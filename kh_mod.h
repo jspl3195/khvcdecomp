@@ -423,7 +423,7 @@ undefined4 FUN_00101268(undefined4 param_1,uint param_2,undefined4 param_3,undef
 undefined8 FUN_001013e0(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, uint param_5);
 void FUN_00101440(undefined4 param_1,undefined4 param_2);
 undefined4 FUN_00101458(int param_1,char *param_2);
-undefined8 FUN_00101638(undefined4 param_1);
+void debug_write_char(char character);   /* 0x00101638 GUESS: name, see kh_mod.c */
 undefined4 FUN_00101ad8(int *param_1,int param_2);
 void FUN_001051d4(int param_1,int param_2);
 void FUN_00105224(int *param_1,int param_2);

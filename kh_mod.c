@@ -1857,32 +1857,36 @@ undefined4 FUN_00101458(int param_1,char *param_2)
       }
     }
   }
-  FUN_00101638(10);
+  debug_write_char(10);
   cVar1 = *unaff_r5;
   while (cVar1 != '\0') {
-    FUN_00101638(*unaff_r5);
+    debug_write_char(*unaff_r5);
     cVar1 = unaff_r5[1];
     unaff_r5 = unaff_r5 + 1;
   }
   cVar1 = *pcVar3;
   while (cVar1 != '\0') {
-    FUN_00101638(*pcVar3);
+    debug_write_char(*pcVar3);
     cVar1 = pcVar3[1];
     pcVar3 = pcVar3 + 1;
   }
-  FUN_00101638(10);
+  debug_write_char(10);
   return 1;
 }
 
-/* ==== 0x00101638  (file offset 0x01638)  FUN_00101638 ================================================ */
-undefined8 FUN_00101638(undefined4 param_1)
+/* ==== 0x00101638  (file offset 0x01638)  debug_write_char ============================================ */
+/* GUESS: name. Writes one character to the debugger's console through ARM semihosting: the ARM C
+   library's _ttywrch(int ch). Evidence (0x00101638-0x0010164c): `strb r0, [sp]` stores the character in
+   a 1-byte stack buffer, `mov r0, #3` (SYS_WRITEC, write one character), `mov r1, sp` (its address),
+   `svc #0x123456` (the ARM-mode semihosting trap). Nothing is returned (Ghidra's CONCAT44(local_8, 3)
+   was just the r1/r0 left by the trap). Its only caller is FUN_00101458 (raise / the default signal
+   handler), which prints its "Arithmetic exception: ..." message with it. With no debugger attached
+   (a phone, khvcemu) the trap does nothing useful. */
+void debug_write_char(char character)
 
 {
-  /* param_1: not in Ghidra's prototype; kh.mod reads r0 at entry and its callers set it */
-  undefined1 local_8 [8];
-  
+  /* semihosting SYS_WRITEC: r0 = 3, r1 = &character (the byte stored on the stack) */
   software_interrupt(0x123456);
-  return CONCAT44(local_8,3);
 }
 
 /* ==== 0x00101744  (file offset 0x01744)  hand-written (no Ghidra function) =========================== */
