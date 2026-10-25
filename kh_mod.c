@@ -2185,7 +2185,7 @@ undefined4 FUN_00101ad8(int *param_1,int param_2)
   pvVar16 = (void *)0x0;
   local_34 = 1;
   if (param_2 == 0x41) {
-    FUN_00108fcc(param_1,1);
+    screen_stack_close_top(param_1,1);
     uVar10 = 0xd;
     goto LAB_00104360;
   }
@@ -2202,14 +2202,14 @@ LAB_0010438c:
         FUN_00109940(*(int *)(*param_1 + 0xd4),0);
       }
 LAB_00104338:
-      FUN_00108fa0(param_1);
+      screen_stack_close_all(param_1);
       uVar10 = 1;
       goto LAB_00104360;
     }
     if (param_2 < 0x74) {
       if (param_2 == 0x6c) {
 LAB_00104dac:
-        iVar9 = FUN_001080ac(param_1);
+        iVar9 = screen_stack_top(param_1);
                     /* 0x104dbc bl ui_element_find_child / 0x104dc0 bl FUN_00108e8c: nothing touches r0 in
                        between, so FUN_00108e8c's argument is ui_element_find_child's result (the entry
                        found for id 800); Ghidra dropped it */
@@ -2336,12 +2336,12 @@ LAB_00104fa4:
             }
             iVar7 = 0;
             do {
-              uVar10 = FUN_001080ac(param_1);
+              uVar10 = screen_stack_top(param_1);
               key_picker_restore_original(ui_element_find_child(uVar10,iVar7 + 400));
               iVar7 = iVar7 + 1;
             } while (iVar7 < 7);
           }
-          iVar7 = FUN_001080ac(param_1);
+          iVar7 = screen_stack_top(param_1);
                     /* 0x103844 bl FUN_0010a498: only r0/r1 are inputs (Ghidra's prototype had 4
                        parameters: param_3 was never read, and param_4 only went on as a fifth
                        (stack) argument to a call that already gets its four arguments in r0-r3). */
@@ -2351,7 +2351,7 @@ LAB_00104fa4:
             return local_34;
           }
 LAB_00103858:
-          FUN_00108fcc(param_1,1);
+          screen_stack_close_top(param_1,1);
           helper_free((void *)param_1[0xf]);
           param_1[0xf] = 0;
           return local_34;
@@ -2526,7 +2526,7 @@ LAB_001050b0:
       uVar11 = 2;
       break;
     case 0x7d:
-      iVar9 = FUN_001080ac(param_1);
+      iVar9 = screen_stack_top(param_1);
       iVar7 = FUN_0010ba08(0,6);
       *(undefined4 *)(iVar7 + 4) = 0x21;
       uVar10 = FUN_00107fd0(param_1,700,1);
@@ -2612,14 +2612,14 @@ LAB_001050b0:
     case 0x7f:
       goto LAB_00104fa4;
     case 0x80:
-      FUN_00108fcc(param_1,1);
-      uVar10 = FUN_001080ac(param_1);
+      screen_stack_close_top(param_1,1);
+      uVar10 = screen_stack_top(param_1);
       uVar13 = 7;
       uVar11 = 1;
       goto LAB_001043c4;
     case 0x81:
 LAB_00104a24:
-      iVar9 = FUN_001080ac(param_1);
+      iVar9 = screen_stack_top(param_1);
       FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_10FB280A,0x73);
       FUN_00109a10(iVar9,1,0,0);
       uVar10 = FUN_00107fd0(param_1,100,1);
@@ -2667,7 +2667,7 @@ LAB_00104a24:
                    *(undefined4 *)(iVar7 + 0x5c4));
       return local_34;
     case 0x82:
-      iVar9 = FUN_001080ac(param_1);
+      iVar9 = screen_stack_top(param_1);
       iVar19 = FUN_0010ba08(0,6);
       *(undefined4 *)(iVar19 + 4) = 0x21;
       uVar10 = FUN_00107fd0(param_1,700,1);
@@ -2836,8 +2836,8 @@ LAB_00105108:
       uVar11 = 1;
       break;
     case 0x84:
-      FUN_00108fcc(param_1,1);
-      FUN_00108fcc(param_1,1);
+      screen_stack_close_top(param_1,1);
+      screen_stack_close_top(param_1,1);
       uVar10 = 4;
 LAB_00104de4:
       FUN_00101ad8(param_1,uVar10);
@@ -2852,14 +2852,14 @@ LAB_00102874:
       }
       param_1[6] = 0;
 LAB_00101db4:
-      FUN_00108fcc(param_1,1);
+      screen_stack_close_top(param_1,1);
       return local_34;
     case 0x86:
       return 0;
     case 0x87:
       return 0;
     case 0x88:
-      FUN_00108fcc(param_1,1);
+      screen_stack_close_top(param_1,1);
       iVar9 = FUN_0010bd7c(0,param_1,1);
       FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_10FB280A,0x73);
       FUN_00109a10(iVar9,1,0,0);
@@ -2899,7 +2899,7 @@ LAB_00101db4:
       *(undefined4 *)(iVar7 + 0x598) = 0;
       pvVar16 = WORD_HEXADECIMAL_27B2CEEB;
     }
-    uVar10 = FUN_001080ac(param_1);
+    uVar10 = screen_stack_top(param_1);
     iVar7 = ui_element_find_child(uVar10,0xc9);
     FUN_00109ff8(*(undefined4 *)(iVar7 + 0x30),pvVar16);
     iVar7 = *(int *)(*(int *)(*param_1 + 0x94) + 4);
@@ -3046,7 +3046,7 @@ LAB_0010489c:
         if (iVar19 <= *(int *)(*(int *)(*param_1 + 0xa8) + 0x52c)) {
           FUN_00109a10(iVar9,1,WORD_HEXADECIMAL_0B259095,uVar24);
         }
-        uVar10 = FUN_001080ac(param_1);
+        uVar10 = screen_stack_top(param_1);
         iVar19 = ui_element_find_child(uVar10,300);
         psVar18 = *(short **)(iVar19 + 8);
         iVar19 = FUN_0010ba08(0,5);
@@ -3116,7 +3116,7 @@ LAB_00101f10:
           }
           goto LAB_00101fa8;
         }
-        FUN_00108fcc(param_1,1);
+        screen_stack_close_top(param_1,1);
         FUN_0011b178(*(undefined4 *)(*param_1 + 0xa8),STRING_REPLAYGAME_DOT_DAT_OFFSET + 0x101fa4);
 LAB_00101f40:
         uVar10 = 0x6b;
@@ -3358,7 +3358,7 @@ LAB_00104da0:
     goto LAB_00104360;
   case 6:
     FUN_00120450(*(undefined4 *)(*param_1 + 0x94));
-    uVar10 = FUN_001080ac(param_1);
+    uVar10 = screen_stack_top(param_1);
     iVar7 = ui_element_find_child(uVar10,0x2d);
     if (iVar7 != 0) {
       FUN_00109f00(iVar7,WORD_HEXADECIMAL_1650919F);
@@ -3472,7 +3472,7 @@ LAB_00104360:
       *(undefined4 *)(iVar7 + 0x594) = 0;
       pvVar16 = WORD_HEXADECIMAL_14FB8F11;
     }
-    uVar10 = FUN_001080ac(param_1);
+    uVar10 = screen_stack_top(param_1);
     iVar7 = ui_element_find_child(uVar10,200);
     FUN_00109ff8(*(undefined4 *)(iVar7 + 0x30),pvVar16);
     iVar7 = *(int *)(*param_1 + 0xbc);
@@ -3523,7 +3523,7 @@ LAB_001048a4:
     *(undefined4 *)(iVar9 + 0x30) = uVar10;
     break;
   case 0x10:
-    FUN_00108fcc(param_1,1);
+    screen_stack_close_top(param_1,1);
     FUN_00109a10(*(undefined4 *)(*param_1 + 0xd4),1,uVar13,2);
     uVar13 = 4;
     uVar11 = 2;
@@ -5506,30 +5506,23 @@ undefined4 FUN_00107fec(int param_1,undefined4 param_2)
   return local_10;
 }
 
-/* ==== 0x001080AC  (file offset 0x080AC)  FUN_001080ac ================================================ */
-int FUN_001080ac(int param_1)
+/* ==== 0x001080AC  (file offset 0x080AC)  screen_stack_top ============================================ */
+/* GUESS: name. The screen on top of the screen stack (the one shown), or 0 when none is open. The
+   binary (0x001080ac-0x001080c4) loads stack->depth, returns 0 when it is 0, else tail-jumps into the
+   search of list_find_entry with stack->screens and the id depth - 1; that search is written inline
+   here, as in Ghidra's listing. 28 callers; most cases of FUN_00101ad8 start with it. */
+int screen_stack_top(ScreenStack *stack)
 
 {
-  int *piVar1;
-  int iVar2;
-  int iVar3;
-  
-  if (*(int *)(param_1 + 0x38) == 0) {
+  int screen = 0;
+  int i;
+
+  if (stack->depth == 0)
     return 0;
-  }
-  piVar1 = *(int **)(param_1 + 0x34);
-  iVar3 = 0;
-  iVar2 = 0;
-  do {
-    if (*piVar1 <= iVar2) {
-      return iVar3;
-    }
-    if (*(int *)(piVar1[1] + iVar2 * 4) == *(int *)(param_1 + 0x38) + -1) {
-      iVar3 = *(int *)(piVar1[2] + iVar2 * 4);
-    }
-    iVar2 = iVar2 + 1;
-  } while (iVar3 == 0);
-  return iVar3;
+  for (i = 0; screen == 0 && i < stack->screens->count; i++)
+    if (stack->screens->ids[i] == stack->depth - 1)
+      screen = stack->screens->entries[i];
+  return screen;
 }
 
 /* ==== 0x001080C8  (file offset 0x080C8)  list_find_entry ============================================= */
@@ -5657,7 +5650,7 @@ undefined4 FUN_001083d8(undefined4 param_1,undefined4 param_2,undefined4 param_3
   
   uVar2 = 0;
   uVar3 = param_4;
-  iVar1 = FUN_001080ac(param_1);
+  iVar1 = screen_stack_top(param_1);
   if (iVar1 != 0) {
     uVar2 = FUN_0010873c(iVar1,param_2,param_3,param_4 /* not arguments, value leftovers: uVar3 */);
   }
@@ -5914,7 +5907,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
   int iVar10;
   ulonglong uVar11;
   
-  piVar1 = (int *)FUN_001080ac((int)param_1);
+  piVar1 = (int *)screen_stack_top((int)param_1);
   iVar8 = INTEGER_MINUS_35012;
   uVar4 = WORD_HEXADECIMAL_1AB5DBD0;
   switch((int)param_2) {
@@ -5934,7 +5927,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
       }
       pvVar3 = helper_malloc(0x100);
       (*g_pHelperFuncs->strtowstr)(param_5,pvVar3,0x80);
-      iVar5 = FUN_001080ac((int)param_1);
+      iVar5 = screen_stack_top((int)param_1);
       FUN_00109308(iVar5,700,1);
       FUN_00109308(iVar5,500,1);
       if (param_1[0x18] == 0) {
@@ -5956,7 +5949,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
       param_1[6] = 0;
       return;
     }
-    FUN_00108fcc(param_1,1);
+    screen_stack_close_top(param_1,1);
     iVar8 = 0x6b;
     goto LAB_00108d50;
   case 0x3:
@@ -5988,12 +5981,12 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
     param_1[6] = 0;
     if (param_3 == (int *)0x2 || param_3 == (int *)0x1) {
       FUN_00101ad8(param_1,0x88);
-      piVar1 = (int *)FUN_001080ac((int)param_1);
+      piVar1 = (int *)screen_stack_top((int)param_1);
     }
     else {
       if (param_3 == (int *)0x5) {
         FUN_00101ad8(param_1,0x88);
-        piVar1 = (int *)FUN_001080ac((int)param_1);
+        piVar1 = (int *)screen_stack_top((int)param_1);
         iVar8 = ui_element_find_child((int)piVar1,1000);
         uVar4 = WORD_HEXADECIMAL_0FA4E52C;
       }
@@ -6010,7 +6003,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
         }
         if (piVar1[0xf] == 2 || piVar1[0xf] == 3) {
           FUN_00101ad8(param_1,0x88);
-          piVar1 = (int *)FUN_001080ac((int)param_1);
+          piVar1 = (int *)screen_stack_top((int)param_1);
           iVar8 = ui_element_find_child((int)piVar1,1000);
         }
         else {
@@ -6028,8 +6021,8 @@ LAB_00108a4c:
   case 0x6:
     iVar8 = FUN_0010e1f8(*(int *)(*param_1 + 0xa8));
     FUN_0011fddc(*(int *)(*param_1 + 0xa8),*(undefined4 *)(*param_1 + 0xc4),iVar8,param_3);
-    FUN_00108fcc(param_1,1);
-    FUN_00108fcc(param_1,1);
+    screen_stack_close_top(param_1,1);
+    screen_stack_close_top(param_1,1);
     iVar8 = 0x7e;
     goto LAB_00108d50;
   case 0x7:
@@ -6043,7 +6036,7 @@ LAB_00108a4c:
       helper_free(pvVar3);
     }
     FUN_0011ea18(*(int *)(*param_1 + 0xa8));
-    FUN_00108fcc(param_1,1);
+    screen_stack_close_top(param_1,1);
     iVar8 = 0x83;
 LAB_00108d50:
     FUN_00101ad8(param_1,iVar8);
@@ -6136,93 +6129,72 @@ int FUN_00108f28(int param_1,int param_2)
   return (**(code **)(*piVar3 + 0x10))(piVar3,4,puVar2[2],0);
 }
 
-/* ==== 0x00108FA0  (file offset 0x08FA0)  FUN_00108fa0 ================================================ */
-void FUN_00108fa0(undefined4 param_1)
+/* ==== 0x00108FA0  (file offset 0x08FA0)  screen_stack_close_all ====================================== */
+/* GUESS: name. Closes every open screen, top first, without redrawing. */
+void screen_stack_close_all(ScreenStack *stack)
 
 {
-  int iVar1;
-  
-  while (iVar1 = FUN_001080ac(param_1), iVar1 != 0) {
-    FUN_00108fcc(param_1,0);
-  }
-  return;
+  while (screen_stack_top(stack) != 0)
+    screen_stack_close_top(stack,0);
 }
 
-/* ==== 0x00108FCC  (file offset 0x08FCC)  FUN_00108fcc ================================================ */
-void FUN_00108fcc(int *param_1,int param_2)
+/* ==== 0x00108FCC  (file offset 0x08FCC)  screen_stack_close_top ====================================== */
+/* GUESS: name. Closes the top screen: removes it from the stack, destroys and frees it, and resumes the
+   screen below (redrawn when `redraw` is set). When the new top screen is the app's field_d4 screen, the
+   binary then tail-jumps (0x001090b0) to thunk_FUN_0011e154 (0x001093f4 -> 0x0011e154) with the app;
+   that code is written inline below, as in Ghidra's listing: it ends a status message state
+   (field_cc 5), and restarts the app's 0x28 ms timer (FUN_001242b4). */
+void screen_stack_close_top(ScreenStack *stack,int redraw)
 
 {
-  int *piVar1;
-  int iVar2;
-  undefined4 uVar3;
-  int *piVar4;
-  int iVar5;
-  undefined1 uVar6;
-  bool bVar7;
-  undefined1 uVar8;
-  
-  piVar1 = (int *)FUN_001080ac((int)param_1);
-  if (piVar1 != (int *)0x0) {
-    FUN_00109380(param_1[0xd],param_1[0xe] + -1);
-    param_1[0xe] = param_1[0xe] + -1;
-    piVar4 = *(int **)(*param_1 + 0xd4);
-    if (piVar1[0xf] == 2) {
-      FUN_00120450(*(undefined4 *)(*param_1 + 0x94));
-    }
-    (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1);
-    helper_free(piVar1);
-    if (piVar4 == piVar1) {
-      *(undefined4 *)(*param_1 + 0xd4) = 0;
-    }
-    piVar1 = (int *)FUN_001080ac(param_1);
-    if (piVar1 != (int *)0x0) {
-      if (*(int **)(*param_1 + 0xd4) == piVar1) {
-        FUN_00120450(*(undefined4 *)(*param_1 + 0x94));
-      }
-      (*(code *)(*(int *)(*piVar1 + 0x20) + *piVar1))(piVar1);
-      if (param_2 != 0) {
-        FUN_00107d24(piVar1);
-      }
+  KHApp *app = stack->app;
+  int *screen = (int *)screen_stack_top(stack);
+  int wasCurrent;
+  int state = 0;
+  PFNNOTIFY timer;
+
+  if (screen != (int *)0x0) {
+    FUN_00109380((int *)stack->screens,stack->depth - 1);     /* take it off the list */
+    stack->depth--;
+    wasCurrent = (int *)app->field_d4 == screen;
+    if (screen[0xf] == 2)
+      FUN_00120450(app->pObj94);
+    (*(code *)(*(int *)*screen + *screen))(screen);           /* destroy: vtable slot 0 */
+    helper_free(screen);
+    if (wasCurrent)
+      app->field_d4 = 0;
+    screen = (int *)screen_stack_top(stack);                  /* the screen below is the top now */
+    if (screen != (int *)0x0) {
+      if ((int *)app->field_d4 == screen)
+        FUN_00120450(app->pObj94);
+      (*(code *)(*(int *)(*screen + 0x20) + *screen))(screen);   /* resume: vtable +0x20 */
+      if (redraw)
+        FUN_00107d24(screen);
     }
   }
-  iVar2 = FUN_001080ac(param_1);
-  iVar5 = *param_1;
-  if (*(int *)(iVar5 + 0xd4) != iVar2) {
+  if (app->field_d4 != (uint32)screen_stack_top(stack))
     return;
-  }
-  if (*(int *)(iVar5 + 0xcc) == 5) {
-    bVar7 = *(int *)(iVar5 + 0xa4) != 0;
-    iVar2 = 0;
-    if (bVar7) {
-      iVar2 = *(int *)(iVar5 + 0xd4);
+  /* ---- the code at 0x0011e154 (thunk_FUN_0011e154), with the app */
+  if (app->field_cc == 5 && app->pGame != (void *)0x0 && app->field_d4 != 0) {
+    FUN_0010ea00(app->field_d4);
+    FUN_0011ab60(*(int *)((int)app->pGame + 0x1f8));
+    /* FUN_001268fc compares two floats and leaves the result in the condition flags; the binary
+       branches on it (`bls` at 0x0011e1b0), which is the test written after the comma */
+    if (app->bSuspended != 0 &&
+        (FUN_001268fc(*(uint *)((int)app->pObja8 + 0x514),0),
+         *(float *)((int)app->pObja8 + 0x514) > 0.0f)) {
+      FUN_0011d040((int)app->pObj94,WORD_HEXADECIMAL_21BF9442,(void *)WORD_HEXADECIMAL_3C5A569E);
+      state = 5;
     }
-    if (bVar7 && iVar2 != 0) {
-      FUN_0010ea00(iVar2);
-      FUN_0011ab60(*(undefined4 *)(*(int *)(iVar5 + 0xa4) + 0x1f8));
-      uVar3 = WORD_HEXADECIMAL_21BF9442;
-      uVar8 = *(int *)(iVar5 + 0xb8) == 0;
-      uVar6 = true;
-      if (!(bool)uVar8) {
-        FUN_001268fc(*(undefined4 *)(*(int *)(iVar5 + 0xa8) + 0x514),0);
-      }
-      if ((bool)uVar6 && !(bool)uVar8) {
-        FUN_0011d040(*(undefined4 *)(iVar5 + 0x94),uVar3,WORD_HEXADECIMAL_3C5A569E);
-        *(undefined4 *)(iVar5 + 0xcc) = 5;
-        goto LAB_0011e1dc;
-      }
-      FUN_0011d040(*(undefined4 *)(iVar5 + 0x94),uVar3,WORD_HEXADECIMAL_1FEB4DB8);
-    }
+    else
+      FUN_0011d040((int)app->pObj94,WORD_HEXADECIMAL_21BF9442,(void *)WORD_HEXADECIMAL_1FEB4DB8);
   }
-  *(undefined4 *)(iVar5 + 0xcc) = 0;
-LAB_0011e1dc:
-  uVar3 = (*g_pHelperFuncs->aee_GetUpTimeMS)();
-  *(undefined4 *)(iVar5 + 0x80) = uVar3;
-  *(undefined4 *)(iVar5 + 0x7c) = uVar3;
-  iVar2 = ADDRESS_OF_FUNCTION_001242b4_OFFSET_2 + 0x11e210;
-  (**(code **)(**(int **)(iVar5 + 0xc) + 0x30))(*(int **)(iVar5 + 0xc),iVar2,iVar5);
-  (**(code **)(**(int **)(iVar5 + 0xc) + 0x2c))(*(int **)(iVar5 + 0xc),0x28,iVar2,iVar5);
-  *(undefined4 *)(iVar5 + 0xb8) = 0;
-  return;
+  app->field_cc = state;
+  app->field_80 = app->field_7c = (*g_pHelperFuncs->aee_GetUpTimeMS)();
+  timer = (PFNNOTIFY)(ADDRESS_OF_FUNCTION_001242b4_OFFSET_2 + 0x11e210);   /* FUN_001242b4 */
+  (*app->a.m_pIShell->pvt->CancelTimer)(app->a.m_pIShell,timer,app);
+  (*app->a.m_pIShell->pvt->SetTimer)(app->a.m_pIShell,0x28,timer,app);
+  app->bSuspended = 0;
 }
 
 /* ==== 0x001090B8  (file offset 0x090B8)  FUN_001090b8 ================================================ */
@@ -8585,11 +8557,11 @@ void FUN_0010c3f8(int param_1,int param_2)
   void *p;
   int *piVar4;
   
-  iVar1 = FUN_001080ac(param_1);
+  iVar1 = screen_stack_top(param_1);
   if (iVar1 != 0) {
     iVar1 = 0;
     do {
-      uVar2 = FUN_001080ac(param_1);
+      uVar2 = screen_stack_top(param_1);
       iVar3 = ui_element_find_child(uVar2,iVar1 + 400);
       if (iVar3 != 0) {
         key_picker_restore_original(iVar3);
@@ -8617,7 +8589,7 @@ void FUN_0010c3f8(int param_1,int param_2)
     (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 100));
     *(undefined4 *)(param_1 + 100) = 0;
   }
-  FUN_00108fa0(param_1);
+  screen_stack_close_all(param_1);
   if (*(int *)(param_1 + 0x34) != 0) {
     FUN_0010cdd8(*(int *)(param_1 + 0x34),1);
   }
@@ -14506,9 +14478,9 @@ void kh_OnAppStop(KHApp *pMe)
                        Destroys the objects at +0xd0, +0x9c, +0xa0, +0xc4/+0xc8 (helper free),
                        +0xa4, +0x98, +0x94, +0xa8 and releases +0x6c, +0x68, +0x70, +0x64 (Swerve).
                         */
-  if (pMe->pObjd0 != (void *)0x0) {
-    FUN_0010c3f8(pMe->pObjd0,1);
-    pMe->pObjd0 = (void *)0x0;
+  if (pMe->screens != (void *)0x0) {
+    FUN_0010c3f8(pMe->screens,1);
+    pMe->screens = (void *)0x0;
   }
   FUN_0012056c(pMe,1);
   if (pMe->pObj9c != (void *)0x0) {
@@ -20205,7 +20177,7 @@ void kh_OnAppStart(KHApp *pMe)
           else {
             if (pMe->nErr != 0) goto LAB_001199b0;
             pvVar4 = (void *)FUN_0010ac6c(0,pMe);
-            pMe->pObjd0 = pvVar4;
+            pMe->screens = pvVar4;
             iVar6 = INTEGER_265;
             if (pvVar4 != (void *)0x0) {
               if (((pMe->nErr == 0) && (FUN_00118640(pMe->pObj9c,pMe->pObj6c), pMe->nErr == 0)) &&
@@ -21242,7 +21214,7 @@ void kh_OnKey(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
   }
   iVar11 = uVar8 - 0xe030;
   if (iVar11 == 0) {
-    uVar2 = FUN_001080ac(pMe->pObjd0);
+    uVar2 = screen_stack_top(pMe->screens);
     iVar3 = 0;
     if (uVar2 != 0) {
       iVar3 = *(int *)(uVar2 + 0x3c);
@@ -21261,7 +21233,7 @@ void kh_OnKey(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
         iVar9 = 0;
         do {
           uVar10 = *(undefined4 *)(*(int *)(*(int *)(*(int *)(uVar2 + 0x34) + 4) + 0x30) + 0x38);
-          uVar6 = FUN_00107fec(pMe->pObjd0,aiStack_48[iVar9]);
+          uVar6 = FUN_00107fec(pMe->screens,aiStack_48[iVar9]);
                     /* helper[11] int wstrcmp(const AECHAR *a, const AECHAR *b)  (AEEHelperFuncs
                        +0x2c, via *(base-4)) */
           iVar5 = (*g_pHelperFuncs->wstrcmp)(uVar6,uVar10);
@@ -21269,7 +21241,7 @@ void kh_OnKey(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
             (*g_pHelperFuncs->free)(uVar6);
             if (aiStack_48[iVar9] == WORD_HEXADECIMAL_0252B33F) {
-              FUN_00101ad8(pMe->pObjd0,7);
+              FUN_00101ad8(pMe->screens,7);
               return;
             }
             iVar3 = ui_element_find_child(uVar2,600);
@@ -21287,17 +21259,17 @@ void kh_OnKey(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
     }
     else if (pMe->field_cc != 5) {
       uVar6 = 8;
-      pvVar4 = pMe->pObjd0;
+      pvVar4 = pMe->screens;
       goto LAB_0011a8a8;
     }
-    pvVar4 = pMe->pObjd0;
+    pvVar4 = pMe->screens;
     uVar6 = 7;
 LAB_0011a8a8:
     FUN_00101ad8(pvVar4,uVar6);
     return;
   }
 LAB_0011a990:
-  iVar3 = FUN_001083d8(pMe->pObjd0,uStack_30,uVar8,dwParam);
+  iVar3 = FUN_001083d8(pMe->screens,uStack_30,uVar8,dwParam);
   if ((iVar3 == 0) && (pMe->field_cc != 5)) {
     if (pMe->pObja0 != (void *)0x0) {
       FUN_0011a7dc(pMe->pObja0,uVar8);
@@ -21332,7 +21304,7 @@ LAB_0011a990:
   if (pMe->field_cc != 5) {
     return;
   }
-  uVar7 = FUN_001080ac(pMe->pObjd0);
+  uVar7 = screen_stack_top(pMe->screens);
   if (uVar7 != pMe->field_d4) {
     return;
   }
@@ -29759,7 +29731,7 @@ void FUN_001242b4(int param_1)
     }
     break;
   case 2:
-    FUN_00108fa0(*(undefined4 *)(param_1 + 0xd0));
+    screen_stack_close_all(*(undefined4 *)(param_1 + 0xd0));
     FUN_0010f9a4(*(int *)(param_1 + 0xa8));
     goto LAB_001244d4;
   case 3:
@@ -29786,7 +29758,7 @@ LAB_0012462c:
   case 6:
     break;
   case 7:
-    FUN_00108fa0(*(undefined4 *)(param_1 + 0xd0));
+    screen_stack_close_all(*(undefined4 *)(param_1 + 0xd0));
     FUN_0011b178(*(int *)(param_1 + 0xa8),0);
 LAB_001244d4:
     FUN_0010edec(param_1);
@@ -29812,7 +29784,7 @@ LAB_001244d4:
     goto LAB_001243b0;
   case 0x10:
 LAB_001243b0:
-    piVar5 = (int *)FUN_001080ac(*(int *)(param_1 + 0xd0));
+    piVar5 = (int *)screen_stack_top(*(int *)(param_1 + 0xd0));
     if (piVar5 != (int *)0x0) {
       FUN_00109a10((int)piVar5,1,0,0);
       FUN_00109a10((int)piVar5,2,0,0);
@@ -29864,7 +29836,7 @@ LAB_001244f0:
     (**(code **)(**(int **)(param_1 + 0x14) + 0x1c))(*(int **)(param_1 + 0x14),1);
     return;
   }
-  piVar5 = (int *)FUN_001080ac(*(int *)(param_1 + 0xd0));
+  piVar5 = (int *)screen_stack_top(*(int *)(param_1 + 0xd0));
   if (piVar5 == (int *)0x0) {
 LAB_00124540:
     (**(code **)(**(int **)(param_1 + 0x68) + 0x44))

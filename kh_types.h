@@ -64,7 +64,8 @@ typedef struct KHApp {
     void          *pBufc4;           /* +0xc4 heap block (helper free in kh_OnAppStop) */
     void          *pBufc8;           /* +0xc8 heap block (helper free in kh_OnAppStop) */
     uint32         field_cc;         /* +0xcc */
-    void          *pObjd0;           /* +0xd0 created by 0x10ac6c(0, pMe), destroyed by 0x10c3f8 */
+    struct ScreenStack *screens;     /* +0xd0 the open screens (menus); created by 0x10ac6c(0, pMe),
+                                        destroyed by 0x10c3f8. FUN_00101ad8 handles its events */
     uint32         field_d4;         /* +0xd4 */
     uint32         fpStatus;         /* +0xd8 GUESS: soft-float status word (what a compiler fplib keeps in a
                                         static). Address returned by kh_GetFpStatusPtr; read by
@@ -81,6 +82,18 @@ typedef struct UIList {
     int   *ids;                   /* +0x04 one id per entry (the key pickers have ids 400-406) */
     int   *entries;               /* +0x08 the entries, usually UIElement pointers */
 } UIList;
+
+/* ---- The screen stack (GUESS: names) -------------------------------------------------------------
+ * The game's open screens (menus), KHApp.screens. Each screen has its position as its id in the list
+ * (0 = the bottom); the top one, id depth - 1, is the one shown (screen_stack_top). Screens have a
+ * vtable at +0 whose slots hold self-relative offsets: slot 0 destroys the screen, +0x20 resumes it
+ * when it becomes the top again (screen_stack_close_top). */
+typedef struct ScreenStack {
+    struct KHApp *app;            /* +0x00 */
+    uint8  unknown_04[0x30];
+    UIList *screens;              /* +0x34 the open screens, by position */
+    int    depth;                 /* +0x38 how many screens are open */
+} ScreenStack;
 
 /* ---- The game's UI elements (GUESS: names) ------------------------------------------------------
  * A UIElement is a screen, menu entry or widget, created by FUN_0010bba0 with its type in +0x34.

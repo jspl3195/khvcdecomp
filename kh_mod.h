@@ -460,7 +460,7 @@ void * FUN_00107ecc(undefined4 param_1,undefined4 param_2);
 int FUN_00107f88(int param_1);
 ulonglong FUN_00107fd0(int param_1,int param_2,int param_3);
 undefined4 FUN_00107fec(int param_1,undefined4 param_2);
-int FUN_001080ac(int param_1);
+int screen_stack_top(ScreenStack *stack);   /* 0x001080AC GUESS: name */
 int list_find_entry(UIList *list,int id);   /* 0x001080C8 GUESS: name */
 void FUN_0010810c(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5, undefined4 param_6);
 void FUN_001082e0(int param_1,undefined4 param_2,int param_3,undefined4 param_4,undefined4 param_5, undefined4 param_6,undefined4 param_7,int param_8);
@@ -474,8 +474,8 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
 bool FUN_00108e8c(int param_1);
 bool FUN_00108ed8(int param_1);
 int FUN_00108f28(int param_1,int param_2);
-void FUN_00108fa0(undefined4 param_1);
-void FUN_00108fcc(int *param_1,int param_2);
+void screen_stack_close_all(ScreenStack *stack);   /* 0x00108FA0 GUESS: name */
+void screen_stack_close_top(ScreenStack *stack,int redraw);   /* 0x00108FCC GUESS: name */
 void FUN_001090b8(int param_1,int *param_2);
 int FUN_001090fc(int *param_1,int param_2,int param_3);
 void FUN_001091fc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
