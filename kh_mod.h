@@ -505,7 +505,7 @@ undefined8 FUN_0010a214(int param_1);
 void FUN_0010a3e8(undefined4 param_1,int *param_2,uint param_3,int param_4);
 void FUN_0010a46c(undefined4 param_1,int *param_2,undefined4 param_3,uint param_4);
 void FUN_0010a498(int param_1,int param_2);
-Hitsphere * hitsphere_create(Hitsphere *hitsphere,int entity,HitsphereEnemy *owner,int secondary);   /* 0x0010A528 GUESS: name */
+Hitsphere * hitsphere_create(Hitsphere *hitsphere,int entity,BossCombatRegion *owner,int secondary);   /* 0x0010A528 GUESS: name */
 int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3);
 int * FUN_0010aa8c(int *param_1,int *param_2);
 int * FUN_0010ac6c(int *param_1,int param_2);
@@ -513,17 +513,17 @@ undefined4 * FUN_0010af3c(undefined4 *param_1,undefined4 param_2,undefined4 para
 undefined4 * FUN_0010afc4(undefined4 *param_1);
 undefined4 * FUN_0010b014(undefined4 *param_1,undefined4 param_2);
 int * FUN_0010b080(int *param_1,undefined4 param_2);
-Enemy * enemy_create(Enemy *enemy,int number,EnemySpawner *spawner,int type);   /* 0x0010B230 GUESS: name */
+Enemy * enemy_create(Enemy *enemy,int number,CombatRegion *region,int type);   /* 0x0010B230 GUESS: name */
 int * FUN_0010b2dc(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5 ,undefined4 param_6,int param_7);
 undefined1 * FUN_0010b3e8(undefined1 *param_1,undefined4 param_2,undefined4 param_3);
-undefined1 * FUN_0010b478(undefined1 *param_1,undefined4 param_2,undefined4 param_3);
+CombatRegion * combat_region_create(CombatRegion *region,ISwerveObject *node,char *name);   /* 0x0010B478 GUESS: name */
 void * FUN_0010b4e4(void *param_1,int param_2);
-undefined1 * FUN_0010b5e8(undefined1 *param_1,undefined4 param_2,undefined4 param_3);
+MotionEntity * motion_entity_create(MotionEntity *entity,ISwerveObject *node,char *name);   /* 0x0010B5E8 GUESS: name */
 undefined8 FUN_0010b650(int *param_1,undefined4 param_2,int param_3,int param_4,undefined4 param_5,int param_6, int param_7,int param_8);
 undefined1 * FUN_0010b70c(undefined1 *param_1,undefined4 param_2,undefined4 param_3);
 undefined4 * FUN_0010b804(undefined4 *param_1);
-undefined1 * FUN_0010b870(undefined1 *param_1,undefined4 param_2,undefined4 param_3);
-undefined1 * FUN_0010b8cc(undefined1 *param_1,undefined4 *param_2,undefined4 param_3);
+BossCombatRegion * boss_combat_region_create(BossCombatRegion *region,ISwerveObject *node,char *name);   /* 0x0010B870 GUESS: name */
+LevelObject * level_object_create(LevelObject *object,ISwerveObject *node,char *name);   /* 0x0010B8CC GUESS: name */
 void * FUN_0010b9b4(void *param_1);
 undefined4 * FUN_0010ba08(undefined4 *param_1,undefined4 param_2);
 undefined4 * FUN_0010bb2c(undefined4 *param_1,int param_2,undefined4 param_3);
@@ -586,7 +586,7 @@ int FUN_0010eefc(undefined4 param_1,int param_2,int *param_3,undefined4 param_4)
 undefined4 FUN_0010efd4(undefined4 param_1,undefined4 param_2,int param_3,int param_4);
 int FUN_0010f058(int param_1,int param_2);
 void FUN_0010f244(int *param_1,undefined4 *param_2);
-int enemy_spawner_take_one(EnemySpawner *spawner);   /* 0x0010F2CC GUESS: name */
+int combat_region_take_one(CombatRegion *region);   /* 0x0010F2CC GUESS: name */
 undefined8 FUN_0010f2e8(int param_1,uint param_2,undefined4 param_3,uint param_4,undefined4 param_5, undefined4 param_6,uint param_7);
 void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5,
                  uint param_6);
@@ -612,9 +612,9 @@ bool FUN_00112a98(int param_1,undefined4 param_2,int param_3);
 void FUN_00112b4c(int param_1);
 int item_drops_find_free_slot(ItemDrops *drops);   /* 0x00112C18 GUESS: name */
 void FUN_00112c44(int *param_1);
-Hitsphere * hitsphere_enemy_find_hitsphere(HitsphereEnemy *enemy,int entity);   /* 0x00112C9C GUESS: name */
+Hitsphere * boss_combat_region_find_hitsphere(BossCombatRegion *region,int entity);   /* 0x00112C9C GUESS: name */
 undefined8 FUN_00112cdc(int param_1,int *param_2,int param_3);
-int FUN_00112cfc(int param_1);
+int game_find_free_object_slot(Game *game);   /* 0x00112CFC GUESS: name */
 int FUN_00112d28(int param_1);
 int FUN_00112d54(int param_1);
 undefined4 FUN_00112dbc(int param_1,int param_2);
@@ -666,13 +666,13 @@ void FUN_0011498c(int param_1,uint param_2);
 void FUN_00114a1c(int param_1,undefined4 param_2);
 undefined8 FUN_00114a94(int param_1,undefined4 param_2,void *param_3,undefined4 param_4,undefined4 param_5,
                         undefined4 param_6,undefined4 param_7);
-int hitsphere_enemy_hit_target(HitsphereEnemy *enemy,int unused,uint32 damage,uint32 x,uint32 y,uint32 z,int playerState);   /* 0x00114B48 GUESS: name */
+int boss_combat_region_hit_target(BossCombatRegion *region,int unused,uint32 damage,uint32 x,uint32 y,uint32 z,int playerState);   /* 0x00114B48 GUESS: name */
 void FUN_00114c00(int param_1,undefined4 param_2,undefined4 param_3,int param_4);
 void FUN_001150d0(int param_1,int *param_2);
 void FUN_00115118(undefined4 *param_1,undefined4 param_2,uint param_3);
 void FUN_001174ac(int param_1,undefined4 param_2);
 void FUN_00117d30(int param_1,int *param_2);
-void enemy_spawner_setup(EnemySpawner *spawner,int context);   /* 0x00117DD8 GUESS: name */
+void combat_region_setup(CombatRegion *region,int context);   /* 0x00117DD8 GUESS: name */
 undefined8 FUN_001180c4(int param_1,uint param_2);
 void FUN_00118318(int param_1,int *param_2);
 void FUN_00118640(int param_1,int *param_2);
@@ -788,7 +788,7 @@ void FUN_0012070c(int param_1,int param_2);
 void FUN_0012088c(int param_1,int *param_2);
 void FUN_00120be8(undefined4 *param_1,int *param_2,uint *param_3,uint *param_4,uint param_5);
 void FUN_00120f8c(int param_1,int *param_2,int param_3,int *param_4,int param_5);
-void FUN_00121134(int param_1,int *param_2,undefined4 param_3);
+void game_create_objects(Game *game,ISwerveObject *node,LevelObject *parent);   /* 0x00121134 GUESS: name */
 undefined8 FUN_001213fc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 ,undefined4 param_6,undefined4 param_7);
 void FUN_00121584(int param_1,int *param_2,int *param_3,int param_4);
 void FUN_0012164c(int param_1,undefined4 param_2,int param_3);
@@ -802,7 +802,7 @@ void FUN_001226e8(int *param_1,undefined4 param_2,int param_3);
 undefined4 FUN_0012289c(int *param_1,undefined4 param_2,int param_3);
 void enemy_update(Enemy *enemy,int now,int elapsed);   /* 0x00122954 GUESS: name */
 void FUN_00122b90(int param_1,int param_2,uint param_3,undefined4 param_4);
-void enemy_spawner_update(EnemySpawner *spawner,int now,int elapsed);   /* 0x00122F98 GUESS: name */
+void combat_region_update(CombatRegion *region,int now,int elapsed);   /* 0x00122F98 GUESS: name */
 void FUN_0012312c(int param_1,int param_2,int param_3,undefined4 param_4);
 void FUN_00123588(int param_1,int param_2,int param_3,undefined4 param_4);
 void FUN_00123c24(int param_1,undefined4 param_2,undefined4 param_3,int param_4);

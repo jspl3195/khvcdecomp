@@ -187,14 +187,113 @@ typedef struct Progress {
     struct KHApp *app;            /* +0x724 the app it belongs to */
 } Progress;
 
-/* ---- Enemies and enemy spawners (GUESS: names) ----------------------------------------------
- * An EnemySpawner is a place in a level that sends enemies in waves: enemy_spawner_setup reads its
- * parameters from the level data, enemy_spawner_update runs its waves and updates its enemies. Each
- * Enemy (0x280 bytes, enemy_create) waits until the spawner lets it appear (enemy_spawner_take_one),
- * then lives through the states of enemy_update. Fields whose meaning is not known are named by offset. */
-struct EnemySpawner;
+/* ---- Level objects -------------------------------------------------------------------------------
+ * game_create_objects walks the level's scene (Swerve nodes) and makes a level object for every node
+ * that has a name (its user parameter 0x009660B3), choosing the class by the node's tags (FUN_00119b0c):
+ * "MotionEntity", "CombatRegion", "BossCombatRegion", or a plain LevelObject. All of them start with the
+ * LevelObject fields (kind, parent, node, nameId, app at +0x84); the subclasses are written out flat
+ * rather than embedding it. Names are hashed by FUN_00113654 (strlen, then from the last character
+ * hash = hash * 0x19660D + c + 0x3C6EF35F, made positive, & 0x3FFFFFFF); the WORD_HEXADECIMAL_ ids
+ * passed around with level data are such hashes. Fields whose meaning is not known are named by offset. */
+struct LevelObject;
 
-/* The items an enemy spawner's enemies drop (100 bytes, FUN_0010b014; GUESS: names): 10 slots, each an
+typedef struct LevelObject {
+    uint8  kind;                  /* +0x000 0 LevelObject, 1 MotionEntity, 2 and 3 MotionEntity subclasses
+                                     (FUN_0010b70c 0x338 bytes, FUN_0010b3e8 0x214 bytes), 4 CombatRegion,
+                                     5 BossCombatRegion */
+    uint8  unknown_001[0x03];
+    struct LevelObject *parent;   /* +0x004 the object of the nearest named node above it, or 0 for the
+                                     "NoParent" tag */
+    ISwerveObject *node;          /* +0x008 its scene node (AddRef'd) */
+    uint32 nameId;                /* +0x00c the hash (FUN_00113654) of its name */
+    int    field_10;              /* +0x010 0 at creation */
+    int    field_14;              /* +0x014 0 at creation */
+    int    field_18;              /* +0x018 0 at creation */
+    int    field_1c;              /* +0x01c 0 at creation */
+    uint8  unknown_020[0x10];
+    int    field_30;              /* +0x030 0 at creation */
+    int    field_34;              /* +0x034 1 at creation */
+    int    field_38;              /* +0x038 1 at creation */
+    int    field_3c;              /* +0x03c 1 at creation */
+    int    field_40;              /* +0x040 0 at creation */
+    int    field_44;              /* +0x044 0 at creation */
+    int    field_48;              /* +0x048 0 at creation */
+    int    field_4c;              /* +0x04c 0 at creation */
+    int    field_50;              /* +0x050 0 at creation */
+    int    field_54;              /* +0x054 0 at creation */
+    int    field_58;              /* +0x058 0 at creation */
+    uint8  unknown_05c[0x04];
+    int    field_60;              /* +0x060 0 at creation */
+    uint8  unknown_064[0x20];
+    struct KHApp *app;            /* +0x084 GetAppInstance() at creation */
+    uint8  unknown_088[0x58];
+    int    field_e0;              /* +0x0e0 0 at creation */
+    uint8  unknown_0e4[0x08];
+    int    field_ec;              /* +0x0ec 0 at creation */
+    int    field_f0;              /* +0x0f0 0 at creation */
+    int    field_f4;              /* +0x0f4 0 at creation */
+    int    field_f8;              /* +0x0f8 0 at creation */
+    int    field_fc;              /* +0x0fc 0 at creation */
+    int    field_100;             /* +0x100 0 at creation */
+    int    field_104;             /* +0x104 0 at creation */
+    int    field_108;             /* +0x108 0 at creation */
+    int    field_10c;             /* +0x10c 0 at creation */
+} LevelObject;                    /* 0x110 bytes */
+
+/* "MotionEntity" (kind 1): a LevelObject that moves; the base of kinds 2 and 3. */
+typedef struct MotionEntity {
+    uint8  kind;                  /* +0x000 LevelObject.kind */
+    uint8  unknown_001[0x10f];    /* the LevelObject fields */
+    int    field_110;             /* +0x110 0 at creation */
+    int    field_114;             /* +0x114 0 at creation */
+    uint8  unknown_118[0x10];
+    int    field_128;             /* +0x128 0 at creation */
+    int    field_12c;             /* +0x12c 0 at creation */
+    uint8  unknown_130[0x24];
+    int    field_154;             /* +0x154 0 at creation */
+    int    field_158;             /* +0x158 0 at creation */
+    uint8  unknown_15c[0x64];
+    int    field_1c0;             /* +0x1c0 0 at creation */
+    int    field_1c4;             /* +0x1c4 0 at creation */
+} MotionEntity;                   /* 0x1c8 bytes */
+
+/* KHApp.pGame (GUESS: names): the game state; it holds the level objects. */
+typedef struct Game {
+    ISwerveObject *root;          /* +0x000 a scene whose level objects FUN_0010a5d8 creates */
+    ISwerveObject *field_04;      /* +0x004 a scene loaded by FUN_0011ae04; its level objects are created
+                                     too */
+    uint8  unknown_008[0x08];
+    LevelObject *objects[120];    /* +0x010 0 = free slot (game_find_free_object_slot) */
+    uint8  unknown_1f0[0x08];
+    int    field_1f8;             /* +0x1f8 GUESS: the player's level object; its +0x20c is the current
+                                     target */
+    uint8  unknown_1fc[0x18];
+    struct KHApp *app;            /* +0x214 */
+} Game;
+
+/* The Swerve vtable slots game_create_objects calls, past the shared ISwerveObjectVtbl ones (GUESS:
+ * names, from the JSR-184 methods they implement in swv21brew). */
+typedef struct SwerveGroupVtbl {
+    ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
+    void  *unknown_0c[0x28];
+    void (*GetChildCount)(ISwerveObject *po, int *pCount);               /* +0xac slot 43, 0x01030360 */
+    int  (*GetChild)(ISwerveObject *po, int index, ISwerveObject **ppo); /* +0xb0 slot 44, 0x010302ec */
+} SwerveGroupVtbl;
+
+typedef struct SwerveSkinnedMeshVtbl {
+    ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
+    void  *unknown_0c[0x31];
+    int  (*GetSkeleton)(ISwerveObject *po, ISwerveObject **ppo);         /* +0xd0 slot 52, 0x01038878 */
+} SwerveSkinnedMeshVtbl;
+
+/* ---- Enemies and combat regions (GUESS: names) ----------------------------------------------
+ * A CombatRegion ("CombatRegion" level object, kind 4) is a place in a level that sends enemies in
+ * waves: combat_region_setup reads its parameters from the level data, combat_region_update runs its
+ * waves and updates its enemies. Each Enemy (0x280 bytes, enemy_create) waits until the region lets it
+ * appear (combat_region_take_one), then lives through the states of enemy_update. */
+struct CombatRegion;
+
+/* The items an combat region's enemies drop (100 bytes, FUN_0010b014; GUESS: names): 10 slots, each an
  * item on the ground for a limited time. A slot is free when its timeLeft is 0
  * (item_drops_find_free_slot). FUN_0010fbf4 drops items into free slots; FUN_001226e8 counts the times
  * down and gives the reward when the player picks one up. */
@@ -204,25 +303,25 @@ typedef struct ItemDrops {
     uint8  kinds[10];             /* +0x2c 0: health +1.0, 1: MP +1, 2: munny */
     uint8  unknown_36[0x02];
     int    timeLeft[10];          /* +0x38 ms the item stays on the ground; 0 = free slot */
-    uint32 munnyPerPickup;        /* +0x60 a float (its bits): 1.0, or 2.0 when the spawner's field_120 >= 5 */
+    uint32 munnyPerPickup;        /* +0x60 a float (its bits): 1.0, or 2.0 when the region's field_120 >= 5 */
 } ItemDrops;                      /* 100 bytes */
 
 typedef struct Enemy {
     int    vtable;                /* +0x000 slots hold self-relative offsets; +4 is enemy_update, 0 and +0xc
-                                     run when the spawner's field_148 is set */
+                                     run when the region's field_148 is set */
     int    field_04;              /* +0x004 FUN_00113524 fills +0x04.. (GUESS: its position) */
     int    field_08;              /* +0x008 */
     uint8  unknown_0c[0x04];
     int    field_10;              /* +0x010 FUN_00113cc4 fills +0x10.. from field_20 */
     int    field_14;              /* +0x014 */
     uint8  unknown_18[0x04];
-    int    number;                /* +0x01c 1, 2, ...: its place among the spawner's enemies */
+    int    number;                /* +0x01c 1, 2, ...: its place among the region's enemies */
     int    field_20;              /* +0x020 GUESS: its model (an object) */
     int    field_24;              /* +0x024 */
     int    field_28;              /* +0x028 an object; FUN_001201cc(field_28, 0) when it dies */
     uint8  unknown_2c[0x10];
     uint32 health;                /* +0x03c a float (its bits); > 0 alive, shown in the health bar */
-    struct EnemySpawner *spawner; /* +0x040 the spawner that created it */
+    struct CombatRegion *region; /* +0x040 the region that created it */
     uint8  unknown_44[0x1c];
     int    field_60;              /* +0x060 */
     int    field_64;              /* +0x064 */
@@ -244,7 +343,7 @@ typedef struct Enemy {
     int    field_f8;              /* +0x0f8 */
     uint8  unknown_fc[0x04];
     int    field_100;             /* +0x100 -1 at creation */
-    int    type;                  /* +0x104 1-11, from the spawner's enemy name (enemy_spawner_setup) */
+    int    type;                  /* +0x104 1-11, from the region's enemy name (combat_region_setup) */
     int    field_108;             /* +0x108 when set (or for type 2) its health bar is shown */
     uint8  unknown_10c[0x1c];
     int    field_128;             /* +0x128 a countdown (enemy_update subtracts the elapsed time) */
@@ -258,14 +357,18 @@ typedef struct Enemy {
     uint8  unknown_274[0x0c];
 } Enemy;                          /* 0x280 bytes */
 
-typedef struct EnemySpawner {
-    uint8  unknown_00[0x08];
-    int    field_08;              /* +0x008 its object in the level data (the key the setup reads with) */
-    int    field_0c;              /* +0x00c passed with message 0x11E3EE3E (enemy_spawner_update) */
+typedef struct CombatRegion {
+    uint8  kind;                  /* +0x000 4 (LevelObject.kind) */
+    uint8  unknown_001[0x03];
+    LevelObject *parent;          /* +0x004 LevelObject.parent */
+    int    node;                  /* +0x008 its scene node, an ISwerveObject (LevelObject.node); the setup
+                                     reads its parameters from it */
+    uint32 nameId;                /* +0x00c LevelObject.nameId; passed with message 0x11E3EE3E
+                                     (combat_region_update) */
     uint8  unknown_10[0x74];
     struct KHApp *app;            /* +0x084 */
     uint8  unknown_88[0x88];
-    int    active;                /* +0x110 GUESS: the player is in its area */
+    int    active;                /* +0x110 0 at creation; GUESS: the player is in its area */
     ItemDrops *itemDrops;         /* +0x114 its item drops (FUN_0010b014; updated by FUN_001226e8) */
     uint32 enemyMaximumHealth;    /* +0x118 a float (its bits); level data, default 5.0 */
     uint32 field_11c;             /* +0x11c a float (its bits); level data, default 1.0 */
@@ -273,23 +376,27 @@ typedef struct EnemySpawner {
     int    waves;                 /* +0x124 level data */
     int    enemiesPerWave;        /* +0x128 level data */
     int    enemyCount;            /* +0x12c enemy objects: 2 for type 1, else 1; at most enemiesPerWave */
-    int    state;                 /* +0x130 1 waiting, 2 fighting, 3 the player left during a wave (GUESS) */
+    int    state;                 /* +0x130 1 at creation; 1 waiting, 2 fighting, 3 the player left during a wave (GUESS) */
     int    wavesLeft;             /* +0x134 */
-    int    enemiesLeftInWave;     /* +0x138 enemy_spawner_take_one takes them one by one */
-    int    field_13c;             /* +0x13c set to 1 when state 2 ends */
-    uint8  unknown_140[0x08];
-    int    field_148;             /* +0x148 when set, each enemy's vtable slots 0 and +0xc run once */
+    int    enemiesLeftInWave;     /* +0x138 combat_region_take_one takes them one by one */
+    int    field_13c;             /* +0x13c 1 at creation; set to 1 when state 2 ends */
+    int    field_140;             /* +0x140 0 at creation */
+    uint8  unknown_144[0x04];
+    int    field_148;             /* +0x148 1 at creation; when set, each enemy's vtable slots 0 and +0xc
+                                     run once */
     Enemy **enemies;              /* +0x14c enemyCount of them */
-} EnemySpawner;
+    int    field_150;             /* +0x150 0 at creation */
+    int    field_154;             /* +0x154 0 at creation */
+} CombatRegion;                   /* 0x158 bytes */
 
-/* ---- Hitsphere enemies (GUESS: the hitsphere reading and all names) ---------------------------------
- * A level object built on the same base as EnemySpawner (setup FUN_0011868c starts with the base setup
- * FUN_00118910; app +0x84, item drops +0x114), whose enemy is a set of hitspheres: scene entities named
- * in the level data, each with a radius. Every frame (FUN_00123d7c) the nearest hitsphere whose radius
- * holds the player (a 3D distance, FUN_00113820) becomes the game's current target, and a player attack
- * hits it (hitsphere_enemy_hit_target). The first hitsphere's field_14 is shown in the HUD (GUESS: the
- * enemy's health). */
-struct HitsphereEnemy;
+/* ---- Boss combat regions (GUESS: the hitsphere reading and the function names) ---------------------
+ * A "BossCombatRegion" level object (kind 5; setup FUN_0011868c starts with the base setup FUN_00118910,
+ * as combat_region_setup does), whose boss is a set of hitspheres: scene entities named in the level
+ * data, each with a radius. Every frame (FUN_00123d7c) the nearest hitsphere whose radius holds the
+ * player (a 3D distance, FUN_00113820) becomes the game's current target, and a player attack hits it
+ * (boss_combat_region_hit_target). The first hitsphere's field_14 is shown in the HUD (GUESS: the boss's
+ * health). */
+struct BossCombatRegion;
 
 typedef struct Hitsphere {
     int    vtable;                /* +0x00 0x00101650; slots hold self-relative offsets: +4 update,
@@ -301,7 +408,7 @@ typedef struct Hitsphere {
                                      (field_d4 +0x4c, +0x50) */
     uint8  unknown_18[0x08];
     struct KHApp *app;            /* +0x20 GetAppInstance() at creation */
-    struct HitsphereEnemy *owner; /* +0x24 */
+    struct BossCombatRegion *owner; /* +0x24 */
     uint8  unknown_28[0x1c];
     int    field_44;              /* +0x44 0 at creation */
     int    secondary;             /* +0x48 set on every hitsphere but the first */
@@ -322,21 +429,27 @@ typedef struct Hitsphere {
     int    field_d0;              /* +0xd0 0 at creation */
 } Hitsphere;                      /* 0xd4 bytes */
 
-typedef struct HitsphereEnemy {
-    uint8  unknown_00[0x08];
-    int    field_08;              /* +0x008 its object in the level data (the key the setup reads with) */
-    uint8  unknown_0c[0x78];
+typedef struct BossCombatRegion {
+    uint8  kind;                  /* +0x000 5 (LevelObject.kind) */
+    uint8  unknown_001[0x03];
+    LevelObject *parent;          /* +0x004 LevelObject.parent */
+    int    node;                  /* +0x008 its scene node, an ISwerveObject (LevelObject.node) */
+    uint32 nameId;                /* +0x00c LevelObject.nameId */
+    uint8  unknown_10[0x74];
     struct KHApp *app;            /* +0x084 */
     uint8  unknown_88[0x88];
-    int    active;                /* +0x110 GUESS: the player is in its area (FUN_00123d7c) */
+    int    active;                /* +0x110 0 at creation; GUESS: the player is in its area (FUN_00123d7c) */
     ItemDrops *itemDrops;         /* +0x114 its item drops (updated by FUN_001226e8) */
     int   *field_118;             /* +0x118 more scene entities named in the level data (field_12c of them) */
     int    extraEntity;           /* +0x11c one more scene entity (id 0x2E583064): it can be targeted within
                                      3.0, and a hit hides it and clears its +0x34 (targetable) */
     Hitsphere **hitspheres;       /* +0x120 */
-    uint8  unknown_124[0x04];
+    uint32 field_124;             /* +0x124 a float (its bits), 1.0 at creation */
     int    hitsphereCount;        /* +0x128 */
     int    field_12c;             /* +0x12c how many field_118 holds */
-} HitsphereEnemy;
+    int    field_130;             /* +0x130 1 at creation; when set, FUN_00123d7c runs each hitsphere's
+                                     vtable slot 0 and fills the HUD from the first one, then clears it */
+    uint8  unknown_134[0x08];
+} BossCombatRegion;               /* 0x13c bytes */
 
 #endif /* KH_TYPES_H */

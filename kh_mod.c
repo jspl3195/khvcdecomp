@@ -7289,10 +7289,10 @@ void FUN_0010a498(int param_1,int param_2)
 /* ==== 0x0010A528  (file offset 0x0A528)  hitsphere_create ============================================ */
 /* GUESS: names (the hitsphere reading too). Sets up a hitsphere (allocating its 0xd4 bytes when
    `hitsphere` is 0) for the scene entity `entity`, owned by `owner`; returns it, or 0 when out of
-   memory. Called by the hitsphere enemy's setup (FUN_0011868c) for each entity of its list, with
+   memory. Called by the boss combat region's setup (FUN_0011868c) for each entity of its list, with
    `secondary` set for all but the first. The radius is not set here. Ghidra's INTEGER_MINUS_42416 was
    the PC-relative offset of the helper table, read for GetAppInstance. */
-Hitsphere * hitsphere_create(Hitsphere *hitsphere,int entity,HitsphereEnemy *owner,int secondary)
+Hitsphere * hitsphere_create(Hitsphere *hitsphere,int entity,BossCombatRegion *owner,int secondary)
 
 {
   if (hitsphere == (Hitsphere *)0x0 && (hitsphere = helper_malloc_2(0xd4)) == (Hitsphere *)0x0)
@@ -7414,7 +7414,7 @@ int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3)
     iVar1 = iVar6;
     if (iVar6 != 0x1f5) goto LAB_0010a894;
 LAB_0010a85c:
-    FUN_00121134(param_1,*param_1,0);
+    game_create_objects((Game *)param_1,(ISwerveObject *)*param_1,(LevelObject *)0x0);
     uVar4 = FUN_0010aa8c(0,*(undefined4 *)(param_1[0x85] + 0xd0));
     *(undefined4 *)(param_1[0x85] + 0xd4) = uVar4;
     screen_stack_open(*(undefined4 *)(param_1[0x85] + 0xd0),uVar4);
@@ -7716,9 +7716,9 @@ int * FUN_0010b080(int *param_1,undefined4 param_2)
 }
 
 /* ==== 0x0010B230  (file offset 0x0B230)  enemy_create ================================================ */
-/* GUESS: name. Creates (when enemy is 0: allocates 0x280 bytes) the enemy number `number` of a spawner,
+/* GUESS: name. Creates (when enemy is 0: allocates 0x280 bytes) the enemy number `number` of a region,
    of the given type, waiting to appear (state 1001). */
-Enemy * enemy_create(Enemy *enemy,int number,EnemySpawner *spawner,int type)
+Enemy * enemy_create(Enemy *enemy,int number,CombatRegion *region,int type)
 
 {
   if (enemy == (Enemy *)0x0 && (enemy = helper_malloc_2(0x280)) == (Enemy *)0x0)
@@ -7728,7 +7728,7 @@ Enemy * enemy_create(Enemy *enemy,int number,EnemySpawner *spawner,int type)
   enemy->number = number;
   enemy->field_24 = 0;
   enemy->field_28 = 0;
-  enemy->spawner = spawner;
+  enemy->region = region;
   enemy->field_f8 = 0;
   enemy->field_100 = -1;
   enemy->type = type;
@@ -7801,7 +7801,7 @@ undefined1 * FUN_0010b3e8(undefined1 *param_1,undefined4 param_2,undefined4 para
   
   if ((param_1 != (undefined1 *)0x0) ||
      (param_1 = helper_malloc_2(0x214), param_1 != (undefined1 *)0x0)) {
-    FUN_0010b5e8(param_1,param_2,param_3);
+    motion_entity_create((MotionEntity *)param_1,(ISwerveObject *)param_2,(char *)param_3);
     *param_1 = 3;
     iVar1 = FLOAT_10;
     *(undefined4 *)(param_1 + 0x1d8) = FLOAT_90;
@@ -7821,24 +7821,25 @@ undefined1 * FUN_0010b3e8(undefined1 *param_1,undefined4 param_2,undefined4 para
   return param_1;
 }
 
-/* ==== 0x0010B478  (file offset 0x0B478)  FUN_0010b478 ================================================ */
-undefined1 * FUN_0010b478(undefined1 *param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x0010B478  (file offset 0x0B478)  combat_region_create ======================================== */
+/* GUESS: name. Sets up a "CombatRegion" level object (kind 4, 0x158 bytes, allocated when `region` is
+   0): inactive, waiting (state 1), no enemies yet (combat_region_setup makes them); returns it, or 0
+   when out of memory. */
+CombatRegion * combat_region_create(CombatRegion *region,ISwerveObject *node,char *name)
 
 {
-  if ((param_1 != (undefined1 *)0x0) ||
-     (param_1 = helper_malloc_2(0x158), param_1 != (undefined1 *)0x0)) {
-    FUN_0010b8cc(param_1,param_2,param_3);
-    *(undefined4 *)(param_1 + 0x110) = 0;
-    *(undefined4 *)(param_1 + 0x130) = 1;
-    *(undefined4 *)(param_1 + 0x140) = 0;
-    *(undefined4 *)(param_1 + 0x13c) = 1;
-    *(undefined4 *)(param_1 + 0x14c) = 0;
-    *(undefined4 *)(param_1 + 0x148) = 1;
-    *(undefined4 *)(param_1 + 0x150) = 0;
-    *(undefined4 *)(param_1 + 0x154) = 0;
-    *param_1 = 4;
-  }
-  return param_1;
+  if (region == (CombatRegion *)0x0 && (region = helper_malloc_2(0x158)) == (CombatRegion *)0x0)
+    return (CombatRegion *)0x0;
+  level_object_create((LevelObject *)region,node,name);
+  region->active = 0;
+  region->state = 1;
+  region->field_140 = 0;
+  region->field_13c = 1;
+  region->enemies = (Enemy **)0x0;
+  region->field_148 = 1;
+  region->field_150 = region->field_154 = 0;
+  region->kind = 4;
+  return region;
 }
 
 /* ==== 0x0010B4E4  (file offset 0x0B4E4)  FUN_0010b4e4 ================================================ */
@@ -7893,24 +7894,20 @@ void * FUN_0010b4e4(void *param_1,int param_2)
   return param_1;
 }
 
-/* ==== 0x0010B5E8  (file offset 0x0B5E8)  FUN_0010b5e8 ================================================ */
-undefined1 * FUN_0010b5e8(undefined1 *param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x0010B5E8  (file offset 0x0B5E8)  motion_entity_create ======================================== */
+/* GUESS: name. Sets up a "MotionEntity" level object (kind 1, 0x1c8 bytes, allocated when `entity` is 0);
+   returns it, or 0 when out of memory. Also the start of the kind 2 and 3 constructors. */
+MotionEntity * motion_entity_create(MotionEntity *entity,ISwerveObject *node,char *name)
 
 {
-  if ((param_1 != (undefined1 *)0x0) ||
-     (param_1 = helper_malloc_2(0x1c8), param_1 != (undefined1 *)0x0)) {
-    FUN_0010b8cc(param_1,param_2,param_3);
-    *param_1 = 1;
-    *(undefined4 *)(param_1 + 0x128) = 0;
-    *(undefined4 *)(param_1 + 300) = 0;
-    *(undefined4 *)(param_1 + 0x158) = 0;
-    *(undefined4 *)(param_1 + 0x110) = 0;
-    *(undefined4 *)(param_1 + 0x114) = 0;
-    *(undefined4 *)(param_1 + 0x154) = 0;
-    *(undefined4 *)(param_1 + 0x1c0) = 0;
-    *(undefined4 *)(param_1 + 0x1c4) = 0;
-  }
-  return param_1;
+  if (entity == (MotionEntity *)0x0 && (entity = helper_malloc_2(0x1c8)) == (MotionEntity *)0x0)
+    return (MotionEntity *)0x0;
+  level_object_create((LevelObject *)entity,node,name);
+  entity->kind = 1;
+  entity->field_128 = entity->field_12c = entity->field_158 = 0;
+  entity->field_110 = entity->field_114 = entity->field_154 = 0;
+  entity->field_1c0 = entity->field_1c4 = 0;
+  return entity;
 }
 
 /* ==== 0x0010B650  (file offset 0x0B650)  FUN_0010b650 ================================================ */
@@ -7954,7 +7951,7 @@ undefined1 * FUN_0010b70c(undefined1 *param_1,undefined4 param_2,undefined4 para
   
   if ((param_1 != (undefined1 *)0x0) ||
      (param_1 = helper_malloc_2(0x338), param_1 != (undefined1 *)0x0)) {
-    FUN_0010b5e8(param_1,param_2,param_3);
+    motion_entity_create((MotionEntity *)param_1,(ISwerveObject *)param_2,(char *)param_3);
     *param_1 = 2;
     *(undefined4 *)(param_1 + 0x1c8) = 0xc;
     *(undefined4 *)(param_1 + 0x1cc) = 10;
@@ -8023,67 +8020,48 @@ undefined4 * FUN_0010b804(undefined4 *param_1)
   return param_1;
 }
 
-/* ==== 0x0010B870  (file offset 0x0B870)  FUN_0010b870 ================================================ */
-undefined1 * FUN_0010b870(undefined1 *param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x0010B870  (file offset 0x0B870)  boss_combat_region_create =================================== */
+/* GUESS: name. Sets up a "BossCombatRegion" level object (kind 5, 0x13c bytes, allocated when `region`
+   is 0): inactive, field_124 1.0, field_130 set; returns it, or 0 when out of memory. */
+BossCombatRegion * boss_combat_region_create(BossCombatRegion *region,ISwerveObject *node,char *name)
 
 {
-  if ((param_1 != (undefined1 *)0x0) ||
-     (param_1 = helper_malloc_2(0x13c), param_1 != (undefined1 *)0x0)) {
-    FUN_0010b8cc(param_1,param_2,param_3);
-    *(undefined4 *)(param_1 + 0x110) = 0;
-    *(undefined4 *)(param_1 + 0x124) = 0x3f800000;
-    *(undefined4 *)(param_1 + 0x130) = 1;
-    *param_1 = 5;
-  }
-  return param_1;
+  if (region == (BossCombatRegion *)0x0 && (region = helper_malloc_2(0x13c)) == (BossCombatRegion *)0x0)
+    return (BossCombatRegion *)0x0;
+  level_object_create((LevelObject *)region,node,name);
+  region->active = 0;
+  region->field_124 = 0x3f800000;   /* 1.0f */
+  region->field_130 = 1;
+  region->kind = 5;
+  return region;
 }
 
-/* ==== 0x0010B8CC  (file offset 0x0B8CC)  FUN_0010b8cc ================================================ */
-undefined1 * FUN_0010b8cc(undefined1 *param_1,undefined4 *param_2,undefined4 param_3)
+/* ==== 0x0010B8CC  (file offset 0x0B8CC)  level_object_create ========================================= */
+/* GUESS: name. Sets up a plain level object (allocating its 0x110 bytes when `object` is 0) for the scene
+   node `node` (AddRef'd) named `name`; returns it, or 0 when out of memory. The other level object
+   constructors start with it. */
+LevelObject * level_object_create(LevelObject *object,ISwerveObject *node,char *name)
 
 {
-  undefined4 uVar1;
-  
-  if ((param_1 != (undefined1 *)0x0) ||
-     (param_1 = helper_malloc_2(0x110), param_1 != (undefined1 *)0x0)) {
-                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
-                        */
-    uVar1 = (*g_pHelperFuncs->GetAppInstance)();
-    *(undefined4 *)(param_1 + 0x84) = uVar1;
-    *param_1 = 0;
-    *(undefined4 **)(param_1 + 8) = param_2;
-    (**(code **)*param_2)(param_2);
-    uVar1 = FUN_00113654(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),param_3);
-    *(undefined4 *)(param_1 + 0xc) = uVar1;
-    *(undefined4 *)(param_1 + 4) = 0;
-    *(undefined4 *)(param_1 + 0x10) = 0;
-    *(undefined4 *)(param_1 + 0x34) = 1;
-    *(undefined4 *)(param_1 + 0x30) = 0;
-    *(undefined4 *)(param_1 + 0x38) = 1;
-    *(undefined4 *)(param_1 + 0x3c) = 1;
-    *(undefined4 *)(param_1 + 0x40) = 0;
-    *(undefined4 *)(param_1 + 0x44) = 0;
-    *(undefined4 *)(param_1 + 0x48) = 0;
-    *(undefined4 *)(param_1 + 0x4c) = 0;
-    *(undefined4 *)(param_1 + 0x50) = 0;
-    *(undefined4 *)(param_1 + 0x54) = 0;
-    *(undefined4 *)(param_1 + 0x58) = 0;
-    *(undefined4 *)(param_1 + 0x60) = 0;
-    *(undefined4 *)(param_1 + 0x1c) = 0;
-    *(undefined4 *)(param_1 + 0x14) = 0;
-    *(undefined4 *)(param_1 + 0x18) = 0;
-    *(undefined4 *)(param_1 + 0xe0) = 0;
-    *(undefined4 *)(param_1 + 0xec) = 0;
-    *(undefined4 *)(param_1 + 0xf0) = 0;
-    *(undefined4 *)(param_1 + 0xf4) = 0;
-    *(undefined4 *)(param_1 + 0xf8) = 0;
-    *(undefined4 *)(param_1 + 0xfc) = 0;
-    *(undefined4 *)(param_1 + 0x100) = 0;
-    *(undefined4 *)(param_1 + 0x104) = 0;
-    *(undefined4 *)(param_1 + 0x108) = 0;
-    *(undefined4 *)(param_1 + 0x10c) = 0;
-  }
-  return param_1;
+  if (object == (LevelObject *)0x0 && (object = helper_malloc_2(0x110)) == (LevelObject *)0x0)
+    return (LevelObject *)0x0;
+  object->app = (*g_pHelperFuncs->GetAppInstance)();
+  object->kind = 0;
+  object->node = node;
+  (*node->pvt->AddRef)(node);
+  object->nameId = FUN_00113654((int)object->app->pObj94,(int)name);
+  object->parent = (LevelObject *)0x0;
+  object->field_10 = 0;
+  object->field_34 = 1;
+  object->field_30 = 0;
+  object->field_38 = object->field_3c = 1;
+  object->field_40 = object->field_44 = object->field_48 = object->field_4c = 0;
+  object->field_50 = object->field_54 = object->field_58 = object->field_60 = 0;
+  object->field_1c = object->field_14 = object->field_18 = 0;
+  object->field_e0 = 0;
+  object->field_ec = object->field_f0 = object->field_f4 = object->field_f8 = object->field_fc = 0;
+  object->field_100 = object->field_104 = object->field_108 = object->field_10c = 0;
+  return object;
 }
 
 /* ==== 0x0010B9B4  (file offset 0x0B9B4)  FUN_0010b9b4 ================================================ */
@@ -11558,15 +11536,15 @@ void FUN_0010f244(int *param_1,undefined4 *param_2)
   return;
 }
 
-/* ==== 0x0010F2CC  (file offset 0x0F2CC)  enemy_spawner_take_one ====================================== */
+/* ==== 0x0010F2CC  (file offset 0x0F2CC)  combat_region_take_one ====================================== */
 /* GUESS: name. Lets one more enemy of the current wave appear: takes one from enemiesLeftInWave and
    returns 1, or returns 0 when none is left. Called by every waiting enemy (enemy_update, state 1001). */
-int enemy_spawner_take_one(EnemySpawner *spawner)
+int combat_region_take_one(CombatRegion *region)
 
 {
-  if (spawner->enemiesLeftInWave <= 0)
+  if (region->enemiesLeftInWave <= 0)
     return 0;
-  spawner->enemiesLeftInWave--;
+  region->enemiesLeftInWave--;
   return 1;
 }
 
@@ -13625,7 +13603,7 @@ uint FUN_00110924(int *param_1)
       piVar4 = (int *)FUN_0011ae04(*(int *)(iVar2 + 0x94),param_1[0x10],
                                    (int *)**(undefined4 **)(iVar2 + 0xa4),1,0);
       *(int **)(*(int *)(iVar2 + 0xa4) + 4) = piVar4;
-      FUN_00121134(*(int *)(iVar2 + 0xa4),piVar4,0);
+      game_create_objects(*(Game **)(iVar2 + 0xa4),(ISwerveObject *)piVar4,(LevelObject *)0x0);
       FUN_00119a28(*(int *)(iVar2 + 0xa4),(int *)(iVar2 + 0x90));
     }
     break;
@@ -14642,17 +14620,17 @@ void FUN_00112c44(int *param_1)
   return;
 }
 
-/* ==== 0x00112C9C  (file offset 0x12C9C)  hitsphere_enemy_find_hitsphere ============================== */
-/* GUESS: names (the hitsphere reading too). The hitsphere of `enemy` that follows the scene entity
-   `entity`, or 0 when none does. Called by hitsphere_enemy_hit_target with the current target. */
-Hitsphere * hitsphere_enemy_find_hitsphere(HitsphereEnemy *enemy,int entity)
+/* ==== 0x00112C9C  (file offset 0x12C9C)  boss_combat_region_find_hitsphere =========================== */
+/* GUESS: names (the hitsphere reading too). The hitsphere of `region` that follows the scene entity
+   `entity`, or 0 when none does. Called by boss_combat_region_hit_target with the current target. */
+Hitsphere * boss_combat_region_find_hitsphere(BossCombatRegion *region,int entity)
 
 {
   int i;
 
-  for (i = 0; i < enemy->hitsphereCount; i++)
-    if (enemy->hitspheres[i]->entity == entity)
-      return enemy->hitspheres[i];
+  for (i = 0; i < region->hitsphereCount; i++)
+    if (region->hitspheres[i]->entity == entity)
+      return region->hitspheres[i];
   return (Hitsphere *)0x0;
 }
 
@@ -14671,19 +14649,17 @@ undefined8 FUN_00112cdc(int param_1,int *param_2,int param_3)
   return CONCAT44(uVar1,local_8[0]);
 }
 
-/* ==== 0x00112CFC  (file offset 0x12CFC)  FUN_00112cfc ================================================ */
-int FUN_00112cfc(int param_1)
+/* ==== 0x00112CFC  (file offset 0x12CFC)  game_find_free_object_slot ================================== */
+/* GUESS: name. The first free one of the game's 120 level object slots, or -1 when all are in use.
+   Called by game_create_objects. */
+int game_find_free_object_slot(Game *game)
 
 {
-  int iVar1;
-  
-  iVar1 = 0;
-  do {
-    if (*(int *)(param_1 + iVar1 * 4 + 0x10) == 0) {
-      return iVar1;
-    }
-    iVar1 = iVar1 + 1;
-  } while (iVar1 < 0x78);
+  int i;
+
+  for (i = 0; i < 120; i++)
+    if (game->objects[i] == (LevelObject *)0x0)
+      return i;
   return -1;
 }
 
@@ -17003,32 +16979,32 @@ FUN_00114a94(int param_1,undefined4 param_2,void *param_3,undefined4 param_4,und
   return CONCAT44(uVar7,uVar2);
 }
 
-/* ==== 0x00114B48  (file offset 0x14B48)  hitsphere_enemy_hit_target ================================== */
-/* GUESS: names (the hitsphere reading too). A player attack against a hitsphere enemy, from the player's
+/* ==== 0x00114B48  (file offset 0x14B48)  boss_combat_region_hit_target =============================== */
+/* GUESS: names (the hitsphere reading too). A player attack against a boss combat region, from the player's
    attack state 7 (FUN_00123588), with `damage` (a float: the player's Progress +0x530 as a float), the
    attack's position and the player's state (+0x228). It hits the game's current target
    (pGame->[0x1f8]->[0x20c], set by FUN_00123d7c): a hitsphere takes the hit (vtable +8) and the HUD value
    (field_d4 +0x4c) is refreshed from the first hitsphere's field_14 (FUN_00126858, float to integer);
    the extra entity is hidden (FUN_001201cc) and made untargetable instead. r1 is never read. Always
-   returns 0. FUN_00114a94 is the enemy spawner's counterpart. */
-int hitsphere_enemy_hit_target(HitsphereEnemy *enemy,int unused,uint32 damage,uint32 x,uint32 y,uint32 z,
+   returns 0. FUN_00114a94 is the combat region's counterpart. */
+int boss_combat_region_hit_target(BossCombatRegion *region,int unused,uint32 damage,uint32 x,uint32 y,uint32 z,
                                int playerState)
 
 {
-  int target = *(int *)(*(int *)((int)enemy->app->pGame + 0x1f8) + 0x20c);
+  int target = *(int *)(*(int *)((int)region->app->pGame + 0x1f8) + 0x20c);
   Hitsphere *hitsphere;
 
   if (target == 0)
     return 0;
-  hitsphere = hitsphere_enemy_find_hitsphere(enemy,target);
+  hitsphere = boss_combat_region_find_hitsphere(region,target);
   if (hitsphere != (Hitsphere *)0x0) {
     (*(code *)(*(int *)(hitsphere->vtable + 8) + hitsphere->vtable))
               (hitsphere,damage,x,y,z,playerState);              /* take a hit: vtable +8 */
-    *(uint *)(enemy->app->field_d4 + 0x4c) = FUN_00126858(enemy->hitspheres[0]->field_14);
+    *(uint *)(region->app->field_d4 + 0x4c) = FUN_00126858(region->hitspheres[0]->field_14);
   }
-  else if (enemy->extraEntity == target) {
-    FUN_001201cc(enemy->extraEntity,0);
-    *(int *)(enemy->extraEntity + 0x34) = 0;
+  else if (region->extraEntity == target) {
+    FUN_001201cc(region->extraEntity,0);
+    *(int *)(region->extraEntity + 0x34) = 0;
   }
   return 0;
 }
@@ -17183,7 +17159,7 @@ void FUN_001150d0(int param_1,int *param_2)
         FUN_001180c4(pcVar2,param_2);
       }
       else if (cVar1 == '\x04') {
-        enemy_spawner_setup(pcVar2,param_2);
+        combat_region_setup(pcVar2,param_2);
       }
       else if (cVar1 == '\x05') {
         FUN_0011868c(pcVar2,param_2);
@@ -18990,58 +18966,58 @@ void FUN_00117d30(int param_1,int *param_2)
   return;
 }
 
-/* ==== 0x00117DD8  (file offset 0x17DD8)  enemy_spawner_setup ========================================= */
-/* GUESS: name. Sets up a spawner from the level data (read by its object, field_08): the enemy type
+/* ==== 0x00117DD8  (file offset 0x17DD8)  combat_region_setup ========================================= */
+/* GUESS: name. Sets up a region from the level data (read from its scene node, node): the enemy type
    from the enemy name, the number of waves, enemies per wave, the enemies' maximum health (default 5.0
    when the data gives 0), field_11c (default 1.0), field_120; then creates its enemies and its item
    drops. The two defaults are tested with FUN_001267f0, a float compare that leaves its result in the
    condition flags (`streq` after it at 0x00117fdc / 0x00118000), as written after the comma. */
-void enemy_spawner_setup(EnemySpawner *spawner,int context)
+void combat_region_setup(CombatRegion *region,int context)
 
 {
   int type;
   int i;
 
-  FUN_00118910((int)spawner,context);
-  if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_SOLDIER_OFFSET + 0x117dfc) != 0)
+  FUN_00118910((int)region,context);
+  if ((int)FUN_00119b0c(region->app->pObj94,region->node,STRING_SOLDIER_OFFSET + 0x117dfc) != 0)
     type = 3;
-  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_FLYINGSOLDIER_OFFSET + 0x117e24) != 0)
+  else if ((int)FUN_00119b0c(region->app->pObj94,region->node,STRING_FLYINGSOLDIER_OFFSET + 0x117e24) != 0)
     type = 4;
-  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_FLYINGMOOK_OFFSET + 0x117e48) == 1)
+  else if ((int)FUN_00119b0c(region->app->pObj94,region->node,STRING_FLYINGMOOK_OFFSET + 0x117e48) == 1)
     type = 2;
-  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_PURPLECROC_OFFSET + 0x117e6c) == 1)
+  else if ((int)FUN_00119b0c(region->app->pObj94,region->node,STRING_PURPLECROC_OFFSET + 0x117e6c) == 1)
     type = 5;
-  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_UMBRELLABIRD_OFFSET + 0x117e90) == 1)
+  else if ((int)FUN_00119b0c(region->app->pObj94,region->node,STRING_UMBRELLABIRD_OFFSET + 0x117e90) == 1)
     type = 6;
-  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_BANDIT_OFFSET + 0x117eb4) == 1)
+  else if ((int)FUN_00119b0c(region->app->pObj94,region->node,STRING_BANDIT_OFFSET + 0x117eb4) == 1)
     type = 7;
-  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_POTSPIDER_OFFSET + 0x117ed8) == 1)
+  else if ((int)FUN_00119b0c(region->app->pObj94,region->node,STRING_POTSPIDER_OFFSET + 0x117ed8) == 1)
     type = 8;
-  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_MUMMY_OFFSET + 0x117efc) == 1)
+  else if ((int)FUN_00119b0c(region->app->pObj94,region->node,STRING_MUMMY_OFFSET + 0x117efc) == 1)
     type = 9;
-  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_DARKBALL_OFFSET + 0x117f20) == 1)
+  else if ((int)FUN_00119b0c(region->app->pObj94,region->node,STRING_DARKBALL_OFFSET + 0x117f20) == 1)
     type = 10;
-  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_PIGSOLDIER_OFFSET + 0x117f44) == 1)
+  else if ((int)FUN_00119b0c(region->app->pObj94,region->node,STRING_PIGSOLDIER_OFFSET + 0x117f44) == 1)
     type = 0xb;
   else
     type = 1;                                     /* no name matched */
-  spawner->enemyCount = type == 1 ? 2 : 1;
-  FUN_00114610((int)spawner->app->pObj94,spawner->field_08,WORD_HEXADECIMAL_369F84CA,(undefined4 *)&spawner->waves);
-  spawner->wavesLeft = spawner->waves;
-  FUN_00114610((int)spawner->app->pObj94,spawner->field_08,WORD_HEXADECIMAL_0B63154F,(undefined4 *)&spawner->enemiesPerWave);
-  if (spawner->enemyCount > spawner->enemiesPerWave)
-    spawner->enemyCount = spawner->enemiesPerWave;
-  FUN_001145b4((int)spawner->app->pObj94,spawner->field_08,WORD_HEXADECIMAL_2E46DCB0,(undefined4 *)&spawner->enemyMaximumHealth);
-  if (FUN_001267f0(spawner->enemyMaximumHealth,0), *(float *)&spawner->enemyMaximumHealth == 0.0f)
-    spawner->enemyMaximumHealth = FLOAT_5;
-  FUN_001145b4((int)spawner->app->pObj94,spawner->field_08,WORD_HEXADECIMAL_13ADA166,(undefined4 *)&spawner->field_11c);
-  if (FUN_001267f0(spawner->field_11c,0), *(float *)&spawner->field_11c == 0.0f)
-    spawner->field_11c = 0x3f800000;              /* 1.0f */
-  FUN_00114610((int)spawner->app->pObj94,spawner->field_08,WORD_HEXADECIMAL_26B58FD6,(undefined4 *)&spawner->field_120);
-  spawner->enemies = helper_malloc(spawner->enemyCount << 2);
-  for (i = 0; i < spawner->enemyCount; i++)
-    spawner->enemies[i] = enemy_create((Enemy *)0x0,i + 1,spawner,type);
-  spawner->itemDrops = (ItemDrops *)FUN_0010b014((undefined4 *)0x0,spawner->field_120 < 5 ? 0x3f800000 : 0x40000000);
+  region->enemyCount = type == 1 ? 2 : 1;
+  FUN_00114610((int)region->app->pObj94,region->node,WORD_HEXADECIMAL_369F84CA,(undefined4 *)&region->waves);
+  region->wavesLeft = region->waves;
+  FUN_00114610((int)region->app->pObj94,region->node,WORD_HEXADECIMAL_0B63154F,(undefined4 *)&region->enemiesPerWave);
+  if (region->enemyCount > region->enemiesPerWave)
+    region->enemyCount = region->enemiesPerWave;
+  FUN_001145b4((int)region->app->pObj94,region->node,WORD_HEXADECIMAL_2E46DCB0,(undefined4 *)&region->enemyMaximumHealth);
+  if (FUN_001267f0(region->enemyMaximumHealth,0), *(float *)&region->enemyMaximumHealth == 0.0f)
+    region->enemyMaximumHealth = FLOAT_5;
+  FUN_001145b4((int)region->app->pObj94,region->node,WORD_HEXADECIMAL_13ADA166,(undefined4 *)&region->field_11c);
+  if (FUN_001267f0(region->field_11c,0), *(float *)&region->field_11c == 0.0f)
+    region->field_11c = 0x3f800000;              /* 1.0f */
+  FUN_00114610((int)region->app->pObj94,region->node,WORD_HEXADECIMAL_26B58FD6,(undefined4 *)&region->field_120);
+  region->enemies = helper_malloc(region->enemyCount << 2);
+  for (i = 0; i < region->enemyCount; i++)
+    region->enemies[i] = enemy_create((Enemy *)0x0,i + 1,region,type);
+  region->itemDrops = (ItemDrops *)FUN_0010b014((undefined4 *)0x0,region->field_120 < 5 ? 0x3f800000 : 0x40000000);
 }
 
 /* ==== 0x001180C4  (file offset 0x180C4)  FUN_001180c4 ================================================ */
@@ -19369,7 +19345,7 @@ void FUN_0011868c(int param_1,undefined4 param_2)
         uVar5 = FUN_00113654(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
                              *(undefined4 *)((int)pvVar3 + iVar2 * 4));
         uVar5 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0xa4),uVar5);
-        uVar5 = (undefined4)hitsphere_create((Hitsphere *)0x0,uVar5,(HitsphereEnemy *)param_1,iVar2 != 0);
+        uVar5 = (undefined4)hitsphere_create((Hitsphere *)0x0,uVar5,(BossCombatRegion *)param_1,iVar2 != 0);
         *(undefined4 *)(*(int *)(param_1 + 0x120) + iVar2 * 4) = uVar5;
         helper_free(*(void **)((int)pvVar3 + iVar2 * 4));
       }
@@ -20119,7 +20095,7 @@ void FUN_00119a28(int param_1,int *param_2)
         FUN_001180c4(pcVar2,param_2);
       }
       else if (cVar1 == '\x04') {
-        enemy_spawner_setup(pcVar2,param_2);
+        combat_region_setup(pcVar2,param_2);
       }
       else if (cVar1 == '\x05') {
         FUN_0011868c(pcVar2,param_2);
@@ -21606,7 +21582,7 @@ void FUN_0011b044(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
   else {
     *(undefined4 *)(param_1 + 0x1c) = 1;
     if (param_3 != 0) {
-      FUN_00121134(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0xa4),iVar1,param_1);
+      game_create_objects(*(Game **)(*(int *)(param_1 + 0x84) + 0xa4),(ISwerveObject *)iVar1,(LevelObject *)param_1);
       FUN_00119a28(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0xa4),param_6);
     }
   }
@@ -27249,105 +27225,67 @@ void FUN_00120f8c(int param_1,int *param_2,int param_3,int *param_4,int param_5)
   return;
 }
 
-/* ==== 0x00121134  (file offset 0x21134)  FUN_00121134 ================================================ */
-void FUN_00121134(int param_1,int *param_2,undefined4 param_3)
+/* ==== 0x00121134  (file offset 0x21134)  game_create_objects ========================================= */
+/* GUESS: name. Creates the level objects of a scene, from `node` down. A node with a name (its user
+   parameter 0x009660B3, read by FUN_00114520) gets a level object in a free slot, of the class its tags
+   name (FUN_00119b0c): "MotionEntity", "CombatRegion", "BossCombatRegion", else a plain one. Its parent
+   is `parent`, or 0 with the "NoParent" tag. Unless the node has the "DeadEnd" tag, its children are
+   walked too (the node is a Group: GetChildCount / GetChild), with the new object, if any, as their
+   parent: a child Group directly, a child SkinnedMesh through its skeleton (GetSkeleton). Called by
+   FUN_0010a5d8 (the game's root scene), FUN_00110924 (after a scene is loaded, FUN_0011ae04) and
+   FUN_0011b044 (a level object's own scene, with that object as the parent). */
+void game_create_objects(Game *game,ISwerveObject *node,LevelObject *parent)
 
 {
-  undefined1 *puVar1;
-  int iVar2;
-  undefined4 uVar3;
-  int iVar4;
-  int iVar5;
-  int iVar6;
-  undefined8 uVar7;
-  int *local_34;
-  int *local_30;
-  int *local_2c;
-  int *local_28;
-  int local_24;
-  int local_20;
-  
-  local_20 = 0;
-  iVar4 = -1;
-  FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x214) + 0x94),param_2,WORD_HEXADECIMAL_009660B3,&local_20);
-  if (local_20 != 0) {
-    iVar4 = FUN_00112cfc(param_1);
-    if (iVar4 != -1) {
-      uVar7 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x214) + 0x94),(int)param_2,
-                           STRING_MOTIONENTITY_OFFSET + 0x12119c);
-      if ((int)uVar7 == 0) {
-        uVar7 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x214) + 0x94),(int)param_2,
-                             STRING_COMBATREGION_OFFSET + 0x1211d0);
-        if ((int)uVar7 == 0) {
-          uVar7 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x214) + 0x94),(int)param_2,
-                               STRING_BOSSCOMBATREGION_OFFSET + 0x121204);
-          if ((int)uVar7 == 0) {
-            puVar1 = FUN_0010b8cc((undefined1 *)0x0,param_2,local_20);
-          }
-          else {
-            puVar1 = FUN_0010b870((undefined1 *)0x0,param_2,local_20);
-          }
-        }
-        else {
-          puVar1 = FUN_0010b478((undefined1 *)0x0,param_2,local_20);
-        }
-      }
-      else {
-        puVar1 = FUN_0010b5e8((undefined1 *)0x0,param_2,local_20);
-      }
-      *(undefined1 **)(param_1 + iVar4 * 4 + 0x10) = puVar1;
-      uVar7 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x214) + 0x94),(int)param_2,
-                           STRING_NOPARENT_OFFSET + 0x121244);
-      if ((int)uVar7 == 0) {
-        *(undefined4 *)(*(int *)(param_1 + iVar4 * 4 + 0x10) + 4) = param_3;
-      }
-      else {
-        *(undefined4 *)(*(int *)(param_1 + iVar4 * 4 + 0x10) + 4) = 0;
-      }
+  char *name = (char *)0x0;
+  int slot = -1;
+  int count = 0;
+  int i;
+  ISwerveObject *child;
+  ISwerveObject *group;
+  ISwerveObject *skinnedMesh;
+  ISwerveObject *skeleton;
+
+  FUN_00114520((int)game->app->pObj94,(int *)node,WORD_HEXADECIMAL_009660B3,(undefined4 *)&name);
+  if (name != (char *)0x0) {
+    slot = game_find_free_object_slot(game);
+    if (slot != -1) {
+      if ((int)FUN_00119b0c((int)game->app->pObj94,(int)node,STRING_MOTIONENTITY_OFFSET + 0x12119c) != 0)
+        game->objects[slot] = (LevelObject *)motion_entity_create((MotionEntity *)0x0,node,name);
+      else if ((int)FUN_00119b0c((int)game->app->pObj94,(int)node,STRING_COMBATREGION_OFFSET + 0x1211d0) != 0)
+        game->objects[slot] = (LevelObject *)combat_region_create((CombatRegion *)0x0,node,name);
+      else if ((int)FUN_00119b0c((int)game->app->pObj94,(int)node,STRING_BOSSCOMBATREGION_OFFSET + 0x121204) != 0)
+        game->objects[slot] = (LevelObject *)boss_combat_region_create((BossCombatRegion *)0x0,node,name);
+      else
+        game->objects[slot] = level_object_create((LevelObject *)0x0,node,name);
+      game->objects[slot]->parent =
+           (int)FUN_00119b0c((int)game->app->pObj94,(int)node,STRING_NOPARENT_OFFSET + 0x121244) != 0 ?
+           (LevelObject *)0x0 : parent;
     }
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(local_20);
+    (*g_pHelperFuncs->free)(name);
   }
-  uVar7 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x214) + 0x94),(int)param_2,
-                       STRING_DEADEND_OFFSET_3 + 0x121294);
-  if ((int)uVar7 == 0) {
-    local_24 = 0;
-    (**(code **)(*param_2 + 0xac))(param_2,&local_24);
-    iVar6 = param_1 + iVar4 * 4;
-    for (iVar5 = 0; iVar5 < local_24; iVar5 = iVar5 + 1) {
-      local_28 = (int *)0x0;
-      iVar2 = (**(code **)(*param_2 + 0xb0))(param_2,iVar5,&local_28);
-      if (iVar2 == 0) {
-        local_2c = (int *)0x0;
-        local_30 = (int *)0x0;
-        local_34 = (int *)0x0;
-        iVar2 = (**(code **)(*local_28 + 8))(local_28,9);
-        if (iVar2 == 0) {
-          uVar3 = param_3;
-          if (iVar4 != -1) {
-            uVar3 = *(undefined4 *)(iVar6 + 0x10);
-          }
-          FUN_00121134(param_1,local_2c,uVar3);
-          (**(code **)(*local_2c + 4))();
-        }
-        else {
-          iVar2 = (**(code **)(*local_28 + 8))(local_28,0x16,&local_30);
-          if (iVar2 == 0) {
-            (**(code **)(*local_30 + 0xd0))(local_30,&local_34);
-            uVar3 = param_3;
-            if (iVar4 != -1) {
-              uVar3 = *(undefined4 *)(iVar6 + 0x10);
-            }
-            FUN_00121134(param_1,local_34,uVar3);
-            (**(code **)(*local_34 + 4))();
-            (**(code **)(*local_30 + 4))();
-          }
-        }
-        (**(code **)(*local_28 + 4))();
-      }
+  if ((int)FUN_00119b0c((int)game->app->pObj94,(int)node,STRING_DEADEND_OFFSET_3 + 0x121294) != 0)
+    return;
+  if (slot != -1)
+    parent = game->objects[slot];
+  (*((const SwerveGroupVtbl *)node->pvt)->GetChildCount)(node,&count);
+  for (i = 0; i < count; i++) {
+    child = (ISwerveObject *)0x0;
+    if ((*((const SwerveGroupVtbl *)node->pvt)->GetChild)(node,i,&child) != 0)
+      continue;
+    group = skinnedMesh = skeleton = (ISwerveObject *)0x0;
+    if ((*child->pvt->QueryInterface)(child,SWV_GROUP,(void **)&group) == 0) {
+      game_create_objects(game,group,parent);
+      (*group->pvt->Release)(group);
     }
+    else if ((*child->pvt->QueryInterface)(child,SWV_SKINNEDMESH,(void **)&skinnedMesh) == 0) {
+      (*((const SwerveSkinnedMeshVtbl *)skinnedMesh->pvt)->GetSkeleton)(skinnedMesh,&skeleton);
+      game_create_objects(game,skeleton,parent);
+      (*skeleton->pvt->Release)(skeleton);
+      (*skinnedMesh->pvt->Release)(skinnedMesh);
+    }
+    (*child->pvt->Release)(child);
   }
-  return;
 }
 
 /* ==== 0x001213FC  (file offset 0x213FC)  FUN_001213fc ================================================ */
@@ -28097,7 +28035,7 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
         pbVar6 = extraout_r1_02;
       }
       else if (pbVar6 == &UndefinedInstruction) {
-        enemy_spawner_update((int)pbVar2,param_2,param_3);
+        combat_region_update((int)pbVar2,param_2,param_3);
         pbVar6 = extraout_r1_03;
       }
       else if (pbVar6 == (byte *)0x5) {
@@ -28312,8 +28250,8 @@ undefined4 FUN_0012289c(int *param_1,undefined4 param_2,int param_3)
 }
 
 /* ==== 0x00122954  (file offset 0x22954)  enemy_update ================================================ */
-/* GUESS: name. One update of an enemy (vtable +4, called by enemy_spawner_update with the current time and the time passed, in ms):
-   waiting (1001) until its spawner lets it appear, alive (1002) while its health is above 0, dying (1003),
+/* GUESS: name. One update of an enemy (vtable +4, called by combat_region_update with the current time and the time passed, in ms):
+   waiting (1001) until its region lets it appear, alive (1002) while its health is above 0, dying (1003),
    gone (1004) for 1000 ms, then waiting again; at the end two countdowns go down by `elapsed`. When mode
    is 1 the binary tail-jumps (0x00122994) to the code at 0x0011db34 instead (no Ghidra function there;
    written inline below). FUN_00126964 / FUN_001267f0 are float compares whose result is in the condition
@@ -28361,15 +28299,15 @@ void enemy_update(Enemy *enemy,int now,int elapsed)
     return;
   }
   switch(enemy->state) {
-  case 1001:                                      /* waiting for the spawner */
-    if (enemy_spawner_take_one(enemy->spawner) != 0) {
+  case 1001:                                      /* waiting for the region */
+    if (combat_region_take_one(enemy->region) != 0) {
       FUN_0011dedc((int)enemy);
       FUN_0011de70((int)enemy);
       enemy->state = INTEGER_1002;
       if (enemy->type == 2 || enemy->field_108 != 0) {   /* show its health bar */
         *(uint8 *)(enemy->app->field_d4 + 0x4a) = 1;
         *(uint *)(enemy->app->field_d4 + 0x4c) = FUN_00126858(enemy->health);
-        *(uint *)(enemy->app->field_d4 + 0x50) = FUN_00126858(enemy->spawner->enemyMaximumHealth);
+        *(uint *)(enemy->app->field_d4 + 0x50) = FUN_00126858(enemy->region->enemyMaximumHealth);
       }
     }
     break;
@@ -28393,7 +28331,7 @@ void enemy_update(Enemy *enemy,int now,int elapsed)
       *(int *)(enemy->field_28 + 0x34) = 0;
       if (FUN_001267f0(enemy->health,0), *(float *)&enemy->health == 0.0f) {   /* item drop where it was */
         FUN_00113cc4(position,enemy->field_20);
-        FUN_0010fb90((undefined4)enemy->spawner->itemDrops,position[0],position[1],position[2]);
+        FUN_0010fb90((undefined4)enemy->region->itemDrops,position[0],position[1],position[2]);
       }
     }
     break;
@@ -28556,57 +28494,57 @@ void FUN_00122b90(int param_1,int param_2,uint param_3,undefined4 param_4)
   return;
 }
 
-/* ==== 0x00122F98  (file offset 0x22F98)  enemy_spawner_update ======================================== */
-/* GUESS: name. One update of a spawner (`now` is the current time and `elapsed` the time passed since the last update, in ms): resets its
+/* ==== 0x00122F98  (file offset 0x22F98)  combat_region_update ======================================== */
+/* GUESS: name. One update of a region (`now` is the current time and `elapsed` the time passed since the last update, in ms): resets its
    enemies when asked (field_148), runs the wave state machine, updates every enemy (vtable +4,
    enemy_update), then its item drops: the binary tail-jumps (0x00123124) to FUN_001226e8 with
-   spawner->itemDrops; Ghidra copied that code in, and it is kept below as Ghidra wrote it. */
-void enemy_spawner_update(EnemySpawner *spawner,int now,int elapsed)
+   region->itemDrops; Ghidra copied that code in, and it is kept below as Ghidra wrote it. */
+void combat_region_update(CombatRegion *region,int now,int elapsed)
 
 {
   int i;
 
-  FUN_0012407c((int)spawner,now,elapsed);
-  if (spawner->field_148 != 0) {
-    for (i = 0; i < spawner->enemyCount; i++) {
-      (*(code *)(*(int *)spawner->enemies[i]->vtable + spawner->enemies[i]->vtable))(spawner->enemies[i]);
-      (*(code *)(*(int *)(spawner->enemies[i]->vtable + 0xc) + spawner->enemies[i]->vtable))(spawner->enemies[i]);
+  FUN_0012407c((int)region,now,elapsed);
+  if (region->field_148 != 0) {
+    for (i = 0; i < region->enemyCount; i++) {
+      (*(code *)(*(int *)region->enemies[i]->vtable + region->enemies[i]->vtable))(region->enemies[i]);
+      (*(code *)(*(int *)(region->enemies[i]->vtable + 0xc) + region->enemies[i]->vtable))(region->enemies[i]);
     }
-    spawner->field_148 = 0;
+    region->field_148 = 0;
   }
-  switch(spawner->state) {
+  switch(region->state) {
   case 1:                                         /* waiting: start a wave */
-    if (spawner->active != 0 && spawner->wavesLeft > 0) {
-      spawner->state = 2;
-      spawner->wavesLeft--;
-      spawner->enemiesLeftInWave = spawner->enemiesPerWave;
+    if (region->active != 0 && region->wavesLeft > 0) {
+      region->state = 2;
+      region->wavesLeft--;
+      region->enemiesLeftInWave = region->enemiesPerWave;
     }
     break;
   case 2:                                         /* fighting */
-    if (spawner->active == 0) {
-      spawner->state = 3;
-      FUN_0011f630((int)spawner);
-      spawner->field_13c = 1;
+    if (region->active == 0) {
+      region->state = 3;
+      FUN_0011f630((int)region);
+      region->field_13c = 1;
     }
     else
-      FUN_0011a2f4((int)spawner,now);
+      FUN_0011a2f4((int)region,now);
     break;
   case 3:
-    if (spawner->active == 0)
+    if (region->active == 0)
       break;
-    if (spawner->enemiesLeftInWave == 0 && FUN_0010d354((int)spawner) != 0) {
-      spawner->state = 1;
-      FUN_0011d040((int)spawner->app->pObj94,spawner->field_0c,(void *)WORD_HEXADECIMAL_11E3EE3E);
+    if (region->enemiesLeftInWave == 0 && FUN_0010d354((int)region) != 0) {
+      region->state = 1;
+      FUN_0011d040((int)region->app->pObj94,region->nameId,(void *)WORD_HEXADECIMAL_11E3EE3E);
     }
     else {
-      FUN_0011f280((int)spawner);
-      spawner->state = 2;
+      FUN_0011f280((int)region);
+      region->state = 2;
     }
     break;
   }
-  for (i = 0; i < spawner->enemyCount; i++)
-    (*(code *)(*(int *)(spawner->enemies[i]->vtable + 4) + spawner->enemies[i]->vtable))
-              (spawner->enemies[i],now,elapsed);   /* vtable +4: enemy_update */
+  for (i = 0; i < region->enemyCount; i++)
+    (*(code *)(*(int *)(region->enemies[i]->vtable + 4) + region->enemies[i]->vtable))
+              (region->enemies[i],now,elapsed);   /* vtable +4: enemy_update */
   /* ---- the code of FUN_001226e8 (the item drops), as Ghidra copied it here ---- */
   {
     char cVar1;
@@ -28626,7 +28564,7 @@ void enemy_spawner_update(EnemySpawner *spawner,int now,int elapsed)
     uint uStack_30;
     uint uStack_2c;
 
-    piVar5 = (int *)spawner->itemDrops;
+    piVar5 = (int *)region->itemDrops;
     FUN_00113cc4(&uStack_30,*(int *)(*(int *)(*piVar5 + 0xa4) + 0x1f8));
     iVar6 = 0;
     do {
@@ -29092,7 +29030,7 @@ void FUN_00123588(int param_1,int param_2,int param_3,undefined4 param_4)
       pcVar7 = local_3c;
       uVar8 = local_38;
 LAB_00123a24:
-      iVar9 = hitsphere_enemy_hit_target((HitsphereEnemy *)iVar9,0,uVar4,uVar5,(uint32)pcVar7,uVar8,uVar2);
+      iVar9 = boss_combat_region_hit_target((BossCombatRegion *)iVar9,0,uVar4,uVar5,(uint32)pcVar7,uVar8,uVar2);
     }
     else {
       uVar4 = FUN_001268c8(uVar2);
@@ -29150,7 +29088,7 @@ LAB_00123b40:
           uVar2 = *(uint *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa8) + 0x530);
           if (iVar9 == 0) {
             uVar2 = FUN_001268c8(uVar2);
-            iVar9 = hitsphere_enemy_hit_target(*(HitsphereEnemy **)(param_1 + 0x240),iVar1,uVar2,local_40,(uint32)local_3c,local_38,
+            iVar9 = boss_combat_region_hit_target(*(BossCombatRegion **)(param_1 + 0x240),iVar1,uVar2,local_40,(uint32)local_3c,local_38,
                                  *(undefined4 *)(param_1 + 0x228));
           }
           else {
