@@ -2473,7 +2473,7 @@ LAB_00103858:
         iVar9 = iVar9 + 1;
         iVar7 = iVar17 + *(short *)(*(int *)(iVar19 + 8) + 6) + iVar7;
       } while (iVar9 < 6);
-      FUN_001090b8(param_1,uVar10);
+      screen_stack_open(param_1,uVar10);
       FUN_0011ea18(*(undefined4 *)(*param_1 + 0xa8));
                     /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
                        via *(base-4)) */
@@ -3538,7 +3538,7 @@ LAB_001043c4:
     return 0;
   }
 LAB_0010423c:
-  FUN_001090b8(param_1,iVar9);
+  screen_stack_open(param_1,iVar9);
   return local_34;
 }
 
@@ -3681,7 +3681,7 @@ LAB_0010532c:
       param_9 = *(int *)(param_1 + 0x28) + -1;
       *(int *)(param_1 + 0x28) = param_9;
     }
-    FUN_001090fc(*(undefined4 *)(param_1 + 0x24),param_9,iVar3);
+    list_set_entry(*(undefined4 *)(param_1 + 0x24),param_9,iVar3);
     *(int *)(iVar3 + 0xc) = param_9;
     *(int *)(iVar3 + 0x2c) = param_1;
     iVar4 = param_9;
@@ -3739,7 +3739,7 @@ void FUN_001053a8(undefined4 param_1,undefined4 param_2,int param_3,int param_4,
 /* ==== 0x001054D8  (file offset 0x054D8)  ui_element_add_child ======================================== */
 /* GUESS: name. Adds `child` to `parent` under the id `id`. When id is 0 or already in use, the child
    gets the next automatic id instead (-1, -2, ...; parent->nextAutomaticId). Stores the child in the
-   parent's children list (FUN_001090fc), and the id and parent in the child. Returns the id used, or 0
+   parent's children list (list_set_entry), and the id and parent in the child. Returns the id used, or 0
    when child is the parent itself. */
 int ui_element_add_child(UIElement *parent,UIElement *child,int id)
 
@@ -3748,7 +3748,7 @@ int ui_element_add_child(UIElement *parent,UIElement *child,int id)
     return 0;
   if (id == 0 || list_find_entry(parent->children,id) != 0)
     id = --parent->nextAutomaticId;
-  FUN_001090fc((int *)parent->children,id,(int)child);
+  list_set_entry(parent->children,id,(int)child);
   child->id = id;
   child->parent = parent;
   return id;
@@ -5928,8 +5928,8 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
       pvVar3 = helper_malloc(0x100);
       (*g_pHelperFuncs->strtowstr)(param_5,pvVar3,0x80);
       iVar5 = screen_stack_top((int)param_1);
-      FUN_00109308(iVar5,700,1);
-      FUN_00109308(iVar5,500,1);
+      ui_element_remove_child(iVar5,700,1);
+      ui_element_remove_child(iVar5,500,1);
       if (param_1[0x18] == 0) {
         FUN_00109a10(iVar5,2,WORD_HEXADECIMAL_19408333,0x80);
         FUN_00109a10(iVar5,1,WORD_HEXADECIMAL_251509C8,0x73);
@@ -5972,7 +5972,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
     uVar11 = FUN_00107fd0((int)param_1,0x96,1);
     *psVar9 = *psVar9 - (short)uVar11;
     FUN_00109f00(iVar8,uVar4);
-    FUN_00109308((int)piVar1,700,1);
+    ui_element_remove_child((int)piVar1,700,1);
     break;
   case 0x5:
     if (param_1[6] != 0) {
@@ -6154,7 +6154,7 @@ void screen_stack_close_top(ScreenStack *stack,int redraw)
   PFNNOTIFY timer;
 
   if (screen != (int *)0x0) {
-    FUN_00109380((int *)stack->screens,stack->depth - 1);     /* take it off the list */
+    list_remove_entry(stack->screens,stack->depth - 1);     /* take it off the list */
     stack->depth--;
     wasCurrent = (int *)app->field_d4 == screen;
     if (screen[0xf] == 2)
@@ -6197,68 +6197,55 @@ void screen_stack_close_top(ScreenStack *stack,int redraw)
   app->bSuspended = 0;
 }
 
-/* ==== 0x001090B8  (file offset 0x090B8)  FUN_001090b8 ================================================ */
-void FUN_001090b8(int param_1,int *param_2)
+/* ==== 0x001090B8  (file offset 0x090B8)  screen_stack_open =========================================== */
+/* GUESS: name. Opens a screen on top of the screen stack: stores it under the id `depth` (its position),
+   the count returned becomes the new depth; then resumes it (vtable +0x20) and redraws it. The opposite
+   of screen_stack_close_top. */
+void screen_stack_open(ScreenStack *stack,int *screen)
 
 {
-  undefined4 param_4;
-  /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  undefined4 uVar1;
-  
-  if (param_2 != (int *)0x0) {
-    uVar1 = FUN_001090fc(*(undefined4 *)(param_1 + 0x34),*(undefined4 *)(param_1 + 0x38),param_2 /* not arguments, register leftovers: param_4,param_4 */);
-    *(undefined4 *)(param_1 + 0x38) = uVar1;
-    (*(code *)(*(int *)(*param_2 + 0x20) + *param_2))(param_2);
-    FUN_00107d24(param_2);
-  }
-  return;
+  if (screen == (int *)0x0)
+    return;
+  stack->depth = list_set_entry(stack->screens,stack->depth,(int)screen);
+  (*(code *)(*(int *)(*screen + 0x20) + *screen))(screen);   /* resume: vtable +0x20 */
+  FUN_00107d24(screen);
 }
 
-/* ==== 0x001090FC  (file offset 0x090FC)  FUN_001090fc ================================================ */
-int FUN_001090fc(int *param_1,int param_2,int param_3)
+/* ==== 0x001090FC  (file offset 0x090FC)  list_set_entry ============================================== */
+/* GUESS: name. Stores `entry` under `id`: replaces the entry when the id is in the list, otherwise
+   appends it, first growing both arrays by growBy when they are full (two helper_malloc, copy, two
+   helper_free). A 0 entry is ignored. Returns the number of entries (screen_stack_open keeps it as the
+   stack's depth). Ghidra's -55555 (INTEGER_MINUS_55555) was the search's "not found" marker. */
+int list_set_entry(UIList *list,int id,int entry)
 
 {
-  uint32 size;
-  int iVar1;
-  void *pvVar2;
-  void *pvVar3;
-  int iVar4;
-  
-  if (param_3 != 0) {
-    iVar1 = 0;
-    iVar4 = INTEGER_MINUS_55555;
-    do {
-      if (*param_1 <= iVar1) {
-        if (*param_1 == param_1[3]) {
-          iVar1 = param_1[3] + param_1[4];
-          size = iVar1 * 4;
-          pvVar2 = helper_malloc(size);
-          pvVar3 = helper_malloc(size);
-          for (iVar4 = 0; iVar4 < *param_1; iVar4 = iVar4 + 1) {
-            *(undefined4 *)((int)pvVar2 + iVar4 * 4) = *(undefined4 *)(param_1[1] + iVar4 * 4);
-            *(undefined4 *)((int)pvVar3 + iVar4 * 4) = *(undefined4 *)(param_1[2] + iVar4 * 4);
-          }
-          helper_free((void *)param_1[1]);
-          helper_free((void *)param_1[2]);
-          param_1[2] = (int)pvVar3;
-          param_1[3] = iVar1;
-          param_1[1] = (int)pvVar2;
-        }
-        *(int *)(param_1[1] + *param_1 * 4) = param_2;
-        *(int *)(param_1[2] + *param_1 * 4) = param_3;
-        *param_1 = *param_1 + 1;
-        goto LAB_001091f0;
-      }
-      if (*(int *)(param_1[1] + iVar1 * 4) == param_2) {
-        iVar4 = iVar1;
-      }
-      iVar1 = iVar1 + 1;
-    } while (iVar4 == -0xd903);
-    *(int *)(param_1[2] + iVar4 * 4) = param_3;
+  int *ids;
+  int *entries;
+  int i;
+
+  if (entry == 0)
+    return list->count;
+  for (i = 0; i < list->count; i++)
+    if (list->ids[i] == id) {
+      list->entries[i] = entry;
+      return list->count;
+    }
+  if (list->count == list->capacity) {
+    list->capacity += list->growBy;
+    ids = helper_malloc(list->capacity * 4);
+    entries = helper_malloc(list->capacity * 4);
+    for (i = 0; i < list->count; i++) {
+      ids[i] = list->ids[i];
+      entries[i] = list->entries[i];
+    }
+    helper_free(list->ids);
+    helper_free(list->entries);
+    list->ids = ids;
+    list->entries = entries;
   }
-LAB_001091f0:
-  return *param_1;
+  list->ids[list->count] = id;
+  list->entries[list->count] = entry;
+  return ++list->count;
 }
 
 /* ==== 0x001091FC  (file offset 0x091FC)  FUN_001091fc ================================================ */
@@ -6307,7 +6294,7 @@ void FUN_001092c0(int param_1,int param_2)
   
   iVar1 = param_1 + param_2 * 4;
   if (*(int *)(iVar1 + 0x58) != 0) {
-    FUN_00109308(param_1,*(undefined4 *)(*(int *)(iVar1 + 0x58) + 0xc),1 /* not arguments, register leftovers: param_4,param_4 */);
+    ui_element_remove_child(param_1,*(undefined4 *)(*(int *)(iVar1 + 0x58) + 0xc),1 /* not arguments, register leftovers: param_4,param_4 */);
     *(undefined4 *)(iVar1 + 0x58) = 0;
     *(undefined4 *)(iVar1 + 0x6c) = 0;
     *(undefined4 *)(iVar1 + 0x80) = 0;
@@ -6317,23 +6304,22 @@ void FUN_001092c0(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x00109308  (file offset 0x09308)  FUN_00109308 ================================================ */
-undefined4 FUN_00109308(int param_1,undefined4 param_2,int param_3)
+/* ==== 0x00109308  (file offset 0x09308)  ui_element_remove_child ===================================== */
+/* GUESS: name. Removes the child with id `id` from a UI element; with `destroy` set, also destroys it
+   (vtable slot 0) and frees it. Returns 1 when the child was destroyed, 0 otherwise. */
+int ui_element_remove_child(UIElement *element,int id,int destroy)
 
 {
-  int *p;
-  undefined4 uVar1;
-  
-  p = (int *)list_find_entry(*(undefined4 *)(param_1 + 0x24),param_2);
-  if ((p == (int *)0x0) || (FUN_00109380(*(undefined4 *)(param_1 + 0x24),param_2), param_3 == 0)) {
-    uVar1 = 0;
-  }
-  else {
-    (*(code *)(*(int *)*p + *p))(p);
-    helper_free(p);
-    uVar1 = 1;
-  }
-  return uVar1;
+  int *child = (int *)list_find_entry(element->children,id);
+
+  if (child == (int *)0x0)
+    return 0;
+  list_remove_entry(element->children,id);
+  if (!destroy)
+    return 0;
+  (*(code *)(*(int *)*child + *child))(child);    /* destroy: vtable slot 0 */
+  helper_free(child);
+  return 1;
 }
 
 /* ==== 0x00109368  (file offset 0x09368)  FUN_00109368 ================================================ */
@@ -6360,26 +6346,24 @@ void FUN_00109368(int param_1)
   return;
 }
 
-/* ==== 0x00109380  (file offset 0x09380)  FUN_00109380 ================================================ */
-void FUN_00109380(int *param_1,int param_2)
+/* ==== 0x00109380  (file offset 0x09380)  list_remove_entry =========================================== */
+/* GUESS: name. Takes the entry with id `id` out of a list (nothing when it is not there): the entries
+   after it move down one place, the count drops by one. The entry itself is not destroyed or freed,
+   and the arrays keep their size. */
+void list_remove_entry(UIList *list,int id)
 
 {
-  int iVar1;
-  
-  iVar1 = 0;
-  while( true ) {
-    if (*param_1 <= iVar1) {
-      return;
-    }
-    if (*(int *)(param_1[1] + iVar1 * 4) == param_2) break;
-    iVar1 = iVar1 + 1;
+  int i;
+
+  for (i = 0; i < list->count && list->ids[i] != id; i++)
+    ;
+  if (i >= list->count)
+    return;
+  for (i++; i < list->count; i++) {
+    list->ids[i - 1] = list->ids[i];
+    list->entries[i - 1] = list->entries[i];
   }
-  while (iVar1 = iVar1 + 1, iVar1 < *param_1) {
-    *(undefined4 *)(param_1[1] + iVar1 * 4 + -4) = *(undefined4 *)(param_1[1] + iVar1 * 4);
-    *(undefined4 *)(param_1[2] + iVar1 * 4 + -4) = *(undefined4 *)(param_1[2] + iVar1 * 4);
-  }
-  *param_1 = *param_1 + -1;
-  return;
+  list->count--;
 }
 
 /* ==== 0x001093F4  (file offset 0x093F4)  thunk_FUN_0011e154 ========================================== */
@@ -6758,7 +6742,7 @@ void FUN_00109a10(int param_1,int param_2,int param_3,undefined4 param_4)
   iVar7 = param_2 + -1;
   iVar1 = *(int *)(*(int *)(param_1 + 0x34) + iVar7 * 4);
   if (iVar1 != 0) {
-    FUN_00109308(param_1,*(undefined4 *)(iVar1 + 0xc),1);
+    ui_element_remove_child(param_1,*(undefined4 *)(iVar1 + 0xc),1);
     *(undefined4 *)(*(int *)(param_1 + 0x34) + iVar7 * 4) = 0;
   }
   if (param_3 != 0) {
@@ -6891,7 +6875,7 @@ void FUN_00109b4c(int param_1,int param_2,int param_3)
                                     *(int *)(*(int *)(param_1 + 0x34) + 4));
               iVar13 = (int)uVar20;
               FUN_00109f48(iVar13,(int)pvVar4);
-              FUN_001090fc(*(int **)(param_1 + 0x30),local_38,iVar13);
+              list_set_entry(*(int **)(param_1 + 0x30),local_38,iVar13);
               local_38 = local_38 + 1;
               iVar16 = iVar17;
               if (*(int *)(param_1 + 0x3c) < 0) {
@@ -7152,7 +7136,7 @@ undefined8 FUN_0010a214(int param_1)
   
   iVar10 = param_1;
   if (*(int *)(param_1 + 0x48) != 0) {
-    iVar1 = FUN_00109308(param_1,*(undefined4 *)(*(int *)(param_1 + 0x48) + 0xc),1);
+    iVar1 = ui_element_remove_child(param_1,*(undefined4 *)(*(int *)(param_1 + 0x48) + 0xc),1);
     if (iVar1 == 0) {
       (*(code *)(*(int *)**(int **)(param_1 + 0x48) + **(int **)(param_1 + 0x48)))();
       helper_free(*(void **)(param_1 + 0x48));
@@ -7407,7 +7391,7 @@ LAB_0010a85c:
     FUN_00121134(param_1,*param_1,0);
     uVar4 = FUN_0010aa8c(0,*(undefined4 *)(param_1[0x85] + 0xd0));
     *(undefined4 *)(param_1[0x85] + 0xd4) = uVar4;
-    FUN_001090b8(*(undefined4 *)(param_1[0x85] + 0xd0),uVar4);
+    screen_stack_open(*(undefined4 *)(param_1[0x85] + 0xd0),uVar4);
     iVar6 = iVar1;
   }
 LAB_0010a894:
@@ -7552,7 +7536,7 @@ int * FUN_0010ac6c(int *param_1,int param_2)
                     /* helper[16] AECHAR * strtowstr(const char *src, AECHAR *dst, int nDstBytes)
                        (AEEHelperFuncs +0x40, via *(base-4)) */
       (*g_pHelperFuncs->strtowstr)((int)&local_58 + iVar5,pvVar6,4);
-      FUN_001090fc(param_1[0x10],local_4c[iVar5],pvVar6);
+      list_set_entry(param_1[0x10],local_4c[iVar5],pvVar6);
       iVar5 = iVar5 + 1;
     } while (iVar5 < 0xc);
     iVar1 = (**(code **)(**(int **)(*param_1 + 0xc) + 0x4c))

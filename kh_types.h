@@ -76,11 +76,13 @@ typedef struct KHApp {
 /* ---- Lists (GUESS: names) ----------------------------------------------------------------------
  * The children of a menu or UI element (for example the list at menu +0x24), kept as two parallel
  * arrays. list_get_entry reads an entry by position (0 when out of range); list_find_entry returns the
- * entry whose id matches. The key map of a UIElement (+0x60) is searched the same way. */
+ * entry whose id matches; list_set_entry adds or replaces one; list_remove_entry takes one out. The key map of a UIElement (+0x60) is searched the same way. */
 typedef struct UIList {
     int    count;                 /* +0x00 number of entries */
     int   *ids;                   /* +0x04 one id per entry (the key pickers have ids 400-406) */
     int   *entries;               /* +0x08 the entries, usually UIElement pointers */
+    int    capacity;              /* +0x0c room in both arrays */
+    int    growBy;                /* +0x10 how much list_set_entry grows them by when they are full */
 } UIList;
 
 /* ---- The screen stack (GUESS: names) -------------------------------------------------------------

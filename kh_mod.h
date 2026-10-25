@@ -476,13 +476,13 @@ bool FUN_00108ed8(int param_1);
 int FUN_00108f28(int param_1,int param_2);
 void screen_stack_close_all(ScreenStack *stack);   /* 0x00108FA0 GUESS: name */
 void screen_stack_close_top(ScreenStack *stack,int redraw);   /* 0x00108FCC GUESS: name */
-void FUN_001090b8(int param_1,int *param_2);
-int FUN_001090fc(int *param_1,int param_2,int param_3);
+void screen_stack_open(ScreenStack *stack,int *screen);   /* 0x001090B8 GUESS: name */
+int list_set_entry(UIList *list,int id,int entry);   /* 0x001090FC GUESS: name */
 void FUN_001091fc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_001092c0(int param_1,int param_2);
-undefined4 FUN_00109308(int param_1,undefined4 param_2,int param_3);
+int ui_element_remove_child(UIElement *element,int id,int destroy);   /* 0x00109308 GUESS: name */
 void FUN_00109368(int param_1);
-void FUN_00109380(int *param_1,int param_2);
+void list_remove_entry(UIList *list,int id);   /* 0x00109380 GUESS: name */
 void thunk_FUN_0011e154(int param_1);
 undefined4 FUN_001093f8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 );
 void FUN_00109534(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
