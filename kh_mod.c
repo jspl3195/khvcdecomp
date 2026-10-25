@@ -136,7 +136,7 @@ void * memset(void *destination,uint byteCount)
    __rt_memcpy (ADS / RVCT), which the compiler calls itself for structure copies. Evidence
    (0x00100168-0x00100284): fewer than 4 bytes go straight to the byte tail; otherwise single bytes
    are copied until the destination is word-aligned; an aligned source then jumps into the word-copy
-   code at 0x0010021c (shared with FUN_0010021c, written inline below); a misaligned source is read a
+   code at 0x0010021c (shared with memcpy_word_aligned, written inline below); a misaligned source is read a
    word at a time and each destination word is built from two neighbouring source words (lsr/orr ...
    lsl, one loop per offset 1, 2, 3); the last 0-3 bytes are copied one at a time. The binary leaves the end pointers in r0/r1, but no caller
    uses them, so the function is written as void. All 10 callers copy 8 bytes (or 10 once). */
@@ -153,7 +153,7 @@ void memcpy(void *destination,void *source,uint byteCount)
       *to++ = *from++;
     if (((uint)from & 3) == 0) {
       /* source aligned too: whole words (the binary continues in the word-copy code at 0x0010021c,
-         which it shares with FUN_0010021c, in blocks of 32/16/8/4 bytes) */
+         which it shares with memcpy_word_aligned, in blocks of 32/16/8/4 bytes) */
       for (; byteCount >= 4; byteCount -= 4, to += 4, from += 4)
         *(uint32 *)to = *(uint32 *)from;
     }
@@ -170,110 +170,26 @@ void memcpy(void *destination,void *source,uint byteCount)
     *to++ = *from++;
 }
 
-/* ==== 0x0010021C  (file offset 0x0021C)  FUN_0010021c ================================================ */
-undefined8 FUN_0010021c(byte *param_1,byte *param_2,uint param_3)
+/* ==== 0x0010021C  (file offset 0x0021C)  memcpy_word_aligned ========================================= */
+/* GUESS: name. memcpy(destination, source, byteCount) for word-aligned destination and source: the ARM
+   C library's __rt_memcpy_w (ADS / RVCT; __aeabi_memcpy4 in later ABIs), which the compiler calls
+   itself when it knows both sides are word-aligned. Evidence (0x0010021c-0x00100284): while at least 32
+   bytes remain, two `ldmhs r1!, {r3, r4, ip, lr}` / `stmhs r0!, {...}` pairs copy 32 bytes; the rest of
+   the count is copied by its bits (16, 8, 4 bytes with ldm/stm and ldr/str, then 1 and 2 single bytes
+   in the byte tail at 0x00100268, shared with memcpy); alignment is never checked. The end pointers left
+   in r0/r1 are not used by any caller, so the function is written as void. Callers copy constant tables
+   into local arrays / structures (0x14-0x74 bytes, all multiples of 4). */
+void memcpy_word_aligned(void *destination,void *source,uint byteCount)
 
 {
-  undefined4 param_4;
-  /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  byte bVar1;
-  byte *pbVar2;
-  byte *pbVar3;
-  byte *pbVar4;
-  undefined4 uVar5;
-  undefined4 uVar6;
-  uint uVar7;
-  undefined4 uVar8;
-  bool bVar9;
-  bool bVar10;
-  
-  bVar9 = 0x1f < param_3;
-  param_3 = param_3 - 0x20;
-  if (bVar9) {
-    do {
-      if (bVar9) {
-        uVar5 = *(undefined4 *)(param_2 + 4);
-        uVar6 = *(undefined4 *)(param_2 + 8);
-        uVar8 = *(undefined4 *)(param_2 + 0xc);
-        *(undefined4 *)param_1 = *(undefined4 *)param_2;
-        *(undefined4 *)(param_1 + 4) = uVar5;
-        *(undefined4 *)(param_1 + 8) = uVar6;
-        *(undefined4 *)(param_1 + 0xc) = uVar8;
-        param_4 = *(undefined4 *)(param_2 + 0x10);
-        uVar5 = *(undefined4 *)(param_2 + 0x14);
-        uVar6 = *(undefined4 *)(param_2 + 0x18);
-        uVar8 = *(undefined4 *)(param_2 + 0x1c);
-        param_2 = param_2 + 0x20;
-        *(undefined4 *)(param_1 + 0x10) = param_4;
-        *(undefined4 *)(param_1 + 0x14) = uVar5;
-        *(undefined4 *)(param_1 + 0x18) = uVar6;
-        *(undefined4 *)(param_1 + 0x1c) = uVar8;
-        param_1 = param_1 + 0x20;
-        bVar9 = 0x1f < param_3;
-        param_3 = param_3 - 0x20;
-      }
-    } while (bVar9);
-  }
-  if ((bool)((byte)(param_3 >> 4) & 1)) {
-    param_4 = *(undefined4 *)param_2;
-    uVar5 = *(undefined4 *)(param_2 + 4);
-    uVar6 = *(undefined4 *)(param_2 + 8);
-    uVar8 = *(undefined4 *)(param_2 + 0xc);
-    param_2 = param_2 + 0x10;
-    *(undefined4 *)param_1 = param_4;
-    *(undefined4 *)(param_1 + 4) = uVar5;
-    *(undefined4 *)(param_1 + 8) = uVar6;
-    *(undefined4 *)(param_1 + 0xc) = uVar8;
-    param_1 = param_1 + 0x10;
-  }
-  if ((int)(param_3 << 0x1c) < 0) {
-    param_4 = *(undefined4 *)param_2;
-    uVar5 = *(undefined4 *)(param_2 + 4);
-    param_2 = param_2 + 8;
-    *(undefined4 *)param_1 = param_4;
-    *(undefined4 *)(param_1 + 4) = uVar5;
-    param_1 = param_1 + 8;
-  }
-  uVar7 = param_3 << 0x1e;
-  pbVar2 = param_1;
-  pbVar3 = param_2;
-  if ((bool)((byte)(param_3 >> 2) & 1)) {
-    pbVar3 = param_2 + 4;
-    param_4 = *(undefined4 *)param_2;
-    pbVar2 = param_1 + 4;
-    *(undefined4 *)param_1 = param_4;
-  }
-  bVar1 = (byte)param_4;
-  if (uVar7 != 0) {
-    bVar10 = (bool)((byte)(param_3 >> 1) & 1);
-    param_3 = param_3 << 0x1f;
-    bVar9 = (int)param_3 < 0;
-    pbVar4 = pbVar3;
-    if (bVar9) {
-      pbVar4 = pbVar3 + 1;
-      param_3 = (uint)*pbVar3;
-    }
-    if (bVar10) {
-      pbVar3 = pbVar4 + 1;
-      bVar1 = *pbVar4;
-      pbVar4 = pbVar4 + 2;
-      uVar7 = (uint)*pbVar3;
-    }
-    pbVar3 = pbVar2;
-    if (bVar9) {
-      pbVar3 = pbVar2 + 1;
-      *pbVar2 = (byte)param_3;
-    }
-    if (bVar10) {
-      pbVar2 = pbVar3 + 1;
-      *pbVar3 = bVar1;
-      pbVar3 = pbVar3 + 2;
-      *pbVar2 = (byte)uVar7;
-    }
-    return CONCAT44(pbVar4,pbVar3);
-  }
-  return CONCAT44(pbVar3,pbVar2);
+  uint8 *to = (uint8 *)destination;
+  uint8 *from = (uint8 *)source;
+
+  /* whole words (the binary: blocks of 32, 16, 8 and 4 bytes) */
+  for (; byteCount >= 4; byteCount -= 4, to += 4, from += 4)
+    *(uint32 *)to = *(uint32 *)from;
+  while (byteCount-- != 0)                        /* the last 0-3 bytes */
+    *to++ = *from++;
 }
 
 /* ==== 0x00100288  (file offset 0x00288)  FUN_00100288 ================================================ */
@@ -2383,12 +2299,11 @@ LAB_00104fa4:
           iVar9 = FUN_0010bd7c(0,param_1,0);
           iVar7 = DATA_AT_00127ADC_OFFSET + 0x101dec;
           *(undefined4 *)(iVar9 + 0x3c) = 1;
-                    /* 0x101df0 bl FUN_0010021c (GUESS: memcpy(dst, src, n), the ARM library's
-                       word-copying version): only r0-r2 are set; Ghidra's param_4 was the r3 it
-                       uses as a scratch register for the copy, not an input. */
-          FUN_0010021c(local_74 + 0xb,iVar7,0x14);
-                    /* 0x101e04 bl FUN_0010021c: same as the copy above, only r0-r2 are set */
-          FUN_0010021c(local_74 + 6,DATA_AT_00127AF0_OFFSET + 0x101e04,0x14);
+                    /* 0x101df0 bl memcpy_word_aligned (0x0010021c): only r0-r2 are set; Ghidra's
+                       param_4 was the r3 it uses as a scratch register for the copy, not an input. */
+          memcpy_word_aligned(local_74 + 0xb,iVar7,0x14);
+                    /* 0x101e04 bl memcpy_word_aligned: same as the copy above, only r0-r2 are set */
+          memcpy_word_aligned(local_74 + 6,DATA_AT_00127AF0_OFFSET + 0x101e04,0x14);
           uVar10 = FUN_00107fd0(param_1,0x208,2);
           uVar11 = FUN_00107fd0(param_1,400,1);
           uVar13 = FUN_00107fd0(param_1,0x208,2);
@@ -2526,8 +2441,8 @@ LAB_00103858:
       uVar11 = FUN_00107fd0(param_1,0x96,2);
       uVar13 = FUN_00107fd0(param_1,700,2);
       iVar7 = FUN_00107fd0(param_1,0xfa,1);
-      FUN_0010021c(local_74 + 3,(int)&CODE_AT_00100FD0_SELF_RELATIVE_OFFSET + WORD_HEXADECIMAL_00025038,0x18);
-      FUN_0010021c(local_a8 + 10,DATA_AT_00127B1C_OFFSET + 0x102bbc,0x18);
+      memcpy_word_aligned(local_74 + 3,(int)&CODE_AT_00100FD0_SELF_RELATIVE_OFFSET + WORD_HEXADECIMAL_00025038,0x18);
+      memcpy_word_aligned(local_a8 + 10,DATA_AT_00127B1C_OFFSET + 0x102bbc,0x18);
       iVar9 = 0;
       do {
         iVar19 = FUN_0010b650(0,uVar11,iVar7,uVar13,0,param_1,local_74[iVar9 + 3],0x24);
@@ -2660,8 +2575,8 @@ LAB_001050b0:
       uVar10 = FUN_00107fd0(param_1,0x96,2);
       uVar11 = FUN_00107fd0(param_1,700,2);
       iVar7 = FUN_00107fd0(param_1,0xfa,1);
-      FUN_0010021c(local_74,DATA_AT_00127B34_OFFSET + 0x102f54,0x1c);
-      FUN_0010021c(local_a8 + 6,DATA_AT_00127B50_OFFSET + 0x102f68,0x1c);
+      memcpy_word_aligned(local_74,DATA_AT_00127B34_OFFSET + 0x102f54,0x1c);
+      memcpy_word_aligned(local_a8 + 6,DATA_AT_00127B50_OFFSET + 0x102f68,0x1c);
       iVar19 = 0;
       do {
         iVar17 = FUN_0010b650(0,uVar10,iVar7,uVar11,0,param_1,local_74[iVar19],0x24);
@@ -3010,7 +2925,7 @@ LAB_0010489c:
               iVar9 = FUN_0010bd7c(0,param_1,1);
               FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_0DB81F00,0);
               FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0x1f);
-              FUN_0010021c(local_74 + 10,DATA_AT_00127BA4_OFFSET + 0x1034d0,0x18);
+              memcpy_word_aligned(local_74 + 10,DATA_AT_00127BA4_OFFSET + 0x1034d0,0x18);
               puVar6 = (undefined4 *)
                        FUN_001146f0(*(undefined4 *)(*param_1 + 0xa8),STRING_COLLECTABLES_OFFSET + 0x1034e8);
               local_74[9] = 0;
@@ -3023,7 +2938,7 @@ LAB_0010489c:
               local_74[6] = *(int *)(*(int *)(*param_1 + 0xa8) + 0x5b0);
               local_74[7] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x5b4);
               local_74[8] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x5b8);
-              FUN_0010021c(local_a8 + 0xb,DATA_AT_00127BBC_OFFSET + 0x103558,0x18);
+              memcpy_word_aligned(local_a8 + 0xb,DATA_AT_00127BBC_OFFSET + 0x103558,0x18);
               uVar10 = FUN_00107fd0(param_1,0x96,2);
               iVar19 = FUN_00107fd0(param_1,0x82,1);
               uVar11 = FUN_00107fd0(param_1,700,2);
@@ -3249,8 +3164,8 @@ LAB_001042b8:
     uVar10 = FUN_00107fd0(param_1,0x96,2);
     uVar11 = FUN_00107fd0(param_1,700,2);
     iVar7 = FUN_00107fd0(param_1,0x82,1);
-    FUN_0010021c(local_74 + 2,DATA_AT_00127B6C_OFFSET + 0x103230,0x1c);
-    FUN_0010021c(local_a8 + 8,DATA_AT_00127B88_OFFSET + 0x103244,0x1c);
+    memcpy_word_aligned(local_74 + 2,DATA_AT_00127B6C_OFFSET + 0x103230,0x1c);
+    memcpy_word_aligned(local_a8 + 8,DATA_AT_00127B88_OFFSET + 0x103244,0x1c);
     iVar19 = 0;
     do {
       iVar17 = FUN_0010b650(0,uVar10,iVar7,uVar11,0,param_1,local_74[iVar19 + 2],0x24);
@@ -3313,9 +3228,9 @@ LAB_001042b8:
     FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_2E66608C,0);
     FUN_00109a10(iVar9,1,uVar11,0xfffffffe);
     FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0xffffffff);
-    FUN_0010021c(local_74 + 0xb,DATA_AT_00127BD4_OFFSET + 0x103904,0x14);
-    FUN_0010021c(local_74 + 6,DATA_AT_00127BE8_OFFSET + 0x103918,0x14);
-    FUN_0010021c(local_74 + 1,DATA_AT_00127BFC_OFFSET + 0x10392c,0x14);
+    memcpy_word_aligned(local_74 + 0xb,DATA_AT_00127BD4_OFFSET + 0x103904,0x14);
+    memcpy_word_aligned(local_74 + 6,DATA_AT_00127BE8_OFFSET + 0x103918,0x14);
+    memcpy_word_aligned(local_74 + 1,DATA_AT_00127BFC_OFFSET + 0x10392c,0x14);
     iVar7 = *(int *)(*(int *)(*param_1 + 0xa8) + 0x594);
     pvVar16 = WORD_HEXADECIMAL_2F7413EE;
     if (((iVar7 == 0x14) || (pvVar16 = WORD_HEXADECIMAL_31B444EE, iVar7 == 0x28)) ||
@@ -3468,7 +3383,7 @@ LAB_00104360:
     FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_111CB9DB,0);
     FUN_00109a10(iVar9,1,uVar13,0x46);
     FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0x48);
-    FUN_0010021c(local_74 + 9,DATA_AT_00127C40_OFFSET + 0x104434,0x1c);
+    memcpy_word_aligned(local_74 + 9,DATA_AT_00127C40_OFFSET + 0x104434,0x1c);
     uVar10 = FUN_00107fd0(param_1,0x50,2);
     iVar19 = FUN_00107fd0(param_1,0xa0,1);
     iVar7 = FUN_00107fd0(param_1,0x348,2);
@@ -3494,8 +3409,8 @@ LAB_00104360:
     local_74[4] = *(int *)(*param_1 + 0xa8) + 0x5dc;
     local_74[5] = *(int *)(*param_1 + 0xa8) + 0x5e0;
     local_74[6] = *(int *)(*param_1 + 0xa8) + 0x5e4;
-    FUN_0010021c(local_a8,DATA_AT_00127C5C_OFFSET + 0x1045c0,0x34);
-    FUN_0010021c(local_dc,DATA_AT_00127C90_OFFSET + 0x1045d8,0x34);
+    memcpy_word_aligned(local_a8,DATA_AT_00127C5C_OFFSET + 0x1045c0,0x34);
+    memcpy_word_aligned(local_dc,DATA_AT_00127C90_OFFSET + 0x1045d8,0x34);
     pvVar16 = helper_malloc(0xd0);
     param_1[0xf] = (int)pvVar16;
     iVar19 = 0;
@@ -7723,7 +7638,7 @@ int * FUN_0010ac6c(int *param_1,int param_2)
     iVar5 = FUN_0010be6c(0,0x10,0x10);
     iVar7 = DATA_AT_00127AA0_OFFSET + 0x10ada0;
     param_1[0x10] = iVar5;
-    FUN_0010021c(local_4c,iVar7,0x30);
+    memcpy_word_aligned(local_4c,iVar7,0x30);
     local_58 = *(undefined4 *)(WORD_HEXADECIMAL_0001CD1C + 0x10adb4);
     uStack_54 = *(undefined4 *)(WORD_HEXADECIMAL_0001CD1C + 0x10adb8);
     uStack_50 = *(undefined4 *)(WORD_HEXADECIMAL_0001CD1C + 0x10adbc);
@@ -14811,9 +14726,9 @@ void FUN_00112b4c(int param_1)
     *(int *)(param_1 + 0x10) = iVar1;
   }
   else if (*(int *)(param_1 + 0x9c) == 2) {
-    FUN_0010021c(local_38,(byte *)(DATA_AT_00127918_OFFSET + 0x112b98),0x2c);
-    FUN_0010021c(local_64,(byte *)(DATA_AT_00127944_OFFSET + 0x112bac),0x2c);
-    FUN_0010021c(local_90,(byte *)(DATA_AT_00127970_OFFSET + 0x112bc0),0x2c);
+    memcpy_word_aligned(local_38,(byte *)(DATA_AT_00127918_OFFSET + 0x112b98),0x2c);
+    memcpy_word_aligned(local_64,(byte *)(DATA_AT_00127944_OFFSET + 0x112bac),0x2c);
+    memcpy_word_aligned(local_90,(byte *)(DATA_AT_00127970_OFFSET + 0x112bc0),0x2c);
     iVar1 = 0;
     do {
       iVar2 = FUN_001137a4(*(int *)(*(int *)(param_1 + 4) + 0x9c),*(int *)(local_38 + iVar1 * 4));
@@ -14853,7 +14768,7 @@ void FUN_00112c44(int *param_1)
   int iVar3;
   undefined4 local_34 [10];
   
-  FUN_0010021c(local_34,DATA_AT_00126DEC_OFFSET + 0x112c60,0x28);
+  memcpy_word_aligned(local_34,DATA_AT_00126DEC_OFFSET + 0x112c60,0x28);
   iVar2 = 0;
   do {
     iVar1 = FUN_00112dbc(*(undefined4 *)(*param_1 + 0xa4),local_34[iVar2]);
@@ -19450,7 +19365,7 @@ void FUN_00118318(int param_1,int *param_2)
   *(undefined4 *)(param_1 + 0x294) = uVar2;
   FUN_001145b4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_1218EC09,param_1 + 0x288);
-  FUN_0010021c(local_84,DATA_AT_00126EA8_OFFSET + 0x118390,0x74);
+  memcpy_word_aligned(local_84,DATA_AT_00126EA8_OFFSET + 0x118390,0x74);
   iVar4 = 0;
   do {
     uVar2 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),local_84[iVar4]);
@@ -19458,8 +19373,8 @@ void FUN_00118318(int param_1,int *param_2)
     iVar4 = iVar4 + 1;
     *(undefined4 *)(param_1 + iVar1 + 0x2b8) = uVar2;
   } while (iVar4 < 0x1d);
-  FUN_0010021c(local_c4,DATA_AT_00126F1C_OFFSET + 0x1183d0,0x40);
-  FUN_0010021c(local_104,DATA_AT_00126F5C_OFFSET + 0x1183e4,0x40);
+  memcpy_word_aligned(local_c4,DATA_AT_00126F1C_OFFSET + 0x1183d0,0x40);
+  memcpy_word_aligned(local_104,DATA_AT_00126F5C_OFFSET + 0x1183e4,0x40);
   iVar4 = 0;
   do {
     FUN_0011fdbc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
@@ -21406,7 +21321,7 @@ void kh_OnKey(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
     if ((!bVar13) || (FUN_001268fc(*(undefined4 *)((int)pMe->pObja8 + 0x514),0), !bVar15 || bVar13))
     {
       if (*(int *)(*(int *)(uVar2 + 0x34) + 4) != 0) {
-        FUN_0010021c(aiStack_48,DATA_AT_001279E0_OFFSET + 0x11a8d4,0x14);
+        memcpy_word_aligned(aiStack_48,DATA_AT_001279E0_OFFSET + 0x11a8d4,0x14);
         iVar3 = WORD_HEXADECIMAL_FFFE5718;
         iVar9 = 0;
         do {
@@ -25199,7 +25114,7 @@ void FUN_0011ed3c(int param_1,undefined4 *param_2)
                     /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
                        via *(base-4)) */
   (*g_pHelperFuncs->strcpy)(auStack_34,STRING_HASH_VER_OFFSET + 0x11ee0c);
-  FUN_0010021c(local_8c,DATA_AT_00127ED4_OFFSET + 0x11ee24,0x20);
+  memcpy_word_aligned(local_8c,DATA_AT_00127ED4_OFFSET + 0x11ee24,0x20);
   iVar8 = 0;
   local_8c[0] = *(int *)(*(int *)(*(int *)(param_1 + 0xc) + 0xa8) + 0x5cc);
   local_8c[1] = *(undefined4 *)(*(int *)(*(int *)(param_1 + 0xc) + 0xa8) + 0x5d0);
