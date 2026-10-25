@@ -4,7 +4,7 @@
  * Source module : dumps/mod/11839/kh.mod (164424 bytes)
  * SHA-256       : 91b28342b14bf8268657f79da7722c5099a496b2c078f90375d93a82ec37fb31
  * Ghidra base   : 0x00100000 (= khvcemu load address); file offset = address - 0x100000
- * Functions     : 450 from Ghidra + hand-written ones Ghidra has no function for
+ * Functions     : 449 from Ghidra (FUN_00100028 removed: always 0 in User mode) + hand-written ones Ghidra has no function for
  * Calls into this module from khvcemu: AEEMod_Load, AEEMod_CreateInstance, AEEApplet_HandleEvent
  * (khvcemu/runtime.py:211-242, 398-422). Swerve 3D calls go through ISwerve / ISwerveTarget (kh_types.h).
  *
@@ -29,116 +29,6 @@ int AEEMod_Load(IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod)
                        AEEAppGen.c): the code layout matches it exactly. */
   iVar1 = AEEStaticMod_New(0x14,pIShell,ph,ppMod,(void *)0x0,(void *)0x0);
   return iVar1;
-}
-
-/* ==== 0x00100028  (file offset 0x00028)  FUN_00100028 ================================================ */
-/* WARNING: Removing unreachable block (ram,0x001000a8) */
-/* WARNING: Removing unreachable block (ram,0x001000bc) */
-/* WARNING: Removing unreachable block (ram,0x001000c4) */
-/* WARNING: Removing unreachable block (ram,0x001000c8) */
-/* WARNING: Removing unreachable block (ram,0x001000d0) */
-/* WARNING: Removing unreachable block (ram,0x001000d4) */
-/* WARNING: Removing unreachable block (ram,0x001000d8) */
-/* WARNING: Removing unreachable block (ram,0x001000dc) */
-/* WARNING: Removing unreachable block (ram,0x001000e0) */
-/* WARNING: Removing unreachable block (ram,0x001000ec) */
-/* WARNING: Removing unreachable block (ram,0x00100050) */
-/* WARNING: Removing unreachable block (ram,0x0010006c) */
-/* WARNING: Removing unreachable block (ram,0x00100080) */
-/* WARNING: Removing unreachable block (ram,0x00100074) */
-/* WARNING: Removing unreachable block (ram,0x00100090) */
-/* WARNING: Removing unreachable block (ram,0x001000f8) */
-
-/* ---- The code behind the "unreachable block" warnings above ------------------------------------
- *
- * Why this is here: the decompiler reduced this function to `return 0`, but the blocks it removed
- * are real code - privileged MMU / cache maintenance. Each block is guarded by a check of the
- * processor mode (`mrs r1, cpsr; tst r1, #0xf; beq exit`); the decompiler took the low four CPSR
- * bits to be 0, so the check always exits and everything behind it looked dead. That matches User
- * mode (0x10), which is how khvcemu runs the game, but on a phone running the applet in a privileged
- * mode these blocks execute. Below is the whole function in C, reconstructed by hand from its
- * instructions (0x00100028-0x00100100) so the removed code is not lost; the decompiled body after
- * this comment is left as Ghidra produced it.
- *
- * Caller: kh_HandleEvent calls FUN_00100028(pMe->pSwerve, 1) on EVT_APP_SUSPEND and EVT_APP_RESUME.
- * GUESS: purpose - set the cache attributes of the engine's memory sections. The descriptor table
- * is found from the address of the object's first vtable function (ISwerve_AddRef, inside
- * swv21brew) plus 0x1b400, i.e. a table inside the engine's image.
- *
- * The coprocessor and status-register accesses have no C equivalent; they are written as calls,
- * each with the single instruction it stands for:
- *   cpsr_read()                     mrs   rX, cpsr
- *   cp15_read_translation_base()    mrc   p15, 0, rX, c2, c0, 0
- *   cp15_read_domain_access()       mrc   p15, 0, rX, c3, c0, 0
- *   cp15_write_domain_access(v)     mcr   p15, 0, rX, c3, c0, 0
- *   cp15_dcache_test_clean_invalidate()   mrc p15, 0, pc, c7, c14, 3  (ARM926; loops until clean)
- *   cp15_invalidate_data_tlb()      mcr   p15, 0, rX, c8, c6, 0
- *
- * undefined4 FUN_00100028(void *object, int operation)
- * {
- *   uint32 *descriptor;              // walks the engine's table of section descriptors
- *   uint32 *translationTable;        // the MMU first-level table (4096 section entries)
- *   uint32  savedDomainAccess;
- *   uint32  value;
- *   int     remaining;
- *
- *   // object->pvt[0] is a code address in the engine; the table is 0x1b400 bytes after it
- *   descriptor = (uint32 *)(**(uint32 **)object + 0x1b400);
- *
- *   if (operation == 1) {
- *     if ((cpsr_read() & 0xf) == 0)              // User mode: nothing to do
- *       return 0;
- *     translationTable  = (uint32 *)(cp15_read_translation_base() & 0xffffc000);
- *     savedDomainAccess = cp15_read_domain_access();
- *     cp15_write_domain_access(0xffffffff);      // every domain = manager (no permission checks)
- *     cp15_dcache_test_clean_invalidate();
- *     for (remaining = 10; ; ) {
- *       value = *descriptor;
- *       if (value == 0) {                        // end of the table
- *         cp15_invalidate_data_tlb();
- *         break;
- *       }
- *       translationTable[value >> 20] = value;   // write the descriptor back as it is
- *       descriptor++;
- *       if (--remaining == 0)
- *         break;                                 // after 10 entries: no TLB invalidate (as written)
- *     }
- *     cp15_write_domain_access(savedDomainAccess);
- *     return 0;
- *   }
- *
- *   if (operation == 2) {
- *     if ((cpsr_read() & 0xf) == 0)              // User mode: nothing to do
- *       return 0;
- *     translationTable  = (uint32 *)(cp15_read_translation_base() & 0xffffc000);
- *     savedDomainAccess = cp15_read_domain_access();
- *     cp15_write_domain_access(0xffffffff);
- *     cp15_dcache_test_clean_invalidate();
- *     for (remaining = 10; ; ) {
- *       value = *descriptor;
- *       if (value == 0) {
- *         cp15_invalidate_data_tlb();
- *         break;
- *       }
- *       // section descriptor (type 2) with the C (cacheable) and B (bufferable) bits set
- *       translationTable[value >> 20] = (value & ~0xfu) | 0xe;
- *       descriptor++;
- *       if (--remaining == 0)
- *         break;
- *     }
- *     cp15_write_domain_access(savedDomainAccess);
- *     return 0;
- *   }
- *
- *   return 0;                                    // any other operation
- * }
- */
-
-undefined4 FUN_00100028(undefined4 param_1,undefined4 param_2)
-
-{
-  /* param_1, param_2: not in Ghidra's prototype; kh.mod reads r0, r1 at entry and its callers set them */
-  return 0;
 }
 
 /* ==== 0x00100104  (file offset 0x00104)  FUN_00100104 ================================================ */
@@ -2059,7 +1949,7 @@ FUN_00101268(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param
  * instruction. That is what ARM's linker writes for a call to a weak function that was not linked:
  * the call does nothing and r0 keeps the 0 set just before it, so `cmp r0, #0` always finds 0 and
  * the three conditional instructions at 0x00101410-0x00101418 (the "handled: return its result"
- * path) never run. Unlike FUN_00100028, the decompiler is right: in this build the blocks are dead.
+ * path) never run. The decompiler is right: in this build the blocks are dead.
  * They are kept here so the full logic of the routine is on record. GUESS: the handler's name (it
  * is unresolved, so the binary does not say).
  *
@@ -10553,7 +10443,6 @@ boolean kh_HandleEvent(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
       uVar5 = *(undefined4 *)pMe->pObj94;
       FUN_00120450(pMe->pObj94);
       *(undefined4 *)pMe->pObj94 = uVar5;
-      FUN_00100028(pMe->pSwerve,1);
       pMe->bSuspended = 1;
       FUN_0012056c(pMe,1);
       return '\x01';
@@ -10561,7 +10450,6 @@ boolean kh_HandleEvent(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
     if (eCode == 3) {
       FUN_0011e154(pMe);
       FUN_0012031c(pMe->pObj94,*(undefined4 *)pMe->pObj94);
-      FUN_00100028(pMe->pSwerve,1);
       return '\x01';
     }
   }

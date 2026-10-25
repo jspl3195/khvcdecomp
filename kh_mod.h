@@ -4,7 +4,7 @@
  * Source module : dumps/mod/11839/kh.mod (164424 bytes)
  * SHA-256       : 91b28342b14bf8268657f79da7722c5099a496b2c078f90375d93a82ec37fb31
  * Ghidra base   : 0x00100000 (= khvcemu load address); file offset = address - 0x100000
- * Functions     : 450 from Ghidra + hand-written ones Ghidra has no function for
+ * Functions     : 449 from Ghidra (FUN_00100028 removed: always 0 in User mode) + hand-written ones Ghidra has no function for
  * Calls into this module from khvcemu: AEEMod_Load, AEEMod_CreateInstance, AEEApplet_HandleEvent
  * (khvcemu/runtime.py:211-242, 398-422). Swerve 3D calls go through ISwerve / ISwerveTarget (kh_types.h).
  */
@@ -405,7 +405,6 @@ uint32 AEEMod_AddRef(IModule *po);
 void AEEMod_FreeResources(IModule *po, IHeap *ph, IFileMgr *pfm);
 
 /* Not yet identified (auto-named by Ghidra). */
-undefined4 FUN_00100028(undefined4 param_1,undefined4 param_2);
 void FUN_00100104(int param_1);
 undefined4 * FUN_00100110(undefined4 *param_1,uint param_2);
 undefined8 FUN_00100168(uint *param_1,uint *param_2,uint param_3);
