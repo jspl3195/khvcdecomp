@@ -54,7 +54,8 @@ typedef struct KHApp {
     void          *pObja0;           /* +0xa0 created by 0x10bb2c, destroyed by 0x10cd2c */
     void          *pGame;            /* +0xa4 GUESS: game state; receives key releases (kh_OnKeyRelease);
                                         destroyed by 0x10c2c4 */
-    void          *pObja8;           /* +0xa8 created by 0x10b4e4; EVT_APP_MESSAGE handled only while set */
+    struct Progress *progress;       /* +0xa8 the player's progress (munny, experience, level, controls);
+                                        created by 0x10b4e4; EVT_APP_MESSAGE handled only while set */
     uint32         field_ac;         /* +0xac */
     uint32         dwStartTimeMS;    /* +0xb0 aee_GetTimeMS() at EVT_APP_START */
     uint32         bStarted;         /* +0xb4 GUESS: set to 1 at EVT_APP_START */
@@ -139,5 +140,34 @@ typedef struct UIElement {
     int    unknown_64;            /* +0x64 passed to FUN_00105224 with the element found there */
     int    originalKeyCode;       /* +0x68 key picker: the setting's value when it was set up */
 } UIElement;
+
+/* ---- The player's progress (GUESS: names) -----------------------------------------------------
+ * KHApp.progress. Only the fields used by the functions named so far are named; the rest is padding.
+ * progress_add_experience levels up through levels[] (levels 0-8); progress_score = munny + 100 *
+ * experience. The Controls key bindings (key_picker_setup) are controls[]. */
+typedef struct ProgressLevel {
+    int    experienceNeeded;      /* +0x00 experience at which this level-up happens */
+    int    reward;                /* +0x04 1: maximumHealth + 1.0f, 2: levelRewardTwoCount + 1,
+                                     3: levelRewardThreeCount + 1 */
+} ProgressLevel;
+
+typedef struct Progress {
+    uint8  unknown_000[0x514];
+    uint32 health;                /* +0x514 GUESS: a float (its bits); refilled from maximumHealth */
+    uint32 maximumHealth;         /* +0x518 GUESS: a float (its bits); +1.0f by a level reward of type 1 */
+    uint8  unknown_51c[0x10];
+    int    munny;                 /* +0x52c the currency: progress_add_munny; spent in shops */
+    int    levelRewardTwoCount;   /* +0x530 GUESS: meaning; +1 by a level reward of type 2 */
+    int    levelRewardThreeCount; /* +0x534 GUESS: meaning; +1 by a level reward of type 3 */
+    int    experience;            /* +0x538 progress_add_experience */
+    ProgressLevel levels[9];      /* +0x53c the level-ups of levels 0-8 */
+    uint8  unknown_584[0x08];
+    int    level;                 /* +0x58c 0-9; no level-ups after 9 */
+    uint8  unknown_590[0x3c];
+    int    controls[7];           /* +0x5cc the Controls key bindings (BREW key codes): Forwards, Backwards,
+                                     Left, Right, Action, Status, Magic */
+    uint8  unknown_5e8[0x13c];
+    struct KHApp *app;            /* +0x724 the app it belongs to */
+} Progress;
 
 #endif /* KH_TYPES_H */

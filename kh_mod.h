@@ -556,10 +556,10 @@ void FUN_0010cda4(int param_1,int param_2);
 void FUN_0010cdd8(int param_1,int param_2);
 void FUN_0010ce08(undefined4 *param_1,int param_2);
 void FUN_0010cee4(int param_1,int param_2);
-void FUN_0010cfc4(int param_1,int param_2);
+void progress_add_experience(Progress *progress,int amount);   /* 0x0010CFC4 GUESS: name */
 void FUN_0010d074(int param_1,undefined4 param_2);
 void FUN_0010d18c(int param_1,int param_2);
-void FUN_0010d1e0(int param_1,int param_2);
+void progress_add_munny(Progress *progress,int amount);   /* 0x0010D1E0 GUESS: name */
 undefined4 FUN_0010d2fc(int param_1);
 undefined4 FUN_0010d354(int param_1);
 void FUN_0010d3a4(int param_1,undefined4 param_2);
@@ -568,7 +568,7 @@ undefined4 FUN_0010d56c(int param_1,int param_2);
 undefined4 FUN_0010d7c4(int param_1,int param_2);
 undefined4 FUN_0010d95c(int param_1,int param_2);
 void FUN_0010db04(int param_1,undefined4 param_2);
-int FUN_0010e1f8(int param_1);
+int progress_score(Progress *progress);   /* 0x0010E1F8 GUESS: name */
 void FUN_0010e210(undefined4 param_1,undefined4 *param_2,int *param_3);
 void FUN_0010e280(int param_1,undefined4 *param_2,undefined4 *param_3);
 undefined4 FUN_0010e448(int param_1,undefined4 *param_2);

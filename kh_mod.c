@@ -2434,7 +2434,7 @@ LAB_00103858:
       }
       FUN_00109a10(uVar10,1,uVar23,uVar24);
       FUN_00109a10(uVar10,2,uVar2,0x3f);
-      local_38 = (void *)FUN_0010e1f8(*(undefined4 *)(*param_1 + 0xa8));
+      local_38 = (void *)progress_score(*(undefined4 *)(*param_1 + 0xa8));
       memset(local_74 + 9,0x18);
       local_74[9] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x52c);
       local_74[10] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x530);
@@ -2541,7 +2541,7 @@ LAB_001050b0:
       }
       iVar7 = FUN_0010af3c(0,param_1,ADDRESS_OF_FUNCTION_0010888c_OFFSET_2 + 0x102804);
       param_1[6] = iVar7;
-      uVar10 = FUN_0010e1f8(*(undefined4 *)(*param_1 + 0xa8));
+      uVar10 = progress_score(*(undefined4 *)(*param_1 + 0xa8));
       FUN_001216c4(*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
       FUN_001082e0(param_1[6],2,*(undefined4 *)(iVar7 + 0x590),uVar10,
@@ -6019,7 +6019,7 @@ LAB_00108a4c:
     FUN_00107d24(piVar1);
     break;
   case 0x6:
-    iVar8 = FUN_0010e1f8(*(int *)(*param_1 + 0xa8));
+    iVar8 = progress_score(*(int *)(*param_1 + 0xa8));
     FUN_0011fddc(*(int *)(*param_1 + 0xa8),*(undefined4 *)(*param_1 + 0xc4),iVar8,param_3);
     screen_stack_close_top(param_1,1);
     screen_stack_close_top(param_1,1);
@@ -6181,8 +6181,8 @@ void screen_stack_close_top(ScreenStack *stack,int redraw)
     /* FUN_001268fc compares two floats and leaves the result in the condition flags; the binary
        branches on it (`bls` at 0x0011e1b0), which is the test written after the comma */
     if (app->bSuspended != 0 &&
-        (FUN_001268fc(*(uint *)((int)app->pObja8 + 0x514),0),
-         *(float *)((int)app->pObja8 + 0x514) > 0.0f)) {
+        (FUN_001268fc(app->progress->health,0),
+         *(float *)&app->progress->health > 0.0f)) {
       FUN_0011d040((int)app->pObj94,WORD_HEXADECIMAL_21BF9442,(void *)WORD_HEXADECIMAL_3C5A569E);
       state = 5;
     }
@@ -9254,47 +9254,41 @@ uint32 * kh_GetFpStatusPtr(void)
   return (uint32 *)(iVar1 + 0xd8);
 }
 
-/* ==== 0x0010CFC4  (file offset 0x0CFC4)  FUN_0010cfc4 ================================================ */
-void FUN_0010cfc4(int param_1,int param_2)
+/* ==== 0x0010CFC4  (file offset 0x0CFC4)  progress_add_experience ===================================== */
+/* GUESS: name. Adds `amount` experience; when it reaches the current level's threshold, applies that
+   level's reward, shows a level-up message (FUN_0011d040 with a text id per reward) and goes up one
+   level. Nothing happens past level 8. One level-up per call at most. */
+void progress_add_experience(Progress *progress,int amount)
 
 {
-  int iVar1;
-  int iVar2;
-  undefined4 uVar3;
-  int iVar4;
-  int iVar5;
-  
-  if (8 < *(int *)(param_1 + 0x58c)) {
+  ProgressLevel *next;
+  int message;
+
+  if (progress->level > 8)
     return;
-  }
-  iVar2 = param_1 + *(int *)(param_1 + 0x58c) * 8;
-  param_2 = *(int *)(param_1 + 0x538) + param_2;
-  *(int *)(param_1 + 0x538) = param_2;
-  iVar1 = WORD_HEXADECIMAL_0B96B9C5;
-  iVar5 = WORD_HEXADECIMAL_150C956D;
-  iVar4 = *(int *)(iVar2 + 0x53c);
-  if (param_2 < iVar4) {
+  next = &progress->levels[progress->level];
+  progress->experience += amount;
+  if (progress->experience < next->experienceNeeded)
     return;
+  switch(next->reward) {
+  case 1:
+    progress->maximumHealth = FUN_001262b0(progress->maximumHealth,0x3f800000);   /* + 1.0f */
+    message = WORD_HEXADECIMAL_2CB8343A;
+    break;
+  case 2:
+    progress->levelRewardTwoCount++;
+    message = WORD_HEXADECIMAL_150C956D;
+    break;
+  case 3:
+    progress->levelRewardThreeCount++;
+    message = WORD_HEXADECIMAL_0B96B9C5;
+    break;
+  default:
+    message = next->experienceNeeded;   /* as in the binary: r2 still holds the threshold (0x0010d02c) */
+    break;
   }
-  iVar2 = *(int *)(iVar2 + 0x540);
-  if (iVar2 == 1) {
-    uVar3 = FUN_001262b0(*(undefined4 *)(param_1 + 0x518),0x3f800000);
-    iVar5 = WORD_HEXADECIMAL_2CB8343A;
-    *(undefined4 *)(param_1 + 0x518) = uVar3;
-  }
-  else if (iVar2 == 2) {
-    *(int *)(param_1 + 0x530) = *(int *)(param_1 + 0x530) + 1;
-  }
-  else {
-    iVar5 = iVar4;
-    if (iVar2 == 3) {
-      *(int *)(param_1 + 0x534) = *(int *)(param_1 + 0x534) + 1;
-      iVar5 = iVar1;
-    }
-  }
-  FUN_0011d040(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0x94),WORD_HEXADECIMAL_21BF9442,iVar5);
-  *(int *)(param_1 + 0x58c) = *(int *)(param_1 + 0x58c) + 1;
-  return;
+  FUN_0011d040((int)progress->app->pObj94,WORD_HEXADECIMAL_21BF9442,(void *)message);
+  progress->level++;
 }
 
 /* ==== 0x0010D074  (file offset 0x0D074)  FUN_0010d074 ================================================ */
@@ -9422,49 +9416,35 @@ void FUN_0010d18c(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x0010D1E0  (file offset 0x0D1E0)  FUN_0010d1e0 ================================================ */
-void FUN_0010d1e0(int param_1,int param_2)
+/* ==== 0x0010D1E0  (file offset 0x0D1E0)  progress_add_munny ========================================== */
+/* GUESS: name. Adds `amount` munny (it never goes below 0) and shows the new total as "<label>=<munny>":
+   the label is the text 0x16A5390B (FUN_0011421c, GUESS: "Munny"), turned into a wide string
+   (FUN_0010e210) and shown on the app's field_d4 screen for 2000 ms (FUN_00105538). */
+void progress_add_munny(Progress *progress,int amount)
 
 {
-  void *param_3;
-  /* not parameters: param_3. kh.mod reads r2 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  int *piVar1;
-  int iVar2;
-  int local_18;
-  void *local_14;
-  int local_10;
-  
-  piVar1 = (int *)(*(int *)(*(int *)(param_1 + 0x724) + 0xa8) + 0x52c);
-  *piVar1 = *piVar1 + param_2;
-  iVar2 = *(int *)(*(int *)(param_1 + 0x724) + 0xa8);
-  if (*(int *)(iVar2 + 0x52c) < 1) {
-    *(undefined4 *)(iVar2 + 0x52c) = 0;
+  KHApp *app = progress->app;
+  void *label = (void *)0x0;
+  void *text;
+  void *wideText = (void *)0x0;
+
+  app->progress->munny += amount;
+  if (app->progress->munny < 1)
+    app->progress->munny = 0;
+  FUN_0011421c(app->pObj98,WORD_HEXADECIMAL_16A5390B,&label);
+  if (label == (void *)0x0 || (text = helper_malloc(0x20)) == (void *)0x0)
+    return;
+  (*g_pHelperFuncs->sprintf)(text,STRING_PERCENT_S_EQUALS_PERCENT_D_OFFSET + 0x10d278,label,app->progress->munny);
+  /* Ghidra: (**(code **)(*(int *)(-53860 + 0x10d260) + 0x6c))(...): -53860 + 0x10d260 = 0x000ffffc,
+     the helper table pointer at module base - 4, slot +0x6c = free (here and for wideText below) */
+  (*g_pHelperFuncs->free)(label);
+  FUN_0010e210(app->pObj94,&text,&wideText);
+  helper_free(text);
+  if (wideText != (void *)0x0) {
+    FUN_00105538(app->field_d4,wideText,3);
+    *(int *)(app->field_d4 + 0xbc) = 2000;
+    (*g_pHelperFuncs->free)(wideText);
   }
-  local_10 = 0;
-  local_18 = param_2;
-  local_14 = param_3;
-  FUN_0011421c(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0x98),WORD_HEXADECIMAL_16A5390B,&local_10);
-  if ((local_10 != 0) &&
-     (local_14 = helper_malloc(0x20), iVar2 = INTEGER_MINUS_53860, local_14 != (void *)0x0)) {
-                    /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
-                       +0x20, via *(base-4)) */
-    (*g_pHelperFuncs->sprintf)
-              (local_14,STRING_PERCENT_S_EQUALS_PERCENT_D_OFFSET + 0x10d278,local_10,
-               *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x724) + 0xa8) + 0x52c));
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (**(code **)(*(int *)(iVar2 + 0x10d260) + 0x6c))(local_10);
-    local_18 = 0;
-    FUN_0010e210(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0x94),&local_14,&local_18);
-    helper_free(local_14);
-    if (local_18 != 0) {
-      FUN_00105538(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xd4),local_18,3);
-      *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x724) + 0xd4) + 0xbc) = 2000;
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-      (**(code **)(*(int *)(iVar2 + 0x10d260) + 0x6c))(local_18);
-    }
-  }
-  return;
 }
 
 /* ==== 0x0010D2FC  (file offset 0x0D2FC)  FUN_0010d2fc ================================================ */
@@ -10081,7 +10061,7 @@ boolean kh_HandleEvent(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
                        kh_OnKeyRelease(pMe->+0xa4, wParam), 0x405 and 0x500. EVT_KEY_PRESS (0x101)
                        is not handled. GUESS: name is mine (kh_ prefix = game code). */
   if (eCode == 8) {
-    if (pMe->pObja8 != (void *)0x0) {
+    if (pMe->progress != (void *)0x0) {
       return '\x01';
     }
   }
@@ -10152,11 +10132,14 @@ boolean kh_HandleEvent(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
   return '\0';
 }
 
-/* ==== 0x0010E1F8  (file offset 0x0E1F8)  FUN_0010e1f8 ================================================ */
-int FUN_0010e1f8(int param_1)
+/* ==== 0x0010E1F8  (file offset 0x0E1F8)  progress_score ============================================== */
+/* GUESS: name. munny + 100 * experience (0x0010e1f8: experience * 25, shifted left by 2, plus munny).
+   Used for a ranking entry (FUN_0011fddc, with the player's name pBufc4), a results screen
+   (FUN_001082e0) and a status screen (FUN_00101ad8). */
+int progress_score(Progress *progress)
 
 {
-  return *(int *)(param_1 + 0x52c) + *(int *)(param_1 + 0x538) * 100;
+  return progress->munny + progress->experience * 100;
 }
 
 /* ==== 0x0010E210  (file offset 0x0E210)  FUN_0010e210 ================================================ */
@@ -11568,7 +11551,7 @@ LAB_0010f1f4:
   }
   iVar1 = 1;
 LAB_0010f0cc:
-  FUN_0010cfc4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0xa8),
+  progress_add_experience(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0xa8),
                *(undefined4 *)(*(int *)(param_1 + 0x40) + 0x120));
   return iVar1;
 }
@@ -13500,13 +13483,13 @@ uint FUN_00110924(int *param_1)
         iVar10 = (*g_pHelperFuncs->strcmp)
                            (param_1[0x10],STRING_MUNNY_OFFSET + 0x110f04);
         if (iVar10 == 0) {
-          FUN_0010d1e0(*(int *)(iVar2 + 0xa8),param_1[7]);
+          progress_add_munny(*(int *)(iVar2 + 0xa8),param_1[7]);
         }
         else {
           iVar10 = (*g_pHelperFuncs->strcmp)
                              (param_1[0x10],STRING_EXP_OFFSET + 0x110f34);
           if (iVar10 == 0) {
-            FUN_0010cfc4(*(int *)(iVar2 + 0xa8),param_1[7]);
+            progress_add_experience(*(int *)(iVar2 + 0xa8),param_1[7]);
           }
           else {
             iVar10 = (*g_pHelperFuncs->strcmp)
@@ -14530,13 +14513,13 @@ void kh_OnAppStop(KHApp *pMe)
     FUN_0010cee4(pMe->pObj94,1);
     pMe->pObj94 = (void *)0x0;
   }
-  if (pMe->pObja8 != (void *)0x0) {
-    FUN_001216c4(pMe->pObja8);
-    FUN_0011ead4(pMe->pObja8,STRING_SETTINGS_DOT_DAT_OFFSET_2 + 0x1128e4);
-    if (pMe->pObja8 != (void *)0x0) {
-      FUN_0010c800(pMe->pObja8,1);
+  if (pMe->progress != (void *)0x0) {
+    FUN_001216c4(pMe->progress);
+    FUN_0011ead4(pMe->progress,STRING_SETTINGS_DOT_DAT_OFFSET_2 + 0x1128e4);
+    if (pMe->progress != (void *)0x0) {
+      FUN_0010c800(pMe->progress,1);
     }
-    pMe->pObja8 = (void *)0x0;
+    pMe->progress = (void *)0x0;
   }
   po = pMe->pObj6c;
   if (po != (IBase *)0x0) {
@@ -20107,7 +20090,7 @@ void kh_OnAppStart(KHApp *pMe)
   pMe->pObj9c = (void *)0x0;
   pMe->pObja0 = (void *)0x0;
   pMe->pGame = (void *)0x0;
-  pMe->pObja8 = (void *)0x0;
+  pMe->progress = (void *)0x0;
   pMe->pBufc4 = (void *)0x0;
   pMe->bSuspended = 0;
   pIVar1 = (pMe->a).m_pIShell;
@@ -20187,7 +20170,7 @@ void kh_OnAppStart(KHApp *pMe)
         else {
           if (pMe->nErr != 0) goto LAB_001199b0;
           pvVar4 = (void *)FUN_0010b4e4(0,0);
-          pMe->pObja8 = pvVar4;
+          pMe->progress = pvVar4;
           if (pvVar4 == (void *)0x0) {
             iVar6 = 0x104;
           }
@@ -21242,7 +21225,7 @@ void kh_OnKey(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
     }
     bVar15 = uVar2 <= pMe->field_d4;
     bVar13 = pMe->field_d4 == uVar2;
-    if ((!bVar13) || (FUN_001268fc(*(undefined4 *)((int)pMe->pObja8 + 0x514),0), !bVar15 || bVar13))
+    if ((!bVar13) || (FUN_001268fc(*(undefined4 *)((int)pMe->progress + 0x514),0), !bVar15 || bVar13))
     {
       if (*(int *)(*(int *)(uVar2 + 0x34) + 4) != 0) {
         memcpy_word_aligned(aiStack_48,DATA_AT_001279E0_OFFSET + 0x11a8d4,0x14);
@@ -21263,7 +21246,7 @@ void kh_OnKey(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
             }
             iVar3 = ui_element_find_child(uVar2,600);
             if (iVar3 == 0) {
-              uVar8 = *(uint *)((int)pMe->pObja8 + 0x5ec) & 0xffff;
+              uVar8 = *(uint *)((int)pMe->progress + 0x5ec) & 0xffff;
             }
             break;
           }
@@ -21295,7 +21278,7 @@ LAB_0011a990:
       FUN_0011a3ec(pMe->pGame,uVar8,dwParam);
     }
   }
-  bVar13 = *(uint *)((int)pMe->pObja8 + 0x5dc) != uVar8;
+  bVar13 = *(uint *)((int)pMe->progress + 0x5dc) != uVar8;
   if (bVar13) {
     iVar11 = uVar8 - 0xe000;
   }
@@ -21338,7 +21321,7 @@ LAB_0011a990:
       uVar14 = pMe->bSuspended == 0;
       uVar12 = true;
       if (!(bool)uVar14) {
-        FUN_001268fc(*(undefined4 *)((int)pMe->pObja8 + 0x514),0);
+        FUN_001268fc(*(undefined4 *)((int)pMe->progress + 0x514),0);
       }
       if ((bool)uVar12 && !(bool)uVar14) {
         FUN_0011d040(pMe->pObj94,uVar6,WORD_HEXADECIMAL_3C5A569E);
@@ -28384,7 +28367,7 @@ LAB_00122870:
             else {
               uVar3 = FUN_001269cc(param_1[0x18],0x3f800000);
               uVar3 = FUN_00126858(uVar3);
-              FUN_0010d1e0(*(int *)(*param_1 + 0xa8),uVar3);
+              progress_add_munny(*(int *)(*param_1 + 0xa8),uVar3);
             }
             param_1[iVar5 + 0xe] = 0;
           }
@@ -28873,7 +28856,7 @@ LAB_00122870:
             else {
               uVar3 = FUN_001269cc(piVar5[0x18],0x3f800000);
               uVar3 = FUN_00126858(uVar3);
-              FUN_0010d1e0(*(int *)(*piVar5 + 0xa8),uVar3);
+              progress_add_munny(*(int *)(*piVar5 + 0xa8),uVar3);
             }
             piVar5[iVar6 + 0xe] = 0;
           }
