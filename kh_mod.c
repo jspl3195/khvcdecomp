@@ -3132,7 +3132,7 @@ LAB_00101f40:
           if (param_2 != 0x3d) {
             return 0;
           }
-          FUN_0010f880(*(undefined4 *)(*param_1 + 0xa8));
+          progress_reset(*(undefined4 *)(*param_1 + 0xa8));
           FUN_001204f0(*(undefined4 *)(*param_1 + 0x94),STRING_TRAINING_OFFSET + 0x101c3c,*param_1 + 0xc4);
           goto LAB_00102910;
         }
@@ -7891,7 +7891,7 @@ void * FUN_0010b4e4(void *param_1,int param_2)
       *(undefined4 *)((int)param_1 + 0x5c8) = 1;
       *(undefined4 *)((int)param_1 + 0x5c4) = 0;
       FUN_0010f9a4(param_1);
-      FUN_0010f880(param_1);
+      progress_reset(param_1);
       FUN_0010f8e8(param_1);
       FUN_0011b6f0(param_1,STRING_SETTINGS_DOT_DAT_OFFSET + 0x10b5c8);
       FUN_0011b5f0(param_1);
@@ -9357,61 +9357,46 @@ LAB_0010d124:
   return;
 }
 
-/* ==== 0x0010D18C  (file offset 0x0D18C)  FUN_0010d18c ================================================ */
-void FUN_0010d18c(int param_1,int param_2)
+/* ==== 0x0010D18C  (file offset 0x0D18C)  progress_add_magic_points ===================================== */
+/* GUESS: name. Adds `amount` MP (negative to spend), kept between 0 and maximumMagicPoints, and keeps the
+   "Out of magic" status text on while MP is 0. The binary computes outOfMagic (rsbs / movlo at 0x0010d1c4)
+   and tail-jumps (0x0010d1d8) to FUN_0011fef4(app->progress, "Out of magic", outOfMagic); that code is
+   written inline here, as in Ghidra's listing: with the flag clear it removes the text from the status
+   table, with it set it stores the text in a free slot (FUN_00112d54). Called with +1 by an item drop. */
+void progress_add_magic_points(Progress *progress,int amount)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  int iVar5;
-  int iVar6;
-  
-  param_2 = *(int *)(param_1 + 0x524) + param_2;
-  *(int *)(param_1 + 0x524) = param_2;
-  if (*(int *)(param_1 + 0x528) < param_2) {
-    *(undefined4 *)(param_1 + 0x524) =
-         *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x724) + 0xa8) + 0x528);
-  }
-  if (*(int *)(param_1 + 0x524) < 1) {
-    *(undefined4 *)(param_1 + 0x524) = 0;
-  }
-  iVar3 = WORD_HEXADECIMAL_FFFE00F0;
-  iVar5 = 1 - *(uint *)(param_1 + 0x524);
-  iVar1 = *(int *)(*(int *)(param_1 + 0x724) + 0xa8);
-  if (1 < *(uint *)(param_1 + 0x524)) {
-    iVar5 = 0;
-  }
-  iVar4 = (int)&STRING_OUT_OF_MAGIC_SELF_RELATIVE_OFFSET + STRING_OUT_OF_MAGIC_SELF_RELATIVE_OFFSET;
-  if (iVar5 == 0) {
-    iVar5 = 0;
-    while( true ) {
-      iVar6 = iVar1 + iVar5 * 4;
-      iVar2 = *(int *)(iVar6 + 100);
-      if ((iVar2 != 0) &&
-         (iVar2 = (*g_pHelperFuncs->strcmp)(iVar2,iVar4), iVar2 == 0)) break;
-      iVar5 = iVar5 + 1;
-      if (99 < iVar5) {
+  Progress *table;
+  char *text;
+  int outOfMagic;
+  int i;
+
+  progress->magicPoints += amount;
+  if (progress->magicPoints > progress->maximumMagicPoints)
+    progress->magicPoints = progress->app->progress->maximumMagicPoints;
+  if (progress->magicPoints < 1)
+    progress->magicPoints = 0;
+  outOfMagic = progress->magicPoints == 0;
+  /* ---- the code of FUN_0011fef4 */
+  table = progress->app->progress;
+  text = (char *)((int)&STRING_OUT_OF_MAGIC_SELF_RELATIVE_OFFSET + STRING_OUT_OF_MAGIC_SELF_RELATIVE_OFFSET);
+  if (!outOfMagic) {
+    for (i = 0; i < 100; i++)
+      if (table->statusTexts[i] != (char *)0x0 && (*g_pHelperFuncs->strcmp)(table->statusTexts[i],text) == 0) {
+        table->statusFlags[i] = 0;
+        (*g_pHelperFuncs->free)(table->statusTexts[i]);
+        table->statusTexts[i] = (char *)0x0;
         return;
       }
-    }
-    *(undefined1 *)(iVar1 + iVar5) = 0;
-    (*g_pHelperFuncs->free)(*(undefined4 *)(iVar1 + iVar5 * 4 + 100));
-    *(undefined4 *)(iVar6 + 100) = 0;
     return;
   }
-  iVar2 = FUN_00112d54(iVar1);
-  if (iVar2 == -1) {
+  i = FUN_00112d54((int)table);
+  if (i == -1)
     return;
+  if ((*g_pHelperFuncs->strlen)(text) != 0) {
+    FUN_001204f0((int)table->app->pObj94,(int)text,(int *)&table->statusTexts[i]);
+    table->statusFlags[i] = (uint8)outOfMagic;
   }
-  iVar3 = (*g_pHelperFuncs->strlen)(iVar4);
-  if (iVar3 != 0) {
-    FUN_001204f0(*(undefined4 *)(*(int *)(iVar1 + 0x724) + 0x94),iVar4,iVar1 + iVar2 * 4 + 100);
-    *(char *)(iVar1 + iVar2) = (char)iVar5;
-    return;
-  }
-  return;
 }
 
 /* ==== 0x0010D1E0  (file offset 0x0D1E0)  progress_add_munny ========================================== */
@@ -11862,32 +11847,23 @@ joined_r0x0010f71c:
   return;
 }
 
-/* ==== 0x0010F880  (file offset 0x0F880)  FUN_0010f880 ================================================ */
-void FUN_0010f880(int param_1)
+/* ==== 0x0010F880  (file offset 0x0F880)  progress_reset ============================================== */
+/* GUESS: name. The values of a new game: health 5.0 of 5.0, MP 5 of 5, no munny or experience, level 0.
+   Called by the Progress constructor (FUN_0010b4e4) and when Training starts (FUN_00101ad8, 0x3d). */
+void progress_reset(Progress *progress)
 
 {
-  int iVar1;
-  
-  iVar1 = FLOAT_5;
-  *(int *)(param_1 + 0x514) = FLOAT_5;
-  *(int *)(param_1 + 0x518) = iVar1;
-  *(int *)(param_1 + 0x51c) = iVar1 + 0x700000;
-  *(undefined4 *)(param_1 + 0x520) = 0x40000000;
-  *(undefined4 *)(param_1 + 0x524) = 5;
-  *(undefined4 *)(param_1 + 0x528) = 5;
-  *(undefined4 *)(param_1 + 0x52c) = 0;
-  *(undefined4 *)(param_1 + 0x530) = 1;
-  *(undefined4 *)(param_1 + 0x538) = 0;
-  *(undefined4 *)(param_1 + 0x534) = 1;
-  *(undefined4 *)(param_1 + 0x58c) = 0;
-  *(undefined4 *)(param_1 + 0x59c) = 0;
-  *(undefined4 *)(param_1 + 0x5a0) = 0;
-  *(undefined4 *)(param_1 + 0x5a4) = 0;
-  *(undefined4 *)(param_1 + 0x5ac) = 0;
-  *(undefined4 *)(param_1 + 0x5b0) = 0;
-  *(undefined4 *)(param_1 + 0x5b4) = 0;
-  *(undefined4 *)(param_1 + 0x5b8) = 0;
-  return;
+  progress->health = progress->maximumHealth = FLOAT_5;
+  progress->field_51c = FLOAT_5 + 0x700000;      /* 9.0f */
+  progress->field_520 = 0x40000000;              /* 2.0f */
+  progress->magicPoints = progress->maximumMagicPoints = 5;
+  progress->munny = 0;
+  progress->levelRewardTwoCount = 1;
+  progress->experience = 0;
+  progress->levelRewardThreeCount = 1;
+  progress->level = 0;
+  progress->field_59c = progress->field_5a0 = progress->field_5a4 = 0;
+  progress->field_5ac = progress->field_5b0 = progress->field_5b4 = progress->field_5b8 = 0;
 }
 
 /* ==== 0x0010F8E8  (file offset 0x0F8E8)  FUN_0010f8e8 ================================================ */
@@ -13474,7 +13450,7 @@ uint FUN_00110924(int *param_1)
       iVar10 = (*g_pHelperFuncs->strcmp)
                          (param_1[0x10],STRING_MAGIC_OFFSET + 0x110ed4);
       if (iVar10 == 0) {
-        FUN_0010d18c(*(int *)(iVar2 + 0xa8),param_1[7]);
+        progress_add_magic_points(*(int *)(iVar2 + 0xa8),param_1[7]);
       }
       else {
         iVar10 = (*g_pHelperFuncs->strcmp)
@@ -28285,7 +28261,7 @@ LAB_00122870:
               FUN_0010d074(*(int *)(*param_1 + 0xa8),0x3f800000);
             }
             else if (cVar1 == '\x01') {
-              FUN_0010d18c(*(int *)(*param_1 + 0xa8),1);
+              progress_add_magic_points(*(int *)(*param_1 + 0xa8),1);
             }
             else {
               uVar3 = FUN_001269cc(param_1[0x18],0x3f800000);
@@ -28722,7 +28698,7 @@ void enemy_spawner_update(EnemySpawner *spawner,int context,int elapsed)
                 FUN_0010d074(*(int *)(*piVar5 + 0xa8),0x3f800000);
               }
               else if (cVar1 == '\x01') {
-                FUN_0010d18c(*(int *)(*piVar5 + 0xa8),1);
+                progress_add_magic_points(*(int *)(*piVar5 + 0xa8),1);
               }
               else {
                 uVar3 = FUN_001269cc(piVar5[0x18],0x3f800000);

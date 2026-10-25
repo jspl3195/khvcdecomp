@@ -152,18 +152,35 @@ typedef struct ProgressLevel {
 } ProgressLevel;
 
 typedef struct Progress {
-    uint8  unknown_000[0x514];
+    uint8  statusFlags[100];      /* +0x000 one byte per status text (GUESS: names) */
+    char  *statusTexts[100];      /* +0x064 named status texts, for example "Out of magic" while magicPoints is
+                                     0; set and cleared by FUN_0011fef4 */
+    uint8  unknown_1f4[0x320];
     uint32 health;                /* +0x514 GUESS: a float (its bits); refilled from maximumHealth */
     uint32 maximumHealth;         /* +0x518 GUESS: a float (its bits); +1.0f by a level reward of type 1 */
-    uint8  unknown_51c[0x10];
+    uint32 field_51c;             /* +0x51c a float (its bits), 9.0 at the start; drawn with the health */
+    uint32 field_520;             /* +0x520 a float (its bits), 2.0 at the start; drawn with the health */
+    int    magicPoints;           /* +0x524 MP: progress_add_magic_points, 0..maximumMagicPoints */
+    int    maximumMagicPoints;    /* +0x528 */
     int    munny;                 /* +0x52c the currency: progress_add_munny; spent in shops */
-    int    levelRewardTwoCount;   /* +0x530 GUESS: meaning; +1 by a level reward of type 2 */
-    int    levelRewardThreeCount; /* +0x534 GUESS: meaning; +1 by a level reward of type 3 */
+    int    levelRewardTwoCount;   /* +0x530 GUESS: meaning (a stat level?); 1 at the start, +1 by a level
+                                     reward of type 2 */
+    int    levelRewardThreeCount; /* +0x534 GUESS: meaning (a stat level?); 1 at the start, +1 by a level
+                                     reward of type 3 */
     int    experience;            /* +0x538 progress_add_experience */
     ProgressLevel levels[9];      /* +0x53c the level-ups of levels 0-8 */
     uint8  unknown_584[0x08];
     int    level;                 /* +0x58c 0-9; no level-ups after 9 */
-    uint8  unknown_590[0x3c];
+    uint8  unknown_590[0x0c];
+    int    field_59c;             /* +0x59c 0 at the start */
+    int    field_5a0;             /* +0x5a0 0 at the start */
+    int    field_5a4;             /* +0x5a4 0 at the start */
+    uint8  unknown_5a8[0x04];
+    int    field_5ac;             /* +0x5ac 0 at the start */
+    int    field_5b0;             /* +0x5b0 0 at the start */
+    int    field_5b4;             /* +0x5b4 0 at the start */
+    int    field_5b8;             /* +0x5b8 0 at the start */
+    uint8  unknown_5bc[0x10];
     int    controls[7];           /* +0x5cc the Controls key bindings (BREW key codes): Forwards, Backwards,
                                      Left, Right, Action, Status, Magic */
     uint8  unknown_5e8[0x13c];

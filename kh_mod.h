@@ -558,7 +558,7 @@ void FUN_0010ce08(undefined4 *param_1,int param_2);
 void FUN_0010cee4(int param_1,int param_2);
 void progress_add_experience(Progress *progress,int amount);   /* 0x0010CFC4 GUESS: name */
 void FUN_0010d074(int param_1,undefined4 param_2);
-void FUN_0010d18c(int param_1,int param_2);
+void progress_add_magic_points(Progress *progress,int amount);   /* 0x0010D18C GUESS: name */
 void progress_add_munny(Progress *progress,int amount);   /* 0x0010D1E0 GUESS: name */
 undefined4 FUN_0010d2fc(int param_1);
 undefined4 FUN_0010d354(int param_1);
@@ -590,7 +590,7 @@ int enemy_spawner_take_one(EnemySpawner *spawner);   /* 0x0010F2CC GUESS: name *
 undefined8 FUN_0010f2e8(int param_1,uint param_2,undefined4 param_3,uint param_4,undefined4 param_5, undefined4 param_6,uint param_7);
 void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5,
                  uint param_6);
-void FUN_0010f880(int param_1);
+void progress_reset(Progress *progress);   /* 0x0010F880 GUESS: name */
 void FUN_0010f8e8(int param_1);
 void FUN_0010f9a4(int param_1);
 bool FUN_0010fa50(int param_1,int param_2,int param_3);
