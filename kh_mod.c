@@ -11945,31 +11945,23 @@ void FUN_0010f9a4(int param_1)
   return;
 }
 
-/* ==== 0x0010FA50  (file offset 0x0FA50)  FUN_0010fa50 ================================================ */
-bool FUN_0010fa50(int param_1,int param_2,int param_3)
+/* ==== 0x0010FA50  (file offset 0x0FA50)  enemy_wait ================================================== */
+/* GUESS: name. A one-shot wait of `duration` ms, called once per update with the current time: the first
+   call (waitState 5001) sets waitUntil = now + duration and returns 0; later calls return 0 until now
+   reaches waitUntil, and then 1, with waitState back to 5001 for the next wait. Used by enemy_update
+   (1000 ms in state 1004) and the enemy behaviours FUN_0011d28c (2000 ms) and FUN_0011d3ec (1500 ms). */
+int enemy_wait(Enemy *enemy,int now,int duration)
 
 {
-  int iVar1;
-  int iVar2;
-  bool bVar3;
-  
-  bVar3 = false;
-  if (*(int *)(param_1 + 0xa0) == 0x1389) {
-    *(int *)(param_1 + 0xbc) = param_2 + param_3;
-    *(undefined4 *)(param_1 + 0xa0) = INTEGER_5002;
+  if (enemy->waitState == 5001) {
+    enemy->waitUntil = now + duration;
+    enemy->waitState = INTEGER_5002;
   }
-  else if (*(int *)(param_1 + 0xa0) == 0x138a) {
-    iVar2 = *(int *)(param_1 + 0xbc);
-    iVar1 = param_2;
-    if (iVar2 <= param_2) {
-      iVar1 = INTEGER_5001;
-    }
-    bVar3 = iVar2 <= param_2;
-    if (iVar2 <= param_2) {
-      *(int *)(param_1 + 0xa0) = iVar1;
-    }
+  else if (enemy->waitState == 5002 && enemy->waitUntil <= now) {
+    enemy->waitState = INTEGER_5001;
+    return 1;
   }
-  return bVar3;
+  return 0;
 }
 
 /* ==== 0x0010FAA8  (file offset 0x0FAA8)  FUN_0010faa8 ================================================ */
@@ -12062,7 +12054,7 @@ void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param
   uVar2 = param_9 ^ 0x80000000;
   local_38 = FUN_001262b0(param_5,param_10);
   do {
-    iVar4 = FUN_00112c18((int)param_1);
+    iVar4 = item_drops_find_free_slot((int)param_1);
     bVar14 = iVar4 == -1;
     iVar5 = iVar4;
     if (!bVar14) {
@@ -14623,19 +14615,17 @@ void FUN_00112b4c(int param_1)
   return;
 }
 
-/* ==== 0x00112C18  (file offset 0x12C18)  FUN_00112c18 ================================================ */
-int FUN_00112c18(int param_1)
+/* ==== 0x00112C18  (file offset 0x12C18)  item_drops_find_free_slot =================================== */
+/* GUESS: name. The first of the 10 item-drop slots whose timeLeft is 0, or -1 when all are in use.
+   Called by FUN_0010fbf4 (dropping items). */
+int item_drops_find_free_slot(ItemDrops *drops)
 
 {
-  int iVar1;
-  
-  iVar1 = 0;
-  do {
-    if (*(int *)(param_1 + iVar1 * 4 + 0x38) == 0) {
-      return iVar1;
-    }
-    iVar1 = iVar1 + 1;
-  } while (iVar1 < 10);
+  int i;
+
+  for (i = 0; i < 10; i++)
+    if (drops->timeLeft[i] == 0)
+      return i;
   return -1;
 }
 
@@ -19061,7 +19051,7 @@ void enemy_spawner_setup(EnemySpawner *spawner,int context)
   spawner->enemies = helper_malloc(spawner->enemyCount << 2);
   for (i = 0; i < spawner->enemyCount; i++)
     spawner->enemies[i] = enemy_create((Enemy *)0x0,i + 1,spawner,type);
-  spawner->itemDrops = (int *)FUN_0010b014((undefined4 *)0x0,spawner->field_120 < 5 ? 0x3f800000 : 0x40000000);
+  spawner->itemDrops = (ItemDrops *)FUN_0010b014((undefined4 *)0x0,spawner->field_120 < 5 ? 0x3f800000 : 0x40000000);
 }
 
 /* ==== 0x001180C4  (file offset 0x180C4)  FUN_001180c4 ================================================ */
@@ -23384,7 +23374,7 @@ LAB_0011d2e8:
   else {
     iVar4 = INTEGER_2003 + -2;
     if (iVar1 == 0x7d3) {
-      iVar3 = FUN_0010fa50(param_1,param_2,2000);
+      iVar3 = enemy_wait(param_1,param_2,2000);
       if (iVar3 == 0) {
                     /* WARNING: Could not recover jumptable at 0x0011d3bc. Too many branches */
                     /* WARNING: Treating indirect jump as call */
@@ -23451,7 +23441,7 @@ undefined8 FUN_0011d3ec(int param_1,int param_2,undefined4 param_3,undefined4 pa
     uVar12 = 1;
     if (*(int *)(param_1 + 0x130) != 0) {
       if (*(int *)(param_1 + 0x120) != 0) {
-        bVar3 = FUN_0010fa50(param_1,param_2,INTEGER_1500);
+        bVar3 = enemy_wait(param_1,param_2,INTEGER_1500);
         iVar8 = 0;
         if (!bVar3) goto switchD_0001d418_default;
       }
@@ -28332,13 +28322,13 @@ undefined4 FUN_0012289c(int *param_1,undefined4 param_2,int param_3)
 }
 
 /* ==== 0x00122954  (file offset 0x22954)  enemy_update ================================================ */
-/* GUESS: name. One update of an enemy (vtable +4, called by enemy_spawner_update with the time passed):
+/* GUESS: name. One update of an enemy (vtable +4, called by enemy_spawner_update with the current time and the time passed, in ms):
    waiting (1001) until its spawner lets it appear, alive (1002) while its health is above 0, dying (1003),
    gone (1004) for 1000 ms, then waiting again; at the end two countdowns go down by `elapsed`. When mode
    is 1 the binary tail-jumps (0x00122994) to the code at 0x0011db34 instead (no Ghidra function there;
    written inline below). FUN_00126964 / FUN_001267f0 are float compares whose result is in the condition
    flags (`bhi` at 0x00122a78, `bne` at 0x00122b28); the tests are written after the comma. */
-void enemy_update(Enemy *enemy,int context,int elapsed)
+void enemy_update(Enemy *enemy,int now,int elapsed)
 
 {
   uint32 angle;
@@ -28351,7 +28341,7 @@ void enemy_update(Enemy *enemy,int context,int elapsed)
     if (enemy->field_90 == 0x1b59) {              /* 7001 */
       *(uint8 *)(enemy->app->field_d4 + 0x4a) = 0;
       FUN_00120024((int)enemy,4);
-      if (FUN_0010eb74((int)enemy /* not arguments, register leftovers: context */) == 0)
+      if (FUN_0010eb74((int)enemy /* not arguments, register leftovers: now */) == 0)
         return;
       if (enemy->type == 5 || enemy->type == 8) {
         FUN_0011fed8((int)enemy->app->pObj9c,enemy->field_64,FLOAT_MINUS_1);
@@ -28396,9 +28386,9 @@ void enemy_update(Enemy *enemy,int context,int elapsed)
   case 1002:                                      /* alive */
     if ((FUN_00126964(enemy->health,0), *(float *)&enemy->health > 0.0f) || enemy->field_88 == 0x7d4) {
       if (enemy->mode == 2 && enemy->field_130 == 0)
-        (*enemy->field_19c)(enemy,context);
+        (*enemy->field_19c)(enemy,now);
       else
-        (*enemy->field_1a0)(enemy,context);
+        (*enemy->field_1a0)(enemy,now);
     }
     else {
       FUN_00120024((int)enemy,4);
@@ -28406,7 +28396,7 @@ void enemy_update(Enemy *enemy,int context,int elapsed)
     }
     break;
   case 1003:                                      /* dying */
-    if (FUN_0010f058((int)enemy,context) != 0) {
+    if (FUN_0010f058((int)enemy,now) != 0) {
       *(uint8 *)(enemy->app->field_d4 + 0x4a) = 0;
       enemy->state = 0x3ec;
       FUN_001201cc(enemy->field_28,0);
@@ -28418,7 +28408,7 @@ void enemy_update(Enemy *enemy,int context,int elapsed)
     }
     break;
   case 0x3ec:                                     /* 1004 gone: wait 1000 ms */
-    if (FUN_0010fa50((int)enemy,context,1000) != 0)
+    if (enemy_wait((int)enemy,now,1000) != 0)
       enemy->state = INTEGER_1001;
     break;
   }
@@ -28577,16 +28567,16 @@ void FUN_00122b90(int param_1,int param_2,uint param_3,undefined4 param_4)
 }
 
 /* ==== 0x00122F98  (file offset 0x22F98)  enemy_spawner_update ======================================== */
-/* GUESS: name. One update of a spawner (`elapsed` is the time passed, GUESS: milliseconds): resets its
+/* GUESS: name. One update of a spawner (`now` is the current time and `elapsed` the time passed since the last update, in ms): resets its
    enemies when asked (field_148), runs the wave state machine, updates every enemy (vtable +4,
    enemy_update), then its item drops: the binary tail-jumps (0x00123124) to FUN_001226e8 with
    spawner->itemDrops; Ghidra copied that code in, and it is kept below as Ghidra wrote it. */
-void enemy_spawner_update(EnemySpawner *spawner,int context,int elapsed)
+void enemy_spawner_update(EnemySpawner *spawner,int now,int elapsed)
 
 {
   int i;
 
-  FUN_0012407c((int)spawner,context,elapsed);
+  FUN_0012407c((int)spawner,now,elapsed);
   if (spawner->field_148 != 0) {
     for (i = 0; i < spawner->enemyCount; i++) {
       (*(code *)(*(int *)spawner->enemies[i]->vtable + spawner->enemies[i]->vtable))(spawner->enemies[i]);
@@ -28609,7 +28599,7 @@ void enemy_spawner_update(EnemySpawner *spawner,int context,int elapsed)
       spawner->field_13c = 1;
     }
     else
-      FUN_0011a2f4((int)spawner,context);
+      FUN_0011a2f4((int)spawner,now);
     break;
   case 3:
     if (spawner->active == 0)
@@ -28626,7 +28616,7 @@ void enemy_spawner_update(EnemySpawner *spawner,int context,int elapsed)
   }
   for (i = 0; i < spawner->enemyCount; i++)
     (*(code *)(*(int *)(spawner->enemies[i]->vtable + 4) + spawner->enemies[i]->vtable))
-              (spawner->enemies[i],context,elapsed);   /* vtable +4: enemy_update */
+              (spawner->enemies[i],now,elapsed);   /* vtable +4: enemy_update */
   /* ---- the code of FUN_001226e8 (the item drops), as Ghidra copied it here ---- */
   {
     char cVar1;
@@ -28646,7 +28636,7 @@ void enemy_spawner_update(EnemySpawner *spawner,int context,int elapsed)
     uint uStack_30;
     uint uStack_2c;
 
-    piVar5 = spawner->itemDrops;
+    piVar5 = (int *)spawner->itemDrops;
     FUN_00113cc4(&uStack_30,*(int *)(*(int *)(*piVar5 + 0xa4) + 0x1f8));
     iVar6 = 0;
     do {

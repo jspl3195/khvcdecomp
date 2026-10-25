@@ -194,6 +194,19 @@ typedef struct Progress {
  * then lives through the states of enemy_update. Fields whose meaning is not known are named by offset. */
 struct EnemySpawner;
 
+/* The items an enemy spawner's enemies drop (100 bytes, FUN_0010b014; GUESS: names): 10 slots, each an
+ * item on the ground for a limited time. A slot is free when its timeLeft is 0
+ * (item_drops_find_free_slot). FUN_0010fbf4 drops items into free slots; FUN_001226e8 counts the times
+ * down and gives the reward when the player picks one up. */
+typedef struct ItemDrops {
+    struct KHApp *app;            /* +0x00 GetAppInstance() at creation */
+    int    entities[10];          /* +0x04 the item shown in each slot */
+    uint8  kinds[10];             /* +0x2c 0: health +1.0, 1: MP +1, 2: munny */
+    uint8  unknown_36[0x02];
+    int    timeLeft[10];          /* +0x38 ms the item stays on the ground; 0 = free slot */
+    uint32 munnyPerPickup;        /* +0x60 a float (its bits): 1.0, or 2.0 when the spawner's field_120 >= 5 */
+} ItemDrops;                      /* 100 bytes */
+
 typedef struct Enemy {
     int    vtable;                /* +0x000 slots hold self-relative offsets; +4 is enemy_update, 0 and +0xc
                                      run when the spawner's field_148 is set */
@@ -222,9 +235,12 @@ typedef struct Enemy {
     int    field_88;              /* +0x088 2004: the alive behaviour runs even at 0 health */
     uint8  unknown_8c[0x04];
     int    field_90;              /* +0x090 the state while mode is 1: 7001, 7002, 7003 */
-    uint8  unknown_94[0x10];
+    uint8  unknown_94[0x0c];
+    int    waitState;             /* +0x0a0 enemy_wait: 5001 idle, 5002 waiting */
     int    state;                 /* +0x0a4 1001 waiting, 1002 alive, 1003 dying, 1004 gone */
-    uint8  unknown_a8[0x50];
+    uint8  unknown_a8[0x14];
+    int    waitUntil;             /* +0x0bc enemy_wait: the time (ms) the wait ends */
+    uint8  unknown_c0[0x38];
     int    field_f8;              /* +0x0f8 */
     uint8  unknown_fc[0x04];
     int    field_100;             /* +0x100 -1 at creation */
@@ -235,8 +251,8 @@ typedef struct Enemy {
     int    field_12c;             /* +0x12c another countdown */
     int    field_130;             /* +0x130 */
     uint8  unknown_134[0x68];
-    int  (*field_19c)(struct Enemy *enemy, int context);   /* +0x19c alive, mode 2 and field_130 == 0 */
-    int  (*field_1a0)(struct Enemy *enemy, int context);   /* +0x1a0 alive, otherwise */
+    int  (*field_19c)(struct Enemy *enemy, int now);   /* +0x19c alive, mode 2 and field_130 == 0 */
+    int  (*field_1a0)(struct Enemy *enemy, int now);   /* +0x1a0 alive, otherwise */
     uint8  unknown_1a4[0xcc];
     int    field_270;             /* +0x270 1 at creation */
     uint8  unknown_274[0x0c];
@@ -250,7 +266,7 @@ typedef struct EnemySpawner {
     struct KHApp *app;            /* +0x084 */
     uint8  unknown_88[0x88];
     int    active;                /* +0x110 GUESS: the player is in its area */
-    int   *itemDrops;             /* +0x114 its item drops (FUN_0010b014; updated by FUN_001226e8) */
+    ItemDrops *itemDrops;         /* +0x114 its item drops (FUN_0010b014; updated by FUN_001226e8) */
     uint32 enemyMaximumHealth;    /* +0x118 a float (its bits); level data, default 5.0 */
     uint32 field_11c;             /* +0x11c a float (its bits); level data, default 1.0 */
     int    field_120;             /* +0x120 level data; below 5 the item drops get 1.0, else 2.0 */

@@ -593,7 +593,7 @@ void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4
 void progress_reset(Progress *progress);   /* 0x0010F880 GUESS: name */
 void FUN_0010f8e8(int param_1);
 void FUN_0010f9a4(int param_1);
-bool FUN_0010fa50(int param_1,int param_2,int param_3);
+int enemy_wait(Enemy *enemy,int now,int duration);   /* 0x0010FA50 GUESS: name */
 int FUN_0010faa8(int param_1,undefined4 param_2);
 void FUN_0010fb90(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param_5,int param_6,
@@ -610,7 +610,7 @@ uint FUN_00110924(int *param_1);
 undefined8 FUN_0011295c(undefined4 *param_1,int *param_2,int *param_3,int *param_4,undefined4 param_5);
 bool FUN_00112a98(int param_1,undefined4 param_2,int param_3);
 void FUN_00112b4c(int param_1);
-int FUN_00112c18(int param_1);
+int item_drops_find_free_slot(ItemDrops *drops);   /* 0x00112C18 GUESS: name */
 void FUN_00112c44(int *param_1);
 undefined4 FUN_00112c9c(int param_1,int param_2);
 undefined8 FUN_00112cdc(int param_1,int *param_2,int param_3);
@@ -800,9 +800,9 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3,uint param_4)
 void FUN_00122450(int param_1,byte *param_2,int param_3);
 void FUN_001226e8(int *param_1,undefined4 param_2,int param_3);
 undefined4 FUN_0012289c(int *param_1,undefined4 param_2,int param_3);
-void enemy_update(Enemy *enemy,int context,int elapsed);   /* 0x00122954 GUESS: name */
+void enemy_update(Enemy *enemy,int now,int elapsed);   /* 0x00122954 GUESS: name */
 void FUN_00122b90(int param_1,int param_2,uint param_3,undefined4 param_4);
-void enemy_spawner_update(EnemySpawner *spawner,int context,int elapsed);   /* 0x00122F98 GUESS: name */
+void enemy_spawner_update(EnemySpawner *spawner,int now,int elapsed);   /* 0x00122F98 GUESS: name */
 void FUN_0012312c(int param_1,int param_2,int param_3,undefined4 param_4);
 void FUN_00123588(int param_1,int param_2,int param_3,undefined4 param_4);
 void FUN_00123c24(int param_1,undefined4 param_2,undefined4 param_3,int param_4);
