@@ -89,66 +89,46 @@ void FUN_00100104(int param_1)
   return;
 }
 
-/* ==== 0x00100110  (file offset 0x00110)  FUN_00100110 ================================================ */
-undefined4 * FUN_00100110(undefined4 *param_1,uint param_2)
+/* ==== 0x00100110  (file offset 0x00110)  memset ====================================================== */
+/* GUESS: name. memset(destination, 0, byteCount) for a word-aligned destination: the ARM C library's
+   __rt_memclr_w (ADS / RVCT; __aeabi_memclr4 in later ABIs), which the compiler calls itself to clear
+   local structures. There is no fill-value parameter: the value is always 0. Evidence (0x00100110-
+   0x00100164): r2, r3, ip and lr are set to 0; while at least 32 bytes remain, two
+   `stmhs r0!, {r2, r3, ip, lr}` write 32 bytes; the remaining 0-31 bytes are written by testing the
+   bits of the count (16, 8, 4, 2, 1 bytes); the destination is never aligned first (hence "word-
+   aligned"). Returns the address just past the last byte cleared (r0). All 5 callers are in
+   FUN_00101ad8, clearing parts of its local array local_74 (0x18 or 0x1c bytes). */
+void * memset(void *destination,uint byteCount)
 
 {
-  uint uVar1;
-  undefined1 *puVar2;
-  undefined4 *puVar3;
-  undefined4 *puVar4;
-  bool bVar5;
-  
-  bVar5 = 0x1f < param_2;
-  param_2 = param_2 - 0x20;
-  do {
-    if (bVar5) {
-      *param_1 = 0;
-      param_1[1] = 0;
-      param_1[2] = 0;
-      param_1[3] = 0;
-      param_1[4] = 0;
-      param_1[5] = 0;
-      param_1[6] = 0;
-      param_1[7] = 0;
-      param_1 = param_1 + 8;
-      bVar5 = 0x1f < param_2;
-      param_2 = param_2 - 0x20;
-    }
-  } while (bVar5);
-  if ((bool)((byte)(param_2 >> 4) & 1)) {
-    *param_1 = 0;
-    param_1[1] = 0;
-    param_1[2] = 0;
-    param_1[3] = 0;
-    param_1 = param_1 + 4;
+  uint32 *words = (uint32 *)destination;
+  uint8 *bytes;
+
+  /* the same steps as the binary: 32 bytes at a time (two stmhs of four registers), then one store
+     per bit of the remaining count. The 2 trailing bytes are two strb, not one halfword store. */
+  for (; byteCount >= 0x20; byteCount -= 0x20, words += 8) {
+    words[0] = words[1] = words[2] = words[3] = words[4] = words[5] = words[6] = words[7] = 0;
   }
-  if ((int)(param_2 << 0x1c) < 0) {
-    *param_1 = 0;
-    param_1[1] = 0;
-    param_1 = param_1 + 2;
+  if (byteCount & 0x10) {
+    words[0] = words[1] = words[2] = words[3] = 0;
+    words += 4;
   }
-  uVar1 = param_2 << 0x1e;
-  puVar3 = param_1;
-  if ((bool)((byte)((param_2 << 0x1c) >> 0x1e) & 1)) {
-    puVar3 = param_1 + 1;
-    *param_1 = 0;
+  if (byteCount & 8) {
+    words[0] = words[1] = 0;
+    words += 2;
   }
-  if (uVar1 != 0) {
-    if ((int)uVar1 < 0) {
-      puVar2 = (undefined1 *)((int)puVar3 + 1);
-      *(undefined1 *)puVar3 = 0;
-      puVar3 = (undefined4 *)((int)puVar3 + 2);
-      *puVar2 = 0;
-    }
-    puVar4 = puVar3;
-    if ((uVar1 & 0x40000000) != 0) {
-      puVar4 = (undefined4 *)((int)puVar3 + 1);
-      *(undefined1 *)puVar3 = 0;
-    }
-    return puVar4;
+  if (byteCount & 4) {
+    *words++ = 0;
   }
-  return puVar3;
+  bytes = (uint8 *)words;
+  if (byteCount & 2) {
+    *bytes++ = 0;
+    *bytes++ = 0;
+  }
+  if (byteCount & 1) {
+    *bytes++ = 0;
+  }
+  return bytes;                     /* destination + byteCount */
 }
 
 /* ==== 0x00100168  (file offset 0x00168)  FUN_00100168 ================================================ */
@@ -2691,7 +2671,7 @@ LAB_00103858:
       FUN_00109a10(uVar10,1,uVar23,uVar24);
       FUN_00109a10(uVar10,2,uVar2,0x3f);
       local_38 = (void *)FUN_0010e1f8(*(undefined4 *)(*param_1 + 0xa8));
-      FUN_00100110(local_74 + 9,0x18);
+      memset(local_74 + 9,0x18);
       local_74[9] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x52c);
       local_74[10] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x530);
       local_74[0xb] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x534);
@@ -2824,7 +2804,7 @@ LAB_001050b0:
       local_3c = (void *)0x0;
       FUN_00114120(*(undefined4 *)(*param_1 + 0xa8),*(undefined4 *)(*param_1 + 0xc4),&local_38,
                    &local_3c);
-      FUN_00100110(local_74 + 7,0x1c);
+      memset(local_74 + 7,0x1c);
       local_74[7] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x52c);
       local_74[8] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x530);
       local_74[9] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x534);
@@ -3192,7 +3172,7 @@ LAB_0010489c:
               if (puVar6 != (undefined4 *)0x0) {
                 local_74[9] = *puVar6;
               }
-              FUN_00100110(local_74 + 4,0x18);
+              memset(local_74 + 4,0x18);
               local_74[4] = *(int *)(*(int *)(*param_1 + 0xa8) + 0x52c);
               local_74[5] = *(int *)(*(int *)(*param_1 + 0xa8) + 0x5ac);
               local_74[6] = *(int *)(*(int *)(*param_1 + 0xa8) + 0x5b0);
@@ -3411,7 +3391,7 @@ LAB_001042b8:
     FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_2B21E3F9,0);
     FUN_00109a10(iVar9,1,WORD_HEXADECIMAL_225D20E5,0x15);
     FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0xffffffff);
-    FUN_00100110(local_74 + 9,0x1c);
+    memset(local_74 + 9,0x1c);
     local_74[9] = FUN_00126858(*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x514));
     local_74[10] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x524);
     local_74[0xb] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x530);
@@ -3661,7 +3641,7 @@ LAB_00104360:
       iVar8 = iVar8 + 1;
       iVar19 = iVar19 + iVar17;
     } while (iVar8 < 7);
-    FUN_00100110(local_74,0x1c);
+    memset(local_74,0x1c);
     local_74[0] = *(int *)(*param_1 + 0xa8) + 0x5cc;
     local_74[1] = *(int *)(*param_1 + 0xa8) + 0x5d0;
     local_74[2] = *(int *)(*param_1 + 0xa8) + 0x5d4;
