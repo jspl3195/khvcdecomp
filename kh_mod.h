@@ -499,7 +499,7 @@ void FUN_00109ff8(int param_1,undefined4 param_2);
 void FUN_0010a03c(int param_1,undefined4 param_2);
 void FUN_0010a080(int param_1);
 void FUN_0010a0d0(int param_1);
-void FUN_0010a124(int param_1);
+void game_pause(KHApp *app);   /* 0x0010A124 GUESS: name, see kh_mod.c */
 int FUN_0010a12c(int param_1,undefined4 param_2,byte *param_3);
 undefined8 FUN_0010a214(int param_1);
 void FUN_0010a3e8(undefined4 param_1,int *param_2,uint param_3,int param_4);

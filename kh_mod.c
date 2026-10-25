@@ -2373,7 +2373,7 @@ LAB_00103858:
         piVar4 = (int *)FUN_0011b518(*(undefined4 *)(*param_1 + 0x94),pvVar16);
         helper_free(pvVar16);
         if (piVar4 != (int *)0x0) {
-          FUN_0010a124(*param_1);
+          game_pause(*param_1);
           iVar9 = FUN_0010bd7c(0,param_1,0);
           uVar10 = FUN_0010bba0(0,0,0,(int)*(short *)(param_1[5] + 4),
                                 (int)*(short *)(param_1[5] + 6),param_1,0xc,0,1);
@@ -2412,7 +2412,7 @@ LAB_00103858:
       uVar10 = 0xf;
       goto LAB_00104360;
     case 0x75:
-      FUN_0010a124(*param_1);
+      game_pause(*param_1);
       iVar9 = *(int *)(*param_1 + 0xa8);
       if ((*(int *)(iVar9 + 0x71c) == 0) && (*(int *)(*param_1 + 200) != 0)) {
         *(undefined4 *)(iVar9 + 0x71c) = 1;
@@ -3150,7 +3150,7 @@ LAB_001042b8:
   case 0:
     return 0;
   case 1:
-    FUN_0010a124(*param_1);
+    game_pause(*param_1);
     iVar9 = FUN_0010bd7c(0,param_1,1);
     FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_2B21E3F9,0);
     FUN_00109a10(iVar9,1,WORD_HEXADECIMAL_225D20E5,0x15);
@@ -3262,7 +3262,7 @@ LAB_001042b8:
     FUN_0012031c(*(undefined4 *)(*param_1 + 0x94),0);
     break;
   case 4:
-    FUN_0010a124(*param_1);
+    game_pause(*param_1);
     iVar9 = FUN_0010bd7c(0,param_1,1);
     FUN_001055c4(param_1,iVar9,0,uVar10,WORD_HEXADECIMAL_133529B8);
     FUN_00109a10(iVar9,1,uVar11,0xfffffffe);
@@ -7058,7 +7058,7 @@ void FUN_0010a0d0(int param_1)
   return;
 }
 
-/* ==== 0x0010A124  (file offset 0x0A124)  FUN_0010a124 ================================================ */
+/* ==== 0x0010A124  (file offset 0x0A124)  game_pause ================================================== */
 /* WARNING: Removing unreachable block (ram,0x0012058c) */
 /* WARNING: Removing unreachable block (ram,0x00120584) */
 /* WARNING: Removing unreachable block (ram,0x0012057c) */
@@ -7066,13 +7066,46 @@ void FUN_0010a0d0(int param_1)
 /* WARNING: Removing unreachable block (ram,0x00120588) */
 /* WARNING: Removing unreachable block (ram,0x00120590) */
 
-void FUN_0010a124(int param_1)
+/* ---- The code behind the "unreachable block" warnings above ------------------------------------
+ *
+ * The function itself is two instructions: it calls FUN_0012056c(app, 0) as a tail call.
+ *   0010a124  e3a01000  mov   r1, #0
+ *   0010a128  ea00590f  b     0x0012056c
+ *
+ * Ghidra followed the branch and decompiled FUN_0012056c with its second argument known to be 0, so
+ * the instructions that run only when that argument is not 0 were dropped as unreachable:
+ *   0012056c  e1a02000  mov   r2, r0              ; r2 = app (later the timer's user data)
+ *   00120570  e3a00005  mov   r0, #5
+ *   00120574  e58200cc  str   r0, [r2, #0xcc]     ; app->field_cc = 5
+ *   00120578  e3510000  cmp   r1, #0
+ *   0012057c  1592000c  ldrne r0, [r2, #0xc]      ; unreachable here: r0 = app->a.m_pIShell
+ *   00120580  15901000  ldrne r1, [r0]            ; unreachable here: r1 = its vtable
+ *   00120584  15913030  ldrne r3, [r1, #0x30]     ; unreachable here: r3 = slot +0x30, CancelTimer
+ *   00120588  159f1008  ldrne r1, [pc, #8]        ; unreachable here: literal 0x00003d20 at 0x00120598
+ *   0012058c  108f1001  addne r1, pc, r1          ; unreachable here: r1 = 0x00003d20 + 0x00120594 = FUN_001242b4
+ *   00120590  112fff13  bxne  r3                  ; unreachable here: tail call CancelTimer
+ *   00120594  e12fff1e  bx    lr
+ *
+ * The missing code, in C (all of FUN_0012056c, with the part that is unreachable from here marked):
+ *
+ *   void FUN_0012056c(KHApp *app, int stopTimer)
+ *   {
+ *     app->field_cc = 5;
+ *     if (stopTimer != 0)                                       // never true when called from here
+ *       (*app->a.m_pIShell->pvt->CancelTimer)(app->a.m_pIShell, (PFNNOTIFY)FUN_001242b4, app);
+ *   }
+ *
+ * FUN_001242b4 is the app's timer callback: screen_stack_close_top restarts it every 0x28 ms (40 ms),
+ * so it is very likely the game's frame tick. kh_HandleEvent calls FUN_0012056c(pMe, 1) on
+ * EVT_APP_SUSPEND, which also stops it; this function leaves it running.
+ */
+/* GUESS: name. Pauses the game: sets the app's state word field_cc to 5 (GUESS: 5 = paused), without
+   stopping the timer. When the menu that was opened over the game closes, screen_stack_close_top sees
+   field_cc == 5 and resumes. Called 4 times by FUN_00101ad8 (the screen stack's event handler). */
+void game_pause(KHApp *app)
 
 {
-  *(undefined4 *)(param_1 + 0xcc) = 5;
-                    /* WARNING: Could not recover jumptable at 0x00120590. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  return;
+  app->field_cc = 5;
 }
 
 /* ==== 0x0010A12C  (file offset 0x0A12C)  FUN_0010a12c ================================================ */
