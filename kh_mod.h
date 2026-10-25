@@ -454,7 +454,7 @@ void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,u
 void FUN_00107adc(int param_1,int param_2,undefined4 param_3,int *param_4,short *param_5, undefined4 param_6,uint param_7,short param_8);
 void FUN_00107d24(int *param_1);
 void FUN_00107e48(undefined4 param_1,int param_2);
-int FUN_00107ea4(int *param_1,int param_2);
+int list_get_entry(UIList *list,int index);   /* 0x00107EA4 GUESS: name, see kh_mod.c */
 int FUN_00107ec4(int param_1,int param_2);
 void * FUN_00107ecc(undefined4 param_1,undefined4 param_2);
 int FUN_00107f88(int param_1);

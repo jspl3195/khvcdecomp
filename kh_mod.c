@@ -3624,7 +3624,7 @@ LAB_001052c0:
   (*pcVar3)(param_1,*(undefined4 *)(param_1[8] + 0xc),*(undefined4 *)(param_1[8] + 0x10),pcVar3,
             in_r3,unaff_r4);
   iVar4 = 0;
-  while (piVar2 = (int *)FUN_00107ea4((int *)param_1[9],iVar4), piVar2 != (int *)0x0) {
+  while (piVar2 = (int *)list_get_entry((int *)param_1[9],iVar4), piVar2 != (int *)0x0) {
     FUN_00107d24(piVar2);
     iVar4 = iVar4 + 1;
   }
@@ -3834,7 +3834,7 @@ void FUN_001056d0(int *param_1,int param_2)
     (*pcVar5)(param_1,*(undefined4 *)(param_1[8] + 0xc),*(undefined4 *)(param_1[8] + 0x10),pcVar5,
               iVar4);
     iVar3 = 0;
-    while (piVar2 = (int *)FUN_00107ea4((int *)param_1[9],iVar3), piVar2 != (int *)0x0) {
+    while (piVar2 = (int *)list_get_entry((int *)param_1[9],iVar3), piVar2 != (int *)0x0) {
       FUN_00107d24(piVar2);
       iVar3 = iVar3 + 1;
     }
@@ -4114,7 +4114,7 @@ void FUN_00105c5c(int param_1)
   }
   helper_free(*(void **)(param_1 + 0x34));
   iVar1 = 0;
-  while (p = (int *)FUN_00107ea4(*(undefined4 *)(param_1 + 0x24),iVar1), p != (int *)0x0) {
+  while (p = (int *)list_get_entry(*(undefined4 *)(param_1 + 0x24),iVar1), p != (int *)0x0) {
     (*(code *)(*(int *)*p + *p))(p);
     helper_free(p);
     iVar1 = iVar1 + 1;
@@ -4139,7 +4139,7 @@ void FUN_00105d48(int param_1)
     (*g_pHelperFuncs->free)(*(void **)(param_1 + 0x38));
   }
   iVar1 = 0;
-  while (p = (int *)FUN_00107ea4(*(undefined4 *)(param_1 + 0x24),iVar1), p != (int *)0x0) {
+  while (p = (int *)list_get_entry(*(undefined4 *)(param_1 + 0x24),iVar1), p != (int *)0x0) {
     (*(code *)(*(int *)*p + *p))(p);
     helper_free(p);
     iVar1 = iVar1 + 1;
@@ -4170,7 +4170,7 @@ void FUN_00105d7c(int param_1)
     (**(code **)(**(int **)(param_1 + 0x6c) + 4))();
   }
   iVar1 = 0;
-  while (p = (int *)FUN_00107ea4(*(undefined4 *)(param_1 + 0x24),iVar1), p != (int *)0x0) {
+  while (p = (int *)list_get_entry(*(undefined4 *)(param_1 + 0x24),iVar1), p != (int *)0x0) {
     (*(code *)(*(int *)*p + *p))(p);
     helper_free(p);
     iVar1 = iVar1 + 1;
@@ -4193,7 +4193,7 @@ void FUN_00105dc8(int param_1)
   
   helper_free(*(void **)(param_1 + 0x34));
   iVar1 = 0;
-  while (p = (int *)FUN_00107ea4(*(undefined4 *)(param_1 + 0x24),iVar1), p != (int *)0x0) {
+  while (p = (int *)list_get_entry(*(undefined4 *)(param_1 + 0x24),iVar1), p != (int *)0x0) {
     (*(code *)(*(int *)*p + *p))(p);
     helper_free(p);
     iVar1 = iVar1 + 1;
@@ -5261,7 +5261,7 @@ void FUN_00107d24(int *param_1)
     (*(code *)(*(int *)(*param_1 + 0x10) + *param_1))
               (param_1,*(undefined4 *)(param_1[8] + 0xc),*(undefined4 *)(param_1[8] + 0x10));
     iVar3 = 0;
-    while (piVar2 = (int *)FUN_00107ea4((int *)param_1[9],iVar3), piVar2 != (int *)0x0) {
+    while (piVar2 = (int *)list_get_entry((int *)param_1[9],iVar3), piVar2 != (int *)0x0) {
       FUN_00107d24(piVar2);
       iVar3 = iVar3 + 1;
     }
@@ -5294,33 +5294,17 @@ void FUN_00107e48(undefined4 param_1,int param_2)
   return;
 }
 
-/* ==== 0x00107EA4  (file offset 0x07EA4)  FUN_00107ea4 ================================================ */
-int FUN_00107ea4(int *param_1,int param_2)
+/* ==== 0x00107EA4  (file offset 0x07EA4)  list_get_entry ============================================== */
+/* GUESS: name. Entry `index` of a list, or 0 when index is out of range (0x00107ea4-0x00107ec0:
+   cmp r1, #0 / ldrge r3, [r0] / cmpge r3, r1 / ldrgt r0, [r0, #8] / ldrgt r2, [r0, r1, lsl #2]).
+   Most of its 13 callers walk a menu's or element's children with it,
+   `while ((child = list_get_entry(list, i)) != 0) ... i++`, stopping at the 0 after the last entry. */
+int list_get_entry(UIList *list,int index)
 
 {
-  int param_4;
-  /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  int iVar1;
-  bool bVar2;
-  bool bVar3;
-  
-  bVar2 = -1 < param_2;
-  bVar3 = param_2 == 0;
-  if (bVar2) {
-    param_4 = *param_1;
-  }
-  iVar1 = 0;
-  if (bVar2) {
-    bVar3 = param_4 == param_2;
-  }
-  if (!bVar3 && (bVar2 && param_2 <= param_4)) {
-    param_1 = (int *)param_1[2];
-  }
-  if (!bVar3 && (bVar2 && param_2 <= param_4)) {
-    iVar1 = param_1[param_2];
-  }
-  return iVar1;
+  if (index >= 0 && index < list->count)
+    return list->entries[index];
+  return 0;
 }
 
 /* ==== 0x00107EC4  (file offset 0x07EC4)  FUN_00107ec4 ================================================ */
@@ -5388,7 +5372,7 @@ int FUN_00107f88(int param_1)
   int iVar2;
   
   iVar2 = 0;
-  iVar1 = FUN_00107ea4(*(undefined4 *)(param_1 + 0x30),0 /* not arguments, register leftovers: param_3,param_4,param_4 */);
+  iVar1 = list_get_entry(*(undefined4 *)(param_1 + 0x30),0 /* not arguments, register leftovers: param_3,param_4,param_4 */);
   if (iVar1 != 0) {
     iVar2 = *(int *)(iVar1 + 0x34) + *(int *)(*(int *)(param_1 + 0x34) + 0x10);
   }
@@ -5912,7 +5896,7 @@ void FUN_00108840(int param_1,short param_2)
   iVar3 = 0;
   psVar1 = (short *)(*(int *)(param_1 + 8) + 2);
   *psVar1 = *psVar1 + param_2;
-  while (iVar2 = FUN_00107ea4(*(undefined4 *)(param_1 + 0x24),iVar3), iVar2 != 0) {
+  while (iVar2 = list_get_entry(*(undefined4 *)(param_1 + 0x24),iVar3), iVar2 != 0) {
     iVar3 = iVar3 + 1;
     psVar1 = (short *)(*(int *)(iVar2 + 8) + 2);
     *psVar1 = *psVar1 + param_2;
@@ -6868,7 +6852,7 @@ void FUN_00109b4c(int param_1,int param_2,int param_3)
   
   while( true ) {
     iVar11 = 0;
-    while (piVar2 = (int *)FUN_00107ea4(*(int **)(param_1 + 0x30),iVar11), piVar2 != (int *)0x0) {
+    while (piVar2 = (int *)list_get_entry(*(int **)(param_1 + 0x30),iVar11), piVar2 != (int *)0x0) {
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2);
       helper_free(piVar2);
       iVar11 = iVar11 + 1;
@@ -7217,7 +7201,7 @@ undefined8 FUN_0010a214(int param_1)
   **(undefined4 **)(param_1 + 0x24) = 0;
   iVar1 = **(int **)(param_1 + 0x30);
   if (0 < iVar1) {
-    iVar2 = FUN_00107ea4(*(int **)(param_1 + 0x30),0);
+    iVar2 = list_get_entry(*(int **)(param_1 + 0x30),0);
     iVar3 = *(int *)(param_1 + 0x34);
     iVar9 = *(int *)(iVar2 + 0x34) + *(int *)(iVar3 + 0x10);
     iVar1 = iVar1 - *(int *)(param_1 + 0x38);
@@ -7238,7 +7222,7 @@ undefined8 FUN_0010a214(int param_1)
       iVar3 = *(int *)(iVar3 + 0xc);
     }
     for (iVar8 = 0; iVar8 < iVar2; iVar8 = iVar8 + 1) {
-      iVar4 = FUN_00107ea4(*(undefined4 *)(param_1 + 0x30),*(int *)(param_1 + 0x38) + iVar8);
+      iVar4 = list_get_entry(*(undefined4 *)(param_1 + 0x30),*(int *)(param_1 + 0x38) + iVar8);
       **(short **)(iVar4 + 8) =
            **(short **)(param_1 + 8) + (short)*(undefined4 *)(*(int *)(param_1 + 0x34) + 8);
       *(short *)(*(int *)(iVar4 + 8) + 2) = *(short *)(*(int *)(param_1 + 8) + 2) + (short)iVar3;
@@ -8625,7 +8609,7 @@ void FUN_0010c3f8(int param_1,int param_2)
     } while (iVar1 < 7);
   }
   for (iVar1 = 0; piVar4 = *(int **)(param_1 + 0x40), iVar1 < *piVar4; iVar1 = iVar1 + 1) {
-    p = (void *)FUN_00107ea4(piVar4,iVar1);
+    p = (void *)list_get_entry(piVar4,iVar1);
     helper_free(p);
   }
   if (piVar4 != (int *)0x0) {

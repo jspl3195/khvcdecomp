@@ -72,6 +72,16 @@ typedef struct KHApp {
     uint32         field_dc;         /* +0xdc address returned by kh_GetAppFieldPtr_dc */
 } KHApp;
 
+/* ---- Lists (GUESS: names) ----------------------------------------------------------------------
+ * The children of a menu or UI element (for example the list at menu +0x24), kept as two parallel
+ * arrays. list_get_entry reads an entry by position (0 when out of range); FUN_001080c8 returns the
+ * entry whose id matches. The key map of a UIElement (+0x60) is searched the same way. */
+typedef struct UIList {
+    int    count;                 /* +0x00 number of entries */
+    int   *ids;                   /* +0x04 one id per entry (the key pickers have ids 400-406) */
+    int   *entries;               /* +0x08 the entries, usually UIElement pointers */
+} UIList;
+
 /* ---- The game's UI elements (GUESS: names) ------------------------------------------------------
  * A UIElement is a menu entry or widget, created by FUN_0010bba0 with its type in +0x34. Only the
  * fields used by ui_element_handle_key and the key picker functions are named; the rest is padding.
