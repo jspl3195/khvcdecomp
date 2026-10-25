@@ -170,4 +170,83 @@ typedef struct Progress {
     struct KHApp *app;            /* +0x724 the app it belongs to */
 } Progress;
 
+/* ---- Enemies and enemy spawners (GUESS: names) ----------------------------------------------
+ * An EnemySpawner is a place in a level that sends enemies in waves: enemy_spawner_setup reads its
+ * parameters from the level data, enemy_spawner_update runs its waves and updates its enemies. Each
+ * Enemy (0x280 bytes, enemy_create) waits until the spawner lets it appear (enemy_spawner_take_one),
+ * then lives through the states of enemy_update. Fields whose meaning is not known are named by offset. */
+struct EnemySpawner;
+
+typedef struct Enemy {
+    int    vtable;                /* +0x000 slots hold self-relative offsets; +4 is enemy_update, 0 and +0xc
+                                     run when the spawner's field_148 is set */
+    int    field_04;              /* +0x004 FUN_00113524 fills +0x04.. (GUESS: its position) */
+    int    field_08;              /* +0x008 */
+    uint8  unknown_0c[0x04];
+    int    field_10;              /* +0x010 FUN_00113cc4 fills +0x10.. from field_20 */
+    int    field_14;              /* +0x014 */
+    uint8  unknown_18[0x04];
+    int    number;                /* +0x01c 1, 2, ...: its place among the spawner's enemies */
+    int    field_20;              /* +0x020 GUESS: its model (an object) */
+    int    field_24;              /* +0x024 */
+    int    field_28;              /* +0x028 an object; FUN_001201cc(field_28, 0) when it dies */
+    uint8  unknown_2c[0x10];
+    uint32 health;                /* +0x03c a float (its bits); > 0 alive, shown in the health bar */
+    struct EnemySpawner *spawner; /* +0x040 the spawner that created it */
+    uint8  unknown_44[0x1c];
+    int    field_60;              /* +0x060 */
+    int    field_64;              /* +0x064 */
+    int    field_68;              /* +0x068 */
+    uint8  unknown_6c[0x08];
+    struct KHApp *app;            /* +0x074 GetAppInstance() at creation */
+    uint8  unknown_78[0x08];
+    int    mode;                  /* +0x080 1: the code at 0x0011db34 runs instead of the states (field_90) */
+    uint8  unknown_84[0x04];
+    int    field_88;              /* +0x088 2004: the alive behaviour runs even at 0 health */
+    uint8  unknown_8c[0x04];
+    int    field_90;              /* +0x090 the state while mode is 1: 7001, 7002, 7003 */
+    uint8  unknown_94[0x10];
+    int    state;                 /* +0x0a4 1001 waiting, 1002 alive, 1003 dying, 1004 gone */
+    uint8  unknown_a8[0x50];
+    int    field_f8;              /* +0x0f8 */
+    uint8  unknown_fc[0x04];
+    int    field_100;             /* +0x100 -1 at creation */
+    int    type;                  /* +0x104 1-11, from the spawner's enemy name (enemy_spawner_setup) */
+    int    field_108;             /* +0x108 when set (or for type 2) its health bar is shown */
+    uint8  unknown_10c[0x1c];
+    int    field_128;             /* +0x128 a countdown (enemy_update subtracts the elapsed time) */
+    int    field_12c;             /* +0x12c another countdown */
+    int    field_130;             /* +0x130 */
+    uint8  unknown_134[0x68];
+    int  (*field_19c)(struct Enemy *enemy, int context);   /* +0x19c alive, mode 2 and field_130 == 0 */
+    int  (*field_1a0)(struct Enemy *enemy, int context);   /* +0x1a0 alive, otherwise */
+    uint8  unknown_1a4[0xcc];
+    int    field_270;             /* +0x270 1 at creation */
+    uint8  unknown_274[0x0c];
+} Enemy;                          /* 0x280 bytes */
+
+typedef struct EnemySpawner {
+    uint8  unknown_00[0x08];
+    int    field_08;              /* +0x008 its object in the level data (the key the setup reads with) */
+    int    field_0c;              /* +0x00c passed with message 0x11E3EE3E (enemy_spawner_update) */
+    uint8  unknown_10[0x74];
+    struct KHApp *app;            /* +0x084 */
+    uint8  unknown_88[0x88];
+    int    active;                /* +0x110 GUESS: the player is in its area */
+    int   *itemDrops;             /* +0x114 its item drops (FUN_0010b014; updated by FUN_001226e8) */
+    uint32 enemyMaximumHealth;    /* +0x118 a float (its bits); level data, default 5.0 */
+    uint32 field_11c;             /* +0x11c a float (its bits); level data, default 1.0 */
+    int    field_120;             /* +0x120 level data; below 5 the item drops get 1.0, else 2.0 */
+    int    waves;                 /* +0x124 level data */
+    int    enemiesPerWave;        /* +0x128 level data */
+    int    enemyCount;            /* +0x12c enemy objects: 2 for type 1, else 1; at most enemiesPerWave */
+    int    state;                 /* +0x130 1 waiting, 2 fighting, 3 the player left during a wave (GUESS) */
+    int    wavesLeft;             /* +0x134 */
+    int    enemiesLeftInWave;     /* +0x138 enemy_spawner_take_one takes them one by one */
+    int    field_13c;             /* +0x13c set to 1 when state 2 ends */
+    uint8  unknown_140[0x08];
+    int    field_148;             /* +0x148 when set, each enemy's vtable slots 0 and +0xc run once */
+    Enemy **enemies;              /* +0x14c enemyCount of them */
+} EnemySpawner;
+
 #endif /* KH_TYPES_H */

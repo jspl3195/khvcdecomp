@@ -7722,33 +7722,31 @@ int * FUN_0010b080(int *param_1,undefined4 param_2)
   return param_1;
 }
 
-/* ==== 0x0010B230  (file offset 0x0B230)  FUN_0010b230 ================================================ */
-int * FUN_0010b230(int *param_1,int param_2,int param_3,int param_4)
+/* ==== 0x0010B230  (file offset 0x0B230)  enemy_create ================================================ */
+/* GUESS: name. Creates (when enemy is 0: allocates 0x280 bytes) the enemy number `number` of a spawner,
+   of the given type, waiting to appear (state 1001). */
+Enemy * enemy_create(Enemy *enemy,int number,EnemySpawner *spawner,int type)
 
 {
-  int iVar1;
-  
-  if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(0x280), param_1 != (int *)0x0)) {
-    *param_1 = DATA_AT_00101680_OFFSET + 0x10b264;
-    param_1[8] = 0;
-    param_1[7] = param_2;
-    param_1[9] = 0;
-    param_1[10] = 0;
-    param_1[0x10] = param_3;
-    param_1[0x3e] = 0;
-    param_1[0x40] = -1;
-    param_1[0x41] = param_4;
-    param_1[0x9c] = 1;
-    iVar1 = INTEGER_MINUS_45732;
-    param_1[0x29] = INTEGER_1001;
+  if (enemy == (Enemy *)0x0 && (enemy = helper_malloc_2(0x280)) == (Enemy *)0x0)
+    return (Enemy *)0x0;
+  enemy->vtable = DATA_AT_00101680_OFFSET + 0x10b264;
+  enemy->field_20 = 0;
+  enemy->number = number;
+  enemy->field_24 = 0;
+  enemy->field_28 = 0;
+  enemy->spawner = spawner;
+  enemy->field_f8 = 0;
+  enemy->field_100 = -1;
+  enemy->type = type;
+  enemy->field_270 = 1;
+  enemy->state = INTEGER_1001;
                     /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
                         */
-    iVar1 = (*g_pHelperFuncs->GetAppInstance)();
-    param_1[0x1d] = iVar1;
-    FUN_00120024(param_1,4);
-    FUN_0011de70(param_1);
-  }
-  return param_1;
+  enemy->app = (*g_pHelperFuncs->GetAppInstance)();
+  FUN_00120024((int)enemy,4);
+  FUN_0011de70((int)enemy);
+  return enemy;
 }
 
 /* ==== 0x0010B2DC  (file offset 0x0B2DC)  FUN_0010b2dc ================================================ */
@@ -11582,17 +11580,16 @@ void FUN_0010f244(int *param_1,undefined4 *param_2)
   return;
 }
 
-/* ==== 0x0010F2CC  (file offset 0x0F2CC)  FUN_0010f2cc ================================================ */
-bool FUN_0010f2cc(int param_1)
+/* ==== 0x0010F2CC  (file offset 0x0F2CC)  enemy_spawner_take_one ====================================== */
+/* GUESS: name. Lets one more enemy of the current wave appear: takes one from enemiesLeftInWave and
+   returns 1, or returns 0 when none is left. Called by every waiting enemy (enemy_update, state 1001). */
+int enemy_spawner_take_one(EnemySpawner *spawner)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 0x138);
-  if (0 < iVar1) {
-    *(int *)(param_1 + 0x138) = iVar1 + -1;
-  }
-  return 0 < iVar1;
+  if (spawner->enemiesLeftInWave <= 0)
+    return 0;
+  spawner->enemiesLeftInWave--;
+  return 1;
 }
 
 /* ==== 0x0010F2E8  (file offset 0x0F2E8)  FUN_0010f2e8 ================================================ */
@@ -17230,7 +17227,7 @@ void FUN_001150d0(int param_1,int *param_2)
         FUN_001180c4(pcVar2,param_2);
       }
       else if (cVar1 == '\x04') {
-        FUN_00117dd8(pcVar2,param_2);
+        enemy_spawner_setup(pcVar2,param_2);
       }
       else if (cVar1 == '\x05') {
         FUN_0011868c(pcVar2,param_2);
@@ -19037,132 +19034,58 @@ void FUN_00117d30(int param_1,int *param_2)
   return;
 }
 
-/* ==== 0x00117DD8  (file offset 0x17DD8)  FUN_00117dd8 ================================================ */
-void FUN_00117dd8(int param_1,undefined4 param_2)
+/* ==== 0x00117DD8  (file offset 0x17DD8)  enemy_spawner_setup ========================================= */
+/* GUESS: name. Sets up a spawner from the level data (read by its object, field_08): the enemy type
+   from the enemy name, the number of waves, enemies per wave, the enemies' maximum health (default 5.0
+   when the data gives 0), field_11c (default 1.0), field_120; then creates its enemies and its item
+   drops. The two defaults are tested with FUN_001267f0, a float compare that leaves its result in the
+   condition flags (`streq` after it at 0x00117fdc / 0x00118000), as written after the comma. */
+void enemy_spawner_setup(EnemySpawner *spawner,int context)
 
 {
-  /* param_2: not in Ghidra's prototype; kh.mod reads r1 at entry and its callers set it */
-  int iVar1;
-  void *pvVar2;
-  undefined4 uVar3;
-  undefined4 uVar4;
-  undefined1 uVar5;
-  
-  FUN_00118910(param_1,param_2);
-  iVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8)
-                       ,STRING_SOLDIER_OFFSET + 0x117dfc);
-  if (iVar1 == 0) {
-    iVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
-                         *(undefined4 *)(param_1 + 8),STRING_FLYINGSOLDIER_OFFSET + 0x117e24);
-    if (iVar1 == 0) {
-      iVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
-                           *(undefined4 *)(param_1 + 8),STRING_FLYINGMOOK_OFFSET + 0x117e48);
-      if (iVar1 == 1) {
-        uVar4 = 2;
-      }
-      else {
-        iVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
-                             *(undefined4 *)(param_1 + 8),STRING_PURPLECROC_OFFSET + 0x117e6c);
-        if (iVar1 == 1) {
-          uVar4 = 5;
-        }
-        else {
-          iVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
-                               *(undefined4 *)(param_1 + 8),STRING_UMBRELLABIRD_OFFSET + 0x117e90);
-          if (iVar1 == 1) {
-            uVar4 = 6;
-          }
-          else {
-            iVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
-                                 *(undefined4 *)(param_1 + 8),STRING_BANDIT_OFFSET + 0x117eb4);
-            if (iVar1 == 1) {
-              uVar4 = 7;
-            }
-            else {
-              iVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
-                                   *(undefined4 *)(param_1 + 8),STRING_POTSPIDER_OFFSET + 0x117ed8);
-              if (iVar1 == 1) {
-                uVar4 = 8;
-              }
-              else {
-                iVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
-                                     *(undefined4 *)(param_1 + 8),STRING_MUMMY_OFFSET + 0x117efc);
-                if (iVar1 == 1) {
-                  uVar4 = 9;
-                }
-                else {
-                  iVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
-                                       *(undefined4 *)(param_1 + 8),STRING_DARKBALL_OFFSET + 0x117f20);
-                  if (iVar1 == 1) {
-                    uVar4 = 10;
-                  }
-                  else {
-                    iVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
-                                         *(undefined4 *)(param_1 + 8),STRING_PIGSOLDIER_OFFSET + 0x117f44);
-                    if (iVar1 != 1) {
-                      *(undefined4 *)(param_1 + 300) = 2;
-                      uVar4 = 1;
-                      goto LAB_00117f60;
-                    }
-                    uVar4 = 0xb;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    else {
-      uVar4 = 4;
-    }
-  }
-  else {
-    uVar4 = 3;
-  }
-  *(undefined4 *)(param_1 + 300) = 1;
-LAB_00117f60:
-  FUN_00114610(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
-               WORD_HEXADECIMAL_369F84CA,param_1 + 0x124);
-  *(undefined4 *)(param_1 + 0x134) = *(undefined4 *)(param_1 + 0x124);
-  FUN_00114610(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
-               WORD_HEXADECIMAL_0B63154F,param_1 + 0x128);
-  iVar1 = *(int *)(param_1 + 0x128);
-  uVar5 = *(int *)(param_1 + 300) == iVar1;
-  if (iVar1 < *(int *)(param_1 + 300)) {
-    *(int *)(param_1 + 300) = iVar1;
-  }
-  FUN_001145b4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
-               WORD_HEXADECIMAL_2E46DCB0,param_1 + 0x118);
-  FUN_001267f0(*(undefined4 *)(param_1 + 0x118),0);
-  if ((bool)uVar5) {
-    *(undefined4 *)(param_1 + 0x118) = FLOAT_5;
-  }
-  FUN_001145b4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
-               WORD_HEXADECIMAL_13ADA166,param_1 + 0x11c);
-  FUN_001267f0(*(undefined4 *)(param_1 + 0x11c),0);
-  if ((bool)uVar5) {
-    *(undefined4 *)(param_1 + 0x11c) = 0x3f800000;
-  }
-  FUN_00114610(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
-               WORD_HEXADECIMAL_26B58FD6,param_1 + 0x120);
-  pvVar2 = helper_malloc(*(int *)(param_1 + 300) << 2);
-  *(void **)(param_1 + 0x14c) = pvVar2;
-  iVar1 = 0;
-  while (iVar1 < *(int *)(param_1 + 300)) {
-    uVar3 = FUN_0010b230(0,iVar1 + 1,param_1,uVar4);
-    *(undefined4 *)(*(int *)(param_1 + 0x14c) + iVar1 * 4) = uVar3;
-    iVar1 = iVar1 + 1;
-  }
-  if (*(int *)(param_1 + 0x120) < 5) {
-    uVar4 = 0x3f800000;
-  }
-  else {
-    uVar4 = 0x40000000;
-  }
-  uVar4 = FUN_0010b014(0,uVar4);
-  *(undefined4 *)(param_1 + 0x114) = uVar4;
-  return;
+  int type;
+  int i;
+
+  FUN_00118910((int)spawner,context);
+  if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_SOLDIER_OFFSET + 0x117dfc) != 0)
+    type = 3;
+  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_FLYINGSOLDIER_OFFSET + 0x117e24) != 0)
+    type = 4;
+  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_FLYINGMOOK_OFFSET + 0x117e48) == 1)
+    type = 2;
+  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_PURPLECROC_OFFSET + 0x117e6c) == 1)
+    type = 5;
+  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_UMBRELLABIRD_OFFSET + 0x117e90) == 1)
+    type = 6;
+  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_BANDIT_OFFSET + 0x117eb4) == 1)
+    type = 7;
+  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_POTSPIDER_OFFSET + 0x117ed8) == 1)
+    type = 8;
+  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_MUMMY_OFFSET + 0x117efc) == 1)
+    type = 9;
+  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_DARKBALL_OFFSET + 0x117f20) == 1)
+    type = 10;
+  else if ((int)FUN_00119b0c(spawner->app->pObj94,spawner->field_08,STRING_PIGSOLDIER_OFFSET + 0x117f44) == 1)
+    type = 0xb;
+  else
+    type = 1;                                     /* no name matched */
+  spawner->enemyCount = type == 1 ? 2 : 1;
+  FUN_00114610((int)spawner->app->pObj94,spawner->field_08,WORD_HEXADECIMAL_369F84CA,(undefined4 *)&spawner->waves);
+  spawner->wavesLeft = spawner->waves;
+  FUN_00114610((int)spawner->app->pObj94,spawner->field_08,WORD_HEXADECIMAL_0B63154F,(undefined4 *)&spawner->enemiesPerWave);
+  if (spawner->enemyCount > spawner->enemiesPerWave)
+    spawner->enemyCount = spawner->enemiesPerWave;
+  FUN_001145b4((int)spawner->app->pObj94,spawner->field_08,WORD_HEXADECIMAL_2E46DCB0,(undefined4 *)&spawner->enemyMaximumHealth);
+  if (FUN_001267f0(spawner->enemyMaximumHealth,0), *(float *)&spawner->enemyMaximumHealth == 0.0f)
+    spawner->enemyMaximumHealth = FLOAT_5;
+  FUN_001145b4((int)spawner->app->pObj94,spawner->field_08,WORD_HEXADECIMAL_13ADA166,(undefined4 *)&spawner->field_11c);
+  if (FUN_001267f0(spawner->field_11c,0), *(float *)&spawner->field_11c == 0.0f)
+    spawner->field_11c = 0x3f800000;              /* 1.0f */
+  FUN_00114610((int)spawner->app->pObj94,spawner->field_08,WORD_HEXADECIMAL_26B58FD6,(undefined4 *)&spawner->field_120);
+  spawner->enemies = helper_malloc(spawner->enemyCount << 2);
+  for (i = 0; i < spawner->enemyCount; i++)
+    spawner->enemies[i] = enemy_create((Enemy *)0x0,i + 1,spawner,type);
+  spawner->itemDrops = (int *)FUN_0010b014((undefined4 *)0x0,spawner->field_120 < 5 ? 0x3f800000 : 0x40000000);
 }
 
 /* ==== 0x001180C4  (file offset 0x180C4)  FUN_001180c4 ================================================ */
@@ -20240,7 +20163,7 @@ void FUN_00119a28(int param_1,int *param_2)
         FUN_001180c4(pcVar2,param_2);
       }
       else if (cVar1 == '\x04') {
-        FUN_00117dd8(pcVar2,param_2);
+        enemy_spawner_setup(pcVar2,param_2);
       }
       else if (cVar1 == '\x05') {
         FUN_0011868c(pcVar2,param_2);
@@ -28218,7 +28141,7 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
         pbVar6 = extraout_r1_02;
       }
       else if (pbVar6 == &UndefinedInstruction) {
-        FUN_00122f98((int)pbVar2,param_2,param_3);
+        enemy_spawner_update((int)pbVar2,param_2,param_3);
         pbVar6 = extraout_r1_03;
       }
       else if (pbVar6 == (byte *)0x5) {
@@ -28432,153 +28355,101 @@ undefined4 FUN_0012289c(int *param_1,undefined4 param_2,int param_3)
   return 1;
 }
 
-/* ==== 0x00122954  (file offset 0x22954)  FUN_00122954 ================================================ */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-void FUN_00122954(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
+/* ==== 0x00122954  (file offset 0x22954)  enemy_update ================================================ */
+/* GUESS: name. One update of an enemy (vtable +4, called by enemy_spawner_update with the time passed):
+   waiting (1001) until its spawner lets it appear, alive (1002) while its health is above 0, dying (1003),
+   gone (1004) for 1000 ms, then waiting again; at the end two countdowns go down by `elapsed`. When mode
+   is 1 the binary tail-jumps (0x00122994) to the code at 0x0011db34 instead (no Ghidra function there;
+   written inline below). FUN_00126964 / FUN_001267f0 are float compares whose result is in the condition
+   flags (`bhi` at 0x00122a78, `bne` at 0x00122b28); the tests are written after the comma. */
+void enemy_update(Enemy *enemy,int context,int elapsed)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  undefined4 uVar3;
-  bool bVar4;
-  undefined1 uVar5;
-  bool bVar6;
-  undefined4 local_20;
-  int iStack_1c;
-  undefined4 local_18;
-  
-  iVar2 = param_3;
-  local_20 = param_2;
-  iStack_1c = param_3;
-  local_18 = param_4;
-  FUN_00113524(param_1 + 4,param_1);
-  FUN_00113cc4(param_1 + 0x10,*(undefined4 *)(param_1 + 0x20));
-  uVar3 = INTEGER_7002;
-  if (*(int *)(param_1 + 0x80) == 1) {
-    iStack_1c = iVar2;
-    local_18 = param_4;
-    if (*(int *)(param_1 + 0x90) == 0x1b59) {
-      *(undefined1 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x4a) = 0;
-      local_20 = param_2;
-      FUN_00120024(param_1,4);
-      iVar2 = FUN_0010eb74(param_1 /* not arguments, register leftovers: param_2 */);
-      if (iVar2 == 0) {
+  uint32 angle;
+  uint32 position[3];
+
+  FUN_00113524((undefined4 *)&enemy->field_04,(int)enemy);
+  FUN_00113cc4((undefined4 *)&enemy->field_10,enemy->field_20);
+  if (enemy->mode == 1) {
+    /* ---- the code at 0x0011db34 */
+    if (enemy->field_90 == 0x1b59) {              /* 7001 */
+      *(uint8 *)(enemy->app->field_d4 + 0x4a) = 0;
+      FUN_00120024((int)enemy,4);
+      if (FUN_0010eb74((int)enemy /* not arguments, register leftovers: context */) == 0)
+        return;
+      if (enemy->type == 5 || enemy->type == 8) {
+        FUN_0011fed8((int)enemy->app->pObj9c,enemy->field_64,FLOAT_MINUS_1);
+        FUN_0011cc14((int)enemy,enemy->field_64,0);
+        enemy->field_90 = INTEGER_7003;
         return;
       }
-      iVar2 = *(int *)(param_1 + 0x104);
-      if (iVar2 == 5 || iVar2 == 8) {
-        FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 100)
-                     ,FLOAT_MINUS_1);
-        FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 100),0);
-        *(undefined4 *)(param_1 + 0x90) = INTEGER_7003;
-        return;
-      }
-      if (iVar2 != 9) {
-        FUN_001201cc(*(undefined4 *)(param_1 + 0x28),0);
-      }
+      if (enemy->type != 9)
+        FUN_001201cc(enemy->field_28,0);
     }
     else {
-      if (*(int *)(param_1 + 0x90) != 0x1b5b) {
+      if (enemy->field_90 != 0x1b5b)              /* 7003 */
         return;
-      }
-      local_20 = param_2;
-      iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),
-                           *(undefined4 *)(param_1 + 100));
-      if (iVar2 != 4) {
+      if (FUN_001141f4((int)enemy->app->pObj9c,enemy->field_64) != 4)
         return;
-      }
-      FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 100),
-                   0x3f800000);
-      if (*(int *)(param_1 + 0x60) != 0) {
-        FUN_0011cc14(param_1,*(int *)(param_1 + 0x60),1);
-      }
-      *(undefined4 *)(param_1 + 0x68) = 0;
-      local_20 = *(undefined4 *)(param_1 + 0x14);
-      uVar1 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),
-                           *(undefined4 *)(param_1 + 4),*(undefined4 *)(param_1 + 8),
-                           *(undefined4 *)(param_1 + 0x10),*(undefined4 *)(param_1 + 0x14));
-      local_18 = FUN_001262b0(uVar1,FLOAT_180);
-      uVar1 = FUN_001148a0(*(undefined4 *)(param_1 + 0x20));
-      local_18 = FUN_001263f8(uVar1,local_18);
-      FUN_0011cb34(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),&local_18);
-      FUN_0011e530(*(undefined4 *)(param_1 + 0x20),local_18,0x3f000000);
+      FUN_0011fed8((int)enemy->app->pObj9c,enemy->field_64,0x3f800000);
+      if (enemy->field_60 != 0)
+        FUN_0011cc14((int)enemy,enemy->field_60,1);
+      enemy->field_68 = 0;
+      angle = FUN_001262b0((uint)FUN_00113374(enemy->app->pObj94,enemy->field_04,enemy->field_08,
+                                              enemy->field_10,enemy->field_14),FLOAT_180);
+      angle = FUN_001263f8(FUN_001148a0(enemy->field_20),angle);
+      FUN_0011cb34(enemy->app->pObj94,&angle);
+      FUN_0011e530(enemy->field_20,angle,0x3f000000);
     }
-    *(undefined4 *)(param_1 + 0x90) = uVar3;
+    enemy->field_90 = INTEGER_7002;
     return;
   }
-  iVar2 = *(int *)(param_1 + 0xa4);
-  if (iVar2 == 0x3e9) {
-    iVar2 = FUN_0010f2cc(*(undefined4 *)(param_1 + 0x40));
-    if (iVar2 != 0) {
-      FUN_0011dedc(param_1);
-      FUN_0011de70(param_1);
-      *(undefined4 *)(param_1 + 0xa4) = INTEGER_1002;
-      if ((*(int *)(param_1 + 0x104) == 2) || (*(int *)(param_1 + 0x108) != 0)) {
-        *(undefined1 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x4a) = 1;
-        uVar3 = FUN_00126858(*(undefined4 *)(param_1 + 0x3c));
-        *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x4c) = uVar3;
-        uVar3 = FUN_00126858(*(undefined4 *)(*(int *)(param_1 + 0x40) + 0x118));
-        *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x50) = uVar3;
+  switch(enemy->state) {
+  case 1001:                                      /* waiting for the spawner */
+    if (enemy_spawner_take_one(enemy->spawner) != 0) {
+      FUN_0011dedc((int)enemy);
+      FUN_0011de70((int)enemy);
+      enemy->state = INTEGER_1002;
+      if (enemy->type == 2 || enemy->field_108 != 0) {   /* show its health bar */
+        *(uint8 *)(enemy->app->field_d4 + 0x4a) = 1;
+        *(uint *)(enemy->app->field_d4 + 0x4c) = FUN_00126858(enemy->health);
+        *(uint *)(enemy->app->field_d4 + 0x50) = FUN_00126858(enemy->spawner->enemyMaximumHealth);
       }
     }
-    goto LAB_00122b48;
-  }
-  bVar6 = 0xe9 < iVar2 - 0x300U;
-  bVar4 = iVar2 - 0x300U == 0xea;
-  if (bVar4) {
-    FUN_00126964(*(undefined4 *)(param_1 + 0x3c),0);
-    if ((bVar6 && !bVar4) || (*(int *)(param_1 + 0x88) == 0x7d4)) {
-      iVar2 = *(int *)(param_1 + 0x80);
-      bVar4 = iVar2 != 2;
-      if (!bVar4) {
-        iVar2 = *(int *)(param_1 + 0x130);
-      }
-      if (bVar4 || iVar2 != 0) {
-        (**(code **)(param_1 + 0x1a0))(param_1,param_2);
-      }
-      else {
-        (**(code **)(param_1 + 0x19c))(param_1,param_2);
-      }
-      goto LAB_00122b48;
+    break;
+  case 1002:                                      /* alive */
+    if ((FUN_00126964(enemy->health,0), *(float *)&enemy->health > 0.0f) || enemy->field_88 == 0x7d4) {
+      if (enemy->mode == 2 && enemy->field_130 == 0)
+        (*enemy->field_19c)(enemy,context);
+      else
+        (*enemy->field_1a0)(enemy,context);
     }
-    FUN_00120024(param_1,4);
-    uVar3 = INTEGER_1003;
-  }
-  else {
-    if (iVar2 == 0x3eb) {
-      iVar2 = FUN_0010f058(param_1,param_2);
-      uVar5 = iVar2 == 0;
-      if (!(bool)uVar5) {
-        *(undefined1 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x4a) = 0;
-        *(undefined4 *)(param_1 + 0xa4) = 0x3ec;
-        FUN_001201cc(*(undefined4 *)(param_1 + 0x28),0);
-        *(undefined4 *)(*(int *)(param_1 + 0x28) + 0x34) = 0;
-        FUN_001267f0(*(undefined4 *)(param_1 + 0x3c),0);
-        if ((bool)uVar5) {
-          FUN_00113cc4(&local_20,*(undefined4 *)(param_1 + 0x20));
-          FUN_0010fb90(*(undefined4 *)(*(int *)(param_1 + 0x40) + 0x114),local_20,iStack_1c,local_18
-                      );
-        }
-      }
-      goto LAB_00122b48;
+    else {
+      FUN_00120024((int)enemy,4);
+      enemy->state = INTEGER_1003;
     }
-    if ((iVar2 != 0x3ec) ||
-       (iVar2 = FUN_0010fa50(param_1,param_2,1000), uVar3 = INTEGER_1001, iVar2 == 0))
-    goto LAB_00122b48;
+    break;
+  case 1003:                                      /* dying */
+    if (FUN_0010f058((int)enemy,context) != 0) {
+      *(uint8 *)(enemy->app->field_d4 + 0x4a) = 0;
+      enemy->state = 0x3ec;
+      FUN_001201cc(enemy->field_28,0);
+      *(int *)(enemy->field_28 + 0x34) = 0;
+      if (FUN_001267f0(enemy->health,0), *(float *)&enemy->health == 0.0f) {   /* item drop where it was */
+        FUN_00113cc4(position,enemy->field_20);
+        FUN_0010fb90((undefined4)enemy->spawner->itemDrops,position[0],position[1],position[2]);
+      }
+    }
+    break;
+  case 0x3ec:                                     /* 1004 gone: wait 1000 ms */
+    if (FUN_0010fa50((int)enemy,context,1000) != 0)
+      enemy->state = INTEGER_1001;
+    break;
   }
-  *(undefined4 *)(param_1 + 0xa4) = uVar3;
-LAB_00122b48:
-  if ((0 < *(int *)(param_1 + 0x128)) &&
-     (iVar2 = *(int *)(param_1 + 0x128) - param_3, *(int *)(param_1 + 0x128) = iVar2, iVar2 < 1)) {
-    *(undefined4 *)(param_1 + 0x128) = 0;
-  }
-  if ((0 < *(int *)(param_1 + 300)) &&
-     (param_3 = *(int *)(param_1 + 300) - param_3, *(int *)(param_1 + 300) = param_3, param_3 < 1))
-  {
-    *(undefined4 *)(param_1 + 300) = 0;
-  }
-  return;
+  if (enemy->field_128 > 0 && (enemy->field_128 -= elapsed) <= 0)
+    enemy->field_128 = 0;
+  if (enemy->field_12c > 0 && (enemy->field_12c -= elapsed) <= 0)
+    enemy->field_12c = 0;
 }
 
 /* ==== 0x00122B90  (file offset 0x22B90)  FUN_00122b90 ================================================ */
@@ -28729,150 +28600,151 @@ void FUN_00122b90(int param_1,int param_2,uint param_3,undefined4 param_4)
   return;
 }
 
-/* ==== 0x00122F98  (file offset 0x22F98)  FUN_00122f98 ================================================ */
-void FUN_00122f98(int param_1,int param_2,int param_3)
+/* ==== 0x00122F98  (file offset 0x22F98)  enemy_spawner_update ======================================== */
+/* GUESS: name. One update of a spawner (`elapsed` is the time passed, GUESS: milliseconds): resets its
+   enemies when asked (field_148), runs the wave state machine, updates every enemy (vtable +4,
+   enemy_update), then its item drops: the binary tail-jumps (0x00123124) to FUN_001226e8 with
+   spawner->itemDrops; Ghidra copied that code in, and it is kept below as Ghidra wrote it. */
+void enemy_spawner_update(EnemySpawner *spawner,int context,int elapsed)
 
 {
-  char cVar1;
-  int iVar2;
-  uint uVar3;
-  uint uVar4;
-  int *piVar5;
-  uint extraout_r1;
-  int iVar6;
-  undefined4 uVar7;
-  int iVar8;
-  undefined1 uVar9;
-  bool bVar10;
-  ulonglong uVar11;
-  uint uStack_3c;
-  uint uStack_38;
-  uint uStack_30;
-  uint uStack_2c;
-  
-  FUN_0012407c(param_1,param_2,param_3);
-  if (*(int *)(param_1 + 0x148) != 0) {
-    for (iVar6 = 0; iVar6 < *(int *)(param_1 + 300); iVar6 = iVar6 + 1) {
-      piVar5 = (int *)**(int **)(*(int *)(param_1 + 0x14c) + iVar6 * 4);
-      (*(code *)(*piVar5 + (int)piVar5))();
-      iVar2 = **(int **)(*(int *)(param_1 + 0x14c) + iVar6 * 4);
-      (*(code *)(*(int *)(iVar2 + 0xc) + iVar2))();
+  int i;
+
+  FUN_0012407c((int)spawner,context,elapsed);
+  if (spawner->field_148 != 0) {
+    for (i = 0; i < spawner->enemyCount; i++) {
+      (*(code *)(*(int *)spawner->enemies[i]->vtable + spawner->enemies[i]->vtable))(spawner->enemies[i]);
+      (*(code *)(*(int *)(spawner->enemies[i]->vtable + 0xc) + spawner->enemies[i]->vtable))(spawner->enemies[i]);
     }
-    *(undefined4 *)(param_1 + 0x148) = 0;
+    spawner->field_148 = 0;
   }
-  iVar6 = *(int *)(param_1 + 0x130);
-  if (iVar6 == 1) {
-    bVar10 = *(int *)(param_1 + 0x110) != 0;
+  switch(spawner->state) {
+  case 1:                                         /* waiting: start a wave */
+    if (spawner->active != 0 && spawner->wavesLeft > 0) {
+      spawner->state = 2;
+      spawner->wavesLeft--;
+      spawner->enemiesLeftInWave = spawner->enemiesPerWave;
+    }
+    break;
+  case 2:                                         /* fighting */
+    if (spawner->active == 0) {
+      spawner->state = 3;
+      FUN_0011f630((int)spawner);
+      spawner->field_13c = 1;
+    }
+    else
+      FUN_0011a2f4((int)spawner,context);
+    break;
+  case 3:
+    if (spawner->active == 0)
+      break;
+    if (spawner->enemiesLeftInWave == 0 && FUN_0010d354((int)spawner) != 0) {
+      spawner->state = 1;
+      FUN_0011d040((int)spawner->app->pObj94,spawner->field_0c,(void *)WORD_HEXADECIMAL_11E3EE3E);
+    }
+    else {
+      FUN_0011f280((int)spawner);
+      spawner->state = 2;
+    }
+    break;
+  }
+  for (i = 0; i < spawner->enemyCount; i++)
+    (*(code *)(*(int *)(spawner->enemies[i]->vtable + 4) + spawner->enemies[i]->vtable))
+              (spawner->enemies[i],context,elapsed);   /* vtable +4: enemy_update */
+  /* ---- the code of FUN_001226e8 (the item drops), as Ghidra copied it here ---- */
+  {
+    char cVar1;
+    int iVar2;
+    uint uVar3;
+    uint uVar4;
+    int *piVar5;
+    uint extraout_r1;
+    int iVar6;
+    undefined4 uVar7;
+    int iVar8;
+    undefined1 uVar9;
+    bool bVar10;
+    ulonglong uVar11;
+    uint uStack_3c;
+    uint uStack_38;
+    uint uStack_30;
+    uint uStack_2c;
+
+    piVar5 = spawner->itemDrops;
+    FUN_00113cc4(&uStack_30,*(int *)(*(int *)(*piVar5 + 0xa4) + 0x1f8));
     iVar6 = 0;
-    if (bVar10) {
-      iVar6 = *(int *)(param_1 + 0x134);
-    }
-    if ((bVar10 && iVar6 != 0) && -1 < iVar6) {
-      *(undefined4 *)(param_1 + 0x130) = 2;
-      *(int *)(param_1 + 0x134) = iVar6 + -1;
-      *(undefined4 *)(param_1 + 0x138) = *(undefined4 *)(param_1 + 0x128);
-    }
-  }
-  else if (iVar6 == 2) {
-    if (*(int *)(param_1 + 0x110) == 0) {
-      *(undefined4 *)(param_1 + 0x130) = 3;
-      FUN_0011f630(param_1);
-      *(undefined4 *)(param_1 + 0x13c) = 1;
-    }
-    else {
-      FUN_0011a2f4(param_1,param_2);
-    }
-  }
-  else if ((iVar6 == 3) && (*(int *)(param_1 + 0x110) != 0)) {
-    if ((*(int *)(param_1 + 0x138) == 0) && (iVar6 = FUN_0010d354(param_1), iVar6 != 0)) {
-      *(undefined4 *)(param_1 + 0x130) = 1;
-      FUN_0011d040(*(int *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 0xc),
-                   WORD_HEXADECIMAL_11E3EE3E);
-    }
-    else {
-      FUN_0011f280(param_1);
-      *(undefined4 *)(param_1 + 0x130) = 2;
-    }
-  }
-  for (iVar6 = 0; iVar6 < *(int *)(param_1 + 300); iVar6 = iVar6 + 1) {
-    piVar5 = *(int **)(*(int *)(param_1 + 0x14c) + iVar6 * 4);
-    iVar2 = *piVar5;
-    (*(code *)(*(int *)(iVar2 + 4) + iVar2))(piVar5,param_2,param_3);
-  }
-  piVar5 = *(int **)(param_1 + 0x114);
-  FUN_00113cc4(&uStack_30,*(int *)(*(int *)(*piVar5 + 0xa4) + 0x1f8));
-  iVar6 = 0;
-  do {
-    if (0 < piVar5[iVar6 + 0xe]) {
-      iVar2 = piVar5[iVar6 + 0xe] - param_3;
-      piVar5[iVar6 + 0xe] = iVar2;
-      if (iVar2 < 1) {
-        piVar5[iVar6 + 0xe] = 0;
-      }
-      uVar7 = 1;
-      if (iVar2 < 1) {
-LAB_00122870:
-        uVar7 = 0;
-      }
-      else {
-        uVar9 = 1;
-        if (*(int *)(piVar5[iVar6 + 1] + 0x150) == 0) {
-          FUN_00113cc4(&uStack_3c,piVar5[iVar6 + 1]);
-          uVar3 = FUN_0012642c(uStack_30,uStack_3c);
-          uVar4 = FUN_0012642c(uStack_2c,uStack_38);
-          FUN_00126964(uVar3,0);
-          if (!(bool)uVar9) {
-            uVar3 = uVar3 ^ 0x80000000;
-          }
-          FUN_00126964(uVar4,0);
-          if (!(bool)uVar9) {
-            uVar4 = uVar4 ^ 0x80000000;
-          }
-          uVar3 = FUN_001262b0(uVar3,uVar4);
-          uVar3 = FUN_00126248(uVar3);
-          FUN_001256b4(uVar3,extraout_r1,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
-          if ((bool)uVar9) {
-            iVar2 = piVar5[iVar6 + 0xe];
-            bVar10 = SBORROW4(iVar2,0x1000);
-            iVar8 = iVar2 + -0x1000;
-            if (0xfff < iVar2) {
-              bVar10 = SBORROW4(iVar8,0x388);
-              iVar8 = iVar2 + -5000;
+    do {
+      if (0 < piVar5[iVar6 + 0xe]) {
+        iVar2 = piVar5[iVar6 + 0xe] - elapsed;
+        piVar5[iVar6 + 0xe] = iVar2;
+        if (iVar2 < 1) {
+          piVar5[iVar6 + 0xe] = 0;
+        }
+        uVar7 = 1;
+        if (iVar2 < 1) {
+  LAB_00122870:
+          uVar7 = 0;
+        }
+        else {
+          uVar9 = 1;
+          if (*(int *)(piVar5[iVar6 + 1] + 0x150) == 0) {
+            FUN_00113cc4(&uStack_3c,piVar5[iVar6 + 1]);
+            uVar3 = FUN_0012642c(uStack_30,uStack_3c);
+            uVar4 = FUN_0012642c(uStack_2c,uStack_38);
+            FUN_00126964(uVar3,0);
+            if (!(bool)uVar9) {
+              uVar3 = uVar3 ^ 0x80000000;
             }
-            if (iVar8 < 0 == bVar10) goto LAB_00122874;
-          }
-          else {
-            if ((0 < *(int *)(*(int *)(*piVar5 + 0xa8) + 0x594)) &&
-               (iVar2 = *(int *)(*piVar5 + 0xbc), iVar2 != 0)) {
-              FUN_00108f28(iVar2,5);
+            FUN_00126964(uVar4,0);
+            if (!(bool)uVar9) {
+              uVar4 = uVar4 ^ 0x80000000;
             }
-            cVar1 = *(char *)((int)piVar5 + iVar6 + 0x2c);
-            if (cVar1 == '\0') {
-              FUN_0010d074(*(int *)(*piVar5 + 0xa8),0x3f800000);
-            }
-            else if (cVar1 == '\x01') {
-              FUN_0010d18c(*(int *)(*piVar5 + 0xa8),1);
+            uVar3 = FUN_001262b0(uVar3,uVar4);
+            uVar3 = FUN_00126248(uVar3);
+            FUN_001256b4(uVar3,extraout_r1,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
+            if ((bool)uVar9) {
+              iVar2 = piVar5[iVar6 + 0xe];
+              bVar10 = SBORROW4(iVar2,0x1000);
+              iVar8 = iVar2 + -0x1000;
+              if (0xfff < iVar2) {
+                bVar10 = SBORROW4(iVar8,0x388);
+                iVar8 = iVar2 + -5000;
+              }
+              if (iVar8 < 0 == bVar10) goto LAB_00122874;
             }
             else {
-              uVar3 = FUN_001269cc(piVar5[0x18],0x3f800000);
-              uVar3 = FUN_00126858(uVar3);
-              progress_add_munny(*(int *)(*piVar5 + 0xa8),uVar3);
+              if ((0 < *(int *)(*(int *)(*piVar5 + 0xa8) + 0x594)) &&
+                 (iVar2 = *(int *)(*piVar5 + 0xbc), iVar2 != 0)) {
+                FUN_00108f28(iVar2,5);
+              }
+              cVar1 = *(char *)((int)piVar5 + iVar6 + 0x2c);
+              if (cVar1 == '\0') {
+                FUN_0010d074(*(int *)(*piVar5 + 0xa8),0x3f800000);
+              }
+              else if (cVar1 == '\x01') {
+                FUN_0010d18c(*(int *)(*piVar5 + 0xa8),1);
+              }
+              else {
+                uVar3 = FUN_001269cc(piVar5[0x18],0x3f800000);
+                uVar3 = FUN_00126858(uVar3);
+                progress_add_munny(*(int *)(*piVar5 + 0xa8),uVar3);
+              }
+              piVar5[iVar6 + 0xe] = 0;
             }
-            piVar5[iVar6 + 0xe] = 0;
+            uVar11 = FUN_00100288(200,piVar5[iVar6 + 0xe]);
+            uVar7 = 1;
+            if ((int)(uVar11 >> 0x20) < 100) goto LAB_00122870;
           }
-          uVar11 = FUN_00100288(200,piVar5[iVar6 + 0xe]);
-          uVar7 = 1;
-          if ((int)(uVar11 >> 0x20) < 100) goto LAB_00122870;
         }
+  LAB_00122874:
+        FUN_001201cc(piVar5[iVar6 + 1],uVar7);
       }
-LAB_00122874:
-      FUN_001201cc(piVar5[iVar6 + 1],uVar7);
-    }
-    iVar6 = iVar6 + 1;
-    if (9 < iVar6) {
-      return;
-    }
-  } while( true );
+      iVar6 = iVar6 + 1;
+      if (9 < iVar6) {
+        return;
+      }
+    } while( true );
+  }
 }
 
 /* ==== 0x0012312C  (file offset 0x2312C)  FUN_0012312c ================================================ */

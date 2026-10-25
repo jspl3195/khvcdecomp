@@ -513,7 +513,7 @@ undefined4 * FUN_0010af3c(undefined4 *param_1,undefined4 param_2,undefined4 para
 undefined4 * FUN_0010afc4(undefined4 *param_1);
 undefined4 * FUN_0010b014(undefined4 *param_1,undefined4 param_2);
 int * FUN_0010b080(int *param_1,undefined4 param_2);
-int * FUN_0010b230(int *param_1,int param_2,int param_3,int param_4);
+Enemy * enemy_create(Enemy *enemy,int number,EnemySpawner *spawner,int type);   /* 0x0010B230 GUESS: name */
 int * FUN_0010b2dc(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5 ,undefined4 param_6,int param_7);
 undefined1 * FUN_0010b3e8(undefined1 *param_1,undefined4 param_2,undefined4 param_3);
 undefined1 * FUN_0010b478(undefined1 *param_1,undefined4 param_2,undefined4 param_3);
@@ -586,7 +586,7 @@ int FUN_0010eefc(undefined4 param_1,int param_2,int *param_3,undefined4 param_4)
 undefined4 FUN_0010efd4(undefined4 param_1,undefined4 param_2,int param_3,int param_4);
 int FUN_0010f058(int param_1,int param_2);
 void FUN_0010f244(int *param_1,undefined4 *param_2);
-bool FUN_0010f2cc(int param_1);
+int enemy_spawner_take_one(EnemySpawner *spawner);   /* 0x0010F2CC GUESS: name */
 undefined8 FUN_0010f2e8(int param_1,uint param_2,undefined4 param_3,uint param_4,undefined4 param_5, undefined4 param_6,uint param_7);
 void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5,
                  uint param_6);
@@ -672,7 +672,7 @@ void FUN_001150d0(int param_1,int *param_2);
 void FUN_00115118(undefined4 *param_1,undefined4 param_2,uint param_3);
 void FUN_001174ac(int param_1,undefined4 param_2);
 void FUN_00117d30(int param_1,int *param_2);
-void FUN_00117dd8(int param_1,undefined4 param_2);
+void enemy_spawner_setup(EnemySpawner *spawner,int context);   /* 0x00117DD8 GUESS: name */
 undefined8 FUN_001180c4(int param_1,uint param_2);
 void FUN_00118318(int param_1,int *param_2);
 void FUN_00118640(int param_1,int *param_2);
@@ -800,9 +800,9 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3,uint param_4)
 void FUN_00122450(int param_1,byte *param_2,int param_3);
 void FUN_001226e8(int *param_1,undefined4 param_2,int param_3);
 undefined4 FUN_0012289c(int *param_1,undefined4 param_2,int param_3);
-void FUN_00122954(int param_1,undefined4 param_2,int param_3,undefined4 param_4);
+void enemy_update(Enemy *enemy,int context,int elapsed);   /* 0x00122954 GUESS: name */
 void FUN_00122b90(int param_1,int param_2,uint param_3,undefined4 param_4);
-void FUN_00122f98(int param_1,int param_2,int param_3);
+void enemy_spawner_update(EnemySpawner *spawner,int context,int elapsed);   /* 0x00122F98 GUESS: name */
 void FUN_0012312c(int param_1,int param_2,int param_3,undefined4 param_4);
 void FUN_00123588(int param_1,int param_2,int param_3,undefined4 param_4);
 void FUN_00123c24(int param_1,undefined4 param_2,undefined4 param_3,int param_4);
