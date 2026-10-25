@@ -429,7 +429,7 @@ void FUN_001051d4(int param_1,int param_2);
 void FUN_00105224(int *param_1,int param_2);
 int FUN_001052e0(int param_1,undefined4 param_2,int param_3,int param_4,int param_5,int param_6, undefined4 param_7,undefined4 param_8,int param_9);
 void FUN_001053a8(undefined4 param_1,undefined4 param_2,int param_3,int param_4,int param_5, int param_6,undefined4 param_7,int param_8,int param_9,int param_10,int param_11, int param_12,int param_13);
-int FUN_001054d8(int param_1,int param_2,int param_3);
+int ui_element_add_child(UIElement *parent,UIElement *child,int id);   /* 0x001054D8 GUESS: name */
 void FUN_00105538(int param_1,undefined4 param_2,int param_3);
 void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5);
 void FUN_001056d0(int *param_1,int param_2);
@@ -455,13 +455,13 @@ void FUN_00107adc(int param_1,int param_2,undefined4 param_3,int *param_4,short 
 void FUN_00107d24(int *param_1);
 void FUN_00107e48(undefined4 param_1,int param_2);
 int list_get_entry(UIList *list,int index);   /* 0x00107EA4 GUESS: name, see kh_mod.c */
-int FUN_00107ec4(int param_1,int param_2);
+int ui_element_find_child(UIElement *element,int id);   /* 0x00107EC4 GUESS: name */
 void * FUN_00107ecc(undefined4 param_1,undefined4 param_2);
 int FUN_00107f88(int param_1);
 ulonglong FUN_00107fd0(int param_1,int param_2,int param_3);
 undefined4 FUN_00107fec(int param_1,undefined4 param_2);
 int FUN_001080ac(int param_1);
-int FUN_001080c8(int *param_1,int param_2);
+int list_find_entry(UIList *list,int id);   /* 0x001080C8 GUESS: name */
 void FUN_0010810c(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5, undefined4 param_6);
 void FUN_001082e0(int param_1,undefined4 param_2,int param_3,undefined4 param_4,undefined4 param_5, undefined4 param_6,undefined4 param_7,int param_8);
 undefined4 FUN_001083d8(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);

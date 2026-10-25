@@ -2210,10 +2210,10 @@ LAB_00104338:
       if (param_2 == 0x6c) {
 LAB_00104dac:
         iVar9 = FUN_001080ac(param_1);
-                    /* 0x104dbc bl FUN_00107ec4 / 0x104dc0 bl FUN_00108e8c: nothing touches r0 in
-                       between, so FUN_00108e8c's argument is FUN_00107ec4's result (the entry
+                    /* 0x104dbc bl ui_element_find_child / 0x104dc0 bl FUN_00108e8c: nothing touches r0 in
+                       between, so FUN_00108e8c's argument is ui_element_find_child's result (the entry
                        found for id 800); Ghidra dropped it */
-        iVar7 = FUN_00107ec4(iVar9,800);
+        iVar7 = ui_element_find_child(iVar9,800);
         iVar7 = FUN_00108e8c(iVar7);
         if (iVar7 == 1) goto LAB_00104dcc;
         if (param_2 == 0x6d) goto LAB_00101f10;
@@ -2261,7 +2261,7 @@ LAB_00104fa4:
           }
           FUN_00109750(uVar10,pvVar16);
           helper_free(pvVar16);
-          FUN_001054d8(iVar9,uVar10,0);
+          ui_element_add_child(iVar9,uVar10,0);
           if (param_2 != 0x6f) {
             if (param_2 == 0x7f) {
               uVar24 = 0x81;
@@ -2272,7 +2272,7 @@ LAB_00104fa4:
                        had 4 parameters: it never reads param_3, and only copies param_4 into a
                        stack local that is never read: a register spill). r2 here is still the word
                        loaded at 0x10508c for the 0x6f branch (FUN_00109a10 at 0x1050a4); r3 is
-                       whatever FUN_001054d8 left in it. */
+                       whatever ui_element_add_child left in it. */
             FUN_0012031c(*(undefined4 *)(*param_1 + 0x94),1);
             FUN_00109a10(iVar9,2,0,0);
             if (param_2 != 0x70) {
@@ -2337,7 +2337,7 @@ LAB_00104fa4:
             iVar7 = 0;
             do {
               uVar10 = FUN_001080ac(param_1);
-              key_picker_restore_original(FUN_00107ec4(uVar10,iVar7 + 400));
+              key_picker_restore_original(ui_element_find_child(uVar10,iVar7 + 400));
               iVar7 = iVar7 + 1;
             } while (iVar7 < 7);
           }
@@ -2377,10 +2377,10 @@ LAB_00103858:
           iVar9 = FUN_0010bd7c(0,param_1,0);
           uVar10 = FUN_0010bba0(0,0,0,(int)*(short *)(param_1[5] + 4),
                                 (int)*(short *)(param_1[5] + 6),param_1,0xc,0,1);
-          FUN_001054d8(iVar9,uVar10,0);
+          ui_element_add_child(iVar9,uVar10,0);
           uVar10 = FUN_0010bba0(0,0,0,0x1e,0x33,param_1,0xc,0,1);
           FUN_00109750(uVar10,STRING_JIMINY_ICON_DOT_PNG_OFFSET + 0x104e8c);
-          FUN_001054d8(iVar9,uVar10,0);
+          ui_element_add_child(iVar9,uVar10,0);
           local_38 = (void *)0x0;
           FUN_0011448c(*(undefined4 *)(*param_1 + 0x94),piVar4,WORD_HEXADECIMAL_0AE069A1,&local_38);
           (**(code **)(*piVar4 + 4))(piVar4);
@@ -2397,7 +2397,7 @@ LAB_00103858:
             (*g_pHelperFuncs->free)(local_38);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
             (*g_pHelperFuncs->free)(local_3c);
-            FUN_001054d8(iVar9,uVar10,800);
+            ui_element_add_child(iVar9,uVar10,800);
           }
           uVar10 = 0x6c;
           goto LAB_00105108;
@@ -2451,7 +2451,7 @@ LAB_00103858:
       do {
         iVar19 = FUN_0010b650(0,uVar11,iVar7,uVar13,0,param_1,local_74[iVar9 + 3],0x24);
         *(int *)(iVar19 + 0x10) = local_a8[iVar9 + 10];
-        FUN_001054d8(uVar10,iVar19,0);
+        ui_element_add_child(uVar10,iVar19,0);
         iVar19 = FUN_0010b650(0,uVar11,iVar7,uVar13,0,param_1,0,0x22);
         pvVar16 = helper_malloc(0x40);
         local_a8[9] = FUN_00107ecc(param_1,local_74[iVar9 + 9]);
@@ -2463,12 +2463,12 @@ LAB_00103858:
         FUN_00109f48(iVar19,pvVar16);
         helper_free(pvVar16);
         *(int *)(iVar19 + 0x10) = local_a8[iVar9 + 10];
-        FUN_001054d8(uVar10,iVar19,0);
+        ui_element_add_child(uVar10,iVar19,0);
         iVar17 = FUN_00107fd0(param_1,10,1);
         iVar7 = iVar17 + *(int *)(iVar19 + 0x34) + iVar7;
         iVar19 = FUN_0010c168(0,uVar11,iVar7,uVar13,1,param_1);
         *(undefined1 *)(iVar19 + 0x1c) = 1;
-        FUN_001054d8(uVar10,iVar19,0);
+        ui_element_add_child(uVar10,iVar19,0);
         iVar17 = FUN_00107fd0(param_1,10,1);
         iVar9 = iVar9 + 1;
         iVar7 = iVar17 + *(short *)(*(int *)(iVar19 + 8) + 6) + iVar7;
@@ -2533,7 +2533,7 @@ LAB_001050b0:
       uVar10 = FUN_0010b2dc(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar7);
       FUN_00109f00(uVar10,WORD_HEXADECIMAL_2E8D6E9D);
-      FUN_001054d8(iVar9,uVar10,500);
+      ui_element_add_child(iVar9,uVar10,500);
       FUN_00109a10(iVar9,1,0,0);
       FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_10FB280A,0x56);
       if (param_1[6] != 0) {
@@ -2585,7 +2585,7 @@ LAB_001050b0:
       do {
         iVar17 = FUN_0010b650(0,uVar10,iVar7,uVar11,0,param_1,local_74[iVar19],0x24);
         *(int *)(iVar17 + 0x10) = local_a8[iVar19 + 6];
-        FUN_001054d8(iVar9,iVar17,0);
+        ui_element_add_child(iVar9,iVar17,0);
         iVar17 = FUN_0010b650(0,uVar10,iVar7,uVar11,0,param_1,0,0x22);
         pvVar16 = helper_malloc(0x40);
         local_a8[5] = FUN_00107ecc(param_1,local_74[iVar19 + 7]);
@@ -2597,13 +2597,13 @@ LAB_001050b0:
         FUN_00109f48(iVar17,pvVar16);
         helper_free(pvVar16);
         *(int *)(iVar17 + 0x10) = local_a8[iVar19 + 6];
-        FUN_001054d8(iVar9,iVar17,0);
+        ui_element_add_child(iVar9,iVar17,0);
         iVar8 = FUN_00107fd0(param_1,10,1);
         iVar7 = iVar8 + *(int *)(iVar17 + 0x34) + iVar7;
         iVar17 = FUN_0010c168(0,uVar10,iVar7,uVar11,1,param_1);
         *(undefined1 *)(iVar17 + 0x1c) = 1;
         *(undefined4 *)(iVar17 + 0x10) = 0xff000000;
-        FUN_001054d8(iVar9,iVar17,0);
+        ui_element_add_child(iVar9,iVar17,0);
         iVar8 = FUN_00107fd0(param_1,10,1);
         iVar19 = iVar19 + 1;
         iVar7 = iVar8 + *(short *)(*(int *)(iVar17 + 8) + 6) + iVar7;
@@ -2628,14 +2628,14 @@ LAB_00104a24:
       uVar11 = FUN_00107fd0(param_1,INTEGER_790,1);
       uVar13 = FUN_00107fd0(param_1,100,2);
       uVar10 = FUN_0010bba0(0,uVar13,uVar11,(int)sVar1 + iVar19 * -2,uVar10,param_1,0xb,0,1);
-      FUN_001054d8(iVar9,uVar10,700);
+      ui_element_add_child(iVar9,uVar10,700);
       iVar19 = FUN_0010ba08(0,6);
       *(undefined4 *)(iVar19 + 4) = 0x21;
       uVar10 = FUN_00107fd0(param_1,800,1);
       uVar10 = FUN_0010b2dc(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar19);
       FUN_00109f00(uVar10,WORD_HEXADECIMAL_0528CA88);
-      FUN_001054d8(iVar9,uVar10,500);
+      ui_element_add_child(iVar9,uVar10,500);
       if (param_1[0x19] != 0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
         (*g_pHelperFuncs->free)(param_1[0x19]);
@@ -2674,7 +2674,7 @@ LAB_00104a24:
       uVar10 = FUN_0010b2dc(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar19);
       FUN_00109f00(uVar10,WORD_HEXADECIMAL_0528CA88);
-      FUN_001054d8(iVar9,uVar10,500);
+      ui_element_add_child(iVar9,uVar10,500);
       pvVar16 = helper_malloc(0x100);
       pvVar5 = helper_malloc(0x80);
       iVar17 = 0;
@@ -2727,15 +2727,15 @@ LAB_00101fa8:
       uVar10 = FUN_00107fd0(param_1,0xfa,1);
       uVar11 = FUN_00107fd0(param_1,0x32,2);
       uVar10 = FUN_0010b650(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_272E6865,0x24);
-      FUN_001054d8(iVar9,uVar10,0);
+      ui_element_add_child(iVar9,uVar10,0);
       uVar10 = FUN_00107fd0(param_1,0xfa,1);
       uVar10 = FUN_0010b650(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),0,param_1,
                             WORD_HEXADECIMAL_00C833EC,0x21);
-      FUN_001054d8(iVar9,uVar10,0);
+      ui_element_add_child(iVar9,uVar10,0);
       uVar10 = FUN_00107fd0(param_1,0xfa,1);
       uVar11 = FUN_00107fd0(param_1,0x3b6,2);
       uVar10 = FUN_0010b650(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_04D4D70F,0x22);
-      FUN_001054d8(iVar9,uVar10,0);
+      ui_element_add_child(iVar9,uVar10,0);
       iVar19 = 1;
       iVar7 = 0x18;
       do {
@@ -2764,7 +2764,7 @@ LAB_00101fa8:
           helper_free(p_00);
           FUN_00109f48(iVar17,p);
           helper_free(p);
-          FUN_001054d8(iVar9,iVar17,0);
+          ui_element_add_child(iVar9,iVar17,0);
           local_38 = (void *)0x0;
           local_3c = (void *)0x0;
           FUN_00114120(*(int *)(*param_1 + 0xa8),
@@ -2785,7 +2785,7 @@ LAB_00101fa8:
           FUN_00109f48(local_40,pvVar16);
           helper_free(pvVar16);
           helper_free(pvVar5);
-          FUN_001054d8(iVar9,local_40,0);
+          ui_element_add_child(iVar9,local_40,0);
           if (local_3c != (void *)0xffffffff) {
             uVar10 = FUN_00107fd0(param_1,local_28,1);
             uVar11 = FUN_00107fd0(param_1,0x3b6,2);
@@ -2802,14 +2802,14 @@ LAB_00101fa8:
             FUN_00109f48(local_44,pvVar16);
             helper_free(pvVar16);
             helper_free(pvVar5);
-            FUN_001054d8(iVar9,local_44,0);
+            ui_element_add_child(iVar9,local_44,0);
           }
           iVar17 = FUN_0010c168(0,0,(int)*(short *)(*(int *)(iVar17 + 8) + 2) +
                                     *(int *)(iVar17 + 0x34) + 2,
                                 (int)*(short *)(*(int *)(iVar9 + 8) + 6),1,param_1);
           *(undefined1 *)(iVar17 + 0x1c) = 1;
           *(undefined4 *)(iVar17 + 0x10) = WORD_HEXADECIMAL_FFC9C4DA;
-          FUN_001054d8(iVar9,iVar17,0);
+          ui_element_add_child(iVar9,iVar17,0);
           iVar19 = iVar19 + 1;
         }
         iVar7 = iVar7 + -1;
@@ -2900,7 +2900,7 @@ LAB_00101db4:
       pvVar16 = WORD_HEXADECIMAL_27B2CEEB;
     }
     uVar10 = FUN_001080ac(param_1);
-    iVar7 = FUN_00107ec4(uVar10,0xc9);
+    iVar7 = ui_element_find_child(uVar10,0xc9);
     FUN_00109ff8(*(undefined4 *)(iVar7 + 0x30),pvVar16);
     iVar7 = *(int *)(*(int *)(*param_1 + 0x94) + 4);
     if (iVar7 != 0) {
@@ -2967,7 +2967,7 @@ LAB_0010489c:
                 if (iVar17 == 5) {
                   FUN_00109f48(iVar7,*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x5bc));
                 }
-                FUN_001054d8(iVar9,iVar7,0);
+                ui_element_add_child(iVar9,iVar7,0);
                 iVar7 = FUN_0010b650(0,uVar10,iVar19,uVar11,0,param_1,0,0x22);
                 pvVar16 = helper_malloc(0x40);
                 local_a8[9] = FUN_00107ecc(param_1,local_74[iVar17 + 4]);
@@ -2994,13 +2994,13 @@ LAB_0010489c:
                 (*g_pHelperFuncs->free)(pvVar16);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
                 (*g_pHelperFuncs->free)(local_a8[9]);
-                FUN_001054d8(iVar9,iVar7,0);
+                ui_element_add_child(iVar9,iVar7,0);
                 iVar8 = FUN_00107fd0(param_1,10,1);
                 iVar19 = iVar8 + *(int *)(iVar7 + 0x34) + iVar19;
                 iVar7 = FUN_0010c168(0,uVar10,iVar19,uVar11,1,param_1);
                 *(undefined1 *)(iVar7 + 0x1c) = 1;
                 *(undefined4 *)(iVar7 + 0x10) = 0xff000000;
-                FUN_001054d8(iVar9,iVar7,0);
+                ui_element_add_child(iVar9,iVar7,0);
                 iVar8 = FUN_00107fd0(param_1,10,1);
                 iVar19 = iVar8 + *(short *)(*(int *)(iVar7 + 8) + 6) + iVar19;
               }
@@ -3047,7 +3047,7 @@ LAB_0010489c:
           FUN_00109a10(iVar9,1,WORD_HEXADECIMAL_0B259095,uVar24);
         }
         uVar10 = FUN_001080ac(param_1);
-        iVar19 = FUN_00107ec4(uVar10,300);
+        iVar19 = ui_element_find_child(uVar10,300);
         psVar18 = *(short **)(iVar19 + 8);
         iVar19 = FUN_0010ba08(0,5);
         *(undefined4 *)(iVar19 + 4) = 0x24;
@@ -3055,11 +3055,11 @@ LAB_0010489c:
         uVar10 = FUN_0010b2dc(0,(int)*psVar18,(int)psVar18[1],(int)psVar18[2],(int)psVar18[3],
                               param_1,iVar19);
         FUN_00109f00(uVar10,uVar11);
-        FUN_001054d8(iVar9,uVar10,0);
+        ui_element_add_child(iVar9,uVar10,0);
         uVar10 = FUN_00107fd0(param_1,0x2a8,1);
         uVar11 = FUN_00107fd0(param_1,500,2);
         uVar10 = FUN_0010b650(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_16A5390B,0x21);
-        FUN_001054d8(iVar9,uVar10,0);
+        ui_element_add_child(iVar9,uVar10,0);
         local_38 = helper_malloc(0x20);
                     /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
                        +0x20, via *(base-4)) */
@@ -3077,7 +3077,7 @@ LAB_0010489c:
           (*g_pHelperFuncs->free)(local_3c);
           local_3c = (void *)0x0;
         }
-        FUN_001054d8(iVar9,uVar10,0);
+        ui_element_add_child(iVar9,uVar10,0);
         goto LAB_0010423c;
       }
       if (param_2 == 0x3e) {
@@ -3174,7 +3174,7 @@ LAB_001042b8:
     do {
       iVar17 = FUN_0010b650(0,uVar10,iVar7,uVar11,0,param_1,local_74[iVar19 + 2],0x24);
       *(int *)(iVar17 + 0x10) = local_a8[iVar19 + 8];
-      FUN_001054d8(iVar9,iVar17,0);
+      ui_element_add_child(iVar9,iVar17,0);
       iVar17 = FUN_0010b650(0,uVar10,iVar7,uVar11,0,param_1,0,0x22);
       pvVar16 = helper_malloc(0x40);
       local_a8[7] = FUN_00107ecc(param_1,local_74[iVar19 + 9]);
@@ -3206,13 +3206,13 @@ LAB_001042b8:
       FUN_00109f48(iVar17,pvVar16);
       helper_free(pvVar16);
       *(int *)(iVar17 + 0x10) = local_a8[iVar19 + 8];
-      FUN_001054d8(iVar9,iVar17,0);
+      ui_element_add_child(iVar9,iVar17,0);
       iVar8 = FUN_00107fd0(param_1,10,1);
       iVar7 = iVar8 + *(int *)(iVar17 + 0x34) + iVar7;
       iVar17 = FUN_0010c168(0,uVar10,iVar7,uVar11,1,param_1);
       *(undefined1 *)(iVar17 + 0x1c) = 1;
       *(undefined4 *)(iVar17 + 0x10) = 0xff000000;
-      FUN_001054d8(iVar9,iVar17,0);
+      ui_element_add_child(iVar9,iVar17,0);
       iVar8 = FUN_00107fd0(param_1,10,1);
       iVar19 = iVar19 + 1;
       iVar7 = iVar8 + *(short *)(*(int *)(iVar17 + 8) + 6) + iVar7;
@@ -3282,9 +3282,9 @@ LAB_001042b8:
     pvVar16 = (void *)((int)local_3c + iVar8 * -2);
     iVar19 = (int)local_38 + iVar8;
     uVar10 = FUN_0010b650(0,iVar19,iVar17,pvVar16,0,param_1,WORD_HEXADECIMAL_02AAF639,0x24);
-    FUN_001054d8(iVar7,uVar10,0);
+    ui_element_add_child(iVar7,uVar10,0);
     iVar19 = FUN_0010b650(0,iVar19,iVar17,pvVar16,0,param_1,WORD_HEXADECIMAL_1A43CB02,0x22);
-    FUN_001054d8(iVar7,iVar19,0);
+    ui_element_add_child(iVar7,iVar19,0);
     iVar12 = FUN_00107fd0(param_1,0x1e,1);
     iVar17 = iVar12 + *(int *)(iVar19 + 0x34) + iVar17;
     local_74[9] = *(undefined4 *)(WORD_HEXADECIMAL_00023F3C + 0x103cd4);
@@ -3311,8 +3311,8 @@ LAB_001042b8:
       FUN_00109f48(iVar20,local_78);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
       (*g_pHelperFuncs->free)(local_78);
-      FUN_001054d8(iVar12,iVar20,0);
-      FUN_001054d8(iVar7,iVar12,0);
+      ui_element_add_child(iVar12,iVar20,0);
+      ui_element_add_child(iVar7,iVar12,0);
       iVar17 = iVar17 + *(int *)(iVar20 + 0x34);
       *(short *)(*(int *)(iVar12 + 8) + 6) = (short)*(int *)(iVar20 + 0x34);
       if (iVar19 == 0) {
@@ -3328,7 +3328,7 @@ LAB_001042b8:
     uVar10 = FUN_00107fd0(param_1,0x2a8,1);
     uVar11 = FUN_00107fd0(param_1,500,2);
     uVar10 = FUN_0010b650(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_16A5390B,0x21);
-    FUN_001054d8(iVar9,uVar10,0);
+    ui_element_add_child(iVar9,uVar10,0);
     local_78 = helper_malloc(0x20);
     iVar19 = INTEGER_MINUS_16076;
                     /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
@@ -3346,12 +3346,12 @@ LAB_001042b8:
       (*g_pHelperFuncs->free)(local_a8[0xb]);
       local_a8[0xb] = 0;
     }
-    FUN_001054d8(iVar9,uVar10,0);
+    ui_element_add_child(iVar9,uVar10,0);
     *(short *)(*(int *)(iVar7 + 8) + 6) =
          ((short)iVar17 + (short)local_40) - *(short *)(*(int *)(iVar7 + 8) + 2);
     uVar10 = 300;
 LAB_00104da0:
-    FUN_001054d8(iVar9,iVar7,uVar10);
+    ui_element_add_child(iVar9,iVar7,uVar10);
     break;
   case 5:
     uVar10 = 0x10;
@@ -3359,7 +3359,7 @@ LAB_00104da0:
   case 6:
     FUN_00120450(*(undefined4 *)(*param_1 + 0x94));
     uVar10 = FUN_001080ac(param_1);
-    iVar7 = FUN_00107ec4(uVar10,0x2d);
+    iVar7 = ui_element_find_child(uVar10,0x2d);
     if (iVar7 != 0) {
       FUN_00109f00(iVar7,WORD_HEXADECIMAL_1650919F);
       FUN_00109a10(uVar10,2,WORD_HEXADECIMAL_19408333,8);
@@ -3395,13 +3395,13 @@ LAB_00104360:
     iVar8 = 0;
     do {
       iVar12 = FUN_0010b650(0,uVar10,iVar19,0,0,param_1,local_74[iVar8 + 9],0x24);
-      FUN_001054d8(iVar9,iVar12,0);
+      ui_element_add_child(iVar9,iVar12,0);
       iVar20 = *(int *)(iVar12 + 0x34);
       iVar19 = iVar20 + iVar17 + iVar19;
       iVar12 = FUN_0010c168(0,uVar10,iVar19,iVar7,1,param_1);
       *(undefined1 *)(iVar12 + 0x1c) = 1;
       *(undefined4 *)(iVar12 + 0x10) = WORD_HEXADECIMAL_FFC9C4DA;
-      FUN_001054d8(iVar9,iVar12,0);
+      ui_element_add_child(iVar9,iVar12,0);
       iVar8 = iVar8 + 1;
       iVar19 = iVar19 + iVar17;
     } while (iVar8 < 7);
@@ -3439,7 +3439,7 @@ LAB_00104360:
     do {
       iVar12 = FUN_0010bba0(0,local_74[8],iVar19,local_74[7],iVar20,param_1,8,0,0);
       key_picker_setup(iVar12,param_1[0xf],local_74[iVar8],iVar8);
-      FUN_001054d8(iVar9,iVar12,iVar8 + 400);
+      ui_element_add_child(iVar9,iVar12,iVar8 + 400);
       param_1[iVar8 + 0x11] = iVar12;
       iVar19 = *(short *)(*(int *)(iVar12 + 8) + 6) + iVar17 + iVar17 + iVar19;
       if (iVar8 == 0) {
@@ -3473,7 +3473,7 @@ LAB_00104360:
       pvVar16 = WORD_HEXADECIMAL_14FB8F11;
     }
     uVar10 = FUN_001080ac(param_1);
-    iVar7 = FUN_00107ec4(uVar10,200);
+    iVar7 = ui_element_find_child(uVar10,200);
     FUN_00109ff8(*(undefined4 *)(iVar7 + 0x30),pvVar16);
     iVar7 = *(int *)(*param_1 + 0xbc);
     if (iVar7 != 0) {
@@ -3519,7 +3519,7 @@ LAB_001048a4:
     else {
       FUN_00109f00(uVar10,uVar11);
     }
-    FUN_001054d8(iVar9,uVar10,0);
+    ui_element_add_child(iVar9,uVar10,0);
     *(undefined4 *)(iVar9 + 0x30) = uVar10;
     break;
   case 0x10:
@@ -3677,7 +3677,7 @@ LAB_0010532c:
   iVar4 = 0;
   if (iVar3 != param_1) {
     if ((param_9 == 0) ||
-       (iVar4 = FUN_001080c8(*(undefined4 *)(param_1 + 0x24),param_9), iVar4 != 0)) {
+       (iVar4 = list_find_entry(*(undefined4 *)(param_1 + 0x24),param_9), iVar4 != 0)) {
       param_9 = *(int *)(param_1 + 0x28) + -1;
       *(int *)(param_1 + 0x28) = param_9;
     }
@@ -3730,31 +3730,28 @@ void FUN_001053a8(undefined4 param_1,undefined4 param_2,int param_3,int param_4,
     if (param_6 != 0) {
       uVar4 = *(undefined4 *)(param_6 + iVar5 * 4);
     }
-    FUN_001054d8(param_2,iVar2,uVar4);
+    ui_element_add_child(param_2,iVar2,uVar4);
     unaff_r9 = iVar2;
   }
   return;
 }
 
-/* ==== 0x001054D8  (file offset 0x054D8)  FUN_001054d8 ================================================ */
-int FUN_001054d8(int param_1,int param_2,int param_3)
+/* ==== 0x001054D8  (file offset 0x054D8)  ui_element_add_child ======================================== */
+/* GUESS: name. Adds `child` to `parent` under the id `id`. When id is 0 or already in use, the child
+   gets the next automatic id instead (-1, -2, ...; parent->nextAutomaticId). Stores the child in the
+   parent's children list (FUN_001090fc), and the id and parent in the child. Returns the id used, or 0
+   when child is the parent itself. */
+int ui_element_add_child(UIElement *parent,UIElement *child,int id)
 
 {
-  int iVar1;
-  
-  iVar1 = 0;
-  if (param_2 != param_1) {
-    if ((param_3 == 0) ||
-       (iVar1 = FUN_001080c8(*(undefined4 *)(param_1 + 0x24),param_3), iVar1 != 0)) {
-      param_3 = *(int *)(param_1 + 0x28) + -1;
-      *(int *)(param_1 + 0x28) = param_3;
-    }
-    FUN_001090fc(*(undefined4 *)(param_1 + 0x24),param_3,param_2);
-    *(int *)(param_2 + 0xc) = param_3;
-    *(int *)(param_2 + 0x2c) = param_1;
-    iVar1 = param_3;
-  }
-  return iVar1;
+  if (child == parent)
+    return 0;
+  if (id == 0 || list_find_entry(parent->children,id) != 0)
+    id = --parent->nextAutomaticId;
+  FUN_001090fc((int *)parent->children,id,(int)child);
+  child->id = id;
+  child->parent = parent;
+  return id;
 }
 
 /* ==== 0x00105538  (file offset 0x05538)  FUN_00105538 ================================================ */
@@ -3789,7 +3786,7 @@ void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
   if (param_3 != 0) {
     *(int *)(iVar2 + 0x10) = param_3;
   }
-  FUN_001054d8(param_2,iVar2,0);
+  ui_element_add_child(param_2,iVar2,0);
   if (param_5 != 0) {
     iVar2 = FUN_00107fd0(param_1,0x6e,1);
     iVar3 = FUN_00107fd0(param_1,100,2);
@@ -3801,7 +3798,7 @@ void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
     if (param_3 != 0) {
       *(int *)(iVar2 + 0x10) = param_3;
     }
-    FUN_001054d8(param_2,iVar2,0);
+    ui_element_add_child(param_2,iVar2,0);
   }
   return;
 }
@@ -5307,27 +5304,23 @@ int list_get_entry(UIList *list,int index)
   return 0;
 }
 
-/* ==== 0x00107EC4  (file offset 0x07EC4)  FUN_00107ec4 ================================================ */
-int FUN_00107ec4(int param_1,int param_2)
+/* ==== 0x00107EC4  (file offset 0x07EC4)  ui_element_find_child ======================================= */
+/* GUESS: name. The child of a UI element (often the current screen) whose id is `id`, or 0. The
+   binary is two instructions, `ldr r0, [r0, #0x24]` (element->children) and a tail jump into the search
+   of list_find_entry at 0x001080c8; that search is written inline here, as in Ghidra's listing. The
+   ids are the screens' own numbers for their controls: 400-406 the Controls key pickers, and 45, 200,
+   201, 300, 500, 600, 700, 800 and 1000 elsewhere. */
+int ui_element_find_child(UIElement *element,int id)
 
 {
-  int *piVar1;
-  int iVar2;
-  int iVar3;
-  
-  piVar1 = *(int **)(param_1 + 0x24);
-  iVar3 = 0;
-  iVar2 = 0;
-  do {
-    if (*piVar1 <= iVar2) {
-      return iVar3;
-    }
-    if (*(int *)(piVar1[1] + iVar2 * 4) == param_2) {
-      iVar3 = *(int *)(piVar1[2] + iVar2 * 4);
-    }
-    iVar2 = iVar2 + 1;
-  } while (iVar3 == 0);
-  return iVar3;
+  UIList *children = element->children;
+  int child = 0;
+  int i;
+
+  for (i = 0; child == 0 && i < children->count; i++)
+    if (children->ids[i] == id)
+      child = children->entries[i];
+  return child;
 }
 
 /* ==== 0x00107ECC  (file offset 0x07ECC)  FUN_00107ecc ================================================ */
@@ -5500,7 +5493,7 @@ undefined4 FUN_00107fec(int param_1,undefined4 param_2)
   undefined4 local_10;
   
   local_10 = param_4;
-  iVar1 = FUN_001080c8(*(undefined4 *)(param_1 + 0x40),param_2);
+  iVar1 = list_find_entry(*(undefined4 *)(param_1 + 0x40),param_2);
   local_10 = 0;
   if (iVar1 == 0) {
     FUN_00114774(*(undefined4 *)(param_1 + 8),param_2,&local_10);
@@ -5539,25 +5532,21 @@ int FUN_001080ac(int param_1)
   return iVar3;
 }
 
-/* ==== 0x001080C8  (file offset 0x080C8)  FUN_001080c8 ================================================ */
-int FUN_001080c8(int *param_1,int param_2)
+/* ==== 0x001080C8  (file offset 0x080C8)  list_find_entry ============================================= */
+/* GUESS: name. The entry of a list whose id is `id`, or 0 when there is none (0x001080c8-0x00108108:
+   walks list->ids, stops at the first match and returns list->entries at that position). Used for a
+   UI element's children (ui_element_find_child, ui_element_add_child) and its key map
+   (ui_element_handle_key). */
+int list_find_entry(UIList *list,int id)
 
 {
-  int iVar1;
-  int iVar2;
-  
-  iVar2 = 0;
-  iVar1 = 0;
-  do {
-    if (*param_1 <= iVar1) {
-      return iVar2;
-    }
-    if (*(int *)(param_1[1] + iVar1 * 4) == param_2) {
-      iVar2 = *(int *)(param_1[2] + iVar1 * 4);
-    }
-    iVar1 = iVar1 + 1;
-  } while (iVar2 == 0);
-  return iVar2;
+  int entry = 0;
+  int i;
+
+  for (i = 0; entry == 0 && i < list->count; i++)
+    if (list->ids[i] == id)
+      entry = list->entries[i];
+  return entry;
 }
 
 /* ==== 0x0010810C  (file offset 0x0810C)  FUN_0010810c ================================================ */
@@ -5766,7 +5755,7 @@ bool FUN_001084e4(undefined4 param_1,undefined4 param_2,int param_3)
 /* GUESS: name. Key handler of every UI element. A key picker (type 8) takes LEFT / RIGHT itself: the
    previous / next key of its ring, shown at once and written to the setting at once; UP / DOWN go to
    FUN_0010a498 with the picker's row, then on as for every element. SELECT sends the element's event
-   to its owner (FUN_00101ad8). Any other key is looked up in the element's key map (FUN_001080c8);
+   to its owner (FUN_00101ad8). Any other key is looked up in the element's key map (list_find_entry);
    without a match it goes to the element's listener (vtable +8), with one the found element gets the
    focus (FUN_00105224). Finally the element's two colours are set from its type and state (unless flag
    bit 1 is set), and it is redrawn (FUN_00107d24) if anything changed. Returns 1 when the key was
@@ -5792,7 +5781,7 @@ int ui_element_handle_key(UIElement *element,int eventCode,int keyCode,int keyPa
       FUN_00101ad8(element->owner,element->selectEvent);
       handled = 1;
     }
-    else if ((target = FUN_001080c8(element->keyMap,keyCode)) == 0) {
+    else if ((target = list_find_entry(element->keyMap,keyCode)) == 0) {
       if (element->listener != (int *)0x0)
         handled = (**(code **)(*element->listener + 8))(element->listener,eventCode,keyCode,keyParameter);
     }
@@ -5933,7 +5922,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
     break;
   case 0x1:
     if (*(int *)(param_1[6] + 0x48) == 3) {
-      iVar8 = FUN_00107ec4((int)piVar1,700);
+      iVar8 = ui_element_find_child((int)piVar1,700);
       *(int **)(iVar8 + 0x54) = param_3;
       *(void **)(iVar8 + 0x58) = param_4;
     }
@@ -5958,7 +5947,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
       piVar1 = FUN_0010b2dc((int *)0x0,0,(int)uVar11,(int)*(short *)(piVar1[2] + 4),
                             (int)*(short *)(piVar1[2] + 6),param_1,(int)puVar6);
       FUN_00109b4c((int)piVar1,(int)pvVar3,0);
-      FUN_001054d8(iVar5,(int)piVar1,500);
+      ui_element_add_child(iVar5,(int)piVar1,500);
       helper_free(pvVar3);
       (*g_pHelperFuncs->free)(param_5);
       if (param_1[6] != 0) {
@@ -5971,7 +5960,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
     iVar8 = 0x6b;
     goto LAB_00108d50;
   case 0x3:
-    iVar5 = FUN_00107ec4((int)piVar1,500);
+    iVar5 = ui_element_find_child((int)piVar1,500);
     pvVar3 = helper_malloc(0x20);
     pvVar7 = helper_malloc(0x20);
     FUN_0011421c((int *)param_1[2],WORD_HEXADECIMAL_3D198889,(undefined4 *)&stack0xffffffd4);
@@ -5985,7 +5974,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
     helper_free(pvVar7);
     break;
   case 0x4:
-    iVar8 = FUN_00107ec4((int)piVar1,500);
+    iVar8 = ui_element_find_child((int)piVar1,500);
     psVar9 = (short *)(*(int *)(iVar8 + 8) + 2);
     uVar11 = FUN_00107fd0((int)param_1,0x96,1);
     *psVar9 = *psVar9 - (short)uVar11;
@@ -6005,12 +5994,12 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
       if (param_3 == (int *)0x5) {
         FUN_00101ad8(param_1,0x88);
         piVar1 = (int *)FUN_001080ac((int)param_1);
-        iVar8 = FUN_00107ec4((int)piVar1,1000);
+        iVar8 = ui_element_find_child((int)piVar1,1000);
         uVar4 = WORD_HEXADECIMAL_0FA4E52C;
       }
       else {
         if (param_3 == (int *)0x6) {
-          iVar8 = FUN_00107ec4((int)piVar1,500);
+          iVar8 = ui_element_find_child((int)piVar1,500);
           psVar9 = (short *)(*(int *)(iVar8 + 8) + 2);
           uVar11 = FUN_00107fd0((int)param_1,0x96,1);
           *psVar9 = *psVar9 - (short)uVar11;
@@ -6022,10 +6011,10 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
         if (piVar1[0xf] == 2 || piVar1[0xf] == 3) {
           FUN_00101ad8(param_1,0x88);
           piVar1 = (int *)FUN_001080ac((int)param_1);
-          iVar8 = FUN_00107ec4((int)piVar1,1000);
+          iVar8 = ui_element_find_child((int)piVar1,1000);
         }
         else {
-          iVar8 = FUN_00107ec4((int)piVar1,500);
+          iVar8 = ui_element_find_child((int)piVar1,500);
           psVar9 = (short *)(*(int *)(iVar8 + 8) + 2);
           uVar11 = FUN_00107fd0((int)param_1,0x96,1);
           *psVar9 = *psVar9 - (short)uVar11;
@@ -6062,7 +6051,7 @@ LAB_00108d50:
   case 0x8:
     break;
   case 0x9:
-    iVar5 = FUN_00107ec4((int)piVar1,500);
+    iVar5 = ui_element_find_child((int)piVar1,500);
     FUN_00109f00(iVar5,WORD_HEXADECIMAL_3D569D08);
     iVar5 = WORD_HEXADECIMAL_0001F14C;
     *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x720) = 0;
@@ -6363,7 +6352,7 @@ undefined4 FUN_00109308(int param_1,undefined4 param_2,int param_3)
   int *p;
   undefined4 uVar1;
   
-  p = (int *)FUN_001080c8(*(undefined4 *)(param_1 + 0x24),param_2);
+  p = (int *)list_find_entry(*(undefined4 *)(param_1 + 0x24),param_2);
   if ((p == (int *)0x0) || (FUN_00109380(*(undefined4 *)(param_1 + 0x24),param_2), param_3 == 0)) {
     uVar1 = 0;
   }
@@ -6818,7 +6807,7 @@ void FUN_00109a10(int param_1,int param_2,int param_3,undefined4 param_4)
                          ,*(undefined4 *)(param_1 + 0x20),2,param_4,1);
     *(int *)(*(int *)(param_1 + 0x34) + iVar7 * 4) = iVar1;
     FUN_00109ff8(*(undefined4 *)(iVar1 + 0x30),param_3);
-    FUN_001054d8(param_1,*(undefined4 *)(*(int *)(param_1 + 0x34) + iVar7 * 4),0);
+    ui_element_add_child(param_1,*(undefined4 *)(*(int *)(param_1 + 0x34) + iVar7 * 4),0);
   }
   return;
 }
@@ -7228,7 +7217,7 @@ undefined8 FUN_0010a214(int param_1)
       *(short *)(*(int *)(iVar4 + 8) + 2) = *(short *)(*(int *)(param_1 + 8) + 2) + (short)iVar3;
       *(short *)(*(int *)(iVar4 + 8) + 6) = (short)((uint)(iVar9 * 0x10000) >> 0x10);
       iVar3 = iVar3 + iVar9;
-      FUN_001054d8(param_1,iVar4,0);
+      ui_element_add_child(param_1,iVar4,0);
     }
     if ((*(char *)(param_1 + 0x44) == '\0') && (iVar7 < iVar1)) {
       psVar5 = *(short **)(param_1 + 8);
@@ -7240,7 +7229,7 @@ undefined8 FUN_0010a214(int param_1)
                            *(int *)(*(int *)(param_1 + 0x34) + 0xc) * -2,0,0,param_2,WORD_HEXADECIMAL_3D1D22E8,9)
       ;
       *(undefined4 *)(param_1 + 0x48) = uVar6;
-      FUN_001054d8(param_1,uVar6,0);
+      ui_element_add_child(param_1,uVar6,0);
     }
   }
   return CONCAT44(param_2,iVar10);
@@ -7526,7 +7515,7 @@ int * FUN_0010aa8c(int *param_1,int *param_2)
     iVar1 = FUN_0010b650(0,(int)*(short *)(param_1[2] + 4) / 2,(int)*(short *)(param_1[2] + 6) / 2,0
                          ,0,*(undefined4 *)(param_1[0x11] + 0xd0),WORD_HEXADECIMAL_254DA109,9);
     param_1[0x37] = iVar1;
-    FUN_001054d8(param_1,iVar1,900);
+    ui_element_add_child(param_1,iVar1,900);
     *(undefined1 *)(param_1[0x37] + 4) = 0;
     FUN_00109940(param_1,0);
   }
@@ -8270,7 +8259,7 @@ int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
       param_1[0x16] = 0;
     }
     *(undefined1 *)(param_1 + 0x13) = param_9;
-    FUN_001054d8((int)param_1,param_1[0xc],0);
+    ui_element_add_child((int)param_1,param_1[0xc],0);
     puVar3 = FUN_0010be6c((undefined4 *)0x0,0x10,0x10);
     param_1[0x18] = (int)puVar3;
     param_1[0x17] = 1;
@@ -8601,7 +8590,7 @@ void FUN_0010c3f8(int param_1,int param_2)
     iVar1 = 0;
     do {
       uVar2 = FUN_001080ac(param_1);
-      iVar3 = FUN_00107ec4(uVar2,iVar1 + 400);
+      iVar3 = ui_element_find_child(uVar2,iVar1 + 400);
       if (iVar3 != 0) {
         key_picker_restore_original(iVar3);
       }
@@ -21283,7 +21272,7 @@ void kh_OnKey(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
               FUN_00101ad8(pMe->pObjd0,7);
               return;
             }
-            iVar3 = FUN_00107ec4(uVar2,600);
+            iVar3 = ui_element_find_child(uVar2,600);
             if (iVar3 == 0) {
               uVar8 = *(uint *)((int)pMe->pObja8 + 0x5ec) & 0xffff;
             }
@@ -29830,7 +29819,7 @@ LAB_001243b0:
       uVar10 = FUN_0010b650((int *)0x0,(int)*(short *)(piVar5[2] + 4) / 2,
                             *(short *)(piVar5[2] + 6) + -10,0,0,*(int *)(param_1 + 0xd0),
                             WORD_HEXADECIMAL_254DA109,9);
-      FUN_001054d8((int)piVar5,(int)uVar10,0);
+      ui_element_add_child((int)piVar5,(int)uVar10,0);
       if (*(int *)(param_1 + 0xcc) == 0x10) {
         piVar5[4] = WORD_HEXADECIMAL_FFEFEFEF;
       }

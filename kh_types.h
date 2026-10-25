@@ -74,7 +74,7 @@ typedef struct KHApp {
 
 /* ---- Lists (GUESS: names) ----------------------------------------------------------------------
  * The children of a menu or UI element (for example the list at menu +0x24), kept as two parallel
- * arrays. list_get_entry reads an entry by position (0 when out of range); FUN_001080c8 returns the
+ * arrays. list_get_entry reads an entry by position (0 when out of range); list_find_entry returns the
  * entry whose id matches. The key map of a UIElement (+0x60) is searched the same way. */
 typedef struct UIList {
     int    count;                 /* +0x00 number of entries */
@@ -83,8 +83,10 @@ typedef struct UIList {
 } UIList;
 
 /* ---- The game's UI elements (GUESS: names) ------------------------------------------------------
- * A UIElement is a menu entry or widget, created by FUN_0010bba0 with its type in +0x34. Only the
- * fields used by ui_element_handle_key and the key picker functions are named; the rest is padding.
+ * A UIElement is a screen, menu entry or widget, created by FUN_0010bba0 with its type in +0x34.
+ * Elements form a tree: each has an id and a parent, and keeps its children in a UIList
+ * (ui_element_add_child / ui_element_find_child). Only the fields used by the functions named so far
+ * are named; the rest is padding.
  * Type 8 is the key picker of the Controls screen; +0x3c..+0x48 and +0x68 are its own fields. */
 typedef struct KeyOption {
     struct KeyOption *previous;   /* +0x00 */
@@ -95,12 +97,16 @@ typedef struct KeyOption {
 } KeyOption;                      /* 0x10 bytes; the Controls screen links 13 of them in a ring */
 
 typedef struct UIElement {
-    uint8  unknown_00[0x10];
+    uint8  unknown_00[0x0c];
+    int    id;                    /* +0x0c its id among its parent's children (ui_element_add_child) */
     uint32 primaryColor;          /* +0x10 set by ui_element_handle_key for each type and state */
     uint32 secondaryColor;        /* +0x14 */
     uint8  unknown_18[0x08];
     int   *owner;                 /* +0x20 the menu (screen) it belongs to; FUN_00101ad8 handles its events */
-    uint8  unknown_24[0x0c];
+    UIList *children;             /* +0x24 its children, by id (ui_element_find_child) */
+    int    nextAutomaticId;       /* +0x28 counts down from 0: the ids -1, -2, ... given to children
+                                     added without an id (or with one already in use) */
+    struct UIElement *parent;     /* +0x2c the element it was added to */
     int    label;                 /* +0x30 the text element that shows the current value */
     int    type;                  /* +0x34 2..10; 8 = key picker */
     int    selectEvent;           /* +0x38 the event sent to the owner when SELECT is pressed */
@@ -114,7 +120,7 @@ typedef struct UIElement {
                                      does not handle itself */
     uint8  unknown_54[0x08];
     uint32 flags;                 /* +0x5c bit 1: keep the colours (no restyling) */
-    int   *keyMap;                /* +0x60 searched with the key code by FUN_001080c8 */
+    UIList *keyMap;               /* +0x60 searched with the key code by list_find_entry */
     int    unknown_64;            /* +0x64 passed to FUN_00105224 with the element found there */
     int    originalKeyCode;       /* +0x68 key picker: the setting's value when it was set up */
 } UIElement;
