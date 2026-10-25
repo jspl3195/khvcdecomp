@@ -135,10 +135,10 @@ void * memset(void *destination,uint byteCount)
 /* GUESS: name. memcpy(destination, source, byteCount) for any alignment: the ARM C library's
    __rt_memcpy (ADS / RVCT), which the compiler calls itself for structure copies. Evidence
    (0x00100168-0x00100284): fewer than 4 bytes go straight to the byte tail; otherwise single bytes
-   are copied until the destination is word-aligned; an aligned source then jumps into the word copier
-   at 0x0010021c (FUN_0010021c); a misaligned source is read a word at a time and each destination
-   word is built from two neighbouring source words (lsr/orr ... lsl, one loop per offset 1, 2, 3); the
-   last 0-3 bytes are copied one at a time. The binary leaves the end pointers in r0/r1, but no caller
+   are copied until the destination is word-aligned; an aligned source then jumps into the word-copy
+   code at 0x0010021c (shared with FUN_0010021c, written inline below); a misaligned source is read a
+   word at a time and each destination word is built from two neighbouring source words (lsr/orr ...
+   lsl, one loop per offset 1, 2, 3); the last 0-3 bytes are copied one at a time. The binary leaves the end pointers in r0/r1, but no caller
    uses them, so the function is written as void. All 10 callers copy 8 bytes (or 10 once). */
 void memcpy(void *destination,void *source,uint byteCount)
 
@@ -151,16 +151,20 @@ void memcpy(void *destination,void *source,uint byteCount)
   if (byteCount >= 4) {
     for (; ((uint)to & 3) != 0; byteCount--)      /* single bytes until the destination is aligned */
       *to++ = *from++;
-    if (((uint)from & 3) == 0) {                  /* source aligned too: the binary jumps into the */
-      FUN_0010021c(to,from,byteCount);            /* word copier at 0x0010021c */
-      return;
+    if (((uint)from & 3) == 0) {
+      /* source aligned too: whole words (the binary continues in the word-copy code at 0x0010021c,
+         which it shares with FUN_0010021c, in blocks of 32/16/8/4 bytes) */
+      for (; byteCount >= 4; byteCount -= 4, to += 4, from += 4)
+        *(uint32 *)to = *(uint32 *)from;
     }
-    /* misaligned source: each destination word is the upper bytes of one source word and the lower
-       bytes of the next (little-endian) */
-    shift = ((uint)from & 3) * 8;
-    words = (uint32 *)((uint)from & ~3u);
-    for (; byteCount >= 4; byteCount -= 4, to += 4, from += 4, words++)
-      *(uint32 *)to = (words[0] >> shift) | (words[1] << (32 - shift));
+    else {
+      /* misaligned source: each destination word is the upper bytes of one source word and the
+         lower bytes of the next (little-endian) */
+      shift = ((uint)from & 3) * 8;
+      words = (uint32 *)((uint)from & ~3u);
+      for (; byteCount >= 4; byteCount -= 4, to += 4, from += 4, words++)
+        *(uint32 *)to = (words[0] >> shift) | (words[1] << (32 - shift));
+    }
   }
   while (byteCount-- != 0)                        /* the last 0-3 bytes */
     *to++ = *from++;
