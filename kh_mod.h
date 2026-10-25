@@ -407,7 +407,7 @@ void AEEMod_FreeResources(IModule *po, IHeap *ph, IFileMgr *pfm);
 /* Not yet identified (auto-named by Ghidra). */
 void FUN_00100104(int param_1);
 void * memset(void *destination,uint byteCount);   /* 0x00100110 GUESS: name, see kh_mod.c */
-undefined8 FUN_00100168(uint *param_1,uint *param_2,uint param_3);
+void memcpy(void *destination,void *source,uint byteCount);   /* 0x00100168 GUESS: name, see kh_mod.c */
 undefined8 FUN_0010021c(byte *param_1,byte *param_2,uint param_3);
 ulonglong FUN_00100288(uint param_1,uint param_2);
 int FUN_0010035c(uint param_1,uint param_2);

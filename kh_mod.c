@@ -131,198 +131,39 @@ void * memset(void *destination,uint byteCount)
   return bytes;                     /* destination + byteCount */
 }
 
-/* ==== 0x00100168  (file offset 0x00168)  FUN_00100168 ================================================ */
-undefined8 FUN_00100168(uint *param_1,uint *param_2,uint param_3)
+/* ==== 0x00100168  (file offset 0x00168)  memcpy ====================================================== */
+/* GUESS: name. memcpy(destination, source, byteCount) for any alignment: the ARM C library's
+   __rt_memcpy (ADS / RVCT), which the compiler calls itself for structure copies. Evidence
+   (0x00100168-0x00100284): fewer than 4 bytes go straight to the byte tail; otherwise single bytes
+   are copied until the destination is word-aligned; an aligned source then jumps into the word copier
+   at 0x0010021c (FUN_0010021c); a misaligned source is read a word at a time and each destination
+   word is built from two neighbouring source words (lsr/orr ... lsl, one loop per offset 1, 2, 3); the
+   last 0-3 bytes are copied one at a time. The binary leaves the end pointers in r0/r1, but no caller
+   uses them, so the function is written as void. All 10 callers copy 8 bytes (or 10 once). */
+void memcpy(void *destination,void *source,uint byteCount)
 
 {
-  uint param_4;
-  /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  uint *puVar1;
-  uint *puVar2;
-  byte *pbVar3;
-  byte bVar4;
-  byte bVar5;
-  uint in_r12;
-  uint uVar6;
-  uint uVar7;
-  uint uVar8;
-  bool bVar9;
-  bool bVar10;
-  
-  if (3 < param_3) {
-    uVar6 = (uint)param_1 & 3;
-    in_r12 = uVar6;
-    if (uVar6 != 0) {
-      bVar4 = (byte)*param_2;
-      puVar2 = (uint *)((int)param_2 + 1);
-      if (uVar6 < 3) {
-        puVar2 = (uint *)((int)param_2 + 2);
-        in_r12 = (uint)*(byte *)((int)param_2 + 1);
-      }
-      *(byte *)param_1 = bVar4;
-      param_2 = puVar2;
-      if (uVar6 < 2) {
-        param_2 = (uint *)((int)puVar2 + 1);
-        bVar4 = (byte)*puVar2;
-      }
-      param_3 = (param_3 + uVar6) - 4;
-      puVar2 = (uint *)((int)param_1 + 1);
-      if (uVar6 < 3) {
-        puVar2 = (uint *)((int)param_1 + 2);
-        *(byte *)((int)param_1 + 1) = (byte)in_r12;
-      }
-      param_1 = puVar2;
-      if (uVar6 < 2) {
-        param_1 = (uint *)((int)puVar2 + 1);
-        *(byte *)puVar2 = bVar4;
-      }
+  uint8 *to = (uint8 *)destination;
+  uint8 *from = (uint8 *)source;
+  uint32 *words;                    /* the aligned source words around from */
+  uint shift;
+
+  if (byteCount >= 4) {
+    for (; ((uint)to & 3) != 0; byteCount--)      /* single bytes until the destination is aligned */
+      *to++ = *from++;
+    if (((uint)from & 3) == 0) {                  /* source aligned too: the binary jumps into the */
+      FUN_0010021c(to,from,byteCount);            /* word copier at 0x0010021c */
+      return;
     }
-    param_4 = (uint)param_2 & 3;
-    if (param_4 == 0) {
-      bVar9 = 0x1f < param_3;
-      param_3 = param_3 - 0x20;
-      if (bVar9) {
-        do {
-          if (bVar9) {
-            uVar6 = param_2[1];
-            uVar7 = param_2[2];
-            uVar8 = param_2[3];
-            *param_1 = *param_2;
-            param_1[1] = uVar6;
-            param_1[2] = uVar7;
-            param_1[3] = uVar8;
-            param_4 = param_2[4];
-            uVar6 = param_2[5];
-            uVar7 = param_2[6];
-            uVar8 = param_2[7];
-            param_2 = param_2 + 8;
-            param_1[4] = param_4;
-            param_1[5] = uVar6;
-            param_1[6] = uVar7;
-            param_1[7] = uVar8;
-            param_1 = param_1 + 8;
-            bVar9 = 0x1f < param_3;
-            param_3 = param_3 - 0x20;
-          }
-        } while (bVar9);
-      }
-      puVar2 = param_1;
-      if ((bool)((byte)(param_3 >> 4) & 1)) {
-        param_4 = *param_2;
-        uVar6 = param_2[1];
-        uVar7 = param_2[2];
-        uVar8 = param_2[3];
-        param_2 = param_2 + 4;
-        *param_1 = param_4;
-        param_1[1] = uVar6;
-        param_1[2] = uVar7;
-        param_1[3] = uVar8;
-        puVar2 = param_1 + 4;
-      }
-      if ((int)(param_3 << 0x1c) < 0) {
-        param_4 = *param_2;
-        uVar6 = param_2[1];
-        param_2 = param_2 + 2;
-        *puVar2 = param_4;
-        puVar2[1] = uVar6;
-        puVar2 = puVar2 + 2;
-      }
-      in_r12 = param_3 << 0x1e;
-      param_1 = puVar2;
-      if ((bool)((byte)(param_3 >> 2) & 1)) {
-        param_4 = *param_2;
-        param_1 = puVar2 + 1;
-        *puVar2 = param_4;
-        param_2 = param_2 + 1;
-      }
-      if (in_r12 == 0) {
-        return CONCAT44(param_2,param_1);
-      }
-    }
-    else {
-      bVar9 = 3 < param_3;
-      param_3 = param_3 - 4;
-      if (bVar9) {
-        param_2 = (uint *)((int)param_2 - param_4);
-        in_r12 = *param_2;
-        puVar2 = param_1;
-        if (param_4 == 2) {
-          do {
-            puVar1 = param_2;
-            param_4 = in_r12 >> 0x10;
-            param_2 = puVar1 + 1;
-            in_r12 = *param_2;
-            bVar9 = 3 < param_3;
-            param_3 = param_3 - 4;
-            param_4 = param_4 | in_r12 << 0x10;
-            param_1 = puVar2 + 1;
-            *puVar2 = param_4;
-            puVar2 = param_1;
-          } while (bVar9);
-          param_2 = (uint *)((int)puVar1 + 6);
-        }
-        else if (param_4 < 3) {
-          do {
-            puVar1 = param_2;
-            param_4 = in_r12 >> 8;
-            param_2 = puVar1 + 1;
-            in_r12 = *param_2;
-            bVar9 = 3 < param_3;
-            param_3 = param_3 - 4;
-            param_4 = param_4 | in_r12 << 0x18;
-            param_1 = puVar2 + 1;
-            *puVar2 = param_4;
-            puVar2 = param_1;
-          } while (bVar9);
-          param_2 = (uint *)((int)puVar1 + 5);
-        }
-        else {
-          do {
-            puVar1 = param_2;
-            param_4 = in_r12 >> 0x18;
-            param_2 = puVar1 + 1;
-            in_r12 = *param_2;
-            bVar9 = 3 < param_3;
-            param_3 = param_3 - 4;
-            param_4 = param_4 | in_r12 << 8;
-            param_1 = puVar2 + 1;
-            *puVar2 = param_4;
-            puVar2 = param_1;
-          } while (bVar9);
-          param_2 = (uint *)((int)puVar1 + 7);
-        }
-      }
-    }
+    /* misaligned source: each destination word is the upper bytes of one source word and the lower
+       bytes of the next (little-endian) */
+    shift = ((uint)from & 3) * 8;
+    words = (uint32 *)((uint)from & ~3u);
+    for (; byteCount >= 4; byteCount -= 4, to += 4, from += 4, words++)
+      *(uint32 *)to = (words[0] >> shift) | (words[1] << (32 - shift));
   }
-  bVar5 = (byte)in_r12;
-  bVar4 = (byte)param_4;
-  bVar10 = (bool)((byte)(param_3 >> 1) & 1);
-  param_3 = param_3 << 0x1f;
-  bVar9 = (int)param_3 < 0;
-  puVar2 = param_2;
-  if (bVar9) {
-    puVar2 = (uint *)((int)param_2 + 1);
-    param_3 = (uint)(byte)*param_2;
-  }
-  if (bVar10) {
-    pbVar3 = (byte *)((int)puVar2 + 1);
-    bVar4 = (byte)*puVar2;
-    puVar2 = (uint *)((int)puVar2 + 2);
-    bVar5 = *pbVar3;
-  }
-  puVar1 = param_1;
-  if (bVar9) {
-    puVar1 = (uint *)((int)param_1 + 1);
-    *(byte *)param_1 = (byte)param_3;
-  }
-  if (bVar10) {
-    pbVar3 = (byte *)((int)puVar1 + 1);
-    *(byte *)puVar1 = bVar4;
-    puVar1 = (uint *)((int)puVar1 + 2);
-    *pbVar3 = bVar5;
-  }
-  return CONCAT44(puVar2,puVar1);
+  while (byteCount-- != 0)                        /* the last 0-3 bytes */
+    *to++ = *from++;
 }
 
 /* ==== 0x0010021C  (file offset 0x0021C)  FUN_0010021c ================================================ */
@@ -4684,7 +4525,7 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
         (**(code **)(*param_3 + 0x18))(param_3,1);
         FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_3,WORD_HEXADECIMAL_FF4757DD,2);
         FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_3,0xff000000,1);
-        FUN_00100168((uint *)&stack0xffffffd0,(uint *)(DATA_AT_00127A8E_OFFSET + 0x106478),10);
+        memcpy((uint *)&stack0xffffffd0,(uint *)(DATA_AT_00127A8E_OFFSET + 0x106478),10);
         iVar2 = 0;
         do {
           if (*(int *)(*(int *)(*(int *)(param_1 + 0x44) + 0xa8) + 0x524) == iVar2) {
@@ -4945,7 +4786,7 @@ void FUN_00106bd4(int *param_1,int *param_2,int *param_3)
     if ((char)param_1[0x13] != '\0') {
       p = helper_malloc_2(8);
       if (p != (uint *)0x0) {
-        FUN_00100168(p,(uint *)param_1[2],8);
+        memcpy(p,(uint *)param_1[2],8);
       }
       sVar5 = 4;
       if ((param_1[0x17] & 2U) != 0) {
@@ -4997,7 +4838,7 @@ void FUN_00106e44(int param_1,undefined4 param_2,int *param_3)
   if (*(char *)(param_1 + 0x38) != '\0') {
     psVar4 = helper_malloc_2(8);
     if (psVar4 != (short *)0x0) {
-      FUN_00100168(psVar4,*(undefined4 *)(param_1 + 8),8);
+      memcpy(psVar4,*(undefined4 *)(param_1 + 8),8);
     }
     FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_3,WORD_HEXADECIMAL_FF615A6D,3);
     (**(code **)(*param_3 + 0x78))(param_3,psVar4);
@@ -5048,7 +4889,7 @@ void FUN_00106fb0(int *param_1,undefined4 param_2,int *param_3)
     FUN_0010a3e8(param_1[8],param_3,uVar1,1);
     FUN_0010a3e8(param_1[8],param_3,uVar2,2);
     (**(code **)(*param_3 + 0x18))(param_3,1);
-    FUN_00100168(&local_1c,DATA_AT_00127D88_OFFSET + 0x107048,8);
+    memcpy(&local_1c,DATA_AT_00127D88_OFFSET + 0x107048,8);
     local_1c = *(short *)param_1[2] + ((short *)param_1[2])[2] + -0xb;
     local_1a = *(undefined2 *)(param_1[2] + 2);
     local_16 = *(undefined2 *)(param_1[2] + 6);
@@ -5103,8 +4944,7 @@ void FUN_00107230(int *param_1,undefined4 param_2,int *param_3)
   puVar1 = helper_malloc_2(8);
   uVar3 = extraout_r1;
   if (puVar1 != (uint *)0x0) {
-    uVar9 = FUN_00100168(puVar1,(uint *)param_1[2],8);
-    uVar3 = (uint)((ulonglong)uVar9 >> 0x20);
+    memcpy(puVar1,(uint *)param_1[2],8);
   }
   uVar4 = WORD_HEXADECIMAL_FF2F2533;
   switch(param_1[0xd]) {
@@ -5157,7 +4997,7 @@ LAB_00107378:
     if ((char)param_1[0x13] != '\0') {
       p = helper_malloc_2(8);
       if (p != (uint *)0x0) {
-        FUN_00100168(p,(uint *)param_1[2],8);
+        memcpy(p,(uint *)param_1[2],8);
       }
       *(short *)p = (short)*p + 1;
       *(short *)((int)p + 2) = *(short *)((int)p + 2) + 1;
@@ -5332,7 +5172,7 @@ void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,u
   sVar2 = (short)iVar11;
   if (0x34 < iVar6) {
     sVar1 = (short)iVar6 + -0x34;
-    FUN_00100168(&local_54,DATA_AT_00127A7E_OFFSET + 0x107910,8);
+    memcpy(&local_54,DATA_AT_00127A7E_OFFSET + 0x107910,8);
     if (param_3 == 0) {
       sVar4 = sVar5 + 1;
     }
@@ -5361,7 +5201,7 @@ void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,u
     (**(code **)(*param_2 + 0x60))(param_2,&local_4c);
     if (0x34 < iVar7) {
       sVar1 = (short)iVar7 + -0x34;
-      FUN_00100168(&local_54,DATA_AT_00127A86_OFFSET + 0x1079e8,8);
+      memcpy(&local_54,DATA_AT_00127A86_OFFSET + 0x1079e8,8);
       if (param_3 != 0) {
         sVar5 = (sVar5 - sVar1) + 1;
       }
@@ -6681,7 +6521,7 @@ void FUN_00109368(int param_1)
   *(undefined4 *)(param_1 + 0x10) = *(undefined4 *)(param_1 + 0xe0);
   pvVar1 = helper_malloc_2(8);
   if (pvVar1 != (void *)0x0) {
-    FUN_00100168(pvVar1,*(undefined4 *)(param_1 + 8),8);
+    memcpy(pvVar1,*(undefined4 *)(param_1 + 8),8);
   }
   iVar2 = *(int *)(*(int *)(param_1 + 0x44) + 0xd0);
   FUN_0010a3e8(iVar2,*(undefined4 *)(iVar2 + 0x10),0,3);
@@ -10972,7 +10812,7 @@ void FUN_0010ea00(int param_1)
   
   pvVar1 = helper_malloc_2(8);
   if (pvVar1 != (void *)0x0) {
-    FUN_00100168(pvVar1,*(undefined4 *)(param_1 + 8),8);
+    memcpy(pvVar1,*(undefined4 *)(param_1 + 8),8);
   }
   iVar2 = *(int *)(*(int *)(param_1 + 0x44) + 0xd0);
   FUN_0010a3e8(iVar2,*(undefined4 *)(iVar2 + 0x10),0,3);
