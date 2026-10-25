@@ -505,7 +505,7 @@ undefined8 FUN_0010a214(int param_1);
 void FUN_0010a3e8(undefined4 param_1,int *param_2,uint param_3,int param_4);
 void FUN_0010a46c(undefined4 param_1,int *param_2,undefined4 param_3,uint param_4);
 void FUN_0010a498(int param_1,int param_2);
-int * FUN_0010a528(int *param_1,int param_2,int param_3,int param_4);
+Hitsphere * hitsphere_create(Hitsphere *hitsphere,int entity,HitsphereEnemy *owner,int secondary);   /* 0x0010A528 GUESS: name */
 int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3);
 int * FUN_0010aa8c(int *param_1,int *param_2);
 int * FUN_0010ac6c(int *param_1,int param_2);
@@ -612,7 +612,7 @@ bool FUN_00112a98(int param_1,undefined4 param_2,int param_3);
 void FUN_00112b4c(int param_1);
 int item_drops_find_free_slot(ItemDrops *drops);   /* 0x00112C18 GUESS: name */
 void FUN_00112c44(int *param_1);
-undefined4 FUN_00112c9c(int param_1,int param_2);
+Hitsphere * hitsphere_enemy_find_hitsphere(HitsphereEnemy *enemy,int entity);   /* 0x00112C9C GUESS: name */
 undefined8 FUN_00112cdc(int param_1,int *param_2,int param_3);
 int FUN_00112cfc(int param_1);
 int FUN_00112d28(int param_1);
@@ -666,7 +666,7 @@ void FUN_0011498c(int param_1,uint param_2);
 void FUN_00114a1c(int param_1,undefined4 param_2);
 undefined8 FUN_00114a94(int param_1,undefined4 param_2,void *param_3,undefined4 param_4,undefined4 param_5,
                         undefined4 param_6,undefined4 param_7);
-undefined4 FUN_00114b48(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 ,undefined4 param_6,undefined4 param_7);
+int hitsphere_enemy_hit_target(HitsphereEnemy *enemy,int unused,uint32 damage,uint32 x,uint32 y,uint32 z,int playerState);   /* 0x00114B48 GUESS: name */
 void FUN_00114c00(int param_1,undefined4 param_2,undefined4 param_3,int param_4);
 void FUN_001150d0(int param_1,int *param_2);
 void FUN_00115118(undefined4 *param_1,undefined4 param_2,uint param_3);

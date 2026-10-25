@@ -7286,38 +7286,31 @@ void FUN_0010a498(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x0010A528  (file offset 0x0A528)  FUN_0010a528 ================================================ */
-int * FUN_0010a528(int *param_1,int param_2,int param_3,int param_4)
+/* ==== 0x0010A528  (file offset 0x0A528)  hitsphere_create ============================================ */
+/* GUESS: names (the hitsphere reading too). Sets up a hitsphere (allocating its 0xd4 bytes when
+   `hitsphere` is 0) for the scene entity `entity`, owned by `owner`; returns it, or 0 when out of
+   memory. Called by the hitsphere enemy's setup (FUN_0011868c) for each entity of its list, with
+   `secondary` set for all but the first. The radius is not set here. Ghidra's INTEGER_MINUS_42416 was
+   the PC-relative offset of the helper table, read for GetAppInstance. */
+Hitsphere * hitsphere_create(Hitsphere *hitsphere,int entity,HitsphereEnemy *owner,int secondary)
 
 {
-  int iVar1;
-  
-  if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(0xd4), param_1 != (int *)0x0)) {
-    *param_1 = DATA_AT_00101650_OFFSET + 0x10a55c;
-    param_1[1] = param_2;
-    param_1[0x11] = 0;
-    param_1[0x12] = param_4;
-    param_1[0x13] = -1;
-    param_1[9] = param_3;
-    param_1[0x20] = 0;
-    param_1[0x29] = 0;
-    param_1[0x2a] = 0;
-    param_1[0x2b] = 0;
-    param_1[0x2e] = 0;
-    param_1[0x2f] = 0;
-    param_1[0x30] = 0;
-    iVar1 = FLOAT_3;
-    param_1[0x31] = 0;
-    param_1[0x32] = iVar1;
-    param_1[0x34] = 0;
-    iVar1 = INTEGER_MINUS_42416;
-    param_1[0x33] = FLOAT_0_POINT_3;
-                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
-                        */
-    iVar1 = (*g_pHelperFuncs->GetAppInstance)();
-    param_1[8] = iVar1;
-  }
-  return param_1;
+  if (hitsphere == (Hitsphere *)0x0 && (hitsphere = helper_malloc_2(0xd4)) == (Hitsphere *)0x0)
+    return (Hitsphere *)0x0;
+  hitsphere->vtable = DATA_AT_00101650_OFFSET + 0x10a55c;   /* the vtable at 0x00101650 */
+  hitsphere->entity = entity;
+  hitsphere->field_44 = 0;
+  hitsphere->secondary = secondary;
+  hitsphere->field_4c = -1;
+  hitsphere->owner = owner;
+  hitsphere->field_80 = 0;
+  hitsphere->field_a4 = hitsphere->field_a8 = hitsphere->field_ac = 0;
+  hitsphere->field_b8 = hitsphere->field_bc = hitsphere->field_c0 = hitsphere->field_c4 = 0;
+  hitsphere->field_c8 = FLOAT_3;
+  hitsphere->field_d0 = 0;
+  hitsphere->field_cc = FLOAT_0_POINT_3;
+  hitsphere->app = (*g_pHelperFuncs->GetAppInstance)();
+  return hitsphere;
 }
 
 /* ==== 0x0010A5D8  (file offset 0x0A5D8)  FUN_0010a5d8 ================================================ */
@@ -14649,21 +14642,18 @@ void FUN_00112c44(int *param_1)
   return;
 }
 
-/* ==== 0x00112C9C  (file offset 0x12C9C)  FUN_00112c9c ================================================ */
-undefined4 FUN_00112c9c(int param_1,int param_2)
+/* ==== 0x00112C9C  (file offset 0x12C9C)  hitsphere_enemy_find_hitsphere ============================== */
+/* GUESS: names (the hitsphere reading too). The hitsphere of `enemy` that follows the scene entity
+   `entity`, or 0 when none does. Called by hitsphere_enemy_hit_target with the current target. */
+Hitsphere * hitsphere_enemy_find_hitsphere(HitsphereEnemy *enemy,int entity)
 
 {
-  int iVar1;
-  
-  iVar1 = 0;
-  while( true ) {
-    if (*(int *)(param_1 + 0x128) <= iVar1) {
-      return 0;
-    }
-    if (*(int *)(*(int *)(*(int *)(param_1 + 0x120) + iVar1 * 4) + 4) == param_2) break;
-    iVar1 = iVar1 + 1;
-  }
-  return *(undefined4 *)(*(int *)(param_1 + 0x120) + iVar1 * 4);
+  int i;
+
+  for (i = 0; i < enemy->hitsphereCount; i++)
+    if (enemy->hitspheres[i]->entity == entity)
+      return enemy->hitspheres[i];
+  return (Hitsphere *)0x0;
 }
 
 /* ==== 0x00112CDC  (file offset 0x12CDC)  FUN_00112cdc ================================================ */
@@ -17013,32 +17003,32 @@ FUN_00114a94(int param_1,undefined4 param_2,void *param_3,undefined4 param_4,und
   return CONCAT44(uVar7,uVar2);
 }
 
-/* ==== 0x00114B48  (file offset 0x14B48)  FUN_00114b48 ================================================ */
-undefined4
-FUN_00114b48(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5
-            ,undefined4 param_6,undefined4 param_7)
+/* ==== 0x00114B48  (file offset 0x14B48)  hitsphere_enemy_hit_target ================================== */
+/* GUESS: names (the hitsphere reading too). A player attack against a hitsphere enemy, from the player's
+   attack state 7 (FUN_00123588), with `damage` (a float: the player's Progress +0x530 as a float), the
+   attack's position and the player's state (+0x228). It hits the game's current target
+   (pGame->[0x1f8]->[0x20c], set by FUN_00123d7c): a hitsphere takes the hit (vtable +8) and the HUD value
+   (field_d4 +0x4c) is refreshed from the first hitsphere's field_14 (FUN_00126858, float to integer);
+   the extra entity is hidden (FUN_001201cc) and made untargetable instead. r1 is never read. Always
+   returns 0. FUN_00114a94 is the enemy spawner's counterpart. */
+int hitsphere_enemy_hit_target(HitsphereEnemy *enemy,int unused,uint32 damage,uint32 x,uint32 y,uint32 z,
+                               int playerState)
 
 {
-  int *piVar1;
-  undefined4 uVar2;
-  int iVar3;
-  int iVar4;
-  
-  iVar4 = *(int *)(*(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa4) + 0x1f8) + 0x20c);
-  if (iVar4 != 0) {
-    piVar1 = (int *)FUN_00112c9c(param_1,iVar4 /* not arguments, register leftovers: param_3,param_4,param_3,param_4 */);
-    if (piVar1 == (int *)0x0) {
-      iVar3 = *(int *)(param_1 + 0x11c);
-      if ((iVar3 != 0) && (iVar3 == iVar4)) {
-        FUN_001201cc(iVar3,0);
-        *(undefined4 *)(*(int *)(param_1 + 0x11c) + 0x34) = 0;
-      }
-    }
-    else {
-      (*(code *)(*(int *)(*piVar1 + 8) + *piVar1))(piVar1,param_3,param_4,param_5,param_6,param_7);
-      uVar2 = FUN_00126858(*(undefined4 *)(**(int **)(param_1 + 0x120) + 0x14));
-      *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x84) + 0xd4) + 0x4c) = uVar2;
-    }
+  int target = *(int *)(*(int *)((int)enemy->app->pGame + 0x1f8) + 0x20c);
+  Hitsphere *hitsphere;
+
+  if (target == 0)
+    return 0;
+  hitsphere = hitsphere_enemy_find_hitsphere(enemy,target);
+  if (hitsphere != (Hitsphere *)0x0) {
+    (*(code *)(*(int *)(hitsphere->vtable + 8) + hitsphere->vtable))
+              (hitsphere,damage,x,y,z,playerState);              /* take a hit: vtable +8 */
+    *(uint *)(enemy->app->field_d4 + 0x4c) = FUN_00126858(enemy->hitspheres[0]->field_14);
+  }
+  else if (enemy->extraEntity == target) {
+    FUN_001201cc(enemy->extraEntity,0);
+    *(int *)(enemy->extraEntity + 0x34) = 0;
   }
   return 0;
 }
@@ -19379,7 +19369,7 @@ void FUN_0011868c(int param_1,undefined4 param_2)
         uVar5 = FUN_00113654(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
                              *(undefined4 *)((int)pvVar3 + iVar2 * 4));
         uVar5 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0xa4),uVar5);
-        uVar5 = FUN_0010a528(0,uVar5,param_1,iVar2 != 0);
+        uVar5 = (undefined4)hitsphere_create((Hitsphere *)0x0,uVar5,(HitsphereEnemy *)param_1,iVar2 != 0);
         *(undefined4 *)(*(int *)(param_1 + 0x120) + iVar2 * 4) = uVar5;
         helper_free(*(void **)((int)pvVar3 + iVar2 * 4));
       }
@@ -29102,7 +29092,7 @@ void FUN_00123588(int param_1,int param_2,int param_3,undefined4 param_4)
       pcVar7 = local_3c;
       uVar8 = local_38;
 LAB_00123a24:
-      iVar9 = FUN_00114b48(iVar9,0,uVar4,uVar5,pcVar7,uVar8,uVar2);
+      iVar9 = hitsphere_enemy_hit_target((HitsphereEnemy *)iVar9,0,uVar4,uVar5,(uint32)pcVar7,uVar8,uVar2);
     }
     else {
       uVar4 = FUN_001268c8(uVar2);
@@ -29160,7 +29150,7 @@ LAB_00123b40:
           uVar2 = *(uint *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa8) + 0x530);
           if (iVar9 == 0) {
             uVar2 = FUN_001268c8(uVar2);
-            iVar9 = FUN_00114b48(*(int *)(param_1 + 0x240),iVar1,uVar2,local_40,local_3c,local_38,
+            iVar9 = hitsphere_enemy_hit_target(*(HitsphereEnemy **)(param_1 + 0x240),iVar1,uVar2,local_40,(uint32)local_3c,local_38,
                                  *(undefined4 *)(param_1 + 0x228));
           }
           else {

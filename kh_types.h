@@ -282,4 +282,61 @@ typedef struct EnemySpawner {
     Enemy **enemies;              /* +0x14c enemyCount of them */
 } EnemySpawner;
 
+/* ---- Hitsphere enemies (GUESS: the hitsphere reading and all names) ---------------------------------
+ * A level object built on the same base as EnemySpawner (setup FUN_0011868c starts with the base setup
+ * FUN_00118910; app +0x84, item drops +0x114), whose enemy is a set of hitspheres: scene entities named
+ * in the level data, each with a radius. Every frame (FUN_00123d7c) the nearest hitsphere whose radius
+ * holds the player (a 3D distance, FUN_00113820) becomes the game's current target, and a player attack
+ * hits it (hitsphere_enemy_hit_target). The first hitsphere's field_14 is shown in the HUD (GUESS: the
+ * enemy's health). */
+struct HitsphereEnemy;
+
+typedef struct Hitsphere {
+    int    vtable;                /* +0x00 0x00101650; slots hold self-relative offsets: +4 update,
+                                     +8 take a hit (damage, x, y, z, player state) */
+    int    entity;                /* +0x04 the scene entity it follows */
+    uint32 radius;                /* +0x08 a float (its bits); not set by hitsphere_create */
+    uint8  unknown_0c[0x08];
+    uint32 field_14;              /* +0x14 a float (its bits); the first hitsphere's is shown in the HUD
+                                     (field_d4 +0x4c, +0x50) */
+    uint8  unknown_18[0x08];
+    struct KHApp *app;            /* +0x20 GetAppInstance() at creation */
+    struct HitsphereEnemy *owner; /* +0x24 */
+    uint8  unknown_28[0x1c];
+    int    field_44;              /* +0x44 0 at creation */
+    int    secondary;             /* +0x48 set on every hitsphere but the first */
+    int    field_4c;              /* +0x4c -1 at creation */
+    uint8  unknown_50[0x30];
+    int    field_80;              /* +0x80 0 at creation */
+    uint8  unknown_84[0x20];
+    int    field_a4;              /* +0xa4 0 at creation */
+    int    field_a8;              /* +0xa8 0 at creation */
+    int    field_ac;              /* +0xac 0 at creation */
+    uint8  unknown_b0[0x08];
+    int    field_b8;              /* +0xb8 0 at creation */
+    int    field_bc;              /* +0xbc 0 at creation */
+    int    field_c0;              /* +0xc0 0 at creation */
+    int    field_c4;              /* +0xc4 0 at creation */
+    uint32 field_c8;              /* +0xc8 a float (its bits), 3.0 at creation */
+    uint32 field_cc;              /* +0xcc a float (its bits), 0.3 at creation */
+    int    field_d0;              /* +0xd0 0 at creation */
+} Hitsphere;                      /* 0xd4 bytes */
+
+typedef struct HitsphereEnemy {
+    uint8  unknown_00[0x08];
+    int    field_08;              /* +0x008 its object in the level data (the key the setup reads with) */
+    uint8  unknown_0c[0x78];
+    struct KHApp *app;            /* +0x084 */
+    uint8  unknown_88[0x88];
+    int    active;                /* +0x110 GUESS: the player is in its area (FUN_00123d7c) */
+    ItemDrops *itemDrops;         /* +0x114 its item drops (updated by FUN_001226e8) */
+    int   *field_118;             /* +0x118 more scene entities named in the level data (field_12c of them) */
+    int    extraEntity;           /* +0x11c one more scene entity (id 0x2E583064): it can be targeted within
+                                     3.0, and a hit hides it and clears its +0x34 (targetable) */
+    Hitsphere **hitspheres;       /* +0x120 */
+    uint8  unknown_124[0x04];
+    int    hitsphereCount;        /* +0x128 */
+    int    field_12c;             /* +0x12c how many field_118 holds */
+} HitsphereEnemy;
+
 #endif /* KH_TYPES_H */
