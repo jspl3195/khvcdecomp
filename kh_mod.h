@@ -434,7 +434,7 @@ void FUN_00105538(int param_1,undefined4 param_2,int param_3);
 void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5);
 void FUN_001056d0(int *param_1,int param_2);
 int FUN_001056ec(int param_1,int param_2,int param_3);
-void FUN_001056f4(int param_1);
+void key_picker_restore_original(UIElement *picker);   /* 0x001056F4 GUESS: name */
 void FUN_00105734(undefined4 *param_1,int param_2);
 void FUN_00105c5c(int param_1);
 void FUN_00105d48(int param_1);
@@ -467,7 +467,7 @@ void FUN_001082e0(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
 undefined4 FUN_001083d8(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 undefined4 FUN_00108414(int param_1,undefined4 param_2,int param_3);
 bool FUN_001084e4(undefined4 param_1,undefined4 param_2,int param_3);
-undefined4 FUN_00108524(int param_1,undefined4 param_2,int param_3,undefined4 param_4);
+int ui_element_handle_key(UIElement *element,int eventCode,int keyCode,int keyParameter);   /* 0x00108524 GUESS: name */
 int FUN_0010873c(int *param_1,undefined4 param_2,int param_3,undefined4 param_4);
 void FUN_00108840(int param_1,short param_2);
 void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *param_5);
@@ -489,7 +489,7 @@ void FUN_00109534(undefined4 *param_1,undefined4 param_2,undefined4 param_3,unde
 void FUN_0010955c(int param_1,int param_2,int param_3);
 void FUN_00109750(int param_1,undefined4 param_2);
 int FUN_00109780(int *param_1,undefined4 param_2,int param_3);
-void FUN_001098d8(int param_1,int param_2,int *param_3,undefined4 param_4);
+void key_picker_setup(UIElement *picker,KeyOption *options,int *setting,int index);   /* 0x001098D8 GUESS: name */
 void FUN_00109940(int param_1,int param_2);
 void FUN_00109a10(int param_1,int param_2,int param_3,undefined4 param_4);
 void FUN_00109b4c(int param_1,int param_2,int param_3);

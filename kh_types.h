@@ -72,4 +72,41 @@ typedef struct KHApp {
     uint32         field_dc;         /* +0xdc address returned by kh_GetAppFieldPtr_dc */
 } KHApp;
 
+/* ---- The game's UI elements (GUESS: names) ------------------------------------------------------
+ * A UIElement is a menu entry or widget, created by FUN_0010bba0 with its type in +0x34. Only the
+ * fields used by ui_element_handle_key and the key picker functions are named; the rest is padding.
+ * Type 8 is the key picker of the Controls screen; +0x3c..+0x48 and +0x68 are its own fields. */
+typedef struct KeyOption {
+    struct KeyOption *previous;   /* +0x00 */
+    struct KeyOption *next;       /* +0x04 */
+    int    label;                 /* +0x08 the text shown for it: 0x1484CCBF "undefined", -1000..-1011
+                                     the keys 0..9, *, # (GUESS: glyph ids) */
+    int    keyCode;               /* +0x0C AVK_UNDEFINED, AVK_0..AVK_9, AVK_STAR or AVK_POUND */
+} KeyOption;                      /* 0x10 bytes; the Controls screen links 13 of them in a ring */
+
+typedef struct UIElement {
+    uint8  unknown_00[0x10];
+    uint32 primaryColor;          /* +0x10 set by ui_element_handle_key for each type and state */
+    uint32 secondaryColor;        /* +0x14 */
+    uint8  unknown_18[0x08];
+    int   *owner;                 /* +0x20 the menu (screen) it belongs to; FUN_00101ad8 handles its events */
+    uint8  unknown_24[0x0c];
+    int    label;                 /* +0x30 the text element that shows the current value */
+    int    type;                  /* +0x34 2..10; 8 = key picker */
+    int    selectEvent;           /* +0x38 the event sent to the owner when SELECT is pressed */
+    KeyOption *options;           /* +0x3c key picker: the ring of options */
+    KeyOption *selectedOption;    /* +0x40 key picker: the option shown */
+    int   *setting;               /* +0x44 key picker: the setting it edits (a key code) */
+    int    index;                 /* +0x48 key picker: its row (0..6), passed to FUN_0010a498 on UP / DOWN */
+    uint8  enabled;               /* +0x4c GUESS: meaning; a key picker with 0 is drawn all white */
+    uint8  unknown_4d[0x03];
+    int   *listener;              /* +0x50 an object (vtable at +0) that gets the keys the element
+                                     does not handle itself */
+    uint8  unknown_54[0x08];
+    uint32 flags;                 /* +0x5c bit 1: keep the colours (no restyling) */
+    int   *keyMap;                /* +0x60 searched with the key code by FUN_001080c8 */
+    int    unknown_64;            /* +0x64 passed to FUN_00105224 with the element found there */
+    int    originalKeyCode;       /* +0x68 key picker: the setting's value when it was set up */
+} UIElement;
+
 #endif /* KH_TYPES_H */

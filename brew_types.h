@@ -72,6 +72,7 @@ typedef enum AEERasterOpValue {
 } AEERasterOpValue;
 
 typedef enum AVKType {
+    AVK_UNDEFINED = 0xE010,   /* "no key" (AVK_FIRST); kh.mod: a key binding that is unset */
     AVK_0 = 0xE021, AVK_1 = 0xE022, AVK_2 = 0xE023, AVK_3 = 0xE024, AVK_4 = 0xE025,
     AVK_5 = 0xE026, AVK_6 = 0xE027, AVK_7 = 0xE028, AVK_8 = 0xE029, AVK_9 = 0xE02A,
     AVK_STAR = 0xE02B, AVK_POUND = 0xE02C, AVK_POWER = 0xE02D, AVK_END = 0xE02E,

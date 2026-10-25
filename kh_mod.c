@@ -2337,7 +2337,7 @@ LAB_00104fa4:
             iVar7 = 0;
             do {
               uVar10 = FUN_001080ac(param_1);
-              FUN_001056f4(FUN_00107ec4(uVar10,iVar7 + 400));
+              key_picker_restore_original(FUN_00107ec4(uVar10,iVar7 + 400));
               iVar7 = iVar7 + 1;
             } while (iVar7 < 7);
           }
@@ -3438,7 +3438,7 @@ LAB_00104360:
     iVar8 = 0;
     do {
       iVar12 = FUN_0010bba0(0,local_74[8],iVar19,local_74[7],iVar20,param_1,8,0,0);
-      FUN_001098d8(iVar12,param_1[0xf],local_74[iVar8],iVar8);
+      key_picker_setup(iVar12,param_1[0xf],local_74[iVar8],iVar8);
       FUN_001054d8(iVar9,iVar12,iVar8 + 400);
       param_1[iVar8 + 0x11] = iVar12;
       iVar19 = *(short *)(*(int *)(iVar12 + 8) + 6) + iVar17 + iVar17 + iVar19;
@@ -3896,22 +3896,21 @@ LAB_001091f0:
   return *piVar1;
 }
 
-/* ==== 0x001056F4  (file offset 0x056F4)  FUN_001056f4 ================================================ */
-void FUN_001056f4(int param_1)
+/* ==== 0x001056F4  (file offset 0x056F4)  key_picker_restore_original ================================ */
+/* GUESS: name. Undoes a key picker's changes: selects again the option whose key code is the value the
+   setting had when key_picker_setup ran (+0x68) and writes it back to the setting. The left / right keys
+   change the setting at once (ui_element_handle_key), so this is what leaving the Controls screen
+   without confirming does: FUN_00101ad8 (event 0x48) and FUN_0010c3f8 call it for the 7 pickers, ids
+   400-406. The value must be in the ring: the search has no end test. The label is not redrawn. */
+void key_picker_restore_original(UIElement *picker)
 
 {
-  int iVar1;
-  
-  *(undefined4 *)(param_1 + 0x40) = 0;
-  iVar1 = *(int *)(param_1 + 0x3c);
-  do {
-    if (*(int *)(iVar1 + 0xc) == *(int *)(param_1 + 0x68)) {
-      *(int *)(param_1 + 0x40) = iVar1;
-    }
-    iVar1 = *(int *)(iVar1 + 4);
-  } while (*(int *)(param_1 + 0x40) == 0);
-  **(undefined4 **)(param_1 + 0x44) = *(undefined4 *)(*(int *)(param_1 + 0x40) + 0xc);
-  return;
+  KeyOption *option = picker->options;
+
+  for (picker->selectedOption = 0; picker->selectedOption == 0; option = option->next)
+    if (option->keyCode == picker->originalKeyCode)
+      picker->selectedOption = option;
+  *picker->setting = picker->selectedOption->keyCode;
 }
 
 /* ==== 0x00105734  (file offset 0x05734)  FUN_00105734 ================================================ */
@@ -5779,121 +5778,81 @@ bool FUN_001084e4(undefined4 param_1,undefined4 param_2,int param_3)
   return bVar2;
 }
 
-/* ==== 0x00108524  (file offset 0x08524)  FUN_00108524 ================================================ */
-undefined4 FUN_00108524(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
+/* ==== 0x00108524  (file offset 0x08524)  ui_element_handle_key ======================================= */
+/* GUESS: name. Key handler of every UI element. A key picker (type 8) takes LEFT / RIGHT itself: the
+   previous / next key of its ring, shown at once and written to the setting at once; UP / DOWN go to
+   FUN_0010a498 with the picker's row, then on as for every element. SELECT sends the element's event
+   to its owner (FUN_00101ad8). Any other key is looked up in the element's key map (FUN_001080c8);
+   without a match it goes to the element's listener (vtable +8), with one the found element gets the
+   focus (FUN_00105224). Finally the element's two colours are set from its type and state (unless flag
+   bit 1 is set), and it is redrawn (FUN_00107d24) if anything changed. Returns 1 when the key was
+   handled. The element constructor (FUN_0010bba0) calls it with AVK_UNDEFINED just to set the colours. */
+int ui_element_handle_key(UIElement *element,int eventCode,int keyCode,int keyParameter)
 
 {
-  bool bVar1;
-  int *piVar2;
-  undefined4 uVar3;
-  undefined4 uVar4;
-  int iVar5;
-  bool bVar6;
-  
-  bVar1 = false;
-  uVar4 = 0;
-  if (*(int *)(param_1 + 0x34) == 8) {
-    iVar5 = 0;
-    if (param_3 != 0xe034) {
-      iVar5 = param_3 + -0xe000;
-    }
-    if (param_3 != 0xe034 && iVar5 != 0x33) {
-      iVar5 = 0;
-      if (param_3 != 0xe031) {
-        iVar5 = param_3 + -0xe000;
-      }
-      if (param_3 == 0xe031 || iVar5 == 0x32) {
-        FUN_0010a498(*(undefined4 *)(param_1 + 0x20),*(undefined4 *)(param_1 + 0x48));
-      }
-      goto LAB_001085bc;
-    }
-    if (param_3 == 0xe034) {
-      iVar5 = (*(int **)(param_1 + 0x40))[1];
-    }
-    else {
-      iVar5 = **(int **)(param_1 + 0x40);
-    }
-    *(int *)(param_1 + 0x40) = iVar5;
-    FUN_00109ff8(*(undefined4 *)(param_1 + 0x30),*(undefined4 *)(iVar5 + 8));
-    uVar4 = 1;
-    bVar1 = true;
-    **(undefined4 **)(param_1 + 0x44) = *(undefined4 *)(*(int *)(param_1 + 0x40) + 0xc);
+  int handled = 0;
+  int redraw = 0;
+  int target;
+
+  if (element->type == 8 && (keyCode == AVK_LEFT || keyCode == AVK_RIGHT)) {
+    element->selectedOption =
+         keyCode == AVK_RIGHT ? element->selectedOption->next : element->selectedOption->previous;
+    FUN_00109ff8(element->label,element->selectedOption->label);
+    *element->setting = element->selectedOption->keyCode;
+    handled = redraw = 1;
   }
   else {
-LAB_001085bc:
-    if (param_3 == 0xe035) {
-      FUN_00101ad8(*(undefined4 *)(param_1 + 0x20),*(undefined4 *)(param_1 + 0x38));
+    if (element->type == 8 && (keyCode == AVK_UP || keyCode == AVK_DOWN))
+      FUN_0010a498((int)element->owner,element->index);
+    if (keyCode == AVK_SELECT) {
+      FUN_00101ad8(element->owner,element->selectEvent);
+      handled = 1;
+    }
+    else if ((target = FUN_001080c8(element->keyMap,keyCode)) == 0) {
+      if (element->listener != (int *)0x0)
+        handled = (**(code **)(*element->listener + 8))(element->listener,eventCode,keyCode,keyParameter);
     }
     else {
-      iVar5 = FUN_001080c8(*(undefined4 *)(param_1 + 0x60),param_3);
-      if (iVar5 == 0) {
-        piVar2 = *(int **)(param_1 + 0x50);
-        if (piVar2 != (int *)0x0) {
-          uVar4 = (**(code **)(*piVar2 + 8))(piVar2,param_2,param_3,param_4);
-        }
-        goto LAB_00108650;
-      }
-      *(uint *)(param_1 + 0x5c) = *(uint *)(param_1 + 0x5c) & 0xfffffffd;
-      piVar2 = *(int **)(param_1 + 0x50);
-      if (piVar2 != (int *)0x0) {
-        (**(code **)(*piVar2 + 0x10))(piVar2,0);
-      }
-      bVar1 = true;
-      FUN_00105224(iVar5,*(undefined4 *)(param_1 + 100));
+      element->flags &= ~2u;
+      if (element->listener != (int *)0x0)
+        (**(code **)(*element->listener + 0x10))(element->listener,0);
+      redraw = 1;
+      FUN_00105224((int *)target,element->unknown_64);
+      handled = 1;
     }
-    uVar4 = 1;
   }
-LAB_00108650:
-  uVar3 = WORD_HEXADECIMAL_FFEBEBF7;
-  if ((*(uint *)(param_1 + 0x5c) & 2) != 0) goto LAB_001086f8;
-  switch(*(undefined4 *)(param_1 + 0x34)) {
-  case 2:
-    *(undefined4 *)(param_1 + 0x14) = WORD_HEXADECIMAL_FF2F2533;
-    *(undefined4 *)(param_1 + 0x10) = uVar3;
-    goto LAB_001086f8;
-  case 3:
-    break;
-  case 4:
-    break;
-  case 5:
-    *(undefined4 *)(param_1 + 0x10) = WORD_HEXADECIMAL_FFC0C000;
-    *(undefined4 *)(param_1 + 0x14) = 0xff000000;
-    goto LAB_001086f8;
-  case 6:
-    *(undefined4 *)(param_1 + 0x10) = 0xff000000;
-    uVar3 = WORD_HEXADECIMAL_FFEFEFEF;
-    goto LAB_001086f4;
-  case 7:
-    break;
-  case 8:
-    bVar6 = *(char *)(param_1 + 0x4c) == '\0';
-    uVar3 = WORD_HEXADECIMAL_FF2F2533;
-    if (bVar6) {
-      uVar3 = 0xffffffff;
+  if ((element->flags & 2) == 0) {
+    switch(element->type) {
+    case 2:
+      element->primaryColor = WORD_HEXADECIMAL_FFEBEBF7;
+      element->secondaryColor = WORD_HEXADECIMAL_FF2F2533;
+      break;
+    case 5:
+      element->primaryColor = WORD_HEXADECIMAL_FFC0C000;
+      element->secondaryColor = 0xff000000;
+      break;
+    case 6:
+      element->primaryColor = 0xff000000;
+      element->secondaryColor = WORD_HEXADECIMAL_FFEFEFEF;
+      break;
+    case 8:
+      element->primaryColor = element->enabled ? WORD_HEXADECIMAL_FF2F2533 : 0xffffffff;
+      element->secondaryColor = element->enabled ? WORD_HEXADECIMAL_FFC9C4DA : 0xffffffff;
+      break;
+    case 9:
+    case 10:
+      element->primaryColor = WORD_HEXADECIMAL_FF47464C;
+      element->secondaryColor = WORD_HEXADECIMAL_FFEBEBF7;
+      break;
+    default:                                    /* 3, 4, 7 and any other type */
+      element->primaryColor = WORD_HEXADECIMAL_FF47464C;
+      element->secondaryColor = WORD_HEXADECIMAL_FFC9C4DA;
+      break;
     }
-    *(undefined4 *)(param_1 + 0x10) = uVar3;
-    uVar3 = WORD_HEXADECIMAL_FFC9C4DA;
-    if (bVar6) {
-      uVar3 = 0xffffffff;
-    }
-    goto LAB_001086f4;
-  case 9:
-    goto LAB_001086cc;
-  case 10:
-LAB_001086cc:
-    *(undefined4 *)(param_1 + 0x10) = WORD_HEXADECIMAL_FF47464C;
-    *(undefined4 *)(param_1 + 0x14) = uVar3;
-    goto LAB_001086f8;
   }
-  *(undefined4 *)(param_1 + 0x10) = WORD_HEXADECIMAL_FF47464C;
-  uVar3 = WORD_HEXADECIMAL_FFC9C4DA;
-LAB_001086f4:
-  *(undefined4 *)(param_1 + 0x14) = uVar3;
-LAB_001086f8:
-  if (bVar1) {
-    FUN_00107d24(param_1);
-  }
-  return uVar4;
+  if (redraw)
+    FUN_00107d24((int *)element);
+  return handled;
 }
 
 /* ==== 0x0010873C  (file offset 0x0873C)  FUN_0010873c ================================================ */
@@ -6763,29 +6722,25 @@ LAB_001098b8:
   return iVar7;
 }
 
-/* ==== 0x001098D8  (file offset 0x098D8)  FUN_001098d8 ================================================ */
-void FUN_001098d8(int param_1,int param_2,int *param_3,undefined4 param_4)
+/* ==== 0x001098D8  (file offset 0x098D8)  key_picker_setup ============================================ */
+/* GUESS: name. Connects a key picker (a type 8 UI element) to its ring of options and to the setting it
+   edits, selects the option whose key code is the setting's current value (it must be in the ring), shows
+   that option's label, and remembers the value as the original (for key_picker_restore_original). Called
+   by FUN_00101ad8 (event 0xb, the Controls screen) for the 7 settings Forwards, Backwards, Left, Right,
+   Action, Status and Magic: setting = game settings + 0x5cc + 4 * index. */
+void key_picker_setup(UIElement *picker,KeyOption *options,int *setting,int index)
 
 {
-  int iVar1;
-  
-  if (*(int *)(param_1 + 0x34) != 8) {
+  if (picker->type != 8)
     return;
-  }
-  *(int *)(param_1 + 0x3c) = param_2;
-  *(int **)(param_1 + 0x44) = param_3;
-  *(undefined4 *)(param_1 + 0x48) = param_4;
-  iVar1 = *param_3;
-  *(undefined4 *)(param_1 + 0x40) = 0;
-  do {
-    if (*(int *)(param_2 + 0xc) == iVar1) {
-      *(int *)(param_1 + 0x40) = param_2;
-    }
-    param_2 = *(int *)(param_2 + 4);
-  } while (*(int *)(param_1 + 0x40) == 0);
-  FUN_00109ff8(*(undefined4 *)(param_1 + 0x30),*(undefined4 *)(*(int *)(param_1 + 0x40) + 8));
-  *(undefined4 *)(param_1 + 0x68) = *(undefined4 *)(*(int *)(param_1 + 0x40) + 0xc);
-  return;
+  picker->options = options;
+  picker->setting = setting;
+  picker->index = index;
+  for (picker->selectedOption = 0; picker->selectedOption == 0; options = options->next)
+    if (options->keyCode == *setting)
+      picker->selectedOption = options;
+  FUN_00109ff8(picker->label,picker->selectedOption->label);
+  picker->originalKeyCode = picker->selectedOption->keyCode;
 }
 
 /* ==== 0x00109940  (file offset 0x09940)  FUN_00109940 ================================================ */
@@ -8335,7 +8290,7 @@ int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
     puVar3 = FUN_0010be6c((undefined4 *)0x0,0x10,0x10);
     param_1[0x18] = (int)puVar3;
     param_1[0x17] = 1;
-    FUN_00108524((int)param_1,0x7000,INTEGER_57360,0);
+    ui_element_handle_key((int)param_1,0x7000,INTEGER_57360,0);
   }
   return param_1;
 }
@@ -8664,7 +8619,7 @@ void FUN_0010c3f8(int param_1,int param_2)
       uVar2 = FUN_001080ac(param_1);
       iVar3 = FUN_00107ec4(uVar2,iVar1 + 400);
       if (iVar3 != 0) {
-        FUN_001056f4(iVar3);
+        key_picker_restore_original(iVar3);
       }
       iVar1 = iVar1 + 1;
     } while (iVar1 < 7);
@@ -12006,6 +11961,9 @@ void FUN_0010f8e8(int param_1)
   int local_14;
   int iVar3;
   
+  /* the default Controls key bindings (BREW key codes; key_picker_setup edits them):
+     +0x5cc Forwards 2 (AVK_2), +0x5d0 Backwards 8, +0x5d4 Left 4, +0x5d8 Right 6, +0x5dc Action 5,
+     +0x5e0 Status 0, +0x5e4 Magic * (AVK_STAR) */
   iVar1 = INTEGER_57379;
   *(int *)(param_1 + 0x5cc) = INTEGER_57379;
   *(int *)(param_1 + 0x5d0) = iVar1 + 6;
