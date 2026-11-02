@@ -237,8 +237,8 @@ typedef struct TextBox {
     TextStyle *style;             /* +0x34 */
     int32    firstLine;           /* +0x38 the first line shown */
     int32    visibleLines;        /* +0x3c how many fit; -1 until text_box_set_text works it out */
-    AEETriangle *tail;           /* +0x40 a triangle drawn under a type 0 box (GUESS: a speech bubble's
-                                     tail); freed with the box */
+    AEETriangle *tail;           /* +0x40 a speech bubble's tail: its tip and a base on one side
+                                     (text_box_set_tail), drawn under a type 0 box; freed with the box */
     uint8    scrollable;          /* +0x44 a type 5 style with more lines than fit: a scroll bar */
     uint8    unknown_45[0x03];
     TextLine *moreLine;           /* +0x48 the "more" mark shown when lines follow (text_box_layout) */

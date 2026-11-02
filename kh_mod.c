@@ -3722,7 +3722,7 @@ LAB_0010532c:
   *(undefined4 *)(iVar4 + 0x58) = uVar2;
   text_box_set_text(uVar2,param_2,0);
   if (param_9 == 0) {
-    FUN_0010955c(*(undefined4 *)(param_1 + 0x58),param_7,param_8);
+    text_box_set_tail(*(TextBox **)(param_1 + 0x58),param_7,param_8);
   }
   return ui_element_add_child((UIElement *)param_1,*(UIElement **)(iVar4 + 0x58),param_9 + 0x2c);
 }
@@ -6296,114 +6296,59 @@ void web_request_notify(WebRequest *request,int32 event,int32 value,int32 detail
 }
 
 
-/* ==== 0x0010955C  (file offset 0x0955C)  FUN_0010955c ================================================ */
-void FUN_0010955c(int param_1,int param_2,int param_3)
+/* ==== 0x0010955C  (file offset 0x0955C)  text_box_set_tail =========================================== */
+/* GUESS: names. Gives a text box a tail pointing at (x, y) outside it, a speech bubble's (text_box_draw
+   draws it under a type 0 box): the tip is the point, the base 10 pixels on the side the point is outside
+   (the top, the bottom, the left or the right; past a corner, the side it is further outside), placed at
+   the point but at least 7 pixels from the start of the side and 17 from its end. A point inside the box
+   gives no tail - but the old tail has been freed by then and box->tail still points at it (a bug in
+   the game, kept here as the binary has it: research_notes/decomp/GAME_BUGS.md). Called by FUN_001052e0
+   for a screen's first text-box row, with a point from the level's script (FUN_00110924, two floats of
+   the command). Written from its disassembly (0x0010955c - 0x00109740). */
+void text_box_set_tail(TextBox *box,int32 x,int32 y)
 
 {
-  short sVar1;
-  int iVar2;
-  undefined2 *puVar3;
-  int iVar4;
-  int iVar5;
-  short *psVar6;
-  int iVar7;
-  
-  if (*(void **)(param_1 + 0x40) != (void *)0x0) {
-    helper_free(*(void **)(param_1 + 0x40));
-  }
-  psVar6 = *(short **)(param_1 + 8);
-  iVar4 = psVar6[1] - param_3;
-  iVar5 = param_3 - ((int)psVar6[1] + (int)psVar6[3]);
-  iVar7 = param_2 - ((int)*psVar6 + (int)psVar6[2]);
-  iVar2 = *psVar6 - param_2;
-  if (iVar4 < 1) {
-    if (iVar5 < 1) {
-      if (iVar2 < 1) {
-        if (iVar7 < 1) {
-          return;
-        }
-        iVar2 = 8;
-      }
-      else {
-        iVar2 = 4;
-      }
-      goto LAB_00109624;
-    }
-    if (iVar2 < 1) {
-      if (iVar7 < 1) {
-        iVar2 = 2;
-        goto LAB_00109624;
-      }
-      if (iVar5 < iVar7) goto LAB_00109610;
-    }
-    else if (iVar5 < iVar2) goto LAB_001095f4;
-    iVar2 = 2;
-  }
-  else if (iVar2 < 1) {
-    if (iVar7 < 1) {
-      iVar2 = 1;
-      goto LAB_00109624;
-    }
-    if (iVar7 <= iVar4) goto LAB_001095d4;
-LAB_00109610:
-    iVar2 = 8;
-  }
-  else if (iVar4 < iVar2) {
-LAB_001095f4:
-    iVar2 = 4;
+  AEERect *rect = ((UIElement *)box)->rect;
+  int32 above;
+  int32 below;
+  int32 leftOf;
+  int32 rightOf;
+  int32 side;                                     /* 1 top, 2 bottom, 4 left, 8 right */
+  int32 base;
+
+  if (box->tail != (AEETriangle *)0x0)
+    helper_free(box->tail);
+  above = rect->y - y;
+  below = y - (rect->y + rect->dy);
+  rightOf = x - (rect->x + rect->dx);
+  leftOf = rect->x - x;
+  if (above > 0)
+    side = leftOf > 0 ? (leftOf > above ? 4 : 1) : rightOf > 0 && rightOf > above ? 8 : 1;
+  else if (below > 0)
+    side = leftOf > 0 ? (leftOf > below ? 4 : 2) : rightOf > 0 && rightOf > below ? 8 : 2;
+  else if (leftOf > 0)
+    side = 4;
+  else if (rightOf > 0)
+    side = 8;
+  else
+    return;                                       /* inside: box->tail is left pointing at the freed tail */
+  box->tail = helper_malloc_2(0xc);
+  box->tail->p0.x = (int16)x;
+  box->tail->p0.y = (int16)y;
+  if (side == 1 || side == 2) {
+    base = x > rect->x + rect->dx - 0x11 ? rect->x + rect->dx - 0x11 : x >= rect->x + 7 ? x : rect->x + 7;
+    box->tail->p1.x = (int16)base;
+    box->tail->p2.x = (int16)(base + 10);
+    box->tail->p1.y = box->tail->p2.y = side == 1 ? rect->y : rect->y + rect->dy - 1;
   }
   else {
-LAB_001095d4:
-    iVar2 = 1;
+    base = y > rect->y + rect->dy - 0x11 ? rect->y + rect->dy - 0x11 : y >= rect->y + 7 ? y : rect->y + 7;
+    box->tail->p1.y = (int16)base;
+    box->tail->p2.y = (int16)(base + 10);
+    box->tail->p1.x = box->tail->p2.x = side == 4 ? rect->x : rect->x + rect->dx - 1;
   }
-  if (iVar2 == 0) {
-    return;
-  }
-LAB_00109624:
-  puVar3 = helper_malloc_2(0xc);
-  *(undefined2 **)(param_1 + 0x40) = puVar3;
-  *puVar3 = (short)param_2;
-  *(short *)(*(int *)(param_1 + 0x40) + 2) = (short)param_3;
-  if (iVar2 == 1 || iVar2 == 2) {
-    iVar4 = (int)**(short **)(param_1 + 8);
-    iVar5 = iVar4 + 7;
-    iVar4 = iVar4 + (*(short **)(param_1 + 8))[2] + -0x11;
-    if ((param_2 <= iVar4) && (iVar4 = iVar5, iVar5 <= param_2)) {
-      iVar4 = param_2;
-    }
-    *(short *)(*(int *)(param_1 + 0x40) + 4) = (short)iVar4;
-    *(short *)(*(int *)(param_1 + 0x40) + 8) = (short)iVar4 + 10;
-    iVar4 = *(int *)(param_1 + 8);
-    if (iVar2 == 1) {
-      sVar1 = *(short *)(iVar4 + 2);
-    }
-    else {
-      sVar1 = *(short *)(iVar4 + 2) + *(short *)(iVar4 + 6) + -1;
-    }
-    *(short *)(*(int *)(param_1 + 0x40) + 6) = sVar1;
-    *(short *)(*(int *)(param_1 + 0x40) + 10) = sVar1;
-  }
-  else if (iVar2 == 4 || iVar2 == 8) {
-    iVar4 = (int)*(short *)(*(int *)(param_1 + 8) + 2);
-    iVar5 = iVar4 + 7;
-    iVar4 = iVar4 + *(short *)(*(int *)(param_1 + 8) + 6) + -0x11;
-    if ((param_3 <= iVar4) && (iVar4 = iVar5, iVar5 <= param_3)) {
-      iVar4 = param_3;
-    }
-    *(short *)(*(int *)(param_1 + 0x40) + 6) = (short)iVar4;
-    *(short *)(*(int *)(param_1 + 0x40) + 10) = (short)iVar4 + 10;
-    psVar6 = *(short **)(param_1 + 8);
-    if (iVar2 == 4) {
-      sVar1 = *psVar6;
-    }
-    else {
-      sVar1 = *psVar6 + psVar6[2] + -1;
-    }
-    *(short *)(*(int *)(param_1 + 0x40) + 4) = sVar1;
-    *(short *)(*(int *)(param_1 + 0x40) + 8) = sVar1;
-  }
-  return;
 }
+
 
 /* ==== 0x00109750  (file offset 0x09750)  FUN_00109750 ================================================ */
 void FUN_00109750(int param_1,undefined4 param_2)

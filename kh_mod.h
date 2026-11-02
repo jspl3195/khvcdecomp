@@ -496,7 +496,7 @@ void list_remove_entry(UIList *list,int32 id);   /* 0x00109380 GUESS: name */
 void thunk_FUN_0011e154(int param_1);
 undefined4 FUN_001093f8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 );
 void web_request_notify(WebRequest *request,int32 event,int32 value,int32 detail,int32 extra);   /* 0x00109534 GUESS: name, see kh_mod.c */
-void FUN_0010955c(int param_1,int param_2,int param_3);
+void text_box_set_tail(TextBox *box,int32 x,int32 y);   /* 0x0010955C GUESS: name, see kh_mod.c */
 void FUN_00109750(int param_1,undefined4 param_2);
 int FUN_00109780(int *param_1,undefined4 param_2,int param_3);
 void key_picker_setup(UIElement *picker,KeyOption *options,int32 *setting,int32 index);   /* 0x001098D8 GUESS: name */
