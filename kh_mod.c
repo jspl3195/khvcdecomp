@@ -8051,29 +8051,26 @@ LevelObject * level_object_create(LevelObject *object,ISwerveObject *node,char *
   object->field_40 = object->field_44 = object->field_48 = object->field_4c = 0;
   object->field_50 = object->field_54 = object->field_58 = object->field_60 = 0;
   object->field_1c = object->field_14 = object->field_18 = 0;
-  object->field_e0 = 0;
-  object->field_ec = object->field_f0 = object->field_f4 = object->field_f8 = object->field_fc = 0;
+  object->sceneShapeCount = 0;
+  object->shapeCount = object->field_f0 = object->field_f4 = object->field_f8 = object->field_fc = 0;
   object->field_100 = object->field_104 = object->field_108 = object->field_10c = 0;
   return object;
 }
 
-/* ==== 0x0010B9B4  (file offset 0x0B9B4)  FUN_0010b9b4 ================================================ */
-void * FUN_0010b9b4(void *param_1)
+/* ==== 0x0010B9B4  (file offset 0x0B9B4)  collision_shape_create ====================================== */
+/* GUESS: name. Sets up a collision shape (allocating its 0x48 bytes when `shape` is 0) with no
+   vertices; returns it, or 0 when out of memory. collision_shape_setup fills it in. */
+CollisionShape * collision_shape_create(CollisionShape *shape)
 
 {
-  undefined4 uVar1;
-  
-  if ((param_1 != (void *)0x0) || (param_1 = helper_malloc_2(0x48), param_1 != (void *)0x0)) {
-                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
-                        */
-    uVar1 = (*g_pHelperFuncs->GetAppInstance)();
-    *(undefined4 *)((int)param_1 + 0x34) = uVar1;
-    *(undefined4 *)((int)param_1 + 0x38) = 0;
-    *(undefined4 *)((int)param_1 + 0x3c) = 0;
-    *(undefined4 *)((int)param_1 + 0x40) = 0;
-    *(undefined4 *)((int)param_1 + 0x44) = 0;
-  }
-  return param_1;
+  if (shape == (CollisionShape *)0x0 && (shape = helper_malloc_2(0x48)) == (CollisionShape *)0x0)
+    return (CollisionShape *)0x0;
+  shape->app = (*g_pHelperFuncs->GetAppInstance)();
+  shape->vertices = (uint32 *)0x0;
+  shape->vertexCount = 0;
+  shape->clockwise = 0;
+  shape->vertexEntities = (int *)0x0;
+  return shape;
 }
 
 /* ==== 0x0010BA08  (file offset 0x0BA08)  FUN_0010ba08 ================================================ */
@@ -10363,7 +10360,7 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
       }
     }
     else {
-      uVar4 = FUN_00113784(param_1);
+      uVar4 = level_object_get_height((LevelObject *)param_1);
       piVar5 = (int *)FUN_001269cc(uVar4,0x3f000000);
       uVar4 = FUN_001262b0(*(uint *)(param_1 + 0x70),(uint)piVar5);
       uVar4 = FUN_001262b0(uVar4,param_2[2]);
@@ -10689,7 +10686,7 @@ void FUN_0010ea64(int param_1)
       iVar7 = *(int *)(iVar1 + 0x1cc);
       uStack_24 = *(undefined4 *)(iVar7 + 0x68);
       uStack_20 = *(undefined4 *)(iVar7 + 0x6c);
-      uVar3 = FUN_00113784(iVar7);
+      uVar3 = level_object_get_height((LevelObject *)iVar7);
       uVar3 = FUN_001269cc(uVar3,0x3f000000);
       uStack_1c = FUN_001262b0(uVar3,*(uint *)(*(int *)(iVar1 + 0x1cc) + 0x70));
       FUN_0011f680(iVar1,uStack_24,uStack_20,uStack_1c,uVar6);
@@ -10702,7 +10699,7 @@ void FUN_0010ea64(int param_1)
       uVar8 = *(uint *)(iVar1 + 0x6c);
       uVar3 = FUN_0012642c(*(uint *)(iVar1 + 0x1f0),uVar8);
       uStack_2c = FUN_001263f8(uVar3,uVar8);
-      uVar3 = FUN_00113784(*(int *)(iVar1 + 0x1cc));
+      uVar3 = level_object_get_height((LevelObject *)*(int *)(iVar1 + 0x1cc));
       uVar3 = FUN_001269cc(uVar3,0x3f000000);
       uStack_28 = FUN_001262b0(uVar3,*(uint *)(*(int *)(iVar1 + 0x1cc) + 0x70));
       uVar4 = FUN_001148a0(*(int *)(iVar1 + 0x1cc));
@@ -12888,7 +12885,7 @@ undefined4 FUN_00110190(int param_1,undefined4 *param_2,undefined4 *param_3)
   iStack_30 = param_1;
   puStack_2c = param_2;
   local_28 = param_3;
-  uVar1 = FUN_00113784(param_1);
+  uVar1 = level_object_get_height((LevelObject *)param_1);
   FUN_001268fc(param_2[2],0);
   if ((bool)in_CY && !(bool)in_ZR) {
     uVar2 = FUN_001262b0(*(uint *)(param_1 + 0x70),param_2[2]);
@@ -13044,7 +13041,7 @@ void FUN_00110564(int param_1,int param_2,int param_3)
       FUN_0010ecb8(param_1,&local_2c);
       local_20 = FUN_001262b0(*(undefined4 *)(param_1 + 0x68),local_2c);
       local_1c = FUN_001262b0(*(undefined4 *)(param_1 + 0x6c),local_28);
-      uVar1 = FUN_00113784(param_1);
+      uVar1 = level_object_get_height((LevelObject *)param_1);
       uVar1 = FUN_001262b0(uVar1,*(undefined4 *)(param_1 + 0x70));
       local_18 = FUN_001262b0(uVar1,local_24);
     }
@@ -13633,7 +13630,7 @@ uint FUN_00110924(int *param_1)
     if (((*(int *)(param_1[3] + 0xc) == WORD_HEXADECIMAL_2E6723BD) &&
         (iVar10 = *(int *)(param_1[3] + 0x1cc), iVar10 != 0)) &&
        (*(int *)(iVar10 + 0xc) == WORD_HEXADECIMAL_10C617E4)) {
-      uVar14 = FUN_00113784(param_1[4]);
+      uVar14 = level_object_get_height((LevelObject *)(param_1[4]));
       uVar14 = FUN_001269cc(uVar14,0x3f000000);
       uVar14 = FUN_001262b0(uVar14,(uint)local_34);
       iVar10 = param_1[3];
@@ -13916,7 +13913,7 @@ LAB_00111948:
         *(undefined4 *)(uVar14 + 0x1cc) = 0xb;
         *(undefined4 *)(uVar14 + 0x1c8) = 0;
         piVar4 = *(int **)(uVar14 + 0x80);
-        uVar12 = FUN_00113784(uVar14);
+        uVar12 = level_object_get_height((LevelObject *)uVar14);
         local_3c = (int *)0x0;
         local_34 = (int *)0x0;
         local_38 = piVar4;
@@ -15154,24 +15151,16 @@ FUN_001136c8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param
   return uVar7;
 }
 
-/* ==== 0x00113784  (file offset 0x13784)  FUN_00113784 ================================================ */
-undefined4 FUN_00113784(int param_1)
+/* ==== 0x00113784  (file offset 0x13784)  level_object_get_height ===================================== */
+/* GUESS: name. The height (a float, its bits) of a level object's first collision shape: the first one
+   of its scene, else the first one its level data lists; 0 without one. Callers add half of it to the
+   object's z (+0x70) for the middle of its body. */
+uint32 level_object_get_height(LevelObject *object)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  bool bVar3;
-  
-  iVar2 = *(int *)(param_1 + 0x90);
-  uVar1 = 0;
-  bVar3 = iVar2 == 0;
-  if (bVar3) {
-    iVar2 = *(int *)(param_1 + 0xe4);
-  }
-  if (!bVar3 || iVar2 != 0) {
-    uVar1 = *(undefined4 *)(iVar2 + 0x30);
-  }
-  return uVar1;
+  CollisionShape *shape = object->sceneShapes[0] != (CollisionShape *)0x0 ? object->sceneShapes[0] : object->shapes[0];
+
+  return shape != (CollisionShape *)0x0 ? shape->height : 0;
 }
 
 /* ==== 0x001137A4  (file offset 0x137A4)  FUN_001137a4 ================================================ */
@@ -19523,9 +19512,9 @@ void FUN_00118910(int param_1,undefined4 param_2)
     FUN_00110084(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,STRING_CARRIAGE_RETURN_NEWLINE_OFFSET_8 + 0x118cf0,
                  p_00,*(undefined4 *)(param_1 + 0xec));
     for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0xec); iVar1 = iVar1 + 1) {
-      uVar4 = FUN_0010b9b4(0);
+      uVar4 = (undefined4)collision_shape_create((CollisionShape *)0x0);
       *(undefined4 *)(param_1 + iVar1 * 4 + 0xe4) = uVar4;
-      FUN_00118ed8(uVar4,*(undefined4 *)(param_1 + 8),*(undefined4 *)((int)p_00 + iVar1 * 4));
+      collision_shape_setup((CollisionShape *)uVar4,*(ISwerveObject **)(param_1 + 8),*(char **)((int)p_00 + iVar1 * 4));
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
       (*g_pHelperFuncs->free)(local_28);
       local_28 = 0;
@@ -19576,304 +19565,160 @@ void FUN_00118910(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x00118ED8  (file offset 0x18ED8)  FUN_00118ed8 ================================================ */
-void FUN_00118ed8(undefined4 *param_1,int *param_2,int param_3)
+/* ==== 0x00118ED8  (file offset 0x18ED8)  collision_shape_setup ======================================= */
+/* GUESS: name. Fills a collision shape for the scene node `node` from `text`, whose words
+   (FUN_00110084) are: the kind and form ("inner..." / "outer...", "...circle", "...cylinder",
+   "...cuboid", "...rect", "...poly", "...sphere"), then up to three sizes (FUN_0010d4dc; -1.0 when
+   missing), or "use verts" as the second word. The shape starts at the entity's position
+   (FUN_001147ec) with an empty box; when no size is given, the box is the entity's own (FUN_00113474,
+   from its vertices with "use verts"), made relative to the position. Then by form:
+     circle, cylinder  radius: size 1, else the larger half of the box's x and y; height: size 2 (the box
+                       then spans -height/2..height/2 in z), else the box's z size;
+     sphere            radius: size 1, else the largest half of the box's sizes;
+     poly              one vertex per child of the node, at the entities named "1transform",
+                       "2transform", ... (Find); "Clockwise" tag; FUN_00121ab0 (with the node in r1 as
+                       well, 0x00119448); height: size 1, the box from 0 to it in z when given;
+     others (cuboid, rect)  the box: sizes 1 and 2 across x and y (when both are given), 0..size 3 in z;
+                       its 4 corners as vertices (x, y only); height: the box's z size.
+   The float comparisons leave their results in the flags (FUN_001267f0 equality, FUN_001268fc `bhi`;
+   FUN_001254d4 compares the size as a double with -1.0), written after the commas. */
+void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
 
 {
-  /* stack0x<offset>: Ghidra's names for stack locations whose address is taken (the byte at
-     that offset from the entry sp); declared here so the listing compiles */
-  undefined1 stack0xffffffc0;
-  undefined4 *puVar1;
-  int iVar2;
-  undefined4 *puVar3;
-  int iVar4;
-  undefined4 *puVar5;
-  undefined4 *puVar6;
-  undefined4 *puVar7;
-  undefined4 uVar8;
-  int iVar9;
-  uint uVar10;
-  void *pvVar11;
-  uint *puVar12;
-  uint extraout_r1;
-  uint extraout_r1_00;
-  uint extraout_r1_01;
-  uint uVar13;
-  uint uVar14;
-  uint uVar15;
-  undefined1 uVar16;
-  bool bVar17;
-  undefined1 uVar18;
-  undefined8 uVar19;
-  undefined4 local_30;
-  
-  iVar2 = FUN_00110084(*(undefined4 *)(param_1[0xd] + 0x94),param_3,DATA_AT_00126FCC_OFFSET + 0x118f08,0,0);
-  puVar3 = helper_malloc(iVar2 << 2);
-  FUN_00110084(*(undefined4 *)(param_1[0xd] + 0x94),param_3,DATA_AT_00126FCC_OFFSET_2 + 0x118f38,(int)puVar3,
-               iVar2);
-  iVar9 = WORD_HEXADECIMAL_FFFE70A8;
-  puVar7 = FLOAT_MINUS_1;
-  local_30 = 0;
-  puVar5 = puVar7;
-  if (1 < iVar2) {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar4 = (*g_pHelperFuncs->strcmp)
-                      (puVar3[1],STRING_USE_VERTS_OFFSET + 0x118f78);
-    if (iVar4 == 0) {
-      local_30 = 1;
-    }
+  char name[16];
+  char **words;
+  int wordCount;
+  int useVertices = 0;
+  uint32 size1 = FLOAT_MINUS_1;
+  uint32 size2 = FLOAT_MINUS_1;
+  uint32 size3 = FLOAT_MINUS_1;
+  uint32 half;
+  uint32 highWord;   /* r1 after FUN_00126248: the high word of the double it returns in r0:r1 */
+  int i;
+
+  wordCount = FUN_00110084((int)shape->app->pObj94,(int)text,DATA_AT_00126FCC_OFFSET + 0x118f08,0,0);
+  words = helper_malloc(wordCount << 2);
+  FUN_00110084((int)shape->app->pObj94,(int)text,DATA_AT_00126FCC_OFFSET_2 + 0x118f38,(int)words,wordCount);
+  if (wordCount > 1) {
+    if ((*g_pHelperFuncs->strcmp)(words[1],(char *)(STRING_USE_VERTS_OFFSET + 0x118f78)) == 0)
+      useVertices = 1;
+    else
+      size1 = FUN_0010d4dc((int)shape->app->pObj94,(int)words[1]);
+  }
+  if (wordCount > 2)
+    size2 = FUN_0010d4dc((int)shape->app->pObj94,(int)words[2]);
+  if (wordCount > 3)
+    size3 = FUN_0010d4dc((int)shape->app->pObj94,(int)words[3]);
+  if ((*g_pHelperFuncs->strbegins)((char *)(STRING_OUTER_OFFSET + 0x118fec),words[0]) != 0)
+    shape->kind = 2;
+  else if ((*g_pHelperFuncs->strbegins)((char *)(STRING_INNER_OFFSET + 0x119010),words[0]) != 0)
+    shape->kind = 1;
+  if ((*g_pHelperFuncs->strends)((char *)(STRING_CIRCLE_OFFSET + 0x119040),words[0]) != 0)
+    shape->form = 3;
+  else if ((*g_pHelperFuncs->strends)((char *)(STRING_CYLINDER_OFFSET + 0x11906c),words[0]) != 0)
+    shape->form = 4;
+  else if ((*g_pHelperFuncs->strends)((char *)(STRING_CUBOID_OFFSET + 0x119090),words[0]) != 0)
+    shape->form = 5;
+  else if ((*g_pHelperFuncs->strends)((char *)(STRING_RECT_OFFSET + 0x1190b4),words[0]) != 0)
+    shape->form = 6;
+  else if ((*g_pHelperFuncs->strends)((char *)(STRING_POLY_OFFSET + 0x1190d8),words[0]) != 0)
+    shape->form = 8;
+  else if ((*g_pHelperFuncs->strends)((char *)(STRING_SPHERE_OFFSET + 0x1190fc),words[0]) != 0)
+    shape->form = 7;
+  for (i = 0; i < wordCount; i++)
+    helper_free(words[i]);
+  helper_free(words);
+
+  FUN_001147ec((undefined4 *)shape->position,(int)shape->app->pObj94,(int *)node);
+  for (i = 0; i < 3; i++)
+    shape->minimum[i] = shape->maximum[i] = shape->position[i];
+  if ((FUN_001267f0(size1,FLOAT_MINUS_1), *(float *)&size1 == -1.0f) &&
+      (FUN_001267f0(size2,FLOAT_MINUS_1), *(float *)&size2 == -1.0f) &&
+      (FUN_001267f0(size3,FLOAT_MINUS_1), *(float *)&size3 == -1.0f)) {
+    FUN_00113474((undefined4)shape->app->pGame,(undefined4)node,(undefined4)shape->minimum,
+                 (undefined4)shape->maximum,useVertices);
+    for (i = 0; i < 3; i++)
+      shape->minimum[i] = FUN_0012642c(shape->minimum[i],shape->position[i]);
+    for (i = 0; i < 3; i++)
+      shape->maximum[i] = FUN_0012642c(shape->maximum[i],shape->position[i]);
+  }
+
+  switch (shape->form) {
+  case 3:                                            /* circle */
+  case 4:                                            /* cylinder */
+    if (FUN_001254d4(FUN_00126248(size1),highWord,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD),
+        *(float *)&size1 != -1.0f)
+      shape->radius = size1;
     else {
-      puVar5 = (undefined4 *)FUN_0010d4dc(*(undefined4 *)(param_1[0xd] + 0x94),puVar3[1]);
+      shape->radius = FUN_001269cc(FUN_0012642c(shape->maximum[0],shape->minimum[0]),0x3f000000);
+      half = FUN_001269cc(FUN_0012642c(shape->maximum[1],shape->minimum[1]),0x3f000000);
+      if (FUN_001268fc(half,shape->radius), *(float *)&half > *(float *)&shape->radius)
+        shape->radius = half;
     }
-  }
-  puVar6 = puVar7;
-  if (2 < iVar2) {
-    puVar6 = (undefined4 *)FUN_0010d4dc(*(undefined4 *)(param_1[0xd] + 0x94),puVar3[2]);
-  }
-  if (3 < iVar2) {
-    puVar7 = (undefined4 *)FUN_0010d4dc(*(undefined4 *)(param_1[0xd] + 0x94),puVar3[3]);
-  }
-                    /* helper[62] boolean strbegins(const char *prefix, const char *s)
-                       (AEEHelperFuncs +0xf8, via *(base-4)) */
-  iVar4 = (*g_pHelperFuncs->strbegins)(STRING_OUTER_OFFSET + 0x118fec,*puVar3);
-  if (iVar4 == 0) {
-                    /* helper[62] boolean strbegins(const char *prefix, const char *s)
-                       (AEEHelperFuncs +0xf8, via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strbegins)(STRING_INNER_OFFSET + 0x119010,*puVar3);
-    if (iVar9 != 0) {
-      uVar8 = 1;
-      goto LAB_0011901c;
-    }
-  }
-  else {
-    uVar8 = 2;
-LAB_0011901c:
-    *param_1 = uVar8;
-  }
-                    /* helper[63] boolean strends(const char *suffix, const char *s)
-                       (AEEHelperFuncs +0xfc, via *(base-4)) */
-  iVar4 = (*g_pHelperFuncs->strends)(STRING_CIRCLE_OFFSET + 0x119040,*puVar3);
-  iVar9 = WORD_HEXADECIMAL_FFFE6FA8;
-  if (iVar4 == 0) {
-                    /* helper[63] boolean strends(const char *suffix, const char *s)
-                       (AEEHelperFuncs +0xfc, via *(base-4)) */
-    iVar4 = (*g_pHelperFuncs->strends)(STRING_CYLINDER_OFFSET + 0x11906c,*puVar3)
-    ;
-    if (iVar4 != 0) {
-      uVar8 = 4;
-      goto LAB_00119108;
-    }
-                    /* helper[63] boolean strends(const char *suffix, const char *s)
-                       (AEEHelperFuncs +0xfc, via *(base-4)) */
-    iVar4 = (*g_pHelperFuncs->strends)(STRING_CUBOID_OFFSET + 0x119090,*puVar3);
-    if (iVar4 != 0) {
-      uVar8 = 5;
-      goto LAB_00119108;
-    }
-                    /* helper[63] boolean strends(const char *suffix, const char *s)
-                       (AEEHelperFuncs +0xfc, via *(base-4)) */
-    iVar4 = (*g_pHelperFuncs->strends)(STRING_RECT_OFFSET + 0x1190b4,*puVar3);
-    if (iVar4 != 0) {
-      uVar8 = 6;
-      goto LAB_00119108;
-    }
-                    /* helper[63] boolean strends(const char *suffix, const char *s)
-                       (AEEHelperFuncs +0xfc, via *(base-4)) */
-    iVar4 = (*g_pHelperFuncs->strends)(STRING_POLY_OFFSET + 0x1190d8,*puVar3);
-    if (iVar4 != 0) {
-      uVar8 = 8;
-      goto LAB_00119108;
-    }
-                    /* helper[63] boolean strends(const char *suffix, const char *s)
-                       (AEEHelperFuncs +0xfc, via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strends)(STRING_SPHERE_OFFSET + 0x1190fc,*puVar3);
-    if (iVar9 != 0) {
-      uVar8 = 7;
-      goto LAB_00119108;
-    }
-  }
-  else {
-    uVar8 = 3;
-LAB_00119108:
-    param_1[1] = uVar8;
-  }
-  for (iVar9 = 0; uVar16 = iVar9 == iVar2, iVar9 < iVar2; iVar9 = iVar9 + 1) {
-    helper_free((void *)puVar3[iVar9]);
-  }
-  helper_free(puVar3);
-  puVar3 = param_1 + 2;
-  FUN_001147ec(puVar3,*(int *)(param_1[0xd] + 0x94),param_2);
-  param_1[5] = *puVar3;
-  param_1[6] = param_1[3];
-  param_1[7] = param_1[4];
-  param_1[8] = *puVar3;
-  param_1[9] = param_1[3];
-  param_1[10] = param_1[4];
-  FUN_001267f0((uint)puVar5,(uint)FLOAT_MINUS_1);
-  puVar1 = FLOAT_MINUS_1;
-  if ((bool)uVar16) {
-    FUN_001267f0((uint)puVar6,(uint)FLOAT_MINUS_1);
-    puVar3 = puVar1;
-  }
-  if ((bool)uVar16) {
-    FUN_001267f0((uint)puVar7,(uint)puVar3);
-  }
-  if ((bool)uVar16) {
-    FUN_00113474(*(undefined4 *)(param_1[0xd] + 0xa4),param_2,param_1 + 5,param_1 + 8,local_30);
-    uVar13 = param_1[2];
-    uVar10 = FUN_0012642c(param_1[5],uVar13);
-    param_1[5] = uVar10;
-    uVar14 = param_1[3];
-    uVar10 = FUN_0012642c(param_1[6],uVar14);
-    param_1[6] = uVar10;
-    uVar15 = param_1[4];
-    uVar10 = FUN_0012642c(param_1[7],uVar15);
-    param_1[7] = uVar10;
-    uVar10 = FUN_0012642c(param_1[8],uVar13);
-    param_1[8] = uVar10;
-    uVar10 = FUN_0012642c(param_1[9],uVar14);
-    param_1[9] = uVar10;
-    uVar10 = FUN_0012642c(param_1[10],uVar15);
-    param_1[10] = uVar10;
-  }
-  puVar3 = FLOAT_MINUS_1;
-  uVar10 = param_1[1];
-  uVar16 = 3 < uVar10;
-  bVar17 = uVar10 == 4;
-  if (!bVar17) {
-    uVar16 = 2 < uVar10;
-  }
-  uVar18 = bVar17 || uVar10 == 3;
-  if (!bVar17 && uVar10 != 3) {
-    uVar18 = 6 < uVar10;
-    uVar16 = uVar10 == 7;
-    if ((bool)uVar16) {
-      uVar10 = FUN_00126248((uint)puVar5);
-      FUN_001254d4(uVar10,extraout_r1_01,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD);
-      if (!(bool)uVar16) {
-        param_1[0xb] = puVar5;
-        return;
-      }
-      uVar10 = FUN_0012642c(param_1[8],param_1[5]);
-      uVar10 = FUN_001269cc(uVar10,0x3f000000);
-      param_1[0xb] = uVar10;
-      uVar13 = FUN_0012642c(param_1[9],param_1[6]);
-      uVar13 = FUN_001269cc(uVar13,0x3f000000);
-      FUN_001268fc(uVar13,uVar10);
-      if ((bool)uVar18 && !(bool)uVar16) {
-        param_1[0xb] = uVar13;
-      }
-      uVar10 = FUN_0012642c(param_1[10],param_1[7]);
-      uVar10 = FUN_001269cc(uVar10,0x3f000000);
-      FUN_001268fc(uVar10,param_1[0xb]);
-      if (!(bool)uVar18 || (bool)uVar16) {
-        return;
-      }
-      param_1[0xb] = uVar10;
+    if (FUN_001254d4(FUN_00126248(size2),highWord,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD),
+        *(float *)&size2 != -1.0f) {
+      shape->height = size2;
+      shape->minimum[2] = FUN_001269cc(size2 ^ 0x80000000,0x3f000000);   /* -size2 * 0.5 */
+      shape->maximum[2] = FUN_001269cc(size2,0x3f000000);
       return;
     }
-    uVar16 = uVar10 == 8;
-    if ((bool)uVar16) {
-      (**(code **)(*param_2 + 0xac))(param_2,param_1 + 0xf);
-      pvVar11 = helper_malloc(param_1[0xf] * 0xc);
-      param_1[0xe] = pvVar11;
-      uVar19 = FUN_00119b0c(*(undefined4 *)(param_1[0xd] + 0x94),(int)param_2,
-                            STRING_CLOCKWISE_OFFSET + 0x1193b8);
-      param_1[0x10] = (int)uVar19;
-      pvVar11 = helper_malloc(param_1[0xf] << 2);
-      iVar9 = WORD_HEXADECIMAL_FFFE6C24;
-      iVar4 = STRING_PERCENT_DTRANSFORM_OFFSET + 0x1193e4;
-      param_1[0x11] = pvVar11;
-      for (iVar2 = 0; uVar16 = param_1[0xf] == iVar2, !(bool)uVar16 && iVar2 <= (int)param_1[0xf];
-          iVar2 = iVar2 + 1) {
-                    /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
-                       +0x20, via *(base-4)) */
-        (*g_pHelperFuncs->sprintf)(&stack0xffffffc0,iVar4);
-        uVar10 = FUN_00113654(*(undefined4 *)(param_1[0xd] + 0x94),(int)&stack0xffffffc0);
-        *(undefined4 *)(param_1[0x11] + iVar2 * 4) = 0;
-        (**(code **)(*param_2 + 0x28))(param_2,uVar10,param_1[0x11] + iVar2 * 4);
-      }
-      FUN_00121ab0((int)param_1);
-      param_1[0xc] = puVar5;
-      param_1[7] = 0;
-      FUN_001267f0((uint)puVar5,(uint)FLOAT_MINUS_1);
-      if ((bool)uVar16) {
-        return;
-      }
-      uVar10 = param_1[0xc];
-      goto LAB_00119470;
+    break;
+  case 7:                                            /* sphere */
+    if (FUN_001254d4(FUN_00126248(size1),highWord,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD),
+        *(float *)&size1 != -1.0f) {
+      shape->radius = size1;
+      return;
     }
-    FUN_001267f0((uint)puVar5,(uint)FLOAT_MINUS_1);
-    if (!(bool)uVar16) {
-      FUN_001267f0((uint)puVar6,(uint)puVar3);
-    }
-    if (!(bool)uVar16) {
-      uVar10 = FUN_001269cc((uint)puVar5 ^ 0x80000000,0x3f000000);
-      param_1[5] = uVar10;
-      uVar10 = FUN_001269cc((uint)puVar5,0x3f000000);
-      param_1[8] = uVar10;
-      uVar10 = FUN_001269cc((uint)puVar6 ^ 0x80000000,0x3f000000);
-      param_1[6] = uVar10;
-      uVar10 = FUN_001269cc((uint)puVar6,0x3f000000);
-      param_1[9] = uVar10;
-    }
-    FUN_001267f0((uint)puVar7,(uint)puVar3);
-    if (!(bool)uVar16) {
-      param_1[7] = 0;
-      param_1[10] = puVar7;
-    }
-    param_1[0xf] = 4;
-    puVar12 = helper_malloc(0x30);
-    param_1[0xe] = puVar12;
-    uVar10 = FUN_001262b0(param_1[2],param_1[5]);
-    *puVar12 = uVar10;
-    uVar10 = FUN_001262b0(param_1[3],param_1[6]);
-    *(uint *)(param_1[0xe] + 4) = uVar10;
-    uVar10 = FUN_001262b0(param_1[2],param_1[5]);
-    *(uint *)(param_1[0xe] + 0x24) = uVar10;
-    uVar10 = FUN_001262b0(param_1[3],param_1[9]);
-    *(uint *)(param_1[0xe] + 0x28) = uVar10;
-    uVar10 = FUN_001262b0(param_1[2],param_1[8]);
-    *(uint *)(param_1[0xe] + 0x18) = uVar10;
-    uVar10 = FUN_001262b0(param_1[3],param_1[9]);
-    *(uint *)(param_1[0xe] + 0x1c) = uVar10;
-    uVar10 = FUN_001262b0(param_1[2],param_1[8]);
-    *(uint *)(param_1[0xe] + 0xc) = uVar10;
-    uVar10 = FUN_001262b0(param_1[3],param_1[6]);
-    *(uint *)(param_1[0xe] + 0x10) = uVar10;
-    goto LAB_001192ac;
-  }
-  uVar10 = FUN_00126248((uint)puVar5);
-  FUN_001254d4(uVar10,extraout_r1,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD);
-  if ((bool)uVar18) {
-    uVar10 = FUN_0012642c(param_1[8],param_1[5]);
-    uVar10 = FUN_001269cc(uVar10,0x3f000000);
-    param_1[0xb] = uVar10;
-    uVar13 = FUN_0012642c(param_1[9],param_1[6]);
-    puVar5 = (undefined4 *)FUN_001269cc(uVar13,0x3f000000);
-    FUN_001268fc((uint)puVar5,uVar10);
-    if ((bool)uVar16 && !(bool)uVar18) goto LAB_00119294;
-  }
-  else {
-LAB_00119294:
-    param_1[0xb] = puVar5;
-  }
-  uVar10 = FUN_00126248((uint)puVar6);
-  FUN_001254d4(uVar10,extraout_r1_00,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD);
-  if (!(bool)uVar18) {
-    param_1[0xc] = puVar6;
-    uVar10 = FUN_001269cc((uint)puVar6 ^ 0x80000000,0x3f000000);
-    param_1[7] = uVar10;
-    uVar10 = FUN_001269cc((uint)puVar6,0x3f000000);
-LAB_00119470:
-    param_1[10] = uVar10;
+    shape->radius = FUN_001269cc(FUN_0012642c(shape->maximum[0],shape->minimum[0]),0x3f000000);
+    half = FUN_001269cc(FUN_0012642c(shape->maximum[1],shape->minimum[1]),0x3f000000);
+    if (FUN_001268fc(half,shape->radius), *(float *)&half > *(float *)&shape->radius)
+      shape->radius = half;
+    half = FUN_001269cc(FUN_0012642c(shape->maximum[2],shape->minimum[2]),0x3f000000);
+    if (FUN_001268fc(half,shape->radius), *(float *)&half > *(float *)&shape->radius)
+      shape->radius = half;
     return;
+  case 8:                                            /* poly */
+    (*((const SwerveGroupVtbl *)node->pvt)->GetChildCount)(node,&shape->vertexCount);
+    shape->vertices = helper_malloc(shape->vertexCount * 0xc);
+    shape->clockwise = (int)FUN_00119b0c((int)shape->app->pObj94,(int)node,STRING_CLOCKWISE_OFFSET + 0x1193b8);
+    shape->vertexEntities = helper_malloc(shape->vertexCount << 2);
+    for (i = 0; i < shape->vertexCount; i++) {
+      (*g_pHelperFuncs->sprintf)(name,(char *)(STRING_PERCENT_DTRANSFORM_OFFSET + 0x1193e4),i + 1);
+      shape->vertexEntities[i] = 0;
+      (*((const SwerveObject3DVtbl *)node->pvt)->Find)
+                (node,FUN_00113654((int)shape->app->pObj94,(int)name),(ISwerveObject **)&shape->vertexEntities[i]);
+    }
+    FUN_00121ab0((int)shape);
+    shape->height = size1;
+    shape->minimum[2] = 0;
+    if (FUN_001267f0(size1,FLOAT_MINUS_1), *(float *)&size1 != -1.0f)
+      shape->maximum[2] = shape->height;
+    return;
+  default:                                           /* cuboid, rect (and no form) */
+    if ((FUN_001267f0(size1,FLOAT_MINUS_1), *(float *)&size1 != -1.0f) &&
+        (FUN_001267f0(size2,FLOAT_MINUS_1), *(float *)&size2 != -1.0f)) {
+      shape->minimum[0] = FUN_001269cc(size1 ^ 0x80000000,0x3f000000);   /* -size1 * 0.5 */
+      shape->maximum[0] = FUN_001269cc(size1,0x3f000000);
+      shape->minimum[1] = FUN_001269cc(size2 ^ 0x80000000,0x3f000000);
+      shape->maximum[1] = FUN_001269cc(size2,0x3f000000);
+    }
+    if (FUN_001267f0(size3,FLOAT_MINUS_1), *(float *)&size3 != -1.0f) {
+      shape->minimum[2] = 0;
+      shape->maximum[2] = size3;
+    }
+    shape->vertexCount = 4;
+    shape->vertices = helper_malloc(0x30);
+    shape->vertices[0] = FUN_001262b0(shape->position[0],shape->minimum[0]);   /* corner 0: minimum x, y */
+    shape->vertices[1] = FUN_001262b0(shape->position[1],shape->minimum[1]);
+    shape->vertices[9] = FUN_001262b0(shape->position[0],shape->minimum[0]);   /* corner 3: minimum x, maximum y */
+    shape->vertices[10] = FUN_001262b0(shape->position[1],shape->maximum[1]);
+    shape->vertices[6] = FUN_001262b0(shape->position[0],shape->maximum[0]);   /* corner 2: maximum x, y */
+    shape->vertices[7] = FUN_001262b0(shape->position[1],shape->maximum[1]);
+    shape->vertices[3] = FUN_001262b0(shape->position[0],shape->maximum[0]);   /* corner 1: maximum x, minimum y */
+    shape->vertices[4] = FUN_001262b0(shape->position[1],shape->minimum[1]);
+    break;
   }
-LAB_001192ac:
-  uVar10 = FUN_0012642c(param_1[10],param_1[7]);
-  param_1[0xc] = uVar10;
-  return;
+  shape->height = FUN_0012642c(shape->maximum[2],shape->minimum[2]);
 }
 
 /* ==== 0x001195F8  (file offset 0x195F8)  FUN_001195f8 ================================================ */
@@ -20209,7 +20054,7 @@ undefined8 FUN_00119c60(int param_1,int param_2,undefined4 param_3,undefined4 pa
       iVar1 = *(int *)(iVar1 + 0x38);
     }
     if ((bVar7 && iVar3 != 0) && iVar1 != 0) {
-      uVar2 = FUN_00113784(*(undefined4 *)(param_1 + 0x1f8));
+      uVar2 = level_object_get_height((LevelObject *)*(undefined4 *)(param_1 + 0x1f8));
       iVar4 = *(int *)(*(int *)(param_1 + 0x1f8) + 0x80);
       uVar8 = FUN_00119ce0(*(undefined4 *)(iVar6 + 0x10),param_2,param_3,param_4,iVar4,uVar2 /* not arguments, value leftovers: uVar9 */);
       iVar3 = (int)((ulonglong)uVar8 >> 0x20);
@@ -20733,7 +20578,7 @@ void FUN_0011a4d8(int param_1,int param_2)
       *(undefined4 *)(param_1 + 0x128) = 0;
       *(undefined4 *)(param_1 + 0x244) = 0;
       uVar9 = *(undefined4 *)(param_1 + 0x80);
-      uVar10 = FUN_00113784(param_1);
+      uVar10 = level_object_get_height((LevelObject *)param_1);
       uVar10 = FUN_001269cc(uVar10,0x3f000000);
       FUN_0010ecb8(param_1,(undefined4 *)&stack0xffffffe8);
       FUN_0011ca70(param_1,0,uVar9,uVar10,0);
@@ -25054,7 +24899,7 @@ void FUN_0011f394(int param_1,char *param_2,undefined4 param_3,undefined4 param_
     FUN_00113cc4(&local_1c,*(undefined4 *)(param_1 + 0x1cc));
     *(undefined4 *)(param_1 + 0x6c) = local_18;
     FUN_00113cc4(&local_1c,*(undefined4 *)(param_1 + 0x1cc));
-    uVar1 = FUN_00113784(*(undefined4 *)(param_1 + 0x1cc));
+    uVar1 = level_object_get_height((LevelObject *)*(undefined4 *)(param_1 + 0x1cc));
     uVar1 = FUN_001269cc(uVar1,0x3f000000);
     uVar1 = FUN_001262b0(uVar1,local_14);
     *(undefined4 *)(param_1 + 0x70) = uVar1;
@@ -25390,7 +25235,7 @@ LAB_0011fa40:
                    *(undefined4 *)(*(int *)(param_1 + 0x244) + 8),&local_34,&local_40,1);
       *(undefined4 *)(param_1 + 0x204) = local_38;
       *(undefined4 *)(param_1 + 0x208) = local_2c;
-      uVar3 = FUN_00113784(param_1);
+      uVar3 = level_object_get_height((LevelObject *)param_1);
       uVar3 = FUN_001269cc(uVar3,0x3f000000);
       uVar3 = FUN_001262b0(uVar3,*(undefined4 *)(param_1 + 0x208));
       uVar9 = 5 < param_2;
@@ -25410,7 +25255,7 @@ LAB_0011fa40:
       FUN_0010ecb8(param_1,&local_4c);
       local_28 = FUN_001262b0(local_28,local_4c);
       local_24 = FUN_001262b0(local_24,local_48);
-      uVar3 = FUN_00113784(param_1);
+      uVar3 = level_object_get_height((LevelObject *)param_1);
       uVar3 = FUN_001269cc(uVar3,0x3f000000);
       uVar3 = FUN_001262b0(uVar3,*(undefined4 *)(param_1 + 0x70));
       FUN_001268fc(uVar3,local_38);
@@ -25418,7 +25263,7 @@ LAB_0011fa40:
         local_20 = *(undefined4 *)(param_1 + 0x70);
       }
       else {
-        uVar3 = FUN_00113784(param_1);
+        uVar3 = level_object_get_height((LevelObject *)param_1);
         local_20 = FUN_001263f8(uVar3,local_38);
       }
       thunk_FUN_0011fd90(param_1,local_28,local_24,local_20);
@@ -27128,9 +26973,9 @@ void FUN_00120f8c(int param_1,int *param_2,int param_3,int *param_4,int param_5)
   local_20 = 0;
   FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x214) + 0x94),param_2,WORD_HEXADECIMAL_019E5BAF,&local_20);
   if (local_20 != 0) {
-    uVar1 = FUN_0010b9b4(0);
+    uVar1 = (undefined4)collision_shape_create((CollisionShape *)0x0);
     *(undefined4 *)(param_3 + *param_4 * 4) = uVar1;
-    FUN_00118ed8(uVar1,param_2,local_20);
+    collision_shape_setup((CollisionShape *)uVar1,(ISwerveObject *)param_2,(char *)local_20);
     *param_4 = *param_4 + 1;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(local_20);
@@ -27392,7 +27237,7 @@ void FUN_00121780(int param_1,undefined4 *param_2)
   puStack_2c = param_2;
   local_28 = in_r2;
   uVar1 = FUN_001262b0(*(uint *)(iVar4 + 0x70),0x3fc00000);
-  uVar2 = FUN_00113784(iVar4);
+  uVar2 = level_object_get_height((LevelObject *)iVar4);
   uVar2 = FUN_001269cc(uVar2,0x3f000000);
   uVar2 = FUN_001262b0(uVar2,*(uint *)(*(int *)(param_1 + 0x1cc) + 0x70));
   uVar1 = FUN_001263f8(uVar2,uVar1);
@@ -27404,7 +27249,7 @@ void FUN_00121780(int param_1,undefined4 *param_2)
   uVar2 = FUN_0012642c(*(uint *)(param_1 + 0x6c),*(uint *)(iVar4 + 0x6c));
   uVar3 = FUN_0012642c(*(uint *)(param_1 + 0x68),*(uint *)(iVar4 + 0x68));
   uVar2 = FUN_00113820(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),uVar3,uVar2,0);
-  uVar3 = FUN_00113784(*(int *)(param_1 + 0x1cc));
+  uVar3 = level_object_get_height((LevelObject *)*(int *)(param_1 + 0x1cc));
   uVar3 = FUN_001269cc(uVar3,0x3f000000);
   uVar6 = local_34 == 0;
   uVar5 = 1;
@@ -27414,10 +27259,10 @@ void FUN_00121780(int param_1,undefined4 *param_2)
     uVar1 = FUN_001263f8(uVar3,uVar1);
     *(uint *)(param_1 + 0x20c) = uVar1;
   }
-  uVar1 = FUN_00113784(*(int *)(param_1 + 0x1cc));
+  uVar1 = level_object_get_height((LevelObject *)*(int *)(param_1 + 0x1cc));
   FUN_001268fc(uVar1,uVar2);
   if ((bool)uVar5 && !(bool)uVar6) {
-    uVar1 = FUN_00113784(*(int *)(param_1 + 0x1cc));
+    uVar1 = level_object_get_height((LevelObject *)*(int *)(param_1 + 0x1cc));
     uVar1 = FUN_0012642c(uVar1,uVar2);
     uVar1 = FUN_001262b0(uVar1,*(uint *)(param_1 + 0x20c));
     *(uint *)(param_1 + 0x20c) = uVar1;
@@ -27971,7 +27816,7 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
         pbVar6 = extraout_r1_04;
       }
       if (*(int *)(*(int *)(iVar8 + 0x10) + 0x54) != 0) {
-        uVar3 = FUN_00113784(*(int *)(param_1 + 0x1f8));
+        uVar3 = level_object_get_height((LevelObject *)*(int *)(param_1 + 0x1f8));
         FUN_00113cc4(&local_2c,*(int *)(param_1 + 0x1f8));
         in_r3 = local_24;
         uVar13 = FUN_001213fc(*(int *)(iVar8 + 0x10),local_2c,uStack_28,local_24,
@@ -28315,7 +28160,7 @@ void FUN_00122b90(int param_1,int param_2,uint param_3,undefined4 param_4)
   iVar1 = *(int *)(param_1 + 0x1cc);
   local_24 = *(undefined4 *)(iVar1 + 0x68);
   local_20 = *(undefined4 *)(iVar1 + 0x6c);
-  uVar2 = FUN_00113784(iVar1);
+  uVar2 = level_object_get_height((LevelObject *)iVar1);
   uVar2 = FUN_001269cc(uVar2,0x3f000000);
   local_1c = FUN_001262b0(uVar2,*(uint *)(*(int *)(param_1 + 0x1cc) + 0x70));
   FUN_0011f680(param_1,local_24,local_20,local_1c,param_3);
@@ -28328,7 +28173,7 @@ void FUN_00122b90(int param_1,int param_2,uint param_3,undefined4 param_4)
   uVar4 = *(uint *)(param_1 + 0x6c);
   uVar2 = FUN_0012642c(*(uint *)(param_1 + 0x1f0),uVar4);
   local_2c = FUN_001263f8(uVar2,uVar4);
-  uVar2 = FUN_00113784(*(int *)(param_1 + 0x1cc));
+  uVar2 = level_object_get_height((LevelObject *)*(int *)(param_1 + 0x1cc));
   uVar2 = FUN_001269cc(uVar2,0x3f000000);
   local_28 = FUN_001262b0(uVar2,*(uint *)(*(int *)(param_1 + 0x1cc) + 0x70));
   uVar3 = FUN_001148a0(*(int *)(param_1 + 0x1cc));

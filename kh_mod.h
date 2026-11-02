@@ -524,7 +524,7 @@ undefined1 * FUN_0010b70c(undefined1 *param_1,undefined4 param_2,undefined4 para
 Animations * animations_create(Animations *animations);   /* 0x0010B804 GUESS: name */
 BossCombatRegion * boss_combat_region_create(BossCombatRegion *region,ISwerveObject *node,char *name);   /* 0x0010B870 GUESS: name */
 LevelObject * level_object_create(LevelObject *object,ISwerveObject *node,char *name);   /* 0x0010B8CC GUESS: name */
-void * FUN_0010b9b4(void *param_1);
+CollisionShape * collision_shape_create(CollisionShape *shape);   /* 0x0010B9B4 GUESS: name */
 undefined4 * FUN_0010ba08(undefined4 *param_1,undefined4 param_2);
 undefined4 * FUN_0010bb2c(undefined4 *param_1,int param_2,undefined4 param_3);
 int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,int param_6,int param_7,int param_8,undefined1 param_9);
@@ -632,7 +632,7 @@ int animations_get_duration(Animations *animations,int index);   /* 0x001135B8 G
 void FUN_001135dc(int param_1);
 uint FUN_00113654(undefined4 param_1,int param_2);
 undefined4 FUN_001136c8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param_4, undefined4 *param_5,undefined4 param_6);
-undefined4 FUN_00113784(int param_1);
+uint32 level_object_get_height(LevelObject *object);   /* 0x00113784 GUESS: name */
 int FUN_001137a4(int param_1,int param_2);
 uint FUN_001137d4(undefined4 param_1,undefined4 *param_2);
 uint FUN_00113820(undefined4 param_1,uint param_2,uint param_3,uint param_4);
@@ -678,7 +678,7 @@ void FUN_00118318(int param_1,int *param_2);
 void FUN_00118640(int param_1,int *param_2);
 void FUN_0011868c(int param_1,undefined4 param_2);
 void FUN_00118910(int param_1,undefined4 param_2);
-void FUN_00118ed8(undefined4 *param_1,int *param_2,int param_3);
+void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text);   /* 0x00118ED8 GUESS: name */
 void FUN_001195f8(undefined4 *param_1);
 void FUN_00119a28(int param_1,int *param_2);
 undefined4 FUN_00119abc(int param_1);

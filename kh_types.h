@@ -198,6 +198,25 @@ typedef struct Progress {
  * passed around with level data are such hashes. Fields whose meaning is not known are named by offset. */
 struct LevelObject;
 
+/* A level object's collision shape (GUESS: names), 0x48 bytes (collision_shape_create), filled by
+ * collision_shape_setup from a text: its first word starts with "inner" or "outer" and ends with the
+ * form ("circle", "cylinder", "cuboid", "rect", "sphere", "poly"); the next words give the sizes, or
+ * "use verts" for the size of the entity's vertices. */
+typedef struct CollisionShape {
+    int    kind;                  /* +0x00 1 "inner", 2 "outer" */
+    int    form;                  /* +0x04 3 circle, 4 cylinder, 5 cuboid, 6 rect, 7 sphere, 8 poly */
+    uint32 position[3];           /* +0x08 floats (their bits): the entity's position (FUN_001147ec) */
+    uint32 minimum[3];            /* +0x14 floats: the box around it */
+    uint32 maximum[3];            /* +0x20 floats */
+    uint32 radius;                /* +0x2c a float (its bits) */
+    uint32 height;                /* +0x30 a float (its bits); level_object_get_height */
+    struct KHApp *app;            /* +0x34 GetAppInstance() at creation */
+    uint32 *vertices;             /* +0x38 floats, 3 per vertex (a "poly", or the 4 corners of a "rect") */
+    int    vertexCount;           /* +0x3c */
+    int    clockwise;             /* +0x40 a "poly": the entity's "Clockwise" tag */
+    int   *vertexEntities;        /* +0x44 a "poly": the entities named "%dtransform", one per vertex */
+} CollisionShape;                 /* 0x48 bytes */
+
 typedef struct LevelObject {
     uint8  kind;                  /* +0x000 0 LevelObject, 1 MotionEntity, 2 and 3 MotionEntity subclasses
                                      (FUN_0010b70c 0x338 bytes, FUN_0010b3e8 0x214 bytes), 4 CombatRegion,
@@ -225,12 +244,16 @@ typedef struct LevelObject {
     int    field_58;              /* +0x058 0 at creation */
     uint8  unknown_05c[0x04];
     int    field_60;              /* +0x060 0 at creation */
-    uint8  unknown_064[0x20];
+    uint8  unknown_064[0x1c];
+    uint32 radius;                /* +0x080 a float (its bits): the first scene shape's radius, or 0
+                                     (FUN_00118910) */
     struct KHApp *app;            /* +0x084 GetAppInstance() at creation */
-    uint8  unknown_088[0x58];
-    int    field_e0;              /* +0x0e0 0 at creation */
-    uint8  unknown_0e4[0x08];
-    int    field_ec;              /* +0x0ec 0 at creation */
+    uint8  unknown_088[0x08];
+    CollisionShape *sceneShapes[20]; /* +0x090 the shapes of the nodes of its scene with user parameter
+                                     0x019E5BAF (FUN_00120f8c, through FUN_00112cdc) */
+    int    sceneShapeCount;       /* +0x0e0 0 at creation */
+    CollisionShape *shapes[2];    /* +0x0e4 the shapes its node's user parameter 0x2101870D lists */
+    int    shapeCount;            /* +0x0ec 0 at creation */
     int    field_f0;              /* +0x0f0 0 at creation */
     int    field_f4;              /* +0x0f4 0 at creation */
     int    field_f8;              /* +0x0f8 0 at creation */
