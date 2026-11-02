@@ -568,7 +568,7 @@ void screen_resume_nothing(int32 screen);   /* 0x001052DC (no Ghidra function; a
 void FUN_00105c98(int param_1);   /* 0x00105C98 (no Ghidra function; a virtual method) */
 void ui_element_destroy(UIElement *element);   /* 0x00105DE4 (no Ghidra function; a virtual method) */
 void ui_element_draw_nothing(int32 element,int32 display,int32 graphics);   /* 0x00106FA8 (no Ghidra function; a virtual method) */
-void ui_element_method_04_nothing(int32 element);   /* 0x00106FAC (no Ghidra function; a virtual method) */
+void ui_element_update_nothing(int32 element,int32 now,int32 elapsed);   /* 0x00106FAC (no Ghidra function; a virtual method) */
 void ui_element_draw_over_children_nothing(int32 element,int32 display,int32 graphics);   /* 0x001077CC (no Ghidra function; a virtual method) */
 uint32 ui_element_get_border_color(UIElement *element);   /* 0x00107F58 (no Ghidra function; a virtual method) */
 uint32 ui_element_get_secondary_color(UIElement *element);   /* 0x00108048 (no Ghidra function; a virtual method) */
@@ -1957,7 +1957,7 @@ static code *const VTABLE_00101650[3] = {   /* 0x00101650; in kh.mod each entry 
 static code *const VTABLE_0010165C[9] = {   /* 0x0010165C; in kh.mod each entry is the method's offset from
                                                 the table */
   (code *)FUN_00105c5c,
-  (code *)ui_element_method_04_nothing,
+  (code *)ui_element_update_nothing,
   (code *)FUN_00108414,
   (code *)ui_element_draw_over_children_nothing,
   (code *)FUN_00106398,
@@ -1980,7 +1980,7 @@ static code *const VTABLE_00101680[8] = {   /* 0x00101680; in kh.mod each entry 
 static code *const VTABLE_001016A0[8] = {   /* 0x001016A0; in kh.mod each entry is the method's offset from
                                                 the table */
   (code *)FUN_00105c98,
-  (code *)ui_element_method_04_nothing,
+  (code *)ui_element_update_nothing,
   (code *)FUN_001084e4,
   (code *)FUN_00106fb0,
   (code *)FUN_0010673c,
@@ -1991,7 +1991,7 @@ static code *const VTABLE_001016A0[8] = {   /* 0x001016A0; in kh.mod each entry 
 static code *const VTABLE_001016C0[8] = {   /* 0x001016C0; in kh.mod each entry is the method's offset from
                                                 the table */
   (code *)FUN_00105d48,
-  (code *)ui_element_method_04_nothing,
+  (code *)ui_element_update_nothing,
   (code *)ui_element_handle_key_nothing,
   (code *)ui_element_draw_over_children_nothing,
   (code *)FUN_00106a94,
@@ -2002,7 +2002,7 @@ static code *const VTABLE_001016C0[8] = {   /* 0x001016C0; in kh.mod each entry 
 static code *const VTABLE_001016E0[8] = {   /* 0x001016E0; in kh.mod each entry is the method's offset from
                                                 the table */
   (code *)FUN_00105d7c,
-  (code *)ui_element_method_04_nothing,
+  (code *)ui_element_update_nothing,
   (code *)ui_element_handle_key,
   (code *)FUN_00107230,
   (code *)FUN_00106bd4,
@@ -2013,7 +2013,7 @@ static code *const VTABLE_001016E0[8] = {   /* 0x001016E0; in kh.mod each entry 
 static code *const VTABLE_00101700[9] = {   /* 0x00101700; in kh.mod each entry is the method's offset from
                                                 the table */
   (code *)FUN_00105dc8,
-  (code *)ui_element_method_04_nothing,
+  (code *)ui_element_update_nothing,
   (code *)FUN_0010872c,
   (code *)ui_element_draw_over_children_nothing,
   (code *)FUN_00106e44,
@@ -2025,7 +2025,7 @@ static code *const VTABLE_00101700[9] = {   /* 0x00101700; in kh.mod each entry 
 static code *const VTABLE_00101724[8] = {   /* 0x00101724; in kh.mod each entry is the method's offset from
                                                 the table */
   (code *)ui_element_destroy,
-  (code *)ui_element_method_04_nothing,
+  (code *)ui_element_update_nothing,
   (code *)ui_element_handle_key_nothing,
   (code *)ui_element_draw_over_children_nothing,
   (code *)ui_element_draw_nothing,

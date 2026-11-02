@@ -4809,12 +4809,16 @@ void ui_element_draw_nothing(int32 element,int32 display,int32 graphics)
 }
 
 
-/* ==== 0x00106FAC  (file offset 0x06FAC)  ui_element_method_04_nothing ================================ */
-/* GUESS: name. Vtable slot 1 (+0x04) of every UI class (VTABLE_0010165C - VTABLE_00101724): it does nothing
-   (`bx lr`, 0x00106fac), and no code in kh.mod calls through that slot of a UI element (the enemies' slot
-   1 is their update), so its purpose is not known. Ghidra has no function here (only reached through the
-   vtables); written from its disassembly. */
-void ui_element_method_04_nothing(int32 element)
+/* ==== 0x00106FAC  (file offset 0x06FAC)  ui_element_update_nothing =================================== */
+/* GUESS: name. Vtable slot 1 (+0x04) of every UI class (VTABLE_0010165C - VTABLE_00101724): does nothing
+   (`bx lr`, 0x00106fac). In the other classes with these relative vtables slot 1 is the update: the
+   enemies' enemy_update(enemy, now, elapsed), called each frame by combat_region_update, and the
+   hitspheres' FUN_00121c6c (VTABLE_00101650), so the UI elements share that base layout (slot 0 the
+   destructor, slot 1 the update) and keep the empty update. Nothing in kh.mod calls a UI element's
+   slot 1 (checked in the binary: the only calls through +0x04 are on enemies, in combat_region_update
+   and FUN_00123d7c), so the parameters are what an update gets. Ghidra has no function here (only
+   reached through the vtables); written from its disassembly. */
+void ui_element_update_nothing(int32 element,int32 now,int32 elapsed)
 
 {
   return;
