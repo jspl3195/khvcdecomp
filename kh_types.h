@@ -48,7 +48,8 @@ typedef struct KHApp {
     int32          field_8c;         /* +0x8c set to 0x1e or a computed value at the end of kh_OnAppStart */
     int32          nErr;             /* +0x90 GUESS: start-up error code; every init step is skipped
                                         once it is non-zero, and key releases are ignored */
-    void          *pObj94;           /* +0x94 created by 0x10c218, destroyed by 0x10cee4 */
+    struct AppContext *context;      /* +0x94 GUESS: name; the object most functions take first
+                                        (app_context_create, app_context_destroy) */
     void          *pObj98;           /* +0x98 created by 0x10be14, destroyed by 0x10cda4 */
     struct Animations *animations;   /* +0x9c the scene's animations; created by animations_create,
                                         destroyed by 0x10c9dc */
@@ -75,6 +76,17 @@ typedef struct KHApp {
     int32          errnoValue;       /* +0xdc the C library's errno (set_errno, kh_GetErrnoPtr); GUESS: kept here as
                                         BREW modules have no writable statics */
 } KHApp;
+
+/* ---- The app's context (GUESS: names) ----------------------------------------------------------------
+ * KHApp.context (app_context_create, 0x14 bytes): passed first to most of the game's functions
+ * (string_split, string_to_float, the scene loaders, ...), which mostly do not read it. */
+typedef struct AppContext {
+    int32    type;                  /* +0x00 3 */
+    int32    sounds[2];             /* +0x04 two sound sets (FUN_0010bec4's kind, destroyed by FUN_0010ce08);
+                                     the Options screen sets their volume (FUN_0010a03c, Progress +0x598) */
+    struct KHApp *app;            /* +0x0c */
+    ISwerveObject *transform;     /* +0x10 a Swerve Transform (ISwerve::CreateObject) */
+} AppContext;                     /* 0x14 bytes */
 
 /* ---- A web request (GUESS: names) ------------------------------------------------------------------
  * The game's HTTP client for its server, http://swervenet.superscape.com/ (web_request_create, 0x5c

@@ -2262,7 +2262,7 @@ undefined4 FUN_00101ad8(int *param_1,int param_2)
       }
       param_1[6] = 0;
 LAB_00104380:
-      FUN_00120450(*(undefined4 *)(*param_1 + 0x94));
+      FUN_00120450((undefined4)((KHApp *)*param_1)->context);
 LAB_0010438c:
       if (*(int *)(*param_1 + 0xd4) != 0) {
         FUN_00109940(*(int *)(*param_1 + 0xd4),0);
@@ -2339,7 +2339,7 @@ LAB_00104fa4:
                        stack local that is never read: a register spill). r2 here is still the word
                        loaded at 0x10508c for the 0x6f branch (FUN_00109a10 at 0x1050a4); r3 is
                        whatever ui_element_add_child left in it. */
-            FUN_0012031c(*(undefined4 *)(*param_1 + 0x94),1);
+            FUN_0012031c((undefined4)((KHApp *)*param_1)->context,1);
             FUN_00109a10(iVar9,2,0,0);
             if (param_2 != 0x70) {
               FUN_00109a10(iVar9,1,uVar14,0x71);
@@ -2436,7 +2436,7 @@ LAB_00103858:
                        parameters: param_3 was never read, and param_4 only went into local_10,
                        which the call through vtable slot +0x10 (with &local_10) overwrites before
                        it is read: a stack slot spilled from r3, not an argument). */
-        piVar4 = (int *)FUN_0011b518(*(undefined4 *)(*param_1 + 0x94),pvVar16).low;
+        piVar4 = (int *)FUN_0011b518((undefined4)((KHApp *)*param_1)->context,pvVar16).low;
         helper_free(pvVar16);
         if (piVar4 != (int *)0x0) {
           game_pause(*param_1);
@@ -2448,7 +2448,7 @@ LAB_00103858:
           FUN_00109750(uVar10,(int32)STRING_JIMINY_ICON_DOT_PNG);
           ui_element_add_child(iVar9,uVar10,0);
           local_38 = (void *)0x0;
-          FUN_0011448c(*(undefined4 *)(*param_1 + 0x94),piVar4,WORD_HEXADECIMAL_0AE069A1,&local_38);
+          FUN_0011448c((undefined4)((KHApp *)*param_1)->context,piVar4,WORD_HEXADECIMAL_0AE069A1,&local_38);
           (**(code **)(*piVar4 + 4))(piVar4);
           if (local_38 != (void *)0x0) {
             iVar19 = text_style_create(0,6);
@@ -2457,7 +2457,7 @@ LAB_00103858:
             uVar11 = FUN_00107fd0(param_1,800,2).low;
             uVar13 = FUN_00107fd0(param_1,200,1).low;
             uVar10 = text_box_create(0,0x19,uVar13,uVar11,uVar10,param_1,iVar19);
-            FUN_0010e210(*(undefined4 *)(*param_1 + 0x94),&local_38,&local_3c);
+            FUN_0010e210((undefined4)((KHApp *)*param_1)->context,&local_38,&local_3c);
             text_box_set_text(uVar10,local_3c,0);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
             (*g_pHelperFuncs->free)(local_38);
@@ -2565,7 +2565,7 @@ LAB_00103858:
         goto LAB_00104de4;
       }
       iVar9 = *param_1;
-      FUN_001204f0(*(undefined4 *)(iVar9 + 0x94),*(undefined4 *)(iVar9 + 200),iVar9 + 0xc4);
+      FUN_001204f0((undefined4)((KHApp *)iVar9)->context,*(undefined4 *)(iVar9 + 200),iVar9 + 0xc4);
       (*g_pHelperFuncs->free)(*(undefined4 *)(*param_1 + 200));
       *(undefined4 *)(*param_1 + 200) = 0;
       iVar7 = WORD_HEXADECIMAL_000253E4;
@@ -2707,10 +2707,10 @@ LAB_00104a24:
         (*g_pHelperFuncs->free)(param_1[0x19]);
         param_1[0x19] = 0;
       }
-      FUN_001204f0(*(undefined4 *)(*param_1 + 0x94),*(undefined4 *)(*param_1 + 0xc4),param_1 + 0x19)
+      FUN_001204f0((undefined4)((KHApp *)*param_1)->context,*(undefined4 *)(*param_1 + 0xc4),param_1 + 0x19)
       ;
       iVar9 = *param_1;
-      FUN_001204f0(*(undefined4 *)(iVar9 + 0x94),*(undefined4 *)(iVar9 + 200),iVar9 + 0xc4);
+      FUN_001204f0((undefined4)((KHApp *)iVar9)->context,*(undefined4 *)(iVar9 + 200),iVar9 + 0xc4);
       if (*(int *)(*param_1 + 200) != 0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
         (*g_pHelperFuncs->free)(*(undefined4 *)(*param_1 + 200));
@@ -2968,11 +2968,11 @@ LAB_00101db4:
     uVar10 = screen_stack_top(param_1);
     iVar7 = ui_element_find_child(uVar10,0xc9);
     text_line_set_text_id(*(undefined4 *)(iVar7 + 0x30),pvVar16);
-    iVar7 = *(int *)(*(int *)(*param_1 + 0x94) + 4);
+    iVar7 = ((KHApp *)*param_1)->context->sounds[0];
     if (iVar7 != 0) {
       FUN_0010a03c(iVar7,*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x598));
     }
-    iVar7 = *(int *)(*(int *)(*param_1 + 0x94) + 8);
+    iVar7 = ((KHApp *)*param_1)->context->sounds[1];
     if (iVar7 == 0) {
       return local_34;
     }
@@ -3135,7 +3135,7 @@ LAB_0010489c:
         uVar10 = FUN_00107fd0(param_1,INTEGER_735,1).low;
         uVar11 = FUN_00107fd0(param_1,500,2).low;
         uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,0,0x21);
-        FUN_0010e210(*(undefined4 *)(*param_1 + 0x94),&local_38,&local_3c);
+        FUN_0010e210((undefined4)((KHApp *)*param_1)->context,&local_38,&local_3c);
         text_line_set_text(uVar10,local_3c);
         helper_free(local_38);
         if (local_3c != (void *)0x0) {
@@ -3149,7 +3149,7 @@ LAB_0010489c:
       if (param_2 == 0x3e) {
         iVar9 = FUN_0011b178(*(undefined4 *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
         if (iVar9 == 0) {
-          FUN_001204f0(*(undefined4 *)(*param_1 + 0x94),(int32)STRING_TRAINING_00127D10,*param_1 + 0xc4);
+          FUN_001204f0((undefined4)((KHApp *)*param_1)->context,(int32)STRING_TRAINING_00127D10,*param_1 + 0xc4);
           FUN_0010f9a4(*(undefined4 *)(*param_1 + 0xa8));
 LAB_00102910:
           uVar10 = 0x6a;
@@ -3165,7 +3165,7 @@ LAB_00102910:
               *(undefined4 *)(*param_1 + 200) = 0;
             }
             iVar7 = *param_1;
-            FUN_001204f0(*(undefined4 *)(iVar7 + 0x94),*(undefined4 *)(iVar7 + 0xc4),iVar7 + 200);
+            FUN_001204f0((undefined4)((KHApp *)iVar7)->context,*(undefined4 *)(iVar7 + 0xc4),iVar7 + 200);
             uVar10 = 0x7f;
             goto LAB_00104de4;
           }
@@ -3199,7 +3199,7 @@ LAB_00101f40:
             return 0;
           }
           progress_reset(*(undefined4 *)(*param_1 + 0xa8));
-          FUN_001204f0(*(undefined4 *)(*param_1 + 0x94),(int32)STRING_TRAINING_00127D10,*param_1 + 0xc4);
+          FUN_001204f0((undefined4)((KHApp *)*param_1)->context,(int32)STRING_TRAINING_00127D10,*param_1 + 0xc4);
           goto LAB_00102910;
         }
         piVar4 = (int *)(*(int *)(*param_1 + 0xa8) + 0x52c);
@@ -3325,7 +3325,7 @@ LAB_001042b8:
                        as stores into local_dc[0..3] (the outgoing argument area) instead of passing them */
     FUN_001053a8(param_1,iVar9,5,local_74 + 0xb,local_74 + 6,local_74 + 1,3,uVar10,uVar11,local_dc[0],
                  local_dc[1],local_dc[2],local_dc[3]);
-    FUN_0012031c(*(undefined4 *)(*param_1 + 0x94),0);
+    FUN_0012031c((undefined4)((KHApp *)*param_1)->context,0);
     break;
   case 4:
     game_pause(*param_1);
@@ -3404,7 +3404,7 @@ LAB_001042b8:
     uVar10 = FUN_00107fd0(param_1,INTEGER_735,1).low;
     uVar11 = FUN_00107fd0(param_1,500,2).low;
     uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,0,0x21);
-    FUN_0010e210(*(undefined4 *)(*param_1 + 0x94),&local_78,local_a8 + 0xb);
+    FUN_0010e210((undefined4)((KHApp *)*param_1)->context,&local_78,local_a8 + 0xb);
     text_line_set_text(uVar10,local_a8[0xb]);
     helper_free(local_78);
     if (local_a8[0xb] != 0) {
@@ -3423,7 +3423,7 @@ LAB_00104da0:
     uVar10 = 0x10;
     goto LAB_00104360;
   case 6:
-    FUN_00120450(*(undefined4 *)(*param_1 + 0x94));
+    FUN_00120450((undefined4)((KHApp *)*param_1)->context);
     uVar10 = screen_stack_top(param_1);
     iVar7 = ui_element_find_child(uVar10,0x2d);
     if (iVar7 != 0) {
@@ -3438,7 +3438,7 @@ LAB_00104da0:
   case 7:
     goto LAB_0010438c;
   case 8:
-    FUN_0011d040(*(undefined4 *)(*param_1 + 0x94),WORD_HEXADECIMAL_21BF9442,WORD_HEXADECIMAL_3C5A569E);
+    FUN_0011d040((undefined4)((KHApp *)*param_1)->context,WORD_HEXADECIMAL_21BF9442,WORD_HEXADECIMAL_3C5A569E);
     uVar10 = 5;
 LAB_00104360:
     *(undefined4 *)(*param_1 + 0xcc) = uVar10;
@@ -3576,8 +3576,8 @@ LAB_001048a4:
     uVar10 = text_box_create(0,uVar14,uVar13,uVar10,local_38,param_1,iVar19);
     if (param_2 == 0xe || param_2 == 0xf) {
       text_table_get_text(*(undefined4 *)(*param_1 + 0x98),uVar11,&local_38);
-      FUN_0011ed3c(*(undefined4 *)(*param_1 + 0x94),&local_38);
-      FUN_0010e210(*(undefined4 *)(*param_1 + 0x94),&local_38,&local_3c);
+      FUN_0011ed3c((undefined4)((KHApp *)*param_1)->context,&local_38);
+      FUN_0010e210((undefined4)((KHApp *)*param_1)->context,&local_38,&local_3c);
       text_box_set_text(uVar10,local_3c,0);
       (*g_pHelperFuncs->free)(local_38);
       (*g_pHelperFuncs->free)(local_3c);
@@ -3623,7 +3623,7 @@ void FUN_001051d4(int param_1,int param_2)
   }
   if (bVar2 && param_2 == 5) {
     thunk_FUN_0011e154(uVar1);
-    FUN_0011d040(*(int *)(*(int *)(param_1 + 0x44) + 0x94),WORD_HEXADECIMAL_21BF9442,WORD_HEXADECIMAL_1FEB4DB8);
+    FUN_0011d040((int)((KHApp *)*(int *)(param_1 + 0x44))->context,WORD_HEXADECIMAL_21BF9442,WORD_HEXADECIMAL_1FEB4DB8);
     *(undefined4 *)(*(int *)(param_1 + 0x44) + 0xcc) = 0;
     return;
   }
@@ -5854,7 +5854,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
                                param_4);
     helper_free(name);
     wideText = helper_malloc(0x40);
-    FUN_0010e210(*(undefined4 *)(*param_1 + 0x94),(undefined4 *)&text,(int *)&wideText);
+    FUN_0010e210((undefined4)((KHApp *)*param_1)->context,(undefined4 *)&text,(int *)&wideText);
     helper_free(text);
     text_box_set_text(iVar5,(int)wideText,0);
     helper_free(wideText);
@@ -5942,10 +5942,10 @@ LAB_00108d50:
     iVar5 = WORD_HEXADECIMAL_0001F14C;
     *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x720) = 0;
     FUN_0011e6b8(*(int *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
-    FUN_0010faa8(*(int *)(*param_1 + 0x94),(int32)STRING_ISLAND);
-    FUN_0010faa8(*(int *)(*param_1 + 0x94),(int32)STRING_WONDERLAND);
-    FUN_0010faa8(*(int *)(*param_1 + 0x94),(int32)STRING_AGRABAH);
-    FUN_0010faa8(*(int *)(*param_1 + 0x94),(int32)STRING_CASTLE);
+    FUN_0010faa8((int)((KHApp *)*param_1)->context,(int32)STRING_ISLAND);
+    FUN_0010faa8((int)((KHApp *)*param_1)->context,(int32)STRING_WONDERLAND);
+    FUN_0010faa8((int)((KHApp *)*param_1)->context,(int32)STRING_AGRABAH);
+    FUN_0010faa8((int)((KHApp *)*param_1)->context,(int32)STRING_CASTLE);
     if (param_1[0x19] != 0) {
       (*g_pHelperFuncs->free)(param_1[0x19]);
       param_1[0x19] = 0;
@@ -6048,7 +6048,7 @@ void screen_stack_close_top(ScreenStack *stack,int32 redraw)
     stack->depth--;
     wasCurrent = (int32 *)app->field_d4 == screen;
     if (screen[0xf] == 2)
-      FUN_00120450(app->pObj94);
+      FUN_00120450(app->context);
     (*(code *)(*(int32 *)*screen))(screen);           /* destroy: vtable slot 0 */
     helper_free(screen);
     if (wasCurrent)
@@ -6056,7 +6056,7 @@ void screen_stack_close_top(ScreenStack *stack,int32 redraw)
     screen = (int32 *)screen_stack_top(stack);                  /* the screen below is the top now */
     if (screen != (int32 *)0x0) {
       if ((int32 *)app->field_d4 == screen)
-        FUN_00120450(app->pObj94);
+        FUN_00120450(app->context);
       (*(code *)(*(int32 *)(*screen + 0x20)))(screen);   /* resume: vtable +0x20 */
       if (redraw)
         ui_element_draw((UIElement *)screen);
@@ -6475,7 +6475,7 @@ void FUN_00109940(int param_1,int param_2)
                       (int)*(short *)(iVar5 + 0x7a)) / 2);
   }
   FUN_0010ea00(param_1);
-  FUN_001132a8(*(int *)(*(int *)(param_1 + 0x44) + 0x94));
+  FUN_001132a8((int)((KHApp *)*(int *)(param_1 + 0x44))->context);
   return;
 }
 
@@ -6981,7 +6981,7 @@ int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3)
     param_1[iVar1 + 0x86] = 0;
     iVar1 = iVar2;
   } while (iVar2 < 5);
-  iVar1 = FUN_0011ba0c(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_BASE_DOT_M3G);
+  iVar1 = FUN_0011ba0c((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_BASE_DOT_M3G);
   *(int *)(param_1[0x85] + 0x6c) = iVar1;
   if (iVar1 == 0) {
     iVar6 = -1;
@@ -6991,11 +6991,11 @@ int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3)
     pcVar5 = *(code **)(**(int **)(param_1[0x85] + 0x6c) + 0x28);
     (*pcVar5)(*(int **)(param_1[0x85] + 0x6c),WORD_HEXADECIMAL_1922F406,param_1,pcVar5,piVar3);
     if (*param_1 != 0) {
-      iVar1 = FUN_0011ae04(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_CHARACTER_GRP_001277DC,*param_1,0,
+      iVar1 = FUN_0011ae04((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_CHARACTER_GRP_001277DC,*param_1,0,
                            0);
       param_1[2] = iVar1;
       if (iVar1 != 0) {
-        iVar1 = FUN_0011ae04(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_GENERAL_SCRIPTS,*param_1,
+        iVar1 = FUN_0011ae04((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_GENERAL_SCRIPTS,*param_1,
                              0,0);
         param_1[3] = iVar1;
         if (iVar1 != 0) {
@@ -7017,7 +7017,7 @@ int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3)
               iVar1 = (int)character_create((Character *)0x0,(ISwerveObject *)local_1c,(char *)STRING_CHARACTER);
               param_1[0x7e] = iVar1;
               (**(code **)(*local_1c + 4))();
-              iVar2 = FUN_0011ae04(*(undefined4 *)(param_1[0x85] + 0x94),param_2,*param_1,0,0);
+              iVar2 = FUN_0011ae04((undefined4)((KHApp *)param_1[0x85])->context,param_2,*param_1,0,0);
               param_1[1] = iVar2;
               iVar1 = INTEGER_501;
               if (iVar2 != 0) {
@@ -7044,19 +7044,19 @@ LAB_0010a85c:
   }
 LAB_0010a894:
   p = helper_malloc(0x34);
-  FUN_001204f0(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_SORA_JUMP_DOT_QCP,p);
-  FUN_001204f0(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_SORA_HIT_DOT_QCP,(int)p + 4);
-  FUN_001204f0(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_ENEMY_HIT_DOT_QCP,(int)p + 8);
-  FUN_001204f0(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_SORA_SWIPE_DOT_QCP,(int)p + 0xc);
-  FUN_001204f0(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_BAD_DOT_MID,(int)p + 0x10);
-  FUN_001204f0(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_GOOD_DOT_MID,(int)p + 0x14);
-  FUN_001204f0(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_KEYBLADE_DOT_MID,(int)p + 0x18);
-  FUN_001204f0(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_EXPLODE_DOT_QCP,(int)p + 0x1c);
-  FUN_001204f0(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_WATER_DOT_QCP,(int)p + 0x20);
-  FUN_001204f0(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_THUD_DOT_QCP,(int)p + 0x24);
-  FUN_001204f0(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_TRANSITION_DOT_QCP,(int)p + 0x28);
-  FUN_001204f0(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_MAGIC_ALERT_DOT_MID,(int)p + 0x2c);
-  FUN_001204f0(*(undefined4 *)(param_1[0x85] + 0x94),(int32)STRING_MAGIC_CAST_DOT_QCP,(int)p + 0x30);
+  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_SORA_JUMP_DOT_QCP,p);
+  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_SORA_HIT_DOT_QCP,(int)p + 4);
+  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_ENEMY_HIT_DOT_QCP,(int)p + 8);
+  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_SORA_SWIPE_DOT_QCP,(int)p + 0xc);
+  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_BAD_DOT_MID,(int)p + 0x10);
+  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_GOOD_DOT_MID,(int)p + 0x14);
+  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_KEYBLADE_DOT_MID,(int)p + 0x18);
+  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_EXPLODE_DOT_QCP,(int)p + 0x1c);
+  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_WATER_DOT_QCP,(int)p + 0x20);
+  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_THUD_DOT_QCP,(int)p + 0x24);
+  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_TRANSITION_DOT_QCP,(int)p + 0x28);
+  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_MAGIC_ALERT_DOT_MID,(int)p + 0x2c);
+  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_MAGIC_CAST_DOT_QCP,(int)p + 0x30);
   uVar4 = FUN_0010bec4(0,p,0xd,1).low;
   *(undefined4 *)(param_1[0x85] + 0xbc) = uVar4;
   FUN_0010a03c(uVar4,*(undefined4 *)(*(int *)(param_1[0x85] + 0xa8) + 0x594));
@@ -7307,15 +7307,15 @@ ScriptSequence * script_sequence_create(ScriptSequence *sequence,char *text)
   sequence->next = 0;
                     /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4)) */
   app = (KHApp *)(*g_pHelperFuncs->GetAppInstance)();
-  sequence->count = string_split((int32)app->pObj94,text,(char *)STRING_CARRIAGE_RETURN_NEWLINE_00127780,(char **)0x0,0) - 1;
+  sequence->count = string_split((int32)app->context,text,(char *)STRING_CARRIAGE_RETURN_NEWLINE_00127780,(char **)0x0,0) - 1;
   lines = helper_malloc(sequence->count * 4 + 4);
-  string_split((int32)app->pObj94,text,(char *)STRING_CARRIAGE_RETURN_NEWLINE_00127780,lines,sequence->count + 1);
+  string_split((int32)app->context,text,(char *)STRING_CARRIAGE_RETURN_NEWLINE_00127780,lines,sequence->count + 1);
   sequence->times = helper_malloc(sequence->count * 4 + 4);
   sequence->commands = helper_malloc(sequence->count << 2);
   for (i = 0; i < sequence->count + 1; i++) {
     parts = helper_malloc(8);
-    string_split((int32)app->pObj94,lines[i],(char *)DATA_AT_00127784,parts,2);   /* ":" */
-    sequence->times[i] = FUN_00126858(string_to_float((int32)app->pObj94,parts[0]));
+    string_split((int32)app->context,lines[i],(char *)DATA_AT_00127784,parts,2);   /* ":" */
+    sequence->times[i] = FUN_00126858(string_to_float((int32)app->context,parts[0]));
     if (sequence->count != i) {
       sequence->commands[i] = script_command_create((ScriptCommand *)0x0);
       script_command_parse(sequence->commands[i],0,parts[1]);
@@ -7640,7 +7640,7 @@ LevelObject * level_object_create(LevelObject *object,ISwerveObject *node,char *
   object->kind = 0;
   object->node = node;
   (*node->pvt->AddRef)(node);
-  object->nameId = FUN_00113654((int32)object->app->pObj94,(int32)name);
+  object->nameId = FUN_00113654((int32)object->app->context,(int32)name);
   object->parent = (LevelObject *)0x0;
   object->field_10 = 0;
   object->field_34 = 1;
@@ -7846,7 +7846,7 @@ int * FUN_0010be14(int *param_1)
                         */
     iVar1 = (*g_pHelperFuncs->GetAppInstance)();
     *param_1 = iVar1;
-    iVar1 = FUN_0011b518(*(undefined4 *)(iVar1 + 0x94),(int32)STRING_LANGUAGE_DOT_M3G).low;
+    iVar1 = FUN_0011b518((undefined4)((KHApp *)iVar1)->context,(int32)STRING_LANGUAGE_DOT_M3G).low;
     param_1[1] = iVar1;
   }
   return param_1;
@@ -8008,32 +8008,31 @@ UIElement * ui_element_create(UIElement *element,int16 x,int16 y,int16 width,int
 }
 
 
-/* ==== 0x0010C218  (file offset 0x0C218)  FUN_0010c218 ================================================ */
-undefined4 * FUN_0010c218(undefined4 *param_1,undefined4 *param_2)
+/* ==== 0x0010C218  (file offset 0x0C218)  app_context_create ========================================== */
+/* GUESS: names. The constructor of the app's context (KHApp.context; 0x14 bytes, allocated when `context` is
+   0; returns 0 when out of memory): the object most of the game's functions take first, often without
+   reading it. It holds a Swerve Transform (ISwerve::CreateObject, its result in *error: kh_OnAppStart
+   passes &KHApp.nErr) and two sound sets, none yet. */
+AppContext * app_context_create(AppContext *context,int32 *error)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  if ((param_1 != (undefined4 *)0x0) ||
-     (param_1 = helper_malloc_2(0x14), param_1 != (undefined4 *)0x0)) {
-                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
-                        */
-    iVar1 = (*g_pHelperFuncs->GetAppInstance)();
-    param_1[3] = iVar1;
-    param_1[4] = 0;
+  KHApp *app;
+
+  if (context == (AppContext *)0x0 && (context = helper_malloc_2(0x14)) == (AppContext *)0x0)
+    return context;
+                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4)) */
+  context->app = app = (KHApp *)(*g_pHelperFuncs->GetAppInstance)();
+  context->transform = (ISwerveObject *)0x0;
                     /* swv21brew: ISwerve_CreateObject (0x0102479c, ISwerve vtbl[4] +0x10) on
                        GetAppInstance()->pSwerve (KHApp+0x64): creates a Transform (class 26 = 0x1a,
-                       swv_Create_Transform 0x0103b68c) into obj->+0x10. */
-    uVar2 = (*((KHApp *)iVar1)->pSwerve->pvt->CreateObject)
-                      (((KHApp *)iVar1)->pSwerve,SWV_TRANSFORM,(void **)(param_1 + 4));
-    *param_2 = uVar2;
-    param_1[1] = 0;
-    *param_1 = 3;
-    param_1[2] = 0;
-  }
-  return param_1;
+                       swv_Create_Transform 0x0103b68c) into context->transform. */
+  *error = (*app->pSwerve->pvt->CreateObject)(app->pSwerve,SWV_TRANSFORM,(void **)&context->transform);
+  context->sounds[0] = 0;
+  context->type = 3;
+  context->sounds[1] = 0;
+  return context;
 }
+
 
 /* ==== 0x0010C290  (file offset 0x0C290)  helper_free ================================================= */
 void helper_free(void *p)
@@ -8097,10 +8096,10 @@ void FUN_0010c2c4(int *param_1,int param_2)
     FUN_0010c73c(param_1[0x7c],1);
   }
   if (param_1[3] != 0) {
-    FUN_00121584(*(int *)(param_1[0x85] + 0x94),(int *)param_1[3],(int *)*param_1,1);
+    FUN_00121584((int)((KHApp *)param_1[0x85])->context,(int *)param_1[3],(int *)*param_1,1);
   }
   if (param_1[2] != 0) {
-    FUN_00121584(*(undefined4 *)(param_1[0x85] + 0x94),(int *)param_1[2],(int *)*param_1,1);
+    FUN_00121584((undefined4)((KHApp *)param_1[0x85])->context,(int *)param_1[2],(int *)*param_1,1);
   }
   if ((int *)*param_1 != (int *)0x0) {
     (**(code **)(*(int *)*param_1 + 4))();
@@ -8395,7 +8394,7 @@ void FUN_0010c92c(int param_1,int param_2)
   /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
      leftover (no caller sets it); Ghidra listed it as input */
   if (*(int *)(param_1 + 0x1f0) != 0) {
-    FUN_00121584(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(int *)(param_1 + 0x1f0),
+    FUN_00121584((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(int *)(param_1 + 0x1f0),
                  **(undefined4 **)(*(int *)(param_1 + 0x84) + 0xa4),0 /* not arguments, value leftovers: param_4 */);
   }
   if (*(int **)(param_1 + 0x1e0) != (int *)0x0) {
@@ -8583,7 +8582,7 @@ void FUN_0010cd2c(int param_1,int param_2)
   int *piVar1;
   
   if (*(int *)(param_1 + 8) != 0) {
-    FUN_00121584(*(undefined4 *)(*(int *)(param_1 + 4) + 0x94),*(int *)(param_1 + 8),
+    FUN_00121584((undefined4)((KHApp *)*(int *)(param_1 + 4))->context,*(int *)(param_1 + 8),
                  *(undefined4 *)(param_1 + 0xc),1 /* not arguments, value leftovers: param_4 */);
   }
   if (*(int **)(param_1 + 0xc) != (int *)0x0) {
@@ -8669,27 +8668,27 @@ void FUN_0010ce08(undefined4 *param_1,int param_2)
   return;
 }
 
-/* ==== 0x0010CEE4  (file offset 0x0CEE4)  FUN_0010cee4 ================================================ */
-void FUN_0010cee4(int param_1,int param_2)
+/* ==== 0x0010CEE4  (file offset 0x0CEE4)  app_context_destroy ========================================= */
+/* GUESS: names. The app's context's destructor: releases its Transform, destroys its sound sets
+   (FUN_0010ce08) and frees it when `freeIt` is set (the binary's tail jump to helper_free at 0x0010cf44).
+   Called by kh_OnAppStop. */
+void app_context_destroy(AppContext *context,int32 freeIt)
 
 {
-  if (*(int **)(param_1 + 0x10) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x10) + 4))();
+  if (context->transform != (ISwerveObject *)0x0)
+    (**(code **)(*(int32 *)context->transform + 4))(context->transform);
+  if (context->sounds[0] != 0) {
+    FUN_0010ce08((undefined4 *)context->sounds[0],1);
+    context->sounds[0] = 0;
   }
-  if (*(int *)(param_1 + 4) != 0) {
-    FUN_0010ce08(*(int *)(param_1 + 4),1);
-    *(undefined4 *)(param_1 + 4) = 0;
+  if (context->sounds[1] != 0) {
+    FUN_0010ce08((undefined4 *)context->sounds[1],1);
+    context->sounds[1] = 0;
   }
-  if (*(int *)(param_1 + 8) != 0) {
-    FUN_0010ce08(*(int *)(param_1 + 8),1);
-    *(undefined4 *)(param_1 + 8) = 0;
-  }
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
-  return;
+  if (freeIt != 0)
+    helper_free(context);
 }
+
 
 /* ==== 0x0010CF4C  (file offset 0x0CF4C)  helper_malloc =============================================== */
 void * helper_malloc(uint32 size)
@@ -8782,7 +8781,7 @@ void progress_add_experience(Progress *progress,int32 amount)
     message = next->experienceNeeded;   /* as in the binary: r2 still holds the threshold (0x0010d02c) */
     break;
   }
-  FUN_0011d040((int32)progress->app->pObj94,WORD_HEXADECIMAL_21BF9442,(void *)message);
+  FUN_0011d040((int32)progress->app->context,WORD_HEXADECIMAL_21BF9442,(void *)message);
   progress->level++;
 }
 
@@ -8887,7 +8886,7 @@ void progress_add_munny(Progress *progress,int32 amount)
   /* Ghidra: (**(code **)(*(int *)(-53860 + 0x10d260) + 0x6c))(...): -53860 + 0x10d260 = 0x000ffffc,
      the helper table pointer at module base - 4, slot +0x6c = free (here and for wideText below) */
   (*g_pHelperFuncs->free)(label);
-  FUN_0010e210(app->pObj94,&text,&wideText);
+  FUN_0010e210(app->context,&text,&wideText);
   helper_free(text);
   if (wideText != (void *)0x0) {
     FUN_00105538(app->field_d4,wideText,3);
@@ -8977,7 +8976,7 @@ void FUN_0010d3a4(int param_1,undefined4 param_2)
 
 /* ==== 0x0010D4DC  (file offset 0x0D4DC)  string_to_float ============================================= */
 /* GUESS: names. The number written in `text` (the narrow text widened, then BREW's wstrtofloat), as a
-   float's bits; 0 when out of memory. `context` (the app's pObj94) is not read. */
+   float's bits; 0 when out of memory. `context` (the app's context) is not read. */
 uint32 string_to_float(int32 context,char *text)
 
 {
@@ -9110,12 +9109,12 @@ LAB_0010d710:
       uVar3 = float_multiply(uVar2,uVar3);
       uVar3 = float_divide(uVar3,iVar1);
       *(undefined4 *)(param_1 + 0xb8) = uVar3;
-      uVar3 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),local_2c,local_28,uVar5,
+      uVar3 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,local_2c,local_28,uVar5,
                            uVar6).low;
       local_30 = float_add(uVar3,iVar1 + -0x1140000);
       uVar3 = motion_entity_get_heading((MotionEntity *)*(undefined4 *)(param_1 + 0x20));
       local_30 = float_reverse_subtract(uVar3,local_30);
-      wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),(uint32 *)&local_30);
+      wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,(uint32 *)&local_30);
       motion_entity_start_turn((MotionEntity *)*(undefined4 *)(param_1 + 0x20),local_30,0x3f800000);
       FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x4c),0);
       *(int *)(param_1 + 0x168) = param_2 + 200;
@@ -9196,12 +9195,12 @@ undefined4 FUN_0010d7c4(int param_1,int param_2)
       }
       FUN_00113524(&local_1c,param_1);
       level_object_get_position((uint32 *)&local_28,(LevelObject *)*(undefined4 *)(param_1 + 0x20));
-      uVar2 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),local_1c,local_18,
+      uVar2 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,local_1c,local_18,
                            local_28,local_24).low;
       local_2c = float_add(uVar2,FLOAT_180);
       uVar2 = motion_entity_get_heading((MotionEntity *)*(undefined4 *)(param_1 + 0x20));
       local_2c = float_reverse_subtract(uVar2,local_2c);
-      wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),(uint32 *)&local_2c);
+      wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,(uint32 *)&local_2c);
       motion_entity_start_turn((MotionEntity *)*(undefined4 *)(param_1 + 0x20),local_2c,0x3f800000);
       FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x48),0);
       iVar1 = animations_get_duration((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),
@@ -9247,7 +9246,7 @@ undefined4 FUN_0010d95c(int param_1,int param_2)
     }
     FUN_001201cc(*(undefined4 *)(param_1 + 0x2c),0);
     thunk_FUN_0011fd90(*(undefined4 *)(param_1 + 0x2c),local_2c,local_28,uStack_24);
-    uVar2 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),local_20,local_1c,local_2c
+    uVar2 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,local_20,local_1c,local_2c
                          ,local_28).low;
     uVar2 = float_add(uVar2,FLOAT_180);
     FUN_00120290(*(undefined4 *)(param_1 + 0x2c),uVar2);
@@ -9325,14 +9324,14 @@ void FUN_0010db04(int param_1,undefined4 param_2)
   }
   else {
     level_object_get_position((uint32 *)((undefined4 *)(param_1 + 0x218)),(LevelObject *)*(int *)(param_1 + 0x20c));
-    uVar14 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
+    uVar14 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                           *(undefined4 *)(param_1 + 0x68),*(undefined4 *)(param_1 + 0x6c),
                           *(undefined4 *)(param_1 + 0x218),*(undefined4 *)(param_1 + 0x21c));
     FUN_00120290(param_1,(int)uVar14.low);
     uVar4 = float_subtract(*(uint *)(param_1 + 0x70),*(uint *)(param_1 + 0x220));
     uVar5 = float_subtract(*(uint *)(param_1 + 0x6c),*(uint *)(param_1 + 0x21c));
     uVar6 = float_subtract(*(uint *)(param_1 + 0x68),*(uint *)(param_1 + 0x218));
-    uVar4 = vector_length3(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),uVar6,uVar5,uVar4);
+    uVar4 = vector_length3((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,uVar6,uVar5,uVar4);
   }
   iVar3 = *(int *)(param_1 + 0x228);
   if (iVar3 != 7) {
@@ -9366,7 +9365,7 @@ void FUN_0010db04(int param_1,undefined4 param_2)
     iVar11 = animations_find((Animations *)iVar10,iVar3);
 LAB_0010dde4:
     if (*(int *)(param_1 + 0x230) != 0) {
-      FUN_001147ec(&local_2c,*(int *)(*(int *)(param_1 + 0x84) + 0x94),*(int **)(param_1 + 0x1ec));
+      FUN_001147ec(&local_2c,(int)((KHApp *)*(int *)(param_1 + 0x84))->context,*(int **)(param_1 + 0x1ec));
       FUN_001201cc(*(int *)(param_1 + 0x230),1);
       thunk_FUN_0011fd90(*(int *)(param_1 + 0x230),local_2c,local_28,local_24);
       FUN_00120290(*(int *)(param_1 + 0x230),*(undefined4 *)(param_1 + 0x140));
@@ -9376,7 +9375,7 @@ LAB_0010dde4:
           uVar5 = float_subtract(*(uint *)(param_1 + 0x220),local_24);
           uVar6 = float_subtract(*(uint *)(param_1 + 0x21c),local_28);
           uVar9 = float_subtract(*(uint *)(param_1 + 0x218),local_2c);
-          uVar5 = vector_length3(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),uVar9,uVar6,uVar5);
+          uVar5 = vector_length3((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,uVar9,uVar6,uVar5);
           uVar5 = float_multiply(uVar5,FLOAT_100);
           uVar5 = FUN_00126858(uVar5);
           *(uint *)(param_1 + 0x2a0) = uVar5;
@@ -9518,9 +9517,9 @@ boolean kh_HandleEvent(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
       return '\x01';
     }
     if (eCode == 2) {
-      uVar5 = *(undefined4 *)pMe->pObj94;
-      FUN_00120450(pMe->pObj94);
-      *(undefined4 *)pMe->pObj94 = uVar5;
+      uVar5 = *(undefined4 *)pMe->context;
+      FUN_00120450(pMe->context);
+      *(undefined4 *)pMe->context = uVar5;
       engine_memory_set_caching(pMe->pSwerve,1);
       pMe->bSuspended = 1;
       FUN_0012056c(pMe,1);
@@ -9528,7 +9527,7 @@ boolean kh_HandleEvent(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
     }
     if (eCode == 3) {
       FUN_0011e154(pMe);
-      FUN_0012031c(pMe->pObj94,*(undefined4 *)pMe->pObj94);
+      FUN_0012031c(pMe->context,*(undefined4 *)pMe->context);
       engine_memory_set_caching(pMe->pSwerve,1);
       return '\x01';
     }
@@ -9631,10 +9630,10 @@ void FUN_0010e280(int param_1,undefined4 *param_2,undefined4 *param_3)
   local_24 = float_subtract(*param_3,*param_2);
   local_20 = float_subtract(param_3[1],param_2[1]);
   local_1c = float_subtract(param_3[2],param_2[2]);
-  uVar1 = vector_length(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),&local_24);
+  uVar1 = vector_length((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,&local_24);
   uVar6 = FLOAT_1_POINT_1;
   uVar1 = float_add(uVar1,FLOAT_1_POINT_1);
-  FUN_0011442c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),&local_24);
+  FUN_0011442c((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,&local_24);
   local_30 = *param_2;
   uStack_2c = param_2[1];
   uStack_28 = param_2[2];
@@ -9656,12 +9655,12 @@ void FUN_0010e280(int param_1,undefined4 *param_2,undefined4 *param_3)
         *param_3 = uVar3;
         uVar5 = float_add(param_2[1],uVar4);
         param_3[1] = uVar5;
-        uVar6 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
+        uVar6 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                              *(undefined4 *)(*(int *)(param_1 + 0x1cc) + 0x68),
                              *(undefined4 *)(*(int *)(param_1 + 0x1cc) + 0x6c),uVar3,uVar5 /* not arguments, value leftovers: uVar6, uVar4,uVar1 */).low;
         uVar6 = float_add(uVar6,FLOAT_90);
         *(undefined4 *)(param_1 + 0x1fc) = uVar6;
-        wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),(uint32 *)(param_1 + 0x1fc));
+        wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,(uint32 *)(param_1 + 0x1fc));
       }
     }
   }
@@ -10269,7 +10268,7 @@ void FUN_0010ed54(int param_1,int param_2,undefined4 param_3)
   
   if (param_2 != 0) {
     local_10 = 0;
-    FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x214) + 0x94),(int *)param_2,param_3,&local_10)
+    FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x214))->context,(int *)param_2,param_3,&local_10)
     ;
     if (local_10 != 0) {
       iVar2 = 0;
@@ -10329,7 +10328,7 @@ LAB_0010ee88:
       *(undefined4 *)(param_1 + 0x90) = 0x100;
       *(undefined4 *)(param_1 + 0xa4) = 0;
     }
-    FUN_00120450(*(undefined4 **)(param_1 + 0x94));
+    FUN_00120450((undefined4 *)((KHApp *)param_1)->context);
   }
   if (*(int *)(param_1 + 0x90) != 0) {
     return;
@@ -10519,7 +10518,7 @@ FUN_0010f2e8(int param_1,uint param_2,undefined4 param_3,uint param_4,undefined4
   uVar8 = 6 < param_7;
   if ((param_7 == 7) && (uVar8 = true, uVar9 = param_2, *(int *)(param_1 + 0x110) != 0))
   goto LAB_0010f4c0;
-  FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),*(undefined4 *)(param_1 + 4),
+  FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,*(undefined4 *)(param_1 + 4),
                *(undefined4 *)(param_1 + 8),*(undefined4 *)(param_1 + 0x10),
                *(undefined4 *)(param_1 + 0x14) /* not arguments, value leftovers: param_3,param_4 */);
   motion_entity_get_heading((MotionEntity *)*(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xa4) + 0x1f8));
@@ -10617,7 +10616,7 @@ void FUN_0010f1fc(int32 character)
   int32 object = FUN_00112dbc(*(int32 *)(*(int32 *)(character + 0x84) + 0xa4),WORD_HEXADECIMAL_21BF9442);
 
   FUN_0010ed54(*(int32 *)(*(int32 *)(character + 0x84) + 0xa4),*(int32 *)(object + 8),WORD_HEXADECIMAL_0493FC17);
-  FUN_0012031c(*(int **)(*(int32 *)(character + 0x84) + 0x94),2);
+  FUN_0012031c((int *)((KHApp *)*(int32 *)(character + 0x84))->context,2);
 }
 
 /* ==== 0x0010F4D0  (file offset 0x0F4D0)  FUN_0010f4d0 ================================================ */
@@ -10711,12 +10710,12 @@ void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4
     uVar5 = WORD_HEXADECIMAL_0B7E4D24;
     if (!(bool)uVar8 || (bool)uVar10) {
       *(undefined4 *)(param_1 + 0x14) = 0;
-      FUN_0011d040(*(int *)(*(int *)(param_1 + 0x20) + 0x94),
+      FUN_0011d040((int)((KHApp *)*(int *)(param_1 + 0x20))->context,
                    *(undefined4 *)(*(int *)(param_1 + 4) + 0xc),pvVar2);
       *(undefined4 *)(param_1 + 0x44) = 8;
       return;
     }
-    FUN_0011d040(*(int *)(*(int *)(param_1 + 0x20) + 0x94),*(undefined4 *)(*(int *)(param_1 + 4) + 0xc),
+    FUN_0011d040((int)((KHApp *)*(int *)(param_1 + 0x20))->context,*(undefined4 *)(*(int *)(param_1 + 4) + 0xc),
                  (void *)uVar5);
     return;
   }
@@ -10740,7 +10739,7 @@ LAB_0010f714:
     if (!(bool)uVar8 || (bool)uVar10) {
       *(undefined4 *)(**(int **)(*(int *)(param_1 + 0x24) + 0x120) + 0x14) = 0;
       FUN_0011cbc4(**(int **)(*(int *)(param_1 + 0x24) + 0x120),*(int *)(param_1 + 0x74),0);
-      FUN_0011d040(*(int *)(*(int *)(param_1 + 0x20) + 0x94),
+      FUN_0011d040((int)((KHApp *)*(int *)(param_1 + 0x20))->context,
                    *(undefined4 *)(*(int *)(param_1 + 4) + 0xc),pvVar2);
       *(undefined4 *)(param_1 + 0x44) = 8;
       *(undefined4 *)(**(int **)(*(int *)(param_1 + 0x24) + 0x120) + 0x44) = 3;
@@ -10980,7 +10979,7 @@ void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param
   uVar2 = dVar2.low;
   local_28 = FUN_0012479c(uVar2,dVar2.high);
   FUN_0010f244(param_1,&local_48);
-  iVar3 = FUN_00113cfc(*(undefined4 *)(*param_1 + 0x94),0xf);
+  iVar3 = FUN_00113cfc((undefined4)((KHApp *)*param_1)->context,0xf);
   iVar9 = 0;
   uVar2 = param_9 ^ 0x80000000;
   local_38 = float_add(param_5,param_10);
@@ -11134,7 +11133,7 @@ uint32 planar_distance_squared_2(void *object,uint32 x1,uint32 y1,uint32 z1,uint
    It stores part n while n <= maxParts, one more than the array has room for, so a text with more
    parts than maxParts writes past the array (research_notes/decomp/GAME_BUGS.md); its callers pass the
    count they got, except script_sequence_create, which splits each line at ":" into 2. `context` (the
-   app's pObj94) is not read. Written from its disassembly (0x00110084 - 0x0011017c). */
+   app's context) is not read. Written from its disassembly (0x00110084 - 0x0011017c). */
 int32 string_split(int32 context,char *text,char *separator,char **parts,int32 maxParts)
 
 {
@@ -11471,7 +11470,7 @@ void FUN_00110860(int param_1,int param_2)
     param_2 = *(int *)(param_1 + 0x10c);
     iVar1 = *(int *)(param_1 + 0xfc);
   }
-  FUN_001108ac(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),param_2,iVar1);
+  FUN_001108ac((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,param_2,iVar1);
   return;
 }
 
@@ -11559,7 +11558,7 @@ int32 script_command_run(ScriptCommand *command)
   game = (Game *)app->pGame;
   player = game->character;
   hud = hud;
-  context = (int32)app->pObj94;
+  context = (int32)app->context;
                     /* helper[4] int strcmp(const char *a, const char *b), helper[27] void free(void *p)
                        (AEEHelperFuncs +0x10, +0x6c, via *(base-4)) */
   switch (command->type) {
@@ -12379,9 +12378,9 @@ void kh_OnAppStop(KHApp *pMe)
     FUN_0010cda4(pMe->pObj98,1);
     pMe->pObj98 = (void *)0x0;
   }
-  if (pMe->pObj94 != (void *)0x0) {
-    FUN_0010cee4(pMe->pObj94,1);
-    pMe->pObj94 = (void *)0x0;
+  if (pMe->context != (void *)0x0) {
+    app_context_destroy(pMe->context,1);
+    pMe->context = (void *)0x0;
   }
   if (pMe->progress != (void *)0x0) {
     FUN_001216c4(pMe->progress);
@@ -12682,7 +12681,7 @@ undefined4 FUN_00112e20(int param_1,undefined4 param_2)
     uVar2 = *(undefined4 *)(param_1 + 8);
   }
   else {
-    uVar2 = FUN_00113654(*(undefined4 *)(*(int *)(param_1 + 4) + 0x94),param_2);
+    uVar2 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 4))->context,param_2);
     uVar2 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 4) + 0xa4),uVar2);
   }
   return uVar2;
@@ -12748,7 +12747,7 @@ void FUN_00113030(int param_1,undefined4 param_2,uint param_3,uint param_4,undef
     FUN_001201cc(*(int *)(param_1 + 0x11c),1);
     *(undefined4 *)(*(int *)(param_1 + 0x11c) + 0x34) = 1;
     thunk_FUN_0011fd90(*(int *)(param_1 + 0x11c),local_20,local_1c,uStack_18);
-    uVar5 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_20,local_1c,param_3,
+    uVar5 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_20,local_1c,param_3,
                          param_4);
     FUN_00120290(*(int *)(param_1 + 0x11c),(int)uVar5.low);
     uVar1 = float_subtract(param_3,local_20);
@@ -13001,10 +13000,10 @@ void FUN_001135dc(int param_1)
   int local_c;
   
   local_c = 0;
-  FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
+  FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_39B9295D,&local_c /* not arguments, value leftovers: param_3 */);
   if (local_c != 0) {
-    uVar1 = FUN_00113654(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_c);
+    uVar1 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_c);
     uVar1 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0xa4),uVar1);
     *(undefined4 *)(param_1 + 0x1cc) = uVar1;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -13112,8 +13111,8 @@ int32 animations_find(Animations *animations,int32 userId)
 /* ==== 0x001137D4  (file offset 0x137D4)  vector_length =============================================== */
 /* GUESS: name. The length of a 3-component float vector: sqrt(x*x + y*y + z*z), as
    float_sqrt(float_add(z*z, float_add(y*y, x*x))) (the square root is a tail jump at 0x0011381c).
-   pObj94 (the KHApp's +0x94 object) is not read. Ghidra listed float_sqrt's body here. */
-uint32 vector_length(void *pObj94,uint32 *vector)
+   `context` (KHApp.context) is not read. Ghidra listed float_sqrt's body here. */
+uint32 vector_length(void *context,uint32 *vector)
 
 {
   uint32 sum = float_multiply(vector[0],vector[0]);
@@ -13125,8 +13124,8 @@ uint32 vector_length(void *pObj94,uint32 *vector)
 /* ==== 0x00113820  (file offset 0x13820)  vector_length3 ============================================== */
 /* GUESS: name. The length sqrt(x*x + y*y + z*z) of a vector given by its 3 float components, as
    float_sqrt(float_add(z*z, float_add(y*y, x*x))) (the square root is a tail jump at 0x00113868).
-   pObj94 (the KHApp's +0x94 object) is not read. Ghidra listed float_sqrt's body here. */
-uint32 vector_length3(void *pObj94,uint32 x,uint32 y,uint32 z)
+   `context` (KHApp.context) is not read. Ghidra listed float_sqrt's body here. */
+uint32 vector_length3(void *context,uint32 x,uint32 y,uint32 z)
 
 {
   uint32 sum = float_multiply(x,x);
@@ -13572,12 +13571,12 @@ LAB_0011400c:
 LAB_00114080:
                     float_compare_equal(uVar3,0);
                     if (!(bool)uVar11) {
-                      uVar13 = FUN_00113374(*(undefined4 *)(param_1[0xd] + 0x94),uVar5,uVar7,
+                      uVar13 = FUN_00113374((undefined4)((KHApp *)param_1[0xd])->context,uVar5,uVar7,
                                             local_58,uVar9);
                       local_60 = float_subtract(uVar13.low,FLOAT_90);
-                      wrap_angle(*(undefined4 *)(param_1[0xd] + 0x94),(uint32 *)&local_60);
+                      wrap_angle((undefined4)((KHApp *)param_1[0xd])->context,(uint32 *)&local_60);
                       local_64 = float_subtract(local_60,param_6);
-                      wrap_angle(*(undefined4 *)(param_1[0xd] + 0x94),(uint32 *)&local_64);
+                      wrap_angle((undefined4)((KHApp *)param_1[0xd])->context,(uint32 *)&local_64);
                       float_compare_greater(local_64,0);
                       if (!(bool)uVar12 || (bool)uVar11) {
                         return local_5c;
@@ -13655,7 +13654,7 @@ int32 text_table_get_text(TextTable *table,int32 textId,char **text)
 {
   if (table->source == (int *)0x0)
     return (int32)table;
-  return FUN_0011448c((undefined4)table->app->pObj94,table->source,textId,(undefined4 *)text);
+  return FUN_0011448c((undefined4)table->app->context,table->source,textId,(undefined4 *)text);
 }
 
 
@@ -13811,7 +13810,7 @@ void FUN_001145b4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *
   local_10 = 0;
   FUN_00114520(param_1,param_2,param_3,&local_10);
   if (local_10 != 0) {
-    uVar1 = string_to_float(*(undefined4 *)(*(int *)(param_1 + 0xc) + 0x94),local_10);
+    uVar1 = string_to_float((undefined4)((KHApp *)*(int *)(param_1 + 0xc))->context,local_10);
     *param_4 = uVar1;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(local_10);
@@ -13851,7 +13850,7 @@ undefined4 FUN_00114638(int param_1)
       iVar3 = iVar3 + 1;
     }
   }
-  puVar2 = (undefined4 *)FUN_00113cfc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),1);
+  puVar2 = (undefined4 *)FUN_00113cfc((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,1);
   
   iVar4 = FUN_00126858(float_multiply(*puVar2,FLOAT_1000));
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -13901,9 +13900,9 @@ void text_table_get_wide_text(TextTable *table,int32 textId,AECHAR **text)
   if (table->source == (int *)0x0)
     return;
   narrow = (char *)0x0;
-  FUN_0011448c((undefined4)table->app->pObj94,table->source,textId,(undefined4 *)&narrow);
+  FUN_0011448c((undefined4)table->app->context,table->source,textId,(undefined4 *)&narrow);
   if (narrow != (char *)0x0) {
-    FUN_0010e210((undefined4)table->app->pObj94,(undefined4 *)&narrow,(int *)text);
+    FUN_0010e210((undefined4)table->app->context,(undefined4 *)&narrow,(int *)text);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(narrow);
   }
@@ -14111,7 +14110,7 @@ int32 combat_region_hit_enemies(CombatRegion *region,int32 part,uint32 damage,ui
               (region->enemies[i],part,damage,x,y,z,playerState);
   if (!combat_region_all_enemies_defeated(region) || region->enemiesLeftInWave != 0)
     return 0;
-  FUN_0011d040((int32)region->app->pObj94,region->nameId,
+  FUN_0011d040((int32)region->app->context,region->nameId,
                (void *)(region->wavesLeft != 0 ? WORD_HEXADECIMAL_11E3EE3E : WORD_HEXADECIMAL_14F1CDC1));
   region->state = 1;
   return 1;
@@ -14166,40 +14165,40 @@ void FUN_00114c00(int param_1,undefined4 param_2,undefined4 param_3,int param_4)
   *(undefined4 *)(param_1 + 0x94) = 0xffffffff;
   *(undefined4 *)(param_1 + 0x98) = 0;
   local_10 = param_4;
-  FUN_001145b4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_001145b4((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_2F1AAC89,param_1 + 8);
-  FUN_001145b4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_001145b4((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_3D9EB884,param_1 + 0xc);
-  FUN_001145b4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_001145b4((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_3CCB2BC1,param_1 + 0x10);
-  FUN_001145b4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_001145b4((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_2E46DCB0,param_1 + 0x14);
-  FUN_001145b4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_001145b4((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_13ADA166,param_1 + 0x18);
-  FUN_00114610(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_00114610((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_3F01176F,param_1 + 0x84);
-  FUN_00114610(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_00114610((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_3D388F5A,param_1 + 0x8c);
-  FUN_00114610(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_00114610((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_2345879A,param_1 + 0x9c);
-  FUN_00114610(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_00114610((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_01337FE6,param_1 + 0x94);
-  FUN_00114610(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_00114610((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),FOUR_CHARACTER_TAG_0KRY,param_1 + 0xc0);
-  FUN_00114610(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_00114610((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_39E539EA,param_1 + 0xc4);
-  FUN_001145b4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_001145b4((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_3975D3E2,param_1 + 200);
-  FUN_001145b4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_001145b4((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_143E4B90,param_1 + 0xcc);
-  FUN_001145b4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_001145b4((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_1D6B0C6A,param_1 + 0xd0);
   *(undefined4 *)(param_1 + 0x1c) = 0;
   local_10 = 0;
-  FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_0AFEF300,&local_10);
   if (local_10 != 0) {
-    uVar1 = FUN_00113654(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),local_10);
+    uVar1 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,local_10);
     uVar1 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0xa4),uVar1);
     *(undefined4 *)(param_1 + 0x1c) = uVar1;
     if (local_10 != 0) {
@@ -14240,22 +14239,22 @@ void FUN_00114c00(int param_1,undefined4 param_2,undefined4 param_3,int param_4)
   *(undefined4 *)(param_1 + 0x74) = uVar1;
   uVar1 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_139B6934);
   *(undefined4 *)(param_1 + 0x78) = uVar1;
-  uVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  uVar1 = FUN_00119b0c((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                        *(undefined4 *)(*(int *)(param_1 + 4) + 8),(int32)STRING_ROTTOCHARACTER).low;
   *(undefined4 *)(param_1 + 0xa4) = uVar1;
-  uVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  uVar1 = FUN_00119b0c((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                        *(undefined4 *)(*(int *)(param_1 + 4) + 8),(int32)STRING_DOHITBOSS).low;
   *(undefined4 *)(param_1 + 0xa8) = uVar1;
-  uVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  uVar1 = FUN_00119b0c((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                        *(undefined4 *)(*(int *)(param_1 + 4) + 8),(int32)STRING_DOMAGICHITBOSS).low;
   *(undefined4 *)(param_1 + 0xac) = uVar1;
-  uVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  uVar1 = FUN_00119b0c((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                        *(undefined4 *)(*(int *)(param_1 + 4) + 8),(int32)STRING_SWITCHTARGETS).low;
   *(undefined4 *)(param_1 + 0xb0) = uVar1;
-  uVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  uVar1 = FUN_00119b0c((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                        *(undefined4 *)(*(int *)(param_1 + 4) + 8),(int32)STRING_NOBALLSONMAGIC).low;
   *(undefined4 *)(param_1 + 0xbc) = uVar1;
-  uVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+  uVar1 = FUN_00119b0c((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                        *(undefined4 *)(*(int *)(param_1 + 4) + 8),(int32)STRING_NOBALLSONHIT).low;
   *(undefined4 *)(param_1 + 0xb8) = uVar1;
   if (*(int *)(param_1 + 0xb0) != 0) {
@@ -14327,7 +14326,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   command->owner = owner;
                     /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4)) */
   command->app = app = (KHApp *)(*g_pHelperFuncs->GetAppInstance)();
-  context = (int32)app->pObj94;
+  context = (int32)app->context;
   count = string_split(context,text,(char *)DATA_AT_0012710C,(char **)0x0,0);   /* " " */
   words = helper_malloc(count << 2);
   string_split(context,text,(char *)DATA_AT_0012710C,words,count);
@@ -15362,41 +15361,41 @@ void combat_region_setup(CombatRegion *region,int32 context)
   int32 i;
 
   FUN_00118910((int32)region,context);
-  if ((int32)FUN_00119b0c(region->app->pObj94,region->node,(int32)STRING_SOLDIER).low != 0)
+  if ((int32)FUN_00119b0c(region->app->context,region->node,(int32)STRING_SOLDIER).low != 0)
     type = 3;
-  else if ((int32)FUN_00119b0c(region->app->pObj94,region->node,(int32)STRING_FLYINGSOLDIER).low != 0)
+  else if ((int32)FUN_00119b0c(region->app->context,region->node,(int32)STRING_FLYINGSOLDIER).low != 0)
     type = 4;
-  else if ((int32)FUN_00119b0c(region->app->pObj94,region->node,(int32)STRING_FLYINGMOOK).low == 1)
+  else if ((int32)FUN_00119b0c(region->app->context,region->node,(int32)STRING_FLYINGMOOK).low == 1)
     type = 2;
-  else if ((int32)FUN_00119b0c(region->app->pObj94,region->node,(int32)STRING_PURPLECROC).low == 1)
+  else if ((int32)FUN_00119b0c(region->app->context,region->node,(int32)STRING_PURPLECROC).low == 1)
     type = 5;
-  else if ((int32)FUN_00119b0c(region->app->pObj94,region->node,(int32)STRING_UMBRELLABIRD).low == 1)
+  else if ((int32)FUN_00119b0c(region->app->context,region->node,(int32)STRING_UMBRELLABIRD).low == 1)
     type = 6;
-  else if ((int32)FUN_00119b0c(region->app->pObj94,region->node,(int32)STRING_BANDIT).low == 1)
+  else if ((int32)FUN_00119b0c(region->app->context,region->node,(int32)STRING_BANDIT).low == 1)
     type = 7;
-  else if ((int32)FUN_00119b0c(region->app->pObj94,region->node,(int32)STRING_POTSPIDER).low == 1)
+  else if ((int32)FUN_00119b0c(region->app->context,region->node,(int32)STRING_POTSPIDER).low == 1)
     type = 8;
-  else if ((int32)FUN_00119b0c(region->app->pObj94,region->node,(int32)STRING_MUMMY).low == 1)
+  else if ((int32)FUN_00119b0c(region->app->context,region->node,(int32)STRING_MUMMY).low == 1)
     type = 9;
-  else if ((int32)FUN_00119b0c(region->app->pObj94,region->node,(int32)STRING_DARKBALL).low == 1)
+  else if ((int32)FUN_00119b0c(region->app->context,region->node,(int32)STRING_DARKBALL).low == 1)
     type = 10;
-  else if ((int32)FUN_00119b0c(region->app->pObj94,region->node,(int32)STRING_PIGSOLDIER).low == 1)
+  else if ((int32)FUN_00119b0c(region->app->context,region->node,(int32)STRING_PIGSOLDIER).low == 1)
     type = 0xb;
   else
     type = 1;                                     /* no name matched */
   region->enemyCount = type == 1 ? 2 : 1;
-  FUN_00114610((int32)region->app->pObj94,region->node,WORD_HEXADECIMAL_369F84CA,(uint32 *)&region->waves);
+  FUN_00114610((int32)region->app->context,region->node,WORD_HEXADECIMAL_369F84CA,(uint32 *)&region->waves);
   region->wavesLeft = region->waves;
-  FUN_00114610((int32)region->app->pObj94,region->node,WORD_HEXADECIMAL_0B63154F,(uint32 *)&region->enemiesPerWave);
+  FUN_00114610((int32)region->app->context,region->node,WORD_HEXADECIMAL_0B63154F,(uint32 *)&region->enemiesPerWave);
   if (region->enemyCount > region->enemiesPerWave)
     region->enemyCount = region->enemiesPerWave;
-  FUN_001145b4((int32)region->app->pObj94,region->node,WORD_HEXADECIMAL_2E46DCB0,(uint32 *)&region->enemyMaximumHealth);
+  FUN_001145b4((int32)region->app->context,region->node,WORD_HEXADECIMAL_2E46DCB0,(uint32 *)&region->enemyMaximumHealth);
   if (float_compare_equal(region->enemyMaximumHealth,0), *(float *)&region->enemyMaximumHealth == 0.0f)
     region->enemyMaximumHealth = FLOAT_5;
-  FUN_001145b4((int32)region->app->pObj94,region->node,WORD_HEXADECIMAL_13ADA166,(uint32 *)&region->field_11c);
+  FUN_001145b4((int32)region->app->context,region->node,WORD_HEXADECIMAL_13ADA166,(uint32 *)&region->field_11c);
   if (float_compare_equal(region->field_11c,0), *(float *)&region->field_11c == 0.0f)
     region->field_11c = 0x3f800000;              /* 1.0f */
-  FUN_00114610((int32)region->app->pObj94,region->node,WORD_HEXADECIMAL_26B58FD6,(uint32 *)&region->field_120);
+  FUN_00114610((int32)region->app->context,region->node,WORD_HEXADECIMAL_26B58FD6,(uint32 *)&region->field_120);
   region->enemies = helper_malloc(region->enemyCount << 2);
   for (i = 0; i < region->enemyCount; i++)
     region->enemies[i] = enemy_create((Enemy *)0x0,i + 1,region,type);
@@ -15445,13 +15444,13 @@ undefined8 FUN_001180c4(int param_1,uint param_2)
   motion_entity_turn((MotionEntity *)param_1,*(undefined4 *)(param_1 + 0x124));
   FUN_00118910(param_1,param_2);
   local_20 = 0;
-  FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(int **)(param_1 + 8),WORD_HEXADECIMAL_3488ACED,
+  FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(int **)(param_1 + 8),WORD_HEXADECIMAL_3488ACED,
                &local_20);
   uVar5 = FLOAT_1000;
   if (local_20 != 0) {
     iVar7 = 0;
     iVar6 = (int32)STRING_CARRIAGE_RETURN_NEWLINE_001270F8;
-    iVar2 = string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_20,iVar6,0,0);
+    iVar2 = string_split((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_20,iVar6,0,0);
     if (0 < iVar2) {
       size = iVar2 << 2;
       pvVar3 = helper_malloc(size);
@@ -15460,10 +15459,10 @@ undefined8 FUN_001180c4(int param_1,uint param_2)
       *(void **)(param_1 + 0x114) = pvVar3;
       pvVar3 = helper_malloc(size);
       iVar7 = iVar2;
-      string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_20,iVar6,(int)pvVar3,iVar2
+      string_split((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_20,iVar6,(int)pvVar3,iVar2
                   );
       for (iVar6 = 0; iVar6 < iVar2; iVar6 = iVar6 + 1) {
-        uVar4 = string_to_float(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
+        uVar4 = string_to_float((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                              *(undefined4 *)((int)pvVar3 + iVar6 * 4));
         uVar4 = float_divide(uVar4,uVar5);
         *(uint *)(*(int *)(param_1 + 0x110) + iVar6 * 4) = uVar4;
@@ -15478,7 +15477,7 @@ undefined8 FUN_001180c4(int param_1,uint param_2)
     (*g_pHelperFuncs->free)(local_20);
     local_20 = 0;
   }
-  FUN_001145b4(*(int *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),WORD_HEXADECIMAL_1DED5D32,
+  FUN_001145b4((int)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),WORD_HEXADECIMAL_1DED5D32,
                &local_24);
   uVar5 = float_divide(local_24,uVar5);
   *(uint *)(param_1 + 0x118) = uVar5;
@@ -15512,10 +15511,10 @@ void character_setup(Character *character,int32 *error)
   int32 i;
 
   FUN_001180c4((int32)character,(uint32)error);
-  FUN_001145b4((int32)character->app->pObj94,character->node,WORD_HEXADECIMAL_2073D363,(uint32 *)&character->field_28c);
-  FUN_001145b4((int32)character->app->pObj94,character->node,WORD_HEXADECIMAL_1932DEDD,(uint32 *)&value);
+  FUN_001145b4((int32)character->app->context,character->node,WORD_HEXADECIMAL_2073D363,(uint32 *)&character->field_28c);
+  FUN_001145b4((int32)character->app->context,character->node,WORD_HEXADECIMAL_1932DEDD,(uint32 *)&value);
   character->field_294 = float_divide(value,FLOAT_1000);
-  FUN_001145b4((int32)character->app->pObj94,character->node,WORD_HEXADECIMAL_1218EC09,(uint32 *)&character->field_288);
+  FUN_001145b4((int32)character->app->context,character->node,WORD_HEXADECIMAL_1218EC09,(uint32 *)&character->field_288);
 
   memcpy_word_aligned(userIds,(void *)((int32)DATA_AT_00126EA8),0x74);
   for (i = 0; i < 29; i++)
@@ -15539,7 +15538,7 @@ void character_setup(Character *character,int32 *error)
     (**(code **)((int32)character->field_1e4->pvt + 0x8c))(character->field_1e4,0);
   (**(code **)((int32)character->field_1dc->pvt + 0x48))(character->field_1dc,&character->field_1f8);
   character->shadow =
-       (ISwerveObject *)FUN_0011ae04((int32)character->app->pObj94,(int32)STRING_CHARACTER_SHADOW,(int32 *)scene,0,0);
+       (ISwerveObject *)FUN_0011ae04((int32)character->app->context,(int32)STRING_CHARACTER_SHADOW,(int32 *)scene,0,0);
   if (character->shadow != (ISwerveObject *)0x0) {
     (**(code **)((int32)character->shadow->pvt + 0x94))(character->shadow,0);
     character->hasShadow = 1;
@@ -15689,21 +15688,21 @@ void FUN_0011868c(int param_1,undefined4 param_2)
   local_1c = param_4;
   FUN_00118910(param_1,param_2);
   local_1c = 0;
-  FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
+  FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_13EB8A28,&local_1c /* not arguments, value leftovers: param_3 */);
   iVar6 = (int32)STRING_CARRIAGE_RETURN_NEWLINE_00126E2C;
   if (local_1c != 0) {
     param_3 = 0;
-    iVar2 = string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_1c,iVar6,0,0);
+    iVar2 = string_split((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_1c,iVar6,0,0);
     *(int *)(param_1 + 0x128) = iVar2;
     if (0 < iVar2) {
       pvVar3 = helper_malloc(iVar2 << 2);
       param_3 = *(undefined4 *)(param_1 + 0x128);
-      string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_1c,iVar6,pvVar3,param_3);
+      string_split((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_1c,iVar6,pvVar3,param_3);
       pvVar4 = helper_malloc(*(int *)(param_1 + 0x128) << 2);
       *(void **)(param_1 + 0x120) = pvVar4;
       for (iVar2 = 0; iVar2 < *(int *)(param_1 + 0x128); iVar2 = iVar2 + 1) {
-        uVar5 = FUN_00113654(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
+        uVar5 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                              *(undefined4 *)((int)pvVar3 + iVar2 * 4));
         uVar5 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0xa4),uVar5);
         uVar5 = (undefined4)hitsphere_create((Hitsphere *)0x0,uVar5,(BossCombatRegion *)param_1,iVar2 != 0);
@@ -15716,19 +15715,19 @@ void FUN_0011868c(int param_1,undefined4 param_2)
     (*g_pHelperFuncs->free)(local_1c);
     local_1c = 0;
   }
-  FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
+  FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_155EAFB5,&local_1c /* not arguments, value leftovers: param_3 */);
   if (local_1c != 0) {
-    iVar2 = string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_1c,iVar6,0,0);
+    iVar2 = string_split((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_1c,iVar6,0,0);
     *(int *)(param_1 + 300) = iVar2;
     if (0 < iVar2) {
       pvVar3 = helper_malloc(iVar2 << 2);
-      string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_1c,iVar6,pvVar3,
+      string_split((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_1c,iVar6,pvVar3,
                    *(undefined4 *)(param_1 + 300));
       pvVar4 = helper_malloc(*(int *)(param_1 + 300) << 2);
       *(void **)(param_1 + 0x118) = pvVar4;
       for (iVar6 = 0; iVar6 < *(int *)(param_1 + 300); iVar6 = iVar6 + 1) {
-        uVar5 = FUN_00113654(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
+        uVar5 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                              *(undefined4 *)((int)pvVar3 + iVar6 * 4));
         uVar5 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0xa4),uVar5);
         *(undefined4 *)(*(int *)(param_1 + 0x118) + iVar6 * 4) = uVar5;
@@ -15746,7 +15745,7 @@ void FUN_0011868c(int param_1,undefined4 param_2)
                         */
   uVar5 = (*g_pHelperFuncs->malloc)(*(int *)(param_1 + 300) << 2);
   *(undefined4 *)(param_1 + 0x138) = uVar5;
-  FUN_001145b4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
+  FUN_001145b4((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_275AA16E,param_1 + 0x124);
   uVar5 = FUN_0010b014(0,*(undefined4 *)(param_1 + 0x124));
   *(undefined4 *)(param_1 + 0x114) = uVar5;
@@ -15774,22 +15773,22 @@ void FUN_00118910(int param_1,undefined4 param_2)
   
   *(undefined4 *)(param_1 + 0x30) = 1;
   local_28 = param_4;
-  FUN_001147ec((undefined4 *)(param_1 + 0x68),*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
+  FUN_001147ec((undefined4 *)(param_1 + 0x68),(undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                *(undefined4 *)(param_1 + 8) /* not arguments, register leftovers: param_4,param_2,param_3 */);
   *(undefined4 *)(param_1 + 0x74) = *(undefined4 *)(param_1 + 0x68);
   *(undefined4 *)(param_1 + 0x78) = *(undefined4 *)(param_1 + 0x6c);
   *(undefined4 *)(param_1 + 0x7c) = *(undefined4 *)(param_1 + 0x70);
   local_28 = 0;
-  FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
+  FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_178BD97D,&local_28);
   iVar6 = WORD_HEXADECIMAL_FFFE768C;
   if (local_28 != 0) {
-    iVar1 = string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,
+    iVar1 = string_split((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,
                          (int32)DATA_AT_0012774C,0,0);
     p = helper_malloc(iVar1 << 2);
-    string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,(int32)DATA_AT_0012774C,p
+    string_split((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,(int32)DATA_AT_0012774C,p
                  ,iVar1);
-    FUN_001204f0(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*p,param_1 + 0x14);
+    FUN_001204f0((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*p,param_1 + 0x14);
     iVar7 = (int32)DATA_AT_00127750;
     if (1 < iVar1) {
                     /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
@@ -15833,30 +15832,30 @@ void FUN_00118910(int param_1,undefined4 param_2)
     }
     helper_free(p);
   }
-  FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
+  FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_18FC8335,&local_28);
   if (local_28 != 0) {
-    uVar4 = FUN_00113654(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),iVar7);
+    uVar4 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,iVar7);
     piVar5 = *(int **)(*(int *)(param_1 + 0x84) + 0x6c);
     (**(code **)(*piVar5 + 0x28))(piVar5,uVar4,param_1 + 0x10);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(local_28);
     local_28 = 0;
   }
-  FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
+  FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_3310A2A1,&local_28);
   if (local_28 != 0) {
-    uVar4 = script_parse_lines(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,param_1 + 0xf0,
+    uVar4 = script_parse_lines((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,param_1 + 0xf0,
                          param_1);
     *(undefined4 *)(param_1 + 0x100) = uVar4;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(local_28);
     local_28 = 0;
   }
-  FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
+  FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_0B090BAC,&local_28);
   if (local_28 != 0) {
-    uVar4 = script_parse_lines(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,param_1 + 0xf4,
+    uVar4 = script_parse_lines((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,param_1 + 0xf4,
                          param_1);
     *(undefined4 *)(param_1 + 0x104) = uVar4;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -15864,10 +15863,10 @@ void FUN_00118910(int param_1,undefined4 param_2)
     local_28 = 0;
     *(undefined4 *)(param_1 + 0x54) = 1;
   }
-  FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
+  FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_08E8548D,&local_28);
   if (local_28 != 0) {
-    uVar4 = script_parse_lines(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,param_1 + 0xf8,
+    uVar4 = script_parse_lines((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,param_1 + 0xf8,
                          param_1);
     *(undefined4 *)(param_1 + 0x108) = uVar4;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -15875,24 +15874,24 @@ void FUN_00118910(int param_1,undefined4 param_2)
     local_28 = 0;
     *(undefined4 *)(param_1 + 0x54) = 1;
   }
-  FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
+  FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_19631267,&local_28);
   if (local_28 != 0) {
-    uVar4 = script_parse_lines(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,param_1 + 0xfc,
+    uVar4 = script_parse_lines((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,param_1 + 0xfc,
                          param_1);
     *(undefined4 *)(param_1 + 0x10c) = uVar4;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(local_28);
     local_28 = 0;
   }
-  FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
+  FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_2101870D,&local_28);
   if (local_28 != 0) {
-    iVar1 = string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,
+    iVar1 = string_split((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,
                          (int32)STRING_CARRIAGE_RETURN_NEWLINE_00127754,0,0);
     *(int *)(param_1 + 0xec) = iVar1;
     p_00 = helper_malloc(iVar1 << 2);
-    string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,(int32)STRING_CARRIAGE_RETURN_NEWLINE_00127754,
+    string_split((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,(int32)STRING_CARRIAGE_RETURN_NEWLINE_00127754,
                  p_00,*(undefined4 *)(param_1 + 0xec));
     for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0xec); iVar1 = iVar1 + 1) {
       uVar4 = (undefined4)collision_shape_create((CollisionShape *)0x0);
@@ -15905,11 +15904,11 @@ void FUN_00118910(int param_1,undefined4 param_2)
     }
     helper_free(p_00);
   }
-  FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
+  FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_32CA0CC6,&local_28);
   if (local_28 != 0) {
     *(undefined4 *)(param_1 + 0x60) = 1;
-    uVar4 = string_to_float(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28);
+    uVar4 = string_to_float((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28);
     *(undefined4 *)(param_1 + 100) = uVar4;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(local_28);
@@ -15930,16 +15929,16 @@ void FUN_00118910(int param_1,undefined4 param_2)
     FUN_0011b044(param_1,*(undefined4 *)(param_1 + 0x20),*(undefined4 *)(param_1 + 0x24),
                  *(undefined4 *)(param_1 + 0x28),*(undefined4 *)(param_1 + 0x2c),param_2);
   }
-  uVar4 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8)
+  uVar4 = FUN_00119b0c((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8)
                        ,(int32)STRING_MOVING).low;
   *(undefined4 *)(param_1 + 0x40) = uVar4;
-  uVar4 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8)
+  uVar4 = FUN_00119b0c((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8)
                        ,(int32)STRING_ALIGN).low;
   *(undefined4 *)(param_1 + 0x44) = uVar4;
-  uVar4 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8)
+  uVar4 = FUN_00119b0c((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8)
                        ,(int32)STRING_NONTERRAIN).low;
   *(undefined4 *)(param_1 + 0x4c) = uVar4;
-  uVar4 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8)
+  uVar4 = FUN_00119b0c((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8)
                        ,(int32)STRING_TERRAINONLY).low;
   *(undefined4 *)(param_1 + 0x50) = uVar4;
   FUN_00114750(param_1);
@@ -15979,19 +15978,19 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
   uint64 value;   /* a size as a double (FUN_00126248), r0:r1 */
   int32 i;
 
-  wordCount = string_split((int32)shape->app->pObj94,(int32)text,(int32)DATA_AT_00126FCC,0,0);
+  wordCount = string_split((int32)shape->app->context,(int32)text,(int32)DATA_AT_00126FCC,0,0);
   words = helper_malloc(wordCount << 2);
-  string_split((int32)shape->app->pObj94,(int32)text,(int32)DATA_AT_00126FCC,(int32)words,wordCount);
+  string_split((int32)shape->app->context,(int32)text,(int32)DATA_AT_00126FCC,(int32)words,wordCount);
   if (wordCount > 1) {
     if ((*g_pHelperFuncs->strcmp)(words[1],(char *)((int32)STRING_USE_VERTS)) == 0)
       useVertices = 1;
     else
-      size1 = string_to_float((int32)shape->app->pObj94,(int32)words[1]);
+      size1 = string_to_float((int32)shape->app->context,(int32)words[1]);
   }
   if (wordCount > 2)
-    size2 = string_to_float((int32)shape->app->pObj94,(int32)words[2]);
+    size2 = string_to_float((int32)shape->app->context,(int32)words[2]);
   if (wordCount > 3)
-    size3 = string_to_float((int32)shape->app->pObj94,(int32)words[3]);
+    size3 = string_to_float((int32)shape->app->context,(int32)words[3]);
   if ((*g_pHelperFuncs->strbegins)((char *)((int32)STRING_OUTER),words[0]) != 0)
     shape->kind = 2;
   else if ((*g_pHelperFuncs->strbegins)((char *)((int32)STRING_INNER),words[0]) != 0)
@@ -16012,7 +16011,7 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
     helper_free(words[i]);
   helper_free(words);
 
-  FUN_001147ec((uint32 *)shape->position,(int32)shape->app->pObj94,(int32 *)node);
+  FUN_001147ec((uint32 *)shape->position,(int32)shape->app->context,(int32 *)node);
   for (i = 0; i < 3; i++)
     shape->minimum[i] = shape->maximum[i] = shape->position[i];
   if ((float_compare_equal(size1,FLOAT_MINUS_1), *(float *)&size1 == -1.0f) &&
@@ -16066,13 +16065,13 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
   case 8:                                            /* poly */
     (*((const SwerveGroupVtbl *)node->pvt)->GetChildCount)(node,&shape->vertexCount);
     shape->vertices = helper_malloc(shape->vertexCount * 0xc);
-    shape->clockwise = (int32)FUN_00119b0c((int32)shape->app->pObj94,(int32)node,(int32)STRING_CLOCKWISE).low;
+    shape->clockwise = (int32)FUN_00119b0c((int32)shape->app->context,(int32)node,(int32)STRING_CLOCKWISE).low;
     shape->vertexEntities = helper_malloc(shape->vertexCount << 2);
     for (i = 0; i < shape->vertexCount; i++) {
       (*g_pHelperFuncs->sprintf)(name,(char *)((int32)STRING_PERCENT_DTRANSFORM),i + 1);
       shape->vertexEntities[i] = 0;
       (*((const SwerveObject3DVtbl *)node->pvt)->Find)
-                (node,FUN_00113654((int32)shape->app->pObj94,(int32)name),(ISwerveObject **)&shape->vertexEntities[i]);
+                (node,FUN_00113654((int32)shape->app->context,(int32)name),(ISwerveObject **)&shape->vertexEntities[i]);
     }
     FUN_00121ab0((int32)shape);
     shape->height = size1;
@@ -16109,7 +16108,7 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
 
 /* ==== 0x001195F8  (file offset 0x195F8)  intro_start ================================================= */
 /* GUESS: name. Starts the current stage: time 0; stage 0 just runs; stage 1 plays its animation
-   (after FUN_00112b4c and FUN_001132a8); stage 2 runs after FUN_0012031c(app->pObj94, 0) and
+   (after FUN_00112b4c and FUN_001132a8); stage 2 runs after FUN_0012031c(app->context, 0) and
    FUN_00112b4c. */
 void intro_start(Intro *intro)
 
@@ -16119,11 +16118,11 @@ void intro_start(Intro *intro)
     intro->running = 1;
   else if (intro->stage == 1) {
     FUN_00112b4c((int32)intro);
-    FUN_001132a8((int32)intro->app->pObj94);
+    FUN_001132a8((int32)intro->app->context);
     animations_play(intro->app->animations,intro->animation,0);
   }
   else if (intro->stage == 2) {
-    FUN_0012031c((int32 *)intro->app->pObj94,0);
+    FUN_0012031c((int32 *)intro->app->context,0);
     intro->running = 1;
     FUN_00112b4c((int32)intro);
   }
@@ -16154,7 +16153,7 @@ void kh_OnAppStart(KHApp *pMe)
   pMe->pSwerveTarget = (ISwerveTarget *)0x0;
   pMe->pObj6c = (IBase *)0x0;
   pMe->pScreenDIB = (IDIB *)0x0;
-  pMe->pObj94 = (void *)0x0;
+  pMe->context = (void *)0x0;
   pMe->pObj98 = (void *)0x0;
   pMe->animations = (void *)0x0;
   pMe->intro = (void *)0x0;
@@ -16184,8 +16183,8 @@ void kh_OnAppStart(KHApp *pMe)
     iVar2 = (*pIVar1->pvt->CreateInstance)(pIVar1,AEECLSID_SWERVE_VALUE,&pMe->pSwerve);
     pMe->nErr = iVar2;
     if (iVar2 != 0) goto LAB_001199b0;
-    pvVar4 = (void *)FUN_0010c218(0,&pMe->nErr);
-    pMe->pObj94 = pvVar4;
+    pvVar4 = (void *)app_context_create((AppContext *)0x0,&pMe->nErr);
+    pMe->context = pvVar4;
     iVar6 = INTEGER_262;
     if (pvVar4 != (void *)0x0) {
       if (pMe->nErr != 0) goto LAB_001199b0;
@@ -16257,7 +16256,7 @@ void kh_OnAppStart(KHApp *pMe)
                   pMe->field_8c = 0x1e;
                 }
                 else {
-                  iVar6 = FUN_00126858(string_to_float(pMe->pObj94,local_18));
+                  iVar6 = FUN_00126858(string_to_float(pMe->context,local_18));
                   pMe->field_8c = iVar6;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
                   (*g_pHelperFuncs->free)(local_18);
@@ -16514,7 +16513,7 @@ bool FUN_00119d58(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 
     local_38 = 0;
     local_40 = float_subtract(param_1[2],param_2);
     local_3c = float_subtract(param_1[3],param_3);
-    uVar4 = vector_length(*(undefined4 *)(param_1[0xd] + 0x94),&local_40);
+    uVar4 = vector_length((undefined4)((KHApp *)param_1[0xd])->context,&local_40);
     bVar6 = true;
     uVar9 = *param_1 != 0;
     bVar1 = true;
@@ -16716,7 +16715,7 @@ LAB_0011a13c:
       uVar3 = float_multiply(param_6,0x3f000000);
       uVar3 = float_add(uVar3,param_4);
       local_38 = float_subtract(uVar3,param_1[4]);
-      uVar3 = vector_length(*(undefined4 *)(param_1[0xd] + 0x94),&local_40);
+      uVar3 = vector_length((undefined4)((KHApp *)param_1[0xd])->context,&local_40);
       uVar9 = *param_1 != 0;
       if (*param_1 == 1) {
         uVar3 = float_add(uVar3,param_5);
@@ -16806,7 +16805,7 @@ void FUN_0011a3ec(int param_1,int param_2,undefined4 param_3)
     bVar6 = iVar5 == 0;
   }
   if (bVar6) {
-    FUN_0011d040(*(undefined4 *)(*(int *)(param_1 + 0x214) + 0x94),WORD_HEXADECIMAL_21BF9442,WORD_HEXADECIMAL_3C5A569E);
+    FUN_0011d040((undefined4)((KHApp *)*(int *)(param_1 + 0x214))->context,WORD_HEXADECIMAL_21BF9442,WORD_HEXADECIMAL_3C5A569E);
     *(undefined4 *)(*(int *)(param_1 + 0x214) + 0xcc) = 5;
     return;
   }
@@ -17307,7 +17306,7 @@ undefined4 FUN_0011ae04(int param_1,undefined4 param_2,int *param_3,int param_4,
                     /* helper[3] char * strcat(char *dst, const char *src)  (AEEHelperFuncs +0xc,
                        via *(base-4)) */
   (*g_pHelperFuncs->strcat)(uVar3,(int32)STRING_TRANSFORM);
-  uVar4 = FUN_00113654(*(undefined4 *)(*(int *)(param_1 + 0xc) + 0x94),uVar3);
+  uVar4 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0xc))->context,uVar3);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
   (*g_pHelperFuncs->free)(uVar3);
   piVar5 = *(int **)(*(int *)(param_1 + 0xc) + 0x6c);
@@ -17365,7 +17364,7 @@ void FUN_0011b044(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
 {
   int iVar1;
   
-  iVar1 = FUN_0011ae04(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
+  iVar1 = FUN_0011ae04((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                        *(undefined4 *)(param_1 + 0x14),*(undefined4 *)(param_1 + 8),param_2,param_4)
   ;
   *(int *)(param_1 + 0x18) = iVar1;
@@ -17698,11 +17697,11 @@ void FUN_0011b890(int param_1,int *param_2)
     *(undefined4 *)(*(int *)(param_1 + 4) + 0x6c) = 0;
   }
   if (*(int *)(param_1 + 0x9c) == 0) {
-    uVar1 = *(undefined4 *)(*(int *)(param_1 + 4) + 0x94);
+    uVar1 = (undefined4)((KHApp *)*(int *)(param_1 + 4))->context;
     iVar3 = (int32)STRING_DISNEY_DOT_M3G;
   }
   else {
-    uVar1 = *(undefined4 *)(*(int *)(param_1 + 4) + 0x94);
+    uVar1 = (undefined4)((KHApp *)*(int *)(param_1 + 4))->context;
     if (*(int *)(param_1 + 0x9c) != 1) {
       piVar4 = (int *)FUN_0011ba0c(uVar1,(int32)STRING_INTRO_DOT_M3G);
       iVar3 = INTEGER_263;
@@ -17713,7 +17712,7 @@ void FUN_0011b890(int param_1,int *param_2)
       }
       (**(code **)(*piVar4 + 0x28))(piVar4,WORD_HEXADECIMAL_3E11FC00,param_1 + 0xc);
       if (*(int *)(param_1 + 0xc) != 0) {
-        iVar6 = FUN_0011ae04(*(undefined4 *)(*(int *)(param_1 + 4) + 0x94),(int32)STRING_CHARACTER_GRP_001279C0,*(int **)(param_1 + 0xc),0,0);
+        iVar6 = FUN_0011ae04((undefined4)((KHApp *)*(int *)(param_1 + 4))->context,(int32)STRING_CHARACTER_GRP_001279C0,*(int **)(param_1 + 0xc),0,0);
         *(int *)(param_1 + 8) = iVar6;
         if (iVar6 == 0) {
           *param_2 = iVar3;
@@ -18373,12 +18372,12 @@ LAB_0011c440:
     uVar2 = float_add(uVar4,uVar2);
     *(uint *)(param_1 + 0xd0) = uVar2;
     iVar6 = *(int *)(param_1 + 0xb8);
-    uVar11 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),0,0,
+    uVar11 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,0,0,
                           *(undefined4 *)(param_1 + 0xb4),iVar6);
     local_24 = uVar11.low;
     uVar2 = motion_entity_get_heading((MotionEntity *)*(int *)(param_1 + 0x20));
     local_24 = float_reverse_subtract(uVar2,local_24);
-    wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),(uint32 *)&local_24);
+    wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,(uint32 *)&local_24);
     motion_entity_start_turn((MotionEntity *)*(int *)(param_1 + 0x20),local_24,0x3f800000);
     *(int *)(param_1 + 0xc4) = param_2;
     uVar2 = float_multiply(*(uint *)(param_1 + 0xb4),*(uint *)(param_1 + 0xb4));
@@ -18502,12 +18501,12 @@ bool FUN_0011c860(int param_1,int param_2,undefined4 param_3)
       }
       bVar7 = !(bool)uVar9;
       thunk_FUN_0011fd90(*(undefined4 *)(param_1 + 0x28),uVar1,uVar2,local_28);
-      uVar1 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),
+      uVar1 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,
                            *(undefined4 *)(param_1 + 4),*(undefined4 *)(param_1 + 8),uVar1,uVar2).low;
       local_30 = float_add(uVar1,FLOAT_180);
       uVar1 = motion_entity_get_heading((MotionEntity *)*(undefined4 *)(param_1 + 0x20));
       local_30 = float_reverse_subtract(uVar1,local_30);
-      wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),(uint32 *)&local_30);
+      wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,(uint32 *)&local_30);
       motion_entity_start_turn((MotionEntity *)*(undefined4 *)(param_1 + 0x20),local_30,0x3f800000);
     }
   }
@@ -18563,8 +18562,8 @@ void FUN_0011ca8c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
    above 180, adds 360 while it is below -180. The work is done in doubles: FUN_00126248 widens the float,
    FUN_00124b84 / FUN_00124954 subtract / add 360.0, FUN_0012479c narrows back; FUN_00125634 and
    FUN_001256b4 compare with 180.0 and -180.0 and leave the result in the flags (`bhi` at 0x0011cb70,
-   `bcc` at 0x0011cba4), written after the commas. The first argument, app->pObj94, is never read. */
-void wrap_angle(int32 pObj94,uint32 *angle)
+   `bcc` at 0x0011cba4), written after the commas. The first argument, app->context, is never read. */
+void wrap_angle(int32 context,uint32 *angle)
 
 {
   uint64 value;   /* the angle as a double, r0:r1 */
@@ -18688,7 +18687,7 @@ undefined8 FUN_0011ceac(int param_1)
   uint auStack_1c [3];
   undefined8 uVar7;
   
-  puVar1 = (uint *)FUN_00113cfc(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),1);
+  puVar1 = (uint *)FUN_00113cfc((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,1);
   uVar2 = float_multiply(*puVar1,FLOAT_1000);
   uVar2 = FUN_00126858(uVar2);
   iVar3 = (int)uVar2 % 2;
@@ -18697,7 +18696,7 @@ undefined8 FUN_0011ceac(int param_1)
   if (iVar3 < 0) {
     iVar3 = -iVar3;
   }
-  FUN_0011d040(*(int *)(*(int *)(param_1 + 0x20) + 0x94),
+  FUN_0011d040((int)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 0xc),WORD_HEXADECIMAL_262A32C2);
   bVar6 = iVar3 == 0;
   if (!bVar6) {
@@ -18713,7 +18712,7 @@ undefined8 FUN_0011ceac(int param_1)
   }
   auStack_1c[0] = float_subtract(*(uint *)(param_1 + 0x28),*(uint *)(param_1 + 0x34));
   float_subtract(*(uint *)(param_1 + 0x2c),*(uint *)(param_1 + 0x38));
-  uVar2 = vector_length(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),auStack_1c);
+  uVar2 = vector_length((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,auStack_1c);
   float_compare_less(uVar2,0);
   if (!(bool)uVar5) {
     uVar2 = uVar2 ^ 0x80000000;
@@ -18772,10 +18771,10 @@ void FUN_0011d040(int param_1,undefined4 param_2,void *param_3)
   iVar1 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0xc) + 0xa4),param_2);
   if (iVar1 != 0) {
     local_10 = 0;
-    FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0xc) + 0x94),*(undefined4 *)(iVar1 + 8),param_3,
+    FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0xc))->context,*(undefined4 *)(iVar1 + 8),param_3,
                  &local_10 /* not arguments, value leftovers: param_2 */);
     if (local_10 != 0) {
-      iVar1 = script_parse_lines(*(undefined4 *)(*(int *)(param_1 + 0xc) + 0x94),local_10,&local_14,0);
+      iVar1 = script_parse_lines((undefined4)((KHApp *)*(int *)(param_1 + 0xc))->context,local_10,&local_14,0);
       FUN_001108ac(param_1,iVar1,local_14);
       for (iVar3 = 0; iVar3 < iVar1; iVar3 = iVar3 + 1) {
         iVar2 = *(int *)((int)local_14 + iVar3 * 4);
@@ -19131,19 +19130,19 @@ void FUN_0011d6cc(int param_1,int param_2)
       uVar11 = 1;
       uVar10 = 0;
       if (*(int *)(param_1 + 0x270) == 0) {
-        uVar12 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),
+        uVar12 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,
                               *(undefined4 *)(param_1 + 0x254),*(undefined4 *)(param_1 + 600),
                               local_30,local_2c);
         local_34 = uVar12.low;
         uVar9 = motion_entity_get_heading((MotionEntity *)*(int *)(param_1 + 0x20));
         local_34 = float_reverse_subtract(uVar9,local_34);
-        wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),(uint32 *)&local_34);
+        wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,(uint32 *)&local_34);
         motion_entity_start_turn((MotionEntity *)*(int *)(param_1 + 0x20),local_34,0x3f800000);
         return;
       }
     }
     *(undefined4 *)(param_1 + 0x270) = 0;
-    uVar12 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),
+    uVar12 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,
                           *(undefined4 *)(param_1 + 0x254),*(undefined4 *)(param_1 + 600),local_30,
                           local_2c);
     uVar9 = FLOAT_360;
@@ -19157,7 +19156,7 @@ void FUN_0011d6cc(int param_1,int param_2)
                            *(undefined4 *)(iVar6 + 0x1d0));
       float_compare_greater(uVar4,FLOAT_0_POINT_1);
       if ((bool)uVar11 && !(bool)uVar10) {
-        uVar13 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),
+        uVar13 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,
                               *(undefined4 *)(param_1 + 0x254),*(undefined4 *)(param_1 + 600),
                               *(undefined4 *)(iVar6 + 0x1cc),*(undefined4 *)(iVar6 + 0x1d0));
         uVar4 = float_subtract(uVar13.low,uVar12.low);
@@ -19204,11 +19203,11 @@ void FUN_0011d6cc(int param_1,int param_2)
     uVar8 = float_subtract(*(uint *)(param_1 + 0x24c),*(uint *)(param_1 + 0x25c));
     uVar9 = float_reverse_divide(uVar9,uVar8);
     *(uint *)(param_1 + 0x24c) = uVar9;
-    uVar12 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),0,0,uVar2,uVar3);
+    uVar12 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,0,0,uVar2,uVar3);
     local_34 = uVar12.low;
     uVar9 = motion_entity_get_heading((MotionEntity *)*(int *)(param_1 + 0x20));
     local_34 = float_reverse_subtract(uVar9,local_34);
-    wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),(uint32 *)&local_34);
+    wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,(uint32 *)&local_34);
     motion_entity_start_turn((MotionEntity *)*(int *)(param_1 + 0x20),local_34,0x3f800000);
     *(undefined4 *)(param_1 + 0x8c) = INTEGER_6003;
   }
@@ -19227,7 +19226,7 @@ void FUN_0011d6cc(int param_1,int param_2)
     }
     else {
       *(undefined4 *)(param_1 + 0x8c) = INTEGER_6001;
-      FUN_0011d040(*(int *)(*(int *)(param_1 + 0x74) + 0x94),
+      FUN_0011d040((int)((KHApp *)*(int *)(param_1 + 0x74))->context,
                    *(undefined4 *)(param_1 + *(int *)(param_1 + 0x250) * 4 + 0x1a4),pvVar1);
     }
   }
@@ -19447,7 +19446,7 @@ void FUN_0011df14(undefined4 *param_1)
     iVar4 = iVar4 + 1;
   } while (iVar4 < 0x78);
   if (param_1[1] != 0) {
-    FUN_00121584(*(undefined4 *)(param_1[0x85] + 0x94),param_1[1],*param_1,1 /* not arguments, value leftovers: param_4 */);
+    FUN_00121584((undefined4)((KHApp *)param_1[0x85])->context,param_1[1],*param_1,1 /* not arguments, value leftovers: param_4 */);
     param_1[1] = 0;
   }
   if (param_1[0x7e] != 0) {
@@ -19565,11 +19564,11 @@ void FUN_0011e154(KHApp *app)
     if (app->bSuspended != 0 &&
         (float_compare_greater(app->progress->health,0),
          *(float *)&app->progress->health > 0.0f)) {
-      FUN_0011d040((int32)app->pObj94,WORD_HEXADECIMAL_21BF9442,(void *)WORD_HEXADECIMAL_3C5A569E);
+      FUN_0011d040((int32)app->context,WORD_HEXADECIMAL_21BF9442,(void *)WORD_HEXADECIMAL_3C5A569E);
       state = 5;
     }
     else
-      FUN_0011d040((int32)app->pObj94,WORD_HEXADECIMAL_21BF9442,(void *)WORD_HEXADECIMAL_1FEB4DB8);
+      FUN_0011d040((int32)app->context,WORD_HEXADECIMAL_21BF9442,(void *)WORD_HEXADECIMAL_1FEB4DB8);
   }
   app->field_cc = state;
   app->field_80 = app->field_7c = (*g_pHelperFuncs->aee_GetUpTimeMS)();
@@ -19694,7 +19693,7 @@ void motion_entity_pitch_by(MotionEntity *entity,uint32 angle)
   if (entity->field_158 == (ISwerveObject *)0x0)
     return;
   entity->pitch = float_add(entity->pitch,angle);
-  wrap_angle((int32)entity->app->pObj94,&entity->pitch);
+  wrap_angle((int32)entity->app->context,&entity->pitch);
   (**(code **)((int32)entity->field_158->pvt + 0x5c))(entity->field_158,&entity->pitch);
 }
 
@@ -19727,10 +19726,10 @@ void motion_entity_turn(MotionEntity *entity,uint32 angle)
     centerX = center[0];
     level_object_get_position(center,entity->orbitCenter);
     centerY = center[1];
-    direction = FUN_00113374((int32)entity->app->pObj94,entity->position[0],entity->position[1],
+    direction = FUN_00113374((int32)entity->app->context,entity->position[0],entity->position[1],
                              centerX,centerY).low;
     offsetY = float_subtract(entity->position[1],centerY);
-    distance = vector_length3((int32)entity->app->pObj94,float_subtract(entity->position[0],centerX),offsetY,0);
+    distance = vector_length3((int32)entity->app->context,float_subtract(entity->position[0],centerX),offsetY,0);
     entity->heading = float_add(direction,angle);
     radians = float_multiply(entity->heading,WORD_HEXADECIMAL_3C8EFA39);
     cosine = float_sin(radians);
@@ -19741,7 +19740,7 @@ void motion_entity_turn(MotionEntity *entity,uint32 angle)
     entity->position[1] = float_add(float_multiply(distance,sine),center[1]);
     (**(code **)((int32)entity->node->pvt + 0x4c))(entity->node,entity->position);
   }
-  wrap_angle((int32)entity->app->pObj94,&entity->heading);
+  wrap_angle((int32)entity->app->context,&entity->heading);
   (**(code **)((int32)entity->node->pvt + 0x5c))(entity->node,&entity->heading);
 }
 
@@ -20022,12 +20021,12 @@ undefined4 FUN_0011ec28(int param_1,int param_2)
       FUN_0011f7d4(param_1,1);
       FUN_00113524(&local_1c,param_1);
       level_object_get_position((uint32 *)&local_28,(LevelObject *)*(undefined4 *)(param_1 + 0x20));
-      uVar2 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),local_1c,local_18,
+      uVar2 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,local_1c,local_18,
                            local_28,local_24).low;
       local_2c = float_add(uVar2,FLOAT_180);
       uVar2 = motion_entity_get_heading((MotionEntity *)*(undefined4 *)(param_1 + 0x20));
       local_2c = float_reverse_subtract(uVar2,local_2c);
-      wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),(uint32 *)&local_2c);
+      wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,(uint32 *)&local_2c);
       motion_entity_start_turn((MotionEntity *)*(undefined4 *)(param_1 + 0x20),local_2c,0x3f800000);
       FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x17c),0);
       *(int *)(param_1 + 0x164) = param_2 + 500;
@@ -20557,7 +20556,7 @@ void FUN_0011f7d4(int param_1,int param_2)
   local_2c = motion_entity_get_heading((MotionEntity *)iVar3);
   uVar1 = motion_entity_get_heading((MotionEntity *)uVar2);
   local_2c = float_reverse_subtract(uVar1,local_2c);
-  wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),(uint32 *)&local_2c);
+  wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,(uint32 *)&local_2c);
   motion_entity_start_turn((MotionEntity *)uVar2,local_2c,0x3f800000);
   FUN_001201cc(iVar3,0);
   FUN_001201cc(uVar2,1);
@@ -20573,7 +20572,7 @@ void FUN_0011f8ac(int param_1)
   
   piVar4 = *(int **)(*(int *)(param_1 + 0x214) + 0x6c);
   (**(code **)(*piVar4 + 200))(piVar4,*(undefined4 *)(*(int *)(param_1 + 0x1f0) + 0x1c8));
-  FUN_001132a8(*(int *)(*(int *)(param_1 + 0x214) + 0x94));
+  FUN_001132a8((int)((KHApp *)*(int *)(param_1 + 0x214))->context);
   return;
 }
 
@@ -20651,7 +20650,7 @@ void FUN_0011f8e0(int param_1,uint param_2)
 LAB_0011fa40:
     if (*(int *)(param_1 + 0x244) != 0) {
       *(undefined4 *)(param_1 + 0x1cc) = 10;
-      FUN_001147ec(&local_28,*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
+      FUN_001147ec(&local_28,(undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                    *(undefined4 *)(*(int *)(param_1 + 0x244) + 8));
       local_34 = local_28;
       local_30 = local_24;
@@ -20718,7 +20717,7 @@ LAB_0011fba4:
     if (bVar8 && iVar2 != 0) {
       FUN_0011492c(param_1);
       FUN_001148a8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 800));
-      FUN_001147ec(&local_28,*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
+      FUN_001147ec(&local_28,(undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                    *(undefined4 *)(param_1 + 0x1e8));
       level_object_get_position((uint32 *)&local_34,(LevelObject *)*(undefined4 *)(param_1 + 300));
       uVar3 = float_subtract(local_2c,local_20);
@@ -20874,7 +20873,7 @@ undefined4 FUN_0011fddc(int param_1,undefined4 param_2,int param_3,undefined4 pa
           (*g_pHelperFuncs->free)(*(undefined4 *)(iVar5 + 0x5f0));
           *(undefined4 *)(iVar5 + 0x5f0) = 0;
         }
-        FUN_001204f0(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0x94),param_2,iVar5 + 0x5f0);
+        FUN_001204f0((undefined4)((KHApp *)*(int *)(param_1 + 0x724))->context,param_2,iVar5 + 0x5f0);
         iVar2 = param_1 + iVar6 * 8;
         *(int *)(iVar2 + 0x654) = param_3;
         *(undefined4 *)(iVar2 + 0x658) = param_4;
@@ -20941,7 +20940,7 @@ void FUN_0011fef4(int param_1,undefined4 param_2,int param_3)
   if (iVar2 == 0) {
     return;
   }
-  FUN_001204f0(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0x94),param_2,param_1 + iVar3 * 4 + 100);
+  FUN_001204f0((undefined4)((KHApp *)*(int *)(param_1 + 0x724))->context,param_2,param_1 + iVar3 * 4 + 100);
   *(char *)(param_1 + iVar3) = (char)param_3;
   return;
 }
@@ -20963,7 +20962,7 @@ void FUN_0011ffc0(undefined4 *param_1,undefined4 param_2)
     (**(code **)(**(int **)(param_1[0x85] + 0x6c) + 200))();
     (**(code **)(*local_c + 4))();
   }
-  FUN_001132a8(*(undefined4 *)(param_1[0x85] + 0x94));
+  FUN_001132a8((undefined4)((KHApp *)param_1[0x85])->context);
   return;
 }
 
@@ -21036,7 +21035,7 @@ void FUN_00120120(int param_1,undefined4 param_2,undefined4 param_3)
       do {
         if (*(int *)(param_1 + iVar2 * 4 + 900) == 0) {
           iVar2 = param_1 + iVar2 * 4;
-          FUN_001204f0(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0x94),param_2,iVar2 + 900);
+          FUN_001204f0((undefined4)((KHApp *)*(int *)(param_1 + 0x724))->context,param_2,iVar2 + 900);
           *(undefined4 *)(iVar2 + 500) = param_3;
           return;
         }
@@ -21086,7 +21085,7 @@ void motion_entity_set_pitch(MotionEntity *entity,uint32 pitch)
   if (entity->field_158 == (ISwerveObject *)0x0)
     return;
   entity->pitch = pitch;
-  wrap_angle((int32)entity->app->pObj94,&entity->pitch);
+  wrap_angle((int32)entity->app->context,&entity->pitch);
   (**(code **)((int32)entity->field_158->pvt + 0x5c))(entity->field_158,&entity->pitch);
 }
 
@@ -21095,7 +21094,7 @@ void FUN_00120290(int param_1,undefined4 param_2)
 
 {
   *(undefined4 *)(param_1 + 0x140) = param_2;
-  wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),(uint32 *)((undefined4 *)(param_1 + 0x140)));
+  wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,(uint32 *)((undefined4 *)(param_1 + 0x140)));
                     /* WARNING: Could not recover jumptable at 0x001202c8. Too many branches */
                     /* WARNING: Treating indirect jump as call */
   (**(code **)(**(int **)(param_1 + 8) + 0x5c))(*(int **)(param_1 + 8),param_1 + 0x140);
@@ -21548,7 +21547,7 @@ void FUN_00120be8(undefined4 *param_1,int *param_2,uint *param_3,uint *param_4,u
   int *local_2c;
   int local_28;
   
-  iVar1 = FUN_00119b0c(*(undefined4 *)(param_1[0x85] + 0x94),param_2,(int32)STRING_DEADEND).low;
+  iVar1 = FUN_00119b0c((undefined4)((KHApp *)param_1[0x85])->context,param_2,(int32)STRING_DEADEND).low;
   if (iVar1 == 0) {
     local_28 = 0;
     (**(code **)(*param_2 + 0xac))(param_2,&local_28);
@@ -21558,7 +21557,7 @@ void FUN_00120be8(undefined4 *param_1,int *param_2,uint *param_3,uint *param_4,u
       uVar7 = iVar2 == 0;
       uVar6 = 1;
       if ((bool)uVar7) {
-        FUN_001147ec(&local_3c,*(undefined4 *)(param_1[0x85] + 0x94),local_30);
+        FUN_001147ec(&local_3c,(undefined4)((KHApp *)param_1[0x85])->context,local_30);
         float_compare_less(local_3c,*param_3);
         if (!(bool)uVar6) {
           *param_3 = local_3c;
@@ -21677,7 +21676,7 @@ void FUN_00120f8c(int param_1,int *param_2,int param_3,int *param_4,int param_5)
     }
   }
   local_20 = 0;
-  FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x214) + 0x94),param_2,WORD_HEXADECIMAL_019E5BAF,&local_20);
+  FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x214))->context,param_2,WORD_HEXADECIMAL_019E5BAF,&local_20);
   if (local_20 != 0) {
     uVar1 = (undefined4)collision_shape_create((CollisionShape *)0x0);
     *(undefined4 *)(param_3 + *param_4 * 4) = uVar1;
@@ -21686,7 +21685,7 @@ void FUN_00120f8c(int param_1,int *param_2,int param_3,int *param_4,int param_5)
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(local_20);
   }
-  iVar2 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x214) + 0x94),param_2,
+  iVar2 = FUN_00119b0c((undefined4)((KHApp *)*(int *)(param_1 + 0x214))->context,param_2,
                        (int32)STRING_DEADEND).low;
   if (iVar2 == 0) {
     local_24 = 0;
@@ -21725,25 +21724,25 @@ void game_create_objects(Game *game,ISwerveObject *node,LevelObject *parent)
   ISwerveObject *skinnedMesh;
   ISwerveObject *skeleton;
 
-  FUN_00114520((int32)game->app->pObj94,(int32 *)node,WORD_HEXADECIMAL_009660B3,(uint32 *)&name);
+  FUN_00114520((int32)game->app->context,(int32 *)node,WORD_HEXADECIMAL_009660B3,(uint32 *)&name);
   if (name != (char *)0x0) {
     slot = game_find_free_object_slot(game);
     if (slot != -1) {
-      if ((int32)FUN_00119b0c((int32)game->app->pObj94,(int32)node,(int32)STRING_MOTIONENTITY).low != 0)
+      if ((int32)FUN_00119b0c((int32)game->app->context,(int32)node,(int32)STRING_MOTIONENTITY).low != 0)
         game->objects[slot] = (LevelObject *)motion_entity_create((MotionEntity *)0x0,node,name);
-      else if ((int32)FUN_00119b0c((int32)game->app->pObj94,(int32)node,(int32)STRING_COMBATREGION).low != 0)
+      else if ((int32)FUN_00119b0c((int32)game->app->context,(int32)node,(int32)STRING_COMBATREGION).low != 0)
         game->objects[slot] = (LevelObject *)combat_region_create((CombatRegion *)0x0,node,name);
-      else if ((int32)FUN_00119b0c((int32)game->app->pObj94,(int32)node,(int32)STRING_BOSSCOMBATREGION).low != 0)
+      else if ((int32)FUN_00119b0c((int32)game->app->context,(int32)node,(int32)STRING_BOSSCOMBATREGION).low != 0)
         game->objects[slot] = (LevelObject *)boss_combat_region_create((BossCombatRegion *)0x0,node,name);
       else
         game->objects[slot] = level_object_create((LevelObject *)0x0,node,name);
       game->objects[slot]->parent =
-           (int32)FUN_00119b0c((int32)game->app->pObj94,(int32)node,(int32)STRING_NOPARENT).low != 0 ?
+           (int32)FUN_00119b0c((int32)game->app->context,(int32)node,(int32)STRING_NOPARENT).low != 0 ?
            (LevelObject *)0x0 : parent;
     }
     (*g_pHelperFuncs->free)(name);
   }
-  if ((int32)FUN_00119b0c((int32)game->app->pObj94,(int32)node,(int32)STRING_DEADEND).low != 0)
+  if ((int32)FUN_00119b0c((int32)game->app->context,(int32)node,(int32)STRING_DEADEND).low != 0)
     return;
   if (slot != -1)
     parent = game->objects[slot];
@@ -21793,7 +21792,7 @@ FUN_001213fc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
         uVar4 = 1;
         if (!(bool)uVar5) {
           iVar6 = *(int *)(param_1 + 0x6c);
-          uVar2 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),param_2,param_3,
+          uVar2 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,param_2,param_3,
                                *(undefined4 *)(param_1 + 0x68),iVar6).low;
           uVar2 = float_subtract(uVar2,param_7);
           float_compare_greater(*(uint *)(param_1 + 100) ^ 0x80000000,uVar2);
@@ -21823,7 +21822,7 @@ LAB_00121530:
   }
   else {
     iVar6 = *(int *)(param_1 + 0x6c);
-    uVar3 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),param_2,param_3,
+    uVar3 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,param_2,param_3,
                          *(undefined4 *)(param_1 + 0x68),iVar6 /* not arguments, value leftovers: param_2,param_3,param_4 */).low;
     uVar3 = float_subtract(uVar3,param_7);
     float_compare_greater(*(uint *)(param_1 + 100) ^ 0x80000000,uVar3);
@@ -21886,7 +21885,7 @@ void FUN_0012164c(int param_1,undefined4 param_2,int param_3)
     if (param_3 != 0) {
       FUN_0012070c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0xa4),param_1);
     }
-    FUN_00121584(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 0x18),
+    FUN_00121584((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 0x18),
                  *(undefined4 *)(param_1 + 8),param_2);
     *(undefined4 *)(param_1 + 0x18) = 0;
   }
@@ -21963,7 +21962,7 @@ void FUN_00121780(int param_1,undefined4 *param_2,uint param_3)
   iVar4 = *(int *)(param_1 + 0x1cc);
   uVar2 = float_subtract(*(uint *)(param_1 + 0x6c),*(uint *)(iVar4 + 0x6c));
   uVar3 = float_subtract(*(uint *)(param_1 + 0x68),*(uint *)(iVar4 + 0x68));
-  uVar2 = vector_length3(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),uVar3,uVar2,0);
+  uVar2 = vector_length3((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,uVar3,uVar2,0);
   uVar3 = level_object_get_height((LevelObject *)*(int *)(param_1 + 0x1cc));
   uVar3 = float_multiply(uVar3,0x3f000000);
   uVar6 = local_34 == 0;
@@ -22016,7 +22015,7 @@ void FUN_00121780(int param_1,undefined4 *param_2,uint param_3)
     uVar1 = *(uint *)(param_1 + 0x1dc);
   }
   angle = float_subtract(uVar1,*(uint *)(param_1 + 0x1f8));
-  wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),&angle);
+  wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,&angle);
   uVar2 = float_divide(angle,FLOAT_60);
   dVar3 = FUN_00126248(uVar2);
   uVar3 = dVar3.low;
@@ -22067,7 +22066,7 @@ void FUN_00121ab0(int param_1)
     uVar3 = 1;
     if (!(bool)uVar4) {
       FUN_001147ec((undefined4 *)(*(int *)(param_1 + 0x38) + iVar2 * 0xc),
-                   *(int *)(*(int *)(param_1 + 0x34) + 0x94),piVar1);
+                   (int)((KHApp *)*(int *)(param_1 + 0x34))->context,piVar1);
       float_compare_less(*(uint *)(*(int *)(param_1 + 0x38) + iVar2 * 0xc),*(uint *)(param_1 + 0x14));
       if (!(bool)uVar3) {
         *(undefined4 *)(param_1 + 0x14) = *(undefined4 *)(*(int *)(param_1 + 0x38) + iVar2 * 0xc);
@@ -22110,7 +22109,7 @@ void FUN_00121b98(int param_1,undefined4 param_2)
   local_14 = param_4;
   uVar1 = float_subtract(*(undefined4 *)(param_1 + 0x1d4),FLOAT_90 /* not arguments, register leftovers: param_3,param_4,param_3 */);
   local_14 = float_subtract(uVar1,*(undefined4 *)(param_1 + 0x1fc));
-  wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),(uint32 *)&local_14);
+  wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,(uint32 *)&local_14);
   uVar2 = float_divide(local_14,FLOAT_60);
   uVar4 = FUN_00126248(uVar2);
   FUN_001256b4((int)uVar4.low,(int)uVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD);
@@ -22132,7 +22131,7 @@ void FUN_00121b98(int param_1,undefined4 param_2)
   local_14 = uVar2;
   uVar1 = float_add(*(undefined4 *)(param_1 + 0x1fc),local_14);
   *(undefined4 *)(param_1 + 0x1fc) = uVar1;
-  wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),(uint32 *)(param_1 + 0x1fc));
+  wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,(uint32 *)(param_1 + 0x1fc));
   return;
 }
 
@@ -22179,13 +22178,13 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
         uVar11 = *(int *)(param_1 + 0xa4) == 0;
         if (!(bool)uVar11) {
           uVar3 = *(uint *)(param_1 + 0x2c);
-          uVar12 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+          uVar12 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                                 *(undefined4 *)(param_1 + 0x34),*(undefined4 *)(param_1 + 0x38),
                                 *(undefined4 *)(param_1 + 0x28),uVar3);
           local_24 = float_subtract(uVar12.low,*(uint *)(*(int *)(param_1 + 4) + 0x140));
           float_compare_equal(local_24,0);
           if (!(bool)uVar11) {
-            wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),(uint32 *)&local_24);
+            wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,(uint32 *)&local_24);
             iVar4 = *(int *)(param_1 + 4);
             uVar6 = float_multiply(*(uint *)(iVar4 + 0x118),uVar6);
             motion_entity_start_turn((MotionEntity *)iVar4,local_24,uVar6);
@@ -22229,7 +22228,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
     *(int *)(param_1 + 0x80) = iVar4;
     level_object_get_position((uint32 *)&local_2c,(LevelObject *)*(int *)(*(int *)(*(int *)(param_1 + 0x24) + 0x118) + iVar4 * 4));
     uVar3 = local_28;
-    uVar12 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+    uVar12 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                           *(undefined4 *)(param_1 + 0x34),*(undefined4 *)(param_1 + 0x38),local_2c,
                           local_28);
     if (*(int *)(param_1 + 0x78) == -1) {
@@ -22244,7 +22243,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
         }
         if (!(bool)uVar11) {
           uVar3 = float_subtract(uVar12.low,*(uint *)(*(int *)(param_1 + 4) + 0x140));
-          wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),&uVar3);
+          wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,&uVar3);
           iVar4 = *(int *)(param_1 + 4);
           uVar6 = float_multiply(*(uint *)(iVar4 + 0x118),uVar6);
           motion_entity_start_turn((MotionEntity *)iVar4,uVar3,uVar6);
@@ -22311,7 +22310,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
          (FUN_0011cbc4(param_1,-1,0), *(int *)(param_1 + 0x4c) != -1)) &&
         (cVar1 = animations_get_state((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
         cVar1 != '\x04')))) goto switchD_00021cbc_default;
-    FUN_0011d040(*(int *)(*(int *)(param_1 + 0x20) + 0x94),
+    FUN_0011d040((int)((KHApp *)*(int *)(param_1 + 0x20))->context,
                  *(undefined4 *)(*(int *)(param_1 + 4) + 0xc),WORD_HEXADECIMAL_397714A4);
     uVar7 = 8;
     break;
@@ -22359,7 +22358,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
        ((*(int *)(param_1 + 0x4c) != -1 &&
         (cVar1 = animations_get_state((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
         cVar1 != '\x04')))) goto switchD_00021cbc_default;
-    uVar12 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
+    uVar12 = FUN_00119b0c((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                           *(int *)(*(int *)(*(int *)(*(int *)(param_1 + 0x24) + 0x118) +
                                            *(int *)(param_1 + 0x80) * 4) + 8),
                           (int32)STRING_PLAYARRIVEANIM);
@@ -22372,7 +22371,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
       iVar4 = *(int *)(param_1 + 0xa4);
     }
     if (!bVar10 || iVar4 == 0) {
-      FUN_0011d040(*(int *)(*(int *)(param_1 + 0x20) + 0x94),
+      FUN_0011d040((int)((KHApp *)*(int *)(param_1 + 0x20))->context,
                    *(undefined4 *)
                     (*(int *)(*(int *)(*(int *)(param_1 + 0x24) + 0x118) +
                              *(int *)(param_1 + 0x80) * 4) + 0xc),WORD_HEXADECIMAL_1A5C2C12);
@@ -22525,7 +22524,7 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
     piVar5 = *(int **)(*(int *)(param_1 + 0x214) + 0x6c);
     (**(code **)(*piVar5 + 0xc4))(piVar5,&local_24);
     if (local_24 != (int *)0x0) {
-      FUN_001147ec((undefined4 *)vector,*(int *)(*(int *)(param_1 + 0x214) + 0x94),local_24);
+      FUN_001147ec((undefined4 *)vector,(int)((KHApp *)*(int *)(param_1 + 0x214))->context,local_24);
       (**(code **)(**(int **)(param_1 + 0x22c) + 0x4c))(*(int **)(param_1 + 0x22c),vector);
       (**(code **)(*local_24 + 4))(local_24);
     }
@@ -22694,10 +22693,10 @@ void enemy_update(Enemy *enemy,int32 now,int32 elapsed)
       if (enemy->field_60 != 0)
         FUN_0011cc14((int32)enemy,enemy->field_60,1);
       enemy->field_68 = 0;
-      angle = float_add(FUN_00113374(enemy->app->pObj94,enemy->field_04,enemy->field_08,
+      angle = float_add(FUN_00113374(enemy->app->context,enemy->field_04,enemy->field_08,
                                               enemy->field_10,enemy->field_14).low,FLOAT_180);
       angle = float_reverse_subtract(motion_entity_get_heading((MotionEntity *)enemy->field_20),angle);
-      wrap_angle((int32)enemy->app->pObj94,(uint32 *)&angle);
+      wrap_angle((int32)enemy->app->context,(uint32 *)&angle);
       motion_entity_start_turn((MotionEntity *)enemy->field_20,angle,0x3f000000);
     }
     enemy->field_90 = INTEGER_7002;
@@ -22867,31 +22866,31 @@ void FUN_00122b90(int param_1,int param_2,uint param_3)
     *(undefined4 *)(param_1 + 0x210) = 0;
   }
   thunk_FUN_0011fd90(param_1,local_30,local_2c,local_28);
-  uVar9 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
+  uVar9 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                        *(undefined4 *)(param_1 + 0x1ec),*(undefined4 *)(param_1 + 0x1f0),local_30,
                        local_2c);
   uVar2 = float_add(uVar9.low,FLOAT_180);
   local_34 = float_subtract(uVar2,*(uint *)(param_1 + 0x140));
-  wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),(uint32 *)&local_34);
+  wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,(uint32 *)&local_34);
   motion_entity_turn((MotionEntity *)param_1,local_34);
   local_40 = 0;
   local_3c = 0;
   local_38 = 0;
   local_40 = float_subtract(local_30,*(uint *)(param_1 + 0x1ec));
   local_3c = float_subtract(local_2c,*(uint *)(param_1 + 0x1f0));
-  uVar2 = vector_length(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),&local_40);
+  uVar2 = vector_length((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,&local_40);
   uVar4 = float_subtract(local_28,*(uint *)(param_1 + 500));
-  uVar9 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),uVar2,uVar4,0,0);
+  uVar9 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,uVar2,uVar4,0,0);
   local_44 = uVar9.low;
   uVar2 = motion_entity_get_pitch((MotionEntity *)param_1);
   uVar2 = float_reverse_subtract(uVar2,FLOAT_90);
   local_44 = float_add(uVar2,local_44);
-  wrap_angle(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),(uint32 *)&local_44);
+  wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,(uint32 *)&local_44);
   motion_entity_pitch_by((MotionEntity *)param_1,local_44);
   offset[0] = float_subtract(local_30,*(uint *)(param_1 + 0x1ec));
   offset[1] = float_subtract(local_2c,*(uint *)(param_1 + 0x1f0));
   offset[2] = float_subtract(local_28,*(uint *)(param_1 + 500));
-  uVar2 = vector_length(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),offset);
+  uVar2 = vector_length((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,offset);
   *(uint *)(param_1 + 0x208) = uVar2;
   return;
 }
@@ -22936,7 +22935,7 @@ void combat_region_update(CombatRegion *region,int32 now,int32 elapsed)
       break;
     if (region->enemiesLeftInWave == 0 && FUN_0010d354((int32)region) != 0) {
       region->state = 1;
-      FUN_0011d040((int32)region->app->pObj94,region->nameId,(void *)WORD_HEXADECIMAL_11E3EE3E);
+      FUN_0011d040((int32)region->app->context,region->nameId,(void *)WORD_HEXADECIMAL_11E3EE3E);
     }
     else {
       FUN_0011f280((int32)region);
@@ -23042,7 +23041,7 @@ void FUN_0012312c(int param_1,int param_2,int param_3)
         uVar6 = float_subtract(*(uint *)(param_1 + 0x17c),uVar6);
         *(uint *)(param_1 + 0x188) = uVar6;
         if (*(int *)(param_1 + 0x1a4) < 0) {
-          uVar2 = vector_length3(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),uVar2,uVar3,uVar6);
+          uVar2 = vector_length3((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,uVar2,uVar3,uVar6);
           uVar2 = float_divide(uVar2,*(uint *)(param_1 + 0x1a8));
           uVar2 = FUN_00126858(uVar2);
           *(uint *)(param_1 + 0x1a4) = uVar2;
@@ -23075,7 +23074,7 @@ void FUN_0012312c(int param_1,int param_2,int param_3)
         FUN_001201cc(param_1,0);
       }
       if (*(int *)(param_1 + 0x19c) != 0) {
-        FUN_0011d040(*(int *)(*(int *)(param_1 + 0x84) + 0x94),
+        FUN_0011d040((int)((KHApp *)*(int *)(param_1 + 0x84))->context,
                      *(undefined4 *)(*(int *)(param_1 + 0x19c) + 0xc),WORD_HEXADECIMAL_03AD1271);
       }
       *(undefined4 *)(param_1 + 0x150) = 0;
@@ -23250,7 +23249,7 @@ void FUN_00123588(int param_1,int param_2,int param_3)
     (*pcVar7)();
   }
   if (*(int *)(param_1 + 0x24c) != 0) {
-    FUN_001147ec(&local_40,*(int *)(*(int *)(param_1 + 0x84) + 0x94),*(int **)(param_1 + 0x1e0));
+    FUN_001147ec(&local_40,(int)((KHApp *)*(int *)(param_1 + 0x84))->context,*(int **)(param_1 + 0x1e0));
     thunk_FUN_0011fd90(*(int *)(param_1 + 0x24c),local_40,local_3c,local_38);
     piVar3 = *(int **)(*(int *)(param_1 + 0x24c) + 8);
     pcVar7 = *(code **)(*piVar3 + 0x5c);
@@ -23318,14 +23317,14 @@ void FUN_00123588(int param_1,int param_2,int param_3)
       if (uVar2 >= 3) {
         pcVar7 = WORD_HEXADECIMAL_25491361;
       }
-      FUN_0011d040(*(int *)(*(int *)(param_1 + 0x84) + 0x94),
+      FUN_0011d040((int)((KHApp *)*(int *)(param_1 + 0x84))->context,
                    *(undefined4 *)(*(int *)(param_1 + 0x20c) + 0xc),(void *)(uint)pcVar7);
     }
     goto LAB_00123ba8;
   }
   iVar9 = 0;
   if (uVar2 == 7) {
-    FUN_001147ec(&local_40,*(int *)(*(int *)(param_1 + 0x84) + 0x94),*(int **)(param_1 + 0x1ec));
+    FUN_001147ec(&local_40,(int)((KHApp *)*(int *)(param_1 + 0x84))->context,*(int **)(param_1 + 0x1ec));
     iVar1 = *(int *)(param_1 + 0x23c);
     uVar2 = *(uint *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa8) + 0x530);
     if (iVar1 == 0) {
@@ -23531,7 +23530,7 @@ void FUN_00123d7c(int param_1,undefined4 param_2,int param_3)
         uVar3 = float_subtract(local_28,local_34);
         uVar4 = float_subtract(local_2c,local_38);
         uVar5 = float_subtract(local_30,local_3c);
-        uVar3 = vector_length3(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),uVar5,uVar4,uVar3);
+        uVar3 = vector_length3((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,uVar5,uVar4,uVar3);
         iVar6 = FUN_00114750(*(int *)(*(int *)(*(int *)(param_1 + 0x120) + iVar7 * 4) + 4));
         uVar10 = iVar6 == 0;
         uVar9 = 1;
@@ -23551,7 +23550,7 @@ void FUN_00123d7c(int param_1,undefined4 param_2,int param_3)
       uVar3 = float_subtract(local_28,local_34);
       uVar4 = float_subtract(local_2c,local_38);
       uVar5 = float_subtract(local_30,local_3c);
-      uVar3 = vector_length3(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),uVar5,uVar4,uVar3);
+      uVar3 = vector_length3((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,uVar5,uVar4,uVar3);
       iVar7 = FUN_00114750(*(int *)(param_1 + 0x11c));
       uVar10 = iVar7 == 0;
       uVar9 = 1;
@@ -23598,7 +23597,7 @@ void FUN_0012407c(int param_1,undefined4 param_2,undefined4 param_3)
       iVar4 = *(int *)(param_1 + 8);
     }
     local_1c = param_4;
-    FUN_001147ec(puVar6,*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),iVar4 /* not arguments, register leftovers: *(undefined4 *)(param_1 + 0x70),param_3 */);
+    FUN_001147ec(puVar6,(undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,iVar4 /* not arguments, register leftovers: *(undefined4 *)(param_1 + 0x70),param_3 */);
     for (iVar4 = 0; iVar4 < *(int *)(param_1 + 0xe0); iVar4 = iVar4 + 1) {
       iVar1 = param_1 + iVar4 * 4;
       iVar3 = *(int *)(iVar1 + 0x90);
@@ -23743,7 +23742,7 @@ void FUN_001242b4(int param_1)
     if (iVar7 != 0) {
       pvVar10 = WORD_HEXADECIMAL_262EA0D8;
     }
-    FUN_0011d040(*(int *)(param_1 + 0x94),WORD_HEXADECIMAL_21BF9442,pvVar10);
+    FUN_0011d040((int)((KHApp *)param_1)->context,WORD_HEXADECIMAL_21BF9442,pvVar10);
 LAB_0012462c:
     *(undefined4 *)(param_1 + 0xcc) = 0;
     goto LAB_001244e8;

@@ -543,7 +543,7 @@ int * FUN_0010be14(int *param_1);
 UIList * list_create(UIList *list,int32 capacity,int32 growBy);   /* 0x0010BE6C GUESS: name, see kh_mod.c */
 undefined8 FUN_0010bec4(int *param_1,int param_2,int param_3,int param_4);
 UIElement * ui_element_create(UIElement *element,int16 x,int16 y,int16 width,int16 height,int32 *owner);   /* 0x0010C168 GUESS: name, see kh_mod.c */
-undefined4 * FUN_0010c218(undefined4 *param_1,undefined4 *param_2);
+AppContext * app_context_create(AppContext *context,int32 *error);   /* 0x0010C218 GUESS: name, see kh_mod.c */
 void FUN_0010c2a8(int *param_1,int param_2);
 void FUN_0010c2c4(int *param_1,int param_2);
 void FUN_0010c3f8(int param_1,int param_2);
@@ -581,7 +581,7 @@ void FUN_0011f260(int param_1);   /* 0x0011F260 (no Ghidra function; a virtual m
 void FUN_0011f26c(int param_1);   /* 0x0011F26C (no Ghidra function; a virtual method) */
 void FUN_0011f624(int param_1);   /* 0x0011F624 (no Ghidra function; a virtual method) */
 void FUN_0010ce08(undefined4 *param_1,int param_2);
-void FUN_0010cee4(int param_1,int param_2);
+void app_context_destroy(AppContext *context,int32 freeIt);   /* 0x0010CEE4 GUESS: name, see kh_mod.c */
 void progress_add_experience(Progress *progress,int32 amount);   /* 0x0010CFC4 GUESS: name */
 void FUN_0010d074(int param_1,undefined4 param_2);
 void progress_add_magic_points(Progress *progress,int32 amount);   /* 0x0010D18C GUESS: name */
@@ -661,8 +661,8 @@ uint FUN_00113654(undefined4 param_1,int param_2);
 undefined4 FUN_001136c8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param_4, undefined4 *param_5,undefined4 param_6);
 uint32 level_object_get_height(LevelObject *object);   /* 0x00113784 GUESS: name */
 int32 animations_find(Animations *animations,int32 userId);   /* 0x001137A4 GUESS: name */
-uint32 vector_length(void *pObj94,uint32 *vector);   /* 0x001137D4 GUESS: name, see kh_mod.c */
-uint32 vector_length3(void *pObj94,uint32 x,uint32 y,uint32 z);   /* 0x00113820 GUESS: name, see kh_mod.c */
+uint32 vector_length(void *context,uint32 *vector);   /* 0x001137D4 GUESS: name, see kh_mod.c */
+uint32 vector_length3(void *context,uint32 x,uint32 y,uint32 z);   /* 0x00113820 GUESS: name, see kh_mod.c */
 void FUN_0011386c(uint param_1,int param_2);
 void level_object_get_position(uint32 *position,LevelObject *object);   /* 0x00113CC4 GUESS: name */
 uint8 animations_get_priority(Animations *animations,int32 index);   /* 0x00113CD4 GUESS: name */
@@ -738,7 +738,7 @@ void FUN_0011c708(int param_1,int param_2,int param_3);
 bool FUN_0011c860(int param_1,int param_2,undefined4 param_3);
 void FUN_0011ca70(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);
 void FUN_0011ca8c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5);
-void wrap_angle(int32 pObj94,uint32 *angle);   /* 0x0011CB34 GUESS: name */
+void wrap_angle(int32 context,uint32 *angle);   /* 0x0011CB34 GUESS: name */
 void FUN_0011cbc4(int param_1,int param_2,int param_3);
 void FUN_0011cc14(int param_1,int param_2,int param_3);
 int32 character_play_animation(Character *character,int32 index,int32 channel,int32 loop);   /* 0x0011CC64 GUESS: names */
