@@ -427,8 +427,10 @@ undefined8 FUN_00100c2c(int param_1,int param_2,undefined4 param_3,undefined4 pa
 int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3);
 undefined8 FUN_00101268(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param_4,int param_5);
 undefined8 FUN_001013e0(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, uint param_5);
-void FUN_00101440(undefined4 param_1,undefined4 param_2);
-undefined4 FUN_00101458(int param_1,char *param_2);
+int32 raise_signal_and_exit(int32 signal,int32 type);   /* 0x00101440 GUESS: name, see kh_mod.c */
+int32 raise_signal(int32 signal,int32 type);   /* 0x00101458 GUESS: name, see kh_mod.c */
+int32 semihosting_exit(void);   /* 0x001014BC (no Ghidra function) */
+int32 default_signal_handler(int32 signal,int32 type);   /* 0x001014D4 (no Ghidra function) */
 int32 debug_write_char(char character);   /* 0x00101638 GUESS: name, see kh_mod.c */
 int software_interrupt(int number);      /* Ghidra's name for the `svc` (swi) instruction, not a function:
                                             the trap with the given number, its result as r0 leaves it */

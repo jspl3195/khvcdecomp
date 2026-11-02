@@ -156,8 +156,8 @@ int32 engine_memory_set_caching(ISwerve *swerve,int32 mode)
  * Everything after `if (param_1 != 0) return;` below is code the decompiler followed through
  * tail branches, not this function's own body:
  *   0x00100a4c  `mov r0,#2; mov r1,#2; b ...`  -> raise signal 2 (SIGFPE, arithmetic exception)
- *               with subtype 2 (divide by zero); shown as FUN_00101458(2,2).
- *   FUN_00101458 / 0x001014d4  the library's raise and default signal handler: picks a message from
+ *               with subtype 2 (divide by zero); shown as raise_signal(2,2).
+ *   raise_signal / 0x001014d4  the library's raise and default signal handler: picks a message from
  *               its table ("Abnormal termination", "Arithmetic exception: ", ...) and, if nothing
  *               handles the signal, exits:
  *   0x001014bc  mov r0, #0x18        ; semihosting SYS_EXIT (angel_SWIreason_ReportException)
@@ -190,7 +190,7 @@ void FUN_00100104(int param_1)
   if (param_1 != 0) {
     return;
   }
-  iVar1 = FUN_00101458(2,2);
+  iVar1 = raise_signal(2,2);
   if (iVar1 == 0) {
     return;
   }
@@ -313,7 +313,7 @@ uint64 FUN_00100288(uint param_1,uint param_2)
   bool bVar7;
   bool bVar8;
   int iVar9;
-  int remainder;      /* never set: on a divide by zero the binary returns r1 as FUN_00101458 leaves
+  int remainder;      /* never set: on a divide by zero the binary returns r1 as raise_signal leaves
                          it */
   undefined8 uVar10;
   
@@ -341,7 +341,7 @@ uint64 FUN_00100288(uint param_1,uint param_2)
   if (param_2 >> 4 < uVar1) goto LAB_00100318;
   bVar5 = false;
   if (uVar1 == 0) {
-    iVar9 = FUN_00101458(2,2);
+    iVar9 = raise_signal(2,2);
     if (iVar9 != 0) {
       software_interrupt(0x123456);
       return MAKE_WORDS(uVar10,ADP_Stopped_ApplicationExit,0x18);
@@ -429,7 +429,7 @@ int FUN_0010035c(uint param_1,uint param_2)
   if (param_2 >> 4 < uVar1) goto LAB_001003e0;
   bVar4 = false;
   if (uVar1 == 0) {
-    iVar2 = FUN_00101458(2,2);
+    iVar2 = raise_signal(2,2);
     if (iVar2 != 0) {
       software_interrupt(0x123456);
       return 0x18;
@@ -1819,7 +1819,7 @@ FUN_00101268(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param
  *     return result;                                // not linked - a bl to the next instruction,
  *                                                   // so this is never taken (0x00101410-18)
  *   // otherwise: raise SIGFPE with the exception bits, and return 0.0
- *   FUN_00101440(2, controlWord & 0x7c000000);      // 2 = SIGFPE; bits 26-30 = the five IEEE
+ *   raise_signal_and_exit(2, controlWord & 0x7c000000);      // 2 = SIGFPE; bits 26-30 = the five IEEE
  *                                                   // exceptions (invalid, divide by zero,
  *                                                   // overflow, underflow, inexact - GUESS: order)
  *   result = 0.0;
@@ -1842,148 +1842,111 @@ FUN_001013e0(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4
   uStack_18 = param_2;
   uStack_14 = param_3;
   uStack_10 = param_4;
-  FUN_00101440(2,param_5 & 0x7c000000 /* not arguments, register leftovers: &uStack_1c,&uStack_14 */);
+  raise_signal_and_exit(2,param_5 & 0x7c000000 /* not arguments, register leftovers: &uStack_1c,&uStack_14 */);
   return MAKE_WORDS(uVar1,0,0);
 }
 
-/* ==== 0x00101440  (file offset 0x01440)  FUN_00101440 ================================================ */
-void FUN_00101440(undefined4 param_1,undefined4 param_2)
+/* ==== 0x00101440  (file offset 0x01440)  raise_signal_and_exit ======================================= */
+/* GUESS: name. Raises `signal` (raise_signal) and, when nothing handled it (raise_signal returns 1 from
+   the default handler), exits through semihosting: the binary's tail jump to semihosting_exit
+   (0x00101454). Called by the floating-point exception routine FUN_001013e0 as
+   raise_signal_and_exit(2, controlWord & 0x7c000000) (SIGFPE with the IEEE exception bits). Returns r0 as
+   the binary leaves it: 0, or semihosting_exit's result. */
+int32 raise_signal_and_exit(int32 signal,int32 type)
 
 {
-  /* param_1, param_2: not in Ghidra's prototype; kh.mod reads r0, r1 at entry and its callers set them */
-  int iVar1;
-  
-  iVar1 = FUN_00101458(param_1,param_2);
-  if (iVar1 == 0) {
-    return;
-  }
-  software_interrupt(0x123456);
-  return;
+  if (raise_signal(signal,type) == 0)
+    return 0;
+  return semihosting_exit();
 }
 
-/* ==== 0x00101458  (file offset 0x01458)  FUN_00101458 ================================================ */
-/* WARNING: Removing unreachable block (ram,0x00101490) */
-/* WARNING: Removing unreachable block (ram,0x0010149c) */
-/* WARNING: Removing unreachable block (ram,0x001014a0) */
-/* WARNING: Removing unreachable block (ram,0x001014a4) */
-/* WARNING: Removing unreachable block (ram,0x001014a8) */
-/* WARNING: Removing unreachable block (ram,0x001014ac) */
 
-/* ---- The code behind the "unreachable block" warnings above ------------------------------------
- *
- * What the function is: the ARM C library's signal raising routine, FUN_00101458(signal, type).
- * FUN_00100104 (the divide-by-zero check) calls it as FUN_00101458(2, 2), and the floating-point
- * exception routine FUN_001013e0 as FUN_00101458(2, controlWord & 0x7c000000). Note: the decompiled
- * body below is mostly NOT this function's own code - Ghidra merged in the default signal handler at
- * 0x001014d4, which this function tail-calls (see "What runs" below).
- *
- * Why the blocks were removed, and why that is correct here: the function asks a handler-lookup
- * routine for the handler installed for this signal. That call is `bl 0x00101478` at 0x00101474 -
- * the word 0xEBFFFFFF, a bl with offset -1, which lands on the next instruction: ARM's linker's
- * placeholder for a call to a weak function that was not linked (as in FUN_001013e0). r0 keeps the
- * value set just before the call, the "default handler" value, so the `cmp r0, r6` always finds it
- * equal and the branch to the default handler is always taken. The removed blocks (0x00101490-
- * 0x001014ac: "ignored? return 0 : call the installed handler") never run in this build.
- *
- * The two handler values are computed PC-relatively: 0x000FFFFF and 0x000FFFFD, i.e. the module
- * base - 1 and - 3. GUESS: these are ARM's SIG_DFL ((void (*)(int))-1) and SIG_IGN (-3), turned into
- * PC-relative constants by the position-independent build.
- *
- * The whole function, reconstructed by hand from its instructions (0x00101458-0x001014b0):
- *
- * undefined4 FUN_00101458(int signal, int type)
- * {
- *   void (*handler)(int, int);
- *
- *   handler = signal_handler_lookup(SIG_DFL, signal);  // 0x00101474: weak, not linked - a bl to the
- *                                                      // next instruction, so handler = SIG_DFL
- *   if (handler == SIG_DFL)
- *     return default_signal_handler(signal, type);     // 0x0010148c: tail branch to 0x001014d4
- *                                                      // (always taken in this build)
- *   if (handler != SIG_IGN)                            // 0x00101490-0x001014a8: dead here
- *     handler(signal, type);
- *   return 0;                                          // 0x001014ac: dead here
- * }
- *
- * What runs: the default handler at 0x001014d4 (the body Ghidra shows below). For signals 1..13 it
- * picks a message from the library's table ("Abnormal termination", "Arithmetic exception: ", ...,
- * "C++ library exception"; anything else is "Unknown signal"). For signal 2 (SIGFPE) it adds the
- * detail from the type / control-word bits:
- *   0x04000000              "Invalid Operation"
- *   0x08000000 (or type 2)  "Divide By Zero"
- *   0x10000000              "Overflow"
- *   0x20000000              "Underflow"
- *   0x40000000              "Inexact Result"
- * - the five IEEE exceptions in that order, which confirms the meaning of those bits in the soft-
- * float control words (DOUBLE_ADD_NONFINITE_OPERAND_CODE, DOUBLE_ADD_FINITE_OPERANDS_CODE). Then it
- * exits through ARM semihosting (`swi 0x123456`, ADP_Stopped_ApplicationExit, see FUN_00100104).
- */
-
-undefined4 FUN_00101458(int param_1,char *param_2)
+/* ==== 0x00101458  (file offset 0x01458)  raise_signal ================================================ */
+/* GUESS: name (the routine is certain: the ARM C library's signal raising routine, raise(signal, type)).
+   It asks a handler-lookup routine for the handler installed for `signal`, passing the default handler's
+   value (SIG_DFL): that call, `bl 0x00101478` at 0x00101474, is the word 0xEBFFFFFF, a bl to the next
+   instruction - ARM's linker's placeholder for a weak function that was not linked (as in
+   FUN_001013e0). r0 keeps SIG_DFL, the `cmp r0, r6` always finds it, and the binary tail-jumps
+   (0x0010148c) to the default handler, default_signal_handler. What the rest would do, and never does in
+   this build (0x00101490 - 0x001014b0, Ghidra's "unreachable" blocks):
+       if (handler != SIG_IGN)
+         handler(signal, type);
+       return 0;
+   SIG_DFL and SIG_IGN are PC-relative values in the binary: 0x000FFFFF and 0x000FFFFD, the module base
+   - 1 and - 3 (GUESS: ARM's (void (*)(int))-1 and -3). Callers: raise_signal_and_exit, and the integer
+   divides' division by zero (FUN_00100104, FUN_00100288, FUN_0010035c, with (2, 2): SIGFPE, divide by
+   zero). Returns the default handler's result, 1. */
+int32 raise_signal(int32 signal,int32 type)
 
 {
-  char cVar1;
-  char *pcVar2;
-  char *pcVar3;
-  char *message;
-  bool bVar4;
-  
-  bVar4 = 0xc < param_1 - 1U;
-  if (bVar4) {
+  return default_signal_handler(signal,type);
+}
+
+
+/* ==== 0x001014BC  (file offset 0x014BC)  semihosting_exit ============================================ */
+/* A routine Ghidra has no function for (only reached by raise_signal_and_exit's tail jump at 0x00101454):
+   written from its disassembly (0x001014bc - 0x001014c8). ARM semihosting SYS_EXIT
+   (angel_SWIreason_ReportException): r0 = 0x18, r1 = ADP_Stopped_ApplicationExit, `swi 0x123456` asks
+   an attached debugger to stop the program; on a phone (and in khvcemu, which does not emulate swi)
+   nothing services it, and the routine returns. Returns r0 as the trap leaves it. */
+int32 semihosting_exit(void)
+
+{
+  /* semihosting SYS_EXIT: r0 = 0x18, r1 = ADP_Stopped_ApplicationExit */
+  return software_interrupt(0x123456);
+}
+
+
+/* ==== 0x001014D4  (file offset 0x014D4)  default_signal_handler ====================================== */
+/* A routine Ghidra has no function for (only reached by raise_signal's tail jump at 0x0010148c; Ghidra
+   pasted its code into raise_signal): written from its disassembly (0x001014d4 - 0x001015b4). The ARM
+   C library's default signal handler: writes a newline, the signal's message from the library's table
+   (13 entries of 0x17 bytes: 1 "Abnormal termination", 2 "Arithmetic exception: ", 3 "Illegal
+   instruction", 4 "Interrupt received", 5 "Illegal address", 6 "Termination request", 7 "Stack
+   overflow", 8 "Redirect: can't open: ", 9 "Out of heap memory", 10 / 11 "User-defined signal 1 / 2",
+   12 "Pure virtual fn called", 13 "C++ library exception"; any other signal "Unknown signal"), a
+   detail and a newline through debug_write_char, and returns 1 (not handled: the caller exits). The
+   detail: for signal 2 (SIGFPE) the first of the IEEE exception bits in `type` - 0x04000000 "Invalid
+   Operation", 0x08000000 or type 2 "Divide By Zero", 0x10000000 "Overflow", 0x20000000 "Underflow",
+   0x40000000 "Inexact Result" (which confirms the meaning of those bits in the soft-float control
+   words, DOUBLE_ADD_NONFINITE_OPERAND_CODE and DOUBLE_ADD_FINITE_OPERANDS_CODE); for signal 8 `type` is
+   the file name; signal 9 with type 1 prints ": Heap memory corrupted" instead of its message. */
+int32 default_signal_handler(int32 signal,int32 type)
+
+{
+  const char *message;
+  const char *detail = "";
+
+  if ((uint32)(signal - 1) >= 13)
     message = "Unknown signal";
-  }
-  pcVar2 = "";
-  pcVar3 = pcVar2;
-  if (!bVar4) {
-    message = (char *)(param_1 * 0x17 + ((int32)SIGNAL_MESSAGE_TABLE + 0x1));
-    if (param_1 == 2) {
-      if (((uint)param_2 & 0x4000000) == 0) {
-        if (((uint)param_2 & 0x8000002) == 0) {
-          if (((uint)param_2 & 0x10000000) == 0) {
-            if (((uint)param_2 & 0x20000000) == 0) {
-              if (((uint)param_2 & 0x40000000) != 0) {
-                pcVar3 = "Inexact Result";
-              }
-            }
-            else {
-              pcVar3 = "Underflow";
-            }
-          }
-          else {
-            pcVar3 = "Overflow";
-          }
-        }
-        else {
-          pcVar3 = "Divide By Zero";
-        }
-      }
-      else {
-        pcVar3 = "Invalid Operation";
-      }
+  else {
+    message = (const char *)(signal * 0x17 + ((int32)SIGNAL_MESSAGE_TABLE + 0x1));
+    if (signal == 2) {
+      if (type & 0x04000000)
+        detail = "Invalid Operation";
+      else if (type & 0x08000002)
+        detail = "Divide By Zero";
+      else if (type & 0x10000000)
+        detail = "Overflow";
+      else if (type & 0x20000000)
+        detail = "Underflow";
+      else if (type & 0x40000000)
+        detail = "Inexact Result";
     }
-    else {
-      pcVar3 = param_2;
-      if ((param_1 != 8) && (pcVar3 = pcVar2, param_1 == 9 && param_2 == (char *)0x1)) {
-        message = ": Heap memory corrupted";
-      }
-    }
+    else if (signal == 8)
+      detail = (const char *)type;                /* the file that could not be opened */
+    else if (signal == 9 && type == 1)
+      message = ": Heap memory corrupted";
   }
-  debug_write_char(10);
-  cVar1 = *message;
-  while (cVar1 != '\0') {
+  debug_write_char('\n');
+  for (; *message != '\0'; message++)
     debug_write_char(*message);
-    cVar1 = message[1];
-    message = message + 1;
-  }
-  cVar1 = *pcVar3;
-  while (cVar1 != '\0') {
-    debug_write_char(*pcVar3);
-    cVar1 = pcVar3[1];
-    pcVar3 = pcVar3 + 1;
-  }
-  debug_write_char(10);
+  for (; *detail != '\0'; detail++)
+    debug_write_char(*detail);
+  debug_write_char('\n');
   return 1;
 }
+
 
 /* ==== 0x00101638  (file offset 0x01638)  debug_write_char ============================================ */
 /* GUESS: name. Writes one character to the debugger's console through ARM semihosting: the ARM C
@@ -1991,7 +1954,7 @@ undefined4 FUN_00101458(int param_1,char *param_2)
    a 1-byte stack buffer, `mov r0, #3` (SYS_WRITEC, write one character), `mov r1, sp` (its address),
    `svc #0x123456` (the ARM-mode semihosting trap). Returns r0 as the trap leaves it (SYS_WRITEC
    defines no result; Ghidra's CONCAT44(local_8, 3) assumed r0 kept the 3, and r1 is the buffer's
-   address). Its only caller is FUN_00101458 (raise / the default signal
+   address). Its only caller is raise_signal (raise / the default signal
    handler), which prints its "Arithmetic exception: ..." message with it. With no debugger attached
    (a phone, khvcemu) the trap does nothing useful. */
 int32 debug_write_char(char character)
