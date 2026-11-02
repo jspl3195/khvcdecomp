@@ -2258,7 +2258,7 @@ undefined4 FUN_00101ad8(int *param_1,int param_2)
   if (0x41 < param_2) {
     if (param_2 == 0x73) {
       if (param_1[6] != 0) {
-        FUN_0010c598(param_1[6],1);
+        web_request_destroy(param_1[6],1);
       }
       param_1[6] = 0;
 LAB_00104380:
@@ -2603,14 +2603,14 @@ LAB_001050b0:
       FUN_00109a10(iVar9,1,0,0);
       FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_10FB280A,0x56);
       if (param_1[6] != 0) {
-        FUN_0010c598(param_1[6],1);
+        web_request_destroy(param_1[6],1);
       }
-      iVar7 = FUN_0010af3c(0,param_1,(int32)FUN_0010888c);
+      iVar7 = (int)web_request_create((WebRequest *)0x0,(int32)param_1,(WebRequestListener)FUN_0010888c);
       param_1[6] = iVar7;
       uVar10 = progress_score(*(undefined4 *)(*param_1 + 0xa8));
       FUN_001216c4(*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
-      FUN_001082e0(param_1[6],2,*(undefined4 *)(iVar7 + 0x590),uVar10,
+      web_request_post_rank(param_1[6],2,*(undefined4 *)(iVar7 + 0x590),uVar10,
                    *(undefined4 *)(*param_1 + 0xc4),*(undefined4 *)(iVar7 + 0x5c4),
                    *(undefined4 *)(iVar7 + 0x5c8),0);
       goto LAB_00104dcc;
@@ -2723,13 +2723,13 @@ LAB_00104a24:
         param_1[0x18] = 1;
       }
       if (param_1[6] != 0) {
-        FUN_0010c598(param_1[6],1);
+        web_request_destroy(param_1[6],1);
       }
-      iVar7 = FUN_0010af3c(0,param_1,(int32)FUN_0010888c);
+      iVar7 = (int)web_request_create((WebRequest *)0x0,(int32)param_1,(WebRequestListener)FUN_0010888c);
       param_1[6] = iVar7;
       FUN_001216c4(*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
-      FUN_00106130(param_1[6],*(undefined4 *)(*param_1 + 0xc4),0,*(undefined4 *)(iVar7 + 0x590),
+      web_request_download(param_1[6],*(undefined4 *)(*param_1 + 0xc4),0,*(undefined4 *)(iVar7 + 0x590),
                    *(undefined4 *)(iVar7 + 0x5c4));
       return local_34;
     case 0x82:
@@ -2772,13 +2772,13 @@ LAB_00104a24:
       FUN_00109a10(iVar9,1,0,0);
       FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_10FB280A,0x56);
       if (param_1[6] != 0) {
-        FUN_0010c598(param_1[6],1);
+        web_request_destroy(param_1[6],1);
       }
-      iVar7 = FUN_0010af3c(0,param_1,(int32)FUN_0010888c);
+      iVar7 = (int)web_request_create((WebRequest *)0x0,(int32)param_1,(WebRequestListener)FUN_0010888c);
       param_1[6] = iVar7;
       FUN_001216c4(*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
-      FUN_0010810c(param_1[6],*(undefined4 *)(iVar7 + 0x590),pvVar16,pvVar5,
+      web_request_post_rank_ex(param_1[6],*(undefined4 *)(iVar7 + 0x590),pvVar16,pvVar5,
                    *(undefined4 *)(iVar7 + 0x5c4),*(undefined4 *)(iVar7 + 0x5c8));
       helper_free(pvVar16);
       helper_free(pvVar5);
@@ -2914,7 +2914,7 @@ LAB_00104de4:
       }
 LAB_00102874:
       if (param_1[6] != 0) {
-        FUN_0010c598(param_1[6],1);
+        web_request_destroy(param_1[6],1);
       }
       param_1[6] = 0;
 LAB_00101db4:
@@ -3889,190 +3889,131 @@ void key_picker_restore_original(UIElement *picker)
   *picker->setting = picker->selectedOption->keyCode;
 }
 
-/* ==== 0x00105734  (file offset 0x05734)  FUN_00105734 ================================================ */
-void FUN_00105734(undefined4 *param_1,int param_2)
+/* ==== 0x00105734  (file offset 0x05734)  web_request_parse_reply ===================================== */
+/* GUESS: names. Parses the server's reply (request->data), once web_request_read has read it to its end,
+   and tells the listener; then the request is cancelled and its buffers freed. `caller` and `request`
+   are the same request: the binary reads the data through r1 and, for a download, notifies and cancels
+   with r0.
+   A download's reply (state 3) is "<kind>|<id>|<rest>", a leading space skipped. Unless what follows the
+   first "|" is "invalidentry", the id is stored (FUN_001200ac, in the player's progress) and the kind
+   says what the rest is: "*d" data - notify 9, then FUN_0010a12c handles it and its result is the
+   event (value 1); "*t" text - event 2, value 2, with a copy of the rest; anything else, event 5. The
+   event is sent with value 2 for event 5, and the copy (or 0) as the last argument. The copy of the
+   kind gets no terminator of its own: BREW's MALLOC zeroes the memory.
+   A ranking's reply (any other state) is "|"-separated fields, a leading space skipped: "*r", not
+   "invalidentry", an id up to "~" (stored by FUN_001200ac), ...; with state 4 (rankex) event 7 with the
+   number of fields from the fourth on and those fields; otherwise event 6 with the number after the
+   "~" of the fourth field; a reply of another form gives event 5, value 6. Written from its disassembly
+   (0x00105734 - 0x00105c08). */
+void web_request_parse_reply(WebRequest *caller,WebRequest *request)
 
 {
-  char *pcVar1;
-  int iVar2;
-  int iVar3;
-  undefined4 uVar4;
-  void *pvVar5;
-  undefined4 *puVar6;
-  code *pcVar7;
-  int iVar8;
-  byte *pbVar9;
-  int iVar10;
-  undefined4 uVar11;
-  undefined4 uVar12;
-  int iVar13;
-  undefined4 *puVar14;
-  
-  iVar3 = INTEGER_MINUS_22348;
-  iVar8 = *(int *)(param_2 + 0x28);
-  if (*(int *)(param_2 + 0x48) != 3) {
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-    iVar8 = (*g_pHelperFuncs->strlen)(iVar8);
-    iVar10 = 0;
-    iVar2 = 0;
-    while (iVar2 < iVar8) {
-      pcVar1 = (char *)(*(int *)(param_2 + 0x28) + iVar2);
-      iVar2 = iVar2 + 1;
-      if (*pcVar1 == '|') {
-        iVar10 = iVar10 + 1;
-      }
-    }
-    if (0 < iVar10) {
-      iVar10 = iVar10 + 1;
-    }
-    puVar6 = (undefined4 *)(*g_pHelperFuncs->malloc)(iVar10 << 2);
-    iVar8 = *(int *)(param_2 + 0x28);
-    iVar3 = (*g_pHelperFuncs->strncmp)(iVar8,(int32)DATA_AT_00127D94,1);
-    if (iVar3 == 0) {
-      iVar8 = iVar8 + 1;
-    }
-    for (iVar3 = 0; iVar3 < iVar10; iVar3 = iVar3 + 1) {
-                    /* helper[64] char * strchrend(const char *s, int ch)  (AEEHelperFuncs +0x100,
-                       via *(base-4)) */
-      iVar2 = (*g_pHelperFuncs->strchrend)(iVar8,0x7c);
-      iVar13 = iVar2 - iVar8;
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-      uVar12 = (*g_pHelperFuncs->malloc)(iVar13 + 1);
-      puVar6[iVar3] = uVar12;
-                    /* helper[50] char * strncpy(char *dst, const char *src, uint32 n)
-                       (AEEHelperFuncs +0xc8, via *(base-4)) */
-      (*g_pHelperFuncs->strncpy)(uVar12,iVar8,iVar13);
-      *(undefined1 *)(puVar6[iVar3] + iVar13) = 0;
-      iVar8 = iVar2 + 1;
-    }
-    FUN_00107e48(param_1,param_2);
-    iVar3 = INTEGER_MINUS_23228;
-                    /* helper[52] int stricmp(const char *a, const char *b)  (AEEHelperFuncs +0xd0,
-                       via *(base-4)) */
-    iVar8 = (*g_pHelperFuncs->stricmp)(*puVar6,(int32)STRING_STAR_R)
-    ;
-                    /* helper[52] int stricmp(const char *a, const char *b)  (AEEHelperFuncs +0xd0,
-                       via *(base-4)) */
-    if ((iVar8 == 0) &&
-       (iVar8 = (*g_pHelperFuncs->stricmp)(puVar6[1],(int32)STRING_INVALIDENTRY),
-       iVar8 != 0)) {
-      iVar8 = puVar6[2];
-                    /* helper[64] char * strchrend(const char *s, int ch)  (AEEHelperFuncs +0x100,
-                       via *(base-4)) */
-      iVar2 = (*g_pHelperFuncs->strchrend)(iVar8,0x7e);
-      pvVar5 = helper_malloc((iVar2 - iVar8) + 1);
-                    /* helper[50] char * strncpy(char *dst, const char *src, uint32 n)
-                       (AEEHelperFuncs +0xc8, via *(base-4)) */
-      (*g_pHelperFuncs->strncpy)(pvVar5,iVar8,iVar2 - iVar8);
-      FUN_001200ac(*(int *)(*(int *)(param_2 + 0x4c) + 0xa8),pvVar5);
-      helper_free(pvVar5);
-      if (*(int *)(param_2 + 0x48) == 4) {
-        puVar14 = puVar6 + 3;
-        iVar8 = iVar10 + -3;
-        uVar12 = 7;
-      }
-      else {
-                    /* helper[64] char * strchrend(const char *s, int ch)  (AEEHelperFuncs +0x100,
-                       via *(base-4)) */
-        iVar8 = (*g_pHelperFuncs->strchrend)(puVar6[3],0x7e);
-                    /* helper[36] int atoi(const char *s)  (AEEHelperFuncs +0x90, via *(base-4)) */
-        iVar8 = (*g_pHelperFuncs->atoi)(iVar8 + 1);
-        puVar14 = (undefined4 *)0x0;
-        uVar12 = 6;
-      }
-    }
+  char *reply = request->data;
+  char *end;
+  char *kind;
+  char *id;
+  char *rest;
+  char *copy = (char *)0x0;
+  char **fields;
+  int32 length;
+  int32 event;
+  int32 value = 0;
+  int32 i;
+  int32 count;
+
+  if (request->state == 3) {
+    end = (*g_pHelperFuncs->strchrend)(reply,'|');
+    if ((*g_pHelperFuncs->strncmp)(reply,STRING_SPACE,1) == 0)
+      reply++;
+    length = end - reply;
+    kind = (*g_pHelperFuncs->malloc)(length + 1);
+    (*g_pHelperFuncs->strncpy)(kind,reply,length);
+    reply = end + 1;
+    end = (*g_pHelperFuncs->strchrend)(reply,'|');
+    length = end - reply;
+    if ((*g_pHelperFuncs->stricmp)(reply,STRING_INVALIDENTRY) == 0)
+      event = 5;
     else {
-      puVar14 = (undefined4 *)0x0;
-      iVar8 = 6;
-      uVar12 = 5;
+      id = helper_malloc(length + 1);
+      (*g_pHelperFuncs->strncpy)(id,reply,length);
+      FUN_001200ac((int32)request->app->progress,(int32)id);
+      helper_free(id);
+      rest = end + 1;
+      if ((*g_pHelperFuncs->strcmp)(kind,STRING_STAR_D) == 0) {
+        web_request_notify(caller,9,0,0,0);
+        event = FUN_0010a12c((int32)caller,(int32)request,(byte *)rest);
+        value = 1;
+      }
+      else if ((*g_pHelperFuncs->strcmp)(kind,STRING_STAR_T) == 0) {
+        length = (*g_pHelperFuncs->strlen)(rest);
+        copy = (*g_pHelperFuncs->malloc)(length + 1);
+        (*g_pHelperFuncs->strncpy)(copy,rest,length);
+        event = 2;
+        value = 2;
+      }
+      else
+        event = 5;
     }
-    FUN_00109534((undefined4 *)param_2,uVar12,iVar8,0,puVar14);
-    FUN_00106354((int)param_1,param_2);
-    for (iVar8 = 0; iVar8 < iVar10; iVar8 = iVar8 + 1) {
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-      (*g_pHelperFuncs->free)(puVar6[iVar8]);
-    }
-                    /* WARNING: Could not recover jumptable at 0x00105c08. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-    (*g_pHelperFuncs->free)(puVar6);
+    (*g_pHelperFuncs->free)(kind);
+    web_request_cancel(caller,request);
+    web_request_free_buffers(caller,request);
+    request->retries = 0;
+    if (event == 5)
+      value = 2;
+    web_request_notify(caller,event,value,0,(int32)copy);
     return;
   }
-  pcVar7 = (code *)g_pHelperFuncs->strchrend;
-  uVar11 = 0;
-  uVar12 = 0;
-                    /* helper[64] char * strchrend(const char *s, int ch)  (AEEHelperFuncs +0x100,
-                       via *(base-4)) */
-  iVar2 = (*pcVar7)(iVar8,0x7c /* not arguments, value leftovers: pcVar7, r3, param_2 */);
-                    /* helper[51] int strncmp(const char *a, const char *b, uint32 n)
-                       (AEEHelperFuncs +0xcc, via *(base-4)) */
-  iVar3 = (*g_pHelperFuncs->strncmp)(iVar8,(int32)DATA_AT_00127D94,1);
-  if (iVar3 == 0) {
-    iVar8 = iVar8 + 1;
+  length = (*g_pHelperFuncs->strlen)(reply);
+  count = 0;
+  for (i = 0; i < length; i++)
+    if (request->data[i] == '|')
+      count++;
+  if (count > 0)
+    count++;
+  fields = (*g_pHelperFuncs->malloc)(count << 2);
+  reply = request->data;
+  if ((*g_pHelperFuncs->strncmp)(reply,STRING_SPACE,1) == 0)
+    reply++;
+  for (i = 0; i < count; i++) {
+    end = (*g_pHelperFuncs->strchrend)(reply,'|');
+    length = end - reply;
+    fields[i] = (*g_pHelperFuncs->malloc)(length + 1);
+    (*g_pHelperFuncs->strncpy)(fields[i],reply,length);
+    fields[i][length] = 0;
+    reply = end + 1;
   }
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-  uVar4 = (*g_pHelperFuncs->malloc)((iVar2 - iVar8) + 1);
-                    /* helper[50] char * strncpy(char *dst, const char *src, uint32 n)
-                       (AEEHelperFuncs +0xc8, via *(base-4)) */
-  (*g_pHelperFuncs->strncpy)(uVar4,iVar8,iVar2 - iVar8);
-  iVar2 = iVar2 + 1;
-                    /* helper[64] char * strchrend(const char *s, int ch)  (AEEHelperFuncs +0x100,
-                       via *(base-4)) */
-  iVar3 = (*g_pHelperFuncs->strchrend)(iVar2,0x7c);
-                    /* helper[52] int stricmp(const char *a, const char *b)  (AEEHelperFuncs +0xd0,
-                       via *(base-4)) */
-  iVar8 = (*g_pHelperFuncs->stricmp)(iVar2,(int32)STRING_INVALIDENTRY);
-  if (iVar8 != 0) {
-    pvVar5 = helper_malloc((iVar3 - iVar2) + 1);
-                    /* helper[50] char * strncpy(char *dst, const char *src, uint32 n)
-                       (AEEHelperFuncs +0xc8, via *(base-4)) */
-    (*g_pHelperFuncs->strncpy)(pvVar5,iVar2,iVar3 - iVar2);
-    FUN_001200ac(*(int *)(*(int *)(param_2 + 0x4c) + 0xa8),pvVar5);
-    helper_free(pvVar5);
-    pbVar9 = (byte *)(iVar3 + 1);
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar8 = (*g_pHelperFuncs->strcmp)(uVar4,(int32)STRING_STAR_D);
-    iVar3 = INTEGER_MINUS_22752;
-    if (iVar8 == 0) {
-      FUN_00109534(param_1,9,0,0,0);
-      iVar3 = FUN_0010a12c(param_1,param_2,pbVar9);
-      uVar11 = 1;
-      goto LAB_0010594c;
+  web_request_free_buffers(caller,request);
+  if ((*g_pHelperFuncs->stricmp)(fields[0],STRING_STAR_R) != 0 ||
+      (*g_pHelperFuncs->stricmp)(fields[1],STRING_INVALIDENTRY) == 0) {
+    event = 5;
+    value = 6;
+    copy = (char *)0x0;
+  }
+  else {
+    end = (*g_pHelperFuncs->strchrend)(fields[2],'~');
+    length = end - fields[2];
+    id = helper_malloc(length + 1);
+    (*g_pHelperFuncs->strncpy)(id,fields[2],length);
+    FUN_001200ac((int32)request->app->progress,(int32)id);
+    helper_free(id);
+    if (request->state == 4) {
+      event = 7;
+      value = count - 3;
+      copy = (char *)(fields + 3);
     }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar8 = (*g_pHelperFuncs->strcmp)(uVar4,(int32)STRING_STAR_T);
-    if (iVar8 == 0) {
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-      iVar8 = (*g_pHelperFuncs->strlen)(pbVar9);
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-      uVar12 = (*g_pHelperFuncs->malloc)(iVar8 + 1);
-                    /* helper[50] char * strncpy(char *dst, const char *src, uint32 n)
-                       (AEEHelperFuncs +0xc8, via *(base-4)) */
-      (*g_pHelperFuncs->strncpy)(uVar12,pbVar9,iVar8);
-      iVar3 = 2;
-      uVar11 = 2;
-      goto LAB_0010594c;
+    else {
+      event = 6;
+      value = (*g_pHelperFuncs->atoi)((*g_pHelperFuncs->strchrend)(fields[3],'~') + 1);
+      copy = (char *)0x0;
     }
   }
-  iVar3 = 5;
-LAB_0010594c:
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-  (*g_pHelperFuncs->free)(uVar4);
-  FUN_00106354((int)param_1,param_2);
-  FUN_00107e48(param_1,param_2);
-  *(undefined4 *)(param_2 + 0x34) = 0;
-  if (iVar3 == 5) {
-    uVar11 = 2;
-  }
-  FUN_00109534(param_1,iVar3,uVar11,0,uVar12);
-  return;
+  web_request_notify(request,event,value,0,(int32)copy);
+  web_request_cancel(caller,request);
+  for (i = 0; i < count; i++)
+    (*g_pHelperFuncs->free)(fields[i]);
+  (*g_pHelperFuncs->free)(fields);                /* the binary's tail call (0x00105c08) */
 }
+
 
 /* ==== 0x00105C5C  (file offset 0x05C5C)  FUN_00105c5c ================================================ */
 void FUN_00105c5c(int param_1)
@@ -4216,200 +4157,171 @@ void ui_element_destroy(UIElement *element)
 }
 
 
-/* ==== 0x00105E44  (file offset 0x05E44)  FUN_00105e44 ================================================ */
-void FUN_00105e44(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+/* ==== 0x00105E44  (file offset 0x05E44)  web_request_read ============================================ */
+/* GUESS: names. The response callback (request->callback, set by web_request_download and the two
+   ranking requests): reads the response 1 KB at a time (ISource Read) into request->data, allocated from
+   the content length on the first read (with a check that the file system has room for it, IFileMgr
+   GetFreeSpace) and grown by 1 KB when a read does not fit; asks to be called again when more can be
+   read (Readable), reports progress every 20 reads (notify 1: bytes received, content length), and at
+   the end of the data terminates it, reports it and hands it to web_request_parse_reply. An HTTP status
+   outside 200-299 (or no response information), or a read error, sets the 1000 ms retry timer
+   (web_request_retry). Out of memory (notify 5, 1) or no room (5, 5) is reported, and then the binary
+   returns without freeing its 1 KB buffer (only the failed grow frees it first). Written from its
+   disassembly (0x00105e44 - 0x00106120). */
+void web_request_read(WebRequest *request)
 
 {
-  undefined4 uVar2;
-  int *piVar3;
-  int iVar4;
-  int iVar5;
-  int *piVar6;
-  uint uVar7;
-  int *piVar8;
-  int iVar9;
-  uint64 uVar10;
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-  uVar2 = (*g_pHelperFuncs->malloc)(0x400);
-  piVar3 = (int *)(**(code **)(**(int **)(param_1 + 0x20) + 0x18))();
-  if (((piVar3 == (int *)0x0) || (*piVar3 < 200)) || (299 < *piVar3)) {
-    (**(code **)(**(int **)(param_1 + 0x58) + 0x2c))
-              (*(int **)(param_1 + 0x58),1000,(int32)FUN_001091fc,param_1,param_4);
-    goto LAB_0010610c;
-  }
-  piVar8 = (int *)piVar3[1];
-  iVar4 = (**(code **)(*piVar8 + 0xc))(piVar8,uVar2,0x400);
-  if (*(int *)(param_1 + 0x30) != 0) {
-LAB_00105f58:
-    if (iVar4 == -2) {
-      (**(code **)(*piVar8 + 0x10))(piVar8,param_1 + 4);
-      goto LAB_0010610c;
+  char *buffer;
+  WebRespInfo *info;
+  ISource *source;
+  int32 count;
+  int32 space;
+  int32 reason = 0;                               /* why it failed (notify 5), 0 when it did not */
+  char *grown;
+
+  buffer = (*g_pHelperFuncs->malloc)(0x400);
+  info = (*request->response->pvt->GetInfo)(request->response);
+  if (info == (WebRespInfo *)0x0 || info->nCode < 200 || info->nCode >= 300)
+    (*request->shell->pvt->SetTimer)(request->shell,1000,(PFNNOTIFY)web_request_retry,request);
+  else {
+    source = info->pisMessage;
+    count = (*source->pvt->Read)(source,buffer,0x400);
+    if (request->started == 0) {
+      request->started = 1;
+      if (info->lContentLength != -1 && request->received == 0) {
+        request->data = (*g_pHelperFuncs->malloc)(info->lContentLength + 1);
+        if (request->data == (char *)0x0)
+          reason = 1;
+        else {
+          request->dataSize = info->lContentLength;
+          request->data[info->lContentLength] = 0;
+          if (request->fileMgr != (IFileMgr *)0x0 &&
+              (space = (int32)(*request->fileMgr->pvt->GetFreeSpace)(request->fileMgr,(uint32 *)0x0)) <
+              info->lContentLength + 1 && space >= 0)
+            reason = 5;
+        }
+      }
     }
-    if (iVar4 == -1) {
-      (**(code **)(**(int **)(param_1 + 0x58) + 0x2c))
-                (*(int **)(param_1 + 0x58),1000,(int32)FUN_001091fc,param_1);
-      goto LAB_0010610c;
-    }
-    iVar5 = *(int *)(param_1 + 0x24);
-    if (iVar4 == 0) {
-      if (iVar5 < *(int *)(param_1 + 0x2c)) {
-        *(undefined1 *)(*(int *)(param_1 + 0x28) + iVar5) = 0;
+    if (reason == 0) {
+      if (count == -2)                            /* nothing to read yet */
+        (*source->pvt->Readable)(source,&request->callback);
+      else if (count == -1)                       /* a read error */
+        (*request->shell->pvt->SetTimer)(request->shell,1000,(PFNNOTIFY)web_request_retry,request);
+      else if (count == 0) {                      /* the end of the data */
+        request->data[request->received < request->dataSize ? request->received : request->dataSize] = 0;
+        web_request_notify(request,1,request->received,info->lContentLength,0);
+        web_request_parse_reply(request,request);
       }
       else {
-        *(undefined1 *)(*(int *)(param_1 + 0x28) + *(int *)(param_1 + 0x2c)) = 0;
+        if (request->received + count > request->dataSize) {
+          grown = (*g_pHelperFuncs->realloc)(request->data,request->dataSize + 0x400);
+          if (grown == (char *)0x0) {
+            (*g_pHelperFuncs->free)(buffer);
+            reason = 1;
+          }
+          else {
+            request->data = grown;
+            request->dataSize = request->dataSize + 0x400;
+          }
+        }
+        if (reason == 0) {
+          if (request->received + count <= request->dataSize) {
+            (*g_pHelperFuncs->memmove)(request->data + request->received,buffer,count);
+            request->received = request->received + count;
+          }
+          if (FUN_00100288(0x14,request->readCount++).high == 0)    /* every 20 reads */
+            web_request_notify(request,1,request->received,info->lContentLength,0);
+          (*source->pvt->Readable)(source,&request->callback);
+        }
       }
-      FUN_00109534((undefined4 *)param_1,1,*(undefined4 *)(param_1 + 0x24),piVar3[2],0);
-      FUN_00105734(param_1,param_1);
-      goto LAB_0010610c;
     }
-    if (*(int *)(param_1 + 0x2c) < iVar5 + iVar4) {
-      iVar9 = *(int *)(param_1 + 0x2c) + 0x400;
-                    /* helper[29] void * realloc(void *p, uint32 size)  (AEEHelperFuncs +0x74, via
-                       *(base-4)) */
-      iVar5 = (*g_pHelperFuncs->realloc)
-                        (*(undefined4 *)(param_1 + 0x28),iVar9);
-      if (iVar5 == 0) {
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-        (*g_pHelperFuncs->free)(uVar2);
-        goto LAB_00105fbc;
-      }
-      *(int *)(param_1 + 0x28) = iVar5;
-      *(int *)(param_1 + 0x2c) = iVar9;
-    }
-    if (*(int *)(param_1 + 0x24) + iVar4 <= *(int *)(param_1 + 0x2c)) {
-                    /* helper[0] void * memmove(void *dst, const void *src, uint32 n)
-                       (AEEHelperFuncs +0x0, via *(base-4)) */
-      (*(code *)g_pHelperFuncs->memmove)
-                (*(int *)(param_1 + 0x28) + *(int *)(param_1 + 0x24),uVar2,iVar4);
-      *(int *)(param_1 + 0x24) = *(int *)(param_1 + 0x24) + iVar4;
-    }
-    uVar7 = *(uint *)(param_1 + 0x40);
-    *(uint *)(param_1 + 0x40) = uVar7 + 1;
-    uVar10 = FUN_00100288(0x14,uVar7);
-    if ((int)uVar10.high == 0) {
-      FUN_00109534((undefined4 *)param_1,1,*(undefined4 *)(param_1 + 0x24),piVar3[2],0);
-    }
-    (**(code **)(*piVar8 + 0x10))(piVar8,param_1 + 4);
-LAB_0010610c:
-                    /* WARNING: Could not recover jumptable at 0x00106120. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) - tail
-                       call */
-    (*g_pHelperFuncs->free)(uVar2);
+  }
+  if (reason != 0) {
+    web_request_notify(request,5,reason,0,0);
     return;
   }
-  *(undefined4 *)(param_1 + 0x30) = 1;
-  if ((piVar3[2] == -1) || (*(int *)(param_1 + 0x24) != 0)) goto LAB_00105f58;
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-  iVar5 = (*g_pHelperFuncs->malloc)(piVar3[2] + 1);
-  *(int *)(param_1 + 0x28) = iVar5;
-  if (iVar5 != 0) {
-    *(int *)(param_1 + 0x2c) = piVar3[2];
-    *(undefined1 *)(*(int *)(param_1 + 0x28) + piVar3[2]) = 0;
-    piVar6 = *(int **)(param_1 + 0x50);
-    if (((piVar6 != (int *)0x0) &&
-        (iVar5 = (**(code **)(*piVar6 + 0x20))(piVar6,0), iVar5 < piVar3[2] + 1)) && (-1 < iVar5)) {
-      uVar2 = 5;
-      goto LAB_00105fc8;
-    }
-    goto LAB_00105f58;
-  }
-LAB_00105fbc:
-  uVar2 = 1;
-LAB_00105fc8:
-  FUN_00109534((undefined4 *)param_1,5,uVar2,0,0);
-  return;
+  (*g_pHelperFuncs->free)(buffer);                /* the binary's tail call (0x00106120) */
 }
 
-/* ==== 0x00106130  (file offset 0x06130)  FUN_00106130 ================================================ */
-void FUN_00106130(int param_1,undefined4 param_2,int param_3,int param_4,undefined4 param_5)
+
+/* ==== 0x00106130  (file offset 0x06130)  web_request_download ======================================== */
+/* GUESS: names. Starts (position 0) or resumes a download of `fileName`.dat from
+   http://swervenet.superscape.com/disney/download.php: with position 0 it builds the base URL
+   (?f=<file>.dat&uid=<userId>&aid=KH&t=<time>; userId "" when 0) and starts the counts at 0; then the URL
+   is the base URL with &s=<position>, the retry timer is cancelled and the IWeb asked for the response
+   (web_request_read reads it). Needs the IFileMgr it creates and the IWeb, else tells the listener (5, 3).
+   State 3: downloading. */
+void web_request_download(WebRequest *request,char *fileName,int32 position,char *userId,int32 time)
 
 {
-  int iVar2;
-  void *pvVar3;
-  bool bVar4;
-  
-  *(undefined4 *)(param_1 + 0x48) = 3;
-  (**(code **)(**(int **)(param_1 + 0x58) + 8))
-            (*(int **)(param_1 + 0x58),AEECLSID_FILEMGR_VALUE,param_1 + 0x50);
-  bVar4 = *(int *)(param_1 + 0x50) != 0;
-  iVar2 = 0;
-  if (bVar4) {
-    iVar2 = *(int *)(param_1 + 0x54);
+  char *file;
+
+  request->state = 3;
+  (*request->shell->pvt->CreateInstance)(request->shell,AEECLSID_FILEMGR_VALUE,(void **)&request->fileMgr);
+  if (request->fileMgr == (IFileMgr *)0x0 || request->web == (IWeb *)0x0) {
+    web_request_notify(request,5,3,0,0);
+    return;
   }
-  if (bVar4 && iVar2 != 0) {
-    if (param_3 == 0) {
-      if (*(void **)(param_1 + 0x3c) != (void *)0x0) {
-        helper_free(*(void **)(param_1 + 0x3c));
-      }
-      *(undefined4 *)(param_1 + 0x3c) = 0;
-      pvVar3 = helper_malloc(0x100);
-      *(void **)(param_1 + 0x3c) = pvVar3;
-      pvVar3 = helper_malloc(0x80);
+  if (position == 0) {
+    if (request->baseUrl != (char *)0x0)
+      helper_free(request->baseUrl);
+    request->baseUrl = (char *)0x0;
+    request->baseUrl = helper_malloc(0x100);
+    file = helper_malloc(0x80);
                     /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
                        via *(base-4)) */
-      (*g_pHelperFuncs->strcpy)(pvVar3,param_2);
+    (*g_pHelperFuncs->strcpy)(file,fileName);
                     /* helper[3] char * strcat(char *dst, const char *src)  (AEEHelperFuncs +0xc,
                        via *(base-4)) */
-      (*g_pHelperFuncs->strcat)(pvVar3,(int32)STRING_DOT_DAT);
-      if (param_4 == 0) {
-        param_4 = (int32)DATA_AT_00127D90;
-      }
+    (*g_pHelperFuncs->strcat)(file,STRING_DOT_DAT);
+    if (userId == (char *)0x0)
+      userId = (char *)STRING_EMPTY;          /* "" */
                     /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
                        +0x20, via *(base-4)) */
-      (*g_pHelperFuncs->sprintf)
-                (*(undefined4 *)(param_1 + 0x3c),(int32)STRING_PERCENT_S_PERCENT_S_PERCENT_S_00127DC0,(int32)STRING_HTTP_COLON_SLASH_SLASH_SWERVENET_DOT,
-                 (int32)STRING_DISNEY_SLASH_DOWNLOAD_DOT_PHP_QUESTION,pvVar3,param_4,(int32)STRING_KH,param_5);
-      helper_free(pvVar3);
-      *(undefined4 *)(param_1 + 0x24) = 0;
-      *(undefined4 *)(param_1 + 0x40) = 0;
-    }
-    if (*(void **)(param_1 + 0x38) != (void *)0x0) {
-      helper_free(*(void **)(param_1 + 0x38));
-    }
-    *(undefined4 *)(param_1 + 0x38) = 0;
-    pvVar3 = helper_malloc(0x100);
-    *(void **)(param_1 + 0x38) = pvVar3;
+    (*g_pHelperFuncs->sprintf)(request->baseUrl,STRING_PERCENT_S_PERCENT_S_PERCENT_S_00127DC0,
+                               STRING_HTTP_COLON_SLASH_SLASH_SWERVENET_DOT,
+                               STRING_DISNEY_SLASH_DOWNLOAD_DOT_PHP_QUESTION,file,userId,STRING_KH,time);
+    helper_free(file);
+    request->received = 0;
+    request->readCount = 0;
+  }
+  if (request->url != (char *)0x0)
+    helper_free(request->url);
+  request->url = (char *)0x0;
+  request->url = helper_malloc(0x100);
                     /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
                        +0x20, via *(base-4)) */
-    (*g_pHelperFuncs->sprintf)
-              (pvVar3,(int32)STRING_PERCENT_S_AND_S_EQUALS_PERCENT,*(undefined4 *)(param_1 + 0x3c),param_3);
-    (**(code **)(**(int **)(param_1 + 0x58) + 0x30))
-              (*(int **)(param_1 + 0x58),(int32)FUN_001091fc,param_1);
-    if (*(code **)(param_1 + 0xc) != (code *)0x0) {
-      (**(code **)(param_1 + 0xc))(param_1 + 4);
-    }
-    *(int *)(param_1 + 0x14) = (int32)FUN_00105e44;
-    iVar2 = WORD_HEXADECIMAL_00021B34;
-    *(int *)(param_1 + 0x18) = param_1;
-    *(undefined4 *)(param_1 + 0x30) = 0;
-    (**(code **)(**(int **)(param_1 + 0x54) + 0x18))
-              (*(int **)(param_1 + 0x54),param_1 + 0x20,param_1 + 4,*(undefined4 *)(param_1 + 0x38),
-               WORD_HEXADECIMAL_00010002 + 0x10000,param_1,WORD_HEXADECIMAL_00010002,(int32)DATA_AT_00127E20,0);
+  (*g_pHelperFuncs->sprintf)(request->url,STRING_PERCENT_S_AND_S_EQUALS_PERCENT,request->baseUrl,position);
+  {
+    (*request->shell->pvt->CancelTimer)(request->shell,(PFNNOTIFY)web_request_retry,request);
+    if (request->callback.pfnCancel != (PFNNOTIFY)0x0)
+      (*request->callback.pfnCancel)(&request->callback);
+    request->callback.pfnNotify = (PFNNOTIFY)web_request_read;
+    request->callback.pNotifyData = request;
+    request->started = 0;
+    (*request->web->pvt->GetResponse)(request->web,&request->response,&request->callback,request->url,
+                                      WORD_HEXADECIMAL_00010002 + 0x10000,request,WORD_HEXADECIMAL_00010002,
+                                      (int32)STRING_X_METHOD_GET,0);
   }
-  else {
-    FUN_00109534(param_1,5,3,0,0);
-  }
-  return;
 }
 
-/* ==== 0x00106354  (file offset 0x06354)  FUN_00106354 ================================================ */
-void FUN_00106354(int param_1,int param_2)
+
+/* ==== 0x00106354  (file offset 0x06354)  web_request_cancel ========================================== */
+/* GUESS: name. Stops a web request: its state becomes 1 (idle), its callback is cancelled and its response
+   released. The state is set in `request`, the rest in `pending`; every caller passes the same request
+   twice. */
+void web_request_cancel(WebRequest *request,WebRequest *pending)
 
 {
-  *(undefined4 *)(param_1 + 0x48) = 1;
-  if (*(code **)(param_2 + 0xc) != (code *)0x0) {
-    (**(code **)(param_2 + 0xc))(param_2 + 4);
+  request->state = 1;
+  if (pending->callback.pfnCancel != (PFNNOTIFY)0x0)
+    (*pending->callback.pfnCancel)(&pending->callback);
+  if (pending->response != (IWebResp *)0x0) {
+    (*pending->response->pvt->Release)(pending->response);
+    pending->response = (IWebResp *)0x0;
   }
-  if (*(int **)(param_2 + 0x20) != (int *)0x0) {
-    (**(code **)(**(int **)(param_2 + 0x20) + 4))();
-    *(undefined4 *)(param_2 + 0x20) = 0;
-    return;
-  }
-  return;
 }
+
 
 /* ==== 0x00106398  (file offset 0x06398)  FUN_00106398 ================================================ */
 void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
@@ -5340,24 +5252,27 @@ int32 ui_element_draw(UIElement *element)
 }
 
 
-/* ==== 0x00107E48  (file offset 0x07E48)  FUN_00107e48 ================================================ */
-void FUN_00107e48(undefined4 param_1,int param_2)
+/* ==== 0x00107E48  (file offset 0x07E48)  web_request_free_buffers ==================================== */
+/* GUESS: name. Frees a web request's URL and the data received, and resets the counts of bytes received
+   and of the buffer. `caller` is not read; every caller passes the request itself (the reply parser
+   passes its own first parameter, the same request). */
+void web_request_free_buffers(WebRequest *caller,WebRequest *request)
 
 {
-  if (*(int *)(param_2 + 0x38) != 0) {
+  if (request->url != (char *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(*(undefined4 *)(param_2 + 0x38));
-    *(undefined4 *)(param_2 + 0x38) = 0;
+    (*g_pHelperFuncs->free)(request->url);
+    request->url = (char *)0x0;
   }
-  if (*(int *)(param_2 + 0x28) != 0) {
+  if (request->data != (char *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(*(undefined4 *)(param_2 + 0x28));
-    *(undefined4 *)(param_2 + 0x28) = 0;
+    (*g_pHelperFuncs->free)(request->data);
+    request->data = (char *)0x0;
   }
-  *(undefined4 *)(param_2 + 0x24) = 0;
-  *(undefined4 *)(param_2 + 0x2c) = 0;
-  return;
+  request->received = 0;
+  request->dataSize = 0;
 }
+
 
 /* ==== 0x00107EA4  (file offset 0x07EA4)  list_get_entry ============================================== */
 /* GUESS: name. Entry `index` of a list, or 0 when index is out of range (0x00107ea4-0x00107ec0:
@@ -5551,103 +5466,96 @@ int32 list_find_entry(UIList *list,int32 id)
   return entry;
 }
 
-/* ==== 0x0010810C  (file offset 0x0810C)  FUN_0010810c ================================================ */
-void FUN_0010810c(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5,
-                 undefined4 param_6)
+/* ==== 0x0010810C  (file offset 0x0810C)  web_request_post_rank_ex ==================================== */
+/* GUESS: names. Sends a ranking to http://swervenet.superscape.com/disney/rankex.php
+   (?uid=<userId>&aid=KH&lid=<levelId>&s=<score>&t=<time>&u1=<value>; userId "" when 0, the score a
+   string), state 4; the reply is read by web_request_read. Without the IWeb it tells the listener (5, 3). */
+void web_request_post_rank_ex(WebRequest *request,char *userId,char *levelId,char *score,int32 time,
+                              int32 value)
 
 {
-  undefined4 uVar2;
-  *(undefined4 *)(param_1 + 0x48) = 4;
-  if (*(int *)(param_1 + 0x38) != 0) {
+  request->state = 4;
+  if (request->url != (char *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x38));
-    *(undefined4 *)(param_1 + 0x38) = 0;
+    (*g_pHelperFuncs->free)(request->url);
+    request->url = (char *)0x0;
   }
                     /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
                         */
-  uVar2 = (*g_pHelperFuncs->malloc)(0x100);
-  *(undefined4 *)(param_1 + 0x38) = uVar2;
-  if (param_2 == 0) {
-    param_2 = (int32)DATA_AT_00127D90;
-  }
-  (*g_pHelperFuncs->sprintf)
-            (uVar2,(int32)STRING_PERCENT_S_PERCENT_S_QUESTION_MARK_00127E70,(int32)STRING_HTTP_COLON_SLASH_SLASH_SWERVENET_DOT,(int32)STRING_DISNEY_SLASH_RANKEX_DOT_PHP,param_2,
-             (int32)STRING_KH,param_3,param_4,param_5,param_6);
-  if (*(int *)(param_1 + 0x54) == 0) {
-    FUN_00109534(param_1,5,3,0,0);
-  }
+  request->url = (*g_pHelperFuncs->malloc)(0x100);
+  if (userId == (char *)0x0)
+    userId = (char *)STRING_EMPTY;            /* "" */
+                    /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
+                       +0x20, via *(base-4)) */
+  (*g_pHelperFuncs->sprintf)(request->url,STRING_PERCENT_S_PERCENT_S_QUESTION_MARK_00127E70,
+                             STRING_HTTP_COLON_SLASH_SLASH_SWERVENET_DOT,STRING_DISNEY_SLASH_RANKEX_DOT_PHP,userId,
+                             STRING_KH,levelId,score,time,value);
+  if (request->web == (IWeb *)0x0)
+    web_request_notify(request,5,3,0,0);
   else {
-    (**(code **)(**(int **)(param_1 + 0x58) + 0x30))
-              (*(int **)(param_1 + 0x58),(int32)FUN_001091fc,param_1);
-    if (*(code **)(param_1 + 0xc) != (code *)0x0) {
-      (**(code **)(param_1 + 0xc))(param_1 + 4);
+    (*request->shell->pvt->CancelTimer)(request->shell,(PFNNOTIFY)web_request_retry,request);
+    if (request->callback.pfnCancel != (PFNNOTIFY)0x0)
+      (*request->callback.pfnCancel)(&request->callback);
+    request->callback.pfnNotify = (PFNNOTIFY)web_request_read;
+    request->callback.pNotifyData = request;
+    request->started = 0;
+    if (request->response != (IWebResp *)0x0) {
+      (*request->response->pvt->Release)(request->response);
+      request->response = (IWebResp *)0x0;
     }
-    *(int *)(param_1 + 0x14) = (int32)FUN_00105e44;
-    *(int *)(param_1 + 0x18) = param_1;
-    *(undefined4 *)(param_1 + 0x30) = 0;
-    if (*(int **)(param_1 + 0x20) != (int *)0x0) {
-      (**(code **)(**(int **)(param_1 + 0x20) + 4))();
-      *(undefined4 *)(param_1 + 0x20) = 0;
-    }
-    (**(code **)(**(int **)(param_1 + 0x54) + 0x18))
-              (*(int **)(param_1 + 0x54),param_1 + 0x20,param_1 + 4,*(undefined4 *)(param_1 + 0x38),
-               WORD_HEXADECIMAL_00010002 + 0x10000,param_1,WORD_HEXADECIMAL_00010002,(int32)DATA_AT_00127E20,0);
+    (*request->web->pvt->GetResponse)(request->web,&request->response,&request->callback,request->url,
+                                      WORD_HEXADECIMAL_00010002 + 0x10000,request,WORD_HEXADECIMAL_00010002,
+                                      (int32)STRING_X_METHOD_GET,0);
   }
-  return;
 }
 
-/* ==== 0x001082E0  (file offset 0x082E0)  FUN_001082e0 ================================================ */
-void FUN_001082e0(int param_1,undefined4 param_2,int param_3,undefined4 param_4,undefined4 param_5,
-                 undefined4 param_6,undefined4 param_7,int param_8)
+
+/* ==== 0x001082E0  (file offset 0x082E0)  web_request_post_rank ======================================= */
+/* GUESS: names. Sends a ranking to http://swervenet.superscape.com/disney/rank.php
+   (?uid=<userId>&aid=KH&lid=<levelId>&s=<score>&t=<time>&u1=<value>&u2=<text>; userId and text "" when
+   0), with the state `state` (2 from FUN_00101ad8); the reply is read by web_request_read. Without the
+   IWeb it tells the listener (5, 3). */
+void web_request_post_rank(WebRequest *request,int32 state,char *userId,int32 score,char *levelId,int32 time,
+                           int32 value,char *text)
 
 {
-  undefined4 uVar2;
-  int iVar3;
-  int iVar4;
-  
-  *(undefined4 *)(param_1 + 0x48) = param_2;
-  if (*(int *)(param_1 + 0x38) != 0) {
+  request->state = state;
+  if (request->url != (char *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x38));
-    *(undefined4 *)(param_1 + 0x38) = 0;
+    (*g_pHelperFuncs->free)(request->url);
+    request->url = (char *)0x0;
   }
                     /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
                         */
-  uVar2 = (*g_pHelperFuncs->malloc)(0x100);
-  *(undefined4 *)(param_1 + 0x38) = uVar2;
-  iVar4 = (int32)DATA_AT_00127D90;
-  iVar3 = iVar4;
-  if (param_8 != 0) {
-    iVar3 = param_8;
-  }
-  if (param_3 != 0) {
-    iVar4 = param_3;
-  }
-  (*g_pHelperFuncs->sprintf)
-            (uVar2,(int32)STRING_PERCENT_S_PERCENT_S_QUESTION_MARK_00127E30,(int32)STRING_HTTP_COLON_SLASH_SLASH_SWERVENET_DOT,(int32)STRING_DISNEY_SLASH_RANK_DOT_PHP,iVar4,
-             (int32)STRING_KH,param_5,param_4,param_6,param_7,iVar3);
-  if (*(int *)(param_1 + 0x54) == 0) {
-    FUN_00109534(param_1,5,3,0,0);
-  }
+  request->url = (*g_pHelperFuncs->malloc)(0x100);
+  if (text == (char *)0x0)
+    text = (char *)STRING_EMPTY;              /* "" */
+  if (userId == (char *)0x0)
+    userId = (char *)STRING_EMPTY;
+                    /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
+                       +0x20, via *(base-4)) */
+  (*g_pHelperFuncs->sprintf)(request->url,STRING_PERCENT_S_PERCENT_S_QUESTION_MARK_00127E30,
+                             STRING_HTTP_COLON_SLASH_SLASH_SWERVENET_DOT,STRING_DISNEY_SLASH_RANK_DOT_PHP,userId,
+                             STRING_KH,levelId,score,time,value,text);
+  if (request->web == (IWeb *)0x0)
+    web_request_notify(request,5,3,0,0);
   else {
-    (**(code **)(**(int **)(param_1 + 0x58) + 0x30))
-              (*(int **)(param_1 + 0x58),(int32)FUN_001091fc,param_1);
-    if (*(code **)(param_1 + 0xc) != (code *)0x0) {
-      (**(code **)(param_1 + 0xc))(param_1 + 4);
+    (*request->shell->pvt->CancelTimer)(request->shell,(PFNNOTIFY)web_request_retry,request);
+    if (request->callback.pfnCancel != (PFNNOTIFY)0x0)
+      (*request->callback.pfnCancel)(&request->callback);
+    request->callback.pfnNotify = (PFNNOTIFY)web_request_read;
+    request->callback.pNotifyData = request;
+    request->started = 0;
+    if (request->response != (IWebResp *)0x0) {
+      (*request->response->pvt->Release)(request->response);
+      request->response = (IWebResp *)0x0;
     }
-    *(int *)(param_1 + 0x14) = (int32)FUN_00105e44;
-    *(int *)(param_1 + 0x18) = param_1;
-    *(undefined4 *)(param_1 + 0x30) = 0;
-    if (*(int **)(param_1 + 0x20) != (int *)0x0) {
-      (**(code **)(**(int **)(param_1 + 0x20) + 4))();
-      *(undefined4 *)(param_1 + 0x20) = 0;
-    }
-    (**(code **)(**(int **)(param_1 + 0x54) + 0x18))
-              (*(int **)(param_1 + 0x54),param_1 + 0x20,param_1 + 4,*(undefined4 *)(param_1 + 0x38),
-               WORD_HEXADECIMAL_00010002 + 0x10000,param_1,WORD_HEXADECIMAL_00010002,(int32)DATA_AT_00127E20,0);
+    (*request->web->pvt->GetResponse)(request->web,&request->response,&request->callback,request->url,
+                                      WORD_HEXADECIMAL_00010002 + 0x10000,request,WORD_HEXADECIMAL_00010002,
+                                      (int32)STRING_X_METHOD_GET,0);
   }
-  return;
 }
+
 
 /* ==== 0x001083D8  (file offset 0x083D8)  FUN_001083d8 ================================================ */
 undefined4 FUN_001083d8(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
@@ -5972,7 +5880,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
       helper_free(pvVar3);
       (*g_pHelperFuncs->free)(param_5);
       if (param_1[6] != 0) {
-        FUN_0010c598(param_1[6],1);
+        web_request_destroy(param_1[6],1);
       }
       param_1[6] = 0;
       return;
@@ -6004,7 +5912,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
     break;
   case 0x5:
     if (param_1[6] != 0) {
-      FUN_0010c598(param_1[6],1);
+      web_request_destroy(param_1[6],1);
     }
     param_1[6] = 0;
     if (param_3 == (int *)0x2 || param_3 == (int *)0x1) {
@@ -6252,40 +6160,44 @@ int32 list_set_entry(UIList *list,int32 id,int32 entry)
   return ++list->count;
 }
 
-/* ==== 0x001091FC  (file offset 0x091FC)  FUN_001091fc ================================================ */
-void FUN_001091fc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+/* ==== 0x001091FC  (file offset 0x091FC)  web_request_retry =========================================== */
+/* GUESS: name. The retry timer (set by web_request_read when the server does not answer or the read
+   fails, 1000 ms): meant to send the download again from the bytes already received, at most 3 times
+   (state 3), and to report a failure after that (notify 5, 4). But it starts with web_request_cancel,
+   which sets the state to 1, so the state is never 3 when it is tested (0x0010920c) and the binary
+   always takes the second branch: the buffers are freed and the listener told (5, 4, 0). The first
+   branch is written as the binary has it. */
+void web_request_retry(WebRequest *request)
 
 {
-  undefined4 uVar1;
-  undefined4 uVar2;
-  int iVar3;
-  undefined4 uVar4;
-  
-  FUN_00106354(param_1,param_1 /* not arguments, register leftovers: param_3,param_4,param_3,param_4 */);
-  if (*(int *)(param_1 + 0x48) == 3) {
-    if (*(int *)(param_1 + 0x34) < 3) {
-      iVar3 = *(int *)(param_1 + 0x34) + 1;
-      *(int *)(param_1 + 0x34) = iVar3;
-      FUN_00109534(param_1,3,iVar3,3,0);
-      FUN_00106130(param_1,*(undefined4 *)(param_1 + 0x38),*(undefined4 *)(param_1 + 0x24),0,
-                   *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x4c) + 0xa8) + 0x5c4));
+  int32 event;
+  int32 value;
+  int32 detail;
+
+  web_request_cancel(request,request);
+  if (request->state == 3) {
+    if (request->retries < 3) {
+      request->retries++;
+      web_request_notify(request,3,request->retries,3,0);
+      web_request_download(request,request->url,request->received,(char *)0x0,
+                           *(int32 *)((int32)request->app->progress + 0x5c4));
       return;
     }
-    *(undefined4 *)(param_1 + 0x34) = 0xffffffff;
-    FUN_00107e48(param_1,param_1);
-    uVar4 = 3;
-    uVar2 = 0;
-    uVar1 = 4;
+    request->retries = -1;
+    web_request_free_buffers(request,request);
+    event = 4;
+    value = 0;
+    detail = 3;
   }
   else {
-    FUN_00107e48(param_1,param_1);
-    uVar4 = 0;
-    uVar2 = 4;
-    uVar1 = 5;
+    web_request_free_buffers(request,request);
+    event = 5;
+    value = 4;
+    detail = 0;
   }
-  FUN_00109534(param_1,uVar1,uVar2,uVar4,0);
-  return;
+  web_request_notify(request,event,value,detail,0);
 }
+
 
 /* ==== 0x001092C0  (file offset 0x092C0)  FUN_001092c0 ================================================ */
 void FUN_001092c0(int param_1,int param_2)
@@ -6379,7 +6291,7 @@ FUN_001093f8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
   uVar6 = 2;
                     /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
                         */
-  iVar2 = (*g_pHelperFuncs->strlen)((int32)DATA_AT_00127D90);
+  iVar2 = (*g_pHelperFuncs->strlen)((int32)STRING_EMPTY);
                     /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
                         */
   iVar3 = (*g_pHelperFuncs->strlen)(param_3);
@@ -6388,7 +6300,7 @@ FUN_001093f8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
   uVar4 = (*g_pHelperFuncs->malloc)(iVar2 + iVar3 + 1);
                     /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
                        via *(base-4)) */
-  (*g_pHelperFuncs->strcpy)(uVar4,(int32)DATA_AT_00127D90);
+  (*g_pHelperFuncs->strcpy)(uVar4,(int32)STRING_EMPTY);
                     /* helper[3] char * strcat(char *dst, const char *src)  (AEEHelperFuncs +0xc,
                        via *(base-4)) */
   (*g_pHelperFuncs->strcat)(uVar4,param_3);
@@ -6415,16 +6327,17 @@ LAB_001094f8:
   return uVar6;
 }
 
-/* ==== 0x00109534  (file offset 0x09534)  FUN_00109534 ================================================ */
-void FUN_00109534(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
-                 undefined4 param_5)
+/* ==== 0x00109534  (file offset 0x09534)  web_request_notify ========================================== */
+/* GUESS: name. Tells the request's listener (FUN_0010888c) about an event, with its context: progress (1,
+   bytes received, content length), a reply (2, 6, 7, 9 by its kind), a failure (5, reason: 1 out of memory,
+   3 no IWeb or IFileMgr, 4 the server did not answer, 5 no room or a bad reply). */
+void web_request_notify(WebRequest *request,int32 event,int32 value,int32 detail,int32 extra)
 
 {
-  if ((code *)*param_1 != (code *)0x0) {
-    (*(code *)*param_1)(param_1[0x11],param_2,param_3,param_4,param_5);
-  }
-  return;
+  if (request->listener != (WebRequestListener)0x0)
+    (*request->listener)(request->context,event,value,detail,extra);
 }
+
 
 /* ==== 0x0010955C  (file offset 0x0955C)  FUN_0010955c ================================================ */
 void FUN_0010955c(int param_1,int param_2,int param_3)
@@ -7489,32 +7402,32 @@ int * FUN_0010ac6c(int *param_1,int param_2)
   return param_1;
 }
 
-/* ==== 0x0010AF3C  (file offset 0x0AF3C)  FUN_0010af3c ================================================ */
-undefined4 * FUN_0010af3c(undefined4 *param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x0010AF3C  (file offset 0x0AF3C)  web_request_create ========================================== */
+/* GUESS: names. A web request's constructor: allocates its 0x5c bytes when `request` is 0 (returns 0 when
+   out of memory), keeps the app, its IShell, the listener and its context (the screen stack, for
+   FUN_0010888c), and creates the IWeb (AEECLSID_WEB). Made by FUN_00101ad8 for the downloads and the
+   rankings (KHApp's screen stack +0x18). */
+WebRequest * web_request_create(WebRequest *request,int32 context,WebRequestListener listener)
 
 {
-  int iVar1;
-  int *piVar2;
-  
-  if ((param_1 != (undefined4 *)0x0) ||
-     (param_1 = helper_malloc_2(0x5c), param_1 != (undefined4 *)0x0)) {
-                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
-                        */
-    iVar1 = (*g_pHelperFuncs->GetAppInstance)();
-    param_1[0x13] = iVar1;
-    piVar2 = *(int **)(iVar1 + 0xc);
-    param_1[0x11] = param_2;
-    param_1[0x16] = piVar2;
-    param_1[0xf] = 0;
-    *param_1 = param_3;
-    param_1[0xd] = 0;
-    param_1[0x14] = 0;
-    param_1[0x15] = 0;
-    (**(code **)(*piVar2 + 8))(piVar2,AEECLSID_WEB_VALUE,param_1 + 0x15);
-    param_1[0x12] = 0;
-  }
-  return param_1;
+  IShell *shell;
+
+  if (request == (WebRequest *)0x0 && (request = helper_malloc_2(0x5c)) == (WebRequest *)0x0)
+    return request;
+  request->app = (KHApp *)(*g_pHelperFuncs->GetAppInstance)();
+  shell = request->app->a.m_pIShell;
+  request->context = context;
+  request->shell = shell;
+  request->baseUrl = (char *)0x0;
+  request->listener = listener;
+  request->retries = 0;
+  request->fileMgr = (IFileMgr *)0x0;
+  request->web = (IWeb *)0x0;
+  (*shell->pvt->CreateInstance)(shell,AEECLSID_WEB_VALUE,(void **)&request->web);
+  request->state = 0;
+  return request;
 }
+
 
 /* ==== 0x0010AFC4  (file offset 0x0AFC4)  FUN_0010afc4 ================================================ */
 /* returns r0 as kh.mod leaves it (param_1, or the new block, or NULL when the allocation fails); Ghidra had declared it void, but callers use r0 after the
@@ -8452,7 +8365,7 @@ void FUN_0010c3f8(int param_1,int param_2)
     FUN_0010cdd8(*(undefined4 *)(param_1 + 0x40),1);
   }
   if (*(int *)(param_1 + 0x18) != 0) {
-    FUN_0010c598(*(int *)(param_1 + 0x18),1);
+    web_request_destroy(*(int *)(param_1 + 0x18),1);
     *(undefined4 *)(param_1 + 0x18) = 0;
   }
   if (*(void **)(param_1 + 0x3c) != (void *)0x0) {
@@ -8496,33 +8409,26 @@ void FUN_0010c3f8(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x0010C598  (file offset 0x0C598)  FUN_0010c598 ================================================ */
-void FUN_0010c598(int param_1,int param_2)
+/* ==== 0x0010C598  (file offset 0x0C598)  web_request_destroy ========================================= */
+/* GUESS: name. A web request's destructor: cancels it (web_request_cancel), frees its buffers, cancels the
+   retry timer, frees the base URL, releases the IFileMgr and the IWeb, and frees the request itself when
+   `freeIt` is set. */
+void web_request_destroy(WebRequest *request,int32 freeIt)
 
 {
-  undefined4 param_3;
-  undefined4 param_4;
-  /* not parameters: param_3, param_4. kh.mod reads r2 / r3 only on paths where it was already written, or as a
-     leftover (no caller sets them); Ghidra listed them as inputs */
-  FUN_00106354(param_1,param_1 /* not arguments, register leftovers: param_3,param_4,param_4 */);
-  FUN_00107e48(param_1,param_1);
-  (**(code **)(**(int **)(param_1 + 0x58) + 0x30))
-            (*(int **)(param_1 + 0x58),(int32)FUN_001091fc,param_1);
-  if (*(void **)(param_1 + 0x3c) != (void *)0x0) {
-    helper_free(*(void **)(param_1 + 0x3c));
-  }
-  if (*(int **)(param_1 + 0x50) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x50) + 4))();
-  }
-  if (*(int **)(param_1 + 0x54) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x54) + 4))();
-  }
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
-  return;
+  web_request_cancel(request,request);
+  web_request_free_buffers(request,request);
+  (*request->shell->pvt->CancelTimer)(request->shell,(PFNNOTIFY)web_request_retry,request);
+  if (request->baseUrl != (char *)0x0)
+    helper_free(request->baseUrl);
+  if (request->fileMgr != (IFileMgr *)0x0)
+    (*request->fileMgr->pvt->Release)(request->fileMgr);
+  if (request->web != (IWeb *)0x0)
+    (*request->web->pvt->Release)(request->web);
+  if (freeIt != 0)
+    helper_free(request);
 }
+
 
 /* ==== 0x0010C620  (file offset 0x0C620)  FUN_0010c620 ================================================ */
 void FUN_0010c620(int param_1,int param_2)
@@ -9899,7 +9805,7 @@ boolean kh_HandleEvent(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
 /* ==== 0x0010E1F8  (file offset 0x0E1F8)  progress_score ============================================== */
 /* GUESS: name. munny + 100 * experience (0x0010e1f8: experience * 25, shifted left by 2, plus munny).
    Used for a ranking entry (FUN_0011fddc, with the player's name pBufc4), a results screen
-   (FUN_001082e0) and a status screen (FUN_00101ad8). */
+   (web_request_post_rank) and a status screen (FUN_00101ad8). */
 int32 progress_score(Progress *progress)
 
 {

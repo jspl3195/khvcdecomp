@@ -445,14 +445,14 @@ void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
 void FUN_001056d0(int *param_1,int param_2);
 int32 ui_element_set_key_target(UIElement *element,int32 keyCode,UIElement *target);   /* 0x001056EC GUESS: name, see kh_mod.c */
 void key_picker_restore_original(UIElement *picker);   /* 0x001056F4 GUESS: name */
-void FUN_00105734(undefined4 *param_1,int param_2);
+void web_request_parse_reply(WebRequest *caller,WebRequest *request);   /* 0x00105734 GUESS: name, see kh_mod.c */
 void FUN_00105c5c(int param_1);
 void FUN_00105d48(int param_1);
 void FUN_00105d7c(int param_1);
 void FUN_00105dc8(int param_1);
-void FUN_00105e44(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-void FUN_00106130(int param_1,undefined4 param_2,int param_3,int param_4,undefined4 param_5);
-void FUN_00106354(int param_1,int param_2);
+void web_request_read(WebRequest *request);   /* 0x00105E44 GUESS: name, see kh_mod.c */
+void web_request_download(WebRequest *request,char *fileName,int32 position,char *userId,int32 time);   /* 0x00106130 GUESS: name, see kh_mod.c */
+void web_request_cancel(WebRequest *request,WebRequest *pending);   /* 0x00106354 GUESS: name, see kh_mod.c */
 void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4);
 void FUN_0010673c(int *param_1,undefined4 param_2,int *param_3,undefined4 param_4);
 void FUN_00106a94(int *param_1,int *param_2);
@@ -463,7 +463,7 @@ void FUN_00107230(int *param_1,undefined4 param_2,int *param_3);
 void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,undefined4 param_6, int param_7);
 void FUN_00107adc(int param_1,int param_2,undefined4 param_3,int *param_4,short *param_5, undefined4 param_6,uint param_7,short param_8);
 int32 ui_element_draw(UIElement *element);   /* 0x00107D24 GUESS: name, see kh_mod.c */
-void FUN_00107e48(undefined4 param_1,int param_2);
+void web_request_free_buffers(WebRequest *caller,WebRequest *request);   /* 0x00107E48 GUESS: name, see kh_mod.c */
 int32 list_get_entry(UIList *list,int32 index);   /* 0x00107EA4 GUESS: name, see kh_mod.c */
 int32 ui_element_find_child(UIElement *element,int32 id);   /* 0x00107EC4 GUESS: name */
 void * FUN_00107ecc(undefined4 param_1,undefined4 param_2);
@@ -472,8 +472,8 @@ uint64 FUN_00107fd0(int param_1,int param_2,int param_3);
 undefined4 FUN_00107fec(int param_1,undefined4 param_2);
 int32 screen_stack_top(ScreenStack *stack);   /* 0x001080AC GUESS: name */
 int32 list_find_entry(UIList *list,int32 id);   /* 0x001080C8 GUESS: name */
-void FUN_0010810c(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5, undefined4 param_6);
-void FUN_001082e0(int param_1,undefined4 param_2,int param_3,undefined4 param_4,undefined4 param_5, undefined4 param_6,undefined4 param_7,int param_8);
+void web_request_post_rank_ex(WebRequest *request,char *userId,char *levelId,char *score,int32 time, int32 value);   /* 0x0010810C GUESS: name, see kh_mod.c */
+void web_request_post_rank(WebRequest *request,int32 state,char *userId,int32 score,char *levelId,int32 time, int32 value,char *text);   /* 0x001082E0 GUESS: name, see kh_mod.c */
 undefined4 FUN_001083d8(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 undefined4 FUN_00108414(int param_1,undefined4 param_2,int param_3);
 bool FUN_001084e4(undefined4 param_1,undefined4 param_2,int param_3);
@@ -488,14 +488,14 @@ void screen_stack_close_all(ScreenStack *stack);   /* 0x00108FA0 GUESS: name */
 void screen_stack_close_top(ScreenStack *stack,int32 redraw);   /* 0x00108FCC GUESS: name */
 void screen_stack_open(ScreenStack *stack,int32 *screen);   /* 0x001090B8 GUESS: name */
 int32 list_set_entry(UIList *list,int32 id,int32 entry);   /* 0x001090FC GUESS: name */
-void FUN_001091fc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
+void web_request_retry(WebRequest *request);   /* 0x001091FC GUESS: name, see kh_mod.c */
 void FUN_001092c0(int param_1,int param_2);
 int32 ui_element_remove_child(UIElement *element,int32 id,int32 destroy);   /* 0x00109308 GUESS: name */
 void FUN_00109368(int param_1);
 void list_remove_entry(UIList *list,int32 id);   /* 0x00109380 GUESS: name */
 void thunk_FUN_0011e154(int param_1);
 undefined4 FUN_001093f8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 );
-void FUN_00109534(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
+void web_request_notify(WebRequest *request,int32 event,int32 value,int32 detail,int32 extra);   /* 0x00109534 GUESS: name, see kh_mod.c */
 void FUN_0010955c(int param_1,int param_2,int param_3);
 void FUN_00109750(int param_1,undefined4 param_2);
 int FUN_00109780(int *param_1,undefined4 param_2,int param_3);
@@ -519,7 +519,7 @@ Hitsphere * hitsphere_create(Hitsphere *hitsphere,int32 entity,BossCombatRegion 
 int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3);
 int * FUN_0010aa8c(int *param_1,int *param_2);
 int * FUN_0010ac6c(int *param_1,int param_2);
-undefined4 * FUN_0010af3c(undefined4 *param_1,undefined4 param_2,undefined4 param_3);
+WebRequest * web_request_create(WebRequest *request,int32 context,WebRequestListener listener);   /* 0x0010AF3C GUESS: name, see kh_mod.c */
 undefined4 * FUN_0010afc4(undefined4 *param_1);
 undefined4 * FUN_0010b014(undefined4 *param_1,undefined4 param_2);
 int * FUN_0010b080(int *param_1,undefined4 param_2);
@@ -547,7 +547,7 @@ undefined4 * FUN_0010c218(undefined4 *param_1,undefined4 *param_2);
 void FUN_0010c2a8(int *param_1,int param_2);
 void FUN_0010c2c4(int *param_1,int param_2);
 void FUN_0010c3f8(int param_1,int param_2);
-void FUN_0010c598(int param_1,int param_2);
+void web_request_destroy(WebRequest *request,int32 freeIt);   /* 0x0010C598 GUESS: name, see kh_mod.c */
 void FUN_0010c620(int param_1,int param_2);
 void FUN_0010c66c(int param_1,int param_2);
 void FUN_0010c6b4(int *param_1,int param_2);
@@ -1820,12 +1820,8 @@ static const char STRING_OUT_OF_MAGIC_00127D78[] = "OUT_OF_MAGIC";   /* 0x00127D
 static const uint32 DATA_AT_00127D88[2] = {   /* 0x00127D88 */
   0x00000000,0x0000000B
 };
-static const uint32 DATA_AT_00127D90[1] = {   /* 0x00127D90 */
-  0x00000000
-};
-static const uint32 DATA_AT_00127D94[1] = {   /* 0x00127D94 */
-  0x00000020
-};
+static const char STRING_EMPTY[4] = "";   /* 0x00127D90 (4 bytes: "" and its padding) */
+static const char STRING_SPACE[4] = " ";   /* 0x00127D94 (4 bytes: " " and its padding) */
 static const char STRING_INVALIDENTRY[] = "invalidentry";   /* 0x00127D98 */
 static const char STRING_STAR_D[] = "*d";   /* 0x00127DA8 */
 static const char STRING_STAR_T[] = "*t";   /* 0x00127DAC */
@@ -1836,9 +1832,8 @@ static const char STRING_PERCENT_S_PERCENT_S_PERCENT_S_00127DC0[] = "%s%s%s&uid=
 static const char STRING_HTTP_COLON_SLASH_SLASH_SWERVENET_DOT[] = "http://swervenet.superscape.com/";   /* 0x00127DDC */
 static const char STRING_DISNEY_SLASH_DOWNLOAD_DOT_PHP_QUESTION[] = "disney/download.php\?f=";   /* 0x00127E00 */
 static const char STRING_PERCENT_S_AND_S_EQUALS_PERCENT[] = "%s&s=%d";   /* 0x00127E18 */
-static const uint32 DATA_AT_00127E20[4] = {   /* 0x00127E20 */
-  0x654D2D58,0x646F6874,0x4547203A,0x000A0D54
-};
+static const char STRING_X_METHOD_GET[16] = "X-Method: GET\r\n";   /* 0x00127E20: an HTTP header line, the web
+                                                                       requests' GetResponse option 0x00010002 */
 static const char STRING_PERCENT_S_PERCENT_S_QUESTION_MARK_00127E30[] = "%s%s\?uid=%s&aid=%s&lid=%s&s=%d&t=%d&u1=%d&u2=%s";   /* 0x00127E30 */
 static const char STRING_DISNEY_SLASH_RANK_DOT_PHP[] = "disney/rank.php";   /* 0x00127E60 */
 static const char STRING_PERCENT_S_PERCENT_S_QUESTION_MARK_00127E70[] = "%s%s\?uid=%s&aid=%s&lid=%s&s=%s&t=%d&u1=%d";   /* 0x00127E70 */

@@ -76,6 +76,32 @@ typedef struct KHApp {
                                         BREW modules have no writable statics */
 } KHApp;
 
+/* ---- A web request (GUESS: names) ------------------------------------------------------------------
+ * The game's HTTP client for its server, http://swervenet.superscape.com/ (web_request_create, 0x5c
+ * bytes): downloads (disney/download.php, web_request_download) and rankings (disney/rank.php and
+ * rankex.php). The response is read through `callback` (web_request_read), the reply parsed by
+ * web_request_parse_reply, and the listener told what happened (web_request_notify). */
+typedef void (*WebRequestListener)(int32 context,int32 event,int32 value,int32 detail,int32 extra);
+typedef struct WebRequest {
+    WebRequestListener listener;  /* +0x00 told about progress, replies and failures (FUN_0010888c) */
+    AEECallback callback;         /* +0x04 the IWeb's callback: pfnNotify = web_request_read */
+    IWebResp *response;           /* +0x20 the response being read */
+    int32    received;              /* +0x24 bytes received so far (the resume position) */
+    char    *data;                  /* +0x28 the data received */
+    int32    dataSize;              /* +0x2c the size of data */
+    int32    started;               /* +0x30 set once the first part of the response was read */
+    int32    retries;               /* +0x34 retries so far (web_request_retry); -1 after the last */
+    char    *url;                   /* +0x38 the URL of the request */
+    char    *baseUrl;               /* +0x3c a download's URL without its position */
+    uint32   readCount;             /* +0x40 reads so far; progress is reported every 20 */
+    int32    context;               /* +0x44 passed to the listener (the screen stack) */
+    int32    state;                 /* +0x48 0 new, 1 idle, 3 downloading, 4 rankex, or the rank state */
+    KHApp   *app;                   /* +0x4c */
+    IFileMgr *fileMgr;            /* +0x50 created by web_request_download */
+    IWeb    *web;                   /* +0x54 */
+    IShell  *shell;                 /* +0x58 the app's (the retry timer) */
+} WebRequest;                     /* 0x5c bytes */
+
 /* ---- Lists (GUESS: names) ----------------------------------------------------------------------
  * The children of a menu or UI element (for example the list at menu +0x24), kept as two parallel
  * arrays. list_get_entry reads an entry by position (0 when out of range); list_find_entry returns the
