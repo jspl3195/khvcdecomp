@@ -376,7 +376,7 @@ typedef struct CollisionShape {
 
 typedef struct LevelObject {
     uint8  kind;                  /* +0x000 0 LevelObject, 1 MotionEntity, 2 Character (FUN_0010b70c,
-                                     0x338 bytes), 3 "Camera" (FUN_0010b3e8, 0x214 bytes), 4 CombatRegion,
+                                     0x338 bytes), 3 "Camera" (camera_create, 0x214 bytes), 4 CombatRegion,
                                      5 BossCombatRegion; 2 and 3 are MotionEntity subclasses */
     uint8  unknown_001[0x03];
     struct LevelObject *parent;   /* +0x004 the object of the nearest named node above it, or 0 for the
@@ -457,22 +457,28 @@ typedef struct MotionEntity {
 } MotionEntity;                   /* 0x1c8 bytes */
 
 /* ---- The camera (GUESS: names) -----------------------------------------------------------------------
- * The "Camera" level object (kind 3, FUN_0010b3e8, 0x214 bytes; name hash 0x2E6723BD): a motion entity
+ * The "Camera" level object (kind 3, camera_create, 0x214 bytes; name hash 0x2E6723BD): a motion entity
  * that follows its target. Only what the level scripts set (script_command_run) is named. */
 typedef struct Camera {
-    uint8    entity[0x1c8];       /* +0x000 the MotionEntity */
-    uint8    unknown_1c8[0x04];
+    uint8    entity[0x1c8];       /* +0x000 the MotionEntity (its first byte LevelObject.kind, 3) */
+    int32    field_1c8;           /* +0x1c8 0 at creation */
     LevelObject *target;          /* +0x1cc the object it follows (the player's character, name hash
                                      0x10C617E4) */
     uint8    unknown_1d0[0x08];
     uint32   view[3];             /* +0x1d8 floats (their bits): setCameraFocus's named views (STANDARD_VIEW
                                      90, 0, 10; HIGH_VIEW 60, 45, 45; ...) */
-    uint8    unknown_1e4[0x04];
+    uint32   field_1e4;           /* +0x1e4 0 at creation */
     int32    activeRotation;      /* +0x1e8 setActiveRotOn / setActiveRotOff */
     uint32   focus[3];            /* +0x1ec floats (their bits): a point it looks at (matchPosition) */
-    uint32   field_1f8;           /* +0x1f8 a float (its bits): setXRot's angle; 10.0 from matchPosition */
-    uint8    unknown_1fc[0x18];
-} Camera;                         /* 0x214 bytes */
+    uint32   field_1f8;           /* +0x1f8 a float (its bits): setXRot's angle; 10.0 from matchPosition; 0 at
+                                     creation */
+    uint32   field_1fc;           /* +0x1fc a float (its bits); 0 at creation */
+    uint8    unknown_200[0x04];
+    ISwerveObject *field_204;     /* +0x204 0 at creation */
+    uint32   field_208;           /* +0x208 a float (its bits); 3.5 at creation */
+    LevelObject *field_20c;       /* +0x20c 0 at creation */
+    uint32   field_210;           /* +0x210 a float (its bits); 0 at creation */
+} Camera;                         /* 0x214 bytes (camera_create) */
 
 /* "Character" (kind 2, 0x338 bytes, FUN_0010b70c; GUESS: names): the player's character, a MotionEntity.
  * It plays its animations on three channels (character_play_animation): channel 0 alone, or channels 2

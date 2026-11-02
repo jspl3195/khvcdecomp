@@ -7002,7 +7002,7 @@ int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3)
           local_1c = (int *)0x0;
           (**(code **)(*(int *)*param_1 + 0x28))((int *)*param_1,WORD_HEXADECIMAL_038AD7F2,&local_1c);
           if (local_1c != (int *)0x0) {
-            iVar1 = FUN_0010b3e8(0,local_1c,(int32)STRING_CAMERA);
+            iVar1 = (int)camera_create((Camera *)0x0,(ISwerveObject *)local_1c,(char *)STRING_CAMERA);
             param_1[0x7c] = iVar1;
             (**(code **)(*local_1c + 4))();
             (**(code **)(*(int *)*param_1 + 0x28))((int *)*param_1,WORD_HEXADECIMAL_334C8936,param_1 + 0x8b);
@@ -7391,33 +7391,34 @@ TextBox * text_box_create(TextBox *box,int32 x,int32 y,int32 width,int32 height,
 }
 
 
-/* ==== 0x0010B3E8  (file offset 0x0B3E8)  FUN_0010b3e8 ================================================ */
-undefined1 * FUN_0010b3e8(undefined1 *param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x0010B3E8  (file offset 0x0B3E8)  camera_create =============================================== */
+/* GUESS: names. The camera's constructor (0x214 bytes, allocated when `camera` is 0; returns 0 when out of
+   memory): a motion entity (motion_entity_create) of kind 3, with the standard view (90, 0, 10, as the
+   script's setCameraFocus STANDARD_VIEW) and field_208 3.5, the rest cleared. Made once, by the game's
+   set-up, from the scene node with user id 0x038AD7F2, named "Camera" (Game.camera). */
+Camera * camera_create(Camera *camera,ISwerveObject *node,char *name)
 
 {
-  int iVar1;
-  
-  if ((param_1 != (undefined1 *)0x0) ||
-     (param_1 = helper_malloc_2(0x214), param_1 != (undefined1 *)0x0)) {
-    motion_entity_create((MotionEntity *)param_1,(ISwerveObject *)param_2,(char *)param_3);
-    *param_1 = 3;
-    iVar1 = FLOAT_10;
-    *(undefined4 *)(param_1 + 0x1d8) = FLOAT_90;
-    *(undefined4 *)(param_1 + 0x1dc) = 0;
-    *(undefined4 *)(param_1 + 0x1e4) = 0;
-    *(int *)(param_1 + 0x1e0) = iVar1;
-    *(undefined4 *)(param_1 + 0x1c8) = 0;
-    *(undefined4 *)(param_1 + 0x1cc) = 0;
-    *(undefined4 *)(param_1 + 0x204) = 0;
-    *(undefined4 *)(param_1 + 0x1e8) = 0;
-    *(int *)(param_1 + 0x208) = iVar1 + -0xc00000;
-    *(undefined4 *)(param_1 + 0x20c) = 0;
-    *(undefined4 *)(param_1 + 0x1f8) = 0;
-    *(undefined4 *)(param_1 + 0x1fc) = 0;
-    *(undefined4 *)(param_1 + 0x210) = 0;
-  }
-  return param_1;
+  if (camera == (Camera *)0x0 && (camera = helper_malloc_2(0x214)) == (Camera *)0x0)
+    return camera;
+  motion_entity_create((MotionEntity *)camera,node,name);
+  camera->entity[0] = 3;   /* LevelObject.kind */
+  camera->view[0] = FLOAT_90;
+  camera->view[1] = 0;
+  camera->field_1e4 = 0;
+  camera->view[2] = FLOAT_10;
+  camera->field_1c8 = 0;
+  camera->target = (LevelObject *)0x0;
+  camera->field_204 = (ISwerveObject *)0x0;
+  camera->activeRotation = 0;
+  camera->field_208 = 0x40600000;   /* 3.5; the binary takes 0xc00000 off FLOAT_10 */
+  camera->field_20c = (LevelObject *)0x0;
+  camera->field_1f8 = 0;
+  camera->field_1fc = 0;
+  camera->field_210 = 0;
+  return camera;
 }
+
 
 /* ==== 0x0010B478  (file offset 0x0B478)  combat_region_create ======================================== */
 /* GUESS: name. Sets up a "CombatRegion" level object (kind 4, 0x158 bytes, allocated when `region` is

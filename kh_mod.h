@@ -525,7 +525,7 @@ undefined4 * FUN_0010b014(undefined4 *param_1,undefined4 param_2);
 ScriptSequence * script_sequence_create(ScriptSequence *sequence,char *text);   /* 0x0010B080 GUESS: name, see kh_mod.c */
 Enemy * enemy_create(Enemy *enemy,int32 number,CombatRegion *region,int32 type);   /* 0x0010B230 GUESS: name */
 TextBox * text_box_create(TextBox *box,int32 x,int32 y,int32 width,int32 height,int32 *owner,TextStyle *style);   /* 0x0010B2DC GUESS: name, see kh_mod.c */
-undefined1 * FUN_0010b3e8(undefined1 *param_1,undefined4 param_2,undefined4 param_3);
+Camera * camera_create(Camera *camera,ISwerveObject *node,char *name);   /* 0x0010B3E8 GUESS: name, see kh_mod.c */
 CombatRegion * combat_region_create(CombatRegion *region,ISwerveObject *node,char *name);   /* 0x0010B478 GUESS: name */
 void * FUN_0010b4e4(void *param_1,int param_2);
 MotionEntity * motion_entity_create(MotionEntity *entity,ISwerveObject *node,char *name);   /* 0x0010B5E8 GUESS: name */
