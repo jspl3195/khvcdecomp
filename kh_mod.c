@@ -11807,7 +11807,7 @@ void progress_reset(Progress *progress)
   progress->experience = 0;
   progress->levelRewardThreeCount = 1;
   progress->level = 0;
-  progress->field_59c = progress->field_5a0 = progress->field_5a4 = 0;
+  progress->spells[0] = progress->spells[1] = progress->spells[2] = 0;
   progress->field_5ac = progress->field_5b0 = progress->field_5b4 = progress->field_5b8 = 0;
 }
 
@@ -20386,7 +20386,7 @@ void FUN_0011a3ec(int param_1,int param_2,undefined4 param_3)
     return;
   }
   if (*(int *)(*(int *)(param_1 + 0x1f8) + 0x3c) != 0) {
-    FUN_0011a4d8(*(int *)(param_1 + 0x1f8),param_2 /* not arguments, register leftovers: param_3 */);
+    character_on_key(*(Character **)(param_1 + 0x1f8),param_2 /* not arguments, register leftovers: param_3 */);
   }
   iVar3 = *(int *)(param_1 + 0x1f0);
   if (*(int *)(iVar3 + 0x3c) != 0) {
@@ -20414,367 +20414,118 @@ void FUN_0011a3ec(int param_1,int param_2,undefined4 param_3)
   return;
 }
 
-/* ==== 0x0011A4D8  (file offset 0x1A4D8)  FUN_0011a4d8 ================================================ */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-void FUN_0011a4d8(int param_1,int param_2)
+/* ==== 0x0011A4D8  (file offset 0x1A4D8)  character_on_key ============================================ */
+/* GUESS: names. A key pressed, for the player's character (FUN_0011a3ec, with game->character). Nothing
+   while it is not controllable. Each of these takes the key when it is the move's Controls binding or its
+   fixed key and the move is not held already (else the next one is tried):
+     left, right, backwards: set the held flag;
+     forwards: also, in state 0x11, goes to state 0x13;
+     action: sets its flag; in states 4, 5, 6, 0x11 and 0x12 starts an attack (state 0, field_1cc 0xb,
+       FUN_0010ecb8 and FUN_0011ca70 with an offset of 0, the radius, half the height); else, unless the
+       state is 3, 0x10 or 0x13 or field_1cc is 0xb, sets field_1cc to 8 and, while Progress.field_594 is
+       above 0, tells the app's field_bc screen (FUN_00108f28 with 0; the binary tail-jumps, 0x0011a6a4).
+   The Magic binding (controls[6]) uses magic: with no MP left, one item of field_5b8 refills all of it,
+   else one of field_5b4 half of it ((maximum + 1) / 2), and "Out of magic" is cleared (FUN_0011fef4);
+   with MP, the selected spell is cast when the player has it (FUN_0010db04; the binary tail-jumps,
+   0x0011a770), and the "random" choice 8 casts one of the player's spells: the (field_88 / 1000) % count
+   th (FUN_00100288 divides: quotient in the low word, remainder in the high word). The rest of Ghidra's
+   listing was its copy of FUN_0010db04 and of FUN_00108f28, which the binary jumps to. */
+void character_on_key(Character *character,int key)
 
 {
-  /* stack0x<offset>: Ghidra's names for stack locations whose address is taken (the byte at
-     that offset from the entry sp); declared here so the listing compiles */
-  undefined1 stack0xffffffe8;
-  int iVar1;
-  undefined4 *puVar2;
-  int *piVar3;
-  uint uVar4;
-  uint uVar5;
-  uint uVar6;
-  uint uVar7;
-  int iVar8;
-  undefined4 uVar9;
-  uint uVar10;
-  uint extraout_r1;
-  uint extraout_r1_00;
-  int iVar11;
-  int in_r12;
-  int iVar12;
-  undefined1 uVar13;
-  bool bVar14;
-  bool bVar15;
-  bool bVar16;
-  bool bVar17;
-  undefined1 uVar18;
-  undefined8 uVar19;
-  ulonglong uVar20;
-  uint uStack_2c;
-  uint uStack_28;
-  uint uStack_24;
-  
-  if (*(int *)(param_1 + 0x1d8) == 0) {
+  Progress *progress;
+  uint32 offset[3];
+  int known[3];
+  int count;
+  int i;
+
+  if (!character->controllable)
+    return;
+  progress = character->app->progress;
+  if ((key == progress->controls[2] || key == AVK_LEFT) && !character->leftHeld) {
+    character->leftHeld = 1;
     return;
   }
-  iVar11 = *(int *)(param_1 + 0x84);
-  iVar8 = *(int *)(iVar11 + 0xa8);
-  bVar14 = *(int *)(iVar8 + 0x5d4) == param_2;
-  if (!bVar14) {
-    in_r12 = param_2 + -0xe033;
-    bVar14 = in_r12 == 0;
-  }
-  if ((bVar14) && (*(char *)(param_1 + 0x27a) == '\0')) {
-    *(undefined1 *)(param_1 + 0x27a) = 1;
+  if ((key == progress->controls[3] || key == AVK_RIGHT) && !character->rightHeld) {
+    character->rightHeld = 1;
     return;
   }
-  bVar14 = *(int *)(iVar8 + 0x5d8) != param_2;
-  if (bVar14) {
-    in_r12 = param_2 + -0xe000;
-  }
-  if ((!bVar14 || in_r12 == 0x34) && (*(char *)(param_1 + 0x27b) == '\0')) {
-    *(undefined1 *)(param_1 + 0x27b) = 1;
-    return;
-  }
-  iVar12 = *(int *)(iVar8 + 0x5cc);
-  bVar14 = iVar12 != param_2;
-  if (bVar14) {
-    iVar12 = param_2 + -0xe000;
-  }
-  if ((!bVar14 || iVar12 == 0x31) && (*(char *)(param_1 + 0x278) == '\0')) {
-    if (*(int *)(param_1 + 0x1c8) == 0x11) {
-      *(undefined4 *)(param_1 + 0x1c8) = 0x13;
-      *(undefined4 *)(param_1 + 300) = 0;
+  if ((key == progress->controls[0] || key == AVK_UP) && !character->forwardsHeld) {
+    if (character->state == 0x11) {
+      character->state = 0x13;
+      character->field_12c = 0;
     }
-    *(undefined1 *)(param_1 + 0x278) = 1;
+    character->forwardsHeld = 1;
     return;
   }
-  iVar12 = *(int *)(iVar8 + 0x5d0);
-  bVar14 = iVar12 != param_2;
-  if (bVar14) {
-    iVar12 = param_2 + -0xe000;
-  }
-  if ((!bVar14 || iVar12 == 0x32) && (*(char *)(param_1 + 0x279) == '\0')) {
-    *(undefined1 *)(param_1 + 0x279) = 1;
+  if ((key == progress->controls[1] || key == AVK_DOWN) && !character->backwardsHeld) {
+    character->backwardsHeld = 1;
     return;
   }
-  iVar12 = *(int *)(iVar8 + 0x5dc);
-  bVar14 = iVar12 != param_2;
-  if (bVar14) {
-    iVar12 = param_2 + -0xe000;
-  }
-  if ((!bVar14 || iVar12 == 0x35) && (*(char *)(param_1 + 0x27c) == '\0')) {
-    *(undefined1 *)(param_1 + 0x27c) = 1;
-    iVar8 = *(int *)(param_1 + 0x1c8);
-    if ((((iVar8 == 6 || iVar8 == 5) || iVar8 == 4) || iVar8 == 0x11) || iVar8 == 0x12) {
-      if (iVar8 == 0x11 || iVar8 == 0x12) {
-        *(undefined4 *)(param_1 + 300) = 0;
-      }
-      *(undefined4 *)(param_1 + 0x1cc) = 0xb;
-      *(undefined4 *)(param_1 + 0x1c8) = 0;
-      *(undefined4 *)(param_1 + 0x128) = 0;
-      *(undefined4 *)(param_1 + 0x244) = 0;
-      uVar9 = *(undefined4 *)(param_1 + 0x80);
-      uVar10 = level_object_get_height((LevelObject *)param_1);
-      uVar10 = FUN_001269cc(uVar10,0x3f000000);
-      FUN_0010ecb8(param_1,(undefined4 *)&stack0xffffffe8);
-      FUN_0011ca70(param_1,0,uVar9,uVar10,0);
+  if ((key == progress->controls[4] || key == AVK_SELECT) && !character->actionHeld) {
+    character->actionHeld = 1;
+    if (character->state == 6 || character->state == 5 || character->state == 4 ||
+        character->state == 0x11 || character->state == 0x12) {
+      if (character->state == 0x11 || character->state == 0x12)
+        character->field_12c = 0;
+      character->field_1cc = 0xb;
+      character->state = 0;
+      character->orbitCenter = (LevelObject *)0x0;
+      character->field_244 = 0;
+      offset[0] = 0;
+      offset[1] = character->radius;
+      offset[2] = FUN_001269cc(level_object_get_height((LevelObject *)character),0x3f000000);   /* * 0.5 */
+      FUN_0010ecb8((int)character,(undefined4 *)offset);
+      FUN_0011ca70((undefined4)character,offset[0],offset[1],offset[2],0);
       return;
     }
-    bVar14 = SBORROW4(iVar8,3);
-    iVar12 = iVar8 + -3;
-    bVar15 = iVar8 == 3;
-    if (!bVar15) {
-      bVar14 = SBORROW4(iVar8,0x10);
-      iVar12 = iVar8 + -0x10;
-    }
-    bVar16 = iVar8 == 0x10;
-    if (!bVar15 && !bVar16) {
-      bVar14 = SBORROW4(iVar8,0x13);
-      iVar12 = iVar8 + -0x13;
-    }
-    bVar17 = iVar8 == 0x13;
-    if ((!bVar15 && !bVar16) && !bVar17) {
-      iVar8 = *(int *)(param_1 + 0x1cc);
-      bVar14 = SBORROW4(iVar8,0xb);
-      iVar12 = iVar8 + -0xb;
-    }
-    iVar1 = iVar8;
-    if (((!bVar15 && !bVar16) && !bVar17) && iVar8 != 0xb) {
-      *(undefined4 *)(param_1 + 0x1cc) = 8;
-      iVar12 = *(int *)(*(int *)(iVar11 + 0xa8) + 0x594);
-      bVar14 = false;
-      iVar1 = iVar12;
-    }
-    if (((((bVar15 || bVar16) || bVar17) || iVar8 == 0xb) || iVar1 == 0) || iVar12 < 0 != bVar14) {
+    if (character->state == 3 || character->state == 0x10 || character->state == 0x13 ||
+        character->field_1cc == 0xb)
       return;
+    character->field_1cc = 8;
+    if (progress->field_594 > 0 && character->app->field_bc != 0)
+      FUN_00108f28((int)character->app->field_bc,0);
+    return;
+  }
+  if (key != progress->controls[6])
+    return;
+  if (progress->magicPoints == 0) {
+    if (progress->field_5b8 > 0) {
+      progress->field_5b8--;
+      progress->magicPoints = progress->maximumMagicPoints;
     }
-    iVar8 = *(int *)(iVar11 + 0xbc);
-    if (iVar8 == 0) {
+    else if (progress->field_5b4 > 0) {
+      progress->field_5b4--;
+      progress->magicPoints = (progress->maximumMagicPoints + 1) / 2;
+    }
+    else
       return;
-    }
-    iVar11 = 0;
-    goto code_r0x00108f28;
-  }
-  if (*(int *)(iVar8 + 0x5e4) != param_2) {
+    FUN_0011fef4((int)progress,STRING_OUT_OF_MAGIC_OFFSET_3 + 0x11a6d0,0);
+    character->field_224 = 1;
     return;
   }
-  if (*(int *)(iVar8 + 0x524) == 0) {
-    iVar11 = STRING_OUT_OF_MAGIC_OFFSET_3 + 0x11a6d0;
-    if (*(int *)(iVar8 + 0x5b8) < 1) {
-      if (*(int *)(iVar8 + 0x5b4) < 1) {
-        return;
-      }
-      *(int *)(iVar8 + 0x5b4) = *(int *)(iVar8 + 0x5b4) + -1;
-      iVar8 = *(int *)(*(int *)(param_1 + 0x84) + 0xa8);
-      *(int *)(iVar8 + 0x524) = (*(int *)(iVar8 + 0x528) + 1) / 2;
-    }
-    else {
-      *(int *)(iVar8 + 0x5b8) = *(int *)(iVar8 + 0x5b8) + -1;
-      iVar8 = *(int *)(*(int *)(param_1 + 0x84) + 0xa8);
-      *(undefined4 *)(iVar8 + 0x524) = *(undefined4 *)(iVar8 + 0x528);
-    }
-    FUN_0011fef4(*(int *)(*(int *)(param_1 + 0x84) + 0xa8),iVar11,0);
-    *(undefined4 *)(param_1 + 0x224) = 1;
+  if (character->selectedSpell != 8) {
+    if (progress->spells[character->selectedSpell] != 0)
+      FUN_0010db04((int)character,character->selectedSpell);
     return;
   }
-  iVar11 = *(int *)(param_1 + 0x22c);
-  if (iVar11 == 8) {
-    iVar8 = 0;
-    uVar10 = 0;
-    do {
-      if (*(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa8) + iVar8 * 4 + 0x59c) != 0) {
-        *(int *)(&stack0xffffffe8 + uVar10 * 4) = iVar8;
-        uVar10 = uVar10 + 1;
-      }
-      iVar8 = iVar8 + 1;
-    } while (iVar8 < 3);
-    if ((int)uVar10 < 1) {
-      return;
-    }
-    uVar20 = FUN_00100288(1000,*(uint *)(param_1 + 0x88));
-    uVar20 = FUN_00100288(uVar10,(uint)uVar20);
-    FUN_0010db04(param_1,*(undefined4 *)(&stack0xffffffe8 + (int)(uVar20 >> 0x20) * 4));
+  count = 0;
+  for (i = 0; i < 3; i++)
+    if (progress->spells[i] != 0)
+      known[count++] = i;
+  if (count <= 0)
     return;
-  }
-  if (*(int *)(iVar8 + iVar11 * 4 + 0x59c) == 0) {
-    return;
-  }
-  iVar8 = *(int *)(param_1 + 0x1c8);
-  if (((iVar8 != 0xc && iVar8 != 0xe) && iVar8 != 0) && iVar8 != 1) {
-    return;
-  }
-  if (iVar8 == 0xd) {
-    return;
-  }
-  *(int *)(param_1 + 0x228) = iVar11;
-  uVar10 = FLOAT_10;
-  if (*(int *)(param_1 + 0x20c) == 0) {
-    uVar20 = FUN_00100288(0x1e,*(uint *)(param_1 + 0x88));
-    uVar4 = FUN_001268c8((uint)(uVar20 >> 0x20));
-    uVar4 = FUN_00126618(uVar4,uVar10);
-  }
-  else {
-    level_object_get_position((uint32 *)((undefined4 *)(param_1 + 0x218)),(LevelObject *)*(int *)(param_1 + 0x20c));
-    uVar19 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
-                          *(undefined4 *)(param_1 + 0x68),*(undefined4 *)(param_1 + 0x6c),
-                          *(undefined4 *)(param_1 + 0x218),*(undefined4 *)(param_1 + 0x21c));
-    FUN_00120290(param_1,(int)uVar19);
-    uVar4 = float_subtract(*(uint *)(param_1 + 0x70),*(uint *)(param_1 + 0x220));
-    uVar5 = float_subtract(*(uint *)(param_1 + 0x6c),*(uint *)(param_1 + 0x21c));
-    uVar6 = float_subtract(*(uint *)(param_1 + 0x68),*(uint *)(param_1 + 0x218));
-    uVar4 = FUN_00113820(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),uVar6,uVar5,uVar4);
-  }
-  iVar8 = *(int *)(param_1 + 0x228);
-  if (iVar8 != 7) {
-    if (*(int *)(param_1 + 0x1cc) != 10) {
-      return;
-    }
-    iVar11 = *(int *)(param_1 + 0x84);
-    if (*(int *)(*(int *)(iVar11 + 0xa8) + 0x524) < 1) {
-      return;
-    }
-    iVar12 = -1;
-    if (iVar8 == 0) {
-      uVar9 = FUN_00112dbc(*(int *)(iVar11 + 0xa4),WORD_HEXADECIMAL_24D6C48B);
-      *(undefined4 *)(param_1 + 0x230) = uVar9;
-      iVar11 = *(int *)(*(int *)(param_1 + 0x84) + 0x9c);
-      iVar8 = WORD_HEXADECIMAL_14A090F6;
-    }
-    else if (iVar8 == 1) {
-      uVar9 = FUN_00112dbc(*(int *)(iVar11 + 0xa4),WORD_HEXADECIMAL_36420037);
-      *(undefined4 *)(param_1 + 0x230) = uVar9;
-      iVar11 = *(int *)(*(int *)(param_1 + 0x84) + 0x9c);
-      iVar8 = WORD_HEXADECIMAL_387C837A;
-    }
-    else {
-      if (iVar8 != 2) goto LAB_0010dde4;
-      uVar9 = FUN_00112dbc(*(int *)(iVar11 + 0xa4),WORD_HEXADECIMAL_2DF1CDEC);
-      *(undefined4 *)(param_1 + 0x230) = uVar9;
-      iVar11 = *(int *)(*(int *)(param_1 + 0x84) + 0x9c);
-      iVar8 = WORD_HEXADECIMAL_254FCFF2;
-    }
-    iVar12 = animations_find((Animations *)iVar11,iVar8);
-LAB_0010dde4:
-    if (*(int *)(param_1 + 0x230) != 0) {
-      FUN_001147ec(&uStack_2c,*(int *)(*(int *)(param_1 + 0x84) + 0x94),*(int **)(param_1 + 0x1ec));
-      FUN_001201cc(*(int *)(param_1 + 0x230),1);
-      thunk_FUN_0011fd90(*(int *)(param_1 + 0x230),uStack_2c,uStack_28,uStack_24);
-      FUN_00120290(*(int *)(param_1 + 0x230),*(undefined4 *)(param_1 + 0x140));
-      animations_play((Animations *)*(int *)(*(int *)(param_1 + 0x84) + 0x9c),iVar12,0);
-      if (*(uint *)(param_1 + 0x228) < 2) {
-        if (*(int *)(param_1 + 0x20c) != 0) {
-          uVar5 = float_subtract(*(uint *)(param_1 + 0x220),uStack_24);
-          uVar6 = float_subtract(*(uint *)(param_1 + 0x21c),uStack_28);
-          uVar7 = float_subtract(*(uint *)(param_1 + 0x218),uStack_2c);
-          uVar5 = FUN_00113820(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),uVar7,uVar6,uVar5);
-          uVar5 = FUN_001269cc(uVar5,FLOAT_100);
-          uVar5 = FUN_00126858(uVar5);
-          *(uint *)(param_1 + 0x2a0) = uVar5;
-          if ((*(int *)(param_1 + 0x228) == 0) &&
-             (iVar8 = FUN_00112dbc(*(int *)(*(int *)(param_1 + 0x84) + 0xa4),WORD_HEXADECIMAL_3361CE32),
-             iVar8 != 0)) {
-            FUN_001201cc(iVar8,0);
-            thunk_FUN_0011fd90(iVar8,uStack_2c,uStack_28,uStack_24);
-            FUN_0011316c(iVar8,*(undefined4 *)(param_1 + 0x218),*(undefined4 *)(param_1 + 0x21c),
-                         *(undefined4 *)(param_1 + 0x220),0,0,0,0,300,0xffffffff,uVar10);
-          }
-        }
-      }
-      else if (*(uint *)(param_1 + 0x228) == 2) {
-        *(undefined4 *)(param_1 + 0x2a0) = INTEGER_750;
-      }
-    }
-    if ((0 < *(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa8) + 0x594)) &&
-       (iVar8 = *(int *)(*(int *)(param_1 + 0x84) + 0xbc), iVar8 != 0)) {
-      FUN_00108f28(iVar8,0xc);
-    }
-    piVar3 = (int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa8) + 0x524);
-    *piVar3 = *piVar3 + -1;
-    iVar8 = *(int *)(*(int *)(param_1 + 0x84) + 0xa8);
-    uVar13 = *(int *)(iVar8 + 0x524) == 0;
-    uVar18 = 1;
-    if ((bool)uVar13) {
-      FUN_0011fef4(iVar8,STRING_OUT_OF_MAGIC_OFFSET_2 + 0x10dff4,1);
-    }
-    FUN_0011492c(param_1);
-    character_play_animation((Character *)param_1,*(int *)(param_1 + 0x2f4),2,0);
-    uVar10 = FUN_00126248(uVar4);
-    FUN_00125634(uVar10,extraout_r1_00,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
-    if (!(bool)uVar18 || (bool)uVar13) {
-      iVar8 = *(int *)(param_1 + 0x300);
-    }
-    else {
-      iVar8 = *(int *)(param_1 + 0x2f8);
-    }
-    character_play_animation((Character *)param_1,iVar8,3,0);
-    *(undefined4 *)(param_1 + 0x1c8) = 0xd;
-                    /* WARNING: Could not recover jumptable at 0x0010e054. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-    (**(code **)(**(int **)(param_1 + 0x1f0) + 0x8c))(*(int **)(param_1 + 0x1f0),0);
-    return;
-  }
-  FUN_0011492c(param_1);
-  uVar18 = 9 < *(uint *)(param_1 + 0x1cc);
-  uVar13 = *(uint *)(param_1 + 0x1cc) == 10;
-  if ((bool)uVar13) {
-    uVar10 = FUN_00126248(uVar4);
-    FUN_001256b4(uVar10,extraout_r1,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
-    if ((bool)uVar18 && !(bool)uVar13) {
-      FUN_001256b4(uVar10,extraout_r1,TWO_DOUBLE_LOW_WORD,TWO_DOUBLE_HIGH_WORD);
-      if (!(bool)uVar18 || (bool)uVar13) {
-        character_play_animation((Character *)param_1,*(int *)(param_1 + 0x2f4),2,0);
-        iVar8 = *(int *)(param_1 + 0x2f8);
-        iVar11 = 3;
-        goto LAB_0010dccc;
-      }
-      character_play_animation((Character *)param_1,*(int *)(param_1 + 0x30c),0,0);
-      *(undefined4 *)(param_1 + 0x2a0) = 0xfa;
-    }
-    else {
-      if ((*(uint *)(param_1 + 0x88) & 1) == 0) {
-        character_play_animation((Character *)param_1,*(int *)(param_1 + 0x2fc),2,0);
-        *(undefined4 *)(param_1 + 0x2a0) = 700;
-      }
-      else {
-        character_play_animation((Character *)param_1,*(int *)(param_1 + 0x304),2,0);
-        *(undefined4 *)(param_1 + 0x2a0) = 300;
-      }
-      character_play_animation((Character *)param_1,*(int *)(param_1 + 0x300),3,0);
-    }
-  }
-  else {
-    iVar11 = 2;
-    iVar8 = *(int *)(param_1 + 0x304);
-LAB_0010dccc:
-    character_play_animation((Character *)param_1,iVar8,iVar11,0);
-    *(undefined4 *)(param_1 + 0x2a0) = 300;
-  }
-  *(undefined4 *)(param_1 + 0x1c8) = 0xd;
-  (**(code **)(**(int **)(param_1 + 0x1f0) + 0x8c))(*(int **)(param_1 + 0x1f0),0);
-  if ((*(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa8) + 0x594) < 1) ||
-     (iVar8 = *(int *)(*(int *)(param_1 + 0x84) + 0xbc), iVar8 == 0)) {
-    return;
-  }
-  iVar11 = 3;
-code_r0x00108f28:
-  if (iVar11 < *(int *)(iVar8 + 0xc)) {
-    *(undefined4 *)(*(int *)(*(int *)(iVar8 + 4) + iVar11 * 4) + 8) = *(undefined4 *)(iVar8 + 0x30);
-    *(int *)(iVar8 + 0x2c) = iVar11;
-    (**(code **)(*(int *)**(undefined4 **)(*(int *)(iVar8 + 4) + iVar11 * 4) + 0x18))();
-    puVar2 = *(undefined4 **)(*(int *)(iVar8 + 4) + iVar11 * 4);
-    piVar3 = (int *)*puVar2;
-                    /* WARNING: Could not recover jumptable at 0x00108f98. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-    (**(code **)(*piVar3 + 0x10))(piVar3,4,puVar2[2],0);
-    return;
-  }
-  return;
+  FUN_0010db04((int)character,known[(int)(FUN_00100288(count,(uint)FUN_00100288(1000,character->field_88)) >> 32)]);
 }
 
 /* ==== 0x0011A7DC  (file offset 0x1A7DC)  intro_on_key ================================================ */
-/* GUESS: name. The 5 key (AVK_5) on the title, before the menu has opened, skips the timeline to
-   5000 ms, so the next update opens the menu. Called by kh_OnKey for keys no screen has taken. */
+/* GUESS: name. The select key (AVK_SELECT, 0xE035) on the title, before the menu has opened, skips the
+   timeline to 5000 ms, so the next update opens the menu. Called by kh_OnKey for keys no screen has
+   taken. */
 void intro_on_key(Intro *intro,int key)
 
 {
-  if (intro->stage == 2 && !intro->menuOpened && key == 0xe035)
+  if (intro->stage == 2 && !intro->menuOpened && key == AVK_SELECT)
     intro->time = INTEGER_5000;
 }
 
@@ -20972,7 +20723,7 @@ void kh_OnKeyRelease(void *pGame,uint16 wParam)
                        (+0x5cc/+0x5d0 of a nested object), a literal-pool key code and AVK_DOWN
                        (0xE032), and on a match clears a key-state word at (+0x1f0)->+0x200. */
   uVar1 = (uint)wParam;
-  FUN_0011aad0(*(undefined4 *)((int)pGame + 0x1f8),uVar1);
+  character_on_key_release(*(Character **)((int)pGame + 0x1f8),uVar1);
   uVar2 = *(uint *)(*(int *)(*(int *)((int)pGame + 0x1f0) + 0x84) + 0xa8);
   bVar3 = *(uint *)(uVar2 + 0x5cc) == uVar1;
   if (!bVar3) {
@@ -20995,63 +20746,29 @@ void kh_OnKeyRelease(void *pGame,uint16 wParam)
   return;
 }
 
-/* ==== 0x0011AAD0  (file offset 0x1AAD0)  FUN_0011aad0 ================================================ */
-void FUN_0011aad0(int param_1,int param_2)
+/* ==== 0x0011AAD0  (file offset 0x1AAD0)  character_on_key_release ==================================== */
+/* GUESS: name. A key released: clears the held flag of the movement it stands for, its Controls binding
+   (Progress.controls: Forwards, Backwards, Left, Right, Action) or its fixed key (the arrows, and select
+   for the action); the first match counts, in the binary's order: left, right, forwards, backwards,
+   action. Nothing while the character is not controllable. Called by kh_OnKeyRelease. */
+void character_on_key_release(Character *character,int key)
 
 {
-  int iVar1;
-  int iVar2;
-  bool bVar3;
-  
-  if (*(int *)(param_1 + 0x1d8) == 0) {
+  int *controls;
+
+  if (!character->controllable)
     return;
-  }
-  iVar1 = *(int *)(*(int *)(param_1 + 0x84) + 0xa8);
-  iVar2 = *(int *)(iVar1 + 0x5d4);
-  bVar3 = iVar2 != param_2;
-  if (bVar3) {
-    iVar2 = param_2 + -0xe000;
-  }
-  if (!bVar3 || iVar2 == 0x33) {
-    *(undefined1 *)(param_1 + 0x27a) = 0;
-    return;
-  }
-  iVar2 = *(int *)(iVar1 + 0x5d8);
-  bVar3 = iVar2 != param_2;
-  if (bVar3) {
-    iVar2 = param_2 + -0xe000;
-  }
-  if (!bVar3 || iVar2 == 0x34) {
-    *(undefined1 *)(param_1 + 0x27b) = 0;
-    return;
-  }
-  iVar2 = *(int *)(iVar1 + 0x5cc);
-  bVar3 = iVar2 != param_2;
-  if (bVar3) {
-    iVar2 = param_2 + -0xe000;
-  }
-  if (bVar3 && iVar2 != 0x31) {
-    iVar2 = *(int *)(iVar1 + 0x5d0);
-    bVar3 = iVar2 == param_2;
-    if (!bVar3) {
-      iVar2 = param_2 + -0xe032;
-      bVar3 = iVar2 == 0;
-    }
-    if (!bVar3) {
-      bVar3 = *(int *)(iVar1 + 0x5dc) != param_2;
-      if (bVar3) {
-        iVar2 = param_2 + -0xe000;
-      }
-      if (!bVar3 || iVar2 == 0x35) {
-        *(undefined1 *)(param_1 + 0x27c) = 0;
-      }
-      return;
-    }
-    *(undefined1 *)(param_1 + 0x279) = 0;
-    return;
-  }
-  *(undefined1 *)(param_1 + 0x278) = 0;
-  return;
+  controls = character->app->progress->controls;
+  if (key == controls[2] || key == AVK_LEFT)
+    character->leftHeld = 0;
+  else if (key == controls[3] || key == AVK_RIGHT)
+    character->rightHeld = 0;
+  else if (key == controls[0] || key == AVK_UP)
+    character->forwardsHeld = 0;
+  else if (key == controls[1] || key == AVK_DOWN)
+    character->backwardsHeld = 0;
+  else if (key == controls[4] || key == AVK_SELECT)
+    character->actionHeld = 0;
 }
 
 /* ==== 0x0011AB60  (file offset 0x1AB60)  FUN_0011ab60 ================================================ */

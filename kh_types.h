@@ -172,15 +172,18 @@ typedef struct Progress {
     ProgressLevel levels[9];      /* +0x53c the level-ups of levels 0-8 */
     uint8  unknown_584[0x08];
     int    level;                 /* +0x58c 0-9; no level-ups after 9 */
-    uint8  unknown_590[0x0c];
-    int    field_59c;             /* +0x59c 0 at the start */
-    int    field_5a0;             /* +0x5a0 0 at the start */
-    int    field_5a4;             /* +0x5a4 0 at the start */
+    uint8  unknown_590[0x04];
+    int    field_594;             /* +0x594 GUESS: a tutorial step; above 0, the action key tells the app's
+                                     field_bc screen (FUN_00108f28) */
+    uint8  unknown_598[0x04];
+    int    spells[3];             /* +0x59c 0 at the start; set for each spell the player has (GUESS: names);
+                                     character_on_key casts only those */
     uint8  unknown_5a8[0x04];
     int    field_5ac;             /* +0x5ac 0 at the start */
     int    field_5b0;             /* +0x5b0 0 at the start */
-    int    field_5b4;             /* +0x5b4 0 at the start */
-    int    field_5b8;             /* +0x5b8 0 at the start */
+    int    field_5b4;             /* +0x5b4 0 at the start; GUESS: a count of items that refill half the MP
+                                     (the Magic key with no MP, after field_5b8) */
+    int    field_5b8;             /* +0x5b8 0 at the start; GUESS: a count of items that refill all of it */
     uint8  unknown_5bc[0x10];
     int    controls[7];           /* +0x5cc the Controls key bindings (BREW key codes): Forwards, Backwards,
                                      Left, Right, Action, Status, Magic */
@@ -308,9 +311,19 @@ typedef struct Character {
     int    node;                  /* +0x008 its scene node, an ISwerveObject (LevelObject.node) */
     uint8  unknown_00c[0x40];
     int    field_4c;              /* +0x04c set to 1 by character_setup */
-    uint8  unknown_050[0x34];
+    uint8  unknown_050[0x30];
+    uint32 radius;                /* +0x080 LevelObject.radius */
     struct KHApp *app;            /* +0x084 LevelObject.app */
-    uint8  unknown_088[0x154];
+    int    field_88;              /* +0x088 GUESS: a time in ms; its seconds pick a random spell */
+    uint8  unknown_08c[0x9c];
+    LevelObject *orbitCenter;     /* +0x128 MotionEntity.orbitCenter */
+    int    field_12c;             /* +0x12c MotionEntity.field_12c */
+    uint8  unknown_130[0x98];
+    int    state;                 /* +0x1c8 0xc at creation; the action key starts an attack in states 4, 5,
+                                     6, 0x11 and 0x12, forwards turns 0x11 into 0x13 */
+    int    field_1cc;             /* +0x1cc 10 at creation; 0xb and 8 set by the action key */
+    uint8  unknown_1d0[0x08];
+    int    controllable;          /* +0x1d8 1 at creation (FUN_0010b70c); the keys move it only while set */
     ISwerveObject *field_1dc;     /* +0x1dc the game scene's object with user id 0x0F846A96 (Find); its
                                      slot +0x48 fills field_1f8 */
     ISwerveObject *field_1e0;     /* +0x1e0 the object with user id 0x0D44B786 */
@@ -321,10 +334,22 @@ typedef struct Character {
     ISwerveObject *shadow;        /* +0x1f0 the scene "CharacterShadow" (FUN_0011ae04) */
     int    hasShadow;             /* +0x1f4 1 when shadow was loaded */
     int    field_1f8;             /* +0x1f8 filled by field_1dc's slot +0x48 */
-    uint8  unknown_1fc[0x38];
+    uint8  unknown_1fc[0x28];
+    int    field_224;             /* +0x224 set to 1 when the Magic key refills MP with an item */
+    int    field_228;             /* +0x228 7 at creation; the player's state handed to the hit functions */
+    int    selectedSpell;         /* +0x22c 0-2, or 8 for a random known one (character_on_key) */
+    int    field_230;             /* +0x230 */
     LevelObject *field_234;       /* +0x234 the level object named by hash 0x2BB0C920 (FUN_00112dbc) */
     LevelObject *field_238;       /* +0x238 the level object named by hash 0x19DB98DB */
-    uint8  unknown_23c[0x4c];
+    uint8  unknown_23c[0x08];
+    int    field_244;             /* +0x244 cleared when the action key starts an attack */
+    uint8  unknown_248[0x30];
+    uint8  forwardsHeld;          /* +0x278 the movement keys held down: each set by character_on_key and */
+    uint8  backwardsHeld;         /* +0x279 cleared by character_on_key_release, for its Controls binding */
+    uint8  leftHeld;              /* +0x27a or its arrow key (AVK_UP, AVK_DOWN, AVK_LEFT, AVK_RIGHT, and */
+    uint8  rightHeld;             /* +0x27b AVK_SELECT for the action); read by FUN_0011386c */
+    uint8  actionHeld;            /* +0x27c */
+    uint8  unknown_27d[0x0b];
     uint32 field_288;             /* +0x288 a float (its bits); level data 0x1218EC09 */
     uint32 field_28c;             /* +0x28c a float (its bits); level data 0x2073D363 */
     uint8  unknown_290[0x04];
@@ -436,7 +461,7 @@ typedef struct Animations {
  * KHApp.intro (0xa4 bytes, intro_create): stage 0 waits 2 s, stage 1 plays one animation of its scene
  * to the end, stage 2 runs the title scene's timeline (11 animations, each shown between its start and
  * end time), opens the title menu (screen 0x5a, GUESS) at 4.2 s and loops 4467..13802 ms behind it.
- * Each stage change loads the stage's scene (FUN_0011b890). The 5 key skips to the menu (intro_on_key).
+ * Each stage change loads the stage's scene (FUN_0011b890). The select key skips to the menu (intro_on_key).
  * A return to the title creates it at stage 2. */
 typedef struct Intro {
     int    running;               /* +0x00 0 at creation; intro_update does nothing until it is set */
