@@ -656,7 +656,7 @@ int FUN_001146f0(int param_1,undefined4 param_2);
 undefined4 FUN_00114750(int param_1);
 void FUN_00114774(int *param_1,undefined4 param_2,undefined4 param_3);
 void FUN_001147ec(undefined4 *param_1,int param_2,int *param_3);
-undefined4 FUN_00114898(int param_1);
+uint32 motion_entity_get_heading(MotionEntity *entity);   /* 0x00114898 GUESS: name */
 undefined4 FUN_001148a0(int param_1);
 void FUN_001148a8(int param_1,int param_2);
 int animations_finish(Animations *animations,int index);   /* 0x001148C8 GUESS: name */
@@ -712,7 +712,7 @@ void FUN_0011c708(int param_1,int param_2,int param_3);
 bool FUN_0011c860(int param_1,int param_2,undefined4 param_3);
 void FUN_0011ca70(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);
 void FUN_0011ca8c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5);
-void FUN_0011cb34(undefined4 param_1,undefined4 *param_2);
+void wrap_angle(int unused,uint32 *angle);   /* 0x0011CB34 GUESS: name */
 void FUN_0011cbc4(int param_1,int param_2,int param_3);
 void FUN_0011cc14(int param_1,int param_2,int param_3);
 int character_play_animation(Character *character,int index,int channel,int loop);   /* 0x0011CC64 GUESS: names */
@@ -741,7 +741,7 @@ void animations_reset(Animations *animations);   /* 0x0011E0FC GUESS: name */
 void FUN_0011e154(int param_1);
 undefined4 FUN_0011e250(int param_1);
 undefined4 FUN_0011e300(int param_1);
-void FUN_0011e36c(int param_1,undefined4 param_2);
+void motion_entity_turn(MotionEntity *entity,uint32 angle);   /* 0x0011E36C GUESS: name */
 void FUN_0011e3c0(int param_1,uint param_2);
 void FUN_0011e530(int param_1,undefined4 param_2,undefined4 param_3);
 bool FUN_0011e574(int param_1,undefined4 param_2,undefined4 param_3,int *param_4);
@@ -773,7 +773,7 @@ void FUN_00120024(int param_1,int param_2);
 void FUN_001200ac(int param_1,undefined4 param_2);
 void FUN_00120120(int param_1,undefined4 param_2,undefined4 param_3);
 void FUN_001201cc(int param_1,undefined4 param_2);
-void FUN_00120244(int param_1,undefined4 param_2);
+void motion_entity_set_heading(MotionEntity *entity,uint32 heading);   /* 0x00120244 GUESS: name */
 void FUN_00120290(int param_1,undefined4 param_2);
 void FUN_001202cc(int param_1,undefined4 param_2);
 uint FUN_001202f4(uint param_1);
@@ -830,9 +830,9 @@ uint FUN_00125734(uint param_1,uint param_2,uint param_3,uint param_4);
 uint FUN_001259e8(uint param_1,uint param_2,uint param_3,uint param_4);
 uint FUN_00125cd0(uint param_1,uint param_2);
 uint FUN_00126248(uint param_1);
-uint FUN_001262b0(uint param_1,uint param_2);
-uint FUN_001263f8(uint param_1,uint param_2);
-uint FUN_0012642c(uint param_1,uint param_2);
+uint32 float_add(uint32 a,uint32 b);   /* 0x001262B0 GUESS: name; a + b, float bits (__aeabi_fadd) */
+uint32 float_reverse_subtract(uint32 a,uint32 b);   /* 0x001263F8 GUESS: name; b - a (__aeabi_frsub) */
+uint32 float_subtract(uint32 a,uint32 b);   /* 0x0012642C GUESS: name; a - b (__aeabi_fsub) */
 uint FUN_00126608(uint param_1,uint param_2);
 uint FUN_00126618(uint param_1,uint param_2);
 uint FUN_001267f0(uint param_1,uint param_2);
