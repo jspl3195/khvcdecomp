@@ -244,7 +244,10 @@ typedef struct LevelObject {
     int    field_58;              /* +0x058 0 at creation */
     uint8  unknown_05c[0x04];
     int    field_60;              /* +0x060 0 at creation */
-    uint8  unknown_064[0x1c];
+    uint8  unknown_064[0x04];
+    uint32 position[3];           /* +0x068 floats (their bits): x, y, z (level_object_get_position); z is
+                                     the bottom (callers add half the height for the middle) */
+    uint8  unknown_074[0x0c];
     uint32 radius;                /* +0x080 a float (its bits): the first scene shape's radius, or 0
                                      (FUN_00118910) */
     struct KHApp *app;            /* +0x084 GetAppInstance() at creation */
@@ -394,7 +397,7 @@ typedef struct Enemy {
     int    field_04;              /* +0x004 FUN_00113524 fills +0x04.. (GUESS: its position) */
     int    field_08;              /* +0x008 */
     uint8  unknown_0c[0x04];
-    int    field_10;              /* +0x010 FUN_00113cc4 fills +0x10.. from field_20 */
+    int    field_10;              /* +0x010 level_object_get_position fills +0x10.. from field_20 */
     int    field_14;              /* +0x014 */
     uint8  unknown_18[0x04];
     int    number;                /* +0x01c 1, 2, ...: its place among the region's enemies */

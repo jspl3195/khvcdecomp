@@ -637,7 +637,7 @@ int animations_find(Animations *animations,int userId);   /* 0x001137A4 GUESS: n
 uint FUN_001137d4(undefined4 param_1,undefined4 *param_2);
 uint FUN_00113820(undefined4 param_1,uint param_2,uint param_3,uint param_4);
 void FUN_0011386c(uint param_1,int param_2);
-void FUN_00113cc4(undefined4 *param_1,int param_2);
+void level_object_get_position(uint32 *position,LevelObject *object);   /* 0x00113CC4 GUESS: name */
 uint8 animations_get_mode(Animations *animations,int index);   /* 0x00113CD4 GUESS: name */
 int FUN_00113cfc(undefined4 param_1,int param_2);
 int FUN_00113da4(int *param_1,int param_2,int param_3,int param_4,int param_5,uint param_6);

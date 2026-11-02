@@ -9604,7 +9604,7 @@ LAB_0010d710:
         return 0;
       }
       FUN_00113524(&local_2c,param_1);
-      FUN_00113cc4(param_1 + 0x184,*(undefined4 *)(param_1 + 0x20));
+      level_object_get_position((uint32 *)(param_1 + 0x184),(LevelObject *)*(undefined4 *)(param_1 + 0x20));
       uVar5 = *(undefined4 *)(param_1 + 0x184);
       uVar2 = FUN_0012642c(local_2c,uVar5);
       uVar3 = FLOAT_0_POINT_7;
@@ -9702,7 +9702,7 @@ undefined4 FUN_0010d7c4(int param_1,int param_2)
         return 0;
       }
       FUN_00113524(&local_1c,param_1);
-      FUN_00113cc4(&local_28,*(undefined4 *)(param_1 + 0x20));
+      level_object_get_position((uint32 *)&local_28,(LevelObject *)*(undefined4 *)(param_1 + 0x20));
       uVar2 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),local_1c,local_18,
                            local_28,local_24);
       local_2c = FUN_001262b0(uVar2,FLOAT_180);
@@ -9746,7 +9746,7 @@ undefined4 FUN_0010d95c(int param_1,int param_2)
   if ((bool)uVar3) {
     FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x48),1);
     FUN_00113524(&local_20,param_1);
-    FUN_00113cc4(&local_2c,*(undefined4 *)(param_1 + 0x20));
+    level_object_get_position((uint32 *)&local_2c,(LevelObject *)*(undefined4 *)(param_1 + 0x20));
     uVar2 = FUN_00110030(param_1,local_20,local_1c,uStack_18,local_2c,local_28 /* not arguments, value leftovers: uStack_24 */);
     FUN_001268fc(uVar2,FLOAT_16);
     if ((bool)uVar4 && !(bool)uVar3) {
@@ -9832,7 +9832,7 @@ void FUN_0010db04(int param_1,undefined4 param_2)
     uVar4 = FUN_00126618(uVar4,uVar7);
   }
   else {
-    FUN_00113cc4((undefined4 *)(param_1 + 0x218),*(int *)(param_1 + 0x20c));
+    level_object_get_position((uint32 *)((undefined4 *)(param_1 + 0x218)),(LevelObject *)*(int *)(param_1 + 0x20c));
     uVar14 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
                           *(undefined4 *)(param_1 + 0x68),*(undefined4 *)(param_1 + 0x6c),
                           *(undefined4 *)(param_1 + 0x218),*(undefined4 *)(param_1 + 0x21c));
@@ -10676,7 +10676,7 @@ void FUN_0010ea64(int param_1)
       FUN_0012312c(iVar1,iVar5,uVar6,iVar7);
       if (*(int *)(iVar1 + 0x1cc) == 0) {
         FUN_001135dc(iVar1);
-        FUN_00113cc4((undefined4 *)(iVar1 + 0x1ec),*(int *)(iVar1 + 0x1cc));
+        level_object_get_position((uint32 *)((undefined4 *)(iVar1 + 0x1ec)),(LevelObject *)*(int *)(iVar1 + 0x1cc));
         *(undefined4 *)(iVar1 + 0x1f8) = FLOAT_10;
         if (*(int *)(iVar1 + 0x1cc) == 0) {
           return;
@@ -11460,7 +11460,7 @@ int FUN_0010f058(int param_1,int param_2)
          (iVar1 = *(int *)(*(int *)(param_1 + 0x74) + 0xbc), iVar1 != 0)) {
         FUN_00108f28(iVar1,2);
       }
-      FUN_00113cc4(&iStack_24,*(undefined4 *)(param_1 + 0x134));
+      level_object_get_position((uint32 *)&iStack_24,(LevelObject *)*(undefined4 *)(param_1 + 0x134));
       local_1c = FUN_001262b0(local_1c,*(undefined4 *)(param_1 + 0x27c));
       thunk_FUN_0011fd90(*(undefined4 *)(param_1 + 0x70),iStack_24,uStack_20,local_1c);
       FUN_001201cc(*(undefined4 *)(param_1 + 0x70),1);
@@ -11472,7 +11472,7 @@ int FUN_0010f058(int param_1,int param_2)
   else {
     if (iVar1 == 0x65) {
       FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x50),1 /* not arguments, register leftovers: param_4,param_1 */);
-      FUN_00113cc4(&iStack_24,*(undefined4 *)(param_1 + 0x20));
+      level_object_get_position((uint32 *)&iStack_24,(LevelObject *)*(undefined4 *)(param_1 + 0x20));
       uVar2 = FUN_001262b0(*(undefined4 *)(param_1 + 0x27c),0x3f000000);
       local_1c = FUN_001262b0(uVar2,local_1c);
       thunk_FUN_0011fd90(*(undefined4 *)(param_1 + 0x70),iStack_24,uStack_20,local_1c);
@@ -11726,7 +11726,7 @@ void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4
       if ((bool)uVar10) {
         uVar8 = 1;
         uVar5 = FUN_001148a0(*(int *)(param_1 + 4));
-        FUN_00113cc4(&local_30,*(int *)(param_1 + 0x1c));
+        level_object_get_position((uint32 *)&local_30,(LevelObject *)*(int *)(param_1 + 0x1c));
         FUN_0010fbf4(*(int **)(*(int *)(param_1 + 0x24) + 0x114),local_30,uStack_2c,uStack_28,uVar5,
                      *(int *)(param_1 + 0xc0),*(int *)(param_1 + 0xc4),
                      *(undefined4 *)(param_1 + 200),*(uint *)(param_1 + 0xcc),
@@ -11800,7 +11800,7 @@ joined_r0x0010f71c:
   if (iVar4 == 0) {
     uVar7 = FUN_001148a0(*(int *)(**(int **)(*(int *)(param_1 + 0x24) + 0x120) + 4));
     uVar3 = FUN_001262b0(uVar7,uVar3);
-    FUN_00113cc4(&local_30,*(int *)(param_1 + 0x1c));
+    level_object_get_position((uint32 *)&local_30,(LevelObject *)*(int *)(param_1 + 0x1c));
     FUN_0010fbf4(*(int **)(*(int *)(param_1 + 0x24) + 0x114),local_30,uStack_2c,uStack_28,uVar3,
                  *(int *)(param_1 + 0xc0),*(int *)(param_1 + 0xc4),*(undefined4 *)(param_1 + 200),
                  *(uint *)(param_1 + 0xcc),*(undefined4 *)(param_1 + 0xd0));
@@ -13046,7 +13046,7 @@ void FUN_00110564(int param_1,int param_2,int param_3)
       local_18 = FUN_001262b0(uVar1,local_24);
     }
     else {
-      FUN_00113cc4(&local_20,param_3);
+      level_object_get_position((uint32 *)&local_20,(LevelObject *)param_3);
       uVar2 = 0;
     }
     local_28 = *(undefined4 *)(param_1 + 0x24c);
@@ -13506,13 +13506,13 @@ uint FUN_00110924(int *param_1)
   case 0xc:
     if (param_1[3] != 0) {
       if (param_1[0xc] == 0) {
-        FUN_00113cc4(&local_3c,param_1[3]);
+        level_object_get_position((uint32 *)&local_3c,(LevelObject *)param_1[3]);
         local_3c = (int *)FUN_001262b0((uint)local_3c,param_1[0x11]);
         local_38 = (int *)FUN_001262b0((uint)local_38,param_1[0x12]);
         local_34 = (int *)FUN_001262b0((uint)local_34,param_1[0x13]);
       }
       else if (param_1[4] != 0) {
-        FUN_00113cc4(&local_3c,param_1[4]);
+        level_object_get_position((uint32 *)&local_3c,(LevelObject *)param_1[4]);
       }
       local_40 = 0;
       local_44 = 0;
@@ -13626,7 +13626,7 @@ uint FUN_00110924(int *param_1)
     if (param_1[3] == 0 || iVar10 == 0) {
       return 1;
     }
-    FUN_00113cc4(&local_3c,iVar10);
+    level_object_get_position((uint32 *)&local_3c,(LevelObject *)iVar10);
     if (((*(int *)(param_1[3] + 0xc) == WORD_HEXADECIMAL_2E6723BD) &&
         (iVar10 = *(int *)(param_1[3] + 0x1cc), iVar10 != 0)) &&
        (*(int *)(iVar10 + 0xc) == WORD_HEXADECIMAL_10C617E4)) {
@@ -14041,7 +14041,7 @@ LAB_00111f68:
     if (param_1[3] == 0) {
       return 1;
     }
-    FUN_00113cc4(&local_3c,param_1[3]);
+    level_object_get_position((uint32 *)&local_3c,(LevelObject *)param_1[3]);
     if (param_1[0xc] != 1) {
       local_3c = (int *)param_1[0x11];
     }
@@ -14106,7 +14106,7 @@ LAB_001121cc:
     }
     else {
       puVar3[0x81] = 1;
-      FUN_00113cc4(param_1 + 0x11,param_1[3]);
+      level_object_get_position((uint32 *)(param_1 + 0x11),(LevelObject *)param_1[3]);
       *(int *)(*(int *)(iVar2 + 0xa4) + 0x208) = param_1[0x13];
     }
     break;
@@ -14826,7 +14826,7 @@ void FUN_00113030(int param_1,undefined4 param_2,uint param_3,uint param_4,undef
   undefined4 uStack_18;
   
   if (*(int *)(param_1 + 0x11c) != 0) {
-    FUN_00113cc4(&local_20,*(int *)(*(int *)(*(int *)(param_1 + 0x120) + 4) + 4));
+    level_object_get_position((uint32 *)&local_20,(LevelObject *)*(int *)(*(int *)(*(int *)(param_1 + 0x120) + 4) + 4));
     FUN_001201cc(*(int *)(param_1 + 0x11c),1);
     *(undefined4 *)(*(int *)(param_1 + 0x11c) + 0x34) = 1;
     thunk_FUN_0011fd90(*(int *)(param_1 + 0x11c),local_20,local_1c,uStack_18);
@@ -15019,7 +15019,7 @@ void FUN_00113490(undefined4 *param_1,int param_2)
   undefined4 local_14;
   undefined4 local_10;
   
-  FUN_00113cc4(&local_18,*(undefined4 *)(*(int *)(*(int *)(param_2 + 0x20) + 0xa4) + 0x1f8));
+  level_object_get_position((uint32 *)&local_18,(LevelObject *)*(undefined4 *)(*(int *)(*(int *)(param_2 + 0x20) + 0xa4) + 0x1f8));
   local_24 = *(undefined4 *)(WORD_HEXADECIMAL_00013970 + 0x1134c0);
   local_20 = *(undefined4 *)(WORD_HEXADECIMAL_00013970 + 0x1134c4);
   local_1c = *(undefined4 *)(WORD_HEXADECIMAL_00013970 + 0x1134c8);
@@ -15045,7 +15045,7 @@ void FUN_00113524(undefined4 *param_1,int param_2)
   undefined4 local_14;
   undefined4 local_10;
   
-  FUN_00113cc4(&local_18,*(undefined4 *)(*(int *)(*(int *)(param_2 + 0x74) + 0xa4) + 0x1f8));
+  level_object_get_position((uint32 *)&local_18,(LevelObject *)*(undefined4 *)(*(int *)(*(int *)(param_2 + 0x74) + 0xa4) + 0x1f8));
   local_24 = *(undefined4 *)(WORD_HEXADECIMAL_00013B98 + 0x113554);
   local_20 = *(undefined4 *)(WORD_HEXADECIMAL_00013B98 + 0x113558);
   local_1c = *(undefined4 *)(WORD_HEXADECIMAL_00013B98 + 0x11355c);
@@ -16119,19 +16119,14 @@ LAB_00113c30:
   return;
 }
 
-/* ==== 0x00113CC4  (file offset 0x13CC4)  FUN_00113cc4 ================================================ */
-void FUN_00113cc4(undefined4 *param_1,int param_2)
+/* ==== 0x00113CC4  (file offset 0x13CC4)  level_object_get_position =================================== */
+/* GUESS: name. Copies a level object's position (x, y, z floats) to `position`. */
+void level_object_get_position(uint32 *position,LevelObject *object)
 
 {
-  undefined4 uVar1;
-  undefined4 uVar2;
-  
-  uVar1 = *(undefined4 *)(param_2 + 0x6c);
-  uVar2 = *(undefined4 *)(param_2 + 0x70);
-  *param_1 = *(undefined4 *)(param_2 + 0x68);
-  param_1[1] = uVar1;
-  param_1[2] = uVar2;
-  return;
+  position[0] = object->position[0];
+  position[1] = object->position[1];
+  position[2] = object->position[2];
 }
 
 /* ==== 0x00113CD4  (file offset 0x13CD4)  animations_get_mode ========================================= */
@@ -16889,7 +16884,7 @@ void FUN_00114a1c(int param_1,undefined4 param_2)
   
   FUN_00126964(*(undefined4 *)(param_1 + 0xc),0x3f800000);
   if (!(bool)in_CY) {
-    FUN_00113cc4(&local_18,*(undefined4 *)(param_1 + 0x24));
+    level_object_get_position((uint32 *)&local_18,(LevelObject *)*(undefined4 *)(param_1 + 0x24));
     uVar2 = FUN_00110030(param_1,*(undefined4 *)(param_1 + 4),*(undefined4 *)(param_1 + 8),
                          *(undefined4 *)(param_1 + 0xc),local_18,uStack_14 /* not arguments, value leftovers: uStack_10 */);
     FUN_00126964(uVar2,param_2);
@@ -18672,7 +18667,7 @@ void FUN_001174ac(int param_1,undefined4 param_2)
     do {
       uVar14 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0xa4),
                             *(undefined4 *)(param_1 + iVar15 * 4 + 0x1a4));
-      FUN_00113cc4(param_1 + iVar15 * 0xc + 0x1cc,uVar14);
+      level_object_get_position((uint32 *)(param_1 + iVar15 * 0xc + 0x1cc),(LevelObject *)uVar14);
       uVar27 = WORD_HEXADECIMAL_21E5FC16;
       uVar24 = WORD_HEXADECIMAL_1C0CA328;
       uVar30 = WORD_HEXADECIMAL_1EE299BF;
@@ -18854,7 +18849,7 @@ LAB_00117ac8:
   *(undefined4 *)(param_1 + 0x20) = uVar14;
   *(undefined4 *)(param_1 + 0x78) = local_28;
   *(undefined4 *)(param_1 + 0x7c) = local_2c;
-  FUN_00113cc4(param_1 + 0x30,uVar14);
+  level_object_get_position((uint32 *)(param_1 + 0x30),(LevelObject *)uVar14);
   FUN_0011dedc(param_1);
   FUN_0011de70(param_1);
   *(undefined4 *)(*(int *)(param_1 + 0x24) + 0x4c) = 1;
@@ -20677,7 +20672,7 @@ void FUN_0011a4d8(int param_1,int param_2)
     uVar4 = FUN_00126618(uVar4,uVar10);
   }
   else {
-    FUN_00113cc4((undefined4 *)(param_1 + 0x218),*(int *)(param_1 + 0x20c));
+    level_object_get_position((uint32 *)((undefined4 *)(param_1 + 0x218)),(LevelObject *)*(int *)(param_1 + 0x20c));
     uVar19 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
                           *(undefined4 *)(param_1 + 0x68),*(undefined4 *)(param_1 + 0x6c),
                           *(undefined4 *)(param_1 + 0x218),*(undefined4 *)(param_1 + 0x21c));
@@ -21196,7 +21191,7 @@ undefined8 FUN_0011abc4(int param_1,int param_2,uint param_3)
   local_30 = param_2;
   local_2c = param_3;
   if (uVar1 == 0x65) {
-    FUN_00113cc4((undefined4 *)(param_1 + 400),*(int *)(param_1 + 0x20));
+    level_object_get_position((uint32 *)((undefined4 *)(param_1 + 400)),(LevelObject *)*(int *)(param_1 + 0x20));
     FUN_00113524(&local_30,param_1);
     uVar1 = FUN_001148a0(*(int *)(param_1 + 0x20));
     uVar1 = FUN_001262b0(uVar1,FLOAT_90);
@@ -22317,7 +22312,7 @@ LAB_0011c28c:
               FUN_0011de04(param_1,param_2);
             }
             else {
-              FUN_00113cc4(&local_24,*(int *)(param_1 + 0x248));
+              level_object_get_position((uint32 *)&local_24,(LevelObject *)*(int *)(param_1 + 0x248));
               uVar4 = FUN_0012642c(local_24,*(undefined4 *)(param_1 + 0x68));
               *param_2 = uVar4;
               uVar4 = FUN_0012642c(local_20,*(undefined4 *)(param_1 + 0x6c));
@@ -22581,14 +22576,14 @@ void FUN_0011c708(int param_1,int param_2,int param_3)
     local_24 = *(uint *)(INTEGER_42736 + 0x11c734);
     iStack_20 = *(undefined4 *)(INTEGER_42736 + 0x11c738);
     FUN_0010ecb8(*(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa4) + 0x1f8),&local_28);
-    FUN_00113cc4(&local_1c,*(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa4) + 0x1f8));
+    level_object_get_position((uint32 *)&local_1c,(LevelObject *)*(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa4) + 0x1f8));
     local_1c = FUN_001262b0(local_1c,local_28);
     local_18 = FUN_001262b0(local_18,local_24);
     local_14 = FUN_001262b0(*(uint *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa4) + 0x208),0x3f800000)
     ;
   }
   else {
-    FUN_00113cc4(&local_1c,*(int *)(*(int *)(param_1 + 0x118) + param_3 * 4));
+    level_object_get_position((uint32 *)&local_1c,(LevelObject *)*(int *)(*(int *)(param_1 + 0x118) + param_3 * 4));
   }
   FUN_001267f0(**(uint **)(*(int *)(param_2 + 4) + 0x110),0);
   if (!(bool)uVar4) {
@@ -23509,7 +23504,7 @@ void FUN_0011d6cc(int param_1,int param_2)
   if ((bool)uVar10) {
     FUN_0011cc14(param_1,*(int *)(param_1 + 0x44),1);
     FUN_00113524(&local_30,param_1);
-    FUN_00113cc4((undefined4 *)(param_1 + 0x254),*(int *)(param_1 + 0x20));
+    level_object_get_position((uint32 *)((undefined4 *)(param_1 + 0x254)),(LevelObject *)*(int *)(param_1 + 0x20));
     FUN_001201cc(*(int *)(param_1 + 0x20),1);
     uVar9 = FUN_00110030(param_1,*(undefined4 *)(param_1 + 0x254),*(undefined4 *)(param_1 + 600),
                          *(uint *)(param_1 + 0x25c),local_30,local_2c);
@@ -24298,9 +24293,9 @@ void FUN_0011e3c0(int param_1,uint param_2)
   }
   else {
     local_20 = in_r2;
-    FUN_00113cc4(&local_24,*(int *)(param_1 + 0x128));
+    level_object_get_position((uint32 *)&local_24,(LevelObject *)*(int *)(param_1 + 0x128));
     uVar1 = local_24;
-    FUN_00113cc4(&local_24,*(int *)(param_1 + 0x128));
+    level_object_get_position((uint32 *)&local_24,(LevelObject *)*(int *)(param_1 + 0x128));
     uVar2 = local_20;
     uVar5 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
                          *(undefined4 *)(param_1 + 0x68),*(undefined4 *)(param_1 + 0x6c),uVar1,
@@ -24313,12 +24308,12 @@ void FUN_0011e3c0(int param_1,uint param_2)
     uVar1 = FUN_001269cc(uVar1,WORD_HEXADECIMAL_3C8EFA39);
     uVar3 = FUN_001202f4(uVar1);
     uVar4 = FUN_0010ed40(uVar1);
-    FUN_00113cc4(&local_24,*(int *)(param_1 + 0x128));
+    level_object_get_position((uint32 *)&local_24,(LevelObject *)*(int *)(param_1 + 0x128));
     uVar1 = local_24;
     uVar3 = FUN_001269cc(uVar2,uVar3);
     uVar1 = FUN_001263f8(uVar3,uVar1);
     *(uint *)(param_1 + 0x68) = uVar1;
-    FUN_00113cc4(&local_24,*(int *)(param_1 + 0x128));
+    level_object_get_position((uint32 *)&local_24,(LevelObject *)*(int *)(param_1 + 0x128));
     uVar1 = FUN_001269cc(uVar2,uVar4);
     uVar1 = FUN_001262b0(uVar1,local_20);
     *(uint *)(param_1 + 0x6c) = uVar1;
@@ -24605,7 +24600,7 @@ undefined4 FUN_0011ec28(int param_1,int param_2)
       }
       FUN_0011f7d4(param_1,1);
       FUN_00113524(&local_1c,param_1);
-      FUN_00113cc4(&local_28,*(undefined4 *)(param_1 + 0x20));
+      level_object_get_position((uint32 *)&local_28,(LevelObject *)*(undefined4 *)(param_1 + 0x20));
       uVar2 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),local_1c,local_18,
                            local_28,local_24);
       local_2c = FUN_001262b0(uVar2,FLOAT_180);
@@ -24893,11 +24888,11 @@ void FUN_0011f394(int param_1,char *param_2,undefined4 param_3,undefined4 param_
   }
   uVar3 = 1;
   if (param_5 != 0) {
-    FUN_00113cc4(&local_1c,*(undefined4 *)(param_1 + 0x1cc));
+    level_object_get_position((uint32 *)&local_1c,(LevelObject *)*(undefined4 *)(param_1 + 0x1cc));
     *(undefined4 *)(param_1 + 0x68) = local_1c;
-    FUN_00113cc4(&local_1c,*(undefined4 *)(param_1 + 0x1cc));
+    level_object_get_position((uint32 *)&local_1c,(LevelObject *)*(undefined4 *)(param_1 + 0x1cc));
     *(undefined4 *)(param_1 + 0x6c) = local_18;
-    FUN_00113cc4(&local_1c,*(undefined4 *)(param_1 + 0x1cc));
+    level_object_get_position((uint32 *)&local_1c,(LevelObject *)*(undefined4 *)(param_1 + 0x1cc));
     uVar1 = level_object_get_height((LevelObject *)*(undefined4 *)(param_1 + 0x1cc));
     uVar1 = FUN_001269cc(uVar1,0x3f000000);
     uVar1 = FUN_001262b0(uVar1,local_14);
@@ -25102,8 +25097,8 @@ void FUN_0011f7d4(int param_1,int param_2)
     }
     uVar2 = *(undefined4 *)(param_1 + 0x28);
   }
-  FUN_00113cc4(&local_1c,iVar3);
-  FUN_00113cc4(&local_28,uVar2);
+  level_object_get_position((uint32 *)&local_1c,(LevelObject *)iVar3);
+  level_object_get_position((uint32 *)&local_28,(LevelObject *)uVar2);
   thunk_FUN_0011fd90(iVar3,local_28,uStack_24,uStack_20);
   thunk_FUN_0011fd90(uVar2,local_1c,uStack_18,uStack_14);
   local_2c = FUN_001148a0(iVar3);
@@ -25291,7 +25286,7 @@ LAB_0011fba4:
       FUN_001148a8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 800));
       FUN_001147ec(&local_28,*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
                    *(undefined4 *)(param_1 + 0x1e8));
-      FUN_00113cc4(&local_34,*(undefined4 *)(param_1 + 300));
+      level_object_get_position((uint32 *)&local_34,(LevelObject *)*(undefined4 *)(param_1 + 300));
       uVar3 = FUN_0012642c(local_2c,local_20);
       uVar4 = FUN_0012642c(local_30,local_24);
       uVar5 = FUN_0012642c(local_34,local_28);
@@ -26585,11 +26580,11 @@ bool FUN_0012059c(int param_1,int param_2)
     uVar5 = *(int *)(param_1 + 0x104) != 0;
     uVar4 = *(int *)(param_1 + 0x104) == 1;
     if ((bool)uVar4) {
-      FUN_00113cc4(&iStack_1c,*(undefined4 *)(param_1 + 0x134) /* not arguments, register leftovers: param_3,param_4,param_1 */);
+      level_object_get_position((uint32 *)&iStack_1c,(LevelObject *)*(undefined4 *)(param_1 + 0x134) /* not arguments, register leftovers: param_3,param_4,param_1 */);
       local_14 = FUN_001262b0(local_14,0x3f000000);
     }
     else {
-      FUN_00113cc4(&iStack_1c,*(undefined4 *)(param_1 + 0x20) /* not arguments, register leftovers: param_3,param_4,param_1 */);
+      level_object_get_position((uint32 *)&iStack_1c,(LevelObject *)*(undefined4 *)(param_1 + 0x20) /* not arguments, register leftovers: param_3,param_4,param_1 */);
     }
     FUN_00126964(*(undefined4 *)(param_1 + 0x3c),0);
     if (!(bool)uVar5 || (bool)uVar4) {
@@ -27451,7 +27446,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3,uint param_4)
   local_28 = param_3;
   local_24 = param_4;
   FUN_00113490((undefined4 *)(param_1 + 0x28),param_1);
-  FUN_00113cc4((undefined4 *)(param_1 + 0x34),*(int *)(param_1 + 4));
+  level_object_get_position((uint32 *)((undefined4 *)(param_1 + 0x34)),(LevelObject *)*(int *)(param_1 + 4));
   iVar4 = WORD_HEXADECIMAL_FFFDE350;
   uVar6 = FLOAT_1000;
   if (*(int *)(param_1 + 0x48) != 0) goto switchD_00021cbc_default;
@@ -27520,7 +27515,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3,uint param_4)
     }
     iVar4 = FUN_00114638(*(int *)(param_1 + 0x24));
     *(int *)(param_1 + 0x80) = iVar4;
-    FUN_00113cc4(&local_2c,*(int *)(*(int *)(*(int *)(param_1 + 0x24) + 0x118) + iVar4 * 4));
+    level_object_get_position((uint32 *)&local_2c,(LevelObject *)*(int *)(*(int *)(*(int *)(param_1 + 0x24) + 0x118) + iVar4 * 4));
     uVar3 = local_28;
     uVar12 = FUN_00113374(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
                           *(undefined4 *)(param_1 + 0x34),*(undefined4 *)(param_1 + 0x38),local_2c,
@@ -27816,7 +27811,7 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
       }
       if (*(int *)(*(int *)(iVar8 + 0x10) + 0x54) != 0) {
         uVar3 = level_object_get_height((LevelObject *)*(int *)(param_1 + 0x1f8));
-        FUN_00113cc4(&local_2c,*(int *)(param_1 + 0x1f8));
+        level_object_get_position((uint32 *)&local_2c,(LevelObject *)*(int *)(param_1 + 0x1f8));
         in_r3 = local_24;
         uVar13 = FUN_001213fc(*(int *)(iVar8 + 0x10),local_2c,uStack_28,local_24,
                               *(undefined4 *)(*(int *)(param_1 + 0x1f8) + 0x80),uVar3,
@@ -27900,7 +27895,7 @@ void FUN_001226e8(int *param_1,undefined4 param_2,int param_3)
   uint local_30;
   uint local_2c;
   
-  FUN_00113cc4(&local_30,*(int *)(*(int *)(*param_1 + 0xa4) + 0x1f8));
+  level_object_get_position((uint32 *)&local_30,(LevelObject *)*(int *)(*(int *)(*param_1 + 0xa4) + 0x1f8));
   iVar5 = 0;
   do {
     if (0 < param_1[iVar5 + 0xe]) {
@@ -27917,7 +27912,7 @@ LAB_00122870:
       else {
         uVar8 = 1;
         if (*(int *)(param_1[iVar5 + 1] + 0x150) == 0) {
-          FUN_00113cc4(&local_3c,param_1[iVar5 + 1]);
+          level_object_get_position((uint32 *)&local_3c,(LevelObject *)(param_1[iVar5 + 1]));
           uVar3 = FUN_0012642c(local_30,local_3c);
           uVar4 = FUN_0012642c(local_2c,local_38);
           FUN_00126964(uVar3,0);
@@ -28035,7 +28030,7 @@ void enemy_update(Enemy *enemy,int now,int elapsed)
   uint32 position[3];
 
   FUN_00113524((undefined4 *)&enemy->field_04,(int)enemy);
-  FUN_00113cc4((undefined4 *)&enemy->field_10,enemy->field_20);
+  level_object_get_position((uint32 *)((undefined4 *)&enemy->field_10),(LevelObject *)(enemy->field_20));
   if (enemy->mode == 1) {
     /* ---- the code at 0x0011db34 */
     if (enemy->field_90 == 0x1b59) {              /* 7001 */
@@ -28102,7 +28097,7 @@ void enemy_update(Enemy *enemy,int now,int elapsed)
       FUN_001201cc(enemy->field_28,0);
       *(int *)(enemy->field_28 + 0x34) = 0;
       if (FUN_001267f0(enemy->health,0), *(float *)&enemy->health == 0.0f) {   /* item drop where it was */
-        FUN_00113cc4(position,enemy->field_20);
+        level_object_get_position((uint32 *)position,(LevelObject *)(enemy->field_20));
         FUN_0010fb90((undefined4)enemy->region->itemDrops,position[0],position[1],position[2]);
       }
     }
@@ -28149,7 +28144,7 @@ void FUN_00122b90(int param_1,int param_2,uint param_3,undefined4 param_4)
   FUN_0012312c(param_1,param_2,param_3,param_4);
   if (*(int *)(param_1 + 0x1cc) == 0) {
     FUN_001135dc(param_1);
-    FUN_00113cc4((undefined4 *)(param_1 + 0x1ec),*(int *)(param_1 + 0x1cc));
+    level_object_get_position((uint32 *)((undefined4 *)(param_1 + 0x1ec)),(LevelObject *)*(int *)(param_1 + 0x1cc));
     *(undefined4 *)(param_1 + 0x1f8) = FLOAT_10;
     if (*(int *)(param_1 + 0x1cc) == 0) {
       return;
@@ -28337,7 +28332,7 @@ void combat_region_update(CombatRegion *region,int now,int elapsed)
     uint uStack_2c;
 
     piVar5 = (int *)region->itemDrops;
-    FUN_00113cc4(&uStack_30,*(int *)(*(int *)(*piVar5 + 0xa4) + 0x1f8));
+    level_object_get_position((uint32 *)&uStack_30,(LevelObject *)*(int *)(*(int *)(*piVar5 + 0xa4) + 0x1f8));
     iVar6 = 0;
     do {
       if (0 < piVar5[iVar6 + 0xe]) {
@@ -28354,7 +28349,7 @@ void combat_region_update(CombatRegion *region,int now,int elapsed)
         else {
           uVar9 = 1;
           if (*(int *)(piVar5[iVar6 + 1] + 0x150) == 0) {
-            FUN_00113cc4(&uStack_3c,piVar5[iVar6 + 1]);
+            level_object_get_position((uint32 *)&uStack_3c,(LevelObject *)(piVar5[iVar6 + 1]));
             uVar3 = FUN_0012642c(uStack_30,uStack_3c);
             uVar4 = FUN_0012642c(uStack_2c,uStack_38);
             FUN_00126964(uVar3,0);
@@ -28853,7 +28848,7 @@ LAB_00123b40:
         }
         if (((iVar11 < 0 != (iVar6 != 0 && SBORROW4(iVar10,2))) &&
             (iVar11 = param_1 + iVar10 * 4, *(int *)(iVar11 + 0x234) != 0)) && (iVar9 == 0)) {
-          FUN_00113cc4(&local_40,iVar6);
+          level_object_get_position((uint32 *)&local_40,(LevelObject *)iVar6);
           FUN_001201cc(*(int *)(iVar11 + 0x234),1);
           thunk_FUN_0011fd90(*(int *)(iVar11 + 0x234),local_40,local_3c,local_38);
           iVar9 = *(int *)(param_1 + 0x23c);
@@ -29015,12 +29010,12 @@ void FUN_00123d7c(int param_1,undefined4 param_2,int param_3)
         (*(code *)(*(int *)(iVar6 + 4) + iVar6))(piVar2,param_2,param_3);
       }
     }
-    FUN_00113cc4(&local_30,*(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa4) + 0x1f8));
+    level_object_get_position((uint32 *)&local_30,(LevelObject *)*(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa4) + 0x1f8));
     uVar8 = uVar1;
     for (iVar7 = 0; iVar7 < *(int *)(param_1 + 0x128); iVar7 = iVar7 + 1) {
       iVar6 = *(int *)(*(int *)(*(int *)(param_1 + 0x120) + iVar7 * 4) + 4);
       if (*(int *)(iVar6 + 0x34) != 0) {
-        FUN_00113cc4(&local_3c,iVar6);
+        level_object_get_position((uint32 *)&local_3c,(LevelObject *)iVar6);
         uVar3 = FUN_0012642c(local_28,local_34);
         uVar4 = FUN_0012642c(local_2c,local_38);
         uVar5 = FUN_0012642c(local_30,local_3c);
@@ -29040,7 +29035,7 @@ void FUN_00123d7c(int param_1,undefined4 param_2,int param_3)
     }
     uVar10 = *(int *)(param_1 + 0x11c) == 0;
     if (!(bool)uVar10) {
-      FUN_00113cc4(&local_3c,*(int *)(param_1 + 0x11c));
+      level_object_get_position((uint32 *)&local_3c,(LevelObject *)*(int *)(param_1 + 0x11c));
       uVar3 = FUN_0012642c(local_28,local_34);
       uVar4 = FUN_0012642c(local_2c,local_38);
       uVar5 = FUN_0012642c(local_30,local_3c);
