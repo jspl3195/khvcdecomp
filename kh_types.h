@@ -80,11 +80,11 @@ typedef struct KHApp {
  * arrays. list_get_entry reads an entry by position (0 when out of range); list_find_entry returns the
  * entry whose id matches; list_set_entry adds or replaces one; list_remove_entry takes one out. The key map of a UIElement (+0x60) is searched the same way. */
 typedef struct UIList {
-    int    count;                 /* +0x00 number of entries */
-    int   *ids;                   /* +0x04 one id per entry (the key pickers have ids 400-406) */
-    int   *entries;               /* +0x08 the entries, usually UIElement pointers */
-    int    capacity;              /* +0x0c room in both arrays */
-    int    growBy;                /* +0x10 how much list_set_entry grows them by when they are full */
+    int32    count;                 /* +0x00 number of entries */
+    int32   *ids;                   /* +0x04 one id per entry (the key pickers have ids 400-406) */
+    int32   *entries;               /* +0x08 the entries, usually UIElement pointers */
+    int32    capacity;              /* +0x0c room in both arrays */
+    int32    growBy;                /* +0x10 how much list_set_entry grows them by when they are full */
 } UIList;
 
 /* ---- The screen stack (GUESS: names) -------------------------------------------------------------
@@ -96,7 +96,7 @@ typedef struct ScreenStack {
     struct KHApp *app;            /* +0x00 */
     uint8  unknown_04[0x30];
     UIList *screens;              /* +0x34 the open screens, by position */
-    int    depth;                 /* +0x38 how many screens are open */
+    int32    depth;                 /* +0x38 how many screens are open */
 } ScreenStack;
 
 /* ---- The game's UI elements (GUESS: names) ------------------------------------------------------
@@ -108,38 +108,38 @@ typedef struct ScreenStack {
 typedef struct KeyOption {
     struct KeyOption *previous;   /* +0x00 */
     struct KeyOption *next;       /* +0x04 */
-    int    label;                 /* +0x08 the text shown for it: 0x1484CCBF "undefined", -1000..-1011
+    int32    label;                 /* +0x08 the text shown for it: 0x1484CCBF "undefined", -1000..-1011
                                      the keys 0..9, *, # (GUESS: glyph ids) */
-    int    keyCode;               /* +0x0C AVK_UNDEFINED, AVK_0..AVK_9, AVK_STAR or AVK_POUND */
+    int32    keyCode;               /* +0x0C AVK_UNDEFINED, AVK_0..AVK_9, AVK_STAR or AVK_POUND */
 } KeyOption;                      /* 0x10 bytes; the Controls screen links 13 of them in a ring */
 
 typedef struct UIElement {
     uint8  unknown_00[0x0c];
-    int    id;                    /* +0x0c its id among its parent's children (ui_element_add_child) */
+    int32    id;                    /* +0x0c its id among its parent's children (ui_element_add_child) */
     uint32 primaryColor;          /* +0x10 set by ui_element_handle_key for each type and state */
     uint32 secondaryColor;        /* +0x14 */
     uint8  unknown_18[0x08];
-    int   *owner;                 /* +0x20 the menu (screen) it belongs to; FUN_00101ad8 handles its events */
+    int32   *owner;                 /* +0x20 the menu (screen) it belongs to; FUN_00101ad8 handles its events */
     UIList *children;             /* +0x24 its children, by id (ui_element_find_child) */
-    int    nextAutomaticId;       /* +0x28 counts down from 0: the ids -1, -2, ... given to children
+    int32    nextAutomaticId;       /* +0x28 counts down from 0: the ids -1, -2, ... given to children
                                      added without an id (or with one already in use) */
     struct UIElement *parent;     /* +0x2c the element it was added to */
-    int    label;                 /* +0x30 the text element that shows the current value */
-    int    type;                  /* +0x34 2..10; 8 = key picker */
-    int    selectEvent;           /* +0x38 the event sent to the owner when SELECT is pressed */
+    int32    label;                 /* +0x30 the text element that shows the current value */
+    int32    type;                  /* +0x34 2..10; 8 = key picker */
+    int32    selectEvent;           /* +0x38 the event sent to the owner when SELECT is pressed */
     KeyOption *options;           /* +0x3c key picker: the ring of options */
     KeyOption *selectedOption;    /* +0x40 key picker: the option shown */
-    int   *setting;               /* +0x44 key picker: the setting it edits (a key code) */
-    int    index;                 /* +0x48 key picker: its row (0..6), passed to FUN_0010a498 on UP / DOWN */
+    int32   *setting;               /* +0x44 key picker: the setting it edits (a key code) */
+    int32    index;                 /* +0x48 key picker: its row (0..6), passed to FUN_0010a498 on UP / DOWN */
     uint8  enabled;               /* +0x4c GUESS: meaning; a key picker with 0 is drawn all white */
     uint8  unknown_4d[0x03];
-    int   *listener;              /* +0x50 an object (vtable at +0) that gets the keys the element
+    int32   *listener;              /* +0x50 an object (vtable at +0) that gets the keys the element
                                      does not handle itself */
     uint8  unknown_54[0x08];
     uint32 flags;                 /* +0x5c bit 1: keep the colours (no restyling) */
     UIList *keyMap;               /* +0x60 searched with the key code by list_find_entry */
-    int    unknown_64;            /* +0x64 passed to FUN_00105224 with the element found there */
-    int    originalKeyCode;       /* +0x68 key picker: the setting's value when it was set up */
+    int32    unknown_64;            /* +0x64 passed to FUN_00105224 with the element found there */
+    int32    originalKeyCode;       /* +0x68 key picker: the setting's value when it was set up */
 } UIElement;
 
 /* ---- The player's progress (GUESS: names) -----------------------------------------------------
@@ -147,8 +147,8 @@ typedef struct UIElement {
  * progress_add_experience levels up through levels[] (levels 0-8); progress_score = munny + 100 *
  * experience. The Controls key bindings (key_picker_setup) are controls[]. */
 typedef struct ProgressLevel {
-    int    experienceNeeded;      /* +0x00 experience at which this level-up happens */
-    int    reward;                /* +0x04 1: maximumHealth + 1.0f, 2: levelRewardTwoCount + 1,
+    int32    experienceNeeded;      /* +0x00 experience at which this level-up happens */
+    int32    reward;                /* +0x04 1: maximumHealth + 1.0f, 2: levelRewardTwoCount + 1,
                                      3: levelRewardThreeCount + 1 */
 } ProgressLevel;
 
@@ -161,31 +161,31 @@ typedef struct Progress {
     uint32 maximumHealth;         /* +0x518 GUESS: a float (its bits); +1.0f by a level reward of type 1 */
     uint32 field_51c;             /* +0x51c a float (its bits), 9.0 at the start; drawn with the health */
     uint32 field_520;             /* +0x520 a float (its bits), 2.0 at the start; drawn with the health */
-    int    magicPoints;           /* +0x524 MP: progress_add_magic_points, 0..maximumMagicPoints */
-    int    maximumMagicPoints;    /* +0x528 */
-    int    munny;                 /* +0x52c the currency: progress_add_munny; spent in shops */
-    int    levelRewardTwoCount;   /* +0x530 GUESS: meaning (a stat level?); 1 at the start, +1 by a level
+    int32    magicPoints;           /* +0x524 MP: progress_add_magic_points, 0..maximumMagicPoints */
+    int32    maximumMagicPoints;    /* +0x528 */
+    int32    munny;                 /* +0x52c the currency: progress_add_munny; spent in shops */
+    int32    levelRewardTwoCount;   /* +0x530 GUESS: meaning (a stat level?); 1 at the start, +1 by a level
                                      reward of type 2 */
-    int    levelRewardThreeCount; /* +0x534 GUESS: meaning (a stat level?); 1 at the start, +1 by a level
+    int32    levelRewardThreeCount; /* +0x534 GUESS: meaning (a stat level?); 1 at the start, +1 by a level
                                      reward of type 3 */
-    int    experience;            /* +0x538 progress_add_experience */
+    int32    experience;            /* +0x538 progress_add_experience */
     ProgressLevel levels[9];      /* +0x53c the level-ups of levels 0-8 */
     uint8  unknown_584[0x08];
-    int    level;                 /* +0x58c 0-9; no level-ups after 9 */
+    int32    level;                 /* +0x58c 0-9; no level-ups after 9 */
     uint8  unknown_590[0x04];
-    int    field_594;             /* +0x594 GUESS: a tutorial step; above 0, the action key tells the app's
+    int32    field_594;             /* +0x594 GUESS: a tutorial step; above 0, the action key tells the app's
                                      field_bc screen (FUN_00108f28) */
     uint8  unknown_598[0x04];
-    int    spells[3];             /* +0x59c 0 at the start; set for each spell the player has (GUESS: names);
+    int32    spells[3];             /* +0x59c 0 at the start; set for each spell the player has (GUESS: names);
                                      character_on_key casts only those */
     uint8  unknown_5a8[0x04];
-    int    field_5ac;             /* +0x5ac 0 at the start */
-    int    field_5b0;             /* +0x5b0 0 at the start */
-    int    field_5b4;             /* +0x5b4 0 at the start; GUESS: a count of items that refill half the MP
+    int32    field_5ac;             /* +0x5ac 0 at the start */
+    int32    field_5b0;             /* +0x5b0 0 at the start */
+    int32    field_5b4;             /* +0x5b4 0 at the start; GUESS: a count of items that refill half the MP
                                      (the Magic key with no MP, after field_5b8) */
-    int    field_5b8;             /* +0x5b8 0 at the start; GUESS: a count of items that refill all of it */
+    int32    field_5b8;             /* +0x5b8 0 at the start; GUESS: a count of items that refill all of it */
     uint8  unknown_5bc[0x10];
-    int    controls[7];           /* +0x5cc the Controls key bindings (BREW key codes): Forwards, Backwards,
+    int32    controls[7];           /* +0x5cc the Controls key bindings (BREW key codes): Forwards, Backwards,
                                      Left, Right, Action, Status, Magic */
     uint8  unknown_5e8[0x13c];
     struct KHApp *app;            /* +0x724 the app it belongs to */
@@ -206,8 +206,8 @@ struct LevelObject;
  * form ("circle", "cylinder", "cuboid", "rect", "sphere", "poly"); the next words give the sizes, or
  * "use verts" for the size of the entity's vertices. */
 typedef struct CollisionShape {
-    int    kind;                  /* +0x00 1 "inner", 2 "outer" */
-    int    form;                  /* +0x04 3 circle, 4 cylinder, 5 cuboid, 6 rect, 7 sphere, 8 poly */
+    int32    kind;                  /* +0x00 1 "inner", 2 "outer" */
+    int32    form;                  /* +0x04 3 circle, 4 cylinder, 5 cuboid, 6 rect, 7 sphere, 8 poly */
     uint32 position[3];           /* +0x08 floats (their bits): the entity's position (FUN_001147ec) */
     uint32 minimum[3];            /* +0x14 floats: the box around it */
     uint32 maximum[3];            /* +0x20 floats */
@@ -215,9 +215,9 @@ typedef struct CollisionShape {
     uint32 height;                /* +0x30 a float (its bits); level_object_get_height */
     struct KHApp *app;            /* +0x34 GetAppInstance() at creation */
     uint32 *vertices;             /* +0x38 floats, 3 per vertex (a "poly", or the 4 corners of a "rect") */
-    int    vertexCount;           /* +0x3c */
-    int    clockwise;             /* +0x40 a "poly": the entity's "Clockwise" tag */
-    int   *vertexEntities;        /* +0x44 a "poly": the entities named "%dtransform", one per vertex */
+    int32    vertexCount;           /* +0x3c */
+    int32    clockwise;             /* +0x40 a "poly": the entity's "Clockwise" tag */
+    int32   *vertexEntities;        /* +0x44 a "poly": the entities named "%dtransform", one per vertex */
 } CollisionShape;                 /* 0x48 bytes */
 
 typedef struct LevelObject {
@@ -229,24 +229,24 @@ typedef struct LevelObject {
                                      "NoParent" tag */
     ISwerveObject *node;          /* +0x008 its scene node (AddRef'd) */
     uint32 nameId;                /* +0x00c the hash (FUN_00113654) of its name */
-    int    field_10;              /* +0x010 0 at creation */
-    int    field_14;              /* +0x014 0 at creation */
-    int    field_18;              /* +0x018 0 at creation */
-    int    field_1c;              /* +0x01c 0 at creation */
+    int32    field_10;              /* +0x010 0 at creation */
+    int32    field_14;              /* +0x014 0 at creation */
+    int32    field_18;              /* +0x018 0 at creation */
+    int32    field_1c;              /* +0x01c 0 at creation */
     uint8  unknown_020[0x10];
-    int    field_30;              /* +0x030 0 at creation */
-    int    field_34;              /* +0x034 1 at creation */
-    int    field_38;              /* +0x038 1 at creation */
-    int    field_3c;              /* +0x03c 1 at creation */
-    int    field_40;              /* +0x040 0 at creation */
-    int    field_44;              /* +0x044 0 at creation */
-    int    field_48;              /* +0x048 0 at creation */
-    int    field_4c;              /* +0x04c 0 at creation */
-    int    field_50;              /* +0x050 0 at creation */
-    int    field_54;              /* +0x054 0 at creation */
-    int    field_58;              /* +0x058 0 at creation */
+    int32    field_30;              /* +0x030 0 at creation */
+    int32    field_34;              /* +0x034 1 at creation */
+    int32    field_38;              /* +0x038 1 at creation */
+    int32    field_3c;              /* +0x03c 1 at creation */
+    int32    field_40;              /* +0x040 0 at creation */
+    int32    field_44;              /* +0x044 0 at creation */
+    int32    field_48;              /* +0x048 0 at creation */
+    int32    field_4c;              /* +0x04c 0 at creation */
+    int32    field_50;              /* +0x050 0 at creation */
+    int32    field_54;              /* +0x054 0 at creation */
+    int32    field_58;              /* +0x058 0 at creation */
     uint8  unknown_05c[0x04];
-    int    field_60;              /* +0x060 0 at creation */
+    int32    field_60;              /* +0x060 0 at creation */
     uint8  unknown_064[0x04];
     uint32 position[3];           /* +0x068 floats (their bits): x, y, z (level_object_get_position); z is
                                      the bottom (callers add half the height for the middle) */
@@ -257,17 +257,17 @@ typedef struct LevelObject {
     uint8  unknown_088[0x08];
     CollisionShape *sceneShapes[20]; /* +0x090 the shapes of the nodes of its scene with user parameter
                                      0x019E5BAF (FUN_00120f8c, through FUN_00112cdc) */
-    int    sceneShapeCount;       /* +0x0e0 0 at creation */
+    int32    sceneShapeCount;       /* +0x0e0 0 at creation */
     CollisionShape *shapes[2];    /* +0x0e4 the shapes its node's user parameter 0x2101870D lists */
-    int    shapeCount;            /* +0x0ec 0 at creation */
-    int    field_f0;              /* +0x0f0 0 at creation */
-    int    field_f4;              /* +0x0f4 0 at creation */
-    int    field_f8;              /* +0x0f8 0 at creation */
-    int    field_fc;              /* +0x0fc 0 at creation */
-    int    field_100;             /* +0x100 0 at creation */
-    int    field_104;             /* +0x104 0 at creation */
-    int    field_108;             /* +0x108 0 at creation */
-    int    field_10c;             /* +0x10c 0 at creation */
+    int32    shapeCount;            /* +0x0ec 0 at creation */
+    int32    field_f0;              /* +0x0f0 0 at creation */
+    int32    field_f4;              /* +0x0f4 0 at creation */
+    int32    field_f8;              /* +0x0f8 0 at creation */
+    int32    field_fc;              /* +0x0fc 0 at creation */
+    int32    field_100;             /* +0x100 0 at creation */
+    int32    field_104;             /* +0x104 0 at creation */
+    int32    field_108;             /* +0x108 0 at creation */
+    int32    field_10c;             /* +0x10c 0 at creation */
 } LevelObject;                    /* 0x110 bytes */
 
 /* "MotionEntity" (kind 1): a LevelObject that moves; the base of kinds 2 and 3. */
@@ -281,19 +281,19 @@ typedef struct MotionEntity {
     uint8  unknown_074[0x10];
     struct KHApp *app;            /* +0x084 LevelObject.app */
     uint8  unknown_088[0x88];
-    int    field_110;             /* +0x110 0 at creation */
-    int    field_114;             /* +0x114 0 at creation */
+    int32    field_110;             /* +0x110 0 at creation */
+    int32    field_114;             /* +0x114 0 at creation */
     uint8  unknown_118[0x10];
     LevelObject *orbitCenter;     /* +0x128 0 at creation; when set, motion_entity_turn moves the entity
                                      around it (the camera around its target) */
-    int    field_12c;             /* +0x12c 0 at creation */
+    int32    field_12c;             /* +0x12c 0 at creation */
     uint32 pitch;                 /* +0x130 a float (its bits): the up/down angle, in degrees, -180..180
                                      (motion_entity_get_pitch / _set_pitch / _pitch_by) */
     uint8  unknown_134[0x0c];
     uint32 heading;               /* +0x140 a float (its bits): the direction it faces, in degrees,
                                      -180..180 (motion_entity_get_heading / _turn / _start_turn) */
     uint8  unknown_144[0x10];
-    int    turning;               /* +0x154 0 at creation; 1 while a turn started by motion_entity_start_turn
+    int32    turning;               /* +0x154 0 at creation; 1 while a turn started by motion_entity_start_turn
                                      runs */
     ISwerveObject *field_158;     /* +0x158 0 at creation; a Swerve object that is handed &pitch through its
                                      slot +0x5c whenever the pitch changes (GUESS: a tilting child node) */
@@ -308,22 +308,22 @@ typedef struct MotionEntity {
 typedef struct Character {
     uint8  kind;                  /* +0x000 2 (LevelObject.kind) */
     uint8  unknown_001[0x07];     /* the LevelObject and MotionEntity fields, where not named */
-    int    node;                  /* +0x008 its scene node, an ISwerveObject (LevelObject.node) */
+    int32    node;                  /* +0x008 its scene node, an ISwerveObject (LevelObject.node) */
     uint8  unknown_00c[0x40];
-    int    field_4c;              /* +0x04c set to 1 by character_setup */
+    int32    field_4c;              /* +0x04c set to 1 by character_setup */
     uint8  unknown_050[0x30];
     uint32 radius;                /* +0x080 LevelObject.radius */
     struct KHApp *app;            /* +0x084 LevelObject.app */
-    int    field_88;              /* +0x088 GUESS: a time in ms; its seconds pick a random spell */
+    int32    field_88;              /* +0x088 GUESS: a time in ms; its seconds pick a random spell */
     uint8  unknown_08c[0x9c];
     LevelObject *orbitCenter;     /* +0x128 MotionEntity.orbitCenter */
-    int    field_12c;             /* +0x12c MotionEntity.field_12c */
+    int32    field_12c;             /* +0x12c MotionEntity.field_12c */
     uint8  unknown_130[0x98];
-    int    state;                 /* +0x1c8 0xc at creation; the action key starts an attack in states 4, 5,
+    int32    state;                 /* +0x1c8 0xc at creation; the action key starts an attack in states 4, 5,
                                      6, 0x11 and 0x12, forwards turns 0x11 into 0x13 */
-    int    field_1cc;             /* +0x1cc 10 at creation; 0xb and 8 set by the action key */
+    int32    field_1cc;             /* +0x1cc 10 at creation; 0xb and 8 set by the action key */
     uint8  unknown_1d0[0x08];
-    int    controllable;          /* +0x1d8 1 at creation (FUN_0010b70c); the keys move it only while set */
+    int32    controllable;          /* +0x1d8 1 at creation (FUN_0010b70c); the keys move it only while set */
     ISwerveObject *field_1dc;     /* +0x1dc the game scene's object with user id 0x0F846A96 (Find); its
                                      slot +0x48 fills field_1f8 */
     ISwerveObject *field_1e0;     /* +0x1e0 the object with user id 0x0D44B786 */
@@ -332,22 +332,22 @@ typedef struct Character {
     ISwerveObject *field_1e8;     /* +0x1e8 the object with user id 0x314D49C5 */
     ISwerveObject *field_1ec;     /* +0x1ec the object with user id 0x0A893452 */
     ISwerveObject *shadow;        /* +0x1f0 the scene "CharacterShadow" (FUN_0011ae04) */
-    int    hasShadow;             /* +0x1f4 1 when shadow was loaded */
-    int    field_1f8;             /* +0x1f8 filled by field_1dc's slot +0x48 */
+    int32    hasShadow;             /* +0x1f4 1 when shadow was loaded */
+    int32    field_1f8;             /* +0x1f8 filled by field_1dc's slot +0x48 */
     uint8  unknown_1fc[0x10];
-    int    targets[3];            /* +0x20c entities the player's attacks hit: [0] the current target
+    int32    targets[3];            /* +0x20c entities the player's attacks hit: [0] the current target
                                      (boss_combat_region_hit_target), [n] the one of the enemy numbered n;
                                      set by the enemies (enemy_set_target) and FUN_00123d7c */
     uint8  unknown_218[0x0c];
-    int    field_224;             /* +0x224 set to 1 when the Magic key refills MP with an item */
-    int    field_228;             /* +0x228 7 at creation; the player's state handed to the hit functions */
-    int    selectedSpell;         /* +0x22c 0-2, or 8 for a random known one (character_on_key) */
-    int    field_230;             /* +0x230 */
+    int32    field_224;             /* +0x224 set to 1 when the Magic key refills MP with an item */
+    int32    field_228;             /* +0x228 7 at creation; the player's state handed to the hit functions */
+    int32    selectedSpell;         /* +0x22c 0-2, or 8 for a random known one (character_on_key) */
+    int32    field_230;             /* +0x230 */
     LevelObject *field_234;       /* +0x234 the level object named by hash 0x2BB0C920 (FUN_00112dbc) */
     LevelObject *field_238;       /* +0x238 the level object named by hash 0x19DB98DB */
     struct CombatRegion *combatRegion;          /* +0x23c the combat region it is in, or 0 */
     struct BossCombatRegion *bossCombatRegion;  /* +0x240 the boss combat region it is in, or 0 */
-    int    field_244;             /* +0x244 cleared when the action key starts an attack */
+    int32    field_244;             /* +0x244 cleared when the action key starts an attack */
     uint8  unknown_248[0x30];
     uint8  forwardsHeld;          /* +0x278 the movement keys: 0 up, 1 held (character_on_key, from its */
     uint8  backwardsHeld;         /* +0x279 Controls binding or its arrow key: AVK_UP, AVK_DOWN, AVK_LEFT, */
@@ -355,7 +355,7 @@ typedef struct Character {
     uint8  rightHeld;             /* +0x27b an interruption (character_freeze_held_keys: ignored until */
     uint8  actionHeld;            /* +0x27c released, character_on_key_release); FUN_0011386c reads them */
     uint8  unknown_27d[0x03];
-    int    controlDirection;      /* +0x280 -1: the movement keys are reversed (forwards <-> backwards, left
+    int32    controlDirection;      /* +0x280 -1: the movement keys are reversed (forwards <-> backwards, left
                                      <-> right; FUN_0011386c), else normal; set by the level script
                                      (character_set_control_direction) */
     uint8  unknown_284[0x04];
@@ -364,12 +364,12 @@ typedef struct Character {
     uint8  unknown_290[0x04];
     uint32 field_294;             /* +0x294 a float (its bits): FUN_00126618(level data 0x1932DEDD, 1000.0) */
     uint8  unknown_298[0x0c];
-    int    layered;               /* +0x2a4 0 at creation; 1 while channels 2 and 3 are in use */
+    int32    layered;               /* +0x2a4 0 at creation; 1 while channels 2 and 3 are in use */
     uint8  unknown_2a8[0x04];
-    int    animation;             /* +0x2ac the animation on channel 0, -1 none */
-    int    channelTwoAnimation;   /* +0x2b0 the animation on channel 2, -1 none */
-    int    channelThreeAnimation; /* +0x2b4 the animation on channel 3, -1 none */
-    int    animations[29];        /* +0x2b8 its animations' indexes, found by user id (character_setup); 9-12
+    int32    animation;             /* +0x2ac the animation on channel 0, -1 none */
+    int32    channelTwoAnimation;   /* +0x2b0 the animation on channel 2, -1 none */
+    int32    channelThreeAnimation; /* +0x2b4 the animation on channel 3, -1 none */
+    int32    animations[29];        /* +0x2b8 its animations' indexes, found by user id (character_setup); 9-12
                                      play at speed 2.0, 19, 21 and 27 at 1.5 */
     uint8  unknown_32c[0x0c];
 } Character;                      /* 0x338 bytes */
@@ -393,49 +393,49 @@ typedef struct Game {
 typedef struct SwerveGroupVtbl {
     ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
     void  *unknown_0c[0x28];
-    void (*GetChildCount)(ISwerveObject *po, int *pCount);               /* +0xac slot 43, 0x01030360 */
-    int  (*GetChild)(ISwerveObject *po, int index, ISwerveObject **ppo); /* +0xb0 slot 44, 0x010302ec */
+    void (*GetChildCount)(ISwerveObject *po, int32 *pCount);               /* +0xac slot 43, 0x01030360 */
+    int32  (*GetChild)(ISwerveObject *po, int32 index, ISwerveObject **ppo); /* +0xb0 slot 44, 0x010302ec */
 } SwerveGroupVtbl;
 
 typedef struct SwerveSkinnedMeshVtbl {
     ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
     void  *unknown_0c[0x31];
-    int  (*GetSkeleton)(ISwerveObject *po, ISwerveObject **ppo);         /* +0xd0 slot 52, 0x01038878 */
+    int32  (*GetSkeleton)(ISwerveObject *po, ISwerveObject **ppo);         /* +0xd0 slot 52, 0x01038878 */
 } SwerveSkinnedMeshVtbl;
 
 /* The Swerve Object3D vtable slots kh.mod calls, shared by every object class (GUESS: names, from the
  * JSR-184 methods they implement in swv21brew, 0x0103517c fills them). */
 typedef struct SwerveObject3DVtbl {
     ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
-    void (*GetUserId)(ISwerveObject *po, int *pUserId);                  /* +0x0c slot 3, 0x010350fc */
+    void (*GetUserId)(ISwerveObject *po, int32 *pUserId);                  /* +0x0c slot 3, 0x010350fc */
     void  *unknown_10;
-    void (*GetAnimationTrackCount)(ISwerveObject *po, int *pCount);      /* +0x14 slot 5, 0x01034f74 */
-    int  (*GetAnimationTrack)(ISwerveObject *po, int index, ISwerveObject **ppo); /* +0x18 slot 6, 0x01034f00 */
+    void (*GetAnimationTrackCount)(ISwerveObject *po, int32 *pCount);      /* +0x14 slot 5, 0x01034f74 */
+    int32  (*GetAnimationTrack)(ISwerveObject *po, int32 index, ISwerveObject **ppo); /* +0x18 slot 6, 0x01034f00 */
     void  *unknown_1c[0x02];
-    int  (*Animate)(ISwerveObject *po, int worldTime, int *pResult);     /* +0x24 slot 9, 0x01034da8 */
-    int  (*Find)(ISwerveObject *po, int userId, ISwerveObject **ppo);    /* +0x28 slot 10, 0x01034e8c */
+    int32  (*Animate)(ISwerveObject *po, int32 worldTime, int32 *pResult);     /* +0x24 slot 9, 0x01034da8 */
+    int32  (*Find)(ISwerveObject *po, int32 userId, ISwerveObject **ppo);    /* +0x28 slot 10, 0x01034e8c */
 } SwerveObject3DVtbl;
 
 typedef struct SwerveAnimationTrackVtbl {
     ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
     void  *unknown_0c[0x10];                                             /* the Object3D slots and more */
-    int  (*GetController)(ISwerveObject *po, ISwerveObject **ppo);       /* +0x4c slot 19, 0x0102d1c0 */
+    int32  (*GetController)(ISwerveObject *po, ISwerveObject **ppo);       /* +0x4c slot 19, 0x0102d1c0 */
     void  *unknown_50;
-    int  (*GetKeyframeSequence)(ISwerveObject *po, ISwerveObject **ppo); /* +0x54 slot 21, 0x0102d22c */
+    int32  (*GetKeyframeSequence)(ISwerveObject *po, ISwerveObject **ppo); /* +0x54 slot 21, 0x0102d22c */
 } SwerveAnimationTrackVtbl;
 
 typedef struct SwerveKeyframeSequenceVtbl {
     ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
     void  *unknown_0c[0x10];
-    void (*GetDuration)(ISwerveObject *po, int *pDuration);              /* +0x4c slot 19, 0x01032ac0 */
+    void (*GetDuration)(ISwerveObject *po, int32 *pDuration);              /* +0x4c slot 19, 0x01032ac0 */
 } SwerveKeyframeSequenceVtbl;
 
 typedef struct SwerveAnimationControllerVtbl {
     ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
     void  *unknown_0c[0x14];
-    int  (*SetActiveInterval)(ISwerveObject *po, int start, int end);    /* +0x5c slot 23, 0x0102cf84 */
+    int32  (*SetActiveInterval)(ISwerveObject *po, int32 start, int32 end);    /* +0x5c slot 23, 0x0102cf84 */
     void  *unknown_60;
-    int  (*SetPosition)(ISwerveObject *po, uint32 sequenceTime, int worldTime); /* +0x64 slot 25, 0x0102cfec;
+    int32  (*SetPosition)(ISwerveObject *po, uint32 sequenceTime, int32 worldTime); /* +0x64 slot 25, 0x0102cfec;
                                                                             sequenceTime is a float */
 } SwerveAnimationControllerVtbl;
 
@@ -448,10 +448,10 @@ typedef struct SwerveAnimationControllerVtbl {
 typedef struct Animations {
     struct KHApp *app;            /* +0x000 GetAppInstance() at creation */
     ISwerveObject *world;         /* +0x004 GUESS: the scene's World; controllers are found in it (Find) */
-    int    elapsed;               /* +0x008 ms since the last update (animations_update) */
-    int    worldTime;             /* +0x00c the time the controllers are set at (animations_update) */
-    int    userIds[100];          /* +0x010 the controllers' user ids (animations_find); -1 = free slot */
-    int    durations[100];        /* +0x1a0 the longest keyframe sequence of each controller
+    int32    elapsed;               /* +0x008 ms since the last update (animations_update) */
+    int32    worldTime;             /* +0x00c the time the controllers are set at (animations_update) */
+    int32    userIds[100];          /* +0x010 the controllers' user ids (animations_find); -1 = free slot */
+    int32    durations[100];        /* +0x1a0 the longest keyframe sequence of each controller
                                      (animations_get_duration) */
     uint8  states[100];           /* +0x330 0 free (animations_reset); 1 added, never played (stopped at the
                                      next update); 2 playing once (becomes 4 at its end); 3 looping; 4 stopped
@@ -460,7 +460,7 @@ typedef struct Animations {
                                      replaces the playing one only when its priority is not lower
                                      (character_play_animation) */
     uint32 speeds[100];           /* +0x3f8 floats (their bits), 1.0 when added (animations_set_speed) */
-    int    positions[100];        /* +0x588 where each one plays from: 0, or its last frame when its speed is
+    int32    positions[100];        /* +0x588 where each one plays from: 0, or its last frame when its speed is
                                      not above 0 */
     ISwerveObject **controllers;  /* +0x718 100 controllers, found by user id when first played; 0 until then
                                      and after animations_release_controllers */
@@ -473,17 +473,17 @@ typedef struct Animations {
  * Each stage change loads the stage's scene (FUN_0011b890). The select key skips to the menu (intro_on_key).
  * A return to the title creates it at stage 2. */
 typedef struct Intro {
-    int    running;               /* +0x00 0 at creation; intro_update does nothing until it is set */
+    int32    running;               /* +0x00 0 at creation; intro_update does nothing until it is set */
     struct KHApp *app;            /* +0x04 GetAppInstance() at creation */
-    int    field_08;              /* +0x08 0 at creation */
-    int    field_0c;              /* +0x0c 0 at creation */
-    int    animation;             /* +0x10 stage 1's animation (an Animations index) */
-    int    timelineAnimations[11];   /* +0x14 stage 2's animations */
-    int    starts[11];            /* +0x40 when each of them starts (ms into stage 2) */
-    int    ends[11];              /* +0x6c when each ends */
-    int    time;                  /* +0x98 ms since the stage started */
-    int    stage;                 /* +0x9c 0, 1, 2 */
-    int    menuOpened;            /* +0xa0 stage 2 has opened the title menu */
+    int32    field_08;              /* +0x08 0 at creation */
+    int32    field_0c;              /* +0x0c 0 at creation */
+    int32    animation;             /* +0x10 stage 1's animation (an Animations index) */
+    int32    timelineAnimations[11];   /* +0x14 stage 2's animations */
+    int32    starts[11];            /* +0x40 when each of them starts (ms into stage 2) */
+    int32    ends[11];              /* +0x6c when each ends */
+    int32    time;                  /* +0x98 ms since the stage started */
+    int32    stage;                 /* +0x9c 0, 1, 2 */
+    int32    menuOpened;            /* +0xa0 stage 2 has opened the title menu */
 } Intro;                          /* 0xa4 bytes */
 
 /* ---- Enemies and combat regions (GUESS: names) ----------------------------------------------
@@ -499,68 +499,68 @@ struct CombatRegion;
  * down and gives the reward when the player picks one up. */
 typedef struct ItemDrops {
     struct KHApp *app;            /* +0x00 GetAppInstance() at creation */
-    int    entities[10];          /* +0x04 the item shown in each slot */
+    int32    entities[10];          /* +0x04 the item shown in each slot */
     uint8  kinds[10];             /* +0x2c 0: health +1.0, 1: MP +1, 2: munny */
     uint8  unknown_36[0x02];
-    int    timeLeft[10];          /* +0x38 ms the item stays on the ground; 0 = free slot */
+    int32    timeLeft[10];          /* +0x38 ms the item stays on the ground; 0 = free slot */
     uint32 munnyPerPickup;        /* +0x60 a float (its bits): 1.0, or 2.0 when the region's field_120 >= 5 */
 } ItemDrops;                      /* 100 bytes */
 
 typedef struct Enemy {
-    int    vtable;                /* +0x000 slots hold self-relative offsets; +4 is enemy_update, 0 and +0xc
+    int32    vtable;                /* +0x000 slots hold self-relative offsets; +4 is enemy_update, 0 and +0xc
                                      run when the region's field_148 is set */
-    int    field_04;              /* +0x004 FUN_00113524 fills +0x04.. (GUESS: its position) */
-    int    field_08;              /* +0x008 */
+    int32    field_04;              /* +0x004 FUN_00113524 fills +0x04.. (GUESS: its position) */
+    int32    field_08;              /* +0x008 */
     uint8  unknown_0c[0x04];
-    int    field_10;              /* +0x010 level_object_get_position fills +0x10.. from field_20 */
-    int    field_14;              /* +0x014 */
+    int32    field_10;              /* +0x010 level_object_get_position fills +0x10.. from field_20 */
+    int32    field_14;              /* +0x014 */
     uint8  unknown_18[0x04];
-    int    number;                /* +0x01c 1, 2, ...: its place among the region's enemies */
-    int    field_20;              /* +0x020 GUESS: its model (an object) */
-    int    field_24;              /* +0x024 */
-    int    field_28;              /* +0x028 an object; FUN_001201cc(field_28, 0) when it dies */
+    int32    number;                /* +0x01c 1, 2, ...: its place among the region's enemies */
+    int32    field_20;              /* +0x020 GUESS: its model (an object) */
+    int32    field_24;              /* +0x024 */
+    int32    field_28;              /* +0x028 an object; FUN_001201cc(field_28, 0) when it dies */
     uint8  unknown_2c[0x10];
     uint32 health;                /* +0x03c a float (its bits); > 0 alive, shown in the health bar */
     struct CombatRegion *region; /* +0x040 the region that created it */
     uint8  unknown_44[0x1c];
-    int    field_60;              /* +0x060 */
-    int    field_64;              /* +0x064 */
-    int    field_68;              /* +0x068 */
+    int32    field_60;              /* +0x060 */
+    int32    field_64;              /* +0x064 */
+    int32    field_68;              /* +0x068 */
     uint8  unknown_6c[0x08];
     struct KHApp *app;            /* +0x074 GetAppInstance() at creation */
     uint8  unknown_78[0x08];
-    int    mode;                  /* +0x080 1: the code at 0x0011db34 runs instead of the states (field_90) */
-    int    field_84;              /* +0x084 a state machine: 3001 first (enemy_reset_states) */
-    int    field_88;              /* +0x088 a state machine: 2001 first; 2004: the alive behaviour runs even
+    int32    mode;                  /* +0x080 1: the code at 0x0011db34 runs instead of the states (field_90) */
+    int32    field_84;              /* +0x084 a state machine: 3001 first (enemy_reset_states) */
+    int32    field_88;              /* +0x088 a state machine: 2001 first; 2004: the alive behaviour runs even
                                      at 0 health */
-    int    field_8c;              /* +0x08c a state machine: 6001 first */
-    int    field_90;              /* +0x090 the state while mode is 1: 7001, 7002, 7003 */
+    int32    field_8c;              /* +0x08c a state machine: 6001 first */
+    int32    field_90;              /* +0x090 the state while mode is 1: 7001, 7002, 7003 */
     uint8  unknown_94[0x08];
-    int    field_9c;              /* +0x09c a state machine: 4001 first */
-    int    waitState;             /* +0x0a0 enemy_wait: 5001 idle, 5002 waiting */
-    int    state;                 /* +0x0a4 1001 waiting, 1002 alive, 1003 dying, 1004 gone */
+    int32    field_9c;              /* +0x09c a state machine: 4001 first */
+    int32    waitState;             /* +0x0a0 enemy_wait: 5001 idle, 5002 waiting */
+    int32    state;                 /* +0x0a4 1001 waiting, 1002 alive, 1003 dying, 1004 gone */
     uint8  unknown_a8[0x14];
-    int    waitUntil;             /* +0x0bc enemy_wait: the time (ms) the wait ends */
+    int32    waitUntil;             /* +0x0bc enemy_wait: the time (ms) the wait ends */
     uint8  unknown_c0[0x38];
-    int    field_f8;              /* +0x0f8 */
+    int32    field_f8;              /* +0x0f8 */
     uint8  unknown_fc[0x04];
-    int    field_100;             /* +0x100 -1 at creation */
-    int    type;                  /* +0x104 1-11, from the region's enemy name (combat_region_setup) */
-    int    field_108;             /* +0x108 when set (or for type 2) its health bar is shown */
+    int32    field_100;             /* +0x100 -1 at creation */
+    int32    type;                  /* +0x104 1-11, from the region's enemy name (combat_region_setup) */
+    int32    field_108;             /* +0x108 when set (or for type 2) its health bar is shown */
     uint8  unknown_10c[0x14];
-    int    field_120;             /* +0x120 cleared by enemy_reset_states */
+    int32    field_120;             /* +0x120 cleared by enemy_reset_states */
     uint8  unknown_124[0x04];
-    int    field_128;             /* +0x128 a countdown (enemy_update subtracts the elapsed time) */
-    int    field_12c;             /* +0x12c another countdown */
-    int    field_130;             /* +0x130 */
+    int32    field_128;             /* +0x128 a countdown (enemy_update subtracts the elapsed time) */
+    int32    field_12c;             /* +0x12c another countdown */
+    int32    field_130;             /* +0x130 */
     uint8  unknown_134[0x04];
-    int    actionSteps[8];        /* +0x138 the step of each of its action sequences: 0x65 first, 0x66 next
+    int32    actionSteps[8];        /* +0x138 the step of each of its action sequences: 0x65 first, 0x66 next
                                      (+0x138 used by FUN_0010eb74, +0x13c by FUN_0011ec28); GUESS: names */
     uint8  unknown_158[0x44];
-    int  (*field_19c)(struct Enemy *enemy, int now);   /* +0x19c alive, mode 2 and field_130 == 0 */
-    int  (*field_1a0)(struct Enemy *enemy, int now);   /* +0x1a0 alive, otherwise */
+    int32  (*field_19c)(struct Enemy *enemy, int32 now);   /* +0x19c alive, mode 2 and field_130 == 0 */
+    int32  (*field_1a0)(struct Enemy *enemy, int32 now);   /* +0x1a0 alive, otherwise */
     uint8  unknown_1a4[0xcc];
-    int    field_270;             /* +0x270 1 at creation */
+    int32    field_270;             /* +0x270 1 at creation */
     uint8  unknown_274[0x0c];
 } Enemy;                          /* 0x280 bytes */
 
@@ -568,32 +568,32 @@ typedef struct CombatRegion {
     uint8  kind;                  /* +0x000 4 (LevelObject.kind) */
     uint8  unknown_001[0x03];
     LevelObject *parent;          /* +0x004 LevelObject.parent */
-    int    node;                  /* +0x008 its scene node, an ISwerveObject (LevelObject.node); the setup
+    int32    node;                  /* +0x008 its scene node, an ISwerveObject (LevelObject.node); the setup
                                      reads its parameters from it */
     uint32 nameId;                /* +0x00c LevelObject.nameId; passed with message 0x11E3EE3E
                                      (combat_region_update) */
     uint8  unknown_10[0x74];
     struct KHApp *app;            /* +0x084 */
     uint8  unknown_88[0x88];
-    int    active;                /* +0x110 0 at creation; GUESS: the player is in its area */
+    int32    active;                /* +0x110 0 at creation; GUESS: the player is in its area */
     ItemDrops *itemDrops;         /* +0x114 its item drops (FUN_0010b014; updated by FUN_001226e8) */
     uint32 enemyMaximumHealth;    /* +0x118 a float (its bits); level data, default 5.0 */
     uint32 field_11c;             /* +0x11c a float (its bits); level data, default 1.0 */
-    int    field_120;             /* +0x120 level data; below 5 the item drops get 1.0, else 2.0 */
-    int    waves;                 /* +0x124 level data */
-    int    enemiesPerWave;        /* +0x128 level data */
-    int    enemyCount;            /* +0x12c enemy objects: 2 for type 1, else 1; at most enemiesPerWave */
-    int    state;                 /* +0x130 1 at creation; 1 waiting, 2 fighting, 3 the player left during a wave (GUESS) */
-    int    wavesLeft;             /* +0x134 */
-    int    enemiesLeftInWave;     /* +0x138 combat_region_take_one takes them one by one */
-    int    field_13c;             /* +0x13c 1 at creation; set to 1 when state 2 ends */
-    int    field_140;             /* +0x140 0 at creation */
+    int32    field_120;             /* +0x120 level data; below 5 the item drops get 1.0, else 2.0 */
+    int32    waves;                 /* +0x124 level data */
+    int32    enemiesPerWave;        /* +0x128 level data */
+    int32    enemyCount;            /* +0x12c enemy objects: 2 for type 1, else 1; at most enemiesPerWave */
+    int32    state;                 /* +0x130 1 at creation; 1 waiting, 2 fighting, 3 the player left during a wave (GUESS) */
+    int32    wavesLeft;             /* +0x134 */
+    int32    enemiesLeftInWave;     /* +0x138 combat_region_take_one takes them one by one */
+    int32    field_13c;             /* +0x13c 1 at creation; set to 1 when state 2 ends */
+    int32    field_140;             /* +0x140 0 at creation */
     uint8  unknown_144[0x04];
-    int    field_148;             /* +0x148 1 at creation; when set, each enemy's vtable slots 0 and +0xc
+    int32    field_148;             /* +0x148 1 at creation; when set, each enemy's vtable slots 0 and +0xc
                                      run once */
     Enemy **enemies;              /* +0x14c enemyCount of them */
-    int    field_150;             /* +0x150 0 at creation */
-    int    attackToken;           /* +0x154 0 at creation; 1 while one of its enemies holds it
+    int32    field_150;             /* +0x150 0 at creation */
+    int32    attackToken;           /* +0x154 0 at creation; 1 while one of its enemies holds it
                                      (combat_region_take_attack_token / _release_attack_token) */
 } CombatRegion;                   /* 0x158 bytes */
 
@@ -607,9 +607,9 @@ typedef struct CombatRegion {
 struct BossCombatRegion;
 
 typedef struct Hitsphere {
-    int    vtable;                /* +0x00 0x00101650; slots hold self-relative offsets: +4 update,
+    int32    vtable;                /* +0x00 0x00101650; slots hold self-relative offsets: +4 update,
                                      +8 take a hit (damage, x, y, z, player state) */
-    int    entity;                /* +0x04 the scene entity it follows */
+    int32    entity;                /* +0x04 the scene entity it follows */
     uint32 radius;                /* +0x08 a float (its bits); not set by hitsphere_create */
     uint8  unknown_0c[0x08];
     uint32 field_14;              /* +0x14 a float (its bits); the first hitsphere's is shown in the HUD
@@ -618,44 +618,44 @@ typedef struct Hitsphere {
     struct KHApp *app;            /* +0x20 GetAppInstance() at creation */
     struct BossCombatRegion *owner; /* +0x24 */
     uint8  unknown_28[0x1c];
-    int    field_44;              /* +0x44 0 at creation */
-    int    secondary;             /* +0x48 set on every hitsphere but the first */
-    int    field_4c;              /* +0x4c -1 at creation */
+    int32    field_44;              /* +0x44 0 at creation */
+    int32    secondary;             /* +0x48 set on every hitsphere but the first */
+    int32    field_4c;              /* +0x4c -1 at creation */
     uint8  unknown_50[0x30];
-    int    field_80;              /* +0x80 0 at creation */
+    int32    field_80;              /* +0x80 0 at creation */
     uint8  unknown_84[0x20];
-    int    field_a4;              /* +0xa4 0 at creation */
-    int    field_a8;              /* +0xa8 0 at creation */
-    int    field_ac;              /* +0xac 0 at creation */
+    int32    field_a4;              /* +0xa4 0 at creation */
+    int32    field_a8;              /* +0xa8 0 at creation */
+    int32    field_ac;              /* +0xac 0 at creation */
     uint8  unknown_b0[0x08];
-    int    field_b8;              /* +0xb8 0 at creation */
-    int    field_bc;              /* +0xbc 0 at creation */
-    int    field_c0;              /* +0xc0 0 at creation */
-    int    field_c4;              /* +0xc4 0 at creation */
+    int32    field_b8;              /* +0xb8 0 at creation */
+    int32    field_bc;              /* +0xbc 0 at creation */
+    int32    field_c0;              /* +0xc0 0 at creation */
+    int32    field_c4;              /* +0xc4 0 at creation */
     uint32 field_c8;              /* +0xc8 a float (its bits), 3.0 at creation */
     uint32 field_cc;              /* +0xcc a float (its bits), 0.3 at creation */
-    int    field_d0;              /* +0xd0 0 at creation */
+    int32    field_d0;              /* +0xd0 0 at creation */
 } Hitsphere;                      /* 0xd4 bytes */
 
 typedef struct BossCombatRegion {
     uint8  kind;                  /* +0x000 5 (LevelObject.kind) */
     uint8  unknown_001[0x03];
     LevelObject *parent;          /* +0x004 LevelObject.parent */
-    int    node;                  /* +0x008 its scene node, an ISwerveObject (LevelObject.node) */
+    int32    node;                  /* +0x008 its scene node, an ISwerveObject (LevelObject.node) */
     uint32 nameId;                /* +0x00c LevelObject.nameId */
     uint8  unknown_10[0x74];
     struct KHApp *app;            /* +0x084 */
     uint8  unknown_88[0x88];
-    int    active;                /* +0x110 0 at creation; GUESS: the player is in its area (FUN_00123d7c) */
+    int32    active;                /* +0x110 0 at creation; GUESS: the player is in its area (FUN_00123d7c) */
     ItemDrops *itemDrops;         /* +0x114 its item drops (updated by FUN_001226e8) */
-    int   *field_118;             /* +0x118 more scene entities named in the level data (field_12c of them) */
-    int    extraEntity;           /* +0x11c one more scene entity (id 0x2E583064): it can be targeted within
+    int32   *field_118;             /* +0x118 more scene entities named in the level data (field_12c of them) */
+    int32    extraEntity;           /* +0x11c one more scene entity (id 0x2E583064): it can be targeted within
                                      3.0, and a hit hides it and clears its +0x34 (targetable) */
     Hitsphere **hitspheres;       /* +0x120 */
     uint32 field_124;             /* +0x124 a float (its bits), 1.0 at creation */
-    int    hitsphereCount;        /* +0x128 */
-    int    field_12c;             /* +0x12c how many field_118 holds */
-    int    field_130;             /* +0x130 1 at creation; when set, FUN_00123d7c runs each hitsphere's
+    int32    hitsphereCount;        /* +0x128 */
+    int32    field_12c;             /* +0x12c how many field_118 holds */
+    int32    field_130;             /* +0x130 1 at creation; when set, FUN_00123d7c runs each hitsphere's
                                      vtable slot 0 and fills the HUD from the first one, then clears it */
     uint8  unknown_134[0x08];
 } BossCombatRegion;               /* 0x13c bytes */

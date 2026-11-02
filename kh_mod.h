@@ -21,23 +21,80 @@ typedef unsigned char  undefined;
 typedef unsigned char  undefined1;
 typedef unsigned short undefined2;
 typedef unsigned int   undefined4;
-typedef unsigned long long undefined8;
 typedef unsigned int   uint;
 typedef unsigned short ushort;
 typedef unsigned char  uchar;
-typedef unsigned long long ulonglong;
-typedef long long longlong;
 typedef unsigned char  byte;
-typedef unsigned char  bool;    /* Ghidra's boolean: 0 or 1 (C89 has no bool) */
+typedef unsigned char  bool;    /* Ghidra's boolean: 0 or 1 (C90 has no bool) */
+/* C90 has no 64-bit integer type, so a 64-bit value (Ghidra's undefined8, ulonglong and longlong) is
+   two 32-bit words: low is the word the ARM code holds in r0 (r2) and high the one in r1 (r3); in
+   memory the low word comes first (little-endian), as in the struct. */
+typedef struct {
+  uint low;
+  uint high;
+} undefined8;
+typedef undefined8 ulonglong;
+typedef undefined8 longlong;
+/* What the code does with 64-bit values, as macros on the two words (no calls; the arguments are
+   evaluated more than once, and the result is assigned high word first).
+   MAKE_WORDS(result, h, l): result = h:l, and the expression's value is result (Ghidra's CONCAT44).
+   MULTIPLY_WORDS(result, a, b): result = a * b, a and b 32-bit unsigned, from four 16 x 16 products.
+   ADD_WORDS(result, a, b): result = a + b, the carry from the low word into the high (result may be a
+   or b). SUBTRACT_WORDS(result, a, b): result = a - b, the same way. SUBTRACT_WORD(result, w): result =
+   result - w, w a 32-bit word. SHIFT_LEFT_WORDS(result, a, n): result = a << n, 0 < n < 32 (result may
+   be a). */
+#define MAKE_WORDS(result,h,l) ((result).high = (h), (result).low = (l), (result))
+#define MULTIPLY_WORDS(result,a,b) \
+  ((result).high = ((a) >> 16) * ((b) >> 16) + (((a) >> 16) * ((b) & 0xffff) >> 16) + \
+                   (((a) & 0xffff) * ((b) >> 16) >> 16) + \
+                   ((((a) & 0xffff) * ((b) & 0xffff) >> 16) + (((a) >> 16) * ((b) & 0xffff) & 0xffff) + \
+                    (((a) & 0xffff) * ((b) >> 16) & 0xffff) >> 16), \
+   (result).low = (a) * (b))
+#define ADD_WORDS(result,a,b) \
+  ((result).high = (a).high + (b).high + ((a).low + (b).low < (a).low), \
+   (result).low = (a).low + (b).low)
+#define SUBTRACT_WORDS(result,a,b) \
+  ((result).high = (a).high - (b).high - ((a).low < (b).low), \
+   (result).low = (a).low - (b).low)
+#define SUBTRACT_WORD(result,w) \
+  ((result).high = (result).high - ((result).low < (w)), (result).low = (result).low - (w))
+#define SHIFT_LEFT_WORDS(result,a,n) \
+  ((result).high = (a).high << (n) | (a).low >> (32 - (n)), (result).low = (a).low << (n))
+/* Shifts by a variable count, as the binary does them: the count is its low byte, and a count of 32
+   or more gives 0 (SHIFT_LEFT, SHIFT_RIGHT) or the sign in every bit (SHIFT_RIGHT_SIGNED), where C
+   leaves a shift by the width or more undefined. Macros, not calls. */
+#define SHIFT_LEFT(x,n) (((n) & 0xff) < 32 ? (uint)(x) << ((n) & 0xff) : 0)
+#define SHIFT_RIGHT(x,n) (((n) & 0xff) < 32 ? (uint)(x) >> ((n) & 0xff) : 0)
+#define SHIFT_RIGHT_SIGNED(x,n) ((int)(x) >> (((n) & 0xff) < 32 ? ((n) & 0xff) : 31))
+/* The carry out of a + b; whether a + b and a - b overflow as signed 32-bit numbers (Ghidra's CARRY4,
+   SCARRY4 and SBORROW4). */
+#define ADD_CARRIES(a,b) ((uint)(a) + (uint)(b) < (uint)(a))
+#define ADD_OVERFLOWS(a,b) \
+  ((~((uint)(a) ^ (uint)(b)) & ((uint)(a) ^ ((uint)(a) + (uint)(b)))) >> 31)
+#define SUBTRACT_OVERFLOWS(a,b) \
+  ((((uint)(a) ^ (uint)(b)) & ((uint)(a) ^ ((uint)(a) - (uint)(b)))) >> 31)
+/* The number of leading zero bits of a 32-bit word, 32 for 0 (Ghidra's LZCOUNT), by a lookup per byte. */
+#define LEADING_ZEROS(x) \
+  ((uint)(x) >> 16 ? ((uint)(x) >> 24 ? leading_zeros_in_byte[(uint)(x) >> 24] \
+                                      : 8 + leading_zeros_in_byte[(uint)(x) >> 16]) \
+                   : ((uint)(x) >> 8 ? 16 + leading_zeros_in_byte[(uint)(x) >> 8] \
+                                     : 24 + leading_zeros_in_byte[(uint)(x) & 0xff]))
+static const uint8 leading_zeros_in_byte[256] = {
+  8,7,6,6,5,5,5,5,4,4,4,4,4,4,4,4,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
+  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+};
 #define true  1                 /* Ghidra's boolean constants (keywords only in C++ and C23) */
 #define false 0
 #ifndef NULL
 #define NULL  ((void *)0)        /* used by the hand-written functions; no standard header is included */
 #endif
 typedef int            code();  /* Ghidra: function of unknown signature (a call through (code *) is valid C) */
-typedef int            int3;    /* Ghidra: a 3-byte integer (only used in casts; kept in an int) */
-#define UndefinedInstruction (*(byte *)0x4)   /* Ghidra's label for address 4 (the ARM undefined-
-                                                instruction vector); &UndefinedInstruction = 4 */
 
 /* Literal-pool words given a name (Ghidra's DAT_<address> labels; the value is the word stored at
    that address in kh.mod's read-only image). */
@@ -183,10 +240,6 @@ typedef int            int3;    /* Ghidra: a 3-byte integer (only used in casts;
 #define LARGE_ARGUMENT_EXPONENT_LIMIT  0x469        /* was DAT_001011a0 (word at 0x001011A0): 1129, a
                                                 biased exponent (1129 - 1023 = 106): for |x| >= 2^106 the
                                                 large-argument path first scales x by a table entry */
-#define LARGE_ARGUMENT_SCALE_TABLE_OFFSET 0x00027000  /* was DAT_001011a4 (word at 0x001011A4): PC-relative
-                                                offset; + 0x101034 (the pc) = 0x00128034, a table of
-                                                doubles (1.1257e-16, 1.5993e-32, -7.27e-48, 1.49e-63,
-                                                ...) indexed by FUN_00100288's result */
 /* The large-argument path (|x| > ~2^20*pi/2) is the ARM library's own, not fdlibm's (fdlibm calls
    __kernel_rem_pio2 there). It splits x (low word & 0xfc000000 and the rest), multiplies both parts
    by a two-part constant C = HIGH_PART + LOW_PART, sums the partial products and reduces modulo the
@@ -242,62 +295,6 @@ typedef int            int3;    /* Ghidra: a 3-byte integer (only used in casts;
                                                 = 0x3C91A62633145C07, fdlibm's pio2_lo: the part of pi/2
                                                 a double cannot hold (pi/2 = pio2_hi + pio2_lo), added
                                                 separately to keep acos's result exact */
-#define ACOS_DENOMINATOR_TABLE_OFFSET 0x00027B20  /* was DAT_001007cc (word at 0x001007CC): PC-relative
-                                                    offset; + 0x1004c4 (the pc) = 0x00127FE4, the 4
-                                                    doubles of the acos denominator (fdlibm qS1..qS4) */
-#define ACOS_NUMERATOR_TABLE_OFFSET   0x00027AE8  /* was LAB_001007d0 (word at 0x001007D0): PC-relative
-                                                    offset; + 0x1004cc (the pc) = 0x00127FB4, the 6
-                                                    doubles of the acos numerator (fdlibm pS0..pS5) */
-#define HALF_PI_PIECES_TABLE_OFFSET   0x00027184  /* was DAT_0010119c (word at 0x0010119C): PC-relative
-                                                    offset; + 0x100f40 (the pc) = 0x001280C4, a table of
-                                                    pi/2 in three 33-bit pieces, each with its tail, 16
-                                                    bytes per row (fdlibm e_rem_pio2.c):
-                                                      row 0: pio2_1 1.5707963267341256,
-                                                             pio2_1t 6.0771005065061922e-11
-                                                      row 1: pio2_2 6.077100506303966e-11,
-                                                             pio2_2t 2.0222662487959506e-21
-                                                      row 2: pio2_3 2.0222662487111665e-21,
-                                                             pio2_3t 8.4784276603688996e-32
-                                                    FUN_00100d88 (GUESS: rem_pio2) loops over rows 1 and
-                                                    2 for fdlibm's 2nd and 3rd medium-path refinements,
-                                                    when the bits lost to cancellation exceed
-                                                    33*k - 17 (16, then 49) */
-#define SIGNAL_MESSAGE_TABLE_OFFSET   0x00026C1C  /* was DAT_001015cc (word at 0x001015CC): PC-relative
-                                                    offset; + 0x101500 (the pc) = 0x0012811C, the ARM C
-                                                    library's signal-message table: 13 entries of 23
-                                                    bytes, one per signal (the decompiled
-                                                    `signal * 0x17 + OFFSET + 0x1014e9` is that pc minus
-                                                    one entry, as signals start at 1):
-                                                      1 SIGABRT  "Abnormal termination"
-                                                      2 SIGFPE   "Arithmetic exception: " (+ detail)
-                                                      3 SIGILL   "Illegal instruction"
-                                                      4 SIGINT   "Interrupt received"
-                                                      5 SIGSEGV  "Illegal address"
-                                                      6 SIGTERM  "Termination request"
-                                                      7 SIGSTAK  "Stack overflow"
-                                                      8 SIGRTRED "Redirect: can't open: "
-                                                      9 SIGRTMEM "Out of heap memory"
-                                                     10 SIGUSR1  "User-defined signal 1"
-                                                     11 SIGUSR2  "User-defined signal 2"
-                                                     12 SIGPVFN  "Pure virtual fn called"
-                                                     13 SIGCPPL  "C++ library exception"
-                                                    Used by the default signal handler (0x001014d4,
-                                                    shown inside FUN_00101458). GUESS: the ARM signal
-                                                    names (from ARM's signal.h numbering) */
-#define SIN_KERNEL_TABLE_OFFSET       0x00026E04  /* was DAT_001013cc (word at 0x001013CC): PC-relative
-                                                    offset; + 0x1012f0 (the pc) = 0x001280F4, the 5
-                                                    doubles S2..S6 of the sin kernel polynomial (fdlibm
-                                                    k_sin.c, identical to the last digit):
-                                                    8.33333333332248946124e-03, -1.98412698298579493134e-04,
-                                                    2.75573137070700676789e-06, -2.50507602534068634195e-08,
-                                                    1.58969099521155010221e-10. Evaluated by FUN_00100c2c
-                                                    in FUN_00101268 (GUESS: kernel_sin). The table follows
-                                                    the pi/2 pieces (HALF_PI_PIECES_TABLE_OFFSET) */
-#define COS_KERNEL_TABLE_OFFSET       0x00027538  /* was DAT_00100c14 (word at 0x00100C14): PC-relative
-                                                    offset; + 0x100acc (the pc) = 0x00128004, the 6
-                                                    doubles of the cos kernel polynomial (fdlibm k_cos.c
-                                                    C1..C6, identical to the last digit), evaluated by
-                                                    FUN_00100c2c in FUN_00100a58 (GUESS: kernel_cos) */
 
 #define DOUBLE_EXPONENT_MASK_SHIFTED 0xFFE00000u  /* was DAT_00124e08 (word at 0x00124E08), in the
                                                      soft-float library's literal pool: a double's
@@ -364,11 +361,11 @@ typedef int            int3;    /* Ghidra: a 3-byte integer (only used in casts;
                                                 prefix: the words sit in a code area and were never
                                                 defined as data */
 /* Literal-pool data the code takes the address of (so: objects, not #defines). */
-extern undefined4 ZERO_DOUBLE;              /* was DAT_001007b4: the IEEE-754 double 0.0, two zero words
+extern undefined8 ZERO_DOUBLE;              /* was DAT_001007b4: the IEEE-754 double 0.0, two zero words
                                                at 0x001007B4..0x001007BB. FUN_0010041c (GUESS: acos)
                                                returns it for x == 1: `adr r1, ZERO_DOUBLE;
                                                ldmia r1, {r0, r1}` loads both words as the result */
-extern undefined4 NAN_DOUBLE;               /* was DAT_001007bc: the IEEE-754 double quiet NaN
+extern undefined8 NAN_DOUBLE;               /* was DAT_001007bc: the IEEE-754 double quiet NaN
                                                0x7FF80000_00000001 (low word 1, high 0x7FF80000) at
                                                0x001007BC..0x001007C3. FUN_0010041c (GUESS: acos)
                                                returns it for |x| > 1, after errno = EDOM */
@@ -400,37 +397,39 @@ void kh_OnKeyRelease(void *pGame,uint16 wParam);   /* 0x0011AA6C */
 /* No Ghidra function exists for these; bodies are hand-written in the .c file. */
 uint32 AEEApplet_AddRef(IApplet *po);
 boolean AEEApplet_HandleEvent(IApplet *po, AEEEvent evt, uint16 wParam, uint32 dwParam);
-int AEEClsCreateInstance(AEECLSID ClsId, IShell *pIShell, IModule *po, void **ppObj);
+int32 AEEClsCreateInstance(AEECLSID ClsId, IShell *pIShell, IModule *po, void **ppObj);
 uint32 AEEMod_AddRef(IModule *po);
 void AEEMod_FreeResources(IModule *po, IHeap *ph, IFileMgr *pfm);
 
 /* Not yet identified (auto-named by Ghidra). */
 undefined4 FUN_00100028(undefined4 param_1,undefined4 param_2);
 void FUN_00100104(int param_1);
-void * memset(void *destination,uint byteCount);   /* 0x00100110 GUESS: name, see kh_mod.c */
-void memcpy(void *destination,void *source,uint byteCount);   /* 0x00100168 GUESS: name, see kh_mod.c */
-void memcpy_word_aligned(void *destination,void *source,uint byteCount);   /* 0x0010021C GUESS: name, see kh_mod.c */
+void * memset(void *destination,uint32 byteCount);   /* 0x00100110 GUESS: name, see kh_mod.c */
+ulonglong memcpy(void *destination,void *source,uint32 byteCount);   /* 0x00100168 GUESS: name, see kh_mod.c */
+ulonglong memcpy_word_aligned(void *destination,void *source,uint32 byteCount);   /* 0x0010021C GUESS: name, see kh_mod.c */
 ulonglong FUN_00100288(uint param_1,uint param_2);
 int FUN_0010035c(uint param_1,uint param_2);
-undefined4 FUN_0010041c(int param_1,uint param_2);
-uint FUN_001007f4(int param_1,uint param_2);
-undefined4 FUN_001008d0(int param_1,uint param_2);
-undefined4 FUN_001009b8(uint param_1,uint param_2);
+undefined8 FUN_0010041c(int param_1,uint param_2);
+undefined8 FUN_001007f4(int param_1,uint param_2);
+undefined8 FUN_001008d0(int param_1,uint param_2);
+undefined8 FUN_001009b8(uint param_1,uint param_2);
 void FUN_00100a38(undefined4 param_1);
-undefined4 FUN_00100a58(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param_4);
-uint FUN_00100c2c(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
+undefined8 FUN_00100a58(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param_4);
+undefined8 FUN_00100c2c(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3);
-undefined4 FUN_00101268(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param_4,int param_5);
+undefined8 FUN_00101268(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param_4,int param_5);
 undefined8 FUN_001013e0(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, uint param_5);
 void FUN_00101440(undefined4 param_1,undefined4 param_2);
 undefined4 FUN_00101458(int param_1,char *param_2);
-void debug_write_char(char character);   /* 0x00101638 GUESS: name, see kh_mod.c */
+int32 debug_write_char(char character);   /* 0x00101638 GUESS: name, see kh_mod.c */
+int software_interrupt(int number);      /* Ghidra's name for the `svc` (swi) instruction, not a function:
+                                            the trap with the given number, its result as r0 leaves it */
 undefined4 FUN_00101ad8(int *param_1,int param_2);
 void FUN_001051d4(int param_1,int param_2);
 void FUN_00105224(int *param_1,int param_2);
 int FUN_001052e0(int param_1,undefined4 param_2,int param_3,int param_4,int param_5,int param_6, undefined4 param_7,undefined4 param_8,int param_9);
 void FUN_001053a8(undefined4 param_1,undefined4 param_2,int param_3,int param_4,int param_5, int param_6,undefined4 param_7,int param_8,int param_9,int param_10,int param_11, int param_12,int param_13);
-int ui_element_add_child(UIElement *parent,UIElement *child,int id);   /* 0x001054D8 GUESS: name */
+int32 ui_element_add_child(UIElement *parent,UIElement *child,int32 id);   /* 0x001054D8 GUESS: name */
 void FUN_00105538(int param_1,undefined4 param_2,int param_3);
 void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5);
 void FUN_001056d0(int *param_1,int param_2);
@@ -455,20 +454,20 @@ void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,u
 void FUN_00107adc(int param_1,int param_2,undefined4 param_3,int *param_4,short *param_5, undefined4 param_6,uint param_7,short param_8);
 void FUN_00107d24(int *param_1);
 void FUN_00107e48(undefined4 param_1,int param_2);
-int list_get_entry(UIList *list,int index);   /* 0x00107EA4 GUESS: name, see kh_mod.c */
-int ui_element_find_child(UIElement *element,int id);   /* 0x00107EC4 GUESS: name */
+int32 list_get_entry(UIList *list,int32 index);   /* 0x00107EA4 GUESS: name, see kh_mod.c */
+int32 ui_element_find_child(UIElement *element,int32 id);   /* 0x00107EC4 GUESS: name */
 void * FUN_00107ecc(undefined4 param_1,undefined4 param_2);
 int FUN_00107f88(int param_1);
 ulonglong FUN_00107fd0(int param_1,int param_2,int param_3);
 undefined4 FUN_00107fec(int param_1,undefined4 param_2);
-int screen_stack_top(ScreenStack *stack);   /* 0x001080AC GUESS: name */
-int list_find_entry(UIList *list,int id);   /* 0x001080C8 GUESS: name */
+int32 screen_stack_top(ScreenStack *stack);   /* 0x001080AC GUESS: name */
+int32 list_find_entry(UIList *list,int32 id);   /* 0x001080C8 GUESS: name */
 void FUN_0010810c(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5, undefined4 param_6);
 void FUN_001082e0(int param_1,undefined4 param_2,int param_3,undefined4 param_4,undefined4 param_5, undefined4 param_6,undefined4 param_7,int param_8);
 undefined4 FUN_001083d8(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 undefined4 FUN_00108414(int param_1,undefined4 param_2,int param_3);
 bool FUN_001084e4(undefined4 param_1,undefined4 param_2,int param_3);
-int ui_element_handle_key(UIElement *element,int eventCode,int keyCode,int keyParameter);   /* 0x00108524 GUESS: name */
+int32 ui_element_handle_key(UIElement *element,int32 eventCode,int32 keyCode,int32 keyParameter);   /* 0x00108524 GUESS: name */
 int FUN_0010873c(int *param_1,undefined4 param_2,int param_3,undefined4 param_4);
 void FUN_00108840(int param_1,short param_2);
 void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *param_5);
@@ -476,21 +475,21 @@ bool FUN_00108e8c(int param_1);
 bool FUN_00108ed8(int param_1);
 int FUN_00108f28(int param_1,int param_2);
 void screen_stack_close_all(ScreenStack *stack);   /* 0x00108FA0 GUESS: name */
-void screen_stack_close_top(ScreenStack *stack,int redraw);   /* 0x00108FCC GUESS: name */
-void screen_stack_open(ScreenStack *stack,int *screen);   /* 0x001090B8 GUESS: name */
-int list_set_entry(UIList *list,int id,int entry);   /* 0x001090FC GUESS: name */
+void screen_stack_close_top(ScreenStack *stack,int32 redraw);   /* 0x00108FCC GUESS: name */
+void screen_stack_open(ScreenStack *stack,int32 *screen);   /* 0x001090B8 GUESS: name */
+int32 list_set_entry(UIList *list,int32 id,int32 entry);   /* 0x001090FC GUESS: name */
 void FUN_001091fc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_001092c0(int param_1,int param_2);
-int ui_element_remove_child(UIElement *element,int id,int destroy);   /* 0x00109308 GUESS: name */
+int32 ui_element_remove_child(UIElement *element,int32 id,int32 destroy);   /* 0x00109308 GUESS: name */
 void FUN_00109368(int param_1);
-void list_remove_entry(UIList *list,int id);   /* 0x00109380 GUESS: name */
+void list_remove_entry(UIList *list,int32 id);   /* 0x00109380 GUESS: name */
 void thunk_FUN_0011e154(int param_1);
 undefined4 FUN_001093f8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 );
 void FUN_00109534(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
 void FUN_0010955c(int param_1,int param_2,int param_3);
 void FUN_00109750(int param_1,undefined4 param_2);
 int FUN_00109780(int *param_1,undefined4 param_2,int param_3);
-void key_picker_setup(UIElement *picker,KeyOption *options,int *setting,int index);   /* 0x001098D8 GUESS: name */
+void key_picker_setup(UIElement *picker,KeyOption *options,int32 *setting,int32 index);   /* 0x001098D8 GUESS: name */
 void FUN_00109940(int param_1,int param_2);
 void FUN_00109a10(int param_1,int param_2,int param_3,undefined4 param_4);
 void FUN_00109b4c(int param_1,int param_2,int param_3);
@@ -506,7 +505,7 @@ undefined8 FUN_0010a214(int param_1);
 void FUN_0010a3e8(undefined4 param_1,int *param_2,uint param_3,int param_4);
 void FUN_0010a46c(undefined4 param_1,int *param_2,undefined4 param_3,uint param_4);
 void FUN_0010a498(int param_1,int param_2);
-Hitsphere * hitsphere_create(Hitsphere *hitsphere,int entity,BossCombatRegion *owner,int secondary);   /* 0x0010A528 GUESS: name */
+Hitsphere * hitsphere_create(Hitsphere *hitsphere,int32 entity,BossCombatRegion *owner,int32 secondary);   /* 0x0010A528 GUESS: name */
 int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3);
 int * FUN_0010aa8c(int *param_1,int *param_2);
 int * FUN_0010ac6c(int *param_1,int param_2);
@@ -514,7 +513,7 @@ undefined4 * FUN_0010af3c(undefined4 *param_1,undefined4 param_2,undefined4 para
 undefined4 * FUN_0010afc4(undefined4 *param_1);
 undefined4 * FUN_0010b014(undefined4 *param_1,undefined4 param_2);
 int * FUN_0010b080(int *param_1,undefined4 param_2);
-Enemy * enemy_create(Enemy *enemy,int number,CombatRegion *region,int type);   /* 0x0010B230 GUESS: name */
+Enemy * enemy_create(Enemy *enemy,int32 number,CombatRegion *region,int32 type);   /* 0x0010B230 GUESS: name */
 int * FUN_0010b2dc(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5 ,undefined4 param_6,int param_7);
 undefined1 * FUN_0010b3e8(undefined1 *param_1,undefined4 param_2,undefined4 param_3);
 CombatRegion * combat_region_create(CombatRegion *region,ISwerveObject *node,char *name);   /* 0x0010B478 GUESS: name */
@@ -527,7 +526,7 @@ BossCombatRegion * boss_combat_region_create(BossCombatRegion *region,ISwerveObj
 LevelObject * level_object_create(LevelObject *object,ISwerveObject *node,char *name);   /* 0x0010B8CC GUESS: name */
 CollisionShape * collision_shape_create(CollisionShape *shape);   /* 0x0010B9B4 GUESS: name */
 undefined4 * FUN_0010ba08(undefined4 *param_1,undefined4 param_2);
-Intro * intro_create(Intro *intro,int atTitle,int32 *error);   /* 0x0010BB2C GUESS: names */
+Intro * intro_create(Intro *intro,int32 atTitle,int32 *error);   /* 0x0010BB2C GUESS: names */
 int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,int param_6,int param_7,int param_8,undefined1 param_9);
 int * FUN_0010bd7c(int *param_1,int *param_2,undefined1 param_3);
 int * FUN_0010be14(int *param_1);
@@ -555,13 +554,29 @@ void FUN_0010cc9c(int param_1,int param_2);
 void FUN_0010cd2c(int param_1,int param_2);
 void FUN_0010cda4(int param_1,int param_2);
 void FUN_0010cdd8(int param_1,int param_2);
+void FUN_001052dc(int param_1);   /* 0x001052DC (no Ghidra function; a virtual method) */
+void FUN_00105c98(int param_1);   /* 0x00105C98 (no Ghidra function; a virtual method) */
+void FUN_00105de4(int param_1);   /* 0x00105DE4 (no Ghidra function; a virtual method) */
+void FUN_00106fa8(int param_1);   /* 0x00106FA8 (no Ghidra function; a virtual method) */
+void FUN_00106fac(int param_1);   /* 0x00106FAC (no Ghidra function; a virtual method) */
+void FUN_001077cc(int param_1);   /* 0x001077CC (no Ghidra function; a virtual method) */
+uint FUN_00107f58(int param_1);   /* 0x00107F58 (no Ghidra function; a virtual method) */
+uint FUN_00108048(int param_1);   /* 0x00108048 (no Ghidra function; a virtual method) */
+uint FUN_0010807c(int param_1);   /* 0x0010807C (no Ghidra function; a virtual method) */
+int FUN_0010872c(int param_1);   /* 0x0010872C (no Ghidra function; a virtual method) */
+int FUN_00108734(int param_1);   /* 0x00108734 (no Ghidra function; a virtual method) */
+int FUN_001136c0(int param_1);   /* 0x001136C0 (no Ghidra function; a virtual method) */
+int FUN_00119af4(int param_1);   /* 0x00119AF4 (no Ghidra function; a virtual method) */
+void FUN_0011f260(int param_1);   /* 0x0011F260 (no Ghidra function; a virtual method) */
+void FUN_0011f26c(int param_1);   /* 0x0011F26C (no Ghidra function; a virtual method) */
+void FUN_0011f624(int param_1);   /* 0x0011F624 (no Ghidra function; a virtual method) */
 void FUN_0010ce08(undefined4 *param_1,int param_2);
 void FUN_0010cee4(int param_1,int param_2);
-void progress_add_experience(Progress *progress,int amount);   /* 0x0010CFC4 GUESS: name */
+void progress_add_experience(Progress *progress,int32 amount);   /* 0x0010CFC4 GUESS: name */
 void FUN_0010d074(int param_1,undefined4 param_2);
-void progress_add_magic_points(Progress *progress,int amount);   /* 0x0010D18C GUESS: name */
-void progress_add_munny(Progress *progress,int amount);   /* 0x0010D1E0 GUESS: name */
-int combat_region_all_enemies_defeated(CombatRegion *region);   /* 0x0010D2FC GUESS: names */
+void progress_add_magic_points(Progress *progress,int32 amount);   /* 0x0010D18C GUESS: name */
+void progress_add_munny(Progress *progress,int32 amount);   /* 0x0010D1E0 GUESS: name */
+int32 combat_region_all_enemies_defeated(CombatRegion *region);   /* 0x0010D2FC GUESS: names */
 undefined4 FUN_0010d354(int param_1);
 void FUN_0010d3a4(int param_1,undefined4 param_2);
 uint FUN_0010d4dc(undefined4 param_1,undefined4 param_2);
@@ -569,38 +584,39 @@ undefined4 FUN_0010d56c(int param_1,int param_2);
 undefined4 FUN_0010d7c4(int param_1,int param_2);
 undefined4 FUN_0010d95c(int param_1,int param_2);
 void FUN_0010db04(int param_1,undefined4 param_2);
-int progress_score(Progress *progress);   /* 0x0010E1F8 GUESS: name */
+int32 progress_score(Progress *progress);   /* 0x0010E1F8 GUESS: name */
 void FUN_0010e210(undefined4 param_1,undefined4 *param_2,int *param_3);
 void FUN_0010e280(int param_1,undefined4 *param_2,undefined4 *param_3);
 undefined4 FUN_0010e448(int param_1,undefined4 *param_2);
 void thunk_animations_add_from_scene(int param_1,int *param_2);
 void FUN_0010e94c(int *param_1);
-void animations_release_controllers(Animations *animations);   /* 0x0010E9BC GUESS: name */
+int32 animations_release_controllers(Animations *animations);   /* 0x0010E9BC GUESS: name */
 void FUN_0010ea00(int param_1);
 void FUN_0010ea64(int param_1);
 undefined4 FUN_0010eb74(int param_1);
 void FUN_0010ecb8(int param_1,undefined4 *param_2);
-uint FUN_0010ed40(uint param_1);
+uint32 float_cos(uint32 angle);   /* 0x0010ED40 GUESS: name, see kh_mod.c */
 void FUN_0010ed54(int param_1,int param_2,undefined4 param_3);
+void FUN_0010f1fc(int32 character);   /* 0x0010F1FC (no Ghidra function) */
 void FUN_0010edec(int param_1);
 int FUN_0010eefc(undefined4 param_1,int param_2,int *param_3,undefined4 param_4);
 undefined4 FUN_0010efd4(undefined4 param_1,undefined4 param_2,int param_3,int param_4);
 int FUN_0010f058(int param_1,int param_2);
 void FUN_0010f244(int *param_1,undefined4 *param_2);
-int combat_region_take_one(CombatRegion *region);   /* 0x0010F2CC GUESS: name */
+int32 combat_region_take_one(CombatRegion *region);   /* 0x0010F2CC GUESS: name */
 undefined8 FUN_0010f2e8(int param_1,uint param_2,undefined4 param_3,uint param_4,undefined4 param_5, undefined4 param_6,uint param_7);
 void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5,
                  uint param_6);
 void progress_reset(Progress *progress);   /* 0x0010F880 GUESS: name */
 void FUN_0010f8e8(int param_1);
 void FUN_0010f9a4(int param_1);
-int enemy_wait(Enemy *enemy,int now,int duration);   /* 0x0010FA50 GUESS: name */
+int32 enemy_wait(Enemy *enemy,int32 now,int32 duration);   /* 0x0010FA50 GUESS: name */
 int FUN_0010faa8(int param_1,undefined4 param_2);
 void FUN_0010fb90(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param_5,int param_6,
                  int param_7,uint param_8,uint param_9,uint param_10);
-uint FUN_0010ffdc(undefined4 param_1,undefined4 param_2,undefined4 param_3,uint param_4, undefined4 param_5,undefined4 param_6);
-uint FUN_00110030(undefined4 param_1,undefined4 param_2,undefined4 param_3,uint param_4, undefined4 param_5,undefined4 param_6);
+uint32 planar_distance_squared(void *object,uint32 x1,uint32 y1,uint32 z1,uint32 x2,uint32 y2);   /* 0x0010FFDC GUESS: name, see kh_mod.c */
+uint32 planar_distance_squared_2(void *object,uint32 x1,uint32 y1,uint32 z1,uint32 x2,uint32 y2);   /* 0x00110030 GUESS: name, see kh_mod.c */
 int FUN_00110084(undefined4 param_1,int param_2,undefined4 param_3,int param_4,int param_5);
 undefined4 FUN_00110190(int param_1,undefined4 *param_2,undefined4 *param_3);
 void FUN_00110564(int param_1,int param_2,int param_3);
@@ -611,12 +627,12 @@ uint FUN_00110924(int *param_1);
 undefined8 FUN_0011295c(undefined4 *param_1,int *param_2,int *param_3,int *param_4,undefined4 param_5);
 bool FUN_00112a98(int param_1,undefined4 param_2,int param_3);
 void FUN_00112b4c(int param_1);
-int item_drops_find_free_slot(ItemDrops *drops);   /* 0x00112C18 GUESS: name */
+int32 item_drops_find_free_slot(ItemDrops *drops);   /* 0x00112C18 GUESS: name */
 void FUN_00112c44(int *param_1);
-Hitsphere * boss_combat_region_find_hitsphere(BossCombatRegion *region,int entity);   /* 0x00112C9C GUESS: name */
+Hitsphere * boss_combat_region_find_hitsphere(BossCombatRegion *region,int32 entity);   /* 0x00112C9C GUESS: name */
 undefined8 FUN_00112cdc(int param_1,int *param_2,int param_3);
-int game_find_free_object_slot(Game *game);   /* 0x00112CFC GUESS: name */
-int animations_find_free_slot(Animations *animations);   /* 0x00112D28 GUESS: name */
+int32 game_find_free_object_slot(Game *game);   /* 0x00112CFC GUESS: name */
+int32 animations_find_free_slot(Animations *animations);   /* 0x00112D28 GUESS: name */
 int FUN_00112d54(int param_1);
 undefined4 FUN_00112dbc(int param_1,int param_2);
 undefined4 FUN_00112e20(int param_1,undefined4 param_2);
@@ -629,26 +645,26 @@ undefined8 FUN_00113374(undefined4 param_1,uint param_2,uint param_3,uint param_
 void FUN_00113474(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);
 void FUN_00113490(undefined4 *param_1,int param_2);
 void FUN_00113524(undefined4 *param_1,int param_2);
-int animations_get_duration(Animations *animations,int index);   /* 0x001135B8 GUESS: name */
+int32 animations_get_duration(Animations *animations,int32 index);   /* 0x001135B8 GUESS: name */
 void FUN_001135dc(int param_1);
 uint FUN_00113654(undefined4 param_1,int param_2);
 undefined4 FUN_001136c8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param_4, undefined4 *param_5,undefined4 param_6);
 uint32 level_object_get_height(LevelObject *object);   /* 0x00113784 GUESS: name */
-int animations_find(Animations *animations,int userId);   /* 0x001137A4 GUESS: name */
-uint FUN_001137d4(undefined4 param_1,undefined4 *param_2);
-uint FUN_00113820(undefined4 param_1,uint param_2,uint param_3,uint param_4);
+int32 animations_find(Animations *animations,int32 userId);   /* 0x001137A4 GUESS: name */
+uint32 vector_length(void *pObj94,uint32 *vector);   /* 0x001137D4 GUESS: name, see kh_mod.c */
+uint32 vector_length3(void *pObj94,uint32 x,uint32 y,uint32 z);   /* 0x00113820 GUESS: name, see kh_mod.c */
 void FUN_0011386c(uint param_1,int param_2);
 void level_object_get_position(uint32 *position,LevelObject *object);   /* 0x00113CC4 GUESS: name */
-uint8 animations_get_priority(Animations *animations,int index);   /* 0x00113CD4 GUESS: name */
+uint8 animations_get_priority(Animations *animations,int32 index);   /* 0x00113CD4 GUESS: name */
 int FUN_00113cfc(undefined4 param_1,int param_2);
 int FUN_00113da4(int *param_1,int param_2,int param_3,int param_4,int param_5,uint param_6);
 undefined4 FUN_00114120(int param_1,undefined4 param_2,undefined4 *param_3,undefined4 *param_4);
 undefined1 FUN_00114198(int param_1,undefined4 param_2);
-uint8 animations_get_state(Animations *animations,int index);   /* 0x001141F4 GUESS: name */
-int * FUN_0011421c(int *param_1,undefined4 param_2,undefined4 *param_3);
+uint8 animations_get_state(Animations *animations,int32 index);   /* 0x001141F4 GUESS: name */
+int FUN_0011421c(int *param_1,undefined4 param_2,undefined4 *param_3);
 undefined4 FUN_00114240(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,undefined4 *param_6,int param_7,undefined4 param_8,int param_9);
 void FUN_0011442c(undefined4 param_1,undefined4 *param_2);
-void FUN_0011448c(undefined4 param_1,int *param_2,undefined4 param_3,undefined4 *param_4);
+int FUN_0011448c(undefined4 param_1,int *param_2,undefined4 param_3,undefined4 *param_4);
 void FUN_00114520(undefined4 param_1,int *param_2,undefined4 param_3,undefined4 *param_4);
 void FUN_001145b4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param_4);
 void FUN_00114610(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param_4);
@@ -660,21 +676,21 @@ void FUN_001147ec(undefined4 *param_1,int param_2,int *param_3);
 uint32 motion_entity_get_pitch(MotionEntity *entity);   /* 0x00114898 GUESS: name */
 uint32 motion_entity_get_heading(MotionEntity *entity);   /* 0x001148A0 GUESS: name */
 void FUN_001148a8(int param_1,int param_2);
-int animations_finish(Animations *animations,int index);   /* 0x001148C8 GUESS: name */
-int combat_region_take_attack_token(CombatRegion *region);   /* 0x00114910 GUESS: names */
+int32 animations_finish(Animations *animations,int32 index);   /* 0x001148C8 GUESS: name */
+int32 combat_region_take_attack_token(CombatRegion *region);   /* 0x00114910 GUESS: names */
 void FUN_0011492c(int param_1);
 void FUN_0011498c(int param_1,uint param_2);
 void FUN_00114a1c(int param_1,undefined4 param_2);
-int combat_region_hit_enemies(CombatRegion *region,int part,uint32 damage,uint32 x,uint32 y,uint32 z,int playerState);   /* 0x00114A94 GUESS: names */
-int boss_combat_region_hit_target(BossCombatRegion *region,int part,uint32 damage,uint32 x,uint32 y,uint32 z,int playerState);   /* 0x00114B48 GUESS: name */
+int32 combat_region_hit_enemies(CombatRegion *region,int32 part,uint32 damage,uint32 x,uint32 y,uint32 z,int32 playerState);   /* 0x00114A94 GUESS: names */
+int32 boss_combat_region_hit_target(BossCombatRegion *region,int32 part,uint32 damage,uint32 x,uint32 y,uint32 z,int32 playerState);   /* 0x00114B48 GUESS: name */
 void FUN_00114c00(int param_1,undefined4 param_2,undefined4 param_3,int param_4);
 void FUN_001150d0(int param_1,int *param_2);
 void FUN_00115118(undefined4 *param_1,undefined4 param_2,uint param_3);
 void FUN_001174ac(int param_1,undefined4 param_2);
 void FUN_00117d30(int param_1,int *param_2);
-void combat_region_setup(CombatRegion *region,int context);   /* 0x00117DD8 GUESS: name */
+void combat_region_setup(CombatRegion *region,int32 context);   /* 0x00117DD8 GUESS: name */
 undefined8 FUN_001180c4(int param_1,uint param_2);
-void character_setup(Character *character,int *error);   /* 0x00118318 GUESS: name */
+void character_setup(Character *character,int32 *error);   /* 0x00118318 GUESS: name */
 void FUN_00118640(int param_1,int *param_2);
 void FUN_0011868c(int param_1,undefined4 param_2);
 void FUN_00118910(int param_1,undefined4 param_2);
@@ -689,11 +705,11 @@ undefined4 FUN_00119ce0(int param_1,undefined4 param_2,undefined4 param_3,undefi
 bool FUN_00119d58(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,undefined4 param_6);
 void FUN_0011a2f4(int param_1,int param_2);
 void FUN_0011a3ec(int param_1,int param_2,undefined4 param_3);
-void character_on_key(Character *character,int key);   /* 0x0011A4D8 GUESS: name */
-void intro_on_key(Intro *intro,int key);   /* 0x0011A7DC GUESS: name */
-void character_on_key_release(Character *character,int key);   /* 0x0011AAD0 GUESS: name */
+void character_on_key(Character *character,int32 key);   /* 0x0011A4D8 GUESS: name */
+void intro_on_key(Intro *intro,int32 key);   /* 0x0011A7DC GUESS: name */
+void character_on_key_release(Character *character,int32 key);   /* 0x0011AAD0 GUESS: name */
 void character_freeze_held_keys(Character *character);   /* 0x0011AB60 GUESS: name */
-undefined8 FUN_0011abc4(int param_1,int param_2,uint param_3);
+undefined8 FUN_0011abc4(int param_1,int param_2);
 uint FUN_0011add0(uint param_1,int param_2);
 undefined4 FUN_0011ae04(int param_1,undefined4 param_2,int *param_3,int param_4,int param_5);
 void FUN_0011b044(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5, undefined4 *param_6);
@@ -707,19 +723,19 @@ undefined4 FUN_0011ba0c(int param_1,undefined4 param_2);
 void FUN_0011bb00(undefined4 *param_1,int param_2);
 void FUN_0011bb58(int param_1,int param_2);
 int FUN_0011bb9c(int param_1,undefined4 *param_2);
-undefined8 FUN_0011c330(int param_1,int param_2,uint param_3,uint param_4);
+undefined8 FUN_0011c330(int param_1,int param_2,uint param_3);
 void FUN_0011c708(int param_1,int param_2,int param_3);
 bool FUN_0011c860(int param_1,int param_2,undefined4 param_3);
 void FUN_0011ca70(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);
 void FUN_0011ca8c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5);
-void wrap_angle(int pObj94,uint32 *angle);   /* 0x0011CB34 GUESS: name */
+void wrap_angle(int32 pObj94,uint32 *angle);   /* 0x0011CB34 GUESS: name */
 void FUN_0011cbc4(int param_1,int param_2,int param_3);
 void FUN_0011cc14(int param_1,int param_2,int param_3);
-int character_play_animation(Character *character,int index,int channel,int loop);   /* 0x0011CC64 GUESS: names */
+int32 character_play_animation(Character *character,int32 index,int32 channel,int32 loop);   /* 0x0011CC64 GUESS: names */
 undefined8 FUN_0011ceac(int param_1);
 undefined4 FUN_0011cfdc(int param_1,undefined4 param_2,int param_3);
 void FUN_0011d040(int param_1,undefined4 param_2,void *param_3);
-int animations_play(Animations *animations,int index,int loop);   /* 0x0011D104 GUESS: names */
+int32 animations_play(Animations *animations,int32 index,int32 loop);   /* 0x0011D104 GUESS: names */
 int FUN_0011d168(int param_1,undefined4 param_2,undefined4 param_3);
 void FUN_0011d28c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 undefined8 FUN_0011d3ec(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
@@ -738,8 +754,8 @@ void FUN_0011e010(int param_1);
 void FUN_0011e07c(int param_1);
 void FUN_0011e0b4(int param_1);
 void animations_reset(Animations *animations);   /* 0x0011E0FC GUESS: name */
-void FUN_0011e154(int param_1);
-undefined4 FUN_0011e250(int param_1);
+void FUN_0011e154(KHApp *app);
+undefined4 FUN_0011e250(int param_1,int param_2);
 undefined4 FUN_0011e300(int param_1);
 void motion_entity_pitch_by(MotionEntity *entity,uint32 angle);   /* 0x0011E36C GUESS: name */
 void motion_entity_turn(MotionEntity *entity,uint32 angle);   /* 0x0011E3C0 GUESS: names */
@@ -755,32 +771,32 @@ void FUN_0011f2bc(int param_1,int *param_2,int param_3);
 void FUN_0011f394(int param_1,char *param_2,undefined4 param_3,undefined4 param_4,int param_5);
 void FUN_0011f540(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
 void FUN_0011f630(int param_1);
-void character_set_control_direction(Character *character,int direction);   /* 0x0011F66C GUESS: name */
+void character_set_control_direction(Character *character,int32 direction);   /* 0x0011F66C GUESS: name */
 void FUN_0011f680(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
 void FUN_0011f7d4(int param_1,int param_2);
 void FUN_0011f8ac(int param_1);
 void FUN_0011f8e0(int param_1,uint param_2);
 void FUN_0011fc80(int param_1,undefined4 param_2);
-int animations_set_position(Animations *animations,int index,int position);   /* 0x0011FCC4 GUESS: name */
+int32 animations_set_position(Animations *animations,int32 index,int32 position);   /* 0x0011FCC4 GUESS: name */
 void thunk_FUN_0011fd90(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0011fd90(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-void animations_set_priority(Animations *animations,int index,uint8 priority);   /* 0x0011FDBC GUESS: name */
+void animations_set_priority(Animations *animations,int32 index,uint8 priority);   /* 0x0011FDBC GUESS: name */
 undefined4 FUN_0011fddc(int param_1,undefined4 param_2,int param_3,undefined4 param_4);
-void animations_set_speed(Animations *animations,int index,uint32 speed);   /* 0x0011FED8 GUESS: name */
+void animations_set_speed(Animations *animations,int32 index,uint32 speed);   /* 0x0011FED8 GUESS: name */
 void FUN_0011fef4(int param_1,undefined4 param_2,int param_3);
 void FUN_0011ffc0(undefined4 *param_1,undefined4 param_2);
-void enemy_set_target(Enemy *enemy,int how);   /* 0x00120024 GUESS: names */
+void enemy_set_target(Enemy *enemy,int32 how);   /* 0x00120024 GUESS: names */
 void FUN_001200ac(int param_1,undefined4 param_2);
 void FUN_00120120(int param_1,undefined4 param_2,undefined4 param_3);
 void FUN_001201cc(int param_1,undefined4 param_2);
 void motion_entity_set_pitch(MotionEntity *entity,uint32 pitch);   /* 0x00120244 GUESS: name */
 void FUN_00120290(int param_1,undefined4 param_2);
 void FUN_001202cc(int param_1,undefined4 param_2);
-uint FUN_001202f4(uint param_1);
-uint FUN_00120308(void);
+uint32 float_sin(uint32 angle);   /* 0x001202F4 GUESS: name, see kh_mod.c */
+uint32 float_sqrt(uint32 value);   /* 0x00120308 GUESS: name, see kh_mod.c */
 void FUN_0012031c(int *param_1,int param_2);
 void FUN_00120450(undefined4 *param_1);
-void animations_stop(Animations *animations,int index,int immediately);   /* 0x001204B0 GUESS: name */
+void animations_stop(Animations *animations,int32 index,int32 immediately);   /* 0x001204B0 GUESS: name */
 void FUN_001204f0(undefined4 param_1,undefined4 param_2,int *param_3);
 void FUN_0012056c(int param_1,int param_2);
 bool FUN_0012059c(int param_1,int param_2);
@@ -793,128 +809,90 @@ undefined8 FUN_001213fc(int param_1,undefined4 param_2,undefined4 param_3,undefi
 void FUN_00121584(int param_1,int *param_2,int *param_3,int param_4);
 void FUN_0012164c(int param_1,undefined4 param_2,int param_3);
 void FUN_001216c4(int param_1);
-void FUN_00121780(int param_1,undefined4 *param_2);
+void FUN_0012171c(int32 object,int32 now,int32 elapsed);   /* 0x0012171C (no Ghidra function) */
+void FUN_00121780(int param_1,undefined4 *param_2,uint param_3);
 void FUN_00121ab0(int param_1);
 void FUN_00121b98(int param_1,undefined4 param_2);
-undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3,uint param_4);
+undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3);
 void FUN_00122450(int param_1,byte *param_2,int param_3);
-void FUN_001226e8(int *param_1,undefined4 param_2,int param_3);
+void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed);
 undefined4 FUN_0012289c(int *param_1,undefined4 param_2,int param_3);
-void enemy_update(Enemy *enemy,int now,int elapsed);   /* 0x00122954 GUESS: name */
-void FUN_00122b90(int param_1,int param_2,uint param_3,undefined4 param_4);
-void combat_region_update(CombatRegion *region,int now,int elapsed);   /* 0x00122F98 GUESS: name */
-void FUN_0012312c(int param_1,int param_2,int param_3,undefined4 param_4);
-void FUN_00123588(int param_1,int param_2,int param_3,undefined4 param_4);
-void animations_update(Animations *animations,int worldTime,int elapsed,int animate);   /* 0x00123C24 GUESS: names */
+void enemy_update(Enemy *enemy,int32 now,int32 elapsed);   /* 0x00122954 GUESS: name */
+void FUN_00122b90(int param_1,int param_2,uint param_3);
+void combat_region_update(CombatRegion *region,int32 now,int32 elapsed);   /* 0x00122F98 GUESS: name */
+void FUN_0012312c(int param_1,int param_2,int param_3);
+void FUN_00123588(int param_1,int param_2,int param_3);
+void animations_update(Animations *animations,int32 worldTime,int32 elapsed,int32 animate);   /* 0x00123C24 GUESS: names */
 void FUN_00123d7c(int param_1,undefined4 param_2,int param_3);
 void FUN_0012407c(int param_1,undefined4 param_2,undefined4 param_3);
-void intro_update(Intro *intro,int worldTime,int elapsed,int32 *error);   /* 0x001241A8 GUESS: names */
+void intro_update(Intro *intro,int32 worldTime,int32 elapsed,int32 *error);   /* 0x001241A8 GUESS: names */
 void FUN_001242b4(int param_1);
 undefined8 FUN_00124674(undefined4 param_1,undefined4 param_2,int param_3,int *param_4);
 undefined8 FUN_001246b4(undefined4 param_1,undefined4 param_2,int param_3,int *param_4);
 undefined8 FUN_001246f4(undefined4 param_1,undefined4 param_2,int param_3,int *param_4);
 void FUN_00124734(undefined4 param_1,int param_2,int param_3,int *param_4);
 uint FUN_0012479c(uint param_1,uint param_2);
-uint FUN_00124954(uint param_1,uint param_2,uint param_3,uint param_4);
-uint FUN_00124b40(uint param_1,uint param_2,uint param_3,uint param_4);
-uint FUN_00124b84(uint param_1,uint param_2,uint param_3,uint param_4);
-uint FUN_00124f24(uint param_1,uint param_2,uint param_3,uint param_4);
-uint FUN_00124f44(uint param_1,uint param_2,uint param_3,uint param_4);
-undefined8 FUN_001251ec(uint param_1,uint param_2,uint param_3,uint param_4);
+undefined8 FUN_00124954(uint param_1,uint param_2,uint param_3,uint param_4);
+undefined8 FUN_00124b40(uint param_1,uint param_2,uint param_3,uint param_4);
+undefined8 FUN_00124b84(uint param_1,uint param_2,uint param_3,uint param_4);
+undefined8 FUN_00124f24(uint param_1,uint param_2,uint param_3,uint param_4);
+undefined8 FUN_00124f44(uint param_1,uint param_2,uint param_3,uint param_4);
+ulonglong double_divide_mantissas(uint32 dividendLow,uint32 dividendHigh,uint32 divisorLow,uint32 divisorHigh);   /* 0x001251EC GUESS: name */
 uint FUN_001254d4(uint param_1,uint param_2,uint param_3,uint param_4);
 uint FUN_00125554(uint param_1,uint param_2);
 undefined8 FUN_00125604(uint param_1);
 uint FUN_00125634(uint param_1,uint param_2,uint param_3,uint param_4);
 uint FUN_001256b4(uint param_1,uint param_2,uint param_3,uint param_4);
-uint FUN_00125734(uint param_1,uint param_2,uint param_3,uint param_4);
-uint FUN_001259e8(uint param_1,uint param_2,uint param_3,uint param_4);
-uint FUN_00125cd0(uint param_1,uint param_2);
-uint FUN_00126248(uint param_1);
+undefined8 FUN_00125734(uint param_1,uint param_2,uint param_3,uint param_4);
+undefined8 FUN_001259e8(uint param_1,uint param_2,uint param_3,uint param_4);
+undefined8 FUN_00125cd0(uint param_1,uint param_2);
+undefined8 FUN_00126248(uint param_1);
 uint32 float_add(uint32 a,uint32 b);   /* 0x001262B0 GUESS: name; a + b, float bits (__aeabi_fadd) */
 uint32 float_reverse_subtract(uint32 a,uint32 b);   /* 0x001263F8 GUESS: name; b - a (__aeabi_frsub) */
 uint32 float_subtract(uint32 a,uint32 b);   /* 0x0012642C GUESS: name; a - b (__aeabi_fsub) */
-uint FUN_00126608(uint param_1,uint param_2);
-uint FUN_00126618(uint param_1,uint param_2);
-void float_compare_equal(uint32 a,uint32 b);   /* 0x001267F0 GUESS: name; == / !=, result in the flags (__aeabi_cfcmpeq) */
+uint32 float_reverse_divide(uint32 a,uint32 b);   /* 0x00126608 GUESS: name, see kh_mod.c */
+uint32 float_divide(uint32 a,uint32 b);   /* 0x00126618 GUESS: name, see kh_mod.c */
+uint32 float_compare_equal(uint32 a,uint32 b);   /* 0x001267F0 GUESS: name; == / !=, result in the flags (__aeabi_cfcmpeq) */
 uint FUN_00126858(uint param_1);
 uint FUN_001268c8(uint param_1);
-void float_compare_greater(uint32 a,uint32 b);   /* 0x001268FC GUESS: name; > / >=, result in the flags (__aeabi_cfcmple) */
-void float_compare_less(uint32 a,uint32 b);   /* 0x00126964 GUESS: name; < / <=, result in the flags */
-uint FUN_001269cc(uint param_1,uint param_2);
+uint32 float_compare_greater(uint32 a,uint32 b);   /* 0x001268FC GUESS: name; > / >=, result in the flags (__aeabi_cfcmple) */
+uint32 float_compare_less(uint32 a,uint32 b);   /* 0x00126964 GUESS: name; < / <=, result in the flags */
+uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mod.c */
 
 
 /* ---- Literal-pool words, named automatically from the module bytes ----------------------------
-   Each was a Ghidra DAT_<address> label. PC-relative offsets (used as NAME + pc) are named after
-   what they point to; other words are named after their value. The comment gives the old label(s),
+   Each was a Ghidra DAT_<address> label, named after its value (the PC-relative offsets among them
+   are the data objects and function addresses at the end of this file now). The comment gives the old label(s),
    the word's address and how the name was derived. Generated, not reviewed one by one: names say
    what a word IS (its value or target), not necessarily what the code uses it for. */
 #define AEECLSID_KH_APPLET_VALUE 0x01026191   /* was DAT_0010197c (word at 0x0010197C); BREW class identifier AEECLSID_KH_APPLET */
-#define ADDRESS_OF_kh_HandleEvent_OFFSET 0x0000C70C   /* was DAT_00101980 (word at 0x00101980); PC-relative offset: + 0x101954 (the pc) = 0x0010E060 */
-#define ADDRESS_OF_AEEMod_AddRef_OFFSET 0xFFFFFEFC   /* was DAT_00101ac8 (word at 0x00101AC8); PC-relative offset: + 0x101a88 (the pc) = 0x00101984 */
-#define ADDRESS_OF_AEEMod_Release_OFFSET 0xFFFFFF38   /* was DAT_00101acc (word at 0x00101ACC); PC-relative offset: + 0x101a94 (the pc) = 0x001019CC */
-#define ADDRESS_OF_AEEMod_CreateInstance_OFFSET 0xFFFFFEF8   /* was DAT_00101ad0 (word at 0x00101AD0); PC-relative offset: + 0x101aa0 (the pc) = 0x00101998 */
-#define ADDRESS_OF_AEEMod_FreeResources_OFFSET 0xFFFFFF1C   /* was DAT_00101ad4 (word at 0x00101AD4); PC-relative offset: + 0x101aac (the pc) = 0x001019C8 */
-extern undefined4 CODE_AT_00100FD0_SELF_RELATIVE_OFFSET;   /* was DAT_00102acc (word at 0x00102ACC = 0xFFFFE504); word relative to its own address: 0x00102ACC + 0xFFFFE504 = 0x00100FD0 */
 #define WORD_HEXADECIMAL_2DE9998F 0x2DE9998F   /* was DAT_00102ad0 (word at 0x00102AD0); value 0x2DE9998F (770283919) */
 #define WORD_HEXADECIMAL_1EC39991 0x1EC39991   /* was DAT_00102ad4 (word at 0x00102AD4); value 0x1EC39991 (516135313) */
 #define WORD_HEXADECIMAL_0017A510 0x0017A510   /* was DAT_00102ad8 (word at 0x00102AD8); value 0x0017A510 (1549584) */
 #define WORD_HEXADECIMAL_1F10FB19 0x1F10FB19   /* was DAT_00102adc (word at 0x00102ADC); value 0x1F10FB19 (521206553) */
-#define STRING_TRAINING_OFFSET 0x000260D4   /* was DAT_00102ae0 (word at 0x00102AE0); PC-relative offset: + 0x101c3c (the pc) = 0x00127D10 */
 #define WORD_HEXADECIMAL_03D18088 0x03D18088   /* was DAT_00102ae4 (word at 0x00102AE4); value 0x03D18088 (64061576) */
-#define STRING_JTEXT_DOT_M3G_OFFSET 0x0002608C   /* was DAT_00102ae8 (word at 0x00102AE8); PC-relative offset: + 0x101cc4 (the pc) = 0x00127D50 */
-#define STRING_RO_OFFSET 0x00026070   /* was DAT_00102aec (word at 0x00102AEC); PC-relative offset: + 0x101cdc (the pc) = 0x00127D4C */
-#define STRING_PERCENT_S_PERCENT_S_PERCENT_S_OFFSET 0x00026060   /* was DAT_00102af0 (word at 0x00102AF0); PC-relative offset: + 0x101ce4 (the pc) = 0x00127D44 */
 #define WORD_HEXADECIMAL_0252B33F 0x0252B33F   /* was DAT_00102af4, DAT_0011aa68 (word at 0x00102AF4); value 0x0252B33F (38974271) */
 #define WORD_HEXADECIMAL_251509C8 0x251509C8   /* was DAT_00102af8, DAT_00108e80 (word at 0x00102AF8); value 0x251509C8 (622135752) */
 #define WORD_HEXADECIMAL_310668B6 0x310668B6   /* was DAT_00102afc (word at 0x00102AFC); value 0x310668B6 (822503606) */
-#define DATA_AT_00127ADC_OFFSET 0x00025CF0   /* was DAT_00102b00 (word at 0x00102B00); PC-relative offset: + 0x101dec (the pc) = 0x00127ADC */
-#define DATA_AT_00127AF0_OFFSET 0x00025CEC   /* was DAT_00102b04 (word at 0x00102B04); PC-relative offset: + 0x101e04 (the pc) = 0x00127AF0 */
-#define STRING_SAVEGAME_DOT_DAT_OFFSET 0x00025E28   /* was DAT_00102b08 (word at 0x00102B08); PC-relative offset: + 0x101ecc (the pc) = 0x00127CF4 */
-#define STRING_TRAINING_OFFSET_2 0x00025E24   /* was DAT_00102b0c (word at 0x00102B0C); PC-relative offset: + 0x101eec (the pc) = 0x00127D10 */
-#define STRING_REPLAYGAME_DOT_DAT_OFFSET 0x00025D78   /* was DAT_00102b10 (word at 0x00102B10); PC-relative offset: + 0x101fa4 (the pc) = 0x00127D1C */
 #define WORD_HEXADECIMAL_01B449A3 0x01B449A3   /* was DAT_00102b14 (word at 0x00102B14); value 0x01B449A3 (28592547) */
 #define WORD_HEXADECIMAL_24017E3E 0x24017E3E   /* was DAT_00102b18 (word at 0x00102B18); value 0x24017E3E (604077630) */
 #define WORD_HEXADECIMAL_272E6865 0x272E6865   /* was DAT_00102b1c (word at 0x00102B1C); value 0x272E6865 (657352805) */
 #define WORD_HEXADECIMAL_00C833EC 0x00C833EC   /* was DAT_00102b20 (word at 0x00102B20); value 0x00C833EC (13120492) */
 #define WORD_HEXADECIMAL_04D4D70F 0x04D4D70F   /* was DAT_00102b24 (word at 0x00102B24); value 0x04D4D70F (81057551) */
-#define DATA_AT_00127D2C_OFFSET 0x00025BFC   /* was DAT_00102b2c (word at 0x00102B2C); PC-relative offset: + 0x102130 (the pc) = 0x00127D2C */
-#define STRING_PERCENT_D_OFFSET 0x000259EC   /* was DAT_00102b3c (word at 0x00102B3C); PC-relative offset: + 0x1022e0 (the pc) = 0x00127CCC */
-#define STRING_PERCENT_D_OFFSET_2 0x00025904   /* was DAT_00102b48 (word at 0x00102B48); PC-relative offset: + 0x1023c8 (the pc) = 0x00127CCC */
 #define WORD_HEXADECIMAL_FFC9C4DA 0xFFC9C4DA   /* was DAT_00102b50, DAT_00104c2c, DAT_001077b8, DAT_00108728 (word at 0x00102B50); value 0xFFC9C4DA (-3554086) */
 #define WORD_HEXADECIMAL_19408333 0x19408333   /* was DAT_00102b54, DAT_00104c08, DAT_00108e64 (word at 0x00102B54); value 0x19408333 (423658291) */
 #define WORD_HEXADECIMAL_0528CA88 0x0528CA88   /* was DAT_00102b5c, DAT_00104c58 (word at 0x00102B5C); value 0x0528CA88 (86559368) */
-#define DATA_AT_00127D2C_OFFSET_2 0x000257A0   /* was DAT_00102b60 (word at 0x00102B60); PC-relative offset: + 0x10258c (the pc) = 0x00127D2C */
-#define DATA_AT_00127D30_OFFSET 0x00025784   /* was DAT_00102b64 (word at 0x00102B64); PC-relative offset: + 0x1025ac (the pc) = 0x00127D30 */
-#define DATA_AT_00127D30_OFFSET_2 0x0002576C   /* was DAT_00102b68 (word at 0x00102B68); PC-relative offset: + 0x1025c4 (the pc) = 0x00127D30 */
-#define STRING_PERCENT_D_OFFSET_3 0x00025698   /* was DAT_00102b6c (word at 0x00102B6C); PC-relative offset: + 0x102634 (the pc) = 0x00127CCC */
 #define WORD_HEXADECIMAL_10FB280A 0x10FB280A   /* was DAT_00102b70, DAT_00104c50 (word at 0x00102B70); value 0x10FB280A (284895242) */
-#define ADDRESS_OF_FUNCTION_0010888c_OFFSET 0x000061E0   /* was DAT_00102b74 (word at 0x00102B74); PC-relative offset: + 0x1026ac (the pc) = 0x0010888C */
 #define WORD_HEXADECIMAL_03B0A428 0x03B0A428   /* was DAT_00102b80, DAT_00104c18 (word at 0x00102B80); value 0x03B0A428 (61908008) */
 #define WORD_HEXADECIMAL_30D96C27 0x30D96C27   /* was DAT_00102b84 (word at 0x00102B84); value 0x30D96C27 (819555367) */
 #define WORD_HEXADECIMAL_2E8D6E9D 0x2E8D6E9D   /* was DAT_00102b88 (word at 0x00102B88); value 0x2E8D6E9D (781020829) */
-#define ADDRESS_OF_FUNCTION_0010888c_OFFSET_2 0x00006088   /* was DAT_00102b8c (word at 0x00102B8C); PC-relative offset: + 0x102804 (the pc) = 0x0010888C */
 #define WORD_HEXADECIMAL_000253E4 0x000253E4   /* was DAT_00102b90 (word at 0x00102B90); value 0x000253E4 (152548) */
-#define STRING_SAVEGAME_DOT_DAT_OFFSET_2 0x0002539C   /* was DAT_00102b94 (word at 0x00102B94); PC-relative offset: + 0x102958 (the pc) = 0x00127CF4 */
 #define WORD_HEXADECIMAL_21C1059D 0x21C1059D   /* was DAT_00102b98 (word at 0x00102B98); value 0x21C1059D (566298013) */
-#define STRING_SAVEGAME_DOT_DAT_OFFSET_3 0x00025310   /* was DAT_00102b9c (word at 0x00102B9C); PC-relative offset: + 0x1029e4 (the pc) = 0x00127CF4 */
 #define WORD_HEXADECIMAL_00025038 0x00025038   /* was DAT_00102ba0 (word at 0x00102BA0); value 0x00025038 (151608) */
-#define DATA_AT_00127B1C_OFFSET 0x00024F60   /* was DAT_00103b5c (word at 0x00103B5C); PC-relative offset: + 0x102bbc (the pc) = 0x00127B1C */
-#define STRING_TRAINING_OFFSET_3 0x00024F98   /* was DAT_00103b6c (word at 0x00103B6C); PC-relative offset: + 0x102d78 (the pc) = 0x00127D10 */
-#define STRING_SAVEGAME_DOT_DAT_OFFSET_4 0x00024EA4   /* was DAT_00103b70 (word at 0x00103B70); PC-relative offset: + 0x102e50 (the pc) = 0x00127CF4 */
-#define DATA_AT_00127B34_OFFSET 0x00024BE0   /* was DAT_00103b74 (word at 0x00103B74); PC-relative offset: + 0x102f54 (the pc) = 0x00127B34 */
-#define DATA_AT_00127B50_OFFSET 0x00024BE8   /* was DAT_00103b78 (word at 0x00103B78); PC-relative offset: + 0x102f68 (the pc) = 0x00127B50 */
 #define WORD_HEXADECIMAL_2B21E3F9 0x2B21E3F9   /* was DAT_00103b84 (word at 0x00103B84); value 0x2B21E3F9 (723641337) */
 #define WORD_HEXADECIMAL_225D20E5 0x225D20E5   /* was DAT_00103b88 (word at 0x00103B88); value 0x225D20E5 (576528613) */
-#define DATA_AT_00127B6C_OFFSET 0x0002493C   /* was DAT_00103b8c (word at 0x00103B8C); PC-relative offset: + 0x103230 (the pc) = 0x00127B6C */
-#define DATA_AT_00127B88_OFFSET 0x00024944   /* was DAT_00103b90 (word at 0x00103B90); PC-relative offset: + 0x103244 (the pc) = 0x00127B88 */
 #define WORD_HEXADECIMAL_0DB81F00 0x0DB81F00   /* was DAT_00103bac (word at 0x00103BAC); value 0x0DB81F00 (230170368) */
-#define DATA_AT_00127BA4_OFFSET 0x000246D4   /* was DAT_00103bb0 (word at 0x00103BB0); PC-relative offset: + 0x1034d0 (the pc) = 0x00127BA4 */
-#define STRING_COLLECTABLES_OFFSET 0x0002484C   /* was DAT_00103bb4 (word at 0x00103BB4); PC-relative offset: + 0x1034e8 (the pc) = 0x00127D34 */
-#define DATA_AT_00127BBC_OFFSET 0x00024664   /* was DAT_00103bb8 (word at 0x00103BB8); PC-relative offset: + 0x103558 (the pc) = 0x00127BBC */
 #define WORD_HEXADECIMAL_2E66608C 0x2E66608C   /* was DAT_00103bd8 (word at 0x00103BD8); value 0x2E66608C (778461324) */
-#define DATA_AT_00127BD4_OFFSET 0x000242D0   /* was DAT_00103bdc (word at 0x00103BDC); PC-relative offset: + 0x103904 (the pc) = 0x00127BD4 */
-#define DATA_AT_00127BE8_OFFSET 0x000242D0   /* was DAT_00103be0 (word at 0x00103BE0); PC-relative offset: + 0x103918 (the pc) = 0x00127BE8 */
-#define DATA_AT_00127BFC_OFFSET 0x000242D0   /* was DAT_00103be4 (word at 0x00103BE4); PC-relative offset: + 0x10392c (the pc) = 0x00127BFC */
 #define WORD_HEXADECIMAL_2F7413EE 0x2F7413EE   /* was DAT_00103be8 (word at 0x00103BE8); value 0x2F7413EE (796136430) */
 #define WORD_HEXADECIMAL_31B444EE 0x31B444EE   /* was DAT_00103bec (word at 0x00103BEC); value 0x31B444EE (833897710) */
 #define WORD_HEXADECIMAL_15998E05 0x15998E05   /* was DAT_00103bf0 (word at 0x00103BF0); value 0x15998E05 (362384901) */
@@ -932,21 +910,16 @@ extern undefined4 CODE_AT_00100FD0_SELF_RELATIVE_OFFSET;   /* was DAT_00102acc (
 #define INTEGER_57394 0x0000E032   /* was DAT_00104be0, DAT_001054d4 (word at 0x00104BE0); integer 57394 */
 #define WORD_HEXADECIMAL_16A5390B 0x16A5390B   /* was DAT_00104be4, DAT_0010d2f0 (word at 0x00104BE4); value 0x16A5390B (379926795) */
 #define INTEGER_MINUS_16076 0xFFFFC134   /* was DAT_00104be8 (word at 0x00104BE8); integer -16076 */
-#define STRING_PERCENT_D_OFFSET_4 0x00023DEC   /* was DAT_00104bec (word at 0x00104BEC); PC-relative offset: + 0x103ee0 (the pc) = 0x00127CCC */
 #define INTEGER_735 0x000002DF   /* was DAT_00104bf0 (word at 0x00104BF0); integer 735 */
 #define WORD_HEXADECIMAL_2A6EBDD0 0x2A6EBDD0   /* was DAT_00104bf4 (word at 0x00104BF4); value 0x2A6EBDD0 (711900624) */
 #define WORD_HEXADECIMAL_2CF7E187 0x2CF7E187   /* was DAT_00104bf8 (word at 0x00104BF8); value 0x2CF7E187 (754442631) */
 #define WORD_HEXADECIMAL_0955306E 0x0955306E   /* was DAT_00104bfc (word at 0x00104BFC); value 0x0955306E (156577902) */
 #define WORD_HEXADECIMAL_2C7A1EE9 0x2C7A1EE9   /* was DAT_00104c00 (word at 0x00104C00); value 0x2C7A1EE9 (746200809) */
 #define WORD_HEXADECIMAL_07A0110B 0x07A0110B   /* was DAT_00104c04 (word at 0x00104C04); value 0x07A0110B (127930635) */
-#define STRING_PERCENT_D_OFFSET_5 0x00023B40   /* was DAT_00104c10 (word at 0x00104C10); PC-relative offset: + 0x10418c (the pc) = 0x00127CCC */
 #define WORD_HEXADECIMAL_1650919F 0x1650919F   /* was DAT_00104c14 (word at 0x00104C14); value 0x1650919F (374378911) */
 #define WORD_HEXADECIMAL_3C5A569E 0x3C5A569E   /* was DAT_00104c1c, DAT_0011a498, DAT_0011e240 (word at 0x00104C1C); value 0x3C5A569E (1012553374) */
 #define WORD_HEXADECIMAL_21BF9442 0x21BF9442   /* was DAT_00104c20, DAT_00105220, DAT_0010d070, DAT_0010f23c, DAT_0011a49c, DAT_0011e23c, DAT_00123c1c, DAT_00124668 (word at 0x00104C20); value 0x21BF9442 (566203458) */
 #define WORD_HEXADECIMAL_111CB9DB 0x111CB9DB   /* was DAT_00104c24 (word at 0x00104C24); value 0x111CB9DB (287095259) */
-#define DATA_AT_00127C40_OFFSET 0x0002380C   /* was DAT_00104c28 (word at 0x00104C28); PC-relative offset: + 0x104434 (the pc) = 0x00127C40 */
-#define DATA_AT_00127C5C_OFFSET 0x0002369C   /* was DAT_00104c30 (word at 0x00104C30); PC-relative offset: + 0x1045c0 (the pc) = 0x00127C5C */
-#define DATA_AT_00127C90_OFFSET 0x000236B8   /* was DAT_00104c34 (word at 0x00104C34); PC-relative offset: + 0x1045d8 (the pc) = 0x00127C90 */
 #define WORD_HEXADECIMAL_14FB8F11 0x14FB8F11   /* was DAT_00104c38 (word at 0x00104C38); value 0x14FB8F11 (352030481) */
 #define WORD_HEXADECIMAL_27B2CEEB 0x27B2CEEB   /* was DAT_00104c3c (word at 0x00104C3C); value 0x27B2CEEB (666029803) */
 #define WORD_HEXADECIMAL_0C211E44 0x0C211E44   /* was DAT_00104c40 (word at 0x00104C40); value 0x0C211E44 (203497028) */
@@ -954,80 +927,34 @@ extern undefined4 CODE_AT_00100FD0_SELF_RELATIVE_OFFSET;   /* was DAT_00102acc (
 #define WORD_HEXADECIMAL_37E4CCE1 0x37E4CCE1   /* was DAT_00104c48 (word at 0x00104C48); value 0x37E4CCE1 (937741537) */
 #define WORD_HEXADECIMAL_0CB59575 0x0CB59575   /* was DAT_00104c4c (word at 0x00104C4C); value 0x0CB59575 (213226869) */
 #define INTEGER_790 0x00000316   /* was DAT_00104c54 (word at 0x00104C54); integer 790 */
-#define ADDRESS_OF_FUNCTION_0010888c_OFFSET_3 0x00003C0C   /* was DAT_0010519c (word at 0x0010519C); PC-relative offset: + 0x104c80 (the pc) = 0x0010888C */
 #define WORD_HEXADECIMAL_27B19885 0x27B19885   /* was DAT_001051a4 (word at 0x001051A4); value 0x27B19885 (665950341) */
-#define STRING_JIMINY_ICON_DOT_PNG_OFFSET 0x00022ED0   /* was DAT_001051a8 (word at 0x001051A8); PC-relative offset: + 0x104e8c (the pc) = 0x00127D5C */
 #define WORD_HEXADECIMAL_0AE069A1 0x0AE069A1   /* was DAT_001051ac (word at 0x001051AC); value 0x0AE069A1 (182479265) */
-#define STRING_SPLASH_DOT_PNG_OFFSET 0x00022D5C   /* was DAT_001051b0 (word at 0x001051B0); PC-relative offset: + 0x105010 (the pc) = 0x00127D6C */
-#define STRING_RO_OFFSET_2 0x00022D1C   /* was DAT_001051b4 (word at 0x001051B4); PC-relative offset: + 0x105030 (the pc) = 0x00127D4C */
-#define STRING_PERCENT_S_PERCENT_S_PERCENT_S_OFFSET_2 0x00022D0C   /* was DAT_001051b8 (word at 0x001051B8); PC-relative offset: + 0x105038 (the pc) = 0x00127D44 */
-#define STRING_RO_OFFSET_3 0x00022CF4   /* was DAT_001051bc (word at 0x001051BC); PC-relative offset: + 0x105058 (the pc) = 0x00127D4C */
-#define STRING_PERCENT_S_PERCENT_S_PERCENT_S_OFFSET_3 0x00022CE4   /* was DAT_001051c0 (word at 0x001051C0); PC-relative offset: + 0x105060 (the pc) = 0x00127D44 */
 #define WORD_HEXADECIMAL_1D73D1AE 0x1D73D1AE   /* was DAT_001051c4 (word at 0x001051C4); value 0x1D73D1AE (494129582) */
 #define WORD_HEXADECIMAL_14741FD6 0x14741FD6   /* was DAT_001051c8 (word at 0x001051C8); value 0x14741FD6 (343154646) */
-#define STRING_OUT_OF_MAGIC_OFFSET 0x00022C08   /* was DAT_001051cc (word at 0x001051CC); PC-relative offset: + 0x105170 (the pc) = 0x00127D78 */
-#define STRING_REPLAYGAME_DOT_DAT_OFFSET_2 0x00022B98   /* was DAT_001051d0 (word at 0x001051D0); PC-relative offset: + 0x105184 (the pc) = 0x00127D1C */
 #define WORD_HEXADECIMAL_1FEB4DB8 0x1FEB4DB8   /* was DAT_0010521c, DAT_0011e244 (word at 0x0010521C); value 0x1FEB4DB8 (535514552) */
 #define WORD_HEXADECIMAL_FF606060 0xFF606060   /* was DAT_001052cc (word at 0x001052CC); value 0xFF606060 (-10461088) */
 #define WORD_HEXADECIMAL_FFEBEBF7 0xFFEBEBF7   /* was DAT_001052d4, DAT_001077b4, DAT_0010871c, DAT_0010bb28, DAT_0010be10 (word at 0x001052D4); value 0xFFEBEBF7 (-1315849) */
 #define WORD_HEXADECIMAL_FF7E8194 0xFF7E8194   /* was DAT_001052d8, DAT_00106e40, DAT_001077bc (word at 0x001052D8); value 0xFF7E8194 (-8486508) */
 #define FLOAT_500 0x43FA0000   /* was DAT_001055c0 (word at 0x001055C0); the float 500.0 */
 #define INTEGER_MINUS_22348 0xFFFFA8B4   /* was DAT_00105c0c (word at 0x00105C0C); integer -22348 */
-#define DATA_AT_00127D94_OFFSET 0x00022608   /* was DAT_00105c10 (word at 0x00105C10); PC-relative offset: + 0x10578c (the pc) = 0x00127D94 */
-#define STRING_INVALIDENTRY_OFFSET 0x0002257C   /* was DAT_00105c24 (word at 0x00105C24); PC-relative offset: + 0x10581c (the pc) = 0x00127D98 */
-#define STRING_STAR_D_OFFSET 0x00022518   /* was DAT_00105c30 (word at 0x00105C30); PC-relative offset: + 0x105890 (the pc) = 0x00127DA8 */
 #define INTEGER_MINUS_22752 0xFFFFA720   /* was DAT_00105c34 (word at 0x00105C34); integer -22752 */
-#define STRING_STAR_T_OFFSET 0x000224C0   /* was DAT_00105c38 (word at 0x00105C38); PC-relative offset: + 0x1058ec (the pc) = 0x00127DAC */
-#define DATA_AT_00127D94_OFFSET_2 0x00022380   /* was DAT_00105c40 (word at 0x00105C40); PC-relative offset: + 0x105a14 (the pc) = 0x00127D94 */
 #define INTEGER_MINUS_23228 0xFFFFA544   /* was DAT_00105c50 (word at 0x00105C50); integer -23228 */
-#define STRING_STAR_R_OFFSET 0x000222E0   /* was DAT_00105c54 (word at 0x00105C54); PC-relative offset: + 0x105ad0 (the pc) = 0x00127DB0 */
-#define STRING_INVALIDENTRY_OFFSET_2 0x000222A8   /* was DAT_00105c58 (word at 0x00105C58); PC-relative offset: + 0x105af0 (the pc) = 0x00127D98 */
-#define ADDRESS_OF_FUNCTION_001091fc_OFFSET 0x000031F4   /* was DAT_00106128 (word at 0x00106128); PC-relative offset: + 0x106008 (the pc) = 0x001091FC */
-#define ADDRESS_OF_FUNCTION_001091fc_OFFSET_2 0x000030F8   /* was DAT_0010612c (word at 0x0010612C); PC-relative offset: + 0x106104 (the pc) = 0x001091FC */
 #define AEECLSID_FILEMGR_VALUE 0x01001003   /* was DAT_00106320, DAT_001098d0, DAT_0010fb84, DAT_0011b174, DAT_0011e6b0 (word at 0x00106320); BREW class identifier AEECLSID_FILEMGR */
-#define STRING_DOT_DAT_OFFSET 0x00021BB8   /* was DAT_00106328 (word at 0x00106328); PC-relative offset: + 0x106200 (the pc) = 0x00127DB8 */
-#define STRING_KH_OFFSET 0x00021B9C   /* was DAT_0010632c (word at 0x0010632C); PC-relative offset: + 0x106218 (the pc) = 0x00127DB4 */
-#define DATA_AT_00127D90_OFFSET 0x00021B6C   /* was DAT_00106330 (word at 0x00106330); PC-relative offset: + 0x106224 (the pc) = 0x00127D90 */
-#define STRING_DISNEY_SLASH_DOWNLOAD_DOT_PHP_QUESTION_OFFSET 0x00021BC0   /* was DAT_00106334 (word at 0x00106334); PC-relative offset: + 0x106240 (the pc) = 0x00127E00 */
-#define STRING_HTTP_COLON_SLASH_SLASH_SWERVENET_DOT_OFFSET 0x00021B94   /* was DAT_00106338 (word at 0x00106338); PC-relative offset: + 0x106248 (the pc) = 0x00127DDC */
-#define STRING_PERCENT_S_PERCENT_S_PERCENT_S_OFFSET_4 0x00021B6C   /* was DAT_0010633c (word at 0x0010633C); PC-relative offset: + 0x106254 (the pc) = 0x00127DC0 */
-#define STRING_PERCENT_S_AND_S_EQUALS_PERCENT_OFFSET 0x00021B7C   /* was DAT_00106340 (word at 0x00106340); PC-relative offset: + 0x10629c (the pc) = 0x00127E18 */
-#define ADDRESS_OF_FUNCTION_001091fc_OFFSET_3 0x00002F44   /* was DAT_00106344 (word at 0x00106344); PC-relative offset: + 0x1062b8 (the pc) = 0x001091FC */
-#define ADDRESS_OF_FUNCTION_00105e44_OFFSET 0xFFFFFB6C   /* was DAT_00106348 (word at 0x00106348); PC-relative offset: + 0x1062d8 (the pc) = 0x00105E44 */
 #define WORD_HEXADECIMAL_00021B34 0x00021B34   /* was DAT_0010634c (word at 0x0010634C); value 0x00021B34 (138036) */
 #define WORD_HEXADECIMAL_00010002 0x00010002   /* was DAT_00106350, DAT_001082dc (word at 0x00106350); value 0x00010002 (65538) */
 #define WORD_HEXADECIMAL_FF4757DD 0xFF4757DD   /* was DAT_00106734 (word at 0x00106734); value 0xFF4757DD (-12101667) */
-#define DATA_AT_00127A8E_OFFSET 0x00021616   /* was DAT_00106738 (word at 0x00106738); PC-relative offset: + 0x106478 (the pc) = 0x00127A8E */
 #define WORD_HEXADECIMAL_FF82ECF3 0xFF82ECF3   /* was DAT_00106a88 (word at 0x00106A88); value 0xFF82ECF3 (-8196877) */
 #define INTEGER_MINUS_19441 0xFFFFB40F   /* was DAT_00106a8c (word at 0x00106A8C); integer -19441 */
 #define INTEGER_MINUS_15954 0xFFFFC1AE   /* was DAT_00106a90 (word at 0x00106A90); integer -15954 */
 #define WORD_HEXADECIMAL_FF615A6D 0xFF615A6D   /* was DAT_00106fa0 (word at 0x00106FA0); value 0xFF615A6D (-10397075) */
 #define WORD_HEXADECIMAL_FF9795A5 0xFF9795A5   /* was DAT_00106fa4, DAT_001077b0 (word at 0x00106FA4); value 0xFF9795A5 (-6842971) */
-#define DATA_AT_00127D88_OFFSET 0x00020D40   /* was DAT_0010722c (word at 0x0010722C); PC-relative offset: + 0x107048 (the pc) = 0x00127D88 */
 #define WORD_HEXADECIMAL_FF2F2533 0xFF2F2533   /* was DAT_001077a8, DAT_00108718 (word at 0x001077A8); value 0xFF2F2533 (-13687501) */
 #define WORD_HEXADECIMAL_00FF00FF 0x00FF00FF   /* was DAT_001077ac (word at 0x001077AC); value 0x00FF00FF (16711935) */
 #define WORD_HEXADECIMAL_FF47464C 0xFF47464C   /* was DAT_001077c0, DAT_00108714 (word at 0x001077C0); value 0xFF47464C (-12106164) */
 #define WORD_HEXADECIMAL_FFFF0000 0xFFFF0000   /* was DAT_001077c4, DAT_00107ad0 (word at 0x001077C4); value 0xFFFF0000 (-65536) */
 #define INTEGER_270 0x0000010E   /* was DAT_00107ac4 (word at 0x00107AC4); integer 270 */
-#define DATA_AT_00127A7E_OFFSET 0x0002016E   /* was DAT_00107ac8 (word at 0x00107AC8); PC-relative offset: + 0x107910 (the pc) = 0x00127A7E */
 #define WORD_HEXADECIMAL_FF7FCB61 0xFF7FCB61   /* was DAT_00107acc (word at 0x00107ACC); value 0xFF7FCB61 (-8402079) */
-#define DATA_AT_00127A86_OFFSET 0x0002009E   /* was DAT_00107ad4 (word at 0x00107AD4); PC-relative offset: + 0x1079e8 (the pc) = 0x00127A86 */
-#define DATA_AT_00127A7C_OFFSET 0x00020010   /* was DAT_00107ad8 (word at 0x00107AD8); PC-relative offset: + 0x107a6c (the pc) = 0x00127A7C */
 #define WORD_HEXADECIMAL_0001FE30 0x0001FE30   /* was DAT_00107d20 (word at 0x00107D20); value 0x0001FE30 (130608) */
-#define STRING_PERCENT_D_OFFSET_6 0x0001FDD0   /* was DAT_00107f54 (word at 0x00107F54); PC-relative offset: + 0x107efc (the pc) = 0x00127CCC */
-#define STRING_KH_OFFSET_2 0x0001FC34   /* was DAT_001081e0 (word at 0x001081E0); PC-relative offset: + 0x108180 (the pc) = 0x00127DB4 */
-#define DATA_AT_00127D90_OFFSET_2 0x0001FBF4   /* was DAT_001081e4 (word at 0x001081E4); PC-relative offset: + 0x10819c (the pc) = 0x00127D90 */
-#define STRING_DISNEY_SLASH_RANKEX_DOT_PHP_OFFSET 0x0001FCEC   /* was DAT_001081e8 (word at 0x001081E8); PC-relative offset: + 0x1081b0 (the pc) = 0x00127E9C */
-#define STRING_HTTP_COLON_SLASH_SLASH_SWERVENET_DOT_OFFSET_2 0x0001FC24   /* was DAT_001081ec (word at 0x001081EC); PC-relative offset: + 0x1081b8 (the pc) = 0x00127DDC */
-#define STRING_PERCENT_S_PERCENT_S_QUESTION_MARK_OFFSET 0x0001FCB0   /* was DAT_001081f0 (word at 0x001081F0); PC-relative offset: + 0x1081c0 (the pc) = 0x00127E70 */
-#define ADDRESS_OF_FUNCTION_001091fc_OFFSET_4 0x00000FB4   /* was DAT_001082d0 (word at 0x001082D0); PC-relative offset: + 0x108248 (the pc) = 0x001091FC */
-#define ADDRESS_OF_FUNCTION_00105e44_OFFSET_2 0xFFFFDBDC   /* was DAT_001082d4 (word at 0x001082D4); PC-relative offset: + 0x108268 (the pc) = 0x00105E44 */
-#define STRING_X_DASH_METHOD_COLON_GET_CARRIAGE_OFFSET 0x0001FB80   /* was DAT_001082d8 (word at 0x001082D8); PC-relative offset: + 0x1082a0 (the pc) = 0x00127E20 */
-#define DATA_AT_00127D90_OFFSET_3 0x0001FA40   /* was DAT_001083c4 (word at 0x001083C4); PC-relative offset: + 0x108350 (the pc) = 0x00127D90 */
-#define STRING_KH_OFFSET_3 0x0001FA48   /* was DAT_001083c8 (word at 0x001083C8); PC-relative offset: + 0x10836c (the pc) = 0x00127DB4 */
-#define STRING_DISNEY_SLASH_RANK_DOT_PHP_OFFSET 0x0001FACC   /* was DAT_001083cc (word at 0x001083CC); PC-relative offset: + 0x108394 (the pc) = 0x00127E60 */
-#define STRING_HTTP_COLON_SLASH_SLASH_SWERVENET_DOT_OFFSET_3 0x0001FA40   /* was DAT_001083d0 (word at 0x001083D0); PC-relative offset: + 0x10839c (the pc) = 0x00127DDC */
-#define STRING_PERCENT_S_PERCENT_S_QUESTION_MARK_OFFSET_2 0x0001FA8C   /* was DAT_001083d4 (word at 0x001083D4); PC-relative offset: + 0x1083a4 (the pc) = 0x00127E30 */
 #define WORD_HEXADECIMAL_FFC0C000 0xFFC0C000   /* was DAT_00108720 (word at 0x00108720); value 0xFFC0C000 (-4145152) */
 #define INTEGER_57397 0x0000E035   /* was DAT_0010883c (word at 0x0010883C); integer 57397 */
 #define WORD_HEXADECIMAL_1AB5DBD0 0x1AB5DBD0   /* was DAT_00108e58 (word at 0x00108E58); value 0x1AB5DBD0 (448125904) */
@@ -1035,82 +962,38 @@ extern undefined4 CODE_AT_00100FD0_SELF_RELATIVE_OFFSET;   /* was DAT_00102acc (
 #define WORD_HEXADECIMAL_0FA4E52C 0x0FA4E52C   /* was DAT_00108e60 (word at 0x00108E60); value 0x0FA4E52C (262464812) */
 #define WORD_HEXADECIMAL_3D569D08 0x3D569D08   /* was DAT_00108e68 (word at 0x00108E68); value 0x3D569D08 (1029086472) */
 #define WORD_HEXADECIMAL_0001F14C 0x0001F14C   /* was DAT_00108e6c (word at 0x00108E6C); value 0x0001F14C (127308) */
-#define STRING_ISLAND_OFFSET 0x0001F130   /* was DAT_00108e70 (word at 0x00108E70); PC-relative offset: + 0x108bbc (the pc) = 0x00127CEC */
-#define STRING_WONDERLAND_OFFSET 0x0001F110   /* was DAT_00108e74 (word at 0x00108E74); PC-relative offset: + 0x108bd0 (the pc) = 0x00127CE0 */
-#define STRING_AGRABAH_OFFSET 0x0001F0F4   /* was DAT_00108e78 (word at 0x00108E78); PC-relative offset: + 0x108be4 (the pc) = 0x00127CD8 */
-#define STRING_CASTLE_OFFSET 0x0001F0D8   /* was DAT_00108e7c (word at 0x00108E7C); PC-relative offset: + 0x108bf8 (the pc) = 0x00127CD0 */
 #define WORD_HEXADECIMAL_3D198889 0x3D198889   /* was DAT_00108e84 (word at 0x00108E84); value 0x3D198889 (1025083529) */
-#define STRING_PERCENT_S_PERCENT_D_SLASH_PERCENT_OFFSET 0x0001EF54   /* was DAT_00108e88 (word at 0x00108E88); PC-relative offset: + 0x108db0 (the pc) = 0x00127D04 */
 #define INTEGER_MINUS_55555 0xFFFF26FD   /* was DAT_001091f8 (word at 0x001091F8); integer -55555 */
-#define DATA_AT_00127D90_OFFSET_4 0x0001E964   /* was DAT_0010952c (word at 0x0010952C); PC-relative offset: + 0x10942c (the pc) = 0x00127D90 */
-#define DATA_AT_00127D90_OFFSET_5 0x0001E928   /* was DAT_00109530 (word at 0x00109530); PC-relative offset: + 0x109468 (the pc) = 0x00127D90 */
 #define INTEGER_10000 0x00002710   /* was DAT_00109ef4 (word at 0x00109EF4); integer 10000 */
-#define ADDRESS_OF_FUNCTION_001242b4_OFFSET 0x0001A214   /* was DAT_0010a0cc (word at 0x0010A0CC); PC-relative offset: + 0x10a0a0 (the pc) = 0x001242B4 */
 #define WORD_HEXADECIMAL_3D1D22E8 0x3D1D22E8   /* was DAT_0010a3e4 (word at 0x0010A3E4); value 0x3D1D22E8 (1025319656) */
 #define INTEGER_57396 0x0000E034   /* was DAT_0010a524 (word at 0x0010A524); integer 57396 */
-#define DATA_AT_00101650_OFFSET 0xFFFF70F4   /* was DAT_0010a5c8 (word at 0x0010A5C8); PC-relative offset: + 0x10a55c (the pc) = 0x00101650 */
 #define FLOAT_3 0x40400000   /* was DAT_0010a5cc, DAT_00110554, DAT_00121aac, DAT_00124078 (word at 0x0010A5CC); the float 3.0 */
 #define FLOAT_0_POINT_3 0x3E99999A   /* was DAT_0010a5d0, DAT_00117d0c (word at 0x0010A5D0); the float 0.30000001192092896 */
 #define INTEGER_MINUS_42416 0xFFFF5A50   /* was DAT_0010a5d4 (word at 0x0010A5D4); integer -42416 */
-#define STRING_BASE_DOT_M3G_OFFSET 0x0001D144   /* was DAT_0010aa30 (word at 0x0010AA30); PC-relative offset: + 0x10a68c (the pc) = 0x001277D0 */
 #define WORD_HEXADECIMAL_1922F406 0x1922F406   /* was DAT_0010aa34 (word at 0x0010AA34); value 0x1922F406 (421721094) */
-#define STRING_CHARACTER_GRP_OFFSET 0x0001D0F0   /* was DAT_0010aa38 (word at 0x0010AA38); PC-relative offset: + 0x10a6ec (the pc) = 0x001277DC */
-#define STRING_GENERAL_SCRIPTS_OFFSET 0x0001D0D4   /* was DAT_0010aa3c (word at 0x0010AA3C); PC-relative offset: + 0x10a718 (the pc) = 0x001277EC */
 #define WORD_HEXADECIMAL_038AD7F2 0x038AD7F2   /* was DAT_0010aa40 (word at 0x0010AA40); value 0x038AD7F2 (59430898) */
-#define STRING_CAMERA_OFFSET 0x0001D0A0   /* was DAT_0010aa44 (word at 0x0010AA44); PC-relative offset: + 0x10a75c (the pc) = 0x001277FC */
 #define WORD_HEXADECIMAL_334C8936 0x334C8936   /* was DAT_0010aa48 (word at 0x0010AA48); value 0x334C8936 (860653878) */
 #define WORD_HEXADECIMAL_0AD65F3D 0x0AD65F3D   /* was DAT_0010aa4c (word at 0x0010AA4C); value 0x0AD65F3D (181821245) */
-#define STRING_CHARACTER_OFFSET 0x0001D008   /* was DAT_0010aa50 (word at 0x0010AA50); PC-relative offset: + 0x10a7fc (the pc) = 0x00127804 */
 #define INTEGER_501 0x000001F5   /* was DAT_0010aa54 (word at 0x0010AA54); integer 501 */
-#define STRING_SORA_JUMP_DOT_QCP_OFFSET 0x0001D000   /* was DAT_0010aa58 (word at 0x0010AA58); PC-relative offset: + 0x10a8b8 (the pc) = 0x001278B8 */
-#define STRING_SORA_HIT_DOT_QCP_OFFSET 0x0001CFD8   /* was DAT_0010aa5c (word at 0x0010AA5C); PC-relative offset: + 0x10a8d0 (the pc) = 0x001278A8 */
-#define STRING_ENEMY_HIT_DOT_QCP_OFFSET 0x0001CFB0   /* was DAT_0010aa60 (word at 0x0010AA60); PC-relative offset: + 0x10a8e8 (the pc) = 0x00127898 */
-#define STRING_SORA_SWIPE_DOT_QCP_OFFSET 0x0001CF88   /* was DAT_0010aa64 (word at 0x0010AA64); PC-relative offset: + 0x10a900 (the pc) = 0x00127888 */
-#define STRING_BAD_DOT_MID_OFFSET 0x0001CF68   /* was DAT_0010aa68 (word at 0x0010AA68); PC-relative offset: + 0x10a918 (the pc) = 0x00127880 */
-#define STRING_GOOD_DOT_MID_OFFSET 0x0001CF44   /* was DAT_0010aa6c (word at 0x0010AA6C); PC-relative offset: + 0x10a930 (the pc) = 0x00127874 */
-#define STRING_KEYBLADE_DOT_MID_OFFSET 0x0001CF1C   /* was DAT_0010aa70 (word at 0x0010AA70); PC-relative offset: + 0x10a948 (the pc) = 0x00127864 */
-#define STRING_EXPLODE_DOT_QCP_OFFSET 0x0001CEF8   /* was DAT_0010aa74 (word at 0x0010AA74); PC-relative offset: + 0x10a960 (the pc) = 0x00127858 */
-#define STRING_WATER_DOT_QCP_OFFSET 0x0001CED4   /* was DAT_0010aa78 (word at 0x0010AA78); PC-relative offset: + 0x10a978 (the pc) = 0x0012784C */
-#define STRING_THUD_DOT_QCP_OFFSET 0x0001CEB0   /* was DAT_0010aa7c (word at 0x0010AA7C); PC-relative offset: + 0x10a990 (the pc) = 0x00127840 */
-#define STRING_TRANSITION_DOT_QCP_OFFSET 0x0001CE88   /* was DAT_0010aa80 (word at 0x0010AA80); PC-relative offset: + 0x10a9a8 (the pc) = 0x00127830 */
-#define STRING_MAGIC_ALERT_DOT_MID_OFFSET 0x0001CE60   /* was DAT_0010aa84 (word at 0x0010AA84); PC-relative offset: + 0x10a9c0 (the pc) = 0x00127820 */
-#define STRING_MAGIC_CAST_DOT_QCP_OFFSET 0x0001CE38   /* was DAT_0010aa88 (word at 0x0010AA88); PC-relative offset: + 0x10a9d8 (the pc) = 0x00127810 */
-#define DATA_AT_0010165C_OFFSET 0xFFFF6B84   /* was DAT_0010ac50 (word at 0x0010AC50); PC-relative offset: + 0x10aad8 (the pc) = 0x0010165C */
 #define INTEGER_5001 0x00001389   /* was DAT_0010ac58, DAT_0010faa4 (word at 0x0010AC58); integer 5001 */
-#define STRING_KH_DOT_BAR_OFFSET 0x0001CF24   /* was DAT_0010ac5c (word at 0x0010AC5C); PC-relative offset: + 0x10ab74 (the pc) = 0x00127A98 */
 #define INTEGER_5002 0x0000138A   /* was DAT_0010ac60, DAT_0010faa0 (word at 0x0010AC60); integer 5002 */
-#define STRING_KH_DOT_BAR_OFFSET_2 0x0001CEFC   /* was DAT_0010ac64 (word at 0x0010AC64); PC-relative offset: + 0x10ab9c (the pc) = 0x00127A98 */
 #define WORD_HEXADECIMAL_254DA109 0x254DA109   /* was DAT_0010ac68 (word at 0x0010AC68); value 0x254DA109 (625844489) */
 #define AEECLSID_GRAPHICS_VALUE 0x01002001   /* was DAT_0010aefc (word at 0x0010AEFC); BREW class identifier AEECLSID_GRAPHICS */
 #define INTEGER_MINUS_44296 0xFFFF52F8   /* was DAT_0010af00 (word at 0x0010AF00); integer -44296 */
-#define DATA_AT_00127AA0_OFFSET 0x0001CD00   /* was DAT_0010af04 (word at 0x0010AF04); PC-relative offset: + 0x10ada0 (the pc) = 0x00127AA0 */
 #define WORD_HEXADECIMAL_0001CD1C 0x0001CD1C   /* was DAT_0010af08 (word at 0x0010AF08); value 0x0001CD1C (118044) */
 #define INTEGER_5003 0x0000138B   /* was DAT_0010af0c (word at 0x0010AF0C); integer 5003 */
-#define STRING_KH_DOT_BAR_OFFSET_3 0x0001CE9C   /* was DAT_0010af10 (word at 0x0010AF10); PC-relative offset: + 0x10ae28 (the pc) = 0x00127CC4 */
 #define INTEGER_5004 0x0000138C   /* was DAT_0010af14 (word at 0x0010AF14); integer 5004 */
-#define STRING_KH_DOT_BAR_OFFSET_4 0x0001CE74   /* was DAT_0010af18 (word at 0x0010AF18); PC-relative offset: + 0x10ae50 (the pc) = 0x00127CC4 */
 #define INTEGER_5005 0x0000138D   /* was DAT_0010af1c (word at 0x0010AF1C); integer 5005 */
-#define STRING_KH_DOT_BAR_OFFSET_5 0x0001CE4C   /* was DAT_0010af20 (word at 0x0010AF20); PC-relative offset: + 0x10ae78 (the pc) = 0x00127CC4 */
 #define INTEGER_5006 0x0000138E   /* was DAT_0010af24 (word at 0x0010AF24); integer 5006 */
-#define STRING_KH_DOT_BAR_OFFSET_6 0x0001CE24   /* was DAT_0010af28 (word at 0x0010AF28); PC-relative offset: + 0x10aea0 (the pc) = 0x00127CC4 */
 #define INTEGER_5007 0x0000138F   /* was DAT_0010af2c (word at 0x0010AF2C); integer 5007 */
-#define STRING_KH_DOT_BAR_OFFSET_7 0x0001CDFC   /* was DAT_0010af30 (word at 0x0010AF30); PC-relative offset: + 0x10aec8 (the pc) = 0x00127CC4 */
 #define INTEGER_5008 0x00001390   /* was DAT_0010af34 (word at 0x0010AF34); integer 5008 */
-#define STRING_KH_DOT_BAR_OFFSET_8 0x0001CDD4   /* was DAT_0010af38 (word at 0x0010AF38); PC-relative offset: + 0x10aef0 (the pc) = 0x00127CC4 */
 #define AEECLSID_WEB_VALUE 0x01005000   /* was DAT_0010afc0 (word at 0x0010AFC0); BREW class identifier AEECLSID_WEB */
-#define STRING_CARRIAGE_RETURN_NEWLINE_OFFSET 0x0001C694   /* was DAT_0010b224 (word at 0x0010B224); PC-relative offset: + 0x10b0ec (the pc) = 0x00127780 */
-#define STRING_CARRIAGE_RETURN_NEWLINE_OFFSET_2 0x0001C65C   /* was DAT_0010b228 (word at 0x0010B228); PC-relative offset: + 0x10b124 (the pc) = 0x00127780 */
-#define DATA_AT_00127784_OFFSET 0x0001C62C   /* was DAT_0010b22c (word at 0x0010B22C); PC-relative offset: + 0x10b158 (the pc) = 0x00127784 */
-#define DATA_AT_00101680_OFFSET 0xFFFF641C   /* was DAT_0010b2d0 (word at 0x0010B2D0); PC-relative offset: + 0x10b264 (the pc) = 0x00101680 */
 #define INTEGER_1001 0x000003E9   /* was DAT_0010b2d4, DAT_00122b84 (word at 0x0010B2D4); integer 1001 */
 #define INTEGER_MINUS_45732 0xFFFF4D5C   /* was DAT_0010b2d8 (word at 0x0010B2D8); integer -45732 */
-#define DATA_AT_001016A0_OFFSET 0xFFFF6364   /* was DAT_0010b3e0 (word at 0x0010B3E0); PC-relative offset: + 0x10b33c (the pc) = 0x001016A0 */
 #define INTEGER_5000 0x00001388   /* was DAT_0010b3e4, DAT_0011a800, DAT_0011c324, DAT_0011fc78, DAT_0012243c (word at 0x0010B3E4); integer 5000 */
 #define FLOAT_90 0x42B40000   /* was DAT_0010b470, DAT_0010e444, DAT_0011411c, DAT_001169c4, DAT_0011adb4, DAT_001202f0, DAT_00121c5c, DAT_00122f94 (word at 0x0010B470); the float 90.0 */
 #define FLOAT_10 0x41200000   /* was DAT_0010b474, DAT_0010db00, DAT_0010df5c, DAT_001118a8, DAT_00122f88 (word at 0x0010B474); the float 10.0 */
 #define INTEGER_1836 0x0000072C   /* was DAT_0010b5dc (word at 0x0010B5DC); integer 1836 */
-#define STRING_SETTINGS_DOT_DAT_OFFSET 0x0001C310   /* was DAT_0010b5e4 (word at 0x0010B5E4); PC-relative offset: + 0x10b5c8 (the pc) = 0x001278D8 */
-#define DATA_AT_001016C0_OFFSET 0xFFFF6014   /* was DAT_0010b708 (word at 0x0010B708); PC-relative offset: + 0x10b6ac (the pc) = 0x001016C0 */
 #define INTEGER_1820 0x0000071C   /* was DAT_0010b868 (word at 0x0010B868); integer 1820 */
 #define WORD_HEXADECIMAL_FFC5FAB9 0xFFC5FAB9   /* was DAT_0010bafc (word at 0x0010BAFC); value 0xFFC5FAB9 (-3802439) */
 #define WORD_HEXADECIMAL_FF004C78 0xFF004C78   /* was DAT_0010bb00 (word at 0x0010BB00); value 0xFF004C78 (-16757640) */
@@ -1122,34 +1005,18 @@ extern undefined4 CODE_AT_00100FD0_SELF_RELATIVE_OFFSET;   /* was DAT_00102acc (
 #define WORD_HEXADECIMAL_FF724307 0xFF724307   /* was DAT_0010bb18 (word at 0x0010BB18); value 0xFF724307 (-9288953) */
 #define WORD_HEXADECIMAL_FF8A4E00 0xFF8A4E00   /* was DAT_0010bb1c (word at 0x0010BB1C); value 0xFF8A4E00 (-7713280) */
 #define WORD_HEXADECIMAL_FFEFEFC0 0xFFEFEFC0   /* was DAT_0010bb24 (word at 0x0010BB24); value 0xFFEFEFC0 (-1052736) */
-#define DATA_AT_001016E0_OFFSET 0xFFFF5AD0   /* was DAT_0010bd70 (word at 0x0010BD70); PC-relative offset: + 0x10bc10 (the pc) = 0x001016E0 */
 #define CLASS_IDENTIFIER_HEXADECIMAL_01003009 0x01003009   /* was DAT_0010bd74 (word at 0x0010BD74); in the BREW class identifier range */
 #define INTEGER_57360 0x0000E010   /* was DAT_0010bd78 (word at 0x0010BD78); integer 57360 */
-#define DATA_AT_00101700_OFFSET 0xFFFF5934   /* was DAT_0010be0c (word at 0x0010BE0C); PC-relative offset: + 0x10bdcc (the pc) = 0x00101700 */
-#define STRING_LANGUAGE_DOT_M3G_OFFSET 0x0001BB78   /* was DAT_0010be68 (word at 0x0010BE68); PC-relative offset: + 0x10be58 (the pc) = 0x001279D0 */
 #define INTEGER_MINUS_48896 0xFFFF4100   /* was DAT_0010c144 (word at 0x0010C144); integer -48896 */
 #define INTEGER_MINUS_49004 0xFFFF4094   /* was DAT_0010c148 (word at 0x0010C148); integer -49004 */
-#define STRING_MP3_OFFSET 0x0001BF18   /* was DAT_0010c14c (word at 0x0010C14C); PC-relative offset: + 0x10bf98 (the pc) = 0x00127EB0 */
 #define AEECLSID_MEDIAMP3_VALUE 0x01005502   /* was DAT_0010c150 (word at 0x0010C150); BREW class identifier AEECLSID_MEDIAMP3 */
-#define STRING_MID_OFFSET 0x0001BEF8   /* was DAT_0010c154 (word at 0x0010C154); PC-relative offset: + 0x10bfbc (the pc) = 0x00127EB4 */
 #define AEECLSID_MEDIAMIDI_VALUE 0x01005501   /* was DAT_0010c158 (word at 0x0010C158); BREW class identifier AEECLSID_MEDIAMIDI */
-#define STRING_QCP_OFFSET 0x0001BED8   /* was DAT_0010c15c (word at 0x0010C15C); PC-relative offset: + 0x10bfe0 (the pc) = 0x00127EB8 */
-#define STRING_PMD_OFFSET 0x0001BE80   /* was DAT_0010c160 (word at 0x0010C160); PC-relative offset: + 0x10c03c (the pc) = 0x00127EBC */
 #define AEECLSID_MEDIAPMD_VALUE 0x01005504   /* was DAT_0010c164 (word at 0x0010C164); BREW class identifier AEECLSID_MEDIAPMD */
-#define DATA_AT_00101724_OFFSET 0xFFFF5580   /* was DAT_0010c214 (word at 0x0010C214); PC-relative offset: + 0x10c1a4 (the pc) = 0x00101724 */
-#define DATA_AT_00101650_OFFSET_2 0xFFFF539C   /* was DAT_0010c2c0 (word at 0x0010C2C0); PC-relative offset: + 0x10c2b4 (the pc) = 0x00101650 */
-#define ADDRESS_OF_FUNCTION_001091fc_OFFSET_5 0xFFFFCC28   /* was DAT_0010c61c (word at 0x0010C61C); PC-relative offset: + 0x10c5d4 (the pc) = 0x001091FC */
-#define DATA_AT_00101680_OFFSET_2 0xFFFF4F54   /* was DAT_0010c738 (word at 0x0010C738); PC-relative offset: + 0x10c72c (the pc) = 0x00101680 */
 #define WORD_HEXADECIMAL_150C956D 0x150C956D   /* was DAT_0010d064 (word at 0x0010D064); value 0x150C956D (353146221) */
 #define WORD_HEXADECIMAL_0B96B9C5 0x0B96B9C5   /* was DAT_0010d068 (word at 0x0010D068); value 0x0B96B9C5 (194427333) */
 #define WORD_HEXADECIMAL_2CB8343A 0x2CB8343A   /* was DAT_0010d06c (word at 0x0010D06C); value 0x2CB8343A (750269498) */
-extern undefined4 STRING_OUT_OF_MAGIC_SELF_RELATIVE_OFFSET;   /* was DAT_0010d1dc (word at 0x0010D1DC = 0x0001A718); word relative to its own address: 0x0010D1DC + 0x0001A718 = 0x001278F4 */
 #define INTEGER_MINUS_53860 0xFFFF2D9C   /* was DAT_0010d2f4 (word at 0x0010D2F4); integer -53860 */
-#define STRING_PERCENT_S_EQUALS_PERCENT_D_OFFSET 0x0001A68C   /* was DAT_0010d2f8 (word at 0x0010D2F8); PC-relative offset: + 0x10d278 (the pc) = 0x00127904 */
 #define INTEGER_MINUS_54208 0xFFFF2C40   /* was DAT_0010d4cc (word at 0x0010D4CC); integer -54208 */
-#define STRING_THE_APPLICATION_HAS_FAILED_OFFSET 0x0001A660   /* was DAT_0010d4d0 (word at 0x0010D4D0); PC-relative offset: + 0x10d3cc (the pc) = 0x00127A2C */
-#define STRING_AND_WILL_CLOSE_ERROR_PERCENT_X_OFFSET 0x0001A628   /* was DAT_0010d4d4 (word at 0x0010D4D4); PC-relative offset: + 0x10d3e8 (the pc) = 0x00127A10 */
-#define STRING_PRESS_ANY_KEY_TO_CONTINUE_OFFSET 0x0001A5F4   /* was DAT_0010d4d8 (word at 0x0010D4D8); PC-relative offset: + 0x10d400 (the pc) = 0x001279F4 */
 #define FLOAT_0_POINT_7 0x3F333333   /* was DAT_0010d7bc (word at 0x0010D7BC); the float 0.699999988079071 */
 #define FLOAT_800 0x44480000   /* was DAT_0010d7c0 (word at 0x0010D7C0); the float 800.0 */
 #define FLOAT_180 0x43340000   /* was DAT_0010d958, DAT_0010dafc, DAT_0011ca6c, DAT_0011da98, DAT_0011dc90, DAT_0011ed38, DAT_00122f90, DAT_00123c0c (word at 0x0010D958); the float 180.0 */
@@ -1164,12 +1031,9 @@ extern undefined4 STRING_OUT_OF_MAGIC_SELF_RELATIVE_OFFSET;   /* was DAT_0010d1d
 #define FLOAT_100 0x42C80000   /* was DAT_0010df88, DAT_0010ffc0, DAT_0011c6f4 (word at 0x0010DF88); the float 100.0 */
 #define WORD_HEXADECIMAL_3361CE32 0x3361CE32   /* was DAT_0010df8c (word at 0x0010DF8C); value 0x3361CE32 (862047794) */
 #define INTEGER_750 0x000002EE   /* was DAT_0010e058, DAT_0011c328 (word at 0x0010E058); integer 750 */
-#define STRING_OUT_OF_MAGIC_OFFSET_2 0x00018FC8   /* was DAT_0010e05c (word at 0x0010E05C); PC-relative offset: + 0x10dff4 (the pc) = 0x00126FBC */
 #define FLOAT_1_POINT_1 0x3F8CCCCD   /* was DAT_0010e440 (word at 0x0010E440); the float 1.100000023841858 */
 #define FLOAT_5 0x40A00000   /* was DAT_0010e834, DAT_0010f8e4, DAT_0010ffc8, DAT_00110560, DAT_00113298, DAT_001180b8, DAT_0011cfd8 (word at 0x0010E834); the float 5.0 */
 #define WORD_HEXADECIMAL_3C8EFA39 0x3C8EFA39   /* was DAT_0010ed3c, DAT_0011e52c, DAT_00122f8c (word at 0x0010ED3C); value 0x3C8EFA39 (1016003129) */
-#define STRING_CARRIAGE_RETURN_NEWLINE_OFFSET_3 0x00018FE0   /* was DAT_0010efcc (word at 0x0010EFCC); PC-relative offset: + 0x10ef28 (the pc) = 0x00127F08 */
-#define STRING_CARRIAGE_RETURN_NEWLINE_OFFSET_4 0x00018FB0   /* was DAT_0010efd0 (word at 0x0010EFD0); PC-relative offset: + 0x10ef58 (the pc) = 0x00127F08 */
 #define WORD_HEXADECIMAL_0493FC17 0x0493FC17   /* was DAT_0010f240 (word at 0x0010F240); value 0x0493FC17 (76807191) */
 #define INTEGER_2004 0x000007D4   /* was DAT_0010f4c8 (word at 0x0010F4C8); integer 2004 */
 #define INTEGER_2007 0x000007D7   /* was DAT_0010f4cc, DAT_0011d6bc (word at 0x0010F4CC); integer 2007 */
@@ -1181,7 +1045,6 @@ extern undefined4 STRING_OUT_OF_MAGIC_SELF_RELATIVE_OFFSET;   /* was DAT_0010d1d
 #define INTEGER_57387 0x0000E02B   /* was DAT_0010f994 (word at 0x0010F994); integer 57387 */
 #define WORD_HEXADECIMAL_052F918F 0x052F918F   /* was DAT_0010f998 (word at 0x0010F998); value 0x052F918F (87003535) */
 #define INTEGER_57398 0x0000E036   /* was DAT_0010f99c (word at 0x0010F99C); integer 57398 */
-#define DATA_AT_00127F78_OFFSET 0x00018484   /* was DAT_0010fb88 (word at 0x0010FB88); PC-relative offset: + 0x10faf4 (the pc) = 0x00127F78 */
 #define FLOAT_0_POINT_1 0x3DCCCCCD   /* was DAT_0010fbf0, DAT_00110550, DAT_0011302c, DAT_0011da94 (word at 0x0010FBF0); the float 0.10000000149011612 */
 #define FLOAT_5000 0x459C4000   /* was DAT_0010ffc4 (word at 0x0010FFC4); the float 5000.0 */
 #define FLOAT_0_POINT_001 0x3A83126F   /* was DAT_0010ffcc, DAT_00110558, DAT_00113028, DAT_0011329c (word at 0x0010FFCC); the float 0.0010000000474974513 */
@@ -1191,87 +1054,22 @@ extern undefined4 STRING_OUT_OF_MAGIC_SELF_RELATIVE_OFFSET;   /* was DAT_0010d1d
 #define FLOAT_MINUS_5 0xC0A00000   /* was DAT_00110698, DAT_001169e4 (word at 0x00110698); the float -5.0 */
 #define FLOAT_7_POINT_5 0x40F00000   /* was DAT_0011069c (word at 0x0011069C); the float 7.5 */
 #define WORD_HEXADECIMAL_FFFEF6C4 0xFFFEF6C4   /* was DAT_001117b0 (word at 0x001117B0); value 0xFFFEF6C4 (-67900) */
-#define STRING_SAVE_OFFSET 0x00016B38   /* was DAT_001117b4 (word at 0x001117B4); PC-relative offset: + 0x110ae4 (the pc) = 0x0012761C */
-#define STRING_SHOP_OFFSET 0x00016B18   /* was DAT_001117bc (word at 0x001117BC); PC-relative offset: + 0x110b0c (the pc) = 0x00127624 */
-#define STRING_OPTIONS_OFFSET 0x00016AF8   /* was DAT_001117c4 (word at 0x001117C4); PC-relative offset: + 0x110b34 (the pc) = 0x0012762C */
-#define STRING_MAIN_MENU_OFFSET 0x00016AD4   /* was DAT_001117cc (word at 0x001117CC); PC-relative offset: + 0x110b60 (the pc) = 0x00127634 */
-#define STRING_RESTART_GAME_OFFSET 0x00016AB8   /* was DAT_001117d4 (word at 0x001117D4); PC-relative offset: + 0x110b88 (the pc) = 0x00127640 */
-#define STRING_UNPAUSE_OFFSET 0x00016A9C   /* was DAT_001117dc (word at 0x001117DC); PC-relative offset: + 0x110bb4 (the pc) = 0x00127650 */
-#define STRING_ACTIVATE_OFFSET 0x00016A5C   /* was DAT_001117e0 (word at 0x001117E0); PC-relative offset: + 0x110bfc (the pc) = 0x00127658 */
 #define WORD_HEXADECIMAL_2ACA7E67 0x2ACA7E67   /* was DAT_001117e4 (word at 0x001117E4); value 0x2ACA7E67 (717913703) */
-#define STRING_ATTACK_OFFSET 0x0001674C   /* was DAT_001117e8 (word at 0x001117E8); PC-relative offset: + 0x110c20 (the pc) = 0x0012736C */
 #define WORD_HEXADECIMAL_22837D60 0x22837D60   /* was DAT_001117ec (word at 0x001117EC); value 0x22837D60 (579042656) */
-#define STRING_DROP_OFFSET 0x00016788   /* was DAT_001117f0 (word at 0x001117F0); PC-relative offset: + 0x110c44 (the pc) = 0x001273CC */
 #define WORD_HEXADECIMAL_29F2A761 0x29F2A761   /* was DAT_001117f4 (word at 0x001117F4); value 0x29F2A761 (703768417) */
-#define STRING_GRAB_OFFSET 0x000169FC   /* was DAT_001117f8 (word at 0x001117F8); PC-relative offset: + 0x110c68 (the pc) = 0x00127664 */
 #define WORD_HEXADECIMAL_0C0AB7A6 0x0C0AB7A6   /* was DAT_001117fc (word at 0x001117FC); value 0x0C0AB7A6 (202028966) */
-#define STRING_LIFT_OFFSET 0x00016738   /* was DAT_00111800 (word at 0x00111800); PC-relative offset: + 0x110c8c (the pc) = 0x001273C4 */
 #define WORD_HEXADECIMAL_30BF44AD 0x30BF44AD   /* was DAT_00111804 (word at 0x00111804); value 0x30BF44AD (817841325) */
-#define STRING_LOCK_OFFSET 0x000169BC   /* was DAT_00111808 (word at 0x00111808); PC-relative offset: + 0x110cb0 (the pc) = 0x0012766C */
 #define WORD_HEXADECIMAL_1B18B1A5 0x1B18B1A5   /* was DAT_0011180c (word at 0x0011180C); value 0x1B18B1A5 (454603173) */
-#define STRING_OPEN_OFFSET 0x000169A0   /* was DAT_00111810 (word at 0x00111810); PC-relative offset: + 0x110cd4 (the pc) = 0x00127674 */
 #define WORD_HEXADECIMAL_0B0EC760 0x0B0EC760   /* was DAT_00111814 (word at 0x00111814); value 0x0B0EC760 (185517920) */
-#define STRING_TALK_OFFSET 0x00016984   /* was DAT_00111818 (word at 0x00111818); PC-relative offset: + 0x110cf8 (the pc) = 0x0012767C */
 #define WORD_HEXADECIMAL_18413CCA 0x18413CCA   /* was DAT_0011181c (word at 0x0011181C); value 0x18413CCA (406928586) */
-#define STRING_PLACE_OFFSET 0x00016968   /* was DAT_00111820 (word at 0x00111820); PC-relative offset: + 0x110d1c (the pc) = 0x00127684 */
 #define WORD_HEXADECIMAL_1BF8C522 0x1BF8C522   /* was DAT_00111824 (word at 0x00111824); value 0x1BF8C522 (469288226) */
-#define STRING_HEALTH_OFFSET 0x000167E8   /* was DAT_00111828 (word at 0x00111828); PC-relative offset: + 0x110ea4 (the pc) = 0x0012768C */
-#define STRING_MAGIC_OFFSET 0x000167C0   /* was DAT_0011182c (word at 0x0011182C); PC-relative offset: + 0x110ed4 (the pc) = 0x00127694 */
-#define STRING_MUNNY_OFFSET 0x00016798   /* was DAT_00111830 (word at 0x00111830); PC-relative offset: + 0x110f04 (the pc) = 0x0012769C */
-#define STRING_EXP_OFFSET 0x00016770   /* was DAT_00111834 (word at 0x00111834); PC-relative offset: + 0x110f34 (the pc) = 0x001276A4 */
-#define STRING_POTION_OFFSET 0x00016744   /* was DAT_00111838 (word at 0x00111838); PC-relative offset: + 0x110f64 (the pc) = 0x001276A8 */
-#define STRING_HIPOTION_OFFSET 0x00016704   /* was DAT_0011183c (word at 0x0011183C); PC-relative offset: + 0x110fac (the pc) = 0x001276B0 */
-#define STRING_ETHER_OFFSET 0x000166C8   /* was DAT_00111840 (word at 0x00111840); PC-relative offset: + 0x110ff4 (the pc) = 0x001276BC */
-#define STRING_ELIXIR_OFFSET 0x00016688   /* was DAT_00111844 (word at 0x00111844); PC-relative offset: + 0x11103c (the pc) = 0x001276C4 */
-#define STRING_FIRE_OFFSET 0x00016484   /* was DAT_00111848 (word at 0x00111848); PC-relative offset: + 0x111084 (the pc) = 0x00127508 */
-#define STRING_BLIZZARD_OFFSET 0x00016454   /* was DAT_0011184c (word at 0x0011184C); PC-relative offset: + 0x1110bc (the pc) = 0x00127510 */
-#define STRING_THUNDER_OFFSET 0x00016428   /* was DAT_00111850 (word at 0x00111850); PC-relative offset: + 0x1110f4 (the pc) = 0x0012751C */
-#define DATA_AT_0012710C_OFFSET 0x00015F00   /* was DAT_00111858 (word at 0x00111858); PC-relative offset: + 0x11120c (the pc) = 0x0012710C */
-#define DATA_AT_0012710C_OFFSET_2 0x00015ED4   /* was DAT_0011185c (word at 0x0011185C); PC-relative offset: + 0x111238 (the pc) = 0x0012710C */
-#define DATA_AT_001276CC_OFFSET 0x0001647C   /* was DAT_00111860 (word at 0x00111860); PC-relative offset: + 0x111250 (the pc) = 0x001276CC */
-#define DATA_AT_001276CC_OFFSET_2 0x00016428   /* was DAT_00111864 (word at 0x00111864); PC-relative offset: + 0x1112a4 (the pc) = 0x001276CC */
 #define WORD_HEXADECIMAL_FFFEED2C 0xFFFEED2C   /* was DAT_00111868 (word at 0x00111868); value 0xFFFEED2C (-70356) */
-#define STRING_BAR_BAR_OFFSET 0x000163E8   /* was DAT_0011186c (word at 0x0011186C); PC-relative offset: + 0x1112e8 (the pc) = 0x001276D0 */
-#define STRING_AND_AND_OFFSET 0x000163CC   /* was DAT_00111870 (word at 0x00111870); PC-relative offset: + 0x111308 (the pc) = 0x001276D4 */
-#define DATA_AT_0012710C_OFFSET_3 0x00015DA0   /* was DAT_00111874 (word at 0x00111874); PC-relative offset: + 0x11136c (the pc) = 0x0012710C */
-#define DATA_AT_0012710C_OFFSET_4 0x00015D74   /* was DAT_00111878 (word at 0x00111878); PC-relative offset: + 0x111398 (the pc) = 0x0012710C */
-#define STRING_ENGINE_VER_OFFSET 0x00016324   /* was DAT_0011187c (word at 0x0011187C); PC-relative offset: + 0x1113b4 (the pc) = 0x001276D8 */
-#define STRING_EQUALS_EQUALS_OFFSET 0x000162B4   /* was DAT_00111880 (word at 0x00111880); PC-relative offset: + 0x111430 (the pc) = 0x001276E4 */
-#define STRING_EQUALS_OFFSET 0x0001628C   /* was DAT_00111884 (word at 0x00111884); PC-relative offset: + 0x11145c (the pc) = 0x001276E8 */
-#define DATA_AT_001276EC_OFFSET 0x00016264   /* was DAT_00111888 (word at 0x00111888); PC-relative offset: + 0x111488 (the pc) = 0x001276EC */
-#define STRING_EQUALS_OFFSET_2 0x0001623C   /* was DAT_0011188c (word at 0x0011188C); PC-relative offset: + 0x1114b4 (the pc) = 0x001276F0 */
-#define DATA_AT_001276F4_OFFSET 0x00016214   /* was DAT_00111890 (word at 0x00111890); PC-relative offset: + 0x1114e0 (the pc) = 0x001276F4 */
-#define STRING_EQUALS_OFFSET_3 0x000161EC   /* was DAT_00111894 (word at 0x00111894); PC-relative offset: + 0x11150c (the pc) = 0x001276F8 */
-#define DATA_AT_0012710C_OFFSET_5 0x00015AC0   /* was DAT_00111898 (word at 0x00111898); PC-relative offset: + 0x11164c (the pc) = 0x0012710C */
-#define DATA_AT_0012710C_OFFSET_6 0x00015A94   /* was DAT_0011189c (word at 0x0011189C); PC-relative offset: + 0x111678 (the pc) = 0x0012710C */
 #define WORD_HEXADECIMAL_2E6723BD 0x2E6723BD   /* was DAT_001118a0, DAT_00112e1c (word at 0x001118A0); value 0x2E6723BD (778511293) */
 #define WORD_HEXADECIMAL_10C617E4 0x10C617E4   /* was DAT_001118a4, DAT_00112e18 (word at 0x001118A4); value 0x10C617E4 (281417700) */
 #define FLOAT_1000 0x447A0000   /* was DAT_001118ac, DAT_00113168, DAT_001132a4, DAT_00113da0, DAT_001146e8, DAT_00118308, DAT_0011860c, DAT_0011c85c, DAT_0011cfcc, DAT_00122434 (word at 0x001118AC); the float 1000.0 */
 #define WORD_HEXADECIMAL_00015CF8 0x00015CF8   /* was DAT_001127a4 (word at 0x001127A4); value 0x00015CF8 (89336) */
-#define STRING_DOT_M3G_OFFSET 0x00015AE8   /* was DAT_001127a8 (word at 0x001127A8); PC-relative offset: + 0x111c24 (the pc) = 0x0012770C */
-#define STRING_ALL_OFFSET 0x000154A0   /* was DAT_001127ac (word at 0x001127AC); PC-relative offset: + 0x112274 (the pc) = 0x00127714 */
-#define DATA_AT_0012710C_OFFSET_7 0x00014D50   /* was DAT_001127b0 (word at 0x001127B0); PC-relative offset: + 0x1123bc (the pc) = 0x0012710C */
-#define DATA_AT_0012710C_OFFSET_8 0x00014D24   /* was DAT_001127b4 (word at 0x001127B4); PC-relative offset: + 0x1123e8 (the pc) = 0x0012710C */
-#define STRING_LOADING_OFFSET 0x0001531C   /* was DAT_001127b8 (word at 0x001127B8); PC-relative offset: + 0x112424 (the pc) = 0x00127740 */
-#define STRING_HEALTH_OFFSET_2 0x00015250   /* was DAT_001127bc (word at 0x001127BC); PC-relative offset: + 0x11243c (the pc) = 0x0012768C */
-#define STRING_MAGIC_OFFSET_2 0x00015234   /* was DAT_001127c0 (word at 0x001127C0); PC-relative offset: + 0x112460 (the pc) = 0x00127694 */
-#define STRING_ENEMY_OFFSET 0x00015294   /* was DAT_001127c4 (word at 0x001127C4); PC-relative offset: + 0x112484 (the pc) = 0x00127718 */
-#define DATA_AT_001276CC_OFFSET_3 0x00015224   /* was DAT_001127c8 (word at 0x001127C8); PC-relative offset: + 0x1124a8 (the pc) = 0x001276CC */
-#define STRING_ALL_OFFSET_2 0x00015240   /* was DAT_001127cc (word at 0x001127CC); PC-relative offset: + 0x1124d4 (the pc) = 0x00127714 */
-#define STRING_SHOW_OFFSET 0x0001522C   /* was DAT_001127d0 (word at 0x001127D0); PC-relative offset: + 0x1124f4 (the pc) = 0x00127720 */
-#define STRING_ALL_OFFSET_3 0x00015200   /* was DAT_001127d4 (word at 0x001127D4); PC-relative offset: + 0x112528 (the pc) = 0x00127728 */
-#define STRING_HIDE_OFFSET 0x000151E8   /* was DAT_001127d8 (word at 0x001127D8); PC-relative offset: + 0x112548 (the pc) = 0x00127730 */
-#define STRING_LOADING_OFFSET_2 0x000151BC   /* was DAT_001127dc (word at 0x001127DC); PC-relative offset: + 0x11257c (the pc) = 0x00127738 */
-#define STRING_SETTINGS_DOT_DAT_OFFSET_2 0x00015174   /* was DAT_00112958 (word at 0x00112958); PC-relative offset: + 0x1128e4 (the pc) = 0x00127A58 */
 #define WORD_HEXADECIMAL_2BAC0EE7 0x2BAC0EE7   /* was DAT_00112a94 (word at 0x00112A94); value 0x2BAC0EE7 (732696295) */
-#define STRING_DOT_M3G_OFFSET_2 0x00014E10   /* was DAT_00112b48 (word at 0x00112B48); PC-relative offset: + 0x112b00 (the pc) = 0x00127910 */
 #define WORD_HEXADECIMAL_1D28D9CF 0x1D28D9CF   /* was DAT_00112c08 (word at 0x00112C08); value 0x1D28D9CF (489216463) */
-#define DATA_AT_00127918_OFFSET 0x00014D80   /* was DAT_00112c0c (word at 0x00112C0C); PC-relative offset: + 0x112b98 (the pc) = 0x00127918 */
-#define DATA_AT_00127944_OFFSET 0x00014D98   /* was DAT_00112c10 (word at 0x00112C10); PC-relative offset: + 0x112bac (the pc) = 0x00127944 */
-#define DATA_AT_00127970_OFFSET 0x00014DB0   /* was DAT_00112c14 (word at 0x00112C14); PC-relative offset: + 0x112bc0 (the pc) = 0x00127970 */
-#define DATA_AT_00126DEC_OFFSET 0x0001418C   /* was DAT_00112c98 (word at 0x00112C98); PC-relative offset: + 0x112c60 (the pc) = 0x00126DEC */
-#define DATA_AT_001278E8_OFFSET 0x00014B7C   /* was DAT_00112db4 (word at 0x00112DB4); PC-relative offset: + 0x112d6c (the pc) = 0x001278E8 */
-#define STRING_ME_OFFSET 0x000142B8   /* was DAT_00112e80 (word at 0x00112E80); PC-relative offset: + 0x112e44 (the pc) = 0x001270FC */
 #define WORD_HEXADECIMAL_42652F1B 0x42652F1B   /* was DAT_00113468, DAT_00121a9c (word at 0x00113468); value 0x42652F1B (1113927451) */
 #define WORD_HEXADECIMAL_00013970 0x00013970   /* was DAT_00113520 (word at 0x00113520); value 0x00013970 (80240) */
 #define WORD_HEXADECIMAL_00013B98 0x00013B98   /* was DAT_001135b4 (word at 0x001135B4); value 0x00013B98 (80792) */
@@ -1308,156 +1106,25 @@ extern undefined4 STRING_OUT_OF_MAGIC_SELF_RELATIVE_OFFSET;   /* was DAT_0010d1d
 #define WORD_HEXADECIMAL_31C58CC3 0x31C58CC3   /* was DAT_001150ac (word at 0x001150AC); value 0x31C58CC3 (835030211) */
 #define WORD_HEXADECIMAL_384A929A 0x384A929A   /* was DAT_001150b0 (word at 0x001150B0); value 0x384A929A (944411290) */
 #define WORD_HEXADECIMAL_139B6934 0x139B6934   /* was DAT_001150b4 (word at 0x001150B4); value 0x139B6934 (328952116) */
-#define STRING_ROTTOCHARACTER_OFFSET 0x00011F20   /* was DAT_001150b8 (word at 0x001150B8); PC-relative offset: + 0x114f68 (the pc) = 0x00126E88 */
-#define STRING_DOHITBOSS_OFFSET 0x00011EF4   /* was DAT_001150bc (word at 0x001150BC); PC-relative offset: + 0x114f88 (the pc) = 0x00126E7C */
-#define STRING_DOMAGICHITBOSS_OFFSET 0x00011EC4   /* was DAT_001150c0 (word at 0x001150C0); PC-relative offset: + 0x114fa8 (the pc) = 0x00126E6C */
-#define STRING_SWITCHTARGETS_OFFSET 0x00011E94   /* was DAT_001150c4 (word at 0x001150C4); PC-relative offset: + 0x114fc8 (the pc) = 0x00126E5C */
-#define STRING_NOBALLSONMAGIC_OFFSET 0x00011E64   /* was DAT_001150c8 (word at 0x001150C8); PC-relative offset: + 0x114fe8 (the pc) = 0x00126E4C */
-#define STRING_NOBALLSONHIT_OFFSET 0x00011E34   /* was DAT_001150cc (word at 0x001150CC); PC-relative offset: + 0x115008 (the pc) = 0x00126E3C */
 #define WORD_HEXADECIMAL_FFFEAED0 0xFFFEAED0   /* was DAT_00115e34 (word at 0x00115E34); value 0xFFFEAED0 (-86320) */
-#define DATA_AT_0012710C_OFFSET_9 0x00011FB4   /* was DAT_00115e38 (word at 0x00115E38); PC-relative offset: + 0x115158 (the pc) = 0x0012710C */
-#define DATA_AT_0012710C_OFFSET_10 0x00011F84   /* was DAT_00115e3c (word at 0x00115E3C); PC-relative offset: + 0x115188 (the pc) = 0x0012710C */
-#define STRING_ADDSOFTKEY_OFFSET 0x00011F5C   /* was DAT_00115e40 (word at 0x00115E40); PC-relative offset: + 0x1151a4 (the pc) = 0x00127100 */
-#define STRING_ADDUIACTION_OFFSET 0x00011EFC   /* was DAT_00115e44 (word at 0x00115E44); PC-relative offset: + 0x115214 (the pc) = 0x00127110 */
-#define STRING_ADDUIINFO_OFFSET 0x00011EC0   /* was DAT_00115e48 (word at 0x00115E48); PC-relative offset: + 0x11525c (the pc) = 0x0012711C */
-#define STRING_ADDUITEXT_OFFSET 0x00011E6C   /* was DAT_00115e4c (word at 0x00115E4C); PC-relative offset: + 0x1152bc (the pc) = 0x00127128 */
-#define DATA_AT_00127134_OFFSET 0x00011E6C   /* was DAT_00115e50 (word at 0x00115E50); PC-relative offset: + 0x1152c8 (the pc) = 0x00127134 */
-#define DATA_AT_00127138_OFFSET 0x00011D34   /* was DAT_00115e54 (word at 0x00115E54); PC-relative offset: + 0x115404 (the pc) = 0x00127138 */
-#define STRING_ADJUSTVALUE_OFFSET 0x00011CC8   /* was DAT_00115e58 (word at 0x00115E58); PC-relative offset: + 0x115474 (the pc) = 0x0012713C */
-#define STRING_BREAK_OFFSET 0x00011C78   /* was DAT_00115e5c (word at 0x00115E5C); PC-relative offset: + 0x1154d0 (the pc) = 0x00127148 */
-#define STRING_FADE_OFFSET 0x00011C5C   /* was DAT_00115e60 (word at 0x00115E60); PC-relative offset: + 0x1154f4 (the pc) = 0x00127150 */
-#define STRING_FIREPROJECTILE_OFFSET 0x00011BB0   /* was DAT_00115e64 (word at 0x00115E64); PC-relative offset: + 0x1155a8 (the pc) = 0x00127158 */
-#define STRING_IF_OFFSET 0x00011AF0   /* was DAT_00115e6c (word at 0x00115E6C); PC-relative offset: + 0x115678 (the pc) = 0x00127168 */
 #define WORD_HEXADECIMAL_FFFEA960 0xFFFEA960   /* was DAT_00115e70 (word at 0x00115E70); value 0xFFFEA960 (-87712) */
-#define STRING_IF_OFFSET_2 0x00011A8C   /* was DAT_00115e74 (word at 0x00115E74); PC-relative offset: + 0x1156e0 (the pc) = 0x0012716C */
-#define STRING_IFVAR_OFFSET 0x00011A70   /* was DAT_00115e7c (word at 0x00115E7C); PC-relative offset: + 0x115700 (the pc) = 0x00127170 */
 #define WORD_HEXADECIMAL_FFFEA8DC 0xFFFEA8DC   /* was DAT_00115e80 (word at 0x00115E80); value 0xFFFEA8DC (-87844) */
-#define STRING_IFVAR_OFFSET_2 0x00011A14   /* was DAT_00115e84 (word at 0x00115E84); PC-relative offset: + 0x115764 (the pc) = 0x00127178 */
-#define STRING_ELSE_OFFSET 0x000119FC   /* was DAT_00115e8c (word at 0x00115E8C); PC-relative offset: + 0x115784 (the pc) = 0x00127180 */
-#define STRING_ENDIF_OFFSET 0x000119D8   /* was DAT_00115e94 (word at 0x00115E94); PC-relative offset: + 0x1157b0 (the pc) = 0x00127188 */
-#define STRING_LIFT_OFFSET_2 0x000119B4   /* was DAT_00115e9c (word at 0x00115E9C); PC-relative offset: + 0x1157dc (the pc) = 0x00127190 */
-#define STRING_LINK_OFFSET 0x00011968   /* was DAT_00115ea4 (word at 0x00115EA4); PC-relative offset: + 0x115830 (the pc) = 0x00127198 */
-#define STRING_LOADCLIPART_OFFSET 0x00011914   /* was DAT_00115eac (word at 0x00115EAC); PC-relative offset: + 0x11588c (the pc) = 0x001271A0 */
 #define WORD_HEXADECIMAL_FFFEA72C 0xFFFEA72C   /* was DAT_00115eb0 (word at 0x00115EB0); value 0xFFFEA72C (-88276) */
-#define STRING_LOADSCENE_OFFSET 0x0001181C   /* was DAT_00115eb8 (word at 0x00115EB8); PC-relative offset: + 0x115990 (the pc) = 0x001271AC */
-#define STRING_LOADSOUNDS_OFFSET 0x000117EC   /* was DAT_00115ec0 (word at 0x00115EC0); PC-relative offset: + 0x1159cc (the pc) = 0x001271B8 */
 #define WORD_HEXADECIMAL_FFFEA60C 0xFFFEA60C   /* was DAT_00115ec4 (word at 0x00115EC4); value 0xFFFEA60C (-88564) */
-#define STRING_LOADSOUNDS_OFFSET_2 0x00011790   /* was DAT_00115ec8 (word at 0x00115EC8); PC-relative offset: + 0x115a34 (the pc) = 0x001271C4 */
-#define STRING_MATCHPOSITION_OFFSET 0x00011778   /* was DAT_00115ed0 (word at 0x00115ED0); PC-relative offset: + 0x115a58 (the pc) = 0x001271D0 */
-#define STRING_TERRAIN_OFFSET 0x00011728   /* was DAT_00115ed8 (word at 0x00115ED8); PC-relative offset: + 0x115ab8 (the pc) = 0x001271E0 */
-#define STRING_PLAYANIM_OFFSET 0x00011704   /* was DAT_00115ee0 (word at 0x00115EE0); PC-relative offset: + 0x115ae4 (the pc) = 0x001271E8 */
-#define STRING_LOOP_OFFSET 0x000116BC   /* was DAT_00115ee8 (word at 0x00115EE8); PC-relative offset: + 0x115b38 (the pc) = 0x001271F4 */
-#define STRING_PLAYSEQUENCE_OFFSET 0x00011698   /* was DAT_00115ef0 (word at 0x00115EF0); PC-relative offset: + 0x115b64 (the pc) = 0x001271FC */
-#define STRING_PLAYSOUND_OFFSET 0x00011658   /* was DAT_00115ef8 (word at 0x00115EF8); PC-relative offset: + 0x115bb4 (the pc) = 0x0012720C */
 #define WORD_HEXADECIMAL_FFFEA428 0xFFFEA428   /* was DAT_00115efc (word at 0x00115EFC); value 0xFFFEA428 (-89048) */
-#define STRING_BAD_OFFSET 0x0001162C   /* was DAT_00115f00 (word at 0x00115F00); PC-relative offset: + 0x115bec (the pc) = 0x00127218 */
-#define STRING_GOOD_OFFSET 0x00011608   /* was DAT_00115f04 (word at 0x00115F04); PC-relative offset: + 0x115c14 (the pc) = 0x0012721C */
-#define STRING_KEYBLADE_OFFSET 0x000115E8   /* was DAT_00115f08 (word at 0x00115F08); PC-relative offset: + 0x115c3c (the pc) = 0x00127224 */
-#define STRING_EXPLODE_OFFSET 0x000115CC   /* was DAT_00115f0c (word at 0x00115F0C); PC-relative offset: + 0x115c64 (the pc) = 0x00127230 */
-#define STRING_WATER_OFFSET 0x000115AC   /* was DAT_00115f10 (word at 0x00115F10); PC-relative offset: + 0x115c8c (the pc) = 0x00127238 */
-#define STRING_JUMP_OFFSET 0x00011590   /* was DAT_00115f14 (word at 0x00115F14); PC-relative offset: + 0x115cb0 (the pc) = 0x00127240 */
-#define STRING_THUD_OFFSET 0x00011574   /* was DAT_00115f18 (word at 0x00115F18); PC-relative offset: + 0x115cd4 (the pc) = 0x00127248 */
-#define STRING_TRANSITION_OFFSET 0x00011554   /* was DAT_00115f1c (word at 0x00115F1C); PC-relative offset: + 0x115cfc (the pc) = 0x00127250 */
-#define STRING_MAGIC_ALERT_OFFSET 0x00011538   /* was DAT_00115f20 (word at 0x00115F20); PC-relative offset: + 0x115d24 (the pc) = 0x0012725C */
-#define STRING_MAGIC_CAST_OFFSET 0x0001151C   /* was DAT_00115f24 (word at 0x00115F24); PC-relative offset: + 0x115d4c (the pc) = 0x00127268 */
-#define STRING_REMOVESOFTKEY_OFFSET 0x000114F0   /* was DAT_00115f2c (word at 0x00115F2C); PC-relative offset: + 0x115d84 (the pc) = 0x00127274 */
-#define STRING_REMOVEUIACTION_OFFSET 0x000114C4   /* was DAT_00115f34 (word at 0x00115F34); PC-relative offset: + 0x115dc0 (the pc) = 0x00127284 */
-#define STRING_REMOVEUITEXT_OFFSET 0x000114A8   /* was DAT_00115f3c (word at 0x00115F3C); PC-relative offset: + 0x115dec (the pc) = 0x00127294 */
-#define STRING_RESETKEYS_OFFSET 0x0001148C   /* was DAT_00115f44 (word at 0x00115F44); PC-relative offset: + 0x115e18 (the pc) = 0x001272A4 */
-#define STRING_SAVEGAME_OFFSET 0x00011348   /* was DAT_00116980 (word at 0x00116980); PC-relative offset: + 0x115f68 (the pc) = 0x001272B0 */
-#define STRING_TEMP_OFFSET 0x0001131C   /* was DAT_00116988 (word at 0x00116988); PC-relative offset: + 0x115fa0 (the pc) = 0x001272BC */
-#define STRING_SETANIMSPEED_OFFSET 0x000112F8   /* was DAT_00116990 (word at 0x00116990); PC-relative offset: + 0x115fcc (the pc) = 0x001272C4 */
-#define STRING_SETANIMPOSITION_OFFSET 0x000112B8   /* was DAT_00116998 (word at 0x00116998); PC-relative offset: + 0x11601c (the pc) = 0x001272D4 */
 #define WORD_HEXADECIMAL_FFFE9FAC 0xFFFE9FAC   /* was DAT_0011699c (word at 0x0011699C); value 0xFFFE9FAC (-90196) */
-#define STRING_END_OFFSET 0x0001127C   /* was DAT_001169a0 (word at 0x001169A0); PC-relative offset: + 0x116068 (the pc) = 0x001272E4 */
-#define STRING_SETAPPEARANCE_OFFSET 0x00011214   /* was DAT_001169a8 (word at 0x001169A8); PC-relative offset: + 0x1160d4 (the pc) = 0x001272E8 */
-#define STRING_SETBACKGROUND_OFFSET 0x000111B4   /* was DAT_001169b0 (word at 0x001169B0); PC-relative offset: + 0x116144 (the pc) = 0x001272F8 */
-#define STRING_SETCAMERAFOCUS_OFFSET 0x00011130   /* was DAT_001169b8 (word at 0x001169B8); PC-relative offset: + 0x1161d8 (the pc) = 0x00127308 */
 #define WORD_HEXADECIMAL_FFFE9E00 0xFFFE9E00   /* was DAT_001169bc (word at 0x001169BC); value 0xFFFE9E00 (-90624) */
-#define STRING_STANDARD_VIEW_OFFSET 0x00011104   /* was DAT_001169c0 (word at 0x001169C0); PC-relative offset: + 0x116214 (the pc) = 0x00127318 */
-#define STRING_HIGH_VIEW_OFFSET 0x000110E4   /* was DAT_001169c8 (word at 0x001169C8); PC-relative offset: + 0x116244 (the pc) = 0x00127328 */
 #define FLOAT_60 0x42700000   /* was DAT_001169cc, DAT_00121aa0, DAT_00121c60 (word at 0x001169CC); the float 60.0 */
-#define STRING_PLAN_VIEW_OFFSET 0x000110C4   /* was DAT_001169d0 (word at 0x001169D0); PC-relative offset: + 0x116270 (the pc) = 0x00127334 */
 #define FLOAT_80 0x42A00000   /* was DAT_001169d4 (word at 0x001169D4); the float 80.0 */
-#define STRING_MED_VIEW_OFFSET 0x000110A0   /* was DAT_001169d8 (word at 0x001169D8); PC-relative offset: + 0x1162a0 (the pc) = 0x00127340 */
 #define FLOAT_25 0x41C80000   /* was DAT_001169dc, DAT_00117884 (word at 0x001169DC); the float 25.0 */
-#define STRING_LOW_VIEW_OFFSET 0x00011084   /* was DAT_001169e0 (word at 0x001169E0); PC-relative offset: + 0x1162c8 (the pc) = 0x0012734C */
 #define WORD_HEXADECIMAL_FFFE9CFC 0xFFFE9CFC   /* was DAT_001169e8 (word at 0x001169E8); value 0xFFFE9CFC (-90884) */
-#define STRING_SETCHARACTERMODE_OFFSET 0x00011008   /* was DAT_001169f0 (word at 0x001169F0); PC-relative offset: + 0x116350 (the pc) = 0x00127358 */
 #define WORD_HEXADECIMAL_FFFE9C8C 0xFFFE9C8C   /* was DAT_001169f4 (word at 0x001169F4); value 0xFFFE9C8C (-90996) */
-#define STRING_ATTACK_OFFSET_2 0x00010FE4   /* was DAT_001169f8 (word at 0x001169F8); PC-relative offset: + 0x116388 (the pc) = 0x0012736C */
-#define STRING_SWIM_OFFSET 0x00010FC8   /* was DAT_001169fc (word at 0x001169FC); PC-relative offset: + 0x1163ac (the pc) = 0x00127374 */
-#define STRING_SWIM_NO_CLIMB_OFFSET 0x00010FAC   /* was DAT_00116a00 (word at 0x00116A00); PC-relative offset: + 0x1163d0 (the pc) = 0x0012737C */
-#define STRING_NOSWIM_OFFSET 0x00010F90   /* was DAT_00116a04 (word at 0x00116A04); PC-relative offset: + 0x1163fc (the pc) = 0x0012738C */
-#define STRING_CLIMB_TREE_OFFSET 0x00010F74   /* was DAT_00116a08 (word at 0x00116A08); PC-relative offset: + 0x116420 (the pc) = 0x00127394 */
-#define STRING_CLIMB_TREE_NO_ROT_OFFSET 0x00010F5C   /* was DAT_00116a0c (word at 0x00116A0C); PC-relative offset: + 0x116444 (the pc) = 0x001273A0 */
-#define STRING_CLIMB_LADDER_OFFSET 0x00010F4C   /* was DAT_00116a10 (word at 0x00116A10); PC-relative offset: + 0x116468 (the pc) = 0x001273B4 */
-#define STRING_LIFT_OFFSET_3 0x00010F38   /* was DAT_00116a14 (word at 0x00116A14); PC-relative offset: + 0x11648c (the pc) = 0x001273C4 */
-#define STRING_DROP_OFFSET_2 0x00010F1C   /* was DAT_00116a18 (word at 0x00116A18); PC-relative offset: + 0x1164b0 (the pc) = 0x001273CC */
-#define STRING_BEHIND_OFFSET 0x00010EF0   /* was DAT_00116a1c (word at 0x00116A1C); PC-relative offset: + 0x1164e4 (the pc) = 0x001273D4 */
-#define STRING_HANG_OFFSET 0x00010ED4   /* was DAT_00116a20 (word at 0x00116A20); PC-relative offset: + 0x116508 (the pc) = 0x001273DC */
-#define STRING_STATIC_HANG_OFFSET 0x00010E98   /* was DAT_00116a24 (word at 0x00116A24); PC-relative offset: + 0x11654c (the pc) = 0x001273E4 */
-#define STRING_UNHANG_OFFSET 0x00010E80   /* was DAT_00116a28 (word at 0x00116A28); PC-relative offset: + 0x116570 (the pc) = 0x001273F0 */
-#define STRING_HIT_OFFSET 0x00010E64   /* was DAT_00116a2c (word at 0x00116A2C); PC-relative offset: + 0x116594 (the pc) = 0x001273F8 */
-#define STRING_IDLE_OFFSET 0x00010E20   /* was DAT_00116a30 (word at 0x00116A30); PC-relative offset: + 0x1165dc (the pc) = 0x001273FC */
-#define STRING_RESET_OFFSET 0x00010E04   /* was DAT_00116a34 (word at 0x00116A34); PC-relative offset: + 0x116600 (the pc) = 0x00127404 */
-#define STRING_SETCOLLECTABLES_OFFSET 0x00010DD0   /* was DAT_00116a3c (word at 0x00116A3C); PC-relative offset: + 0x11663c (the pc) = 0x0012740C */
-#define STRING_SETCOLLISIONON_OFFSET 0x00010D54   /* was DAT_00116a44 (word at 0x00116A44); PC-relative offset: + 0x1166c8 (the pc) = 0x0012741C */
-#define STRING_SETCOLLISIONOFF_OFFSET 0x00010D28   /* was DAT_00116a4c (word at 0x00116A4C); PC-relative offset: + 0x116704 (the pc) = 0x0012742C */
-#define STRING_SETCOMBATREGION_OFFSET 0x00010CFC   /* was DAT_00116a54 (word at 0x00116A54); PC-relative offset: + 0x116740 (the pc) = 0x0012743C */
-#define STRING_SETKEYSON_OFFSET 0x00010CD0   /* was DAT_00116a5c (word at 0x00116A5C); PC-relative offset: + 0x11677c (the pc) = 0x0012744C */
-#define STRING_SETKEYSOFF_OFFSET 0x00010CA0   /* was DAT_00116a64 (word at 0x00116A64); PC-relative offset: + 0x1167b8 (the pc) = 0x00127458 */
-#define STRING_SETLEVELUP_OFFSET 0x00010C70   /* was DAT_00116a6c (word at 0x00116A6C); PC-relative offset: + 0x1167f4 (the pc) = 0x00127464 */
-#define STRING_SETMIRROR_OFFSET 0x00010C10   /* was DAT_00116a74 (word at 0x00116A74); PC-relative offset: + 0x116860 (the pc) = 0x00127470 */
 #define WORD_HEXADECIMAL_FFFE977C 0xFFFE977C   /* was DAT_00116a78 (word at 0x00116A78); value 0xFFFE977C (-92292) */
-#define STRING_NULL_OFFSET 0x00010BE4   /* was DAT_00116a7c (word at 0x00116A7C); PC-relative offset: + 0x116898 (the pc) = 0x0012747C */
-#define STRING_DASH_X_OFFSET 0x00010BB4   /* was DAT_00116a80 (word at 0x00116A80); PC-relative offset: + 0x1168d0 (the pc) = 0x00127484 */
-#define STRING_DASH_Y_OFFSET 0x00010B98   /* was DAT_00116a84 (word at 0x00116A84); PC-relative offset: + 0x1168f0 (the pc) = 0x00127488 */
-#define STRING_DASH_Z_OFFSET 0x00010B7C   /* was DAT_00116a88 (word at 0x00116A88); PC-relative offset: + 0x116910 (the pc) = 0x0012748C */
-#define STRING_DASH_R_OFFSET 0x00010B60   /* was DAT_00116a8c (word at 0x00116A8C); PC-relative offset: + 0x116930 (the pc) = 0x00127490 */
-#define STRING_SETMOVINGCAMERA_OFFSET 0x000109E4   /* was DAT_001173cc (word at 0x001173CC); PC-relative offset: + 0x116ab0 (the pc) = 0x00127494 */
-#define STRING_SETPOSITION_OFFSET 0x000109C8   /* was DAT_001173d4 (word at 0x001173D4); PC-relative offset: + 0x116adc (the pc) = 0x001274A4 */
 #define WORD_HEXADECIMAL_FFFE94F0 0xFFFE94F0   /* was DAT_001173d8 (word at 0x001173D8); value 0xFFFE94F0 (-92944) */
-#define STRING_NULL_OFFSET_2 0x0001095C   /* was DAT_001173dc (word at 0x001173DC); PC-relative offset: + 0x116b20 (the pc) = 0x0012747C */
-#define STRING_TERRAIN_OFFSET_2 0x00010630   /* was DAT_001173e0 (word at 0x001173E0); PC-relative offset: + 0x116bb0 (the pc) = 0x001271E0 */
-#define STRING_SETSCREENMODE_OFFSET 0x000108BC   /* was DAT_001173e8 (word at 0x001173E8); PC-relative offset: + 0x116bf4 (the pc) = 0x001274B0 */
 #define WORD_HEXADECIMAL_FFFE93F0 0xFFFE93F0   /* was DAT_001173ec (word at 0x001173EC); value 0xFFFE93F0 (-93200) */
-#define STRING_CINEMATIC_OFFSET 0x0001089C   /* was DAT_001173f0 (word at 0x001173F0); PC-relative offset: + 0x116c24 (the pc) = 0x001274C0 */
-#define STRING_SETSCRIPTON_OFFSET 0x0001087C   /* was DAT_001173f8 (word at 0x001173F8); PC-relative offset: + 0x116c50 (the pc) = 0x001274CC */
-#define STRING_SETSCRIPTOFF_OFFSET 0x0001084C   /* was DAT_00117400 (word at 0x00117400); PC-relative offset: + 0x116c8c (the pc) = 0x001274D8 */
-#define STRING_SETSHADOWVIS_OFFSET 0x00010820   /* was DAT_00117408 (word at 0x00117408); PC-relative offset: + 0x116cc8 (the pc) = 0x001274E8 */
-#define STRING_SETSPELLTYPE_OFFSET 0x000107F4   /* was DAT_00117410 (word at 0x00117410); PC-relative offset: + 0x116d04 (the pc) = 0x001274F8 */
 #define WORD_HEXADECIMAL_FFFE92D8 0xFFFE92D8   /* was DAT_00117414 (word at 0x00117414); value 0xFFFE92D8 (-93480) */
-#define STRING_FIRE_OFFSET_2 0x000107CC   /* was DAT_00117418 (word at 0x00117418); PC-relative offset: + 0x116d3c (the pc) = 0x00127508 */
-#define STRING_BLIZZARD_OFFSET_2 0x000107AC   /* was DAT_0011741c (word at 0x0011741C); PC-relative offset: + 0x116d64 (the pc) = 0x00127510 */
-#define STRING_THUNDER_OFFSET_2 0x00010798   /* was DAT_00117420 (word at 0x00117420); PC-relative offset: + 0x116d84 (the pc) = 0x0012751C */
-#define STRING_SETSTATE_OFFSET 0x0001076C   /* was DAT_00117428 (word at 0x00117428); PC-relative offset: + 0x116db8 (the pc) = 0x00127524 */
-#define STRING_SETVAR_OFFSET 0x0001073C   /* was DAT_00117430 (word at 0x00117430); PC-relative offset: + 0x116df4 (the pc) = 0x00127530 */
-#define STRING_INCVAR_OFFSET 0x00010708   /* was DAT_00117438 (word at 0x00117438); PC-relative offset: + 0x116e30 (the pc) = 0x00127538 */
-#define STRING_DECVAR_OFFSET 0x000106A4   /* was DAT_00117440 (word at 0x00117440); PC-relative offset: + 0x116e9c (the pc) = 0x00127540 */
-#define STRING_SETSTATICCAMERA_OFFSET 0x00010650   /* was DAT_00117448 (word at 0x00117448); PC-relative offset: + 0x116ef8 (the pc) = 0x00127548 */
-#define STRING_SETTERRAINLEVEL_OFFSET 0x00010610   /* was DAT_00117450 (word at 0x00117450); PC-relative offset: + 0x116f48 (the pc) = 0x00127558 */
-#define STRING_SETUPDATEON_OFFSET 0x000105E4   /* was DAT_00117458 (word at 0x00117458); PC-relative offset: + 0x116f84 (the pc) = 0x00127568 */
-#define STRING_SETUPDATEOFF_OFFSET 0x000105B4   /* was DAT_00117460 (word at 0x00117460); PC-relative offset: + 0x116fc0 (the pc) = 0x00127574 */
-#define STRING_SETUIVIS_OFFSET 0x00010588   /* was DAT_00117468 (word at 0x00117468); PC-relative offset: + 0x116ffc (the pc) = 0x00127584 */
 #define WORD_HEXADECIMAL_FFFE8FE0 0xFFFE8FE0   /* was DAT_0011746c (word at 0x0011746C); value 0xFFFE8FE0 (-94240) */
-#define STRING_SETUIVIS_OFFSET_2 0x00010530   /* was DAT_00117470 (word at 0x00117470); PC-relative offset: + 0x117060 (the pc) = 0x00127590 */
 #define WORD_HEXADECIMAL_FFFE8F88 0xFFFE8F88   /* was DAT_00117474 (word at 0x00117474); value 0xFFFE8F88 (-94328) */
-#define STRING_SETVICTIM_OFFSET 0x00010510   /* was DAT_00117478 (word at 0x00117478); PC-relative offset: + 0x11708c (the pc) = 0x0012759C */
-#define STRING_NULL_OFFSET_3 0x000103C0   /* was DAT_0011747c (word at 0x0011747C); PC-relative offset: + 0x1170bc (the pc) = 0x0012747C */
-#define STRING_SETVIS_OFFSET 0x000104C8   /* was DAT_00117480 (word at 0x00117480); PC-relative offset: + 0x1170e0 (the pc) = 0x001275A8 */
-#define STRING_SETXROT_OFFSET 0x00010470   /* was DAT_00117484 (word at 0x00117484); PC-relative offset: + 0x117140 (the pc) = 0x001275B0 */
-#define STRING_SETYROT_OFFSET 0x00010444   /* was DAT_00117488 (word at 0x00117488); PC-relative offset: + 0x117174 (the pc) = 0x001275B8 */
-#define STRING_STOPANIM_OFFSET 0x000103F4   /* was DAT_0011748c (word at 0x0011748C); PC-relative offset: + 0x1171cc (the pc) = 0x001275C0 */
-#define STRING_NOW_OFFSET 0x000103B4   /* was DAT_00117490 (word at 0x00117490); PC-relative offset: + 0x117218 (the pc) = 0x001275CC */
-#define STRING_SUMMARY_OFFSET 0x00010390   /* was DAT_00117494 (word at 0x00117494); PC-relative offset: + 0x117240 (the pc) = 0x001275D0 */
-#define STRING_UNLINK_OFFSET 0x00010350   /* was DAT_00117498 (word at 0x00117498); PC-relative offset: + 0x117288 (the pc) = 0x001275D8 */
-#define STRING_UNLOADCLIPART_OFFSET 0x00010324   /* was DAT_0011749c (word at 0x0011749C); PC-relative offset: + 0x1172bc (the pc) = 0x001275E0 */
-#define STRING_SETKEYDIR_OFFSET 0x000102B8   /* was DAT_001174a0 (word at 0x001174A0); PC-relative offset: + 0x117338 (the pc) = 0x001275F0 */
-#define STRING_SETACTIVEROTON_OFFSET 0x00010290   /* was DAT_001174a4 (word at 0x001174A4); PC-relative offset: + 0x11736c (the pc) = 0x001275FC */
-#define STRING_SETACTIVEROTOFF_OFFSET 0x0001027C   /* was DAT_001174a8 (word at 0x001174A8); PC-relative offset: + 0x117390 (the pc) = 0x0012760C */
-#define ADDRESS_OF_FUNCTION_0011daac_OFFSET 0x000065C8   /* was DAT_00117874 (word at 0x00117874); PC-relative offset: + 0x1174e4 (the pc) = 0x0011DAAC */
-#define ADDRESS_OF_FUNCTION_0011d3ec_OFFSET 0x00005EFC   /* was DAT_00117878 (word at 0x00117878); PC-relative offset: + 0x1174f0 (the pc) = 0x0011D3EC */
 #define INTEGER_450 0x000001C2   /* was DAT_0011787c (word at 0x0011787C); integer 450 */
 #define FLOAT_0_POINT_004 0x3B83126F   /* was DAT_00117880 (word at 0x00117880); the float 0.004000000189989805 */
 #define INTEGER_2500 0x000009C4   /* was DAT_00117888 (word at 0x00117888); integer 2500 */
@@ -1490,8 +1157,6 @@ extern undefined4 STRING_OUT_OF_MAGIC_SELF_RELATIVE_OFFSET;   /* was DAT_0010d1d
 #define WORD_HEXADECIMAL_1C0CA328 0x1C0CA328   /* was DAT_001178f4 (word at 0x001178F4); value 0x1C0CA328 (470590248) */
 #define WORD_HEXADECIMAL_21E5FC16 0x21E5FC16   /* was DAT_001178f8 (word at 0x001178F8); value 0x21E5FC16 (568720406) */
 #define WORD_HEXADECIMAL_03EABB3E 0x03EABB3E   /* was DAT_001178fc (word at 0x001178FC); value 0x03EABB3E (65715006) */
-#define ADDRESS_OF_FUNCTION_0011d6cc_OFFSET 0x00005FE0   /* was DAT_00117900 (word at 0x00117900); PC-relative offset: + 0x1176ec (the pc) = 0x0011D6CC */
-#define ADDRESS_OF_FUNCTION_0011d28c_OFFSET 0x00005B94   /* was DAT_00117904 (word at 0x00117904); PC-relative offset: + 0x1176f8 (the pc) = 0x0011D28C */
 #define WORD_HEXADECIMAL_17A9534F 0x17A9534F   /* was DAT_00117910 (word at 0x00117910); value 0x17A9534F (396972879) */
 #define WORD_HEXADECIMAL_33F82B3B 0x33F82B3B   /* was DAT_00117914 (word at 0x00117914); value 0x33F82B3B (871902011) */
 #define WORD_HEXADECIMAL_2CBD096F 0x2CBD096F   /* was DAT_00117918 (word at 0x00117918); value 0x2CBD096F (750586223) */
@@ -1550,75 +1215,37 @@ extern undefined4 STRING_OUT_OF_MAGIC_SELF_RELATIVE_OFFSET;   /* was DAT_0010d1d
 #define WORD_HEXADECIMAL_08A18ABF 0x08A18ABF   /* was DAT_00117d20 (word at 0x00117D20); value 0x08A18ABF (144804543) */
 #define WORD_HEXADECIMAL_11218F6E 0x11218F6E   /* was DAT_00117d24 (word at 0x00117D24); value 0x11218F6E (287412078) */
 #define WORD_HEXADECIMAL_2E48DA58 0x2E48DA58   /* was DAT_00117d28 (word at 0x00117D28); value 0x2E48DA58 (776526424) */
-#define STRING_SOLDIER_OFFSET 0x0000F23C   /* was DAT_00118084 (word at 0x00118084); PC-relative offset: + 0x117dfc (the pc) = 0x00127038 */
-#define STRING_FLYINGSOLDIER_OFFSET 0x0000F21C   /* was DAT_00118088 (word at 0x00118088); PC-relative offset: + 0x117e24 (the pc) = 0x00127040 */
-#define STRING_FLYINGMOOK_OFFSET 0x0000F208   /* was DAT_0011808c (word at 0x0011808C); PC-relative offset: + 0x117e48 (the pc) = 0x00127050 */
-#define STRING_PURPLECROC_OFFSET 0x0000F1F0   /* was DAT_00118090 (word at 0x00118090); PC-relative offset: + 0x117e6c (the pc) = 0x0012705C */
-#define STRING_UMBRELLABIRD_OFFSET 0x0000F1D8   /* was DAT_00118094 (word at 0x00118094); PC-relative offset: + 0x117e90 (the pc) = 0x00127068 */
-#define STRING_BANDIT_OFFSET 0x0000F1C4   /* was DAT_00118098 (word at 0x00118098); PC-relative offset: + 0x117eb4 (the pc) = 0x00127078 */
-#define STRING_POTSPIDER_OFFSET 0x0000F1A8   /* was DAT_0011809c (word at 0x0011809C); PC-relative offset: + 0x117ed8 (the pc) = 0x00127080 */
-#define STRING_MUMMY_OFFSET 0x0000F190   /* was DAT_001180a0 (word at 0x001180A0); PC-relative offset: + 0x117efc (the pc) = 0x0012708C */
-#define STRING_DARKBALL_OFFSET 0x0000F174   /* was DAT_001180a4 (word at 0x001180A4); PC-relative offset: + 0x117f20 (the pc) = 0x00127094 */
-#define STRING_PIGSOLDIER_OFFSET 0x0000F15C   /* was DAT_001180a8 (word at 0x001180A8); PC-relative offset: + 0x117f44 (the pc) = 0x001270A0 */
 #define WORD_HEXADECIMAL_369F84CA 0x369F84CA   /* was DAT_001180ac (word at 0x001180AC); value 0x369F84CA (916423882) */
 #define WORD_HEXADECIMAL_0B63154F 0x0B63154F   /* was DAT_001180b0 (word at 0x001180B0); value 0x0B63154F (191042895) */
 #define WORD_HEXADECIMAL_26B58FD6 0x26B58FD6   /* was DAT_001180c0 (word at 0x001180C0); value 0x26B58FD6 (649433046) */
 #define WORD_HEXADECIMAL_3488ACED 0x3488ACED   /* was DAT_00118304 (word at 0x00118304); value 0x3488ACED (881372397) */
-#define STRING_CARRIAGE_RETURN_NEWLINE_OFFSET_5 0x0000EF14   /* was DAT_0011830c (word at 0x0011830C); PC-relative offset: + 0x1181e4 (the pc) = 0x001270F8 */
 #define WORD_HEXADECIMAL_1DED5D32 0x1DED5D32   /* was DAT_00118314 (word at 0x00118314); value 0x1DED5D32 (502095154) */
 #define WORD_HEXADECIMAL_2073D363 0x2073D363   /* was DAT_00118604 (word at 0x00118604); value 0x2073D363 (544461667) */
 #define WORD_HEXADECIMAL_1932DEDD 0x1932DEDD   /* was DAT_00118608 (word at 0x00118608); value 0x1932DEDD (422764253) */
 #define WORD_HEXADECIMAL_1218EC09 0x1218EC09   /* was DAT_00118610 (word at 0x00118610); value 0x1218EC09 (303623177) */
-#define DATA_AT_00126EA8_OFFSET 0x0000EB18   /* was DAT_00118614 (word at 0x00118614); PC-relative offset: + 0x118390 (the pc) = 0x00126EA8 */
-#define DATA_AT_00126F1C_OFFSET 0x0000EB4C   /* was DAT_00118618 (word at 0x00118618); PC-relative offset: + 0x1183d0 (the pc) = 0x00126F1C */
-#define DATA_AT_00126F5C_OFFSET 0x0000EB78   /* was DAT_0011861c (word at 0x0011861C); PC-relative offset: + 0x1183e4 (the pc) = 0x00126F5C */
 #define WORD_HEXADECIMAL_0F846A96 0x0F846A96   /* was DAT_00118620 (word at 0x00118620); value 0x0F846A96 (260336278) */
 #define WORD_HEXADECIMAL_0D44B786 0x0D44B786   /* was DAT_00118624 (word at 0x00118624); value 0x0D44B786 (222607238) */
 #define WORD_HEXADECIMAL_1DFBEC7F 0x1DFBEC7F   /* was DAT_00118628, DAT_0011ba08 (word at 0x00118628); value 0x1DFBEC7F (503049343) */
 #define WORD_HEXADECIMAL_314D49C5 0x314D49C5   /* was DAT_0011862c (word at 0x0011862C); value 0x314D49C5 (827148741) */
 #define WORD_HEXADECIMAL_0A893452 0x0A893452   /* was DAT_00118630 (word at 0x00118630); value 0x0A893452 (176763986) */
-#define STRING_CHARACTER_SHADOW_OFFSET 0x0000EA08   /* was DAT_00118634 (word at 0x00118634); PC-relative offset: + 0x1185a0 (the pc) = 0x00126FA8 */
 #define WORD_HEXADECIMAL_2BB0C920 0x2BB0C920   /* was DAT_00118638 (word at 0x00118638); value 0x2BB0C920 (733006112) */
 #define WORD_HEXADECIMAL_19DB98DB 0x19DB98DB   /* was DAT_0011863c (word at 0x0011863C); value 0x19DB98DB (433821915) */
 #define WORD_HEXADECIMAL_13EB8A28 0x13EB8A28   /* was DAT_001188f8 (word at 0x001188F8); value 0x13EB8A28 (334203432) */
-#define STRING_CARRIAGE_RETURN_NEWLINE_OFFSET_6 0x0000E768   /* was DAT_001188fc (word at 0x001188FC); PC-relative offset: + 0x1186c4 (the pc) = 0x00126E2C */
 #define WORD_HEXADECIMAL_155EAFB5 0x155EAFB5   /* was DAT_00118904 (word at 0x00118904); value 0x155EAFB5 (358526901) */
 #define WORD_HEXADECIMAL_2E583064 0x2E583064   /* was DAT_00118908 (word at 0x00118908); value 0x2E583064 (777531492) */
 #define WORD_HEXADECIMAL_275AA16E 0x275AA16E   /* was DAT_0011890c (word at 0x0011890C); value 0x275AA16E (660250990) */
 #define WORD_HEXADECIMAL_178BD97D 0x178BD97D   /* was DAT_00118e90 (word at 0x00118E90); value 0x178BD97D (395041149) */
 #define WORD_HEXADECIMAL_FFFE768C 0xFFFE768C   /* was DAT_00118e94 (word at 0x00118E94); value 0xFFFE768C (-100724) */
-#define DATA_AT_0012774C_OFFSET 0x0000EDB0   /* was DAT_00118e98 (word at 0x00118E98); PC-relative offset: + 0x11899c (the pc) = 0x0012774C */
-#define DATA_AT_0012774C_OFFSET_2 0x0000ED84   /* was DAT_00118e9c (word at 0x00118E9C); PC-relative offset: + 0x1189c8 (the pc) = 0x0012774C */
-#define DATA_AT_00127750_OFFSET 0x0000ED64   /* was DAT_00118ea0 (word at 0x00118EA0); PC-relative offset: + 0x1189ec (the pc) = 0x00127750 */
 #define WORD_HEXADECIMAL_18FC8335 0x18FC8335   /* was DAT_00118ea4 (word at 0x00118EA4); value 0x18FC8335 (419201845) */
 #define WORD_HEXADECIMAL_3310A2A1 0x3310A2A1   /* was DAT_00118ea8 (word at 0x00118EA8); value 0x3310A2A1 (856728225) */
 #define WORD_HEXADECIMAL_0B090BAC 0x0B090BAC   /* was DAT_00118eac (word at 0x00118EAC); value 0x0B090BAC (185142188) */
 #define WORD_HEXADECIMAL_08E8548D 0x08E8548D   /* was DAT_00118eb0 (word at 0x00118EB0); value 0x08E8548D (149443725) */
 #define WORD_HEXADECIMAL_19631267 0x19631267   /* was DAT_00118eb4 (word at 0x00118EB4); value 0x19631267 (425923175) */
 #define WORD_HEXADECIMAL_2101870D 0x2101870D   /* was DAT_00118eb8 (word at 0x00118EB8); value 0x2101870D (553748237) */
-#define STRING_CARRIAGE_RETURN_NEWLINE_OFFSET_7 0x0000EA94   /* was DAT_00118ebc (word at 0x00118EBC); PC-relative offset: + 0x118cc0 (the pc) = 0x00127754 */
-#define STRING_CARRIAGE_RETURN_NEWLINE_OFFSET_8 0x0000EA64   /* was DAT_00118ec0 (word at 0x00118EC0); PC-relative offset: + 0x118cf0 (the pc) = 0x00127754 */
 #define WORD_HEXADECIMAL_32CA0CC6 0x32CA0CC6   /* was DAT_00118ec4 (word at 0x00118EC4); value 0x32CA0CC6 (852102342) */
-#define STRING_MOVING_OFFSET 0x0000E964   /* was DAT_00118ec8 (word at 0x00118EC8); PC-relative offset: + 0x118e14 (the pc) = 0x00127778 */
-#define STRING_ALIGN_OFFSET 0x0000E940   /* was DAT_00118ecc (word at 0x00118ECC); PC-relative offset: + 0x118e30 (the pc) = 0x00127770 */
-#define STRING_NONTERRAIN_OFFSET 0x0000E918   /* was DAT_00118ed0 (word at 0x00118ED0); PC-relative offset: + 0x118e4c (the pc) = 0x00127764 */
-#define STRING_TERRAINONLY_OFFSET 0x0000E8F0   /* was DAT_00118ed4 (word at 0x00118ED4); PC-relative offset: + 0x118e68 (the pc) = 0x00127758 */
-#define DATA_AT_00126FCC_OFFSET 0x0000E0C4   /* was DAT_0011958c (word at 0x0011958C); PC-relative offset: + 0x118f08 (the pc) = 0x00126FCC */
-#define DATA_AT_00126FCC_OFFSET_2 0x0000E094   /* was DAT_00119590 (word at 0x00119590); PC-relative offset: + 0x118f38 (the pc) = 0x00126FCC */
 #define WORD_HEXADECIMAL_FFFE70A8 0xFFFE70A8   /* was DAT_00119598 (word at 0x00119598); value 0xFFFE70A8 (-102232) */
-#define STRING_USE_VERTS_OFFSET 0x0000E058   /* was DAT_0011959c (word at 0x0011959C); PC-relative offset: + 0x118f78 (the pc) = 0x00126FD0 */
-#define STRING_OUTER_OFFSET 0x0000DFF0   /* was DAT_001195a0 (word at 0x001195A0); PC-relative offset: + 0x118fec (the pc) = 0x00126FDC */
-#define STRING_INNER_OFFSET 0x0000DFD4   /* was DAT_001195a4 (word at 0x001195A4); PC-relative offset: + 0x119010 (the pc) = 0x00126FE4 */
-#define STRING_CIRCLE_OFFSET 0x0000DFAC   /* was DAT_001195ac (word at 0x001195AC); PC-relative offset: + 0x119040 (the pc) = 0x00126FEC */
 #define WORD_HEXADECIMAL_FFFE6FA8 0xFFFE6FA8   /* was DAT_001195b0 (word at 0x001195B0); value 0xFFFE6FA8 (-102488) */
-#define STRING_CYLINDER_OFFSET 0x0000DF88   /* was DAT_001195b4 (word at 0x001195B4); PC-relative offset: + 0x11906c (the pc) = 0x00126FF4 */
-#define STRING_CUBOID_OFFSET 0x0000DF70   /* was DAT_001195b8 (word at 0x001195B8); PC-relative offset: + 0x119090 (the pc) = 0x00127000 */
-#define STRING_RECT_OFFSET 0x0000DF54   /* was DAT_001195bc (word at 0x001195BC); PC-relative offset: + 0x1190b4 (the pc) = 0x00127008 */
-#define STRING_POLY_OFFSET 0x0000DF38   /* was DAT_001195c0 (word at 0x001195C0); PC-relative offset: + 0x1190d8 (the pc) = 0x00127010 */
-#define STRING_SPHERE_OFFSET 0x0000DF1C   /* was DAT_001195c4 (word at 0x001195C4); PC-relative offset: + 0x1190fc (the pc) = 0x00127018 */
-#define STRING_CLOCKWISE_OFFSET 0x0000DC68   /* was DAT_001195d0 (word at 0x001195D0); PC-relative offset: + 0x1193b8 (the pc) = 0x00127020 */
 #define WORD_HEXADECIMAL_FFFE6C24 0xFFFE6C24   /* was DAT_001195d4 (word at 0x001195D4); value 0xFFFE6C24 (-103388) */
-#define STRING_PERCENT_DTRANSFORM_OFFSET 0x0000DC48   /* was DAT_001195d8 (word at 0x001195D8); PC-relative offset: + 0x1193e4 (the pc) = 0x0012702C */
 #define CLASS_IDENTIFIER_HEXADECIMAL_0100A004 0x0100A004   /* was DAT_001199fc (word at 0x001199FC); in the BREW class identifier range */
 #define INTEGER_261 0x00000105   /* was DAT_00119a00 (word at 0x00119A00); integer 261 */
 #define AEECLSID_SWERVE_VALUE 0x0102BBFC   /* was DAT_00119a04 (word at 0x00119A04); BREW class identifier AEECLSID_SWERVE */
@@ -1630,26 +1257,13 @@ extern undefined4 STRING_OUT_OF_MAGIC_SELF_RELATIVE_OFFSET;   /* was DAT_0010d1d
 #define INTEGER_258 0x00000102   /* was DAT_00119a20 (word at 0x00119A20); integer 258 */
 #define INTEGER_257 0x00000101   /* was DAT_00119a24 (word at 0x00119A24); integer 257 */
 #define WORD_HEXADECIMAL_018B5704 0x018B5704   /* was DAT_00119c00 (word at 0x00119C00); value 0x018B5704 (25908996) */
-#define STRING_CARRIAGE_RETURN_NEWLINE_OFFSET_9 0x0000E3B8   /* was DAT_00119c04 (word at 0x00119C04); PC-relative offset: + 0x119b50 (the pc) = 0x00127F08 */
-#define STRING_CARRIAGE_RETURN_NEWLINE_OFFSET_10 0x0000E390   /* was DAT_00119c08 (word at 0x00119C08); PC-relative offset: + 0x119b78 (the pc) = 0x00127F08 */
 #define WORD_HEXADECIMAL_FFFE646C 0xFFFE646C   /* was DAT_00119c0c (word at 0x00119C0C); value 0xFFFE646C (-105364) */
 #define WORD_HEXADECIMAL_38D1B717 0x38D1B717   /* was DAT_0011a2f0 (word at 0x0011A2F0); value 0x38D1B717 (953267991) */
-#define STRING_OUT_OF_MAGIC_OFFSET_3 0x0000C8EC   /* was DAT_0011a7d8 (word at 0x0011A7D8); PC-relative offset: + 0x11a6d0 (the pc) = 0x00126FBC */
-#define DATA_AT_001279E0_OFFSET 0x0000D10C   /* was DAT_0011aa60 (word at 0x0011AA60); PC-relative offset: + 0x11a8d4 (the pc) = 0x001279E0 */
 #define WORD_HEXADECIMAL_FFFE5718 0xFFFE5718   /* was DAT_0011aa64 (word at 0x0011AA64); value 0xFFFE5718 (-108776) */
 #define WORD_HEXADECIMAL_1EB851EC 0x1EB851EC   /* was DAT_0011adb8 (word at 0x0011ADB8); value 0x1EB851EC (515396076) */
 #define FLOAT_1_POINT_14 0x3F91EB85   /* was DAT_0011adbc (word at 0x0011ADBC); the float 1.1399999856948853 */
-#define STRING_TRANSFORM_OFFSET 0x0000D070   /* was DAT_0011b03c (word at 0x0011B03C); PC-relative offset: + 0x11ae84 (the pc) = 0x00127EF4 */
-#define STRING_DOT_M3G_OFFSET_3 0x0000CFD8   /* was DAT_0011b040 (word at 0x0011B040); PC-relative offset: + 0x11af28 (the pc) = 0x00127F00 */
-#define STRING_SCOREDATA_DOT_DAT_OFFSET 0x0000C2A0   /* was DAT_0011b6ec (word at 0x0011B6EC); PC-relative offset: + 0x11b628 (the pc) = 0x001278C8 */
-#define STRING_DISNEY_DOT_M3G_OFFSET 0x0000C0AC   /* was DAT_0011b9f0 (word at 0x0011B9F0); PC-relative offset: + 0x11b8f0 (the pc) = 0x0012799C */
-#define STRING_SWERVE_DOT_M3G_OFFSET 0x0000C09C   /* was DAT_0011b9f4 (word at 0x0011B9F4); PC-relative offset: + 0x11b90c (the pc) = 0x001279A8 */
-#define STRING_INTRO_DOT_M3G_OFFSET 0x0000C090   /* was DAT_0011b9f8 (word at 0x0011B9F8); PC-relative offset: + 0x11b924 (the pc) = 0x001279B4 */
 #define WORD_HEXADECIMAL_3E11FC00 0x3E11FC00   /* was DAT_0011ba00 (word at 0x0011BA00); value 0x3E11FC00 (1041366016) */
-#define STRING_CHARACTER_GRP_OFFSET_2 0x0000C048   /* was DAT_0011ba04 (word at 0x0011BA04); PC-relative offset: + 0x11b978 (the pc) = 0x001279C0 */
-extern undefined4 ADDRESS_OF_FUNCTION_0011bb00_SELF_RELATIVE_OFFSET;   /* was DAT_0011bb98 (word at 0x0011BB98 = 0xFFFFFF68); word relative to its own address: 0x0011BB98 + 0xFFFFFF68 = 0x0011BB00 */
 #define INTEGER_3003 0x00000BBB   /* was DAT_0011c6ec (word at 0x0011C6EC); integer 3003 */
-#define DATA_AT_001270AC_OFFSET 0x0000AC38   /* was DAT_0011c6f0 (word at 0x0011C6F0); PC-relative offset: + 0x11c474 (the pc) = 0x001270AC */
 #define INTEGER_7000 0x00001B58   /* was DAT_0011c6f8 (word at 0x0011C6F8); integer 7000 */
 #define FLOAT_350 0x43AF0000   /* was DAT_0011c6fc (word at 0x0011C6FC); the float 350.0 */
 #define INTEGER_3002 0x00000BBA   /* was DAT_0011c700 (word at 0x0011C700); integer 3002 */
@@ -1676,56 +1290,16 @@ extern undefined4 ADDRESS_OF_FUNCTION_0011bb00_SELF_RELATIVE_OFFSET;   /* was DA
 #define INTEGER_7003 0x00001B5B   /* was DAT_0011dc98 (word at 0x0011DC98); integer 7003 */
 #define INTEGER_4001 0x00000FA1   /* was DAT_0011ded4 (word at 0x0011DED4); integer 4001 */
 #define INTEGER_7001 0x00001B59   /* was DAT_0011ded8 (word at 0x0011DED8); integer 7001 */
-#define ADDRESS_OF_FUNCTION_001242b4_OFFSET_2 0x000060A4   /* was DAT_0011e24c (word at 0x0011E24C); PC-relative offset: + 0x11e210 (the pc) = 0x001242B4 */
-#define STRING_TMP_DOT_DAT_OFFSET 0x00009324   /* was DAT_0011e6b4 (word at 0x0011E6B4); PC-relative offset: + 0x11e5c8 (the pc) = 0x001278EC */
-#define STRING_SCOREDATA_DOT_DAT_OFFSET_2 0x00008E20   /* was DAT_0011ead0 (word at 0x0011EAD0); PC-relative offset: + 0x11eaa8 (the pc) = 0x001278C8 */
-#define STRING_HASH_UP_OFFSET 0x000091E0   /* was DAT_0011f20c (word at 0x0011F20C); PC-relative offset: + 0x11ed64 (the pc) = 0x00127F44 */
-#define STRING_HASH_DOWN_OFFSET 0x000091C0   /* was DAT_0011f210 (word at 0x0011F210); PC-relative offset: + 0x11ed7c (the pc) = 0x00127F3C */
-#define STRING_HASH_LEFT_OFFSET 0x000091A0   /* was DAT_0011f214 (word at 0x0011F214); PC-relative offset: + 0x11ed94 (the pc) = 0x00127F34 */
-#define STRING_HASH_RIGHT_OFFSET 0x00009180   /* was DAT_0011f218 (word at 0x0011F218); PC-relative offset: + 0x11edac (the pc) = 0x00127F2C */
-#define STRING_HASH_ACTION_OFFSET 0x00009160   /* was DAT_0011f21c (word at 0x0011F21C); PC-relative offset: + 0x11edc4 (the pc) = 0x00127F24 */
-#define STRING_HASH_INV_OFFSET 0x00009140   /* was DAT_0011f220 (word at 0x0011F220); PC-relative offset: + 0x11eddc (the pc) = 0x00127F1C */
-#define STRING_HASH_MAGIC_OFFSET 0x00009120   /* was DAT_0011f224 (word at 0x0011F224); PC-relative offset: + 0x11edf4 (the pc) = 0x00127F14 */
-#define STRING_HASH_VER_OFFSET 0x00009100   /* was DAT_0011f228 (word at 0x0011F228); PC-relative offset: + 0x11ee0c (the pc) = 0x00127F0C */
-#define DATA_AT_00127ED4_OFFSET 0x000090B0   /* was DAT_0011f22c (word at 0x0011F22C); PC-relative offset: + 0x11ee24 (the pc) = 0x00127ED4 */
-#define DATA_AT_00127F4C_OFFSET 0x0000903C   /* was DAT_0011f230 (word at 0x0011F230); PC-relative offset: + 0x11ef10 (the pc) = 0x00127F4C */
-#define DATA_AT_00127F58_OFFSET 0x00009018   /* was DAT_0011f234 (word at 0x0011F234); PC-relative offset: + 0x11ef40 (the pc) = 0x00127F58 */
-#define DATA_AT_00127F48_OFFSET 0x00008FC0   /* was DAT_0011f238 (word at 0x0011F238); PC-relative offset: + 0x11ef88 (the pc) = 0x00127F48 */
-#define DATA_AT_00127F50_OFFSET 0x00008FAC   /* was DAT_0011f23c (word at 0x0011F23C); PC-relative offset: + 0x11efa4 (the pc) = 0x00127F50 */
-#define DATA_AT_00127F54_OFFSET 0x00008F94   /* was DAT_0011f240 (word at 0x0011F240); PC-relative offset: + 0x11efc0 (the pc) = 0x00127F54 */
-#define DATA_AT_00127F5C_OFFSET 0x00008F80   /* was DAT_0011f244 (word at 0x0011F244); PC-relative offset: + 0x11efdc (the pc) = 0x00127F5C */
-#define DATA_AT_00127F60_OFFSET 0x00008F68   /* was DAT_0011f248 (word at 0x0011F248); PC-relative offset: + 0x11eff8 (the pc) = 0x00127F60 */
-#define DATA_AT_00127F64_OFFSET 0x00008F50   /* was DAT_0011f24c (word at 0x0011F24C); PC-relative offset: + 0x11f014 (the pc) = 0x00127F64 */
-#define DATA_AT_00127F68_OFFSET 0x00008F38   /* was DAT_0011f250 (word at 0x0011F250); PC-relative offset: + 0x11f030 (the pc) = 0x00127F68 */
-#define DATA_AT_00127F6C_OFFSET 0x00008F20   /* was DAT_0011f254 (word at 0x0011F254); PC-relative offset: + 0x11f04c (the pc) = 0x00127F6C */
-#define DATA_AT_00127F70_OFFSET 0x00008F08   /* was DAT_0011f258 (word at 0x0011F258); PC-relative offset: + 0x11f068 (the pc) = 0x00127F70 */
-#define DATA_AT_00127F74_OFFSET 0x00008EF0   /* was DAT_0011f25c (word at 0x0011F25C); PC-relative offset: + 0x11f084 (the pc) = 0x00127F74 */
 #define INTEGER_31544 0x00007B38   /* was DAT_0011f390 (word at 0x0011F390); integer 31544 */
 #define FLOAT_0_POINT_85 0x3F59999A   /* was DAT_0011f7d0 (word at 0x0011F7D0); the float 0.8500000238418579 */
 #define INTEGER_29864 0x000074A8   /* was DAT_0011fc7c (word at 0x0011FC7C); integer 29864 */
 #define WORD_HEXADECIMAL_FFFE01FC 0xFFFE01FC   /* was DAT_0011fed0 (word at 0x0011FED0); value 0xFFFE01FC (-130564) */
-#define DATA_AT_001278E8_OFFSET_2 0x00007AC4   /* was DAT_0011fed4 (word at 0x0011FED4); PC-relative offset: + 0x11fe24 (the pc) = 0x001278E8 */
 #define WORD_HEXADECIMAL_FFFE00F0 0xFFFE00F0   /* was DAT_0011ffbc (word at 0x0011FFBC); value 0xFFFE00F0 (-130832) */
-#define DATA_AT_001278E8_OFFSET_3 0x00007808   /* was DAT_0012011c (word at 0x0012011C); PC-relative offset: + 0x1200e0 (the pc) = 0x001278E8 */
 #define WORD_HEXADECIMAL_FFFDFEBC 0xFFFDFEBC   /* was DAT_001201c8 (word at 0x001201C8); value 0xFFFDFEBC (-131396) */
-#define STRING_DEATH_DOT_MID_OFFSET 0x00007C64   /* was DAT_00120438 (word at 0x00120438); PC-relative offset: + 0x120344 (the pc) = 0x00127FA8 */
-#define STRING_TRAINING_DOT_MID_OFFSET 0x00007C14   /* was DAT_0012043c (word at 0x0012043C); PC-relative offset: + 0x120368 (the pc) = 0x00127F7C */
 #define WORD_HEXADECIMAL_FFFDFC48 0xFFFDFC48   /* was DAT_00120440 (word at 0x00120440); value 0xFFFDFC48 (-132024) */
-#define STRING_TRAINING_OFFSET_4 0x00007BB0   /* was DAT_00120444 (word at 0x00120444); PC-relative offset: + 0x1203dc (the pc) = 0x00127F8C */
-#define STRING_DOT_MID_OFFSET 0x00007B98   /* was DAT_00120448 (word at 0x00120448); PC-relative offset: + 0x120408 (the pc) = 0x00127FA0 */
-#define STRING_PERCENT_S_PERCENT_S_OFFSET 0x00007B88   /* was DAT_0012044c (word at 0x0012044C); PC-relative offset: + 0x120410 (the pc) = 0x00127F98 */
-#define ADDRESS_OF_FUNCTION_001242b4_OFFSET_3 0x00003D20   /* was DAT_00120598 (word at 0x00120598); PC-relative offset: + 0x120594 (the pc) = 0x001242B4 */
-#define STRING_DEADEND_OFFSET 0x00006BB4   /* was DAT_00120f88 (word at 0x00120F88); PC-relative offset: + 0x120c14 (the pc) = 0x001277C8 */
 #define WORD_HEXADECIMAL_009660B3 0x009660B3   /* was DAT_00121124, DAT_001213e0 (word at 0x00121124); value 0x009660B3 (9855155) */
 #define WORD_HEXADECIMAL_019E5BAF 0x019E5BAF   /* was DAT_00121128 (word at 0x00121128); value 0x019E5BAF (27155375) */
-#define STRING_DEADEND_OFFSET_2 0x00006760   /* was DAT_00121130 (word at 0x00121130); PC-relative offset: + 0x121068 (the pc) = 0x001277C8 */
-#define STRING_MOTIONENTITY_OFFSET 0x000065EC   /* was DAT_001213e4 (word at 0x001213E4); PC-relative offset: + 0x12119c (the pc) = 0x00127788 */
-#define STRING_COMBATREGION_OFFSET 0x000065C8   /* was DAT_001213e8 (word at 0x001213E8); PC-relative offset: + 0x1211d0 (the pc) = 0x00127798 */
-#define STRING_BOSSCOMBATREGION_OFFSET 0x000065A4   /* was DAT_001213ec (word at 0x001213EC); PC-relative offset: + 0x121204 (the pc) = 0x001277A8 */
-#define STRING_NOPARENT_OFFSET 0x00006578   /* was DAT_001213f0 (word at 0x001213F0); PC-relative offset: + 0x121244 (the pc) = 0x001277BC */
-#define STRING_DEADEND_OFFSET_3 0x00006534   /* was DAT_001213f8 (word at 0x001213F8); PC-relative offset: + 0x121294 (the pc) = 0x001277C8 */
 #define WORD_HEXADECIMAL_FFFDE350 0xFFFDE350   /* was DAT_00122438 (word at 0x00122438); value 0xFFFDE350 (-138416) */
-#define STRING_PLAYARRIVEANIM_OFFSET 0x00004C44   /* was DAT_00122444 (word at 0x00122444); PC-relative offset: + 0x122254 (the pc) = 0x00126E98 */
 #define WORD_HEXADECIMAL_1A5C2C12 0x1A5C2C12   /* was DAT_00122448 (word at 0x00122448); value 0x1A5C2C12 (442248210) */
 #define INTEGER_1002 0x000003EA   /* was DAT_00122b88 (word at 0x00122B88); integer 1002 */
 #define INTEGER_1003 0x000003EB   /* was DAT_00122b8c (word at 0x00122B8C); integer 1003 */
@@ -1737,9 +1311,6 @@ extern undefined4 ADDRESS_OF_FUNCTION_0011bb00_SELF_RELATIVE_OFFSET;   /* was DA
 #define WORD_HEXADECIMAL_1812C1C3 0x1812C1C3   /* was DAT_00123c20 (word at 0x00123C20); value 0x1812C1C3 (403882435) */
 #define INTEGER_4467 0x00001173   /* was DAT_001242b0 (word at 0x001242B0); integer 4467 */
 #define WORD_HEXADECIMAL_FFFDBD34 0xFFFDBD34   /* was DAT_00124650 (word at 0x00124650); value 0xFFFDBD34 (-148172) */
-#define ADDRESS_OF_FUNCTION_001242b4_OFFSET_4 0xFFFFFCCC   /* was DAT_00124660 (word at 0x00124660); PC-relative offset: + 0x1245e8 (the pc) = 0x001242B4 */
-#define STRING_SAVEGAME_DOT_DAT_OFFSET_5 0x00003438   /* was DAT_00124664 (word at 0x00124664); PC-relative offset: + 0x124610 (the pc) = 0x00127A48 */
-#define DATA_AT_001278E8_OFFSET_4 0x00003198   /* was DAT_00124794 (word at 0x00124794); PC-relative offset: + 0x124750 (the pc) = 0x001278E8 */
 #define WORD_HEXADECIMAL_04000088 0x04000088   /* was DAT_00124950 (word at 0x00124950); value 0x04000088 (67109000) */
 #define WORD_HEXADECIMAL_04000012 0x04000012   /* was DAT_00124e14 (word at 0x00124E14); value 0x04000012 (67108882) */
 #define WORD_HEXADECIMAL_7FF00000 0x7FF00000   /* was DAT_001254c8, DAT_001259e0 (word at 0x001254C8); value 0x7FF00000 (2146435072) */
@@ -1749,7 +1320,7 @@ extern undefined4 ADDRESS_OF_FUNCTION_0011bb00_SELF_RELATIVE_OFFSET;   /* was DA
 #define WORD_HEXADECIMAL_040200C8 0x040200C8   /* was DAT_001255f4 (word at 0x001255F4); value 0x040200C8 (67240136) */
 #define WORD_HEXADECIMAL_04130019 0x04130019   /* was DAT_001256b0 (word at 0x001256B0); value 0x04130019 (68354073) */
 #define WORD_HEXADECIMAL_04160019 0x04160019   /* was DAT_00125730 (word at 0x00125730); value 0x04160019 (68550681) */
-#define WORD_HEXADECIMAL_07FF0000 0x07FF0000   /* was DAT_001259dc, DAT_00125cc8 (word at 0x001259DC); value 0x07FF0000 (134152192); also
+#define WORD_HEXADECIMAL_07FF0000 0x07FF0000u  /* was DAT_001259dc, DAT_00125cc8 (word at 0x001259DC); value 0x07FF0000 (134152192); also
                                                    ram0x001254c4 (word at 0x001254C4), the same value in
                                                    a literal pool Ghidra read as a memory variable */
 #define WORD_HEXADECIMAL_04000013 0x04000013   /* was DAT_001259e4 (word at 0x001259E4); value 0x04000013 (67108883) */
@@ -1789,8 +1360,8 @@ extern undefined4 ADDRESS_OF_FUNCTION_0011bb00_SELF_RELATIVE_OFFSET;   /* was DA
 
 
 /* ---- Literal-pool words, named automatically (second pass) ---------------------------------------
-   Each was a Ghidra DAT_<address> label. PC-relative offsets (used as NAME + pc) are named after
-   what they point to; other words are named after their value. The comment gives the old label(s),
+   Each was a Ghidra DAT_<address> label, named after its value (the PC-relative offsets among them
+   are the data objects and function addresses at the end of this file now). The comment gives the old label(s),
    the word's address and how the name was derived. Generated, not reviewed one by one: names say
    what a word IS (its value or target), not necessarily what the code uses it for. */
 #define WORD_HEXADECIMAL_3B4C67C7 0x3B4C67C7   /* was DAT_00102b58 (word at 0x00102B58); value 0x3B4C67C7 (994863047); r2 of FUN_00109a10 at LAB_001024bc in FUN_00101ad8 */
@@ -1805,5 +1376,652 @@ extern undefined4 ADDRESS_OF_FUNCTION_0011bb00_SELF_RELATIVE_OFFSET;   /* was DA
 #define WORD_HEXADECIMAL_25491361 0x25491361   /* was DAT_00123c18 (word at 0x00123C18); value 0x25491361 (625546081) */
 #define WORD_HEXADECIMAL_38618576 0x38618576   /* was DAT_0012466c (word at 0x0012466C); value 0x38618576 (945915254) */
 #define WORD_HEXADECIMAL_262EA0D8 0x262EA0D8   /* was DAT_00124670 (word at 0x00124670); value 0x262EA0D8 (640590040) */
+
+/* ---- The read-only data of kh.mod (0x00126DEC - 0x00128247) that the code refers to, one object per
+   address the code takes (in kh.mod, an offset from the pc), each reaching to the next such address:
+   strings as string literals, the rest as words or bytes. The comment gives the address. */
+static const uint32 DATA_AT_00126DEC[10] = {   /* 0x00126DEC */
+  0x05208EC5,0x045958CC,0x0DD3405D,0x174D27EE,0x20C70F7F,0x2A40F710,0x33BADEA1,0x3D34C632,
+  0x06AEADC3,0x3544E42E
+};
+static const uint32 DATA_AT_00126E14[3] = {   /* 0x00126E14 */
+  0x12719CCA,0x13001EEA,0x346DBBEC
+};
+static const uint32 DATA_AT_00126E20[3] = {   /* 0x00126E20 */
+  0x00000000,0xC1200000,0x00000000
+};
+static const char STRING_CARRIAGE_RETURN_NEWLINE_00126E2C[] = "\r\n";   /* 0x00126E2C */
+static const uint32 DATA_AT_00126E30[3] = {   /* 0x00126E30 */
+  0x00000000,0x3E800000,0x00000000
+};
+static const char STRING_NOBALLSONHIT[] = "noBallsOnHit";   /* 0x00126E3C */
+static const char STRING_NOBALLSONMAGIC[] = "noBallsOnMagic";   /* 0x00126E4C */
+static const char STRING_SWITCHTARGETS[] = "switchTargets";   /* 0x00126E5C */
+static const char STRING_DOMAGICHITBOSS[] = "doMagicHitBoss";   /* 0x00126E6C */
+static const char STRING_DOHITBOSS[] = "doHitBoss";   /* 0x00126E7C */
+static const char STRING_ROTTOCHARACTER[] = "rotToCharacter";   /* 0x00126E88 */
+static const char STRING_PLAYARRIVEANIM[] = "playArriveAnim";   /* 0x00126E98 */
+static const uint32 DATA_AT_00126EA8[29] = {   /* 0x00126EA8 */
+  0x3B91C067,0x11C542FF,0x24B276B1,0x22CE1A73,0x2D08E9DC,0x35D28B2C,0x1CD88B65,0x327E81F1,
+  0x17CBB3A4,0x290C7A39,0x2EB362EA,0x343FDCDE,0x0151178B,0x24671AD4,0x1366844D,0x31556852,
+  0x01995D01,0x36E5852E,0x05A123D5,0x2663AC15,0x05A123D5,0x0C1533CE,0x206BD8C5,0x201DC04E,
+  0x22C4793E,0x1F5FB54D,0x0368478C,0x006A8793,0x2450A2A6
+};
+static const uint32 DATA_AT_00126F1C[16] = {   /* 0x00126F1C */
+  0x00000000,0x0000000B,0x0000000C,0x0000000D,0x0000000E,0x0000000F,0x00000010,0x00000011,
+  0x00000012,0x00000013,0x00000014,0x00000015,0x00000016,0x00000019,0x0000001A,0x0000001B
+};
+static const uint32 DATA_AT_00126F5C[16] = {   /* 0x00126F5C */
+  0x00000000,0x00000003,0x00000003,0x00000001,0x00000001,0x00000004,0x00000001,0x00000004,
+  0x00000001,0x00000004,0x00000001,0x00000004,0x00000004,0x00000004,0x00000004,0x00000004
+};
+static const uint32 DATA_AT_00126F9C[3] = {   /* 0x00126F9C */
+  0x00000000,0x3EB33333,0x00000000
+};
+static const char STRING_CHARACTER_SHADOW[] = "character_shadow";   /* 0x00126FA8 */
+static const char STRING_OUT_OF_MAGIC_00126FBC[] = "OUT_OF_MAGIC";   /* 0x00126FBC */
+static const uint32 DATA_AT_00126FCC[1] = {   /* 0x00126FCC */
+  0x00000020
+};
+static const char STRING_USE_VERTS[] = "USE_VERTS";   /* 0x00126FD0 */
+static const char STRING_OUTER[] = "Outer";   /* 0x00126FDC */
+static const char STRING_INNER[] = "Inner";   /* 0x00126FE4 */
+static const char STRING_CIRCLE[] = "Circle";   /* 0x00126FEC */
+static const char STRING_CYLINDER[] = "Cylinder";   /* 0x00126FF4 */
+static const char STRING_CUBOID[] = "Cuboid";   /* 0x00127000 */
+static const char STRING_RECT[] = "Rect";   /* 0x00127008 */
+static const char STRING_POLY[] = "Poly";   /* 0x00127010 */
+static const char STRING_SPHERE[] = "Sphere";   /* 0x00127018 */
+static const char STRING_CLOCKWISE[] = "clockwise";   /* 0x00127020 */
+static const char STRING_PERCENT_DTRANSFORM[] = "%dTransform";   /* 0x0012702C */
+static const char STRING_SOLDIER[] = "Soldier";   /* 0x00127038 */
+static const char STRING_FLYINGSOLDIER[] = "FlyingSoldier";   /* 0x00127040 */
+static const char STRING_FLYINGMOOK[] = "FlyingMook";   /* 0x00127050 */
+static const char STRING_PURPLECROC[] = "PurpleCroc";   /* 0x0012705C */
+static const char STRING_UMBRELLABIRD[] = "UmbrellaBird";   /* 0x00127068 */
+static const char STRING_BANDIT[] = "Bandit";   /* 0x00127078 */
+static const char STRING_POTSPIDER[] = "Potspider";   /* 0x00127080 */
+static const char STRING_MUMMY[] = "Mummy";   /* 0x0012708C */
+static const char STRING_DARKBALL[] = "Darkball";   /* 0x00127094 */
+static const char STRING_PIGSOLDIER[] = "PigSoldier";   /* 0x001270A0 */
+static const uint32 DATA_AT_001270AC[16] = {   /* 0x001270AC */
+  0xC0000000,0x00000000,0xC0000000,0x40000000,0x00000000,0x40000000,0x40000000,0x40000000,
+  0x40000000,0x00000000,0x40000000,0xC0000000,0x00000000,0xC0000000,0xC0000000,0xC0000000
+};
+static const uint32 DATA_AT_001270EC[3] = {   /* 0x001270EC */
+  0x00000000,0x3E800000,0x00000000
+};
+static const char STRING_CARRIAGE_RETURN_NEWLINE_001270F8[] = "\r\n";   /* 0x001270F8 */
+static const char STRING_ME[] = "ME";   /* 0x001270FC */
+static const char STRING_ADDSOFTKEY[] = "addSoftkey";   /* 0x00127100 */
+static const uint32 DATA_AT_0012710C[1] = {   /* 0x0012710C */
+  0x00000020
+};
+static const char STRING_ADDUIACTION[] = "addUIAction";   /* 0x00127110 */
+static const char STRING_ADDUIINFO[] = "addUIInfo";   /* 0x0012711C */
+static const char STRING_ADDUITEXT[] = "addUIText";   /* 0x00127128 */
+static const uint32 DATA_AT_00127134[1] = {   /* 0x00127134 */
+  0x00000031
+};
+static const uint32 DATA_AT_00127138[1] = {   /* 0x00127138 */
+  0x00000032
+};
+static const char STRING_ADJUSTVALUE[] = "adjustValue";   /* 0x0012713C */
+static const char STRING_BREAK[] = "break";   /* 0x00127148 */
+static const char STRING_FADE[] = "fade";   /* 0x00127150 */
+static const char STRING_FIREPROJECTILE[] = "fireProjectile";   /* 0x00127158 */
+static const char STRING_IF_00127168[] = "if";   /* 0x00127168 */
+static const char STRING_IF_0012716C[] = "if ";   /* 0x0012716C */
+static const char STRING_IFVAR_00127170[] = "ifVar";   /* 0x00127170 */
+static const char STRING_IFVAR_00127178[] = "ifVar ";   /* 0x00127178 */
+static const char STRING_ELSE[] = "else";   /* 0x00127180 */
+static const char STRING_ENDIF[] = "endif";   /* 0x00127188 */
+static const char STRING_LIFT_00127190[] = "lift";   /* 0x00127190 */
+static const char STRING_LINK[] = "link";   /* 0x00127198 */
+static const char STRING_LOADCLIPART[] = "loadClipart";   /* 0x001271A0 */
+static const char STRING_LOADSCENE[] = "loadScene";   /* 0x001271AC */
+static const char STRING_LOADSOUNDS_001271B8[] = "loadSounds";   /* 0x001271B8 */
+static const char STRING_LOADSOUNDS_001271C4[] = "loadSounds ";   /* 0x001271C4 */
+static const char STRING_MATCHPOSITION[] = "matchPosition";   /* 0x001271D0 */
+static const char STRING_TERRAIN[] = "TERRAIN";   /* 0x001271E0 */
+static const char STRING_PLAYANIM[] = "playAnim";   /* 0x001271E8 */
+static const char STRING_LOOP[] = "LOOP";   /* 0x001271F4 */
+static const char STRING_PLAYSEQUENCE[] = "playSequence";   /* 0x001271FC */
+static const char STRING_PLAYSOUND[] = "playSound";   /* 0x0012720C */
+static const char STRING_BAD[] = "BAD";   /* 0x00127218 */
+static const char STRING_GOOD[] = "GOOD";   /* 0x0012721C */
+static const char STRING_KEYBLADE[] = "KEYBLADE";   /* 0x00127224 */
+static const char STRING_EXPLODE[] = "EXPLODE";   /* 0x00127230 */
+static const char STRING_WATER[] = "WATER";   /* 0x00127238 */
+static const char STRING_JUMP[] = "JUMP";   /* 0x00127240 */
+static const char STRING_THUD[] = "THUD";   /* 0x00127248 */
+static const char STRING_TRANSITION[] = "TRANSITION";   /* 0x00127250 */
+static const char STRING_MAGIC_ALERT[] = "MAGIC_ALERT";   /* 0x0012725C */
+static const char STRING_MAGIC_CAST[] = "MAGIC_CAST";   /* 0x00127268 */
+static const char STRING_REMOVESOFTKEY[] = "removeSoftkey";   /* 0x00127274 */
+static const char STRING_REMOVEUIACTION[] = "removeUIAction";   /* 0x00127284 */
+static const char STRING_REMOVEUITEXT[] = "removeUIText";   /* 0x00127294 */
+static const char STRING_RESETKEYS[] = "resetKeys";   /* 0x001272A4 */
+static const char STRING_SAVEGAME[] = "saveGame";   /* 0x001272B0 */
+static const char STRING_TEMP[] = "TEMP";   /* 0x001272BC */
+static const char STRING_SETANIMSPEED[] = "setAnimSpeed";   /* 0x001272C4 */
+static const char STRING_SETANIMPOSITION[] = "setAnimPosition";   /* 0x001272D4 */
+static const char STRING_END[] = "END";   /* 0x001272E4 */
+static const char STRING_SETAPPEARANCE[] = "setAppearance";   /* 0x001272E8 */
+static const char STRING_SETBACKGROUND[] = "setBackground";   /* 0x001272F8 */
+static const char STRING_SETCAMERAFOCUS[] = "setCameraFocus";   /* 0x00127308 */
+static const char STRING_STANDARD_VIEW[] = "STANDARD_VIEW";   /* 0x00127318 */
+static const char STRING_HIGH_VIEW[] = "HIGH_VIEW";   /* 0x00127328 */
+static const char STRING_PLAN_VIEW[] = "PLAN_VIEW";   /* 0x00127334 */
+static const char STRING_MED_VIEW[] = "MED_VIEW";   /* 0x00127340 */
+static const char STRING_LOW_VIEW[] = "LOW_VIEW";   /* 0x0012734C */
+static const char STRING_SETCHARACTERMODE[] = "setCharacterMode";   /* 0x00127358 */
+static const char STRING_ATTACK[] = "ATTACK";   /* 0x0012736C */
+static const char STRING_SWIM[] = "SWIM";   /* 0x00127374 */
+static const char STRING_SWIM_NO_CLIMB[] = "SWIM_NO_CLIMB";   /* 0x0012737C */
+static const char STRING_NOSWIM[] = "NOSWIM";   /* 0x0012738C */
+static const char STRING_CLIMB_TREE[] = "CLIMB_TREE";   /* 0x00127394 */
+static const char STRING_CLIMB_TREE_NO_ROT[] = "CLIMB_TREE_NO_ROT";   /* 0x001273A0 */
+static const char STRING_CLIMB_LADDER[] = "CLIMB_LADDER";   /* 0x001273B4 */
+static const char STRING_LIFT_001273C4[] = "LIFT";   /* 0x001273C4 */
+static const char STRING_DROP[] = "DROP";   /* 0x001273CC */
+static const char STRING_BEHIND[] = "BEHIND";   /* 0x001273D4 */
+static const char STRING_HANG[] = "HANG";   /* 0x001273DC */
+static const char STRING_STATIC_HANG[] = "STATIC_HANG";   /* 0x001273E4 */
+static const char STRING_UNHANG[] = "UNHANG";   /* 0x001273F0 */
+static const char STRING_HIT[] = "HIT";   /* 0x001273F8 */
+static const char STRING_IDLE[] = "IDLE";   /* 0x001273FC */
+static const char STRING_RESET[] = "RESET";   /* 0x00127404 */
+static const char STRING_SETCOLLECTABLES[] = "setCollectables";   /* 0x0012740C */
+static const char STRING_SETCOLLISIONON[] = "setCollisionOn";   /* 0x0012741C */
+static const char STRING_SETCOLLISIONOFF[] = "setCollisionOff";   /* 0x0012742C */
+static const char STRING_SETCOMBATREGION[] = "setCombatRegion";   /* 0x0012743C */
+static const char STRING_SETKEYSON[] = "setKeysOn";   /* 0x0012744C */
+static const char STRING_SETKEYSOFF[] = "setKeysOff";   /* 0x00127458 */
+static const char STRING_SETLEVELUP[] = "setLevelUp";   /* 0x00127464 */
+static const char STRING_SETMIRROR[] = "setMirror";   /* 0x00127470 */
+static const char STRING_NULL[] = "NULL";   /* 0x0012747C */
+static const char STRING_DASH_X[] = "-X";   /* 0x00127484 */
+static const char STRING_DASH_Y[] = "-Y";   /* 0x00127488 */
+static const char STRING_DASH_Z[] = "-Z";   /* 0x0012748C */
+static const char STRING_DASH_R[] = "-R";   /* 0x00127490 */
+static const char STRING_SETMOVINGCAMERA[] = "setMovingCamera";   /* 0x00127494 */
+static const char STRING_SETPOSITION[] = "setPosition";   /* 0x001274A4 */
+static const char STRING_SETSCREENMODE[] = "setScreenMode";   /* 0x001274B0 */
+static const char STRING_CINEMATIC[] = "CINEMATIC";   /* 0x001274C0 */
+static const char STRING_SETSCRIPTON[] = "setScriptOn";   /* 0x001274CC */
+static const char STRING_SETSCRIPTOFF[] = "setScriptOff";   /* 0x001274D8 */
+static const char STRING_SETSHADOWVIS[] = "setShadowVis";   /* 0x001274E8 */
+static const char STRING_SETSPELLTYPE[] = "setSpellType";   /* 0x001274F8 */
+static const char STRING_FIRE[] = "FIRE";   /* 0x00127508 */
+static const char STRING_BLIZZARD[] = "BLIZZARD";   /* 0x00127510 */
+static const char STRING_THUNDER[] = "THUNDER";   /* 0x0012751C */
+static const char STRING_SETSTATE[] = "setState";   /* 0x00127524 */
+static const char STRING_SETVAR[] = "setVar";   /* 0x00127530 */
+static const char STRING_INCVAR[] = "incVar";   /* 0x00127538 */
+static const char STRING_DECVAR[] = "decVar";   /* 0x00127540 */
+static const char STRING_SETSTATICCAMERA[] = "setStaticCamera";   /* 0x00127548 */
+static const char STRING_SETTERRAINLEVEL[] = "setTerrainLevel";   /* 0x00127558 */
+static const char STRING_SETUPDATEON[] = "setUpdateOn";   /* 0x00127568 */
+static const char STRING_SETUPDATEOFF[] = "setUpdateOff";   /* 0x00127574 */
+static const char STRING_SETUIVIS_00127584[] = "setUIVis";   /* 0x00127584 */
+static const char STRING_SETUIVIS_00127590[] = "setUIVis ";   /* 0x00127590 */
+static const char STRING_SETVICTIM[] = "setVictim";   /* 0x0012759C */
+static const char STRING_SETVIS[] = "setVis";   /* 0x001275A8 */
+static const char STRING_SETXROT[] = "setXRot";   /* 0x001275B0 */
+static const char STRING_SETYROT[] = "setYRot";   /* 0x001275B8 */
+static const char STRING_STOPANIM[] = "stopAnim";   /* 0x001275C0 */
+static const char STRING_NOW[] = "NOW";   /* 0x001275CC */
+static const char STRING_SUMMARY[] = "summary";   /* 0x001275D0 */
+static const char STRING_UNLINK[] = "unlink";   /* 0x001275D8 */
+static const char STRING_UNLOADCLIPART[] = "unloadClipart";   /* 0x001275E0 */
+static const char STRING_SETKEYDIR[] = "setKeyDir";   /* 0x001275F0 */
+static const char STRING_SETACTIVEROTON[] = "setActiveRotOn";   /* 0x001275FC */
+static const char STRING_SETACTIVEROTOFF[] = "setActiveRotOff";   /* 0x0012760C */
+static const char STRING_SAVE[] = "SAVE";   /* 0x0012761C */
+static const char STRING_SHOP[] = "SHOP";   /* 0x00127624 */
+static const char STRING_OPTIONS[] = "OPTIONS";   /* 0x0012762C */
+static const char STRING_MAIN_MENU[] = "MAIN_MENU";   /* 0x00127634 */
+static const char STRING_RESTART_GAME[] = "RESTART_GAME";   /* 0x00127640 */
+static const char STRING_UNPAUSE[] = "UNPAUSE";   /* 0x00127650 */
+static const char STRING_ACTIVATE[] = "ACTIVATE";   /* 0x00127658 */
+static const char STRING_GRAB[] = "GRAB";   /* 0x00127664 */
+static const char STRING_LOCK[] = "LOCK";   /* 0x0012766C */
+static const char STRING_OPEN[] = "OPEN";   /* 0x00127674 */
+static const char STRING_TALK[] = "TALK";   /* 0x0012767C */
+static const char STRING_PLACE[] = "PLACE";   /* 0x00127684 */
+static const char STRING_HEALTH[] = "HEALTH";   /* 0x0012768C */
+static const char STRING_MAGIC[] = "MAGIC";   /* 0x00127694 */
+static const char STRING_MUNNY[] = "MUNNY";   /* 0x0012769C */
+static const char STRING_EXP[] = "EXP";   /* 0x001276A4 */
+static const char STRING_POTION[] = "POTION";   /* 0x001276A8 */
+static const char STRING_HIPOTION[] = "HIPOTION";   /* 0x001276B0 */
+static const char STRING_ETHER[] = "ETHER";   /* 0x001276BC */
+static const char STRING_ELIXIR[] = "ELIXIR";   /* 0x001276C4 */
+static const uint32 DATA_AT_001276CC[1] = {   /* 0x001276CC */
+  0x00000021
+};
+static const char STRING_BAR_BAR[] = "||";   /* 0x001276D0 */
+static const char STRING_AND_AND[] = "&&";   /* 0x001276D4 */
+static const char STRING_ENGINE_VER[] = "ENGINE_VER";   /* 0x001276D8 */
+static const char STRING_EQUALS_EQUALS[] = "==";   /* 0x001276E4 */
+static const char STRING_EQUALS_001276E8[] = "!=";   /* 0x001276E8 */
+static const uint32 DATA_AT_001276EC[1] = {   /* 0x001276EC */
+  0x0000003C
+};
+static const char STRING_EQUALS_001276F0[] = "<=";   /* 0x001276F0 */
+static const uint32 DATA_AT_001276F4[1] = {   /* 0x001276F4 */
+  0x0000003E
+};
+static const char STRING_EQUALS_001276F8[] = ">=";   /* 0x001276F8 */
+static const uint32 DATA_AT_001276FC[4] = {   /* 0x001276FC */
+  0x65766173,0x656D6167,0x7461642E,0x00000000
+};
+static const char STRING_DOT_M3G_0012770C[] = ".m3g";   /* 0x0012770C */
+static const char STRING_ALL_00127714[] = "ALL";   /* 0x00127714 */
+static const char STRING_ENEMY[] = "ENEMY";   /* 0x00127718 */
+static const char STRING_SHOW[] = "SHOW";   /* 0x00127720 */
+static const char STRING_ALL_00127728[] = "!ALL";   /* 0x00127728 */
+static const char STRING_HIDE[] = "HIDE";   /* 0x00127730 */
+static const char STRING_LOADING_00127738[] = "LOADING";   /* 0x00127738 */
+static const char STRING_LOADING_00127740[] = "!LOADING";   /* 0x00127740 */
+static const uint32 DATA_AT_0012774C[1] = {   /* 0x0012774C */
+  0x00000020
+};
+static const uint32 DATA_AT_00127750[1] = {   /* 0x00127750 */
+  0x00000031
+};
+static const char STRING_CARRIAGE_RETURN_NEWLINE_00127754[] = "\r\n";   /* 0x00127754 */
+static const char STRING_TERRAINONLY[] = "TerrainOnly";   /* 0x00127758 */
+static const char STRING_NONTERRAIN[] = "NonTerrain";   /* 0x00127764 */
+static const char STRING_ALIGN[] = "Align";   /* 0x00127770 */
+static const char STRING_MOVING[] = "Moving";   /* 0x00127778 */
+static const char STRING_CARRIAGE_RETURN_NEWLINE_00127780[] = "\r\n";   /* 0x00127780 */
+static const uint32 DATA_AT_00127784[1] = {   /* 0x00127784 */
+  0x0000003A
+};
+static const char STRING_MOTIONENTITY[] = "MotionEntity";   /* 0x00127788 */
+static const char STRING_COMBATREGION[] = "CombatRegion";   /* 0x00127798 */
+static const char STRING_BOSSCOMBATREGION[] = "BossCombatRegion";   /* 0x001277A8 */
+static const char STRING_NOPARENT[] = "NoParent";   /* 0x001277BC */
+static const char STRING_DEADEND[] = "DeadEnd";   /* 0x001277C8 */
+static const char STRING_BASE_DOT_M3G[] = "base.m3g";   /* 0x001277D0 */
+static const char STRING_CHARACTER_GRP_001277DC[] = "character_grp";   /* 0x001277DC */
+static const char STRING_GENERAL_SCRIPTS[] = "general_scripts";   /* 0x001277EC */
+static const char STRING_CAMERA[] = "Camera";   /* 0x001277FC */
+static const char STRING_CHARACTER[] = "Character";   /* 0x00127804 */
+static const char STRING_MAGIC_CAST_DOT_QCP[] = "magic_cast.qcp";   /* 0x00127810 */
+static const char STRING_MAGIC_ALERT_DOT_MID[] = "magic_alert.mid";   /* 0x00127820 */
+static const char STRING_TRANSITION_DOT_QCP[] = "transition.qcp";   /* 0x00127830 */
+static const char STRING_THUD_DOT_QCP[] = "thud.qcp";   /* 0x00127840 */
+static const char STRING_WATER_DOT_QCP[] = "water.qcp";   /* 0x0012784C */
+static const char STRING_EXPLODE_DOT_QCP[] = "explode.qcp";   /* 0x00127858 */
+static const char STRING_KEYBLADE_DOT_MID[] = "keyblade.mid";   /* 0x00127864 */
+static const char STRING_GOOD_DOT_MID[] = "good.mid";   /* 0x00127874 */
+static const char STRING_BAD_DOT_MID[] = "bad.mid";   /* 0x00127880 */
+static const char STRING_SORA_SWIPE_DOT_QCP[] = "sora_swipe.qcp";   /* 0x00127888 */
+static const char STRING_ENEMY_HIT_DOT_QCP[] = "enemy_hit.qcp";   /* 0x00127898 */
+static const char STRING_SORA_HIT_DOT_QCP[] = "sora_hit.qcp";   /* 0x001278A8 */
+static const char STRING_SORA_JUMP_DOT_QCP[] = "sora_jump.qcp";   /* 0x001278B8 */
+static const char STRING_SCOREDATA_DOT_DAT[] = "scoredata.dat";   /* 0x001278C8 */
+static const char STRING_SETTINGS_DOT_DAT_001278D8[] = "settings.dat";   /* 0x001278D8 */
+static const uint32 DATA_AT_001278E8[1] = {   /* 0x001278E8 */
+  0x00000000
+};
+static const char STRING_TMP_DOT_DAT[] = "tmp.dat";   /* 0x001278EC */
+static const char STRING_OUT_OF_MAGIC_001278F4[] = "OUT_OF_MAGIC";   /* 0x001278F4 */
+static const char STRING_PERCENT_S_EQUALS_PERCENT_D[] = "%s = %d";   /* 0x00127904 */
+static const char STRING_DOT_M3G_00127910[] = ".m3g";   /* 0x00127910 */
+static const uint32 DATA_AT_00127918[11] = {   /* 0x00127918 */
+  0x36C5EA1A,0x0368478C,0x343FDCDE,0x0151178B,0x24671AD4,0x1366844D,0x3B91C067,0x2663AC15,
+  0x05A123D5,0x3B91C067,0x11C542FF
+};
+static const uint32 DATA_AT_00127944[11] = {   /* 0x00127944 */
+  0x00000000,0x00000000,0x0000046D,0x0000046D,0x00000535,0x00000535,0x00000708,0x00000DCD,
+  0x00000DCD,0x00001173,0x00002B7F
+};
+static const uint32 DATA_AT_00127970[11] = {   /* 0x00127970 */
+  0x00001B58,0x0000046D,0x00000535,0x00000535,0x00000708,0x00000708,0x00000DCD,0x00001173,
+  0x00001173,0x00002B7F,0x000035EA
+};
+static const char STRING_DISNEY_DOT_M3G[] = "disney.m3g";   /* 0x0012799C */
+static const char STRING_SWERVE_DOT_M3G[] = "swerve.m3g";   /* 0x001279A8 */
+static const char STRING_INTRO_DOT_M3G[] = "intro.m3g";   /* 0x001279B4 */
+static const char STRING_CHARACTER_GRP_001279C0[] = "character_grp";   /* 0x001279C0 */
+static const char STRING_LANGUAGE_DOT_M3G[] = "language.m3g";   /* 0x001279D0 */
+static const uint32 DATA_AT_001279E0[5] = {   /* 0x001279E0 */
+  0x251509C8,0x19408333,0x10FB280A,0x14741FD6,0x0252B33F
+};
+static const char STRING_PRESS_ANY_KEY_TO_CONTINUE[] = "Press any key to continue";   /* 0x001279F4 */
+static const char STRING_AND_WILL_CLOSE_ERROR_PERCENT_X[] = "and will close (Error %x)";   /* 0x00127A10 */
+static const char STRING_THE_APPLICATION_HAS_FAILED[] = "The application has failed";   /* 0x00127A2C */
+static const char STRING_SAVEGAME_DOT_DAT[] = "savegame.dat";   /* 0x00127A48 */
+static const char STRING_SETTINGS_DOT_DAT_00127A58[] = "settings.dat";   /* 0x00127A58 */
+static const uint32 DATA_AT_00127A68[4] = {   /* 0x00127A68 */
+  0x00000008,0x00000000,0x00000004,0x00000000
+};
+static const uint32 DATA_AT_00127A78[2] = {   /* 0x00127A78 */
+  0x00000000,0x00000007
+};
+static const uint8 DATA_AT_00127A7E[8] = {   /* 0x00127A7E */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x07,0x00
+};
+static const uint8 DATA_AT_00127A86[8] = {   /* 0x00127A86 */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x05,0x00
+};
+static const uint8 DATA_AT_00127A8E[10] = {   /* 0x00127A8E */
+  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x2D,0x00
+};
+static const char STRING_KH_DOT_BAR_00127A98[] = "kh.bar";   /* 0x00127A98 */
+static const uint32 DATA_AT_00127AA0[12] = {   /* 0x00127AA0 */
+  0xFFFFFC18,0xFFFFFC17,0xFFFFFC16,0xFFFFFC15,0xFFFFFC14,0xFFFFFC13,0xFFFFFC12,0xFFFFFC11,
+  0xFFFFFC10,0xFFFFFC0F,0xFFFFFC0E,0xFFFFFC0D
+};
+static const uint32 DATA_AT_00127AD0[3] = {   /* 0x00127AD0 */
+  0x33323130,0x37363534,0x232A3938
+};
+static const uint32 DATA_AT_00127ADC[5] = {   /* 0x00127ADC */
+  0x39FEE748,0x3D52229B,0x304B17D0,0x17616D9E,0x09B4B3F6
+};
+static const uint32 DATA_AT_00127AF0[5] = {   /* 0x00127AF0 */
+  0x0000003D,0x0000003E,0x00000003,0x00000040,0x00000041
+};
+static const uint32 DATA_AT_00127B04[6] = {   /* 0x00127B04 */
+  0x16A5390B,0x0AF804C1,0x31655ECD,0x2B26AEEE,0x272E6865,0x00C833EC
+};
+static const uint32 DATA_AT_00127B1C[6] = {   /* 0x00127B1C */
+  0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF
+};
+static const uint32 DATA_AT_00127B34[7] = {   /* 0x00127B34 */
+  0x16A5390B,0x0AF804C1,0x31655ECD,0x2B26AEEE,0x272E6865,0x00C833EC,0x04D4D70F
+};
+static const uint32 DATA_AT_00127B50[7] = {   /* 0x00127B50 */
+  0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF
+};
+static const uint32 DATA_AT_00127B6C[7] = {   /* 0x00127B6C */
+  0x1874E38C,0x210035A0,0x0AF804C1,0x31655ECD,0x2B26AEEE,0x08897883,0x272E6865
+};
+static const uint32 DATA_AT_00127B88[7] = {   /* 0x00127B88 */
+  0xFF7FCB61,0xFF4757DD,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF
+};
+static const uint32 DATA_AT_00127BA4[6] = {   /* 0x00127BA4 */
+  0x16A5390B,0x075C231E,0x0F5D9BAD,0x3A8A8292,0x3746DB2E,0x00000000
+};
+static const uint32 DATA_AT_00127BBC[6] = {   /* 0x00127BBC */
+  0xFF000000,0xFF7FCB61,0xFF7FCB61,0xFF4757DD,0xFF4757DD,0xFF000000
+};
+static const uint32 DATA_AT_00127BD4[5] = {   /* 0x00127BD4 */
+  0x2757255D,0x14FB8F11,0x27B2CEEB,0x045E6D5C,0x14A8296B
+};
+static const uint32 DATA_AT_00127BE8[5] = {   /* 0x00127BE8 */
+  0x0000000B,0x0000000C,0x00000011,0x0000000E,0x0000000F
+};
+static const uint32 DATA_AT_00127BFC[5] = {   /* 0x00127BFC */
+  0x00000000,0x000000C8,0x000000C9,0x00000000,0x00000000
+};
+static const uint32 DATA_AT_00127C10[3] = {   /* 0x00127C10 */
+  0x075C231E,0x0F5D9BAD,0x3A8A8292
+};
+static const uint32 DATA_AT_00127C1C[1] = {   /* 0x00127C1C */
+  0x3746DB2E
+};
+static const uint32 DATA_AT_00127C20[4] = {   /* 0x00127C20 */
+  0x0000000A,0x0000000F,0x0000000A,0x0000000F
+};
+static const uint32 DATA_AT_00127C30[4] = {   /* 0x00127C30 */
+  0x00000029,0x0000002A,0x0000002B,0x0000002C
+};
+static const uint32 DATA_AT_00127C40[7] = {   /* 0x00127C40 */
+  0x36637790,0x0198B58B,0x380D74DD,0x108CF3DF,0x2257A2C2,0x0CCFFC1C,0x23C0A51A
+};
+static const uint32 DATA_AT_00127C5C[13] = {   /* 0x00127C5C */
+  0x1484CCBF,0xFFFFFC18,0xFFFFFC17,0xFFFFFC16,0xFFFFFC15,0xFFFFFC14,0xFFFFFC13,0xFFFFFC12,
+  0xFFFFFC11,0xFFFFFC10,0xFFFFFC0F,0xFFFFFC0E,0xFFFFFC0D
+};
+static const uint32 DATA_AT_00127C90[13] = {   /* 0x00127C90 */
+  0x0000E010,0x0000E021,0x0000E022,0x0000E023,0x0000E024,0x0000E025,0x0000E026,0x0000E027,
+  0x0000E028,0x0000E029,0x0000E02A,0x0000E02B,0x0000E02C
+};
+static const char STRING_KH_DOT_BAR_00127CC4[] = "kh.bar";   /* 0x00127CC4 */
+static const char STRING_PERCENT_D[] = "%d";   /* 0x00127CCC */
+static const char STRING_CASTLE[] = "castle";   /* 0x00127CD0 */
+static const char STRING_AGRABAH[] = "agrabah";   /* 0x00127CD8 */
+static const char STRING_WONDERLAND[] = "wonderland";   /* 0x00127CE0 */
+static const char STRING_ISLAND[] = "island";   /* 0x00127CEC */
+static const uint32 DATA_AT_00127CF4[4] = {   /* 0x00127CF4 */
+  0x65766173,0x656D6167,0x7461642E,0x00000000
+};
+static const char STRING_PERCENT_S_PERCENT_D_SLASH_PERCENT[] = "%s %d/%d";   /* 0x00127D04 */
+static const char STRING_TRAINING_00127D10[] = "training";   /* 0x00127D10 */
+static const char STRING_REPLAYGAME_DOT_DAT[] = "replaygame.dat";   /* 0x00127D1C */
+static const uint32 DATA_AT_00127D2C[1] = {   /* 0x00127D2C */
+  0x00000000
+};
+static const uint32 DATA_AT_00127D30[1] = {   /* 0x00127D30 */
+  0x0000002C
+};
+static const char STRING_COLLECTABLES[] = "COLLECTABLES";   /* 0x00127D34 */
+static const char STRING_PERCENT_S_PERCENT_S_PERCENT_S_00127D44[] = "%s%s%s";   /* 0x00127D44 */
+static const char STRING_RO[] = "ro_";   /* 0x00127D4C */
+static const char STRING_JTEXT_DOT_M3G[] = "_jtext.m3g";   /* 0x00127D50 */
+static const char STRING_JIMINY_ICON_DOT_PNG[] = "jiminy_icon.png";   /* 0x00127D5C */
+static const char STRING_SPLASH_DOT_PNG[] = "_splash.png";   /* 0x00127D6C */
+static const char STRING_OUT_OF_MAGIC_00127D78[] = "OUT_OF_MAGIC";   /* 0x00127D78 */
+static const uint32 DATA_AT_00127D88[2] = {   /* 0x00127D88 */
+  0x00000000,0x0000000B
+};
+static const uint32 DATA_AT_00127D90[1] = {   /* 0x00127D90 */
+  0x00000000
+};
+static const uint32 DATA_AT_00127D94[1] = {   /* 0x00127D94 */
+  0x00000020
+};
+static const char STRING_INVALIDENTRY[] = "invalidentry";   /* 0x00127D98 */
+static const char STRING_STAR_D[] = "*d";   /* 0x00127DA8 */
+static const char STRING_STAR_T[] = "*t";   /* 0x00127DAC */
+static const char STRING_STAR_R[] = "*r";   /* 0x00127DB0 */
+static const char STRING_KH[] = "KH";   /* 0x00127DB4 */
+static const char STRING_DOT_DAT[] = ".dat";   /* 0x00127DB8 */
+static const char STRING_PERCENT_S_PERCENT_S_PERCENT_S_00127DC0[] = "%s%s%s&uid=%s&aid=%s&t=%d";   /* 0x00127DC0 */
+static const char STRING_HTTP_COLON_SLASH_SLASH_SWERVENET_DOT[] = "http://swervenet.superscape.com/";   /* 0x00127DDC */
+static const char STRING_DISNEY_SLASH_DOWNLOAD_DOT_PHP_QUESTION[] = "disney/download.php\?f=";   /* 0x00127E00 */
+static const char STRING_PERCENT_S_AND_S_EQUALS_PERCENT[] = "%s&s=%d";   /* 0x00127E18 */
+static const uint32 DATA_AT_00127E20[4] = {   /* 0x00127E20 */
+  0x654D2D58,0x646F6874,0x4547203A,0x000A0D54
+};
+static const char STRING_PERCENT_S_PERCENT_S_QUESTION_MARK_00127E30[] = "%s%s\?uid=%s&aid=%s&lid=%s&s=%d&t=%d&u1=%d&u2=%s";   /* 0x00127E30 */
+static const char STRING_DISNEY_SLASH_RANK_DOT_PHP[] = "disney/rank.php";   /* 0x00127E60 */
+static const char STRING_PERCENT_S_PERCENT_S_QUESTION_MARK_00127E70[] = "%s%s\?uid=%s&aid=%s&lid=%s&s=%s&t=%d&u1=%d";   /* 0x00127E70 */
+static const char STRING_DISNEY_SLASH_RANKEX_DOT_PHP[] = "disney/rankex.php";   /* 0x00127E9C */
+static const char STRING_MP3[] = "mp3";   /* 0x00127EB0 */
+static const char STRING_MID[] = "mid";   /* 0x00127EB4 */
+static const char STRING_QCP[] = "qcp";   /* 0x00127EB8 */
+static const char STRING_PMD[] = "pmd";   /* 0x00127EBC */
+static const uint32 DATA_AT_00127EC4[4] = {   /* 0x00127EC4 */
+  0x00000000,0x00000000,0x00000000,0x3F800000
+};
+static const uint32 DATA_AT_00127ED4[8] = {   /* 0x00127ED4 */
+  0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0xFFFFFFFF
+};
+static const char STRING_TRANSFORM[] = "Transform";   /* 0x00127EF4 */
+static const char STRING_DOT_M3G_00127F00[] = ".m3g";   /* 0x00127F00 */
+static const char STRING_CARRIAGE_RETURN_NEWLINE_00127F08[] = "\r\n";   /* 0x00127F08 */
+static const char STRING_HASH_VER[] = "#VER";   /* 0x00127F0C */
+static const char STRING_HASH_MAGIC[] = "#MAGIC";   /* 0x00127F14 */
+static const char STRING_HASH_INV[] = "#INV";   /* 0x00127F1C */
+static const char STRING_HASH_ACTION[] = "#ACTION";   /* 0x00127F24 */
+static const char STRING_HASH_RIGHT[] = "#RIGHT";   /* 0x00127F2C */
+static const char STRING_HASH_LEFT[] = "#LEFT";   /* 0x00127F34 */
+static const char STRING_HASH_DOWN[] = "#DOWN";   /* 0x00127F3C */
+static const char STRING_HASH_UP[] = "#UP";   /* 0x00127F44 */
+static const uint32 DATA_AT_00127F48[1] = {   /* 0x00127F48 */
+  0x00000030
+};
+static const uint32 DATA_AT_00127F4C[1] = {   /* 0x00127F4C */
+  0x00000031
+};
+static const uint32 DATA_AT_00127F50[1] = {   /* 0x00127F50 */
+  0x00000032
+};
+static const uint32 DATA_AT_00127F54[1] = {   /* 0x00127F54 */
+  0x00000033
+};
+static const uint32 DATA_AT_00127F58[1] = {   /* 0x00127F58 */
+  0x00000034
+};
+static const uint32 DATA_AT_00127F5C[1] = {   /* 0x00127F5C */
+  0x00000035
+};
+static const uint32 DATA_AT_00127F60[1] = {   /* 0x00127F60 */
+  0x00000036
+};
+static const uint32 DATA_AT_00127F64[1] = {   /* 0x00127F64 */
+  0x00000037
+};
+static const uint32 DATA_AT_00127F68[1] = {   /* 0x00127F68 */
+  0x00000038
+};
+static const uint32 DATA_AT_00127F6C[1] = {   /* 0x00127F6C */
+  0x00000039
+};
+static const uint32 DATA_AT_00127F70[1] = {   /* 0x00127F70 */
+  0x0000002A
+};
+static const uint32 DATA_AT_00127F74[1] = {   /* 0x00127F74 */
+  0x00000023
+};
+static const uint32 DATA_AT_00127F78[1] = {   /* 0x00127F78 */
+  0x00000000
+};
+static const char STRING_TRAINING_DOT_MID[] = "training.mid";   /* 0x00127F7C */
+static const char STRING_TRAINING_00127F8C[] = "training";   /* 0x00127F8C */
+static const char STRING_PERCENT_S_PERCENT_S[] = "%s%s";   /* 0x00127F98 */
+static const char STRING_DOT_MID[] = ".mid";   /* 0x00127FA0 */
+static const char STRING_DEATH_DOT_MID[] = "death.mid";   /* 0x00127FA8 */
+static const uint32 ACOS_NUMERATOR_TABLE[12] = {   /* 0x00127FB4 */
+  0x55555555,0x3FC55555,0x03EB6F7D,0xBFD4D612,0x0E884455,0x3FC9C155,0xB5688F3B,0xBFA48228,
+  0x7501B288,0x3F49EFE0,0x0DFDF709,0x3F023DE1
+};
+static const uint32 ACOS_DENOMINATOR_TABLE[8] = {   /* 0x00127FE4 */
+  0x1C8A2D4B,0xC0033A27,0x9C598AC8,0x40002AE5,0x1B8D0159,0xBFE6066C,0xB12E9282,0x3FB3B8C5
+};
+static const uint32 COS_KERNEL_TABLE[12] = {   /* 0x00128004 */
+  0x5555554C,0x3FA55555,0x16C15177,0xBF56C16C,0x19CB1590,0x3EFA01A0,0x809C52AD,0xBE927E4F,
+  0xBDB4B1C4,0x3E21EE9E,0xBE8838D4,0xBDA8FAE9
+};
+static const uint32 LARGE_ARGUMENT_SCALE_TABLE[36] = {   /* 0x00128034 */
+  0x66C0E65C,0x3CA03923,0x486F5BA8,0x3954C2B1,0xCAF7C76B,0xB6254068,0x84BD9AC5,0x32E39207,
+  0x1EFD4BE4,0x2FA6702F,0x7AC65E97,0xAC491D0B,0xAA3BC92E,0x2903BD1A,0xC9A22250,0xA5DEF596,
+  0x9555FDD5,0x22A2B780,0x046A611E,0x9F638C87,0x916FA3B6,0x1BFEC8DD,0xDC0E352B,0x18D6C252,
+  0xB54C4D89,0x958977F8,0x4C55AC6B,0x91CAAFB6,0x593C7F16,0x8EF7690B,0x41E9C6C7,0x0BE571A3,
+  0x8851AAAD,0x88A3BDD9,0x94F3DE7D,0x0562D533
+};
+static const uint32 HALF_PI_PIECES_TABLE[12] = {   /* 0x001280C4 */
+  0x54400000,0x3FF921FB,0x1A626331,0x3DD0B461,0x1A600000,0x3DD0B461,0x2E037073,0x3BA3198A,
+  0x2E000000,0x3BA3198A,0x252049C1,0x397B839A
+};
+static const uint32 SIN_KERNEL_TABLE[4] = {   /* 0x001280F4 */
+  0x1110F8A6,0x3F811111,0x19C161D5,0xBF2A01A0
+};
+static const uint32 SIGNAL_MESSAGE_TABLE[81] = {   /* 0x00128104 */
+  0x57B1FE7D,0x3EC71DE3,0x8A2B9CEB,0xBE5AE5E6,0x5ACFD57C,0x3DE5D93A,0x6F6E6241,0x6C616D72,
+  0x72657420,0x616E696D,0x6E6F6974,0x41000000,0x68746972,0x6974656D,0x78652063,0x74706563,
+  0x3A6E6F69,0x6C490020,0x6167656C,0x6E69206C,0x75727473,0x6F697463,0x0000006E,0x746E4900,
+  0x75727265,0x72207470,0x69656365,0x00646576,0x00000000,0x656C6C49,0x206C6167,0x72646461,
+  0x00737365,0x00000000,0x54000000,0x696D7265,0x6974616E,0x72206E6F,0x65757165,0x00007473,
+  0x74530000,0x206B6361,0x7265766F,0x776F6C66,0x00000000,0x00000000,0x64655200,0x63657269,
+  0x63203A74,0x74276E61,0x65706F20,0x00203A6E,0x2074754F,0x6820666F,0x20706165,0x6F6D656D,
+  0x00007972,0x55000000,0x2D726573,0x69666564,0x2064656E,0x6E676973,0x31206C61,0x73550000,
+  0x642D7265,0x6E696665,0x73206465,0x616E6769,0x0032206C,0x72755000,0x69762065,0x61757472,
+  0x6E66206C,0x6C616320,0x0064656C,0x202B2B43,0x7262696C,0x20797261,0x65637865,0x6F697470,
+  0x0000006E
+};
+
+/* ---- The relative vtables (0x00101650 - 0x00101743), as arrays of function pointers. */
+static code *const VTABLE_00101650[3] = {   /* 0x00101650; in kh.mod each entry is the method's offset from
+                                                the table */
+  (code *)FUN_00114c00,
+  (code *)FUN_00121c6c,
+  (code *)FUN_0010f4d0
+};
+static code *const VTABLE_0010165C[9] = {   /* 0x0010165C; in kh.mod each entry is the method's offset from
+                                                the table */
+  (code *)FUN_00105c5c,
+  (code *)FUN_00106fac,
+  (code *)FUN_00108414,
+  (code *)FUN_001077cc,
+  (code *)FUN_00106398,
+  (code *)FUN_0010807c,
+  (code *)FUN_00108048,
+  (code *)FUN_00107f58,
+  (code *)FUN_001051d4
+};
+static code *const VTABLE_00101680[8] = {   /* 0x00101680; in kh.mod each entry is the method's offset from
+                                                the table */
+  (code *)FUN_001174ac,
+  (code *)enemy_update,
+  (code *)FUN_0011f624,
+  (code *)FUN_0011f26c,
+  (code *)FUN_0011f260,
+  (code *)FUN_0010f2e8,
+  (code *)FUN_001136c0,
+  (code *)FUN_00119af4
+};
+static code *const VTABLE_001016A0[8] = {   /* 0x001016A0; in kh.mod each entry is the method's offset from
+                                                the table */
+  (code *)FUN_00105c98,
+  (code *)FUN_00106fac,
+  (code *)FUN_001084e4,
+  (code *)FUN_00106fb0,
+  (code *)FUN_0010673c,
+  (code *)FUN_0010807c,
+  (code *)FUN_00108048,
+  (code *)FUN_00107f58
+};
+static code *const VTABLE_001016C0[8] = {   /* 0x001016C0; in kh.mod each entry is the method's offset from
+                                                the table */
+  (code *)FUN_00105d48,
+  (code *)FUN_00106fac,
+  (code *)FUN_00108734,
+  (code *)FUN_001077cc,
+  (code *)FUN_00106a94,
+  (code *)FUN_0010807c,
+  (code *)FUN_00108048,
+  (code *)FUN_00107f58
+};
+static code *const VTABLE_001016E0[8] = {   /* 0x001016E0; in kh.mod each entry is the method's offset from
+                                                the table */
+  (code *)FUN_00105d7c,
+  (code *)FUN_00106fac,
+  (code *)ui_element_handle_key,
+  (code *)FUN_00107230,
+  (code *)FUN_00106bd4,
+  (code *)FUN_0010807c,
+  (code *)FUN_00108048,
+  (code *)FUN_00107f58
+};
+static code *const VTABLE_00101700[9] = {   /* 0x00101700; in kh.mod each entry is the method's offset from
+                                                the table */
+  (code *)FUN_00105dc8,
+  (code *)FUN_00106fac,
+  (code *)FUN_0010872c,
+  (code *)FUN_001077cc,
+  (code *)FUN_00106e44,
+  (code *)FUN_0010807c,
+  (code *)FUN_00108048,
+  (code *)FUN_00107f58,
+  (code *)FUN_001052dc
+};
+static code *const VTABLE_00101724[8] = {   /* 0x00101724; in kh.mod each entry is the method's offset from
+                                                the table */
+  (code *)FUN_00105de4,
+  (code *)FUN_00106fac,
+  (code *)FUN_00108734,
+  (code *)FUN_001077cc,
+  (code *)FUN_00106fa8,
+  (code *)FUN_0010807c,
+  (code *)FUN_00108048,
+  (code *)FUN_00107f58
+};
 
 #endif /* KH_MOD_H */

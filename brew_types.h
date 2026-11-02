@@ -17,12 +17,15 @@
 #define BREW_TYPES_H
 
 /* ---- scalar types (AEEStdDef.h) -------------------------------------------------------- */
+/* The integer types by their size in bits (C89 has none). AEEStdDef.h declares the 32-bit ones on
+   long; on the ARM target int and long are both 32 bits, and int makes them the same types as the
+   decompiler's int and uint, so the two kinds mix without casts. */
 typedef unsigned char      uint8;
 typedef signed char        int8;
 typedef unsigned short     uint16;
 typedef short              int16;
-typedef unsigned long      uint32;
-typedef long               int32;
+typedef unsigned int       uint32;
+typedef int                int32;
 typedef unsigned char      boolean;
 typedef unsigned short     AECHAR;        /* UTF-16LE, zero-terminated */
 typedef unsigned long      AEECLSID;
