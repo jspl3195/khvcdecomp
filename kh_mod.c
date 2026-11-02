@@ -3855,10 +3855,10 @@ void FUN_00105538(int param_1,undefined4 param_2,int param_3)
   param_1 = param_1 + param_3 * 4;
   *(undefined4 *)(param_1 + 0x6c) = 1;
   
-  uVar1 = FUN_001268c8(FUN_00107f88(*(undefined4 *)(param_1 + 0x58)));
+  uVar1 = int_to_float(FUN_00107f88(*(undefined4 *)(param_1 + 0x58)));
   uVar1 = float_divide(uVar1,FLOAT_500);
   *(undefined4 *)(param_1 + 0x94) = uVar1;
-  uVar1 = FUN_001268c8((int)*(short *)(*(int *)(*(int *)(param_1 + 0x58) + 8) + 2));
+  uVar1 = int_to_float(*(int16 *)(*(int *)(*(int *)(param_1 + 0x58) + 8) + 2));
   *(undefined4 *)(param_1 + 0xa8) = uVar1;
   return;
 }
@@ -4582,14 +4582,14 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
           *(undefined4 *)(param_1 + 0x78) = 0;
           *(undefined4 *)(param_1 + 0x8c) = 1;
         }
-        uVar3 = FUN_001268c8(*(uint *)(*(int *)(param_1 + 0x44) + 0x88));
+        uVar3 = int_to_float(*(int32 *)(*(int *)(param_1 + 0x44) + 0x88));
         uVar3 = float_multiply(uVar3,*(uint *)(iVar8 + 0x94));
         if (*(int *)(iVar8 + 0x6c) == 0) {
           if (*(int *)(iVar8 + 0x80) == 1) {
             uVar3 = float_subtract(*(uint *)(iVar8 + 0xa8),uVar3);
             *(uint *)(iVar8 + 0xa8) = uVar3;
             iVar7 = *(int *)(iVar8 + 0x58);
-            uVar4 = FUN_001268c8((int)*(short *)(*(int *)(iVar7 + 8) + 2));
+            uVar4 = int_to_float(*(int16 *)(*(int *)(iVar7 + 8) + 2));
             uVar3 = float_reverse_subtract(uVar4,uVar3);
             uVar3 = FUN_00126858(uVar3);
             FUN_00108840(iVar7,(short)uVar3);
@@ -4606,7 +4606,7 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
             uVar3 = float_add(*(uint *)(iVar8 + 0xa8),uVar3);
             *(uint *)(iVar8 + 0xa8) = uVar3;
             uVar5 = (uint)*(short *)(*(int *)(iVar7 + 8) + 2);
-            uVar4 = FUN_001268c8(uVar5);
+            uVar4 = int_to_float(uVar5);
             uVar3 = float_reverse_subtract(uVar4,uVar3);
             uVar3 = FUN_00126858(uVar3);
             if (0 < (int)(uVar5 + uVar3)) {
@@ -5113,7 +5113,7 @@ LAB_00107384:
                        code on the stack: `mov r3, #3; str r3, [sp]` at 0x1076fc = FO_DIV */
     *(double *)&ratio = (*g_pHelperFuncs->f_op)(*(double *)&value,*(double *)&maximum,FO_DIV);
     uVar3 = FUN_0012479c(ratio.low,ratio.high);
-    uVar4 = FUN_001268c8((int)*(short *)(param_1[2] + 4));
+    uVar4 = int_to_float(*(int16 *)(param_1[2] + 4));
     uVar3 = float_multiply(uVar4,uVar3);
     bar.x = *(int16 *)param_1[2] + 1;
     bar.y = ((int16 *)param_1[2])[1] + 1;
@@ -9446,7 +9446,7 @@ LAB_0010d7a8:
         FUN_00114a1c(param_1,*(undefined4 *)(param_1 + 0xec));
         return 1;
       }
-      uVar3 = FUN_001268c8(800 - (*(int *)(param_1 + 0x168) - param_2));
+      uVar3 = int_to_float(800 - (*(int *)(param_1 + 0x168) - param_2));
       uVar2 = float_multiply(*(undefined4 *)(param_1 + 0xb8),uVar3);
       uVar2 = float_add(uVar2,*(undefined4 *)(param_1 + 0x188));
       uVar3 = float_multiply(*(undefined4 *)(param_1 + 0xb4),uVar3);
@@ -9701,7 +9701,7 @@ void FUN_0010db04(int param_1,undefined4 param_2)
   uVar7 = FLOAT_10;
   if (*(int *)(param_1 + 0x20c) == 0) {
     uVar15 = FUN_00100288(0x1e,*(uint *)(param_1 + 0x88));
-    uVar4 = FUN_001268c8((uint)uVar15.high);
+    uVar4 = int_to_float((int32)uVar15.high);
     uVar4 = float_divide(uVar4,uVar7);
   }
   else {
@@ -10124,7 +10124,7 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
           bVar11 = uVar2 == 0;
           uVar18 = bVar11;
           if (!bVar11) {
-            uVar2 = FUN_001268c8(uVar2);
+            uVar2 = int_to_float(uVar2);
             uVar2 = float_multiply(uVar2,uVar4);
             motion_entity_turn((MotionEntity *)param_1,uVar2);
           }
@@ -10156,7 +10156,7 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
             uVar2 = FUN_00113da4(local_30,*(int *)(param_1 + 0x68),uVar8,*(int *)(param_1 + 0x68),
                                  uVar2,uVar7);
             if (uVar2 != 0) {
-              uVar2 = FUN_001268c8(uVar2);
+              uVar2 = int_to_float(uVar2);
               uVar2 = float_multiply(uVar2,uVar4);
               motion_entity_turn((MotionEntity *)param_1,uVar2);
               bVar11 = true;
@@ -10189,7 +10189,7 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
             uVar8 = float_add(uVar9,*param_2);
             uVar2 = FUN_00113da4(local_30,uVar9,uVar3,uVar8,uVar2,uVar7);
             if (uVar2 != 0) {
-              uVar2 = FUN_001268c8(uVar2);
+              uVar2 = int_to_float(uVar2);
               uVar4 = float_multiply(uVar2,uVar4);
               motion_entity_turn((MotionEntity *)param_1,uVar4);
             }
@@ -10859,8 +10859,8 @@ void FUN_0010f244(int *param_1,undefined4 *param_2)
   *param_2 = uVar1;
   uVar1 = float_reverse_subtract(uVar1,0x3f800000);
   iVar4 = *(int *)(*param_1 + 0xa8);
-  uVar2 = FUN_001268c8(*(undefined4 *)(iVar4 + 0x524));
-  uVar3 = FUN_001268c8(*(undefined4 *)(iVar4 + 0x528));
+  uVar2 = int_to_float(*(int32 *)(iVar4 + 0x524));
+  uVar3 = int_to_float(*(int32 *)(iVar4 + 0x528));
   uVar2 = float_reverse_divide(uVar3,uVar2);
   uVar2 = float_reverse_subtract(uVar2,0x3f800000);
   uVar2 = float_multiply(uVar2,uVar1);
@@ -11608,7 +11608,7 @@ undefined4 FUN_00110190(int param_1,undefined4 *param_2,undefined4 *param_3)
        ) && iVar6 != 0x10) && iVar6 != 0xd) {
     return 0xffffffff;
   }
-  uVar2 = FUN_001268c8(*(uint *)(param_1 + 0x8c));
+  uVar2 = int_to_float(*(int32 *)(param_1 + 0x8c));
   uVar2 = float_multiply(uVar2,*(uint *)(param_1 + 0x294));
   if (iVar6 == 3) {
     uVar2 = 0;
@@ -13158,7 +13158,7 @@ FUN_0011295c(undefined4 *param_1,int *param_2,int *param_3,int *param_4,undefine
   local_20 = param_3;
   local_1c = param_4;
   uVar1 = float_subtract(param_3,(uint)param_2);
-  uVar2 = FUN_001268c8(param_5);
+  uVar2 = int_to_float(param_5);
   uVar1 = float_reverse_divide(uVar2,uVar1);
   param_1[0x8e] = uVar1;
   local_1c = (int *)0x0;
@@ -13567,8 +13567,8 @@ void FUN_001132a8(int param_1)
                      (int)*(short *)(iVar4 + 0x7a));
   *(undefined4 *)(*(int *)(param_1 + 0xc) + 0x90) = uVar2;
   iVar1 = *(int *)(param_1 + 0xc);
-  uVar2 = FUN_001268c8((int)*(short *)(iVar1 + 0x78));
-  uVar3 = FUN_001268c8((int)*(short *)(iVar1 + 0x7a));
+  uVar2 = int_to_float(*(int16 *)(iVar1 + 0x78));
+  uVar3 = int_to_float(*(int16 *)(iVar1 + 0x7a));
   uVar2 = float_reverse_divide(uVar3,uVar2);
   FUN_0011f540(param_1,FLOAT_MINUS_1,uVar2,FLOAT_MINUS_1,FLOAT_MINUS_1);
   return;
@@ -13879,7 +13879,7 @@ void FUN_0011386c(uint param_1,int param_2)
   bool bVar13;
   bool bVar14;
   
-  uVar2 = FUN_001268c8(*(undefined4 *)(param_1 + 0x8c));
+  uVar2 = int_to_float(*(int32 *)(param_1 + 0x8c));
   uVar3 = float_multiply(uVar2,*(undefined4 *)(param_1 + 0x118));
   *(undefined4 *)(param_1 + 0x298) = 0;
   *(undefined4 *)(param_1 + 0x29c) = 0;
@@ -13940,7 +13940,7 @@ LAB_00113954:
           uVar3 = 0;
         }
         else {
-          uVar2 = FUN_001268c8(*(undefined4 *)(param_1 + 0x8c));
+          uVar2 = int_to_float(*(int32 *)(param_1 + 0x8c));
           uVar3 = float_multiply(uVar2,**(undefined4 **)(param_1 + 0x110));
         }
         *(uint *)(param_2 + 4) = uVar3 ^ 0x80000000;
@@ -13956,7 +13956,7 @@ LAB_00113954:
     if (*(int *)(param_1 + 0x1c8) == 1) {
       if (cVar1 != '\x01') goto LAB_00113c30;
       if (*(int *)(param_1 + 0x1cc) != 8) {
-        uVar2 = FUN_001268c8(*(undefined4 *)(param_1 + 0x8c));
+        uVar2 = int_to_float(*(int32 *)(param_1 + 0x8c));
         uVar6 = *(undefined4 *)(*(int *)(param_1 + 0x110) + 4);
         goto LAB_00113b64;
       }
@@ -13966,7 +13966,7 @@ LAB_00113a18:
     }
     else {
       if (cVar9 != '\x01') goto LAB_00113c30;
-      uVar2 = FUN_001268c8(*(undefined4 *)(param_1 + 0x8c));
+      uVar2 = int_to_float(*(int32 *)(param_1 + 0x8c));
       uVar2 = float_multiply(uVar2,*(undefined4 *)(*(int *)(param_1 + 0x110) + 8));
       *(undefined4 *)(param_2 + 4) = uVar2;
       uVar2 = FLOAT_MINUS_1;
@@ -13996,7 +13996,7 @@ LAB_00113abc:
         goto LAB_00113ac8;
       }
       if (cVar1 != '\x01') goto LAB_00113c30;
-      uVar2 = FUN_001268c8(*(undefined4 *)(param_1 + 0x8c));
+      uVar2 = int_to_float(*(int32 *)(param_1 + 0x8c));
       uVar6 = **(undefined4 **)(param_1 + 0x110);
 LAB_00113b64:
       uVar3 = float_multiply(uVar2,uVar6);
@@ -14018,7 +14018,7 @@ LAB_00113bac:
       else if (uVar4 != 5 && uVar4 != 4) goto LAB_00113c30;
 LAB_00113bbc:
       if (cVar1 == '\x01') {
-        uVar2 = FUN_001268c8(*(undefined4 *)(param_1 + 0x8c));
+        uVar2 = int_to_float(*(int32 *)(param_1 + 0x8c));
         uVar2 = float_multiply(uVar2,*(undefined4 *)(*(int *)(param_1 + 0x110) + 0x10));
         *(undefined4 *)(param_2 + 8) = uVar2;
         if (cVar9 == '\x01') goto LAB_00113bf0;
@@ -14027,11 +14027,11 @@ LAB_00113bbc:
         if (cVar9 != '\x01') goto LAB_00113c30;
 LAB_00113bf0:
         if (*(int *)(param_1 + 0x1c8) == 6 || *(int *)(param_1 + 0x1c8) == 5) {
-          uVar2 = FUN_001268c8(*(undefined4 *)(param_1 + 0x8c));
+          uVar2 = int_to_float(*(int32 *)(param_1 + 0x8c));
           uVar6 = *(undefined4 *)(*(int *)(param_1 + 0x110) + 0x14);
         }
         else {
-          uVar2 = FUN_001268c8(*(undefined4 *)(param_1 + 0x8c));
+          uVar2 = int_to_float(*(int32 *)(param_1 + 0x8c));
           uVar6 = *(undefined4 *)(*(int *)(param_1 + 0x110) + 0x10);
         }
         uVar3 = float_multiply(uVar2,uVar6);
@@ -14051,7 +14051,7 @@ LAB_00113bf0:
       *(undefined4 *)(param_1 + 0x29c) = 1;
     }
     if (cVar1 == '\x01') {
-      uVar2 = FUN_001268c8(*(undefined4 *)(param_1 + 0x8c));
+      uVar2 = int_to_float(*(int32 *)(param_1 + 0x8c));
       uVar6 = *(undefined4 *)(*(int *)(param_1 + 0x110) + 0xc);
       goto LAB_00113b64;
     }
@@ -14062,7 +14062,7 @@ LAB_00113bf0:
 LAB_00113c30:
   iVar8 = *(int *)(param_1 + 0x1cc);
   if (iVar8 == 8 || iVar8 == 0xb) {
-    uVar2 = FUN_001268c8(*(undefined4 *)(param_1 + 0x8c));
+    uVar2 = int_to_float(*(int32 *)(param_1 + 0x8c));
     uVar3 = float_multiply(uVar2,*(undefined4 *)(*(int *)(param_1 + 0x110) + 0x18));
     if (iVar8 == 8) {
       bVar14 = 7 < *(uint *)(param_1 + 0x1d4);
@@ -14128,7 +14128,7 @@ int FUN_00113cfc(undefined4 param_1,int param_2)
   (*g_pHelperFuncs->aee_GetRand)(iVar3,iVar6);
   uVar2 = FLOAT_1000;
   for (iVar6 = 0; iVar6 < param_2; iVar6 = iVar6 + 1) {
-    uVar5 = FUN_001268c8(FUN_00100288(1000,*(undefined4 *)(iVar3 + iVar6 * 4)).high);   /* % 1000 */
+    uVar5 = int_to_float((int32)FUN_00100288(1000,*(undefined4 *)(iVar3 + iVar6 * 4)).high);   /* % 1000 */
     uVar5 = float_divide(uVar5,uVar2);
     *(undefined4 *)(iVar4 + iVar6 * 4) = uVar5;
   }
@@ -14762,7 +14762,7 @@ void FUN_0011498c(int param_1,uint param_2)
     FUN_00108f28(iVar1,1);
   }
   iVar1 = *(int *)(*(int *)(param_1 + 0x84) + 0xa8);
-  uVar2 = FUN_001268c8(*(undefined4 *)(iVar1 + 0x534));
+  uVar2 = int_to_float(*(int32 *)(iVar1 + 0x534));
   uVar2 = float_reverse_divide(uVar2,param_2 ^ 0x80000000);
   FUN_0010d074(iVar1,uVar2);
   *(undefined4 *)(param_1 + 0x1c8) = 0xf;
@@ -14800,7 +14800,7 @@ void FUN_00114a1c(int param_1,undefined4 param_2)
         FUN_00108f28(iVar1,1);
       }
       iVar1 = *(int *)(*(int *)(iVar3 + 0x84) + 0xa8);
-      uVar2 = FUN_001268c8(*(undefined4 *)(iVar1 + 0x534));
+      uVar2 = int_to_float(*(int32 *)(iVar1 + 0x534));
       uVar2 = float_reverse_divide(uVar2,uVar4 ^ 0x80000000);
       FUN_0010d074(iVar1,uVar2);
       *(undefined4 *)(iVar3 + 0x1c8) = 0xf;
@@ -15083,12 +15083,12 @@ LAB_001151f4:
         sVar1 = *(short *)(iVar4 + 0x24);
         local_28 = (uint)*(short *)(iVar4 + 0x26);
         uVar5 = FUN_0010d4dc(*(undefined4 *)(iVar4 + 0x94),puVar3[1]);
-        uVar6 = FUN_001268c8((int)sVar1);
+        uVar6 = int_to_float(sVar1);
         uVar5 = float_multiply(uVar6,uVar5);
         uVar5 = FUN_00126858(uVar5);
         param_1[7] = uVar5;
         local_2c = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[2]);
-        uVar5 = FUN_001268c8(local_28);
+        uVar5 = int_to_float(local_28);
         uVar7 = float_multiply(uVar5,local_2c);
         uVar7 = FUN_00126858(uVar7);
         param_1[8] = uVar7;
@@ -18672,7 +18672,7 @@ undefined8 FUN_0011abc4(int param_1,int param_2)
       }
       uVar6 = (uint)(iVar3 <= param_2);
       if (param_2 < iVar3) {
-        uVar1 = FUN_001268c8(800 - (iVar4 - param_2));
+        uVar1 = int_to_float(800 - (iVar4 - param_2));
         uVar5 = float_multiply(*(uint *)(param_1 + 0xb8),uVar1);
         uVar5 = float_add(uVar5,*(uint *)(param_1 + 0x194));
         uVar1 = float_multiply(*(uint *)(param_1 + 0xb4),uVar1);
@@ -19715,7 +19715,7 @@ undefined8 FUN_0011c330(int param_1,int param_2,uint param_3)
       uVar4 = param_2 - *(int *)(param_1 + 0xc4);
       if (*(int *)(param_1 + 200) <= (int)uVar4) goto LAB_0011c694;
       uVar3 = *(undefined4 *)(param_1 + 0xb0);
-      uVar4 = FUN_001268c8(uVar4);
+      uVar4 = int_to_float(uVar4);
       uVar5 = float_multiply(uVar4,*(uint *)(param_1 + 0xb8));
       uVar5 = float_add(uVar5,*(uint *)(param_1 + 0xac));
       uVar4 = float_multiply(uVar4,*(uint *)(param_1 + 0xb4));
@@ -19745,11 +19745,11 @@ LAB_0011c694:
   if ((bool)uVar9) {
     uVar4 = param_2 * *(int *)(param_1 + 0x1c);
     uVar10 = FUN_00100288(2000,uVar4);
-    uVar2 = FUN_001268c8((int)uVar10.high - 1000);
+    uVar2 = int_to_float((int32)uVar10.high - 1000);
     uVar2 = float_divide(uVar2,FLOAT_100);
     *(uint *)(param_1 + 0xb4) = uVar2;
     uVar10 = FUN_00100288(INTEGER_7000,uVar4);
-    uVar2 = FUN_001268c8((int)uVar10.high - 0xdac);
+    uVar2 = int_to_float((int32)uVar10.high - 0xdac);
     uVar2 = float_divide(uVar2,FLOAT_350);
     *(uint *)(param_1 + 0xb8) = uVar2;
     *(undefined4 *)(param_1 + 0xf8) = 0;
@@ -19809,7 +19809,7 @@ LAB_0011c440:
     uVar2 = float_multiply(*(uint *)(param_1 + 0xb4),*(uint *)(param_1 + 0xb4));
     uVar4 = float_multiply(*(uint *)(param_1 + 0xb8),*(uint *)(param_1 + 0xb8));
     uVar2 = float_sqrt(float_add(uVar4,uVar2));
-    uVar4 = FUN_001268c8(*(uint *)(param_1 + 0x118));
+    uVar4 = int_to_float(*(int32 *)(param_1 + 0x118));
     uVar2 = float_multiply(uVar4,uVar2);
     uVar4 = float_divide(*(uint *)(param_1 + 0xb4),uVar2);
     *(uint *)(param_1 + 0xb4) = uVar4;
@@ -19911,7 +19911,7 @@ bool FUN_0011c860(int param_1,int param_2,undefined4 param_3)
       if ((bool)uVar9) {
         uVar6 = *(undefined4 *)(param_1 + 0x11c);
         uVar1 = float_multiply(uVar1,uVar6);
-        uVar3 = FUN_001268c8(param_2 - *(int *)(param_1 + 0xc0));
+        uVar3 = int_to_float(param_2 - *(int *)(param_1 + 0xc0));
         uVar1 = float_multiply(uVar3,uVar1);
         uVar1 = float_add(uVar1,local_2c);
         uVar2 = float_multiply(uVar2,uVar6);
@@ -20589,7 +20589,7 @@ void FUN_0011d6cc(int param_1,int param_2)
         uVar4 = float_add(uVar4,uVar9);
         uVar4 = FUN_00126858(uVar4);
         uVar14 = FUN_00100288(0x168,uVar4);
-        uVar4 = FUN_001268c8((uint)uVar14.high);
+        uVar4 = int_to_float((int32)uVar14.high);
         float_compare_greater(uVar4,FLOAT_180);
         if ((bool)uVar11 && !(bool)uVar10) {
           uVar4 = float_reverse_subtract(uVar4,uVar9);
@@ -20620,7 +20620,7 @@ void FUN_0011d6cc(int param_1,int param_2)
     *(int *)(param_1 + 0x264) = param_2;
     *(int *)(param_1 + 0x268) = param_2;
     uVar2 = float_subtract(*(uint *)(param_1 + 0x244),*(uint *)(param_1 + 0x254));
-    uVar9 = FUN_001268c8(uVar9);
+    uVar9 = int_to_float(uVar9);
     uVar2 = float_reverse_divide(uVar9,uVar2);
     *(uint *)(param_1 + 0x244) = uVar2;
     uVar3 = float_subtract(*(uint *)(param_1 + 0x248),*(uint *)(param_1 + 600));
@@ -20640,7 +20640,7 @@ void FUN_0011d6cc(int param_1,int param_2)
   else if (*(int *)(param_1 + 0x8c) == 0x1773) {
     uVar9 = param_2 - *(int *)(param_1 + 0x264);
     if (((int)uVar9 < *(int *)(param_1 + 0x260)) && (param_2 - *(int *)(param_1 + 0x268) < 500)) {
-      uVar9 = FUN_001268c8(uVar9);
+      uVar9 = int_to_float(uVar9);
       uVar2 = float_multiply(uVar9,*(uint *)(param_1 + 0x244));
       uVar2 = float_add(uVar2,*(uint *)(param_1 + 0x254));
       uVar3 = float_multiply(uVar9,*(uint *)(param_1 + 0x248));
@@ -21909,7 +21909,7 @@ void FUN_0011f680(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   uVar5 = float_multiply(uVar3,uVar3);
   uVar4 = float_sqrt(float_add(uVar5,uVar4));
   uVar6 = float_divide(uVar4,uVar6);
-  uVar4 = FUN_001268c8(param_5);
+  uVar4 = int_to_float(param_5);
   uVar6 = float_multiply(uVar4,uVar6);
   uVar7 = float_multiply(uVar6,**(undefined4 **)(param_1 + 0x110));
   float_compare_greater(uVar1,uVar7);
@@ -22217,7 +22217,7 @@ int32 animations_set_position(Animations *animations,int32 index,int32 position)
   (*((const SwerveAnimationControllerVtbl *)animations->controllers[index]->pvt)->SetActiveInterval)
             (animations->controllers[index],animations->worldTime,animations->worldTime + 1);
   return (*((const SwerveAnimationControllerVtbl *)animations->controllers[index]->pvt)->SetPosition)
-                   (animations->controllers[index],FUN_001268c8(position),animations->worldTime);
+                   (animations->controllers[index],int_to_float(position),animations->worldTime);
 }
 
 /* ==== 0x0011FD8C  (file offset 0x1FD8C)  thunk_FUN_0011fd90 ========================================== */
@@ -23448,7 +23448,7 @@ void FUN_00121780(int param_1,undefined4 *param_2,uint param_3)
   if (FUN_001256b4(uVar3,dVar3.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD), *(float *)&uVar2 < 0.0f) {
     uVar2 = uVar2 ^ 0x80000000;
   }
-  uVar3 = FUN_001268c8(param_3);
+  uVar3 = int_to_float(param_3);
   uVar2 = float_multiply(uVar3,uVar2);
   uVar2 = float_multiply(uVar2,*(uint *)(param_1 + 0x118));
   uVar2 = float_multiply(uVar2,FLOAT_3);
@@ -23542,7 +23542,7 @@ void FUN_00121b98(int param_1,undefined4 param_2)
   if (!(bool)in_CY) {
     uVar2 = uVar2 ^ 0x80000000;
   }
-  uVar1 = FUN_001268c8(param_2);
+  uVar1 = int_to_float(param_2);
   uVar1 = float_multiply(uVar1,uVar2);
   uVar3 = float_multiply(uVar1,*(undefined4 *)(param_1 + 0x118));
   float_compare_greater(local_14,uVar3);
@@ -23958,7 +23958,7 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
   if (0 < *(int *)(param_1 + 0x230)) {
     iVar7 = *(int *)(param_1 + 0x230) - param_3;
     *(int *)(param_1 + 0x230) = iVar7;
-    uVar4 = FUN_001268c8(param_3);
+    uVar4 = int_to_float(param_3);
     uVar4 = float_multiply(uVar4,*(uint *)(param_1 + 0x238));
     uVar4 = float_add(uVar4,*(uint *)(param_1 + 0x210));
     uVar12 = iVar7 == 0;
@@ -24257,7 +24257,7 @@ void FUN_00122b90(int param_1,int param_2,uint param_3)
   }
   uVar5 = *(uint *)(param_1 + 0x208);
   uVar2 = float_reverse_subtract(uVar5,0x40600000);
-  uVar4 = FUN_001268c8(param_3);
+  uVar4 = int_to_float(param_3);
   uVar2 = float_multiply(uVar4,uVar2);
   uVar2 = float_multiply(uVar2,**(uint **)(param_1 + 0x110));
   uVar2 = float_add(uVar5,uVar2);
@@ -24409,7 +24409,7 @@ void FUN_0012312c(int param_1,int param_2,int param_3)
     FUN_0011ca8c(param_1,uVar1,uVar2,uVar3,0);
   }
   iVar4 = *(int *)(param_1 + 0x150);
-  uVar1 = FUN_001268c8(param_3);
+  uVar1 = int_to_float(param_3);
   uVar8 = iVar4 == 0;
   uVar7 = 1;
   if ((bool)uVar8) {
@@ -24485,8 +24485,8 @@ void FUN_0012312c(int param_1,int param_2,int param_3)
       }
       goto LAB_001234e4;
     }
-    uVar2 = FUN_001268c8(uVar2);
-    uVar3 = FUN_001268c8(*(uint *)(param_1 + 0x1a4));
+    uVar2 = int_to_float(uVar2);
+    uVar3 = int_to_float(*(int32 *)(param_1 + 0x1a4));
     uVar2 = float_reverse_divide(uVar3,uVar2);
     dVar3 = FUN_00126248(uVar2);
     uVar3 = dVar3.low;
@@ -24762,7 +24762,7 @@ void FUN_00123588(int param_1,int param_2,int param_3)
     iVar1 = *(int *)(param_1 + 0x23c);
     uVar2 = *(uint *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa8) + 0x530);
     if (iVar1 == 0) {
-      uVar4 = FUN_001268c8(uVar2);
+      uVar4 = int_to_float(uVar2);
       uVar2 = *(uint *)(param_1 + 0x228);
       iVar9 = *(int *)(param_1 + 0x240);
       uVar5 = local_40;
@@ -24772,7 +24772,7 @@ LAB_00123a24:
       iVar9 = boss_combat_region_hit_target((BossCombatRegion *)iVar9,0,uVar4,uVar5,(uint32)pcVar7,uVar8,uVar2);
     }
     else {
-      uVar4 = FUN_001268c8(uVar2);
+      uVar4 = int_to_float(uVar2);
       uVar2 = *(uint *)(param_1 + 0x228);
       uVar5 = local_40;
       pcVar7 = local_3c;
@@ -24795,14 +24795,14 @@ LAB_00123b40:
     if (uVar2 < 2) {
       uVar5 = *(uint *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa8) + 0x530);
       if (iVar1 == 0) {
-        uVar4 = FUN_001268c8(uVar5);
+        uVar4 = int_to_float(uVar5);
         pcVar7 = *(code **)(param_1 + 0x21c);
         uVar8 = *(uint *)(param_1 + 0x220);
         iVar9 = *(int *)(param_1 + 0x240);
         uVar5 = *(uint *)(param_1 + 0x218);
         goto LAB_00123a24;
       }
-      uVar4 = FUN_001268c8(uVar5);
+      uVar4 = int_to_float(uVar5);
       pcVar7 = *(code **)(param_1 + 0x21c);
       uVar8 = *(uint *)(param_1 + 0x220);
       uVar5 = *(uint *)(param_1 + 0x218);
@@ -24825,12 +24825,12 @@ LAB_00123b40:
           iVar9 = *(int *)(param_1 + 0x23c);
           uVar2 = *(uint *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa8) + 0x530);
           if (iVar9 == 0) {
-            uVar2 = FUN_001268c8(uVar2);
+            uVar2 = int_to_float(uVar2);
             iVar9 = boss_combat_region_hit_target(*(BossCombatRegion **)(param_1 + 0x240),iVar1,uVar2,local_40,(uint32)local_3c,local_38,
                                  *(undefined4 *)(param_1 + 0x228));
           }
           else {
-            uVar2 = FUN_001268c8(uVar2);
+            uVar2 = int_to_float(uVar2);
             iVar9 = combat_region_hit_enemies((CombatRegion *)iVar9,iVar1,uVar2,local_40,(uint32)local_3c,local_38,
                                   *(undefined4 *)(param_1 + 0x228));
           }
@@ -24861,7 +24861,7 @@ LAB_00123ba8:
 
 /* ==== 0x00123C24  (file offset 0x23C24)  animations_update =========================================== */
 /* GUESS: names. Advances the animations: stores the world time and the ms elapsed; with a world and
-   `animate` set, moves each playing animation by elapsed * speed (FUN_001268c8 makes elapsed a float,
+   `animate` set, moves each playing animation by elapsed * speed (int_to_float makes elapsed a float,
    float_multiply multiplies, FUN_00126858 makes the product an integer) and hands its controller the new
    position: a looping one (state 3) wraps around its duration, one playing once (state 2) stops at
    either end (state 4); one never played (state 1) is stopped. Then animates the world at worldTime
@@ -24877,7 +24877,7 @@ void animations_update(Animations *animations,int32 worldTime,int32 elapsed,int3
   animations->elapsed = elapsed;
   if (animations->world == (ISwerveObject *)0x0 || !animate)
     return;
-  elapsedAsFloat = FUN_001268c8(elapsed);
+  elapsedAsFloat = int_to_float(elapsed);
   for (i = 0; i < 100; i++) {
     if (animations->userIds[i] == -1)
       continue;
@@ -31968,33 +31968,32 @@ LAB_00126d6c:
   return 2 - uVar7;
 }
 
-/* ==== 0x001268C8  (file offset 0x268C8)  FUN_001268c8 ================================================ */
-uint FUN_001268c8(uint param_1)
+/* ==== 0x001268C8  (file offset 0x268C8)  int_to_float ================================================ */
+/* GUESS: name (the routine is certain: the soft-float library's int -> float conversion, ARM's run-time
+   ABI __aeabi_i2f). Returns the float's bits: sign, exponent 127 + 31 - leading zeros, the 23 bits after
+   the leading 1, rounded to nearest, ties to even (the rounding may carry into the exponent); 0 gives
+   +0.0. The binary (0x001268c8 - 0x001268f8) adds 0x4F800000 and the value shifted right arithmetically,
+   whose sign bits and implicit bit make 0x4F000000, then the round bit (`adc`), and clears bit 0 on a
+   tie (`bichs` after `movsne`); written here with unsigned arithmetic. Verified under emulation
+   (research_notes/soft_float_test, double_reference.py, kind f). */
+uint32 int_to_float(int32 value)
 
 {
-  uint uVar1;
-  uint uVar2;
-  bool bVar3;
-  
-  uVar2 = param_1 & 0x80000000;
-  if (uVar2 != 0) {
-    param_1 = -param_1;
-  }
-  uVar1 = param_1 << LEADING_ZEROS(param_1);
-  if (uVar1 == 0) {
+  uint32 sign = (uint32)value & 0x80000000u;
+  uint32 magnitude = sign != 0 ? 0u - (uint32)value : (uint32)value;
+  uint32 zeros;
+  uint32 result;
+
+  if (magnitude == 0)
     return 0;
-  }
-  bVar3 = (bool)((byte)(uVar1 >> 7) & 1);
-  uVar2 = (uVar2 | 0x40000000) + LEADING_ZEROS(param_1) * -0x800000 + 0xf800000 + ((int)uVar1 >> 8) +
-          (uint)bVar3;
-  if ((uVar1 & 0x7f) != 0) {
-    bVar3 = false;
-  }
-  if (bVar3) {
-    uVar2 = uVar2 & 0xfffffffe;
-  }
-  return uVar2;
+  zeros = LEADING_ZEROS(magnitude);
+  magnitude <<= zeros;                            /* the top bit set; zeros is below 32 here */
+  result = (sign | 0x4F000000u) - zeros * 0x800000u + ((magnitude >> 8) & 0x7fffffu) + (magnitude >> 7 & 1);
+  if ((magnitude & 0xff) == 0x80)                 /* exactly halfway: to even */
+    result &= ~1u;
+  return result;
 }
+
 
 /* ==== 0x001268FC  (file offset 0x268FC)  float_compare_greater ======================================= */
 /* GUESS: name (the routine is certain: the soft-float library's single-precision compare, ARM's

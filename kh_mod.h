@@ -860,7 +860,7 @@ uint32 float_reverse_divide(uint32 a,uint32 b);   /* 0x00126608 GUESS: name, see
 uint32 float_divide(uint32 a,uint32 b);   /* 0x00126618 GUESS: name, see kh_mod.c */
 uint32 float_compare_equal(uint32 a,uint32 b);   /* 0x001267F0 GUESS: name; == / !=, result in the flags (__aeabi_cfcmpeq) */
 uint FUN_00126858(uint param_1);
-uint FUN_001268c8(uint param_1);
+uint32 int_to_float(int32 value);   /* 0x001268C8 GUESS: name, see kh_mod.c */
 uint32 float_compare_greater(uint32 a,uint32 b);   /* 0x001268FC GUESS: name; > / >=, result in the flags (__aeabi_cfcmple) */
 uint32 float_compare_less(uint32 a,uint32 b);   /* 0x00126964 GUESS: name; < / <=, result in the flags */
 uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mod.c */
