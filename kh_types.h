@@ -72,7 +72,8 @@ typedef struct KHApp {
     uint32         fpStatus;         /* +0xd8 GUESS: soft-float status word (what a compiler fplib keeps in a
                                         static). Address returned by kh_GetFpStatusPtr; read by
                                         kh.mod's double->float at 0x12479c (tests bit 0x800). */
-    uint32         field_dc;         /* +0xdc address returned by kh_GetAppFieldPtr_dc */
+    int32          errnoValue;       /* +0xdc the C library's errno (set_errno, kh_GetErrnoPtr); GUESS: kept here as
+                                        BREW modules have no writable statics */
 } KHApp;
 
 /* ---- Lists (GUESS: names) ----------------------------------------------------------------------

@@ -31,7 +31,7 @@ int AEEMod_Load(IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod)
   return iVar1;
 }
 
-/* ==== 0x00100028  (file offset 0x00028)  FUN_00100028 ================================================ */
+/* ==== 0x00100028  (file offset 0x00028)  engine_memory_set_caching =================================== */
 /* WARNING: Removing unreachable block (ram,0x001000a8) */
 /* WARNING: Removing unreachable block (ram,0x001000bc) */
 /* WARNING: Removing unreachable block (ram,0x001000c4) */
@@ -60,8 +60,11 @@ int AEEMod_Load(IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod)
  * instructions (0x00100028-0x00100100) so the removed code is not lost; the decompiled body after
  * this comment is left as Ghidra produced it.
  *
- * Caller: kh_HandleEvent calls FUN_00100028(pMe->pSwerve, 1) on EVT_APP_SUSPEND and EVT_APP_RESUME.
- * GUESS: purpose - set the cache attributes of the engine's memory sections. The descriptor table
+ * Caller: kh_HandleEvent calls it with (pMe->pSwerve, 1) on EVT_APP_SUSPEND and EVT_APP_RESUME.
+ * GUESS: name and purpose - set the cache attributes of the Swerve engine's memory sections: mode 1
+ * writes the engine's section descriptors back into the MMU table as they are, mode 2 marks them
+ * cacheable and bufferable; either way the data cache is cleaned and the data TLB invalidated. In User
+ * mode, as the game runs, it does nothing and returns 0. The descriptor table
  * is found from the address of the object's first vtable function (ISwerve_AddRef, inside
  * swv21brew) plus 0x1b400, i.e. a table inside the engine's image.
  *
@@ -74,7 +77,7 @@ int AEEMod_Load(IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod)
  *   cp15_dcache_test_clean_invalidate()   mrc p15, 0, pc, c7, c14, 3  (ARM926; loops until clean)
  *   cp15_invalidate_data_tlb()      mcr   p15, 0, rX, c8, c6, 0
  *
- * undefined4 FUN_00100028(void *object, int operation)
+ * int32 engine_memory_set_caching(ISwerve *swerve, int32 mode)
  * {
  *   uint32 *descriptor;              // walks the engine's table of section descriptors
  *   uint32 *translationTable;        // the MMU first-level table (4096 section entries)
@@ -82,10 +85,10 @@ int AEEMod_Load(IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod)
  *   uint32  value;
  *   int     remaining;
  *
- *   // object->pvt[0] is a code address in the engine; the table is 0x1b400 bytes after it
- *   descriptor = (uint32 *)(**(uint32 **)object + 0x1b400);
+ *   // swerve->pvt[0] is a code address in the engine; the table is 0x1b400 bytes after it
+ *   descriptor = (uint32 *)(**(uint32 **)swerve + 0x1b400);
  *
- *   if (operation == 1) {
+ *   if (mode == 1) {
  *     if ((cpsr_read() & 0xf) == 0)              // User mode: nothing to do
  *       return 0;
  *     translationTable  = (uint32 *)(cp15_read_translation_base() & 0xffffc000);
@@ -107,7 +110,7 @@ int AEEMod_Load(IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod)
  *     return 0;
  *   }
  *
- *   if (operation == 2) {
+ *   if (mode == 2) {
  *     if ((cpsr_read() & 0xf) == 0)              // User mode: nothing to do
  *       return 0;
  *     translationTable  = (uint32 *)(cp15_read_translation_base() & 0xffffc000);
@@ -130,14 +133,14 @@ int AEEMod_Load(IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod)
  *     return 0;
  *   }
  *
- *   return 0;                                    // any other operation
+ *   return 0;                                    // any other mode
  * }
  */
 
-undefined4 FUN_00100028(undefined4 param_1,undefined4 param_2)
+int32 engine_memory_set_caching(ISwerve *swerve,int32 mode)
 
 {
-  /* param_1, param_2: not in Ghidra's prototype; kh.mod reads r0, r1 at entry and its callers set them */
+  /* swerve, mode: not in Ghidra's prototype; kh.mod reads r0, r1 at entry and its callers set them */
   return 0;
 }
 
@@ -536,12 +539,10 @@ undefined8 FUN_0010041c(int param_1,uint param_2)
       if ((!bVar10 && iVar6 < 0 == bVar11) || ((bVar10 && (param_1 != 0)))) {
         return FUN_00124954(param_1,param_2,param_1,param_2);
       }
-                    /* |x| > 1 (outside acos's domain): FUN_00100a38(1) stores 1 into KHApp+0xdc,
-                       which is how kh.mod keeps the C library's errno without a writable static
-                       (like fpStatus at +0xd8) - so this is errno = EDOM (1 in ARM's C library) -
-                       then the result is NaN: NAN_DOUBLE, loaded through puVar3 below
+                    /* |x| > 1 (outside acos's domain): errno = EDOM (set_errno), then the result
+                       is NaN: NAN_DOUBLE, loaded through puVar3 below
                        (`adr r1, NAN_DOUBLE; ldmia r1, {r0, r1}`). GUESS: the errno reading. */
-      FUN_00100a38(1);
+      set_errno(ERRNO_EDOM);
       puVar3 = &NAN_DOUBLE;
     }
     return *puVar3;
@@ -668,7 +669,7 @@ undefined8 FUN_001007f4(int param_1,uint param_2)
     }
     if (bVar6) {
       if (param_1 == 0) {
-        FUN_00100a38(1);
+        set_errno(ERRNO_EDOM);
         return MAKE_WORDS(uVar8,NAN_DOUBLE_HIGH_WORD,NAN_DOUBLE_LOW_WORD);
       }
     }
@@ -733,7 +734,7 @@ undefined8 FUN_001008d0(int param_1,uint param_2)
     }
     if (bVar4) {
       if (param_1 == 0) {
-        FUN_00100a38(1);
+        set_errno(ERRNO_EDOM);
         return MAKE_WORDS(uVar7,NAN_DOUBLE_HIGH_WORD,NAN_DOUBLE_LOW_WORD);
       }
     }
@@ -788,22 +789,27 @@ undefined8 FUN_001009b8(uint param_1,uint param_2)
     uVar1 = FUN_00125cd0(param_1,param_2);
   }
   else {
-    FUN_00100a38(1);
+    set_errno(ERRNO_EDOM);
     MAKE_WORDS(uVar1,NAN_DOUBLE_HIGH_WORD,NAN_DOUBLE_LOW_WORD);
   }
   return uVar1;
 }
 
-/* ==== 0x00100A38  (file offset 0x00A38)  FUN_00100a38 ================================================ */
-void FUN_00100a38(undefined4 param_1)
+/* ==== 0x00100A38  (file offset 0x00A38)  set_errno =================================================== */
+/* GUESS: name (the routine is certain: it stores `value` into the app's errno, at KHApp +0xdc; ARM's C
+   library has the same routine as __set_errno). kh.mod keeps the C library's errno in the app structure
+   because a BREW module has no writable static data (the soft-float status word is at +0xd8 the same
+   way). Its four callers, acos, sin, cos and sqrt, set ERRNO_EDOM before returning NaN for an argument
+   outside their domain; nothing reads it back. Returns r0 as the binary leaves it: the errno pointer. */
+int32 * set_errno(int32 value)
 
 {
-  undefined4 *puVar1;
-  
-  puVar1 = kh_GetAppFieldPtr_dc();
-  *puVar1 = param_1;
-  return;
+  int32 *pointer = kh_GetErrnoPtr();
+
+  *pointer = value;
+  return pointer;
 }
+
 
 /* ==== 0x00100A58  (file offset 0x00A58)  FUN_00100a58 ================================================ */
 undefined8 FUN_00100a58(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param_4)
@@ -1798,7 +1804,7 @@ FUN_00101268(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param
  * instruction. That is what ARM's linker writes for a call to a weak function that was not linked:
  * the call does nothing and r0 keeps the 0 set just before it, so `cmp r0, #0` always finds 0 and
  * the three conditional instructions at 0x00101410-0x00101418 (the "handled: return its result"
- * path) never run. Unlike FUN_00100028, the decompiler is right: in this build the blocks are dead.
+ * path) never run. Unlike engine_memory_set_caching, the decompiler is right: in this build the blocks are dead.
  * They are kept here so the full logic of the routine is on record. GUESS: the handler's name (it
  * is unresolved, so the binary does not say).
  *
@@ -9091,20 +9097,15 @@ void * helper_malloc_2(uint32 size)
   return pvVar1;
 }
 
-/* ==== 0x0010CF7C  (file offset 0x0CF7C)  kh_GetAppFieldPtr_dc ======================================== */
-/* WARNING: Unknown calling convention -- yet parameter storage is locked */
-
-void * kh_GetAppFieldPtr_dc(void)
+/* ==== 0x0010CF7C  (file offset 0x0CF7C)  kh_GetErrnoPtr ============================================== */
+/* GUESS: name. The address of the app's errno (KHApp +0xdc): AEEHelperFuncs[48] GetAppInstance() + 0xdc,
+   as kh_GetFpStatusPtr is +0xd8 (BREW modules have no writable statics). Used by set_errno. */
+int32 * kh_GetErrnoPtr(void)
 
 {
-  int iVar1;
-  
-                    /* Returns (char *)AEEHelperFuncs[48] GetAppInstance() + 0xdc, i.e.
-                       &KHApp->field_dc. GUESS: name describes the computation only; meaning of the
-                       field not known yet. */
-  iVar1 = (*g_pHelperFuncs->GetAppInstance)();
-  return (void *)(iVar1 + 0xdc);
+  return &((KHApp *)(*g_pHelperFuncs->GetAppInstance)())->errnoValue;
 }
+
 
 /* ==== 0x0010CFA0  (file offset 0x0CFA0)  kh_GetFpStatusPtr ======================================== */
 /* WARNING: Unknown calling convention -- yet parameter storage is locked */
@@ -9902,7 +9903,7 @@ boolean kh_HandleEvent(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
       uVar5 = *(undefined4 *)pMe->pObj94;
       FUN_00120450(pMe->pObj94);
       *(undefined4 *)pMe->pObj94 = uVar5;
-      FUN_00100028(pMe->pSwerve,1);
+      engine_memory_set_caching(pMe->pSwerve,1);
       pMe->bSuspended = 1;
       FUN_0012056c(pMe,1);
       return '\x01';
@@ -9910,7 +9911,7 @@ boolean kh_HandleEvent(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
     if (eCode == 3) {
       FUN_0011e154(pMe);
       FUN_0012031c(pMe->pObj94,*(undefined4 *)pMe->pObj94);
-      FUN_00100028(pMe->pSwerve,1);
+      engine_memory_set_caching(pMe->pSwerve,1);
       return '\x01';
     }
   }
