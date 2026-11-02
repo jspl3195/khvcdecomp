@@ -362,7 +362,8 @@ typedef struct SwerveObject3DVtbl {
     void  *unknown_10;
     void (*GetAnimationTrackCount)(ISwerveObject *po, int *pCount);      /* +0x14 slot 5, 0x01034f74 */
     int  (*GetAnimationTrack)(ISwerveObject *po, int index, ISwerveObject **ppo); /* +0x18 slot 6, 0x01034f00 */
-    void  *unknown_1c[0x03];
+    void  *unknown_1c[0x02];
+    int  (*Animate)(ISwerveObject *po, int worldTime, int *pResult);     /* +0x24 slot 9, 0x01034da8 */
     int  (*Find)(ISwerveObject *po, int userId, ISwerveObject **ppo);    /* +0x28 slot 10, 0x01034e8c */
 } SwerveObject3DVtbl;
 
@@ -398,21 +399,22 @@ typedef struct SwerveAnimationControllerVtbl {
 typedef struct Animations {
     struct KHApp *app;            /* +0x000 GetAppInstance() at creation */
     ISwerveObject *world;         /* +0x004 GUESS: the scene's World; controllers are found in it (Find) */
-    uint8  unknown_008[0x04];
-    int    worldTime;             /* +0x00c the time the controllers are set at */
+    int    elapsed;               /* +0x008 ms since the last update (animations_update) */
+    int    worldTime;             /* +0x00c the time the controllers are set at (animations_update) */
     int    userIds[100];          /* +0x010 the controllers' user ids (animations_find); -1 = free slot */
     int    durations[100];        /* +0x1a0 the longest keyframe sequence of each controller
                                      (animations_get_duration) */
-    uint8  states[100];           /* +0x330 1 added, 2 played (or a looping one let run to its end,
-                                     animations_stop), 3 played with `loop` set (GUESS: looping), 4 stopped
-                                     (animations_stop; GUESS: also when it ends) */
+    uint8  states[100];           /* +0x330 0 free (animations_reset); 1 added, never played (stopped at the
+                                     next update); 2 playing once (becomes 4 at its end); 3 looping; 4 stopped
+                                     or finished (animations_stop, animations_finish, animations_update) */
     uint8  priorities[100];       /* +0x394 2 when added; on a character's animation channel a new animation
                                      replaces the playing one only when its priority is not lower
                                      (character_play_animation) */
     uint32 speeds[100];           /* +0x3f8 floats (their bits), 1.0 when added (animations_set_speed) */
     int    positions[100];        /* +0x588 where each one plays from: 0, or its last frame when its speed is
                                      not above 0 */
-    ISwerveObject **controllers;  /* +0x718 100 controllers, found by user id when first played; 0 until then */
+    ISwerveObject **controllers;  /* +0x718 100 controllers, found by user id when first played; 0 until then
+                                     and after animations_release_controllers */
 } Animations;                     /* 0x71c bytes */
 
 /* ---- Enemies and combat regions (GUESS: names) ----------------------------------------------

@@ -574,7 +574,7 @@ void FUN_0010e280(int param_1,undefined4 *param_2,undefined4 *param_3);
 undefined4 FUN_0010e448(int param_1,undefined4 *param_2);
 void thunk_animations_add_from_scene(int param_1,int *param_2);
 void FUN_0010e94c(int *param_1);
-int FUN_0010e9bc(int param_1);
+void animations_release_controllers(Animations *animations);   /* 0x0010E9BC GUESS: name */
 void FUN_0010ea00(int param_1);
 void FUN_0010ea64(int param_1);
 undefined4 FUN_0010eb74(int param_1);
@@ -659,7 +659,7 @@ void FUN_001147ec(undefined4 *param_1,int param_2,int *param_3);
 undefined4 FUN_00114898(int param_1);
 undefined4 FUN_001148a0(int param_1);
 void FUN_001148a8(int param_1,int param_2);
-int FUN_001148c8(int param_1,int param_2);
+int animations_finish(Animations *animations,int index);   /* 0x001148C8 GUESS: name */
 bool FUN_00114910(int param_1);
 void FUN_0011492c(int param_1);
 void FUN_0011498c(int param_1,uint param_2);
@@ -737,7 +737,7 @@ void FUN_0011df14(undefined4 *param_1);
 void FUN_0011e010(int param_1);
 void FUN_0011e07c(int param_1);
 void FUN_0011e0b4(int param_1);
-void FUN_0011e0fc(int param_1);
+void animations_reset(Animations *animations);   /* 0x0011E0FC GUESS: name */
 void FUN_0011e154(int param_1);
 undefined4 FUN_0011e250(int param_1);
 undefined4 FUN_0011e300(int param_1);
@@ -805,7 +805,7 @@ void FUN_00122b90(int param_1,int param_2,uint param_3,undefined4 param_4);
 void combat_region_update(CombatRegion *region,int now,int elapsed);   /* 0x00122F98 GUESS: name */
 void FUN_0012312c(int param_1,int param_2,int param_3,undefined4 param_4);
 void FUN_00123588(int param_1,int param_2,int param_3,undefined4 param_4);
-void FUN_00123c24(int param_1,undefined4 param_2,undefined4 param_3,int param_4);
+void animations_update(Animations *animations,int worldTime,int elapsed,int animate);   /* 0x00123C24 GUESS: names */
 void FUN_00123d7c(int param_1,undefined4 param_2,int param_3);
 void FUN_0012407c(int param_1,undefined4 param_2,undefined4 param_3);
 void FUN_001241a8(int *param_1,undefined4 param_2,int param_3,undefined4 param_4);

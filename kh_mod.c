@@ -7997,7 +7997,7 @@ undefined1 * FUN_0010b70c(undefined1 *param_1,undefined4 param_2,undefined4 para
 /* ==== 0x0010B804  (file offset 0x0B804)  animations_create =========================================== */
 /* GUESS: name. Sets up the animation table (allocating its 1820 bytes when `animations` is 0): no world
    yet and 100 empty controller slots; returns it, or 0 when out of memory. The user ids are not set
-   to -1 here. */
+   to -1 here; animations_reset does that. */
 Animations * animations_create(Animations *animations)
 
 {
@@ -8866,7 +8866,7 @@ void FUN_0010c92c(int param_1,int param_2)
 void FUN_0010c9dc(int param_1,int param_2)
 
 {
-  FUN_0011e0fc(param_1);
+  animations_reset((Animations *)param_1);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
   (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x718));
   if (param_2 == 0) {
@@ -10545,28 +10545,22 @@ void FUN_0010e94c(int *param_1)
   return;
 }
 
-/* ==== 0x0010E9BC  (file offset 0x0E9BC)  FUN_0010e9bc ================================================ */
-/* returns r0 as kh.mod leaves it (r0 of the last loop pass: the table base after releasing a slot, otherwise 0); Ghidra had declared it void, but callers use r0 after the
-   call */
-int FUN_0010e9bc(int param_1)
+/* ==== 0x0010E9BC  (file offset 0x0E9BC)  animations_release_controllers ============================== */
+/* GUESS: name. Releases every cached animation controller (Release, vtable slot 1) and empties its slot;
+   they are found again by user id the next time they are played (animations_set_position). Called by
+   animations_reset and before a scene is replaced (FUN_00110924, FUN_00121584). kh.mod leaves r0 at
+   the last pass's value, but no caller uses it: FUN_00121584 assigned it to a variable it overwrites on
+   every path before reading it, so it is void here. */
+void animations_release_controllers(Animations *animations)
 
 {
-  int *piVar1;
-  int iVar2;
-  int iVar3;
-  
-  iVar2 = 0;
-  do {
-    piVar1 = *(int **)(*(int *)(param_1 + 0x718) + iVar2 * 4);
-    iVar3 = 0;
-    if (piVar1 != (int *)0x0) {
-      (**(code **)(*piVar1 + 4))();
-      iVar3 = *(int *)(param_1 + 0x718);
-      *(undefined4 *)(iVar3 + iVar2 * 4) = 0;
+  int i;
+
+  for (i = 0; i < 100; i++)
+    if (animations->controllers[i] != (ISwerveObject *)0x0) {
+      (*animations->controllers[i]->pvt->Release)(animations->controllers[i]);
+      animations->controllers[i] = (ISwerveObject *)0x0;
     }
-    iVar2 = iVar2 + 1;
-  } while (iVar2 < 100);
-  return iVar3;
 }
 
 /* ==== 0x0010EA00  (file offset 0x0EA00)  FUN_0010ea00 ================================================ */
@@ -10640,7 +10634,7 @@ void FUN_0010ea64(int param_1)
     return;
   }
   iVar7 = param_1 + 0x90;
-  FUN_00123c24(*(int *)(param_1 + 0x9c),iVar1,*(int *)(param_1 + 0x88),0);
+  animations_update((Animations *)*(int *)(param_1 + 0x9c),iVar1,*(int *)(param_1 + 0x88),0);
   if (*(int *)(param_1 + 0x90) != 0) {
     return;
   }
@@ -10654,7 +10648,7 @@ void FUN_0010ea64(int param_1)
                    *(int *)(param_1 + 0x88),iVar7), *(int *)(param_1 + 0x90) != 0)) {
     return;
   }
-  FUN_00123c24(*(int *)(param_1 + 0x9c),*(undefined4 *)(param_1 + 0x84),
+  animations_update((Animations *)*(int *)(param_1 + 0x9c),*(undefined4 *)(param_1 + 0x84),
                *(undefined4 *)(param_1 + 0x88),1);
   if (*(int *)(param_1 + 0x90) != 0) {
     return;
@@ -11305,7 +11299,7 @@ void FUN_0010edec(int param_1)
   *(undefined4 *)(param_1 + 0x84) = 0;
   if (*(int *)(param_1 + 0xc4) != 0) {
     if (*(int *)(param_1 + 0x9c) != 0) {
-      FUN_0011e0fc(*(int *)(param_1 + 0x9c));
+      animations_reset((Animations *)*(int *)(param_1 + 0x9c));
     }
     if (*(int **)(param_1 + 0xa4) != (int *)0x0) {
       FUN_0010c2c4(*(int **)(param_1 + 0xa4),1);
@@ -11322,7 +11316,7 @@ void FUN_0010edec(int param_1)
       *(undefined4 *)(param_1 + 0x90) = 0;
 LAB_0010ee88:
       FUN_00118640(*(int *)(param_1 + 0x9c),*(int **)(param_1 + 0x6c));
-      FUN_00123c24(*(int *)(param_1 + 0x9c),0,0,1);
+      animations_update((Animations *)*(int *)(param_1 + 0x9c),0,0,1);
       if (*(int *)(param_1 + 0x90) == 0) {
         FUN_001150d0(*(int *)(param_1 + 0xa4),(int *)(param_1 + 0x90));
       }
@@ -13587,7 +13581,7 @@ uint FUN_00110924(int *param_1)
     break;
   case 0x12:
     if (param_1[0x10] != 0) {
-      FUN_0010e9bc(*(int *)(iVar2 + 0x9c));
+      animations_release_controllers(*(Animations **)(iVar2 + 0x9c));
       FUN_0011df14(*(undefined4 **)(iVar2 + 0xa4));
       FUN_0010e94c(*(int **)(iVar2 + 0x9c));
       piVar4 = (int *)FUN_0011ae04(*(int *)(iVar2 + 0x94),param_1[0x10],
@@ -13744,7 +13738,7 @@ LAB_00111948:
     iVar10 = animations_find((Animations *)*(int *)(iVar2 + 0x9c),param_1[7]);
     if (iVar10 != -1) {
       if (param_1[8] == -1) {
-        FUN_001148c8(*(int *)(iVar2 + 0x9c),iVar10);
+        animations_finish((Animations *)*(int *)(iVar2 + 0x9c),iVar10);
       }
       else {
         animations_set_position((Animations *)*(int *)(iVar2 + 0x9c),iVar10,param_1[8]);
@@ -16786,24 +16780,21 @@ void FUN_001148a8(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x001148C8  (file offset 0x148C8)  FUN_001148c8 ================================================ */
-/* returns r0 as kh.mod leaves it (the 4 it stores, or param_1 / the slot address when nothing is done); Ghidra had declared it void, but callers use r0 after the
-   call */
-int FUN_001148c8(int param_1,int param_2)
+/* ==== 0x001148C8  (file offset 0x148C8)  animations_finish =========================================== */
+/* GUESS: name. Jumps animation `index` to its last frame (animations_set_position with duration - 1) and
+   marks it finished (state 4); nothing for a negative index or a free slot. Returns r0 as kh.mod leaves
+   it, which callers use: 4, else `animations` for a negative index, or the slot's address minus 0x10
+   (animations + 4 * index) for a free slot. */
+int animations_finish(Animations *animations,int index)
 
 {
-  undefined4 param_4;
-  /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  int iVar1;
-  
-  iVar1 = param_1;
-  if ((-1 < param_2) && (iVar1 = param_1 + param_2 * 4, *(int *)(iVar1 + 0x10) != -1)) {
-    animations_set_position((Animations *)param_1,param_2,*(int *)(iVar1 + 0x1a0) + -1 /* not arguments, register leftovers: param_4,param_4 */);
-    iVar1 = 4;
-    *(undefined1 *)(param_1 + param_2 + 0x330) = 4;
-  }
-  return iVar1;
+  if (index < 0)
+    return (int)animations;
+  if (animations->userIds[index] == -1)
+    return (int)animations + index * 4;
+  animations_set_position(animations,index,animations->durations[index] - 1);
+  animations->states[index] = 4;
+  return 4;
 }
 
 /* ==== 0x00114910  (file offset 0x14910)  FUN_00114910 ================================================ */
@@ -19158,7 +19149,7 @@ void FUN_00118640(int param_1,int *param_2)
   int *piStack_28;
   int aiStack_24 [3];
   
-  FUN_0011e0fc(param_1);
+  animations_reset((Animations *)param_1);
   if (param_2 != (int *)0x0) {
     (**(code **)(*param_2 + 8))(param_2,9);
   }
@@ -21720,7 +21711,7 @@ void FUN_0011b890(int param_1,int *param_2)
   int aiStack_24 [3];
   
   if (*(int *)(*(int *)(param_1 + 4) + 0x6c) != 0) {
-    FUN_0011e0fc(*(undefined4 *)(*(int *)(param_1 + 4) + 0x9c));
+    animations_reset((Animations *)*(undefined4 *)(*(int *)(param_1 + 4) + 0x9c));
     (**(code **)(**(int **)(*(int *)(param_1 + 4) + 0x6c) + 4))();
     *(undefined4 *)(*(int *)(param_1 + 4) + 0x6c) = 0;
   }
@@ -21761,7 +21752,7 @@ LAB_0011b9d0:
   }
   piVar4 = *(int **)(*(int *)(param_1 + 4) + 0x6c);
   iVar3 = *(int *)(*(int *)(param_1 + 4) + 0x9c);
-  FUN_0011e0fc((int)iVar3);
+  animations_reset((Animations *)((int)iVar3));
   if (piVar4 != (int *)0x0) {
     (**(code **)(*piVar4 + 8))(piVar4,9);
   }
@@ -22002,8 +21993,8 @@ LAB_0011bc6c:
       goto LAB_0011bc6c;
     }
     FUN_0011492c(param_1);
-    FUN_001148c8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2e8));
-    iVar2 = FUN_001148c8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+    animations_finish((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2e8));
+    iVar2 = animations_finish((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                          *(undefined4 *)(param_1 + 0x2e4));
     *(undefined4 *)(param_1 + 0x1c8) = 0;
 LAB_0011bd74:
@@ -22177,7 +22168,7 @@ LAB_0011c180:
           character_play_animation((Character *)param_1,*(int *)(param_1 + 0x2c0),0,0);
           uVar4 = *(undefined4 *)(param_1 + 0x2c0);
 LAB_0011c134:
-          FUN_001148c8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),uVar4);
+          animations_finish((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),uVar4);
           return param_1;
         }
         if (*(int *)(param_1 + 0x2ac) == *(int *)(param_1 + 0x2c4)) {
@@ -24010,27 +24001,25 @@ void FUN_0011e0b4(int param_1)
   return;
 }
 
-/* ==== 0x0011E0FC  (file offset 0x1E0FC)  FUN_0011e0fc ================================================ */
-void FUN_0011e0fc(int param_1)
+/* ==== 0x0011E0FC  (file offset 0x1E0FC)  animations_reset ============================================ */
+/* GUESS: name. Empties the animation table: releases the controllers (animations_release_controllers) and the world,
+   clears the world time, and frees every slot (user id -1, state 0). Called before a scene's
+   animations are added again, and by the app's clean-up (FUN_0010c9dc). */
+void animations_reset(Animations *animations)
 
 {
-  int iVar1;
-  int iVar2;
-  
-  FUN_0010e9bc(param_1);
-  *(undefined4 *)(param_1 + 0xc) = 0;
-  if (*(int **)(param_1 + 4) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 4) + 4))();
-    *(undefined4 *)(param_1 + 4) = 0;
+  int i;
+
+  animations_release_controllers(animations);
+  animations->worldTime = 0;
+  if (animations->world != (ISwerveObject *)0x0) {
+    (*animations->world->pvt->Release)(animations->world);
+    animations->world = (ISwerveObject *)0x0;
   }
-  iVar1 = 0;
-  do {
-    *(undefined4 *)(param_1 + iVar1 * 4 + 0x10) = 0xffffffff;
-    iVar2 = param_1 + iVar1;
-    iVar1 = iVar1 + 1;
-    *(undefined1 *)(iVar2 + 0x330) = 0;
-  } while (iVar1 < 100);
-  return;
+  for (i = 0; i < 100; i++) {
+    animations->userIds[i] = -1;
+    animations->states[i] = 0;
+  }
 }
 
 /* ==== 0x0011E154  (file offset 0x1E154)  FUN_0011e154 ================================================ */
@@ -25135,7 +25124,7 @@ void FUN_0011f8e0(int param_1,uint param_2)
     if (bVar8 && iVar2 != 0xe) {
       FUN_0011492c(param_1);
       character_play_animation((Character *)param_1,*(undefined4 *)(param_1 + 0x2fc),2,0);
-      FUN_001148c8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2fc)
+      animations_finish((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2fc)
                   );
       character_play_animation((Character *)param_1,*(undefined4 *)(param_1 + 0x300),3,0);
     }
@@ -27066,7 +27055,7 @@ void FUN_00121584(int param_1,int *param_2,int *param_3,int param_4)
     iVar1 = *(int *)(*(int *)(param_1 + 0xc) + 0x9c);
   }
   if (param_4 != 0 && iVar1 != 0) {
-    iVar1 = FUN_0010e9bc((int)iVar1);
+    animations_release_controllers((Animations *)iVar1);
   }
   if (param_2 != (int *)0x0) {
     iVar1 = (**(code **)(*param_2 + 8))(param_2,0x12,&local_18);
@@ -28814,82 +28803,57 @@ LAB_00123ba8:
   return;
 }
 
-/* ==== 0x00123C24  (file offset 0x23C24)  FUN_00123c24 ================================================ */
-void FUN_00123c24(int param_1,undefined4 param_2,undefined4 param_3,int param_4)
+/* ==== 0x00123C24  (file offset 0x23C24)  animations_update =========================================== */
+/* GUESS: names. Advances the animations: stores the world time and the ms elapsed; with a world and
+   `animate` set, moves each playing animation by elapsed * speed (FUN_001268c8 makes elapsed a float,
+   FUN_001269cc multiplies, FUN_00126858 makes the product an integer) and hands its controller the new
+   position: a looping one (state 3) wraps around its duration, one playing once (state 2) stops at
+   either end (state 4); one never played (state 1) is stopped. Then animates the world at worldTime
+   (Animate). */
+void animations_update(Animations *animations,int worldTime,int elapsed,int animate)
 
 {
-  undefined4 uVar1;
-  uint uVar2;
-  int iVar3;
-  int iVar4;
-  code *pcVar5;
-  int iVar6;
-  int iVar7;
-  int unaff_r7;
-  bool bVar8;
-  int local_24;
-  
-  *(undefined4 *)(param_1 + 0xc) = param_2;
-  *(undefined4 *)(param_1 + 8) = param_3;
-  if (*(int *)(param_1 + 4) != 0 && param_4 != 0) {
-    iVar7 = 0;
-    local_24 = param_4;
-    uVar1 = FUN_001268c8(param_3);
-    do {
-      iVar6 = param_1 + iVar7 * 4;
-      uVar2 = *(uint *)(iVar6 + 0x10);
-      bVar8 = uVar2 != 0xffffffff;
-      if (bVar8) {
-        unaff_r7 = param_1 + iVar7;
-        uVar2 = (uint)*(byte *)(unaff_r7 + 0x330);
+  uint32 elapsedAsFloat;
+  int result;
+  int i;
+
+  animations->worldTime = worldTime;
+  animations->elapsed = elapsed;
+  if (animations->world == (ISwerveObject *)0x0 || !animate)
+    return;
+  elapsedAsFloat = FUN_001268c8(elapsed);
+  for (i = 0; i < 100; i++) {
+    if (animations->userIds[i] == -1)
+      continue;
+    switch (animations->states[i]) {
+    case 3:                                          /* looping */
+      animations->positions[i] += FUN_00126858(FUN_001269cc(elapsedAsFloat,animations->speeds[i]));
+      while (animations->positions[i] > animations->durations[i] - 1)
+        animations->positions[i] -= animations->durations[i];
+      while (animations->positions[i] < 0)
+        animations->positions[i] += animations->durations[i];
+      animations_set_position(animations,i,animations->positions[i]);
+      break;
+    case 2:                                          /* playing once */
+      animations->positions[i] += FUN_00126858(FUN_001269cc(elapsedAsFloat,animations->speeds[i]));
+      if (animations->positions[i] > animations->durations[i] - 1) {
+        animations->positions[i] = animations->durations[i] - 1;
+        animations->states[i] = 4;
       }
-      if (bVar8 && uVar2 != 4) {
-        if (uVar2 == 3) {
-          
-          iVar3 = FUN_00126858(FUN_001269cc(uVar1,*(undefined4 *)(iVar6 + 0x3f8)));
-          *(int *)(iVar6 + 0x588) = iVar3 + *(int *)(iVar6 + 0x588);
-          iVar4 = *(int *)(iVar6 + 0x1a0);
-          while (iVar4 + -1 < *(int *)(iVar6 + 0x588)) {
-            *(int *)(iVar6 + 0x588) = *(int *)(iVar6 + 0x588) - iVar4;
-          }
-          while (iVar3 = *(int *)(iVar6 + 0x588), iVar3 < 0) {
-            *(int *)(iVar6 + 0x588) = iVar3 + iVar4;
-          }
-        }
-        else {
-          if (uVar2 != 2) {
-            if (uVar2 == 1) {
-              animations_set_position((Animations *)param_1,iVar7,0xffffffff);
-              *(undefined1 *)(unaff_r7 + 0x330) = 4;
-            }
-            goto LAB_00123d4c;
-          }
-          
-          iVar3 = FUN_00126858(FUN_001269cc(uVar1,*(undefined4 *)(iVar6 + 0x3f8)));
-          iVar3 = iVar3 + *(int *)(iVar6 + 0x588);
-          *(int *)(iVar6 + 0x588) = iVar3;
-          iVar4 = *(int *)(iVar6 + 0x1a0) + -1;
-          if (iVar4 < iVar3) {
-            *(int *)(iVar6 + 0x588) = iVar4;
-LAB_00123d24:
-            *(undefined1 *)(unaff_r7 + 0x330) = 4;
-          }
-          else if (iVar3 < 0) {
-            *(undefined4 *)(iVar6 + 0x588) = 0;
-            goto LAB_00123d24;
-          }
-          iVar3 = *(int *)(iVar6 + 0x588);
-        }
-        animations_set_position((Animations *)param_1,iVar7,iVar3);
+      else if (animations->positions[i] < 0) {
+        animations->positions[i] = 0;
+        animations->states[i] = 4;
       }
-LAB_00123d4c:
-      iVar7 = iVar7 + 1;
-    } while (iVar7 < 100);
-    local_24 = 0;
-    pcVar5 = *(code **)(**(int **)(param_1 + 4) + 0x24);
-    (*pcVar5)(*(int **)(param_1 + 4),*(undefined4 *)(param_1 + 0xc),&local_24,pcVar5,param_3);
+      animations_set_position(animations,i,animations->positions[i]);
+      break;
+    case 1:                                          /* added, never played */
+      animations_set_position(animations,i,-1);
+      animations->states[i] = 4;
+      break;
+    }
   }
-  return;
+  result = 0;
+  (*((const SwerveObject3DVtbl *)animations->world->pvt)->Animate)(animations->world,animations->worldTime,&result);
 }
 
 /* ==== 0x00123D7C  (file offset 0x23D7C)  FUN_00123d7c ================================================ */
@@ -29169,7 +29133,7 @@ void FUN_001242b4(int param_1)
   if (*(int *)(param_1 + 0xcc) == 0) goto LAB_001244e8;
   switch(*(int *)(param_1 + 0xcc)) {
   case 1:
-    FUN_0011e0fc(*(int *)(param_1 + 0x9c));
+    animations_reset((Animations *)*(int *)(param_1 + 0x9c));
     if (*(int **)(param_1 + 0xa4) != (int *)0x0) {
       FUN_0010c2c4(*(int **)(param_1 + 0xa4),1);
       *(undefined4 *)(param_1 + 0xa4) = 0;
