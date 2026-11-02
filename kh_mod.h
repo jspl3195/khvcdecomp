@@ -551,7 +551,7 @@ void web_request_destroy(WebRequest *request,int32 freeIt);   /* 0x0010C598 GUES
 void script_command_destroy(ScriptCommand *command,int32 freeIt);   /* 0x0010C620 GUESS: name, see kh_mod.c */
 void FUN_0010c66c(int param_1,int param_2);
 void script_sequence_destroy(ScriptSequence *sequence,int32 freeIt);   /* 0x0010C6B4 GUESS: name, see kh_mod.c */
-void FUN_0010c720(int *param_1,int param_2);
+void enemy_destroy(Enemy *enemy,int32 freeIt);   /* 0x0010C720 GUESS: name, see kh_mod.c */
 void FUN_0010c73c(int param_1,int param_2);
 void FUN_0010c790(int param_1,int param_2);
 void FUN_0010c800(int param_1,int param_2);

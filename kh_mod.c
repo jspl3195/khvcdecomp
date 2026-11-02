@@ -8271,17 +8271,18 @@ void script_sequence_destroy(ScriptSequence *sequence,int32 freeIt)
 }
 
 
-/* ==== 0x0010C720  (file offset 0x0C720)  FUN_0010c720 ================================================ */
-void FUN_0010c720(int *param_1,int param_2)
+/* ==== 0x0010C720  (file offset 0x0C720)  enemy_destroy =============================================== */
+/* GUESS: name. An enemy's destructor: puts back its class's vtable (0x00101680, as enemy_create does; it
+   owns nothing to release) and frees it when `freeIt` is set (the binary's tail jump to helper_free at
+   0x0010c730). Called for each of a combat region's enemies (FUN_0010c790). */
+void enemy_destroy(Enemy *enemy,int32 freeIt)
 
 {
-  *param_1 = (int32)VTABLE_00101680;
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
-  return;
+  enemy->vtable = (int32)VTABLE_00101680;
+  if (freeIt != 0)
+    helper_free(enemy);
 }
+
 
 /* ==== 0x0010C73C  (file offset 0x0C73C)  FUN_0010c73c ================================================ */
 void FUN_0010c73c(int param_1,int param_2)
@@ -8311,7 +8312,7 @@ void FUN_0010c790(int param_1,int param_2)
   for (iVar2 = 0; iVar2 < *(int *)(param_1 + 300); iVar2 = iVar2 + 1) {
     iVar1 = *(int *)(*(int *)(param_1 + 0x14c) + iVar2 * 4);
     if (iVar1 != 0) {
-      FUN_0010c720(iVar1,1);
+      enemy_destroy((Enemy *)iVar1,1);
     }
   }
   helper_free(*(void **)(param_1 + 0x14c));
