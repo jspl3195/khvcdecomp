@@ -247,12 +247,12 @@ void * memset(void *destination,uint32 byteCount)
    lsl, one loop per offset 1, 2, 3); the last 0-3 bytes are copied one at a time. Returns the end
    pointers, as the binary leaves them: r0 the destination's, r1 the source's (no caller uses them).
    All 10 callers copy 8 bytes (or 10 once). */
-ulonglong memcpy(void *destination,void *source,uint32 byteCount)
+uint64 memcpy(void *destination,void *source,uint32 byteCount)
 
 {
   uint8 *to = (uint8 *)destination;
   uint8 *from = (uint8 *)source;
-  ulonglong ends;
+  uint64 ends;
   uint32 *words;                    /* the aligned source words around from */
   uint32 shift;
 
@@ -282,12 +282,12 @@ ulonglong memcpy(void *destination,void *source,uint32 byteCount)
    in the byte tail at 0x00100268, shared with memcpy); alignment is never checked. Returns the end
    pointers, as the binary leaves them: r0 the destination's, r1 the source's (no caller uses them).
    Callers copy constant tables into local arrays / structures (0x14-0x74 bytes, all multiples of 4). */
-ulonglong memcpy_word_aligned(void *destination,void *source,uint32 byteCount)
+uint64 memcpy_word_aligned(void *destination,void *source,uint32 byteCount)
 
 {
   uint8 *to = (uint8 *)destination;
   uint8 *from = (uint8 *)source;
-  ulonglong ends;
+  uint64 ends;
 
   /* whole words (the binary: blocks of 32, 16, 8 and 4 bytes) */
   for (; byteCount >= 4; byteCount -= 4, to += 4, from += 4)
@@ -298,7 +298,7 @@ ulonglong memcpy_word_aligned(void *destination,void *source,uint32 byteCount)
 }
 
 /* ==== 0x00100288  (file offset 0x00288)  FUN_00100288 ================================================ */
-ulonglong FUN_00100288(uint param_1,uint param_2)
+uint64 FUN_00100288(uint param_1,uint param_2)
 
 {
   uint uVar1;
@@ -891,7 +891,7 @@ undefined8 FUN_00100c2c(int param_1,int param_2,undefined4 param_3,undefined4 pa
   uint uVar8;
   undefined4 uVar9;
   undefined4 *puVar10;
-  ulonglong *puVar11;
+  uint64 *puVar11;
   uint uVar12;
   int iVar13;
   uint uVar14;
@@ -903,7 +903,7 @@ undefined8 FUN_00100c2c(int param_1,int param_2,undefined4 param_3,undefined4 pa
   bool bVar20;
   bool bVar21;
   undefined8 uVar22;
-  ulonglong uVar23;
+  uint64 uVar23;
   uint uVar24;
   
   param_2 = param_2 + -1;
@@ -976,7 +976,7 @@ LAB_00100d64:
   uVar23 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
   uVar8 = uVar23.high;
   uVar3 = uVar23.low;
-  puVar11 = (ulonglong *)(param_1 + (param_2 + -1) * 8);
+  puVar11 = (uint64 *)(param_1 + (param_2 + -1) * 8);
   uVar12 = puVar11->low;
   uVar14 = *(uint *)((int)puVar11 + 4);
   if ((DOUBLE_EXPONENT_MASK_SHIFTED & ~(uVar8 << 1)) == 0 || (DOUBLE_EXPONENT_MASK_SHIFTED & ~(uVar14 << 1)) == 0) {
@@ -1680,10 +1680,10 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
                     /* fdlibm: n = (int)(t*invpio2 + half); fn = (double)n. Ghidra dropped the
                        data flow: the sum in r0:r1 is the argument of the double -> int conversion
                        and n (r0) that of the int -> double one (0x00100ea8 bl add; 0x00100eac
-                       bl FUN_00125554; 0x00100eb4 bl FUN_00125604). Written out explicitly. */
+                       bl FUN_00125554; 0x00100eb4 bl int_to_double). Written out explicitly. */
       uVar16 = FUN_00124954((int)uVar16.low,(int)uVar16.high,HALF_DOUBLE_LOW_WORD,HALF_DOUBLE_HIGH_WORD);
       iVar2 = FUN_00125554(uVar16.low,uVar16.high);
-      uVar16 = FUN_00125604(iVar2);
+      uVar16 = int_to_double(iVar2);
       uVar13 = uVar16.high;
       uVar8 = uVar16.low;
       uVar16 = FUN_00125734(uVar8,uVar13,HALF_PI_FIRST_33_BITS_LOW_WORD,HALF_PI_FIRST_33_BITS_HIGH_WORD);
@@ -4298,7 +4298,7 @@ void FUN_00105e44(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   uint uVar7;
   int *piVar8;
   int iVar9;
-  ulonglong uVar10;
+  uint64 uVar10;
                     /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
                         */
   uVar2 = (*g_pHelperFuncs->malloc)(0x400);
@@ -4949,8 +4949,9 @@ void FUN_00107230(int *param_1,undefined4 param_2,int *param_3)
   uint uVar6;
   uint uVar7;
   bool bVar8;
-  undefined8 uVar9;
-  undefined8 uVar10;
+  uint64 maximum;   /* obj->+0x58 as a double */
+  uint64 value;     /* obj->+0x54 as a double */
+  uint64 ratio;     /* value / maximum */
   undefined4 local_2c;
   undefined4 local_28;
   
@@ -5090,8 +5091,8 @@ LAB_00107384:
     (**(code **)(*param_3 + 0x58))(param_3,&local_2c);
     (**(code **)(*param_3 + 0x18))(param_3,1);
     FUN_0010a3e8(param_1[8],param_3,WORD_HEXADECIMAL_FF7E8194,3);
-    uVar9 = FUN_00125604(param_1[0x16]);
-    uVar10 = FUN_00125604(param_1[0x15]);
+    maximum = int_to_double(param_1[0x16]);
+    value = int_to_double(param_1[0x15]);
                     /* helper[37] f_op (AEEHelperFuncs +0x94) - BREW floating-point arithmetic
                        helper: double f_op(double v1, double v2, FloatOperationType nType).
                        Registers (AAPCS soft-float, little-endian): v1 in r0:r1 (r0 = low word, r1 =
@@ -5110,8 +5111,8 @@ LAB_00107384:
                        research_notes/decomp/brew_types.h, AEEHelperFuncs slot 37. */
                     /* the two doubles travel as bit patterns in r0:r1 and r2:r3, the operation
                        code on the stack: `mov r3, #3; str r3, [sp]` at 0x1076fc = FO_DIV */
-    *(double *)&uVar9 = (*g_pHelperFuncs->f_op)(*(double *)&uVar10,*(double *)&uVar9,FO_DIV);
-    uVar3 = FUN_0012479c(uVar9.low,uVar9.high);
+    *(double *)&ratio = (*g_pHelperFuncs->f_op)(*(double *)&value,*(double *)&maximum,FO_DIV);
+    uVar3 = FUN_0012479c(ratio.low,ratio.high);
     uVar4 = FUN_001268c8((int)*(short *)(param_1[2] + 4));
     uVar3 = float_multiply(uVar4,uVar3);
     bar.x = *(int16 *)param_1[2] + 1;
@@ -5507,7 +5508,7 @@ int FUN_00107f88(int param_1)
 }
 
 /* ==== 0x00107FD0  (file offset 0x07FD0)  FUN_00107fd0 ================================================ */
-ulonglong FUN_00107fd0(int param_1,int param_2,int param_3)
+uint64 FUN_00107fd0(int param_1,int param_2,int param_3)
 
 {
   short sVar1;
@@ -5986,7 +5987,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
   int iVar8;
   short *psVar9;
   int iVar10;
-  ulonglong uVar11;
+  uint64 uVar11;
   
   piVar1 = (int *)screen_stack_top((int)param_1);
   iVar8 = INTEGER_MINUS_35012;
@@ -6683,10 +6684,10 @@ void key_picker_setup(UIElement *picker,KeyOption *options,int32 *setting,int32 
 void FUN_00109940(int param_1,int param_2)
 
 {
-  ulonglong dVar1;   /* the double whose low word is uVar1 */
+  uint64 dVar1;   /* the double whose low word is uVar1 */
   uint uVar1;
   int iVar5;
-  undefined8 uVar7;
+  uint64 width;     /* the 16-bit width at +0x70 +0x14, as a double */
   
   *(int *)(param_1 + 0xc0) = param_2;
   if (param_2 == 0) {
@@ -6701,8 +6702,8 @@ void FUN_00109940(int param_1,int param_2)
     *(undefined2 *)(*(int *)(param_1 + 0x44) + 0x78) =
          *(undefined2 *)(*(int *)(*(int *)(param_1 + 0x44) + 0x70) + 0x14);
     iVar5 = *(int *)(param_1 + 0x44);
-    uVar7 = FUN_00125604((uint)*(ushort *)(*(int *)(iVar5 + 0x70) + 0x14));
-    dVar1 = FUN_00124f44(uVar7.low,uVar7.high,DOUBLE_1_POINT_1_LOW_WORD,DOUBLE_1_POINT_1_HIGH_WORD);
+    width = int_to_double((int32)*(uint16 *)(*(int *)(iVar5 + 0x70) + 0x14));
+    dVar1 = FUN_00124f44(width.low,width.high,DOUBLE_1_POINT_1_LOW_WORD,DOUBLE_1_POINT_1_HIGH_WORD);
     uVar1 = dVar1.low;
     uVar1 = FUN_00125554(uVar1,dVar1.high);
     *(short *)(iVar5 + 0x7a) = (short)uVar1;
@@ -6782,7 +6783,7 @@ void FUN_00109b4c(int param_1,int param_2,int param_3)
   bool bVar18;
   bool bVar19;
   undefined8 uVar20;
-  ulonglong uVar21;
+  uint64 uVar21;
   int local_38;
   
   while( true ) {
@@ -9669,7 +9670,7 @@ undefined4 FUN_0010d95c(int param_1,int param_2)
 void FUN_0010db04(int param_1,undefined4 param_2)
 
 {
-  ulonglong dVar7;   /* the double whose low word is uVar7 */
+  uint64 dVar7;   /* the double whose low word is uVar7 */
   undefined4 *puVar1;
   int *piVar2;
   int iVar3;
@@ -9684,7 +9685,7 @@ void FUN_0010db04(int param_1,undefined4 param_2)
   undefined1 uVar12;
   undefined1 uVar13;
   undefined8 uVar14;
-  ulonglong uVar15;
+  uint64 uVar15;
   uint local_2c;
   uint local_28;
   uint local_24;
@@ -10052,8 +10053,8 @@ void FUN_0010e280(int param_1,undefined4 *param_2,undefined4 *param_3)
 undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
 
 {
-  ulonglong dVar2;   /* the double whose low word is uVar2 */
-  ulonglong dVar4;   /* the double whose low word is uVar4 */
+  uint64 dVar2;   /* the double whose low word is uVar2 */
+  uint64 dVar4;   /* the double whose low word is uVar4 */
   int iVar1;
   uint uVar2;
   uint uVar3;
@@ -10633,7 +10634,7 @@ void FUN_0010ecb8(int param_1,undefined4 *param_2)
 uint32 float_cos(uint32 angle)
 
 {
-  ulonglong value = FUN_00126248(angle);
+  uint64 value = FUN_00126248(angle);
 
   value = FUN_001007f4(value.low,value.high);
   return FUN_0012479c(value.low,value.high);
@@ -11015,7 +11016,7 @@ void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4
                  uint param_6)
 
 {
-  ulonglong dVar3;   /* the double whose low word is uVar3 */
+  uint64 dVar3;   /* the double whose low word is uVar3 */
   bool bVar1;
   void *pvVar2;
   uint uVar3;
@@ -11321,7 +11322,7 @@ void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param
                  int param_7,uint param_8,uint param_9,uint param_10)
 
 {
-  ulonglong dVar2;   /* the double whose low word is uVar2 */
+  uint64 dVar2;   /* the double whose low word is uVar2 */
   undefined4 uVar1;
   uint uVar2;
   int iVar3;
@@ -13594,8 +13595,8 @@ void FUN_00113340(int param_1)
 undefined8 FUN_00113374(undefined4 param_1,uint param_2,uint param_3,uint param_4,uint param_5)
 
 {
-  ulonglong dVar1;   /* the double whose low word is uVar1 */
-  ulonglong dVar2;   /* the double whose low word is uVar2 */
+  uint64 dVar1;   /* the double whose low word is uVar1 */
+  uint64 dVar2;   /* the double whose low word is uVar2 */
   uint uVar1;
   uint uVar2;
   undefined1 in_ZR;
@@ -17400,7 +17401,7 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
   uint32 size2 = FLOAT_MINUS_1;
   uint32 size3 = FLOAT_MINUS_1;
   uint32 half;
-  ulonglong value;   /* a size as a double (FUN_00126248), r0:r1 */
+  uint64 value;   /* a size as a double (FUN_00126248), r0:r1 */
   int32 i;
 
   wordCount = FUN_00110084((int32)shape->app->pObj94,(int32)text,(int32)DATA_AT_00126FCC,0,0);
@@ -18170,7 +18171,7 @@ void FUN_0011a2f4(int param_1,int param_2)
   undefined4 uVar1;
   uint uVar2;
   int iVar3;
-  ulonglong uVar4;
+  uint64 uVar4;
   
   if (*(int *)(param_1 + 0x13c) == 1) {
     if (param_2 <= *(int *)(param_1 + 0x140)) {
@@ -18601,8 +18602,8 @@ void character_freeze_held_keys(Character *character)
 undefined8 FUN_0011abc4(int param_1,int param_2)
 
 {
-  ulonglong dVar1;   /* the double whose low word is uVar1 */
-  ulonglong dVar5;   /* the double whose low word is uVar5 */
+  uint64 dVar1;   /* the double whose low word is uVar1 */
+  uint64 dVar5;   /* the double whose low word is uVar5 */
   uint uVar1;
   undefined4 uVar2;
   int iVar3;
@@ -19679,7 +19680,7 @@ undefined8 FUN_0011c330(int param_1,int param_2,uint param_3)
   int iVar7;
   bool bVar8;
   undefined1 uVar9;
-  ulonglong uVar10;
+  uint64 uVar10;
   undefined8 uVar11;
   uint local_24;
   undefined8 uVar12;
@@ -19991,7 +19992,7 @@ void FUN_0011ca8c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 void wrap_angle(int32 pObj94,uint32 *angle)
 
 {
-  ulonglong value;   /* the angle as a double, r0:r1 */
+  uint64 value;   /* the angle as a double, r0:r1 */
 
   while (value = FUN_00126248(*angle),
          FUN_00125634(value.low,value.high,DOUBLE_180_LOW_WORD,DOUBLE_180_HIGH_WORD), *(float *)angle > 180.0f) {
@@ -20534,7 +20535,7 @@ void FUN_0011d6cc(int param_1,int param_2)
   undefined1 uVar11;
   undefined8 uVar12;
   undefined8 uVar13;
-  ulonglong uVar14;
+  uint64 uVar14;
   uint local_34;
   undefined4 local_30;
   undefined4 local_2c;
@@ -22545,7 +22546,7 @@ void FUN_001202cc(int param_1,undefined4 param_2)
 uint32 float_sin(uint32 angle)
 
 {
-  ulonglong value = FUN_00126248(angle);
+  uint64 value = FUN_00126248(angle);
 
   value = FUN_001008d0(value.low,value.high);
   return FUN_0012479c(value.low,value.high);
@@ -22559,7 +22560,7 @@ uint32 float_sin(uint32 angle)
 uint32 float_sqrt(uint32 value)
 
 {
-  ulonglong root = FUN_00126248(value);
+  uint64 root = FUN_00126248(value);
 
   root = FUN_001009b8(root.low,root.high);
   return FUN_0012479c(root.low,root.high);
@@ -23363,8 +23364,8 @@ void FUN_0012171c(int32 object,int32 now,int32 elapsed)
 void FUN_00121780(int param_1,undefined4 *param_2,uint param_3)
 
 {
-  ulonglong dVar1;   /* the double whose low word is uVar1 */
-  ulonglong dVar3;   /* the double whose low word is uVar3 */
+  uint64 dVar1;   /* the double whose low word is uVar1 */
+  uint64 dVar3;   /* the double whose low word is uVar3 */
   uint uVar1;
   uint uVar2;
   uint uVar3;
@@ -23869,7 +23870,7 @@ switchD_00021cbc_default:
 void FUN_00122450(int param_1,byte *param_2,int param_3)
 
 {
-  ulonglong dVar4;   /* the double whose low word is uVar4 */
+  uint64 dVar4;   /* the double whose low word is uVar4 */
   int iVar1;
   byte *pbVar2;
   undefined4 uVar3;
@@ -23996,7 +23997,7 @@ void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed)
   uint32 offsetX;
   uint32 offsetY;
   uint32 distance;
-  ulonglong value;   /* the distance as a double (FUN_00126248), r0:r1 */
+  uint64 value;   /* the distance as a double (FUN_00126248), r0:r1 */
   int32 visible;
   int32 i;
 
@@ -24386,9 +24387,9 @@ void combat_region_update(CombatRegion *region,int32 now,int32 elapsed)
 void FUN_0012312c(int param_1,int param_2,int param_3)
 
 {
-  ulonglong dVar3;   /* the double whose low word is uVar3 */
-  ulonglong dVar2;   /* the double whose low word is uVar2 */
-  ulonglong dVar6;   /* the double whose low word is uVar6 */
+  uint64 dVar3;   /* the double whose low word is uVar3 */
+  uint64 dVar2;   /* the double whose low word is uVar2 */
+  uint64 dVar6;   /* the double whose low word is uVar6 */
   uint32 position[3];
   uint uVar1;
   uint uVar2;
@@ -27481,7 +27482,7 @@ undefined8 FUN_00124f24(uint param_1,uint param_2,uint param_3,uint param_4)
   bool bVar12;
   bool bVar13;
   bool bVar14;
-  ulonglong uVar15;
+  uint64 uVar15;
   uint uVar16;
   uint uVar17;
   undefined8 uVar18;
@@ -27908,7 +27909,7 @@ undefined8 FUN_00124f44(uint param_1,uint param_2,uint param_3,uint param_4)
   bool bVar12;
   bool bVar13;
   bool bVar14;
-  ulonglong uVar15;
+  uint64 uVar15;
   uint uVar16;
   uint uVar17;
   undefined8 uVar18;
@@ -28327,14 +28328,14 @@ LAB_00126d6c:
    it, 13 bits apart (each subtracted, times the divisor, from the 96-bit remainder; the binary writes the
    four out); three last bits by shift and subtract. Verified under emulation (research_notes/
    soft_float_test, divide_reference.py): the same quotient as the binary on every case. */
-ulonglong double_divide_mantissas(uint32 dividendLow,uint32 dividendHigh,uint32 divisorLow,uint32 divisorHigh)
+uint64 double_divide_mantissas(uint32 dividendLow,uint32 dividendHigh,uint32 divisorLow,uint32 divisorHigh)
 
 {
-  ulonglong remainderHigh;   /* the remainder's top 64 bits (r1:r0) ... */
+  uint64 remainderHigh;   /* the remainder's top 64 bits (r1:r0) ... */
   uint32 remainderLow;       /* ... and its low 32 (fp) */
-  ulonglong product;
-  ulonglong term;
-  ulonglong quotient;
+  uint64 product;
+  uint64 term;
+  uint64 quotient;
   uint32 reciprocal;
   uint32 estimate;
   uint32 digit;
@@ -28837,25 +28838,29 @@ LAB_00126d6c:
   return 2 - uVar9;
 }
 
-/* ==== 0x00125604  (file offset 0x25604)  FUN_00125604 ================================================ */
-undefined8 FUN_00125604(uint param_1)
+/* ==== 0x00125604  (file offset 0x25604)  int_to_double =============================================== */
+/* GUESS: name (the routine is certain: the soft-float library's int -> double conversion, ARM's run-time
+   ABI __aeabi_i2d). Returns the double in two words, high word = sign, exponent 1023 + 31 - leading zeros
+   and the top 20 mantissa bits, low word = the next 32; exact for every int32, 0 gives +0.0. The binary
+   (0x00125604 - 0x00125630) adds 0x41F00000 and the mantissa shifted right arithmetically, whose sign
+   bits and implicit bit make 0x41E00000; written here with unsigned arithmetic. Verified under emulation
+   (research_notes/soft_float_test, double_reference.py, kind f). */
+uint64 int_to_double(int32 value)
 
 {
-  int iVar1;
-  uint uVar2;
-  undefined8 uVar3;
-  
-  uVar2 = param_1 & 0x80000000;
-  if (uVar2 != 0) {
-    param_1 = -param_1;
-  }
-  iVar1 = param_1 << LEADING_ZEROS(param_1);
-  if (iVar1 == 0) {
-    return MAKE_WORDS(uVar3,0,0);
-  }
-  return MAKE_WORDS(uVar3,(uVar2 | 0x40000000) + 0x1f00000 + LEADING_ZEROS(param_1) * -0x100000 + (iVar1 >> 0xb),
-                  iVar1 << 0x15);
+  uint64 result;
+  uint32 sign = (uint32)value & 0x80000000u;
+  uint32 magnitude = sign != 0 ? 0u - (uint32)value : (uint32)value;
+  uint32 zeros;
+
+  if (magnitude == 0)
+    return MAKE_WORDS(result,0,0);
+  zeros = LEADING_ZEROS(magnitude);
+  magnitude <<= zeros;                            /* the top bit set; zeros is below 32 here */
+  return MAKE_WORDS(result,(sign | 0x41E00000u) - zeros * 0x100000u + ((magnitude >> 11) & 0xfffffu),
+                    magnitude << 21);
 }
+
 
 /* ==== 0x00125634  (file offset 0x25634)  FUN_00125634 ================================================ */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
@@ -29325,11 +29330,11 @@ LAB_00126d6c:
 undefined8 FUN_00125734(uint param_1,uint param_2,uint param_3,uint param_4)
 
 {
-  longlong lVar1;
-  longlong lVar2;
-  longlong lVar3;
-  longlong lVar4;
-  longlong lVar5;
+  uint64 lVar1;
+  uint64 lVar2;
+  uint64 lVar3;
+  uint64 lVar4;
+  uint64 lVar5;
   uint *puVar6;
   undefined4 uVar7;
   undefined4 uVar8;
@@ -32078,7 +32083,7 @@ uint32 float_multiply(uint32 a,uint32 b)
   int32 denormal;     /* a is the denormal */
   int32 special;
   int32 path = 0;      /* 1: an exception (0x001260e4); 2: a result below the normal range (0x00126b44) */
-  ulonglong product;
+  uint64 product;
   uint32 low;
 
   exponent = a >> 7 & 0xff0000;

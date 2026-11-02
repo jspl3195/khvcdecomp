@@ -26,15 +26,21 @@ typedef unsigned short ushort;
 typedef unsigned char  uchar;
 typedef unsigned char  byte;
 typedef unsigned char  bool;    /* Ghidra's boolean: 0 or 1 (C90 has no bool) */
-/* C90 has no 64-bit integer type, so a 64-bit value (Ghidra's undefined8, ulonglong and longlong) is
-   two 32-bit words: low is the word the ARM code holds in r0 (r2) and high the one in r1 (r3); in
-   memory the low word comes first (little-endian), as in the struct. */
-typedef struct {
-  uint low;
-  uint high;
-} undefined8;
-typedef undefined8 ulonglong;
-typedef undefined8 longlong;
+/* C90 has no 64-bit integer type, so a 64-bit value is two 32-bit words: low is the word the ARM code
+   holds in r0 (r2) and high the one in r1 (r3); in memory the low word comes first (little-endian), as
+   in the structs. uint64 (Ghidra's ulonglong) and int64 (Ghidra's longlong) are two distinct struct
+   types, so the compiler tells them apart: assigning one to the other is an error. int64 keeps the sign
+   in its high word (int32). The word macros below work on uint64 (unsigned arithmetic, no overflow);
+   undefined8 (Ghidra's 8 unknown bytes, in its raw text) is uint64. */
+typedef struct uint64 {
+  uint32 low;
+  uint32 high;
+} uint64;
+typedef struct int64 {
+  uint32 low;
+  int32 high;
+} int64;
+typedef uint64 undefined8;
 /* What the code does with 64-bit values, as macros on the two words (no calls; the arguments are
    evaluated more than once, and the result is assigned high word first).
    MAKE_WORDS(result, h, l): result = h:l, and the expression's value is result (Ghidra's CONCAT44).
@@ -405,9 +411,9 @@ void AEEMod_FreeResources(IModule *po, IHeap *ph, IFileMgr *pfm);
 undefined4 FUN_00100028(undefined4 param_1,undefined4 param_2);
 void FUN_00100104(int param_1);
 void * memset(void *destination,uint32 byteCount);   /* 0x00100110 GUESS: name, see kh_mod.c */
-ulonglong memcpy(void *destination,void *source,uint32 byteCount);   /* 0x00100168 GUESS: name, see kh_mod.c */
-ulonglong memcpy_word_aligned(void *destination,void *source,uint32 byteCount);   /* 0x0010021C GUESS: name, see kh_mod.c */
-ulonglong FUN_00100288(uint param_1,uint param_2);
+uint64 memcpy(void *destination,void *source,uint32 byteCount);   /* 0x00100168 GUESS: name, see kh_mod.c */
+uint64 memcpy_word_aligned(void *destination,void *source,uint32 byteCount);   /* 0x0010021C GUESS: name, see kh_mod.c */
+uint64 FUN_00100288(uint param_1,uint param_2);
 int FUN_0010035c(uint param_1,uint param_2);
 undefined8 FUN_0010041c(int param_1,uint param_2);
 undefined8 FUN_001007f4(int param_1,uint param_2);
@@ -458,7 +464,7 @@ int32 list_get_entry(UIList *list,int32 index);   /* 0x00107EA4 GUESS: name, see
 int32 ui_element_find_child(UIElement *element,int32 id);   /* 0x00107EC4 GUESS: name */
 void * FUN_00107ecc(undefined4 param_1,undefined4 param_2);
 int FUN_00107f88(int param_1);
-ulonglong FUN_00107fd0(int param_1,int param_2,int param_3);
+uint64 FUN_00107fd0(int param_1,int param_2,int param_3);
 undefined4 FUN_00107fec(int param_1,undefined4 param_2);
 int32 screen_stack_top(ScreenStack *stack);   /* 0x001080AC GUESS: name */
 int32 list_find_entry(UIList *list,int32 id);   /* 0x001080C8 GUESS: name */
@@ -837,10 +843,10 @@ undefined8 FUN_00124b40(uint param_1,uint param_2,uint param_3,uint param_4);
 undefined8 FUN_00124b84(uint param_1,uint param_2,uint param_3,uint param_4);
 undefined8 FUN_00124f24(uint param_1,uint param_2,uint param_3,uint param_4);
 undefined8 FUN_00124f44(uint param_1,uint param_2,uint param_3,uint param_4);
-ulonglong double_divide_mantissas(uint32 dividendLow,uint32 dividendHigh,uint32 divisorLow,uint32 divisorHigh);   /* 0x001251EC GUESS: name */
+uint64 double_divide_mantissas(uint32 dividendLow,uint32 dividendHigh,uint32 divisorLow,uint32 divisorHigh);   /* 0x001251EC GUESS: name */
 uint FUN_001254d4(uint param_1,uint param_2,uint param_3,uint param_4);
 uint FUN_00125554(uint param_1,uint param_2);
-undefined8 FUN_00125604(uint param_1);
+uint64 int_to_double(int32 value);   /* 0x00125604 GUESS: name, see kh_mod.c */
 uint FUN_00125634(uint param_1,uint param_2,uint param_3,uint param_4);
 uint FUN_001256b4(uint param_1,uint param_2,uint param_3,uint param_4);
 undefined8 FUN_00125734(uint param_1,uint param_2,uint param_3,uint param_4);

@@ -41,7 +41,8 @@ This must give no errors and no `-Wpedantic`, `-Wlong-long`, `-Woverflow` or shi
 - **64-bit values.** C90 has no 64-bit integer type, so a 64-bit value is two 32-bit words, as the ARM code holds it in r0:r1:
 
   ```c
-  typedef struct { uint low; uint high; } undefined8;   /* also ulonglong, longlong */
+  typedef struct uint64 { uint32 low; uint32 high; } uint64;   /* Ghidra's ulonglong; undefined8 is uint64 */
+  typedef struct int64 { uint32 low; int32 high; } int64;      /* Ghidra's longlong: a distinct type */
   ```
 
   The 64-bit arithmetic is done with macros in `kh_mod.h`: `MAKE_WORDS`, `MULTIPLY_WORDS`, `ADD_WORDS`, `SUBTRACT_WORDS`, `SUBTRACT_WORD` and `SHIFT_LEFT_WORDS`. The double-precision routines return their result this way.
