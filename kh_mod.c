@@ -6177,7 +6177,7 @@ void screen_stack_close_top(ScreenStack *stack,int redraw)
   /* ---- the code at 0x0011e154 (thunk_FUN_0011e154), with the app */
   if (app->field_cc == 5 && app->pGame != (void *)0x0 && app->field_d4 != 0) {
     FUN_0010ea00(app->field_d4);
-    FUN_0011ab60(*(int *)((int)app->pGame + 0x1f8));
+    character_freeze_held_keys(*(Character **)((int)app->pGame + 0x1f8));
     /* float_compare_greater compares two floats and leaves the result in the condition flags; the binary
        branches on it (`bls` at 0x0011e1b0), which is the test written after the comma */
     if (app->bSuspended != 0 &&
@@ -6384,7 +6384,7 @@ void thunk_FUN_0011e154(int param_1)
     }
     if (bVar4 && iVar1 != 0) {
       FUN_0010ea00(iVar1);
-      FUN_0011ab60(*(undefined4 *)(*(int *)(param_1 + 0xa4) + 0x1f8));
+      character_freeze_held_keys(*(Character **)(*(int *)(param_1 + 0xa4) + 0x1f8));
       uVar2 = WORD_HEXADECIMAL_21BF9442;
       uVar5 = *(int *)(param_1 + 0xb8) == 0;
       uVar3 = true;
@@ -11332,7 +11332,7 @@ LAB_0010ee88:
     }
     if (bVar5 && iVar2 != 0) {
       FUN_0010ea00(iVar2);
-      FUN_0011ab60(*(int *)(*(int *)(param_1 + 0xa4) + 0x1f8));
+      character_freeze_held_keys(*(Character **)(*(int *)(param_1 + 0xa4) + 0x1f8));
       uVar3 = WORD_HEXADECIMAL_21BF9442;
       uVar6 = *(int *)(param_1 + 0xb8) == 0;
       uVar4 = true;
@@ -13701,7 +13701,7 @@ LAB_00111948:
     break;
   case 0x1c:
     if ((param_1[3] != 0) && (*(int *)(param_1[3] + 0xc) == WORD_HEXADECIMAL_10C617E4)) {
-      FUN_0011ab60(uVar14);
+      character_freeze_held_keys((Character *)uVar14);
     }
     break;
   case 0x1d:
@@ -20676,7 +20676,7 @@ LAB_0011a990:
     }
     if (bVar13 && uVar7 != 0) {
       FUN_0010ea00(uVar7);
-      FUN_0011ab60(*(undefined4 *)((int)pMe->pGame + 0x1f8));
+      character_freeze_held_keys(*(Character **)((int)pMe->pGame + 0x1f8));
       uVar6 = WORD_HEXADECIMAL_21BF9442;
       uVar14 = pMe->bSuspended == 0;
       uVar12 = true;
@@ -20771,39 +20771,29 @@ void character_on_key_release(Character *character,int key)
     character->actionHeld = 0;
 }
 
-/* ==== 0x0011AB60  (file offset 0x1AB60)  FUN_0011ab60 ================================================ */
-void FUN_0011ab60(int param_1)
+/* ==== 0x0011AB60  (file offset 0x1AB60)  character_freeze_held_keys ================================== */
+/* GUESS: name. When play stops or restarts (a screen opens or closes, a script command, ...): every key
+   still held (1) becomes frozen (2), so it does nothing until it is released and pressed again
+   (FUN_0011386c moves only on 1, character_on_key sets only a released flag). A character that is not
+   controllable has all its keys released instead. */
+void character_freeze_held_keys(Character *character)
 
 {
-  undefined1 uVar1;
-  
-  if (*(int *)(param_1 + 0x1d8) == 0) {
-    *(undefined1 *)(param_1 + 0x278) = 0;
-    *(undefined1 *)(param_1 + 0x279) = 0;
-    *(undefined1 *)(param_1 + 0x27a) = 0;
-    *(undefined1 *)(param_1 + 0x27b) = 0;
-    uVar1 = 0;
+  if (!character->controllable) {
+    character->forwardsHeld = character->backwardsHeld = character->leftHeld = character->rightHeld = 0;
+    character->actionHeld = 0;
+    return;
   }
-  else {
-    uVar1 = 2;
-    if (*(char *)(param_1 + 0x278) == '\x01') {
-      *(undefined1 *)(param_1 + 0x278) = 2;
-    }
-    if (*(char *)(param_1 + 0x279) == '\x01') {
-      *(undefined1 *)(param_1 + 0x279) = 2;
-    }
-    if (*(char *)(param_1 + 0x27a) == '\x01') {
-      *(undefined1 *)(param_1 + 0x27a) = 2;
-    }
-    if (*(char *)(param_1 + 0x27b) == '\x01') {
-      *(undefined1 *)(param_1 + 0x27b) = 2;
-    }
-    if (*(char *)(param_1 + 0x27c) != '\x01') {
-      return;
-    }
-  }
-  *(undefined1 *)(param_1 + 0x27c) = uVar1;
-  return;
+  if (character->forwardsHeld == 1)
+    character->forwardsHeld = 2;
+  if (character->backwardsHeld == 1)
+    character->backwardsHeld = 2;
+  if (character->leftHeld == 1)
+    character->leftHeld = 2;
+  if (character->rightHeld == 1)
+    character->rightHeld = 2;
+  if (character->actionHeld == 1)
+    character->actionHeld = 2;
 }
 
 /* ==== 0x0011ABC4  (file offset 0x1ABC4)  FUN_0011abc4 ================================================ */
@@ -23700,7 +23690,7 @@ void FUN_0011e154(int param_1)
     }
     if (bVar4 && iVar1 != 0) {
       FUN_0010ea00(iVar1);
-      FUN_0011ab60(*(undefined4 *)(*(int *)(param_1 + 0xa4) + 0x1f8));
+      character_freeze_held_keys(*(Character **)(*(int *)(param_1 + 0xa4) + 0x1f8));
       uVar2 = WORD_HEXADECIMAL_21BF9442;
       uVar5 = *(int *)(param_1 + 0xb8) == 0;
       uVar3 = true;

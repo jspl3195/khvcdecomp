@@ -691,7 +691,7 @@ void FUN_0011a3ec(int param_1,int param_2,undefined4 param_3);
 void character_on_key(Character *character,int key);   /* 0x0011A4D8 GUESS: name */
 void intro_on_key(Intro *intro,int key);   /* 0x0011A7DC GUESS: name */
 void character_on_key_release(Character *character,int key);   /* 0x0011AAD0 GUESS: name */
-void FUN_0011ab60(int param_1);
+void character_freeze_held_keys(Character *character);   /* 0x0011AB60 GUESS: name */
 undefined8 FUN_0011abc4(int param_1,int param_2,uint param_3);
 uint FUN_0011add0(uint param_1,int param_2);
 undefined4 FUN_0011ae04(int param_1,undefined4 param_2,int *param_3,int param_4,int param_5);

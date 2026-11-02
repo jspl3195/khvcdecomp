@@ -344,11 +344,11 @@ typedef struct Character {
     uint8  unknown_23c[0x08];
     int    field_244;             /* +0x244 cleared when the action key starts an attack */
     uint8  unknown_248[0x30];
-    uint8  forwardsHeld;          /* +0x278 the movement keys held down: each set by character_on_key and */
-    uint8  backwardsHeld;         /* +0x279 cleared by character_on_key_release, for its Controls binding */
-    uint8  leftHeld;              /* +0x27a or its arrow key (AVK_UP, AVK_DOWN, AVK_LEFT, AVK_RIGHT, and */
-    uint8  rightHeld;             /* +0x27b AVK_SELECT for the action); read by FUN_0011386c */
-    uint8  actionHeld;            /* +0x27c */
+    uint8  forwardsHeld;          /* +0x278 the movement keys: 0 up, 1 held (character_on_key, from its */
+    uint8  backwardsHeld;         /* +0x279 Controls binding or its arrow key: AVK_UP, AVK_DOWN, AVK_LEFT, */
+    uint8  leftHeld;              /* +0x27a AVK_RIGHT, and AVK_SELECT for the action), 2 held since before */
+    uint8  rightHeld;             /* +0x27b an interruption (character_freeze_held_keys: ignored until */
+    uint8  actionHeld;            /* +0x27c released, character_on_key_release); FUN_0011386c reads them */
     uint8  unknown_27d[0x0b];
     uint32 field_288;             /* +0x288 a float (its bits); level data 0x1218EC09 */
     uint32 field_28c;             /* +0x28c a float (its bits); level data 0x2073D363 */
