@@ -13413,74 +13413,45 @@ undefined4 FUN_00112e20(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x00112E84  (file offset 0x12E84)  FUN_00112e84 ================================================ */
-undefined8 FUN_00112e84(int param_1)
+/* GUESS: what it does. Finds where the enemy can stand along its step (+0xb4, +0xb8) by halving: while
+   either half-step (+-0.1 bounds, float_compare_greater / float_compare_less leave their result in the
+   flags: `bhi` / `bhs` / `blo` at 0x00112f58 - 0x00112f88, written after the comma) is larger than 0.1,
+   halves it and moves the step forward when FUN_00119c10 accepts the point +0xa8 + step (with height
+   +0xb0), back when it does not; then steps back once. Returns 0 when the step is 0, else whether
+   FUN_00119c10 accepts the final point. Written from its disassembly; r1, which Ghidra returned as the
+   high word, is only a register leftover. */
+int32 FUN_00112e84(int32 enemy)
 
 {
-  uint uVar1;
-  uint uVar2;
-  uint uVar3;
-  undefined4 uVar4;
-  undefined4 in_r1;
-  uint uVar5;
-  uint uVar6;
-  uint uVar7;
-  undefined1 in_ZR;
-  undefined1 in_CY;
-  undefined8 uVar8;
-  undefined8 uVar9;
-  
-  uVar3 = FLOAT_0_POINT_1;
-  uVar4 = FLOAT_0_POINT_001;
-  uVar5 = *(uint *)(param_1 + 0xb4);
-  uVar6 = *(uint *)(param_1 + 0xb8);
-  uVar7 = FLOAT_0_POINT_1 + 0x80000000;
-  while (((float_compare_greater(uVar5,uVar3), (bool)in_CY && !(bool)in_ZR ||
-          (float_compare_less(uVar5,uVar7), !(bool)in_CY)) &&
-         ((float_compare_greater(uVar6,uVar3), (bool)in_CY && !(bool)in_ZR ||
-          (float_compare_less(uVar6,uVar7), !(bool)in_CY))))) {
-    uVar5 = float_multiply(uVar5,0x3f000000);
-    uVar6 = float_multiply(uVar6,0x3f000000);
-    uVar1 = float_add(*(uint *)(param_1 + 0xac),*(uint *)(param_1 + 0xb8));
-    uVar2 = float_add(*(uint *)(param_1 + 0xa8),*(uint *)(param_1 + 0xb4));
-    in_r1 = uVar4;
-    uVar8 = FUN_00119c10(*(int *)(param_1 + 0x40),uVar2,uVar1,*(undefined4 *)(param_1 + 0xb0),uVar4,
-                         uVar4,0);
-    in_ZR = (int)uVar8.low == 0;
-    in_CY = 1;
-    if ((bool)in_ZR) {
-      uVar1 = float_subtract(*(uint *)(param_1 + 0xb4),uVar5);
-      *(uint *)(param_1 + 0xb4) = uVar1;
-      uVar1 = float_subtract(*(uint *)(param_1 + 0xb8),uVar6);
+  uint32 halfX = *(uint32 *)(enemy + 0xb4);
+  uint32 halfY = *(uint32 *)(enemy + 0xb8);
+  uint32 y;
+
+  while (((float_compare_greater(halfX,FLOAT_0_POINT_1), *(float *)&halfX > 0.1f) ||
+          (float_compare_less(halfX,FLOAT_0_POINT_1 + 0x80000000), *(float *)&halfX < -0.1f)) &&
+         ((float_compare_greater(halfY,FLOAT_0_POINT_1), *(float *)&halfY > 0.1f) ||
+          (float_compare_less(halfY,FLOAT_0_POINT_1 + 0x80000000), *(float *)&halfY < -0.1f))) {
+    halfX = float_multiply(halfX,0x3f000000);
+    halfY = float_multiply(halfY,0x3f000000);
+    y = float_add(*(uint32 *)(enemy + 0xac),*(uint32 *)(enemy + 0xb8));
+    if (FUN_00119c10(*(int32 *)(enemy + 0x40),float_add(*(uint32 *)(enemy + 0xa8),*(uint32 *)(enemy + 0xb4)),y,
+                     *(uint32 *)(enemy + 0xb0),FLOAT_0_POINT_001,FLOAT_0_POINT_001,0).low != 0) {
+      *(uint32 *)(enemy + 0xb4) = float_add(*(uint32 *)(enemy + 0xb4),halfX);
+      *(uint32 *)(enemy + 0xb8) = float_add(*(uint32 *)(enemy + 0xb8),halfY);
     }
     else {
-      uVar1 = float_add(*(uint *)(param_1 + 0xb4),uVar5);
-      *(uint *)(param_1 + 0xb4) = uVar1;
-      uVar1 = float_add(*(uint *)(param_1 + 0xb8),uVar6);
-    }
-    *(uint *)(param_1 + 0xb8) = uVar1;
-  }
-  uVar3 = float_subtract(*(uint *)(param_1 + 0xb4),uVar5);
-  *(uint *)(param_1 + 0xb4) = uVar3;
-  uVar5 = float_subtract(*(uint *)(param_1 + 0xb8),uVar6);
-  *(uint *)(param_1 + 0xb8) = uVar5;
-  float_compare_equal(uVar3,0);
-  if ((bool)in_ZR) {
-    float_compare_equal(*(uint *)(param_1 + 0xb8),0);
-  }
-  if (!(bool)in_ZR) {
-    uVar3 = float_add(*(uint *)(param_1 + 0xac),*(uint *)(param_1 + 0xb8));
-    uVar5 = float_add(*(uint *)(param_1 + 0xa8),*(uint *)(param_1 + 0xb4));
-    uVar8 = FUN_00119c10(*(int *)(param_1 + 0x40),uVar5,uVar3,*(undefined4 *)(param_1 + 0xb0),uVar4,
-                         uVar4,0);
-    in_r1 = uVar4;
-    if ((int)uVar8.low != 0) {
-      uVar4 = 1;
-      goto LAB_00113024;
+      *(uint32 *)(enemy + 0xb4) = float_subtract(*(uint32 *)(enemy + 0xb4),halfX);
+      *(uint32 *)(enemy + 0xb8) = float_subtract(*(uint32 *)(enemy + 0xb8),halfY);
     }
   }
-  uVar4 = 0;
-LAB_00113024:
-  return MAKE_WORDS(uVar9,in_r1,uVar4);
+  *(uint32 *)(enemy + 0xb4) = float_subtract(*(uint32 *)(enemy + 0xb4),halfX);
+  *(uint32 *)(enemy + 0xb8) = float_subtract(*(uint32 *)(enemy + 0xb8),halfY);
+  if ((float_compare_equal(*(uint32 *)(enemy + 0xb4),0), *(float *)(enemy + 0xb4) == 0.0f) &&
+      (float_compare_equal(*(uint32 *)(enemy + 0xb8),0), *(float *)(enemy + 0xb8) == 0.0f))
+    return 0;
+  y = float_add(*(uint32 *)(enemy + 0xac),*(uint32 *)(enemy + 0xb8));
+  return FUN_00119c10(*(int32 *)(enemy + 0x40),float_add(*(uint32 *)(enemy + 0xa8),*(uint32 *)(enemy + 0xb4)),y,
+                      *(uint32 *)(enemy + 0xb0),FLOAT_0_POINT_001,FLOAT_0_POINT_001,0).low != 0;
 }
 
 /* ==== 0x00113030  (file offset 0x13030)  FUN_00113030 ================================================ */
@@ -14410,110 +14381,77 @@ int FUN_0011421c(int *param_1,undefined4 param_2,undefined4 *param_3)
 }
 
 /* ==== 0x00114240  (file offset 0x14240)  FUN_00114240 ================================================ */
+/* GUESS: what it does. The height of the ground or ceiling at (param_2, param_3) from height param_4
+   in the direction param_5 (+1.0 / -1.0): unless param_7 asks for the fixed height (+0x204 set, then
+   +0x208), casts a ray (a RayIntersection, ISwerve class 0x15) from (param_2, param_3, param_4) along
+   (0, 0, param_5) and takes the hit's distance (default 999999 * param_5), then with param_9 lets the
+   120 objects at +0x10 (those with +0x38 set) give a nearer surface (FUN_001136c8: height1 and height2
+   at (param_2, param_3)); *param_6 tells whether anything was found. The compares leave their result in
+   the flags (`blo` / `bhs` / `bls` at 0x001143b8 - 0x00114400), written after the comma. Written from its
+   disassembly: Ghidra read stale flags and r1 leftovers there. */
 undefined4
 FUN_00114240(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
             undefined4 param_5,undefined4 *param_6,int param_7,undefined4 param_8,int param_9)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  int iVar3;
-  int extraout_r1;
-  int extraout_r1_00;
-  int extraout_r1_01;
-  int extraout_r1_02;
-  int extraout_r1_03;
-  undefined4 uVar4;
-  int iVar5;
-  bool bVar6;
-  undefined1 uVar7;
-  int iVar8;
-  int extraout_r1_04;
-  int extraout_r1_05;
-  undefined4 local_48;
-  undefined4 local_44;
-  undefined4 uStack_40;
-  undefined4 local_3c;
-  undefined4 local_38;
-  undefined4 local_34;
-  undefined4 local_30;
-  undefined4 local_2c;
-  int *local_28;
-  
-  iVar1 = 0;
-  if (param_7 != 0) {
-    iVar1 = param_1[0x81];
+  uint32 height;
+  int32 object;
+  int32 i;
+  uint32 origin[3];
+  uint32 direction[3];
+  uint32 distance;
+  uint32 hit;
+  uint32 height1;
+  uint32 height2;
+  int *ray;
+
+  if (param_7 != 0 && param_1[0x81] != 0) {
+    return param_1[0x82];
   }
-  if (param_7 != 0 && iVar1 != 0) {
-    uVar2 = param_1[0x82];
-  }
-  else {
-    uVar2 = float_multiply(param_5,WORD_HEXADECIMAL_497423F0);
-    *param_6 = 0;
+  height = float_multiply(param_5,WORD_HEXADECIMAL_497423F0);
+  *param_6 = 0;
                     /* swv21brew: ISwerve_CreateObject (0x0102479c, ISwerve vtbl[4] +0x10) on
                        ((KHApp *)param_1[0x85])->pSwerve: creates a RayIntersection (class 21 = 0x15,
-                       swv_Create_RayIntersection 0x010382e0) into local_28. GUESS: param_1[0x85] is
+                       swv_Create_RayIntersection 0x010382e0) into ray. GUESS: param_1[0x85] is
                        the KHApp (its +0x64 is used as the ISwerve). */
-    iVar8 = (*((KHApp *)param_1[0x85])->pSwerve->pvt->CreateObject)
-                      (((KHApp *)param_1[0x85])->pSwerve,SWV_RAYINTERSECTION,(void **)&local_28);
-    iVar1 = extraout_r1_04;
-    if (iVar8 == 0) {
-      local_44 = 0;
-      uStack_40 = 0;
-      local_3c = param_5;
-      local_38 = param_2;
-      local_34 = param_3;
-      local_30 = param_4;
-      (**(code **)(*(int *)*param_1 + 0xbc))
-                ((int *)*param_1,1,&local_38,&local_44,local_28,&local_2c);
-      if ((char)local_2c != '\0') {
-        (**(code **)(*local_28 + 0xc))(local_28,&local_48);
-        *param_6 = 1;
-        uVar2 = float_multiply(param_5,local_48);
-        uVar2 = float_add(uVar2,param_4);
-      }
-      (**(code **)(*local_28 + 4))();
-      iVar1 = extraout_r1;
+  if ((*((KHApp *)param_1[0x85])->pSwerve->pvt->CreateObject)
+            (((KHApp *)param_1[0x85])->pSwerve,SWV_RAYINTERSECTION,(void **)&ray) == 0) {
+    origin[0] = param_2;
+    origin[1] = param_3;
+    origin[2] = param_4;
+    direction[0] = 0;
+    direction[1] = 0;
+    direction[2] = param_5;
+    (**(code **)(*(int *)*param_1 + 0xbc))((int *)*param_1,1,origin,direction,ray,&hit);
+    if ((uint8)hit != 0) {
+      (**(code **)(*ray + 0xc))(ray,&distance);
+      *param_6 = 1;
+      height = float_add(float_multiply(param_5,distance),param_4);
     }
-    if (param_9 != 0) {
-      iVar5 = 0;
-      do {
-        iVar3 = param_1[iVar5 + 4];
-        if (iVar3 != 0) {
-          iVar1 = *(int *)(iVar3 + 0x38);
-        }
-        if (iVar3 != 0 && iVar1 != 0) {
-          iVar8 = FUN_001136c8(iVar3,param_2,param_3,&local_2c,&local_30,param_8);
-          iVar1 = extraout_r1_05;
-          uVar7 = iVar8 == 0;
-          bVar6 = true;
-          if (!(bool)uVar7) {
-            float_compare_less(param_5,0);
-            if (bVar6) {
-              float_compare_less(local_2c,uVar2);
-              iVar1 = extraout_r1_02;
-              if ((!bVar6) &&
-                 (float_compare_greater(local_2c,param_4), iVar1 = extraout_r1_03, uVar4 = local_2c,
-                 bVar6 && !(bool)uVar7)) goto LAB_00114408;
-            }
-            else {
-              float_compare_greater(local_30,uVar2);
-              iVar1 = extraout_r1_00;
-              if ((bVar6 && !(bool)uVar7) &&
-                 (float_compare_less(local_30,param_4), iVar1 = extraout_r1_01, uVar4 = local_30, !bVar6))
-              {
-LAB_00114408:
-                *param_6 = 1;
-                uVar2 = uVar4;
-              }
-            }
-          }
-        }
-        iVar5 = iVar5 + 1;
-      } while (iVar5 < 0x78);
+    (**(code **)(*ray + 4))(ray);
+  }
+  if (param_9 == 0) {
+    return height;
+  }
+  for (i = 0; i < 0x78; i++) {
+    object = param_1[i + 4];
+    if (object == 0 || *(int32 *)(object + 0x38) == 0 ||
+        FUN_001136c8(object,param_2,param_3,&height1,&height2,param_8) == 0)
+      continue;
+    if (float_compare_less(param_5,0), *(float *)&param_5 < 0.0f) {
+      if ((float_compare_greater(height2,height), *(float *)&height2 > *(float *)&height) &&
+          (float_compare_less(height2,param_4), *(float *)&height2 < *(float *)&param_4)) {
+        height = height2;
+        *param_6 = 1;
+      }
+    }
+    else if ((float_compare_less(height1,height), *(float *)&height1 < *(float *)&height) &&
+             (float_compare_greater(height1,param_4), *(float *)&height1 > *(float *)&param_4)) {
+      height = height1;
+      *param_6 = 1;
     }
   }
-  return uVar2;
+  return height;
 }
 
 /* ==== 0x0011442C  (file offset 0x1442C)  FUN_0011442c ================================================ */
@@ -19851,8 +19789,7 @@ LAB_0011c440:
     *(undefined4 *)(param_1 + 0xb4) = *(undefined4 *)(iVar1 + *(int *)(param_1 + 0xfc) * 8);
     *(undefined4 *)(param_1 + 0xb8) = *(undefined4 *)(iVar1 + *(int *)(param_1 + 0xfc) * 8 + 4);
   }
-  uVar11 = FUN_00112e84(param_1);
-  if ((int)uVar11.low != 0) {
+  if (FUN_00112e84(param_1) != 0) {
     uVar2 = float_subtract(*(uint *)(param_1 + 4),*(uint *)(param_1 + 0xa8));
     uVar2 = float_multiply(uVar2,uVar2);
     uVar4 = float_subtract(*(uint *)(param_1 + 8),*(uint *)(param_1 + 0xac));

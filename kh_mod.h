@@ -636,7 +636,7 @@ int32 animations_find_free_slot(Animations *animations);   /* 0x00112D28 GUESS: 
 int FUN_00112d54(int param_1);
 undefined4 FUN_00112dbc(int param_1,int param_2);
 undefined4 FUN_00112e20(int param_1,undefined4 param_2);
-undefined8 FUN_00112e84(int param_1);
+int32 FUN_00112e84(int32 enemy);
 void FUN_00113030(int param_1,undefined4 param_2,uint param_3,uint param_4,undefined4 param_5);
 void FUN_0011316c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5,undefined4 param_6,undefined4 param_7,undefined4 param_8,int param_9,undefined4 param_10,undefined4 param_11);
 void FUN_001132a8(int param_1);
