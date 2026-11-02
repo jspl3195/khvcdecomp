@@ -660,7 +660,7 @@ uint32 motion_entity_get_pitch(MotionEntity *entity);   /* 0x00114898 GUESS: nam
 uint32 motion_entity_get_heading(MotionEntity *entity);   /* 0x001148A0 GUESS: name */
 void FUN_001148a8(int param_1,int param_2);
 int animations_finish(Animations *animations,int index);   /* 0x001148C8 GUESS: name */
-bool FUN_00114910(int param_1);
+int combat_region_take_attack_token(CombatRegion *region);   /* 0x00114910 GUESS: names */
 void FUN_0011492c(int param_1);
 void FUN_0011498c(int param_1,uint param_2);
 void FUN_00114a1c(int param_1,undefined4 param_2);
@@ -730,7 +730,7 @@ undefined4 FUN_0011dce8(undefined4 param_1,int param_2,int *param_3);
 undefined4 FUN_0011dd34(undefined4 param_1,int param_2,int *param_3);
 int FUN_0011dd80(undefined4 param_1,int param_2,int *param_3);
 void FUN_0011de04(int param_1,undefined4 *param_2);
-void FUN_0011de64(int param_1);
+void combat_region_release_attack_token(CombatRegion *region);   /* 0x0011DE64 GUESS: name */
 void FUN_0011de70(int param_1);
 void FUN_0011dedc(int param_1);
 void FUN_0011df14(undefined4 *param_1);

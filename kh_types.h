@@ -532,7 +532,8 @@ typedef struct CombatRegion {
                                      run once */
     Enemy **enemies;              /* +0x14c enemyCount of them */
     int    field_150;             /* +0x150 0 at creation */
-    int    field_154;             /* +0x154 0 at creation */
+    int    attackToken;           /* +0x154 0 at creation; 1 while one of its enemies holds it
+                                     (combat_region_take_attack_token / _release_attack_token) */
 } CombatRegion;                   /* 0x158 bytes */
 
 /* ---- Boss combat regions (GUESS: the hitsphere reading and the function names) ---------------------

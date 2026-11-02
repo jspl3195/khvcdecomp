@@ -7837,7 +7837,7 @@ CombatRegion * combat_region_create(CombatRegion *region,ISwerveObject *node,cha
   region->field_13c = 1;
   region->enemies = (Enemy **)0x0;
   region->field_148 = 1;
-  region->field_150 = region->field_154 = 0;
+  region->field_150 = region->attackToken = 0;
   region->kind = 4;
   return region;
 }
@@ -10794,6 +10794,9 @@ void FUN_0010ea64(int param_1)
 }
 
 /* ==== 0x0010EB74  (file offset 0x0EB74)  FUN_0010eb74 ================================================ */
+/* GUESS: what it does, in part (not yet rewritten). Switches on the enemy type (+0x104); for type 1, 500 ms
+   in state 0x66 (+0x138, +0x160) end with FUN_0011f7d4(enemy, 0), the region's attack token given back
+   (combat_region_release_attack_token) and animation +0x178 looping. */
 undefined4 FUN_0010eb74(int param_1)
 
 {
@@ -10824,7 +10827,7 @@ undefined4 FUN_0010eb74(int param_1)
         return 0;
       }
       FUN_0011f7d4(param_1,0);
-      FUN_0011de64(*(undefined4 *)(param_1 + 0x40));
+      combat_region_release_attack_token(*(CombatRegion **)(param_1 + 0x40));
       animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 0x178)
                    ,1);
       *(undefined4 *)(param_1 + 0x138) = 0x65;
@@ -16802,17 +16805,18 @@ int animations_finish(Animations *animations,int index)
   return 4;
 }
 
-/* ==== 0x00114910  (file offset 0x14910)  FUN_00114910 ================================================ */
-bool FUN_00114910(int param_1)
+/* ==== 0x00114910  (file offset 0x14910)  combat_region_take_attack_token ============================= */
+/* GUESS: names. Takes the region's attack token when no enemy holds it: returns 1 then, 0 when another
+   enemy has it. Within a combat region only one enemy of type 1 at a time goes through its turn-and-act
+   sequence (FUN_0011ec28 takes the token, FUN_0010eb74 gives it back with
+   combat_region_release_attack_token; GUESS: an attack). */
+int combat_region_take_attack_token(CombatRegion *region)
 
 {
-  bool bVar1;
-  
-  bVar1 = *(int *)(param_1 + 0x154) == 0;
-  if (bVar1) {
-    *(undefined4 *)(param_1 + 0x154) = 1;
-  }
-  return bVar1;
+  if (region->attackToken != 0)
+    return 0;
+  region->attackToken = 1;
+  return 1;
 }
 
 /* ==== 0x0011492C  (file offset 0x1492C)  FUN_0011492c ================================================ */
@@ -23811,12 +23815,12 @@ void FUN_0011de04(int param_1,undefined4 *param_2)
   return;
 }
 
-/* ==== 0x0011DE64  (file offset 0x1DE64)  FUN_0011de64 ================================================ */
-void FUN_0011de64(int param_1)
+/* ==== 0x0011DE64  (file offset 0x1DE64)  combat_region_release_attack_token ========================== */
+/* GUESS: name. Gives the region's attack token back (see combat_region_take_attack_token). */
+void combat_region_release_attack_token(CombatRegion *region)
 
 {
-  *(undefined4 *)(param_1 + 0x154) = 0;
-  return;
+  region->attackToken = 0;
 }
 
 /* ==== 0x0011DE70  (file offset 0x1DE70)  FUN_0011de70 ================================================ */
@@ -24481,6 +24485,10 @@ undefined4 FUN_0011ead4(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x0011EC28  (file offset 0x1EC28)  FUN_0011ec28 ================================================ */
+/* GUESS: what it does (not yet rewritten). For an enemy of type 1 in state 0x65 (+0x13c): when it gets
+   its region's attack token (combat_region_take_attack_token), FUN_0011f7d4(enemy, 1), a turn towards
+   the player's level object (+0x20; motion_entity_start_turn at speed 1.0), animation +0x17c, then 500 ms
+   in state 0x66 (+0x164) before 0x65 again. */
 undefined4 FUN_0011ec28(int param_1,int param_2)
 
 {
@@ -24494,7 +24502,7 @@ undefined4 FUN_0011ec28(int param_1,int param_2)
   
   if (*(int *)(param_1 + 0x104) == 1) {
     if (*(int *)(param_1 + 0x13c) == 0x65) {
-      iVar1 = FUN_00114910(*(undefined4 *)(param_1 + 0x40));
+      iVar1 = combat_region_take_attack_token(*(CombatRegion **)(param_1 + 0x40));
       if (iVar1 == 0) {
         return 0;
       }
