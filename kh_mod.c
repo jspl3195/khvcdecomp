@@ -3700,10 +3700,13 @@ LAB_001052c0:
   return;
 }
 
-/* ==== 0x001052DC  (file offset 0x052DC)  FUN_001052dc ============================================= */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101700): written from
-   its disassembly. */
-void FUN_001052dc(int param_1)
+/* ==== 0x001052DC  (file offset 0x052DC)  screen_resume_nothing ======================================= */
+/* GUESS: name. The resume method (vtable slot 8, +0x20) of the plain screen class (VTABLE_00101700, made by
+   FUN_0010bd7c): screen_stack_open calls it when the screen is pushed, screen_stack_close_top when it is
+   the top again; for this class it does nothing (`bx lr`, 0x001052dc). The game screen's (VTABLE_0010165C)
+   is FUN_001051d4. Ghidra has no function here (only reached through the vtable); written from its
+   disassembly. */
+void screen_resume_nothing(int32 screen)
 
 {
   return;
@@ -3912,7 +3915,7 @@ int FUN_001056ec(int param_1,int param_2,int param_3)
   return list_set_entry(*(UIList **)(param_1 + 0x60),param_2,param_3);
 }
 
-/* ==== 0x001056F4  (file offset 0x056F4)  key_picker_restore_original ================================ */
+/* ==== 0x001056F4  (file offset 0x056F4)  key_picker_restore_original ================================= */
 /* GUESS: name. Undoes a key picker's changes: selects again the option whose key code is the value the
    setting had when key_picker_setup ran (+0x68) and writes it back to the setting. The left / right keys
    change the setting at once (ui_element_handle_key), so this is what leaving the Controls screen
@@ -4129,7 +4132,7 @@ void FUN_00105c5c(int param_1)
   return;
 }
 
-/* ==== 0x00105C98  (file offset 0x05C98)  FUN_00105c98 ============================================= */
+/* ==== 0x00105C98  (file offset 0x05C98)  FUN_00105c98 ================================================ */
 /* A virtual method Ghidra has no function for (only reached through the vtable at 0x001016A0): written from
    its disassembly. */
 void FUN_00105c98(int param_1)
@@ -4234,7 +4237,7 @@ void FUN_00105dc8(int param_1)
   return;
 }
 
-/* ==== 0x00105DE4  (file offset 0x05DE4)  FUN_00105de4 ============================================= */
+/* ==== 0x00105DE4  (file offset 0x05DE4)  FUN_00105de4 ================================================ */
 /* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101724): written from
    its disassembly. */
 void FUN_00105de4(int param_1)
@@ -4834,7 +4837,7 @@ void FUN_00106e44(int param_1,undefined4 param_2,int *param_3)
   return;
 }
 
-/* ==== 0x00106FA8  (file offset 0x06FA8)  FUN_00106fa8 ============================================= */
+/* ==== 0x00106FA8  (file offset 0x06FA8)  FUN_00106fa8 ================================================ */
 /* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101724): written from
    its disassembly. */
 void FUN_00106fa8(int param_1)
@@ -4844,10 +4847,12 @@ void FUN_00106fa8(int param_1)
 }
 
 
-/* ==== 0x00106FAC  (file offset 0x06FAC)  FUN_00106fac ============================================= */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x0010165C, 0x001016A0, 0x001016C0, 0x001016E0, 0x00101700, 0x00101724): written from
-   its disassembly. */
-void FUN_00106fac(int param_1)
+/* ==== 0x00106FAC  (file offset 0x06FAC)  ui_element_method_04_nothing ================================ */
+/* GUESS: name. Vtable slot 1 (+0x04) of every UI class (VTABLE_0010165C - VTABLE_00101724): it does nothing
+   (`bx lr`, 0x00106fac), and no code in kh.mod calls through that slot of a UI element (the enemies' slot
+   1 is their update), so its purpose is not known. Ghidra has no function here (only reached through the
+   vtables); written from its disassembly. */
+void ui_element_method_04_nothing(int32 element)
 
 {
   return;
@@ -5097,10 +5102,13 @@ LAB_00107384:
   return;
 }
 
-/* ==== 0x001077CC  (file offset 0x077CC)  FUN_001077cc ============================================= */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x0010165C, 0x001016C0, 0x00101700, 0x00101724): written from
-   its disassembly. */
-void FUN_001077cc(int param_1)
+/* ==== 0x001077CC  (file offset 0x077CC)  ui_element_draw_over_children_nothing ======================= */
+/* GUESS: name. The "draw over the children" method (vtable slot 3, +0x0c) of the UI classes that draw
+   nothing there (VTABLE_0010165C, VTABLE_001016C0, VTABLE_00101700, VTABLE_00101724): FUN_00107d24 draws
+   an element (slot 4, +0x10), then its children, then calls this with the element's display and graphics
+   objects (+0x20 -> +0xc, +0x10; GUESS: display); it does nothing (`bx lr`, 0x001077cc). Ghidra has no
+   function here (only reached through the vtables); written from its disassembly. */
+void ui_element_draw_over_children_nothing(int32 element,int32 display,int32 graphics)
 
 {
   return;
@@ -5441,7 +5449,7 @@ void * FUN_00107ecc(undefined4 param_1,undefined4 param_2)
   return pvVar3;
 }
 
-/* ==== 0x00107F58  (file offset 0x07F58)  FUN_00107f58 ============================================= */
+/* ==== 0x00107F58  (file offset 0x07F58)  FUN_00107f58 ================================================ */
 /* A virtual method Ghidra has no function for (only reached through the vtable at 0x0010165C, 0x001016A0, 0x001016C0, 0x001016E0, 0x00101700, 0x00101724): written from
    its disassembly. */
 uint FUN_00107f58(int param_1)
@@ -5515,7 +5523,7 @@ undefined4 FUN_00107fec(int param_1,undefined4 param_2)
   return local_10;
 }
 
-/* ==== 0x00108048  (file offset 0x08048)  FUN_00108048 ============================================= */
+/* ==== 0x00108048  (file offset 0x08048)  FUN_00108048 ================================================ */
 /* A virtual method Ghidra has no function for (only reached through the vtable at 0x0010165C, 0x001016A0, 0x001016C0, 0x001016E0, 0x00101700, 0x00101724): written from
    its disassembly. */
 uint FUN_00108048(int param_1)
@@ -5531,7 +5539,7 @@ uint FUN_00108048(int param_1)
 }
 
 
-/* ==== 0x0010807C  (file offset 0x0807C)  FUN_0010807c ============================================= */
+/* ==== 0x0010807C  (file offset 0x0807C)  FUN_0010807c ================================================ */
 /* A virtual method Ghidra has no function for (only reached through the vtable at 0x0010165C, 0x001016A0, 0x001016C0, 0x001016E0, 0x00101700, 0x00101724): written from
    its disassembly. */
 uint FUN_0010807c(int param_1)
@@ -5855,7 +5863,7 @@ int32 ui_element_handle_key(UIElement *element,int32 eventCode,int32 keyCode,int
   return handled;
 }
 
-/* ==== 0x0010872C  (file offset 0x0872C)  FUN_0010872c ============================================= */
+/* ==== 0x0010872C  (file offset 0x0872C)  FUN_0010872c ================================================ */
 /* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101700): written from
    its disassembly. */
 int FUN_0010872c(int param_1)
@@ -5865,7 +5873,7 @@ int FUN_0010872c(int param_1)
 }
 
 
-/* ==== 0x00108734  (file offset 0x08734)  FUN_00108734 ============================================= */
+/* ==== 0x00108734  (file offset 0x08734)  FUN_00108734 ================================================ */
 /* A virtual method Ghidra has no function for (only reached through the vtable at 0x001016C0, 0x00101724): written from
    its disassembly. */
 int FUN_00108734(int param_1)
@@ -9070,7 +9078,7 @@ int32 * kh_GetErrnoPtr(void)
 }
 
 
-/* ==== 0x0010CFA0  (file offset 0x0CFA0)  kh_GetFpStatusPtr ======================================== */
+/* ==== 0x0010CFA0  (file offset 0x0CFA0)  kh_GetFpStatusPtr =========================================== */
 /* WARNING: Unknown calling convention -- yet parameter storage is locked */
 
 uint32 * kh_GetFpStatusPtr(void)
@@ -9185,7 +9193,7 @@ LAB_0010d124:
   return;
 }
 
-/* ==== 0x0010D18C  (file offset 0x0D18C)  progress_add_magic_points ===================================== */
+/* ==== 0x0010D18C  (file offset 0x0D18C)  progress_add_magic_points =================================== */
 /* GUESS: name. Adds `amount` MP (negative to spend), kept between 0 and maximumMagicPoints, and keeps the
    "Out of magic" status text on while MP is 0. The binary computes outOfMagic (rsbs / movlo at 0x0010d1c4)
    and tail-jumps (0x0010d1d8) to FUN_0011fef4(app->progress, "Out of magic", outOfMagic), which with the
@@ -13726,7 +13734,7 @@ uint FUN_00113654(undefined4 param_1,int param_2)
   return uVar4 & 0x3fffffff;
 }
 
-/* ==== 0x001136C0  (file offset 0x136C0)  FUN_001136c0 ============================================= */
+/* ==== 0x001136C0  (file offset 0x136C0)  FUN_001136c0 ================================================ */
 /* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101680): written from
    its disassembly. */
 int FUN_001136c0(int param_1)
@@ -17733,7 +17741,7 @@ undefined4 FUN_00119abc(int param_1)
   return uVar2;
 }
 
-/* ==== 0x00119AF4  (file offset 0x19AF4)  FUN_00119af4 ============================================= */
+/* ==== 0x00119AF4  (file offset 0x19AF4)  FUN_00119af4 ================================================ */
 /* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101680): written from
    its disassembly. */
 int FUN_00119af4(int param_1)
@@ -21627,7 +21635,7 @@ void FUN_0011ed3c(int param_1,undefined4 *param_2)
   return;
 }
 
-/* ==== 0x0011F260  (file offset 0x1F260)  FUN_0011f260 ============================================= */
+/* ==== 0x0011F260  (file offset 0x1F260)  FUN_0011f260 ================================================ */
 /* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101680): written from
    its disassembly. */
 void FUN_0011f260(int param_1)
@@ -21639,7 +21647,7 @@ void FUN_0011f260(int param_1)
 }
 
 
-/* ==== 0x0011F26C  (file offset 0x1F26C)  FUN_0011f26c ============================================= */
+/* ==== 0x0011F26C  (file offset 0x1F26C)  FUN_0011f26c ================================================ */
 /* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101680): written from
    its disassembly. */
 void FUN_0011f26c(int param_1)
@@ -21810,7 +21818,7 @@ void FUN_0011f540(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   return;
 }
 
-/* ==== 0x0011F624  (file offset 0x1F624)  FUN_0011f624 ============================================= */
+/* ==== 0x0011F624  (file offset 0x1F624)  FUN_0011f624 ================================================ */
 /* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101680): written from
    its disassembly. */
 void FUN_0011f624(int param_1)
