@@ -7738,7 +7738,7 @@ Enemy * enemy_create(Enemy *enemy,int number,CombatRegion *region,int type)
                         */
   enemy->app = (*g_pHelperFuncs->GetAppInstance)();
   FUN_00120024((int)enemy,4);
-  FUN_0011de70((int)enemy);
+  enemy_reset_states(enemy);
   return enemy;
 }
 
@@ -11565,7 +11565,7 @@ FUN_0010f2e8(int param_1,uint param_2,undefined4 param_3,uint param_4,undefined4
     *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x4c) = uVar2;
     uVar2 = FUN_00126858(*(undefined4 *)(*(int *)(param_1 + 0x40) + 0x118));
     *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x50) = uVar2;
-    FUN_0011de70(param_1);
+    enemy_reset_states((Enemy *)param_1);
     *(undefined4 *)(param_1 + 0x128) = *(undefined4 *)(param_1 + 0x124);
     *(int *)(param_1 + 0x88) = iVar1;
     uVar9 = param_4;
@@ -11619,7 +11619,7 @@ LAB_0010f3cc:
   *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x4c) = uVar2;
   uVar2 = FUN_00126858(*(undefined4 *)(*(int *)(param_1 + 0x40) + 0x118));
   *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x50) = uVar2;
-  FUN_0011de70(param_1);
+  enemy_reset_states((Enemy *)param_1);
   *(int *)(param_1 + 0x88) = iVar1;
   *(undefined4 *)(param_1 + 0x128) = *(undefined4 *)(param_1 + 0x124);
   uVar9 = param_4;
@@ -18819,7 +18819,7 @@ LAB_00117ac8:
   *(undefined4 *)(param_1 + 0x7c) = local_2c;
   level_object_get_position((uint32 *)(param_1 + 0x30),(LevelObject *)uVar14);
   FUN_0011dedc(param_1);
-  FUN_0011de70(param_1);
+  enemy_reset_states((Enemy *)param_1);
   *(undefined4 *)(*(int *)(param_1 + 0x24) + 0x4c) = 1;
   *(undefined4 *)(*(int *)(param_1 + 0x28) + 0x4c) = 1;
   FUN_0011fc80(*(undefined4 *)(param_1 + 0x24),0);
@@ -23478,31 +23478,26 @@ void combat_region_release_attack_token(CombatRegion *region)
   region->attackToken = 0;
 }
 
-/* ==== 0x0011DE70  (file offset 0x1DE70)  FUN_0011de70 ================================================ */
-void FUN_0011de70(int param_1)
+/* ==== 0x0011DE70  (file offset 0x1DE70)  enemy_reset_states ========================================== */
+/* GUESS: name. Puts each of the enemy's state machines in its first state (each numbers its states in
+   its own thousand: field_88 2001, field_84 3001, field_9c 4001, waitState 5001, field_8c 6001,
+   field_90 7001; `state`, 1001-1004, is left alone), every action sequence at its first step (0x65), and
+   clears field_120. Called when it is created and when it comes in (enemy_update), by its type's set-up
+   (FUN_001174ac) and by FUN_0010f2e8. */
+void enemy_reset_states(Enemy *enemy)
 
 {
-  int iVar1;
-  
-  iVar1 = INTEGER_3001;
-  *(int *)(param_1 + 0x84) = INTEGER_3001;
-  *(int *)(param_1 + 0x88) = iVar1 + -1000;
-  iVar1 = INTEGER_4001;
-  *(int *)(param_1 + 0x9c) = INTEGER_4001;
-  *(int *)(param_1 + 0xa0) = iVar1 + 1000;
-  iVar1 = INTEGER_7001;
-  *(int *)(param_1 + 0x90) = INTEGER_7001;
-  *(int *)(param_1 + 0x8c) = iVar1 + -1000;
-  *(undefined4 *)(param_1 + 0x138) = 0x65;
-  *(undefined4 *)(param_1 + 0x13c) = 0x65;
-  *(undefined4 *)(param_1 + 0x140) = 0x65;
-  *(undefined4 *)(param_1 + 0x144) = 0x65;
-  *(undefined4 *)(param_1 + 0x148) = 0x65;
-  *(undefined4 *)(param_1 + 0x154) = 0x65;
-  *(undefined4 *)(param_1 + 0x14c) = 0x65;
-  *(undefined4 *)(param_1 + 0x150) = 0x65;
-  *(undefined4 *)(param_1 + 0x120) = 0;
-  return;
+  int i;
+
+  enemy->field_84 = INTEGER_3001;
+  enemy->field_88 = INTEGER_3001 - 1000;
+  enemy->field_9c = INTEGER_4001;
+  enemy->waitState = INTEGER_4001 + 1000;
+  enemy->field_90 = INTEGER_7001;
+  enemy->field_8c = INTEGER_7001 - 1000;
+  for (i = 0; i < 8; i++)
+    enemy->actionSteps[i] = 0x65;
+  enemy->field_120 = 0;
 }
 
 /* ==== 0x0011DEDC  (file offset 0x1DEDC)  FUN_0011dedc ================================================ */
@@ -27621,7 +27616,7 @@ void enemy_update(Enemy *enemy,int now,int elapsed)
   case 1001:                                      /* waiting for the region */
     if (combat_region_take_one(enemy->region) != 0) {
       FUN_0011dedc((int)enemy);
-      FUN_0011de70((int)enemy);
+      enemy_reset_states(enemy);
       enemy->state = INTEGER_1002;
       if (enemy->type == 2 || enemy->field_108 != 0) {   /* show its health bar */
         *(uint8 *)(enemy->app->field_d4 + 0x4a) = 1;

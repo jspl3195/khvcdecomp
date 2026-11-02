@@ -521,11 +521,13 @@ typedef struct Enemy {
     struct KHApp *app;            /* +0x074 GetAppInstance() at creation */
     uint8  unknown_78[0x08];
     int    mode;                  /* +0x080 1: the code at 0x0011db34 runs instead of the states (field_90) */
-    uint8  unknown_84[0x04];
-    int    field_88;              /* +0x088 2004: the alive behaviour runs even at 0 health */
-    uint8  unknown_8c[0x04];
+    int    field_84;              /* +0x084 a state machine: 3001 first (enemy_reset_states) */
+    int    field_88;              /* +0x088 a state machine: 2001 first; 2004: the alive behaviour runs even
+                                     at 0 health */
+    int    field_8c;              /* +0x08c a state machine: 6001 first */
     int    field_90;              /* +0x090 the state while mode is 1: 7001, 7002, 7003 */
-    uint8  unknown_94[0x0c];
+    uint8  unknown_94[0x08];
+    int    field_9c;              /* +0x09c a state machine: 4001 first */
     int    waitState;             /* +0x0a0 enemy_wait: 5001 idle, 5002 waiting */
     int    state;                 /* +0x0a4 1001 waiting, 1002 alive, 1003 dying, 1004 gone */
     uint8  unknown_a8[0x14];
@@ -536,11 +538,16 @@ typedef struct Enemy {
     int    field_100;             /* +0x100 -1 at creation */
     int    type;                  /* +0x104 1-11, from the region's enemy name (combat_region_setup) */
     int    field_108;             /* +0x108 when set (or for type 2) its health bar is shown */
-    uint8  unknown_10c[0x1c];
+    uint8  unknown_10c[0x14];
+    int    field_120;             /* +0x120 cleared by enemy_reset_states */
+    uint8  unknown_124[0x04];
     int    field_128;             /* +0x128 a countdown (enemy_update subtracts the elapsed time) */
     int    field_12c;             /* +0x12c another countdown */
     int    field_130;             /* +0x130 */
-    uint8  unknown_134[0x68];
+    uint8  unknown_134[0x04];
+    int    actionSteps[8];        /* +0x138 the step of each of its action sequences: 0x65 first, 0x66 next
+                                     (+0x138 used by FUN_0010eb74, +0x13c by FUN_0011ec28); GUESS: names */
+    uint8  unknown_158[0x44];
     int  (*field_19c)(struct Enemy *enemy, int now);   /* +0x19c alive, mode 2 and field_130 == 0 */
     int  (*field_1a0)(struct Enemy *enemy, int now);   /* +0x1a0 alive, otherwise */
     uint8  unknown_1a4[0xcc];

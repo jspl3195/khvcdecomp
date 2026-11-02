@@ -730,7 +730,7 @@ undefined4 FUN_0011dd34(undefined4 param_1,int param_2,int *param_3);
 int FUN_0011dd80(undefined4 param_1,int param_2,int *param_3);
 void FUN_0011de04(int param_1,undefined4 *param_2);
 void combat_region_release_attack_token(CombatRegion *region);   /* 0x0011DE64 GUESS: name */
-void FUN_0011de70(int param_1);
+void enemy_reset_states(Enemy *enemy);   /* 0x0011DE70 GUESS: name */
 void FUN_0011dedc(int param_1);
 void FUN_0011df14(undefined4 *param_1);
 void FUN_0011e010(int param_1);
