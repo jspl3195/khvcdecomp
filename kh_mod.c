@@ -4053,7 +4053,7 @@ void text_box_destroy(TextBox *box)
   box->lines->count = 0;
   ((UIElement *)box)->children->count = 0;
   if (box->lines != (UIList *)0x0)
-    FUN_0010cdd8((int32)box->lines,1);
+    list_destroy(box->lines,1);
   helper_free(box->style);
   if (box->tail != (AEETriangle *)0x0)
     helper_free(box->tail);
@@ -4081,7 +4081,7 @@ void FUN_00105d7c(int param_1)
   int iVar1;
   
   if (*(int *)(param_1 + 0x60) != 0) {
-    FUN_0010cdd8(*(int *)(param_1 + 0x60),1);
+    list_destroy(*(UIList **)(param_1 + 0x60),1);
   }
   if (*(int **)(param_1 + 0x50) != (int *)0x0) {
     (**(code **)(**(int **)(param_1 + 0x50) + 4))();
@@ -4096,7 +4096,7 @@ void FUN_00105d7c(int param_1)
     iVar1 = iVar1 + 1;
   }
   if (*(int *)(param_1 + 0x24) != 0) {
-    FUN_0010cdd8(*(int *)(param_1 + 0x24),1);
+    list_destroy(*(UIList **)(param_1 + 0x24),1);
   }
   helper_free(*(undefined4 *)(param_1 + 8));
   return;
@@ -4117,7 +4117,7 @@ void FUN_00105dc8(int param_1)
     iVar1 = iVar1 + 1;
   }
   if (*(int *)(param_1 + 0x24) != 0) {
-    FUN_0010cdd8(*(int *)(param_1 + 0x24),1);
+    list_destroy(*(UIList **)(param_1 + 0x24),1);
   }
   helper_free(*(undefined4 *)(param_1 + 8));
   return;
@@ -4126,7 +4126,7 @@ void FUN_00105dc8(int param_1)
 /* ==== 0x00105DE4  (file offset 0x05DE4)  ui_element_destroy ========================================== */
 /* GUESS: name. The destructor (vtable slot 0) of the base UI element (VTABLE_00101724), which every other
    class's destructor ends with: destroys and frees each child (their own slot 0), frees the child list
-   (FUN_0010cdd8) and the rectangle; the element itself is freed by whoever destroys it. Ghidra has no
+   (list_destroy) and the rectangle; the element itself is freed by whoever destroys it. Ghidra has no
    function here (only reached through the vtable and as the tail of FUN_00105dc8 / text_box_destroy);
    written from its disassembly (0x00105de4 - 0x00105e40). */
 void ui_element_destroy(UIElement *element)
@@ -4140,7 +4140,7 @@ void ui_element_destroy(UIElement *element)
     helper_free(child);
   }
   if (element->children != (UIList *)0x0)
-    FUN_0010cdd8((int32)element->children,1);
+    list_destroy(element->children,1);
   helper_free(element->rect);                     /* the binary's tail jump (0x00105e40) */
 }
 
@@ -8143,7 +8143,7 @@ void FUN_0010c3f8(int param_1,int param_2)
     helper_free(p);
   }
   if (piVar4 != (int *)0x0) {
-    FUN_0010cdd8(*(undefined4 *)(param_1 + 0x40),1);
+    list_destroy(*(UIList **)(param_1 + 0x40),1);
   }
   if (*(int *)(param_1 + 0x18) != 0) {
     web_request_destroy(*(int *)(param_1 + 0x18),1);
@@ -8160,7 +8160,7 @@ void FUN_0010c3f8(int param_1,int param_2)
   }
   screen_stack_close_all(param_1);
   if (*(int *)(param_1 + 0x34) != 0) {
-    FUN_0010cdd8(*(int *)(param_1 + 0x34),1);
+    list_destroy(*(UIList **)(param_1 + 0x34),1);
   }
   helper_free(*(void **)(param_1 + 0x14));
   (**(code **)(**(int **)(param_1 + 0x10) + 4))();
@@ -8617,18 +8617,19 @@ void FUN_0010cda4(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x0010CDD8  (file offset 0x0CDD8)  FUN_0010cdd8 ================================================ */
-void FUN_0010cdd8(int param_1,int param_2)
+/* ==== 0x0010CDD8  (file offset 0x0CDD8)  list_destroy ================================================ */
+/* GUESS: name. A list's destructor (list_create's counterpart): frees its two arrays, not what the entries
+   point to (their owners destroy those first), and the list itself when `freeIt` is set (the binary's tail
+   jump to helper_free at 0x0010ce00). */
+void list_destroy(UIList *list,int32 freeIt)
 
 {
-  helper_free(*(void **)(param_1 + 4));
-  helper_free(*(void **)(param_1 + 8));
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
-  return;
+  helper_free(list->ids);
+  helper_free(list->entries);
+  if (freeIt != 0)
+    helper_free(list);
 }
+
 
 /* ==== 0x0010CE08  (file offset 0x0CE08)  FUN_0010ce08 ================================================ */
 void FUN_0010ce08(undefined4 *param_1,int param_2)

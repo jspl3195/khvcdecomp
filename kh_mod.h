@@ -563,7 +563,7 @@ void FUN_0010cab0(int param_1,int param_2);
 void FUN_0010cc9c(int param_1,int param_2);
 void FUN_0010cd2c(int param_1,int param_2);
 void FUN_0010cda4(int param_1,int param_2);
-void FUN_0010cdd8(int param_1,int param_2);
+void list_destroy(UIList *list,int32 freeIt);   /* 0x0010CDD8 GUESS: name, see kh_mod.c */
 void screen_resume_nothing(int32 screen);   /* 0x001052DC (no Ghidra function; a virtual method) */
 void text_box_destroy(TextBox *box);   /* 0x00105C98 GUESS: name, see kh_mod.c */
 void ui_element_destroy(UIElement *element);   /* 0x00105DE4 (no Ghidra function; a virtual method) */
