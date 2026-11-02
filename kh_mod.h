@@ -479,7 +479,7 @@ undefined4 FUN_00108414(int param_1,undefined4 param_2,int param_3);
 int32 text_box_handle_key(TextBox *box,int32 eventCode,int32 keyCode);   /* 0x001084E4 GUESS: name, see kh_mod.c */
 int32 ui_element_handle_key(UIElement *element,int32 eventCode,int32 keyCode,int32 keyParameter);   /* 0x00108524 GUESS: name */
 int32 screen_handle_key(Screen *screen,int32 eventCode,int32 keyCode,int32 keyParameter);   /* 0x0010873C GUESS: name, see kh_mod.c */
-void FUN_00108840(int param_1,short param_2);
+void ui_element_move_by(UIElement *element,int16 dy);   /* 0x00108840 GUESS: name, see kh_mod.c */
 void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *param_5);
 int32 text_box_scroll_down(TextBox *box);   /* 0x00108E8C GUESS: name, see kh_mod.c */
 int32 text_box_scroll_up(TextBox *box);   /* 0x00108ED8 GUESS: name, see kh_mod.c */

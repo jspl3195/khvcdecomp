@@ -4422,7 +4422,7 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
             uVar4 = int_to_float(*(int16 *)(*(int *)(iVar7 + 8) + 2));
             uVar3 = float_reverse_subtract(uVar4,uVar3);
             uVar3 = FUN_00126858(uVar3);
-            FUN_00108840(iVar7,(short)uVar3);
+            ui_element_move_by((UIElement *)iVar7,(short)uVar3);
             iVar7 = *(int *)(*(int *)(iVar8 + 0x58) + 8);
             if ((int)*(short *)(iVar7 + 6) - (int)*(short *)(iVar7 + 2) < 0) {
               *(undefined4 *)(iVar8 + 0x80) = 0;
@@ -4442,7 +4442,7 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
             if (0 < (int)(uVar5 + uVar3)) {
               uVar3 = -uVar5;
             }
-            FUN_00108840(iVar7,(short)uVar3);
+            ui_element_move_by((UIElement *)iVar7,(short)uVar3);
           }
         }
       }
@@ -5766,24 +5766,21 @@ int32 screen_handle_key(Screen *screen,int32 eventCode,int32 keyCode,int32 keyPa
 }
 
 
-/* ==== 0x00108840  (file offset 0x08840)  FUN_00108840 ================================================ */
-void FUN_00108840(int param_1,short param_2)
+/* ==== 0x00108840  (file offset 0x08840)  ui_element_move_by ========================================== */
+/* GUESS: name. Moves a UI element `dy` pixels down (up when negative): its rectangle's y and the y of each
+   of its direct children's rectangles; grandchildren stay where they are, which is enough for a text box
+   and its lines. Used by FUN_00106398 to slide the game screen's message panels in and out. */
+void ui_element_move_by(UIElement *element,int16 dy)
 
 {
-  short *psVar1;
-  int iVar2;
-  int iVar3;
-  
-  iVar3 = 0;
-  psVar1 = (short *)(*(int *)(param_1 + 8) + 2);
-  *psVar1 = *psVar1 + param_2;
-  while (iVar2 = list_get_entry(*(undefined4 *)(param_1 + 0x24),iVar3), iVar2 != 0) {
-    iVar3 = iVar3 + 1;
-    psVar1 = (short *)(*(int *)(iVar2 + 8) + 2);
-    *psVar1 = *psVar1 + param_2;
-  }
-  return;
+  UIElement *child;
+  int32 i;
+
+  element->rect->y += dy;
+  for (i = 0; (child = (UIElement *)list_get_entry(element->children,i)) != (UIElement *)0x0; i++)
+    child->rect->y += dy;
 }
+
 
 /* ==== 0x0010888C  (file offset 0x0888C)  FUN_0010888c ================================================ */
 void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *param_5)
