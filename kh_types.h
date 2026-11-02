@@ -218,9 +218,9 @@ typedef struct CollisionShape {
 } CollisionShape;                 /* 0x48 bytes */
 
 typedef struct LevelObject {
-    uint8  kind;                  /* +0x000 0 LevelObject, 1 MotionEntity, 2 and 3 MotionEntity subclasses
-                                     (FUN_0010b70c 0x338 bytes, FUN_0010b3e8 0x214 bytes), 4 CombatRegion,
-                                     5 BossCombatRegion */
+    uint8  kind;                  /* +0x000 0 LevelObject, 1 MotionEntity, 2 Character (FUN_0010b70c,
+                                     0x338 bytes), 3 "Camera" (FUN_0010b3e8, 0x214 bytes), 4 CombatRegion,
+                                     5 BossCombatRegion; 2 and 3 are MotionEntity subclasses */
     uint8  unknown_001[0x03];
     struct LevelObject *parent;   /* +0x004 the object of the nearest named node above it, or 0 for the
                                      "NoParent" tag */
@@ -284,6 +284,47 @@ typedef struct MotionEntity {
     int    field_1c4;             /* +0x1c4 0 at creation */
 } MotionEntity;                   /* 0x1c8 bytes */
 
+/* "Character" (kind 2, 0x338 bytes, FUN_0010b70c; GUESS: names): the player's character, a MotionEntity.
+ * It plays its animations on three channels (character_play_animation): channel 0 alone, or channels 2
+ * and 3 together (GUESS: two body parts); a request on 2 or 3 stops channel 0, and one on 0 stops 2 and 3. */
+typedef struct Character {
+    uint8  kind;                  /* +0x000 2 (LevelObject.kind) */
+    uint8  unknown_001[0x07];     /* the LevelObject and MotionEntity fields, where not named */
+    int    node;                  /* +0x008 its scene node, an ISwerveObject (LevelObject.node) */
+    uint8  unknown_00c[0x40];
+    int    field_4c;              /* +0x04c set to 1 by character_setup */
+    uint8  unknown_050[0x34];
+    struct KHApp *app;            /* +0x084 LevelObject.app */
+    uint8  unknown_088[0x154];
+    ISwerveObject *field_1dc;     /* +0x1dc the game scene's object with user id 0x0F846A96 (Find); its
+                                     slot +0x48 fills field_1f8 */
+    ISwerveObject *field_1e0;     /* +0x1e0 the object with user id 0x0D44B786 */
+    ISwerveObject *field_1e4;     /* +0x1e4 the object with user id 0x1DFBEC7F; its slot +0x8c is called
+                                     with 0 */
+    ISwerveObject *field_1e8;     /* +0x1e8 the object with user id 0x314D49C5 */
+    ISwerveObject *field_1ec;     /* +0x1ec the object with user id 0x0A893452 */
+    ISwerveObject *shadow;        /* +0x1f0 the scene "CharacterShadow" (FUN_0011ae04) */
+    int    hasShadow;             /* +0x1f4 1 when shadow was loaded */
+    int    field_1f8;             /* +0x1f8 filled by field_1dc's slot +0x48 */
+    uint8  unknown_1fc[0x38];
+    LevelObject *field_234;       /* +0x234 the level object named by hash 0x2BB0C920 (FUN_00112dbc) */
+    LevelObject *field_238;       /* +0x238 the level object named by hash 0x19DB98DB */
+    uint8  unknown_23c[0x4c];
+    uint32 field_288;             /* +0x288 a float (its bits); level data 0x1218EC09 */
+    uint32 field_28c;             /* +0x28c a float (its bits); level data 0x2073D363 */
+    uint8  unknown_290[0x04];
+    uint32 field_294;             /* +0x294 a float (its bits): FUN_00126618(level data 0x1932DEDD, 1000.0) */
+    uint8  unknown_298[0x0c];
+    int    layered;               /* +0x2a4 0 at creation; 1 while channels 2 and 3 are in use */
+    uint8  unknown_2a8[0x04];
+    int    animation;             /* +0x2ac the animation on channel 0, -1 none */
+    int    channelTwoAnimation;   /* +0x2b0 the animation on channel 2, -1 none */
+    int    channelThreeAnimation; /* +0x2b4 the animation on channel 3, -1 none */
+    int    animations[29];        /* +0x2b8 its animations' indexes, found by user id (character_setup); 9-12
+                                     play at speed 2.0, 19, 21 and 27 at 1.5 */
+    uint8  unknown_32c[0x0c];
+} Character;                      /* 0x338 bytes */
+
 /* KHApp.pGame (GUESS: names): the game state; it holds the level objects. */
 typedef struct Game {
     ISwerveObject *root;          /* +0x000 a scene whose level objects FUN_0010a5d8 creates */
@@ -292,8 +333,8 @@ typedef struct Game {
     uint8  unknown_008[0x08];
     LevelObject *objects[120];    /* +0x010 0 = free slot (game_find_free_object_slot) */
     uint8  unknown_1f0[0x08];
-    int    field_1f8;             /* +0x1f8 GUESS: the player's level object; its +0x20c is the current
-                                     target */
+    struct Character *character;  /* +0x1f8 the player's character (FUN_0010a5d8 creates it from the scene's
+                                     entity 0x0AD65F3D); its +0x20c is the current target */
     uint8  unknown_1fc[0x18];
     struct KHApp *app;            /* +0x214 */
 } Game;
@@ -362,9 +403,12 @@ typedef struct Animations {
     int    userIds[100];          /* +0x010 the controllers' user ids (animations_find); -1 = free slot */
     int    durations[100];        /* +0x1a0 the longest keyframe sequence of each controller
                                      (animations_get_duration) */
-    uint8  states[100];           /* +0x330 1 added, 2 played, 3 played with `loop` set (GUESS: looping);
-                                     callers also test for 4 (set elsewhere; GUESS: finished) */
-    uint8  modes[100];            /* +0x394 2 when added (animations_get_mode / animations_set_mode) */
+    uint8  states[100];           /* +0x330 1 added, 2 played (or a looping one let run to its end,
+                                     animations_stop), 3 played with `loop` set (GUESS: looping), 4 stopped
+                                     (animations_stop; GUESS: also when it ends) */
+    uint8  priorities[100];       /* +0x394 2 when added; on a character's animation channel a new animation
+                                     replaces the playing one only when its priority is not lower
+                                     (character_play_animation) */
     uint32 speeds[100];           /* +0x3f8 floats (their bits), 1.0 when added (animations_set_speed) */
     int    positions[100];        /* +0x588 where each one plays from: 0, or its last frame when its speed is
                                      not above 0 */

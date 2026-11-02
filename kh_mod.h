@@ -638,7 +638,7 @@ uint FUN_001137d4(undefined4 param_1,undefined4 *param_2);
 uint FUN_00113820(undefined4 param_1,uint param_2,uint param_3,uint param_4);
 void FUN_0011386c(uint param_1,int param_2);
 void level_object_get_position(uint32 *position,LevelObject *object);   /* 0x00113CC4 GUESS: name */
-uint8 animations_get_mode(Animations *animations,int index);   /* 0x00113CD4 GUESS: name */
+uint8 animations_get_priority(Animations *animations,int index);   /* 0x00113CD4 GUESS: name */
 int FUN_00113cfc(undefined4 param_1,int param_2);
 int FUN_00113da4(int *param_1,int param_2,int param_3,int param_4,int param_5,uint param_6);
 undefined4 FUN_00114120(int param_1,undefined4 param_2,undefined4 *param_3,undefined4 *param_4);
@@ -674,7 +674,7 @@ void FUN_001174ac(int param_1,undefined4 param_2);
 void FUN_00117d30(int param_1,int *param_2);
 void combat_region_setup(CombatRegion *region,int context);   /* 0x00117DD8 GUESS: name */
 undefined8 FUN_001180c4(int param_1,uint param_2);
-void FUN_00118318(int param_1,int *param_2);
+void character_setup(Character *character,int *error);   /* 0x00118318 GUESS: name */
 void FUN_00118640(int param_1,int *param_2);
 void FUN_0011868c(int param_1,undefined4 param_2);
 void FUN_00118910(int param_1,undefined4 param_2);
@@ -715,7 +715,7 @@ void FUN_0011ca8c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 void FUN_0011cb34(undefined4 param_1,undefined4 *param_2);
 void FUN_0011cbc4(int param_1,int param_2,int param_3);
 void FUN_0011cc14(int param_1,int param_2,int param_3);
-undefined4 FUN_0011cc64(int param_1,int param_2,int param_3,undefined4 param_4);
+int character_play_animation(Character *character,int index,int channel,int loop);   /* 0x0011CC64 GUESS: names */
 undefined8 FUN_0011ceac(int param_1);
 undefined4 FUN_0011cfdc(int param_1,undefined4 param_2,int param_3);
 void FUN_0011d040(int param_1,undefined4 param_2,void *param_3);
@@ -764,7 +764,7 @@ void FUN_0011fc80(int param_1,undefined4 param_2);
 int animations_set_position(Animations *animations,int index,int position);   /* 0x0011FCC4 GUESS: name */
 void thunk_FUN_0011fd90(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0011fd90(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-void animations_set_mode(Animations *animations,int index,uint8 mode);   /* 0x0011FDBC GUESS: name */
+void animations_set_priority(Animations *animations,int index,uint8 priority);   /* 0x0011FDBC GUESS: name */
 undefined4 FUN_0011fddc(int param_1,undefined4 param_2,int param_3,undefined4 param_4);
 void animations_set_speed(Animations *animations,int index,uint32 speed);   /* 0x0011FED8 GUESS: name */
 void FUN_0011fef4(int param_1,undefined4 param_2,int param_3);
@@ -780,7 +780,7 @@ uint FUN_001202f4(uint param_1);
 uint FUN_00120308(void);
 void FUN_0012031c(int *param_1,int param_2);
 void FUN_00120450(undefined4 *param_1);
-void FUN_001204b0(int param_1,int param_2,int param_3);
+void animations_stop(Animations *animations,int index,int immediately);   /* 0x001204B0 GUESS: name */
 void FUN_001204f0(undefined4 param_1,undefined4 param_2,int *param_3);
 void FUN_0012056c(int param_1,int param_2);
 bool FUN_0012059c(int param_1,int param_2);
