@@ -474,11 +474,11 @@ int32 screen_stack_top(ScreenStack *stack);   /* 0x001080AC GUESS: name */
 int32 list_find_entry(UIList *list,int32 id);   /* 0x001080C8 GUESS: name */
 void web_request_post_rank_ex(WebRequest *request,char *userId,char *levelId,char *score,int32 time, int32 value);   /* 0x0010810C GUESS: name, see kh_mod.c */
 void web_request_post_rank(WebRequest *request,int32 state,char *userId,int32 score,char *levelId,int32 time, int32 value,char *text);   /* 0x001082E0 GUESS: name, see kh_mod.c */
-undefined4 FUN_001083d8(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
+int32 screen_stack_handle_key(ScreenStack *stack,int32 eventCode,int32 keyCode,int32 keyParameter);   /* 0x001083D8 GUESS: name, see kh_mod.c */
 undefined4 FUN_00108414(int param_1,undefined4 param_2,int param_3);
 int32 text_box_handle_key(TextBox *box,int32 eventCode,int32 keyCode);   /* 0x001084E4 GUESS: name, see kh_mod.c */
 int32 ui_element_handle_key(UIElement *element,int32 eventCode,int32 keyCode,int32 keyParameter);   /* 0x00108524 GUESS: name */
-int FUN_0010873c(int *param_1,undefined4 param_2,int param_3,undefined4 param_4);
+int32 screen_handle_key(Screen *screen,int32 eventCode,int32 keyCode,int32 keyParameter);   /* 0x0010873C GUESS: name, see kh_mod.c */
 void FUN_00108840(int param_1,short param_2);
 void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *param_5);
 int32 text_box_scroll_down(TextBox *box);   /* 0x00108E8C GUESS: name, see kh_mod.c */
@@ -573,7 +573,7 @@ void ui_element_draw_over_children_nothing(int32 element,int32 display,int32 gra
 uint32 ui_element_get_border_color(UIElement *element);   /* 0x00107F58 (no Ghidra function; a virtual method) */
 uint32 ui_element_get_secondary_color(UIElement *element);   /* 0x00108048 (no Ghidra function; a virtual method) */
 uint32 ui_element_get_primary_color(UIElement *element);   /* 0x0010807C (no Ghidra function; a virtual method) */
-int FUN_0010872c(int param_1);   /* 0x0010872C (no Ghidra function; a virtual method) */
+int32 screen_handle_key_nothing(int32 screen,int32 eventCode,int32 keyCode);   /* 0x0010872C (no Ghidra function; a virtual method) */
 int32 ui_element_handle_key_nothing(int32 element,int32 eventCode,int32 keyCode);   /* 0x00108734 (no Ghidra function; a virtual method) */
 int FUN_001136c0(int param_1);   /* 0x001136C0 (no Ghidra function; a virtual method) */
 int FUN_00119af4(int param_1);   /* 0x00119AF4 (no Ghidra function; a virtual method) */
@@ -2009,7 +2009,7 @@ static code *const VTABLE_00101700[9] = {   /* 0x00101700; in kh.mod each entry 
                                                 the table */
   (code *)FUN_00105dc8,
   (code *)ui_element_update_nothing,
-  (code *)FUN_0010872c,
+  (code *)screen_handle_key_nothing,
   (code *)ui_element_draw_over_children_nothing,
   (code *)FUN_00106e44,
   (code *)ui_element_get_primary_color,

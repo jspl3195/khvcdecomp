@@ -5529,22 +5529,19 @@ void web_request_post_rank(WebRequest *request,int32 state,char *userId,int32 sc
 }
 
 
-/* ==== 0x001083D8  (file offset 0x083D8)  FUN_001083d8 ================================================ */
-undefined4 FUN_001083d8(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+/* ==== 0x001083D8  (file offset 0x083D8)  screen_stack_handle_key ===================================== */
+/* GUESS: name. Gives a key to the screen on top of the screen stack (screen_handle_key); 0 when no screen
+   is open. Called by kh_OnKey. */
+int32 screen_stack_handle_key(ScreenStack *stack,int32 eventCode,int32 keyCode,int32 keyParameter)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  
-  uVar2 = 0;
-  uVar3 = param_4;
-  iVar1 = screen_stack_top(param_1);
-  if (iVar1 != 0) {
-    uVar2 = FUN_0010873c(iVar1,param_2,param_3,param_4 /* not arguments, value leftovers: uVar3 */);
-  }
-  return uVar2;
+  Screen *screen = (Screen *)screen_stack_top(stack);
+
+  if (screen == (Screen *)0x0)
+    return 0;
+  return screen_handle_key(screen,eventCode,keyCode,keyParameter);
 }
+
 
 /* ==== 0x00108414  (file offset 0x08414)  FUN_00108414 ================================================ */
 undefined4 FUN_00108414(int param_1,undefined4 param_2,int param_3)
@@ -5701,10 +5698,12 @@ int32 ui_element_handle_key(UIElement *element,int32 eventCode,int32 keyCode,int
   return handled;
 }
 
-/* ==== 0x0010872C  (file offset 0x0872C)  FUN_0010872c ================================================ */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101700): written from
-   its disassembly. */
-int FUN_0010872c(int param_1)
+/* ==== 0x0010872C  (file offset 0x0872C)  screen_handle_key_nothing =================================== */
+/* GUESS: name. The plain screen's own key handler (vtable slot 2 of VTABLE_00101700): returns 0, "not
+   handled" (`mov r0, #0; bx lr`), so screen_handle_key goes on to the soft keys and the focused element.
+   The same code as ui_element_handle_key_nothing (0x00108734), a second copy for this class. Ghidra has
+   no function here (only reached through the vtable); written from its disassembly. */
+int32 screen_handle_key_nothing(int32 screen,int32 eventCode,int32 keyCode)
 
 {
   return 0;
@@ -5713,7 +5712,7 @@ int FUN_0010872c(int param_1)
 
 /* ==== 0x00108734  (file offset 0x08734)  ui_element_handle_key_nothing =============================== */
 /* GUESS: name. The key handler (vtable slot 2, +0x08) of the base UI element (VTABLE_00101724) and of
-   VTABLE_001016C0: returns 0, "not handled" (0x00108734); FUN_0010873c then offers the key to the
+   VTABLE_001016C0: returns 0, "not handled" (0x00108734); screen_handle_key then offers the key to the
    children. Called with the element, the event and the key. Ghidra has no function here (only reached
    through the vtables); written from its disassembly. */
 int32 ui_element_handle_key_nothing(int32 element,int32 eventCode,int32 keyCode)
@@ -5723,51 +5722,49 @@ int32 ui_element_handle_key_nothing(int32 element,int32 eventCode,int32 keyCode)
 }
 
 
-/* ==== 0x0010873C  (file offset 0x0873C)  FUN_0010873c ================================================ */
-int FUN_0010873c(int *param_1,undefined4 param_2,int param_3,undefined4 param_4)
+/* ==== 0x0010873C  (file offset 0x0873C)  screen_handle_key =========================================== */
+/* GUESS: names. A screen's key handling: the screen's own handler first (vtable slot 2); then the player's
+   two soft keys (Progress.softKeys, the left and the right one) send the event of the screen's first or
+   second soft key entry to the screen stack (FUN_00101ad8) and count as handled; a first entry whose
+   event is -2 instead passes SELECT to the focused element (not counted as handled); any other key goes
+   to the focused element (its slot 2: ui_element_handle_key, text_box_handle_key, ...), whose result is
+   returned. Called by screen_stack_handle_key for the top screen. */
+int32 screen_handle_key(Screen *screen,int32 eventCode,int32 keyCode,int32 keyParameter)
 
 {
-  int iVar1;
-  int *piVar2;
-  int iVar3;
-  
-  iVar1 = (*(code *)(*(int *)(*param_1 + 8)))(param_1,param_2,param_3);
-  if (iVar1 != 0) {
-    return iVar1;
+  int32 handled;
+  int32 event;
+  UIElement *softKey;
+
+  handled = (*(code *)*(int32 *)(((UIElement *)screen)->vtable + 8))(screen,eventCode,keyCode,keyParameter);
+  if (handled != 0)
+    return handled;
+  if (screen->app->progress->softKeys[0] == keyCode) {
+    softKey = screen->softKeys[0];
+    if (softKey == (UIElement *)0x0)
+      return 0;
+    if (softKey->selectEvent == -2) {
+      if (screen->focus != (UIElement *)0x0)
+        (*(code *)*(int32 *)(screen->focus->vtable + 8))(screen->focus,eventCode,AVK_SELECT,keyParameter);
+      return 0;
+    }
+    event = softKey->selectEvent;
   }
-  if (*(int *)(*(int *)(param_1[0x11] + 0xa8) + 0x5e8) == param_3) {
-    if (*(int *)param_1[0xd] == 0) {
+  else if (screen->app->progress->softKeys[1] == keyCode) {
+    softKey = screen->softKeys[1];
+    if (softKey == (UIElement *)0x0)
       return 0;
-    }
-    iVar1 = *(int *)(*(int *)param_1[0xd] + 0x38);
-    if (iVar1 == -2) {
-      piVar2 = (int *)param_1[0xc];
-      if (piVar2 == (int *)0x0) {
-        return 0;
-      }
-      (*(code *)(*(int *)(*piVar2 + 8)))(piVar2,param_2,INTEGER_57397,param_4);
-      return 0;
-    }
-    iVar3 = param_1[8];
+    event = softKey->selectEvent;
   }
   else {
-    if (*(int *)(*(int *)(param_1[0x11] + 0xa8) + 0x5ec) != param_3) {
-      piVar2 = (int *)param_1[0xc];
-      if (piVar2 == (int *)0x0) {
-        return 0;
-      }
-      iVar1 = (*(code *)(*(int *)(*piVar2 + 8)))(piVar2,param_2,param_3,param_4);
-      return iVar1;
-    }
-    if (*(int *)(param_1[0xd] + 4) == 0) {
+    if (screen->focus == (UIElement *)0x0)
       return 0;
-    }
-    iVar1 = *(int *)(*(int *)(param_1[0xd] + 4) + 0x38);
-    iVar3 = param_1[8];
+    return (*(code *)*(int32 *)(screen->focus->vtable + 8))(screen->focus,eventCode,keyCode,keyParameter);
   }
-  FUN_00101ad8(iVar3,iVar1);
+  FUN_00101ad8(((UIElement *)screen)->owner,event);
   return 1;
 }
+
 
 /* ==== 0x00108840  (file offset 0x08840)  FUN_00108840 ================================================ */
 void FUN_00108840(int param_1,short param_2)
@@ -18187,7 +18184,7 @@ LAB_0011a8a8:
     return;
   }
 LAB_0011a990:
-  iVar3 = FUN_001083d8(pMe->screens,uStack_30,uVar8,dwParam);
+  iVar3 = screen_stack_handle_key(pMe->screens,uStack_30,uVar8,dwParam);
   if ((iVar3 == 0) && (pMe->field_cc != 5)) {
     if (pMe->intro != (void *)0x0) {
       intro_on_key(pMe->intro,uVar8);

@@ -245,6 +245,22 @@ typedef struct TextBox {
     int32    framed;              /* +0x4c a style of type 1, 2 or 3 */
 } TextBox;                        /* 0x50 bytes */
 
+/* ---- A screen (GUESS: names) -------------------------------------------------------------------------
+ * A plain screen (FUN_0010bd7c, VTABLE_00101700): a UI element the size of the display, put on the screen
+ * stack, with the element that has the focus and up to two soft key entries. Starts with the UI
+ * element's 0x30 bytes: cast to UIElement for those. */
+typedef struct Screen {
+    uint8    element[0x30];       /* +0x00 the UI element */
+    UIElement *focus;             /* +0x30 the element with the focus (FUN_00105224 sets it) */
+    UIElement **softKeys;         /* +0x34 its first and second soft key entries (8 bytes); their selectEvent
+                                     is sent when the player's soft key is pressed */
+    uint8    field_38;            /* +0x38 FUN_0010bd7c's third argument */
+    uint8    unknown_39[0x03];
+    int32    field_3c;            /* +0x3c 0 */
+    uint32   field_40;            /* +0x40 0xFFEBEBF7 */
+    struct KHApp *app;            /* +0x44 */
+} Screen;                         /* 0x48 bytes */
+
 /* ---- The player's progress (GUESS: names) -----------------------------------------------------
  * KHApp.progress. Only the fields used by the functions named so far are named; the rest is padding.
  * progress_add_experience levels up through levels[] (levels 0-8); progress_score = munny + 100 *
@@ -290,7 +306,9 @@ typedef struct Progress {
     uint8  unknown_5bc[0x10];
     int32    controls[7];           /* +0x5cc the Controls key bindings (BREW key codes): Forwards, Backwards,
                                      Left, Right, Action, Status, Magic */
-    uint8  unknown_5e8[0x13c];
+    int32    softKeys[2];           /* +0x5e8 the keys that act as the left and the right soft key (screen_handle_key):
+                                     AVK_SOFT1 and AVK_SOFT2, swapped when the text 0x052F918F exists */
+    uint8  unknown_5f0[0x134];
     struct KHApp *app;            /* +0x724 the app it belongs to */
 } Progress;
 
