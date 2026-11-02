@@ -270,23 +270,33 @@ typedef struct LevelObject {
 /* "MotionEntity" (kind 1): a LevelObject that moves; the base of kinds 2 and 3. */
 typedef struct MotionEntity {
     uint8  kind;                  /* +0x000 LevelObject.kind */
-    uint8  unknown_001[0x83];     /* the LevelObject fields, where not named */
+    uint8  unknown_001[0x07];     /* the LevelObject fields, where not named */
+    ISwerveObject *node;          /* +0x008 LevelObject.node: handed the position (slot +0x4c) and the
+                                     heading (slot +0x5c) by motion_entity_turn */
+    uint8  unknown_00c[0x5c];
+    uint32 position[3];           /* +0x068 LevelObject.position */
+    uint8  unknown_074[0x10];
     struct KHApp *app;            /* +0x084 LevelObject.app */
     uint8  unknown_088[0x88];
     int    field_110;             /* +0x110 0 at creation */
     int    field_114;             /* +0x114 0 at creation */
     uint8  unknown_118[0x10];
-    int    field_128;             /* +0x128 0 at creation */
+    LevelObject *orbitCenter;     /* +0x128 0 at creation; when set, motion_entity_turn moves the entity
+                                     around it (the camera around its target) */
     int    field_12c;             /* +0x12c 0 at creation */
-    uint32 heading;               /* +0x130 a float (its bits): the angle it faces, in degrees, -180..180
-                                     (motion_entity_get_heading / _set_heading / _turn) */
-    uint8  unknown_134[0x20];
-    int    field_154;             /* +0x154 0 at creation */
-    ISwerveObject *field_158;     /* +0x158 0 at creation; a Swerve object that is handed &heading through
-                                     its slot +0x5c whenever the heading changes (GUESS: its transform) */
+    uint32 pitch;                 /* +0x130 a float (its bits): the up/down angle, in degrees, -180..180
+                                     (motion_entity_get_pitch / _set_pitch / _pitch_by) */
+    uint8  unknown_134[0x0c];
+    uint32 heading;               /* +0x140 a float (its bits): the direction it faces, in degrees,
+                                     -180..180 (motion_entity_get_heading / _turn / _start_turn) */
+    uint8  unknown_144[0x10];
+    int    turning;               /* +0x154 0 at creation; 1 while a turn started by motion_entity_start_turn
+                                     runs */
+    ISwerveObject *field_158;     /* +0x158 0 at creation; a Swerve object that is handed &pitch through its
+                                     slot +0x5c whenever the pitch changes (GUESS: a tilting child node) */
     uint8  unknown_15c[0x64];
-    int    field_1c0;             /* +0x1c0 0 at creation */
-    int    field_1c4;             /* +0x1c4 0 at creation */
+    uint32 turnAngle;             /* +0x1c0 a float (its bits): the angle left to turn, positive */
+    uint32 turnSpeed;             /* +0x1c4 a float (its bits): the turn speed, its sign the direction */
 } MotionEntity;                   /* 0x1c8 bytes */
 
 /* "Character" (kind 2, 0x338 bytes, FUN_0010b70c; GUESS: names): the player's character, a MotionEntity.
