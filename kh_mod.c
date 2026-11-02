@@ -7994,30 +7994,23 @@ undefined1 * FUN_0010b70c(undefined1 *param_1,undefined4 param_2,undefined4 para
   return param_1;
 }
 
-/* ==== 0x0010B804  (file offset 0x0B804)  FUN_0010b804 ================================================ */
-undefined4 * FUN_0010b804(undefined4 *param_1)
+/* ==== 0x0010B804  (file offset 0x0B804)  animations_create =========================================== */
+/* GUESS: name. Sets up the animation table (allocating its 1820 bytes when `animations` is 0): no world
+   yet and 100 empty controller slots; returns it, or 0 when out of memory. The user ids are not set
+   to -1 here. */
+Animations * animations_create(Animations *animations)
 
 {
-  undefined4 uVar1;
-  void *pvVar2;
-  int iVar3;
-  
-  if ((param_1 != (undefined4 *)0x0) ||
-     (param_1 = helper_malloc_2(INTEGER_1820), param_1 != (undefined4 *)0x0)) {
-                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
-                        */
-    uVar1 = (*g_pHelperFuncs->GetAppInstance)();
-    *param_1 = uVar1;
-    param_1[1] = 0;
-    pvVar2 = helper_malloc(400);
-    param_1[0x1c6] = pvVar2;
-    iVar3 = 0;
-    do {
-      *(undefined4 *)(param_1[0x1c6] + iVar3 * 4) = 0;
-      iVar3 = iVar3 + 1;
-    } while (iVar3 < 100);
-  }
-  return param_1;
+  int i;
+
+  if (animations == (Animations *)0x0 && (animations = helper_malloc_2(INTEGER_1820)) == (Animations *)0x0)
+    return (Animations *)0x0;
+  animations->app = (*g_pHelperFuncs->GetAppInstance)();
+  animations->world = (ISwerveObject *)0x0;
+  animations->controllers = helper_malloc(400);
+  for (i = 0; i < 100; i++)
+    animations->controllers[i] = (ISwerveObject *)0x0;
+  return animations;
 }
 
 /* ==== 0x0010B870  (file offset 0x0B870)  boss_combat_region_create =================================== */
@@ -9772,7 +9765,7 @@ undefined4 FUN_0010d95c(int param_1,int param_2)
     FUN_001201cc(*(undefined4 *)(param_1 + 0x20),1);
     FUN_00120244(*(undefined4 *)(param_1 + 0x2c),FLOAT_10);
     FUN_001201cc(*(undefined4 *)(param_1 + 0x2c),1);
-    FUN_0011d104(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 0x5c),0)
+    animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 0x5c),0)
     ;
     *(int *)(param_1 + 0x16c) = param_2 + 0x5dc;
     uVar2 = 0xcc;
@@ -9888,7 +9881,7 @@ LAB_0010dde4:
       FUN_001201cc(*(int *)(param_1 + 0x230),1);
       thunk_FUN_0011fd90(*(int *)(param_1 + 0x230),local_2c,local_28,local_24);
       FUN_00120290(*(int *)(param_1 + 0x230),*(undefined4 *)(param_1 + 0x140));
-      FUN_0011d104(*(int *)(*(int *)(param_1 + 0x84) + 0x9c),iVar11,0);
+      animations_play((Animations *)*(int *)(*(int *)(param_1 + 0x84) + 0x9c),iVar11,0);
       if (*(uint *)(param_1 + 0x228) < 2) {
         if (*(int *)(param_1 + 0x20c) != 0) {
           uVar5 = FUN_0012642c(*(uint *)(param_1 + 0x220),local_24);
@@ -10425,8 +10418,8 @@ LAB_0010e934:
   return uVar7;
 }
 
-/* ==== 0x0010E948  (file offset 0x0E948)  thunk_FUN_0012088c ========================================== */
-void thunk_FUN_0012088c(int param_1,int *param_2)
+/* ==== 0x0010E948  (file offset 0x0E948)  thunk_animations_add_from_scene ============================= */
+void thunk_animations_add_from_scene(int param_1,int *param_2)
 
 {
   int iVar1;
@@ -10475,7 +10468,7 @@ void thunk_FUN_0012088c(int param_1,int *param_2)
               }
               iVar1 = iVar1 + 1;
             } while (iVar1 < 100);
-            iVar1 = FUN_00112d28(param_1);
+            iVar1 = animations_find_free_slot((Animations *)param_1);
             if (iVar1 != -1) {
               iVar2 = param_1 + iVar1 * 4;
               *(int **)(iVar2 + 0x10) = piStack_28;
@@ -10506,21 +10499,21 @@ LAB_00120a28:
           piStack_40 = (int *)0x0;
           iVar1 = (**(code **)(*piStack_30 + 8))(piStack_30,9,&piStack_34);
           if (iVar1 == 0) {
-            FUN_0012088c(param_1,piStack_34);
+            animations_add_from_scene((Animations *)param_1,(ISwerveObject *)piStack_34);
             (**(code **)(*piStack_34 + 4))();
           }
           else {
             iVar1 = (**(code **)(*piStack_30 + 8))(piStack_30,0x16,&piStack_38);
             if (iVar1 == 0) {
               (**(code **)(*piStack_38 + 0xd0))(piStack_38,&piStack_40);
-              FUN_0012088c(param_1,piStack_40);
+              animations_add_from_scene((Animations *)param_1,(ISwerveObject *)piStack_40);
               (**(code **)(*piStack_40 + 4))();
               (**(code **)(*piStack_38 + 4))();
             }
             else {
               iVar1 = (**(code **)(*piStack_30 + 8))(piStack_30,0x11,&piStack_3c);
               if (iVar1 == 0) {
-                FUN_0012088c(param_1,piStack_3c);
+                animations_add_from_scene((Animations *)param_1,(ISwerveObject *)piStack_3c);
                 (**(code **)(*piStack_3c + 4))();
               }
             }
@@ -10839,7 +10832,7 @@ undefined4 FUN_0010eb74(int param_1)
       }
       FUN_0011f7d4(param_1,0);
       FUN_0011de64(*(undefined4 *)(param_1 + 0x40));
-      FUN_0011d104(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 0x178)
+      animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 0x178)
                    ,1);
       *(undefined4 *)(param_1 + 0x138) = 0x65;
     }
@@ -10860,12 +10853,12 @@ undefined4 FUN_0010eb74(int param_1)
 LAB_0010ec48:
     if (*(int *)(param_1 + 0x68) == 0) {
       *(undefined4 *)(param_1 + 0x68) = 1;
-      FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 100),
+      animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 100),
                    0x3f800000);
       FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 100),0);
       return 0;
     }
-    iVar1 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),
+    iVar1 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),
                          *(undefined4 *)(param_1 + 100));
     if (iVar1 != 4) {
       return 0;
@@ -11474,7 +11467,7 @@ int FUN_0010f058(int param_1,int param_2)
       local_1c = FUN_001262b0(local_1c,*(undefined4 *)(param_1 + 0x27c));
       thunk_FUN_0011fd90(*(undefined4 *)(param_1 + 0x70),iStack_24,uStack_20,local_1c);
       FUN_001201cc(*(undefined4 *)(param_1 + 0x70),1);
-      FUN_0011d104(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 0x58),
+      animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 0x58),
                    0);
       goto LAB_0010f1f4;
     }
@@ -11487,7 +11480,7 @@ int FUN_0010f058(int param_1,int param_2)
       local_1c = FUN_001262b0(uVar2,local_1c);
       thunk_FUN_0011fd90(*(undefined4 *)(param_1 + 0x70),iStack_24,uStack_20,local_1c);
       FUN_001201cc(*(undefined4 *)(param_1 + 0x70),1);
-      FUN_0011d104(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 0x58),
+      animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 0x58),
                    0);
       *(int *)(param_1 + 0x174) = param_2 + 500;
 LAB_0010f1f4:
@@ -13658,7 +13651,7 @@ uint FUN_00110924(int *param_1)
     break;
   case 0x16:
     iVar10 = FUN_001137a4(*(int *)(iVar2 + 0x9c),param_1[7]);
-    FUN_0011d104(*(int *)(iVar2 + 0x9c),iVar10,param_1[0xc]);
+    animations_play((Animations *)*(int *)(iVar2 + 0x9c),iVar10,param_1[0xc]);
     break;
   case 0x17:
     if (param_1[3] != 0) {
@@ -13748,7 +13741,7 @@ LAB_00111948:
     break;
   case 0x20:
     iVar10 = FUN_001137a4(*(int *)(iVar2 + 0x9c),param_1[7]);
-    FUN_0011fed8(*(int *)(iVar2 + 0x9c),iVar10,param_1[5]);
+    animations_set_speed((Animations *)*(int *)(iVar2 + 0x9c),iVar10,param_1[5]);
     break;
   case 0x21:
     iVar10 = FUN_001137a4(*(int *)(iVar2 + 0x9c),param_1[7]);
@@ -13757,7 +13750,7 @@ LAB_00111948:
         FUN_001148c8(*(int *)(iVar2 + 0x9c),iVar10);
       }
       else {
-        FUN_0011fcc4(*(int *)(iVar2 + 0x9c),iVar10,param_1[8]);
+        animations_set_position((Animations *)*(int *)(iVar2 + 0x9c),iVar10,param_1[8]);
       }
       if (param_1[0xc] != 0) {
         FUN_00113340(*(int *)(iVar2 + 0x9c));
@@ -14419,9 +14412,9 @@ void kh_OnAppStop(KHApp *pMe)
     pMe->screens = (void *)0x0;
   }
   FUN_0012056c(pMe,1);
-  if (pMe->pObj9c != (void *)0x0) {
-    FUN_0010c9dc(pMe->pObj9c,1);
-    pMe->pObj9c = (void *)0x0;
+  if (pMe->animations != (void *)0x0) {
+    FUN_0010c9dc(pMe->animations,1);
+    pMe->animations = (void *)0x0;
   }
   if (pMe->pObja0 != (void *)0x0) {
     FUN_0010cd2c(pMe->pObja0,1);
@@ -14663,19 +14656,17 @@ int game_find_free_object_slot(Game *game)
   return -1;
 }
 
-/* ==== 0x00112D28  (file offset 0x12D28)  FUN_00112d28 ================================================ */
-int FUN_00112d28(int param_1)
+/* ==== 0x00112D28  (file offset 0x12D28)  animations_find_free_slot =================================== */
+/* GUESS: name. The first free one of the 100 animation slots (user id -1), or -1 when all are in use.
+   Called by animations_add_from_scene. */
+int animations_find_free_slot(Animations *animations)
 
 {
-  int iVar1;
-  
-  iVar1 = 0;
-  do {
-    if (*(int *)(param_1 + iVar1 * 4 + 0x10) == -1) {
-      return iVar1;
-    }
-    iVar1 = iVar1 + 1;
-  } while (iVar1 < 100);
+  int i;
+
+  for (i = 0; i < 100; i++)
+    if (animations->userIds[i] == -1)
+      return i;
   return -1;
 }
 
@@ -15998,9 +15989,9 @@ LAB_00113954:
         *(uint *)(param_2 + 4) = uVar3 ^ 0x80000000;
         *(undefined4 *)(param_1 + 0x29c) = 1;
         FUN_0010ecb8(param_1,param_2);
-        FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+        animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                      *(undefined4 *)(param_1 + 0x2cc),0x3f800000);
-        FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+        animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                      *(undefined4 *)(param_1 + 0x2d0),0x3f800000);
       }
       goto LAB_00113c30;
@@ -16022,9 +16013,9 @@ LAB_00113a18:
       uVar2 = FUN_001269cc(uVar2,*(undefined4 *)(*(int *)(param_1 + 0x110) + 8));
       *(undefined4 *)(param_2 + 4) = uVar2;
       uVar2 = FLOAT_MINUS_1;
-      FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2cc)
+      animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2cc)
                    ,FLOAT_MINUS_1);
-      FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2d0)
+      animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2d0)
                    ,uVar2);
     }
   }
@@ -16033,7 +16024,7 @@ LAB_0011390c:
     uVar4 = *(uint *)(param_1 + 0x1c8);
     if (uVar4 < 3) goto LAB_00113920;
     if (uVar4 == 0x10) {
-      iVar8 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+      iVar8 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                            *(undefined4 *)(param_1 + 0x31c));
       if (iVar8 != 4) goto LAB_00113c30;
       if (cVar10 == '\x01') {
@@ -16155,14 +16146,13 @@ void FUN_00113cc4(undefined4 *param_1,int param_2)
   return;
 }
 
-/* ==== 0x00113CD4  (file offset 0x13CD4)  FUN_00113cd4 ================================================ */
-undefined1 FUN_00113cd4(int param_1,int param_2)
+/* ==== 0x00113CD4  (file offset 0x13CD4)  animations_get_mode ========================================= */
+/* GUESS: name. The mode of animation `index` (Animations.modes), or 2 for a negative index or a free
+   slot. */
+uint8 animations_get_mode(Animations *animations,int index)
 
 {
-  if ((-1 < param_2) && (*(int *)(param_1 + param_2 * 4 + 0x10) != -1)) {
-    return *(undefined1 *)(param_1 + param_2 + 0x394);
-  }
-  return 2;
+  return index >= 0 && animations->userIds[index] != -1 ? animations->modes[index] : 2;
 }
 
 /* ==== 0x00113CFC  (file offset 0x13CFC)  FUN_00113cfc ================================================ */
@@ -16422,14 +16412,13 @@ undefined1 FUN_00114198(int param_1,undefined4 param_2)
   return *(undefined1 *)(param_1 + iVar3);
 }
 
-/* ==== 0x001141F4  (file offset 0x141F4)  FUN_001141f4 ================================================ */
-undefined1 FUN_001141f4(int param_1,int param_2)
+/* ==== 0x001141F4  (file offset 0x141F4)  animations_get_state ======================================== */
+/* GUESS: name. The state of animation `index` (Animations.states), or 0 for a negative index or a free
+   slot. */
+uint8 animations_get_state(Animations *animations,int index)
 
 {
-  if ((-1 < param_2) && (*(int *)(param_1 + param_2 * 4 + 0x10) != -1)) {
-    return *(undefined1 *)(param_1 + param_2 + 0x330);
-  }
-  return 0;
+  return index >= 0 && animations->userIds[index] != -1 ? animations->states[index] : 0;
 }
 
 /* ==== 0x0011421C  (file offset 0x1421C)  FUN_0011421c ================================================ */
@@ -16827,7 +16816,7 @@ int FUN_001148c8(int param_1,int param_2)
   
   iVar1 = param_1;
   if ((-1 < param_2) && (iVar1 = param_1 + param_2 * 4, *(int *)(iVar1 + 0x10) != -1)) {
-    FUN_0011fcc4(param_1,param_2,*(int *)(iVar1 + 0x1a0) + -1 /* not arguments, register leftovers: param_4,param_4 */);
+    animations_set_position((Animations *)param_1,param_2,*(int *)(iVar1 + 0x1a0) + -1 /* not arguments, register leftovers: param_4,param_4 */);
     iVar1 = 4;
     *(undefined1 *)(param_1 + param_2 + 0x330) = 4;
   }
@@ -18913,7 +18902,7 @@ LAB_00117ac8:
       uVar14 = *(undefined4 *)(param_1 + 0x50);
       goto LAB_00117c94;
     }
-    FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 100),
+    animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 100),
                  FLOAT_MINUS_1);
     uVar14 = *(undefined4 *)(param_1 + 100);
   }
@@ -19139,23 +19128,23 @@ void FUN_00118318(int param_1,int *param_2)
   memcpy_word_aligned(local_104,DATA_AT_00126F5C_OFFSET + 0x1183e4,0x40);
   iVar4 = 0;
   do {
-    FUN_0011fdbc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+    animations_set_mode((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                  *(undefined4 *)(param_1 + local_c4[iVar4] * 4 + 0x2b8),local_104[iVar4]);
     iVar4 = iVar4 + 1;
   } while (iVar4 < 0x10);
-  FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2dc),
+  animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2dc),
                0x40000000);
-  FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2e0),
+  animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2e0),
                0x40000000);
-  FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2e4),
+  animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2e4),
                0x40000000);
-  FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2e8),
+  animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2e8),
                0x40000000);
-  FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x304),
+  animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x304),
                0x3fc00000);
-  FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x30c),
+  animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x30c),
                0x3fc00000);
-  FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x324),
+  animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x324),
                0x3fc00000);
   piVar3 = (int *)**(undefined4 **)(*(int *)(param_1 + 0x84) + 0xa4);
   (**(code **)(*piVar3 + 0x28))(piVar3,WORD_HEXADECIMAL_0F846A96,param_1 + 0x1dc);
@@ -19251,7 +19240,7 @@ void FUN_00118640(int param_1,int *param_2)
               }
               iVar1 = iVar1 + 1;
             } while (iVar1 < 100);
-            iVar1 = FUN_00112d28(param_1);
+            iVar1 = animations_find_free_slot((Animations *)param_1);
             if (iVar1 != -1) {
               iVar3 = param_1 + iVar1 * 4;
               *(int **)(iVar3 + 0x10) = piStack_28;
@@ -19282,21 +19271,21 @@ LAB_00120a28:
           piStack_40 = (int *)0x0;
           iVar1 = (**(code **)(*piStack_30 + 8))(piStack_30,9,&piStack_34);
           if (iVar1 == 0) {
-            FUN_0012088c(param_1,piStack_34);
+            animations_add_from_scene((Animations *)param_1,(ISwerveObject *)piStack_34);
             (**(code **)(*piStack_34 + 4))();
           }
           else {
             iVar1 = (**(code **)(*piStack_30 + 8))(piStack_30,0x16,&piStack_38);
             if (iVar1 == 0) {
               (**(code **)(*piStack_38 + 0xd0))(piStack_38,&piStack_40);
-              FUN_0012088c(param_1,piStack_40);
+              animations_add_from_scene((Animations *)param_1,(ISwerveObject *)piStack_40);
               (**(code **)(*piStack_40 + 4))();
               (**(code **)(*piStack_38 + 4))();
             }
             else {
               iVar1 = (**(code **)(*piStack_30 + 8))(piStack_30,0x11,&piStack_3c);
               if (iVar1 == 0) {
-                FUN_0012088c(param_1,piStack_3c);
+                animations_add_from_scene((Animations *)param_1,(ISwerveObject *)piStack_3c);
                 (**(code **)(*piStack_3c + 4))();
               }
             }
@@ -19905,7 +19894,7 @@ void FUN_001195f8(undefined4 *param_1)
   else if (iVar1 == 1) {
     FUN_00112b4c(param_1);
     FUN_001132a8(*(undefined4 *)(param_1[1] + 0x94));
-    FUN_0011d104(*(undefined4 *)(param_1[1] + 0x9c),param_1[4],0);
+    animations_play((Animations *)*(undefined4 *)(param_1[1] + 0x9c),param_1[4],0);
   }
   else if (iVar1 == 2) {
     FUN_0012031c(*(undefined4 *)(param_1[1] + 0x94),0 /* not arguments, register leftovers: param_3,param_4,param_4 */);
@@ -19942,7 +19931,7 @@ void kh_OnAppStart(KHApp *pMe)
   pMe->pScreenDIB = (IDIB *)0x0;
   pMe->pObj94 = (void *)0x0;
   pMe->pObj98 = (void *)0x0;
-  pMe->pObj9c = (void *)0x0;
+  pMe->animations = (void *)0x0;
   pMe->pObja0 = (void *)0x0;
   pMe->pGame = (void *)0x0;
   pMe->progress = (void *)0x0;
@@ -19955,8 +19944,8 @@ void kh_OnAppStart(KHApp *pMe)
     (*pIVar3->pvt->SetFont)(pIVar3,0x8000,local_14);
   }
   if (pMe->nErr != 0) goto LAB_001199b0;
-  pvVar4 = (void *)FUN_0010b804(0);
-  pMe->pObj9c = pvVar4;
+  pvVar4 = animations_create((Animations *)0x0);
+  pMe->animations = pvVar4;
   iVar6 = INTEGER_261;
   if (pvVar4 != (void *)0x0) {
     if (pMe->nErr != 0) goto LAB_001199b0;
@@ -20035,7 +20024,7 @@ void kh_OnAppStart(KHApp *pMe)
             pMe->screens = pvVar4;
             iVar6 = INTEGER_265;
             if (pvVar4 != (void *)0x0) {
-              if (((pMe->nErr == 0) && (FUN_00118640(pMe->pObj9c,pMe->pObj6c), pMe->nErr == 0)) &&
+              if (((pMe->nErr == 0) && (FUN_00118640(pMe->animations,pMe->pObj6c), pMe->nErr == 0)) &&
                  (FUN_001195f8(pMe->pObja0), pMe->nErr == 0)) {
                 local_18 = (IBitmap *)0x0;
                 FUN_0011421c(pMe->pObj98,WORD_HEXADECIMAL_28500339,&local_18);
@@ -20890,7 +20879,7 @@ LAB_0010dde4:
       FUN_001201cc(*(int *)(param_1 + 0x230),1);
       thunk_FUN_0011fd90(*(int *)(param_1 + 0x230),uStack_2c,uStack_28,uStack_24);
       FUN_00120290(*(int *)(param_1 + 0x230),*(undefined4 *)(param_1 + 0x140));
-      FUN_0011d104(*(int *)(*(int *)(param_1 + 0x84) + 0x9c),iVar12,0);
+      animations_play((Animations *)*(int *)(*(int *)(param_1 + 0x84) + 0x9c),iVar12,0);
       if (*(uint *)(param_1 + 0x228) < 2) {
         if (*(int *)(param_1 + 0x20c) != 0) {
           uVar5 = FUN_0012642c(*(uint *)(param_1 + 0x220),uStack_24);
@@ -21475,7 +21464,7 @@ uint FUN_0011add0(uint param_1,int param_2)
       *(undefined4 *)(param_1 + 0x2b4) = 0xffffffff;
     }
     if (iVar1 != -1) {
-      FUN_0011d104(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),iVar1,0);
+      animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),iVar1,0);
       *(int *)(param_1 + 0x2ac) = iVar1;
     }
     *(undefined4 *)(param_1 + 0x2a4) = 0;
@@ -21553,7 +21542,7 @@ undefined4 FUN_0011ae04(int param_1,undefined4 param_2,int *param_3,int param_4,
     (**(code **)(*local_2c + 4))();
   }
   if (param_4 != 0) {
-    thunk_FUN_0012088c(*(undefined4 *)(*(int *)(param_1 + 0xc) + 0x9c),local_34);
+    thunk_animations_add_from_scene(*(undefined4 *)(*(int *)(param_1 + 0xc) + 0x9c),local_34);
   }
                     /* helper[44] uint32 aee_GetUpTimeMS(void)  (AEEHelperFuncs +0xb0, via
                        *(base-4)) */
@@ -21998,7 +21987,7 @@ LAB_0011b9d0:
               }
               iVar2 = iVar2 + 1;
             } while (iVar2 < 100);
-            iVar2 = FUN_00112d28(iVar3);
+            iVar2 = animations_find_free_slot((Animations *)iVar3);
             if (iVar2 != -1) {
               iVar5 = iVar3 + iVar2 * 4;
               *(int **)(iVar5 + 0x10) = piStack_28;
@@ -22029,21 +22018,21 @@ LAB_00120a28:
           piStack_40 = (int *)0x0;
           iVar2 = (**(code **)(*piStack_30 + 8))(piStack_30,9,&piStack_34);
           if (iVar2 == 0) {
-            FUN_0012088c(iVar3,piStack_34);
+            animations_add_from_scene((Animations *)iVar3,(ISwerveObject *)piStack_34);
             (**(code **)(*piStack_34 + 4))();
           }
           else {
             iVar2 = (**(code **)(*piStack_30 + 8))(piStack_30,0x16,&piStack_38);
             if (iVar2 == 0) {
               (**(code **)(*piStack_38 + 0xd0))(piStack_38,&piStack_40);
-              FUN_0012088c(iVar3,piStack_40);
+              animations_add_from_scene((Animations *)iVar3,(ISwerveObject *)piStack_40);
               (**(code **)(*piStack_40 + 4))();
               (**(code **)(*piStack_38 + 4))();
             }
             else {
               iVar2 = (**(code **)(*piStack_30 + 8))(piStack_30,0x11,&piStack_3c);
               if (iVar2 == 0) {
-                FUN_0012088c(iVar3,piStack_3c);
+                animations_add_from_scene((Animations *)iVar3,(ISwerveObject *)piStack_3c);
                 (**(code **)(*piStack_3c + 4))();
               }
             }
@@ -22177,7 +22166,7 @@ int FUN_0011bb9c(int param_1,undefined4 *param_2)
   local_24 = param_2;
   local_20 = param_3;
   local_1c = param_4;
-  FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2b8));
+  animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2b8));
   iVar2 = *(int *)(param_1 + 0x1cc);
   if (iVar2 != *(int *)(param_1 + 0x1d4)) {
     if (iVar2 == 8) {
@@ -22189,7 +22178,7 @@ LAB_0011bc6c:
     }
     if ((iVar2 != 0xb) ||
        ((*(int *)(param_1 + 0x1d4) == 8 &&
-        (iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+        (iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                               *(undefined4 *)(param_1 + 0x2e8)), iVar2 != 2)))) {
       if (*(int *)(param_1 + 0x1cc) != 9) goto LAB_0011bc7c;
       FUN_0011cc64(param_1,*(undefined4 *)(param_1 + 0x2ec),2,0);
@@ -22252,14 +22241,14 @@ LAB_0011bc7c:
   iVar2 = *(int *)(param_1 + 0x1c8);
   if (iVar2 == 0xc) {
     if ((*(int *)(param_1 + 0x1cc) == 9) &&
-       (iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+       (iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                              *(undefined4 *)(param_1 + 0x2f0)), iVar2 == 4)) {
       *(undefined4 *)(param_1 + 0x1cc) = 10;
     }
     bVar8 = false;
     if (*(int *)(param_1 + 0x2a4) == 0) {
       if ((*(int *)(param_1 + 0x2ac) == *(int *)(param_1 + 700)) &&
-         (iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(int *)(param_1 + 0x2ac)), iVar2 == 4)) {
+         (iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(int *)(param_1 + 0x2ac)), iVar2 == 4)) {
         bVar8 = true;
       }
       if ((*(int *)(param_1 + 0x2ac) == -1) || (bVar8)) {
@@ -22269,7 +22258,7 @@ LAB_0011bcf8:
       }
     }
     else {
-      iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+      iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                            *(undefined4 *)(param_1 + 0x2b4));
       if (iVar2 != 2) goto LAB_0011bcf8;
     }
@@ -22300,7 +22289,7 @@ LAB_0011bcf8:
     if (*(int *)(param_1 + 0x1cc) != 10) {
       return param_1;
     }
-    iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+    iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                          *(undefined4 *)(param_1 + 0x2e0));
     if (iVar2 != 4) {
       return param_1;
@@ -22310,11 +22299,11 @@ LAB_0011bcf8:
     goto LAB_0011c11c;
   }
   if (iVar2 == 3) {
-    iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+    iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                          *(undefined4 *)(param_1 + 0x328));
     uVar9 = iVar2 == 4;
     if ((bool)uVar9) {
-      FUN_0011d104(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x328)
+      animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x328)
                   ,0);
     }
     FUN_001267f0(*param_2,0);
@@ -22322,7 +22311,7 @@ LAB_0011bcf8:
       FUN_001267f0(param_2[1],0);
     }
     if ((bool)uVar9) {
-      iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+      iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                            *(undefined4 *)(param_1 + 0x314));
       if (iVar2 != 4) {
         return param_1;
@@ -22330,7 +22319,7 @@ LAB_0011bcf8:
       uVar4 = *(undefined4 *)(param_1 + 0x314);
     }
     else {
-      iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+      iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                            *(undefined4 *)(param_1 + 0x318));
       if (iVar2 != 4) {
         return param_1;
@@ -22378,14 +22367,14 @@ LAB_0011c134:
         if (*(int *)(param_1 + 0x2ac) == *(int *)(param_1 + 0x2c4)) {
           return param_1;
         }
-        iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(int *)(param_1 + 0x2c4));
+        iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(int *)(param_1 + 0x2c4));
         if (iVar2 != 4) {
           return param_1;
         }
         uVar4 = *(undefined4 *)(param_1 + 0x2c4);
       }
       else {
-        iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+        iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                              *(undefined4 *)(param_1 + 0x2c0));
         if (iVar2 != 4) {
           return param_1;
@@ -22406,14 +22395,14 @@ LAB_0011c134:
           if (iVar2 != 0x13) {
             if (iVar2 == 0xd) {
               if (*(int *)(param_1 + 0x2ac) == *(int *)(param_1 + 0x30c)) {
-                iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(int *)(param_1 + 0x2ac));
+                iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(int *)(param_1 + 0x2ac));
                 if (iVar2 != 4) {
                   return param_1;
                 }
                 FUN_0011de04(param_1,param_2);
               }
               else {
-                iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+                iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                                      *(undefined4 *)(param_1 + 0x2b0));
                 if (iVar2 != 4) {
                   return param_1;
@@ -22438,7 +22427,7 @@ LAB_0011c134:
                 if (*(int *)(param_1 + 0x1cc) != 9) {
                   return param_1;
                 }
-                iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+                iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                                      *(undefined4 *)(param_1 + 0x2f0));
                 if (iVar2 != 4) {
                   return param_1;
@@ -22449,7 +22438,7 @@ LAB_0011c134:
               if (iVar2 != 0xf) {
                 return param_1;
               }
-              uVar3 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+              uVar3 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                                    *(undefined4 *)(param_1 + 0x310));
               bVar11 = 3 < uVar3;
               bVar8 = uVar3 == 4;
@@ -22476,7 +22465,7 @@ LAB_0011c28c:
           }
           uVar4 = *(undefined4 *)(param_1 + 0x324);
           if (*(int *)(param_1 + 0x1d0) != 0x11) {
-            iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),uVar4);
+            iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),uVar4);
             if (iVar2 != 4) {
               return param_1;
             }
@@ -22500,7 +22489,7 @@ LAB_0011c204:
         }
         goto LAB_0011c180;
       }
-      iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+      iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                            *(undefined4 *)(param_1 + 0x31c));
       if (iVar2 != 4) {
         return param_1;
@@ -22516,7 +22505,7 @@ LAB_0011c204:
         uVar4 = *(undefined4 *)(param_1 + 0x31c);
         goto LAB_0011c134;
       }
-      FUN_0011fed8(uVar4,*(undefined4 *)(param_1 + 0x2d0),0x3f800000);
+      animations_set_speed((Animations *)uVar4,*(undefined4 *)(param_1 + 0x2d0),0x3f800000);
       goto LAB_0011c118;
     }
     uVar10 = 3 < *(uint *)(param_1 + 0x1d0);
@@ -22544,15 +22533,15 @@ LAB_0011c204:
         }
         return iVar2;
       }
-      FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2c8)
+      animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2c8)
                    ,FLOAT_MINUS_1);
-      iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+      iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                            *(undefined4 *)(param_1 + 0x2c8));
     }
     else {
-      FUN_0011fed8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2c8)
+      animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2c8)
                    ,0x3f800000);
-      iVar2 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+      iVar2 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                            *(undefined4 *)(param_1 + 0x2c8));
     }
     if (iVar2 != 4) {
@@ -22940,7 +22929,7 @@ void FUN_0011cbc4(int param_1,int param_2,int param_3)
     return;
   }
   FUN_001204b0(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c),1);
-  FUN_0011d104(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),param_2,param_3);
+  animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),param_2,param_3);
   *(int *)(param_1 + 0x4c) = param_2;
   return;
 }
@@ -22953,7 +22942,7 @@ void FUN_0011cc14(int param_1,int param_2,int param_3)
     return;
   }
   FUN_001204b0(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(int *)(param_1 + 0x100),1);
-  FUN_0011d104(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),param_2,param_3);
+  animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),param_2,param_3);
   *(int *)(param_1 + 0x100) = param_2;
   return;
 }
@@ -22984,7 +22973,7 @@ undefined4 FUN_0011cc64(int param_1,int param_2,int param_3,undefined4 param_4)
       *(undefined4 *)(param_1 + 0x2b4) = 0xffffffff;
     }
     if (param_2 != -1) {
-      FUN_0011d104(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),param_2,param_4);
+      animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),param_2,param_4);
       uVar4 = 1;
       *(int *)(param_1 + 0x2ac) = param_2;
     }
@@ -22996,7 +22985,7 @@ LAB_0011ce9c:
     FUN_001204b0(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2ac),1
                 );
     *(undefined4 *)(param_1 + 0x2ac) = 0xffffffff;
-    FUN_0011d104(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),param_2,param_4);
+    animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),param_2,param_4);
     if (param_3 != 2) {
       *(int *)(param_1 + 0x2b4) = param_2;
     }
@@ -23011,7 +23000,7 @@ LAB_0011cd54:
   }
   else {
     if (param_3 != 2) {
-      iVar1 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+      iVar1 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                            *(undefined4 *)(param_1 + 0x2b4));
       if (iVar1 == 4) {
         *(undefined4 *)(param_1 + 0x2b4) = 0xffffffff;
@@ -23021,20 +23010,20 @@ LAB_0011ce70:
         if (*(int *)(param_1 + 0x2b4) != -1) goto LAB_0011cd54;
       }
       else {
-        iVar1 = FUN_00113cd4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),param_2);
-        iVar2 = FUN_00113cd4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+        iVar1 = animations_get_mode((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),param_2);
+        iVar2 = animations_get_mode((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                              *(undefined4 *)(param_1 + 0x2b4));
         if (iVar1 < iVar2) goto LAB_0011ce70;
         FUN_001204b0(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                      *(undefined4 *)(param_1 + 0x2b4),1);
         *(undefined4 *)(param_1 + 0x2b4) = 0xffffffff;
       }
-      FUN_0011d104(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),param_2,param_4);
+      animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),param_2,param_4);
       uVar4 = 1;
       *(int *)(param_1 + 0x2b4) = param_2;
       goto LAB_0011cd54;
     }
-    iVar1 = FUN_001141f4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+    iVar1 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                          *(undefined4 *)(param_1 + 0x2b0));
     if (iVar1 == 4) {
       *(undefined4 *)(param_1 + 0x2b0) = 0xffffffff;
@@ -23044,15 +23033,15 @@ LAB_0011cdd8:
       if (*(int *)(param_1 + 0x2b0) != -1) goto LAB_0011cd5c;
     }
     else {
-      iVar1 = FUN_00113cd4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),param_2);
-      iVar2 = FUN_00113cd4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
+      iVar1 = animations_get_mode((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),param_2);
+      iVar2 = animations_get_mode((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                            *(undefined4 *)(param_1 + 0x2b0));
       if (iVar1 < iVar2) goto LAB_0011cdd8;
       FUN_001204b0(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2b0)
                    ,1);
       *(undefined4 *)(param_1 + 0x2b0) = 0xffffffff;
     }
-    FUN_0011d104(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),param_2,param_4);
+    animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),param_2,param_4);
     uVar4 = 1;
     *(int *)(param_1 + 0x2b0) = param_2;
   }
@@ -23100,7 +23089,7 @@ undefined8 FUN_0011ceac(int param_1)
   uVar5 = bVar6 || 0xfffffffe < uVar2;
   if (!bVar6 && uVar2 != 0xffffffff) {
     FUN_001204b0(*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c),1);
-    iVar3 = FUN_0011d104(*(int *)(*(int *)(param_1 + 0x20) + 0x9c),uVar2,0);
+    iVar3 = animations_play((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),uVar2,0);
     *(uint *)(param_1 + 0x4c) = uVar2;
     return CONCAT44(extraout_r1,iVar3);
   }
@@ -23184,70 +23173,43 @@ void FUN_0011d040(int param_1,undefined4 param_2,void *param_3)
   return;
 }
 
-/* ==== 0x0011D104  (file offset 0x1D104)  FUN_0011d104 ================================================ */
-/* returns r0 as kh.mod leaves it (param_1 for a negative index, the tail-called method's result, 0 or -1); Ghidra had declared it void, but callers use r0 after the
-   call */
-int FUN_0011d104(int param_1,int param_2,int param_3)
+/* ==== 0x0011D104  (file offset 0x1D104)  animations_play ============================================= */
+/* GUESS: names. Plays animation `index` from its start, or from its last frame when its speed is not
+   above 0 (FUN_001268fc compares the float with 0 and leaves the result in the flags: `bls` at
+   0x0011d148, written after the comma), with state 3 when `loop` is set, else 2. A negative index or a
+   free slot does nothing. The binary then tail-jumps (0x0011d164) to animations_set_position with that
+   position; that code is written inline below, as in Ghidra's listing. Returns r0 as kh.mod leaves it:
+   `animations` for a negative index, -1 (the free slot's user id), else animations_set_position's
+   result; callers use it. */
+int animations_play(Animations *animations,int index,int loop)
 
 {
-  undefined1 uVar1;
-  int *piVar2;
-  undefined4 uVar3;
-  int iVar4;
-  code *pcVar5;
-  undefined4 unaff_r4;
-  undefined4 unaff_r5;
-  int iVar6;
-  undefined4 unaff_r6;
-  undefined4 in_lr;
-  bool bVar7;
-  bool bVar8;
-  
-  if (param_2 < 0) {
-    return param_1;
+  int position;
+
+  if (index < 0)
+    return (int)animations;
+  if (animations->userIds[index] == -1)
+    return -1;
+  animations->states[index] = loop ? 3 : 2;
+  position = animations->positions[index] =
+       (FUN_001268fc(animations->speeds[index],0), *(float *)&animations->speeds[index] > 0.0f) ?
+       0 : animations->durations[index] - 1;
+  /* ---- the code of animations_set_position */
+  if (animations->controllers[index] == (ISwerveObject *)0x0 &&
+      ((*((const SwerveObject3DVtbl *)animations->world->pvt)->Find)
+                 (animations->world,animations->userIds[index],&animations->controllers[index]),
+       animations->controllers[index] == (ISwerveObject *)0x0))
+    return 0;
+  if (position == -1) {
+    (*((const SwerveAnimationControllerVtbl *)animations->controllers[index]->pvt)->SetActiveInterval)
+              (animations->controllers[index],animations->worldTime - 1,animations->worldTime);
+    return (*((const SwerveAnimationControllerVtbl *)animations->controllers[index]->pvt)->SetPosition)
+                     (animations->controllers[index],FLOAT_MINUS_1,animations->worldTime);
   }
-  iVar6 = param_1 + param_2 * 4;
-  if (*(int *)(iVar6 + 0x10) != -1) {
-    bVar8 = param_3 == 0;
-    bVar7 = true;
-    if (bVar8) {
-      uVar1 = 2;
-    }
-    else {
-      uVar1 = 3;
-    }
-    *(undefined1 *)(param_1 + param_2 + 0x330) = uVar1;
-    FUN_001268fc(*(undefined4 *)(iVar6 + 0x3f8),0);
-    if (!bVar7 || bVar8) {
-      iVar4 = *(int *)(iVar6 + 0x1a0) + -1;
-    }
-    else {
-      iVar4 = 0;
-    }
-    *(int *)(iVar6 + 0x588) = iVar4;
-    if ((*(int *)(*(int *)(param_1 + 0x718) + param_2 * 4) == 0) &&
-       (pcVar5 = *(code **)(**(int **)(param_1 + 4) + 0x28),
-       (*pcVar5)(*(int **)(param_1 + 4),*(undefined4 *)(param_1 + param_2 * 4 + 0x10),
-                 *(int *)(param_1 + 0x718) + param_2 * 4,pcVar5,unaff_r4,unaff_r5,unaff_r6,in_lr),
-       *(int *)(*(int *)(param_1 + 0x718) + param_2 * 4) == 0)) {
-      return 0;
-    }
-    piVar2 = *(int **)(*(int *)(param_1 + 0x718) + param_2 * 4);
-    if (iVar4 == -1) {
-      (**(code **)(*piVar2 + 0x5c))(piVar2,*(int *)(param_1 + 0xc) + -1);
-      piVar2 = *(int **)(*(int *)(param_1 + 0x718) + param_2 * 4);
-                    /* WARNING: Could not recover jumptable at 0x0011fd84. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      return (**(code **)(*piVar2 + 100))(piVar2,FLOAT_MINUS_1,*(undefined4 *)(param_1 + 0xc));
-    }
-    (**(code **)(*piVar2 + 0x5c))(piVar2,*(int *)(param_1 + 0xc),*(int *)(param_1 + 0xc) + 1);
-    uVar3 = FUN_001268c8(iVar4);
-    piVar2 = *(int **)(*(int *)(param_1 + 0x718) + param_2 * 4);
-                    /* WARNING: Could not recover jumptable at 0x0011fd58. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-    return (**(code **)(*piVar2 + 100))(piVar2,uVar3,*(undefined4 *)(param_1 + 0xc));
-  }
-  return -1;
+  (*((const SwerveAnimationControllerVtbl *)animations->controllers[index]->pvt)->SetActiveInterval)
+            (animations->controllers[index],animations->worldTime,animations->worldTime + 1);
+  return (*((const SwerveAnimationControllerVtbl *)animations->controllers[index]->pvt)->SetPosition)
+                   (animations->controllers[index],FUN_001268c8(position),animations->worldTime);
 }
 
 /* ==== 0x0011D168  (file offset 0x1D168)  FUN_0011d168 ================================================ */
@@ -25533,36 +25495,31 @@ void FUN_0011fc80(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x0011FCC4  (file offset 0x1FCC4)  FUN_0011fcc4 ================================================ */
-void FUN_0011fcc4(int param_1,int param_2,int param_3)
+/* ==== 0x0011FCC4  (file offset 0x1FCC4)  animations_set_position ===================================== */
+/* GUESS: name. Hands animation `index` its position: finds its controller in the world by user id the
+   first time (Find; 0 is returned when there is none), sets the controller's active interval to the
+   1 ms from worldTime and its sequence time to `position` (as a float); -1 instead makes the interval
+   the 1 ms before worldTime with sequence time -1.0 (GUESS: stops it). Returns the controller's
+   SetPosition result (the binary tail-jumps to it, 0x0011fd58 / 0x0011fd84); Ghidra had declared it
+   void. Ghidra dropped the second argument of SetActiveInterval in the -1 case (r2, worldTime). */
+int animations_set_position(Animations *animations,int index,int position)
 
 {
-  int *piVar1;
-  undefined4 uVar2;
-  
-  if ((*(int *)(*(int *)(param_1 + 0x718) + param_2 * 4) == 0) &&
-     ((**(code **)(**(int **)(param_1 + 4) + 0x28))
-                (*(int **)(param_1 + 4),*(undefined4 *)(param_1 + param_2 * 4 + 0x10),
-                 *(int *)(param_1 + 0x718) + param_2 * 4),
-     *(int *)(*(int *)(param_1 + 0x718) + param_2 * 4) == 0)) {
-    return;
+  if (animations->controllers[index] == (ISwerveObject *)0x0 &&
+      ((*((const SwerveObject3DVtbl *)animations->world->pvt)->Find)
+                 (animations->world,animations->userIds[index],&animations->controllers[index]),
+       animations->controllers[index] == (ISwerveObject *)0x0))
+    return 0;
+  if (position == -1) {
+    (*((const SwerveAnimationControllerVtbl *)animations->controllers[index]->pvt)->SetActiveInterval)
+              (animations->controllers[index],animations->worldTime - 1,animations->worldTime);
+    return (*((const SwerveAnimationControllerVtbl *)animations->controllers[index]->pvt)->SetPosition)
+                     (animations->controllers[index],FLOAT_MINUS_1,animations->worldTime);
   }
-  piVar1 = *(int **)(*(int *)(param_1 + 0x718) + param_2 * 4);
-  if (param_3 != -1) {
-    (**(code **)(*piVar1 + 0x5c))(piVar1,*(int *)(param_1 + 0xc),*(int *)(param_1 + 0xc) + 1);
-    uVar2 = FUN_001268c8(param_3);
-    piVar1 = *(int **)(*(int *)(param_1 + 0x718) + param_2 * 4);
-                    /* WARNING: Could not recover jumptable at 0x0011fd58. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-    (**(code **)(*piVar1 + 100))(piVar1,uVar2,*(undefined4 *)(param_1 + 0xc));
-    return;
-  }
-  (**(code **)(*piVar1 + 0x5c))(piVar1,*(int *)(param_1 + 0xc) + -1);
-  piVar1 = *(int **)(*(int *)(param_1 + 0x718) + param_2 * 4);
-                    /* WARNING: Could not recover jumptable at 0x0011fd84. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (**(code **)(*piVar1 + 100))(piVar1,FLOAT_MINUS_1,*(undefined4 *)(param_1 + 0xc));
-  return;
+  (*((const SwerveAnimationControllerVtbl *)animations->controllers[index]->pvt)->SetActiveInterval)
+            (animations->controllers[index],animations->worldTime,animations->worldTime + 1);
+  return (*((const SwerveAnimationControllerVtbl *)animations->controllers[index]->pvt)->SetPosition)
+                   (animations->controllers[index],FUN_001268c8(position),animations->worldTime);
 }
 
 /* ==== 0x0011FD8C  (file offset 0x1FD8C)  thunk_FUN_0011fd90 ========================================== */
@@ -25603,17 +25560,13 @@ void FUN_0011fd90(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   return;
 }
 
-/* ==== 0x0011FDBC  (file offset 0x1FDBC)  FUN_0011fdbc ================================================ */
-void FUN_0011fdbc(int param_1,int param_2,undefined1 param_3)
+/* ==== 0x0011FDBC  (file offset 0x1FDBC)  animations_set_mode ========================================= */
+/* GUESS: name. Sets the mode of animation `index`; nothing for a negative index or a free slot. */
+void animations_set_mode(Animations *animations,int index,uint8 mode)
 
 {
-  if (-1 < param_2) {
-    if (*(int *)(param_1 + param_2 * 4 + 0x10) != -1) {
-      *(undefined1 *)(param_1 + param_2 + 0x394) = param_3;
-    }
-    return;
-  }
-  return;
+  if (index >= 0 && animations->userIds[index] != -1)
+    animations->modes[index] = mode;
 }
 
 /* ==== 0x0011FDDC  (file offset 0x1FDDC)  FUN_0011fddc ================================================ */
@@ -25676,18 +25629,14 @@ LAB_0011fec8:
   goto LAB_0011fec8;
 }
 
-/* ==== 0x0011FED8  (file offset 0x1FED8)  FUN_0011fed8 ================================================ */
-void FUN_0011fed8(int param_1,int param_2,undefined4 param_3)
+/* ==== 0x0011FED8  (file offset 0x1FED8)  animations_set_speed ======================================== */
+/* GUESS: name. Sets the speed (a float, its bits) of animation `index`; nothing for a negative index or
+   a free slot. The game uses 1.0 and -1.0 (backwards). */
+void animations_set_speed(Animations *animations,int index,uint32 speed)
 
 {
-  if (param_2 < 0) {
-    return;
-  }
-  param_1 = param_1 + param_2 * 4;
-  if (*(int *)(param_1 + 0x10) != -1) {
-    *(undefined4 *)(param_1 + 0x3f8) = param_3;
-  }
-  return;
+  if (index >= 0 && animations->userIds[index] != -1)
+    animations->speeds[index] = speed;
 }
 
 /* ==== 0x0011FEF4  (file offset 0x1FEF4)  FUN_0011fef4 ================================================ */
@@ -26718,7 +26667,7 @@ void FUN_001204b0(int param_1,int param_2,int param_3)
       uVar1 = 2;
     }
     else {
-      FUN_0011fcc4(param_1,param_2,0xffffffff);
+      animations_set_position((Animations *)param_1,param_2,0xffffffff);
       uVar1 = 4;
     }
     *(undefined1 *)(param_1 + param_2 + 0x330) = uVar1;
@@ -26811,7 +26760,7 @@ bool FUN_0012059c(int param_1,int param_2)
     local_14 = FUN_001262b0(local_14,*(undefined4 *)(param_1 + 0x27c));
     thunk_FUN_0011fd90(*(undefined4 *)(param_1 + 0x6c),iStack_1c,uStack_18,local_14);
     FUN_001201cc(*(undefined4 *)(param_1 + 0x6c),1);
-    FUN_0011d104(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 0x58),0)
+    animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 0x58),0)
     ;
     FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x54),0);
     iVar1 = FUN_001135b8(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),
@@ -26930,113 +26879,92 @@ void FUN_0012070c(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x0012088C  (file offset 0x2088C)  FUN_0012088c ================================================ */
-void FUN_0012088c(int param_1,int *param_2)
+/* ==== 0x0012088C  (file offset 0x2088C)  animations_add_from_scene =================================== */
+/* GUESS: name. Adds the animations of a scene, from `object` down: for each animation track of the
+   object, its controller's user id (0 = none) and its keyframe sequence's duration. A controller already
+   in the table keeps the longest duration; a new one takes a free slot (animations_find_free_slot):
+   state 1, mode 2, speed 1.0, position 0. When the object is a Group, its children are walked too: a
+   Group or a MorphingMesh directly, a SkinnedMesh through its skeleton. Called (through
+   thunk_animations_add_from_scene) after a scene is loaded (FUN_0011ae04). */
+void animations_add_from_scene(Animations *animations,ISwerveObject *object)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  int *local_40;
-  int *local_3c;
-  int *local_38;
-  int *local_34;
-  int *local_30;
-  int local_2c;
-  int *local_28;
-  int local_24;
-  
-  if (param_2 != (int *)0x0) {
-    local_24 = 0;
-    (**(code **)(*param_2 + 0x14))(param_2,&local_24);
-    if (0 < local_24) {
-      for (iVar3 = 0; iVar3 < local_24; iVar3 = iVar3 + 1) {
-        local_28 = (int *)0x0;
-        local_2c = 0;
-        local_30 = (int *)0x0;
-        iVar1 = (**(code **)(*param_2 + 0x18))(param_2,iVar3,&local_30);
-        if (iVar1 == 0) {
-          local_34 = (int *)0x0;
-          iVar1 = (**(code **)(*local_30 + 0x4c))(local_30,&local_34);
-          if (iVar1 == 0) {
-            (**(code **)(*local_34 + 0xc))(local_34,&local_28);
-            (**(code **)(*local_34 + 4))();
-          }
-          local_38 = (int *)0x0;
-          iVar1 = (**(code **)(*local_30 + 0x54))(local_30,&local_38);
-          if (iVar1 == 0) {
-            (**(code **)(*local_38 + 0x4c))(local_38,&local_2c);
-            (**(code **)(*local_38 + 4))();
-          }
-          if (local_28 != (int *)0x0) {
-            iVar1 = 0;
-            do {
-              if (*(int **)(param_1 + iVar1 * 4 + 0x10) == local_28) {
-                iVar1 = param_1 + iVar1 * 4;
-                if (*(int *)(iVar1 + 0x1a0) < local_2c) {
-                  *(int *)(iVar1 + 0x1a0) = local_2c;
-                }
-                goto LAB_00120a28;
-              }
-              iVar1 = iVar1 + 1;
-            } while (iVar1 < 100);
-            iVar1 = FUN_00112d28(param_1);
-            if (iVar1 != -1) {
-              iVar2 = param_1 + iVar1 * 4;
-              *(int **)(iVar2 + 0x10) = local_28;
-              *(int *)(iVar2 + 0x1a0) = local_2c;
-              *(undefined1 *)(param_1 + iVar1 + 0x330) = 1;
-              *(undefined1 *)(param_1 + iVar1 + 0x394) = 2;
-              *(undefined4 *)(iVar2 + 0x3f8) = 0x3f800000;
-              *(undefined4 *)(iVar2 + 0x588) = 0;
-            }
-          }
-LAB_00120a28:
-          (**(code **)(*local_30 + 4))();
-        }
+  int count = 0;
+  int i;
+  int slot;
+  int userId;
+  int duration;
+  ISwerveObject *track;
+  ISwerveObject *part;
+  ISwerveObject *group;
+  ISwerveObject *child;
+  ISwerveObject *skinnedMesh;
+  ISwerveObject *skeleton;
+
+  if (object == (ISwerveObject *)0x0)
+    return;
+  (*((const SwerveObject3DVtbl *)object->pvt)->GetAnimationTrackCount)(object,&count);
+  for (i = 0; i < count; i++) {
+    userId = 0;
+    duration = 0;
+    track = (ISwerveObject *)0x0;
+    if ((*((const SwerveObject3DVtbl *)object->pvt)->GetAnimationTrack)(object,i,&track) != 0)
+      continue;
+    part = (ISwerveObject *)0x0;
+    if ((*((const SwerveAnimationTrackVtbl *)track->pvt)->GetController)(track,&part) == 0) {
+      (*((const SwerveObject3DVtbl *)part->pvt)->GetUserId)(part,&userId);
+      (*part->pvt->Release)(part);
+    }
+    part = (ISwerveObject *)0x0;
+    if ((*((const SwerveAnimationTrackVtbl *)track->pvt)->GetKeyframeSequence)(track,&part) == 0) {
+      (*((const SwerveKeyframeSequenceVtbl *)part->pvt)->GetDuration)(part,&duration);
+      (*part->pvt->Release)(part);
+    }
+    if (userId != 0) {
+      for (slot = 0; slot < 100 && animations->userIds[slot] != userId; slot++)
+        ;
+      if (slot < 100) {
+        if (animations->durations[slot] < duration)
+          animations->durations[slot] = duration;
+      }
+      else if ((slot = animations_find_free_slot(animations)) != -1) {
+        animations->userIds[slot] = userId;
+        animations->durations[slot] = duration;
+        animations->states[slot] = 1;
+        animations->modes[slot] = 2;
+        animations->speeds[slot] = 0x3f800000;   /* 1.0f */
+        animations->positions[slot] = 0;
       }
     }
-    local_28 = (int *)0x0;
-    iVar3 = (**(code **)(*param_2 + 8))(param_2,9,&local_28);
-    if (iVar3 == 0) {
-      local_2c = 0;
-      (**(code **)(*local_28 + 0xac))(local_28,&local_2c);
-      for (iVar3 = 0; iVar3 < local_2c; iVar3 = iVar3 + 1) {
-        local_30 = (int *)0x0;
-        iVar1 = (**(code **)(*local_28 + 0xb0))(local_28,iVar3,&local_30);
-        if (iVar1 == 0) {
-          local_34 = (int *)0x0;
-          local_38 = (int *)0x0;
-          local_3c = (int *)0x0;
-          local_40 = (int *)0x0;
-          iVar1 = (**(code **)(*local_30 + 8))(local_30,9,&local_34);
-          if (iVar1 == 0) {
-            FUN_0012088c(param_1,local_34);
-            (**(code **)(*local_34 + 4))();
-          }
-          else {
-            iVar1 = (**(code **)(*local_30 + 8))(local_30,0x16,&local_38);
-            if (iVar1 == 0) {
-              (**(code **)(*local_38 + 0xd0))(local_38,&local_40);
-              FUN_0012088c(param_1,local_40);
-              (**(code **)(*local_40 + 4))();
-              (**(code **)(*local_38 + 4))();
-            }
-            else {
-              iVar1 = (**(code **)(*local_30 + 8))(local_30,0x11,&local_3c);
-              if (iVar1 == 0) {
-                FUN_0012088c(param_1,local_3c);
-                (**(code **)(*local_3c + 4))();
-              }
-            }
-          }
-          (**(code **)(*local_30 + 4))();
-        }
-      }
-      (**(code **)(*local_28 + 4))();
-    }
+    (*track->pvt->Release)(track);
   }
-  return;
+  group = (ISwerveObject *)0x0;
+  if ((*object->pvt->QueryInterface)(object,SWV_GROUP,(void **)&group) != 0)
+    return;
+  count = 0;
+  (*((const SwerveGroupVtbl *)group->pvt)->GetChildCount)(group,&count);
+  for (i = 0; i < count; i++) {
+    child = (ISwerveObject *)0x0;
+    if ((*((const SwerveGroupVtbl *)group->pvt)->GetChild)(group,i,&child) != 0)
+      continue;
+    part = skinnedMesh = skeleton = (ISwerveObject *)0x0;
+    if ((*child->pvt->QueryInterface)(child,SWV_GROUP,(void **)&part) == 0) {
+      animations_add_from_scene(animations,part);
+      (*part->pvt->Release)(part);
+    }
+    else if ((*child->pvt->QueryInterface)(child,SWV_SKINNEDMESH,(void **)&skinnedMesh) == 0) {
+      (*((const SwerveSkinnedMeshVtbl *)skinnedMesh->pvt)->GetSkeleton)(skinnedMesh,&skeleton);
+      animations_add_from_scene(animations,skeleton);
+      (*skeleton->pvt->Release)(skeleton);
+      (*skinnedMesh->pvt->Release)(skinnedMesh);
+    }
+    else if ((*child->pvt->QueryInterface)(child,SWV_MORPHINGMESH,(void **)&part) == 0) {
+      animations_add_from_scene(animations,part);
+      (*part->pvt->Release)(part);
+    }
+    (*child->pvt->Release)(child);
+  }
+  (*group->pvt->Release)(group);
 }
 
 /* ==== 0x00120BE8  (file offset 0x20BE8)  FUN_00120be8 ================================================ */
@@ -27728,7 +27656,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3,uint param_4)
          ((*(int *)(param_1 + 0x4c) != *(int *)(param_1 + 0x60) ||
           (FUN_0011cbc4(param_1,-1,0), *(int *)(param_1 + 0x4c) != -1)))) &&
         (*(int *)(param_1 + 0x4c) != *(int *)(param_1 + 0x5c))) &&
-       (cVar1 = FUN_001141f4(*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
+       (cVar1 = animations_get_state((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
        cVar1 != '\x04')) {
       if (((0 < *(int *)(param_1 + 0xa0)) && (*(int *)(param_1 + 0x4c) == *(int *)(param_1 + 0x58)))
          && (iVar4 = (*g_pHelperFuncs->aee_GetTimeMS)(),
@@ -27781,7 +27709,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3,uint param_4)
       }
     }
     else {
-      FUN_0011fed8(*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x78),0x3f800000);
+      animations_set_speed((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x78),0x3f800000);
       FUN_0011cbc4(param_1,*(int *)(param_1 + 0x78),0);
     }
     if (*(int *)(param_1 + 0x94) < 1) {
@@ -27822,7 +27750,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3,uint param_4)
     }
     if (*(int *)(param_1 + 0x78) != -1) {
       FUN_0011e3c0(*(int *)(param_1 + 4),uVar5);
-      FUN_0011fed8(*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x78),FLOAT_MINUS_1);
+      animations_set_speed((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x78),FLOAT_MINUS_1);
       FUN_0011cbc4(param_1,*(int *)(param_1 + 0x78),0);
     }
     uVar7 = 5;
@@ -27831,7 +27759,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3,uint param_4)
     if ((*(int *)(param_1 + 0x4c) != -1) &&
        (((*(int *)(param_1 + 0x4c) != *(int *)(param_1 + 0x60) ||
          (FUN_0011cbc4(param_1,-1,0), *(int *)(param_1 + 0x4c) != -1)) &&
-        (cVar1 = FUN_001141f4(*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
+        (cVar1 = animations_get_state((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
         cVar1 != '\x04')))) goto switchD_00021cbc_default;
     FUN_0011d040(*(int *)(*(int *)(param_1 + 0x20) + 0x94),
                  *(undefined4 *)(*(int *)(param_1 + 4) + 0xc),WORD_HEXADECIMAL_397714A4);
@@ -27851,7 +27779,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3,uint param_4)
     }
     bVar9 = bVar10 || iVar8 == iVar4;
     if (!bVar10 && iVar8 != iVar4) {
-      cVar1 = FUN_001141f4(*(int *)(*(int *)(param_1 + 0x20) + 0x9c),iVar8);
+      cVar1 = animations_get_state((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),iVar8);
       bVar9 = cVar1 == '\x04';
       if (!bVar9) goto switchD_00021cbc_default;
     }
@@ -27879,7 +27807,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3,uint param_4)
     }
     if ((*(int *)(*(int *)(param_1 + 4) + 0x154) != 0) ||
        ((*(int *)(param_1 + 0x4c) != -1 &&
-        (cVar1 = FUN_001141f4(*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
+        (cVar1 = animations_get_state((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
         cVar1 != '\x04')))) goto switchD_00021cbc_default;
     uVar12 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
                           *(int *)(*(int *)(*(int *)(*(int *)(param_1 + 0x24) + 0x118) +
@@ -27905,7 +27833,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3,uint param_4)
     *(undefined4 *)(param_1 + 0x90) = *(undefined4 *)(param_1 + 0x8c);
     *(undefined4 *)(param_1 + 0x88) = *(undefined4 *)(param_1 + 0x84);
     if ((*(int *)(param_1 + 0x4c) != -1) &&
-       (cVar1 = FUN_001141f4(*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
+       (cVar1 = animations_get_state((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
        cVar1 != '\x04')) {
       iVar4 = FUN_001135b8(*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c));
       iVar4 = iVar4 + *(int *)(param_1 + 0x88);
@@ -27917,7 +27845,7 @@ LAB_001222f0:
   case 7:
     *(int *)(param_1 + 0x88) = *(int *)(param_1 + 0x88) - param_3;
     if ((*(int *)(param_1 + 0x4c) != -1) &&
-       (cVar1 = FUN_001141f4(*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
+       (cVar1 = animations_get_state((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
        cVar1 != '\x04')) goto switchD_00021cbc_default;
     *(undefined4 *)(param_1 + 0x44) = 0;
     FUN_0011cbc4(param_1,*(int *)(param_1 + 0x5c),1);
@@ -28272,7 +28200,7 @@ void enemy_update(Enemy *enemy,int now,int elapsed)
       if (FUN_0010eb74((int)enemy /* not arguments, register leftovers: now */) == 0)
         return;
       if (enemy->type == 5 || enemy->type == 8) {
-        FUN_0011fed8((int)enemy->app->pObj9c,enemy->field_64,FLOAT_MINUS_1);
+        animations_set_speed(enemy->app->animations,enemy->field_64,FLOAT_MINUS_1);
         FUN_0011cc14((int)enemy,enemy->field_64,0);
         enemy->field_90 = INTEGER_7003;
         return;
@@ -28283,9 +28211,9 @@ void enemy_update(Enemy *enemy,int now,int elapsed)
     else {
       if (enemy->field_90 != 0x1b5b)              /* 7003 */
         return;
-      if (FUN_001141f4((int)enemy->app->pObj9c,enemy->field_64) != 4)
+      if (animations_get_state(enemy->app->animations,enemy->field_64) != 4)
         return;
-      FUN_0011fed8((int)enemy->app->pObj9c,enemy->field_64,0x3f800000);
+      animations_set_speed(enemy->app->animations,enemy->field_64,0x3f800000);
       if (enemy->field_60 != 0)
         FUN_0011cc14((int)enemy,enemy->field_60,1);
       enemy->field_68 = 0;
@@ -29102,7 +29030,7 @@ LAB_00123b40:
         iVar1 = iVar1 + 1;
       } while (iVar1 < 3);
       iVar1 = FUN_001137a4(*(int *)(*(int *)(param_1 + 0x84) + 0x9c),WORD_HEXADECIMAL_22735D97);
-      FUN_0011d104(*(int *)(*(int *)(param_1 + 0x84) + 0x9c),iVar1,0);
+      animations_play((Animations *)*(int *)(*(int *)(param_1 + 0x84) + 0x9c),iVar1,0);
       goto LAB_00123b40;
     }
   }
@@ -29167,7 +29095,7 @@ void FUN_00123c24(int param_1,undefined4 param_2,undefined4 param_3,int param_4)
         else {
           if (uVar2 != 2) {
             if (uVar2 == 1) {
-              FUN_0011fcc4(param_1,iVar7,0xffffffff);
+              animations_set_position((Animations *)param_1,iVar7,0xffffffff);
               *(undefined1 *)(unaff_r7 + 0x330) = 4;
             }
             goto LAB_00123d4c;
@@ -29188,7 +29116,7 @@ LAB_00123d24:
           }
           iVar3 = *(int *)(iVar6 + 0x588);
         }
-        FUN_0011fcc4(param_1,iVar7,iVar3);
+        animations_set_position((Animations *)param_1,iVar7,iVar3);
       }
 LAB_00123d4c:
       iVar7 = iVar7 + 1;
@@ -29388,7 +29316,7 @@ void FUN_001241a8(int *param_1,undefined4 param_2,int param_3,undefined4 param_4
       do {
         iVar2 = param_1[0x26];
         if ((param_1[iVar1 + 0x10] <= iVar2) && (iVar2 <= param_1[iVar1 + 0x1b])) {
-          FUN_0011fcc4(*(undefined4 *)(param_1[1] + 0x9c),param_1[iVar1 + 5],
+          animations_set_position((Animations *)*(undefined4 *)(param_1[1] + 0x9c),param_1[iVar1 + 5],
                        iVar2 - param_1[iVar1 + 0x10]);
         }
         iVar1 = iVar1 + 1;
@@ -29422,7 +29350,7 @@ void FUN_001241a8(int *param_1,undefined4 param_2,int param_3,undefined4 param_4
       }
       return;
     }
-    iVar1 = FUN_001141f4(*(undefined4 *)(param_1[1] + 0x9c),param_1[4]);
+    iVar1 = animations_get_state((Animations *)*(undefined4 *)(param_1[1] + 0x9c),param_1[4]);
     if (iVar1 != 4) {
       return;
     }
@@ -29437,7 +29365,7 @@ void FUN_001241a8(int *param_1,undefined4 param_2,int param_3,undefined4 param_4
   else if (iVar1 == 1) {
     FUN_00112b4c(param_1);
     FUN_001132a8(*(undefined4 *)(param_1[1] + 0x94));
-    FUN_0011d104(*(undefined4 *)(param_1[1] + 0x9c),param_1[4],0);
+    animations_play((Animations *)*(undefined4 *)(param_1[1] + 0x9c),param_1[4],0);
   }
   else if (iVar1 == 2) {
     FUN_0012031c(*(undefined4 *)(param_1[1] + 0x94),0);

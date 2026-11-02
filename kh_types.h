@@ -50,7 +50,8 @@ typedef struct KHApp {
                                         once it is non-zero, and key releases are ignored */
     void          *pObj94;           /* +0x94 created by 0x10c218, destroyed by 0x10cee4 */
     void          *pObj98;           /* +0x98 created by 0x10be14, destroyed by 0x10cda4 */
-    void          *pObj9c;           /* +0x9c created by 0x10b804, destroyed by 0x10c9dc */
+    struct Animations *animations;   /* +0x9c the scene's animations; created by animations_create,
+                                        destroyed by 0x10c9dc */
     void          *pObja0;           /* +0xa0 created by 0x10bb2c, destroyed by 0x10cd2c */
     void          *pGame;            /* +0xa4 GUESS: game state; receives key releases (kh_OnKeyRelease);
                                         destroyed by 0x10c2c4 */
@@ -285,6 +286,63 @@ typedef struct SwerveSkinnedMeshVtbl {
     void  *unknown_0c[0x31];
     int  (*GetSkeleton)(ISwerveObject *po, ISwerveObject **ppo);         /* +0xd0 slot 52, 0x01038878 */
 } SwerveSkinnedMeshVtbl;
+
+/* The Swerve Object3D vtable slots kh.mod calls, shared by every object class (GUESS: names, from the
+ * JSR-184 methods they implement in swv21brew, 0x0103517c fills them). */
+typedef struct SwerveObject3DVtbl {
+    ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
+    void (*GetUserId)(ISwerveObject *po, int *pUserId);                  /* +0x0c slot 3, 0x010350fc */
+    void  *unknown_10;
+    void (*GetAnimationTrackCount)(ISwerveObject *po, int *pCount);      /* +0x14 slot 5, 0x01034f74 */
+    int  (*GetAnimationTrack)(ISwerveObject *po, int index, ISwerveObject **ppo); /* +0x18 slot 6, 0x01034f00 */
+    void  *unknown_1c[0x03];
+    int  (*Find)(ISwerveObject *po, int userId, ISwerveObject **ppo);    /* +0x28 slot 10, 0x01034e8c */
+} SwerveObject3DVtbl;
+
+typedef struct SwerveAnimationTrackVtbl {
+    ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
+    void  *unknown_0c[0x10];                                             /* the Object3D slots and more */
+    int  (*GetController)(ISwerveObject *po, ISwerveObject **ppo);       /* +0x4c slot 19, 0x0102d1c0 */
+    void  *unknown_50;
+    int  (*GetKeyframeSequence)(ISwerveObject *po, ISwerveObject **ppo); /* +0x54 slot 21, 0x0102d22c */
+} SwerveAnimationTrackVtbl;
+
+typedef struct SwerveKeyframeSequenceVtbl {
+    ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
+    void  *unknown_0c[0x10];
+    void (*GetDuration)(ISwerveObject *po, int *pDuration);              /* +0x4c slot 19, 0x01032ac0 */
+} SwerveKeyframeSequenceVtbl;
+
+typedef struct SwerveAnimationControllerVtbl {
+    ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
+    void  *unknown_0c[0x14];
+    int  (*SetActiveInterval)(ISwerveObject *po, int start, int end);    /* +0x5c slot 23, 0x0102cf84 */
+    void  *unknown_60;
+    int  (*SetPosition)(ISwerveObject *po, uint32 sequenceTime, int worldTime); /* +0x64 slot 25, 0x0102cfec;
+                                                                            sequenceTime is a float */
+} SwerveAnimationControllerVtbl;
+
+/* ---- The scene's animations (GUESS: names) -------------------------------------------------------
+ * KHApp.animations (1820 bytes, animations_create). A table of up to 100 animations, one per animation
+ * controller of the loaded scene, keyed by the controller's user id (animations_add_from_scene); the
+ * game refers to an animation by its index. A slot is free when its user id is -1. Each animation is
+ * played at a speed from a position that animations_set_position hands to its controller (looked up by
+ * user id in the world the first time). */
+typedef struct Animations {
+    struct KHApp *app;            /* +0x000 GetAppInstance() at creation */
+    ISwerveObject *world;         /* +0x004 GUESS: the scene's World; controllers are found in it (Find) */
+    uint8  unknown_008[0x04];
+    int    worldTime;             /* +0x00c the time the controllers are set at */
+    int    userIds[100];          /* +0x010 the controllers' user ids; -1 = free slot */
+    int    durations[100];        /* +0x1a0 the longest keyframe sequence of each controller */
+    uint8  states[100];           /* +0x330 1 added, 2 played, 3 played with `loop` set (GUESS: looping);
+                                     callers also test for 4 (set elsewhere; GUESS: finished) */
+    uint8  modes[100];            /* +0x394 2 when added (animations_get_mode / animations_set_mode) */
+    uint32 speeds[100];           /* +0x3f8 floats (their bits), 1.0 when added (animations_set_speed) */
+    int    positions[100];        /* +0x588 where each one plays from: 0, or its last frame when its speed is
+                                     not above 0 */
+    ISwerveObject **controllers;  /* +0x718 100 controllers, found by user id when first played; 0 until then */
+} Animations;                     /* 0x71c bytes */
 
 /* ---- Enemies and combat regions (GUESS: names) ----------------------------------------------
  * A CombatRegion ("CombatRegion" level object, kind 4) is a place in a level that sends enemies in
