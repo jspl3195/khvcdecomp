@@ -2532,7 +2532,7 @@ LAB_00103858:
         ui_element_add_child(uVar10,iVar19,0);
         iVar17 = FUN_00107fd0(param_1,10,1).low;
         iVar7 = iVar17 + *(int *)(iVar19 + 0x34) + iVar7;
-        iVar19 = FUN_0010c168(0,uVar11,iVar7,uVar13,1,param_1);
+        iVar19 = ui_element_create(0,uVar11,iVar7,uVar13,1,param_1);
         *(undefined1 *)(iVar19 + 0x1c) = 1;
         ui_element_add_child(uVar10,iVar19,0);
         iVar17 = FUN_00107fd0(param_1,10,1).low;
@@ -2666,7 +2666,7 @@ LAB_001050b0:
         ui_element_add_child(iVar9,iVar17,0);
         iVar8 = FUN_00107fd0(param_1,10,1).low;
         iVar7 = iVar8 + *(int *)(iVar17 + 0x34) + iVar7;
-        iVar17 = FUN_0010c168(0,uVar10,iVar7,uVar11,1,param_1);
+        iVar17 = ui_element_create(0,uVar10,iVar7,uVar11,1,param_1);
         *(undefined1 *)(iVar17 + 0x1c) = 1;
         *(undefined4 *)(iVar17 + 0x10) = 0xff000000;
         ui_element_add_child(iVar9,iVar17,0);
@@ -2783,7 +2783,7 @@ LAB_00104a24:
       helper_free(pvVar16);
       helper_free(pvVar5);
 LAB_00104dcc:
-      FUN_00107d24(iVar9);
+      ui_element_draw((UIElement *)iVar9);
       return local_34;
     case 0x83:
 LAB_00101fa8:
@@ -2870,7 +2870,7 @@ LAB_00101fa8:
             helper_free(pvVar5);
             ui_element_add_child(iVar9,local_44,0);
           }
-          iVar17 = FUN_0010c168(0,0,(int)*(short *)(*(int *)(iVar17 + 8) + 2) +
+          iVar17 = ui_element_create(0,0,(int)*(short *)(*(int *)(iVar17 + 8) + 2) +
                                     *(int *)(iVar17 + 0x34) + 2,
                                 (int)*(short *)(*(int *)(iVar9 + 8) + 6),1,param_1);
           *(undefined1 *)(iVar17 + 0x1c) = 1;
@@ -3063,7 +3063,7 @@ LAB_0010489c:
                 ui_element_add_child(iVar9,iVar7,0);
                 iVar8 = FUN_00107fd0(param_1,10,1).low;
                 iVar19 = iVar8 + *(int *)(iVar7 + 0x34) + iVar19;
-                iVar7 = FUN_0010c168(0,uVar10,iVar19,uVar11,1,param_1);
+                iVar7 = ui_element_create(0,uVar10,iVar19,uVar11,1,param_1);
                 *(undefined1 *)(iVar7 + 0x1c) = 1;
                 *(undefined4 *)(iVar7 + 0x10) = 0xff000000;
                 ui_element_add_child(iVar9,iVar7,0);
@@ -3275,7 +3275,7 @@ LAB_001042b8:
       ui_element_add_child(iVar9,iVar17,0);
       iVar8 = FUN_00107fd0(param_1,10,1).low;
       iVar7 = iVar8 + *(int *)(iVar17 + 0x34) + iVar7;
-      iVar17 = FUN_0010c168(0,uVar10,iVar7,uVar11,1,param_1);
+      iVar17 = ui_element_create(0,uVar10,iVar7,uVar11,1,param_1);
       *(undefined1 *)(iVar17 + 0x1c) = 1;
       *(undefined4 *)(iVar17 + 0x10) = 0xff000000;
       ui_element_add_child(iVar9,iVar17,0);
@@ -3336,7 +3336,7 @@ LAB_001042b8:
     iVar19 = FUN_00107fd0(param_1,100,2).low;
     iVar17 = FUN_00107fd0(param_1,0x118,1).low;
     iVar12 = (int)*(short *)(*(int *)(iVar9 + 8) + 4) + iVar19 * -2;
-    iVar7 = FUN_0010c168(0,iVar19,iVar17,iVar12,0,param_1);
+    iVar7 = ui_element_create(0,iVar19,iVar17,iVar12,0,param_1);
     *(undefined4 *)(iVar7 + 0x14) = WORD_HEXADECIMAL_FFEFEFEF;
     *(undefined4 *)(iVar7 + 0x10) = 0xff000000;
     *(undefined1 *)(iVar7 + 0x1c) = 1;
@@ -3464,7 +3464,7 @@ LAB_00104360:
       ui_element_add_child(iVar9,iVar12,0);
       iVar20 = *(int *)(iVar12 + 0x34);
       iVar19 = iVar20 + iVar17 + iVar19;
-      iVar12 = FUN_0010c168(0,uVar10,iVar19,iVar7,1,param_1);
+      iVar12 = ui_element_create(0,uVar10,iVar19,iVar7,1,param_1);
       *(undefined1 *)(iVar12 + 0x1c) = 1;
       *(undefined4 *)(iVar12 + 0x10) = WORD_HEXADECIMAL_FFC9C4DA;
       ui_element_add_child(iVar9,iVar12,0);
@@ -3634,9 +3634,6 @@ void FUN_001051d4(int param_1,int param_2)
 void FUN_00105224(int *param_1,int param_2)
 
 {
-  uint uVar1;
-  int *piVar2;
-  code *pcVar3;
   int iVar4;
   
   param_1[0x19] = param_2;
@@ -3673,32 +3670,10 @@ LAB_00105298:
 LAB_001052bc:
   param_1[5] = iVar4;
 LAB_001052c0:
-  if ((char)param_1[1] == '\0') {
-    return;
-  }
-  if ((char)param_1[7] != '\0') {
-    uVar1 = (*(code *)(*(int *)(*param_1 + 0x1c)))(param_1);
-    FUN_0010a3e8(param_1[8],*(int **)(param_1[8] + 0x10),uVar1,1);
-    uVar1 = (*(code *)(*(int *)(*param_1 + 0x18)))(param_1);
-    FUN_0010a3e8(param_1[8],*(int **)(param_1[8] + 0x10),uVar1,2);
-    (**(code **)(**(int **)(param_1[8] + 0x10) + 0x18))(*(int **)(param_1[8] + 0x10),1);
-    (**(code **)(**(int **)(param_1[8] + 0x10) + 0x58))(*(int **)(param_1[8] + 0x10),param_1[2]);
-  }
-  pcVar3 = (code *)(*(int *)(*param_1 + 0x10) + *param_1);
-  (*pcVar3)(param_1,*(undefined4 *)(param_1[8] + 0xc),*(undefined4 *)(param_1[8] + 0x10),pcVar3
-            /* not arguments, value leftovers: r3 and r4 as saved on the stack */);
-  iVar4 = 0;
-  while (piVar2 = (int *)list_get_entry((int *)param_1[9],iVar4), piVar2 != (int *)0x0) {
-    FUN_00107d24(piVar2);
-    iVar4 = iVar4 + 1;
-  }
-  (*(code *)(*(int *)(*param_1 + 0xc)))
-            (param_1,*(undefined4 *)(param_1[8] + 0xc),*(undefined4 *)(param_1[8] + 0x10));
-                    /* WARNING: Could not recover jumptable at 0x00107e40. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (**(code **)(**(int **)(param_1[8] + 0x10) + 0x80))();
+  ui_element_draw((UIElement *)param_1);         /* the binary's tail jump (0x001052c8) */
   return;
 }
+
 
 /* ==== 0x001052DC  (file offset 0x052DC)  screen_resume_nothing ======================================= */
 /* GUESS: name. The resume method (vtable slot 8, +0x20) of the plain screen class (VTABLE_00101700, made by
@@ -3870,43 +3845,18 @@ void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
 void FUN_001056d0(int *param_1,int param_2)
 
 {
-  uint uVar1;
-  int *piVar2;
   int iVar3;
   int iVar4;
-  code *pcVar5;
   
   iVar4 = param_1[0x37];
   *(undefined1 *)(iVar4 + 4) = 1;
   iVar3 = param_1[4];
   param_1[4] = param_2;
   param_1[0x38] = iVar3;
-  if ((char)param_1[1] != '\0') {
-    if ((char)param_1[7] != '\0') {
-      uVar1 = (*(code *)(*(int *)(*param_1 + 0x1c)))(param_1);
-      FUN_0010a3e8(param_1[8],*(int **)(param_1[8] + 0x10),uVar1,1);
-      uVar1 = (*(code *)(*(int *)(*param_1 + 0x18)))(param_1);
-      FUN_0010a3e8(param_1[8],*(int **)(param_1[8] + 0x10),uVar1,2);
-      (**(code **)(**(int **)(param_1[8] + 0x10) + 0x18))(*(int **)(param_1[8] + 0x10),1);
-      (**(code **)(**(int **)(param_1[8] + 0x10) + 0x58))(*(int **)(param_1[8] + 0x10),param_1[2]);
-    }
-    pcVar5 = (code *)(*(int *)(*param_1 + 0x10) + *param_1);
-    (*pcVar5)(param_1,*(undefined4 *)(param_1[8] + 0xc),*(undefined4 *)(param_1[8] + 0x10),pcVar5,
-              iVar4);
-    iVar3 = 0;
-    while (piVar2 = (int *)list_get_entry((int *)param_1[9],iVar3), piVar2 != (int *)0x0) {
-      FUN_00107d24(piVar2);
-      iVar3 = iVar3 + 1;
-    }
-    (*(code *)(*(int *)(*param_1 + 0xc)))
-              (param_1,*(undefined4 *)(param_1[8] + 0xc),*(undefined4 *)(param_1[8] + 0x10));
-                    /* WARNING: Could not recover jumptable at 0x00107e40. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-    (**(code **)(**(int **)(param_1[8] + 0x10) + 0x80))();
-    return;
-  }
+  ui_element_draw((UIElement *)param_1);         /* the binary's tail jump (0x001056e8) */
   return;
 }
+
 
 /* ==== 0x001056EC  (file offset 0x056EC)  ui_element_set_key_target =================================== */
 /* GUESS: name. Links two UI elements for keyboard navigation: when `element` has the focus and the player
@@ -4166,7 +4116,7 @@ void FUN_00105c98(int param_1)
   if (*(int *)(param_1 + 0x40) != 0) {
     helper_free(*(void **)(param_1 + 0x40));
   }
-  FUN_00105de4(param_1);                          /* the binary's tail jump (0x00105d44) */
+  ui_element_destroy(param_1);                          /* the binary's tail jump (0x00105d44) */
   return;
 }
 
@@ -4244,24 +4194,25 @@ void FUN_00105dc8(int param_1)
   return;
 }
 
-/* ==== 0x00105DE4  (file offset 0x05DE4)  FUN_00105de4 ================================================ */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101724): written from
-   its disassembly. */
-void FUN_00105de4(int param_1)
+/* ==== 0x00105DE4  (file offset 0x05DE4)  ui_element_destroy ========================================== */
+/* GUESS: name. The destructor (vtable slot 0) of the base UI element (VTABLE_00101724), which every other
+   class's destructor ends with: destroys and frees each child (their own slot 0), frees the child list
+   (FUN_0010cdd8) and the rectangle; the element itself is freed by whoever destroys it. Ghidra has no
+   function here (only reached through the vtable and as the tail of FUN_00105dc8 / FUN_00105c98);
+   written from its disassembly (0x00105de4 - 0x00105e40). */
+void ui_element_destroy(UIElement *element)
 
 {
-  int *p;
-  int iVar1;
+  int32 *child;
+  int32 i;
 
-  for (iVar1 = 0; (p = (int *)list_get_entry(*(UIList **)(param_1 + 0x24),iVar1)) != (int *)0x0; iVar1 = iVar1 + 1) {
-    (*(code *)*(int *)*p)(p);                     /* destroy: vtable slot 0 */
-    helper_free(p);
+  for (i = 0; (child = (int32 *)list_get_entry(element->children,i)) != (int32 *)0x0; i++) {
+    (*(code *)*(int32 *)*child)(child);           /* destroy: vtable slot 0 */
+    helper_free(child);
   }
-  if (*(int *)(param_1 + 0x24) != 0) {
-    FUN_0010cdd8(*(int *)(param_1 + 0x24),1);
-  }
-  helper_free(*(void **)(param_1 + 8));         /* the binary's tail jump (0x00105e40) */
-  return;
+  if (element->children != (UIList *)0x0)
+    FUN_0010cdd8((int32)element->children,1);
+  helper_free(element->rect);                     /* the binary's tail jump (0x00105e40) */
 }
 
 
@@ -4844,10 +4795,14 @@ void FUN_00106e44(int param_1,undefined4 param_2,int *param_3)
   return;
 }
 
-/* ==== 0x00106FA8  (file offset 0x06FA8)  FUN_00106fa8 ================================================ */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101724): written from
-   its disassembly. */
-void FUN_00106fa8(int param_1)
+/* ==== 0x00106FA8  (file offset 0x06FA8)  ui_element_draw_nothing ===================================== */
+/* GUESS: name. The draw method (vtable slot 4, +0x10) of the base UI element (VTABLE_00101724): a plain
+   element has no content of its own (`bx lr`, 0x00106fa8). ui_element_draw paints its background (when
+   hasBackground is set), calls this, draws its children and calls slot 3; FUN_00101ad8 makes plain
+   elements (ui_element_create) as containers for rows and buttons. Called with the element's display and
+   graphics objects (+0x20 -> +0xc, +0x10; GUESS: display). Ghidra has no function here (only reached
+   through the vtable); written from its disassembly. */
+void ui_element_draw_nothing(int32 element,int32 display,int32 graphics)
 
 {
   return;
@@ -5111,7 +5066,7 @@ LAB_00107384:
 
 /* ==== 0x001077CC  (file offset 0x077CC)  ui_element_draw_over_children_nothing ======================= */
 /* GUESS: name. The "draw over the children" method (vtable slot 3, +0x0c) of the UI classes that draw
-   nothing there (VTABLE_0010165C, VTABLE_001016C0, VTABLE_00101700, VTABLE_00101724): FUN_00107d24 draws
+   nothing there (VTABLE_0010165C, VTABLE_001016C0, VTABLE_00101700, VTABLE_00101724): ui_element_draw draws
    an element (slot 4, +0x10), then its children, then calls this with the element's display and graphics
    objects (+0x20 -> +0xc, +0x10; GUESS: display); it does nothing (`bx lr`, 0x001077cc). Ghidra has no
    function here (only reached through the vtables); written from its disassembly. */
@@ -5349,39 +5304,37 @@ LAB_00107c9c:
   return;
 }
 
-/* ==== 0x00107D24  (file offset 0x07D24)  FUN_00107d24 ================================================ */
-void FUN_00107d24(int *param_1)
+/* ==== 0x00107D24  (file offset 0x07D24)  ui_element_draw ============================================= */
+/* GUESS: name. Draws a UI element and everything in it, when it is visible: its background when it has
+   one (hasBackground: its rectangle filled with the secondary colour and outlined with the border colour,
+   FUN_0010a3e8 with 2 and 1 setting IGraphics' fill and line colours, then SetFillMode and DrawRect),
+   then the element itself (vtable slot 4, +0x10), its children in order (recursively), and what goes over
+   them (slot 3, +0x0c), both with its screen stack's display and graphics objects; then the binary
+   tail-jumps (0x00107e40) to IGraphics Flush. Written from its disassembly (0x00107d24 - 0x00107e44): Ghidra
+   dropped Flush's argument. Returns Flush's result, or 0 (the visible byte) when not visible. Called
+   whenever a screen opens or changes (screen_stack_open, screen_stack_close_top, ui_element_handle_key). */
+int32 ui_element_draw(UIElement *element)
 
 {
-  uint uVar1;
-  int *piVar2;
-  int iVar3;
-  
-  if ((char)param_1[1] != '\0') {
-    if ((char)param_1[7] != '\0') {
-      uVar1 = (*(code *)(*(int *)(*param_1 + 0x1c)))(param_1);
-      FUN_0010a3e8(param_1[8],*(int **)(param_1[8] + 0x10),uVar1,1);
-      uVar1 = (*(code *)(*(int *)(*param_1 + 0x18)))(param_1);
-      FUN_0010a3e8(param_1[8],*(int **)(param_1[8] + 0x10),uVar1,2);
-      (**(code **)(**(int **)(param_1[8] + 0x10) + 0x18))(*(int **)(param_1[8] + 0x10),1);
-      (**(code **)(**(int **)(param_1[8] + 0x10) + 0x58))(*(int **)(param_1[8] + 0x10),param_1[2]);
-    }
-    (*(code *)(*(int *)(*param_1 + 0x10)))
-              (param_1,*(undefined4 *)(param_1[8] + 0xc),*(undefined4 *)(param_1[8] + 0x10));
-    iVar3 = 0;
-    while (piVar2 = (int *)list_get_entry((int *)param_1[9],iVar3), piVar2 != (int *)0x0) {
-      FUN_00107d24(piVar2);
-      iVar3 = iVar3 + 1;
-    }
-    (*(code *)(*(int *)(*param_1 + 0xc)))
-              (param_1,*(undefined4 *)(param_1[8] + 0xc),*(undefined4 *)(param_1[8] + 0x10));
-                    /* WARNING: Could not recover jumptable at 0x00107e40. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-    (**(code **)(**(int **)(param_1[8] + 0x10) + 0x80))();
-    return;
+  ScreenStack *owner = (ScreenStack *)element->owner;
+  UIElement *child;
+  int32 i;
+
+  if (element->visible == 0)
+    return 0;
+  if (element->hasBackground != 0) {
+    FUN_0010a3e8((int32)owner,(int *)owner->graphics,(*(code *)*(int32 *)(element->vtable + 0x1c))(element),1);
+    FUN_0010a3e8((int32)owner,(int *)owner->graphics,(*(code *)*(int32 *)(element->vtable + 0x18))(element),2);
+    (*owner->graphics->pvt->SetFillMode)(owner->graphics,1);
+    (*owner->graphics->pvt->DrawRect)(owner->graphics,element->rect);
   }
-  return;
+  (*(code *)*(int32 *)(element->vtable + 0x10))(element,owner->display,owner->graphics);
+  for (i = 0; (child = (UIElement *)list_get_entry(element->children,i)) != (UIElement *)0x0; i++)
+    ui_element_draw(child);
+  (*(code *)*(int32 *)(element->vtable + 0xc))(element,owner->display,owner->graphics);
+  return (*owner->graphics->pvt->Flush)(owner->graphics);
 }
+
 
 /* ==== 0x00107E48  (file offset 0x07E48)  FUN_00107e48 ================================================ */
 void FUN_00107e48(undefined4 param_1,int param_2)
@@ -5456,19 +5409,20 @@ void * FUN_00107ecc(undefined4 param_1,undefined4 param_2)
   return pvVar3;
 }
 
-/* ==== 0x00107F58  (file offset 0x07F58)  FUN_00107f58 ================================================ */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x0010165C, 0x001016A0, 0x001016C0, 0x001016E0, 0x00101700, 0x00101724): written from
-   its disassembly. */
-uint FUN_00107f58(int param_1)
+/* ==== 0x00107F58  (file offset 0x07F58)  ui_element_get_border_color ================================= */
+/* GUESS: name. Vtable slot 7 (+0x1c) of every UI class: the element's border colour (+0x18, the outline of its background in ui_element_draw), its own
+   when set, else its parent's (the same slot of the parent's vtable: the binary's tail call), else
+   0xFF000000 when it has no parent. The colours are 0xAARRGGBB words; -1 means "not set" (ui_element_create
+   sets all three to -1). Ghidra has no function here (only reached through the vtables); written from its
+   disassembly (0x00107f58). */
+uint32 ui_element_get_border_color(UIElement *element)
 
 {
-  if (*(int *)(param_1 + 0x18) != -1) {
-    return *(uint *)(param_1 + 0x18);
-  }
-  if (*(int **)(param_1 + 0x2c) == (int *)0x0) {
-    return 0xff000000;
-  }
-  return (*(code *)*(int *)(**(int **)(param_1 + 0x2c) + 0x1c))(*(int **)(param_1 + 0x2c));   /* the parent's */
+  if (element->borderColor != 0xffffffffu)
+    return element->borderColor;
+  if (element->parent == (UIElement *)0x0)
+    return 0xff000000u;
+  return (uint32)(*(code *)*(int32 *)(element->parent->vtable + 0x1c))(element->parent);
 }
 
 
@@ -5530,35 +5484,37 @@ undefined4 FUN_00107fec(int param_1,undefined4 param_2)
   return local_10;
 }
 
-/* ==== 0x00108048  (file offset 0x08048)  FUN_00108048 ================================================ */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x0010165C, 0x001016A0, 0x001016C0, 0x001016E0, 0x00101700, 0x00101724): written from
-   its disassembly. */
-uint FUN_00108048(int param_1)
+/* ==== 0x00108048  (file offset 0x08048)  ui_element_get_secondary_color ============================== */
+/* GUESS: name. Vtable slot 6 (+0x18) of every UI class: the element's secondary colour (+0x14, the fill of its background in ui_element_draw), its own
+   when set, else its parent's (the same slot of the parent's vtable: the binary's tail call), else
+   0xFFEBEBF7 when it has no parent. The colours are 0xAARRGGBB words; -1 means "not set" (ui_element_create
+   sets all three to -1). Ghidra has no function here (only reached through the vtables); written from its
+   disassembly (0x00108048). */
+uint32 ui_element_get_secondary_color(UIElement *element)
 
 {
-  if (*(int *)(param_1 + 0x14) != -1) {
-    return *(uint *)(param_1 + 0x14);
-  }
-  if (*(int **)(param_1 + 0x2c) == (int *)0x0) {
+  if (element->secondaryColor != 0xffffffffu)
+    return element->secondaryColor;
+  if (element->parent == (UIElement *)0x0)
     return WORD_HEXADECIMAL_FFEBEBF7;
-  }
-  return (*(code *)*(int *)(**(int **)(param_1 + 0x2c) + 0x18))(*(int **)(param_1 + 0x2c));   /* the parent's */
+  return (uint32)(*(code *)*(int32 *)(element->parent->vtable + 0x18))(element->parent);
 }
 
 
-/* ==== 0x0010807C  (file offset 0x0807C)  FUN_0010807c ================================================ */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x0010165C, 0x001016A0, 0x001016C0, 0x001016E0, 0x00101700, 0x00101724): written from
-   its disassembly. */
-uint FUN_0010807c(int param_1)
+/* ==== 0x0010807C  (file offset 0x0807C)  ui_element_get_primary_color ================================ */
+/* GUESS: name. Vtable slot 5 (+0x14) of every UI class: the element's primary colour (+0x10, restyled by ui_element_handle_key), its own
+   when set, else its parent's (the same slot of the parent's vtable: the binary's tail call), else
+   0xFF000000 when it has no parent. The colours are 0xAARRGGBB words; -1 means "not set" (ui_element_create
+   sets all three to -1). Ghidra has no function here (only reached through the vtables); written from its
+   disassembly (0x0010807c). */
+uint32 ui_element_get_primary_color(UIElement *element)
 
 {
-  if (*(int *)(param_1 + 0x10) != -1) {
-    return *(uint *)(param_1 + 0x10);
-  }
-  if (*(int **)(param_1 + 0x2c) == (int *)0x0) {
-    return 0xff000000;
-  }
-  return (*(code *)*(int *)(**(int **)(param_1 + 0x2c) + 0x14))(*(int **)(param_1 + 0x2c));   /* the parent's */
+  if (element->primaryColor != 0xffffffffu)
+    return element->primaryColor;
+  if (element->parent == (UIElement *)0x0)
+    return 0xff000000u;
+  return (uint32)(*(code *)*(int32 *)(element->parent->vtable + 0x14))(element->parent);
 }
 
 
@@ -5800,7 +5756,7 @@ bool FUN_001084e4(undefined4 param_1,undefined4 param_2,int param_3)
    to its owner (FUN_00101ad8). Any other key is looked up in the element's key map (list_find_entry);
    without a match it goes to the element's listener (vtable +8), with one the found element gets the
    focus (FUN_00105224). Finally the element's two colours are set from its type and state (unless flag
-   bit 1 is set), and it is redrawn (FUN_00107d24) if anything changed. Returns 1 when the key was
+   bit 1 is set), and it is redrawn (ui_element_draw) if anything changed. Returns 1 when the key was
    handled. The element constructor (FUN_0010bba0) calls it with AVK_UNDEFINED just to set the colours. */
 int32 ui_element_handle_key(UIElement *element,int32 eventCode,int32 keyCode,int32 keyParameter)
 
@@ -5866,7 +5822,7 @@ int32 ui_element_handle_key(UIElement *element,int32 eventCode,int32 keyCode,int
     }
   }
   if (redraw)
-    FUN_00107d24((int32 *)element);
+    ui_element_draw(element);
   return handled;
 }
 
@@ -5880,10 +5836,12 @@ int FUN_0010872c(int param_1)
 }
 
 
-/* ==== 0x00108734  (file offset 0x08734)  FUN_00108734 ================================================ */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x001016C0, 0x00101724): written from
-   its disassembly. */
-int FUN_00108734(int param_1)
+/* ==== 0x00108734  (file offset 0x08734)  ui_element_handle_key_nothing =============================== */
+/* GUESS: name. The key handler (vtable slot 2, +0x08) of the base UI element (VTABLE_00101724) and of
+   VTABLE_001016C0: returns 0, "not handled" (0x00108734); FUN_0010873c then offers the key to the
+   children. Called with the element, the event and the key. Ghidra has no function here (only reached
+   through the vtables); written from its disassembly. */
+int32 ui_element_handle_key_nothing(int32 element,int32 eventCode,int32 keyCode)
 
 {
   return 0;
@@ -6082,7 +6040,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
       FUN_00109f00(iVar8,uVar4);
     }
 LAB_00108a4c:
-    FUN_00107d24(piVar1);
+    ui_element_draw((UIElement *)piVar1);
     break;
   case 0x6:
     iVar8 = progress_score(*(int *)(*param_1 + 0xa8));
@@ -6139,7 +6097,7 @@ bool FUN_00108e8c(int param_1)
   if (bVar1) {
     *(int *)(param_1 + 0x38) = iVar2;
     FUN_0010a214(param_1);
-    FUN_00107d24(param_1);
+    ui_element_draw((UIElement *)param_1);
   }
   return bVar1;
 }
@@ -6159,7 +6117,7 @@ bool FUN_00108ed8(int param_1)
       *(undefined4 *)(param_1 + 0x38) = 0;
     }
     FUN_0010a214(param_1);
-    FUN_00107d24(param_1);
+    ui_element_draw((UIElement *)param_1);
   }
   return 0 < iVar1;
 }
@@ -6232,7 +6190,7 @@ void screen_stack_close_top(ScreenStack *stack,int32 redraw)
         FUN_00120450(app->pObj94);
       (*(code *)(*(int32 *)(*screen + 0x20)))(screen);   /* resume: vtable +0x20 */
       if (redraw)
-        FUN_00107d24(screen);
+        ui_element_draw((UIElement *)screen);
     }
   }
   if (app->field_d4 == (uint32)screen_stack_top(stack))
@@ -6250,7 +6208,7 @@ void screen_stack_open(ScreenStack *stack,int32 *screen)
     return;
   stack->depth = list_set_entry(stack->screens,stack->depth,(int32)screen);
   (*(code *)(*(int32 *)(*screen + 0x20)))(screen);   /* resume: vtable +0x20 */
-  FUN_00107d24(screen);
+  ui_element_draw((UIElement *)screen);
 }
 
 /* ==== 0x001090FC  (file offset 0x090FC)  list_set_entry ============================================== */
@@ -7463,7 +7421,7 @@ int * FUN_0010ac6c(int *param_1,int param_2)
   if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(0x68), param_1 != (int *)0x0)) {
     param_1[1] = param_2;
     param_1[2] = *(int *)(param_2 + 0x98);
-    iVar1 = FUN_0010be6c(0,0x10,0x10);
+    iVar1 = (int)list_create((UIList *)0x0,0x10,0x10);
     param_1[0xd] = iVar1;
     param_1[0xe] = 0;
     puVar2 = *(undefined4 **)(param_1[1] + 0x14);
@@ -7488,7 +7446,7 @@ int * FUN_0010ac6c(int *param_1,int param_2)
     *param_1 = param_2;
     param_1[6] = 0;
     param_1[0xf] = 0;
-    iVar5 = FUN_0010be6c(0,0x10,0x10);
+    iVar5 = (int)list_create((UIList *)0x0,0x10,0x10);
     iVar7 = (int32)DATA_AT_00127AA0;
     param_1[0x10] = iVar5;
     memcpy_word_aligned(local_4c,iVar7,0x30);
@@ -7693,14 +7651,14 @@ int * FUN_0010b2dc(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
   bool bVar5;
   
   if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(0x50), param_1 != (int *)0x0)) {
-    FUN_0010c168(param_1,param_2,param_3,param_4,param_5,param_6);
+    ui_element_create(param_1,param_2,param_3,param_4,param_5,param_6);
     *param_1 = (int32)VTABLE_001016A0;
     if (param_7 == 0) {
       param_7 = FUN_0010ba08(0,6);
     }
     param_1[0xd] = param_7;
     param_1[0xe] = 0;
-    iVar1 = FUN_0010be6c(0,0x10,0x10);
+    iVar1 = (int)list_create((UIList *)0x0,0x10,0x10);
     param_1[0xc] = iVar1;
     iVar1 = INTEGER_5000;
     if (param_5 != 0) {
@@ -7868,7 +7826,7 @@ FUN_0010b650(int *param_1,undefined4 param_2,int param_3,int param_4,undefined4 
      )) {
     local_30 = param_5;
     local_2c = param_6;
-    FUN_0010c168(param_1,param_2,param_3,param_4,(short)param_5,param_6);
+    ui_element_create(param_1,param_2,param_3,param_4,(short)param_5,param_6);
     *param_1 = (int32)VTABLE_001016C0;
     param_1[0x10] = param_8;
     param_1[0xe] = 0;
@@ -8103,7 +8061,7 @@ int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
   undefined8 uVar6;
   
   if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(0x70), param_1 != (int *)0x0)) {
-    FUN_0010c168(param_1,(undefined2)param_2,(undefined2)param_3,(undefined2)param_4,
+    ui_element_create(param_1,(undefined2)param_2,(undefined2)param_3,(undefined2)param_4,
                  (undefined2)param_5,param_6);
     *param_1 = (int32)VTABLE_001016E0;
     param_1[0xd] = param_7;
@@ -8146,7 +8104,7 @@ int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
     }
     *(undefined1 *)(param_1 + 0x13) = param_9;
     ui_element_add_child((int)param_1,param_1[0xc],0);
-    puVar3 = FUN_0010be6c((undefined4 *)0x0,0x10,0x10);
+    puVar3 = (undefined4 *)list_create((UIList *)0x0,0x10,0x10);
     param_1[0x18] = (int)puVar3;
     param_1[0x17] = 1;
     ui_element_handle_key((int)param_1,0x7000,INTEGER_57360,0);
@@ -8162,7 +8120,7 @@ int * FUN_0010bd7c(int *param_1,int *param_2,undefined1 param_3)
   undefined4 *puVar2;
   
   if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(0x48), param_1 != (int *)0x0)) {
-    FUN_0010c168(param_1,0,0,(int)*(short *)(param_2[5] + 4),(int)*(short *)(param_2[5] + 6),param_2
+    ui_element_create(param_1,0,0,(int)*(short *)(param_2[5] + 4),(int)*(short *)(param_2[5] + 6),param_2
                 );
     *param_1 = (int32)VTABLE_00101700;
     param_1[0x11] = *param_2;
@@ -8196,24 +8154,25 @@ int * FUN_0010be14(int *param_1)
   return param_1;
 }
 
-/* ==== 0x0010BE6C  (file offset 0x0BE6C)  FUN_0010be6c ================================================ */
-undefined4 * FUN_0010be6c(undefined4 *param_1,int param_2,undefined4 param_3)
+/* ==== 0x0010BE6C  (file offset 0x0BE6C)  list_create ================================================= */
+/* GUESS: name. A list's constructor: allocates its 0x14 bytes when `list` is 0 (returns 0 when out of
+   memory), then two arrays of `capacity` words (the ids and the entries), and starts it empty; it grows by
+   `growBy` entries when full (list_set_entry). Every UI element's child list is list_create(0, 16, 16)
+   (ui_element_create); the others make the screen stack's list (+0x34, FUN_0010ac6c), a UI element's key
+   map (+0x60, FUN_0010bba0) and lists at +0x30 (FUN_0010b2dc) and +0x34 / a local in FUN_0010ac6c. */
+UIList * list_create(UIList *list,int32 capacity,int32 growBy)
 
 {
-  void *pvVar1;
-  
-  if ((param_1 != (undefined4 *)0x0) ||
-     (param_1 = helper_malloc_2(0x14), param_1 != (undefined4 *)0x0)) {
-    param_1[3] = param_2;
-    param_1[4] = param_3;
-    pvVar1 = helper_malloc(param_2 << 2);
-    param_1[1] = pvVar1;
-    pvVar1 = helper_malloc(param_2 << 2);
-    param_1[2] = pvVar1;
-    *param_1 = 0;
-  }
-  return param_1;
+  if (list == (UIList *)0x0 && (list = helper_malloc_2(0x14)) == (UIList *)0x0)
+    return list;
+  list->capacity = capacity;
+  list->growBy = growBy;
+  list->ids = helper_malloc(capacity << 2);
+  list->entries = helper_malloc(capacity << 2);
+  list->count = 0;
+  return list;
 }
+
 
 /* ==== 0x0010BEC4  (file offset 0x0BEC4)  FUN_0010bec4 ================================================ */
 undefined8 FUN_0010bec4(int *param_1,int param_2,int param_3,int param_4)
@@ -8320,35 +8279,36 @@ LAB_0010c0cc:
   return MAKE_WORDS(uVar8,local_30,param_1);
 }
 
-/* ==== 0x0010C168  (file offset 0x0C168)  FUN_0010c168 ================================================ */
-int * FUN_0010c168(int *param_1,undefined2 param_2,undefined2 param_3,undefined2 param_4,
-                  undefined2 param_5,int param_6)
+/* ==== 0x0010C168  (file offset 0x0C168)  ui_element_create =========================================== */
+/* GUESS: name. The base UI element's constructor: allocates the 0x30 bytes of a plain element when
+   `element` is 0 (returns 0 when out of memory), installs VTABLE_00101724 and sets the owner screen, the
+   rectangle (x, y, width, height), an empty child list (16 entries, growing by 16), the three colours to
+   -1 ("not set": the parent's), no parent, no background, visible. Every other UI class's constructor
+   calls it first and then installs its own vtable (FUN_0010bba0, FUN_0010bd7c, ...); FUN_00101ad8 makes
+   plain elements with it as containers. */
+UIElement * ui_element_create(UIElement *element,int16 x,int16 y,int16 width,int16 height,int32 *owner)
 
 {
-  undefined2 *puVar1;
-  int iVar2;
-  
-  if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(0x30), param_1 != (int *)0x0)) {
-    *param_1 = (int32)VTABLE_00101724;
-    param_1[8] = param_6;
-    puVar1 = helper_malloc_2(8);
-    param_1[2] = (int)puVar1;
-    *puVar1 = param_2;
-    *(undefined2 *)(param_1[2] + 2) = param_3;
-    *(undefined2 *)(param_1[2] + 4) = param_4;
-    *(undefined2 *)(param_1[2] + 6) = param_5;
-    param_1[10] = 0;
-    iVar2 = FUN_0010be6c(0,0x10,0x10);
-    param_1[9] = iVar2;
-    param_1[4] = -1;
-    param_1[0xb] = 0;
-    param_1[5] = -1;
-    param_1[6] = -1;
-    *(undefined1 *)(param_1 + 7) = 0;
-    *(undefined1 *)(param_1 + 1) = 1;
-  }
-  return param_1;
+  if (element == (UIElement *)0x0 && (element = helper_malloc_2(0x30)) == (UIElement *)0x0)
+    return element;
+  element->vtable = (int32)VTABLE_00101724;
+  element->owner = owner;
+  element->rect = helper_malloc_2(8);
+  element->rect->x = x;
+  element->rect->y = y;
+  element->rect->dx = width;
+  element->rect->dy = height;
+  element->nextAutomaticId = 0;
+  element->children = list_create((UIList *)0x0,0x10,0x10);
+  element->primaryColor = 0xffffffffu;
+  element->parent = (UIElement *)0x0;
+  element->secondaryColor = 0xffffffffu;
+  element->borderColor = 0xffffffffu;
+  element->hasBackground = 0;
+  element->visible = 1;
+  return element;
 }
+
 
 /* ==== 0x0010C218  (file offset 0x0C218)  FUN_0010c218 ================================================ */
 undefined4 * FUN_0010c218(undefined4 *param_1,undefined4 *param_2)
@@ -25202,7 +25162,7 @@ LAB_001243b0:
       if (*(int *)(param_1 + 0xcc) == 0x10) {
         piVar5[4] = WORD_HEXADECIMAL_FFEFEFEF;
       }
-      FUN_00107d24(piVar5);
+      ui_element_draw((UIElement *)piVar5);
     }
     iVar7 = *(int *)(param_1 + 0xcc);
     if (iVar7 == 0xe) {
@@ -25249,7 +25209,7 @@ LAB_00124540:
     }
     goto LAB_00124540;
   }
-  FUN_00107d24(piVar5);
+  ui_element_draw((UIElement *)piVar5);
 LAB_00124580:
   iVar6 = (*g_pHelperFuncs->aee_GetUpTimeMS)();
   if (0xfa < iVar6 - *(int *)(param_1 + 0xac)) {

@@ -462,7 +462,7 @@ void FUN_00106fb0(int *param_1,undefined4 param_2,int *param_3);
 void FUN_00107230(int *param_1,undefined4 param_2,int *param_3);
 void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,undefined4 param_6, int param_7);
 void FUN_00107adc(int param_1,int param_2,undefined4 param_3,int *param_4,short *param_5, undefined4 param_6,uint param_7,short param_8);
-void FUN_00107d24(int *param_1);
+int32 ui_element_draw(UIElement *element);   /* 0x00107D24 GUESS: name, see kh_mod.c */
 void FUN_00107e48(undefined4 param_1,int param_2);
 int32 list_get_entry(UIList *list,int32 index);   /* 0x00107EA4 GUESS: name, see kh_mod.c */
 int32 ui_element_find_child(UIElement *element,int32 id);   /* 0x00107EC4 GUESS: name */
@@ -540,9 +540,9 @@ Intro * intro_create(Intro *intro,int32 atTitle,int32 *error);   /* 0x0010BB2C G
 int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,int param_6,int param_7,int param_8,undefined1 param_9);
 int * FUN_0010bd7c(int *param_1,int *param_2,undefined1 param_3);
 int * FUN_0010be14(int *param_1);
-undefined4 * FUN_0010be6c(undefined4 *param_1,int param_2,undefined4 param_3);
+UIList * list_create(UIList *list,int32 capacity,int32 growBy);   /* 0x0010BE6C GUESS: name, see kh_mod.c */
 undefined8 FUN_0010bec4(int *param_1,int param_2,int param_3,int param_4);
-int * FUN_0010c168(int *param_1,undefined2 param_2,undefined2 param_3,undefined2 param_4, undefined2 param_5,int param_6);
+UIElement * ui_element_create(UIElement *element,int16 x,int16 y,int16 width,int16 height,int32 *owner);   /* 0x0010C168 GUESS: name, see kh_mod.c */
 undefined4 * FUN_0010c218(undefined4 *param_1,undefined4 *param_2);
 void FUN_0010c2a8(int *param_1,int param_2);
 void FUN_0010c2c4(int *param_1,int param_2);
@@ -566,15 +566,15 @@ void FUN_0010cda4(int param_1,int param_2);
 void FUN_0010cdd8(int param_1,int param_2);
 void screen_resume_nothing(int32 screen);   /* 0x001052DC (no Ghidra function; a virtual method) */
 void FUN_00105c98(int param_1);   /* 0x00105C98 (no Ghidra function; a virtual method) */
-void FUN_00105de4(int param_1);   /* 0x00105DE4 (no Ghidra function; a virtual method) */
-void FUN_00106fa8(int param_1);   /* 0x00106FA8 (no Ghidra function; a virtual method) */
+void ui_element_destroy(UIElement *element);   /* 0x00105DE4 (no Ghidra function; a virtual method) */
+void ui_element_draw_nothing(int32 element,int32 display,int32 graphics);   /* 0x00106FA8 (no Ghidra function; a virtual method) */
 void ui_element_method_04_nothing(int32 element);   /* 0x00106FAC (no Ghidra function; a virtual method) */
 void ui_element_draw_over_children_nothing(int32 element,int32 display,int32 graphics);   /* 0x001077CC (no Ghidra function; a virtual method) */
-uint FUN_00107f58(int param_1);   /* 0x00107F58 (no Ghidra function; a virtual method) */
-uint FUN_00108048(int param_1);   /* 0x00108048 (no Ghidra function; a virtual method) */
-uint FUN_0010807c(int param_1);   /* 0x0010807C (no Ghidra function; a virtual method) */
+uint32 ui_element_get_border_color(UIElement *element);   /* 0x00107F58 (no Ghidra function; a virtual method) */
+uint32 ui_element_get_secondary_color(UIElement *element);   /* 0x00108048 (no Ghidra function; a virtual method) */
+uint32 ui_element_get_primary_color(UIElement *element);   /* 0x0010807C (no Ghidra function; a virtual method) */
 int FUN_0010872c(int param_1);   /* 0x0010872C (no Ghidra function; a virtual method) */
-int FUN_00108734(int param_1);   /* 0x00108734 (no Ghidra function; a virtual method) */
+int32 ui_element_handle_key_nothing(int32 element,int32 eventCode,int32 keyCode);   /* 0x00108734 (no Ghidra function; a virtual method) */
 int FUN_001136c0(int param_1);   /* 0x001136C0 (no Ghidra function; a virtual method) */
 int FUN_00119af4(int param_1);   /* 0x00119AF4 (no Ghidra function; a virtual method) */
 void FUN_0011f260(int param_1);   /* 0x0011F260 (no Ghidra function; a virtual method) */
@@ -1961,9 +1961,9 @@ static code *const VTABLE_0010165C[9] = {   /* 0x0010165C; in kh.mod each entry 
   (code *)FUN_00108414,
   (code *)ui_element_draw_over_children_nothing,
   (code *)FUN_00106398,
-  (code *)FUN_0010807c,
-  (code *)FUN_00108048,
-  (code *)FUN_00107f58,
+  (code *)ui_element_get_primary_color,
+  (code *)ui_element_get_secondary_color,
+  (code *)ui_element_get_border_color,
   (code *)FUN_001051d4
 };
 static code *const VTABLE_00101680[8] = {   /* 0x00101680; in kh.mod each entry is the method's offset from
@@ -1984,20 +1984,20 @@ static code *const VTABLE_001016A0[8] = {   /* 0x001016A0; in kh.mod each entry 
   (code *)FUN_001084e4,
   (code *)FUN_00106fb0,
   (code *)FUN_0010673c,
-  (code *)FUN_0010807c,
-  (code *)FUN_00108048,
-  (code *)FUN_00107f58
+  (code *)ui_element_get_primary_color,
+  (code *)ui_element_get_secondary_color,
+  (code *)ui_element_get_border_color
 };
 static code *const VTABLE_001016C0[8] = {   /* 0x001016C0; in kh.mod each entry is the method's offset from
                                                 the table */
   (code *)FUN_00105d48,
   (code *)ui_element_method_04_nothing,
-  (code *)FUN_00108734,
+  (code *)ui_element_handle_key_nothing,
   (code *)ui_element_draw_over_children_nothing,
   (code *)FUN_00106a94,
-  (code *)FUN_0010807c,
-  (code *)FUN_00108048,
-  (code *)FUN_00107f58
+  (code *)ui_element_get_primary_color,
+  (code *)ui_element_get_secondary_color,
+  (code *)ui_element_get_border_color
 };
 static code *const VTABLE_001016E0[8] = {   /* 0x001016E0; in kh.mod each entry is the method's offset from
                                                 the table */
@@ -2006,9 +2006,9 @@ static code *const VTABLE_001016E0[8] = {   /* 0x001016E0; in kh.mod each entry 
   (code *)ui_element_handle_key,
   (code *)FUN_00107230,
   (code *)FUN_00106bd4,
-  (code *)FUN_0010807c,
-  (code *)FUN_00108048,
-  (code *)FUN_00107f58
+  (code *)ui_element_get_primary_color,
+  (code *)ui_element_get_secondary_color,
+  (code *)ui_element_get_border_color
 };
 static code *const VTABLE_00101700[9] = {   /* 0x00101700; in kh.mod each entry is the method's offset from
                                                 the table */
@@ -2017,21 +2017,21 @@ static code *const VTABLE_00101700[9] = {   /* 0x00101700; in kh.mod each entry 
   (code *)FUN_0010872c,
   (code *)ui_element_draw_over_children_nothing,
   (code *)FUN_00106e44,
-  (code *)FUN_0010807c,
-  (code *)FUN_00108048,
-  (code *)FUN_00107f58,
+  (code *)ui_element_get_primary_color,
+  (code *)ui_element_get_secondary_color,
+  (code *)ui_element_get_border_color,
   (code *)screen_resume_nothing
 };
 static code *const VTABLE_00101724[8] = {   /* 0x00101724; in kh.mod each entry is the method's offset from
                                                 the table */
-  (code *)FUN_00105de4,
+  (code *)ui_element_destroy,
   (code *)ui_element_method_04_nothing,
-  (code *)FUN_00108734,
+  (code *)ui_element_handle_key_nothing,
   (code *)ui_element_draw_over_children_nothing,
-  (code *)FUN_00106fa8,
-  (code *)FUN_0010807c,
-  (code *)FUN_00108048,
-  (code *)FUN_00107f58
+  (code *)ui_element_draw_nothing,
+  (code *)ui_element_get_primary_color,
+  (code *)ui_element_get_secondary_color,
+  (code *)ui_element_get_border_color
 };
 
 #endif /* KH_MOD_H */

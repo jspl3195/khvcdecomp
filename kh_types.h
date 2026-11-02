@@ -95,7 +95,11 @@ typedef struct UIList {
  * when it becomes the top again (screen_stack_close_top). */
 typedef struct ScreenStack {
     struct KHApp *app;            /* +0x00 */
-    uint8  unknown_04[0x30];
+    uint8  unknown_04[0x08];
+    IDisplay *display;            /* +0x0c passed to the elements' draw methods (ui_element_draw); GUESS: the
+                                     IDisplay */
+    IGraphics *graphics;          /* +0x10 what the elements draw with (ui_element_draw, FUN_0010a3e8) */
+    uint8  unknown_14[0x20];
     UIList *screens;              /* +0x34 the open screens, by position */
     int32    depth;                 /* +0x38 how many screens are open */
 } ScreenStack;
@@ -115,11 +119,19 @@ typedef struct KeyOption {
 } KeyOption;                      /* 0x10 bytes; the Controls screen links 13 of them in a ring */
 
 typedef struct UIElement {
-    uint8  unknown_00[0x0c];
+    int32    vtable;                /* +0x00 its class's vtable (VTABLE_00101724 for a plain element) */
+    uint8  visible;               /* +0x04 drawn only when set (FUN_00107d24); 1 from ui_element_create */
+    uint8  unknown_05[0x03];
+    AEERect *rect;                /* +0x08 its rectangle (allocated by ui_element_create) */
     int32    id;                    /* +0x0c its id among its parent's children (ui_element_add_child) */
-    uint32 primaryColor;          /* +0x10 set by ui_element_handle_key for each type and state */
-    uint32 secondaryColor;        /* +0x14 */
-    uint8  unknown_18[0x08];
+    uint32 primaryColor;          /* +0x10 set by ui_element_handle_key for each type and state; -1: the
+                                     parent's (ui_element_get_primary_color) */
+    uint32 secondaryColor;        /* +0x14 the fill of its background; -1: the parent's
+                                     (ui_element_get_secondary_color) */
+    uint32 borderColor;           /* +0x18 the outline of its background; -1: the parent's
+                                     (ui_element_get_border_color) */
+    uint8  hasBackground;         /* +0x1c FUN_00107d24 paints its rectangle (secondary fill, border outline) */
+    uint8  unknown_1d[0x03];
     int32   *owner;                 /* +0x20 the menu (screen) it belongs to; FUN_00101ad8 handles its events */
     UIList *children;             /* +0x24 its children, by id (ui_element_find_child) */
     int32    nextAutomaticId;       /* +0x28 counts down from 0: the ids -1, -2, ... given to children
