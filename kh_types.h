@@ -334,7 +334,8 @@ typedef struct Animations {
     uint8  unknown_008[0x04];
     int    worldTime;             /* +0x00c the time the controllers are set at */
     int    userIds[100];          /* +0x010 the controllers' user ids; -1 = free slot */
-    int    durations[100];        /* +0x1a0 the longest keyframe sequence of each controller */
+    int    durations[100];        /* +0x1a0 the longest keyframe sequence of each controller
+                                     (animations_get_duration) */
     uint8  states[100];           /* +0x330 1 added, 2 played, 3 played with `loop` set (GUESS: looping);
                                      callers also test for 4 (set elsewhere; GUESS: finished) */
     uint8  modes[100];            /* +0x394 2 when added (animations_get_mode / animations_set_mode) */

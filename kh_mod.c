@@ -9714,7 +9714,7 @@ undefined4 FUN_0010d7c4(int param_1,int param_2)
       FUN_0011cb34(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x94),&local_2c);
       FUN_0011e530(*(undefined4 *)(param_1 + 0x20),local_2c,0x3f800000);
       FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x48),0);
-      iVar1 = FUN_001135b8(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),
+      iVar1 = animations_get_duration((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),
                            *(undefined4 *)(param_1 + 0x48));
       *(int *)(param_1 + 0x16c) = iVar1 + param_2;
       if (*(int *)(param_1 + 0x104) == 0xb) {
@@ -15062,14 +15062,14 @@ void FUN_00113524(undefined4 *param_1,int param_2)
   return;
 }
 
-/* ==== 0x001135B8  (file offset 0x135B8)  FUN_001135b8 ================================================ */
-undefined4 FUN_001135b8(int param_1,int param_2)
+/* ==== 0x001135B8  (file offset 0x135B8)  animations_get_duration ===================================== */
+/* GUESS: name. The duration of animation `index` (Animations.durations: its controller's longest
+   keyframe sequence), or 0 for a negative index or a free slot. Callers add it to the current time to
+   wait for the animation to end (FUN_0010d7c4, FUN_0012059c, FUN_00121c6c). */
+int animations_get_duration(Animations *animations,int index)
 
 {
-  if ((-1 < param_2) && (param_1 = param_1 + param_2 * 4, *(int *)(param_1 + 0x10) != -1)) {
-    return *(undefined4 *)(param_1 + 0x1a0);
-  }
-  return 0;
+  return index >= 0 && animations->userIds[index] != -1 ? animations->durations[index] : 0;
 }
 
 /* ==== 0x001135DC  (file offset 0x135DC)  FUN_001135dc ================================================ */
@@ -26763,7 +26763,7 @@ bool FUN_0012059c(int param_1,int param_2)
     animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 0x58),0)
     ;
     FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x54),0);
-    iVar1 = FUN_001135b8(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),
+    iVar1 = animations_get_duration((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),
                          *(undefined4 *)(param_1 + 0x54));
     *(int *)(param_1 + 0x170) = iVar1 + param_2;
     uVar2 = 0x66;
@@ -27835,7 +27835,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3,uint param_4)
     if ((*(int *)(param_1 + 0x4c) != -1) &&
        (cVar1 = animations_get_state((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
        cVar1 != '\x04')) {
-      iVar4 = FUN_001135b8(*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c));
+      iVar4 = animations_get_duration((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c));
       iVar4 = iVar4 + *(int *)(param_1 + 0x88);
 LAB_001222f0:
       *(int *)(param_1 + 0x88) = iVar4;

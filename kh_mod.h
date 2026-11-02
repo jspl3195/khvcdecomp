@@ -628,7 +628,7 @@ undefined8 FUN_00113374(undefined4 param_1,uint param_2,uint param_3,uint param_
 void FUN_00113474(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);
 void FUN_00113490(undefined4 *param_1,int param_2);
 void FUN_00113524(undefined4 *param_1,int param_2);
-undefined4 FUN_001135b8(int param_1,int param_2);
+int animations_get_duration(Animations *animations,int index);   /* 0x001135B8 GUESS: name */
 void FUN_001135dc(int param_1);
 uint FUN_00113654(undefined4 param_1,int param_2);
 undefined4 FUN_001136c8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param_4, undefined4 *param_5,undefined4 param_6);
