@@ -27807,10 +27807,22 @@ void FUN_00122b90(int param_1,int param_2,uint param_3,undefined4 param_4)
 /* GUESS: name. One update of a region (`now` is the current time and `elapsed` the time passed since the last update, in ms): resets its
    enemies when asked (field_148), runs the wave state machine, updates every enemy (vtable +4,
    enemy_update), then its item drops: the binary tail-jumps (0x00123124) to FUN_001226e8 with
-   region->itemDrops; Ghidra copied that code in, and it is kept below as Ghidra wrote it. */
+   region->itemDrops, whose code is written inline below (from its disassembly): each item's time runs
+   down and it disappears at 0; one within 1.0 of the player (|dx| + |dy|, a double compare: `bcs` at
+   0x001227b8, written after the comma) is picked up: health + 1.0, MP + 1 or munny, by its kind, and
+   the tutorial screen is told (field_594, FUN_00108f28 with 5); in its last 5000 ms an item blinks
+   (shown while time % 200 >= 100; FUN_00100288 divides, the remainder in the high word). */
 void combat_region_update(CombatRegion *region,int now,int elapsed)
 
 {
+  ItemDrops *drops;
+  uint32 player[3];
+  uint32 item[3];
+  uint32 offsetX;
+  uint32 offsetY;
+  uint32 distance;
+  uint32 highWord;   /* r1 after FUN_00126248: the high word of the double it returns in r0:r1 */
+  int visible;
   int i;
 
   FUN_0012407c((int)region,now,elapsed);
@@ -27854,99 +27866,44 @@ void combat_region_update(CombatRegion *region,int now,int elapsed)
   for (i = 0; i < region->enemyCount; i++)
     (*(code *)(*(int *)(region->enemies[i]->vtable + 4) + region->enemies[i]->vtable))
               (region->enemies[i],now,elapsed);   /* vtable +4: enemy_update */
-  /* ---- the code of FUN_001226e8 (the item drops), as Ghidra copied it here ---- */
-  {
-    char cVar1;
-    int iVar2;
-    uint uVar3;
-    uint uVar4;
-    int *piVar5;
-    uint extraout_r1;
-    int iVar6;
-    undefined4 uVar7;
-    int iVar8;
-    undefined1 uVar9;
-    bool bVar10;
-    ulonglong uVar11;
-    uint uStack_3c;
-    uint uStack_38;
-    uint uStack_30;
-    uint uStack_2c;
-
-    piVar5 = (int *)region->itemDrops;
-    level_object_get_position((uint32 *)&uStack_30,(LevelObject *)*(int *)(*(int *)(*piVar5 + 0xa4) + 0x1f8));
-    iVar6 = 0;
-    do {
-      if (0 < piVar5[iVar6 + 0xe]) {
-        iVar2 = piVar5[iVar6 + 0xe] - elapsed;
-        piVar5[iVar6 + 0xe] = iVar2;
-        if (iVar2 < 1) {
-          piVar5[iVar6 + 0xe] = 0;
-        }
-        uVar7 = 1;
-        if (iVar2 < 1) {
-  LAB_00122870:
-          uVar7 = 0;
-        }
-        else {
-          uVar9 = 1;
-          if (*(int *)(piVar5[iVar6 + 1] + 0x150) == 0) {
-            level_object_get_position((uint32 *)&uStack_3c,(LevelObject *)(piVar5[iVar6 + 1]));
-            uVar3 = float_subtract(uStack_30,uStack_3c);
-            uVar4 = float_subtract(uStack_2c,uStack_38);
-            float_compare_less(uVar3,0);
-            if (!(bool)uVar9) {
-              uVar3 = uVar3 ^ 0x80000000;
-            }
-            float_compare_less(uVar4,0);
-            if (!(bool)uVar9) {
-              uVar4 = uVar4 ^ 0x80000000;
-            }
-            uVar3 = float_add(uVar3,uVar4);
-            uVar3 = FUN_00126248(uVar3);
-            FUN_001256b4(uVar3,extraout_r1,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
-            if ((bool)uVar9) {
-              iVar2 = piVar5[iVar6 + 0xe];
-              bVar10 = SBORROW4(iVar2,0x1000);
-              iVar8 = iVar2 + -0x1000;
-              if (0xfff < iVar2) {
-                bVar10 = SBORROW4(iVar8,0x388);
-                iVar8 = iVar2 + -5000;
-              }
-              if (iVar8 < 0 == bVar10) goto LAB_00122874;
-            }
-            else {
-              if ((0 < *(int *)(*(int *)(*piVar5 + 0xa8) + 0x594)) &&
-                 (iVar2 = *(int *)(*piVar5 + 0xbc), iVar2 != 0)) {
-                FUN_00108f28(iVar2,5);
-              }
-              cVar1 = *(char *)((int)piVar5 + iVar6 + 0x2c);
-              if (cVar1 == '\0') {
-                FUN_0010d074(*(int *)(*piVar5 + 0xa8),0x3f800000);
-              }
-              else if (cVar1 == '\x01') {
-                progress_add_magic_points(*(int *)(*piVar5 + 0xa8),1);
-              }
-              else {
-                uVar3 = FUN_001269cc(piVar5[0x18],0x3f800000);
-                uVar3 = FUN_00126858(uVar3);
-                progress_add_munny(*(int *)(*piVar5 + 0xa8),uVar3);
-              }
-              piVar5[iVar6 + 0xe] = 0;
-            }
-            uVar11 = FUN_00100288(200,piVar5[iVar6 + 0xe]);
-            uVar7 = 1;
-            if ((int)(uVar11 >> 0x20) < 100) goto LAB_00122870;
-          }
-        }
-  LAB_00122874:
-        FUN_001201cc(piVar5[iVar6 + 1],uVar7);
+  /* ---- the code of FUN_001226e8 (the item drops), which the binary tail-jumps to (0x00123124) */
+  drops = region->itemDrops;
+  level_object_get_position(player,(LevelObject *)((Game *)drops->app->pGame)->character);
+  for (i = 0; i < 10; i++) {
+    if (drops->timeLeft[i] <= 0)
+      continue;
+    drops->timeLeft[i] -= elapsed;
+    if (drops->timeLeft[i] <= 0) {
+      drops->timeLeft[i] = 0;
+      visible = 0;
+    }
+    else if (*(int *)(drops->entities[i] + 0x150) != 0)
+      visible = 1;
+    else {
+      level_object_get_position(item,(LevelObject *)drops->entities[i]);
+      offsetX = float_subtract(player[0],item[0]);
+      offsetY = float_subtract(player[1],item[1]);
+      if (float_compare_less(offsetX,0), *(float *)&offsetX < 0.0f)
+        offsetX ^= 0x80000000;
+      if (float_compare_less(offsetY,0), *(float *)&offsetY < 0.0f)
+        offsetY ^= 0x80000000;
+      distance = float_add(offsetX,offsetY);
+      if (FUN_001256b4(FUN_00126248(distance),highWord,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD),
+          *(float *)&distance < 1.0f) {       /* within 1.0 of the player: picked up */
+        if (drops->app->progress->field_594 > 0 && drops->app->field_bc != 0)
+          FUN_00108f28((int)drops->app->field_bc,5);
+        if (drops->kinds[i] == 0)
+          FUN_0010d074((int)drops->app->progress,0x3f800000);   /* health + 1.0 */
+        else if (drops->kinds[i] == 1)
+          progress_add_magic_points(drops->app->progress,1);
+        else
+          progress_add_munny(drops->app->progress,FUN_00126858(FUN_001269cc(drops->munnyPerPickup,0x3f800000)));
+        drops->timeLeft[i] = 0;
       }
-      iVar6 = iVar6 + 1;
-      if (9 < iVar6) {
-        return;
-      }
-    } while( true );
+      visible = drops->timeLeft[i] >= 5000 ||               /* the last 5000 ms: blinking */
+                (int)(FUN_00100288(200,drops->timeLeft[i]) >> 32) >= 100;
+    }
+    FUN_001201cc(drops->entities[i],visible);
   }
 }
 
@@ -34545,197 +34502,214 @@ uint32 float_add(uint32 a,uint32 b)
   uint32 callerR3;  /* r3 as the caller left it: what the binary hands the trap handler on the paths
                        that do not set r3 (never initialized, as in the binary) */
   int zeros;
+  int aligned = 0;  /* the magnitudes are aligned, with their hidden bits, for the add or subtract */
+  int tie = 0;      /* the rounded result may be a tie, or overflow */
+  int raises = 0;   /* an exception (raise, 0x001260e4) rather than a denormal result (underflow) */
 
-  if ((~(a << 1) & 0xff000000) == 0 || (~(b << 1) & 0xff000000) == 0)
-    goto special_cases;                      /* an Inf or NaN operand */
-  if ((int)(a ^ b) < 0) {
-    b ^= 0x80000000;
-    goto subtract_magnitudes;                /* a + b = a - (-b) */
-  }
-  goto add_magnitudes;
-
-special_cases:                               /* 0x001263b8 */
-  if ((b << 1) > 0xff000000 || (a << 1) > 0xff000000) {   /* a NaN operand (0x0012658c) */
-    exponent = (a << 1) + 0x800000;          /* above 0xff800000: a signalling NaN */
-    shift = (b << 1) + 0x800000;
-    if (exponent > 0xff800000 || shift > 0xff800000) {
-      control = 0x4000001;               /* a signalling NaN: invalid */
+  if ((~(a << 1) & 0xff000000) == 0 || (~(b << 1) & 0xff000000) == 0) {   /* an Inf or NaN operand */
+    if ((b << 1) > 0xff000000 || (a << 1) > 0xff000000) {   /* a NaN operand (0x0012658c) */
+      exponent = (a << 1) + 0x800000;        /* above 0xff800000: a signalling NaN */
+      shift = (b << 1) + 0x800000;
+      if (exponent <= 0xff800000 && shift <= 0xff800000)
+        return exponent < 0x800000 ? a : b;  /* the first quiet NaN */
+      control = 0x4000001;                        /* a signalling NaN: invalid */
       result = a;
-      goto raise;
+      raises = 1;
     }
-    return exponent < 0x800000 ? a : b;      /* the first quiet NaN */
-  }
-  if ((a << 1) == (b << 1)) {                /* two infinities */
-    if ((int)(a ^ b) >= 0)
-      return a;
-    control = 0x4000001;                     /* Inf - Inf: invalid */
-    shift = callerR3;
-    result = a;
-    goto raise;
-  }
-  return (a << 1) == 0xff000000 ? a : b;     /* the infinite operand */
-
-add_magnitudes:                              /* 0x001262cc: a and b have the same sign */
-  if (a < b) {
-    result = a;
-    a = b;
-    b = result;
-  }
-  exponent = a >> 23;
-  shift = exponent - (b >> 23);
-  if ((b << 1 & 0xff000000) == 0) {          /* b is zero or a denormal (0x00126360) */
-    b <<= 8;
-    if (b == 0)
-      goto smaller_is_zero;
-    a <<= 8;
-    if (exponent & 0xff) {                   /* a is normal: b counts as exponent 1 */
-      a |= 0x80000000;
-      shift--;
-      goto add_aligned;
+    else {
+      if ((a << 1) == (b << 1)) {              /* two infinities */
+        if ((int)(a ^ b) >= 0)
+          return a;
+        control = 0x4000001;                   /* Inf - Inf: invalid */
+        shift = callerR3;
+        result = a;
+        raises = 1;
+      }
+      else
+        return (a << 1) == 0xff000000 ? a : b; /* the infinite operand */
     }
-    result = (a + b) >> 8 | exponent << 23;  /* two denormals */
-    if (result & 0x800000)
-      return result;                         /* their sum is normal */
-    exponent = 1;
-    goto underflow;
   }
-  a = 0x80000000 | a << 8;
-  b = 0x80000000 | b << 8;
-add_aligned:                                 /* 0x001262f4 */
-  mantissa = a + ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);
-  if (mantissa >= a) {                       /* no carry out of bit 31 */
-    exponent--;
-    round = mantissa >> 7 & 1;
-    result = (mantissa >> 8) + (exponent << 23) + round;
-    if (!round || ((mantissa & 0x7f) && result << 1 < 0xff000000))
+  else if ((int)(a ^ b) < 0) {
+    b ^= 0x80000000;                         /* a + b = a - (-b) */
+    /* subtract the magnitudes (0x00126448) */
+    if (a < b) {                             /* |a| < |b|: swap them and flip both signs */
+      exponent = (a - b) ^ 0x80000000;
+      a -= exponent;
+      b += exponent;
+    }
+    exponent = a >> 23;
+    shift = exponent - (b >> 23);
+    if ((b << 1 & 0xff000000) == 0) {        /* b is zero or a denormal (0x0012652c) */
+      b <<= 8;
+      if (b == 0) {                          /* b is zero (0x00126398), a is the result */
+        if (a << 1 == 0)
+          a = 0;                             /* 0 - 0 = +0 */
+        if ((exponent & 0xff) || (a & 0x7fffffff) == 0)
+          return a;
+        result = a;                          /* a denormal */
+        exponent = 1;
+      }
+      else {
+        a <<= 8;
+        if (exponent & 0xff) {
+          a |= 0x80000000;
+          shift--;
+        }
+        else
+          exponent++;                        /* two denormals: a counts as exponent 1 */
+        aligned = 1;
+      }
+    }
+    else {
+      a = 0x80000000 | a << 8;
+      b = 0x80000000 | b << 8;
+      aligned = 1;
+    }
+    if (aligned) {
+      mantissa = a - ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);   /* 0x00126474 */
+      if (mantissa & 0x80000000) {           /* still normalized */
+        round = mantissa >> 7 & 1;
+        exponent--;
+        result = (mantissa >> 8) + (exponent << 23) + round;
+        if (!round || (mantissa & 0x7f))
+          return result;
+        tie = 1;
+      }
+      else if ((exponent & 0xfe) && (mantissa & 0x40000000)) {   /* one bit of cancellation */
+        round = mantissa >> 6 & 1;
+        result = (uint32)((int)(mantissa << 1) >> 8) + (exponent << 23) + round;   /* the sign-extended */
+        if (!round || (mantissa & 0x3f))                                         /* top bits lower the */
+          return result;                                                        /* exponent by one */
+        tie = 1;
+      }
+      else {
+        shift = exponent >> 8;               /* the sign (0x001264cc) */
+        if (!(exponent & 0xfe) || mantissa << 1 == 0) {   /* exponent 0 or 1, or an exact zero */
+          result = mantissa >> 7;
+          if (result == 0)
+            return 0;
+          result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
+        }
+        else {
+          result = mantissa >> 1;            /* more cancellation: normalize (exact, no rounding) */
+          for (zeros = 0; !(result << zeros & 0x80000000); zeros++)
+            ;
+          exponent -= zeros;
+          round = (40 - zeros) & 31;         /* the binary's rotation, right by 40 - zeros */
+          result = round ? result >> round | result << (32 - round) : result;
+          if (shift == exponent >> 8)
+            return result + (exponent << 23);
+          exponent = -exponent;              /* below the smallest exponent: a denormal */
+          result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
+        }
+        exponent = 2;
+      }
+      if (tie) {                             /* 0x001264b8: a tie, unless bits of b were shifted out */
+        shift = 32 - shift;
+        b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
+        return b != 0 ? result - 1 : result & ~1;   /* below the tie: round down; a true tie: to even */
+      }
+    }
+  }
+  else {
+    /* add the magnitudes (0x001262cc) */
+    if (a < b) {
+      result = a;
+      a = b;
+      b = result;
+    }
+    exponent = a >> 23;
+    shift = exponent - (b >> 23);
+    if ((b << 1 & 0xff000000) == 0) {        /* b is zero or a denormal (0x00126360) */
+      b <<= 8;
+      if (b == 0) {                          /* b is zero, a is the result (0x001263a0) */
+        if ((exponent & 0xff) || (a & 0x7fffffff) == 0)
+          return a;
+        result = a;                          /* a denormal */
+        exponent = 1;
+      }
+      else {
+        a <<= 8;
+        if (exponent & 0xff) {               /* a is normal: b counts as exponent 1 */
+          a |= 0x80000000;
+          shift--;
+          aligned = 1;
+        }
+        else {
+          result = (a + b) >> 8 | exponent << 23;   /* two denormals */
+          if (result & 0x800000)
+            return result;                   /* their sum is normal */
+          exponent = 1;
+        }
+      }
+    }
+    else {
+      a = 0x80000000 | a << 8;
+      b = 0x80000000 | b << 8;
+      aligned = 1;
+    }
+    if (aligned) {                           /* 0x001262f4 */
+      mantissa = a + ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);
+      if (mantissa >= a) {                   /* no carry out of bit 31 */
+        exponent--;
+        round = mantissa >> 7 & 1;
+        result = (mantissa >> 8) + (exponent << 23) + round;
+        if (!round || ((mantissa & 0x7f) && result << 1 < 0xff000000))
+          return result;
+        tie = 1;
+      }
+      else {                                 /* a carry: one more bit to drop (0x0012633c) */
+        round = mantissa >> 8 & 1;
+        result = ((0x80000000 | mantissa >> 1) >> 8) + (exponent << 23) + round;
+        tie = round && !(mantissa & 0xff);
+        if (!tie && result << 1 < 0xff000000)
+          return result;
+      }
+      if (tie) {                             /* 0x0012631c: a tie, unless bits of b were shifted out */
+        shift = 32 - shift;
+        b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
+        if (b == 0)
+          result &= ~1;                      /* a true tie: round to even */
+        if (result << 1 < 0xff000000)
+          return result;
+      }
+      result -= 0x60000000;                  /* overflow (0x00126330); for the trap handler, the */
+      control = 0x10000001;                  /* exponent wrapped by 192 */
+      raises = 1;
+    }
+  }
+  if (!raises) {                             /* 0x00126c2c: a denormal result */
+    status = kh_GetFpStatusPtr();
+    if (*status & 0x1000000)                 /* flush to zero */
+      return result & 0x80000000;
+    if (!(*status & 0x800))                  /* underflow not trapped: the denormal, no flag */
       return result;
-  }
-  else {                                     /* a carry: one more bit to drop (0x0012633c) */
-    round = mantissa >> 8 & 1;
-    result = ((0x80000000 | mantissa >> 1) >> 8) + (exponent << 23) + round;
-    if (!round || (mantissa & 0xff)) {
-      if (result << 1 < 0xff000000)
-        return result;
-      goto overflow;
+    b = (result & 0x80000000) | 0x60000000;  /* for the trap handler: the result normalized, its */
+    if (!(result & 0xff0000)) {              /* exponent wrapped by 192 */
+      result <<= 8;
+      b -= 0x4000000;
     }
-  }
-  shift = 32 - shift;                        /* 0x0012631c: a tie, unless bits of b were shifted out */
-  b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
-  if (b == 0)
-    result &= ~1;                            /* a true tie: round to even */
-  if (result << 1 < 0xff000000)
-    return result;
-overflow:                                    /* 0x00126330 */
-  result -= 0x60000000;                      /* for the trap handler: the exponent wrapped by 192 */
-  control = 0x10000001;
-  goto raise;
-
-subtract_magnitudes:                         /* 0x00126448: a and b have the same sign */
-  if (a < b) {                               /* |a| < |b|: swap them and flip both signs */
-    exponent = (a - b) ^ 0x80000000;
-    a -= exponent;
-    b += exponent;
-  }
-  exponent = a >> 23;
-  shift = exponent - (b >> 23);
-  if ((b << 1 & 0xff000000) == 0) {          /* b is zero or a denormal (0x0012652c) */
-    b <<= 8;
-    if (b == 0) {
-      if (a << 1 == 0)
-        a = 0;                               /* 0 - 0 = +0 (0x00126398) */
-      goto smaller_is_zero;
+    if (!(result & 0xff0000)) {
+      result <<= 8;
+      b -= 0x4000000;
     }
-    a <<= 8;
-    if (exponent & 0xff) {
-      a |= 0x80000000;
-      shift--;
+    if (!(result & 0xf00000)) {
+      result <<= 4;
+      b -= 0x2000000;
     }
+    if (!(result & 0xc00000)) {
+      result <<= 2;
+      b -= 0x1000000;
+    }
+    if (!(result & 0x800000))
+      result <<= 1;
     else
-      exponent++;                            /* two denormals: a counts as exponent 1 */
+      b += 0x800000;
+    result = (result & ~0x800000) | b;
+    return (uint32)FUN_001013e0(result,b,exponent,shift,exponent | 0x20000000);
   }
-  else {
-    a = 0x80000000 | a << 8;
-    b = 0x80000000 | b << 8;
-  }
-  mantissa = a - ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);   /* 0x00126474 */
-  if (mantissa & 0x80000000) {               /* still normalized */
-    round = mantissa >> 7 & 1;
-    exponent--;
-    result = (mantissa >> 8) + (exponent << 23) + round;
-    if (!round || (mantissa & 0x7f))
-      return result;
-  }
-  else if ((exponent & 0xfe) && (mantissa & 0x40000000)) {   /* one bit of cancellation */
-    round = mantissa >> 6 & 1;
-    result = (uint32)((int)(mantissa << 1) >> 8) + (exponent << 23) + round;   /* the sign-extended */
-    if (!round || (mantissa & 0x3f))                                         /* top bits lower the */
-      return result;                                                        /* exponent by one */
-  }
-  else {
-    shift = exponent >> 8;                   /* the sign (0x001264cc) */
-    if (!(exponent & 0xfe) || mantissa << 1 == 0) {   /* exponent 0 or 1, or an exact zero */
-      result = mantissa >> 7;
-      if (result == 0)
-        return 0;
-      result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
-      exponent = 2;
-      goto underflow;
-    }
-    result = mantissa >> 1;                  /* more cancellation: normalize (exact, no rounding) */
-    for (zeros = 0; !(result << zeros & 0x80000000); zeros++)
-      ;
-    exponent -= zeros;
-    round = (40 - zeros) & 31;               /* the binary's rotation, right by 40 - zeros */
-    result = round ? result >> round | result << (32 - round) : result;
-    if (shift == exponent >> 8)
-      return result + (exponent << 23);
-    exponent = -exponent;                    /* below the smallest exponent: a denormal */
-    result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
-    exponent = 2;
-    goto underflow;
-  }
-  shift = 32 - shift;                        /* 0x001264b8: a tie, unless bits of b were shifted out */
-  b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
-  return b != 0 ? result - 1 : result & ~1;  /* below the tie: round down; a true tie: to even */
-
-smaller_is_zero:                             /* 0x001263a0: b is zero, a is the result */
-  if ((exponent & 0xff) || (a & 0x7fffffff) == 0)
-    return a;
-  result = a;                                /* a is a denormal */
-  exponent = 1;
-underflow:                                   /* 0x00126c2c: a denormal result */
-  status = kh_GetFpStatusPtr();
-  if (*status & 0x1000000)                   /* flush to zero */
-    return result & 0x80000000;
-  if (!(*status & 0x800))                    /* underflow not trapped: the denormal, no flag */
-    return result;
-  b = (result & 0x80000000) | 0x60000000;    /* for the trap handler: the result normalized, its */
-  if (!(result & 0xff0000)) {                /* exponent wrapped by 192 */
-    result <<= 8;
-    b -= 0x4000000;
-  }
-  if (!(result & 0xff0000)) {
-    result <<= 8;
-    b -= 0x4000000;
-  }
-  if (!(result & 0xf00000)) {
-    result <<= 4;
-    b -= 0x2000000;
-  }
-  if (!(result & 0xc00000)) {
-    result <<= 2;
-    b -= 0x1000000;
-  }
-  if (!(result & 0x800000))
-    result <<= 1;
-  else
-    b += 0x800000;
-  result = (result & ~0x800000) | b;
-  return (uint32)FUN_001013e0(result,b,exponent,shift,exponent | 0x20000000);
-
-raise:                                       /* 0x001260e4: the library's exception code (only its */
-  status = kh_GetFpStatusPtr();              /* invalid and overflow cases are reachable here) */
-  if (control & 0x30000000 & ~(*status << 18))
+  status = kh_GetFpStatusPtr();              /* 0x001260e4: the library's exception code (only its */
+  if (control & 0x30000000 & ~(*status << 18))   /* invalid and overflow cases are reachable here) */
     control |= 0x40000000;                   /* an untrapped overflow is also inexact */
   *status |= (control << 1) >> 27;           /* the sticky flags */
   control |= *status & 0x1c00000;
@@ -34770,201 +34744,219 @@ uint32 float_reverse_subtract(uint32 a,uint32 b)
   uint32 callerR3;  /* r3 as the caller left it: what the binary hands the trap handler on the paths
                        that do not set r3 (never initialized, as in the binary) */
   int zeros;
+  int aligned = 0;  /* the magnitudes are aligned, with their hidden bits, for the add or subtract */
+  int tie = 0;      /* the rounded result may be a tie, or overflow */
+  int raises = 0;   /* an exception (raise, 0x001260e4) rather than a denormal result (underflow) */
 
-  if ((~(a << 1) & 0xff000000) == 0 || (~(b << 1) & 0xff000000) == 0) {
-    result = a;                              /* an Inf or NaN operand: float_subtract's special */
-    a = b;                                   /* cases, with the operands swapped */
+  if ((~(a << 1) & 0xff000000) == 0 || (~(b << 1) & 0xff000000) == 0) {   /* an Inf or NaN operand */
+    result = a;                              /* float_subtract's special cases, with the operands */
+    a = b;                                   /* swapped (0x0012641c) */
     b = result;
-    goto special_cases;
-  }
-  a ^= 0x80000000;                           /* b - a = (-a) + b */
-  if ((int)(a ^ b) >= 0)
-    goto add_magnitudes;
-  b ^= 0x80000000;
-  goto subtract_magnitudes;                  /* (-a) + b = (-a) - (-b) */
-
-special_cases:                               /* 0x0012654c */
-  if ((b << 1) > 0xff000000 || (a << 1) > 0xff000000) {   /* a NaN operand (0x0012658c) */
-    exponent = (a << 1) + 0x800000;          /* above 0xff800000: a signalling NaN */
-    shift = (b << 1) + 0x800000;
-    if (exponent > 0xff800000 || shift > 0xff800000) {
-      control = 0x4000002;               /* a signalling NaN: invalid */
+    if ((b << 1) > 0xff000000 || (a << 1) > 0xff000000) {   /* a NaN operand (0x0012658c) */
+      exponent = (a << 1) + 0x800000;        /* above 0xff800000: a signalling NaN */
+      shift = (b << 1) + 0x800000;
+      if (exponent <= 0xff800000 && shift <= 0xff800000)
+        return exponent < 0x800000 ? a : b;  /* the first quiet NaN */
+      control = 0x4000002;                        /* a signalling NaN: invalid */
       result = a;
-      goto raise;
+      raises = 1;
     }
-    return exponent < 0x800000 ? a : b;      /* the first quiet NaN */
-  }
-  if ((a << 1) == (b << 1)) {                /* two infinities */
-    if ((int)(a ^ b) < 0)
-      return a;
-    control = 0x4000002;                     /* Inf - Inf: invalid */
-    shift = callerR3;
-    result = a;
-    goto raise;
-  }
-  return (a << 1) == 0xff000000 ? a : b ^ 0x80000000;   /* the infinite operand (b negated) */
-
-add_magnitudes:                              /* 0x001262cc: a and b have the same sign */
-  if (a < b) {
-    result = a;
-    a = b;
-    b = result;
-  }
-  exponent = a >> 23;
-  shift = exponent - (b >> 23);
-  if ((b << 1 & 0xff000000) == 0) {          /* b is zero or a denormal (0x00126360) */
-    b <<= 8;
-    if (b == 0)
-      goto smaller_is_zero;
-    a <<= 8;
-    if (exponent & 0xff) {                   /* a is normal: b counts as exponent 1 */
-      a |= 0x80000000;
-      shift--;
-      goto add_aligned;
+    else {
+      if ((a << 1) == (b << 1)) {              /* two infinities */
+        if ((int)(a ^ b) < 0)
+          return a;
+        control = 0x4000002;                   /* Inf - Inf: invalid */
+        shift = callerR3;
+        result = a;
+        raises = 1;
+      }
+      else
+        return (a << 1) == 0xff000000 ? a : b ^ 0x80000000;   /* the infinite operand (b negated) */
     }
-    result = (a + b) >> 8 | exponent << 23;  /* two denormals */
-    if (result & 0x800000)
-      return result;                         /* their sum is normal */
-    exponent = 1;
-    goto underflow;
   }
-  a = 0x80000000 | a << 8;
-  b = 0x80000000 | b << 8;
-add_aligned:                                 /* 0x001262f4 */
-  mantissa = a + ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);
-  if (mantissa >= a) {                       /* no carry out of bit 31 */
-    exponent--;
-    round = mantissa >> 7 & 1;
-    result = (mantissa >> 8) + (exponent << 23) + round;
-    if (!round || ((mantissa & 0x7f) && result << 1 < 0xff000000))
+  else if ((int)((a ^ 0x80000000) ^ b) >= 0) {
+    a ^= 0x80000000;                         /* b - a = (-a) + b */
+    /* add the magnitudes (0x001262cc) */
+    if (a < b) {
+      result = a;
+      a = b;
+      b = result;
+    }
+    exponent = a >> 23;
+    shift = exponent - (b >> 23);
+    if ((b << 1 & 0xff000000) == 0) {        /* b is zero or a denormal (0x00126360) */
+      b <<= 8;
+      if (b == 0) {                          /* b is zero, a is the result (0x001263a0) */
+        if ((exponent & 0xff) || (a & 0x7fffffff) == 0)
+          return a;
+        result = a;                          /* a denormal */
+        exponent = 1;
+      }
+      else {
+        a <<= 8;
+        if (exponent & 0xff) {               /* a is normal: b counts as exponent 1 */
+          a |= 0x80000000;
+          shift--;
+          aligned = 1;
+        }
+        else {
+          result = (a + b) >> 8 | exponent << 23;   /* two denormals */
+          if (result & 0x800000)
+            return result;                   /* their sum is normal */
+          exponent = 1;
+        }
+      }
+    }
+    else {
+      a = 0x80000000 | a << 8;
+      b = 0x80000000 | b << 8;
+      aligned = 1;
+    }
+    if (aligned) {                           /* 0x001262f4 */
+      mantissa = a + ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);
+      if (mantissa >= a) {                   /* no carry out of bit 31 */
+        exponent--;
+        round = mantissa >> 7 & 1;
+        result = (mantissa >> 8) + (exponent << 23) + round;
+        if (!round || ((mantissa & 0x7f) && result << 1 < 0xff000000))
+          return result;
+        tie = 1;
+      }
+      else {                                 /* a carry: one more bit to drop (0x0012633c) */
+        round = mantissa >> 8 & 1;
+        result = ((0x80000000 | mantissa >> 1) >> 8) + (exponent << 23) + round;
+        tie = round && !(mantissa & 0xff);
+        if (!tie && result << 1 < 0xff000000)
+          return result;
+      }
+      if (tie) {                             /* 0x0012631c: a tie, unless bits of b were shifted out */
+        shift = 32 - shift;
+        b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
+        if (b == 0)
+          result &= ~1;                      /* a true tie: round to even */
+        if (result << 1 < 0xff000000)
+          return result;
+      }
+      result -= 0x60000000;                  /* overflow (0x00126330); for the trap handler, the */
+      control = 0x10000001;                  /* exponent wrapped by 192 */
+      raises = 1;
+    }
+  }
+  else {
+    a ^= 0x80000000;                         /* (-a) + b = (-a) - (-b) */
+    b ^= 0x80000000;
+    /* subtract the magnitudes (0x00126448) */
+    if (a < b) {                             /* |a| < |b|: swap them and flip both signs */
+      exponent = (a - b) ^ 0x80000000;
+      a -= exponent;
+      b += exponent;
+    }
+    exponent = a >> 23;
+    shift = exponent - (b >> 23);
+    if ((b << 1 & 0xff000000) == 0) {        /* b is zero or a denormal (0x0012652c) */
+      b <<= 8;
+      if (b == 0) {                          /* b is zero (0x00126398), a is the result */
+        if (a << 1 == 0)
+          a = 0;                             /* 0 - 0 = +0 */
+        if ((exponent & 0xff) || (a & 0x7fffffff) == 0)
+          return a;
+        result = a;                          /* a denormal */
+        exponent = 1;
+      }
+      else {
+        a <<= 8;
+        if (exponent & 0xff) {
+          a |= 0x80000000;
+          shift--;
+        }
+        else
+          exponent++;                        /* two denormals: a counts as exponent 1 */
+        aligned = 1;
+      }
+    }
+    else {
+      a = 0x80000000 | a << 8;
+      b = 0x80000000 | b << 8;
+      aligned = 1;
+    }
+    if (aligned) {
+      mantissa = a - ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);   /* 0x00126474 */
+      if (mantissa & 0x80000000) {           /* still normalized */
+        round = mantissa >> 7 & 1;
+        exponent--;
+        result = (mantissa >> 8) + (exponent << 23) + round;
+        if (!round || (mantissa & 0x7f))
+          return result;
+        tie = 1;
+      }
+      else if ((exponent & 0xfe) && (mantissa & 0x40000000)) {   /* one bit of cancellation */
+        round = mantissa >> 6 & 1;
+        result = (uint32)((int)(mantissa << 1) >> 8) + (exponent << 23) + round;   /* the sign-extended */
+        if (!round || (mantissa & 0x3f))                                         /* top bits lower the */
+          return result;                                                        /* exponent by one */
+        tie = 1;
+      }
+      else {
+        shift = exponent >> 8;               /* the sign (0x001264cc) */
+        if (!(exponent & 0xfe) || mantissa << 1 == 0) {   /* exponent 0 or 1, or an exact zero */
+          result = mantissa >> 7;
+          if (result == 0)
+            return 0;
+          result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
+        }
+        else {
+          result = mantissa >> 1;            /* more cancellation: normalize (exact, no rounding) */
+          for (zeros = 0; !(result << zeros & 0x80000000); zeros++)
+            ;
+          exponent -= zeros;
+          round = (40 - zeros) & 31;         /* the binary's rotation, right by 40 - zeros */
+          result = round ? result >> round | result << (32 - round) : result;
+          if (shift == exponent >> 8)
+            return result + (exponent << 23);
+          exponent = -exponent;              /* below the smallest exponent: a denormal */
+          result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
+        }
+        exponent = 2;
+      }
+      if (tie) {                             /* 0x001264b8: a tie, unless bits of b were shifted out */
+        shift = 32 - shift;
+        b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
+        return b != 0 ? result - 1 : result & ~1;   /* below the tie: round down; a true tie: to even */
+      }
+    }
+  }
+  if (!raises) {                             /* 0x00126c2c: a denormal result */
+    status = kh_GetFpStatusPtr();
+    if (*status & 0x1000000)                 /* flush to zero */
+      return result & 0x80000000;
+    if (!(*status & 0x800))                  /* underflow not trapped: the denormal, no flag */
       return result;
-  }
-  else {                                     /* a carry: one more bit to drop (0x0012633c) */
-    round = mantissa >> 8 & 1;
-    result = ((0x80000000 | mantissa >> 1) >> 8) + (exponent << 23) + round;
-    if (!round || (mantissa & 0xff)) {
-      if (result << 1 < 0xff000000)
-        return result;
-      goto overflow;
+    b = (result & 0x80000000) | 0x60000000;  /* for the trap handler: the result normalized, its */
+    if (!(result & 0xff0000)) {              /* exponent wrapped by 192 */
+      result <<= 8;
+      b -= 0x4000000;
     }
-  }
-  shift = 32 - shift;                        /* 0x0012631c: a tie, unless bits of b were shifted out */
-  b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
-  if (b == 0)
-    result &= ~1;                            /* a true tie: round to even */
-  if (result << 1 < 0xff000000)
-    return result;
-overflow:                                    /* 0x00126330 */
-  result -= 0x60000000;                      /* for the trap handler: the exponent wrapped by 192 */
-  control = 0x10000001;
-  goto raise;
-
-subtract_magnitudes:                         /* 0x00126448: a and b have the same sign */
-  if (a < b) {                               /* |a| < |b|: swap them and flip both signs */
-    exponent = (a - b) ^ 0x80000000;
-    a -= exponent;
-    b += exponent;
-  }
-  exponent = a >> 23;
-  shift = exponent - (b >> 23);
-  if ((b << 1 & 0xff000000) == 0) {          /* b is zero or a denormal (0x0012652c) */
-    b <<= 8;
-    if (b == 0) {
-      if (a << 1 == 0)
-        a = 0;                               /* 0 - 0 = +0 (0x00126398) */
-      goto smaller_is_zero;
+    if (!(result & 0xff0000)) {
+      result <<= 8;
+      b -= 0x4000000;
     }
-    a <<= 8;
-    if (exponent & 0xff) {
-      a |= 0x80000000;
-      shift--;
+    if (!(result & 0xf00000)) {
+      result <<= 4;
+      b -= 0x2000000;
     }
+    if (!(result & 0xc00000)) {
+      result <<= 2;
+      b -= 0x1000000;
+    }
+    if (!(result & 0x800000))
+      result <<= 1;
     else
-      exponent++;                            /* two denormals: a counts as exponent 1 */
+      b += 0x800000;
+    result = (result & ~0x800000) | b;
+    return (uint32)FUN_001013e0(result,b,exponent,shift,exponent | 0x20000000);
   }
-  else {
-    a = 0x80000000 | a << 8;
-    b = 0x80000000 | b << 8;
-  }
-  mantissa = a - ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);   /* 0x00126474 */
-  if (mantissa & 0x80000000) {               /* still normalized */
-    round = mantissa >> 7 & 1;
-    exponent--;
-    result = (mantissa >> 8) + (exponent << 23) + round;
-    if (!round || (mantissa & 0x7f))
-      return result;
-  }
-  else if ((exponent & 0xfe) && (mantissa & 0x40000000)) {   /* one bit of cancellation */
-    round = mantissa >> 6 & 1;
-    result = (uint32)((int)(mantissa << 1) >> 8) + (exponent << 23) + round;   /* the sign-extended */
-    if (!round || (mantissa & 0x3f))                                         /* top bits lower the */
-      return result;                                                        /* exponent by one */
-  }
-  else {
-    shift = exponent >> 8;                   /* the sign (0x001264cc) */
-    if (!(exponent & 0xfe) || mantissa << 1 == 0) {   /* exponent 0 or 1, or an exact zero */
-      result = mantissa >> 7;
-      if (result == 0)
-        return 0;
-      result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
-      exponent = 2;
-      goto underflow;
-    }
-    result = mantissa >> 1;                  /* more cancellation: normalize (exact, no rounding) */
-    for (zeros = 0; !(result << zeros & 0x80000000); zeros++)
-      ;
-    exponent -= zeros;
-    round = (40 - zeros) & 31;               /* the binary's rotation, right by 40 - zeros */
-    result = round ? result >> round | result << (32 - round) : result;
-    if (shift == exponent >> 8)
-      return result + (exponent << 23);
-    exponent = -exponent;                    /* below the smallest exponent: a denormal */
-    result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
-    exponent = 2;
-    goto underflow;
-  }
-  shift = 32 - shift;                        /* 0x001264b8: a tie, unless bits of b were shifted out */
-  b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
-  return b != 0 ? result - 1 : result & ~1;  /* below the tie: round down; a true tie: to even */
-
-smaller_is_zero:                             /* 0x001263a0: b is zero, a is the result */
-  if ((exponent & 0xff) || (a & 0x7fffffff) == 0)
-    return a;
-  result = a;                                /* a is a denormal */
-  exponent = 1;
-underflow:                                   /* 0x00126c2c: a denormal result */
-  status = kh_GetFpStatusPtr();
-  if (*status & 0x1000000)                   /* flush to zero */
-    return result & 0x80000000;
-  if (!(*status & 0x800))                    /* underflow not trapped: the denormal, no flag */
-    return result;
-  b = (result & 0x80000000) | 0x60000000;    /* for the trap handler: the result normalized, its */
-  if (!(result & 0xff0000)) {                /* exponent wrapped by 192 */
-    result <<= 8;
-    b -= 0x4000000;
-  }
-  if (!(result & 0xff0000)) {
-    result <<= 8;
-    b -= 0x4000000;
-  }
-  if (!(result & 0xf00000)) {
-    result <<= 4;
-    b -= 0x2000000;
-  }
-  if (!(result & 0xc00000)) {
-    result <<= 2;
-    b -= 0x1000000;
-  }
-  if (!(result & 0x800000))
-    result <<= 1;
-  else
-    b += 0x800000;
-  result = (result & ~0x800000) | b;
-  return (uint32)FUN_001013e0(result,b,exponent,shift,exponent | 0x20000000);
-
-raise:                                       /* 0x001260e4: the library's exception code (only its */
-  status = kh_GetFpStatusPtr();              /* invalid and overflow cases are reachable here) */
-  if (control & 0x30000000 & ~(*status << 18))
+  status = kh_GetFpStatusPtr();              /* 0x001260e4: the library's exception code (only its */
+  if (control & 0x30000000 & ~(*status << 18))   /* invalid and overflow cases are reachable here) */
     control |= 0x40000000;                   /* an untrapped overflow is also inexact */
   *status |= (control << 1) >> 27;           /* the sticky flags */
   control |= *status & 0x1c00000;
@@ -34998,197 +34990,214 @@ uint32 float_subtract(uint32 a,uint32 b)
   uint32 callerR3;  /* r3 as the caller left it: what the binary hands the trap handler on the paths
                        that do not set r3 (never initialized, as in the binary) */
   int zeros;
+  int aligned = 0;  /* the magnitudes are aligned, with their hidden bits, for the add or subtract */
+  int tie = 0;      /* the rounded result may be a tie, or overflow */
+  int raises = 0;   /* an exception (raise, 0x001260e4) rather than a denormal result (underflow) */
 
-  if ((~(a << 1) & 0xff000000) == 0 || (~(b << 1) & 0xff000000) == 0)
-    goto special_cases;                      /* an Inf or NaN operand */
-  if ((int)(a ^ b) < 0) {
-    b ^= 0x80000000;
-    goto add_magnitudes;                     /* a - b = a + (-b) */
-  }
-  goto subtract_magnitudes;
-
-special_cases:                               /* 0x0012654c */
-  if ((b << 1) > 0xff000000 || (a << 1) > 0xff000000) {   /* a NaN operand (0x0012658c) */
-    exponent = (a << 1) + 0x800000;          /* above 0xff800000: a signalling NaN */
-    shift = (b << 1) + 0x800000;
-    if (exponent > 0xff800000 || shift > 0xff800000) {
-      control = 0x4000002;               /* a signalling NaN: invalid */
+  if ((~(a << 1) & 0xff000000) == 0 || (~(b << 1) & 0xff000000) == 0) {   /* an Inf or NaN operand */
+    if ((b << 1) > 0xff000000 || (a << 1) > 0xff000000) {   /* a NaN operand (0x0012658c) */
+      exponent = (a << 1) + 0x800000;        /* above 0xff800000: a signalling NaN */
+      shift = (b << 1) + 0x800000;
+      if (exponent <= 0xff800000 && shift <= 0xff800000)
+        return exponent < 0x800000 ? a : b;  /* the first quiet NaN */
+      control = 0x4000002;                        /* a signalling NaN: invalid */
       result = a;
-      goto raise;
+      raises = 1;
     }
-    return exponent < 0x800000 ? a : b;      /* the first quiet NaN */
-  }
-  if ((a << 1) == (b << 1)) {                /* two infinities */
-    if ((int)(a ^ b) < 0)
-      return a;
-    control = 0x4000002;                     /* Inf - Inf: invalid */
-    shift = callerR3;
-    result = a;
-    goto raise;
-  }
-  return (a << 1) == 0xff000000 ? a : b ^ 0x80000000;   /* the infinite operand (b negated) */
-
-add_magnitudes:                              /* 0x001262cc: a and b have the same sign */
-  if (a < b) {
-    result = a;
-    a = b;
-    b = result;
-  }
-  exponent = a >> 23;
-  shift = exponent - (b >> 23);
-  if ((b << 1 & 0xff000000) == 0) {          /* b is zero or a denormal (0x00126360) */
-    b <<= 8;
-    if (b == 0)
-      goto smaller_is_zero;
-    a <<= 8;
-    if (exponent & 0xff) {                   /* a is normal: b counts as exponent 1 */
-      a |= 0x80000000;
-      shift--;
-      goto add_aligned;
+    else {
+      if ((a << 1) == (b << 1)) {              /* two infinities */
+        if ((int)(a ^ b) < 0)
+          return a;
+        control = 0x4000002;                   /* Inf - Inf: invalid */
+        shift = callerR3;
+        result = a;
+        raises = 1;
+      }
+      else
+        return (a << 1) == 0xff000000 ? a : b ^ 0x80000000;   /* the infinite operand (b negated) */
     }
-    result = (a + b) >> 8 | exponent << 23;  /* two denormals */
-    if (result & 0x800000)
-      return result;                         /* their sum is normal */
-    exponent = 1;
-    goto underflow;
   }
-  a = 0x80000000 | a << 8;
-  b = 0x80000000 | b << 8;
-add_aligned:                                 /* 0x001262f4 */
-  mantissa = a + ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);
-  if (mantissa >= a) {                       /* no carry out of bit 31 */
-    exponent--;
-    round = mantissa >> 7 & 1;
-    result = (mantissa >> 8) + (exponent << 23) + round;
-    if (!round || ((mantissa & 0x7f) && result << 1 < 0xff000000))
+  else if ((int)(a ^ b) < 0) {
+    b ^= 0x80000000;                         /* a - b = a + (-b) */
+    /* add the magnitudes (0x001262cc) */
+    if (a < b) {
+      result = a;
+      a = b;
+      b = result;
+    }
+    exponent = a >> 23;
+    shift = exponent - (b >> 23);
+    if ((b << 1 & 0xff000000) == 0) {        /* b is zero or a denormal (0x00126360) */
+      b <<= 8;
+      if (b == 0) {                          /* b is zero, a is the result (0x001263a0) */
+        if ((exponent & 0xff) || (a & 0x7fffffff) == 0)
+          return a;
+        result = a;                          /* a denormal */
+        exponent = 1;
+      }
+      else {
+        a <<= 8;
+        if (exponent & 0xff) {               /* a is normal: b counts as exponent 1 */
+          a |= 0x80000000;
+          shift--;
+          aligned = 1;
+        }
+        else {
+          result = (a + b) >> 8 | exponent << 23;   /* two denormals */
+          if (result & 0x800000)
+            return result;                   /* their sum is normal */
+          exponent = 1;
+        }
+      }
+    }
+    else {
+      a = 0x80000000 | a << 8;
+      b = 0x80000000 | b << 8;
+      aligned = 1;
+    }
+    if (aligned) {                           /* 0x001262f4 */
+      mantissa = a + ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);
+      if (mantissa >= a) {                   /* no carry out of bit 31 */
+        exponent--;
+        round = mantissa >> 7 & 1;
+        result = (mantissa >> 8) + (exponent << 23) + round;
+        if (!round || ((mantissa & 0x7f) && result << 1 < 0xff000000))
+          return result;
+        tie = 1;
+      }
+      else {                                 /* a carry: one more bit to drop (0x0012633c) */
+        round = mantissa >> 8 & 1;
+        result = ((0x80000000 | mantissa >> 1) >> 8) + (exponent << 23) + round;
+        tie = round && !(mantissa & 0xff);
+        if (!tie && result << 1 < 0xff000000)
+          return result;
+      }
+      if (tie) {                             /* 0x0012631c: a tie, unless bits of b were shifted out */
+        shift = 32 - shift;
+        b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
+        if (b == 0)
+          result &= ~1;                      /* a true tie: round to even */
+        if (result << 1 < 0xff000000)
+          return result;
+      }
+      result -= 0x60000000;                  /* overflow (0x00126330); for the trap handler, the */
+      control = 0x10000001;                  /* exponent wrapped by 192 */
+      raises = 1;
+    }
+  }
+  else {
+    /* subtract the magnitudes (0x00126448) */
+    if (a < b) {                             /* |a| < |b|: swap them and flip both signs */
+      exponent = (a - b) ^ 0x80000000;
+      a -= exponent;
+      b += exponent;
+    }
+    exponent = a >> 23;
+    shift = exponent - (b >> 23);
+    if ((b << 1 & 0xff000000) == 0) {        /* b is zero or a denormal (0x0012652c) */
+      b <<= 8;
+      if (b == 0) {                          /* b is zero (0x00126398), a is the result */
+        if (a << 1 == 0)
+          a = 0;                             /* 0 - 0 = +0 */
+        if ((exponent & 0xff) || (a & 0x7fffffff) == 0)
+          return a;
+        result = a;                          /* a denormal */
+        exponent = 1;
+      }
+      else {
+        a <<= 8;
+        if (exponent & 0xff) {
+          a |= 0x80000000;
+          shift--;
+        }
+        else
+          exponent++;                        /* two denormals: a counts as exponent 1 */
+        aligned = 1;
+      }
+    }
+    else {
+      a = 0x80000000 | a << 8;
+      b = 0x80000000 | b << 8;
+      aligned = 1;
+    }
+    if (aligned) {
+      mantissa = a - ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);   /* 0x00126474 */
+      if (mantissa & 0x80000000) {           /* still normalized */
+        round = mantissa >> 7 & 1;
+        exponent--;
+        result = (mantissa >> 8) + (exponent << 23) + round;
+        if (!round || (mantissa & 0x7f))
+          return result;
+        tie = 1;
+      }
+      else if ((exponent & 0xfe) && (mantissa & 0x40000000)) {   /* one bit of cancellation */
+        round = mantissa >> 6 & 1;
+        result = (uint32)((int)(mantissa << 1) >> 8) + (exponent << 23) + round;   /* the sign-extended */
+        if (!round || (mantissa & 0x3f))                                         /* top bits lower the */
+          return result;                                                        /* exponent by one */
+        tie = 1;
+      }
+      else {
+        shift = exponent >> 8;               /* the sign (0x001264cc) */
+        if (!(exponent & 0xfe) || mantissa << 1 == 0) {   /* exponent 0 or 1, or an exact zero */
+          result = mantissa >> 7;
+          if (result == 0)
+            return 0;
+          result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
+        }
+        else {
+          result = mantissa >> 1;            /* more cancellation: normalize (exact, no rounding) */
+          for (zeros = 0; !(result << zeros & 0x80000000); zeros++)
+            ;
+          exponent -= zeros;
+          round = (40 - zeros) & 31;         /* the binary's rotation, right by 40 - zeros */
+          result = round ? result >> round | result << (32 - round) : result;
+          if (shift == exponent >> 8)
+            return result + (exponent << 23);
+          exponent = -exponent;              /* below the smallest exponent: a denormal */
+          result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
+        }
+        exponent = 2;
+      }
+      if (tie) {                             /* 0x001264b8: a tie, unless bits of b were shifted out */
+        shift = 32 - shift;
+        b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
+        return b != 0 ? result - 1 : result & ~1;   /* below the tie: round down; a true tie: to even */
+      }
+    }
+  }
+  if (!raises) {                             /* 0x00126c2c: a denormal result */
+    status = kh_GetFpStatusPtr();
+    if (*status & 0x1000000)                 /* flush to zero */
+      return result & 0x80000000;
+    if (!(*status & 0x800))                  /* underflow not trapped: the denormal, no flag */
       return result;
-  }
-  else {                                     /* a carry: one more bit to drop (0x0012633c) */
-    round = mantissa >> 8 & 1;
-    result = ((0x80000000 | mantissa >> 1) >> 8) + (exponent << 23) + round;
-    if (!round || (mantissa & 0xff)) {
-      if (result << 1 < 0xff000000)
-        return result;
-      goto overflow;
+    b = (result & 0x80000000) | 0x60000000;  /* for the trap handler: the result normalized, its */
+    if (!(result & 0xff0000)) {              /* exponent wrapped by 192 */
+      result <<= 8;
+      b -= 0x4000000;
     }
-  }
-  shift = 32 - shift;                        /* 0x0012631c: a tie, unless bits of b were shifted out */
-  b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
-  if (b == 0)
-    result &= ~1;                            /* a true tie: round to even */
-  if (result << 1 < 0xff000000)
-    return result;
-overflow:                                    /* 0x00126330 */
-  result -= 0x60000000;                      /* for the trap handler: the exponent wrapped by 192 */
-  control = 0x10000001;
-  goto raise;
-
-subtract_magnitudes:                         /* 0x00126448: a and b have the same sign */
-  if (a < b) {                               /* |a| < |b|: swap them and flip both signs */
-    exponent = (a - b) ^ 0x80000000;
-    a -= exponent;
-    b += exponent;
-  }
-  exponent = a >> 23;
-  shift = exponent - (b >> 23);
-  if ((b << 1 & 0xff000000) == 0) {          /* b is zero or a denormal (0x0012652c) */
-    b <<= 8;
-    if (b == 0) {
-      if (a << 1 == 0)
-        a = 0;                               /* 0 - 0 = +0 (0x00126398) */
-      goto smaller_is_zero;
+    if (!(result & 0xff0000)) {
+      result <<= 8;
+      b -= 0x4000000;
     }
-    a <<= 8;
-    if (exponent & 0xff) {
-      a |= 0x80000000;
-      shift--;
+    if (!(result & 0xf00000)) {
+      result <<= 4;
+      b -= 0x2000000;
     }
+    if (!(result & 0xc00000)) {
+      result <<= 2;
+      b -= 0x1000000;
+    }
+    if (!(result & 0x800000))
+      result <<= 1;
     else
-      exponent++;                            /* two denormals: a counts as exponent 1 */
+      b += 0x800000;
+    result = (result & ~0x800000) | b;
+    return (uint32)FUN_001013e0(result,b,exponent,shift,exponent | 0x20000000);
   }
-  else {
-    a = 0x80000000 | a << 8;
-    b = 0x80000000 | b << 8;
-  }
-  mantissa = a - ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);   /* 0x00126474 */
-  if (mantissa & 0x80000000) {               /* still normalized */
-    round = mantissa >> 7 & 1;
-    exponent--;
-    result = (mantissa >> 8) + (exponent << 23) + round;
-    if (!round || (mantissa & 0x7f))
-      return result;
-  }
-  else if ((exponent & 0xfe) && (mantissa & 0x40000000)) {   /* one bit of cancellation */
-    round = mantissa >> 6 & 1;
-    result = (uint32)((int)(mantissa << 1) >> 8) + (exponent << 23) + round;   /* the sign-extended */
-    if (!round || (mantissa & 0x3f))                                         /* top bits lower the */
-      return result;                                                        /* exponent by one */
-  }
-  else {
-    shift = exponent >> 8;                   /* the sign (0x001264cc) */
-    if (!(exponent & 0xfe) || mantissa << 1 == 0) {   /* exponent 0 or 1, or an exact zero */
-      result = mantissa >> 7;
-      if (result == 0)
-        return 0;
-      result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
-      exponent = 2;
-      goto underflow;
-    }
-    result = mantissa >> 1;                  /* more cancellation: normalize (exact, no rounding) */
-    for (zeros = 0; !(result << zeros & 0x80000000); zeros++)
-      ;
-    exponent -= zeros;
-    round = (40 - zeros) & 31;               /* the binary's rotation, right by 40 - zeros */
-    result = round ? result >> round | result << (32 - round) : result;
-    if (shift == exponent >> 8)
-      return result + (exponent << 23);
-    exponent = -exponent;                    /* below the smallest exponent: a denormal */
-    result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
-    exponent = 2;
-    goto underflow;
-  }
-  shift = 32 - shift;                        /* 0x001264b8: a tie, unless bits of b were shifted out */
-  b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
-  return b != 0 ? result - 1 : result & ~1;  /* below the tie: round down; a true tie: to even */
-
-smaller_is_zero:                             /* 0x001263a0: b is zero, a is the result */
-  if ((exponent & 0xff) || (a & 0x7fffffff) == 0)
-    return a;
-  result = a;                                /* a is a denormal */
-  exponent = 1;
-underflow:                                   /* 0x00126c2c: a denormal result */
-  status = kh_GetFpStatusPtr();
-  if (*status & 0x1000000)                   /* flush to zero */
-    return result & 0x80000000;
-  if (!(*status & 0x800))                    /* underflow not trapped: the denormal, no flag */
-    return result;
-  b = (result & 0x80000000) | 0x60000000;    /* for the trap handler: the result normalized, its */
-  if (!(result & 0xff0000)) {                /* exponent wrapped by 192 */
-    result <<= 8;
-    b -= 0x4000000;
-  }
-  if (!(result & 0xff0000)) {
-    result <<= 8;
-    b -= 0x4000000;
-  }
-  if (!(result & 0xf00000)) {
-    result <<= 4;
-    b -= 0x2000000;
-  }
-  if (!(result & 0xc00000)) {
-    result <<= 2;
-    b -= 0x1000000;
-  }
-  if (!(result & 0x800000))
-    result <<= 1;
-  else
-    b += 0x800000;
-  result = (result & ~0x800000) | b;
-  return (uint32)FUN_001013e0(result,b,exponent,shift,exponent | 0x20000000);
-
-raise:                                       /* 0x001260e4: the library's exception code (only its */
-  status = kh_GetFpStatusPtr();              /* invalid and overflow cases are reachable here) */
-  if (control & 0x30000000 & ~(*status << 18))
+  status = kh_GetFpStatusPtr();              /* 0x001260e4: the library's exception code (only its */
+  if (control & 0x30000000 & ~(*status << 18))   /* invalid and overflow cases are reachable here) */
     control |= 0x40000000;                   /* an untrapped overflow is also inexact */
   *status |= (control << 1) >> 27;           /* the sticky flags */
   control |= *status & 0x1c00000;
