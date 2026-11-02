@@ -769,7 +769,7 @@ undefined4 FUN_0011fddc(int param_1,undefined4 param_2,int param_3,undefined4 pa
 void animations_set_speed(Animations *animations,int index,uint32 speed);   /* 0x0011FED8 GUESS: name */
 void FUN_0011fef4(int param_1,undefined4 param_2,int param_3);
 void FUN_0011ffc0(undefined4 *param_1,undefined4 param_2);
-void FUN_00120024(int param_1,int param_2);
+void enemy_set_target(Enemy *enemy,int how);   /* 0x00120024 GUESS: names */
 void FUN_001200ac(int param_1,undefined4 param_2);
 void FUN_00120120(int param_1,undefined4 param_2,undefined4 param_3);
 void FUN_001201cc(int param_1,undefined4 param_2);

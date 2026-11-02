@@ -7847,7 +7847,7 @@ Enemy * enemy_create(Enemy *enemy,int number,CombatRegion *region,int type)
                     /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
                         */
   enemy->app = (*g_pHelperFuncs->GetAppInstance)();
-  FUN_00120024((int)enemy,4);
+  enemy_set_target(enemy,4);
   enemy_reset_states(enemy);
   return enemy;
 }
@@ -22800,7 +22800,7 @@ void FUN_0011d28c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   undefined1 uVar5;
   undefined1 uVar6;
   
-  FUN_00120024(param_1,1 /* not arguments, register leftovers: param_3,param_4,param_2,param_3,param_4 */);
+  enemy_set_target((Enemy *)param_1,1 /* not arguments, register leftovers: param_3,param_4,param_2,param_3,param_4 */);
   iVar3 = INTEGER_2003;
   iVar1 = *(int *)(param_1 + 0x88);
   uVar6 = 0xd0 < iVar1 - 0x700U;
@@ -22891,7 +22891,7 @@ undefined8 FUN_0011d3ec(int param_1,int param_2,undefined4 param_3,undefined4 pa
   iVar4 = param_2;
   switch(iVar8) {
   case 0:
-    FUN_00120024(param_1,2);
+    enemy_set_target((Enemy *)param_1,2);
     uVar12 = 1;
     if (*(int *)(param_1 + 0x130) != 0) {
       if (*(int *)(param_1 + 0x120) != 0) {
@@ -22939,7 +22939,7 @@ LAB_0011d4b4:
     iVar8 = 0;
     iVar4 = param_2;
     if (!bVar3) goto switchD_0001d418_default;
-    FUN_00120024(param_1,1);
+    enemy_set_target((Enemy *)param_1,1);
     iVar8 = *(int *)(param_1 + 0x74);
     if (*(int *)(*(int *)(iVar8 + 0xa8) + 0x5a8) != 0) {
       uVar11 = FUN_00126858(*(uint *)(param_1 + 0x3c));
@@ -23102,7 +23102,7 @@ LAB_0011c424:
     bVar3 = FUN_0012059c(param_1,param_2);
     iVar8 = 0;
     if (!bVar3) goto switchD_0001d418_default;
-    FUN_00120024(param_1,2);
+    enemy_set_target((Enemy *)param_1,2);
     if (*(int *)(param_1 + 0x108) == 0) {
       *(undefined1 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x4a) = 0;
     }
@@ -23141,7 +23141,7 @@ LAB_0011d5a4:
     }
     break;
   case 8:
-    FUN_00120024(param_1,2);
+    enemy_set_target((Enemy *)param_1,2);
     if (*(int *)(param_1 + 0x108) == 0) {
       *(undefined1 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x4a) = 0;
     }
@@ -23324,7 +23324,7 @@ int FUN_0011daac(int param_1,int param_2,undefined4 param_3,uint param_4)
   uVar3 = INTEGER_3003;
   iVar5 = *(int *)(param_1 + 0x8c);
   if (iVar5 == 0x1771) {
-    FUN_00120024(param_1,3);
+    enemy_set_target((Enemy *)param_1,3);
     if (*(int *)(param_1 + 0x108) == 0) {
       *(undefined1 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x4a) = 0;
     }
@@ -25209,39 +25209,27 @@ void FUN_0011ffc0(undefined4 *param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x00120024  (file offset 0x20024)  FUN_00120024 ================================================ */
-void FUN_00120024(int param_1,int param_2)
+/* ==== 0x00120024  (file offset 0x20024)  enemy_set_target ============================================ */
+/* GUESS: names. Makes one of the enemy's entities what the player's attacks hit: while the character is
+   in a combat region, its current target and the enemy's own slot are cleared first; then by `how`,
+   1: the current target is field_24, 2: it is field_28, 3: the enemy's slot (by its number) is
+   field_28; 4 (or another) only clears. Its alive behaviours set it, enemy_create and enemy_update
+   clear it. */
+void enemy_set_target(Enemy *enemy,int how)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  
-  iVar2 = *(int *)(*(int *)(*(int *)(param_1 + 0x74) + 0xa4) + 0x1f8);
-  if (*(int *)(iVar2 + 0x23c) != 0) {
-    *(undefined4 *)(iVar2 + 0x20c) = 0;
-    *(undefined4 *)
-     (*(int *)(*(int *)(*(int *)(param_1 + 0x74) + 0xa4) + 0x1f8) + *(int *)(param_1 + 0x1c) * 4 +
-     0x20c) = 0;
+  Character *character = ((Game *)enemy->app->pGame)->character;
+
+  if (character->combatRegion != (CombatRegion *)0x0) {
+    character->targets[0] = 0;
+    character->targets[enemy->number] = 0;
   }
-  if (param_2 == 1) {
-    uVar1 = *(undefined4 *)(param_1 + 0x24);
-  }
-  else {
-    if (param_2 != 2) {
-      if (param_2 != 3) {
-        return;
-      }
-      uVar1 = *(undefined4 *)(param_1 + 0x28);
-      iVar2 = *(int *)(*(int *)(*(int *)(param_1 + 0x74) + 0xa4) + 0x1f8) +
-              *(int *)(param_1 + 0x1c) * 4;
-      goto LAB_001200a4;
-    }
-    uVar1 = *(undefined4 *)(param_1 + 0x28);
-  }
-  iVar2 = *(int *)(*(int *)(*(int *)(param_1 + 0x74) + 0xa4) + 0x1f8);
-LAB_001200a4:
-  *(undefined4 *)(iVar2 + 0x20c) = uVar1;
-  return;
+  if (how == 1)
+    character->targets[0] = enemy->field_24;
+  else if (how == 2)
+    character->targets[0] = enemy->field_28;
+  else if (how == 3)
+    character->targets[enemy->number] = enemy->field_28;
 }
 
 /* ==== 0x001200AC  (file offset 0x200AC)  FUN_001200ac ================================================ */
@@ -27689,7 +27677,7 @@ void enemy_update(Enemy *enemy,int now,int elapsed)
     /* ---- the code at 0x0011db34 */
     if (enemy->field_90 == 0x1b59) {              /* 7001 */
       *(uint8 *)(enemy->app->field_d4 + 0x4a) = 0;
-      FUN_00120024((int)enemy,4);
+      enemy_set_target(enemy,4);
       if (FUN_0010eb74((int)enemy /* not arguments, register leftovers: now */) == 0)
         return;
       if (enemy->type == 5 || enemy->type == 8) {
@@ -27740,7 +27728,7 @@ void enemy_update(Enemy *enemy,int now,int elapsed)
         (*enemy->field_1a0)(enemy,now);
     }
     else {
-      FUN_00120024((int)enemy,4);
+      enemy_set_target(enemy,4);
       enemy->state = INTEGER_1003;
     }
     break;

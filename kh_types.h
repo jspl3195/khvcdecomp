@@ -334,14 +334,19 @@ typedef struct Character {
     ISwerveObject *shadow;        /* +0x1f0 the scene "CharacterShadow" (FUN_0011ae04) */
     int    hasShadow;             /* +0x1f4 1 when shadow was loaded */
     int    field_1f8;             /* +0x1f8 filled by field_1dc's slot +0x48 */
-    uint8  unknown_1fc[0x28];
+    uint8  unknown_1fc[0x10];
+    int    targets[3];            /* +0x20c entities the player's attacks hit: [0] the current target
+                                     (boss_combat_region_hit_target), [n] the one of the enemy numbered n;
+                                     set by the enemies (enemy_set_target) and FUN_00123d7c */
+    uint8  unknown_218[0x0c];
     int    field_224;             /* +0x224 set to 1 when the Magic key refills MP with an item */
     int    field_228;             /* +0x228 7 at creation; the player's state handed to the hit functions */
     int    selectedSpell;         /* +0x22c 0-2, or 8 for a random known one (character_on_key) */
     int    field_230;             /* +0x230 */
     LevelObject *field_234;       /* +0x234 the level object named by hash 0x2BB0C920 (FUN_00112dbc) */
     LevelObject *field_238;       /* +0x238 the level object named by hash 0x19DB98DB */
-    uint8  unknown_23c[0x08];
+    struct CombatRegion *combatRegion;          /* +0x23c the combat region it is in, or 0 */
+    struct BossCombatRegion *bossCombatRegion;  /* +0x240 the boss combat region it is in, or 0 */
     int    field_244;             /* +0x244 cleared when the action key starts an attack */
     uint8  unknown_248[0x30];
     uint8  forwardsHeld;          /* +0x278 the movement keys: 0 up, 1 held (character_on_key, from its */
