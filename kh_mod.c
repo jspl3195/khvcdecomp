@@ -2276,11 +2276,11 @@ LAB_00104338:
       if (param_2 == 0x6c) {
 LAB_00104dac:
         iVar9 = screen_stack_top(param_1);
-                    /* 0x104dbc bl ui_element_find_child / 0x104dc0 bl FUN_00108e8c: nothing touches r0 in
-                       between, so FUN_00108e8c's argument is ui_element_find_child's result (the entry
+                    /* 0x104dbc bl ui_element_find_child / 0x104dc0 bl text_box_scroll_down: nothing touches r0 in
+                       between, so text_box_scroll_down's argument is ui_element_find_child's result (the entry
                        found for id 800); Ghidra dropped it */
         iVar7 = ui_element_find_child(iVar9,800);
-        iVar7 = FUN_00108e8c(iVar7);
+        iVar7 = text_box_scroll_down(iVar7);
         if (iVar7 == 1) goto LAB_00104dcc;
         if (param_2 == 0x6d) goto LAB_00101f10;
       }
@@ -2451,14 +2451,14 @@ LAB_00103858:
           FUN_0011448c(*(undefined4 *)(*param_1 + 0x94),piVar4,WORD_HEXADECIMAL_0AE069A1,&local_38);
           (**(code **)(*piVar4 + 4))(piVar4);
           if (local_38 != (void *)0x0) {
-            iVar19 = FUN_0010ba08(0,6);
+            iVar19 = text_style_create(0,6);
             *(undefined4 *)(iVar19 + 4) = 0x24;
             uVar10 = FUN_00107fd0(param_1,600,1).low;
             uVar11 = FUN_00107fd0(param_1,800,2).low;
             uVar13 = FUN_00107fd0(param_1,200,1).low;
-            uVar10 = FUN_0010b2dc(0,0x19,uVar13,uVar11,uVar10,param_1,iVar19);
+            uVar10 = text_box_create(0,0x19,uVar13,uVar11,uVar10,param_1,iVar19);
             FUN_0010e210(*(undefined4 *)(*param_1 + 0x94),&local_38,&local_3c);
-            FUN_00109b4c(uVar10,local_3c,0);
+            text_box_set_text(uVar10,local_3c,0);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
             (*g_pHelperFuncs->free)(local_38);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -2515,10 +2515,10 @@ LAB_00103858:
       memcpy_word_aligned(local_a8 + 10,(int32)DATA_AT_00127B1C,0x18);
       iVar9 = 0;
       do {
-        iVar19 = FUN_0010b650(0,uVar11,iVar7,uVar13,0,param_1,local_74[iVar9 + 3],0x24).low;
+        iVar19 = (int)text_line_create(0,uVar11,iVar7,uVar13,0,param_1,local_74[iVar9 + 3],0x24);
         *(int *)(iVar19 + 0x10) = local_a8[iVar9 + 10];
         ui_element_add_child(uVar10,iVar19,0);
-        iVar19 = FUN_0010b650(0,uVar11,iVar7,uVar13,0,param_1,0,0x22).low;
+        iVar19 = (int)text_line_create(0,uVar11,iVar7,uVar13,0,param_1,0,0x22);
         pvVar16 = helper_malloc(0x40);
         local_a8[9] = FUN_00107ecc(param_1,local_74[iVar9 + 9]);
                     /* helper[10] AECHAR * wstrcat(AECHAR *dst, const AECHAR *src)  (AEEHelperFuncs
@@ -2526,7 +2526,7 @@ LAB_00103858:
         (*g_pHelperFuncs->wstrcat)(pvVar16,local_a8[9]);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
         (*g_pHelperFuncs->free)(local_a8[9]);
-        FUN_00109f48(iVar19,pvVar16);
+        text_line_set_text(iVar19,pvVar16);
         helper_free(pvVar16);
         *(int *)(iVar19 + 0x10) = local_a8[iVar9 + 10];
         ui_element_add_child(uVar10,iVar19,0);
@@ -2593,10 +2593,10 @@ LAB_001050b0:
       break;
     case 0x7d:
       iVar9 = screen_stack_top(param_1);
-      iVar7 = FUN_0010ba08(0,6);
+      iVar7 = text_style_create(0,6);
       *(undefined4 *)(iVar7 + 4) = 0x21;
       uVar10 = FUN_00107fd0(param_1,700,1).low;
-      uVar10 = FUN_0010b2dc(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
+      uVar10 = text_box_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar7);
       FUN_00109f00(uVar10,WORD_HEXADECIMAL_2E8D6E9D);
       ui_element_add_child(iVar9,uVar10,500);
@@ -2649,10 +2649,10 @@ LAB_001050b0:
       memcpy_word_aligned(local_a8 + 6,(int32)DATA_AT_00127B50,0x1c);
       iVar19 = 0;
       do {
-        iVar17 = FUN_0010b650(0,uVar10,iVar7,uVar11,0,param_1,local_74[iVar19],0x24).low;
+        iVar17 = (int)text_line_create(0,uVar10,iVar7,uVar11,0,param_1,local_74[iVar19],0x24);
         *(int *)(iVar17 + 0x10) = local_a8[iVar19 + 6];
         ui_element_add_child(iVar9,iVar17,0);
-        iVar17 = FUN_0010b650(0,uVar10,iVar7,uVar11,0,param_1,0,0x22).low;
+        iVar17 = (int)text_line_create(0,uVar10,iVar7,uVar11,0,param_1,0,0x22);
         pvVar16 = helper_malloc(0x40);
         local_a8[5] = FUN_00107ecc(param_1,local_74[iVar19 + 7]);
                     /* helper[10] AECHAR * wstrcat(AECHAR *dst, const AECHAR *src)  (AEEHelperFuncs
@@ -2660,7 +2660,7 @@ LAB_001050b0:
         (*g_pHelperFuncs->wstrcat)(pvVar16,local_a8[5]);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
         (*g_pHelperFuncs->free)(local_a8[5]);
-        FUN_00109f48(iVar17,pvVar16);
+        text_line_set_text(iVar17,pvVar16);
         helper_free(pvVar16);
         *(int *)(iVar17 + 0x10) = local_a8[iVar19 + 6];
         ui_element_add_child(iVar9,iVar17,0);
@@ -2695,10 +2695,10 @@ LAB_00104a24:
       uVar13 = FUN_00107fd0(param_1,100,2).low;
       uVar10 = FUN_0010bba0(0,uVar13,uVar11,(int)sVar1 + iVar19 * -2,uVar10,param_1,0xb,0,1);
       ui_element_add_child(iVar9,uVar10,700);
-      iVar19 = FUN_0010ba08(0,6);
+      iVar19 = text_style_create(0,6);
       *(undefined4 *)(iVar19 + 4) = 0x21;
       uVar10 = FUN_00107fd0(param_1,800,1).low;
-      uVar10 = FUN_0010b2dc(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
+      uVar10 = text_box_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar19);
       FUN_00109f00(uVar10,WORD_HEXADECIMAL_0528CA88);
       ui_element_add_child(iVar9,uVar10,500);
@@ -2734,10 +2734,10 @@ LAB_00104a24:
       return local_34;
     case 0x82:
       iVar9 = screen_stack_top(param_1);
-      iVar19 = FUN_0010ba08(0,6);
+      iVar19 = text_style_create(0,6);
       *(undefined4 *)(iVar19 + 4) = 0x21;
       uVar10 = FUN_00107fd0(param_1,700,1).low;
-      uVar10 = FUN_0010b2dc(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
+      uVar10 = text_box_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar19);
       FUN_00109f00(uVar10,WORD_HEXADECIMAL_0528CA88);
       ui_element_add_child(iVar9,uVar10,500);
@@ -2792,15 +2792,15 @@ LAB_00101fa8:
       FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_24017E3E,WORD_HEXADECIMAL_01B449A3);
       uVar10 = FUN_00107fd0(param_1,0xfa,1).low;
       uVar11 = FUN_00107fd0(param_1,0x32,2).low;
-      uVar10 = FUN_0010b650(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_272E6865,0x24).low;
+      uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_272E6865,0x24);
       ui_element_add_child(iVar9,uVar10,0);
       uVar10 = FUN_00107fd0(param_1,0xfa,1).low;
-      uVar10 = FUN_0010b650(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),0,param_1,
-                            WORD_HEXADECIMAL_00C833EC,0x21).low;
+      uVar10 = (int)text_line_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),0,param_1,
+                            WORD_HEXADECIMAL_00C833EC,0x21);
       ui_element_add_child(iVar9,uVar10,0);
       uVar10 = FUN_00107fd0(param_1,0xfa,1).low;
       uVar11 = FUN_00107fd0(param_1,0x3b6,2).low;
-      uVar10 = FUN_0010b650(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_04D4D70F,0x22).low;
+      uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_04D4D70F,0x22);
       ui_element_add_child(iVar9,uVar10,0);
       iVar19 = 1;
       iVar7 = 0x18;
@@ -2815,7 +2815,7 @@ LAB_00101fa8:
           local_28 = local_2c;
           uVar10 = FUN_00107fd0(param_1,local_2c,1).low;
           uVar11 = FUN_00107fd0(param_1,0x32,2).low;
-          iVar17 = FUN_0010b650(0,uVar11,uVar10,0,0,param_1,0,0x24).low;
+          iVar17 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,0,0x24);
           p = helper_malloc(0x80);
                     /* helper[16] AECHAR * strtowstr(const char *src, AECHAR *dst, int nDstBytes)
                        (AEEHelperFuncs +0x40, via *(base-4)) */
@@ -2828,7 +2828,7 @@ LAB_00101fa8:
           (*g_pHelperFuncs->wstrupper)(p_00);
           *p = *p_00;
           helper_free(p_00);
-          FUN_00109f48(iVar17,p);
+          text_line_set_text(iVar17,p);
           helper_free(p);
           ui_element_add_child(iVar9,iVar17,0);
           local_38 = (void *)0x0;
@@ -2837,8 +2837,8 @@ LAB_00101fa8:
                        *(undefined4 *)(*(int *)(*param_1 + 0xa8) + iVar7 * 4 + 0x5f0),&local_38,
                        &local_3c);
           uVar10 = FUN_00107fd0(param_1,local_2c,1).low;
-          local_40 = (void *)FUN_0010b650(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),0,
-                                          param_1,0,0x21).low;
+          local_40 = (void *)(int)text_line_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),0,
+                                          param_1,0,0x21);
           pvVar16 = helper_malloc(0x80);
           pvVar5 = helper_malloc(0x40);
                     /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
@@ -2848,14 +2848,14 @@ LAB_00101fa8:
                     /* helper[16] AECHAR * strtowstr(const char *src, AECHAR *dst, int nDstBytes)
                        (AEEHelperFuncs +0x40, via *(base-4)) */
           (*g_pHelperFuncs->strtowstr)(pvVar5,pvVar16,0x40);
-          FUN_00109f48(local_40,pvVar16);
+          text_line_set_text(local_40,pvVar16);
           helper_free(pvVar16);
           helper_free(pvVar5);
           ui_element_add_child(iVar9,local_40,0);
           if (local_3c != (void *)0xffffffff) {
             uVar10 = FUN_00107fd0(param_1,local_28,1).low;
             uVar11 = FUN_00107fd0(param_1,0x3b6,2).low;
-            local_44 = (void *)FUN_0010b650(0,uVar11,uVar10,0,0,param_1,0,0x22).low;
+            local_44 = (void *)(int)text_line_create(0,uVar11,uVar10,0,0,param_1,0,0x22);
             pvVar16 = helper_malloc(0x80);
             pvVar5 = helper_malloc(0x40);
                     /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
@@ -2865,7 +2865,7 @@ LAB_00101fa8:
                     /* helper[16] AECHAR * strtowstr(const char *src, AECHAR *dst, int nDstBytes)
                        (AEEHelperFuncs +0x40, via *(base-4)) */
             (*g_pHelperFuncs->strtowstr)(pvVar5,pvVar16,0x40);
-            FUN_00109f48(local_44,pvVar16);
+            text_line_set_text(local_44,pvVar16);
             helper_free(pvVar16);
             helper_free(pvVar5);
             ui_element_add_child(iVar9,local_44,0);
@@ -2929,14 +2929,14 @@ LAB_00101db4:
       iVar9 = FUN_0010bd7c(0,param_1,1);
       FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_10FB280A,0x73);
       FUN_00109a10(iVar9,1,0,0);
-      iVar7 = FUN_0010ba08(0,6);
+      iVar7 = text_style_create(0,6);
       *(undefined4 *)(iVar7 + 4) = 9;
       *(undefined4 *)(iVar7 + 0x18) = WORD_HEXADECIMAL_FFEFEFEF;
       uVar10 = FUN_00107fd0(param_1,600,1).low;
       uVar11 = FUN_00107fd0(param_1,800,2).low;
       uVar13 = FUN_00107fd0(param_1,200,1).low;
       uVar14 = FUN_00107fd0(param_1,100,2).low;
-      iVar7 = FUN_0010b2dc(0,uVar14,uVar13,uVar11,uVar10,param_1,iVar7);
+      iVar7 = text_box_create(0,uVar14,uVar13,uVar11,uVar10,param_1,iVar7);
       FUN_00109f00(iVar7,WORD_HEXADECIMAL_27B19885);
       uVar10 = 1000;
       goto LAB_00104da0;
@@ -2967,7 +2967,7 @@ LAB_00101db4:
     }
     uVar10 = screen_stack_top(param_1);
     iVar7 = ui_element_find_child(uVar10,0xc9);
-    FUN_00109ff8(*(undefined4 *)(iVar7 + 0x30),pvVar16);
+    text_line_set_text_id(*(undefined4 *)(iVar7 + 0x30),pvVar16);
     iVar7 = *(int *)(*(int *)(*param_1 + 0x94) + 4);
     if (iVar7 != 0) {
       FUN_0010a03c(iVar7,*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x598));
@@ -3028,20 +3028,20 @@ LAB_0010489c:
                 local_a8[10] = 6;
               }
               for (; iVar17 < local_a8[10]; iVar17 = iVar17 + 1) {
-                iVar7 = FUN_0010b650(0,uVar10,iVar19,uVar11,0,param_1,local_74[iVar17 + 10],0x24).low;
+                iVar7 = (int)text_line_create(0,uVar10,iVar19,uVar11,0,param_1,local_74[iVar17 + 10],0x24);
                 *(int *)(iVar7 + 0x10) = local_a8[iVar17 + 0xb];
                 if (iVar17 == 5) {
-                  FUN_00109f48(iVar7,*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x5bc));
+                  text_line_set_text(iVar7,*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x5bc));
                 }
                 ui_element_add_child(iVar9,iVar7,0);
-                iVar7 = FUN_0010b650(0,uVar10,iVar19,uVar11,0,param_1,0,0x22).low;
+                iVar7 = (int)text_line_create(0,uVar10,iVar19,uVar11,0,param_1,0,0x22);
                 pvVar16 = helper_malloc(0x40);
                 local_a8[9] = FUN_00107ecc(param_1,local_74[iVar17 + 4]);
                     /* helper[10] AECHAR * wstrcat(AECHAR *dst, const AECHAR *src)  (AEEHelperFuncs
                        +0x28, via *(base-4)) */
                 (*g_pHelperFuncs->wstrcat)(pvVar16,local_a8[9]);
                 if (iVar17 == 5) {
-                  local_a8[8] = FUN_00107fec(param_1,WORD_HEXADECIMAL_1EC39991);
+                  local_a8[8] = screen_stack_get_text(param_1,WORD_HEXADECIMAL_1EC39991);
                     /* helper[10] AECHAR * wstrcat(AECHAR *dst, const AECHAR *src)  (AEEHelperFuncs
                        +0x28, via *(base-4)) */
                   (*g_pHelperFuncs->wstrcat)(pvVar16,local_a8[8]);
@@ -3055,7 +3055,7 @@ LAB_0010489c:
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
                   (*g_pHelperFuncs->free)(local_a8[8]);
                 }
-                FUN_00109f48(iVar7,pvVar16);
+                text_line_set_text(iVar7,pvVar16);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
                 (*g_pHelperFuncs->free)(pvVar16);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -3115,16 +3115,16 @@ LAB_0010489c:
         uVar10 = screen_stack_top(param_1);
         iVar19 = ui_element_find_child(uVar10,300);
         psVar18 = *(short **)(iVar19 + 8);
-        iVar19 = FUN_0010ba08(0,5);
+        iVar19 = text_style_create(0,5);
         *(undefined4 *)(iVar19 + 4) = 0x24;
         *(undefined4 *)(iVar19 + 0x18) = WORD_HEXADECIMAL_FFEFEFEF;
-        uVar10 = FUN_0010b2dc(0,(int)*psVar18,(int)psVar18[1],(int)psVar18[2],(int)psVar18[3],
+        uVar10 = text_box_create(0,(int)*psVar18,(int)psVar18[1],(int)psVar18[2],(int)psVar18[3],
                               param_1,iVar19);
         FUN_00109f00(uVar10,uVar11);
         ui_element_add_child(iVar9,uVar10,0);
         uVar10 = FUN_00107fd0(param_1,0x2a8,1).low;
         uVar11 = FUN_00107fd0(param_1,500,2).low;
-        uVar10 = FUN_0010b650(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_16A5390B,0x21).low;
+        uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_16A5390B,0x21);
         ui_element_add_child(iVar9,uVar10,0);
         local_38 = helper_malloc(0x20);
                     /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
@@ -3134,9 +3134,9 @@ LAB_0010489c:
                    *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x52c));
         uVar10 = FUN_00107fd0(param_1,INTEGER_735,1).low;
         uVar11 = FUN_00107fd0(param_1,500,2).low;
-        uVar10 = FUN_0010b650(0,uVar11,uVar10,0,0,param_1,0,0x21).low;
+        uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,0,0x21);
         FUN_0010e210(*(undefined4 *)(*param_1 + 0x94),&local_38,&local_3c);
-        FUN_00109f48(uVar10,local_3c);
+        text_line_set_text(uVar10,local_3c);
         helper_free(local_38);
         if (local_3c != (void *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -3238,10 +3238,10 @@ LAB_001042b8:
     memcpy_word_aligned(local_a8 + 8,(int32)DATA_AT_00127B88,0x1c);
     iVar19 = 0;
     do {
-      iVar17 = FUN_0010b650(0,uVar10,iVar7,uVar11,0,param_1,local_74[iVar19 + 2],0x24).low;
+      iVar17 = (int)text_line_create(0,uVar10,iVar7,uVar11,0,param_1,local_74[iVar19 + 2],0x24);
       *(int *)(iVar17 + 0x10) = local_a8[iVar19 + 8];
       ui_element_add_child(iVar9,iVar17,0);
-      iVar17 = FUN_0010b650(0,uVar10,iVar7,uVar11,0,param_1,0,0x22).low;
+      iVar17 = (int)text_line_create(0,uVar10,iVar7,uVar11,0,param_1,0,0x22);
       pvVar16 = helper_malloc(0x40);
       local_a8[7] = FUN_00107ecc(param_1,local_74[iVar19 + 9]);
                     /* helper[10] AECHAR * wstrcat(AECHAR *dst, const AECHAR *src)  (AEEHelperFuncs
@@ -3250,7 +3250,7 @@ LAB_001042b8:
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
       (*g_pHelperFuncs->free)(local_a8[7]);
       if (iVar19 < 2) {
-        local_a8[6] = FUN_00107fec(param_1,WORD_HEXADECIMAL_1EC39991);
+        local_a8[6] = screen_stack_get_text(param_1,WORD_HEXADECIMAL_1EC39991);
                     /* helper[10] AECHAR * wstrcat(AECHAR *dst, const AECHAR *src)  (AEEHelperFuncs
                        +0x28, via *(base-4)) */
         (*g_pHelperFuncs->wstrcat)(pvVar16,local_a8[6]);
@@ -3269,7 +3269,7 @@ LAB_001042b8:
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
         (*g_pHelperFuncs->free)(local_a8[6]);
       }
-      FUN_00109f48(iVar17,pvVar16);
+      text_line_set_text(iVar17,pvVar16);
       helper_free(pvVar16);
       *(int *)(iVar17 + 0x10) = local_a8[iVar19 + 8];
       ui_element_add_child(iVar9,iVar17,0);
@@ -3347,9 +3347,9 @@ LAB_001042b8:
     local_3c = (void *)(iVar12 + iVar8 * -2);
     pvVar16 = (void *)((int)local_3c + iVar8 * -2);
     iVar19 = (int)local_38 + iVar8;
-    uVar10 = FUN_0010b650(0,iVar19,iVar17,pvVar16,0,param_1,WORD_HEXADECIMAL_02AAF639,0x24).low;
+    uVar10 = (int)text_line_create(0,iVar19,iVar17,pvVar16,0,param_1,WORD_HEXADECIMAL_02AAF639,0x24);
     ui_element_add_child(iVar7,uVar10,0);
-    iVar19 = FUN_0010b650(0,iVar19,iVar17,pvVar16,0,param_1,WORD_HEXADECIMAL_1A43CB02,0x22).low;
+    iVar19 = (int)text_line_create(0,iVar19,iVar17,pvVar16,0,param_1,WORD_HEXADECIMAL_1A43CB02,0x22);
     ui_element_add_child(iVar7,iVar19,0);
     iVar12 = FUN_00107fd0(param_1,0x1e,1).low;
     iVar17 = iVar12 + *(int *)(iVar19 + 0x34) + iVar17;
@@ -3369,12 +3369,12 @@ LAB_001042b8:
     local_30 = (int)local_3c - iVar8;
     do {
       iVar12 = FUN_0010bba0(0,local_38,iVar17,local_3c,0,param_1,6,local_74[iVar19 + 1],1);
-      FUN_00109ff8(*(undefined4 *)(iVar12 + 0x30),local_74[iVar19 + 9]);
+      text_line_set_text_id(*(undefined4 *)(iVar12 + 0x30),local_74[iVar19 + 9]);
       psVar18 = *(short **)(*(int *)(iVar12 + 0x30) + 8);
       *psVar18 = *psVar18 + (short)iVar8;
-      iVar20 = FUN_0010b650(0,local_38,iVar17,local_30,0,param_1,0,0x22).low;
+      iVar20 = (int)text_line_create(0,local_38,iVar17,local_30,0,param_1,0,0x22);
       local_78 = (void *)FUN_00107ecc(param_1,local_74[iVar19 + 5]);
-      FUN_00109f48(iVar20,local_78);
+      text_line_set_text(iVar20,local_78);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
       (*g_pHelperFuncs->free)(local_78);
       ui_element_add_child(iVar12,iVar20,0);
@@ -3393,7 +3393,7 @@ LAB_001042b8:
     } while (iVar19 < 4);
     uVar10 = FUN_00107fd0(param_1,0x2a8,1).low;
     uVar11 = FUN_00107fd0(param_1,500,2).low;
-    uVar10 = FUN_0010b650(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_16A5390B,0x21).low;
+    uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_16A5390B,0x21);
     ui_element_add_child(iVar9,uVar10,0);
     local_78 = helper_malloc(0x20);
     iVar19 = INTEGER_MINUS_16076;
@@ -3403,9 +3403,9 @@ LAB_001042b8:
               (local_78,(int32)STRING_PERCENT_D,*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x52c));
     uVar10 = FUN_00107fd0(param_1,INTEGER_735,1).low;
     uVar11 = FUN_00107fd0(param_1,500,2).low;
-    uVar10 = FUN_0010b650(0,uVar11,uVar10,0,0,param_1,0,0x21).low;
+    uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,0,0x21);
     FUN_0010e210(*(undefined4 *)(*param_1 + 0x94),&local_78,local_a8 + 0xb);
-    FUN_00109f48(uVar10,local_a8[0xb]);
+    text_line_set_text(uVar10,local_a8[0xb]);
     helper_free(local_78);
     if (local_a8[0xb] != 0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -3460,7 +3460,7 @@ LAB_00104360:
     iVar17 = FUN_00107fd0(param_1,10,1).low;
     iVar8 = 0;
     do {
-      iVar12 = FUN_0010b650(0,uVar10,iVar19,0,0,param_1,local_74[iVar8 + 9],0x24).low;
+      iVar12 = (int)text_line_create(0,uVar10,iVar19,0,0,param_1,local_74[iVar8 + 9],0x24);
       ui_element_add_child(iVar9,iVar12,0);
       iVar20 = *(int *)(iVar12 + 0x34);
       iVar19 = iVar20 + iVar17 + iVar19;
@@ -3540,7 +3540,7 @@ LAB_00104360:
     }
     uVar10 = screen_stack_top(param_1);
     iVar7 = ui_element_find_child(uVar10,200);
-    FUN_00109ff8(*(undefined4 *)(iVar7 + 0x30),pvVar16);
+    text_line_set_text_id(*(undefined4 *)(iVar7 + 0x30),pvVar16);
     iVar7 = *(int *)(*param_1 + 0xbc);
     if (iVar7 != 0) {
       FUN_0010a03c(iVar7,*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x594));
@@ -3566,19 +3566,19 @@ LAB_001048a4:
     iVar9 = FUN_0010bd7c(0,param_1,1);
     FUN_001055c4(param_1,iVar9,0,uVar10,0);
     FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0xffffffff);
-    iVar19 = FUN_0010ba08(0,5);
+    iVar19 = text_style_create(0,5);
     *(undefined4 *)(iVar19 + 4) = 0x24;
     *(undefined4 *)(iVar19 + 0x18) = WORD_HEXADECIMAL_FFEFEFEF;
     local_38 = (void *)FUN_00107fd0(param_1,600,1).low;
     uVar10 = FUN_00107fd0(param_1,800,2).low;
     uVar13 = FUN_00107fd0(param_1,200,1).low;
     uVar14 = FUN_00107fd0(param_1,100,2).low;
-    uVar10 = FUN_0010b2dc(0,uVar14,uVar13,uVar10,local_38,param_1,iVar19);
+    uVar10 = text_box_create(0,uVar14,uVar13,uVar10,local_38,param_1,iVar19);
     if (param_2 == 0xe || param_2 == 0xf) {
-      FUN_0011421c(*(undefined4 *)(*param_1 + 0x98),uVar11,&local_38);
+      text_table_get_text(*(undefined4 *)(*param_1 + 0x98),uVar11,&local_38);
       FUN_0011ed3c(*(undefined4 *)(*param_1 + 0x94),&local_38);
       FUN_0010e210(*(undefined4 *)(*param_1 + 0x94),&local_38,&local_3c);
-      FUN_00109b4c(uVar10,local_3c,0);
+      text_box_set_text(uVar10,local_3c,0);
       (*g_pHelperFuncs->free)(local_38);
       (*g_pHelperFuncs->free)(local_3c);
     }
@@ -3712,15 +3712,15 @@ int FUN_001052e0(int param_1,undefined4 param_2,int param_3,int param_4,int para
   }
   FUN_001092c0(param_1,uVar2);
 LAB_0010532c:
-  iVar1 = FUN_0010ba08(0,param_9);
+  iVar1 = text_style_create(0,param_9);
   if (param_4 == param_6) {
     *(undefined1 *)(iVar1 + 0x24) = 1;
   }
-  uVar2 = FUN_0010b2dc(0,param_3,param_4,param_5 - param_3,param_6 - param_4,
+  uVar2 = text_box_create(0,param_3,param_4,param_5 - param_3,param_6 - param_4,
                        *(undefined4 *)(param_1 + 0x20),iVar1 /* not arguments, value leftovers: iVar4,param_2,iVar3,iVar5 */);
   iVar4 = param_1 + param_9 * 4;
   *(undefined4 *)(iVar4 + 0x58) = uVar2;
-  FUN_00109b4c(uVar2,param_2,0);
+  text_box_set_text(uVar2,param_2,0);
   if (param_9 == 0) {
     FUN_0010955c(*(undefined4 *)(param_1 + 0x58),param_7,param_8);
   }
@@ -3750,7 +3750,7 @@ void FUN_001053a8(undefined4 param_1,undefined4 param_2,int param_3,int param_4,
   for (; iVar5 < param_3; iVar5 = iVar5 + 1) {
     iVar2 = FUN_0010bba0(0,param_8,param_9,param_10,param_11,param_1,param_7,
                          *(undefined4 *)(param_5 + iVar5 * 4),1);
-    FUN_00109ff8(*(undefined4 *)(iVar2 + 0x30),*(undefined4 *)(param_4 + iVar5 * 4));
+    text_line_set_text_id(*(undefined4 *)(iVar2 + 0x30),*(undefined4 *)(param_4 + iVar5 * 4));
     if (iVar5 == 0) {
       FUN_00105224(iVar2,param_2);
     }
@@ -3802,7 +3802,7 @@ void FUN_00105538(int param_1,undefined4 param_2,int param_3)
   param_1 = param_1 + param_3 * 4;
   *(undefined4 *)(param_1 + 0x6c) = 1;
   
-  uVar1 = int_to_float(FUN_00107f88(*(undefined4 *)(param_1 + 0x58)));
+  uVar1 = int_to_float(text_box_get_content_height(*(undefined4 *)(param_1 + 0x58)));
   uVar1 = float_divide(uVar1,FLOAT_500);
   *(undefined4 *)(param_1 + 0x94) = uVar1;
   uVar1 = int_to_float(*(int16 *)(*(int *)(*(int *)(param_1 + 0x58) + 8) + 2));
@@ -3820,7 +3820,7 @@ void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
   int iVar4;
   
   uVar1 = FUN_00107fd0(param_1,0x5a,1).low;
-  iVar2 = FUN_0010b650(0,0,uVar1,(int)*(short *)(*(int *)(param_1 + 0x14) + 4),0,param_1,param_4,9).low;
+  iVar2 = (int)text_line_create(0,0,uVar1,(int)*(short *)(*(int *)(param_1 + 0x14) + 4),0,param_1,param_4,9);
   if (param_3 != 0) {
     *(int *)(iVar2 + 0x10) = param_3;
   }
@@ -3828,9 +3828,9 @@ void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
   if (param_5 != 0) {
     iVar2 = FUN_00107fd0(param_1,0x6e,1).low;
     iVar3 = FUN_00107fd0(param_1,100,2).low;
-    iVar4 = FUN_0010ba08(0,6);
+    iVar4 = text_style_create(0,6);
     *(undefined4 *)(iVar4 + 4) = 0x21;
-    iVar2 = FUN_0010b2dc(0,iVar3,iVar2,(int)*(short *)(*(int *)(param_1 + 0x14) + 4) + iVar3 * -2,
+    iVar2 = text_box_create(0,iVar3,iVar2,(int)*(short *)(*(int *)(param_1 + 0x14) + 4) + iVar3 * -2,
                          *(short *)(*(int *)(param_1 + 0x14) + 6) - iVar2,param_1,iVar4);
     FUN_00109f00(iVar2,param_5);
     if (param_3 != 0) {
@@ -4030,60 +4030,48 @@ void FUN_00105c5c(int param_1)
   return;
 }
 
-/* ==== 0x00105C98  (file offset 0x05C98)  FUN_00105c98 ================================================ */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x001016A0): written from
-   its disassembly. */
-void FUN_00105c98(int param_1)
+/* ==== 0x00105C98  (file offset 0x05C98)  text_box_destroy ============================================ */
+/* GUESS: name. The text box's destructor (vtable slot 0): destroys and frees its lines and its "more"
+   line, empties its line and child lists, frees the line list, the style and the tail, and ends with the
+   base destructor (the binary's tail jump at 0x00105d44). Ghidra has no function here (only reached
+   through the vtable); written from its disassembly. */
+void text_box_destroy(TextBox *box)
 
 {
-  int *p;
-  int iVar1;
+  int32 *line;
+  int32 i;
 
-  for (iVar1 = 0; (p = (int *)list_get_entry(*(UIList **)(param_1 + 0x30),iVar1)) != (int *)0x0; iVar1 = iVar1 + 1) {
-    (*(code *)*(int *)*p)(p);                     /* destroy: vtable slot 0 */
-    helper_free(p);
+  for (i = 0; (line = (int32 *)list_get_entry(box->lines,i)) != (int32 *)0x0; i++) {
+    (*(code *)*(int32 *)*line)(line);             /* destroy: vtable slot 0 */
+    helper_free(line);
   }
-  if (*(int **)(param_1 + 0x48) != (int *)0x0) {
-    (*(code *)*(int *)**(int **)(param_1 + 0x48))(*(int **)(param_1 + 0x48));
-    helper_free(*(void **)(param_1 + 0x48));
-    *(int *)(param_1 + 0x48) = 0;
+  if (box->moreLine != (TextLine *)0x0) {
+    (*(code *)*(int32 *)*(int32 *)box->moreLine)(box->moreLine);
+    helper_free(box->moreLine);
+    box->moreLine = (TextLine *)0x0;
   }
-  **(int **)(param_1 + 0x30) = 0;
-  **(int **)(param_1 + 0x24) = 0;
-  if (*(int *)(param_1 + 0x30) != 0) {
-    FUN_0010cdd8(*(int *)(param_1 + 0x30),1);
-  }
-  helper_free(*(void **)(param_1 + 0x34));
-  if (*(int *)(param_1 + 0x40) != 0) {
-    helper_free(*(void **)(param_1 + 0x40));
-  }
-  ui_element_destroy(param_1);                          /* the binary's tail jump (0x00105d44) */
-  return;
+  box->lines->count = 0;
+  ((UIElement *)box)->children->count = 0;
+  if (box->lines != (UIList *)0x0)
+    FUN_0010cdd8((int32)box->lines,1);
+  helper_free(box->style);
+  if (box->tail != (AEETriangle *)0x0)
+    helper_free(box->tail);
+  ui_element_destroy((UIElement *)box);
 }
 
 
-/* ==== 0x00105D48  (file offset 0x05D48)  FUN_00105d48 ================================================ */
-void FUN_00105d48(int param_1)
+/* ==== 0x00105D48  (file offset 0x05D48)  text_line_destroy =========================================== */
+/* GUESS: name. The text line's destructor (vtable slot 0): frees its text and ends with the base
+   destructor (the binary's tail jump at 0x00105d74). */
+void text_line_destroy(TextLine *line)
 
 {
-  int *p;
-  int iVar1;
-  
-  if (*(int *)(param_1 + 0x38) != 0) {
-    (*g_pHelperFuncs->free)(*(void **)(param_1 + 0x38));
-  }
-  iVar1 = 0;
-  while (p = (int *)list_get_entry(*(undefined4 *)(param_1 + 0x24),iVar1), p != (int *)0x0) {
-    (*(code *)(*(int *)*p))(p);
-    helper_free(p);
-    iVar1 = iVar1 + 1;
-  }
-  if (*(int *)(param_1 + 0x24) != 0) {
-    FUN_0010cdd8(*(int *)(param_1 + 0x24),1);
-  }
-  helper_free(*(undefined4 *)(param_1 + 8));
-  return;
+  if (line->text != (AECHAR *)0x0)
+    (*g_pHelperFuncs->free)(line->text);
+  ui_element_destroy((UIElement *)line);
 }
+
 
 /* ==== 0x00105D7C  (file offset 0x05D7C)  FUN_00105d7c ================================================ */
 void FUN_00105d7c(int param_1)
@@ -4139,7 +4127,7 @@ void FUN_00105dc8(int param_1)
 /* GUESS: name. The destructor (vtable slot 0) of the base UI element (VTABLE_00101724), which every other
    class's destructor ends with: destroys and frees each child (their own slot 0), frees the child list
    (FUN_0010cdd8) and the rectangle; the element itself is freed by whoever destroys it. Ghidra has no
-   function here (only reached through the vtable and as the tail of FUN_00105dc8 / FUN_00105c98);
+   function here (only reached through the vtable and as the tail of FUN_00105dc8 / text_box_destroy);
    written from its disassembly (0x00105de4 - 0x00105e40). */
 void ui_element_destroy(UIElement *element)
 
@@ -4364,8 +4352,8 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
     if ((bool)uVar11) {
       if (*(char *)(param_1 + 0x48) != '\0') {
         (**(code **)(*param_3 + 0x18))(param_3,1);
-        FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_3,WORD_HEXADECIMAL_FF4757DD,2);
-        FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_3,0xff000000,1);
+        graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,WORD_HEXADECIMAL_FF4757DD,2);
+        graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,0xff000000,1);
         memcpy(&arc,(uint *)((int32)DATA_AT_00127A8E),10);
         arc.cx = *(int16 *)(*(int *)(param_1 + 8) + 4) - 0x19;
         arc.cy = *(int16 *)(*(int *)(param_1 + 8) + 6) - 0x19;
@@ -4373,7 +4361,7 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
         iVar2 = 0;
         do {
           if (*(int *)(*(int *)(*(int *)(param_1 + 0x44) + 0xa8) + 0x524) == iVar2) {
-            FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_3,0xff000000,2);
+            graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,0xff000000,2);
           }
           arc.startAngle = 0x87 - iVar2 * 0x2d;
           (**(code **)(*param_3 + 0x60))(param_3,&arc);
@@ -4464,136 +4452,118 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
   return;
 }
 
-/* ==== 0x0010673C  (file offset 0x0673C)  FUN_0010673c ================================================ */
-void FUN_0010673c(int *param_1,undefined4 param_2,int *param_3,undefined4 param_4)
+/* ==== 0x0010673C  (file offset 0x0673C)  text_box_draw =============================================== */
+/* GUESS: names. The text box's draw method (vtable slot 4; the lines are its children, drawn after it):
+   a type 0 style draws a round-cornered box (12 x 12) filled with the secondary colour and outlined with
+   the primary one, and its tail when it has one (a triangle filled, then its two sides from the first
+   point outlined; GUESS: a speech bubble's tail); a framed box (styles 1-3) draws a double line along its
+   bottom between two corner images of the owner's (owner +0x1c - +0x30, one pair per style), the second
+   line in the style's own colour. Written from its disassembly (0x0010673c - 0x00106a84). */
+void text_box_draw(TextBox *box,IDisplay *display,IGraphics *graphics)
 
 {
-  short sVar1;
-  short sVar2;
-  undefined4 uVar3;
-  undefined4 uVar4;
-  short *psVar5;
-  int iVar6;
-  int iVar7;
-  int iVar8;
-  int iVar9;
-  undefined4 local_24;
-  undefined4 local_20;
-  
-  local_24 = param_3;
-  local_20 = param_4;
-  if (*(int *)param_1[0xd] == 0) {
-    uVar3 = (*(code *)(*(int *)(*param_1 + 0x14)))(param_1);
-    uVar4 = (*(code *)(*(int *)(*param_1 + 0x18)))(param_1);
-    (**(code **)(*param_3 + 0x18))(param_3,1);
-    FUN_0010a3e8(param_1[8],param_3,uVar4,2);
-    FUN_0010a3e8(param_1[8],param_3,uVar3,1);
-    (**(code **)(*param_3 + 0xac))(param_3,param_1[2],0xc,0xc);
-    if (param_1[0x10] != 0) {
-      FUN_0010a3e8(param_1[8],param_3,uVar4,1);
-      (**(code **)(*param_3 + 0x18))(param_3,1);
-      (**(code **)(*param_3 + 0x6c))(param_3,param_1[0x10]);
-      FUN_0010a3e8(param_1[8],param_3,uVar3,1);
-      (**(code **)(*param_3 + 0x18))(param_3,0);
-      local_24 = (int *)((uint32)(uint16)(*(undefined2 *)(param_1[0x10] + 2)) << 16 | (uint16)(*(undefined2 *)param_1[0x10]));
-      local_20 = ((uint32)(uint16)(*(undefined2 *)(param_1[0x10] + 6)) << 16 | (uint16)(*(undefined2 *)(param_1[0x10] + 4)));
-      (**(code **)(*param_3 + 0x54))(param_3,&local_24);
-      local_20 = ((uint32)(uint16)(*(undefined2 *)(param_1[0x10] + 10)) << 16 | (uint16)(*(undefined2 *)(param_1[0x10] + 8)));
-      (**(code **)(*param_3 + 0x54))(param_3,&local_24);
+  UIElement *element = (UIElement *)box;
+  ScreenStack *owner = (ScreenStack *)element->owner;
+  uint32 primary;
+  uint32 secondary;
+  uint32 colour;
+  AEELine edge;
+  int32 left;
+  int32 right;
+  int32 imageY;
+  int16 lineY;
+
+  if (box->style->type == 0) {
+    primary = (uint32)(*(code *)*(int32 *)(element->vtable + 0x14))(box);
+    secondary = (uint32)(*(code *)*(int32 *)(element->vtable + 0x18))(box);
+    (*graphics->pvt->SetFillMode)(graphics,1);
+    graphics_set_color((int32)owner,graphics,secondary,2);
+    graphics_set_color((int32)owner,graphics,primary,1);
+    (*graphics->pvt->DrawRoundRect)(graphics,element->rect,0xc,0xc);
+    if (box->tail != (AEETriangle *)0x0) {
+      graphics_set_color((int32)owner,graphics,secondary,1);
+      (*graphics->pvt->SetFillMode)(graphics,1);
+      (*graphics->pvt->DrawTriangle)(graphics,box->tail);
+      graphics_set_color((int32)owner,graphics,primary,1);
+      (*graphics->pvt->SetFillMode)(graphics,0);
+      edge.sx = box->tail->p0.x;
+      edge.sy = box->tail->p0.y;
+      edge.ex = box->tail->p1.x;
+      edge.ey = box->tail->p1.y;
+      (*graphics->pvt->DrawLine)(graphics,&edge);
+      edge.ex = box->tail->p2.x;
+      edge.ey = box->tail->p2.y;
+      (*graphics->pvt->DrawLine)(graphics,&edge);
     }
   }
-  if (param_1[0x13] == 0) {
+  if (box->framed == 0)
     return;
+  left = element->rect->x;
+  right = left + element->rect->dx - 0x2a;
+  imageY = element->rect->y + element->rect->dy - 0xe;
+  lineY = (int16)(element->rect->y + element->rect->dy - 3);
+  graphics_set_color((int32)owner,graphics,(uint32)(*(code *)*(int32 *)(element->vtable + 0x1c))(box),1);
+  (*graphics->pvt->SetFillMode)(graphics,0);
+  edge.sx = (int16)(left + 0x2a);
+  edge.sy = lineY;
+  edge.ex = (int16)(right - 1);
+  edge.ey = lineY;
+  (*graphics->pvt->DrawLine)(graphics,&edge);
+  edge.sy++;
+  edge.ey++;
+  if (box->style->type == 1 || box->style->type == 3 || box->style->type == 2) {
+    if (box->style->type == 1) {
+      (*owner->frameImages[0]->pvt->Draw)(owner->frameImages[0],left,imageY);
+      (*owner->frameImages[1]->pvt->Draw)(owner->frameImages[1],right,imageY);
+      colour = WORD_HEXADECIMAL_FF82ECF3;
+    }
+    else if (box->style->type == 3) {
+      (*owner->frameImages[2]->pvt->Draw)(owner->frameImages[2],left,imageY);
+      (*owner->frameImages[3]->pvt->Draw)(owner->frameImages[3],right,imageY);
+      colour = INTEGER_MINUS_19441;
+    }
+    else {
+      (*owner->frameImages[4]->pvt->Draw)(owner->frameImages[4],left,imageY);
+      (*owner->frameImages[5]->pvt->Draw)(owner->frameImages[5],right,imageY);
+      colour = INTEGER_MINUS_15954;
+    }
+    graphics_set_color((int32)owner,graphics,colour,1);
   }
-  psVar5 = (short *)param_1[2];
-  sVar1 = *psVar5;
-  iVar8 = (int)sVar1;
-  iVar9 = iVar8 + psVar5[2] + -0x2a;
-  iVar7 = (int)psVar5[1] + (int)psVar5[3] + -0xe;
-  sVar2 = (short)((int)psVar5[1] + (int)psVar5[3]) + -3;
-  uVar3 = (*(code *)(*(int *)(*param_1 + 0x1c)))(param_1);
-  FUN_0010a3e8(param_1[8],param_3,uVar3,1 /* not arguments, value leftovers: param_2 */);
-  (**(code **)(*param_3 + 0x18))(param_3,0);
-  *(undefined2 *)((undefined1 *)&local_24 + 0) = sVar1 + 0x2a;
-  *(undefined2 *)((undefined1 *)&local_20 + 0) = (short)iVar9 + -1;
-  *(undefined2 *)((undefined1 *)&local_24 + 2) = sVar2;
-  *(undefined2 *)((undefined1 *)&local_20 + 2) = sVar2;
-  (**(code **)(*param_3 + 0x54))(param_3,&local_24);
-  local_24 = (int *)((uint32)(uint16)(*(undefined2 *)((undefined1 *)&local_24 + 2) + 1) << 16 | (uint16)((short)local_24));
-  local_20 = ((uint32)(uint16)(*(undefined2 *)((undefined1 *)&local_20 + 2) + 1) << 16 | (uint16)((short)local_20));
-  iVar6 = *(int *)param_1[0xd];
-  if (iVar6 == 1) {
-    (**(code **)(**(int **)(param_1[8] + 0x1c) + 8))(*(int **)(param_1[8] + 0x1c),iVar8,iVar7);
-    (**(code **)(**(int **)(param_1[8] + 0x20) + 8))(*(int **)(param_1[8] + 0x20),iVar9,iVar7);
-    iVar6 = param_1[8];
-    uVar3 = WORD_HEXADECIMAL_FF82ECF3;
-  }
-  else if (iVar6 == 3) {
-    (**(code **)(**(int **)(param_1[8] + 0x24) + 8))(*(int **)(param_1[8] + 0x24),iVar8,iVar7);
-    (**(code **)(**(int **)(param_1[8] + 0x28) + 8))(*(int **)(param_1[8] + 0x28),iVar9,iVar7);
-    iVar6 = param_1[8];
-    uVar3 = INTEGER_MINUS_19441;
-  }
-  else {
-    if (iVar6 != 2) goto LAB_00106a70;
-    (**(code **)(**(int **)(param_1[8] + 0x2c) + 8))(*(int **)(param_1[8] + 0x2c),iVar8,iVar7);
-    (**(code **)(**(int **)(param_1[8] + 0x30) + 8))(*(int **)(param_1[8] + 0x30),iVar9,iVar7);
-    iVar6 = param_1[8];
-    uVar3 = INTEGER_MINUS_15954;
-  }
-  FUN_0010a3e8(iVar6,param_3,uVar3,1);
-LAB_00106a70:
-  (**(code **)(*param_3 + 0x54))(param_3,&local_24);
-  return;
+  (*graphics->pvt->DrawLine)(graphics,&edge);
 }
 
-/* ==== 0x00106A94  (file offset 0x06A94)  FUN_00106a94 ================================================ */
-void FUN_00106a94(int *param_1,int *param_2)
+
+/* ==== 0x00106A94  (file offset 0x06A94)  text_line_draw ============================================== */
+/* GUESS: names. The text line's draw method (vtable slot 4): when it has a text, places it in its rectangle
+   by its alignment (bits 4 left, 2 right, else centred; 0x20 top, 0x10 bottom, else in the middle), keeps
+   the place (+0x44, +0x48), sets the display's colours (primary 1, secondary 2: display_set_color) and
+   draws the text transparently (IDisplay DrawText, IDF_TEXT_TRANSPARENT). */
+void text_line_draw(TextLine *line,IDisplay *display)
 
 {
-  uint uVar1;
-  undefined4 uVar2;
-  int iVar3;
-  short *psVar4;
-  
-  if (param_1[0xe] != 0) {
-    uVar1 = param_1[0x10];
-    if ((uVar1 & 4) == 0) {
-      psVar4 = (short *)param_1[2];
-      if ((uVar1 & 2) == 0) {
-        iVar3 = (int)*psVar4 + ((int)psVar4[2] - param_1[0xc]) / 2;
-      }
-      else {
-        iVar3 = ((int)*psVar4 + (int)psVar4[2]) - param_1[0xc];
-      }
-    }
-    else {
-      iVar3 = (int)*(short *)param_1[2];
-    }
-    param_1[0x11] = iVar3;
-    if ((uVar1 & 0x20) == 0) {
-      iVar3 = param_1[2];
-      if ((uVar1 & 0x10) == 0) {
-        iVar3 = (int)*(short *)(iVar3 + 2) + ((int)*(short *)(iVar3 + 6) - param_1[0xd]) / 2;
-      }
-      else {
-        iVar3 = ((int)*(short *)(iVar3 + 2) + (int)*(short *)(iVar3 + 6)) - param_1[0xd];
-      }
-    }
-    else {
-      iVar3 = (int)*(short *)(param_1[2] + 2);
-    }
-    param_1[0x12] = iVar3;
-    uVar2 = (*(code *)(*(int *)(*param_1 + 0x14)))(param_1);
-    FUN_0010a46c(param_1[8],param_2,1,uVar2);
-    uVar2 = (*(code *)(*(int *)(*param_1 + 0x18)))(param_1);
-    FUN_0010a46c(param_1[8],param_2,2,uVar2);
-    (**(code **)(*param_2 + 0x10))
-              (param_2,(short)param_1[0xf],param_1[0xe],0xffffffff,param_1[0x11],param_1[0x12],0,
-               0x8000);
-  }
-  return;
+  AEERect *rect = ((UIElement *)line)->rect;
+
+  if (line->text == (AECHAR *)0x0)
+    return;
+  if (line->alignment & 4)
+    line->textX = rect->x;
+  else if (line->alignment & 2)
+    line->textX = rect->x + rect->dx - line->textWidth;
+  else
+    line->textX = rect->x + (rect->dx - line->textWidth) / 2;
+  if (line->alignment & 0x20)
+    line->textY = rect->y;
+  else if (line->alignment & 0x10)
+    line->textY = rect->y + rect->dy - line->height;
+  else
+    line->textY = rect->y + (rect->dy - line->height) / 2;
+  display_set_color((int32)((UIElement *)line)->owner,display,1,
+                    (uint32)(*(code *)*(int32 *)(((UIElement *)line)->vtable + 0x14))(line));
+  display_set_color((int32)((UIElement *)line)->owner,display,2,
+                    (uint32)(*(code *)*(int32 *)(((UIElement *)line)->vtable + 0x18))(line));
+  (*display->pvt->DrawText)(display,line->font,line->text,-1,line->textX,line->textY,(AEERect *)0x0,0x8000);
 }
+
 
 /* ==== 0x00106BD4  (file offset 0x06BD4)  FUN_00106bd4 ================================================ */
 void FUN_00106bd4(int *param_1,int *param_2,int *param_3)
@@ -4613,8 +4583,8 @@ void FUN_00106bd4(int *param_1,int *param_2,int *param_3)
   uVar1 = (*(code *)(*(int *)(*param_1 + 0x18)))();
   switch(param_1[0xd]) {
   case 6:
-    FUN_0010a3e8(param_1[8],param_3,uVar1,2);
-    FUN_0010a3e8(param_1[8],param_3,uVar1,1);
+    graphics_set_color(param_1[8],param_3,uVar1,2);
+    graphics_set_color(param_1[8],param_3,uVar1,1);
     (**(code **)(*param_3 + 0x18))(param_3,1);
                     /* WARNING: Could not recover jumptable at 0x00106c80. Too many branches */
                     /* WARNING: Treating indirect jump as call */
@@ -4682,7 +4652,7 @@ void FUN_00106e44(int param_1,undefined4 param_2,int *param_3)
     if (psVar4 != (short *)0x0) {
       memcpy(psVar4,*(undefined4 *)(param_1 + 8),8);
     }
-    FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_3,WORD_HEXADECIMAL_FF615A6D,3);
+    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,WORD_HEXADECIMAL_FF615A6D,3);
     (**(code **)(*param_3 + 0x78))(param_3,psVar4);
     sVar2 = FUN_00107fd0(*(undefined4 *)(param_1 + 0x20),0x96,1).low;
     psVar4[3] = psVar4[3] - sVar2;
@@ -4693,13 +4663,13 @@ void FUN_00106e44(int param_1,undefined4 param_2,int *param_3)
     psVar4[1] = psVar4[1] + sVar2;
     psVar4[2] = psVar4[2] + sVar2 * -2;
     psVar4[3] = psVar4[3] + sVar2 * -2;
-    FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_3,uVar1,3);
+    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,uVar1,3);
     (**(code **)(*param_3 + 0x78))(param_3,psVar4);
     *psVar4 = *psVar4 + sVar3;
     psVar4[1] = psVar4[1] + sVar3;
     psVar4[2] = psVar4[2] + sVar3 * -2;
     psVar4[3] = psVar4[3] + sVar3 * -2;
-    FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_3,*(undefined4 *)(param_1 + 0x40),3);
+    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,*(undefined4 *)(param_1 + 0x40),3);
     (**(code **)(*param_3 + 0x78))(param_3,psVar4);
     helper_free(psVar4);
     return;
@@ -4737,49 +4707,58 @@ void ui_element_update_nothing(int32 element,int32 now,int32 elapsed)
 }
 
 
-/* ==== 0x00106FB0  (file offset 0x06FB0)  FUN_00106fb0 ================================================ */
-void FUN_00106fb0(int *param_1,undefined4 param_2,int *param_3)
+/* ==== 0x00106FB0  (file offset 0x06FB0)  text_box_draw_scroll_bar ==================================== */
+/* GUESS: names. The text box's "draw over the children" method (vtable slot 3): for a scrolling box, a bar
+   11 pixels wide along its right edge (filled with the secondary colour, outlined with the primary; its
+   rectangle from DATA_AT_00127D88, {0, 0, 11, 0}), with an up arrow at its top when lines are above and a
+   down arrow at its bottom when lines are below (filled with the primary colour). Written from its
+   disassembly (0x00106fb0 - 0x00107228). */
+void text_box_draw_scroll_bar(TextBox *box,IDisplay *display,IGraphics *graphics)
 
 {
-  undefined4 uVar1;
-  undefined4 uVar2;
-  short local_28;
-  short sStack_26;
-  short local_24;
-  short local_22;
-  short local_20;
-  short sStack_1e;
-  short local_1c;
-  undefined2 local_1a;
-  undefined2 local_16;
-  
-  if ((char)param_1[0x11] != '\0') {
-    uVar1 = (*(code *)(*(int *)(*param_1 + 0x14)))(param_1);
-    uVar2 = (*(code *)(*(int *)(*param_1 + 0x18)))(param_1);
-    FUN_0010a3e8(param_1[8],param_3,uVar1,1);
-    FUN_0010a3e8(param_1[8],param_3,uVar2,2);
-    (**(code **)(*param_3 + 0x18))(param_3,1);
-    memcpy(&local_1c,(int32)DATA_AT_00127D88,8);
-    local_1c = *(short *)param_1[2] + ((short *)param_1[2])[2] + -0xb;
-    local_1a = *(undefined2 *)(param_1[2] + 2);
-    local_16 = *(undefined2 *)(param_1[2] + 6);
-    (**(code **)(*param_3 + 0x58))(param_3,&local_1c);
-    FUN_0010a3e8(param_1[8],param_3,uVar1,2);
-    if (0 < param_1[0xe]) {
-      *(undefined4 *)&local_28 = ((uint32)(uint16)(*(short *)(param_1[2] + 2) + 8) << 16 | (uint16)(*(short *)param_1[2] + ((short *)param_1[2])[2] + -9));
-      *(undefined4 *)&local_24 = ((uint32)(uint16)(*(short *)(param_1[2] + 2) + 8) << 16 | (uint16)(*(short *)param_1[2] + ((short *)param_1[2])[2] + -3));
-      *(undefined4 *)&local_20 = ((uint32)(uint16)(*(short *)(param_1[2] + 2) + 2) << 16 | (uint16)(*(short *)param_1[2] + ((short *)param_1[2])[2] + -6));
-      (**(code **)(*param_3 + 0x6c))(param_3,&local_28);
-    }
-    if (param_1[0xe] + param_1[0xf] < *(int *)param_1[0xc]) {
-      *(undefined4 *)&local_28 = ((uint32)(uint16)(*(short *)(param_1[2] + 2) + *(short *)(param_1[2] + 6) + -9) << 16 | (uint16)(*(short *)param_1[2] + ((short *)param_1[2])[2] + -9));
-      *(undefined4 *)&local_24 = ((uint32)(uint16)(*(short *)(param_1[2] + 2) + *(short *)(param_1[2] + 6) + -9) << 16 | (uint16)(*(short *)param_1[2] + ((short *)param_1[2])[2] + -3));
-      *(undefined4 *)&local_20 = ((uint32)(uint16)(*(short *)(param_1[2] + 2) + *(short *)(param_1[2] + 6) + -3) << 16 | (uint16)(*(short *)param_1[2] + ((short *)param_1[2])[2] + -6));
-      (**(code **)(*param_3 + 0x6c))(param_3,&local_28);
-    }
+  UIElement *element = (UIElement *)box;
+  uint32 primary;
+  uint32 secondary;
+  AEERect bar;
+  AEETriangle arrow;
+  int16 right;
+  int16 bottom;
+
+  if (box->scrollable == 0)
+    return;
+  primary = (uint32)(*(code *)*(int32 *)(element->vtable + 0x14))(box);
+  secondary = (uint32)(*(code *)*(int32 *)(element->vtable + 0x18))(box);
+  graphics_set_color((int32)element->owner,graphics,primary,1);
+  graphics_set_color((int32)element->owner,graphics,secondary,2);
+  (*graphics->pvt->SetFillMode)(graphics,1);
+  memcpy(&bar,(void *)DATA_AT_00127D88,8);
+  bar.x = element->rect->x + element->rect->dx - 0xb;
+  bar.y = element->rect->y;
+  bar.dy = element->rect->dy;
+  (*graphics->pvt->DrawRect)(graphics,&bar);
+  graphics_set_color((int32)element->owner,graphics,primary,2);
+  right = element->rect->x + element->rect->dx;
+  bottom = element->rect->y + element->rect->dy;
+  if (box->firstLine > 0) {                       /* lines above: an up arrow */
+    arrow.p0.x = right - 9;
+    arrow.p0.y = element->rect->y + 8;
+    arrow.p1.x = right - 3;
+    arrow.p1.y = element->rect->y + 8;
+    arrow.p2.x = right - 6;
+    arrow.p2.y = element->rect->y + 2;
+    (*graphics->pvt->DrawTriangle)(graphics,&arrow);
   }
-  return;
+  if (box->firstLine + box->visibleLines < box->lines->count) {   /* lines below: a down arrow */
+    arrow.p0.x = right - 9;
+    arrow.p0.y = bottom - 9;
+    arrow.p1.x = right - 3;
+    arrow.p1.y = bottom - 9;
+    arrow.p2.x = right - 6;
+    arrow.p2.y = bottom - 3;
+    (*graphics->pvt->DrawTriangle)(graphics,&arrow);
+  }
 }
+
 
 /* ==== 0x00107230  (file offset 0x07230)  FUN_00107230 ================================================ */
 void FUN_00107230(int *param_1,undefined4 param_2,int *param_3)
@@ -4896,8 +4875,8 @@ LAB_00107378:
       uVar3 = uVar4;
     }
     local_2c = WORD_HEXADECIMAL_FFC9C4DA;
-    FUN_0010a3e8(param_1[8],param_3,uVar3,1);
-    FUN_0010a3e8(param_1[8],param_3,local_28,2);
+    graphics_set_color(param_1[8],param_3,uVar3,1);
+    graphics_set_color(param_1[8],param_3,local_28,2);
     (**(code **)(*param_3 + 0x18))(param_3,1);
     arrow.p0.x = left - 6 - margin;
     arrow.p0.y = middle;
@@ -4915,7 +4894,7 @@ LAB_00107378:
     arrow.p1.x = right;
     arrow.p2.x = right;
     if (uVar7 != 0) {
-      FUN_0010a3e8(param_1[8],param_3,local_2c,1);
+      graphics_set_color(param_1[8],param_3,local_2c,1);
       (**(code **)(*param_3 + 0x54))(param_3,&edge);
     }
     (**(code **)(*param_3 + 0x6c))(param_3,&arrow);
@@ -4924,7 +4903,7 @@ LAB_00107378:
       edge.sy = arrow.p0.y;
       edge.ex = arrow.p2.x;
       edge.ey = arrow.p2.y;
-      FUN_0010a3e8(param_1[8],param_3,uVar3,1);
+      graphics_set_color(param_1[8],param_3,uVar3,1);
       (**(code **)(*param_3 + 0x54))(param_3,&edge);
     }
     break;
@@ -4937,12 +4916,12 @@ LAB_00107384:
     }
     break;
   case 0xb:
-    FUN_0010a3e8(param_1[8],param_3,WORD_HEXADECIMAL_FF2F2533,1);
+    graphics_set_color(param_1[8],param_3,WORD_HEXADECIMAL_FF2F2533,1);
     local_2c = ((uint32)(uint16)(*(undefined2 *)(param_1[2] + 2)) << 16 | (uint16)(*(undefined2 *)param_1[2]));
     local_28 = ((uint32)(uint16)(*(undefined2 *)(param_1[2] + 6)) << 16 | (uint16)(*(undefined2 *)(param_1[2] + 4)));
     (**(code **)(*param_3 + 0x58))(param_3,&local_2c);
     (**(code **)(*param_3 + 0x18))(param_3,1);
-    FUN_0010a3e8(param_1[8],param_3,WORD_HEXADECIMAL_FF7E8194,3);
+    graphics_set_color(param_1[8],param_3,WORD_HEXADECIMAL_FF7E8194,3);
     maximum = int_to_double(param_1[0x16]);
     value = int_to_double(param_1[0x15]);
                     /* helper[37] f_op (AEEHelperFuncs +0x94) - BREW floating-point arithmetic
@@ -5046,8 +5025,8 @@ void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,u
   iVar6 = FUN_00100288(param_6,param_5 * 0x50).low;
   iVar7 = FUN_00100288(param_6,local_28 * 0x50).low;
   (**(code **)(*param_2 + 0x18))(param_2,1);
-  FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,1);
-  FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,2);
+  graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,1);
+  graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,2);
   iVar10 = INTEGER_270;
   if (iVar6 < 0x35) {
     iVar10 = FUN_00100288(local_40,INTEGER_270 * iVar6).low;
@@ -5089,7 +5068,7 @@ void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,u
     if (local_28 < param_7) {
       uVar12 = WORD_HEXADECIMAL_FFFF0000;
     }
-    FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_2,uVar12,2);
+    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,uVar12,2);
     iVar10 = INTEGER_270;
     if (iVar7 < 0x35) {
       iVar10 = FUN_00100288(local_40,INTEGER_270 * iVar7).low;
@@ -5108,11 +5087,11 @@ void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,u
       }
       local_54 = ((uint32)(uint16)(sVar2 + 8) << 16 | (uint16)(sVar5));
       local_50 = ((uint32)(uint16)(*(undefined2 *)((undefined1 *)&local_50 + 2)) << 16 | (uint16)(sVar1));
-      FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_2,uVar12,1);
+      graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,uVar12,1);
       (**(code **)(*param_2 + 0x58))(param_2,&local_54);
     }
-    FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,1);
-    FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,2);
+    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,1);
+    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,2);
     local_50 = *(undefined4 *)(((int32)DATA_AT_00127A78 + 0x4));
     local_54 = ((uint32)(uint16)((short)local_3c) << 16 | (uint16)((short)local_38));
     (**(code **)(*param_2 + 0x5c))(param_2,&local_54);
@@ -5194,8 +5173,8 @@ void FUN_00107adc(int param_1,int param_2,undefined4 param_3,int *param_4,short 
   psVar3[0xf] = sStack_42;
   if (param_2 == 1) {
     (**(code **)(*param_4 + 0x18))(param_4,(param_7 & 0xff000000) != 0);
-    FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_4,param_7,2);
-    FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_4,param_7,1);
+    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_4,param_7,2);
+    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_4,param_7,1);
     local_4c = *(undefined4 *)((int32)DATA_AT_00127A68);
     local_48 = psVar3;
     (**(code **)(*param_4 + 0x70))(param_4,&local_4c);
@@ -5206,7 +5185,7 @@ void FUN_00107adc(int param_1,int param_2,undefined4 param_3,int *param_4,short 
       iVar4 = 4;
     }
     (**(code **)(*param_4 + 0x18))(param_4,0);
-    FUN_0010a3e8(*(undefined4 *)(param_1 + 0x20),param_4,param_6,1);
+    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_4,param_6,1);
     local_4c = *(undefined4 *)(iVar2 + 0x107c40);
     local_48 = psVar3 + iVar4 * 2;
     (**(code **)(*param_4 + 0x74))(param_4,&local_4c);
@@ -5223,7 +5202,7 @@ LAB_00107c9c:
 /* ==== 0x00107D24  (file offset 0x07D24)  ui_element_draw ============================================= */
 /* GUESS: name. Draws a UI element and everything in it, when it is visible: its background when it has
    one (hasBackground: its rectangle filled with the secondary colour and outlined with the border colour,
-   FUN_0010a3e8 with 2 and 1 setting IGraphics' fill and line colours, then SetFillMode and DrawRect),
+   graphics_set_color with 2 and 1 setting IGraphics' fill and line colours, then SetFillMode and DrawRect),
    then the element itself (vtable slot 4, +0x10), its children in order (recursively), and what goes over
    them (slot 3, +0x0c), both with its screen stack's display and graphics objects; then the binary
    tail-jumps (0x00107e40) to IGraphics Flush. Written from its disassembly (0x00107d24 - 0x00107e44): Ghidra
@@ -5239,8 +5218,8 @@ int32 ui_element_draw(UIElement *element)
   if (element->visible == 0)
     return 0;
   if (element->hasBackground != 0) {
-    FUN_0010a3e8((int32)owner,(int *)owner->graphics,(*(code *)*(int32 *)(element->vtable + 0x1c))(element),1);
-    FUN_0010a3e8((int32)owner,(int *)owner->graphics,(*(code *)*(int32 *)(element->vtable + 0x18))(element),2);
+    graphics_set_color((int32)owner,owner->graphics,(*(code *)*(int32 *)(element->vtable + 0x1c))(element),1);
+    graphics_set_color((int32)owner,owner->graphics,(*(code *)*(int32 *)(element->vtable + 0x18))(element),2);
     (*owner->graphics->pvt->SetFillMode)(owner->graphics,1);
     (*owner->graphics->pvt->DrawRect)(owner->graphics,element->rect);
   }
@@ -5345,24 +5324,20 @@ uint32 ui_element_get_border_color(UIElement *element)
 }
 
 
-/* ==== 0x00107F88  (file offset 0x07F88)  FUN_00107f88 ================================================ */
-int FUN_00107f88(int param_1)
+/* ==== 0x00107F88  (file offset 0x07F88)  text_box_get_content_height ================================= */
+/* GUESS: name. The height of a text box's text: (the first line's height + the line spacing) per line,
+   plus the vertical margin above and below. */
+int32 text_box_get_content_height(TextBox *box)
 
 {
-  undefined4 param_3;
-  undefined4 param_4;
-  /* not parameters: param_3, param_4. kh.mod reads r2 / r3 only on paths where it was already written, or as a
-     leftover (no caller sets them); Ghidra listed them as inputs */
-  int iVar1;
-  int iVar2;
-  
-  iVar2 = 0;
-  iVar1 = list_get_entry(*(undefined4 *)(param_1 + 0x30),0 /* not arguments, register leftovers: param_3,param_4,param_4 */);
-  if (iVar1 != 0) {
-    iVar2 = *(int *)(iVar1 + 0x34) + *(int *)(*(int *)(param_1 + 0x34) + 0x10);
-  }
-  return iVar2 * **(int **)(param_1 + 0x30) + *(int *)(*(int *)(param_1 + 0x34) + 0xc) * 2;
+  TextLine *first = (TextLine *)list_get_entry(box->lines,0);
+  int32 pitch = 0;
+
+  if (first != (TextLine *)0x0)
+    pitch = first->height + box->style->lineSpacing;
+  return pitch * box->lines->count + box->style->verticalMargin * 2;
 }
+
 
 /* ==== 0x00107FD0  (file offset 0x07FD0)  FUN_00107fd0 ================================================ */
 uint64 FUN_00107fd0(int param_1,int param_2,int param_3)
@@ -5379,29 +5354,26 @@ uint64 FUN_00107fd0(int param_1,int param_2,int param_3)
   return FUN_00100288(1000,sVar1 * param_2);
 }
 
-/* ==== 0x00107FEC  (file offset 0x07FEC)  FUN_00107fec ================================================ */
-undefined4 FUN_00107fec(int param_1,undefined4 param_2)
+/* ==== 0x00107FEC  (file offset 0x07FEC)  screen_stack_get_text ======================================= */
+/* GUESS: names. A copy of the text with the id `textId` (a wide string the caller frees): one of the key
+   glyphs the screen stack keeps (keyTexts: the ids -1000 - -1011 give "0" - "9", "*", "#",
+   FUN_0010ac6c), else the text table's (text_table_get_wide_text); 0 when there is none. Used for the
+   labels (text_line_set_text_id) and the Controls screen's keys. */
+AECHAR * screen_stack_get_text(ScreenStack *stack,int32 textId)
 
 {
-  undefined4 param_4;
-  /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  int iVar1;
-  undefined4 local_10;
-  
-  local_10 = param_4;
-  iVar1 = list_find_entry(*(undefined4 *)(param_1 + 0x40),param_2);
-  local_10 = 0;
-  if (iVar1 == 0) {
-    FUN_00114774(*(undefined4 *)(param_1 + 8),param_2,&local_10);
-  }
-  else {
+  AECHAR *glyph = (AECHAR *)list_find_entry(stack->keyTexts,textId);
+  AECHAR *text = (AECHAR *)0x0;
+
+  if (glyph != (AECHAR *)0x0)
                     /* helper[28] AECHAR * wstrdup(const AECHAR *s)  (AEEHelperFuncs +0x70, via
                        *(base-4)) */
-    local_10 = (*g_pHelperFuncs->wstrdup)(iVar1);
-  }
-  return local_10;
+    text = (*g_pHelperFuncs->wstrdup)(glyph);
+  else
+    text_table_get_wide_text(stack->texts,textId,&text);
+  return text;
 }
+
 
 /* ==== 0x00108048  (file offset 0x08048)  ui_element_get_secondary_color ============================== */
 /* GUESS: name. Vtable slot 6 (+0x18) of every UI class: the element's secondary colour (+0x14, the fill of its background in ui_element_draw), its own
@@ -5615,7 +5587,7 @@ LAB_001084dc:
           iVar2 = param_3 + -0xe000;
         }
         if (!bVar5 || iVar2 == 0x35) {
-          iVar2 = FUN_00108e8c(*(int *)(param_1 + 0x58));
+          iVar2 = text_box_scroll_down(*(int *)(param_1 + 0x58));
           if (iVar2 != 0) {
             return 1;
           }
@@ -5635,31 +5607,22 @@ LAB_001084dc:
   return 0;
 }
 
-/* ==== 0x001084E4  (file offset 0x084E4)  FUN_001084e4 ================================================ */
-bool FUN_001084e4(undefined4 param_1,undefined4 param_2,int param_3)
+/* ==== 0x001084E4  (file offset 0x084E4)  text_box_handle_key ========================================= */
+/* GUESS: name. The text box's key handler (vtable slot 2): UP scrolls up a page, DOWN and SELECT down;
+   returns 1 for those keys (handled, even when the box cannot scroll), else 0. */
+int32 text_box_handle_key(TextBox *box,int32 eventCode,int32 keyCode)
 
 {
-  int iVar1;
-  bool bVar2;
-  bool bVar3;
-  
-  bVar2 = true;
-  if (param_3 == 0xe031) {
-    FUN_00108ed8(param_1);
+  if (keyCode == AVK_UP) {
+    text_box_scroll_up(box);
+    return 1;
   }
-  else {
-    bVar3 = param_3 == 0xe032;
-    iVar1 = 0;
-    if (!bVar3) {
-      iVar1 = param_3 + -0xe000;
-    }
-    bVar2 = bVar3 || iVar1 == 0x35;
-    if (bVar3 || iVar1 == 0x35) {
-      FUN_00108e8c(param_1);
-    }
-  }
-  return bVar2;
+  if (keyCode != AVK_DOWN && keyCode != AVK_SELECT)
+    return 0;
+  text_box_scroll_down(box);
+  return 1;
 }
+
 
 /* ==== 0x00108524  (file offset 0x08524)  ui_element_handle_key ======================================= */
 /* GUESS: name. Key handler of every UI element. A key picker (type 8) takes LEFT / RIGHT itself: the
@@ -5680,7 +5643,7 @@ int32 ui_element_handle_key(UIElement *element,int32 eventCode,int32 keyCode,int
   if (element->type == 8 && (keyCode == AVK_LEFT || keyCode == AVK_RIGHT)) {
     element->selectedOption =
          keyCode == AVK_RIGHT ? element->selectedOption->next : element->selectedOption->previous;
-    FUN_00109ff8(element->label,element->selectedOption->label);
+    text_line_set_text_id(element->label,element->selectedOption->label);
     *element->setting = element->selectedOption->keyCode;
     handled = redraw = 1;
   }
@@ -5870,12 +5833,12 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
         FUN_00109a10(iVar5,2,WORD_HEXADECIMAL_19408333,0x80);
         FUN_00109a10(iVar5,1,WORD_HEXADECIMAL_251509C8,0x73);
       }
-      puVar6 = FUN_0010ba08((undefined4 *)0x0,6);
+      puVar6 = text_style_create((undefined4 *)0x0,6);
       puVar6[1] = 0x21;
       uVar11 = FUN_00107fd0((int)param_1,800,1);
-      piVar1 = FUN_0010b2dc((int *)0x0,0,(int)uVar11.low,(int)*(short *)(piVar1[2] + 4),
+      piVar1 = text_box_create((int *)0x0,0,(int)uVar11.low,(int)*(short *)(piVar1[2] + 4),
                             (int)*(short *)(piVar1[2] + 6),param_1,(int)puVar6);
-      FUN_00109b4c((int)piVar1,(int)pvVar3,0);
+      text_box_set_text((int)piVar1,(int)pvVar3,0);
       ui_element_add_child(iVar5,(int)piVar1,500);
       helper_free(pvVar3);
       (*g_pHelperFuncs->free)(param_5);
@@ -5892,14 +5855,14 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
     iVar5 = ui_element_find_child((int)piVar1,500);
     text = helper_malloc(0x20);
     name = helper_malloc(0x20);
-    FUN_0011421c((int *)param_1[2],WORD_HEXADECIMAL_3D198889,(undefined4 *)&name);
+    text_table_get_text((int *)param_1[2],WORD_HEXADECIMAL_3D198889,(undefined4 *)&name);
     (*g_pHelperFuncs->sprintf)(text,(int32)STRING_PERCENT_S_PERCENT_D_SLASH_PERCENT,name,param_3,
                                param_4);
     helper_free(name);
     wideText = helper_malloc(0x40);
     FUN_0010e210(*(undefined4 *)(*param_1 + 0x94),(undefined4 *)&text,(int *)&wideText);
     helper_free(text);
-    FUN_00109b4c(iVar5,(int)wideText,0);
+    text_box_set_text(iVar5,(int)wideText,0);
     helper_free(wideText);
     break;
   case 0x4:
@@ -5997,42 +5960,42 @@ LAB_00108d50:
   return;
 }
 
-/* ==== 0x00108E8C  (file offset 0x08E8C)  FUN_00108e8c ================================================ */
-bool FUN_00108e8c(int param_1)
+/* ==== 0x00108E8C  (file offset 0x08E8C)  text_box_scroll_down ======================================== */
+/* GUESS: name. Scrolls a text box down by a page when there are lines after it, lays it out and redraws
+   it; returns whether it could. */
+int32 text_box_scroll_down(TextBox *box)
 
 {
-  bool bVar1;
-  int iVar2;
-  
-  iVar2 = *(int *)(param_1 + 0x38) + *(int *)(param_1 + 0x3c);
-  bVar1 = iVar2 < **(int **)(param_1 + 0x30);
-  if (bVar1) {
-    *(int *)(param_1 + 0x38) = iVar2;
-    FUN_0010a214(param_1);
-    ui_element_draw((UIElement *)param_1);
+  int32 first = box->firstLine + box->visibleLines;
+  int32 more = first < box->lines->count;
+
+  if (more) {
+    box->firstLine = first;
+    text_box_layout(box);
+    ui_element_draw((UIElement *)box);
   }
-  return bVar1;
+  return more;
 }
 
-/* ==== 0x00108ED8  (file offset 0x08ED8)  FUN_00108ed8 ================================================ */
-bool FUN_00108ed8(int param_1)
+
+/* ==== 0x00108ED8  (file offset 0x08ED8)  text_box_scroll_up ========================================== */
+/* GUESS: name. Scrolls a text box up by a page (its visible lines, not before the first line), lays it
+   out and redraws it; returns whether it could. */
+int32 text_box_scroll_up(TextBox *box)
 
 {
-  int iVar1;
-  int iVar2;
-  
-  iVar1 = *(int *)(param_1 + 0x38);
-  if (0 < iVar1) {
-    iVar2 = iVar1 - *(int *)(param_1 + 0x3c);
-    *(int *)(param_1 + 0x38) = iVar2;
-    if (iVar2 < 0) {
-      *(undefined4 *)(param_1 + 0x38) = 0;
-    }
-    FUN_0010a214(param_1);
-    ui_element_draw((UIElement *)param_1);
+  int32 first = box->firstLine;
+
+  if (first > 0) {
+    box->firstLine = first - box->visibleLines;
+    if (box->firstLine < 0)
+      box->firstLine = 0;
+    text_box_layout(box);
+    ui_element_draw((UIElement *)box);
   }
-  return 0 < iVar1;
+  return first > 0;
 }
+
 
 /* ==== 0x00108F28  (file offset 0x08F28)  FUN_00108f28 ================================================ */
 /* returns r0 as kh.mod leaves it (iVar1 on the early exit, else the tail-called method's result);
@@ -6535,7 +6498,7 @@ void key_picker_setup(UIElement *picker,KeyOption *options,int32 *setting,int32 
   for (picker->selectedOption = 0; picker->selectedOption == 0; options = options->next)
     if (options->keyCode == *setting)
       picker->selectedOption = options;
-  FUN_00109ff8(picker->label,picker->selectedOption->label);
+  text_line_set_text_id(picker->label,picker->selectedOption->label);
   picker->originalKeyCode = picker->selectedOption->keyCode;
 }
 
@@ -6612,179 +6575,112 @@ void FUN_00109a10(int param_1,int param_2,int param_3,undefined4 param_4)
     iVar1 = FUN_0010bba0(0,iVar6,(*(short *)(*(int *)(param_1 + 8) + 6) - iVar4) - iVar3,iVar2,iVar3
                          ,*(undefined4 *)(param_1 + 0x20),2,param_4,1);
     *(int *)(*(int *)(param_1 + 0x34) + iVar7 * 4) = iVar1;
-    FUN_00109ff8(*(undefined4 *)(iVar1 + 0x30),param_3);
+    text_line_set_text_id(*(undefined4 *)(iVar1 + 0x30),param_3);
     ui_element_add_child(param_1,*(undefined4 *)(*(int *)(param_1 + 0x34) + iVar7 * 4),0);
   }
   return;
 }
 
-/* ==== 0x00109B4C  (file offset 0x09B4C)  FUN_00109b4c ================================================ */
-void FUN_00109b4c(int param_1,int param_2,int param_3)
+/* ==== 0x00109B4C  (file offset 0x09B4C)  text_box_set_text =========================================== */
+/* GUESS: names. Sets a text box's text (a wide string; 0 for none): destroys its lines, then wraps the
+   text into lines no wider than the box minus its horizontal margins (10 pixels less with `narrow`, room
+   for the scroll bar), breaking at spaces and at "\n": a word that does not fit starts the next line
+   (unless it is the line's only word); each line is a text line (text_line_create) in the box's list.
+   With the first line it works out how many lines are visible (the box's height minus the vertical
+   margins, divided by the line height + spacing; 10000 with auto-size). With auto-size the box takes the
+   text's height (text_box_get_content_height), keeping its centre (or starting at 0, or above 0, when its
+   y and height are 0). Then it lays the box out from the first line; a scrolling style (type 5) with more
+   lines than fit scrolls, and then the text is wrapped again, narrow (the binary's tail jump to itself,
+   0x00109edc). Returns whether the box scrolls (r0 as the binary leaves it). Written from its
+   disassembly (0x00109b4c - 0x00109ee4). */
+int32 text_box_set_text(TextBox *box,AECHAR *text,int32 narrow)
 
 {
-  char cVar1;
-  int *piVar2;
-  int iVar3;
-  void *pvVar4;
-  int iVar5;
-  undefined4 uVar6;
-  int iVar7;
-  short *psVar8;
-  int iVar9;
-  short sVar10;
-  int iVar11;
-  int iVar12;
-  int iVar13;
-  int iVar14;
-  int iVar15;
-  int iVar16;
-  int iVar17;
-  bool bVar18;
-  bool bVar19;
-  undefined8 uVar20;
-  uint64 uVar21;
-  int local_38;
-  
-  while( true ) {
-    iVar11 = 0;
-    while (piVar2 = (int *)list_get_entry(*(int **)(param_1 + 0x30),iVar11), piVar2 != (int *)0x0) {
-      (*(code *)(*(int *)*piVar2))(piVar2);
-      helper_free(piVar2);
-      iVar11 = iVar11 + 1;
-    }
-    **(undefined4 **)(param_1 + 0x30) = 0;
-    **(undefined4 **)(param_1 + 0x24) = 0;
-    local_38 = 0;
-    if (param_2 != 0) {
-                    /* helper[12] int wstrlen(const AECHAR *s)  (AEEHelperFuncs +0x30, via
-                       *(base-4)) */
-      iVar3 = (*g_pHelperFuncs->wstrlen)(param_2);
-      iVar3 = iVar3 + 1;
-      pvVar4 = helper_malloc(iVar3 * 2);
-      iVar14 = (int)*(short *)(*(int *)(param_1 + 8) + 4) +
-               *(int *)(*(int *)(param_1 + 0x34) + 8) * -2;
-      iVar11 = param_2;
-      if (param_3 != 0) {
-        iVar14 = iVar14 + -10;
-      }
-                    /* helper[12] int wstrlen(const AECHAR *s)  (AEEHelperFuncs +0x30, via
-                       *(base-4)) */
-      while (iVar7 = (*g_pHelperFuncs->wstrlen)(iVar11), 0 < iVar7) {
-        iVar13 = 0;
-        iVar12 = 0;
-        iVar9 = 0;
-        iVar17 = 0;
-        while( true ) {
-          iVar15 = iVar7;
-          if (iVar12 <= iVar7) {
-            iVar15 = iVar3;
-          }
-          if ((iVar15 <= iVar12) || (iVar13 != 0)) break;
-          psVar8 = (short *)(iVar11 + iVar12 * 2);
-          sVar10 = *psVar8;
-          iVar15 = iVar9;
-          iVar16 = iVar17;
-          if ((sVar10 == 0 || sVar10 == 0x20) || sVar10 == 10) {
-                    /* helper[32] AECHAR * wstrncopyn(AECHAR *dst, int nDstChars, const AECHAR *src,
-                       int nCount)  (AEEHelperFuncs +0x80, via *(base-4)) */
-            (*g_pHelperFuncs->wstrncopyn)(pvVar4,iVar3,iVar11,sVar10 == 10 ? iVar12 + -1 : iVar12);
-            iVar15 = iVar9 + 1;
-            piVar2 = *(int **)(*(int *)(param_1 + 0x20) + 0xc);
-            iVar5 = (**(code **)(*piVar2 + 0xc))
-                              (piVar2,*(undefined2 *)(*(int *)(param_1 + 0x34) + 0x14),pvVar4,
-                               0xffffffff);
-            bVar18 = SUBTRACT_OVERFLOWS(iVar12,iVar7);
-            iVar16 = iVar12 - iVar7;
-            if (iVar12 != iVar7) {
-              bVar18 = SUBTRACT_OVERFLOWS(iVar5,iVar14);
-              iVar16 = iVar5 - iVar14;
-            }
-            if ((iVar16 < 0 == bVar18) || (iVar16 = iVar12, *psVar8 == 10)) {
-              bVar19 = SUBTRACT_OVERFLOWS(iVar5,iVar14);
-              bVar18 = iVar5 == iVar14;
-              iVar13 = iVar5 - iVar14;
-              if (iVar14 <= iVar5) {
-                bVar19 = SUBTRACT_OVERFLOWS(iVar15,1);
-                bVar18 = iVar15 == 1;
-                iVar13 = iVar9;
-              }
-              if (bVar18 || iVar13 < 0 != bVar19) {
-                iVar9 = iVar12;
-                if (iVar12 != iVar7) {
-                  iVar9 = iVar12 + 1;
-                }
-                iVar11 = iVar11 + iVar9 * 2;
-              }
-              else {
-                    /* helper[32] AECHAR * wstrncopyn(AECHAR *dst, int nDstChars, const AECHAR *src,
-                       int nCount)  (AEEHelperFuncs +0x80, via *(base-4)) */
-                (*g_pHelperFuncs->wstrncopyn)(pvVar4,iVar3,iVar11,iVar17);
-                iVar11 = iVar11 + iVar17 * 2 + 2;
-              }
-              uVar20 = FUN_0010b650((int *)0x0,0,0,iVar14,0,*(int *)(param_1 + 0x20),0,
-                                    *(int *)(*(int *)(param_1 + 0x34) + 4));
-              iVar13 = (int)uVar20.low;
-              FUN_00109f48(iVar13,(int)pvVar4);
-              list_set_entry(*(int **)(param_1 + 0x30),local_38,iVar13);
-              local_38 = local_38 + 1;
-              iVar16 = iVar17;
-              if (*(int *)(param_1 + 0x3c) < 0) {
-                iVar9 = *(int *)(param_1 + 0x34);
-                uVar6 = INTEGER_10000;
-                if (*(char *)(iVar9 + 0x24) == '\0') {
-                  uVar21 = FUN_00100288(*(int *)(iVar13 + 0x34) + *(int *)(iVar9 + 0x10),
-                                        (int)*(short *)(*(int *)(param_1 + 8) + 6) +
-                                        *(int *)(iVar9 + 0xc) * -2);
-                  uVar6 = (int)uVar21.low;
-                }
-                *(undefined4 *)(param_1 + 0x3c) = uVar6;
-              }
-            }
-          }
-          iVar12 = iVar12 + 1;
-          iVar9 = iVar15;
-          iVar17 = iVar16;
-        }
-      }
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-      (*g_pHelperFuncs->free)(pvVar4);
-    }
-    if (*(char *)(*(int *)(param_1 + 0x34) + 0x24) != '\0') {
-      iVar11 = FUN_00107f88(param_1);
-      iVar3 = *(int *)(param_1 + 8);
-      sVar10 = *(short *)(iVar3 + 2);
-      bVar18 = sVar10 == 0;
-      if (bVar18) {
-        sVar10 = *(short *)(iVar3 + 6);
-      }
-      if (bVar18 && sVar10 == 0) {
-        sVar10 = -(short)iVar11;
-      }
-      else if ((*(short *)(iVar3 + 2) < 0) && (*(short *)(iVar3 + 6) == 0)) {
-        sVar10 = 0;
-      }
-      else {
-        sVar10 = (short)(((int)*(short *)(iVar3 + 6) + *(short *)(iVar3 + 2) * 2) / 2) -
-                 (short)(iVar11 / 2);
-      }
-      *(short *)(iVar3 + 2) = sVar10;
-      *(short *)(*(int *)(param_1 + 8) + 6) = (short)iVar11;
-    }
-    *(undefined4 *)(param_1 + 0x38) = 0;
-    FUN_0010a214(param_1);
-    if ((**(int **)(param_1 + 0x34) == 5) && (*(int *)(param_1 + 0x3c) < **(int **)(param_1 + 0x30))
-       ) {
-      cVar1 = '\x01';
-    }
-    else {
-      cVar1 = '\0';
-    }
-    *(char *)(param_1 + 0x44) = cVar1;
-    if ((param_3 != 0) || (cVar1 == '\0')) break;
-    param_3 = 1;
+  UIElement *element = (UIElement *)box;
+  TextLine *line;
+  AECHAR *buffer;
+  AECHAR *rest;
+  AECHAR character;
+  int32 lineCount = 0;
+  int32 bufferLength;
+  int32 maximumWidth;
+  int32 remaining;
+  int32 words;
+  int32 lastBreak;
+  int32 width;
+  int32 height;
+  int32 i;
+
+  for (i = 0; (line = (TextLine *)list_get_entry(box->lines,i)) != (TextLine *)0x0; i++) {
+    (*(code *)*(int32 *)*(int32 *)line)(line);   /* destroy: vtable slot 0 */
+    helper_free(line);
   }
-  return;
+  box->lines->count = 0;
+  element->children->count = 0;
+  if (text != (AECHAR *)0x0) {
+    rest = text;
+                    /* helper[12] int wstrlen(const AECHAR *s)  (AEEHelperFuncs +0x30, via *(base-4)) */
+    bufferLength = (*g_pHelperFuncs->wstrlen)(rest) + 1;
+    buffer = helper_malloc(bufferLength * 2);
+    maximumWidth = element->rect->dx - box->style->horizontalMargin * 2;
+    if (narrow != 0)
+      maximumWidth -= 10;
+    while ((remaining = (*g_pHelperFuncs->wstrlen)(rest)) > 0) {
+      words = 0;
+      lastBreak = 0;
+      line = (TextLine *)0x0;
+      for (i = 0; i <= remaining && i < bufferLength && line == (TextLine *)0x0; i++) {
+        character = rest[i];
+        if (character != 0 && character != ' ' && character != '\n')
+          continue;
+                    /* helper[32] AECHAR * wstrncopyn(AECHAR *dst, int nDstChars, const AECHAR *src,
+                       int nCount)  (AEEHelperFuncs +0x80, via *(base-4)) */
+        (*g_pHelperFuncs->wstrncopyn)(buffer,bufferLength,rest,character == '\n' ? i - 1 : i);
+        words++;
+        width = (*((ScreenStack *)element->owner)->display->pvt->MeasureTextEx)
+                         (((ScreenStack *)element->owner)->display,box->style->font,buffer,-1,-1,(int *)0x0);
+        if (i != remaining && width < maximumWidth && rest[i] != '\n') {
+          lastBreak = i;                          /* still fits: try the next word */
+          continue;
+        }
+        if (width >= maximumWidth && words > 1) {  /* the last word does not fit: up to the space before */
+          (*g_pHelperFuncs->wstrncopyn)(buffer,bufferLength,rest,lastBreak);
+          rest += lastBreak + 1;
+        }
+        else
+          rest += i != remaining ? i + 1 : i;
+        line = text_line_create((TextLine *)0x0,0,0,maximumWidth,0,element->owner,0,box->style->alignment);
+        text_line_set_text(line,buffer);
+        list_set_entry(box->lines,lineCount,(int32)line);
+        lineCount++;
+        if (box->visibleLines < 0)
+          box->visibleLines =
+               box->style->autoSize != 0 ? INTEGER_10000 :
+               (int32)FUN_00100288(line->height + box->style->lineSpacing,
+                                   element->rect->dy - box->style->verticalMargin * 2).low;
+      }
+    }
+                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
+    (*g_pHelperFuncs->free)(buffer);
+  }
+  if (box->style->autoSize != 0) {
+    height = text_box_get_content_height(box);
+    if ((uint16)element->rect->y == 0 && (uint16)element->rect->dy == 0)
+      element->rect->y = (int16)-height;
+    else if (element->rect->y < 0 && (uint16)element->rect->dy == 0)
+      element->rect->y = 0;
+    else
+      element->rect->y = (int16)((element->rect->dy + element->rect->y * 2) / 2 - height / 2);
+    element->rect->dy = (int16)height;
+  }
+  box->firstLine = 0;
+  text_box_layout(box);
+  box->scrollable = box->style->type == 5 && box->visibleLines < box->lines->count;
+  if (narrow == 0 && box->scrollable != 0)
+    return text_box_set_text(box,text,1);
+  return box->scrollable;
 }
+
 
 /* ==== 0x00109F00  (file offset 0x09F00)  FUN_00109f00 ================================================ */
 void FUN_00109f00(int param_1,undefined4 param_2)
@@ -6793,8 +6689,8 @@ void FUN_00109f00(int param_1,undefined4 param_2)
   /* param_2: not in Ghidra's prototype; kh.mod reads r1 at entry and its callers set it */
   undefined4 uVar1;
   
-  uVar1 = FUN_00107fec(*(undefined4 *)(param_1 + 0x20),param_2);
-  FUN_00109b4c(param_1,uVar1,0);
+  uVar1 = screen_stack_get_text(*(undefined4 *)(param_1 + 0x20),param_2);
+  text_box_set_text(param_1,uVar1,0);
                     /* WARNING: Could not recover jumptable at 0x00109f40. Too many branches */
                     /* WARNING: Treating indirect jump as call */
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) - tail
@@ -6803,59 +6699,42 @@ void FUN_00109f00(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x00109F48  (file offset 0x09F48)  FUN_00109f48 ================================================ */
-void FUN_00109f48(int param_1,int param_2)
+/* ==== 0x00109F48  (file offset 0x09F48)  text_line_set_text ========================================== */
+/* GUESS: name. Sets a text line's text (copied; 0 for none) and its width (IDisplay MeasureTextEx). */
+void text_line_set_text(TextLine *line,AECHAR *text)
 
 {
-  undefined4 param_4;
-  /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  int iVar2;
-  undefined4 uVar3;
-  int *piVar4;
-  
-  *(undefined4 *)(param_1 + 0x30) = 0;
-  if (*(int *)(param_1 + 0x38) != 0) {
+  ScreenStack *owner = (ScreenStack *)((UIElement *)line)->owner;
+
+  line->textWidth = 0;
+  if (line->text != (AECHAR *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x38));
-    *(undefined4 *)(param_1 + 0x38) = 0;
+    (*g_pHelperFuncs->free)(line->text);
+    line->text = (AECHAR *)0x0;
   }
-  if (param_2 != 0) {
-                    /* helper[12] int wstrlen(const AECHAR *s)  (AEEHelperFuncs +0x30, via
-                       *(base-4)) */
-    iVar2 = (*g_pHelperFuncs->wstrlen)(param_2);
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-    uVar3 = (*g_pHelperFuncs->malloc)(iVar2 * 2 + 2);
-    *(undefined4 *)(param_1 + 0x38) = uVar3;
-                    /* helper[9] AECHAR * wstrcpy(AECHAR *dst, const AECHAR *src)  (AEEHelperFuncs
-                       +0x24, via *(base-4)) */
-    (*g_pHelperFuncs->wstrcpy)(uVar3,param_2);
-    piVar4 = *(int **)(*(int *)(param_1 + 0x20) + 0xc);
-    uVar3 = (**(code **)(*piVar4 + 0xc))
-                      (piVar4,*(undefined2 *)(param_1 + 0x3c),*(undefined4 *)(param_1 + 0x38),
-                       0xffffffff,0xffffffff,0,param_4);
-    *(undefined4 *)(param_1 + 0x30) = uVar3;
-  }
-  return;
+  if (text == (AECHAR *)0x0)
+    return;
+                    /* helper[12] int wstrlen(const AECHAR *s), helper[26] void * malloc(uint32 size),
+                       helper[9] AECHAR * wstrcpy(AECHAR *dst, const AECHAR *src) */
+  line->text = (*g_pHelperFuncs->malloc)((*g_pHelperFuncs->wstrlen)(text) * 2 + 2);
+  (*g_pHelperFuncs->wstrcpy)(line->text,text);
+  line->textWidth = (*owner->display->pvt->MeasureTextEx)(owner->display,line->font,line->text,-1,-1,(int *)0x0);
 }
 
-/* ==== 0x00109FF8  (file offset 0x09FF8)  FUN_00109ff8 ================================================ */
-void FUN_00109ff8(int param_1,undefined4 param_2)
+
+/* ==== 0x00109FF8  (file offset 0x09FF8)  text_line_set_text_id ======================================= */
+/* GUESS: name. Sets a text line's text to the text with the id `textId` (screen_stack_get_text: its owner's list
+   of texts, else the resource file), then frees that copy (the binary's tail call at 0x0010a034). */
+void text_line_set_text_id(TextLine *line,int32 textId)
 
 {
-  /* param_2: not in Ghidra's prototype; kh.mod reads r1 at entry and its callers set it */
-  undefined4 uVar1;
-  
-  uVar1 = FUN_00107fec(*(undefined4 *)(param_1 + 0x20),param_2);
-  FUN_00109f48(param_1,uVar1);
-                    /* WARNING: Could not recover jumptable at 0x0010a034. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) - tail
-                       call */
-  (*g_pHelperFuncs->free)(uVar1);
-  return;
+  AECHAR *text = screen_stack_get_text((ScreenStack *)((UIElement *)line)->owner,textId);
+
+  text_line_set_text(line,text);
+                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
+  (*g_pHelperFuncs->free)(text);
 }
+
 
 /* ==== 0x0010A03C  (file offset 0x0A03C)  FUN_0010a03c ================================================ */
 void FUN_0010a03c(int param_1,undefined4 param_2)
@@ -6962,114 +6841,104 @@ int FUN_0010a12c(int param_1,undefined4 param_2,byte *param_3)
   return iVar4;
 }
 
-/* ==== 0x0010A214  (file offset 0x0A214)  FUN_0010a214 ================================================ */
-undefined8 FUN_0010a214(int param_1)
+/* ==== 0x0010A214  (file offset 0x0A214)  text_box_layout ============================================= */
+/* GUESS: name. Lays a text box out: removes its "more" line, then makes the lines from firstLine its
+   children, one under the other (each the first line's height + the line spacing high, indented by the
+   horizontal margin), as many as are visible, from the top (alignment bit 0x20: after the vertical
+   margin), the bottom (bit 0x10: from the vertical margin above the bottom) or centred; when more lines
+   follow and the box does not scroll, adds a "more" line (text 0x3D1D22E8, GUESS: "...") at the bottom
+   right. Returns the box (r0 as the binary leaves it). Written from its disassembly (0x0010a214 -
+   0x0010a3e0). */
+TextBox * text_box_layout(TextBox *box)
 
 {
-  undefined4 param_2;
-  /* not parameters: param_2. kh.mod reads r1 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  short *psVar5;
-  undefined4 uVar6;
-  int iVar7;
-  int iVar8;
-  int iVar9;
-  int iVar10;
-  undefined8 uVar11;
-  
-  iVar10 = param_1;
-  if (*(int *)(param_1 + 0x48) != 0) {
-    iVar1 = ui_element_remove_child(param_1,*(undefined4 *)(*(int *)(param_1 + 0x48) + 0xc),1);
-    if (iVar1 == 0) {
-      (*(code *)(*(int *)**(int **)(param_1 + 0x48)))();
-      helper_free(*(void **)(param_1 + 0x48));
+  UIElement *element = (UIElement *)box;
+  TextLine *line;
+  int32 count;
+  int32 pitch;
+  int32 shown;
+  int32 more = 0;
+  int32 y;
+  int32 i;
+
+  if (box->moreLine != (TextLine *)0x0) {
+    if (ui_element_remove_child(element,((UIElement *)box->moreLine)->id,1) == 0) {
+      (*(code *)*(int32 *)*(int32 *)box->moreLine)(box->moreLine);   /* destroy: vtable slot 0 */
+      helper_free(box->moreLine);
     }
-    *(undefined4 *)(param_1 + 0x48) = 0;
+    box->moreLine = (TextLine *)0x0;
   }
-  **(undefined4 **)(param_1 + 0x24) = 0;
-  iVar1 = **(int **)(param_1 + 0x30);
-  if (0 < iVar1) {
-    iVar2 = list_get_entry(*(int **)(param_1 + 0x30),0);
-    iVar3 = *(int *)(param_1 + 0x34);
-    iVar9 = *(int *)(iVar2 + 0x34) + *(int *)(iVar3 + 0x10);
-    iVar1 = iVar1 - *(int *)(param_1 + 0x38);
-    iVar7 = *(int *)(param_1 + 0x3c);
-    iVar2 = iVar1;
-    if (iVar7 < iVar1) {
-      iVar2 = iVar7;
-    }
-    if ((*(uint *)(iVar3 + 4) & 0x20) == 0) {
-      if ((*(uint *)(iVar3 + 4) & 0x10) == 0) {
-        iVar3 = ((int)*(short *)(*(int *)(param_1 + 8) + 6) - iVar9 * iVar2) / 2;
-      }
-      else {
-        iVar3 = (int)*(short *)(*(int *)(param_1 + 8) + 6) - *(int *)(iVar3 + 0xc);
-      }
-    }
-    else {
-      iVar3 = *(int *)(iVar3 + 0xc);
-    }
-    for (iVar8 = 0; iVar8 < iVar2; iVar8 = iVar8 + 1) {
-      iVar4 = list_get_entry(*(undefined4 *)(param_1 + 0x30),*(int *)(param_1 + 0x38) + iVar8);
-      **(short **)(iVar4 + 8) =
-           **(short **)(param_1 + 8) + (short)*(undefined4 *)(*(int *)(param_1 + 0x34) + 8);
-      *(short *)(*(int *)(iVar4 + 8) + 2) = *(short *)(*(int *)(param_1 + 8) + 2) + (short)iVar3;
-      *(short *)(*(int *)(iVar4 + 8) + 6) = (short)((uint)(iVar9 * 0x10000) >> 0x10);
-      iVar3 = iVar3 + iVar9;
-      ui_element_add_child(param_1,iVar4,0);
-    }
-    if ((*(char *)(param_1 + 0x44) == '\0') && (iVar7 < iVar1)) {
-      psVar5 = *(short **)(param_1 + 8);
-      param_2 = *(undefined4 *)(param_1 + 0x20);
-      iVar10 = 0;
-      uVar6 = FUN_0010b650(0,(int)*psVar5 + (int)psVar5[2] +
-                             *(int *)(*(int *)(param_1 + 0x34) + 8) * -2,
-                           (int)psVar5[1] + (int)psVar5[3] +
-                           *(int *)(*(int *)(param_1 + 0x34) + 0xc) * -2,0,0,param_2,WORD_HEXADECIMAL_3D1D22E8,9).low
-      ;
-      *(undefined4 *)(param_1 + 0x48) = uVar6;
-      ui_element_add_child(param_1,uVar6,0);
-    }
+  element->children->count = 0;
+  count = box->lines->count;
+  if (count <= 0)
+    return box;
+  line = (TextLine *)list_get_entry(box->lines,0);
+  pitch = line->height + box->style->lineSpacing;
+  shown = count - box->firstLine;
+  if (box->visibleLines < shown) {
+    shown = box->visibleLines;
+    more = 1;
   }
-  return MAKE_WORDS(uVar11,param_2,iVar10);
+  if (box->style->alignment & 0x20)
+    y = box->style->verticalMargin;
+  else if (box->style->alignment & 0x10)
+    y = element->rect->dy - box->style->verticalMargin;
+  else
+    y = (element->rect->dy - pitch * shown) / 2;
+  for (i = 0; i < shown; i++) {
+    line = (TextLine *)list_get_entry(box->lines,box->firstLine + i);
+    ((UIElement *)line)->rect->x = element->rect->x + box->style->horizontalMargin;
+    ((UIElement *)line)->rect->y = element->rect->y + y;
+    ((UIElement *)line)->rect->dy = (int16)pitch;
+    y += pitch;
+    ui_element_add_child(element,(UIElement *)line,0);
+  }
+  if (box->scrollable == 0 && more) {
+    box->moreLine = text_line_create((TextLine *)0x0,
+                                     element->rect->x + element->rect->dx - box->style->horizontalMargin * 2,
+                                     element->rect->y + element->rect->dy - box->style->verticalMargin * 2,0,0,
+                                     element->owner,WORD_HEXADECIMAL_3D1D22E8,9);
+    ui_element_add_child(element,(UIElement *)box->moreLine,0);
+  }
+  return box;
 }
 
-/* ==== 0x0010A3E8  (file offset 0x0A3E8)  FUN_0010a3e8 ================================================ */
-void FUN_0010a3e8(undefined4 param_1,int *param_2,uint param_3,int param_4)
+
+/* ==== 0x0010A3E8  (file offset 0x0A3E8)  graphics_set_color ========================================== */
+/* GUESS: name. Sets an IGraphics colour from a 0xAARRGGBB word (red, green, blue and alpha its bytes):
+   `which` 1 the line colour (SetColor), 2 the fill colour (SetFillColor), 3 the background
+   (SetBackground, no alpha; the binary's tail call at 0x0010a434). Returns what IGraphics returns (the
+   colour before), or, for another `which`, r0 as the binary leaves it: the graphics object. `owner` (the
+   screen stack) is not read. Ghidra had lost the arguments of SetFillColor and SetBackground. */
+uint32 graphics_set_color(int32 owner,IGraphics *graphics,uint32 color,int32 which)
 
 {
-  if (param_4 == 1) {
-    (**(code **)(*param_2 + 0x10))
-              (param_2,(param_3 & 0xffffff) >> 0x10,(param_3 & 0xffff) >> 8,param_3 & 0xff,
-               param_3 >> 0x18);
-  }
-  else if (param_4 == 2) {
-    (**(code **)(*param_2 + 0x20))();
-  }
-  else if (param_4 == 3) {
-                    /* WARNING: Could not recover jumptable at 0x0010a434. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-    (**(code **)(*param_2 + 8))();
-    return;
-  }
-  return;
+  uint8 red = (uint8)(color >> 16);
+  uint8 green = (uint8)(color >> 8);
+  uint8 blue = (uint8)color;
+  uint8 alpha = (uint8)(color >> 24);
+
+  if (which == 1)
+    return (*graphics->pvt->SetColor)(graphics,red,green,blue,alpha);
+  if (which == 2)
+    return (*graphics->pvt->SetFillColor)(graphics,red,green,blue,alpha);
+  if (which == 3)
+    return (*graphics->pvt->SetBackground)(graphics,red,green,blue);
+  return (uint32)graphics;
 }
 
-/* ==== 0x0010A46C  (file offset 0x0A46C)  FUN_0010a46c ================================================ */
-void FUN_0010a46c(undefined4 param_1,int *param_2,undefined4 param_3,uint param_4)
+
+/* ==== 0x0010A46C  (file offset 0x0A46C)  display_set_color =========================================== */
+/* GUESS: name. Sets an IDisplay colour (IDisplay SetColor; `which` 1 the text, 2 its background, as
+   text_line_draw uses it) from a 0xAARRGGBB word, as BREW's RGBVAL 0xBBGGRR00; the binary's tail call at
+   0x0010a494. Returns the colour before. `owner` (the screen stack) is not read. */
+uint32 display_set_color(int32 owner,IDisplay *display,int32 which,uint32 color)
 
 {
-                    /* WARNING: Could not recover jumptable at 0x0010a494. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (**(code **)(*param_2 + 0x28))
-            (param_2,param_3,
-             ((int)param_4 >> 8 & 0xff00U) + (param_4 & 0xff00) * 0x100 + param_4 * 0x1000000);
-  return;
+  return (*display->pvt->SetColor)(display,which,
+                                   (color & 0xff) << 24 | (color & 0xff00) << 8 | (color >> 8 & 0xff00));
 }
+
 
 /* ==== 0x0010A498  (file offset 0x0A498)  FUN_0010a498 ================================================ */
 void FUN_0010a498(int param_1,int param_2)
@@ -7308,8 +7177,8 @@ int * FUN_0010aa8c(int *param_1,int *param_2)
     if (piVar3 != (int *)0x0) {
       (**(code **)(*piVar3 + 0x14))(piVar3,3);
     }
-    iVar1 = FUN_0010b650(0,(int)*(short *)(param_1[2] + 4) / 2,(int)*(short *)(param_1[2] + 6) / 2,0
-                         ,0,*(undefined4 *)(param_1[0x11] + 0xd0),WORD_HEXADECIMAL_254DA109,9).low;
+    iVar1 = (int)text_line_create(0,(int)*(short *)(param_1[2] + 4) / 2,(int)*(short *)(param_1[2] + 6) / 2,0
+                         ,0,*(undefined4 *)(param_1[0x11] + 0xd0),WORD_HEXADECIMAL_254DA109,9);
     param_1[0x37] = iVar1;
     ui_element_add_child(param_1,iVar1,900);
     *(undefined1 *)(param_1[0x37] + 4) = 0;
@@ -7556,56 +7425,38 @@ Enemy * enemy_create(Enemy *enemy,int32 number,CombatRegion *region,int32 type)
   return enemy;
 }
 
-/* ==== 0x0010B2DC  (file offset 0x0B2DC)  FUN_0010b2dc ================================================ */
-int * FUN_0010b2dc(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5
-                  ,undefined4 param_6,int param_7)
+/* ==== 0x0010B2DC  (file offset 0x0B2DC)  text_box_create ============================================= */
+/* GUESS: names. A text box's constructor (0x50 bytes, allocated when `box` is 0; returns 0 when out of
+   memory): a UI element (ui_element_create) with VTABLE_001016A0, its style (a type 6 one when 0), an
+   empty list of lines, as many visible lines as fit (5000 when the height is 0, else -1: computed by
+   text_box_set_text), its colours from the style, a background unless the style is of type 0 or 6
+   (type 0 draws its own, text_box_draw), and the frame of styles 1-3. */
+TextBox * text_box_create(TextBox *box,int32 x,int32 y,int32 width,int32 height,int32 *owner,TextStyle *style)
 
 {
-  int iVar1;
-  int *piVar2;
-  bool bVar3;
-  bool bVar4;
-  bool bVar5;
-  
-  if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(0x50), param_1 != (int *)0x0)) {
-    ui_element_create(param_1,param_2,param_3,param_4,param_5,param_6);
-    *param_1 = (int32)VTABLE_001016A0;
-    if (param_7 == 0) {
-      param_7 = FUN_0010ba08(0,6);
-    }
-    param_1[0xd] = param_7;
-    param_1[0xe] = 0;
-    iVar1 = (int)list_create((UIList *)0x0,0x10,0x10);
-    param_1[0xc] = iVar1;
-    iVar1 = INTEGER_5000;
-    if (param_5 != 0) {
-      iVar1 = -1;
-    }
-    param_1[0xf] = iVar1;
-    param_1[0x10] = 0;
-    piVar2 = (int *)param_1[0xd];
-    param_1[5] = piVar2[6];
-    param_1[4] = piVar2[7];
-    param_1[6] = piVar2[8];
-    if (*piVar2 != 0 && *piVar2 != 6) {
-      *(undefined1 *)(param_1 + 7) = 1;
-    }
-    *(undefined1 *)(param_1 + 0x11) = 0;
-    param_1[0x12] = 0;
-    iVar1 = *piVar2;
-    bVar3 = iVar1 == 1;
-    bVar4 = iVar1 == 3;
-    bVar5 = iVar1 != 2;
-    if ((bVar3 || bVar4) || !bVar5) {
-      iVar1 = 1;
-    }
-    if ((!bVar3 && !bVar4) && bVar5) {
-      iVar1 = 0;
-    }
-    param_1[0x13] = iVar1;
-  }
-  return param_1;
+  UIElement *element;
+
+  if (box == (TextBox *)0x0 && (box = helper_malloc_2(0x50)) == (TextBox *)0x0)
+    return box;
+  element = (UIElement *)box;
+  ui_element_create(element,(int16)x,(int16)y,(int16)width,(int16)height,owner);
+  element->vtable = (int32)VTABLE_001016A0;
+  box->style = style != (TextStyle *)0x0 ? style : text_style_create((TextStyle *)0x0,6);
+  box->firstLine = 0;
+  box->lines = list_create((UIList *)0x0,0x10,0x10);
+  box->visibleLines = height == 0 ? INTEGER_5000 : -1;
+  box->tail = (AEETriangle *)0x0;
+  element->secondaryColor = box->style->fillColor;
+  element->primaryColor = box->style->primaryColor;
+  element->borderColor = box->style->borderColor;
+  if (box->style->type != 0 && box->style->type != 6)
+    element->hasBackground = 1;
+  box->scrollable = 0;
+  box->moreLine = (TextLine *)0x0;
+  box->framed = box->style->type == 1 || box->style->type == 3 || box->style->type == 2;
+  return box;
 }
+
 
 /* ==== 0x0010B3E8  (file offset 0x0B3E8)  FUN_0010b3e8 ================================================ */
 undefined1 * FUN_0010b3e8(undefined1 *param_1,undefined4 param_2,undefined4 param_3)
@@ -7726,38 +7577,34 @@ MotionEntity * motion_entity_create(MotionEntity *entity,ISwerveObject *node,cha
   return entity;
 }
 
-/* ==== 0x0010B650  (file offset 0x0B650)  FUN_0010b650 ================================================ */
-undefined8
-FUN_0010b650(int *param_1,undefined4 param_2,int param_3,int param_4,undefined4 param_5,int param_6,
-            int param_7,int param_8)
+/* ==== 0x0010B650  (file offset 0x0B650)  text_line_create ============================================ */
+/* GUESS: names. A text line's constructor (VTABLE_001016C0, 0x4c bytes, allocated when `line` is 0;
+   returns 0 when out of memory): a UI element with its alignment (bits 4 left, 2 right, else centred;
+   0x20 top, 0x10 bottom, else in the middle), AEE_FONT_NORMAL and that font's height (ascent + descent,
+   IDisplay GetFontMetrics), and the text with the id `textId` when not 0 (text_line_set_text_id). Text
+   boxes make one per line; the menus use them as labels. */
+TextLine * text_line_create(TextLine *line,int32 x,int32 y,int32 width,int32 height,int32 *owner,int32 textId,
+                            uint32 alignment)
 
 {
-  undefined4 local_30;
-  int local_2c;
-  int local_28;
-  undefined8 uVar1;
-  
-  local_28 = param_4;
-  if ((param_1 != (int *)0x0) ||
-     (local_2c = param_3, param_1 = helper_malloc_2(0x4c), local_30 = param_2, param_1 != (int *)0x0
-     )) {
-    local_30 = param_5;
-    local_2c = param_6;
-    ui_element_create(param_1,param_2,param_3,param_4,(short)param_5,param_6);
-    *param_1 = (int32)VTABLE_001016C0;
-    param_1[0x10] = param_8;
-    param_1[0xe] = 0;
-    *(undefined2 *)(param_1 + 0xf) = 0x8000;
-    (**(code **)(**(int **)(param_1[8] + 0xc) + 8))
-              (*(int **)(param_1[8] + 0xc),0x8000,&local_28,&local_2c);
-    param_1[0xd] = local_28 + local_2c;
-    param_1[0xc] = 0;
-    if (param_7 != 0) {
-      FUN_00109ff8(param_1,param_7);
-    }
-  }
-  return MAKE_WORDS(uVar1,local_30,param_1);
+  int ascent;
+  int descent;
+
+  if (line == (TextLine *)0x0 && (line = helper_malloc_2(0x4c)) == (TextLine *)0x0)
+    return line;
+  ui_element_create((UIElement *)line,(int16)x,(int16)y,(int16)width,(int16)height,owner);
+  ((UIElement *)line)->vtable = (int32)VTABLE_001016C0;
+  line->alignment = alignment;
+  line->text = (AECHAR *)0x0;
+  line->font = (int16)0x8000;
+  (*((ScreenStack *)owner)->display->pvt->GetFontMetrics)(((ScreenStack *)owner)->display,0x8000,&ascent,&descent);
+  line->height = ascent + descent;
+  line->textWidth = 0;
+  if (textId != 0)
+    text_line_set_text_id(line,textId);
+  return line;
 }
+
 
 /* ==== 0x0010B70C  (file offset 0x0B70C)  FUN_0010b70c ================================================ */
 undefined1 * FUN_0010b70c(undefined1 *param_1,undefined4 param_2,undefined4 param_3)
@@ -7890,59 +7737,61 @@ CollisionShape * collision_shape_create(CollisionShape *shape)
   return shape;
 }
 
-/* ==== 0x0010BA08  (file offset 0x0BA08)  FUN_0010ba08 ================================================ */
-/* returns r0 as kh.mod leaves it (param_1, or the new block, or NULL when the allocation fails); Ghidra had declared it void, but callers use r0 after the
-   call */
-undefined4 * FUN_0010ba08(undefined4 *param_1,undefined4 param_2)
+/* ==== 0x0010BA08  (file offset 0x0BA08)  text_style_create =========================================== */
+/* GUESS: names. A text style's constructor (0x28 bytes, allocated when `style` is 0; returns 0 when out of
+   memory): alignment 9 (centred), margins 6 x 4, no line spacing, AEE_FONT_NORMAL, no auto-size, and the
+   colours of its type: 0 a light grey box (drawn with round corners by text_box_draw), 1 blue, 2 red,
+   3 orange (these three framed, margins 15 x 6), 5 pale yellow, 4 and 6 (and any other) off-white;
+   the text black unless framed. */
+TextStyle * text_style_create(TextStyle *style,int32 type)
 
 {
-  undefined4 uVar1;
-  
-  if ((param_1 == (undefined4 *)0x0) &&
-     (param_1 = helper_malloc_2(0x28), param_1 == (undefined4 *)0x0)) {
-    return param_1;
-  }
-  param_1[1] = 9;
-  param_1[2] = 6;
-  param_1[3] = 4;
-  param_1[4] = 0;
-  *param_1 = param_2;
-  *(undefined2 *)(param_1 + 5) = 0x8000;
-  *(undefined1 *)(param_1 + 9) = 0;
-  uVar1 = WORD_HEXADECIMAL_FFEBEBF7;
-  switch(param_2) {
+  uint32 fill = WORD_HEXADECIMAL_FFEBEBF7;
+
+  if (style == (TextStyle *)0x0 && (style = helper_malloc_2(0x28)) == (TextStyle *)0x0)
+    return style;
+  style->alignment = 9;
+  style->horizontalMargin = 6;
+  style->verticalMargin = 4;
+  style->lineSpacing = 0;
+  style->type = type;
+  style->font = (int16)0x8000;
+  style->autoSize = 0;
+  switch (type) {
   case 0:
-    uVar1 = WORD_HEXADECIMAL_FFEFEFEF;
+    fill = WORD_HEXADECIMAL_FFEFEFEF;
     break;
   case 1:
-    param_1[6] = WORD_HEXADECIMAL_FFC5FAB9;
-    param_1[7] = WORD_HEXADECIMAL_FF004C78;
-    uVar1 = WORD_HEXADECIMAL_FF0253A8;
-    goto LAB_0010bac8;
+    style->fillColor = WORD_HEXADECIMAL_FFC5FAB9;
+    style->primaryColor = WORD_HEXADECIMAL_FF004C78;
+    style->borderColor = WORD_HEXADECIMAL_FF0253A8;
+    style->verticalMargin = 6;
+    style->horizontalMargin = 0xf;
+    return style;
   case 2:
-    param_1[6] = INTEGER_MINUS_28807;
-    param_1[7] = WORD_HEXADECIMAL_FF2C0621;
-    uVar1 = WORD_HEXADECIMAL_FF8D2B15;
-    goto LAB_0010bac8;
+    style->fillColor = INTEGER_MINUS_28807;
+    style->primaryColor = WORD_HEXADECIMAL_FF2C0621;
+    style->borderColor = WORD_HEXADECIMAL_FF8D2B15;
+    style->verticalMargin = 6;
+    style->horizontalMargin = 0xf;
+    return style;
   case 3:
-    param_1[6] = INTEGER_MINUS_6560;
-    param_1[7] = WORD_HEXADECIMAL_FF724307;
-    uVar1 = WORD_HEXADECIMAL_FF8A4E00;
-LAB_0010bac8:
-    param_1[3] = 6;
-    param_1[8] = uVar1;
-    param_1[2] = 0xf;
-    return param_1;
-  case 4:
-    break;
+    style->fillColor = INTEGER_MINUS_6560;
+    style->primaryColor = WORD_HEXADECIMAL_FF724307;
+    style->borderColor = WORD_HEXADECIMAL_FF8A4E00;
+    style->verticalMargin = 6;
+    style->horizontalMargin = 0xf;
+    return style;
   case 5:
-    uVar1 = WORD_HEXADECIMAL_FFEFEFC0;
+    fill = WORD_HEXADECIMAL_FFEFEFC0;
+    break;
   }
-  param_1[6] = uVar1;
-  param_1[7] = 0xff000000;
-  param_1[8] = 0xff000000;
-  return param_1;
+  style->fillColor = fill;
+  style->primaryColor = 0xff000000u;
+  style->borderColor = 0xff000000u;
+  return style;
 }
+
 
 /* ==== 0x0010BB2C  (file offset 0x0BB2C)  intro_create ================================================ */
 /* GUESS: names. Sets up the opening sequence (allocating its 0xa4 bytes when `intro` is 0), at stage 2
@@ -7975,7 +7824,6 @@ int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
   undefined4 *puVar3;
   int iVar4;
   short *psVar5;
-  undefined8 uVar6;
   
   if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(0x70), param_1 != (int *)0x0)) {
     ui_element_create(param_1,(undefined2)param_2,(undefined2)param_3,(undefined2)param_4,
@@ -7993,9 +7841,8 @@ int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
     else {
       iVar4 = 9;
     }
-    uVar6 = FUN_0010b650((int *)0x0,(int)*psVar5,(int)sVar1,(int)psVar5[2],(int)psVar5[3],param_6,0,
-                         iVar4);
-    param_1[0xc] = (int)uVar6.low;
+    param_1[0xc] = (int)text_line_create((TextLine *)0x0,(int)*psVar5,(int)sVar1,(int)psVar5[2],(int)psVar5[3],
+                                         (int32 *)param_6,0,iVar4);
     if (param_7 == 8) {
       param_1[0x10] = 0;
     }
@@ -8076,7 +7923,7 @@ int * FUN_0010be14(int *param_1)
    memory), then two arrays of `capacity` words (the ids and the entries), and starts it empty; it grows by
    `growBy` entries when full (list_set_entry). Every UI element's child list is list_create(0, 16, 16)
    (ui_element_create); the others make the screen stack's list (+0x34, FUN_0010ac6c), a UI element's key
-   map (+0x60, FUN_0010bba0) and lists at +0x30 (FUN_0010b2dc) and +0x34 / a local in FUN_0010ac6c. */
+   map (+0x60, FUN_0010bba0) and lists at +0x30 (text_box_create) and +0x34 / a local in FUN_0010ac6c. */
 UIList * list_create(UIList *list,int32 capacity,int32 growBy)
 
 {
@@ -9091,7 +8938,7 @@ void progress_add_magic_points(Progress *progress,int32 amount)
 
 /* ==== 0x0010D1E0  (file offset 0x0D1E0)  progress_add_munny ========================================== */
 /* GUESS: name. Adds `amount` munny (it never goes below 0) and shows the new total as "<label>=<munny>":
-   the label is the text 0x16A5390B (FUN_0011421c, GUESS: "Munny"), turned into a wide string
+   the label is the text 0x16A5390B (text_table_get_text, GUESS: "Munny"), turned into a wide string
    (FUN_0010e210) and shown on the app's field_d4 screen for 2000 ms (FUN_00105538). */
 void progress_add_munny(Progress *progress,int32 amount)
 
@@ -9104,7 +8951,7 @@ void progress_add_munny(Progress *progress,int32 amount)
   app->progress->munny += amount;
   if (app->progress->munny < 1)
     app->progress->munny = 0;
-  FUN_0011421c(app->pObj98,WORD_HEXADECIMAL_16A5390B,&label);
+  text_table_get_text(app->pObj98,WORD_HEXADECIMAL_16A5390B,&label);
   if (label == (void *)0x0 || (text = helper_malloc(0x20)) == (void *)0x0)
     return;
   (*g_pHelperFuncs->sprintf)(text,(int32)STRING_PERCENT_S_EQUALS_PERCENT_D,label,app->progress->munny);
@@ -10308,7 +10155,7 @@ void FUN_0010ea00(int param_1)
     memcpy(pvVar1,*(undefined4 *)(param_1 + 8),8);
   }
   iVar2 = *(int *)(*(int *)(param_1 + 0x44) + 0xd0);
-  FUN_0010a3e8(iVar2,*(undefined4 *)(iVar2 + 0x10),0,3);
+  graphics_set_color(iVar2,*(undefined4 *)(iVar2 + 0x10),0,3);
   piVar3 = *(int **)(*(int *)(*(int *)(param_1 + 0x44) + 0xd0) + 0x10);
   (**(code **)(*piVar3 + 0x78))(piVar3,pvVar1);
   helper_free(pvVar1);
@@ -11057,7 +10904,7 @@ void FUN_0010f8e8(int param_1)
   iVar1 = *(int *)(*(int *)(param_1 + 0x724) + 0x98);
   if (iVar1 != 0) {
     local_14 = 0;
-    FUN_0011421c(iVar1,WORD_HEXADECIMAL_052F918F,&local_14 /* not arguments, register leftovers: param_4,param_3 */);
+    text_table_get_text(iVar1,WORD_HEXADECIMAL_052F918F,&local_14 /* not arguments, register leftovers: param_4,param_3 */);
     iVar1 = INTEGER_57398;
     iVar2 = INTEGER_57398 + 1;
     iVar3 = INTEGER_57398 + 1;
@@ -11871,7 +11718,7 @@ uint FUN_00110924(int *param_1)
                             (param_1[0x10],(int32)STRING_PLACE), uVar11 = WORD_HEXADECIMAL_1BF8C522,
         iVar10 == 0)))) {
       local_34 = (int *)0x0;
-      FUN_00114774(*(int **)(iVar2 + 0x98),uVar11,&local_34);
+      text_table_get_wide_text(*(int **)(iVar2 + 0x98),uVar11,&local_34);
       if (local_34 != (int *)0x0) {
         FUN_00105538(*(int *)(iVar2 + 0xd4),local_34,2);
         (*g_pHelperFuncs->free)(local_34);
@@ -14220,15 +14067,18 @@ uint8 animations_get_state(Animations *animations,int32 index)
   return index >= 0 && animations->userIds[index] != -1 ? animations->states[index] : 0;
 }
 
-/* ==== 0x0011421C  (file offset 0x1421C)  FUN_0011421c ================================================ */
-int FUN_0011421c(int *param_1,undefined4 param_2,undefined4 *param_3)
+/* ==== 0x0011421C  (file offset 0x1421C)  text_table_get_text ========================================= */
+/* GUESS: names. The narrow text with the id `textId` from the text table, as a new string in *text
+   (FUN_0011448c, from the table's source; the binary's tail jump at 0x00114238). Returns FUN_0011448c's
+   result, or, without a source, r0 as the binary leaves it: the table. */
+int32 text_table_get_text(TextTable *table,int32 textId,char **text)
 
 {
-  if (param_1[1] == 0) {
-    return (int)param_1;
-  }
-  return FUN_0011448c(*(undefined4 *)(*param_1 + 0x94),(int *)param_1[1],param_2,param_3);
+  if (table->source == (int *)0x0)
+    return (int32)table;
+  return FUN_0011448c((undefined4)table->app->pObj94,table->source,textId,(undefined4 *)text);
 }
+
 
 /* ==== 0x00114240  (file offset 0x14240)  FUN_00114240 ================================================ */
 /* GUESS: what it does. The height of the ground or ceiling at (param_2, param_3) from height param_4
@@ -14460,23 +14310,26 @@ undefined4 FUN_00114750(int param_1)
   return *(undefined4 *)(param_1 + 0x5c);
 }
 
-/* ==== 0x00114774  (file offset 0x14774)  FUN_00114774 ================================================ */
-void FUN_00114774(int *param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x00114774  (file offset 0x14774)  text_table_get_wide_text ==================================== */
+/* GUESS: names. The text with the id `textId` from the text table, as a new wide string in *text (left
+   as it is when there is none): the narrow text (FUN_0011448c, from the table's source) turned into a
+   wide one (FUN_0010e210) and freed. */
+void text_table_get_wide_text(TextTable *table,int32 textId,AECHAR **text)
 
 {
-  int local_10;
-  
-  if (param_1[1] != 0) {
-    local_10 = 0;
-    FUN_0011448c(*(undefined4 *)(*param_1 + 0x94),param_1[1],param_2,&local_10);
-    if (local_10 != 0) {
-      FUN_0010e210(*(undefined4 *)(*param_1 + 0x94),&local_10,param_3);
+  char *narrow;
+
+  if (table->source == (int *)0x0)
+    return;
+  narrow = (char *)0x0;
+  FUN_0011448c((undefined4)table->app->pObj94,table->source,textId,(undefined4 *)&narrow);
+  if (narrow != (char *)0x0) {
+    FUN_0010e210((undefined4)table->app->pObj94,(undefined4 *)&narrow,(int *)text);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-      (*g_pHelperFuncs->free)(local_10);
-    }
+    (*g_pHelperFuncs->free)(narrow);
   }
-  return;
 }
+
 
 /* ==== 0x001147EC  (file offset 0x147EC)  FUN_001147ec ================================================ */
 void FUN_001147ec(undefined4 *param_1,int param_2,int *param_3)
@@ -17526,7 +17379,7 @@ void kh_OnAppStart(KHApp *pMe)
               if (((pMe->nErr == 0) && (FUN_00118640(pMe->animations,pMe->pObj6c), pMe->nErr == 0)) &&
                  (intro_start(pMe->intro), pMe->nErr == 0)) {
                 local_18 = (IBitmap *)0x0;
-                FUN_0011421c(pMe->pObj98,WORD_HEXADECIMAL_28500339,&local_18);
+                text_table_get_text(pMe->pObj98,WORD_HEXADECIMAL_28500339,&local_18);
                 if (local_18 == (IBitmap *)0x0) {
                   pMe->field_8c = 0x1e;
                 }
@@ -18298,7 +18151,7 @@ void kh_OnKey(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
         iVar9 = 0;
         do {
           uVar10 = *(undefined4 *)(*(int *)(*(int *)(*(int *)(uVar2 + 0x34) + 4) + 0x30) + 0x38);
-          uVar6 = FUN_00107fec(pMe->screens,aiStack_48[iVar9]);
+          uVar6 = screen_stack_get_text(pMe->screens,aiStack_48[iVar9]);
                     /* helper[11] int wstrcmp(const AECHAR *a, const AECHAR *b)  (AEEHelperFuncs
                        +0x2c, via *(base-4)) */
           iVar5 = (*g_pHelperFuncs->wstrcmp)(uVar6,uVar10);
@@ -24979,7 +24832,6 @@ void FUN_001242b4(int param_1)
   int iVar7;
   void *pvVar10;
   bool bVar9;
-  undefined8 uVar10;
   
   iVar6 = WORD_HEXADECIMAL_FFFDBD34;
                     /* helper[44] uint32 aee_GetUpTimeMS(void)  (AEEHelperFuncs +0xb0, via
@@ -25065,10 +24917,10 @@ LAB_001243b0:
     if (piVar5 != (int *)0x0) {
       FUN_00109a10((int)piVar5,1,0,0);
       FUN_00109a10((int)piVar5,2,0,0);
-      uVar10 = FUN_0010b650((int *)0x0,(int)*(short *)(piVar5[2] + 4) / 2,
-                            *(short *)(piVar5[2] + 6) + -10,0,0,*(int *)(param_1 + 0xd0),
-                            WORD_HEXADECIMAL_254DA109,9);
-      ui_element_add_child((int)piVar5,(int)uVar10.low,0);
+      ui_element_add_child((int)piVar5,
+                           (int)text_line_create((TextLine *)0x0,(int)*(short *)(piVar5[2] + 4) / 2,
+                                                 *(short *)(piVar5[2] + 6) + -10,0,0,*(int32 **)(param_1 + 0xd0),
+                                                 WORD_HEXADECIMAL_254DA109,9),0);
       if (*(int *)(param_1 + 0xcc) == 0x10) {
         piVar5[4] = WORD_HEXADECIMAL_FFEFEFEF;
       }

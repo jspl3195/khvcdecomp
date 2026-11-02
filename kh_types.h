@@ -121,14 +121,29 @@ typedef struct UIList {
  * when it becomes the top again (screen_stack_close_top). */
 typedef struct ScreenStack {
     struct KHApp *app;            /* +0x00 */
-    uint8  unknown_04[0x08];
+    uint8  unknown_04[0x04];
+    struct TextTable *texts;      /* +0x08 the app's text table (KHApp.pObj98; screen_stack_get_text) */
     IDisplay *display;            /* +0x0c passed to the elements' draw methods (ui_element_draw); GUESS: the
                                      IDisplay */
-    IGraphics *graphics;          /* +0x10 what the elements draw with (ui_element_draw, FUN_0010a3e8) */
-    uint8  unknown_14[0x20];
+    IGraphics *graphics;          /* +0x10 what the elements draw with (ui_element_draw, graphics_set_color) */
+    uint8  unknown_14[0x08];
+    IImage *frameImages[6];       /* +0x1c the corners of the framed text boxes (text_box_draw): left and
+                                     right for style 1, 3 and 2 */
     UIList *screens;              /* +0x34 the open screens, by position */
     int32    depth;                 /* +0x38 how many screens are open */
-} ScreenStack;
+    int32    unknown_3c;
+    UIList  *keyTexts;              /* +0x40 the key glyphs "0" - "9", "*", "#" (wide), by the ids -1000 -
+                                     -1011 (FUN_0010ac6c; screen_stack_get_text) */
+} ScreenStack;                    /* 0x68 bytes (FUN_0010ac6c); only the fields named so far */
+
+/* ---- The text table (GUESS: names) -------------------------------------------------------------------
+ * KHApp.pObj98 (FUN_0010be14, 8 bytes): the game's texts by id, read from `source` (FUN_0011448c:
+ * its vtable +0x30 copies the text with an id), narrow (text_table_get_text) or wide
+ * (text_table_get_wide_text). */
+typedef struct TextTable {
+    struct KHApp *app;            /* +0x00 */
+    int     *source;              /* +0x04 */
+} TextTable;
 
 /* ---- The game's UI elements (GUESS: names) ------------------------------------------------------
  * A UIElement is a screen, menu entry or widget, created by FUN_0010bba0 with its type in +0x34.
@@ -180,6 +195,55 @@ typedef struct UIElement {
     int32    unknown_64;            /* +0x64 passed to FUN_00105224 with the element found there */
     int32    originalKeyCode;       /* +0x68 key picker: the setting's value when it was set up */
 } UIElement;
+
+/* ---- Text boxes and text lines (GUESS: names) -------------------------------------------------------
+ * A text box (text_box_create, VTABLE_001016A0) shows a wide text wrapped into text lines
+ * (text_box_set_text), a page at a time (UP / DOWN scroll it, text_box_handle_key), in the look of its
+ * style (text_style_create). A text line (text_line_create, VTABLE_001016C0) is one line of text in a
+ * font, placed in its rectangle by its alignment; the menus also use them as labels. Both start with the
+ * UI element's 0x30 bytes (ui_element_create): cast to UIElement for those. */
+typedef struct TextStyle {
+    int32  type;                  /* +0x00 0 a round-cornered box, 1-3 framed (blue, red, orange), 5 scrolls */
+    uint32 alignment;             /* +0x04 of its lines (text_line_draw); bit 0x20 lines from the top, 0x10
+                                     from the bottom, else centred (text_box_layout); 9 by default */
+    int32  horizontalMargin;      /* +0x08 6 (15 framed) */
+    int32  verticalMargin;        /* +0x0c 4 (6 framed) */
+    int32  lineSpacing;           /* +0x10 0 */
+    int16  font;                  /* +0x14 AEE_FONT_NORMAL (0x8000) */
+    uint8  unknown_16[0x02];
+    uint32 fillColor;             /* +0x18 the box's secondary colour (its background) */
+    uint32 primaryColor;          /* +0x1c the box's primary colour (the text, the outline) */
+    uint32 borderColor;           /* +0x20 */
+    uint8  autoSize;              /* +0x24 the box takes the height of its text (text_box_set_text) */
+    uint8  unknown_25[0x03];
+} TextStyle;                      /* 0x28 bytes */
+
+typedef struct TextLine {
+    uint8    element[0x30];       /* +0x00 the UI element */
+    int32    textWidth;           /* +0x30 the text's width in its font */
+    int32    height;              /* +0x34 the font's ascent + descent */
+    AECHAR  *text;                /* +0x38 */
+    int16    font;                /* +0x3c AEE_FONT_NORMAL */
+    uint8    unknown_3e[0x02];
+    uint32   alignment;           /* +0x40 bits 4 left, 2 right, else centred; 0x20 top, 0x10 bottom, else
+                                     in the middle */
+    int32    textX;               /* +0x44 where text_line_draw last drew it */
+    int32    textY;               /* +0x48 */
+} TextLine;                       /* 0x4c bytes */
+
+typedef struct TextBox {
+    uint8    element[0x30];       /* +0x00 the UI element */
+    UIList  *lines;               /* +0x30 its text lines, by position */
+    TextStyle *style;             /* +0x34 */
+    int32    firstLine;           /* +0x38 the first line shown */
+    int32    visibleLines;        /* +0x3c how many fit; -1 until text_box_set_text works it out */
+    AEETriangle *tail;           /* +0x40 a triangle drawn under a type 0 box (GUESS: a speech bubble's
+                                     tail); freed with the box */
+    uint8    scrollable;          /* +0x44 a type 5 style with more lines than fit: a scroll bar */
+    uint8    unknown_45[0x03];
+    TextLine *moreLine;           /* +0x48 the "more" mark shown when lines follow (text_box_layout) */
+    int32    framed;              /* +0x4c a style of type 1, 2 or 3 */
+} TextBox;                        /* 0x50 bytes */
 
 /* ---- The player's progress (GUESS: names) -----------------------------------------------------
  * KHApp.progress. Only the fields used by the functions named so far are named; the rest is padding.

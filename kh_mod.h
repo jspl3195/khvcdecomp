@@ -447,18 +447,18 @@ int32 ui_element_set_key_target(UIElement *element,int32 keyCode,UIElement *targ
 void key_picker_restore_original(UIElement *picker);   /* 0x001056F4 GUESS: name */
 void web_request_parse_reply(WebRequest *caller,WebRequest *request);   /* 0x00105734 GUESS: name, see kh_mod.c */
 void FUN_00105c5c(int param_1);
-void FUN_00105d48(int param_1);
+void text_line_destroy(TextLine *line);   /* 0x00105D48 GUESS: name, see kh_mod.c */
 void FUN_00105d7c(int param_1);
 void FUN_00105dc8(int param_1);
 void web_request_read(WebRequest *request);   /* 0x00105E44 GUESS: name, see kh_mod.c */
 void web_request_download(WebRequest *request,char *fileName,int32 position,char *userId,int32 time);   /* 0x00106130 GUESS: name, see kh_mod.c */
 void web_request_cancel(WebRequest *request,WebRequest *pending);   /* 0x00106354 GUESS: name, see kh_mod.c */
 void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4);
-void FUN_0010673c(int *param_1,undefined4 param_2,int *param_3,undefined4 param_4);
-void FUN_00106a94(int *param_1,int *param_2);
+void text_box_draw(TextBox *box,IDisplay *display,IGraphics *graphics);   /* 0x0010673C GUESS: name, see kh_mod.c */
+void text_line_draw(TextLine *line,IDisplay *display);   /* 0x00106A94 GUESS: name, see kh_mod.c */
 void FUN_00106bd4(int *param_1,int *param_2,int *param_3);
 void FUN_00106e44(int param_1,undefined4 param_2,int *param_3);
-void FUN_00106fb0(int *param_1,undefined4 param_2,int *param_3);
+void text_box_draw_scroll_bar(TextBox *box,IDisplay *display,IGraphics *graphics);   /* 0x00106FB0 GUESS: name, see kh_mod.c */
 void FUN_00107230(int *param_1,undefined4 param_2,int *param_3);
 void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,undefined4 param_6, int param_7);
 void FUN_00107adc(int param_1,int param_2,undefined4 param_3,int *param_4,short *param_5, undefined4 param_6,uint param_7,short param_8);
@@ -467,22 +467,22 @@ void web_request_free_buffers(WebRequest *caller,WebRequest *request);   /* 0x00
 int32 list_get_entry(UIList *list,int32 index);   /* 0x00107EA4 GUESS: name, see kh_mod.c */
 int32 ui_element_find_child(UIElement *element,int32 id);   /* 0x00107EC4 GUESS: name */
 void * FUN_00107ecc(undefined4 param_1,undefined4 param_2);
-int FUN_00107f88(int param_1);
+int32 text_box_get_content_height(TextBox *box);   /* 0x00107F88 GUESS: name, see kh_mod.c */
 uint64 FUN_00107fd0(int param_1,int param_2,int param_3);
-undefined4 FUN_00107fec(int param_1,undefined4 param_2);
+AECHAR * screen_stack_get_text(ScreenStack *stack,int32 textId);   /* 0x00107FEC GUESS: name, see kh_mod.c */
 int32 screen_stack_top(ScreenStack *stack);   /* 0x001080AC GUESS: name */
 int32 list_find_entry(UIList *list,int32 id);   /* 0x001080C8 GUESS: name */
 void web_request_post_rank_ex(WebRequest *request,char *userId,char *levelId,char *score,int32 time, int32 value);   /* 0x0010810C GUESS: name, see kh_mod.c */
 void web_request_post_rank(WebRequest *request,int32 state,char *userId,int32 score,char *levelId,int32 time, int32 value,char *text);   /* 0x001082E0 GUESS: name, see kh_mod.c */
 undefined4 FUN_001083d8(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 undefined4 FUN_00108414(int param_1,undefined4 param_2,int param_3);
-bool FUN_001084e4(undefined4 param_1,undefined4 param_2,int param_3);
+int32 text_box_handle_key(TextBox *box,int32 eventCode,int32 keyCode);   /* 0x001084E4 GUESS: name, see kh_mod.c */
 int32 ui_element_handle_key(UIElement *element,int32 eventCode,int32 keyCode,int32 keyParameter);   /* 0x00108524 GUESS: name */
 int FUN_0010873c(int *param_1,undefined4 param_2,int param_3,undefined4 param_4);
 void FUN_00108840(int param_1,short param_2);
 void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *param_5);
-bool FUN_00108e8c(int param_1);
-bool FUN_00108ed8(int param_1);
+int32 text_box_scroll_down(TextBox *box);   /* 0x00108E8C GUESS: name, see kh_mod.c */
+int32 text_box_scroll_up(TextBox *box);   /* 0x00108ED8 GUESS: name, see kh_mod.c */
 int FUN_00108f28(int param_1,int param_2);
 void screen_stack_close_all(ScreenStack *stack);   /* 0x00108FA0 GUESS: name */
 void screen_stack_close_top(ScreenStack *stack,int32 redraw);   /* 0x00108FCC GUESS: name */
@@ -502,18 +502,18 @@ int FUN_00109780(int *param_1,undefined4 param_2,int param_3);
 void key_picker_setup(UIElement *picker,KeyOption *options,int32 *setting,int32 index);   /* 0x001098D8 GUESS: name */
 void FUN_00109940(int param_1,int param_2);
 void FUN_00109a10(int param_1,int param_2,int param_3,undefined4 param_4);
-void FUN_00109b4c(int param_1,int param_2,int param_3);
+int32 text_box_set_text(TextBox *box,AECHAR *text,int32 narrow);   /* 0x00109B4C GUESS: name, see kh_mod.c */
 void FUN_00109f00(int param_1,undefined4 param_2);
-void FUN_00109f48(int param_1,int param_2);
-void FUN_00109ff8(int param_1,undefined4 param_2);
+void text_line_set_text(TextLine *line,AECHAR *text);   /* 0x00109F48 GUESS: name, see kh_mod.c */
+void text_line_set_text_id(TextLine *line,int32 textId);   /* 0x00109FF8 GUESS: name, see kh_mod.c */
 void FUN_0010a03c(int param_1,undefined4 param_2);
 void FUN_0010a080(int param_1);
 void FUN_0010a0d0(int param_1);
 void game_pause(KHApp *app);   /* 0x0010A124 GUESS: name, see kh_mod.c */
 int FUN_0010a12c(int param_1,undefined4 param_2,byte *param_3);
-undefined8 FUN_0010a214(int param_1);
-void FUN_0010a3e8(undefined4 param_1,int *param_2,uint param_3,int param_4);
-void FUN_0010a46c(undefined4 param_1,int *param_2,undefined4 param_3,uint param_4);
+TextBox * text_box_layout(TextBox *box);   /* 0x0010A214 GUESS: name, see kh_mod.c */
+uint32 graphics_set_color(int32 owner,IGraphics *graphics,uint32 color,int32 which);   /* 0x0010A3E8 GUESS: name, see kh_mod.c */
+uint32 display_set_color(int32 owner,IDisplay *display,int32 which,uint32 color);   /* 0x0010A46C GUESS: name, see kh_mod.c */
 void FUN_0010a498(int param_1,int param_2);
 Hitsphere * hitsphere_create(Hitsphere *hitsphere,int32 entity,BossCombatRegion *owner,int32 secondary);   /* 0x0010A528 GUESS: name */
 int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3);
@@ -524,18 +524,18 @@ undefined4 * FUN_0010afc4(undefined4 *param_1);
 undefined4 * FUN_0010b014(undefined4 *param_1,undefined4 param_2);
 int * FUN_0010b080(int *param_1,undefined4 param_2);
 Enemy * enemy_create(Enemy *enemy,int32 number,CombatRegion *region,int32 type);   /* 0x0010B230 GUESS: name */
-int * FUN_0010b2dc(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5 ,undefined4 param_6,int param_7);
+TextBox * text_box_create(TextBox *box,int32 x,int32 y,int32 width,int32 height,int32 *owner,TextStyle *style);   /* 0x0010B2DC GUESS: name, see kh_mod.c */
 undefined1 * FUN_0010b3e8(undefined1 *param_1,undefined4 param_2,undefined4 param_3);
 CombatRegion * combat_region_create(CombatRegion *region,ISwerveObject *node,char *name);   /* 0x0010B478 GUESS: name */
 void * FUN_0010b4e4(void *param_1,int param_2);
 MotionEntity * motion_entity_create(MotionEntity *entity,ISwerveObject *node,char *name);   /* 0x0010B5E8 GUESS: name */
-undefined8 FUN_0010b650(int *param_1,undefined4 param_2,int param_3,int param_4,undefined4 param_5,int param_6, int param_7,int param_8);
+TextLine * text_line_create(TextLine *line,int32 x,int32 y,int32 width,int32 height,int32 *owner,int32 textId, uint32 alignment);   /* 0x0010B650 GUESS: name, see kh_mod.c */
 undefined1 * FUN_0010b70c(undefined1 *param_1,undefined4 param_2,undefined4 param_3);
 Animations * animations_create(Animations *animations);   /* 0x0010B804 GUESS: name */
 BossCombatRegion * boss_combat_region_create(BossCombatRegion *region,ISwerveObject *node,char *name);   /* 0x0010B870 GUESS: name */
 LevelObject * level_object_create(LevelObject *object,ISwerveObject *node,char *name);   /* 0x0010B8CC GUESS: name */
 CollisionShape * collision_shape_create(CollisionShape *shape);   /* 0x0010B9B4 GUESS: name */
-undefined4 * FUN_0010ba08(undefined4 *param_1,undefined4 param_2);
+TextStyle * text_style_create(TextStyle *style,int32 type);   /* 0x0010BA08 GUESS: name, see kh_mod.c */
 Intro * intro_create(Intro *intro,int32 atTitle,int32 *error);   /* 0x0010BB2C GUESS: names */
 int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,int param_6,int param_7,int param_8,undefined1 param_9);
 int * FUN_0010bd7c(int *param_1,int *param_2,undefined1 param_3);
@@ -565,7 +565,7 @@ void FUN_0010cd2c(int param_1,int param_2);
 void FUN_0010cda4(int param_1,int param_2);
 void FUN_0010cdd8(int param_1,int param_2);
 void screen_resume_nothing(int32 screen);   /* 0x001052DC (no Ghidra function; a virtual method) */
-void FUN_00105c98(int param_1);   /* 0x00105C98 (no Ghidra function; a virtual method) */
+void text_box_destroy(TextBox *box);   /* 0x00105C98 GUESS: name, see kh_mod.c */
 void ui_element_destroy(UIElement *element);   /* 0x00105DE4 (no Ghidra function; a virtual method) */
 void ui_element_draw_nothing(int32 element,int32 display,int32 graphics);   /* 0x00106FA8 (no Ghidra function; a virtual method) */
 void ui_element_update_nothing(int32 element,int32 now,int32 elapsed);   /* 0x00106FAC (no Ghidra function; a virtual method) */
@@ -671,7 +671,7 @@ int FUN_00113da4(int *param_1,int param_2,int param_3,int param_4,int param_5,ui
 undefined4 FUN_00114120(int param_1,undefined4 param_2,undefined4 *param_3,undefined4 *param_4);
 undefined1 FUN_00114198(int param_1,undefined4 param_2);
 uint8 animations_get_state(Animations *animations,int32 index);   /* 0x001141F4 GUESS: name */
-int FUN_0011421c(int *param_1,undefined4 param_2,undefined4 *param_3);
+int32 text_table_get_text(TextTable *table,int32 textId,char **text);   /* 0x0011421C GUESS: name, see kh_mod.c */
 undefined4 FUN_00114240(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,undefined4 *param_6,int param_7,undefined4 param_8,int param_9);
 void FUN_0011442c(undefined4 param_1,undefined4 *param_2);
 int FUN_0011448c(undefined4 param_1,int *param_2,undefined4 param_3,undefined4 *param_4);
@@ -681,7 +681,7 @@ void FUN_00114610(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *
 undefined4 FUN_00114638(int param_1);
 int FUN_001146f0(int param_1,undefined4 param_2);
 undefined4 FUN_00114750(int param_1);
-void FUN_00114774(int *param_1,undefined4 param_2,undefined4 param_3);
+void text_table_get_wide_text(TextTable *table,int32 textId,AECHAR **text);   /* 0x00114774 GUESS: name, see kh_mod.c */
 void FUN_001147ec(undefined4 *param_1,int param_2,int *param_3);
 uint32 motion_entity_get_pitch(MotionEntity *entity);   /* 0x00114898 GUESS: name */
 uint32 motion_entity_get_heading(MotionEntity *entity);   /* 0x001148A0 GUESS: name */
@@ -1974,22 +1974,22 @@ static code *const VTABLE_00101680[8] = {   /* 0x00101680; in kh.mod each entry 
 };
 static code *const VTABLE_001016A0[8] = {   /* 0x001016A0; in kh.mod each entry is the method's offset from
                                                 the table */
-  (code *)FUN_00105c98,
+  (code *)text_box_destroy,
   (code *)ui_element_update_nothing,
-  (code *)FUN_001084e4,
-  (code *)FUN_00106fb0,
-  (code *)FUN_0010673c,
+  (code *)text_box_handle_key,
+  (code *)text_box_draw_scroll_bar,
+  (code *)text_box_draw,
   (code *)ui_element_get_primary_color,
   (code *)ui_element_get_secondary_color,
   (code *)ui_element_get_border_color
 };
 static code *const VTABLE_001016C0[8] = {   /* 0x001016C0; in kh.mod each entry is the method's offset from
                                                 the table */
-  (code *)FUN_00105d48,
+  (code *)text_line_destroy,
   (code *)ui_element_update_nothing,
   (code *)ui_element_handle_key_nothing,
   (code *)ui_element_draw_over_children_nothing,
-  (code *)FUN_00106a94,
+  (code *)text_line_draw,
   (code *)ui_element_get_primary_color,
   (code *)ui_element_get_secondary_color,
   (code *)ui_element_get_border_color
