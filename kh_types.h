@@ -356,7 +356,7 @@ typedef struct Animations {
     ISwerveObject *world;         /* +0x004 GUESS: the scene's World; controllers are found in it (Find) */
     uint8  unknown_008[0x04];
     int    worldTime;             /* +0x00c the time the controllers are set at */
-    int    userIds[100];          /* +0x010 the controllers' user ids; -1 = free slot */
+    int    userIds[100];          /* +0x010 the controllers' user ids (animations_find); -1 = free slot */
     int    durations[100];        /* +0x1a0 the longest keyframe sequence of each controller
                                      (animations_get_duration) */
     uint8  states[100];           /* +0x330 1 added, 2 played, 3 played with `loop` set (GUESS: looping);

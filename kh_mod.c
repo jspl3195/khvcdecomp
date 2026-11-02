@@ -9871,7 +9871,7 @@ void FUN_0010db04(int param_1,undefined4 param_2)
       iVar10 = *(int *)(*(int *)(param_1 + 0x84) + 0x9c);
       iVar3 = WORD_HEXADECIMAL_254FCFF2;
     }
-    iVar11 = FUN_001137a4(iVar10,iVar3);
+    iVar11 = animations_find((Animations *)iVar10,iVar3);
 LAB_0010dde4:
     if (*(int *)(param_1 + 0x230) != 0) {
       FUN_001147ec(&local_2c,*(int *)(*(int *)(param_1 + 0x84) + 0x94),*(int **)(param_1 + 0x1ec));
@@ -13647,7 +13647,7 @@ uint FUN_00110924(int *param_1)
   case 0x15:
     break;
   case 0x16:
-    iVar10 = FUN_001137a4(*(int *)(iVar2 + 0x9c),param_1[7]);
+    iVar10 = animations_find((Animations *)*(int *)(iVar2 + 0x9c),param_1[7]);
     animations_play((Animations *)*(int *)(iVar2 + 0x9c),iVar10,param_1[0xc]);
     break;
   case 0x17:
@@ -13737,11 +13737,11 @@ LAB_00111948:
     FUN_0011e6b8(*(int *)(iVar2 + 0xa8),iVar10);
     break;
   case 0x20:
-    iVar10 = FUN_001137a4(*(int *)(iVar2 + 0x9c),param_1[7]);
+    iVar10 = animations_find((Animations *)*(int *)(iVar2 + 0x9c),param_1[7]);
     animations_set_speed((Animations *)*(int *)(iVar2 + 0x9c),iVar10,param_1[5]);
     break;
   case 0x21:
-    iVar10 = FUN_001137a4(*(int *)(iVar2 + 0x9c),param_1[7]);
+    iVar10 = animations_find((Animations *)*(int *)(iVar2 + 0x9c),param_1[7]);
     if (iVar10 != -1) {
       if (param_1[8] == -1) {
         FUN_001148c8(*(int *)(iVar2 + 0x9c),iVar10);
@@ -14243,7 +14243,7 @@ LAB_00112490:
     }
     break;
   case 0x45:
-    iVar10 = FUN_001137a4(*(int *)(iVar2 + 0x9c),param_1[7]);
+    iVar10 = animations_find((Animations *)*(int *)(iVar2 + 0x9c),param_1[7]);
     FUN_001204b0(*(int *)(iVar2 + 0x9c),iVar10,param_1[0xc]);
     break;
   case 0x46:
@@ -14555,7 +14555,7 @@ void FUN_00112b4c(int param_1)
   byte local_38 [44];
   
   if (*(int *)(param_1 + 0x9c) == 1) {
-    iVar1 = FUN_001137a4(*(int *)(*(int *)(param_1 + 4) + 0x9c),WORD_HEXADECIMAL_1D28D9CF);
+    iVar1 = animations_find((Animations *)*(int *)(*(int *)(param_1 + 4) + 0x9c),WORD_HEXADECIMAL_1D28D9CF);
     *(int *)(param_1 + 0x10) = iVar1;
   }
   else if (*(int *)(param_1 + 0x9c) == 2) {
@@ -14564,7 +14564,7 @@ void FUN_00112b4c(int param_1)
     memcpy_word_aligned(local_90,(byte *)(DATA_AT_00127970_OFFSET + 0x112bc0),0x2c);
     iVar1 = 0;
     do {
-      iVar2 = FUN_001137a4(*(int *)(*(int *)(param_1 + 4) + 0x9c),*(int *)(local_38 + iVar1 * 4));
+      iVar2 = animations_find((Animations *)*(int *)(*(int *)(param_1 + 4) + 0x9c),*(int *)(local_38 + iVar1 * 4));
       iVar3 = param_1 + iVar1 * 4;
       *(int *)(iVar3 + 0x14) = iVar2;
       *(undefined4 *)(iVar3 + 0x40) = *(undefined4 *)(local_64 + iVar1 * 4);
@@ -15163,19 +15163,18 @@ uint32 level_object_get_height(LevelObject *object)
   return shape != (CollisionShape *)0x0 ? shape->height : 0;
 }
 
-/* ==== 0x001137A4  (file offset 0x137A4)  FUN_001137a4 ================================================ */
-int FUN_001137a4(int param_1,int param_2)
+/* ==== 0x001137A4  (file offset 0x137A4)  animations_find ============================================= */
+/* GUESS: name. The index of the animation whose controller has the user id `userId`, or -1. Objects
+   look their animations up once (most callers are set-ups, with fixed ids or ids from the level data)
+   and keep the index for animations_play and the others. */
+int animations_find(Animations *animations,int userId)
 
 {
-  int iVar1;
-  
-  iVar1 = 0;
-  do {
-    if (*(int *)(param_1 + iVar1 * 4 + 0x10) == param_2) {
-      return iVar1;
-    }
-    iVar1 = iVar1 + 1;
-  } while (iVar1 < 100);
+  int i;
+
+  for (i = 0; i < 100; i++)
+    if (animations->userIds[i] == userId)
+      return i;
   return -1;
 }
 
@@ -17052,33 +17051,33 @@ void FUN_00114c00(int param_1,undefined4 param_2,undefined4 param_3,int param_4)
   if (*(int *)(param_1 + 0x1c) == 0) {
     *(undefined4 *)(param_1 + 0x1c) = *(undefined4 *)(param_1 + 4);
   }
-  uVar1 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),uVar1);
+  uVar1 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),uVar1);
   *(undefined4 *)(param_1 + 0x50) = uVar1;
-  iVar2 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_0085100C);
+  iVar2 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_0085100C);
   *(int *)(param_1 + 0x54) = iVar2;
   uVar1 = WORD_HEXADECIMAL_06110A54;
   if (iVar2 == -1) {
     *(undefined4 *)(param_1 + 0x54) = *(undefined4 *)(param_1 + 0x50);
   }
-  uVar1 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),uVar1);
+  uVar1 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),uVar1);
   *(undefined4 *)(param_1 + 0x58) = uVar1;
-  uVar1 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_2B8AB074);
+  uVar1 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_2B8AB074);
   *(undefined4 *)(param_1 + 100) = uVar1;
-  uVar1 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_22FC52E2);
+  uVar1 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_22FC52E2);
   *(undefined4 *)(param_1 + 0x5c) = uVar1;
-  uVar1 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_3F185CDD);
+  uVar1 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_3F185CDD);
   *(undefined4 *)(param_1 + 0x7c) = uVar1;
-  uVar1 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_063765F8);
+  uVar1 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_063765F8);
   *(undefined4 *)(param_1 + 0x60) = uVar1;
-  uVar1 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_27BD4923);
+  uVar1 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_27BD4923);
   *(undefined4 *)(param_1 + 0x6c) = uVar1;
-  uVar1 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_301CA7B2);
+  uVar1 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_301CA7B2);
   *(undefined4 *)(param_1 + 0x70) = uVar1;
-  uVar1 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_31C58CC3);
+  uVar1 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_31C58CC3);
   *(undefined4 *)(param_1 + 0x68) = uVar1;
-  uVar1 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_384A929A);
+  uVar1 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_384A929A);
   *(undefined4 *)(param_1 + 0x74) = uVar1;
-  uVar1 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_139B6934);
+  uVar1 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),WORD_HEXADECIMAL_139B6934);
   *(undefined4 *)(param_1 + 0x78) = uVar1;
   uVar1 = FUN_00119b0c(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x94),
                        *(undefined4 *)(*(int *)(param_1 + 4) + 8),STRING_ROTTOCHARACTER_OFFSET + 0x114f68);
@@ -18643,11 +18642,11 @@ void FUN_001174ac(int param_1,undefined4 param_2)
     if (!bVar33) {
       uVar18 = WORD_HEXADECIMAL_2E2C2521;
     }
-    uVar16 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_1EC99F85 /* not arguments, register leftovers: uVar16, uVar17,param_2 */);
+    uVar16 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_1EC99F85 /* not arguments, register leftovers: uVar16, uVar17,param_2 */);
     *(undefined4 *)(param_1 + 0x178) = uVar16;
-    uVar16 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_135FFBD8);
+    uVar16 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_135FFBD8);
     *(undefined4 *)(param_1 + 0x17c) = uVar16;
-    uVar16 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_020A2432);
+    uVar16 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_020A2432);
     *(undefined4 *)(param_1 + 0x180) = uVar16;
     uVar16 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0xa4),WORD_HEXADECIMAL_3D8F67C0);
     *(undefined4 *)(param_1 + 0x134) = uVar16;
@@ -18680,7 +18679,7 @@ void FUN_001174ac(int param_1,undefined4 param_2)
       uVar21 = WORD_HEXADECIMAL_08FE919D;
       iVar15 = iVar15 + 1;
     } while (iVar15 < 10);
-    uVar14 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_03EABB3E);
+    uVar14 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_03EABB3E);
     *(undefined4 *)(param_1 + 0x5c) = uVar14;
     *(int *)(param_1 + 0x19c) = ADDRESS_OF_FUNCTION_0011d6cc_OFFSET + 0x1176ec;
     *(int *)(param_1 + 0x1a0) = ADDRESS_OF_FUNCTION_0011d28c_OFFSET + 0x1176f8;
@@ -18721,9 +18720,9 @@ void FUN_001174ac(int param_1,undefined4 param_2)
     goto LAB_00117a44;
   case 5:
     local_28 = FLOAT_2_POINT_5;
-    uVar14 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_2D335E68 /* not arguments, register leftovers: uVar16, uVar17,param_2 */);
+    uVar14 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_2D335E68 /* not arguments, register leftovers: uVar16, uVar17,param_2 */);
     *(undefined4 *)(param_1 + 0x60) = uVar14;
-    uVar14 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_1C8CAB35);
+    uVar14 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_1C8CAB35);
     *(undefined4 *)(param_1 + 100) = uVar14;
     uVar14 = FLOAT_6_POINT_6;
     *(undefined4 *)(param_1 + 0xec) = FLOAT_6_POINT_6;
@@ -18775,7 +18774,7 @@ LAB_001179f8:
   case 8:
     local_28 = FLOAT_1_POINT_8;
     local_2c = 0x3fc00000;
-    uVar14 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_15BD4DA8 /* not arguments, register leftovers: uVar16, uVar17,param_2 */);
+    uVar14 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_15BD4DA8 /* not arguments, register leftovers: uVar16, uVar17,param_2 */);
     *(undefined4 *)(param_1 + 100) = uVar14;
     *(undefined4 *)(param_1 + 0x68) = 0;
     *(undefined4 *)(param_1 + 0x108) = 1;
@@ -18862,17 +18861,17 @@ LAB_00117ac8:
   *(undefined4 *)(*(int *)(param_1 + 0x28) + 0x4c) = 1;
   FUN_0011fc80(*(undefined4 *)(param_1 + 0x24),0);
   FUN_0011fc80(*(undefined4 *)(param_1 + 0x28),0);
-  uVar14 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),uVar20);
+  uVar14 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),uVar20);
   *(undefined4 *)(param_1 + 0x44) = uVar14;
-  uVar14 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),uVar29);
+  uVar14 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),uVar29);
   *(undefined4 *)(param_1 + 0x48) = uVar14;
-  uVar14 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),uVar31);
+  uVar14 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),uVar31);
   *(undefined4 *)(param_1 + 0x4c) = uVar14;
-  uVar14 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),uVar23);
+  uVar14 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),uVar23);
   *(undefined4 *)(param_1 + 0x50) = uVar14;
-  uVar14 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),uVar26);
+  uVar14 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),uVar26);
   *(undefined4 *)(param_1 + 0x54) = uVar14;
-  uVar14 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_08A18ABF);
+  uVar14 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_08A18ABF);
   *(undefined4 *)(param_1 + 0x58) = uVar14;
   uVar14 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0xa4),WORD_HEXADECIMAL_11218F6E);
   *(undefined4 *)(param_1 + 0x6c) = uVar14;
@@ -19108,7 +19107,7 @@ void FUN_00118318(int param_1,int *param_2)
   memcpy_word_aligned(local_84,DATA_AT_00126EA8_OFFSET + 0x118390,0x74);
   iVar4 = 0;
   do {
-    uVar2 = FUN_001137a4(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),local_84[iVar4]);
+    uVar2 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),local_84[iVar4]);
     iVar1 = iVar4 * 4;
     iVar4 = iVar4 + 1;
     *(undefined4 *)(param_1 + iVar1 + 0x2b8) = uVar2;
@@ -20717,7 +20716,7 @@ void FUN_0011a4d8(int param_1,int param_2)
       iVar11 = *(int *)(*(int *)(param_1 + 0x84) + 0x9c);
       iVar8 = WORD_HEXADECIMAL_254FCFF2;
     }
-    iVar12 = FUN_001137a4(iVar11,iVar8);
+    iVar12 = animations_find((Animations *)iVar11,iVar8);
 LAB_0010dde4:
     if (*(int *)(param_1 + 0x230) != 0) {
       FUN_001147ec(&uStack_2c,*(int *)(*(int *)(param_1 + 0x84) + 0x94),*(int **)(param_1 + 0x1ec));
@@ -28874,7 +28873,7 @@ LAB_00123b40:
         }
         iVar1 = iVar1 + 1;
       } while (iVar1 < 3);
-      iVar1 = FUN_001137a4(*(int *)(*(int *)(param_1 + 0x84) + 0x9c),WORD_HEXADECIMAL_22735D97);
+      iVar1 = animations_find((Animations *)*(int *)(*(int *)(param_1 + 0x84) + 0x9c),WORD_HEXADECIMAL_22735D97);
       animations_play((Animations *)*(int *)(*(int *)(param_1 + 0x84) + 0x9c),iVar1,0);
       goto LAB_00123b40;
     }

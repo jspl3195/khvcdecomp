@@ -633,7 +633,7 @@ void FUN_001135dc(int param_1);
 uint FUN_00113654(undefined4 param_1,int param_2);
 undefined4 FUN_001136c8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param_4, undefined4 *param_5,undefined4 param_6);
 uint32 level_object_get_height(LevelObject *object);   /* 0x00113784 GUESS: name */
-int FUN_001137a4(int param_1,int param_2);
+int animations_find(Animations *animations,int userId);   /* 0x001137A4 GUESS: name */
 uint FUN_001137d4(undefined4 param_1,undefined4 *param_2);
 uint FUN_00113820(undefined4 param_1,uint param_2,uint param_3,uint param_4);
 void FUN_0011386c(uint param_1,int param_2);
