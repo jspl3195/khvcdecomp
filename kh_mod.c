@@ -7014,7 +7014,7 @@ int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3)
             local_1c = (int *)0x0;
             (**(code **)(*(int *)*param_1 + 0x28))((int *)*param_1,WORD_HEXADECIMAL_0AD65F3D,&local_1c);
             if (local_1c != (int *)0x0) {
-              iVar1 = FUN_0010b70c(0,local_1c,(int32)STRING_CHARACTER);
+              iVar1 = (int)character_create((Character *)0x0,(ISwerveObject *)local_1c,(char *)STRING_CHARACTER);
               param_1[0x7e] = iVar1;
               (**(code **)(*local_1c + 4))();
               iVar2 = FUN_0011ae04(*(undefined4 *)(param_1[0x85] + 0x94),param_2,*param_1,0,0);
@@ -7540,57 +7540,57 @@ TextLine * text_line_create(TextLine *line,int32 x,int32 y,int32 width,int32 hei
 }
 
 
-/* ==== 0x0010B70C  (file offset 0x0B70C)  FUN_0010b70c ================================================ */
-undefined1 * FUN_0010b70c(undefined1 *param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x0010B70C  (file offset 0x0B70C)  character_create ============================================ */
+/* GUESS: names. The player's character's constructor (0x338 bytes, allocated when `character` is 0; returns
+   0 when out of memory): a motion entity (motion_entity_create) of kind 2, in state 0xc, controllable,
+   with a random spell selected (8) and no animations (-1); the rest cleared (its scene objects are found
+   later, by character_setup). Made once, by the game's set-up, from the scene node with user id
+   0x0AD65F3D, named "Character" (Game.character). */
+Character * character_create(Character *character,ISwerveObject *node,char *name)
 
 {
-  int iVar1;
-  int iVar2;
-  
-  if ((param_1 != (undefined1 *)0x0) ||
-     (param_1 = helper_malloc_2(0x338), param_1 != (undefined1 *)0x0)) {
-    motion_entity_create((MotionEntity *)param_1,(ISwerveObject *)param_2,(char *)param_3);
-    *param_1 = 2;
-    *(undefined4 *)(param_1 + 0x1c8) = 0xc;
-    *(undefined4 *)(param_1 + 0x1cc) = 10;
-    *(undefined4 *)(param_1 + 0x1d8) = 1;
-    *(undefined4 *)(param_1 + 0x2a4) = 0;
-    param_1[0x278] = 0;
-    param_1[0x279] = 0;
-    param_1[0x27a] = 0;
-    param_1[0x27b] = 0;
-    param_1[0x27c] = 0;
-    *(undefined4 *)(param_1 + 0x2ac) = 0xffffffff;
-    *(undefined4 *)(param_1 + 0x290) = 0;
-    *(undefined4 *)(param_1 + 0x2b0) = 0xffffffff;
-    *(undefined4 *)(param_1 + 0x2b4) = 0xffffffff;
-    *(undefined4 *)(param_1 + 0x228) = 7;
-    *(undefined4 *)(param_1 + 0x22c) = 8;
-    *(undefined4 *)(param_1 + 0x224) = 0;
-    *(undefined4 *)(param_1 + 0x230) = 0;
-    iVar2 = 0;
-    do {
-      iVar1 = iVar2 * 4;
-      iVar2 = iVar2 + 1;
-      *(undefined4 *)(param_1 + iVar1 + 0x20c) = 0;
-    } while (iVar2 < 3);
-    *(undefined4 *)(param_1 + 0x2a0) = 0;
-    *(undefined4 *)(param_1 + 0x23c) = 0;
-    *(undefined4 *)(param_1 + 0x240) = 0;
-    *(undefined4 *)(param_1 + 0x1dc) = 0;
-    *(undefined4 *)(param_1 + 0x1e0) = 0;
-    *(undefined4 *)(param_1 + 0x1e4) = 0;
-    *(undefined4 *)(param_1 + 0x1e8) = 0;
-    *(undefined4 *)(param_1 + 0x1ec) = 0;
-    *(undefined4 *)(param_1 + 0x244) = 0;
-    *(undefined4 *)(param_1 + 0x24c) = 0;
-    *(undefined4 *)(param_1 + 0x250) = 0;
-    *(undefined4 *)(param_1 + 0x120) = 0;
-    *(undefined4 *)(param_1 + 0x124) = 0;
-    *(undefined4 *)(param_1 + 0x284) = 0;
-  }
-  return param_1;
+  int32 i;
+
+  if (character == (Character *)0x0 && (character = helper_malloc_2(0x338)) == (Character *)0x0)
+    return character;
+  motion_entity_create((MotionEntity *)character,node,name);
+  character->kind = 2;
+  character->state = 0xc;
+  character->field_1cc = 10;
+  character->controllable = 1;
+  character->layered = 0;
+  character->forwardsHeld = 0;
+  character->backwardsHeld = 0;
+  character->leftHeld = 0;
+  character->rightHeld = 0;
+  character->actionHeld = 0;
+  character->animation = -1;
+  character->field_290 = 0;
+  character->channelTwoAnimation = -1;
+  character->channelThreeAnimation = -1;
+  character->field_228 = 7;
+  character->selectedSpell = 8;
+  character->field_224 = 0;
+  character->field_230 = 0;
+  for (i = 0; i < 3; i++)
+    character->targets[i] = 0;
+  character->field_2a0 = 0;
+  character->combatRegion = (struct CombatRegion *)0x0;
+  character->bossCombatRegion = (struct BossCombatRegion *)0x0;
+  character->field_1dc = (ISwerveObject *)0x0;
+  character->field_1e0 = (ISwerveObject *)0x0;
+  character->field_1e4 = (ISwerveObject *)0x0;
+  character->field_1e8 = (ISwerveObject *)0x0;
+  character->field_1ec = (ISwerveObject *)0x0;
+  character->field_244 = 0;
+  character->field_24c = 0;
+  character->mirrorObject = (LevelObject *)0x0;
+  ((MotionEntity *)character)->field_120 = 0;
+  ((MotionEntity *)character)->field_124 = 0;
+  character->field_284 = 0;
+  return character;
 }
+
 
 /* ==== 0x0010B804  (file offset 0x0B804)  animations_create =========================================== */
 /* GUESS: name. Sets up the animation table (allocating its 1820 bytes when `animations` is 0): no world

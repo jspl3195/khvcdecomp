@@ -530,7 +530,7 @@ CombatRegion * combat_region_create(CombatRegion *region,ISwerveObject *node,cha
 void * FUN_0010b4e4(void *param_1,int param_2);
 MotionEntity * motion_entity_create(MotionEntity *entity,ISwerveObject *node,char *name);   /* 0x0010B5E8 GUESS: name */
 TextLine * text_line_create(TextLine *line,int32 x,int32 y,int32 width,int32 height,int32 *owner,int32 textId, uint32 alignment);   /* 0x0010B650 GUESS: name, see kh_mod.c */
-undefined1 * FUN_0010b70c(undefined1 *param_1,undefined4 param_2,undefined4 param_3);
+Character * character_create(Character *character,ISwerveObject *node,char *name);   /* 0x0010B70C GUESS: name, see kh_mod.c */
 Animations * animations_create(Animations *animations);   /* 0x0010B804 GUESS: name */
 BossCombatRegion * boss_combat_region_create(BossCombatRegion *region,ISwerveObject *node,char *name);   /* 0x0010B870 GUESS: name */
 LevelObject * level_object_create(LevelObject *object,ISwerveObject *node,char *name);   /* 0x0010B8CC GUESS: name */

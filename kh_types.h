@@ -375,7 +375,7 @@ typedef struct CollisionShape {
 } CollisionShape;                 /* 0x48 bytes */
 
 typedef struct LevelObject {
-    uint8  kind;                  /* +0x000 0 LevelObject, 1 MotionEntity, 2 Character (FUN_0010b70c,
+    uint8  kind;                  /* +0x000 0 LevelObject, 1 MotionEntity, 2 Character (character_create,
                                      0x338 bytes), 3 "Camera" (camera_create, 0x214 bytes), 4 CombatRegion,
                                      5 BossCombatRegion; 2 and 3 are MotionEntity subclasses */
     uint8  unknown_001[0x03];
@@ -437,7 +437,9 @@ typedef struct MotionEntity {
     uint8  unknown_088[0x88];
     int32    field_110;             /* +0x110 0 at creation */
     int32    field_114;             /* +0x114 0 at creation */
-    uint8  unknown_118[0x10];
+    uint8  unknown_118[0x08];
+    int32    field_120;             /* +0x120 0 at creation (character_create) */
+    int32    field_124;             /* +0x124 0 at creation (character_create) */
     LevelObject *orbitCenter;     /* +0x128 0 at creation; when set, motion_entity_turn moves the entity
                                      around it (the camera around its target) */
     int32    field_12c;             /* +0x12c 0 at creation */
@@ -480,7 +482,7 @@ typedef struct Camera {
     uint32   field_210;           /* +0x210 a float (its bits); 0 at creation */
 } Camera;                         /* 0x214 bytes (camera_create) */
 
-/* "Character" (kind 2, 0x338 bytes, FUN_0010b70c; GUESS: names): the player's character, a MotionEntity.
+/* "Character" (kind 2, 0x338 bytes, character_create; GUESS: names): the player's character, a MotionEntity.
  * It plays its animations on three channels (character_play_animation): channel 0 alone, or channels 2
  * and 3 together (GUESS: two body parts); a request on 2 or 3 stops channel 0, and one on 0 stops 2 and 3. */
 typedef struct Character {
@@ -501,7 +503,7 @@ typedef struct Character {
                                      6, 0x11 and 0x12, forwards turns 0x11 into 0x13 */
     int32    field_1cc;             /* +0x1cc 10 at creation; 0xb and 8 set by the action key */
     uint8  unknown_1d0[0x08];
-    int32    controllable;          /* +0x1d8 1 at creation (FUN_0010b70c); the keys move it only while set */
+    int32    controllable;          /* +0x1d8 1 at creation (character_create); the keys move it only while set */
     ISwerveObject *field_1dc;     /* +0x1dc the game scene's object with user id 0x0F846A96 (Find); its
                                      slot +0x48 fills field_1f8 */
     ISwerveObject *field_1e0;     /* +0x1e0 the object with user id 0x0D44B786 */
@@ -528,7 +530,7 @@ typedef struct Character {
     int32    field_244;             /* +0x244 cleared when the action key starts an attack; the tree or ladder
                                      climbed (script setCharacterMode) */
     LevelObject *hangTarget;      /* +0x248 script setCharacterMode HANG's second object */
-    uint8  unknown_24c[0x04];
+    int32    field_24c;             /* +0x24c 0 at creation */
     LevelObject *mirrorObject;    /* +0x250 script setMirror: the object, or 0 */
     uint32 mirrorOffset[3];       /* +0x254 floats (their bits) */
     uint32 mirrorAngle;           /* +0x260 a float (its bits) */
@@ -546,9 +548,10 @@ typedef struct Character {
     int32    field_284;             /* +0x284 set to 1 by a script setCombatRegion without a region */
     uint32 field_288;             /* +0x288 a float (its bits); level data 0x1218EC09 */
     uint32 field_28c;             /* +0x28c a float (its bits); level data 0x2073D363 */
-    uint8  unknown_290[0x04];
+    int32    field_290;             /* +0x290 0 at creation */
     uint32 field_294;             /* +0x294 a float (its bits): FUN_00126618(level data 0x1932DEDD, 1000.0) */
-    uint8  unknown_298[0x0c];
+    uint8  unknown_298[0x08];
+    int32    field_2a0;             /* +0x2a0 0 at creation */
     int32    layered;               /* +0x2a4 0 at creation; 1 while channels 2 and 3 are in use */
     uint8  unknown_2a8[0x04];
     int32    animation;             /* +0x2ac the animation on channel 0, -1 none */
