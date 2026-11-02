@@ -557,7 +557,7 @@ void FUN_0010c790(int param_1,int param_2);
 void FUN_0010c800(int param_1,int param_2);
 void FUN_0010c8b8(int param_1,int param_2);
 void FUN_0010c92c(int param_1,int param_2);
-void FUN_0010c9dc(int param_1,int param_2);
+void animations_destroy(Animations *animations,int32 freeIt);   /* 0x0010C9DC GUESS: name, see kh_mod.c */
 void FUN_0010ca1c(int param_1,int param_2);
 void FUN_0010cab0(int param_1,int param_2);
 void FUN_0010cc9c(int param_1,int param_2);

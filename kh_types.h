@@ -52,7 +52,7 @@ typedef struct KHApp {
                                         (app_context_create, app_context_destroy) */
     void          *pObj98;           /* +0x98 created by 0x10be14, destroyed by 0x10cda4 */
     struct Animations *animations;   /* +0x9c the scene's animations; created by animations_create,
-                                        destroyed by 0x10c9dc */
+                                        destroyed by animations_destroy */
     struct Intro  *intro;            /* +0xa0 the opening sequence (intro_create), destroyed by 0x10cd2c */
     void          *pGame;            /* +0xa4 GUESS: game state; receives key releases (kh_OnKeyRelease);
                                         destroyed by 0x10c2c4 */

@@ -8422,19 +8422,20 @@ void FUN_0010c92c(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x0010C9DC  (file offset 0x0C9DC)  FUN_0010c9dc ================================================ */
-void FUN_0010c9dc(int param_1,int param_2)
+/* ==== 0x0010C9DC  (file offset 0x0C9DC)  animations_destroy ========================================== */
+/* GUESS: name. The animation table's destructor: empties it (animations_reset), frees its controller
+   array (through the helper table's free, not helper_free) and the table itself when `freeIt` is set
+   (the binary's tail jump to helper_free at 0x0010ca10). Called by kh_OnAppStop. */
+void animations_destroy(Animations *animations,int32 freeIt)
 
 {
-  animations_reset((Animations *)param_1);
+  animations_reset(animations);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-  (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x718));
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
-  return;
+  (*g_pHelperFuncs->free)(animations->controllers);
+  if (freeIt != 0)
+    helper_free(animations);
 }
+
 
 /* ==== 0x0010CA1C  (file offset 0x0CA1C)  FUN_0010ca1c ================================================ */
 void FUN_0010ca1c(int param_1,int param_2)
@@ -12355,7 +12356,7 @@ void kh_OnAppStop(KHApp *pMe)
   }
   FUN_0012056c(pMe,1);
   if (pMe->animations != (void *)0x0) {
-    FUN_0010c9dc(pMe->animations,1);
+    animations_destroy(pMe->animations,1);
     pMe->animations = (void *)0x0;
   }
   if (pMe->intro != (void *)0x0) {
@@ -19528,7 +19529,7 @@ void FUN_0011e0b4(int param_1)
 /* ==== 0x0011E0FC  (file offset 0x1E0FC)  animations_reset ============================================ */
 /* GUESS: name. Empties the animation table: releases the controllers (animations_release_controllers) and the world,
    clears the world time, and frees every slot (user id -1, state 0). Called before a scene's
-   animations are added again, and by the app's clean-up (FUN_0010c9dc). */
+   animations are added again, and by the app's clean-up (animations_destroy). */
 void animations_reset(Animations *animations)
 
 {
