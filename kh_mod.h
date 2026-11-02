@@ -443,7 +443,7 @@ int32 ui_element_add_child(UIElement *parent,UIElement *child,int32 id);   /* 0x
 void FUN_00105538(int param_1,undefined4 param_2,int param_3);
 void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5);
 void FUN_001056d0(int *param_1,int param_2);
-int FUN_001056ec(int param_1,int param_2,int param_3);
+int32 ui_element_set_key_target(UIElement *element,int32 keyCode,UIElement *target);   /* 0x001056EC GUESS: name, see kh_mod.c */
 void key_picker_restore_original(UIElement *picker);   /* 0x001056F4 GUESS: name */
 void FUN_00105734(undefined4 *param_1,int param_2);
 void FUN_00105c5c(int param_1);

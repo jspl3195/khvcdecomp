@@ -3385,8 +3385,8 @@ LAB_001042b8:
         FUN_00105224(iVar12,iVar9);
       }
       else {
-        FUN_001056ec(iVar12,INTEGER_57393,local_74[0]);
-        FUN_001056ec(local_74[0],INTEGER_57394,iVar12);
+        ui_element_set_key_target((UIElement *)iVar12,AVK_UP,(UIElement *)local_74[0]);
+        ui_element_set_key_target((UIElement *)local_74[0],AVK_DOWN,(UIElement *)iVar12);
       }
       iVar19 = iVar19 + 1;
       local_74[0] = iVar12;
@@ -3512,8 +3512,8 @@ LAB_00104360:
         FUN_00105224(iVar12,iVar9);
       }
       else {
-        FUN_001056ec(iVar12,INTEGER_57393,iVar7);
-        FUN_001056ec(iVar7,INTEGER_57394,iVar12);
+        ui_element_set_key_target((UIElement *)iVar12,AVK_UP,(UIElement *)iVar7);
+        ui_element_set_key_target((UIElement *)iVar7,AVK_DOWN,(UIElement *)iVar12);
       }
       iVar8 = iVar8 + 1;
       iVar7 = iVar12;
@@ -3758,19 +3758,19 @@ void FUN_001053a8(undefined4 param_1,undefined4 param_2,int param_3,int param_4,
                  int param_12,int param_13)
 
 {
-  int iVar1;
+  int32 previousKey;   /* the key that moves to the previous button */
   int iVar2;
-  int iVar3;
+  int32 nextKey;       /* the key that moves to the next one */
   undefined4 uVar4;
   int iVar5;
   int iVar6;
   
   iVar5 = 0;
-  iVar3 = INTEGER_57394;
-  iVar1 = INTEGER_57393;
-  if (param_13 != 1) {
-    iVar3 = INTEGER_57394 + 2;
-    iVar1 = INTEGER_57393 + 2;
+  nextKey = AVK_DOWN;                             /* a column */
+  previousKey = AVK_UP;
+  if (param_13 != 1) {                            /* a row */
+    nextKey = AVK_RIGHT;
+    previousKey = AVK_LEFT;
   }
   for (; iVar5 < param_3; iVar5 = iVar5 + 1) {
     iVar2 = FUN_0010bba0(0,param_8,param_9,param_10,param_11,param_1,param_7,
@@ -3780,8 +3780,8 @@ void FUN_001053a8(undefined4 param_1,undefined4 param_2,int param_3,int param_4,
       FUN_00105224(iVar2,param_2);
     }
     else {
-      FUN_001056ec(iVar2,iVar1,iVar6);
-      FUN_001056ec(iVar6,iVar3,iVar2);
+      ui_element_set_key_target((UIElement *)iVar2,previousKey,(UIElement *)iVar6);
+      ui_element_set_key_target((UIElement *)iVar6,nextKey,(UIElement *)iVar2);
     }
     if (param_13 == 1) {
       param_9 = param_11 + param_12 + param_9;
@@ -3908,12 +3908,19 @@ void FUN_001056d0(int *param_1,int param_2)
   return;
 }
 
-/* ==== 0x001056EC  (file offset 0x056EC)  FUN_001056ec ================================================ */
-int FUN_001056ec(int param_1,int param_2,int param_3)
+/* ==== 0x001056EC  (file offset 0x056EC)  ui_element_set_key_target =================================== */
+/* GUESS: name. Links two UI elements for keyboard navigation: when `element` has the focus and the player
+   presses `keyCode`, ui_element_handle_key finds `target` in the element's key map (+0x60) and moves the
+   focus to it (FUN_00105224). The binary is `ldr r0, [r0, #0x60]` and a tail jump to list_set_entry,
+   which adds the entry or replaces the one for that key; returns its result, the number of entries.
+   Callers link each new row (or button) of a menu with the previous one both ways: AVK_UP / AVK_DOWN in a
+   column, AVK_LEFT / AVK_RIGHT in a row (FUN_00101ad8, FUN_001053a8). */
+int32 ui_element_set_key_target(UIElement *element,int32 keyCode,UIElement *target)
 
 {
-  return list_set_entry(*(UIList **)(param_1 + 0x60),param_2,param_3);
+  return list_set_entry(element->keyMap,keyCode,(int32)target);
 }
+
 
 /* ==== 0x001056F4  (file offset 0x056F4)  key_picker_restore_original ================================= */
 /* GUESS: name. Undoes a key picker's changes: selects again the option whose key code is the value the
