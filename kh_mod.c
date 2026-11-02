@@ -2457,7 +2457,7 @@ LAB_00103858:
             uVar11 = FUN_00107fd0(param_1,800,2).low;
             uVar13 = FUN_00107fd0(param_1,200,1).low;
             uVar10 = text_box_create(0,0x19,uVar13,uVar11,uVar10,param_1,iVar19);
-            FUN_0010e210((undefined4)((KHApp *)*param_1)->context,&local_38,&local_3c);
+            string_to_wide((int32)((KHApp *)*param_1)->context,(char **)&local_38,(AECHAR **)&local_3c);
             text_box_set_text(uVar10,local_3c,0);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
             (*g_pHelperFuncs->free)(local_38);
@@ -3135,7 +3135,7 @@ LAB_0010489c:
         uVar10 = FUN_00107fd0(param_1,INTEGER_735,1).low;
         uVar11 = FUN_00107fd0(param_1,500,2).low;
         uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,0,0x21);
-        FUN_0010e210((undefined4)((KHApp *)*param_1)->context,&local_38,&local_3c);
+        string_to_wide((int32)((KHApp *)*param_1)->context,(char **)&local_38,(AECHAR **)&local_3c);
         text_line_set_text(uVar10,local_3c);
         helper_free(local_38);
         if (local_3c != (void *)0x0) {
@@ -3404,7 +3404,7 @@ LAB_001042b8:
     uVar10 = FUN_00107fd0(param_1,INTEGER_735,1).low;
     uVar11 = FUN_00107fd0(param_1,500,2).low;
     uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,0,0x21);
-    FUN_0010e210((undefined4)((KHApp *)*param_1)->context,&local_78,local_a8 + 0xb);
+    string_to_wide((int32)((KHApp *)*param_1)->context,(char **)&local_78,(AECHAR **)(local_a8 + 0xb));
     text_line_set_text(uVar10,local_a8[0xb]);
     helper_free(local_78);
     if (local_a8[0xb] != 0) {
@@ -3577,7 +3577,7 @@ LAB_001048a4:
     if (param_2 == 0xe || param_2 == 0xf) {
       text_table_get_text(*(undefined4 *)(*param_1 + 0x98),uVar11,&local_38);
       FUN_0011ed3c((undefined4)((KHApp *)*param_1)->context,&local_38);
-      FUN_0010e210((undefined4)((KHApp *)*param_1)->context,&local_38,&local_3c);
+      string_to_wide((int32)((KHApp *)*param_1)->context,(char **)&local_38,(AECHAR **)&local_3c);
       text_box_set_text(uVar10,local_3c,0);
       (*g_pHelperFuncs->free)(local_38);
       (*g_pHelperFuncs->free)(local_3c);
@@ -5854,7 +5854,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
                                param_4);
     helper_free(name);
     wideText = helper_malloc(0x40);
-    FUN_0010e210((undefined4)((KHApp *)*param_1)->context,(undefined4 *)&text,(int *)&wideText);
+    string_to_wide((int32)((KHApp *)*param_1)->context,(char **)&text,(AECHAR **)&wideText);
     helper_free(text);
     text_box_set_text(iVar5,(int)wideText,0);
     helper_free(wideText);
@@ -8871,7 +8871,7 @@ void progress_add_magic_points(Progress *progress,int32 amount)
 /* ==== 0x0010D1E0  (file offset 0x0D1E0)  progress_add_munny ========================================== */
 /* GUESS: name. Adds `amount` munny (it never goes below 0) and shows the new total as "<label>=<munny>":
    the label is the text 0x16A5390B (text_table_get_text, GUESS: "Munny"), turned into a wide string
-   (FUN_0010e210) and shown on the app's field_d4 screen for 2000 ms (FUN_00105538). */
+   (string_to_wide) and shown on the app's field_d4 screen for 2000 ms (FUN_00105538). */
 void progress_add_munny(Progress *progress,int32 amount)
 
 {
@@ -8890,7 +8890,7 @@ void progress_add_munny(Progress *progress,int32 amount)
   /* Ghidra: (**(code **)(*(int *)(-53860 + 0x10d260) + 0x6c))(...): -53860 + 0x10d260 = 0x000ffffc,
      the helper table pointer at module base - 4, slot +0x6c = free (here and for wideText below) */
   (*g_pHelperFuncs->free)(label);
-  FUN_0010e210(app->context,&text,&wideText);
+  string_to_wide((int32)app->context,(char **)&text,(AECHAR **)&wideText);
   helper_free(text);
   if (wideText != (void *)0x0) {
     FUN_00105538(app->field_d4,wideText,3);
@@ -9585,28 +9585,27 @@ int32 progress_score(Progress *progress)
   return progress->munny + progress->experience * 100;
 }
 
-/* ==== 0x0010E210  (file offset 0x0E210)  FUN_0010e210 ================================================ */
-void FUN_0010e210(undefined4 param_1,undefined4 *param_2,int *param_3)
+/* ==== 0x0010E210  (file offset 0x0E210)  string_to_wide ============================================== */
+/* GUESS: name. A new wide copy of the narrow string *text, in *wide (the caller frees it); returns it, or 0
+   (and *wide 0) when out of memory. Takes the string by reference but only reads it; `context` (the app's)
+   is not read. Ghidra had it as void: the binary returns strtowstr's result through its tail jump at
+   0x0010e274, or malloc's 0. */
+AECHAR * string_to_wide(int32 context,char **text,AECHAR **wide)
 
 {
-  int iVar1;
-  int iVar2;
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-  iVar2 = (*g_pHelperFuncs->strlen)(*param_2);
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-  iVar1 = iVar2 * 2 + 2;
-  iVar2 = (*g_pHelperFuncs->malloc)(iVar1);
-  *param_3 = iVar2;
-  if (iVar2 == 0) {
-    return;
-  }
-                    /* WARNING: Could not recover jumptable at 0x0010e274. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (*g_pHelperFuncs->strtowstr)(*param_2,iVar2,iVar1);
-  return;
+  int32 size;
+
+                    /* helper[5] uint32 strlen(const char *s), helper[26] void * malloc(uint32 size)
+                       (AEEHelperFuncs +0x14, +0x68, via *(base-4)) */
+  size = (*g_pHelperFuncs->strlen)(*text) * 2 + 2;
+  *wide = (*g_pHelperFuncs->malloc)(size);
+  if (*wide == (AECHAR *)0x0)
+    return *wide;
+                    /* helper[16] AECHAR * strtowstr(const char *src, AECHAR *dst, int nDstBytes)
+                       (AEEHelperFuncs +0x40, via *(base-4)) */
+  return (*g_pHelperFuncs->strtowstr)(*text,*wide,size);
 }
+
 
 /* ==== 0x0010E280  (file offset 0x0E280)  FUN_0010e280 ================================================ */
 void FUN_0010e280(int param_1,undefined4 *param_2,undefined4 *param_3)
@@ -11638,7 +11637,7 @@ int32 script_command_run(ScriptCommand *command)
       break;
     FUN_0011ed3c(context,(undefined4 *)&command->text);
     wideText = (AECHAR *)0x0;
-    FUN_0010e210(context,(undefined4 *)&command->text,(int *)&wideText);
+    string_to_wide(context,&command->text,&wideText);
     if (wideText != (AECHAR *)0x0) {
       value = command->flag[3] == 0;
       if (command->number[1] == -2)
@@ -12036,7 +12035,7 @@ int32 script_command_run(ScriptCommand *command)
       app->progress->collectablesText = (AECHAR *)0x0;
     }
     if (command->text != (char *)0x0)
-      FUN_0010e210(context,(undefined4 *)&command->text,(int *)&app->progress->collectablesText);
+      string_to_wide(context,&command->text,&app->progress->collectablesText);
     app->progress->collectables = command->number[0];
     break;
   case 0x2d:   /* setCollisionOn */
@@ -13895,7 +13894,7 @@ undefined4 FUN_00114750(int param_1)
 /* ==== 0x00114774  (file offset 0x14774)  text_table_get_wide_text ==================================== */
 /* GUESS: names. The text with the id `textId` from the text table, as a new wide string in *text (left
    as it is when there is none): the narrow text (FUN_0011448c, from the table's source) turned into a
-   wide one (FUN_0010e210) and freed. */
+   wide one (string_to_wide) and freed. */
 void text_table_get_wide_text(TextTable *table,int32 textId,AECHAR **text)
 
 {
@@ -13906,7 +13905,7 @@ void text_table_get_wide_text(TextTable *table,int32 textId,AECHAR **text)
   narrow = (char *)0x0;
   FUN_0011448c((undefined4)table->app->context,table->source,textId,(undefined4 *)&narrow);
   if (narrow != (char *)0x0) {
-    FUN_0010e210((undefined4)table->app->context,(undefined4 *)&narrow,(int *)text);
+    string_to_wide((int32)table->app->context,&narrow,text);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(narrow);
   }

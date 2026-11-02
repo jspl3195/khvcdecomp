@@ -595,7 +595,7 @@ undefined4 FUN_0010d7c4(int param_1,int param_2);
 undefined4 FUN_0010d95c(int param_1,int param_2);
 void FUN_0010db04(int param_1,undefined4 param_2);
 int32 progress_score(Progress *progress);   /* 0x0010E1F8 GUESS: name */
-void FUN_0010e210(undefined4 param_1,undefined4 *param_2,int *param_3);
+AECHAR * string_to_wide(int32 context,char **text,AECHAR **wide);   /* 0x0010E210 GUESS: name, see kh_mod.c */
 void FUN_0010e280(int param_1,undefined4 *param_2,undefined4 *param_3);
 undefined4 FUN_0010e448(int param_1,undefined4 *param_2);
 void thunk_animations_add_from_scene(int param_1,int *param_2);
