@@ -14364,7 +14364,7 @@ LAB_001116c8:
   case 0x4e:
     break;
   case 0x4f:
-    FUN_0011f66c(uVar14,param_1[7]);
+    character_set_control_direction((Character *)uVar14,param_1[7]);
     break;
   case 0x50:
     *(undefined4 *)(puVar3[0x7c] + 0x1e8) = 1;
@@ -24546,20 +24546,15 @@ void FUN_0011f630(int param_1)
   return;
 }
 
-/* ==== 0x0011F66C  (file offset 0x1F66C)  FUN_0011f66c ================================================ */
-void FUN_0011f66c(int param_1,int param_2)
+/* ==== 0x0011F66C  (file offset 0x1F66C)  character_set_control_direction ============================= */
+/* GUESS: name. -1 reverses the character's movement keys (forwards and backwards swap, and left and
+   right; the action key is not affected), anything else makes them normal (1). Script command 0x4f of
+   FUN_00110924, with game->character and the command's argument. GUESS: for a camera that faces the
+   character from the front. */
+void character_set_control_direction(Character *character,int direction)
 
 {
-  undefined4 uVar1;
-  
-  if (param_2 == -1) {
-    uVar1 = 0xffffffff;
-  }
-  else {
-    uVar1 = 1;
-  }
-  *(undefined4 *)(param_1 + 0x280) = uVar1;
-  return;
+  character->controlDirection = direction == -1 ? -1 : 1;
 }
 
 /* ==== 0x0011F680  (file offset 0x1F680)  FUN_0011f680 ================================================ */

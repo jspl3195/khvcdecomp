@@ -349,7 +349,11 @@ typedef struct Character {
     uint8  leftHeld;              /* +0x27a AVK_RIGHT, and AVK_SELECT for the action), 2 held since before */
     uint8  rightHeld;             /* +0x27b an interruption (character_freeze_held_keys: ignored until */
     uint8  actionHeld;            /* +0x27c released, character_on_key_release); FUN_0011386c reads them */
-    uint8  unknown_27d[0x0b];
+    uint8  unknown_27d[0x03];
+    int    controlDirection;      /* +0x280 -1: the movement keys are reversed (forwards <-> backwards, left
+                                     <-> right; FUN_0011386c), else normal; set by the level script
+                                     (character_set_control_direction) */
+    uint8  unknown_284[0x04];
     uint32 field_288;             /* +0x288 a float (its bits); level data 0x1218EC09 */
     uint32 field_28c;             /* +0x28c a float (its bits); level data 0x2073D363 */
     uint8  unknown_290[0x04];

@@ -754,7 +754,7 @@ void FUN_0011f2bc(int param_1,int *param_2,int param_3);
 void FUN_0011f394(int param_1,char *param_2,undefined4 param_3,undefined4 param_4,int param_5);
 void FUN_0011f540(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
 void FUN_0011f630(int param_1);
-void FUN_0011f66c(int param_1,int param_2);
+void character_set_control_direction(Character *character,int direction);   /* 0x0011F66C GUESS: name */
 void FUN_0011f680(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
 void FUN_0011f7d4(int param_1,int param_2);
 void FUN_0011f8ac(int param_1);
