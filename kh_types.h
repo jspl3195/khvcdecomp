@@ -52,7 +52,7 @@ typedef struct KHApp {
     void          *pObj98;           /* +0x98 created by 0x10be14, destroyed by 0x10cda4 */
     struct Animations *animations;   /* +0x9c the scene's animations; created by animations_create,
                                         destroyed by 0x10c9dc */
-    void          *pObja0;           /* +0xa0 created by 0x10bb2c, destroyed by 0x10cd2c */
+    struct Intro  *intro;            /* +0xa0 the opening sequence (intro_create), destroyed by 0x10cd2c */
     void          *pGame;            /* +0xa4 GUESS: game state; receives key releases (kh_OnKeyRelease);
                                         destroyed by 0x10c2c4 */
     struct Progress *progress;       /* +0xa8 the player's progress (munny, experience, level, controls);
@@ -431,6 +431,26 @@ typedef struct Animations {
     ISwerveObject **controllers;  /* +0x718 100 controllers, found by user id when first played; 0 until then
                                      and after animations_release_controllers */
 } Animations;                     /* 0x71c bytes */
+
+/* ---- The opening sequence (GUESS: names) ----------------------------------------------------------
+ * KHApp.intro (0xa4 bytes, intro_create): stage 0 waits 2 s, stage 1 plays one animation of its scene
+ * to the end, stage 2 runs the title scene's timeline (11 animations, each shown between its start and
+ * end time), opens the title menu (screen 0x5a, GUESS) at 4.2 s and loops 4467..13802 ms behind it.
+ * Each stage change loads the stage's scene (FUN_0011b890). The 5 key skips to the menu (intro_on_key).
+ * A return to the title creates it at stage 2. */
+typedef struct Intro {
+    int    running;               /* +0x00 0 at creation; intro_update does nothing until it is set */
+    struct KHApp *app;            /* +0x04 GetAppInstance() at creation */
+    int    field_08;              /* +0x08 0 at creation */
+    int    field_0c;              /* +0x0c 0 at creation */
+    int    animation;             /* +0x10 stage 1's animation (an Animations index) */
+    int    timelineAnimations[11];   /* +0x14 stage 2's animations */
+    int    starts[11];            /* +0x40 when each of them starts (ms into stage 2) */
+    int    ends[11];              /* +0x6c when each ends */
+    int    time;                  /* +0x98 ms since the stage started */
+    int    stage;                 /* +0x9c 0, 1, 2 */
+    int    menuOpened;            /* +0xa0 stage 2 has opened the title menu */
+} Intro;                          /* 0xa4 bytes */
 
 /* ---- Enemies and combat regions (GUESS: names) ----------------------------------------------
  * A CombatRegion ("CombatRegion" level object, kind 4) is a place in a level that sends enemies in

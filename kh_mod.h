@@ -526,7 +526,7 @@ BossCombatRegion * boss_combat_region_create(BossCombatRegion *region,ISwerveObj
 LevelObject * level_object_create(LevelObject *object,ISwerveObject *node,char *name);   /* 0x0010B8CC GUESS: name */
 CollisionShape * collision_shape_create(CollisionShape *shape);   /* 0x0010B9B4 GUESS: name */
 undefined4 * FUN_0010ba08(undefined4 *param_1,undefined4 param_2);
-undefined4 * FUN_0010bb2c(undefined4 *param_1,int param_2,undefined4 param_3);
+Intro * intro_create(Intro *intro,int atTitle,int32 *error);   /* 0x0010BB2C GUESS: names */
 int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,int param_6,int param_7,int param_8,undefined1 param_9);
 int * FUN_0010bd7c(int *param_1,int *param_2,undefined1 param_3);
 int * FUN_0010be14(int *param_1);
@@ -665,7 +665,7 @@ void FUN_0011492c(int param_1);
 void FUN_0011498c(int param_1,uint param_2);
 void FUN_00114a1c(int param_1,undefined4 param_2);
 int combat_region_hit_enemies(CombatRegion *region,int part,uint32 damage,uint32 x,uint32 y,uint32 z,int playerState);   /* 0x00114A94 GUESS: names */
-int boss_combat_region_hit_target(BossCombatRegion *region,int unused,uint32 damage,uint32 x,uint32 y,uint32 z,int playerState);   /* 0x00114B48 GUESS: name */
+int boss_combat_region_hit_target(BossCombatRegion *region,int part,uint32 damage,uint32 x,uint32 y,uint32 z,int playerState);   /* 0x00114B48 GUESS: name */
 void FUN_00114c00(int param_1,undefined4 param_2,undefined4 param_3,int param_4);
 void FUN_001150d0(int param_1,int *param_2);
 void FUN_00115118(undefined4 *param_1,undefined4 param_2,uint param_3);
@@ -678,7 +678,7 @@ void FUN_00118640(int param_1,int *param_2);
 void FUN_0011868c(int param_1,undefined4 param_2);
 void FUN_00118910(int param_1,undefined4 param_2);
 void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text);   /* 0x00118ED8 GUESS: name */
-void FUN_001195f8(undefined4 *param_1);
+void intro_start(Intro *intro);   /* 0x001195F8 GUESS: name */
 void FUN_00119a28(int param_1,int *param_2);
 undefined4 FUN_00119abc(int param_1);
 undefined8 FUN_00119b0c(undefined4 param_1,int param_2,undefined4 param_3);
@@ -689,7 +689,7 @@ bool FUN_00119d58(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 
 void FUN_0011a2f4(int param_1,int param_2);
 void FUN_0011a3ec(int param_1,int param_2,undefined4 param_3);
 void FUN_0011a4d8(int param_1,int param_2);
-void FUN_0011a7dc(int param_1,int param_2);
+void intro_on_key(Intro *intro,int key);   /* 0x0011A7DC GUESS: name */
 void FUN_0011aad0(int param_1,int param_2);
 void FUN_0011ab60(int param_1);
 undefined8 FUN_0011abc4(int param_1,int param_2,uint param_3);
@@ -711,7 +711,7 @@ void FUN_0011c708(int param_1,int param_2,int param_3);
 bool FUN_0011c860(int param_1,int param_2,undefined4 param_3);
 void FUN_0011ca70(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);
 void FUN_0011ca8c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5);
-void wrap_angle(int unused,uint32 *angle);   /* 0x0011CB34 GUESS: name */
+void wrap_angle(int pObj94,uint32 *angle);   /* 0x0011CB34 GUESS: name */
 void FUN_0011cbc4(int param_1,int param_2,int param_3);
 void FUN_0011cc14(int param_1,int param_2,int param_3);
 int character_play_animation(Character *character,int index,int channel,int loop);   /* 0x0011CC64 GUESS: names */
@@ -807,7 +807,7 @@ void FUN_00123588(int param_1,int param_2,int param_3,undefined4 param_4);
 void animations_update(Animations *animations,int worldTime,int elapsed,int animate);   /* 0x00123C24 GUESS: names */
 void FUN_00123d7c(int param_1,undefined4 param_2,int param_3);
 void FUN_0012407c(int param_1,undefined4 param_2,undefined4 param_3);
-void FUN_001241a8(int *param_1,undefined4 param_2,int param_3,undefined4 param_4);
+void intro_update(Intro *intro,int worldTime,int elapsed,int32 *error);   /* 0x001241A8 GUESS: names */
 void FUN_001242b4(int param_1);
 undefined8 FUN_00124674(undefined4 param_1,undefined4 param_2,int param_3,int *param_4);
 undefined8 FUN_001246b4(undefined4 param_1,undefined4 param_2,int param_3,int *param_4);

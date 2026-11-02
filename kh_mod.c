@@ -8129,30 +8129,24 @@ LAB_0010bac8:
   return param_1;
 }
 
-/* ==== 0x0010BB2C  (file offset 0x0BB2C)  FUN_0010bb2c ================================================ */
-undefined4 * FUN_0010bb2c(undefined4 *param_1,int param_2,undefined4 param_3)
+/* ==== 0x0010BB2C  (file offset 0x0BB2C)  intro_create ================================================ */
+/* GUESS: names. Sets up the opening sequence (allocating its 0xa4 bytes when `intro` is 0), at stage 2
+   (the title) when `atTitle` is set, else 0, and loads its scene (FUN_0011b890, which sets *error);
+   returns it, or 0 when out of memory. Created at start-up (stage 0) and on a return to the title
+   (FUN_001242b4, stage 2). */
+Intro * intro_create(Intro *intro,int atTitle,int32 *error)
 
 {
-  undefined4 uVar1;
-  
-  if ((param_1 != (undefined4 *)0x0) ||
-     (param_1 = helper_malloc_2(0xa4), param_1 != (undefined4 *)0x0)) {
-                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
-                        */
-    uVar1 = (*g_pHelperFuncs->GetAppInstance)();
-    param_1[1] = uVar1;
-    param_1[2] = 0;
-    uVar1 = 0;
-    if (param_2 != 0) {
-      uVar1 = 2;
-    }
-    param_1[3] = 0;
-    param_1[0x27] = uVar1;
-    FUN_0011b890(param_1,param_3);
-    param_1[0x28] = 0;
-    *param_1 = 0;
-  }
-  return param_1;
+  if (intro == (Intro *)0x0 && (intro = helper_malloc_2(0xa4)) == (Intro *)0x0)
+    return (Intro *)0x0;
+  intro->app = (*g_pHelperFuncs->GetAppInstance)();
+  intro->field_08 = 0;
+  intro->field_0c = 0;
+  intro->stage = atTitle ? 2 : 0;
+  FUN_0011b890((int)intro,(int *)error);
+  intro->menuOpened = 0;
+  intro->running = 0;
+  return intro;
 }
 
 /* ==== 0x0010BBA0  (file offset 0x0BBA0)  FUN_0010bba0 ================================================ */
@@ -10637,8 +10631,8 @@ void FUN_0010ea64(int param_1)
     return;
   }
   if ((*(int **)(param_1 + 0xa0) != (int *)0x0) &&
-     (FUN_001241a8(*(int **)(param_1 + 0xa0),*(undefined4 *)(param_1 + 0x84),
-                   *(int *)(param_1 + 0x88),iVar7), *(int *)(param_1 + 0x90) != 0)) {
+     (intro_update(*(Intro **)(param_1 + 0xa0),*(int *)(param_1 + 0x84),*(int *)(param_1 + 0x88),
+                   (int32 *)iVar7), *(int *)(param_1 + 0x90) != 0)) {
     return;
   }
   animations_update((Animations *)*(int *)(param_1 + 0x9c),*(undefined4 *)(param_1 + 0x84),
@@ -14403,9 +14397,9 @@ void kh_OnAppStop(KHApp *pMe)
     FUN_0010c9dc(pMe->animations,1);
     pMe->animations = (void *)0x0;
   }
-  if (pMe->pObja0 != (void *)0x0) {
-    FUN_0010cd2c(pMe->pObja0,1);
-    pMe->pObja0 = (void *)0x0;
+  if (pMe->intro != (void *)0x0) {
+    FUN_0010cd2c(pMe->intro,1);
+    pMe->intro = (void *)0x0;
   }
   if (pMe->pBufc4 != (void *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -16931,9 +16925,9 @@ int combat_region_hit_enemies(CombatRegion *region,int part,uint32 damage,uint32
    attack's position and the player's state (+0x228). It hits the game's current target
    (pGame->character->[0x20c], set by FUN_00123d7c): a hitsphere takes the hit (vtable +8) and the HUD value
    (field_d4 +0x4c) is refreshed from the first hitsphere's field_14 (FUN_00126858, float to integer);
-   the extra entity is hidden (FUN_001201cc) and made untargetable instead. r1 is never read. Always
-   returns 0. combat_region_hit_enemies is the combat region's counterpart. */
-int boss_combat_region_hit_target(BossCombatRegion *region,int unused,uint32 damage,uint32 x,uint32 y,uint32 z,
+   the extra entity is hidden (FUN_001201cc) and made untargetable instead. `part` (r1; as
+   combat_region_hit_enemies gets it) is never read. Always returns 0. combat_region_hit_enemies is the combat region's counterpart. */
+int boss_combat_region_hit_target(BossCombatRegion *region,int part,uint32 damage,uint32 x,uint32 y,uint32 z,
                                int playerState)
 
 {
@@ -19666,32 +19660,26 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
   shape->height = float_subtract(shape->maximum[2],shape->minimum[2]);
 }
 
-/* ==== 0x001195F8  (file offset 0x195F8)  FUN_001195f8 ================================================ */
-void FUN_001195f8(undefined4 *param_1)
+/* ==== 0x001195F8  (file offset 0x195F8)  intro_start ================================================= */
+/* GUESS: name. Starts the current stage: time 0; stage 0 just runs; stage 1 plays its animation
+   (after FUN_00112b4c and FUN_001132a8); stage 2 runs after FUN_0012031c(app->pObj94, 0) and
+   FUN_00112b4c. */
+void intro_start(Intro *intro)
 
 {
-  undefined4 param_3;
-  undefined4 param_4;
-  /* not parameters: param_3, param_4. kh.mod reads r2 / r3 only on paths where it was already written, or as a
-     leftover (no caller sets them); Ghidra listed them as inputs */
-  int iVar1;
-  
-  param_1[0x26] = 0;
-  iVar1 = param_1[0x27];
-  if (iVar1 == 0) {
-    *param_1 = 1;
+  intro->time = 0;
+  if (intro->stage == 0)
+    intro->running = 1;
+  else if (intro->stage == 1) {
+    FUN_00112b4c((int)intro);
+    FUN_001132a8((int)intro->app->pObj94);
+    animations_play(intro->app->animations,intro->animation,0);
   }
-  else if (iVar1 == 1) {
-    FUN_00112b4c(param_1);
-    FUN_001132a8(*(undefined4 *)(param_1[1] + 0x94));
-    animations_play((Animations *)*(undefined4 *)(param_1[1] + 0x9c),param_1[4],0);
+  else if (intro->stage == 2) {
+    FUN_0012031c((int *)intro->app->pObj94,0);
+    intro->running = 1;
+    FUN_00112b4c((int)intro);
   }
-  else if (iVar1 == 2) {
-    FUN_0012031c(*(undefined4 *)(param_1[1] + 0x94),0 /* not arguments, register leftovers: param_3,param_4,param_4 */);
-    *param_1 = 1;
-    FUN_00112b4c(param_1);
-  }
-  return;
 }
 
 /* ==== 0x00119678  (file offset 0x19678)  kh_OnAppStart =============================================== */
@@ -19722,7 +19710,7 @@ void kh_OnAppStart(KHApp *pMe)
   pMe->pObj94 = (void *)0x0;
   pMe->pObj98 = (void *)0x0;
   pMe->animations = (void *)0x0;
-  pMe->pObja0 = (void *)0x0;
+  pMe->intro = (void *)0x0;
   pMe->pGame = (void *)0x0;
   pMe->progress = (void *)0x0;
   pMe->pBufc4 = (void *)0x0;
@@ -19761,8 +19749,8 @@ void kh_OnAppStart(KHApp *pMe)
                         (pMe->pSwerve,SWV_GRAPHICS3D,(void **)&pMe->pSwerveTarget);
       pMe->nErr = iVar2;
       if (iVar2 != 0) goto LAB_001199b0;
-      pvVar4 = (void *)FUN_0010bb2c(0,0,&pMe->nErr);
-      pMe->pObja0 = pvVar4;
+      pvVar4 = intro_create((Intro *)0x0,0,&pMe->nErr);
+      pMe->intro = pvVar4;
       iVar6 = INTEGER_263;
       if (pvVar4 != (void *)0x0) {
         if (pMe->nErr != 0) goto LAB_001199b0;
@@ -19815,7 +19803,7 @@ void kh_OnAppStart(KHApp *pMe)
             iVar6 = INTEGER_265;
             if (pvVar4 != (void *)0x0) {
               if (((pMe->nErr == 0) && (FUN_00118640(pMe->animations,pMe->pObj6c), pMe->nErr == 0)) &&
-                 (FUN_001195f8(pMe->pObja0), pMe->nErr == 0)) {
+                 (intro_start(pMe->intro), pMe->nErr == 0)) {
                 local_18 = (IBitmap *)0x0;
                 FUN_0011421c(pMe->pObj98,WORD_HEXADECIMAL_28500339,&local_18);
                 if (local_18 == (IBitmap *)0x0) {
@@ -20780,27 +20768,14 @@ code_r0x00108f28:
   return;
 }
 
-/* ==== 0x0011A7DC  (file offset 0x1A7DC)  FUN_0011a7dc ================================================ */
-void FUN_0011a7dc(int param_1,int param_2)
+/* ==== 0x0011A7DC  (file offset 0x1A7DC)  intro_on_key ================================================ */
+/* GUESS: name. The 5 key (AVK_5) on the title, before the menu has opened, skips the timeline to
+   5000 ms, so the next update opens the menu. Called by kh_OnKey for keys no screen has taken. */
+void intro_on_key(Intro *intro,int key)
 
 {
-  int iVar1;
-  bool bVar2;
-  bool bVar3;
-  
-  iVar1 = *(int *)(param_1 + 0x9c);
-  bVar2 = iVar1 == 2;
-  if (bVar2) {
-    iVar1 = *(int *)(param_1 + 0xa0);
-  }
-  bVar3 = bVar2 && iVar1 == 0;
-  if (bVar2 && iVar1 == 0) {
-    bVar3 = param_2 == 0xe035;
-  }
-  if (bVar3) {
-    *(undefined4 *)(param_1 + 0x98) = INTEGER_5000;
-  }
-  return;
+  if (intro->stage == 2 && !intro->menuOpened && key == 0xe035)
+    intro->time = INTEGER_5000;
 }
 
 /* ==== 0x0011A804  (file offset 0x1A804)  kh_OnKey ==================================================== */
@@ -20905,8 +20880,8 @@ LAB_0011a8a8:
 LAB_0011a990:
   iVar3 = FUN_001083d8(pMe->screens,uStack_30,uVar8,dwParam);
   if ((iVar3 == 0) && (pMe->field_cc != 5)) {
-    if (pMe->pObja0 != (void *)0x0) {
-      FUN_0011a7dc(pMe->pObja0,uVar8);
+    if (pMe->intro != (void *)0x0) {
+      intro_on_key(pMe->intro,uVar8);
     }
     if (pMe->pGame != (void *)0x0) {
       FUN_0011a3ec(pMe->pGame,uVar8,dwParam);
@@ -22681,9 +22656,8 @@ void FUN_0011ca8c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
    above 180, adds 360 while it is below -180. The work is done in doubles: FUN_00126248 widens the float,
    FUN_00124b84 / FUN_00124954 subtract / add 360.0, FUN_0012479c narrows back; FUN_00125634 and
    FUN_001256b4 compare with 180.0 and -180.0 and leave the result in the flags (`bhi` at 0x0011cb70,
-   `bcc` at 0x0011cba4), written after the commas. The first argument (callers pass app->pObj94) is never
-   read. */
-void wrap_angle(int unused,uint32 *angle)
+   `bcc` at 0x0011cba4), written after the commas. The first argument, app->pObj94, is never read. */
+void wrap_angle(int pObj94,uint32 *angle)
 
 {
   uint32 highWord;   /* r1 after the double routines: the high word of the double they return in r0:r1 */
@@ -28974,90 +28948,59 @@ void FUN_0012407c(int param_1,undefined4 param_2,undefined4 param_3)
   return;
 }
 
-/* ==== 0x001241A8  (file offset 0x241A8)  FUN_001241a8 ================================================ */
-void FUN_001241a8(int *param_1,undefined4 param_2,int param_3,undefined4 param_4)
+/* ==== 0x001241A8  (file offset 0x241A8)  intro_update ================================================ */
+/* GUESS: names. Advances the opening sequence by `elapsed` ms (called every frame from FUN_0010ea64, with
+   `worldTime`, which it never reads): stage 0 ends after 2000 ms, stage 1 when its animation has
+   finished (state 4); a stage change loads the next stage's scene (FUN_0011b890 with `error`) and starts
+   it, which the binary does by tail-jumping to intro_start (0x0012422c), written inline below. In stage
+   2, each timeline animation inside its window is shown at time - start; at 4200 ms the title menu
+   opens once (FUN_00101ad8(app->screens, 0x5a); GUESS: the menu), and from 13802 ms the timeline goes
+   back to 4467 ms. */
+void intro_update(Intro *intro,int worldTime,int elapsed,int32 *error)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  bool bVar4;
-  bool bVar5;
-  
-  if (*param_1 == 0) {
+  int i;
+
+  if (!intro->running)
     return;
-  }
-  iVar1 = param_1[0x26];
-  param_1[0x26] = iVar1 + param_3;
-  if (param_1[0x27] == 0) {
-    if (iVar1 + param_3 < 0x7d1) {
+  intro->time += elapsed;
+  if (intro->stage == 0) {
+    if (intro->time <= 2000)
       return;
-    }
-    param_1[0x27] = 1;
+    intro->stage = 1;
+  }
+  else if (intro->stage == 1) {
+    if (animations_get_state(intro->app->animations,intro->animation) != 4)
+      return;
+    intro->stage = 2;
   }
   else {
-    if (param_1[0x27] != 1) {
-      iVar1 = 0;
-      do {
-        iVar2 = param_1[0x26];
-        if ((param_1[iVar1 + 0x10] <= iVar2) && (iVar2 <= param_1[iVar1 + 0x1b])) {
-          animations_set_position((Animations *)*(undefined4 *)(param_1[1] + 0x9c),param_1[iVar1 + 5],
-                       iVar2 - param_1[iVar1 + 0x10]);
-        }
-        iVar1 = iVar1 + 1;
-      } while (iVar1 < 0xb);
-      iVar2 = param_1[0x26];
-      bVar5 = SBORROW4(iVar2,0x1000);
-      iVar3 = iVar2 + -0x1000;
-      bVar4 = iVar3 == 0;
-      iVar1 = iVar3;
-      if (0xfff < iVar2) {
-        bVar5 = SBORROW4(iVar3,0x68);
-        iVar1 = iVar2 + -0x1068;
-        bVar4 = iVar3 == 0x68;
-      }
-      if (iVar1 < 0 == bVar5) {
-        bVar4 = param_1[0x28] == 0;
-      }
-      if (bVar4) {
-        param_1[0x28] = 1;
-        FUN_00101ad8(*(undefined4 *)(param_1[1] + 0xd0),0x5a);
-      }
-      iVar1 = param_1[0x26];
-      bVar4 = SBORROW4(iVar1,0x3500);
-      iVar2 = iVar1 + -0x3500;
-      if (0x34ff < iVar1) {
-        bVar4 = SBORROW4(iVar2,0xea);
-        iVar2 = iVar1 + -0x35ea;
-      }
-      if (iVar2 < 0 == bVar4) {
-        param_1[0x26] = INTEGER_4467;
-      }
-      return;
+    for (i = 0; i < 11; i++)
+      if (intro->time >= intro->starts[i] && intro->time <= intro->ends[i])
+        animations_set_position(intro->app->animations,intro->timelineAnimations[i],intro->time - intro->starts[i]);
+    if (intro->time >= 4200 && !intro->menuOpened) {
+      intro->menuOpened = 1;
+      FUN_00101ad8((int *)intro->app->screens,0x5a);
     }
-    iVar1 = animations_get_state((Animations *)*(undefined4 *)(param_1[1] + 0x9c),param_1[4]);
-    if (iVar1 != 4) {
-      return;
-    }
-    param_1[0x27] = 2;
+    if (intro->time >= 13802)
+      intro->time = INTEGER_4467;
+    return;
   }
-  FUN_0011b890(param_1,param_4);
-  param_1[0x26] = 0;
-  iVar1 = param_1[0x27];
-  if (iVar1 == 0) {
-    *param_1 = 1;
+  FUN_0011b890((int)intro,(int *)error);
+  /* ---- the code of intro_start */
+  intro->time = 0;
+  if (intro->stage == 0)
+    intro->running = 1;
+  else if (intro->stage == 1) {
+    FUN_00112b4c((int)intro);
+    FUN_001132a8((int)intro->app->pObj94);
+    animations_play(intro->app->animations,intro->animation,0);
   }
-  else if (iVar1 == 1) {
-    FUN_00112b4c(param_1);
-    FUN_001132a8(*(undefined4 *)(param_1[1] + 0x94));
-    animations_play((Animations *)*(undefined4 *)(param_1[1] + 0x9c),param_1[4],0);
+  else if (intro->stage == 2) {
+    FUN_0012031c((int *)intro->app->pObj94,0);
+    intro->running = 1;
+    FUN_00112b4c((int)intro);
   }
-  else if (iVar1 == 2) {
-    FUN_0012031c(*(undefined4 *)(param_1[1] + 0x94),0);
-    *param_1 = 1;
-    FUN_00112b4c(param_1);
-  }
-  return;
 }
 
 /* ==== 0x001242B4  (file offset 0x242B4)  FUN_001242b4 ================================================ */
@@ -29098,14 +29041,14 @@ void FUN_001242b4(int param_1)
     if (*(int *)(param_1 + 0xa0) != 0) {
       FUN_0010cd2c(*(int *)(param_1 + 0xa0),1);
     }
-    puVar2 = FUN_0010bb2c((undefined4 *)0x0,1,param_1 + 0x90);
+    puVar2 = (undefined4 *)intro_create((Intro *)0x0,1,(int32 *)(param_1 + 0x90));
     *(undefined4 **)(param_1 + 0xa0) = puVar2;
     if (puVar2 == (undefined4 *)0x0) {
       *(undefined4 *)(param_1 + 0x90) = INTEGER_263;
     }
     else if (*(int *)(param_1 + 0x90) == 0) {
       FUN_00118640(*(int *)(param_1 + 0x9c),*(int **)(param_1 + 0x6c));
-      FUN_001195f8(*(undefined4 **)(param_1 + 0xa0));
+      intro_start(*(Intro **)(param_1 + 0xa0));
       goto LAB_0012462c;
     }
     break;
