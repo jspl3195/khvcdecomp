@@ -8048,17 +8048,18 @@ void helper_free(void *p)
   return;
 }
 
-/* ==== 0x0010C2A8  (file offset 0x0C2A8)  FUN_0010c2a8 ================================================ */
-void FUN_0010c2a8(int *param_1,int param_2)
+/* ==== 0x0010C2A8  (file offset 0x0C2A8)  hitsphere_destroy =========================================== */
+/* GUESS: name. A hitsphere's destructor: puts back its class's vtable (0x00101650, as hitsphere_create
+   does; it owns nothing to release) and frees it when `freeIt` is set (the binary's tail jump to
+   helper_free at 0x0010c2b8). Called for each of a boss combat region's hitspheres (FUN_0010ca1c). */
+void hitsphere_destroy(Hitsphere *hitsphere,int32 freeIt)
 
 {
-  *param_1 = (int32)VTABLE_00101650;
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
-  return;
+  hitsphere->vtable = (int32)VTABLE_00101650;
+  if (freeIt != 0)
+    helper_free(hitsphere);
 }
+
 
 /* ==== 0x0010C2C4  (file offset 0x0C2C4)  FUN_0010c2c4 ================================================ */
 void FUN_0010c2c4(int *param_1,int param_2)
@@ -8444,7 +8445,7 @@ void FUN_0010ca1c(int param_1,int param_2)
   for (iVar2 = 0; iVar2 < *(int *)(param_1 + 0x128); iVar2 = iVar2 + 1) {
     iVar1 = *(int *)(*(int *)(param_1 + 0x120) + iVar2 * 4);
     if (iVar1 != 0) {
-      FUN_0010c2a8(iVar1,1);
+      hitsphere_destroy((Hitsphere *)iVar1,1);
     }
   }
   helper_free(*(void **)(param_1 + 0x120));

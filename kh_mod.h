@@ -544,7 +544,7 @@ UIList * list_create(UIList *list,int32 capacity,int32 growBy);   /* 0x0010BE6C 
 undefined8 FUN_0010bec4(int *param_1,int param_2,int param_3,int param_4);
 UIElement * ui_element_create(UIElement *element,int16 x,int16 y,int16 width,int16 height,int32 *owner);   /* 0x0010C168 GUESS: name, see kh_mod.c */
 AppContext * app_context_create(AppContext *context,int32 *error);   /* 0x0010C218 GUESS: name, see kh_mod.c */
-void FUN_0010c2a8(int *param_1,int param_2);
+void hitsphere_destroy(Hitsphere *hitsphere,int32 freeIt);   /* 0x0010C2A8 GUESS: name, see kh_mod.c */
 void FUN_0010c2c4(int *param_1,int param_2);
 void FUN_0010c3f8(int param_1,int param_2);
 void web_request_destroy(WebRequest *request,int32 freeIt);   /* 0x0010C598 GUESS: name, see kh_mod.c */
