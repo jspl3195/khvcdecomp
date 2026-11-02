@@ -9393,32 +9393,23 @@ void progress_add_munny(Progress *progress,int amount)
   }
 }
 
-/* ==== 0x0010D2FC  (file offset 0x0D2FC)  FUN_0010d2fc ================================================ */
-undefined4 FUN_0010d2fc(int param_1)
+/* ==== 0x0010D2FC  (file offset 0x0D2FC)  combat_region_all_enemies_defeated ========================== */
+/* GUESS: names. 1 when no enemy of the region has a value above 0 left (vtable slot +0x18, a float;
+   GUESS: its health), else 0 (float_compare_greater, then `bls` at 0x0010d330, written after the comma).
+   Ghidra had dropped the enemy passed to the slot. */
+int combat_region_all_enemies_defeated(CombatRegion *region)
 
 {
-  undefined4 uVar1;
-  uint uVar2;
-  int iVar3;
-  uint uVar4;
-  undefined1 uVar5;
-  undefined1 uVar6;
-  
-  uVar4 = 0;
-  while( true ) {
-    uVar2 = *(uint *)(param_1 + 300);
-    uVar6 = uVar4 <= uVar2;
-    uVar5 = uVar2 == uVar4;
-    if ((int)uVar2 <= (int)uVar4) {
-      return 1;
-    }
-    iVar3 = **(int **)(*(int *)(param_1 + 0x14c) + uVar4 * 4);
-    uVar1 = (*(code *)(*(int *)(iVar3 + 0x18) + iVar3))();
-    float_compare_greater(uVar1,0);
-    if ((bool)uVar6 && !(bool)uVar5) break;
-    uVar4 = uVar4 + 1;
+  uint32 health;
+  int i;
+
+  for (i = 0; i < region->enemyCount; i++) {
+    health = (uint32)(*(code *)(*(int *)(region->enemies[i]->vtable + 0x18) + region->enemies[i]->vtable))
+                       (region->enemies[i]);
+    if (float_compare_greater(health,0), *(float *)&health > 0.0f)
+      return 0;
   }
-  return 0;
+  return 1;
 }
 
 /* ==== 0x0010D354  (file offset 0x0D354)  FUN_0010d354 ================================================ */
@@ -16908,47 +16899,30 @@ void FUN_00114a1c(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x00114A94  (file offset 0x14A94)  FUN_00114a94 ================================================ */
-undefined8
-FUN_00114a94(int param_1,undefined4 param_2,void *param_3,undefined4 param_4,undefined4 param_5,
-            undefined4 param_6,undefined4 param_7)
+/* ==== 0x00114A94  (file offset 0x14A94)  combat_region_hit_enemies =================================== */
+/* GUESS: names. A player attack (FUN_00123588) against a combat region: every enemy takes the hit
+   (vtable slot +0x14, with `part`, the damage, the attack's position and the player's state; GUESS:
+   `part`, 0-2, which part of the attack). When that leaves every enemy defeated and none left to come in
+   the wave, the region shows its message (FUN_0011d040 with its nameId: 0x11E3EE3E while waves remain,
+   as combat_region_update does when a wave starts; GUESS: 0x14F1CDC1 when it is cleared), goes back to
+   waiting (state 1) and 1 is returned; else 0. Ghidra had built a 64-bit return from a leftover r1
+   (the restored `part`); the callers read only the low word. boss_combat_region_hit_target is the boss
+   region's counterpart. */
+int combat_region_hit_enemies(CombatRegion *region,int part,uint32 damage,uint32 x,uint32 y,uint32 z,
+                              int playerState)
 
 {
-  int *piVar1;
-  undefined4 uVar2;
-  int iVar3;
-  void *pvVar4;
-  int iVar5;
-  bool bVar6;
-  undefined4 uVar7;
-  
-  pvVar4 = param_3;
-  uVar7 = param_2;
-  for (iVar5 = 0; iVar5 < *(int *)(param_1 + 300); iVar5 = iVar5 + 1) {
-    piVar1 = *(int **)(*(int *)(param_1 + 0x14c) + iVar5 * 4);
-    iVar3 = *piVar1;
-    pvVar4 = param_3;
-    uVar7 = param_5;
-    (*(code *)(*(int *)(iVar3 + 0x14) + iVar3))
-              (piVar1,param_2,param_3,param_4,param_5,param_6,param_7);
-  }
-  iVar5 = FUN_0010d2fc(param_1);
-  if ((iVar5 == 0) || (*(int *)(param_1 + 0x138) != 0)) {
-    uVar2 = 0;
-  }
-  else {
-    bVar6 = *(int *)(param_1 + 0x134) != 0;
-    if (bVar6) {
-      pvVar4 = WORD_HEXADECIMAL_11E3EE3E;
-    }
-    if (!bVar6) {
-      pvVar4 = WORD_HEXADECIMAL_14F1CDC1;
-    }
-    FUN_0011d040(*(int *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 0xc),pvVar4);
-    uVar2 = 1;
-    *(undefined4 *)(param_1 + 0x130) = 1;
-  }
-  return CONCAT44(uVar7,uVar2);
+  int i;
+
+  for (i = 0; i < region->enemyCount; i++)
+    (*(code *)(*(int *)(region->enemies[i]->vtable + 0x14) + region->enemies[i]->vtable))
+              (region->enemies[i],part,damage,x,y,z,playerState);
+  if (!combat_region_all_enemies_defeated(region) || region->enemiesLeftInWave != 0)
+    return 0;
+  FUN_0011d040((int)region->app->pObj94,region->nameId,
+               (void *)(region->wavesLeft != 0 ? WORD_HEXADECIMAL_11E3EE3E : WORD_HEXADECIMAL_14F1CDC1));
+  region->state = 1;
+  return 1;
 }
 
 /* ==== 0x00114B48  (file offset 0x14B48)  boss_combat_region_hit_target =============================== */
@@ -16958,7 +16932,7 @@ FUN_00114a94(int param_1,undefined4 param_2,void *param_3,undefined4 param_4,und
    (pGame->character->[0x20c], set by FUN_00123d7c): a hitsphere takes the hit (vtable +8) and the HUD value
    (field_d4 +0x4c) is refreshed from the first hitsphere's field_14 (FUN_00126858, float to integer);
    the extra entity is hidden (FUN_001201cc) and made untargetable instead. r1 is never read. Always
-   returns 0. FUN_00114a94 is the combat region's counterpart. */
+   returns 0. combat_region_hit_enemies is the combat region's counterpart. */
 int boss_combat_region_hit_target(BossCombatRegion *region,int unused,uint32 damage,uint32 x,uint32 y,uint32 z,
                                int playerState)
 
@@ -28703,7 +28677,7 @@ LAB_00123a24:
       pcVar7 = local_3c;
       uVar8 = local_38;
 LAB_001239fc:
-      uVar14 = FUN_00114a94(iVar1,0,uVar4,uVar5,pcVar7,uVar8,uVar2);
+      uVar14 = combat_region_hit_enemies((CombatRegion *)iVar1,0,uVar4,uVar5,(uint32)pcVar7,uVar8,uVar2);
       iVar9 = (int)uVar14;
     }
 LAB_00123b40:
@@ -28757,7 +28731,7 @@ LAB_00123b40:
           }
           else {
             uVar2 = FUN_001268c8(uVar2);
-            uVar14 = FUN_00114a94(iVar9,iVar1,uVar2,local_40,local_3c,local_38,
+            uVar14 = combat_region_hit_enemies((CombatRegion *)iVar9,iVar1,uVar2,local_40,(uint32)local_3c,local_38,
                                   *(undefined4 *)(param_1 + 0x228));
             iVar9 = (int)uVar14;
           }

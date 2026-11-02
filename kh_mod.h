@@ -560,7 +560,7 @@ void progress_add_experience(Progress *progress,int amount);   /* 0x0010CFC4 GUE
 void FUN_0010d074(int param_1,undefined4 param_2);
 void progress_add_magic_points(Progress *progress,int amount);   /* 0x0010D18C GUESS: name */
 void progress_add_munny(Progress *progress,int amount);   /* 0x0010D1E0 GUESS: name */
-undefined4 FUN_0010d2fc(int param_1);
+int combat_region_all_enemies_defeated(CombatRegion *region);   /* 0x0010D2FC GUESS: names */
 undefined4 FUN_0010d354(int param_1);
 void FUN_0010d3a4(int param_1,undefined4 param_2);
 uint FUN_0010d4dc(undefined4 param_1,undefined4 param_2);
@@ -664,8 +664,7 @@ int combat_region_take_attack_token(CombatRegion *region);   /* 0x00114910 GUESS
 void FUN_0011492c(int param_1);
 void FUN_0011498c(int param_1,uint param_2);
 void FUN_00114a1c(int param_1,undefined4 param_2);
-undefined8 FUN_00114a94(int param_1,undefined4 param_2,void *param_3,undefined4 param_4,undefined4 param_5,
-                        undefined4 param_6,undefined4 param_7);
+int combat_region_hit_enemies(CombatRegion *region,int part,uint32 damage,uint32 x,uint32 y,uint32 z,int playerState);   /* 0x00114A94 GUESS: names */
 int boss_combat_region_hit_target(BossCombatRegion *region,int unused,uint32 damage,uint32 x,uint32 y,uint32 z,int playerState);   /* 0x00114B48 GUESS: name */
 void FUN_00114c00(int param_1,undefined4 param_2,undefined4 param_3,int param_4);
 void FUN_001150d0(int param_1,int *param_2);
