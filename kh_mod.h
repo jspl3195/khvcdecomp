@@ -520,9 +520,9 @@ int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3);
 int * FUN_0010aa8c(int *param_1,int *param_2);
 int * FUN_0010ac6c(int *param_1,int param_2);
 WebRequest * web_request_create(WebRequest *request,int32 context,WebRequestListener listener);   /* 0x0010AF3C GUESS: name, see kh_mod.c */
-undefined4 * FUN_0010afc4(undefined4 *param_1);
+ScriptCommand * script_command_create(ScriptCommand *command);   /* 0x0010AFC4 GUESS: name, see kh_mod.c */
 undefined4 * FUN_0010b014(undefined4 *param_1,undefined4 param_2);
-int * FUN_0010b080(int *param_1,undefined4 param_2);
+ScriptSequence * script_sequence_create(ScriptSequence *sequence,char *text);   /* 0x0010B080 GUESS: name, see kh_mod.c */
 Enemy * enemy_create(Enemy *enemy,int32 number,CombatRegion *region,int32 type);   /* 0x0010B230 GUESS: name */
 TextBox * text_box_create(TextBox *box,int32 x,int32 y,int32 width,int32 height,int32 *owner,TextStyle *style);   /* 0x0010B2DC GUESS: name, see kh_mod.c */
 undefined1 * FUN_0010b3e8(undefined1 *param_1,undefined4 param_2,undefined4 param_3);
@@ -548,9 +548,9 @@ void FUN_0010c2a8(int *param_1,int param_2);
 void FUN_0010c2c4(int *param_1,int param_2);
 void FUN_0010c3f8(int param_1,int param_2);
 void web_request_destroy(WebRequest *request,int32 freeIt);   /* 0x0010C598 GUESS: name, see kh_mod.c */
-void FUN_0010c620(int param_1,int param_2);
+void script_command_destroy(ScriptCommand *command,int32 freeIt);   /* 0x0010C620 GUESS: name, see kh_mod.c */
 void FUN_0010c66c(int param_1,int param_2);
-void FUN_0010c6b4(int *param_1,int param_2);
+void script_sequence_destroy(ScriptSequence *sequence,int32 freeIt);   /* 0x0010C6B4 GUESS: name, see kh_mod.c */
 void FUN_0010c720(int *param_1,int param_2);
 void FUN_0010c73c(int param_1,int param_2);
 void FUN_0010c790(int param_1,int param_2);
@@ -589,7 +589,7 @@ void progress_add_munny(Progress *progress,int32 amount);   /* 0x0010D1E0 GUESS:
 int32 combat_region_all_enemies_defeated(CombatRegion *region);   /* 0x0010D2FC GUESS: names */
 undefined4 FUN_0010d354(int param_1);
 void FUN_0010d3a4(int param_1,undefined4 param_2);
-uint FUN_0010d4dc(undefined4 param_1,undefined4 param_2);
+uint32 string_to_float(int32 context,char *text);   /* 0x0010D4DC GUESS: name, see kh_mod.c */
 undefined4 FUN_0010d56c(int param_1,int param_2);
 undefined4 FUN_0010d7c4(int param_1,int param_2);
 undefined4 FUN_0010d95c(int param_1,int param_2);
@@ -609,7 +609,7 @@ uint32 float_cos(uint32 angle);   /* 0x0010ED40 GUESS: name, see kh_mod.c */
 void FUN_0010ed54(int param_1,int param_2,undefined4 param_3);
 void FUN_0010f1fc(int32 character);   /* 0x0010F1FC (no Ghidra function) */
 void FUN_0010edec(int param_1);
-int FUN_0010eefc(undefined4 param_1,int param_2,int *param_3,undefined4 param_4);
+int32 script_parse_lines(int32 context,char *text,ScriptCommand ***commands,int32 owner);   /* 0x0010EEFC GUESS: name, see kh_mod.c */
 undefined4 FUN_0010efd4(undefined4 param_1,undefined4 param_2,int param_3,int param_4);
 int FUN_0010f058(int param_1,int param_2);
 void FUN_0010f244(int *param_1,undefined4 *param_2);
@@ -627,13 +627,13 @@ void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param
                  int param_7,uint param_8,uint param_9,uint param_10);
 uint32 planar_distance_squared(void *object,uint32 x1,uint32 y1,uint32 z1,uint32 x2,uint32 y2);   /* 0x0010FFDC GUESS: name, see kh_mod.c */
 uint32 planar_distance_squared_2(void *object,uint32 x1,uint32 y1,uint32 z1,uint32 x2,uint32 y2);   /* 0x00110030 GUESS: name, see kh_mod.c */
-int FUN_00110084(undefined4 param_1,int param_2,undefined4 param_3,int param_4,int param_5);
+int32 string_split(int32 context,char *text,char *separator,char **parts,int32 maxParts);   /* 0x00110084 GUESS: name, see kh_mod.c */
 undefined4 FUN_00110190(int param_1,undefined4 *param_2,undefined4 *param_3);
 void FUN_00110564(int param_1,int param_2,int param_3);
 undefined4 FUN_001106a0(undefined4 param_1,int *param_2,int param_3,int param_4);
 void FUN_00110860(int param_1,int param_2);
 void FUN_001108ac(undefined4 param_1,int param_2,int param_3);
-uint FUN_00110924(int *param_1);
+int32 script_command_run(ScriptCommand *command);   /* 0x00110924 GUESS: name, see kh_mod.c */
 undefined8 FUN_0011295c(undefined4 *param_1,int *param_2,int *param_3,int *param_4,undefined4 param_5);
 bool FUN_00112a98(int param_1,undefined4 param_2,int param_3);
 void FUN_00112b4c(int param_1);
@@ -695,7 +695,7 @@ int32 combat_region_hit_enemies(CombatRegion *region,int32 part,uint32 damage,ui
 int32 boss_combat_region_hit_target(BossCombatRegion *region,int32 part,uint32 damage,uint32 x,uint32 y,uint32 z,int32 playerState);   /* 0x00114B48 GUESS: name */
 void FUN_00114c00(int param_1,undefined4 param_2,undefined4 param_3,int param_4);
 void FUN_001150d0(int param_1,int *param_2);
-void FUN_00115118(undefined4 *param_1,undefined4 param_2,uint param_3);
+void script_command_parse(ScriptCommand *command,int32 owner,char *text);   /* 0x00115118 GUESS: name, see kh_mod.c */
 void FUN_001174ac(int param_1,undefined4 param_2);
 void FUN_00117d30(int param_1,int *param_2);
 void combat_region_setup(CombatRegion *region,int32 context);   /* 0x00117DD8 GUESS: name */
@@ -826,7 +826,7 @@ void FUN_00121b98(int param_1,undefined4 param_2);
 undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3);
 void FUN_00122450(int param_1,byte *param_2,int param_3);
 void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed);
-undefined4 FUN_0012289c(int *param_1,undefined4 param_2,int param_3);
+int32 script_sequence_update(ScriptSequence *sequence,int32 now,int32 elapsed);   /* 0x0012289C GUESS: name, see kh_mod.c */
 void enemy_update(Enemy *enemy,int32 now,int32 elapsed);   /* 0x00122954 GUESS: name */
 void FUN_00122b90(int param_1,int param_2,uint param_3);
 void combat_region_update(CombatRegion *region,int32 now,int32 elapsed);   /* 0x00122F98 GUESS: name */

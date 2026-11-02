@@ -261,6 +261,36 @@ typedef struct Screen {
     struct KHApp *app;            /* +0x44 */
 } Screen;                         /* 0x48 bytes */
 
+/* ---- Level scripts (GUESS: names) ------------------------------------------------------------------
+ * The levels and screens are driven by scripts: lines of text, one command each ("AddSoftKey ...",
+ * "PlayAnim ...", "If ... / Else / EndIf", "SaveGame", ...), parsed into script commands
+ * (script_command_parse) and run by script_command_run. A timed script (a sequence) runs its commands
+ * at given times (script_sequence_update). */
+typedef struct ScriptCommand {
+    int32    type;                  /* +0x00 by the command's name (script_command_parse, script_command_run);
+                                     0x4c none */
+    struct KHApp *app;            /* +0x04 */
+    int32    owner;                 /* +0x08 the object or screen whose script it is (0 for a sequence's) */
+    struct LevelObject *object;   /* +0x0c the object it acts on, by name (FUN_00112e20) */
+    struct LevelObject *target;   /* +0x10 a second object */
+    uint32   value[2];              /* +0x14 floats (their bits): a speed, an angle, an amount, ... */
+    int32    number[4];             /* +0x1c integers: a mode, a sound, an animation's user id (a hash),
+                                     a colour 0xRRGGBB, a text box's rectangle, ... */
+    uint32   hash;                  /* +0x2c a name's hash (FUN_00113654): a text's parameter */
+    int32    flag[4];               /* +0x30 options, by command */
+    char    *text;                  /* +0x40 a text argument: a name, a condition, a list (freed by
+                                     script_command_destroy) */
+    uint32   vector[3];             /* +0x44 floats (their bits): a position, an offset, a view */
+} ScriptCommand;                  /* 0x50 bytes */
+
+typedef struct ScriptSequence {
+    ScriptCommand **commands;     /* +0x00 count commands */
+    int32   *times;                 /* +0x04 count + 1 times (ms); the last one ends the sequence */
+    int32    count;                 /* +0x08 */
+    int32    elapsed;               /* +0x0c ms since the sequence started */
+    int32    next;                  /* +0x10 the next command to run */
+} ScriptSequence;                 /* 0x14 bytes */
+
 /* ---- The player's progress (GUESS: names) -----------------------------------------------------
  * KHApp.progress. Only the fields used by the functions named so far are named; the rest is padding.
  * progress_add_experience levels up through levels[] (levels 0-8); progress_score = munny + 100 *
@@ -289,7 +319,8 @@ typedef struct Progress {
                                      reward of type 3 */
     int32    experience;            /* +0x538 progress_add_experience */
     ProgressLevel levels[9];      /* +0x53c the level-ups of levels 0-8 */
-    uint8  unknown_584[0x08];
+    int32    field_584;             /* +0x584 script setLevelUp of level 9 also sets it */
+    uint8  unknown_588[0x04];
     int32    level;                 /* +0x58c 0-9; no level-ups after 9 */
     uint8  unknown_590[0x04];
     int32    field_594;             /* +0x594 GUESS: a tutorial step; above 0, the action key tells the app's
@@ -303,7 +334,9 @@ typedef struct Progress {
     int32    field_5b4;             /* +0x5b4 0 at the start; GUESS: a count of items that refill half the MP
                                      (the Magic key with no MP, after field_5b8) */
     int32    field_5b8;             /* +0x5b8 0 at the start; GUESS: a count of items that refill all of it */
-    uint8  unknown_5bc[0x10];
+    AECHAR  *collectablesText;      /* +0x5bc script setCollectables: the collectables' name */
+    int32    collectables;          /* +0x5c0 and their number */
+    uint8  unknown_5c4[0x08];
     int32    controls[7];           /* +0x5cc the Controls key bindings (BREW key codes): Forwards, Backwards,
                                      Left, Right, Action, Status, Magic */
     int32    softKeys[2];           /* +0x5e8 the keys that act as the left and the right soft key (screen_handle_key):
@@ -423,6 +456,24 @@ typedef struct MotionEntity {
     uint32 turnSpeed;             /* +0x1c4 a float (its bits): the turn speed, its sign the direction */
 } MotionEntity;                   /* 0x1c8 bytes */
 
+/* ---- The camera (GUESS: names) -----------------------------------------------------------------------
+ * The "Camera" level object (kind 3, FUN_0010b3e8, 0x214 bytes; name hash 0x2E6723BD): a motion entity
+ * that follows its target. Only what the level scripts set (script_command_run) is named. */
+typedef struct Camera {
+    uint8    entity[0x1c8];       /* +0x000 the MotionEntity */
+    uint8    unknown_1c8[0x04];
+    LevelObject *target;          /* +0x1cc the object it follows (the player's character, name hash
+                                     0x10C617E4) */
+    uint8    unknown_1d0[0x08];
+    uint32   view[3];             /* +0x1d8 floats (their bits): setCameraFocus's named views (STANDARD_VIEW
+                                     90, 0, 10; HIGH_VIEW 60, 45, 45; ...) */
+    uint8    unknown_1e4[0x04];
+    int32    activeRotation;      /* +0x1e8 setActiveRotOn / setActiveRotOff */
+    uint32   focus[3];            /* +0x1ec floats (their bits): a point it looks at (matchPosition) */
+    uint32   field_1f8;           /* +0x1f8 a float (its bits): setXRot's angle; 10.0 from matchPosition */
+    uint8    unknown_1fc[0x18];
+} Camera;                         /* 0x214 bytes */
+
 /* "Character" (kind 2, 0x338 bytes, FUN_0010b70c; GUESS: names): the player's character, a MotionEntity.
  * It plays its animations on three channels (character_play_animation): channel 0 alone, or channels 2
  * and 3 together (GUESS: two body parts); a request on 2 or 3 stops channel 0, and one on 0 stops 2 and 3. */
@@ -468,8 +519,15 @@ typedef struct Character {
     LevelObject *field_238;       /* +0x238 the level object named by hash 0x19DB98DB */
     struct CombatRegion *combatRegion;          /* +0x23c the combat region it is in, or 0 */
     struct BossCombatRegion *bossCombatRegion;  /* +0x240 the boss combat region it is in, or 0 */
-    int32    field_244;             /* +0x244 cleared when the action key starts an attack */
-    uint8  unknown_248[0x30];
+    int32    field_244;             /* +0x244 cleared when the action key starts an attack; the tree or ladder
+                                     climbed (script setCharacterMode) */
+    LevelObject *hangTarget;      /* +0x248 script setCharacterMode HANG's second object */
+    uint8  unknown_24c[0x04];
+    LevelObject *mirrorObject;    /* +0x250 script setMirror: the object, or 0 */
+    uint32 mirrorOffset[3];       /* +0x254 floats (their bits) */
+    uint32 mirrorAngle;           /* +0x260 a float (its bits) */
+    int32    mirrorFlags[4];        /* +0x264 -X, -Y, -Z, -R */
+    int32    swimNoClimb;           /* +0x274 script setCharacterMode SWIM: 1 for SWIM_NO_CLIMB */
     uint8  forwardsHeld;          /* +0x278 the movement keys: 0 up, 1 held (character_on_key, from its */
     uint8  backwardsHeld;         /* +0x279 Controls binding or its arrow key: AVK_UP, AVK_DOWN, AVK_LEFT, */
     uint8  leftHeld;              /* +0x27a AVK_RIGHT, and AVK_SELECT for the action), 2 held since before */
@@ -479,7 +537,7 @@ typedef struct Character {
     int32    controlDirection;      /* +0x280 -1: the movement keys are reversed (forwards <-> backwards, left
                                      <-> right; FUN_0011386c), else normal; set by the level script
                                      (character_set_control_direction) */
-    uint8  unknown_284[0x04];
+    int32    field_284;             /* +0x284 set to 1 by a script setCombatRegion without a region */
     uint32 field_288;             /* +0x288 a float (its bits); level data 0x1218EC09 */
     uint32 field_28c;             /* +0x28c a float (its bits); level data 0x2073D363 */
     uint8  unknown_290[0x04];
@@ -502,10 +560,17 @@ typedef struct Game {
                                      too */
     uint8  unknown_008[0x08];
     LevelObject *objects[120];    /* +0x010 0 = free slot (game_find_free_object_slot) */
-    uint8  unknown_1f0[0x08];
+    struct Camera *camera;        /* +0x1f0 the camera */
+    uint8  unknown_1f4[0x04];
     struct Character *character;  /* +0x1f8 the player's character (FUN_0010a5d8 creates it from the scene's
                                      entity 0x0AD65F3D); its +0x20c is the current target */
-    uint8  unknown_1fc[0x18];
+    LevelObject *actionObject;    /* +0x1fc the object of the action shown (script addUIAction; cleared by
+                                     removeUIAction) */
+    uint8  unknown_200[0x04];
+    int32    terrainLevelSet;       /* +0x204 script setTerrainLevel: 1 with a level, 0 without */
+    uint32   terrainLevel;          /* +0x208 a float (its bits): that level's height */
+    int32    field_20c;             /* +0x20c set to 1 by a script addUIText with flag 1 */
+    uint8  unknown_210[0x04];
     struct KHApp *app;            /* +0x214 */
 } Game;
 

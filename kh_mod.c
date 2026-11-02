@@ -6303,7 +6303,7 @@ void web_request_notify(WebRequest *request,int32 event,int32 value,int32 detail
    the point but at least 7 pixels from the start of the side and 17 from its end. A point inside the box
    gives no tail - but the old tail has been freed by then and box->tail still points at it (a bug in
    the game, kept here as the binary has it: research_notes/decomp/GAME_BUGS.md). Called by FUN_001052e0
-   for a screen's first text-box row, with a point from the level's script (FUN_00110924, two floats of
+   for a screen's first text-box row, with a point from the level's script (script_command_run, two floats of
    the command). Written from its disassembly (0x0010955c - 0x00109740). */
 void text_box_set_tail(TextBox *box,int32 x,int32 y)
 
@@ -7237,27 +7237,28 @@ WebRequest * web_request_create(WebRequest *request,int32 context,WebRequestList
 }
 
 
-/* ==== 0x0010AFC4  (file offset 0x0AFC4)  FUN_0010afc4 ================================================ */
-/* returns r0 as kh.mod leaves it (param_1, or the new block, or NULL when the allocation fails); Ghidra had declared it void, but callers use r0 after the
-   call */
-undefined4 * FUN_0010afc4(undefined4 *param_1)
+/* ==== 0x0010AFC4  (file offset 0x0AFC4)  script_command_create ======================================= */
+/* GUESS: names. A script command's constructor (0x50 bytes, allocated when `command` is 0; returns 0 when
+   out of memory): type 0x4c, which no command name gives (a line script_command_parse does not know
+   does nothing), and its arguments cleared. script_command_parse fills it from a line of a script. */
+ScriptCommand * script_command_create(ScriptCommand *command)
 
 {
-  if ((param_1 != (undefined4 *)0x0) ||
-     (param_1 = helper_malloc_2(0x50), param_1 != (undefined4 *)0x0)) {
-    *param_1 = 0x4c;
-    param_1[3] = 0;
-    param_1[4] = 0;
-    param_1[5] = 0;
-    param_1[6] = 0;
-    param_1[7] = 0;
-    param_1[8] = 0;
-    param_1[0xc] = 0;
-    param_1[0xd] = 0;
-    param_1[0x10] = 0;
-  }
-  return param_1;
+  if (command == (ScriptCommand *)0x0 && (command = helper_malloc_2(0x50)) == (ScriptCommand *)0x0)
+    return command;
+  command->type = 0x4c;
+  command->object = (LevelObject *)0x0;
+  command->target = (LevelObject *)0x0;
+  command->value[0] = 0;
+  command->value[1] = 0;
+  command->number[0] = 0;
+  command->number[1] = 0;
+  command->flag[0] = 0;
+  command->flag[1] = 0;
+  command->text = (char *)0x0;
+  return command;
 }
+
 
 /* ==== 0x0010B014  (file offset 0x0B014)  FUN_0010b014 ================================================ */
 undefined4 * FUN_0010b014(undefined4 *param_1,undefined4 param_2)
@@ -7285,57 +7286,50 @@ undefined4 * FUN_0010b014(undefined4 *param_1,undefined4 param_2)
   return param_1;
 }
 
-/* ==== 0x0010B080  (file offset 0x0B080)  FUN_0010b080 ================================================ */
-int * FUN_0010b080(int *param_1,undefined4 param_2)
+/* ==== 0x0010B080  (file offset 0x0B080)  script_sequence_create ====================================== */
+/* GUESS: names. A timed script (0x14 bytes, allocated when `sequence` is 0; returns 0 when out of
+   memory) from `text`: lines "<time>:<command>" (times in ms, string_to_float); the last line only gives
+   the time the sequence ends. script_sequence_update runs the commands as their times come. Made by
+   FUN_0010ed54 for the game (up to five at a time, game +0x218). */
+ScriptSequence * script_sequence_create(ScriptSequence *sequence,char *text)
 
 {
-  int iVar1;
-  int iVar2;
-  void *p;
-  void *pvVar3;
-  undefined4 *p_00;
-  undefined4 uVar4;
-  int iVar5;
-  
-  if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(0x14), param_1 != (int *)0x0)) {
-    *param_1 = 0;
-    param_1[1] = 0;
-    param_1[3] = 0;
-    param_1[4] = 0;
-                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
-                        */
-    iVar1 = (*g_pHelperFuncs->GetAppInstance)();
-    iVar2 = FUN_00110084(*(undefined4 *)(iVar1 + 0x94),param_2,(int32)STRING_CARRIAGE_RETURN_NEWLINE_00127780,0,0);
-    param_1[2] = iVar2 + -1;
-    p = helper_malloc((iVar2 + -1) * 4 + 4);
-    FUN_00110084(*(undefined4 *)(iVar1 + 0x94),param_2,(int32)STRING_CARRIAGE_RETURN_NEWLINE_00127780,p,param_1[2] + 1);
-    pvVar3 = helper_malloc(param_1[2] * 4 + 4);
-    param_1[1] = (int)pvVar3;
-    pvVar3 = helper_malloc(param_1[2] << 2);
-    iVar5 = (int32)DATA_AT_00127784;
-    *param_1 = (int)pvVar3;
-    for (iVar2 = 0; iVar2 < param_1[2] + 1; iVar2 = iVar2 + 1) {
-      p_00 = helper_malloc(8);
-      FUN_00110084(*(undefined4 *)(iVar1 + 0x94),*(undefined4 *)((int)p + iVar2 * 4),iVar5,p_00,2);
-      
-      uVar4 = FUN_00126858(FUN_0010d4dc(*(undefined4 *)(iVar1 + 0x94),*p_00));
-      *(undefined4 *)(param_1[1] + iVar2 * 4) = uVar4;
-      if (param_1[2] != iVar2) {
-        uVar4 = FUN_0010afc4(0);
-        *(undefined4 *)(*param_1 + iVar2 * 4) = uVar4;
-        FUN_00115118(uVar4,0,p_00[1]);
-      }
-      helper_free((void *)*p_00);
-      helper_free((void *)p_00[1]);
-      helper_free(p_00);
+  KHApp *app;
+  char **lines;
+  char **parts;
+  int32 i;
+
+  if (sequence == (ScriptSequence *)0x0 && (sequence = helper_malloc_2(0x14)) == (ScriptSequence *)0x0)
+    return sequence;
+  sequence->commands = (ScriptCommand **)0x0;
+  sequence->times = (int32 *)0x0;
+  sequence->elapsed = 0;
+  sequence->next = 0;
+                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4)) */
+  app = (KHApp *)(*g_pHelperFuncs->GetAppInstance)();
+  sequence->count = string_split((int32)app->pObj94,text,(char *)STRING_CARRIAGE_RETURN_NEWLINE_00127780,(char **)0x0,0) - 1;
+  lines = helper_malloc(sequence->count * 4 + 4);
+  string_split((int32)app->pObj94,text,(char *)STRING_CARRIAGE_RETURN_NEWLINE_00127780,lines,sequence->count + 1);
+  sequence->times = helper_malloc(sequence->count * 4 + 4);
+  sequence->commands = helper_malloc(sequence->count << 2);
+  for (i = 0; i < sequence->count + 1; i++) {
+    parts = helper_malloc(8);
+    string_split((int32)app->pObj94,lines[i],(char *)DATA_AT_00127784,parts,2);   /* ":" */
+    sequence->times[i] = FUN_00126858(string_to_float((int32)app->pObj94,parts[0]));
+    if (sequence->count != i) {
+      sequence->commands[i] = script_command_create((ScriptCommand *)0x0);
+      script_command_parse(sequence->commands[i],0,parts[1]);
     }
-    for (iVar1 = 0; iVar1 < param_1[2] + 1; iVar1 = iVar1 + 1) {
-      helper_free(*(void **)((int)p + iVar1 * 4));
-    }
-    helper_free(p);
+    helper_free(parts[0]);
+    helper_free(parts[1]);
+    helper_free(parts);
   }
-  return param_1;
+  for (i = 0; i < sequence->count + 1; i++)
+    helper_free(lines[i]);
+  helper_free(lines);
+  return sequence;
 }
+
 
 /* ==== 0x0010B230  (file offset 0x0B230)  enemy_create ================================================ */
 /* GUESS: name. Creates (when enemy is 0: allocates 0x280 bytes) the enemy number `number` of a region,
@@ -8087,7 +8081,7 @@ void FUN_0010c2c4(int *param_1,int param_2)
   iVar1 = 0;
   do {
     if (param_1[iVar1 + 0x86] != 0) {
-      FUN_0010c6b4(param_1[iVar1 + 0x86],1);
+      script_sequence_destroy(param_1[iVar1 + 0x86],1);
     }
     iVar1 = iVar1 + 1;
   } while (iVar1 < 5);
@@ -8216,21 +8210,21 @@ void web_request_destroy(WebRequest *request,int32 freeIt)
 }
 
 
-/* ==== 0x0010C620  (file offset 0x0C620)  FUN_0010c620 ================================================ */
-void FUN_0010c620(int param_1,int param_2)
+/* ==== 0x0010C620  (file offset 0x0C620)  script_command_destroy ====================================== */
+/* GUESS: names. A script command's destructor: frees its text and the command itself when `freeIt` is
+   set. */
+void script_command_destroy(ScriptCommand *command,int32 freeIt)
 
 {
-  if (*(int *)(param_1 + 0x40) != 0) {
+  if (command->text != (char *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x40));
-    *(undefined4 *)(param_1 + 0x40) = 0;
+    (*g_pHelperFuncs->free)(command->text);
+    command->text = (char *)0x0;
   }
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
-  return;
+  if (freeIt != 0)
+    helper_free(command);
 }
+
 
 /* ==== 0x0010C66C  (file offset 0x0C66C)  FUN_0010c66c ================================================ */
 void FUN_0010c66c(int param_1,int param_2)
@@ -8255,31 +8249,26 @@ void FUN_0010c66c(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x0010C6B4  (file offset 0x0C6B4)  FUN_0010c6b4 ================================================ */
-void FUN_0010c6b4(int *param_1,int param_2)
+/* ==== 0x0010C6B4  (file offset 0x0C6B4)  script_sequence_destroy ===================================== */
+/* GUESS: names. A timed script's destructor: destroys its commands and frees its arrays, and the sequence
+   itself when `freeIt` is set (the binary's tail jump to helper_free at 0x0010c718). */
+void script_sequence_destroy(ScriptSequence *sequence,int32 freeIt)
 
 {
-  int iVar1;
-  int iVar2;
-  
-  if (*param_1 != 0) {
-    for (iVar2 = 0; iVar2 < param_1[2]; iVar2 = iVar2 + 1) {
-      iVar1 = *(int *)(*param_1 + iVar2 * 4);
-      if (iVar1 != 0) {
-        FUN_0010c620(iVar1,1);
-      }
-    }
-    helper_free((void *)*param_1);
+  int32 i;
+
+  if (sequence->commands != (ScriptCommand **)0x0) {
+    for (i = 0; i < sequence->count; i++)
+      if (sequence->commands[i] != (ScriptCommand *)0x0)
+        script_command_destroy(sequence->commands[i],1);
+    helper_free(sequence->commands);
   }
-  if ((void *)param_1[1] != (void *)0x0) {
-    helper_free((void *)param_1[1]);
-  }
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
-  return;
+  if (sequence->times != (int32 *)0x0)
+    helper_free(sequence->times);
+  if (freeIt != 0)
+    helper_free(sequence);
 }
+
 
 /* ==== 0x0010C720  (file offset 0x0C720)  FUN_0010c720 ================================================ */
 void FUN_0010c720(int *param_1,int param_2)
@@ -8504,7 +8493,7 @@ void FUN_0010cab0(int param_1,int param_2)
     for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0x100); iVar1 = iVar1 + 1) {
       iVar2 = *(int *)(*(int *)(param_1 + 0xf0) + iVar1 * 4);
       if (iVar2 != 0) {
-        FUN_0010c620(iVar2,1);
+        script_command_destroy(iVar2,1);
       }
     }
     helper_free(*(void **)(param_1 + 0xf0));
@@ -8513,7 +8502,7 @@ void FUN_0010cab0(int param_1,int param_2)
     for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0x104); iVar1 = iVar1 + 1) {
       iVar2 = *(int *)(*(int *)(param_1 + 0xf4) + iVar1 * 4);
       if (iVar2 != 0) {
-        FUN_0010c620(iVar2,1);
+        script_command_destroy(iVar2,1);
       }
     }
     helper_free(*(void **)(param_1 + 0xf4));
@@ -8522,7 +8511,7 @@ void FUN_0010cab0(int param_1,int param_2)
     for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0x108); iVar1 = iVar1 + 1) {
       iVar2 = *(int *)(*(int *)(param_1 + 0xf8) + iVar1 * 4);
       if (iVar2 != 0) {
-        FUN_0010c620(iVar2,1);
+        script_command_destroy(iVar2,1);
       }
     }
     helper_free(*(void **)(param_1 + 0xf8));
@@ -8531,7 +8520,7 @@ void FUN_0010cab0(int param_1,int param_2)
     for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0x10c); iVar1 = iVar1 + 1) {
       iVar2 = *(int *)(*(int *)(param_1 + 0xfc) + iVar1 * 4);
       if (iVar2 != 0) {
-        FUN_0010c620(iVar2,1);
+        script_command_destroy(iVar2,1);
       }
     }
     helper_free(*(void **)(param_1 + 0xfc));
@@ -8985,40 +8974,34 @@ void FUN_0010d3a4(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x0010D4DC  (file offset 0x0D4DC)  FUN_0010d4dc ================================================ */
-/* WARNING: Unknown calling convention -- yet parameter storage is locked */
-
-uint FUN_0010d4dc(undefined4 param_1,undefined4 param_2)
+/* ==== 0x0010D4DC  (file offset 0x0D4DC)  string_to_float ============================================= */
+/* GUESS: names. The number written in `text` (the narrow text widened, then BREW's wstrtofloat), as a
+   float's bits; 0 when out of memory. `context` (the app's pObj94) is not read. */
+uint32 string_to_float(int32 context,char *text)
 
 {
-  int iVar2;
-  uint uVar3;
-  int iVar4;
+  uint32 value = 0;
+  int32 size;
+  AECHAR *wide;
   union {
     double value;
-    undefined8 words;   /* low word first, as the soft-float code takes it in r0:r1 */
-  } uVar5;
-  uVar3 = 0;
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-  iVar2 = (*g_pHelperFuncs->strlen)(param_2);
-  iVar4 = iVar2 * 2 + 2;
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-  iVar2 = (*g_pHelperFuncs->malloc)(iVar4);
-  if (iVar2 != 0) {
-                    /* helper[16] AECHAR * strtowstr(const char *src, AECHAR *dst, int nDstBytes)
-                       (AEEHelperFuncs +0x40, via *(base-4)) */
-    (*g_pHelperFuncs->strtowstr)(param_2,iVar2,iVar4);
-                    /* helper[18] double wstrtofloat(const AECHAR *s)  (AEEHelperFuncs +0x48, via
-                       *(base-4)) */
-    uVar5.value = (*g_pHelperFuncs->wstrtofloat)(iVar2);
-    uVar3 = FUN_0012479c(uVar5.words.low,uVar5.words.high);
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(iVar2);
+    uint64 words;   /* low word first, as the soft-float code takes it in r0:r1 */
+  } number;
+
+                    /* helper[5] uint32 strlen(const char *s), helper[26] void * malloc(uint32 size) */
+  size = (*g_pHelperFuncs->strlen)(text) * 2 + 2;
+  wide = (*g_pHelperFuncs->malloc)(size);
+  if (wide != (AECHAR *)0x0) {
+                    /* helper[16] AECHAR * strtowstr(const char *src, AECHAR *dst, int nDstBytes),
+                       helper[18] double wstrtofloat(const AECHAR *s), helper[27] void free(void *p) */
+    (*g_pHelperFuncs->strtowstr)(text,wide,size);
+    number.value = (*g_pHelperFuncs->wstrtofloat)(wide);
+    value = FUN_0012479c(number.words.low,number.words.high);
+    (*g_pHelperFuncs->free)(wide);
   }
-  return uVar3;
+  return value;
 }
+
 
 /* ==== 0x0010D56C  (file offset 0x0D56C)  FUN_0010d56c ================================================ */
 undefined4 FUN_0010d56c(int param_1,int param_2)
@@ -10062,7 +10045,7 @@ void FUN_0010e94c(int *param_1)
 /* ==== 0x0010E9BC  (file offset 0x0E9BC)  animations_release_controllers ============================== */
 /* GUESS: name. Releases every cached animation controller (Release, vtable slot 1) and empties its slot;
    they are found again by user id the next time they are played (animations_set_position). Called by
-   animations_reset and before a scene is replaced (FUN_00110924, FUN_00121584). Returns r0 as kh.mod
+   animations_reset and before a scene is replaced (script_command_run, FUN_00121584). Returns r0 as kh.mod
    leaves it after the last pass: the controller table's address when the last slot held a controller,
    else 0 (FUN_00121584 stores it in a variable it overwrites before reading it). */
 int32 animations_release_controllers(Animations *animations)
@@ -10291,7 +10274,7 @@ void FUN_0010ed54(int param_1,int param_2,undefined4 param_3)
       iVar2 = 0;
       do {
         if (*(int *)(param_1 + iVar2 * 4 + 0x218) == 0) {
-          piVar1 = FUN_0010b080((int *)0x0,local_10);
+          piVar1 = script_sequence_create((int *)0x0,local_10);
           *(int **)(param_1 + iVar2 * 4 + 0x218) = piVar1;
           break;
         }
@@ -10354,35 +10337,33 @@ LAB_0010ee88:
   return;
 }
 
-/* ==== 0x0010EEFC  (file offset 0x0EEFC)  FUN_0010eefc ================================================ */
-int FUN_0010eefc(undefined4 param_1,int param_2,int *param_3,undefined4 param_4)
+/* ==== 0x0010EEFC  (file offset 0x0EEFC)  script_parse_lines ========================================== */
+/* GUESS: names. Parses a script, one command per line ("\r\n"): returns the number of lines and, in
+   *commands, a new array of that many commands (script_command_create, script_command_parse with
+   `owner`); 0 for no text. Used for the scripts of the level objects and of the screens. */
+int32 script_parse_lines(int32 context,char *text,ScriptCommand ***commands,int32 owner)
 
 {
-  void *p;
-  void *pvVar1;
-  undefined4 uVar2;
-  int iVar3;
-  int iVar4;
-  
-  iVar3 = 0;
-  if (param_2 != 0) {
-    iVar3 = FUN_00110084(param_1,param_2,(int32)STRING_CARRIAGE_RETURN_NEWLINE_00127F08,0,0 /* not arguments, value leftovers: param_4 */);
-    p = helper_malloc(iVar3 << 2);
-    FUN_00110084(param_1,param_2,(int32)STRING_CARRIAGE_RETURN_NEWLINE_00127F08,p,iVar3);
-    pvVar1 = helper_malloc(iVar3 << 2);
-    *param_3 = (int)pvVar1;
-    for (iVar4 = 0; iVar4 < iVar3; iVar4 = iVar4 + 1) {
-      uVar2 = FUN_0010afc4(0);
-      *(undefined4 *)(*param_3 + iVar4 * 4) = uVar2;
-      FUN_00115118(uVar2,param_4,*(undefined4 *)((int)p + iVar4 * 4));
-    }
-    for (iVar4 = 0; iVar4 < iVar3; iVar4 = iVar4 + 1) {
-      helper_free(*(void **)((int)p + iVar4 * 4));
-    }
-    helper_free(p);
+  char **lines;
+  int32 count = 0;
+  int32 i;
+
+  if (text == (char *)0x0)
+    return 0;
+  count = string_split(context,text,(char *)STRING_CARRIAGE_RETURN_NEWLINE_00127F08,(char **)0x0,0);
+  lines = helper_malloc(count << 2);
+  string_split(context,text,(char *)STRING_CARRIAGE_RETURN_NEWLINE_00127F08,lines,count);
+  *commands = helper_malloc(count << 2);
+  for (i = 0; i < count; i++) {
+    (*commands)[i] = script_command_create((ScriptCommand *)0x0);
+    script_command_parse((*commands)[i],owner,lines[i]);
   }
-  return iVar3;
+  for (i = 0; i < count; i++)
+    helper_free(lines[i]);
+  helper_free(lines);
+  return count;
 }
+
 
 /* ==== 0x0010EFD4  (file offset 0x0EFD4)  FUN_0010efd4 ================================================ */
 undefined4 FUN_0010efd4(undefined4 param_1,undefined4 param_2,int param_3,int param_4)
@@ -11145,53 +11126,46 @@ uint32 planar_distance_squared_2(void *object,uint32 x1,uint32 y1,uint32 z1,uint
   return float_add(float_multiply(dy,dy),dx);
 }
 
-/* ==== 0x00110084  (file offset 0x10084)  FUN_00110084 ================================================ */
-int FUN_00110084(undefined4 param_1,int param_2,undefined4 param_3,int param_4,int param_5)
+/* ==== 0x00110084  (file offset 0x10084)  string_split ================================================ */
+/* GUESS: names. Splits `text` at each `separator` character (its first; a longer separator is also
+   skipped): returns the number of parts, and with maxParts > 0 stores each part as a new string in
+   parts[0 ...]. Called first with no array to count the parts, then with an array that many long.
+   It stores part n while n <= maxParts, one more than the array has room for, so a text with more
+   parts than maxParts writes past the array (research_notes/decomp/GAME_BUGS.md); its callers pass the
+   count they got, except script_sequence_create, which splits each line at ":" into 2. `context` (the
+   app's pObj94) is not read. Written from its disassembly (0x00110084 - 0x0011017c). */
+int32 string_split(int32 context,char *text,char *separator,char **parts,int32 maxParts)
 
 {
-  int iVar1;
-  int iVar2;
-  void *pvVar3;
-  int iVar4;
-  int iVar5;
-  uint32 size;
-  int iVar6;
-  
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-  iVar1 = (*g_pHelperFuncs->strlen)(param_2);
-  iVar4 = 0;
-  iVar6 = 0;
-  iVar5 = 0;
-  while( true ) {
-                    /* helper[51] int strncmp(const char *a, const char *b, uint32 n)
-                       (AEEHelperFuncs +0xcc, via *(base-4)) */
-    iVar2 = (*g_pHelperFuncs->strncmp)(param_2 + iVar4,param_3,1);
-    if (iVar2 == 0 || iVar4 == iVar1) {
-      size = (iVar4 - iVar6) + 1;
-      if ((iVar5 <= param_5) && (0 < param_5)) {
-        pvVar3 = helper_malloc(size);
-        iVar2 = WORD_HEXADECIMAL_FFFEFEE0;
-        *(void **)(param_4 + iVar5 * 4) = pvVar3;
-                    /* helper[50] char * strncpy(char *dst, const char *src, uint32 n)
-                       (AEEHelperFuncs +0xc8, via *(base-4)) */
-        (*g_pHelperFuncs->strncpy)(pvVar3,param_2 + iVar6,iVar4 - iVar6);
-        *(undefined1 *)(*(int *)(param_4 + iVar5 * 4) + size + -1) = 0;
+  int32 length;
+  int32 size;
+  int32 i = 0;
+  int32 start = 0;
+  int32 count = 0;
+
+                    /* helper[5] uint32 strlen(const char *s), helper[51] int strncmp(const char *a,
+                       const char *b, uint32 n), helper[50] char * strncpy(char *dst, const char *src,
+                       uint32 n) */
+  length = (*g_pHelperFuncs->strlen)(text);
+  for (;;) {
+    if ((*g_pHelperFuncs->strncmp)(text + i,separator,1) == 0 || i == length) {
+      size = i - start + 1;
+      if (count <= maxParts && maxParts > 0) {
+        parts[count] = helper_malloc(size);
+        (*g_pHelperFuncs->strncpy)(parts[count],text + start,size - 1);
+        parts[count][size - 1] = 0;
       }
-      iVar5 = iVar5 + 1;
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-      iVar6 = (*g_pHelperFuncs->strlen)(param_3);
-      if (iVar4 + iVar6 < iVar1) {
-        iVar4 = iVar4 + iVar6 + -1;
-      }
-      iVar6 = iVar4 + 1;
+      count++;
+      if (i + (int32)(*g_pHelperFuncs->strlen)(separator) < length)
+        i = i + (*g_pHelperFuncs->strlen)(separator) - 1;
+      start = i + 1;
     }
-    if (iVar4 == iVar1) break;
-    iVar4 = iVar4 + 1;
+    if (i == length)
+      return count;
+    i++;
   }
-  return iVar5;
 }
+
 
 /* ==== 0x00110190  (file offset 0x10190)  FUN_00110190 ================================================ */
 undefined4 FUN_00110190(int param_1,undefined4 *param_2,undefined4 *param_3)
@@ -11416,7 +11390,7 @@ undefined4 FUN_001106a0(undefined4 param_1,int *param_2,int param_3,int param_4)
       } while (iVar1 != 0);
     }
     do {
-      uVar2 = FUN_00110924(*(int **)(param_4 + *param_2 * 4));
+      uVar2 = script_command_run(*(int **)(param_4 + *param_2 * 4));
       iVar1 = *param_2;
       iVar4 = **(int **)(param_4 + iVar1 * 4);
       if (iVar4 == 0x10 || iVar4 == 0x50) {
@@ -11437,7 +11411,7 @@ undefined4 FUN_001106a0(undefined4 param_1,int *param_2,int param_3,int param_4)
   else {
     while (piVar3 = *(int **)(param_4 + *param_2 * 4), iVar1 = *piVar3,
           iVar1 != 0x11 && iVar1 != 0x12) {
-      uVar2 = FUN_00110924(piVar3);
+      uVar2 = script_command_run(piVar3);
       iVar1 = *param_2;
       iVar4 = **(int **)(param_4 + iVar1 * 4);
       if (iVar4 == 0x10 || iVar4 == 0x50) {
@@ -11516,7 +11490,7 @@ void FUN_001108ac(undefined4 param_1,int param_2,int param_3)
       if (param_2 <= local_14) {
         return;
       }
-      uVar1 = FUN_00110924(*(undefined4 *)(param_3 + local_14 * 4));
+      uVar1 = script_command_run(*(undefined4 *)(param_3 + local_14 * 4));
       iVar2 = **(int **)(param_3 + local_14 * 4);
       if (iVar2 == 0x10 || iVar2 == 0x50) break;
       local_14 = local_14 + 1;
@@ -11527,1173 +11501,838 @@ void FUN_001108ac(undefined4 param_1,int param_2,int param_3)
   return;
 }
 
-/* ==== 0x00110924  (file offset 0x10924)  FUN_00110924 ================================================ */
-uint FUN_00110924(int *param_1)
+/* ==== 0x00110924  (file offset 0x10924)  script_command_run ========================================== */
+/* GUESS: names. Runs a script command (made by script_command_parse), by its type. Returns 1, except
+   for an If (0x10: the progress flags of its condition, "!" negating one, joined by "||" and "&&" from
+   left to right) and an IfVar (0x50: two variables or numbers compared), which return whether it holds.
+   The binary's cases share some calls (FUN_00109a10 at 0x00111948, FUN_00108f28 at 0x00111df8,
+   thunk_FUN_0011fd90 at 0x001121cc, FUN_0011f8e0 at 0x00111f68 and helper_free at 0x001116c8): each is
+   made once, after the switch (or the inner one), from what the case left in the locals softKey ...
+   words. The UI the commands drive (KHApp.field_d4, `hud`) has no struct yet: its fields are offsets. */
+int32 script_command_run(ScriptCommand *command)
 
 {
-  char cVar1;
-  int iVar2;
-  undefined4 *puVar3;
-  int *piVar4;
-  int iVar5;
-  uint *puVar6;
-  char *pcVar7;
-  int iVar8;
-  uint uVar9;
-  int iVar10;
-  undefined4 uVar11;
-  uint uVar12;
-  int iVar13;
-  uint uVar14;
-  uint uVar15;
-  int iVar16;
-  bool bVar17;
-  bool bVar18;
-  undefined8 uVar19;
-  int local_44;
-  int local_40;
-  int *local_3c;
-  int *local_38;
-  int *local_34;
-  int local_30;
-  uint local_2c;
-  int local_28;
-  
-  iVar13 = WORD_HEXADECIMAL_FFFEF6C4;
-                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
-                        */
-  iVar2 = (*g_pHelperFuncs->GetAppInstance)();
-  puVar3 = *(undefined4 **)(iVar2 + 0xa4);
-  uVar15 = 1;
-  uVar14 = puVar3[0x7e];
-  iVar10 = *param_1 + -3;
-  piVar4 = param_1 + 0x10;
-  switch(iVar10) {
-  case 0:
-    if (*(int *)(iVar2 + 0x98) == 0) {
-      return 1;
-    }
-    iVar10 = (*g_pHelperFuncs->strcmp)
-                       (param_1[0x10],(int32)STRING_SAVE);
-    if (iVar10 == 0) {
-      uVar11 = 2;
-      iVar5 = WORD_HEXADECIMAL_1F10FB19;
-    }
-    else {
-      iVar10 = (*g_pHelperFuncs->strcmp)
-                         (param_1[0x10],(int32)STRING_SHOP);
-      if (iVar10 == 0) {
-        uVar11 = 4;
-        iVar5 = WORD_HEXADECIMAL_2A6EBDD0;
-      }
-      else {
-        iVar10 = (*g_pHelperFuncs->strcmp)
-                           (param_1[0x10],(int32)STRING_OPTIONS);
-        if (iVar10 == 0) {
-          uVar11 = 3;
-          iVar5 = WORD_HEXADECIMAL_083D247B;
-        }
-        else {
-          iVar10 = (*g_pHelperFuncs->strcmp)
-                             (param_1[0x10],(int32)STRING_MAIN_MENU);
-          if (iVar10 == 0) {
-            uVar11 = 6;
-            iVar5 = WORD_HEXADECIMAL_14741FD6;
-          }
-          else {
-            iVar10 = (*g_pHelperFuncs->strcmp)
-                               (param_1[0x10],(int32)STRING_RESTART_GAME);
-            iVar5 = WORD_HEXADECIMAL_03D18088;
-            if (iVar10 == 0) {
-              uVar11 = 5;
-            }
-            else {
-              iVar10 = (*g_pHelperFuncs->strcmp)
-                                 (param_1[0x10],(int32)STRING_UNPAUSE);
-              if (iVar10 != 0) {
-                return 1;
-              }
-              uVar11 = 9;
-            }
-          }
-        }
-      }
-    }
-    iVar13 = param_1[7];
-    iVar10 = *(int *)(iVar2 + 0xd4);
-    goto LAB_00111948;
-  case 1:
-    bVar17 = *(int *)(iVar2 + 0xd4) != 0;
-    iVar10 = 0;
-    if (bVar17) {
-      iVar10 = *(int *)(iVar2 + 0x98);
-    }
-    if ((bVar17 && iVar10 != 0) &&
-       ((((((iVar10 = (*g_pHelperFuncs->strcmp)
-                                (param_1[0x10],(int32)STRING_ACTIVATE), uVar11 = WORD_HEXADECIMAL_2ACA7E67,
-            iVar10 == 0 ||
-            (iVar10 = (*g_pHelperFuncs->strcmp)
-                                (param_1[0x10],(int32)STRING_ATTACK), uVar11 = WORD_HEXADECIMAL_22837D60,
-            iVar10 == 0)) ||
-           (iVar10 = (*g_pHelperFuncs->strcmp)
-                               (param_1[0x10],(int32)STRING_DROP), uVar11 = WORD_HEXADECIMAL_29F2A761,
-           iVar10 == 0)) ||
-          ((iVar10 = (*g_pHelperFuncs->strcmp)
-                               (param_1[0x10],(int32)STRING_GRAB), uVar11 = WORD_HEXADECIMAL_0C0AB7A6,
-           iVar10 == 0 ||
-           (iVar10 = (*g_pHelperFuncs->strcmp)
-                               (param_1[0x10],(int32)STRING_LIFT_001273C4), uVar11 = WORD_HEXADECIMAL_30BF44AD,
-           iVar10 == 0)))) ||
-         ((iVar10 = (*g_pHelperFuncs->strcmp)
-                              (param_1[0x10],(int32)STRING_LOCK), uVar11 = WORD_HEXADECIMAL_1B18B1A5,
-          iVar10 == 0 ||
-          ((iVar10 = (*g_pHelperFuncs->strcmp)
-                               (param_1[0x10],(int32)STRING_OPEN), uVar11 = WORD_HEXADECIMAL_0B0EC760,
-           iVar10 == 0 ||
-           (iVar10 = (*g_pHelperFuncs->strcmp)
-                               (param_1[0x10],(int32)STRING_TALK), uVar11 = WORD_HEXADECIMAL_18413CCA,
-           iVar10 == 0)))))) ||
-        (iVar10 = (*g_pHelperFuncs->strcmp)
-                            (param_1[0x10],(int32)STRING_PLACE), uVar11 = WORD_HEXADECIMAL_1BF8C522,
-        iVar10 == 0)))) {
-      local_34 = (int *)0x0;
-      text_table_get_wide_text(*(int **)(iVar2 + 0x98),uVar11,&local_34);
-      if (local_34 != (int *)0x0) {
-        FUN_00105538(*(int *)(iVar2 + 0xd4),local_34,2);
-        (*g_pHelperFuncs->free)(local_34);
-      }
-    }
-    *(int *)(*(int *)(iVar2 + 0xa4) + 0x1fc) = param_1[3];
-    break;
-  case 2:
-    if ((param_1[3] != 0) &&
-       (FUN_00114520(*(undefined4 *)(iVar2 + 0x94),*(int **)(param_1[3] + 8),param_1[0xb],piVar4),
-       param_1[0x10] != 0)) {
-      FUN_0011ed3c(*(int *)(iVar2 + 0x94),piVar4);
-      local_34 = (int *)0x0;
-      FUN_0010e210(*(undefined4 *)(iVar2 + 0x94),piVar4,&local_34);
-      iVar10 = (int)local_34;
-      if (local_34 != (int *)0x0) {
-        local_28 = param_1[8];
-        iVar5 = 1 - param_1[0xf];
-        if (1 < (uint)param_1[0xf]) {
-          iVar5 = 0;
-        }
-        if (local_28 == -2) {
-          FUN_00105538(*(int *)(iVar2 + 0xd4),local_34,iVar5);
-        }
-        else {
-          local_2c = FUN_00126858(param_1[6]);
-          uVar14 = FUN_00126858(param_1[5]);
-          FUN_001052e0(*(int *)(iVar2 + 0xd4),iVar10,param_1[7],local_28,param_1[9],param_1[10],
-                       uVar14,local_2c,iVar5);
-        }
-        (*g_pHelperFuncs->free)(local_34);
-        if (param_1[0xd] == 0) {
-          if (param_1[0xe] != 0) {
-            *(undefined4 *)(iVar2 + 0xcc) = 5;
-          }
-        }
-        else {
-          *(undefined4 *)(*(int *)(iVar2 + 0xa4) + 0x20c) = 1;
-        }
-      }
-      (*g_pHelperFuncs->free)(param_1[0x10]);
-      param_1[0x10] = 0;
-    }
-    break;
-  case 3:
-    iVar10 = (*g_pHelperFuncs->strcmp)
-                       (param_1[0x10],(int32)STRING_HEALTH);
-    if (iVar10 == 0) {
-      FUN_0010d074(*(int *)(iVar2 + 0xa8),param_1[5]);
-    }
-    else {
-      iVar10 = (*g_pHelperFuncs->strcmp)
-                         (param_1[0x10],(int32)STRING_MAGIC);
-      if (iVar10 == 0) {
-        progress_add_magic_points(*(int *)(iVar2 + 0xa8),param_1[7]);
-      }
-      else {
-        iVar10 = (*g_pHelperFuncs->strcmp)
-                           (param_1[0x10],(int32)STRING_MUNNY);
-        if (iVar10 == 0) {
-          progress_add_munny(*(int *)(iVar2 + 0xa8),param_1[7]);
-        }
-        else {
-          iVar10 = (*g_pHelperFuncs->strcmp)
-                             (param_1[0x10],(int32)STRING_EXP);
-          if (iVar10 == 0) {
-            progress_add_experience(*(int *)(iVar2 + 0xa8),param_1[7]);
-          }
-          else {
-            iVar10 = (*g_pHelperFuncs->strcmp)
-                               (param_1[0x10],(int32)STRING_POTION);
-            if (iVar10 == 0) {
-              piVar4 = (int *)(*(int *)(iVar2 + 0xa8) + 0x5ac);
-              *piVar4 = *piVar4 + param_1[7];
-              if (*(int *)(*(int *)(iVar2 + 0xa8) + 0x5ac) < 1) {
-                *(undefined4 *)(*(int *)(iVar2 + 0xa8) + 0x5ac) = 0;
-              }
-            }
-            else {
-              iVar10 = (*g_pHelperFuncs->strcmp)
-                                 (param_1[0x10],(int32)STRING_HIPOTION);
-              if (iVar10 == 0) {
-                piVar4 = (int *)(*(int *)(iVar2 + 0xa8) + 0x5b0);
-                *piVar4 = *piVar4 + param_1[7];
-                if (*(int *)(*(int *)(iVar2 + 0xa8) + 0x5b0) < 1) {
-                  *(undefined4 *)(*(int *)(iVar2 + 0xa8) + 0x5b0) = 0;
-                }
-              }
-              else {
-                iVar10 = (*g_pHelperFuncs->strcmp)
-                                   (param_1[0x10],(int32)STRING_ETHER);
-                if (iVar10 == 0) {
-                  piVar4 = (int *)(*(int *)(iVar2 + 0xa8) + 0x5b4);
-                  *piVar4 = *piVar4 + param_1[7];
-                  if (*(int *)(*(int *)(iVar2 + 0xa8) + 0x5b4) < 1) {
-                    *(undefined4 *)(*(int *)(iVar2 + 0xa8) + 0x5b4) = 0;
-                  }
-                }
-                else {
-                  iVar10 = (*g_pHelperFuncs->strcmp)
-                                     (param_1[0x10],(int32)STRING_ELIXIR);
-                  if (iVar10 == 0) {
-                    piVar4 = (int *)(*(int *)(iVar2 + 0xa8) + 0x5b8);
-                    *piVar4 = *piVar4 + param_1[7];
-                    if (*(int *)(*(int *)(iVar2 + 0xa8) + 0x5b8) < 1) {
-                      *(undefined4 *)(*(int *)(iVar2 + 0xa8) + 0x5b8) = 0;
-                    }
-                  }
-                  else {
-                    iVar10 = (*g_pHelperFuncs->strcmp)
-                                       (param_1[0x10],(int32)STRING_FIRE);
-                    if (iVar10 == 0) {
-                      *(uint *)(*(int *)(iVar2 + 0xa8) + 0x59c) = (uint)(param_1[7] != 0);
-                    }
-                    else {
-                      iVar10 = (*g_pHelperFuncs->strcmp)
-                                         (param_1[0x10],(int32)STRING_BLIZZARD);
-                      if (iVar10 == 0) {
-                        *(uint *)(*(int *)(iVar2 + 0xa8) + 0x5a0) = (uint)(param_1[7] != 0);
-                      }
-                      else {
-                        iVar10 = (*g_pHelperFuncs->strcmp)
-                                           (param_1[0x10],(int32)STRING_THUNDER);
-                        if (iVar10 == 0) {
-                          *(uint *)(*(int *)(iVar2 + 0xa8) + 0x5a4) = (uint)(param_1[7] != 0);
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    break;
-  case 4:
-    break;
-  case 5:
-    break;
-  case 6:
-    break;
-  case 7:
-    break;
-  case 8:
-    break;
-  case 9:
-    break;
-  case 10:
-    break;
-  case 0xb:
-    FUN_0011295c(puVar3,(int *)param_1[5],(int *)param_1[6],(int *)param_1[7],param_1[8]);
-    break;
-  case 0xc:
-    if (param_1[3] != 0) {
-      if (param_1[0xc] == 0) {
-        level_object_get_position((uint32 *)&local_3c,(LevelObject *)param_1[3]);
-        local_3c = (int *)float_add((uint)local_3c,param_1[0x11]);
-        local_38 = (int *)float_add((uint)local_38,param_1[0x12]);
-        local_34 = (int *)float_add((uint)local_34,param_1[0x13]);
-      }
-      else if (param_1[4] != 0) {
-        level_object_get_position((uint32 *)&local_3c,(LevelObject *)param_1[4]);
-      }
-      local_40 = 0;
-      local_44 = 0;
-      FUN_0011316c(param_1[3],local_3c,local_38,local_34,0,0,0,0,0,param_1[7],FLOAT_MINUS_1);
-    }
-    break;
-  case 0xd:
-    iVar10 = FUN_00110084(*(undefined4 *)(iVar2 + 0x94),param_1[0x10],(int32)DATA_AT_0012710C,0,0);
-    piVar4 = helper_malloc(iVar10 << 2);
-    FUN_00110084(*(undefined4 *)(iVar2 + 0x94),param_1[0x10],(int32)DATA_AT_0012710C,(int)piVar4,
-                 iVar10);
-    iVar13 = FUN_0010efd4(*(undefined4 *)(iVar2 + 0x94),(int32)DATA_AT_001276CC,*piVar4,*piVar4);
-    cVar1 = FUN_00114198(*(int *)(iVar2 + 0xa8),*piVar4);
-    uVar15 = (uint)(cVar1 != '\0');
-    local_30 = iVar10 / 2;
-    if (iVar13 != 0) {
-      uVar15 = 1 - uVar15;
-    }
-    for (iVar13 = 0; iVar13 < local_30; iVar13 = iVar13 + 1) {
-      iVar16 = FUN_0010efd4(*(undefined4 *)(iVar2 + 0x94),(int32)DATA_AT_001276CC,
-                            piVar4[iVar13 * 2 + 2],piVar4[iVar13 * 2 + 2]);
-      cVar1 = FUN_00114198(*(int *)(iVar2 + 0xa8),piVar4[iVar13 * 2 + 2]);
-      iVar5 = WORD_HEXADECIMAL_FFFEED2C;
-      uVar14 = (uint)(cVar1 != '\0');
-      if (iVar16 != 0) {
-        uVar14 = 1 - uVar14;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar16 = (*g_pHelperFuncs->strcmp)
-                         (piVar4[iVar13 * 2 + 1],(int32)STRING_BAR_BAR);
-      if (iVar16 == 0) {
-        uVar15 = uVar15 | uVar14;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar5 = (*g_pHelperFuncs->strcmp)
-                        (piVar4[iVar13 * 2 + 1],(int32)STRING_AND_AND);
-      if (iVar5 == 0) {
-        if (uVar15 == 0 || uVar14 == 0) {
-          uVar15 = 0;
-        }
-        else {
-          uVar15 = 1;
-        }
-      }
-    }
-    for (iVar13 = 0; iVar13 < iVar10; iVar13 = iVar13 + 1) {
-      helper_free((void *)piVar4[iVar13]);
-    }
-    goto LAB_001116c8;
-  case 0xe:
-    break;
-  case 0xf:
-    break;
-  case 0x10:
-    iVar13 = param_1[3];
-    if (iVar13 != 0) {
-      iVar10 = param_1[4];
-    }
-    if (iVar13 != 0 && iVar10 != 0) {
-      *(int *)(iVar13 + 300) = iVar10;
-    }
-    break;
-  case 0x11:
-    iVar10 = param_1[3];
-    if ((iVar10 != 0) && (*(int *)(iVar10 + 0x14) == 0)) {
-      FUN_001204f0(*(undefined4 *)(iVar2 + 0x94),param_1[0x10],(int *)(iVar10 + 0x14));
-      FUN_0011b044(param_1[3],param_1[0xc],param_1[0xd],param_1[0xe],param_1[0xf],
-                   (undefined4 *)(iVar2 + 0x90));
-    }
-    break;
-  case 0x12:
-    if (param_1[0x10] != 0) {
-      animations_release_controllers(*(Animations **)(iVar2 + 0x9c));
-      FUN_0011df14(*(undefined4 **)(iVar2 + 0xa4));
-      FUN_0010e94c(*(int **)(iVar2 + 0x9c));
-      piVar4 = (int *)FUN_0011ae04(*(int *)(iVar2 + 0x94),param_1[0x10],
-                                   (int *)**(undefined4 **)(iVar2 + 0xa4),1,0);
-      *(int **)(*(int *)(iVar2 + 0xa4) + 4) = piVar4;
-      game_create_objects(*(Game **)(iVar2 + 0xa4),(ISwerveObject *)piVar4,(LevelObject *)0x0);
-      FUN_00119a28(*(int *)(iVar2 + 0xa4),(int *)(iVar2 + 0x90));
-    }
-    break;
-  case 0x13:
-    if (*(undefined4 **)(iVar2 + 0xc0) != (undefined4 *)0x0) {
-      FUN_0010ce08(*(undefined4 **)(iVar2 + 0xc0),1);
-      *(undefined4 *)(iVar2 + 0xc0) = 0;
-    }
-    if (param_1[0x10] == 0) {
-      return 1;
-    }
-    iVar10 = FUN_00110084(*(undefined4 *)(iVar2 + 0x94),param_1[0x10],(int32)DATA_AT_0012710C,0,0);
-    piVar4 = helper_malloc(iVar10 << 2);
-    FUN_00110084(*(undefined4 *)(iVar2 + 0x94),param_1[0x10],(int32)DATA_AT_0012710C,(int)piVar4,
-                 iVar10);
-    if (0 < iVar10) {
-      uVar19 = FUN_0010bec4((int *)0x0,(int)piVar4,iVar10,1);
-      *(int *)(iVar2 + 0xc0) = (int)uVar19.low;
-      FUN_0010a03c((int)uVar19.low,*(undefined4 *)(*(int *)(iVar2 + 0xa8) + 0x594));
-    }
-    for (iVar13 = 0; iVar13 < iVar10; iVar13 = iVar13 + 1) {
-      helper_free((void *)piVar4[iVar13]);
-    }
-    goto LAB_001116c8;
-  case 0x14:
-    iVar10 = 0;
-    if (param_1[3] != 0) {
-      iVar10 = param_1[4];
-    }
-    if (param_1[3] == 0 || iVar10 == 0) {
-      return 1;
-    }
-    level_object_get_position((uint32 *)&local_3c,(LevelObject *)iVar10);
-    if (((*(int *)(param_1[3] + 0xc) == WORD_HEXADECIMAL_2E6723BD) &&
-        (iVar10 = *(int *)(param_1[3] + 0x1cc), iVar10 != 0)) &&
-       (*(int *)(iVar10 + 0xc) == WORD_HEXADECIMAL_10C617E4)) {
-      uVar14 = level_object_get_height((LevelObject *)(param_1[4]));
-      uVar14 = float_multiply(uVar14,0x3f000000);
-      uVar14 = float_add(uVar14,(uint)local_34);
-      iVar10 = param_1[3];
-      *(int **)(iVar10 + 0x1ec) = local_3c;
-      *(int **)(iVar10 + 0x1f0) = local_38;
-      *(uint *)(iVar10 + 500) = uVar14;
-      *(undefined4 *)(param_1[3] + 0x1f8) = FLOAT_10;
-      return 1;
-    }
-    if ((param_1[0xc] != 0) &&
-       (uVar14 = FUN_00114240(*(undefined4 **)(iVar2 + 0xa4),local_3c,local_38,FLOAT_1000,
-                              FLOAT_MINUS_1,&local_40,1,0,1), local_40 != 0)) goto LAB_001117a8;
-    goto LAB_001121cc;
-  case 0x15:
-    break;
-  case 0x16:
-    iVar10 = animations_find((Animations *)*(int *)(iVar2 + 0x9c),param_1[7]);
-    animations_play((Animations *)*(int *)(iVar2 + 0x9c),iVar10,param_1[0xc]);
-    break;
-  case 0x17:
-    if (param_1[3] != 0) {
-      FUN_0010ed54((int)puVar3,*(int *)(param_1[3] + 8),param_1[7]);
-    }
-    break;
-  case 0x18:
-    iVar10 = *(int *)(*(int *)(iVar2 + 0xa8) + 0x594);
-    if (param_1[0xc] == 0) {
-      if (iVar10 < 1) {
-        return 1;
-      }
-      iVar10 = *(int *)(iVar2 + 0xc0);
-    }
-    else {
-      if (iVar10 < 1) {
-        return 1;
-      }
-      iVar10 = *(int *)(iVar2 + 0xbc);
-    }
-    if (iVar10 == 0) {
-      return 1;
-    }
-    iVar13 = param_1[7];
-LAB_00111df8:
-    FUN_00108f28(iVar10,iVar13);
-    break;
-  case 0x19:
-    iVar10 = *(int *)(iVar2 + 0xd4);
-    if (iVar10 == 0) {
-      return 1;
-    }
-    iVar13 = param_1[7];
-    uVar11 = 0;
-    iVar5 = 0;
-LAB_00111948:
-    FUN_00109a10(iVar10,iVar13,iVar5,uVar11);
-    break;
-  case 0x1a:
-    iVar10 = *(int *)(iVar2 + 0xd4);
-    if (*(int *)(iVar10 + 0x60) != 0) {
-      if (*(int *)(iVar10 + 0x74) == 0) {
-        FUN_001092c0(iVar10,2);
-      }
-      else {
-        *(undefined4 *)(iVar10 + 0x74) = 0;
-        *(undefined4 *)(*(int *)(iVar2 + 0xd4) + 0x88) = 1;
-      }
-    }
-    *(undefined4 *)(*(int *)(iVar2 + 0xa4) + 0x1fc) = 0;
-    break;
-  case 0x1b:
-    iVar10 = *(int *)(iVar2 + 0xd4);
-    if (iVar10 != 0) {
-      iVar13 = 0;
-      if (*(int *)(iVar10 + 0x5c) != 0) {
-        if (*(int *)(iVar10 + 0x70) != 0) {
-          *(undefined4 *)(iVar10 + 0x70) = 0;
-          *(undefined4 *)(*(int *)(iVar2 + 0xd4) + 0x84) = 1;
-          return 1;
-        }
-        iVar13 = 1;
-      }
-      FUN_001092c0(iVar10,iVar13);
-    }
-    break;
-  case 0x1c:
-    if ((param_1[3] != 0) && (*(int *)(param_1[3] + 0xc) == WORD_HEXADECIMAL_10C617E4)) {
-      character_freeze_held_keys((Character *)uVar14);
-    }
-    break;
-  case 0x1d:
-    break;
-  case 0x1e:
-    break;
-  case 0x1f:
-    if (param_1[0xc] == 0) {
-      iVar10 = WORD_HEXADECIMAL_00015CF8;
-    }
-    if (param_1[0xc] == 0) {
-      iVar10 = (int32)DATA_AT_001276FC;
-    }
-    else {
-      iVar10 = 0;
-    }
-    FUN_0011e6b8(*(int *)(iVar2 + 0xa8),iVar10);
-    break;
-  case 0x20:
-    iVar10 = animations_find((Animations *)*(int *)(iVar2 + 0x9c),param_1[7]);
-    animations_set_speed((Animations *)*(int *)(iVar2 + 0x9c),iVar10,param_1[5]);
-    break;
-  case 0x21:
-    iVar10 = animations_find((Animations *)*(int *)(iVar2 + 0x9c),param_1[7]);
-    if (iVar10 != -1) {
-      if (param_1[8] == -1) {
-        animations_finish((Animations *)*(int *)(iVar2 + 0x9c),iVar10);
-      }
-      else {
-        animations_set_position((Animations *)*(int *)(iVar2 + 0x9c),iVar10,param_1[8]);
-      }
-      if (param_1[0xc] != 0) {
-        FUN_00113340(*(int *)(iVar2 + 0x9c));
-      }
-    }
-    break;
-  case 0x22:
-    if (param_1[3] != 0) {
-      local_34 = (int *)0x0;
-      local_38 = (int *)0x0;
-      local_3c = (int *)0x0;
-      (**(code **)(**(int **)(iVar2 + 0x6c) + 0x28))(*(int **)(iVar2 + 0x6c),param_1[7],&local_34);
-      (**(code **)(**(int **)(param_1[3] + 8) + 0x28))
-                (*(int **)(param_1[3] + 8),param_1[8],&local_38);
-      piVar4 = local_38;                  /* only read when local_34 is set */
-      if (local_34 != (int *)0x0 && piVar4 != (int *)0x0) {
-        (**(code **)(*local_34 + 0xb4))(local_34,&local_40);
-        (**(code **)(*local_38 + 0xb4))(local_38,&local_44);
-        if (local_40 != local_44) {
-          (**(code **)(*local_34 + 0xc0))();
-        }
-        for (iVar10 = 0; iVar10 < local_44; iVar10 = iVar10 + 1) {
-          if (local_40 == local_44) {
-            if (local_3c != (int *)0x0) {
-              (**(code **)(*local_3c + 4))();
-              local_3c = (int *)0x0;
-            }
-            (**(code **)(*local_34 + 0xc0))(local_34,iVar10,&local_3c);
-          }
-          (**(code **)(*local_38 + 0xc4))(local_38,iVar10,local_3c);
-        }
-        if (local_3c != (int *)0x0) {
-          (**(code **)(*local_3c + 4))();
-        }
-        (**(code **)(*local_34 + 4))();
-        (**(code **)(*local_38 + 4))();
-      }
-    }
-    break;
-  case 0x23:
-    local_34 = (int *)0x0;
-    if (param_1[0x10] == 0) {
-      (**(code **)(**(int **)(iVar2 + 0x6c) + 0xcc))(*(int **)(iVar2 + 0x6c),&local_34);
-      if (local_34 != (int *)0x0) {
-        (**(code **)(*local_34 + 0x4c))(local_34,param_1[7]);
-        (**(code **)(*local_34 + 4))();
-      }
-    }
-    else {
-      iVar10 = (*g_pHelperFuncs->strlen)(param_1[0x10]);
-      iVar10 = (*g_pHelperFuncs->malloc)(iVar10 + 5);
-      (*g_pHelperFuncs->strcpy)(iVar10,param_1[0x10]);
-      (*g_pHelperFuncs->strcat)(iVar10,(int32)STRING_DOT_M3G_0012770C);
-      uVar19 = FUN_0011b518(*(int *)(iVar2 + 0x94),iVar10);
-      piVar4 = (int *)uVar19.low;
-      (*g_pHelperFuncs->free)(iVar10);
-      if (piVar4 != (int *)0x0) {
-        (**(code **)(*piVar4 + 0xcc))(piVar4,&local_34);
-        if (local_34 != (int *)0x0) {
-          (**(code **)(**(int **)(iVar2 + 0x6c) + 0xd0))();
-          (**(code **)(*local_34 + 4))();
-        }
-        (**(code **)(*piVar4 + 4))(piVar4);
-      }
-    }
-    break;
-  case 0x24:
-    if (param_1[0xc] == 0) {
-      FUN_0011f394(puVar3[0x7c],(char *)param_1[3],param_1[0xe],param_1[5],param_1[0xd]);
-    }
-    else {
-      *(int *)(puVar3[0x7c] + 0x1d8) = param_1[0x11];
-      *(int *)(*(int *)(*(int *)(iVar2 + 0xa4) + 0x1f0) + 0x1dc) = param_1[0x12];
-      *(int *)(*(int *)(*(int *)(iVar2 + 0xa4) + 0x1f0) + 0x1e0) = param_1[0x13];
-    }
-    break;
-  case 0x25:
-    break;
-  case 0x26:
-    switch(param_1[7]) {
-    case 0:
+  KHApp *app;
+  Game *game;
+  Character *player;
+  uint8 *hud;
+  int32 context;
+  int32 result = 1;
+  int32 count;
+  int32 half;
+  int32 i;
+  int32 negate;
+  int32 value;
+  int32 index;
+  int32 found;
+  int32 textId;
+  int32 slot = 0;
+  int32 softKey = 0;
+  int32 sound = 0;
+  int32 soundId;
+  int32 moveObject = 0;
+  int32 state = 0;
+  int32 *variable;
+  int32 *source;
+  int32 *destination;
+  int32 *element;
+  int32 sourceCount;
+  int32 destinationCount;
+  int32 left;
+  int32 right;
+  uint32 width;
+  uint32 height;
+  uint32 red;
+  uint32 green;
+  uint32 blue;
+  uint8 shown[4];
+  uint32 position[3];
+  char **words = (char **)0x0;
+  char *name;
+  AECHAR *wideText;
+  LevelObject *object;
+  uint64 created;
+
+                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4)) */
+  app = (KHApp *)(*g_pHelperFuncs->GetAppInstance)();
+  game = (Game *)app->pGame;
+  player = game->character;
+  hud = hud;
+  context = (int32)app->pObj94;
+                    /* helper[4] int strcmp(const char *a, const char *b), helper[27] void free(void *p)
+                       (AEEHelperFuncs +0x10, +0x6c, via *(base-4)) */
+  switch (command->type) {
+  case 3:   /* addSoftkey: a soft key with its label and the screen it opens */
+    if (app->pObj98 == (void *)0x0)
       break;
-    case 1:
-      FUN_0010db04(uVar14,7);
+    if ((*g_pHelperFuncs->strcmp)(command->text,STRING_SAVE) == 0) {
+      slot = 2;
+      textId = WORD_HEXADECIMAL_1F10FB19;
+    }
+    else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_SHOP) == 0) {
+      slot = 4;
+      textId = WORD_HEXADECIMAL_2A6EBDD0;
+    }
+    else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_OPTIONS) == 0) {
+      slot = 3;
+      textId = WORD_HEXADECIMAL_083D247B;
+    }
+    else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_MAIN_MENU) == 0) {
+      slot = 6;
+      textId = WORD_HEXADECIMAL_14741FD6;
+    }
+    else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_RESTART_GAME) == 0) {
+      slot = 5;
+      textId = WORD_HEXADECIMAL_03D18088;
+    }
+    else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_UNPAUSE) == 0) {
+      slot = 9;
+      textId = WORD_HEXADECIMAL_03D18088;
+    }
+    else
       break;
-    case 2:
-      FUN_0011f8e0(uVar14,3);
-      *(int *)(uVar14 + 0x274) = param_1[0xc];
-      piVar4 = *(int **)(uVar14 + 0x1e4);
-      if (piVar4 != (int *)0x0) {
-        (**(code **)(*piVar4 + 0x8c))(piVar4,1);
+    softKey = 1;
+    break;
+  case 4:   /* addUIAction: shows the action's name; the action key then acts on the object */
+    if (hud != (uint8 *)0x0 && app->pObj98 != (void *)0x0) {
+      if ((*g_pHelperFuncs->strcmp)(command->text,STRING_ACTIVATE) == 0)
+        textId = WORD_HEXADECIMAL_2ACA7E67;
+      else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_ATTACK) == 0)
+        textId = WORD_HEXADECIMAL_22837D60;
+      else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_DROP) == 0)
+        textId = WORD_HEXADECIMAL_29F2A761;
+      else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_GRAB) == 0)
+        textId = WORD_HEXADECIMAL_0C0AB7A6;
+      else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_LIFT_001273C4) == 0)
+        textId = WORD_HEXADECIMAL_30BF44AD;
+      else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_LOCK) == 0)
+        textId = WORD_HEXADECIMAL_1B18B1A5;
+      else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_OPEN) == 0)
+        textId = WORD_HEXADECIMAL_0B0EC760;
+      else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_TALK) == 0)
+        textId = WORD_HEXADECIMAL_18413CCA;
+      else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_PLACE) == 0)
+        textId = WORD_HEXADECIMAL_1BF8C522;
+      else
+        textId = 0;
+      if (textId != 0) {
+        wideText = (AECHAR *)0x0;
+        text_table_get_wide_text((TextTable *)app->pObj98,textId,&wideText);
+        if (wideText != (AECHAR *)0x0) {
+          FUN_00105538((int)hud,(undefined4)wideText,2);
+          (*g_pHelperFuncs->free)(wideText);
+        }
       }
-      if (*(int *)(*(int *)(iVar2 + 0xa8) + 0x594) < 1) {
-        return 1;
+    }
+    game->actionObject = command->object;
+    break;
+  case 5:   /* addUIInfo / addUIText: the object's text (its parameter `hash`), shown in a box */
+    if (command->object == (LevelObject *)0x0)
+      break;
+    FUN_00114520(context,(int *)command->object->node,command->hash,(undefined4 *)&command->text);
+    if (command->text == (char *)0x0)
+      break;
+    FUN_0011ed3c(context,(undefined4 *)&command->text);
+    wideText = (AECHAR *)0x0;
+    FUN_0010e210(context,(undefined4 *)&command->text,(int *)&wideText);
+    if (wideText != (AECHAR *)0x0) {
+      value = command->flag[3] == 0;
+      if (command->number[1] == -2)
+        FUN_00105538((int)hud,(undefined4)wideText,value);
+      else {
+        height = FUN_00126858(command->value[1]);
+        width = FUN_00126858(command->value[0]);
+        FUN_001052e0((int)hud,(undefined4)wideText,command->number[0],command->number[1],
+                     command->number[2],command->number[3],width,height,value);
       }
-      iVar10 = *(int *)(iVar2 + 0xbc);
-      if (iVar10 == 0) {
-        return 1;
+      (*g_pHelperFuncs->free)(wideText);
+      if (command->flag[1] != 0)
+        game->field_20c = 1;
+      else if (command->flag[2] != 0)
+        app->field_cc = 5;
+    }
+    (*g_pHelperFuncs->free)(command->text);
+    command->text = (char *)0x0;
+    break;
+  case 6:   /* adjustValue: adds to one of the player's values */
+    if ((*g_pHelperFuncs->strcmp)(command->text,STRING_HEALTH) == 0)
+      FUN_0010d074((int)app->progress,command->value[0]);
+    else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_MAGIC) == 0)
+      progress_add_magic_points(app->progress,command->number[0]);
+    else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_MUNNY) == 0)
+      progress_add_munny(app->progress,command->number[0]);
+    else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_EXP) == 0)
+      progress_add_experience(app->progress,command->number[0]);
+    else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_POTION) == 0) {
+      app->progress->field_5ac += command->number[0];
+      if (app->progress->field_5ac <= 0)
+        app->progress->field_5ac = 0;
+    }
+    else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_HIPOTION) == 0) {
+      app->progress->field_5b0 += command->number[0];
+      if (app->progress->field_5b0 <= 0)
+        app->progress->field_5b0 = 0;
+    }
+    else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_ETHER) == 0) {
+      app->progress->field_5b4 += command->number[0];
+      if (app->progress->field_5b4 <= 0)
+        app->progress->field_5b4 = 0;
+    }
+    else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_ELIXIR) == 0) {
+      app->progress->field_5b8 += command->number[0];
+      if (app->progress->field_5b8 <= 0)
+        app->progress->field_5b8 = 0;
+    }
+    else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_FIRE) == 0)
+      app->progress->spells[0] = command->number[0] != 0;
+    else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_BLIZZARD) == 0)
+      app->progress->spells[1] = command->number[0] != 0;
+    else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_THUNDER) == 0)
+      app->progress->spells[2] = command->number[0] != 0;
+    break;
+  case 0xe:   /* fade */
+    FUN_0011295c((undefined4 *)game,(int *)command->value[0],(int *)command->value[1],
+                 (int *)command->number[0],command->number[1]);
+    break;
+  case 0xf:   /* fireProjectile: from the object, at the target or at an offset from the object */
+    if (command->object == (LevelObject *)0x0)
+      break;
+    if (command->flag[0] == 0) {
+      level_object_get_position(position,command->object);
+      position[0] = float_add(position[0],command->vector[0]);
+      position[1] = float_add(position[1],command->vector[1]);
+      position[2] = float_add(position[2],command->vector[2]);
+    }
+    else if (command->target != (LevelObject *)0x0)
+      level_object_get_position(position,command->target);
+                    /* the binary also stores 0xff, 0xff, 0xff, 0, 0 and 0 after these arguments */
+    FUN_0011316c((int)command->object,position[0],position[1],position[2],0,0,0,0,0,command->number[0],
+                 FLOAT_MINUS_1);
+    break;
+  case 0x10:   /* if */
+    count = string_split(context,command->text,(char *)DATA_AT_0012710C,(char **)0x0,0);   /* " " */
+    words = helper_malloc(count << 2);
+    string_split(context,command->text,(char *)DATA_AT_0012710C,words,count);
+    negate = FUN_0010efd4(context,(undefined4)DATA_AT_001276CC,(int)words[0],(int)words[0]);   /* "!" */
+    result = FUN_00114198((int)app->progress,(undefined4)words[0]) != 0;
+    half = count / 2;
+    if (negate != 0)
+      result = 1 - result;
+    for (i = 0; i < half; i++) {
+      negate = FUN_0010efd4(context,(undefined4)DATA_AT_001276CC,(int)words[i * 2 + 2],
+                            (int)words[i * 2 + 2]);
+      value = FUN_00114198((int)app->progress,(undefined4)words[i * 2 + 2]) != 0;
+      if (negate != 0)
+        value = 1 - value;
+      if ((*g_pHelperFuncs->strcmp)(words[i * 2 + 1],STRING_BAR_BAR) == 0)
+        result = result | value;
+      if ((*g_pHelperFuncs->strcmp)(words[i * 2 + 1],STRING_AND_AND) == 0)
+        result = result != 0 && value != 0;
+    }
+    for (i = 0; i < count; i++)
+      helper_free(words[i]);
+    break;
+  case 0x13:   /* link */
+    if (command->object != (LevelObject *)0x0 && command->target != (LevelObject *)0x0)
+      ((MotionEntity *)command->object)->field_12c = (int32)command->target;
+    break;
+  case 0x14:   /* loadClipart: loads the object's clipart once */
+    if (command->object != (LevelObject *)0x0 && command->object->field_14 == 0) {
+      FUN_001204f0(context,(undefined4)command->text,&command->object->field_14);
+      FUN_0011b044((int)command->object,command->flag[0],command->flag[1],command->flag[2],
+                   command->flag[3],(undefined4 *)&app->nErr);
+    }
+    break;
+  case 0x15:   /* loadScene: replaces the level's second scene */
+    if (command->text != (char *)0x0) {
+      animations_release_controllers(app->animations);
+      FUN_0011df14((undefined4 *)app->pGame);
+      FUN_0010e94c((int *)app->animations);
+      object = (LevelObject *)FUN_0011ae04(context,(undefined4)command->text,(int *)game->root,1,0);
+      game->field_04 = (ISwerveObject *)object;
+      game_create_objects((Game *)app->pGame,(ISwerveObject *)object,(LevelObject *)0x0);
+      FUN_00119a28((int)app->pGame,(int *)&app->nErr);
+    }
+    break;
+  case 0x16:   /* loadSounds: the level's sounds (KHApp.field_c0) */
+    if (app->field_c0 != 0) {
+      FUN_0010ce08((undefined4 *)app->field_c0,1);
+      app->field_c0 = 0;
+    }
+    if (command->text == (char *)0x0)
+      break;
+    count = string_split(context,command->text,(char *)DATA_AT_0012710C,(char **)0x0,0);
+    words = helper_malloc(count << 2);
+    string_split(context,command->text,(char *)DATA_AT_0012710C,words,count);
+    if (count > 0) {
+      created = FUN_0010bec4((int *)0x0,(int)words,count,1);
+      app->field_c0 = created.low;
+      FUN_0010a03c((int)created.low,app->progress->field_594);
+    }
+    for (i = 0; i < count; i++)
+      helper_free(words[i]);
+    break;
+  case 0x17:   /* matchPosition: puts the object where the target is (on the ground with TERRAIN) */
+    if (command->object == (LevelObject *)0x0 || command->target == (LevelObject *)0x0)
+      break;
+    level_object_get_position(position,command->target);
+    object = command->object;
+    if (object->nameId == WORD_HEXADECIMAL_2E6723BD && ((Camera *)object)->target != (LevelObject *)0x0 &&
+        ((Camera *)object)->target->nameId == WORD_HEXADECIMAL_10C617E4) {
+                    /* the camera following the player: it looks at the target's middle instead */
+      position[2] = float_add(float_multiply(level_object_get_height(command->target),0x3f000000),
+                              position[2]);
+      ((Camera *)object)->focus[0] = position[0];
+      ((Camera *)object)->focus[1] = position[1];
+      ((Camera *)object)->focus[2] = position[2];
+      ((Camera *)command->object)->field_1f8 = FLOAT_10;
+      break;
+    }
+    if (command->flag[0] != 0) {
+      value = FUN_00114240((undefined4 *)app->pGame,position[0],position[1],FLOAT_1000,FLOAT_MINUS_1,
+                           (undefined4 *)&found,1,0,1);
+      if (found != 0)
+        position[2] = value;
+    }
+    moveObject = 1;
+    break;
+  case 0x19:   /* playAnim */
+    index = animations_find(app->animations,command->number[0]);
+    animations_play(app->animations,index,command->flag[0]);
+    break;
+  case 0x1a:   /* playSequence: starts the object's timed script */
+    if (command->object != (LevelObject *)0x0)
+      FUN_0010ed54((int)game,(int)command->object->node,command->number[0]);
+    break;
+  case 0x1b:   /* playSound: a game sound (flag 0, KHApp.field_bc) or a level one (field_c0) */
+    if (command->flag[0] != 0) {
+      if (app->progress->field_594 > 0 && app->field_bc != 0)
+        sound = app->field_bc;
+    }
+    else if (app->progress->field_594 > 0 && app->field_c0 != 0)
+      sound = app->field_c0;
+    soundId = command->number[0];
+    break;
+  case 0x1c:   /* removeSoftkey */
+    if (hud != (uint8 *)0x0) {
+      textId = 0;
+      softKey = 1;
+    }
+    break;
+  case 0x1d:   /* removeUIAction */
+    if (*(int32 *)(hud + 0x60) != 0) {
+      if (*(int32 *)(hud + 0x74) != 0) {
+        *(int32 *)(hud + 0x74) = 0;
+        *(int32 *)(hud + 0x88) = 1;
       }
-      iVar13 = 8;
-      goto LAB_00111df8;
-    case 3:
-      FUN_0011f8e0(uVar14,0xc);
-      piVar4 = *(int **)(uVar14 + 0x1e4);
-      if (piVar4 != (int *)0x0) {
-        (**(code **)(*piVar4 + 0x8c))(piVar4,0);
+      else
+        FUN_001092c0((int)hud,2);
+    }
+    game->actionObject = (LevelObject *)0x0;
+    break;
+  case 0x1e:   /* removeUIText */
+    if (hud == (uint8 *)0x0)
+      break;
+    value = 0;
+    if (*(int32 *)(hud + 0x5c) != 0) {
+      if (*(int32 *)(hud + 0x70) != 0) {
+        *(int32 *)(hud + 0x70) = 0;
+        *(int32 *)(hud + 0x84) = 1;
+        break;
+      }
+      value = 1;
+    }
+    FUN_001092c0((int)hud,value);
+    break;
+  case 0x1f:   /* resetKeys: the player's held keys */
+    if (command->object != (LevelObject *)0x0 && command->object->nameId == WORD_HEXADECIMAL_10C617E4)
+      character_freeze_held_keys(player);
+    break;
+  case 0x22:   /* saveGame: to "savegame.dat", or (TEMP) not to a file */
+    FUN_0011e6b8((int)app->progress,command->flag[0] == 0 ? (int)DATA_AT_001276FC : 0);
+    break;
+  case 0x23:   /* setAnimSpeed */
+    index = animations_find(app->animations,command->number[0]);
+    animations_set_speed(app->animations,index,command->value[0]);
+    break;
+  case 0x24:   /* setAnimPosition: a time, or END */
+    index = animations_find(app->animations,command->number[0]);
+    if (index != -1) {
+      if (command->number[1] == -1)
+        animations_finish(app->animations,index);
+      else
+        animations_set_position(app->animations,index,command->number[1]);
+      if (command->flag[0] != 0)
+        FUN_00113340((int)app->animations);
+    }
+    break;
+  case 0x25:   /* setAppearance: copies the appearance elements of one scene object (by user id) to the
+                  object's */
+    if (command->object == (LevelObject *)0x0)
+      break;
+    element = (int32 *)0x0;
+    destination = (int32 *)0x0;
+    source = (int32 *)0x0;
+    (**(code **)(*(int32 *)app->pObj6c + 0x28))(app->pObj6c,command->number[0],&source);
+    (**(code **)(*(int32 *)command->object->node + 0x28))
+              (command->object->node,command->number[1],&destination);
+    if (source == (int32 *)0x0 || destination == (int32 *)0x0)
+      break;
+    (**(code **)(*source + 0xb4))(source,&sourceCount);
+    (**(code **)(*destination + 0xb4))(destination,&destinationCount);
+    if (sourceCount != destinationCount)
+      (**(code **)(*source + 0xc0))(source,0,&element);
+    for (i = 0; i < destinationCount; i++) {
+      if (sourceCount == destinationCount) {
+        if (element != (int32 *)0x0) {
+          (**(code **)(*element + 4))(element);
+          element = (int32 *)0x0;
+        }
+        (**(code **)(*source + 0xc0))(source,i,&element);
+      }
+      (**(code **)(*destination + 0xc4))(destination,i,element);
+    }
+    if (element != (int32 *)0x0)
+      (**(code **)(*element + 4))(element);
+    (**(code **)(*source + 4))(source);
+    (**(code **)(*destination + 4))(destination);
+    break;
+  case 0x26:   /* setBackground: an image ("<name>.m3g"), or a colour */
+    element = (int32 *)0x0;
+    if (command->text == (char *)0x0) {
+      (**(code **)(*(int32 *)app->pObj6c + 0xcc))(app->pObj6c,&element);
+      if (element != (int32 *)0x0) {
+        (**(code **)(*element + 0x4c))(element,command->number[0]);
+        (**(code **)(*element + 4))(element);
+      }
+    }
+    else {
+                    /* helper[5] strlen, helper[26] malloc, helper[2] strcpy, helper[3] strcat
+                       (AEEHelperFuncs +0x14, +0x68, +0x08, +0x0c, via *(base-4)) */
+      name = (*g_pHelperFuncs->malloc)((*g_pHelperFuncs->strlen)(command->text) + 5);
+      (*g_pHelperFuncs->strcpy)(name,command->text);
+      (*g_pHelperFuncs->strcat)(name,STRING_DOT_M3G_0012770C);
+      source = (int32 *)FUN_0011b518(context,(int)name).low;
+      (*g_pHelperFuncs->free)(name);
+      if (source != (int32 *)0x0) {
+        (**(code **)(*source + 0xcc))(source,&element);
+        if (element != (int32 *)0x0) {
+          (**(code **)(*(int32 *)app->pObj6c + 0xd0))(app->pObj6c,element);
+          (**(code **)(*element + 4))(element);
+        }
+        (**(code **)(*source + 4))(source);
+      }
+    }
+    break;
+  case 0x27:   /* setCameraFocus: a named view, or an object */
+    if (command->flag[0] != 0) {
+      game->camera->view[0] = command->vector[0];
+      game->camera->view[1] = command->vector[1];
+      game->camera->view[2] = command->vector[2];
+    }
+    else
+      FUN_0011f394((int)game->camera,(char *)command->object,command->flag[2],command->value[0],
+                   command->flag[1]);
+    break;
+  case 0x29:   /* setCharacterMode: the player's mode (number 0) */
+    switch (command->number[0]) {
+    case 1:   /* ATTACK */
+      FUN_0010db04((int)player,7);
+      break;
+    case 2:   /* SWIM */
+      FUN_0011f8e0((int)player,3);
+      player->swimNoClimb = command->flag[0];
+      if (player->field_1e4 != (ISwerveObject *)0x0)
+        (**(code **)(*(int32 *)player->field_1e4 + 0x8c))(player->field_1e4,1);
+      if (app->progress->field_594 > 0 && app->field_bc != 0) {
+        sound = app->field_bc;
+        soundId = 8;
       }
       break;
-    case 4:
-      if (param_1[3] == 0) {
-        return 1;
-      }
-      uVar12 = 6;
-      *(int *)(uVar14 + 0x244) = param_1[3];
-      goto LAB_00111f68;
-    case 5:
-      if (param_1[3] == 0) {
-        return 1;
-      }
-      uVar12 = 5;
-      *(int *)(uVar14 + 0x244) = param_1[3];
-      goto LAB_00111f68;
-    case 6:
-      if (param_1[3] == 0) {
-        return 1;
-      }
-      uVar12 = 4;
-      *(int *)(uVar14 + 0x244) = param_1[3];
-      goto LAB_00111f68;
-    case 7:
+    case 3:   /* NOSWIM */
+      FUN_0011f8e0((int)player,0xc);
+      if (player->field_1e4 != (ISwerveObject *)0x0)
+        (**(code **)(*(int32 *)player->field_1e4 + 0x8c))(player->field_1e4,0);
       break;
-    case 8:
-      break;
-    case 9:
-      if (param_1[3] != 0) {
-        FUN_0011add0(uVar14,param_1[3]);
+    case 4:   /* CLIMB_TREE */
+      if (command->object != (LevelObject *)0x0) {
+        player->field_244 = (int32)command->object;
+        state = 6;
       }
       break;
-    case 10:
-      FUN_00110564(uVar14,param_1[0xc],param_1[3]);
-      break;
-    case 0xb:
-      if (param_1[3] == 0) {
-        return 1;
-      }
-      *(int *)(uVar14 + 300) = param_1[3];
-      uVar12 = 0x11;
-      *(int *)(uVar14 + 0x248) = param_1[4];
-      goto LAB_00111f68;
-    case 0xc:
-      if (param_1[3] == 0) {
-        return 1;
-      }
-      uVar12 = 0x12;
-      *(int *)(uVar14 + 300) = param_1[3];
-      goto LAB_00111f68;
-    case 0xd:
-      if (*(int *)(uVar14 + 0x1c8) == 0x11 || *(int *)(uVar14 + 0x1c8) == 0x12) {
-        *(undefined4 *)(uVar14 + 300) = 0;
-        *(undefined4 *)(uVar14 + 0x1cc) = 0xb;
-        *(undefined4 *)(uVar14 + 0x1c8) = 0;
-        piVar4 = *(int **)(uVar14 + 0x80);
-        uVar12 = level_object_get_height((LevelObject *)uVar14);
-        local_3c = (int *)0x0;
-        local_34 = (int *)0x0;
-        local_38 = piVar4;
-        local_34 = (int *)float_multiply(uVar12,0x3f000000);
-        FUN_0010ecb8(uVar14,&local_3c);
-        FUN_0011ca70(uVar14,local_3c,local_38,local_34,0);
+    case 5:   /* CLIMB_TREE_NO_ROT */
+      if (command->object != (LevelObject *)0x0) {
+        player->field_244 = (int32)command->object;
+        state = 5;
       }
       break;
-    case 0xe:
-      FUN_0011498c(uVar14,param_1[5]);
+    case 6:   /* CLIMB_LADDER */
+      if (command->object != (LevelObject *)0x0) {
+        player->field_244 = (int32)command->object;
+        state = 4;
+      }
       break;
-    case 0xf:
-      uVar12 = 0xc;
-      goto LAB_00111f68;
-    case 0x10:
-      uVar12 = 0x14;
-LAB_00111f68:
-      FUN_0011f8e0(uVar14,uVar12);
+    case 9:   /* LIFT */
+      if (command->object != (LevelObject *)0x0)
+        FUN_0011add0((uint)player,(int)command->object);
+      break;
+    case 10:   /* DROP */
+      FUN_00110564((int)player,command->flag[0],(int)command->object);
+      break;
+    case 0xb:   /* HANG */
+      if (command->object != (LevelObject *)0x0) {
+        player->field_12c = (int32)command->object;
+        player->hangTarget = command->target;
+        state = 0x11;
+      }
+      break;
+    case 0xc:   /* STATIC_HANG */
+      if (command->object != (LevelObject *)0x0) {
+        player->field_12c = (int32)command->object;
+        state = 0x12;
+      }
+      break;
+    case 0xd:   /* UNHANG: from either hang, dropped half its height */
+      if (player->state == 0x11 || player->state == 0x12) {
+        player->field_12c = 0;
+        player->field_1cc = 0xb;
+        player->state = 0;
+        position[0] = 0;
+        position[1] = player->radius;
+        position[2] = float_multiply(level_object_get_height((LevelObject *)player),0x3f000000);
+        FUN_0010ecb8((int)player,(undefined4 *)position);
+        FUN_0011ca70((undefined4)player,position[0],position[1],position[2],0);
+      }
+      break;
+    case 0xe:   /* HIT */
+      FUN_0011498c((int)player,command->value[0]);
+      break;
+    case 0xf:   /* IDLE */
+      state = 0xc;
+      break;
+    case 0x10:   /* RESET */
+      state = 0x14;
+      break;
     }
+    if (state != 0)   /* 0x00111f68 */
+      FUN_0011f8e0((int)player,state);
     break;
-  case 0x27:
-    break;
-  case 0x28:
-    break;
-  case 0x29:
-    iVar10 = 0;
-    if (param_1[0xc] != 0) {
-      iVar10 = param_1[0x10];
-    }
-    if (param_1[0xc] != 0 && iVar10 != 0) {
-      iVar10 = FUN_00112e20((int)param_1,iVar10);
-      param_1[3] = iVar10;
-      if (iVar10 == 0) {
-        (*g_pHelperFuncs->free)(param_1[0x10]);
-        param_1[0x10] = 0;
-      }
+  case 0x2c:   /* setCollectables: the collectables' name (an object's text) and number */
+    if (command->flag[0] != 0 && command->text != (char *)0x0) {
+      command->object = (LevelObject *)FUN_00112e20((int)command,(undefined4)command->text);
+      if (command->object != (LevelObject *)0x0)
+        FUN_00114520(context,(int *)command->object->node,command->number[1],(undefined4 *)&command->text);
       else {
-        FUN_00114520(*(undefined4 *)(iVar2 + 0x94),*(int **)(iVar10 + 8),param_1[8],piVar4);
+        (*g_pHelperFuncs->free)(command->text);
+        command->text = (char *)0x0;
       }
     }
-    if (*(int *)(*(int *)(iVar2 + 0xa8) + 0x5bc) != 0) {
-      (*g_pHelperFuncs->free)(*(undefined4 *)(*(int *)(iVar2 + 0xa8) + 0x5bc));
-      *(undefined4 *)(*(int *)(iVar2 + 0xa8) + 0x5bc) = 0;
+    if (app->progress->collectablesText != (AECHAR *)0x0) {
+      (*g_pHelperFuncs->free)(app->progress->collectablesText);
+      app->progress->collectablesText = (AECHAR *)0x0;
     }
-    if (param_1[0x10] != 0) {
-      FUN_0010e210(*(undefined4 *)(iVar2 + 0x94),piVar4,(int *)(*(int *)(iVar2 + 0xa8) + 0x5bc));
-    }
-    *(int *)(*(int *)(iVar2 + 0xa8) + 0x5c0) = param_1[7];
+    if (command->text != (char *)0x0)
+      FUN_0010e210(context,(undefined4 *)&command->text,(int *)&app->progress->collectablesText);
+    app->progress->collectables = command->number[0];
     break;
-  case 0x2a:
-    if (param_1[3] != 0) {
-      *(undefined4 *)(param_1[3] + 0x38) = 1;
+  case 0x2d:   /* setCollisionOn */
+    if (command->object != (LevelObject *)0x0)
+      command->object->field_38 = 1;
+    break;
+  case 0x2e:   /* setCollisionOff */
+    if (command->object != (LevelObject *)0x0)
+      command->object->field_38 = 0;
+    break;
+  case 0x2f:   /* setCombatRegion: the region the player fights in, or none */
+    if (player->combatRegion != (struct CombatRegion *)0x0)
+      player->combatRegion->active = 0;
+    if (player->bossCombatRegion != (struct BossCombatRegion *)0x0)
+      player->bossCombatRegion->active = 0;
+    object = command->object;
+    if (object == (LevelObject *)0x0)
+      player->field_284 = 1;
+    else if (object->kind == 4) {
+      player->combatRegion = (CombatRegion *)object;
+      ((CombatRegion *)object)->active = 1;
+    }
+    else if (object->kind == 5) {
+      player->bossCombatRegion = (BossCombatRegion *)object;
+      ((BossCombatRegion *)object)->active = 1;
     }
     break;
-  case 0x2b:
-    if (param_1[3] != 0) {
-      *(undefined4 *)(param_1[3] + 0x38) = 0;
+  case 0x30:   /* setKeysOn */
+    if (command->object != (LevelObject *)0x0 && command->object->nameId == WORD_HEXADECIMAL_10C617E4)
+      player->controllable = 1;
+    break;
+  case 0x31:   /* setKeysOff */
+    if (command->object != (LevelObject *)0x0 && command->object->nameId == WORD_HEXADECIMAL_10C617E4)
+      player->controllable = 0;
+    break;
+  case 0x32:   /* setLevelUp: level (1-9) and the experience it needs */
+    index = command->number[0] - 1;
+    if ((uint32)index < 9)
+      app->progress->levels[index].experienceNeeded = command->number[1];
+    if (index == 8)
+      app->progress->field_584 = command->number[1];
+    break;
+  case 0x33:   /* setMirror */
+    player->mirrorObject = command->object;
+    player->mirrorOffset[0] = command->vector[0];
+    player->mirrorOffset[1] = command->vector[1];
+    player->mirrorOffset[2] = command->vector[2];
+    player->mirrorFlags[0] = command->flag[0];
+    player->mirrorFlags[1] = command->flag[1];
+    player->mirrorFlags[2] = command->flag[2];
+    player->mirrorAngle = command->value[0];
+    player->mirrorFlags[3] = command->flag[3];
+    break;
+  case 0x35:   /* setMovingCamera */
+    FUN_0011f8ac((int)game);
+    break;
+  case 0x36:   /* setPosition: x, y (NULL keeps them), z (NULL keeps it, TERRAIN the ground) */
+    if (command->object == (LevelObject *)0x0)
+      break;
+    level_object_get_position(position,command->object);
+    if (command->flag[0] != 1)
+      position[0] = command->vector[0];
+    if (command->flag[1] != 1)
+      position[1] = command->vector[1];
+    if (command->number[0] == 0)
+      position[2] = command->vector[2];
+    else if (command->number[0] == -1) {
+      value = FUN_00114240((undefined4 *)app->pGame,position[0],position[1],FLOAT_1000,FLOAT_MINUS_1,
+                           (undefined4 *)&found,1,0,1);
+      if (found != 0)
+        position[2] = value;
+    }
+    moveObject = 1;
+    break;
+  case 0x38:   /* setScreenMode: CINEMATIC or not */
+    FUN_00109940((int)hud,command->number[0]);
+    break;
+  case 0x39:   /* setScriptOn */
+    if (command->object != (LevelObject *)0x0)
+      command->object->field_34 = 1;
+    break;
+  case 0x3a:   /* setScriptOff */
+    if (command->object != (LevelObject *)0x0)
+      command->object->field_34 = 0;
+    break;
+  case 0x3b:   /* setShadowVis */
+    if (player->shadow != (ISwerveObject *)0x0) {
+      value = command->number[0] != 0;
+      player->hasShadow = value;
+      (**(code **)(*(int32 *)game->character->shadow + 0x8c))
+                (game->character->shadow,value);
     }
     break;
-  case 0x2c:
-    if (*(int *)(uVar14 + 0x23c) != 0) {
-      *(undefined4 *)(*(int *)(uVar14 + 0x23c) + 0x110) = 0;
+  case 0x3c:   /* setSpellType */
+    player->selectedSpell = command->number[0];
+    break;
+  case 0x3d:   /* setState: a progress flag (FUN_0011fef4), or ALL cleared */
+    if (command->text != (char *)0x0) {
+      if ((*g_pHelperFuncs->strcmp)(command->text,STRING_ALL_00127714) == 0) {
+        if (command->number[0] == 0)
+          FUN_0011e010((int)app->progress);
+      }
+      else
+        FUN_0011fef4((int)app->progress,(undefined4)command->text,command->number[0] & 0xff);
     }
-    if (*(int *)(uVar14 + 0x240) != 0) {
-      *(undefined4 *)(*(int *)(uVar14 + 0x240) + 0x110) = 0;
-    }
-    pcVar7 = (char *)param_1[3];
-    if (pcVar7 == (char *)0x0) {
-      *(undefined4 *)(uVar14 + 0x284) = 1;
-    }
+    break;
+  case 0x3e:   /* setStaticCamera */
+    FUN_0011ffc0((undefined4 *)game,command->number[0]);
+    break;
+  case 0x3f:   /* setTerrainLevel: the ground at an object's height, or none */
+    if (command->object == (LevelObject *)0x0)
+      game->terrainLevelSet = 0;
     else {
-      if (*pcVar7 == '\x04') {
-        *(char **)(uVar14 + 0x23c) = pcVar7;
-      }
+      game->terrainLevelSet = 1;
+      level_object_get_position(command->vector,command->object);
+      game->terrainLevel = command->vector[2];
+    }
+    break;
+  case 0x40:   /* setUpdateOn */
+    if (command->object != (LevelObject *)0x0)
+      command->object->field_3c = 1;
+    break;
+  case 0x41:   /* setUpdateOff */
+    if (command->object != (LevelObject *)0x0) {
+      if (command->object->nameId == WORD_HEXADECIMAL_10C617E4)
+        FUN_0011492c((int)player);
+      command->object->field_3c = 0;
+    }
+    break;
+  case 0x42:   /* setUIVis: which of the health, magic and enemy bars show ("!" hides one; ALL / SHOW,
+                  !ALL / HIDE), or LOADING r g b / !LOADING */
+    if (command->text == (char *)0x0 || hud == (uint8 *)0x0)
+      break;
+    count = string_split(context,command->text,(char *)DATA_AT_0012710C,(char **)0x0,0);
+    words = helper_malloc(count << 2);
+    string_split(context,command->text,(char *)DATA_AT_0012710C,words,count);
+    shown[3] = 0;
+    shown[0] = *(hud + 0x49);
+    shown[1] = *(hud + 0x48);
+    shown[2] = *(hud + 0x4a);
+                    /* helper[62] boolean strbegins(const char *prefix, const char *s), helper[63]
+                       boolean strends(const char *suffix, const char *s)  (AEEHelperFuncs +0xf8, +0xfc) */
+    for (i = 0; i < count; i++) {
+      if ((*g_pHelperFuncs->strends)(STRING_HEALTH,words[i]) != 0)
+        index = 0;
+      else if ((*g_pHelperFuncs->strends)(STRING_MAGIC,words[i]) != 0)
+        index = 1;
+      else if ((*g_pHelperFuncs->strends)(STRING_ENEMY,words[i]) != 0)
+        index = 2;
       else {
-        if (*pcVar7 != '\x05') {
-          return 1;
+        if ((*g_pHelperFuncs->strcmp)(words[i],STRING_ALL_00127714) == 0 ||
+            (*g_pHelperFuncs->strcmp)(words[i],STRING_SHOW) == 0) {
+          shown[0] = 1;
+          shown[1] = 1;
+          shown[2] = 1;
         }
-        *(char **)(uVar14 + 0x240) = pcVar7;
-      }
-      pcVar7[0x110] = '\x01';
-      pcVar7[0x111] = '\0';
-      pcVar7[0x112] = '\0';
-      pcVar7[0x113] = '\0';
-    }
-    break;
-  case 0x2d:
-    if ((param_1[3] != 0) && (*(int *)(param_1[3] + 0xc) == WORD_HEXADECIMAL_10C617E4)) {
-      *(undefined4 *)(uVar14 + 0x1d8) = 1;
-    }
-    break;
-  case 0x2e:
-    if ((param_1[3] != 0) && (*(int *)(param_1[3] + 0xc) == WORD_HEXADECIMAL_10C617E4)) {
-      *(undefined4 *)(uVar14 + 0x1d8) = 0;
-    }
-    break;
-  case 0x2f:
-    uVar14 = param_1[7] - 1;
-    if (uVar14 < 9) {
-      *(int *)(*(int *)(iVar2 + 0xa8) + uVar14 * 8 + 0x53c) = param_1[8];
-    }
-    if (uVar14 == 8) {
-      *(int *)(*(int *)(iVar2 + 0xa8) + 0x584) = param_1[8];
-    }
-    break;
-  case 0x30:
-    *(int *)(uVar14 + 0x250) = param_1[3];
-    iVar10 = param_1[0x12];
-    iVar13 = param_1[0x13];
-    *(int *)(uVar14 + 0x254) = param_1[0x11];
-    *(int *)(uVar14 + 600) = iVar10;
-    *(int *)(uVar14 + 0x25c) = iVar13;
-    *(int *)(uVar14 + 0x264) = param_1[0xc];
-    *(int *)(uVar14 + 0x268) = param_1[0xd];
-    *(int *)(uVar14 + 0x26c) = param_1[0xe];
-    *(int *)(uVar14 + 0x260) = param_1[5];
-    *(int *)(uVar14 + 0x270) = param_1[0xf];
-    break;
-  case 0x31:
-    break;
-  case 0x32:
-    FUN_0011f8ac((int)puVar3);
-    break;
-  case 0x33:
-    if (param_1[3] == 0) {
-      return 1;
-    }
-    level_object_get_position((uint32 *)&local_3c,(LevelObject *)param_1[3]);
-    if (param_1[0xc] != 1) {
-      local_3c = (int *)param_1[0x11];
-    }
-    if (param_1[0xd] != 1) {
-      local_38 = (int *)param_1[0x12];
-    }
-    if (param_1[7] == 0) {
-      uVar14 = param_1[0x13];
-    }
-    else if ((param_1[7] != -1) ||
-            (uVar14 = FUN_00114240(*(undefined4 **)(iVar2 + 0xa4),local_3c,local_38,FLOAT_1000,
-                                   FLOAT_MINUS_1,&local_40,1,0,1), local_40 == 0)) goto LAB_001121cc;
-LAB_001117a8:
-    local_34 = (int *)uVar14;
-LAB_001121cc:
-    thunk_FUN_0011fd90(param_1[3],local_3c,local_38,local_34);
-    break;
-  case 0x34:
-    break;
-  case 0x35:
-    FUN_00109940(*(int *)(iVar2 + 0xd4),param_1[7]);
-    break;
-  case 0x36:
-    if (param_1[3] != 0) {
-      *(undefined4 *)(param_1[3] + 0x34) = 1;
-    }
-    break;
-  case 0x37:
-    if (param_1[3] != 0) {
-      *(undefined4 *)(param_1[3] + 0x34) = 0;
-    }
-    break;
-  case 0x38:
-    if (*(int *)(uVar14 + 0x1f0) != 0) {
-      *(uint *)(uVar14 + 500) = (uint)(param_1[7] != 0);
-      (**(code **)(**(int **)(*(int *)(*(int *)(iVar2 + 0xa4) + 0x1f8) + 0x1f0) + 0x8c))();
-    }
-    break;
-  case 0x39:
-    *(int *)(uVar14 + 0x22c) = param_1[7];
-    break;
-  case 0x3a:
-    if (param_1[0x10] != 0) {
-      iVar10 = (*g_pHelperFuncs->strcmp)
-                         (param_1[0x10],(int32)STRING_ALL_00127714);
-      if (iVar10 == 0) {
-        if (param_1[7] == 0) {
-          FUN_0011e010(*(int *)(iVar2 + 0xa8));
+        else if ((*g_pHelperFuncs->strcmp)(words[i],STRING_ALL_00127728) == 0 ||
+                 (*g_pHelperFuncs->strcmp)(words[i],STRING_HIDE) == 0) {
+          shown[0] = 0;
+          shown[1] = 0;
+          shown[2] = 0;
         }
-      }
-      else {
-        FUN_0011fef4(*(int *)(iVar2 + 0xa8),param_1[0x10],param_1[7] & 0xff);
-      }
-    }
-    break;
-  case 0x3b:
-    FUN_0011ffc0(puVar3,param_1[7]);
-    break;
-  case 0x3c:
-    if (param_1[3] == 0) {
-      puVar3[0x81] = 0;
-    }
-    else {
-      puVar3[0x81] = 1;
-      level_object_get_position((uint32 *)(param_1 + 0x11),(LevelObject *)param_1[3]);
-      *(int *)(*(int *)(iVar2 + 0xa4) + 0x208) = param_1[0x13];
-    }
-    break;
-  case 0x3d:
-    if (param_1[3] != 0) {
-      *(undefined4 *)(param_1[3] + 0x3c) = 1;
-    }
-    break;
-  case 0x3e:
-    if (param_1[3] != 0) {
-      if (*(int *)(param_1[3] + 0xc) == WORD_HEXADECIMAL_10C617E4) {
-        FUN_0011492c(uVar14);
-      }
-      *(undefined4 *)(param_1[3] + 0x3c) = 0;
-    }
-    break;
-  case 0x3f:
-    iVar10 = param_1[0x10];
-    if (iVar10 != 0) {
-      puVar3 = *(undefined4 **)(iVar2 + 0xd4);
-    }
-    if (iVar10 == 0 || puVar3 == (undefined4 *)0x0) {
-      return 1;
-    }
-    iVar10 = FUN_00110084(*(undefined4 *)(iVar2 + 0x94),iVar10,(int32)DATA_AT_0012710C,0,0);
-    piVar4 = helper_malloc(iVar10 << 2);
-    FUN_00110084(*(undefined4 *)(iVar2 + 0x94),param_1[0x10],(int32)DATA_AT_0012710C,(int)piVar4,
-                 iVar10);
-    local_34 = (int *)(uint)((uint32)(uint8)(*(undefined1 *)(*(int *)(iVar2 + 0xd4) + 0x4a)) << 16 | (uint16)((uint16)((uint32)(uint8)(*(undefined1 *)(*(int *)(iVar2 + 0xd4) + 0x48)) << 8 | (uint8)(*(undefined1 *)(*(int *)(iVar2 + 0xd4) + 0x49)))));
-    iVar16 = (int32)STRING_LOADING_00127740;
-    for (iVar5 = 0; iVar5 < iVar10; iVar5 = iVar5 + 1) {
-      iVar8 = (*g_pHelperFuncs->strends)
-                        ((int32)STRING_HEALTH,piVar4[iVar5]);
-      if (iVar8 == 0) {
-        iVar8 = (*g_pHelperFuncs->strends)
-                          ((int32)STRING_MAGIC,piVar4[iVar5]);
-        if (iVar8 != 0) {
-          iVar8 = 1;
-          goto LAB_00112490;
+        else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_LOADING_00127738) == 0) {
+          red = FUN_00126858(string_to_float(context,words[1]));
+          green = FUN_00126858(string_to_float(context,words[2]));
+          blue = FUN_00126858(string_to_float(context,words[3]));
+          FUN_001056d0((int *)hud,red << 16 | green << 8 | blue);
+          break;
         }
-        iVar8 = (*g_pHelperFuncs->strends)
-                          ((int32)STRING_ENEMY,piVar4[iVar5]);
-        if (iVar8 != 0) {
-          iVar8 = 2;
-          goto LAB_00112490;
+        else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_LOADING_00127740) == 0) {
+          FUN_00109368((int)hud);
+          break;
         }
-        iVar8 = (*g_pHelperFuncs->strcmp)
-                          (piVar4[iVar5],(int32)STRING_ALL_00127714);
-        if ((iVar8 == 0) ||
-           (iVar8 = (*g_pHelperFuncs->strcmp)
-                              (piVar4[iVar5],(int32)STRING_SHOW), iVar8 == 0)) {
-          local_34 = (int *)((uint32)(uint8)(*(undefined1 *)((undefined1 *)&local_34 + 3)) << 24 | ((uint32)(0x10101) & 0xffffff));
-        }
-        else {
-          iVar8 = (*g_pHelperFuncs->strcmp)
-                            (piVar4[iVar5],(int32)STRING_ALL_00127728);
-          if ((iVar8 == 0) ||
-             (iVar8 = (*g_pHelperFuncs->strcmp)
-                                (piVar4[iVar5],(int32)STRING_HIDE), iVar8 == 0)) {
-            local_34 = (int *)((uint)local_34 & 0xff000000);
-          }
-          else {
-            iVar8 = (*g_pHelperFuncs->strcmp)
-                              (*piVar4,(int32)STRING_LOADING_00127738);
-            if (iVar8 == 0) {
-              uVar14 = FUN_0010d4dc(*(undefined4 *)(iVar2 + 0x94),piVar4[1]);
-              uVar14 = FUN_00126858(uVar14);
-              uVar12 = FUN_0010d4dc(*(undefined4 *)(iVar2 + 0x94),piVar4[2]);
-              uVar12 = FUN_00126858(uVar12);
-              uVar9 = FUN_0010d4dc(*(undefined4 *)(iVar2 + 0x94),piVar4[3]);
-              uVar9 = FUN_00126858(uVar9);
-              FUN_001056d0(*(int **)(iVar2 + 0xd4),uVar14 << 0x10 | uVar12 << 8 | uVar9);
-              break;
-            }
-            iVar8 = (*g_pHelperFuncs->strcmp)(*piVar4,iVar16);
-            if (iVar8 == 0) {
-              FUN_00109368(*(int *)(iVar2 + 0xd4));
-              break;
-            }
-          }
-        }
+        continue;
       }
-      else {
-        iVar8 = 0;
-LAB_00112490:
-        uVar14 = (*g_pHelperFuncs->strbegins)
-                           ((int32)DATA_AT_001276CC,piVar4[iVar5]);
-        cVar1 = '\x01' - (char)uVar14;
-        if (1 < uVar14) {
-          cVar1 = '\0';
-        }
-        *(char *)((int)&local_34 + iVar8) = cVar1;
+      shown[index] = (*g_pHelperFuncs->strbegins)((const char *)DATA_AT_001276CC,words[i]) == 0;
+    }
+    *(hud + 0x49) = shown[0];
+    *(hud + 0x48) = shown[1];
+    *(hud + 0x4a) = shown[2];
+    for (i = 0; i < count; i++)
+      helper_free(words[i]);
+    break;
+  case 0x43:   /* setVictim: the player's target */
+    player->targets[0] = (int32)command->object;
+    break;
+  case 0x44:   /* setVis */
+    if (command->object != (LevelObject *)0x0)
+      FUN_001201cc((int)command->object,command->flag[0]);
+    break;
+  case 0x46:   /* setXRot */
+    if (command->object != (LevelObject *)0x0) {
+      if (command->object->nameId == WORD_HEXADECIMAL_2E6723BD)
+        ((Camera *)command->object)->field_1f8 = command->value[0];
+      else
+        motion_entity_set_pitch((MotionEntity *)command->object,command->value[0]);
+    }
+    break;
+  case 0x47:   /* setYRot */
+    if (command->object != (LevelObject *)0x0) {
+      if (command->object->nameId == WORD_HEXADECIMAL_2E6723BD)
+        FUN_001202cc((int)command->object,command->value[0]);
+      else
+        FUN_00120290((int)command->object,command->value[0]);
+    }
+    break;
+  case 0x48:   /* stopAnim */
+    index = animations_find(app->animations,command->number[0]);
+    animations_stop(app->animations,index,command->flag[0]);
+    break;
+  case 0x49:   /* summary: the level's summary screen (event 0x75), its name in KHApp.pBufc8 */
+    FUN_00109940((int)hud,0);
+    if (command->text != (char *)0x0) {
+      if (app->pBufc8 != (void *)0x0) {
+        (*g_pHelperFuncs->free)(app->pBufc8);
+        app->pBufc8 = (void *)0x0;
       }
+      FUN_001204f0(context,(undefined4)command->text,(int *)&app->pBufc8);
     }
-    *(undefined1 *)(*(int *)(iVar2 + 0xd4) + 0x49) = (undefined1)(int)local_34;
-    *(undefined1 *)(*(int *)(iVar2 + 0xd4) + 0x48) = *(undefined1 *)((undefined1 *)&local_34 + 1);
-    *(undefined1 *)(*(int *)(iVar2 + 0xd4) + 0x4a) = *(undefined1 *)((undefined1 *)&local_34 + 2);
-    for (iVar13 = 0; iVar13 < iVar10; iVar13 = iVar13 + 1) {
-      helper_free((void *)piVar4[iVar13]);
-    }
-    goto LAB_001116c8;
-  case 0x40:
-    *(int *)(uVar14 + 0x20c) = param_1[3];
+    FUN_00101ad8((int *)app->screens,0x75);
     break;
-  case 0x41:
-    if (param_1[3] != 0) {
-      FUN_001201cc(param_1[3],param_1[0xc]);
-    }
+  case 0x4a:   /* unlink */
+    if (command->object != (LevelObject *)0x0)
+      ((MotionEntity *)command->object)->field_12c = 0;
     break;
-  case 0x42:
+  case 0x4b:   /* unloadClipart */
+    if (command->object != (LevelObject *)0x0 && command->object->field_1c != 0 &&
+        command->object->field_18 != 0)
+      FUN_0012164c((int)command->object,command->flag[0],command->flag[1]);
     break;
-  case 0x43:
-    iVar10 = param_1[3];
-    if (iVar10 != 0) {
-      if (*(int *)(iVar10 + 0xc) == WORD_HEXADECIMAL_2E6723BD) {
-        *(int *)(iVar10 + 0x1f8) = param_1[5];
-      }
-      else {
-        motion_entity_set_pitch((MotionEntity *)iVar10,param_1[5]);
-      }
+  case 0x4d:   /* setVar */
+    if (command->text != (char *)0x0)
+      FUN_00120120((int)app->progress,(undefined4)command->text,command->number[0]);
+    break;
+  case 0x4e:   /* incVar */
+    if (command->text != (char *)0x0) {
+      variable = (int32 *)FUN_001146f0((int)app->progress,(undefined4)command->text);
+      if (variable != (int32 *)0x0)
+        *variable = *variable + command->number[0];
     }
     break;
-  case 0x44:
-    iVar10 = param_1[3];
-    if (iVar10 != 0) {
-      if (*(int *)(iVar10 + 0xc) == WORD_HEXADECIMAL_2E6723BD) {
-        FUN_001202cc(iVar10,param_1[5]);
-      }
-      else {
-        FUN_00120290(iVar10,param_1[5]);
-      }
+  case 0x4f:   /* decVar */
+    if (command->text != (char *)0x0) {
+      variable = (int32 *)FUN_001146f0((int)app->progress,(undefined4)command->text);
+      if (variable != (int32 *)0x0)
+        *variable = *variable - command->number[0];
     }
     break;
-  case 0x45:
-    iVar10 = animations_find((Animations *)*(int *)(iVar2 + 0x9c),param_1[7]);
-    animations_stop((Animations *)*(int *)(iVar2 + 0x9c),iVar10,param_1[0xc]);
+  case 0x50:   /* ifVar: <variable or number> <==, !=, <, <=, >, >=> <variable or number>; ENGINE_VER
+                 is 1 */
+    count = string_split(context,command->text,(char *)DATA_AT_0012710C,(char **)0x0,0);
+    words = helper_malloc(count << 2);
+    string_split(context,command->text,(char *)DATA_AT_0012710C,words,count);
+    if ((*g_pHelperFuncs->strcmp)(words[0],STRING_ENGINE_VER) == 0)
+      left = 1;
+    else if ((variable = (int32 *)FUN_001146f0((int)app->progress,(undefined4)words[0])) != (int32 *)0x0)
+      left = *variable;
+    else   /* words[2], not words[0]: research_notes/decomp/GAME_BUGS.md */
+      left = FUN_00126858(string_to_float(context,words[2]));
+    if ((variable = (int32 *)FUN_001146f0((int)app->progress,(undefined4)words[2])) != (int32 *)0x0)
+      right = *variable;
+    else
+      right = FUN_00126858(string_to_float(context,words[2]));
+    result = 0;
+    if ((*g_pHelperFuncs->strcmp)(words[1],STRING_EQUALS_EQUALS) == 0)
+      result = left == right;
+    else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_EQUALS_001276E8) == 0)   /* "!=" */
+      result = left != right;
+    else if ((*g_pHelperFuncs->strcmp)(words[1],(const char *)DATA_AT_001276EC) == 0)   /* "<" */
+      result = left < right;
+    else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_EQUALS_001276F0) == 0)   /* "<=" */
+      result = left <= right;
+    else if ((*g_pHelperFuncs->strcmp)(words[1],(const char *)DATA_AT_001276F4) == 0)   /* ">" */
+      result = left > right;
+    else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_EQUALS_001276F8) == 0)   /* ">=" */
+      result = left >= right;
+    for (i = 0; i < count; i++)
+      helper_free(words[i]);
     break;
-  case 0x46:
-    FUN_00109940(*(int *)(iVar2 + 0xd4),0);
-    if (param_1[0x10] != 0) {
-      if (*(int *)(iVar2 + 200) != 0) {
-        (*g_pHelperFuncs->free)(*(undefined4 *)(iVar2 + 200));
-        *(undefined4 *)(iVar2 + 200) = 0;
-      }
-      FUN_001204f0(*(undefined4 *)(iVar2 + 0x94),param_1[0x10],(int *)(iVar2 + 200));
-    }
-    FUN_00101ad8(*(int **)(iVar2 + 0xd0),0x75);
+  case 0x52:   /* setKeyDir: -1 reverses the movement keys */
+    character_set_control_direction(player,command->number[0]);
     break;
-  case 0x47:
-    if (param_1[3] != 0) {
-      *(undefined4 *)(param_1[3] + 300) = 0;
-    }
+  case 0x53:   /* setActiveRotOn */
+    game->camera->activeRotation = 1;
     break;
-  case 0x48:
-    iVar13 = param_1[3];
-    bVar17 = iVar13 != 0;
-    if (bVar17) {
-      iVar10 = *(int *)(iVar13 + 0x1c);
-    }
-    bVar18 = iVar10 != 0;
-    if (bVar17 && bVar18) {
-      iVar10 = *(int *)(iVar13 + 0x18);
-    }
-    if ((bVar17 && bVar18) && iVar10 != 0) {
-      FUN_0012164c(iVar13,param_1[0xc],param_1[0xd]);
-    }
+  case 0x54:   /* setActiveRotOff */
+    game->camera->activeRotation = 0;
     break;
-  case 0x49:
-    break;
-  case 0x4a:
-    if (param_1[0x10] != 0) {
-      FUN_00120120(*(int *)(iVar2 + 0xa8),param_1[0x10],param_1[7]);
-    }
-    break;
-  case 0x4b:
-    if (param_1[0x10] == 0) {
-      return 1;
-    }
-    piVar4 = (int *)FUN_001146f0(*(int *)(iVar2 + 0xa8),param_1[0x10]);
-    if (piVar4 == (int *)0x0) {
-      return 1;
-    }
-    iVar10 = *piVar4 + param_1[7];
-    goto LAB_00112314;
-  case 0x4c:
-    if (param_1[0x10] == 0) {
-      return 1;
-    }
-    piVar4 = (int *)FUN_001146f0(*(int *)(iVar2 + 0xa8),param_1[0x10]);
-    if (piVar4 == (int *)0x0) {
-      return 1;
-    }
-    iVar10 = *piVar4 - param_1[7];
-LAB_00112314:
-    *piVar4 = iVar10;
-    break;
-  case 0x4d:
-    iVar10 = FUN_00110084(*(undefined4 *)(iVar2 + 0x94),param_1[0x10],(int32)DATA_AT_0012710C,0,0);
-    piVar4 = helper_malloc(iVar10 << 2);
-    FUN_00110084(*(undefined4 *)(iVar2 + 0x94),param_1[0x10],(int32)DATA_AT_0012710C,(int)piVar4,
-                 iVar10);
-    iVar5 = (*g_pHelperFuncs->strcmp)(*piVar4,(int32)STRING_ENGINE_VER);
-    if (iVar5 == 0) {
-      uVar14 = 1;
-    }
-    else {
-      puVar6 = (uint *)FUN_001146f0(*(int *)(iVar2 + 0xa8),*piVar4);
-      if (puVar6 == (uint *)0x0) {
-        uVar14 = FUN_0010d4dc(*(undefined4 *)(iVar2 + 0x94),piVar4[2]);
-        uVar14 = FUN_00126858(uVar14);
-      }
-      else {
-        uVar14 = *puVar6;
-      }
-    }
-    iVar5 = piVar4[1];
-    puVar6 = (uint *)FUN_001146f0(*(int *)(iVar2 + 0xa8),piVar4[2]);
-    if (puVar6 == (uint *)0x0) {
-      uVar15 = FUN_0010d4dc(*(undefined4 *)(iVar2 + 0x94),piVar4[2]);
-      uVar12 = FUN_00126858(uVar15);
-    }
-    else {
-      uVar12 = *puVar6;
-    }
-    uVar15 = 0;
-    iVar2 = (*g_pHelperFuncs->strcmp)(iVar5,(int32)STRING_EQUALS_EQUALS);
-    if (iVar2 == 0) {
-      if (uVar14 == uVar12) goto LAB_00111524;
-    }
-    else {
-      iVar2 = (*g_pHelperFuncs->strcmp)(iVar5,(int32)STRING_EQUALS_001276E8);
-      if (iVar2 == 0) {
-        if (uVar14 != uVar12) goto LAB_00111524;
-      }
-      else {
-        iVar2 = (*g_pHelperFuncs->strcmp)(iVar5,(int32)DATA_AT_001276EC);
-        if (iVar2 == 0) {
-          if ((int)uVar14 < (int)uVar12) goto LAB_00111524;
-        }
-        else {
-          iVar2 = (*g_pHelperFuncs->strcmp)(iVar5,(int32)STRING_EQUALS_001276F0);
-          if (iVar2 == 0) {
-            if ((int)uVar14 <= (int)uVar12) goto LAB_00111524;
-          }
-          else {
-            iVar2 = (*g_pHelperFuncs->strcmp)(iVar5,(int32)DATA_AT_001276F4)
-            ;
-            if (iVar2 == 0) {
-              if ((int)uVar12 < (int)uVar14) {
-LAB_00111524:
-                uVar15 = 1;
-              }
-            }
-            else {
-              iVar13 = (*g_pHelperFuncs->strcmp)
-                                 (iVar5,(int32)STRING_EQUALS_001276F8);
-              if ((iVar13 == 0) && ((int)uVar12 <= (int)uVar14)) goto LAB_00111524;
-            }
-          }
-        }
-      }
-    }
-    for (iVar13 = 0; iVar13 < iVar10; iVar13 = iVar13 + 1) {
-      helper_free((void *)piVar4[iVar13]);
-    }
-LAB_001116c8:
-    helper_free(piVar4);
-    break;
-  case 0x4e:
-    break;
-  case 0x4f:
-    character_set_control_direction((Character *)uVar14,param_1[7]);
-    break;
-  case 0x50:
-    *(undefined4 *)(puVar3[0x7c] + 0x1e8) = 1;
-    break;
-  case 0x51:
-    *(undefined4 *)(puVar3[0x7c] + 0x1e8) = 0;
   }
-  return uVar15;
+  if (softKey != 0)   /* 0x00111948 */
+    FUN_00109a10((int)hud,command->number[0],textId,slot);
+  if (sound != 0)   /* 0x00111df8 */
+    FUN_00108f28(sound,soundId);
+  if (moveObject != 0)   /* 0x001121cc */
+    thunk_FUN_0011fd90((int)command->object,position[0],position[1],position[2]);
+  if (words != (char **)0x0)   /* 0x001116c8 */
+    helper_free(words);
+  return result;
 }
+
 
 /* ==== 0x001127E0  (file offset 0x127E0)  kh_OnAppStop ================================================ */
 void kh_OnAppStop(KHApp *pMe)
@@ -14171,7 +13810,7 @@ void FUN_001145b4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *
   local_10 = 0;
   FUN_00114520(param_1,param_2,param_3,&local_10);
   if (local_10 != 0) {
-    uVar1 = FUN_0010d4dc(*(undefined4 *)(*(int *)(param_1 + 0xc) + 0x94),local_10);
+    uVar1 = string_to_float(*(undefined4 *)(*(int *)(param_1 + 0xc) + 0x94),local_10);
     *param_4 = uVar1;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(local_10);
@@ -14646,1384 +14285,678 @@ void FUN_001150d0(int param_1,int *param_2)
   return;
 }
 
-/* ==== 0x00115118  (file offset 0x15118)  FUN_00115118 ================================================ */
-void FUN_00115118(undefined4 *param_1,undefined4 param_2,uint param_3)
+/* ==== 0x00115118  (file offset 0x15118)  script_command_parse ======================================== */
+/* GUESS: names. Parses one line of a script into `command`: the words (split at " "), the first one the
+   command's name, which gives its type; the others its arguments, by command (objects by name,
+   FUN_00112e20; names hashed, FUN_00113654; numbers, string_to_float, made integers by FUN_00126858;
+   texts copied, FUN_001204f0). A command needs its number of words, else only its type is set; an unknown
+   name gives type 0x4c, which does nothing. `owner` is the object or screen whose script it is (0 for a
+   sequence's). The binary's branches share their last steps (jumps to 0x00115800, 0x00116828,
+   0x00116654, 0x00116e68, 0x00116e74, 0x00116f14, 0x0011705c, 0x001171a0 and 0x00117258): each is done
+   once, at the end, from what the branch left in the locals objectName ... copyName. Its words are freed
+   at the end (the binary's tail jump to helper_free at 0x001173c4). */
+void script_command_parse(ScriptCommand *command,int32 owner,char *text)
 
 {
-  short sVar1;
-  int iVar2;
-  undefined4 *puVar3;
-  int iVar4;
-  uint uVar5;
-  uint uVar6;
-  uint uVar7;
-  undefined4 uVar8;
-  int iVar9;
-  int *piVar10;
-  int iVar11;
-  uint local_2c;
-  uint local_28;
-  
-  iVar9 = WORD_HEXADECIMAL_FFFEAED0;
-  param_1[2] = param_2;
-                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
-                        */
-  iVar2 = (*g_pHelperFuncs->GetAppInstance)();
-  param_1[1] = iVar2;
-  iVar2 = FUN_00110084(*(undefined4 *)(iVar2 + 0x94),param_3,(int32)DATA_AT_0012710C,0,0);
-  puVar3 = helper_malloc(iVar2 << 2);
-  FUN_00110084(*(undefined4 *)(param_1[1] + 0x94),param_3,(int32)DATA_AT_0012710C,(int)puVar3,iVar2)
-  ;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-  iVar4 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_ADDSOFTKEY);
-  piVar10 = param_1 + 0x10;
-  if (iVar4 == 0) {
-    *param_1 = 3;
-    if (iVar2 < 3) goto LAB_001173a0;
-    FUN_001204f0(*(undefined4 *)(param_1[1] + 0x94),puVar3[1],piVar10);
-    uVar5 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[2]);
-    uVar5 = FUN_00126858(uVar5);
-    param_1[7] = uVar5;
-    if (iVar2 < 4) goto LAB_001173a0;
-LAB_001151f4:
-    uVar8 = puVar3[2];
+  KHApp *app;
+  int32 context;
+  char **words;
+  int32 count;
+  int32 i;
+  int32 length;
+  int32 textEnd = 0;
+  int32 isXRotation;
+  int32 roundNumber = 0;
+  int32 copyName = 0;
+  uint32 number = 0;
+  uint32 value;
+  uint32 width;
+  uint32 height;
+  uint32 red;
+  uint32 green;
+  uint32 blue;
+  char *objectName = (char *)0x0;
+  char *numberWord = (char *)0x0;
+  char *number2Word = (char *)0x0;
+  char *valueWord = (char *)0x0;
+  char *hashWord = (char *)0x0;
+  const char *prefix = (const char *)0x0;
+  const char *one = (const char *)DATA_AT_00127134;   /* "1" */
+
+  command->owner = owner;
+                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4)) */
+  command->app = app = (KHApp *)(*g_pHelperFuncs->GetAppInstance)();
+  context = (int32)app->pObj94;
+  count = string_split(context,text,(char *)DATA_AT_0012710C,(char **)0x0,0);   /* " " */
+  words = helper_malloc(count << 2);
+  string_split(context,text,(char *)DATA_AT_0012710C,words,count);
+                    /* helper[4] int strcmp(const char *a, const char *b), helper[5] uint32 strlen(const
+                       char *s), helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x10, +0x14,
+                       +0x68, via *(base-4)) */
+  if ((*g_pHelperFuncs->strcmp)(words[0],STRING_ADDSOFTKEY) == 0) {
+    command->type = 3;
+    if (count >= 3) {
+      FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+      command->number[0] = FUN_00126858(string_to_float(context,words[2]));
+      if (count >= 4)
+        objectName = words[2];
+    }
   }
-  else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar4 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_ADDUIACTION);
-    if (iVar4 == 0) {
-      *param_1 = 4;
-      if (iVar2 < 3) goto LAB_001173a0;
-      FUN_001204f0(*(undefined4 *)(param_1[1] + 0x94),puVar3[1],piVar10);
-      goto LAB_001151f4;
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_ADDUIACTION) == 0) {
+    command->type = 4;
+    if (count >= 3) {
+      FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+      objectName = words[2];
     }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar4 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_ADDUIINFO);
-    if (iVar4 == 0) {
-      *param_1 = 5;
-      if (2 < iVar2) {
-        param_1[8] = 0xfffffffe;
-        uVar8 = FUN_00112e20((int)param_1,puVar3[1]);
-        param_1[3] = uVar8;
-        uVar5 = FUN_00113654(*(undefined4 *)(param_1[1] + 0x94),puVar3[2]);
-        param_1[0xb] = uVar5;
-      }
-      goto LAB_001173a0;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar4 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_ADDUITEXT);
-    iVar11 = (int32)DATA_AT_00127134;
-    if (iVar4 == 0) {
-      *param_1 = 5;
-      if (6 < iVar2) {
-        iVar4 = param_1[1];
-        sVar1 = *(short *)(iVar4 + 0x24);
-        local_28 = (uint)*(short *)(iVar4 + 0x26);
-        uVar5 = FUN_0010d4dc(*(undefined4 *)(iVar4 + 0x94),puVar3[1]);
-        uVar6 = int_to_float(sVar1);
-        uVar5 = float_multiply(uVar6,uVar5);
-        uVar5 = FUN_00126858(uVar5);
-        param_1[7] = uVar5;
-        local_2c = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[2]);
-        uVar5 = int_to_float(local_28);
-        uVar7 = float_multiply(uVar5,local_2c);
-        uVar7 = FUN_00126858(uVar7);
-        param_1[8] = uVar7;
-        uVar7 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[3]);
-        uVar7 = float_multiply(uVar6,uVar7);
-        uVar7 = FUN_00126858(uVar7);
-        param_1[9] = uVar7;
-        uVar7 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[4]);
-        uVar7 = float_multiply(uVar5,uVar7);
-        uVar7 = FUN_00126858(uVar7);
-        param_1[10] = uVar7;
-        if (param_1[8] == uVar7) {
-          param_1[0xc] = 1;
-        }
-        uVar8 = FUN_00112e20((int)param_1,puVar3[5]);
-        param_1[3] = uVar8;
-        uVar7 = FUN_00113654(*(undefined4 *)(param_1[1] + 0x94),puVar3[6]);
-        param_1[0xb] = uVar7;
-        if (7 < iVar2) {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-          iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[7],iVar11);
-          if (iVar4 == 0) {
-            param_1[0xd] = 1;
-          }
-          else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-            iVar9 = (*g_pHelperFuncs->strcmp)
-                              (puVar3[7],(int32)DATA_AT_00127138);
-            if (iVar9 == 0) {
-              param_1[0xe] = 1;
-            }
-          }
-        }
-        if (9 < iVar2) {
-          param_1[0xf] = 1;
-          uVar7 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[8]);
-          uVar6 = float_multiply(uVar6,uVar7);
-          param_1[5] = uVar6;
-          uVar6 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[9]);
-          uVar5 = float_multiply(uVar5,uVar6);
-          param_1[6] = uVar5;
-        }
-      }
-      goto LAB_001173a0;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar4 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_ADJUSTVALUE);
-    if (iVar4 == 0) {
-      *param_1 = 6;
-      if (iVar2 < 3) goto LAB_001173a0;
-      FUN_001204f0(*(undefined4 *)(param_1[1] + 0x94),puVar3[1],piVar10);
-      uVar5 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[2]);
-      param_1[5] = uVar5;
-LAB_00116e74:
-      uVar5 = FUN_00126858(uVar5);
-      goto LAB_00116f20;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar4 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_BREAK);
-    if (iVar4 == 0) {
-      uVar8 = 8;
-      goto LAB_0011739c;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar4 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_FADE);
-    if (iVar4 == 0) {
-      *param_1 = 0xe;
-      if (iVar2 < 7) goto LAB_001173a0;
-      uVar8 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[1]);
-      param_1[5] = uVar8;
-      uVar8 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[2]);
-      param_1[6] = uVar8;
-      uVar5 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[3]);
-      uVar5 = FUN_00126858(uVar5);
-      uVar6 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[4]);
-      uVar6 = FUN_00126858(uVar6);
-      uVar7 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[5]);
-      uVar7 = FUN_00126858(uVar7);
-      param_1[7] = uVar5 << 0x10 | uVar6 << 8 | uVar7;
-      uVar8 = puVar3[6];
-LAB_00116828:
-      uVar5 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),uVar8);
-      uVar5 = FUN_00126858(uVar5);
-LAB_00116838:
-      param_1[8] = uVar5;
-      goto LAB_001173a0;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_FIREPROJECTILE);
-    if (iVar9 == 0) {
-      *param_1 = 0xf;
-      if (iVar2 != 4) {
-        if (iVar2 != 6) goto LAB_001173a0;
-        uVar8 = FUN_00112e20((int)param_1,puVar3[1]);
-        param_1[3] = uVar8;
-        uVar8 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[2]);
-        param_1[0x11] = uVar8;
-        uVar8 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[3]);
-        param_1[0x12] = uVar8;
-        uVar8 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[4]);
-        param_1[0x13] = uVar8;
-        uVar8 = puVar3[5];
-LAB_00116e68:
-        uVar5 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),uVar8);
-        goto LAB_00116e74;
-      }
-      uVar8 = FUN_00112e20((int)param_1,puVar3[1]);
-      param_1[3] = uVar8;
-      uVar8 = FUN_00112e20((int)param_1,puVar3[2]);
-      param_1[4] = uVar8;
-      uVar5 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[3]);
-      uVar5 = FUN_00126858(uVar5);
-      param_1[7] = uVar5;
-LAB_00117220:
-      param_1[0xc] = 1;
-      goto LAB_001173a0;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_IF_00127168)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x10;
-      iVar9 = WORD_HEXADECIMAL_FFFEA960;
-      if (iVar2 < 2) goto LAB_001173a0;
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-      iVar4 = (*g_pHelperFuncs->strlen)(param_3);
-      iVar11 = iVar4 + -2;
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-      iVar9 = (*g_pHelperFuncs->malloc)(iVar4 + -1);
-      param_1[0x10] = iVar9;
-      uVar8 = *(undefined4 *)(param_1[1] + 0x94);
-      iVar4 = (int32)STRING_IF_0012716C;
-LAB_0011705c:
-      FUN_0010efd4(uVar8,iVar4,param_3,iVar9);
-      *(undefined1 *)(param_1[0x10] + iVar11) = 0;
-      goto LAB_001173a0;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_IFVAR_00127170)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x50;
-      iVar9 = WORD_HEXADECIMAL_FFFEA8DC;
-      if (iVar2 < 2) goto LAB_001173a0;
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-      iVar4 = (*g_pHelperFuncs->strlen)(param_3);
-      iVar11 = iVar4 + -2;
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-      iVar9 = (*g_pHelperFuncs->malloc)(iVar4 + -1);
-      param_1[0x10] = iVar9;
-      uVar8 = *(undefined4 *)(param_1[1] + 0x94);
-      iVar4 = (int32)STRING_IFVAR_00127178;
-      goto LAB_0011705c;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_ELSE)
-    ;
-    if (iVar9 == 0) {
-      uVar8 = 0x11;
-LAB_0011739c:
-      *param_1 = uVar8;
-      goto LAB_001173a0;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_ENDIF)
-    ;
-    if (iVar9 == 0) {
-      uVar8 = 0x12;
-      goto LAB_0011739c;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_LIFT_00127190)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x29;
-      param_1[7] = 9;
-      goto joined_r0x00116ca0;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_LINK)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x13;
-      if (2 < iVar2) {
-        uVar8 = FUN_00112e20((int)param_1,puVar3[1]);
-        param_1[3] = uVar8;
-        uVar8 = FUN_00112e20((int)param_1,puVar3[2]);
-        param_1[4] = uVar8;
-      }
-      goto LAB_001173a0;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_LOADCLIPART)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x14;
-      if (4 < iVar2) {
-        uVar8 = FUN_00112e20((int)param_1,puVar3[1]);
-        param_1[3] = uVar8;
-        FUN_001204f0(*(undefined4 *)(param_1[1] + 0x94),puVar3[2],piVar10);
-        iVar9 = WORD_HEXADECIMAL_FFFEA72C;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[3],iVar11);
-        if (iVar4 == 0) {
-          param_1[0xc] = 1;
-        }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[4],iVar11);
-        if (iVar4 == 0) {
-          param_1[0xd] = 1;
-        }
-        if (5 < iVar2) {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-          iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[5],iVar11);
-          if (iVar4 == 0) {
-            param_1[0xe] = 1;
-          }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-          iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[5],iVar11);
-          if (iVar4 == 0) {
-            param_1[0xe] = 1;
-          }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-          if ((6 < iVar2) &&
-             (iVar9 = (*g_pHelperFuncs->strcmp)(puVar3[6],iVar11), iVar9 == 0
-             )) {
-            param_1[0xf] = 1;
-          }
-        }
-      }
-      goto LAB_001173a0;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_LOADSCENE)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x15;
-joined_r0x001159a4:
-      if (iVar2 < 2) goto LAB_001173a0;
-LAB_00117258:
-      FUN_001204f0(*(undefined4 *)(param_1[1] + 0x94),puVar3[1],piVar10);
-      goto LAB_001173a0;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_LOADSOUNDS_001271B8)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x16;
-      iVar9 = WORD_HEXADECIMAL_FFFEA60C;
-      if (1 < iVar2) {
-        param_1[7] = iVar2 + -1;
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-        iVar4 = (*g_pHelperFuncs->strlen)(param_3);
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-        iVar9 = (*g_pHelperFuncs->malloc)(iVar4 + -9);
-        param_1[0x10] = iVar9;
-        FUN_0010efd4(*(undefined4 *)(param_1[1] + 0x94),(int32)STRING_LOADSOUNDS_001271C4,param_3,iVar9);
-      }
-      goto LAB_001173a0;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_MATCHPOSITION)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x17;
-      if (iVar2 < 3) goto LAB_001173a0;
-      uVar8 = FUN_00112e20((int)param_1,puVar3[1]);
-      param_1[3] = uVar8;
-      uVar8 = FUN_00112e20((int)param_1,puVar3[2]);
-      param_1[4] = uVar8;
-      if (iVar2 < 4) goto LAB_001173a0;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (puVar3[3],(int32)STRING_TERRAIN);
-joined_r0x001160ac:
-      if (iVar9 != 0) goto LAB_001173a0;
-      goto LAB_00117220;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_PLAYANIM)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x19;
-      if (iVar2 < 2) goto LAB_001173a0;
-      uVar5 = FUN_00113654(*(undefined4 *)(param_1[1] + 0x94),puVar3[1]);
-      param_1[7] = uVar5;
-      if (iVar2 < 3) goto LAB_001173a0;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (puVar3[2],(int32)STRING_LOOP);
-      goto joined_r0x001160ac;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_PLAYSEQUENCE)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x1a;
-      if (iVar2 < 3) goto LAB_001173a0;
-      uVar8 = FUN_00112e20((int)param_1,puVar3[1]);
-      param_1[3] = uVar8;
-      iVar9 = puVar3[2];
-LAB_00116f14:
-      uVar5 = FUN_00113654(*(undefined4 *)(param_1[1] + 0x94),iVar9);
-LAB_00116f20:
-      param_1[7] = uVar5;
-      goto LAB_001173a0;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_PLAYSOUND)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x1b;
-      iVar9 = WORD_HEXADECIMAL_FFFEA428;
-      if (iVar2 < 2) goto LAB_001173a0;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar4 = (*g_pHelperFuncs->strcmp)
-                        (puVar3[1],(int32)STRING_BAD);
-      if (iVar4 == 0) {
-        uVar5 = 4;
-        param_1[0xc] = 1;
-      }
-      else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[1],(int32)STRING_GOOD);
-        if (iVar4 == 0) {
-          uVar5 = 5;
-          param_1[0xc] = 1;
-        }
-        else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-          iVar4 = (*g_pHelperFuncs->strcmp)
-                            (puVar3[1],(int32)STRING_KEYBLADE);
-          if (iVar4 == 0) {
-            uVar5 = 6;
-            param_1[0xc] = 1;
-          }
-          else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-            iVar4 = (*g_pHelperFuncs->strcmp)
-                              (puVar3[1],(int32)STRING_EXPLODE);
-            if (iVar4 == 0) {
-              uVar5 = 7;
-              param_1[0xc] = 1;
-            }
-            else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-              iVar4 = (*g_pHelperFuncs->strcmp)
-                                (puVar3[1],(int32)STRING_WATER);
-              if (iVar4 == 0) {
-                param_1[0xc] = 1;
-LAB_00116d90:
-                uVar5 = 8;
-              }
-              else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                iVar4 = (*g_pHelperFuncs->strcmp)
-                                  (puVar3[1],(int32)STRING_JUMP);
-                if (iVar4 == 0) {
-                  param_1[0xc] = 1;
-                  goto LAB_00116d44;
-                }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                iVar4 = (*g_pHelperFuncs->strcmp)
-                                  (puVar3[1],(int32)STRING_THUD);
-                if (iVar4 == 0) {
-                  uVar5 = 9;
-                  param_1[0xc] = 1;
-                }
-                else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                  iVar4 = (*g_pHelperFuncs->strcmp)
-                                    (puVar3[1],(int32)STRING_TRANSITION);
-                  if (iVar4 == 0) {
-                    uVar5 = 10;
-                    param_1[0xc] = 1;
-                  }
-                  else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                    iVar4 = (*g_pHelperFuncs->strcmp)
-                                      (puVar3[1],(int32)STRING_MAGIC_ALERT);
-                    if (iVar4 == 0) {
-                      uVar5 = 0xb;
-                      param_1[0xc] = 1;
-                    }
-                    else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                      iVar9 = (*g_pHelperFuncs->strcmp)
-                                        (puVar3[1],(int32)STRING_MAGIC_CAST);
-                      if (iVar9 != 0) {
-LAB_00115d5c:
-                        uVar8 = puVar3[1];
-                        goto LAB_00116e68;
-                      }
-                      uVar5 = 0xc;
-                      param_1[0xc] = 1;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-      goto LAB_00116f20;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_REMOVESOFTKEY)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x1c;
-      goto joined_r0x00115d98;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_REMOVEUIACTION)
-    ;
-    if (iVar9 == 0) {
-      uVar8 = 0x1d;
-      goto LAB_0011739c;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_REMOVEUITEXT)
-    ;
-    if (iVar9 == 0) {
-      uVar8 = 0x1e;
-      goto LAB_0011739c;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_RESETKEYS)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x1f;
-      goto joined_r0x00116ca0;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_SAVEGAME)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x22;
-      if (iVar2 < 2) goto LAB_001173a0;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (puVar3[1],(int32)STRING_TEMP);
-      goto joined_r0x001160ac;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_SETANIMSPEED)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x23;
-      if (iVar2 < 3) goto LAB_001173a0;
-      uVar5 = FUN_00113654(*(undefined4 *)(param_1[1] + 0x94),puVar3[1]);
-      param_1[7] = uVar5;
-LAB_0011719c:
-      uVar8 = puVar3[2];
-LAB_001171a0:
-      uVar8 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),uVar8);
-      param_1[5] = uVar8;
-      goto LAB_001173a0;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_SETANIMPOSITION)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x24;
-      if (iVar2 < 3) goto LAB_001173a0;
-      uVar5 = FUN_00113654(*(undefined4 *)(param_1[1] + 0x94),puVar3[1]);
-      iVar9 = WORD_HEXADECIMAL_FFFE9FAC;
-      param_1[7] = uVar5;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[2],(int32)STRING_END);
-      if (iVar4 == 0) {
-        uVar5 = 0xffffffff;
-      }
-      else {
-        uVar5 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[2]);
-        uVar5 = FUN_00126858(uVar5);
-      }
-      param_1[8] = uVar5;
-      if (iVar2 < 4) goto LAB_001173a0;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)(puVar3[3],iVar11);
-      goto joined_r0x001160ac;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_SETAPPEARANCE)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x25;
-      if (iVar2 < 4) goto LAB_001173a0;
-      uVar5 = FUN_00113654(*(undefined4 *)(param_1[1] + 0x94),puVar3[1]);
-      param_1[7] = uVar5;
-      uVar8 = FUN_00112e20((int)param_1,puVar3[2]);
-      param_1[3] = uVar8;
-      uVar5 = FUN_00113654(*(undefined4 *)(param_1[1] + 0x94),puVar3[3]);
-      goto LAB_00116838;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_SETBACKGROUND)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x26;
-      if (iVar2 == 2) goto LAB_00117258;
-      if (iVar2 < 4) goto LAB_001173a0;
-      uVar5 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[1]);
-      uVar6 = FUN_00126858(uVar5);
-      uVar5 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[2]);
-      uVar7 = FUN_00126858(uVar5);
-      uVar5 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[3]);
-      uVar5 = FUN_00126858(uVar5);
-      uVar5 = uVar6 << 0x10 | uVar7 << 8 | uVar5;
-      goto LAB_00116f20;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_SETCAMERAFOCUS)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x27;
-      if (iVar2 == 2) {
-        param_1[0xc] = 1;
-        iVar9 = WORD_HEXADECIMAL_FFFE9E00;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar11 = (*g_pHelperFuncs->strcmp)
-                           (puVar3[1],(int32)STRING_STANDARD_VIEW);
-        iVar4 = FLOAT_90;
-        if (iVar11 == 0) {
-          param_1[0x11] = FLOAT_90;
-          param_1[0x12] = 0;
-          iVar4 = iVar4 + -0x1940000;
-        }
-        else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-          iVar11 = (*g_pHelperFuncs->strcmp)
-                             (puVar3[1],(int32)STRING_HIGH_VIEW);
-          iVar4 = FLOAT_60;
-          if (iVar11 == 0) {
-            iVar4 = FLOAT_60 + -0x3c0000;
-            param_1[0x11] = FLOAT_60;
-          }
-          else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-            iVar11 = (*g_pHelperFuncs->strcmp)
-                               (puVar3[1],(int32)STRING_PLAN_VIEW);
-            if (iVar11 == 0) {
-              param_1[0x11] = FLOAT_80;
-              param_1[0x12] = iVar4;
-              param_1[0x13] = iVar4;
-              goto LAB_001173a0;
-            }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-            iVar11 = (*g_pHelperFuncs->strcmp)
-                               (puVar3[1],(int32)STRING_MED_VIEW);
-            if (iVar11 == 0) {
-              param_1[0x11] = iVar4;
-              iVar4 = FLOAT_25;
-            }
-            else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-              iVar9 = (*g_pHelperFuncs->strcmp)
-                                (puVar3[1],(int32)STRING_LOW_VIEW);
-              iVar4 = FLOAT_MINUS_5;
-              if (iVar9 != 0) goto LAB_001173a0;
-              param_1[0x11] = FLOAT_MINUS_5;
-              iVar4 = iVar4 + 0x1280000;
-            }
-          }
-          param_1[0x12] = iVar4;
-        }
-LAB_00116bcc:
-        param_1[0x13] = iVar4;
-        goto LAB_001173a0;
-      }
-      if (iVar2 < 3) goto LAB_001173a0;
-      uVar8 = FUN_00112e20((int)param_1,puVar3[1]);
-      iVar9 = WORD_HEXADECIMAL_FFFE9CFC;
-      param_1[3] = uVar8;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)(puVar3[2],iVar11);
-      if (iVar9 == 0) {
-        param_1[0xd] = 1;
-      }
-      if (iVar2 < 4) goto LAB_001173a0;
-      param_1[0xe] = 1;
-      uVar8 = puVar3[3];
-      goto LAB_001171a0;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_SETCHARACTERMODE)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x29;
-      iVar9 = WORD_HEXADECIMAL_FFFE9C8C;
-      if (iVar2 < 2) goto LAB_001173a0;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar4 = (*g_pHelperFuncs->strcmp)
-                        (puVar3[1],(int32)STRING_ATTACK);
-      if (iVar4 == 0) {
-        param_1[7] = 1;
-      }
-      else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[1],(int32)STRING_SWIM);
-        if (iVar4 == 0) {
-          uVar8 = 2;
-        }
-        else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-          iVar4 = (*g_pHelperFuncs->strcmp)
-                            (puVar3[1],(int32)STRING_SWIM_NO_CLIMB);
-          if (iVar4 == 0) {
-            param_1[7] = 2;
-            param_1[0xc] = 1;
-            goto LAB_00116610;
-          }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-          iVar4 = (*g_pHelperFuncs->strcmp)
-                            (puVar3[1],(int32)STRING_NOSWIM);
-          if (iVar4 == 0) {
-            uVar8 = 3;
-          }
-          else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-            iVar4 = (*g_pHelperFuncs->strcmp)
-                              (puVar3[1],(int32)STRING_CLIMB_TREE);
-            if (iVar4 == 0) {
-              uVar8 = 4;
-            }
-            else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-              iVar4 = (*g_pHelperFuncs->strcmp)
-                                (puVar3[1],(int32)STRING_CLIMB_TREE_NO_ROT);
-              if (iVar4 == 0) {
-                uVar8 = 5;
-              }
-              else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                iVar4 = (*g_pHelperFuncs->strcmp)
-                                  (puVar3[1],(int32)STRING_CLIMB_LADDER);
-                if (iVar4 == 0) {
-                  uVar8 = 6;
-                }
-                else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                  iVar4 = (*g_pHelperFuncs->strcmp)
-                                    (puVar3[1],(int32)STRING_LIFT_001273C4);
-                  if (iVar4 != 0) {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                    iVar4 = (*g_pHelperFuncs->strcmp)
-                                      (puVar3[1],(int32)STRING_DROP);
-                    if (iVar4 == 0) {
-                      param_1[7] = 10;
-                      param_1[0xc] = 1;
-                      if (iVar2 < 3) goto LAB_001173a0;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                      iVar9 = (*g_pHelperFuncs->strcmp)
-                                        (puVar3[2],(int32)STRING_BEHIND);
-                      if (iVar9 == 0) {
-                        param_1[0xc] = 0;
-                      }
-                    }
-                    else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                      iVar4 = (*g_pHelperFuncs->strcmp)
-                                        (puVar3[1],(int32)STRING_HANG);
-                      if (iVar4 != 0) {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                        iVar4 = (*g_pHelperFuncs->strcmp)
-                                          (puVar3[1],(int32)STRING_STATIC_HANG);
-                        if (iVar4 == 0) {
-                          uVar8 = 0xc;
-                        }
-                        else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                          iVar4 = (*g_pHelperFuncs->strcmp)
-                                            (puVar3[1],(int32)STRING_UNHANG);
-                          if (iVar4 == 0) {
-                            uVar8 = 0xd;
-                          }
-                          else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                            iVar4 = (*g_pHelperFuncs->strcmp)
-                                              (puVar3[1],(int32)STRING_HIT);
-                            if (iVar4 == 0) {
-                              param_1[7] = 0xe;
-                              if (iVar2 < 3) goto LAB_001173a0;
-                              uVar8 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[2]);
-                              param_1[5] = uVar8;
-                              goto LAB_001151f4;
-                            }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                            iVar4 = (*g_pHelperFuncs->strcmp)
-                                              (puVar3[1],(int32)STRING_IDLE);
-                            if (iVar4 == 0) {
-                              uVar8 = 0xf;
-                            }
-                            else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                              iVar9 = (*g_pHelperFuncs->strcmp)
-                                                (puVar3[1],(int32)STRING_RESET);
-                              if (iVar9 != 0) goto LAB_00116610;
-                              uVar8 = 0x10;
-                            }
-                          }
-                        }
-                        goto LAB_0011660c;
-                      }
-                      param_1[7] = 0xb;
-                      if (iVar2 < 4) goto LAB_00116610;
-                      uVar8 = FUN_00112e20((int)param_1,puVar3[3]);
-                      param_1[4] = uVar8;
-                    }
-                    goto LAB_001151f4;
-                  }
-                  uVar8 = 9;
-                }
-              }
-            }
-          }
-        }
-LAB_0011660c:
-        param_1[7] = uVar8;
-      }
-LAB_00116610:
-      if (iVar2 < 3) goto LAB_001173a0;
-      goto LAB_001151f4;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_SETCOLLECTABLES)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x2c;
-      if (iVar2 != 3) {
-        if (iVar2 != 4) goto LAB_001173a0;
-        param_1[0xc] = 1;
-        FUN_001204f0(*(undefined4 *)(param_1[1] + 0x94),puVar3[1],piVar10);
-        uVar5 = FUN_00113654(*(undefined4 *)(param_1[1] + 0x94),puVar3[2]);
-        param_1[8] = uVar5;
-        uVar8 = puVar3[3];
-        goto LAB_00116e68;
-      }
-LAB_00116654:
-      FUN_001204f0(*(undefined4 *)(param_1[1] + 0x94),puVar3[1],piVar10);
-LAB_00116e64:
-      uVar8 = puVar3[2];
-      goto LAB_00116e68;
-    }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    iVar9 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_SETCOLLISIONON)
-    ;
-    if (iVar9 == 0) {
-      *param_1 = 0x2d;
-joined_r0x00116ca0:
-      if (iVar2 < 2) goto LAB_001173a0;
-    }
-    else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETCOLLISIONOFF);
-      if (iVar9 == 0) {
-        *param_1 = 0x2e;
-        goto joined_r0x00116ca0;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETCOMBATREGION);
-      if (iVar9 == 0) {
-        *param_1 = 0x2f;
-        goto joined_r0x00116ca0;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETKEYSON);
-      if (iVar9 == 0) {
-        *param_1 = 0x30;
-        goto joined_r0x00116ca0;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETKEYSOFF);
-      if (iVar9 == 0) {
-        *param_1 = 0x31;
-        goto joined_r0x00116ca0;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETLEVELUP);
-      if (iVar9 == 0) {
-        *param_1 = 0x32;
-        if (iVar2 < 3) goto LAB_001173a0;
-        uVar5 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[1]);
-        uVar5 = FUN_00126858(uVar5);
-        param_1[7] = uVar5;
-        uVar8 = puVar3[2];
-        goto LAB_00116828;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETMIRROR);
-      if (iVar9 == 0) {
-        *param_1 = 0x33;
-        iVar9 = WORD_HEXADECIMAL_FFFE977C;
-        if (iVar2 < 2) goto LAB_001173a0;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->strcmp)
-                          (puVar3[1],(int32)STRING_NULL);
-        if (iVar4 != 0) {
-          uVar8 = FUN_00112e20((int)param_1,puVar3[1]);
-          param_1[3] = uVar8;
-        }
-        if (iVar2 < 10) goto LAB_001173a0;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[2],(int32)STRING_DASH_X);
-        if (iVar4 == 0) {
-          param_1[0xc] = 1;
-        }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[3],(int32)STRING_DASH_Y);
-        if (iVar4 == 0) {
-          param_1[0xd] = 1;
-        }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[4],(int32)STRING_DASH_Z);
-        if (iVar4 == 0) {
-          param_1[0xe] = 1;
-        }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar9 = (*g_pHelperFuncs->strcmp)(puVar3[5],(int32)STRING_DASH_R);
-        if (iVar9 == 0) {
-          param_1[0xf] = 1;
-        }
-        uVar8 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[6]);
-        param_1[0x11] = uVar8;
-        uVar8 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[7]);
-        param_1[0x12] = uVar8;
-        uVar8 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[8]);
-        param_1[0x13] = uVar8;
-        uVar8 = puVar3[9];
-        goto LAB_001171a0;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETMOVINGCAMERA);
-      if (iVar9 == 0) {
-        uVar8 = 0x35;
-        goto LAB_0011739c;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETPOSITION);
-      if (iVar9 == 0) {
-        *param_1 = 0x36;
-        if (iVar2 < 5) goto LAB_001173a0;
-        uVar8 = FUN_00112e20((int)param_1,puVar3[1]);
-        iVar9 = WORD_HEXADECIMAL_FFFE94F0;
-        param_1[3] = uVar8;
-        iVar11 = (int32)STRING_NULL;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[2],iVar11);
-        if (iVar4 == 0) {
-          param_1[0xc] = 1;
-        }
-        else {
-          uVar8 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[2]);
-          param_1[0x11] = uVar8;
-        }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[3],iVar11);
-        if (iVar4 == 0) {
-          param_1[0xd] = 1;
-        }
-        else {
-          uVar8 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[3]);
-          param_1[0x12] = uVar8;
-        }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[4],iVar11);
-        if (iVar4 != 0) {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-          iVar9 = (*g_pHelperFuncs->strcmp)
-                            (puVar3[4],(int32)STRING_TERRAIN);
-          if (iVar9 != 0) {
-            iVar4 = FUN_0010d4dc(*(undefined4 *)(param_1[1] + 0x94),puVar3[4]);
-            goto LAB_00116bcc;
-          }
-          uVar5 = 0xffffffff;
-          goto LAB_00116f20;
-        }
-LAB_00116ed0:
-        param_1[7] = 1;
-        goto LAB_001173a0;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar4 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETSCREENMODE);
-      iVar9 = WORD_HEXADECIMAL_FFFE93F0;
-      if (iVar4 == 0) {
-        *param_1 = 0x38;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar9 = (*g_pHelperFuncs->strcmp)(puVar3[1],(int32)STRING_CINEMATIC);
-        if (iVar9 != 0) {
-LAB_00116d44:
-          param_1[7] = 0;
-          goto LAB_001173a0;
-        }
-        goto LAB_00116ed0;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETSCRIPTON);
-      if (iVar9 == 0) {
-        *param_1 = 0x39;
-        goto joined_r0x00116ca0;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETSCRIPTOFF);
-      if (iVar9 == 0) {
-        *param_1 = 0x3a;
-        goto joined_r0x00116ca0;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETSHADOWVIS);
-      if (iVar9 == 0) {
-        *param_1 = 0x3b;
-joined_r0x00115d98:
-        if (iVar2 < 2) goto LAB_001173a0;
-        goto LAB_00115d5c;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETSPELLTYPE);
-      if (iVar9 == 0) {
-        *param_1 = 0x3c;
-        iVar9 = WORD_HEXADECIMAL_FFFE92D8;
-        if (iVar2 < 2) goto LAB_001173a0;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->strcmp)
-                          (puVar3[1],(int32)STRING_FIRE);
-        if (iVar4 == 0) goto LAB_00116d44;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[1],(int32)STRING_BLIZZARD);
-        if (iVar4 != 0) {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-          iVar9 = (*g_pHelperFuncs->strcmp)
-                            (puVar3[1],(int32)STRING_THUNDER);
-          if (iVar9 != 0) goto LAB_00116d90;
-          uVar5 = 2;
-          goto LAB_00116f20;
-        }
-        goto LAB_00116ed0;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETSTATE);
-      if (iVar9 == 0) {
-        *param_1 = 0x3d;
-joined_r0x00116e08:
-        if (iVar2 < 3) goto LAB_001173a0;
-        goto LAB_00116654;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETVAR);
-      if (iVar9 == 0) {
-        *param_1 = 0x4d;
-        goto joined_r0x00116e08;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_INCVAR);
-      if (iVar9 == 0) {
-        *param_1 = 0x4e;
-        if (iVar2 < 2) goto LAB_00116ed0;
-        FUN_001204f0(*(undefined4 *)(param_1[1] + 0x94),puVar3[1],piVar10);
-joined_r0x00116ecc:
-        if (iVar2 < 3) goto LAB_00116ed0;
-        goto LAB_00116e64;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_DECVAR);
-      if (iVar9 == 0) {
-        *param_1 = 0x4f;
-        if (1 < iVar2) {
-          FUN_001204f0(*(undefined4 *)(param_1[1] + 0x94),puVar3[1],piVar10);
-          goto joined_r0x00116ecc;
-        }
-        goto LAB_00116ed0;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETSTATICCAMERA);
-      if (iVar9 == 0) {
-        *param_1 = 0x3e;
-        if (iVar2 < 2) goto LAB_001173a0;
-        iVar9 = puVar3[1];
-        goto LAB_00116f14;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETTERRAINLEVEL);
-      if (iVar9 == 0) {
-        *param_1 = 0x3f;
-        goto joined_r0x00116ca0;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETUPDATEON);
-      if (iVar9 == 0) {
-        *param_1 = 0x40;
-        goto joined_r0x00116ca0;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar9 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETUPDATEOFF);
-      if (iVar9 == 0) {
-        *param_1 = 0x41;
-        goto joined_r0x00116ca0;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar4 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETUIVIS_00127584);
-      iVar9 = WORD_HEXADECIMAL_FFFE8F88;
-      if (iVar4 == 0) {
-        *param_1 = 0x42;
-        iVar9 = WORD_HEXADECIMAL_FFFE8FE0;
-        if (iVar2 < 2) goto LAB_001173a0;
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-        iVar4 = (*g_pHelperFuncs->strlen)(param_3);
-        iVar11 = iVar4 + -8;
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-        iVar9 = (*g_pHelperFuncs->malloc)(iVar4 + -7);
-        param_1[0x10] = iVar9;
-        uVar8 = *(undefined4 *)(param_1[1] + 0x94);
-        iVar4 = (int32)STRING_SETUIVIS_00127590;
-        goto LAB_0011705c;
-      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      iVar4 = (*g_pHelperFuncs->strcmp)
-                        (*puVar3,(int32)STRING_SETVICTIM);
-      if (iVar4 != 0) {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_SETVIS);
-        if (iVar4 != 0) {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-          iVar4 = (*g_pHelperFuncs->strcmp)(*puVar3,(int32)STRING_SETXROT);
-          if (iVar4 == 0) {
-            *param_1 = 0x46;
-          }
-          else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-            iVar4 = (*g_pHelperFuncs->strcmp)
-                              (*puVar3,(int32)STRING_SETYROT);
-            if (iVar4 != 0) {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-              iVar4 = (*g_pHelperFuncs->strcmp)
-                                (*puVar3,(int32)STRING_STOPANIM);
-              if (iVar4 != 0) {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                iVar4 = (*g_pHelperFuncs->strcmp)
-                                  (*puVar3,(int32)STRING_SUMMARY);
-                if (iVar4 == 0) {
-                  *param_1 = 0x49;
-                  goto joined_r0x001159a4;
-                }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                iVar4 = (*g_pHelperFuncs->strcmp)
-                                  (*puVar3,(int32)STRING_UNLINK);
-                if (iVar4 != 0) {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                  iVar4 = (*g_pHelperFuncs->strcmp)
-                                    (*puVar3,(int32)STRING_UNLOADCLIPART);
-                  if (iVar4 == 0) {
-                    *param_1 = 0x4b;
-                    if (3 < iVar2) {
-                      uVar8 = FUN_00112e20((int)param_1,puVar3[1]);
-                      param_1[3] = uVar8;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                      iVar4 = (*g_pHelperFuncs->strcmp)(puVar3[2],iVar11);
-                      if (iVar4 == 0) {
-                        param_1[0xc] = 1;
-                      }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                      iVar9 = (*g_pHelperFuncs->strcmp)(puVar3[3],iVar11);
-                      if (iVar9 == 0) {
-                        param_1[0xd] = 1;
-                      }
-                    }
-                    goto LAB_001173a0;
-                  }
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                  iVar4 = (*g_pHelperFuncs->strcmp)
-                                    (*puVar3,(int32)STRING_SETKEYDIR);
-                  if (iVar4 != 0) {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                    iVar4 = (*g_pHelperFuncs->strcmp)
-                                      (*puVar3,(int32)STRING_SETACTIVEROTON);
-                    if (iVar4 == 0) {
-                      uVar8 = 0x53;
-                    }
-                    else {
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                      iVar9 = (*g_pHelperFuncs->strcmp)
-                                        (*puVar3,(int32)STRING_SETACTIVEROTOFF);
-                      if (iVar9 == 0) {
-                        uVar8 = 0x54;
-                      }
-                      else {
-                        uVar8 = 0x4c;
-                      }
-                    }
-                    goto LAB_0011739c;
-                  }
-                  *param_1 = 0x52;
-                  goto joined_r0x00115d98;
-                }
-                *param_1 = 0x4a;
-                goto joined_r0x00116ca0;
-              }
-              *param_1 = 0x48;
-              if (iVar2 < 2) goto LAB_001173a0;
-              uVar5 = FUN_00113654(*(undefined4 *)(param_1[1] + 0x94),puVar3[1]);
-              param_1[7] = uVar5;
-              if (iVar2 < 3) goto LAB_001173a0;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-              iVar9 = (*g_pHelperFuncs->strcmp)
-                                (puVar3[2],(int32)STRING_NOW);
-              goto joined_r0x001160ac;
-            }
-            *param_1 = 0x47;
-          }
-          if (iVar2 < 3) goto LAB_001173a0;
-          uVar8 = FUN_00112e20((int)param_1,puVar3[1]);
-          param_1[3] = uVar8;
-          goto LAB_0011719c;
-        }
-        *param_1 = 0x44;
-        if (iVar2 < 3) goto LAB_001173a0;
-        uVar8 = FUN_00112e20((int)param_1,puVar3[1]);
-        param_1[3] = uVar8;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-        iVar9 = (*g_pHelperFuncs->strcmp)(puVar3[2],iVar11);
-        goto joined_r0x001160ac;
-      }
-      *param_1 = 0x43;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      if ((iVar2 < 2) ||
-         (iVar9 = (*g_pHelperFuncs->strcmp)
-                            (puVar3[1],(int32)STRING_NULL), iVar9 == 0)) goto LAB_001173a0;
-    }
-    uVar8 = puVar3[1];
   }
-  uVar8 = FUN_00112e20((int)param_1,uVar8);
-  param_1[3] = uVar8;
-LAB_001173a0:
-  for (iVar9 = 0; iVar9 < iVar2; iVar9 = iVar9 + 1) {
-    helper_free((void *)puVar3[iVar9]);
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_ADDUIINFO) == 0) {
+    command->type = 5;
+    if (count >= 3) {
+      command->number[1] = -2;
+      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      command->hash = FUN_00113654(context,(int)words[2]);
+    }
   }
-  helper_free(puVar3);
-  return;
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_ADDUITEXT) == 0) {
+    command->type = 5;
+    if (count >= 7) {   /* a rectangle in fractions of the screen, made pixels */
+      value = string_to_float(context,words[1]);
+      width = int_to_float((int16)app->devInfo.cxScreen);
+      command->number[0] = FUN_00126858(float_multiply(width,value));
+      value = string_to_float(context,words[2]);
+      height = int_to_float((int16)app->devInfo.cyScreen);
+      command->number[1] = FUN_00126858(float_multiply(height,value));
+      command->number[2] = FUN_00126858(float_multiply(width,string_to_float(context,words[3])));
+      command->number[3] = FUN_00126858(float_multiply(height,string_to_float(context,words[4])));
+      if (command->number[1] == command->number[3])
+        command->flag[0] = 1;
+      command->object = FUN_00112e20((int)command,(undefined4)words[5]);
+      command->hash = FUN_00113654(context,(int)words[6]);
+      if (count >= 8) {
+        if ((*g_pHelperFuncs->strcmp)(words[7],one) == 0)
+          command->flag[1] = 1;
+        else if ((*g_pHelperFuncs->strcmp)(words[7],(const char *)DATA_AT_00127138) == 0)   /* "2" */
+          command->flag[2] = 1;
+      }
+      if (count >= 10) {
+        command->flag[3] = 1;
+        command->value[0] = float_multiply(width,string_to_float(context,words[8]));
+        command->value[1] = float_multiply(height,string_to_float(context,words[9]));
+      }
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_ADJUSTVALUE) == 0) {
+    command->type = 6;
+    if (count >= 3) {
+      FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+      command->value[0] = number = string_to_float(context,words[2]);
+      roundNumber = 1;
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_BREAK) == 0)
+    command->type = 8;
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_FADE) == 0) {
+    command->type = 0xe;
+    if (count >= 7) {
+      command->value[0] = string_to_float(context,words[1]);
+      command->value[1] = string_to_float(context,words[2]);
+      red = FUN_00126858(string_to_float(context,words[3]));
+      green = FUN_00126858(string_to_float(context,words[4]));
+      blue = FUN_00126858(string_to_float(context,words[5]));
+      command->number[0] = red << 16 | green << 8 | blue;
+      number2Word = words[6];
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_FIREPROJECTILE) == 0) {
+    command->type = 0xf;
+    if (count == 4) {
+      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      command->target = FUN_00112e20((int)command,(undefined4)words[2]);
+      command->number[0] = FUN_00126858(string_to_float(context,words[3]));
+      command->flag[0] = 1;
+    }
+    else if (count == 6) {
+      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      command->vector[0] = string_to_float(context,words[2]);
+      command->vector[1] = string_to_float(context,words[3]);
+      command->vector[2] = string_to_float(context,words[4]);
+      numberWord = words[5];
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_IF_00127168) == 0) {
+    command->type = 0x10;
+    if (count >= 2) {   /* the condition: the line after "if " */
+      length = (*g_pHelperFuncs->strlen)(text);
+      command->text = (*g_pHelperFuncs->malloc)(length - 1);
+      prefix = STRING_IF_0012716C;
+      textEnd = length - 2;
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_IFVAR_00127170) == 0) {
+    command->type = 0x50;
+    if (count >= 2) {
+      length = (*g_pHelperFuncs->strlen)(text);
+      command->text = (*g_pHelperFuncs->malloc)(length - 1);
+      prefix = STRING_IFVAR_00127178;
+      textEnd = length - 2;
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_ELSE) == 0)
+    command->type = 0x11;
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_ENDIF) == 0)
+    command->type = 0x12;
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_LIFT_00127190) == 0) {
+    command->type = 0x29;   /* setCharacterMode LIFT */
+    command->number[0] = 9;
+    if (count >= 2)
+      objectName = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_LINK) == 0) {
+    command->type = 0x13;
+    if (count >= 3) {
+      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      command->target = FUN_00112e20((int)command,(undefined4)words[2]);
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_LOADCLIPART) == 0) {
+    command->type = 0x14;
+    if (count >= 5) {
+      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      FUN_001204f0(context,(undefined4)words[2],(int *)&command->text);
+      if ((*g_pHelperFuncs->strcmp)(words[3],one) == 0)
+        command->flag[0] = 1;
+      if ((*g_pHelperFuncs->strcmp)(words[4],one) == 0)
+        command->flag[1] = 1;
+      if (count >= 6) {
+        if ((*g_pHelperFuncs->strcmp)(words[5],one) == 0)
+          command->flag[2] = 1;
+        if ((*g_pHelperFuncs->strcmp)(words[5],one) == 0)   /* the same test again, as the binary has it */
+          command->flag[2] = 1;
+        if (count >= 7 && (*g_pHelperFuncs->strcmp)(words[6],one) == 0)
+          command->flag[3] = 1;
+      }
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_LOADSCENE) == 0) {
+    command->type = 0x15;
+    if (count >= 2)
+      copyName = 1;
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_LOADSOUNDS_001271B8) == 0) {
+    command->type = 0x16;
+    if (count >= 2) {   /* the sound names: the line after "loadSounds " */
+      command->number[0] = count - 1;
+      command->text = (*g_pHelperFuncs->malloc)((*g_pHelperFuncs->strlen)(text) - 9);
+      FUN_0010efd4(context,(undefined4)STRING_LOADSOUNDS_001271C4,(int)text,(int)command->text);
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_MATCHPOSITION) == 0) {
+    command->type = 0x17;
+    if (count >= 3) {
+      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      command->target = FUN_00112e20((int)command,(undefined4)words[2]);
+      if (count >= 4 && (*g_pHelperFuncs->strcmp)(words[3],STRING_TERRAIN) == 0)
+        command->flag[0] = 1;
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_PLAYANIM) == 0) {
+    command->type = 0x19;
+    if (count >= 2) {
+      command->number[0] = FUN_00113654(context,(int)words[1]);
+      if (count >= 3 && (*g_pHelperFuncs->strcmp)(words[2],STRING_LOOP) == 0)
+        command->flag[0] = 1;
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_PLAYSEQUENCE) == 0) {
+    command->type = 0x1a;
+    if (count >= 3) {
+      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      hashWord = words[2];
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_PLAYSOUND) == 0) {
+    command->type = 0x1b;
+    if (count >= 2) {   /* a named game sound (flag 0), else a number */
+      if((*g_pHelperFuncs->strcmp)(words[1],STRING_BAD) == 0)
+        command->number[0] = 4;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_GOOD) == 0)
+        command->number[0] = 5;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_KEYBLADE) == 0)
+        command->number[0] = 6;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_EXPLODE) == 0)
+        command->number[0] = 7;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_WATER) == 0)
+        command->number[0] = 8;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_JUMP) == 0)
+        command->number[0] = 0;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_THUD) == 0)
+        command->number[0] = 9;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_TRANSITION) == 0)
+        command->number[0] = 10;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_MAGIC_ALERT) == 0)
+        command->number[0] = 0xb;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_MAGIC_CAST) == 0)
+        command->number[0] = 0xc;
+      else
+        numberWord = words[1];
+      if (numberWord == (char *)0x0)
+        command->flag[0] = 1;
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_REMOVESOFTKEY) == 0) {
+    command->type = 0x1c;
+    if (count >= 2)
+      numberWord = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_REMOVEUIACTION) == 0)
+    command->type = 0x1d;
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_REMOVEUITEXT) == 0)
+    command->type = 0x1e;
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_RESETKEYS) == 0) {
+    command->type = 0x1f;
+    if (count >= 2)
+      objectName = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SAVEGAME) == 0) {
+    command->type = 0x22;
+    if (count >= 2 && (*g_pHelperFuncs->strcmp)(words[1],STRING_TEMP) == 0)
+      command->flag[0] = 1;
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETANIMSPEED) == 0) {
+    command->type = 0x23;
+    if (count >= 3) {
+      command->number[0] = FUN_00113654(context,(int)words[1]);
+      valueWord = words[2];
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETANIMPOSITION) == 0) {
+    command->type = 0x24;
+    if (count >= 3) {
+      command->number[0] = FUN_00113654(context,(int)words[1]);
+      if ((*g_pHelperFuncs->strcmp)(words[2],STRING_END) == 0)
+        command->number[1] = -1;
+      else
+        command->number[1] = FUN_00126858(string_to_float(context,words[2]));
+      if (count >= 4 && (*g_pHelperFuncs->strcmp)(words[3],one) == 0)
+        command->flag[0] = 1;
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETAPPEARANCE) == 0) {
+    command->type = 0x25;
+    if (count >= 4) {
+      command->number[0] = FUN_00113654(context,(int)words[1]);
+      command->object = FUN_00112e20((int)command,(undefined4)words[2]);
+      command->number[1] = FUN_00113654(context,(int)words[3]);
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETBACKGROUND) == 0) {
+    command->type = 0x26;
+    if (count == 2)   /* an image */
+      copyName = 1;
+    else if (count >= 4) {   /* a colour 0xRRGGBB */
+      red = FUN_00126858(string_to_float(context,words[1]));
+      green = FUN_00126858(string_to_float(context,words[2]));
+      blue = FUN_00126858(string_to_float(context,words[3]));
+      command->number[0] = red << 16 | green << 8 | blue;
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETCAMERAFOCUS) == 0) {
+    command->type = 0x27;
+    if (count == 2) {   /* a named view: vector = its three angles / distances */
+      command->flag[0] = 1;
+      if ((*g_pHelperFuncs->strcmp)(words[1],STRING_STANDARD_VIEW) == 0) {
+        command->vector[0] = FLOAT_90;
+        command->vector[1] = 0;
+        command->vector[2] = FLOAT_10;
+      }
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_HIGH_VIEW) == 0) {
+        command->vector[0] = FLOAT_60;
+        command->vector[1] = 0x42340000;   /* 45.0 */
+        command->vector[2] = 0x42340000;
+      }
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_PLAN_VIEW) == 0) {
+        command->vector[0] = FLOAT_80;
+        command->vector[1] = FLOAT_60;
+        command->vector[2] = FLOAT_60;
+      }
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_MED_VIEW) == 0) {
+        command->vector[0] = FLOAT_60;
+        command->vector[1] = FLOAT_25;
+        command->vector[2] = FLOAT_25;
+      }
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_LOW_VIEW) == 0) {
+        command->vector[0] = FLOAT_MINUS_5;
+        command->vector[1] = 0xC1C80000;   /* -25.0 */
+        command->vector[2] = 0xC1C80000;
+      }
+    }
+    else if (count >= 3) {   /* an object */
+      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      if ((*g_pHelperFuncs->strcmp)(words[2],one) == 0)
+        command->flag[1] = 1;
+      if (count >= 4) {
+        command->flag[2] = 1;
+        valueWord = words[3];
+      }
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETCHARACTERMODE) == 0) {
+    command->type = 0x29;
+    if (count >= 2) {   /* the mode (number 0), then the object */
+      if ((*g_pHelperFuncs->strcmp)(words[1],STRING_ATTACK) == 0)
+        command->number[0] = 1;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_SWIM) == 0)
+        command->number[0] = 2;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_SWIM_NO_CLIMB) == 0) {
+        command->number[0] = 2;
+        command->flag[0] = 1;
+      }
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_NOSWIM) == 0)
+        command->number[0] = 3;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_CLIMB_TREE) == 0)
+        command->number[0] = 4;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_CLIMB_TREE_NO_ROT) == 0)
+        command->number[0] = 5;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_CLIMB_LADDER) == 0)
+        command->number[0] = 6;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_LIFT_001273C4) == 0)
+        command->number[0] = 9;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_DROP) == 0) {
+        command->number[0] = 10;
+        command->flag[0] = 1;
+        if (count >= 3 && (*g_pHelperFuncs->strcmp)(words[2],STRING_BEHIND) == 0)
+          command->flag[0] = 0;
+      }
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_HANG) == 0) {
+        command->number[0] = 0xb;
+        if (count >= 4)
+          command->target = FUN_00112e20((int)command,(undefined4)words[3]);
+      }
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_STATIC_HANG) == 0)
+        command->number[0] = 0xc;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_UNHANG) == 0)
+        command->number[0] = 0xd;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_HIT) == 0) {
+        command->number[0] = 0xe;
+        if (count >= 3)
+          command->value[0] = string_to_float(context,words[2]);
+      }
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_IDLE) == 0)
+        command->number[0] = 0xf;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_RESET) == 0)
+        command->number[0] = 0x10;
+      if (count >= 3)
+        objectName = words[2];
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETCOLLECTABLES) == 0) {
+    command->type = 0x2c;
+    if (count == 3)
+      copyName = 2;
+    else if (count == 4) {
+      command->flag[0] = 1;
+      FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+      command->number[1] = FUN_00113654(context,(int)words[2]);
+      numberWord = words[3];
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETCOLLISIONON) == 0) {
+    command->type = 0x2d;
+    if (count >= 2)
+      objectName = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETCOLLISIONOFF) == 0) {
+    command->type = 0x2e;
+    if (count >= 2)
+      objectName = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETCOMBATREGION) == 0) {
+    command->type = 0x2f;
+    if (count >= 2)
+      objectName = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETKEYSON) == 0) {
+    command->type = 0x30;
+    if (count >= 2)
+      objectName = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETKEYSOFF) == 0) {
+    command->type = 0x31;
+    if (count >= 2)
+      objectName = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETLEVELUP) == 0) {
+    command->type = 0x32;
+    if (count >= 3) {
+      command->number[0] = FUN_00126858(string_to_float(context,words[1]));
+      number2Word = words[2];
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETMIRROR) == 0) {
+    command->type = 0x33;
+    if (count >= 2) {
+      if ((*g_pHelperFuncs->strcmp)(words[1],STRING_NULL) != 0)
+        command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      if (count >= 10) {
+        if ((*g_pHelperFuncs->strcmp)(words[2],STRING_DASH_X) == 0)
+          command->flag[0] = 1;
+        if ((*g_pHelperFuncs->strcmp)(words[3],STRING_DASH_Y) == 0)
+          command->flag[1] = 1;
+        if ((*g_pHelperFuncs->strcmp)(words[4],STRING_DASH_Z) == 0)
+          command->flag[2] = 1;
+        if ((*g_pHelperFuncs->strcmp)(words[5],STRING_DASH_R) == 0)
+          command->flag[3] = 1;
+        command->vector[0] = string_to_float(context,words[6]);
+        command->vector[1] = string_to_float(context,words[7]);
+        command->vector[2] = string_to_float(context,words[8]);
+        valueWord = words[9];
+      }
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETMOVINGCAMERA) == 0)
+    command->type = 0x35;
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETPOSITION) == 0) {
+    command->type = 0x36;
+    if (count >= 5) {   /* x y z, each NULL to keep it (z also TERRAIN: on the ground; number 0) */
+      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      if ((*g_pHelperFuncs->strcmp)(words[2],STRING_NULL) == 0)
+        command->flag[0] = 1;
+      else
+        command->vector[0] = string_to_float(context,words[2]);
+      if ((*g_pHelperFuncs->strcmp)(words[3],STRING_NULL) == 0)
+        command->flag[1] = 1;
+      else
+        command->vector[1] = string_to_float(context,words[3]);
+      if ((*g_pHelperFuncs->strcmp)(words[4],STRING_NULL) == 0)
+        command->number[0] = 1;
+      else if ((*g_pHelperFuncs->strcmp)(words[4],STRING_TERRAIN) == 0)
+        command->number[0] = -1;
+      else
+        command->vector[2] = string_to_float(context,words[4]);
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETSCREENMODE) == 0) {
+    command->type = 0x38;
+                    /* reads words[1] even when the line has no second word, as the binary does */
+    if ((*g_pHelperFuncs->strcmp)(words[1],STRING_CINEMATIC) == 0)
+      command->number[0] = 1;
+    else
+      command->number[0] = 0;
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETSCRIPTON) == 0) {
+    command->type = 0x39;
+    if (count >= 2)
+      objectName = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETSCRIPTOFF) == 0) {
+    command->type = 0x3a;
+    if (count >= 2)
+      objectName = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETSHADOWVIS) == 0) {
+    command->type = 0x3b;
+    if (count >= 2)
+      numberWord = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETSPELLTYPE) == 0) {
+    command->type = 0x3c;
+    if (count >= 2) {
+      if ((*g_pHelperFuncs->strcmp)(words[1],STRING_FIRE) == 0)
+        command->number[0] = 0;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_BLIZZARD) == 0)
+        command->number[0] = 1;
+      else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_THUNDER) == 0)
+        command->number[0] = 2;
+      else
+        command->number[0] = 8;
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETSTATE) == 0) {
+    command->type = 0x3d;
+    if (count >= 3)
+      copyName = 2;
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETVAR) == 0) {
+    command->type = 0x4d;
+    if (count >= 3)
+      copyName = 2;
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_INCVAR) == 0) {
+    command->type = 0x4e;   /* by number 0: 1 without an amount */
+    if (count >= 2)
+      FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+    if (count >= 3)
+      numberWord = words[2];
+    else
+      command->number[0] = 1;
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_DECVAR) == 0) {
+    command->type = 0x4f;
+    if (count >= 2)
+      FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+    if (count >= 3)
+      numberWord = words[2];
+    else
+      command->number[0] = 1;
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETSTATICCAMERA) == 0) {
+    command->type = 0x3e;
+    if (count >= 2)
+      hashWord = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETTERRAINLEVEL) == 0) {
+    command->type = 0x3f;
+    if (count >= 2)
+      objectName = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETUPDATEON) == 0) {
+    command->type = 0x40;
+    if (count >= 2)
+      objectName = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETUPDATEOFF) == 0) {
+    command->type = 0x41;
+    if (count >= 2)
+      objectName = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETUIVIS_00127584) == 0) {
+    command->type = 0x42;
+    if (count >= 2) {   /* the line after "setUIVis " */
+      length = (*g_pHelperFuncs->strlen)(text);
+      command->text = (*g_pHelperFuncs->malloc)(length - 7);
+      prefix = STRING_SETUIVIS_00127590;
+      textEnd = length - 8;
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETVICTIM) == 0) {
+    command->type = 0x43;
+    if (count >= 2 && (*g_pHelperFuncs->strcmp)(words[1],STRING_NULL) != 0)
+      objectName = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETVIS) == 0) {
+    command->type = 0x44;
+    if (count >= 3) {
+      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      if ((*g_pHelperFuncs->strcmp)(words[2],one) == 0)
+        command->flag[0] = 1;
+    }
+  }
+  else if ((isXRotation = (*g_pHelperFuncs->strcmp)(words[0],STRING_SETXROT) == 0) != 0 ||
+           (*g_pHelperFuncs->strcmp)(words[0],STRING_SETYROT) == 0) {
+    command->type = isXRotation != 0 ? 0x46 : 0x47;
+    if (count >= 3) {
+      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      valueWord = words[2];
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_STOPANIM) == 0) {
+    command->type = 0x48;
+    if (count >= 2) {
+      command->number[0] = FUN_00113654(context,(int)words[1]);
+      if (count >= 3 && (*g_pHelperFuncs->strcmp)(words[2],STRING_NOW) == 0)
+        command->flag[0] = 1;
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SUMMARY) == 0) {
+    command->type = 0x49;
+    if (count >= 2)
+      copyName = 1;
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_UNLINK) == 0) {
+    command->type = 0x4a;
+    if (count >= 2)
+      objectName = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_UNLOADCLIPART) == 0) {
+    command->type = 0x4b;
+    if (count >= 4) {
+      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      if ((*g_pHelperFuncs->strcmp)(words[2],one) == 0)
+        command->flag[0] = 1;
+      if ((*g_pHelperFuncs->strcmp)(words[3],one) == 0)
+        command->flag[1] = 1;
+    }
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETKEYDIR) == 0) {
+    command->type = 0x52;
+    if (count >= 2)
+      numberWord = words[1];
+  }
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETACTIVEROTON) == 0)
+    command->type = 0x53;
+  else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETACTIVEROTOFF) == 0)
+    command->type = 0x54;
+  else
+    command->type = 0x4c;
+  if (copyName == 1)   /* 0x00117258: a name */
+    FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+  else if (copyName == 2) {   /* 0x00116654: a name, then a number */
+    FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+    numberWord = words[2];
+  }
+  if (numberWord != (char *)0x0) {   /* 0x00116e68 */
+    number = string_to_float(context,numberWord);
+    roundNumber = 1;
+  }
+  if (roundNumber != 0)   /* 0x00116e74 */
+    command->number[0] = FUN_00126858(number);
+  if (hashWord != (char *)0x0)   /* 0x00116f14 */
+    command->number[0] = FUN_00113654(context,(int)hashWord);
+  if (number2Word != (char *)0x0)   /* 0x00116828 */
+    command->number[1] = FUN_00126858(string_to_float(context,number2Word));
+  if (valueWord != (char *)0x0)   /* 0x001171a0 */
+    command->value[0] = string_to_float(context,valueWord);
+  if (prefix != (const char *)0x0) {   /* 0x0011705c: the rest of the line, its last character cut */
+    FUN_0010efd4(context,(undefined4)prefix,(int)text,(int)command->text);
+    command->text[textEnd] = 0;
+  }
+  if (objectName != (char *)0x0)   /* 0x00115800 */
+    command->object = FUN_00112e20((int)command,(undefined4)objectName);
+  for (i = 0; i < count; i++)
+    helper_free(words[i]);
+  helper_free(words);
 }
+
 
 /* ==== 0x001174AC  (file offset 0x174AC)  FUN_001174ac ================================================ */
 void FUN_001174ac(int param_1,undefined4 param_2)
@@ -16517,7 +15450,7 @@ undefined8 FUN_001180c4(int param_1,uint param_2)
   if (local_20 != 0) {
     iVar7 = 0;
     iVar6 = (int32)STRING_CARRIAGE_RETURN_NEWLINE_001270F8;
-    iVar2 = FUN_00110084(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_20,iVar6,0,0);
+    iVar2 = string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_20,iVar6,0,0);
     if (0 < iVar2) {
       size = iVar2 << 2;
       pvVar3 = helper_malloc(size);
@@ -16526,10 +15459,10 @@ undefined8 FUN_001180c4(int param_1,uint param_2)
       *(void **)(param_1 + 0x114) = pvVar3;
       pvVar3 = helper_malloc(size);
       iVar7 = iVar2;
-      FUN_00110084(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_20,iVar6,(int)pvVar3,iVar2
+      string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_20,iVar6,(int)pvVar3,iVar2
                   );
       for (iVar6 = 0; iVar6 < iVar2; iVar6 = iVar6 + 1) {
-        uVar4 = FUN_0010d4dc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
+        uVar4 = string_to_float(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),
                              *(undefined4 *)((int)pvVar3 + iVar6 * 4));
         uVar4 = float_divide(uVar4,uVar5);
         *(uint *)(*(int *)(param_1 + 0x110) + iVar6 * 4) = uVar4;
@@ -16760,12 +15693,12 @@ void FUN_0011868c(int param_1,undefined4 param_2)
   iVar6 = (int32)STRING_CARRIAGE_RETURN_NEWLINE_00126E2C;
   if (local_1c != 0) {
     param_3 = 0;
-    iVar2 = FUN_00110084(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_1c,iVar6,0,0);
+    iVar2 = string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_1c,iVar6,0,0);
     *(int *)(param_1 + 0x128) = iVar2;
     if (0 < iVar2) {
       pvVar3 = helper_malloc(iVar2 << 2);
       param_3 = *(undefined4 *)(param_1 + 0x128);
-      FUN_00110084(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_1c,iVar6,pvVar3,param_3);
+      string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_1c,iVar6,pvVar3,param_3);
       pvVar4 = helper_malloc(*(int *)(param_1 + 0x128) << 2);
       *(void **)(param_1 + 0x120) = pvVar4;
       for (iVar2 = 0; iVar2 < *(int *)(param_1 + 0x128); iVar2 = iVar2 + 1) {
@@ -16785,11 +15718,11 @@ void FUN_0011868c(int param_1,undefined4 param_2)
   FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_155EAFB5,&local_1c /* not arguments, value leftovers: param_3 */);
   if (local_1c != 0) {
-    iVar2 = FUN_00110084(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_1c,iVar6,0,0);
+    iVar2 = string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_1c,iVar6,0,0);
     *(int *)(param_1 + 300) = iVar2;
     if (0 < iVar2) {
       pvVar3 = helper_malloc(iVar2 << 2);
-      FUN_00110084(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_1c,iVar6,pvVar3,
+      string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_1c,iVar6,pvVar3,
                    *(undefined4 *)(param_1 + 300));
       pvVar4 = helper_malloc(*(int *)(param_1 + 300) << 2);
       *(void **)(param_1 + 0x118) = pvVar4;
@@ -16850,10 +15783,10 @@ void FUN_00118910(int param_1,undefined4 param_2)
                WORD_HEXADECIMAL_178BD97D,&local_28);
   iVar6 = WORD_HEXADECIMAL_FFFE768C;
   if (local_28 != 0) {
-    iVar1 = FUN_00110084(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,
+    iVar1 = string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,
                          (int32)DATA_AT_0012774C,0,0);
     p = helper_malloc(iVar1 << 2);
-    FUN_00110084(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,(int32)DATA_AT_0012774C,p
+    string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,(int32)DATA_AT_0012774C,p
                  ,iVar1);
     FUN_001204f0(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*p,param_1 + 0x14);
     iVar7 = (int32)DATA_AT_00127750;
@@ -16912,7 +15845,7 @@ void FUN_00118910(int param_1,undefined4 param_2)
   FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_3310A2A1,&local_28);
   if (local_28 != 0) {
-    uVar4 = FUN_0010eefc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,param_1 + 0xf0,
+    uVar4 = script_parse_lines(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,param_1 + 0xf0,
                          param_1);
     *(undefined4 *)(param_1 + 0x100) = uVar4;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -16922,7 +15855,7 @@ void FUN_00118910(int param_1,undefined4 param_2)
   FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_0B090BAC,&local_28);
   if (local_28 != 0) {
-    uVar4 = FUN_0010eefc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,param_1 + 0xf4,
+    uVar4 = script_parse_lines(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,param_1 + 0xf4,
                          param_1);
     *(undefined4 *)(param_1 + 0x104) = uVar4;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -16933,7 +15866,7 @@ void FUN_00118910(int param_1,undefined4 param_2)
   FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_08E8548D,&local_28);
   if (local_28 != 0) {
-    uVar4 = FUN_0010eefc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,param_1 + 0xf8,
+    uVar4 = script_parse_lines(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,param_1 + 0xf8,
                          param_1);
     *(undefined4 *)(param_1 + 0x108) = uVar4;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -16944,7 +15877,7 @@ void FUN_00118910(int param_1,undefined4 param_2)
   FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_19631267,&local_28);
   if (local_28 != 0) {
-    uVar4 = FUN_0010eefc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,param_1 + 0xfc,
+    uVar4 = script_parse_lines(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,param_1 + 0xfc,
                          param_1);
     *(undefined4 *)(param_1 + 0x10c) = uVar4;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -16954,11 +15887,11 @@ void FUN_00118910(int param_1,undefined4 param_2)
   FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_2101870D,&local_28);
   if (local_28 != 0) {
-    iVar1 = FUN_00110084(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,
+    iVar1 = string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,
                          (int32)STRING_CARRIAGE_RETURN_NEWLINE_00127754,0,0);
     *(int *)(param_1 + 0xec) = iVar1;
     p_00 = helper_malloc(iVar1 << 2);
-    FUN_00110084(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,(int32)STRING_CARRIAGE_RETURN_NEWLINE_00127754,
+    string_split(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28,(int32)STRING_CARRIAGE_RETURN_NEWLINE_00127754,
                  p_00,*(undefined4 *)(param_1 + 0xec));
     for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0xec); iVar1 = iVar1 + 1) {
       uVar4 = (undefined4)collision_shape_create((CollisionShape *)0x0);
@@ -16975,7 +15908,7 @@ void FUN_00118910(int param_1,undefined4 param_2)
                WORD_HEXADECIMAL_32CA0CC6,&local_28);
   if (local_28 != 0) {
     *(undefined4 *)(param_1 + 0x60) = 1;
-    uVar4 = FUN_0010d4dc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28);
+    uVar4 = string_to_float(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x94),local_28);
     *(undefined4 *)(param_1 + 100) = uVar4;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(local_28);
@@ -17016,8 +15949,8 @@ void FUN_00118910(int param_1,undefined4 param_2)
 
 /* ==== 0x00118ED8  (file offset 0x18ED8)  collision_shape_setup ======================================= */
 /* GUESS: name. Fills a collision shape for the scene node `node` from `text`, whose words
-   (FUN_00110084) are: the kind and form ("inner..." / "outer...", "...circle", "...cylinder",
-   "...cuboid", "...rect", "...poly", "...sphere"), then up to three sizes (FUN_0010d4dc; -1.0 when
+   (string_split) are: the kind and form ("inner..." / "outer...", "...circle", "...cylinder",
+   "...cuboid", "...rect", "...poly", "...sphere"), then up to three sizes (string_to_float; -1.0 when
    missing), or "use verts" as the second word. The shape starts at the entity's position
    (FUN_001147ec) with an empty box; when no size is given, the box is the entity's own (FUN_00113474,
    from its vertices with "use verts"), made relative to the position. Then by form:
@@ -17045,19 +15978,19 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
   uint64 value;   /* a size as a double (FUN_00126248), r0:r1 */
   int32 i;
 
-  wordCount = FUN_00110084((int32)shape->app->pObj94,(int32)text,(int32)DATA_AT_00126FCC,0,0);
+  wordCount = string_split((int32)shape->app->pObj94,(int32)text,(int32)DATA_AT_00126FCC,0,0);
   words = helper_malloc(wordCount << 2);
-  FUN_00110084((int32)shape->app->pObj94,(int32)text,(int32)DATA_AT_00126FCC,(int32)words,wordCount);
+  string_split((int32)shape->app->pObj94,(int32)text,(int32)DATA_AT_00126FCC,(int32)words,wordCount);
   if (wordCount > 1) {
     if ((*g_pHelperFuncs->strcmp)(words[1],(char *)((int32)STRING_USE_VERTS)) == 0)
       useVertices = 1;
     else
-      size1 = FUN_0010d4dc((int32)shape->app->pObj94,(int32)words[1]);
+      size1 = string_to_float((int32)shape->app->pObj94,(int32)words[1]);
   }
   if (wordCount > 2)
-    size2 = FUN_0010d4dc((int32)shape->app->pObj94,(int32)words[2]);
+    size2 = string_to_float((int32)shape->app->pObj94,(int32)words[2]);
   if (wordCount > 3)
-    size3 = FUN_0010d4dc((int32)shape->app->pObj94,(int32)words[3]);
+    size3 = string_to_float((int32)shape->app->pObj94,(int32)words[3]);
   if ((*g_pHelperFuncs->strbegins)((char *)((int32)STRING_OUTER),words[0]) != 0)
     shape->kind = 2;
   else if ((*g_pHelperFuncs->strbegins)((char *)((int32)STRING_INNER),words[0]) != 0)
@@ -17323,7 +16256,7 @@ void kh_OnAppStart(KHApp *pMe)
                   pMe->field_8c = 0x1e;
                 }
                 else {
-                  iVar6 = FUN_00126858(FUN_0010d4dc(pMe->pObj94,local_18));
+                  iVar6 = FUN_00126858(string_to_float(pMe->pObj94,local_18));
                   pMe->field_8c = iVar6;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
                   (*g_pHelperFuncs->free)(local_18);
@@ -17437,10 +16370,10 @@ undefined8 FUN_00119b0c(undefined4 param_1,int param_2,undefined4 param_3)
   uVar5 = 0;
   FUN_00114520(param_1,(int *)param_2,WORD_HEXADECIMAL_018B5704,&local_20);
   if (local_20 != 0) {
-    iVar1 = FUN_00110084(param_1,local_20,(int32)STRING_CARRIAGE_RETURN_NEWLINE_00127F08,0,0);
+    iVar1 = string_split(param_1,local_20,(int32)STRING_CARRIAGE_RETURN_NEWLINE_00127F08,0,0);
     p = helper_malloc(iVar1 << 2);
     param_2 = iVar1;
-    FUN_00110084(param_1,local_20,(int32)STRING_CARRIAGE_RETURN_NEWLINE_00127F08,(int)p,iVar1);
+    string_split(param_1,local_20,(int32)STRING_CARRIAGE_RETURN_NEWLINE_00127F08,(int)p,iVar1);
     iVar4 = WORD_HEXADECIMAL_FFFE646C;
     for (iVar3 = 0; iVar3 < iVar1; iVar3 = iVar3 + 1) {
                     /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
@@ -19841,12 +18774,12 @@ void FUN_0011d040(int param_1,undefined4 param_2,void *param_3)
     FUN_00114520(*(undefined4 *)(*(int *)(param_1 + 0xc) + 0x94),*(undefined4 *)(iVar1 + 8),param_3,
                  &local_10 /* not arguments, value leftovers: param_2 */);
     if (local_10 != 0) {
-      iVar1 = FUN_0010eefc(*(undefined4 *)(*(int *)(param_1 + 0xc) + 0x94),local_10,&local_14,0);
+      iVar1 = script_parse_lines(*(undefined4 *)(*(int *)(param_1 + 0xc) + 0x94),local_10,&local_14,0);
       FUN_001108ac(param_1,iVar1,local_14);
       for (iVar3 = 0; iVar3 < iVar1; iVar3 = iVar3 + 1) {
         iVar2 = *(int *)((int)local_14 + iVar3 * 4);
         if (iVar2 != 0) {
-          FUN_0010c620(iVar2,1);
+          script_command_destroy(iVar2,1);
         }
       }
       helper_free(local_14);
@@ -21516,7 +20449,7 @@ void FUN_0011f630(int param_1)
 /* ==== 0x0011F66C  (file offset 0x1F66C)  character_set_control_direction ============================= */
 /* GUESS: name. -1 reverses the character's movement keys (forwards and backwards swap, and left and
    right; the action key is not affected), anything else makes them normal (1). Script command 0x4f of
-   FUN_00110924, with game->character and the command's argument. GUESS: for a camera that faces the
+   script_command_run, with game->character and the command's argument. GUESS: for a camera that faces the
    character from the front. */
 void character_set_control_direction(Character *character,int32 direction)
 
@@ -22777,7 +21710,7 @@ void FUN_00120f8c(int param_1,int *param_2,int param_3,int *param_4,int param_5)
    is `parent`, or 0 with the "NoParent" tag. Unless the node has the "DeadEnd" tag, its children are
    walked too (the node is a Group: GetChildCount / GetChild), with the new object, if any, as their
    parent: a child Group directly, a child SkinnedMesh through its skeleton (GetSkeleton). Called by
-   FUN_0010a5d8 (the game's root scene), FUN_00110924 (after a scene is loaded, FUN_0011ae04) and
+   FUN_0010a5d8 (the game's root scene), script_command_run (after a scene is loaded, FUN_0011ae04) and
    FUN_0011b044 (a level object's own scene, with that object as the parent). */
 void game_create_objects(Game *game,ISwerveObject *node,LevelObject *parent)
 
@@ -23533,9 +22466,9 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
     do {
       iVar8 = param_1 + iVar7 * 4;
       if ((*(int **)(iVar8 + 0x218) != (int *)0x0) &&
-         (iVar1 = FUN_0012289c(*(int **)(iVar8 + 0x218),param_2,param_3), iVar1 != 0)) {
+         (iVar1 = script_sequence_update(*(int **)(iVar8 + 0x218),param_2,param_3), iVar1 != 0)) {
         if (*(int **)(iVar8 + 0x218) != (int *)0x0) {
-          FUN_0010c6b4(*(int **)(iVar8 + 0x218),1);
+          script_sequence_destroy(*(int **)(iVar8 + 0x218),1);
         }
         *(undefined4 *)(iVar8 + 0x218) = 0;
       }
@@ -23682,51 +22615,43 @@ void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed)
   }
 }
 
-/* ==== 0x0012289C  (file offset 0x2289C)  FUN_0012289c ================================================ */
-undefined4 FUN_0012289c(int *param_1,undefined4 param_2,int param_3)
+/* ==== 0x0012289C  (file offset 0x2289C)  script_sequence_update ====================================== */
+/* GUESS: names. Advances a timed script by `elapsed` ms: runs (script_command_run) each command whose time
+   has come, in order; an If / IfVar (0x10, 0x50) that fails skips the commands up to the next Else or
+   EndIf (0x11, 0x12; not nested), and an Else reached after a true branch skips to the next one too;
+   type 8 ends the sequence. Returns 1 when the sequence has ended (its last time reached, or type 8),
+   else 0. `now` is not read. Written from its disassembly (0x0012289c - 0x00122948). */
+int32 script_sequence_update(ScriptSequence *sequence,int32 now,int32 elapsed)
 
 {
-  int *piVar1;
-  uint uVar2;
-  int iVar3;
-  uint uVar4;
-  
-  uVar4 = 1;
-  while( true ) {
-    iVar3 = param_1[4];
-    if (param_1[3] < *(int *)(param_1[1] + iVar3 * 4)) {
-      param_1[3] = param_1[3] + param_3;
-      return 0;
-    }
-    if (iVar3 == param_1[2]) break;
-    piVar1 = *(int **)(*param_1 + iVar3 * 4);
-    if (uVar4 == 0) {
-      iVar3 = *piVar1;
-      uVar2 = uVar4;
-      if (iVar3 == 0x11 || iVar3 == 0x12) {
-        uVar2 = 1;
-      }
+  int32 running = 1;
+  int32 type;
+  int32 result;
+
+  while (sequence->times[sequence->next] <= sequence->elapsed) {
+    if (sequence->next == sequence->count)
+      return 1;
+    if (running != 0) {
+      result = script_command_run(sequence->commands[sequence->next]);
+      type = sequence->commands[sequence->next]->type;
+      if (type == 0x10 || type == 0x50)
+        running = result;
+      else if (type == 0x11)
+        running = 0;
+      else if (type == 8)
+        return 1;
     }
     else {
-      uVar2 = FUN_00110924(piVar1);
-      iVar3 = **(int **)(*param_1 + param_1[4] * 4);
-      if (iVar3 != 0x10 && iVar3 != 0x50) {
-        if (iVar3 == 0x11) {
-          uVar2 = 0;
-        }
-        else {
-          uVar2 = uVar4;
-          if (iVar3 == 8) {
-            return 1;
-          }
-        }
-      }
+      type = sequence->commands[sequence->next]->type;
+      if (type == 0x11 || type == 0x12)
+        running = 1;
     }
-    param_1[4] = param_1[4] + 1;
-    uVar4 = uVar2;
+    sequence->next++;
   }
-  return 1;
+  sequence->elapsed += elapsed;
+  return 0;
 }
+
 
 /* ==== 0x00122954  (file offset 0x22954)  enemy_update ================================================ */
 /* GUESS: name. One update of an enemy (vtable +4, called by combat_region_update with the current time and the time passed, in ms):
