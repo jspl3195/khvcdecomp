@@ -751,7 +751,7 @@ void FUN_0011d28c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 undefined8 FUN_0011d3ec(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0011d6cc(int param_1,int param_2);
 int FUN_0011daac(int param_1,int param_2,undefined4 param_3,uint param_4);
-uint FUN_0011dc9c(undefined4 param_1,int param_2,int *param_3);
+uint32 save_read_byte(Progress *progress,const uint8 *data,int32 *position);   /* 0x0011DC9C GUESS: name, see kh_mod.c */
 undefined4 FUN_0011dce8(undefined4 param_1,int param_2,int *param_3);
 undefined4 FUN_0011dd34(undefined4 param_1,int param_2,int *param_3);
 int FUN_0011dd80(undefined4 param_1,int param_2,int *param_3);

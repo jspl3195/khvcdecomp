@@ -17455,12 +17455,12 @@ undefined4 FUN_0011b178(int param_1,int param_2)
   iVar6 = 0;
   *(undefined4 *)(param_1 + 0x5b4) = uVar4;
   do {
-    iVar5 = FUN_0011dc9c(param_1,iVar3,&local_24);
+    iVar5 = save_read_byte((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
     iVar7 = iVar6 * 4;
     iVar6 = iVar6 + 1;
     *(uint *)(param_1 + iVar7 + 0x59c) = (uint)(iVar5 != 0x30);
   } while (iVar6 < 3);
-  iVar6 = FUN_0011dc9c(param_1,iVar3,&local_24);
+  iVar6 = save_read_byte((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(uint *)(param_1 + 0x5a8) = (uint)(iVar6 != 0x30);
   if (*(int *)(*(int *)(param_1 + 0x724) + 0xc4) != 0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -17476,13 +17476,13 @@ undefined4 FUN_0011b178(int param_1,int param_2)
   }
   uVar4 = FUN_0011dd80(param_1,iVar3,&local_24);
   *(undefined4 *)(*(int *)(param_1 + 0x724) + 200) = uVar4;
-  iVar6 = FUN_0011dc9c(param_1,iVar3,&local_24);
+  iVar6 = save_read_byte((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(uint *)(param_1 + 0x71c) = (uint)(iVar6 != 0x30);
-  iVar6 = FUN_0011dc9c(param_1,iVar3,&local_24);
+  iVar6 = save_read_byte((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(uint *)(param_1 + 0x720) = (uint)(iVar6 != 0x30);
   iVar6 = FUN_0011dd34(param_1,iVar3,&local_24);
   for (iVar7 = 0; iVar7 < iVar6; iVar7 = iVar7 + 1) {
-    uVar2 = FUN_0011dc9c(param_1,iVar3,&local_24);
+    uVar2 = save_read_byte((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
     *(undefined1 *)(param_1 + iVar7) = uVar2;
     iVar5 = param_1 + iVar7 * 4;
     if (*(int *)(iVar5 + 100) != 0) {
@@ -19238,24 +19238,23 @@ int FUN_0011daac(int param_1,int param_2,undefined4 param_3,uint param_4)
   return (int)FUN_0011c330(param_1,param_2,FLOAT_9).low;
 }
 
-/* ==== 0x0011DC9C  (file offset 0x1DC9C)  FUN_0011dc9c ================================================ */
-uint FUN_0011dc9c(undefined4 param_1,int param_2,int *param_3)
+/* ==== 0x0011DC9C  (file offset 0x1DC9C)  save_read_byte ============================================== */
+/* GUESS: names. The next byte of the saved game (`data` at *position, which it advances): a flag saved as
+   the character '0' or '1', or a status flag. The byte is set to '0' first and then always copied over (by
+   memmove, one byte). `progress` (what the loader FUN_0011b178 fills) is not read. Ghidra had five
+   arguments for the memmove (r3 only held its address) and built the byte from an unset register. */
+uint32 save_read_byte(Progress *progress,const uint8 *data,int32 *position)
 
 {
-  undefined4 param_4;
-  /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  uint local_c;
-  
-  local_c = ((uint32)((int32)((uint)param_4 >> 8)) << 8 | (uint8)(0x30));
-                    /* helper[0] void * memmove(void *dst, const void *src, uint32 n)
-                       (AEEHelperFuncs +0x0, via *(base-4)) */
-  (*(code *)g_pHelperFuncs->memmove)
-            (&local_c,*param_3 + param_2,1,(code *)g_pHelperFuncs->memmove,
-             param_3);
-  *param_3 = *param_3 + 1;
-  return local_c & 0xff;
+  uint8 byte = '0';
+
+                    /* helper[0] void * memmove(void *dst, const void *src, uint32 n)  (AEEHelperFuncs
+                       +0x0, via *(base-4)) */
+  (*g_pHelperFuncs->memmove)(&byte,data + *position,1);
+  *position = *position + 1;
+  return byte;
 }
+
 
 /* ==== 0x0011DCE8  (file offset 0x1DCE8)  FUN_0011dce8 ================================================ */
 undefined4 FUN_0011dce8(undefined4 param_1,int param_2,int *param_3)
