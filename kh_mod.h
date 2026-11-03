@@ -636,7 +636,7 @@ void FUN_001108ac(undefined4 param_1,int param_2,int param_3);
 int32 script_command_run(ScriptCommand *command);   /* 0x00110924 GUESS: name, see kh_mod.c */
 undefined8 FUN_0011295c(undefined4 *param_1,int *param_2,int *param_3,int *param_4,undefined4 param_5);
 bool FUN_00112a98(int param_1,undefined4 param_2,int param_3);
-void FUN_00112b4c(int param_1);
+void intro_find_animations(Intro *intro);   /* 0x00112B4C GUESS: name, see kh_mod.c */
 int32 item_drops_find_free_slot(ItemDrops *drops);   /* 0x00112C18 GUESS: name */
 void FUN_00112c44(int *param_1);
 Hitsphere * boss_combat_region_find_hitsphere(BossCombatRegion *region,int32 entity);   /* 0x00112C9C GUESS: name */
@@ -1682,15 +1682,20 @@ static const char STRING_TMP_DOT_DAT[] = "tmp.dat";   /* 0x001278EC */
 static const char STRING_OUT_OF_MAGIC_001278F4[] = "OUT_OF_MAGIC";   /* 0x001278F4 */
 static const char STRING_PERCENT_S_EQUALS_PERCENT_D[] = "%s = %d";   /* 0x00127904 */
 static const char STRING_DOT_M3G_00127910[] = ".m3g";   /* 0x00127910 */
-static const uint32 DATA_AT_00127918[11] = {   /* 0x00127918 */
+static const uint32 INTRO_ANIMATION_IDS[11] = {   /* 0x00127918 GUESS: name; the intro timeline's
+                                                     animations, by user id (intro_find_animations) */
   0x36C5EA1A,0x0368478C,0x343FDCDE,0x0151178B,0x24671AD4,0x1366844D,0x3B91C067,0x2663AC15,
   0x05A123D5,0x3B91C067,0x11C542FF
 };
-static const uint32 DATA_AT_00127944[11] = {   /* 0x00127944 */
+static const uint32 INTRO_ANIMATION_STARTS[11] = {   /* 0x00127944 GUESS: name; when each starts, ms:
+                                                        0, 0, 1133, 1133, 1333, 1333, 1800, 3533, 3533,
+                                                        4467, 11135 */
   0x00000000,0x00000000,0x0000046D,0x0000046D,0x00000535,0x00000535,0x00000708,0x00000DCD,
   0x00000DCD,0x00001173,0x00002B7F
 };
-static const uint32 DATA_AT_00127970[11] = {   /* 0x00127970 */
+static const uint32 INTRO_ANIMATION_ENDS[11] = {   /* 0x00127970 GUESS: name; when each ends, ms: 7000,
+                                                      1133, 1333, 1333, 1800, 1800, 3533, 4467, 4467,
+                                                      11135, 13802 */
   0x00001B58,0x0000046D,0x00000535,0x00000535,0x00000708,0x00000708,0x00000DCD,0x00001173,
   0x00001173,0x00002B7F,0x000035EA
 };

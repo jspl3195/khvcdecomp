@@ -12487,38 +12487,33 @@ bool FUN_00112a98(int param_1,undefined4 param_2,int param_3)
   return iVar3 != 0;
 }
 
-/* ==== 0x00112B4C  (file offset 0x12B4C)  FUN_00112b4c ================================================ */
-void FUN_00112b4c(int param_1)
+/* ==== 0x00112B4C  (file offset 0x12B4C)  intro_find_animations ======================================= */
+/* GUESS: names. Finds the animations of the intro's current stage (intro_start calls it before a stage
+   runs): stage 1 its one animation (user id 0x1D28D9CF); stage 2 the timeline's 11, with when each starts
+   and ends (ms into the stage), from the tables INTRO_ANIMATION_IDS, _STARTS and _ENDS, which the binary
+   first copies onto its stack. Other stages: nothing. */
+void intro_find_animations(Intro *intro)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  byte local_90 [44];
-  byte local_64 [44];
-  byte local_38 [44];
-  
-  if (*(int *)(param_1 + 0x9c) == 1) {
-    iVar1 = animations_find((Animations *)*(int *)(*(int *)(param_1 + 4) + 0x9c),WORD_HEXADECIMAL_1D28D9CF);
-    *(int *)(param_1 + 0x10) = iVar1;
+  uint32 ids[11];
+  uint32 starts[11];
+  uint32 ends[11];
+  int32 i;
+
+  if (intro->stage == 1)
+    intro->animation = animations_find(intro->app->animations,WORD_HEXADECIMAL_1D28D9CF);
+  else if (intro->stage == 2) {
+    memcpy_word_aligned(ids,(void *)INTRO_ANIMATION_IDS,0x2c);
+    memcpy_word_aligned(starts,(void *)INTRO_ANIMATION_STARTS,0x2c);
+    memcpy_word_aligned(ends,(void *)INTRO_ANIMATION_ENDS,0x2c);
+    for (i = 0; i < 11; i++) {
+      intro->timelineAnimations[i] = animations_find(intro->app->animations,ids[i]);
+      intro->starts[i] = starts[i];
+      intro->ends[i] = ends[i];
+    }
   }
-  else if (*(int *)(param_1 + 0x9c) == 2) {
-    memcpy_word_aligned(local_38,(byte *)((int32)DATA_AT_00127918),0x2c);
-    memcpy_word_aligned(local_64,(byte *)((int32)DATA_AT_00127944),0x2c);
-    memcpy_word_aligned(local_90,(byte *)((int32)DATA_AT_00127970),0x2c);
-    iVar1 = 0;
-    do {
-      iVar2 = animations_find((Animations *)*(int *)(*(int *)(param_1 + 4) + 0x9c),*(int *)(local_38 + iVar1 * 4));
-      iVar3 = param_1 + iVar1 * 4;
-      *(int *)(iVar3 + 0x14) = iVar2;
-      *(undefined4 *)(iVar3 + 0x40) = *(undefined4 *)(local_64 + iVar1 * 4);
-      iVar2 = iVar1 * 4;
-      iVar1 = iVar1 + 1;
-      *(undefined4 *)(iVar3 + 0x6c) = *(undefined4 *)(local_90 + iVar2);
-    } while (iVar1 < 0xb);
-  }
-  return;
 }
+
 
 /* ==== 0x00112C18  (file offset 0x12C18)  item_drops_find_free_slot =================================== */
 /* GUESS: name. The first of the 10 item-drop slots whose timeLeft is 0, or -1 when all are in use.
@@ -16108,8 +16103,8 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
 
 /* ==== 0x001195F8  (file offset 0x195F8)  intro_start ================================================= */
 /* GUESS: name. Starts the current stage: time 0; stage 0 just runs; stage 1 plays its animation
-   (after FUN_00112b4c and FUN_001132a8); stage 2 runs after FUN_0012031c(app->context, 0) and
-   FUN_00112b4c. */
+   (after intro_find_animations and FUN_001132a8); stage 2 runs after FUN_0012031c(app->context, 0) and
+   intro_find_animations. */
 void intro_start(Intro *intro)
 
 {
@@ -16117,14 +16112,14 @@ void intro_start(Intro *intro)
   if (intro->stage == 0)
     intro->running = 1;
   else if (intro->stage == 1) {
-    FUN_00112b4c((int32)intro);
+    intro_find_animations(intro);
     FUN_001132a8((int32)intro->app->context);
     animations_play(intro->app->animations,intro->animation,0);
   }
   else if (intro->stage == 2) {
     FUN_0012031c((int32 *)intro->app->context,0);
     intro->running = 1;
-    FUN_00112b4c((int32)intro);
+    intro_find_animations(intro);
   }
 }
 
