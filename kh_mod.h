@@ -838,8 +838,8 @@ void FUN_0012407c(int param_1,undefined4 param_2,undefined4 param_3);
 void intro_update(Intro *intro,int32 worldTime,int32 elapsed,int32 *error);   /* 0x001241A8 GUESS: names */
 void FUN_001242b4(int param_1);
 void save_write_byte(Progress *progress,uint8 byte,uint8 *data,int32 *position);   /* 0x00124674 GUESS: name, see kh_mod.c */
-undefined8 FUN_001246b4(undefined4 param_1,undefined4 param_2,int param_3,int *param_4);
-undefined8 FUN_001246f4(undefined4 param_1,undefined4 param_2,int param_3,int *param_4);
+void save_write_float(Progress *progress,uint32 value,uint8 *data,int32 *position);   /* 0x001246B4 GUESS: name, see kh_mod.c */
+void save_write_int(Progress *progress,int32 value,uint8 *data,int32 *position);   /* 0x001246F4 GUESS: name, see kh_mod.c */
 void FUN_00124734(undefined4 param_1,int param_2,int param_3,int *param_4);
 uint FUN_0012479c(uint param_1,uint param_2);
 undefined8 FUN_00124954(uint param_1,uint param_2,uint param_3,uint param_4);

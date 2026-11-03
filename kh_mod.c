@@ -2352,7 +2352,7 @@ LAB_00104fa4:
                     /* 0x105180 bl FUN_0011e6b8: only r0 (object) and r1 (file name) are set.
                        Ghidra's param_3/param_4 are register spills: param_4 goes into local_24,
                        which is set to 0 before it is read, and param_3 is passed only as an
-                       extra fifth argument to the four-parameter FUN_001246b4. r2/r3 are
+                       extra fifth argument to the four-parameter save_write_float. r2/r3 are
                        leftovers from progress_set_status. */
               FUN_0011e6b8(*(undefined4 *)(*param_1 + 0xa8),(int32)STRING_REPLAYGAME_DOT_DAT);
               goto LAB_0010423c;
@@ -19810,18 +19810,18 @@ undefined4 FUN_0011e6b8(int param_1,int param_2)
   uVar4 = (*g_pHelperFuncs->malloc)(0x800);
   local_24 = 0;
   uVar8 = 1;
-  FUN_001246b4(param_1,progress->health,uVar4,&local_24 /* not arguments, value leftovers: param_3 */);
-  FUN_001246b4(param_1,progress->maximumHealth,uVar4,&local_24);
-  FUN_001246f4(param_1,progress->magicPoints,uVar4,&local_24);
-  FUN_001246f4(param_1,progress->maximumMagicPoints,uVar4,&local_24);
-  FUN_001246f4(param_1,progress->munny,uVar4,&local_24);
-  FUN_001246f4(param_1,progress->levelRewardTwoCount,uVar4,&local_24);
-  FUN_001246f4(param_1,progress->levelRewardThreeCount,uVar4,&local_24);
-  FUN_001246f4(param_1,progress->experience,uVar4,&local_24);
-  FUN_001246f4(param_1,progress->level,uVar4,&local_24);
-  FUN_001246f4(param_1,progress->field_5ac,uVar4,&local_24);
-  FUN_001246f4(param_1,progress->field_5b0,uVar4,&local_24);
-  FUN_001246f4(param_1,progress->field_5b4,uVar4,&local_24);
+  save_write_float(progress,progress->health,(uint8 *)uVar4,(int32 *)&local_24);
+  save_write_float(progress,progress->maximumHealth,(uint8 *)uVar4,(int32 *)&local_24);
+  save_write_int(progress,progress->magicPoints,(uint8 *)uVar4,(int32 *)&local_24);
+  save_write_int(progress,progress->maximumMagicPoints,(uint8 *)uVar4,(int32 *)&local_24);
+  save_write_int(progress,progress->munny,(uint8 *)uVar4,(int32 *)&local_24);
+  save_write_int(progress,progress->levelRewardTwoCount,(uint8 *)uVar4,(int32 *)&local_24);
+  save_write_int(progress,progress->levelRewardThreeCount,(uint8 *)uVar4,(int32 *)&local_24);
+  save_write_int(progress,progress->experience,(uint8 *)uVar4,(int32 *)&local_24);
+  save_write_int(progress,progress->level,(uint8 *)uVar4,(int32 *)&local_24);
+  save_write_int(progress,progress->field_5ac,(uint8 *)uVar4,(int32 *)&local_24);
+  save_write_int(progress,progress->field_5b0,(uint8 *)uVar4,(int32 *)&local_24);
+  save_write_int(progress,progress->field_5b4,(uint8 *)uVar4,(int32 *)&local_24);
   iVar7 = 0;
   do {
     if (progress->spells[iVar7] == 0) {
@@ -19864,7 +19864,7 @@ undefined4 FUN_0011e6b8(int param_1,int param_2)
     }
     iVar7 = iVar7 + 1;
   } while (iVar7 < 100);
-  FUN_001246f4(param_1,iVar6,uVar4,&local_24);
+  save_write_int(progress,iVar6,(uint8 *)uVar4,(int32 *)&local_24);
   iVar7 = 0;
   do {
     if (progress->statusFlags[iVar7] != 0) {
@@ -19881,16 +19881,16 @@ undefined4 FUN_0011e6b8(int param_1,int param_2)
     }
     iVar7 = iVar7 + 1;
   } while (iVar7 < 100);
-  FUN_001246f4(param_1,iVar6,uVar4,&local_24);
+  save_write_int(progress,iVar6,(uint8 *)uVar4,(int32 *)&local_24);
   iVar7 = 0;
   do {
     if (progress->variableNames[iVar7] != (char *)0x0) {
-      FUN_001246f4(param_1,progress->variableValues[iVar7],uVar4,&local_24);
+      save_write_int(progress,progress->variableValues[iVar7],(uint8 *)uVar4,(int32 *)&local_24);
       FUN_00124734(param_1,progress->variableNames[iVar7],uVar4,&local_24);
     }
     iVar7 = iVar7 + 1;
   } while (iVar7 < 100);
-  FUN_001246f4(param_1,progress->field_5b8,uVar4,&local_24);
+  save_write_int(progress,progress->field_5b8,(uint8 *)uVar4,(int32 *)&local_24);
   if (progress->saveCopy == (uint8 *)0x0) {
                     /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
                         */
@@ -19919,7 +19919,6 @@ undefined4 FUN_0011ea18(int param_1)
   undefined4 uVar2;
   undefined4 uVar3;
   int iVar4;
-  int iVar5;
   undefined4 local_1c;
   local_1c = param_4;
                     /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
@@ -19929,9 +19928,10 @@ undefined4 FUN_0011ea18(int param_1)
   iVar4 = 0;
   do {
     FUN_00124734(param_1,*(undefined4 *)(param_1 + iVar4 * 4 + 0x5f0),uVar2,&local_1c /* not arguments, value leftovers: param_3 */);
-    iVar5 = param_1 + iVar4 * 8;
-    FUN_001246f4(param_1,*(undefined4 *)(iVar5 + 0x654),uVar2,&local_1c);
-    FUN_001246f4(param_1,*(undefined4 *)(iVar5 + 0x658),uVar2,&local_1c);
+    save_write_int((Progress *)param_1,((Progress *)param_1)->records[iVar4].best,(uint8 *)uVar2,
+                   (int32 *)&local_1c);
+    save_write_int((Progress *)param_1,((Progress *)param_1)->records[iVar4].field_04,(uint8 *)uVar2,
+                   (int32 *)&local_1c);
     iVar4 = iVar4 + 1;
   } while (iVar4 < 0x19);
   uVar3 = FUN_0011e574(param_1,(int32)STRING_SCOREDATA_DOT_DAT,uVar2,local_1c);
@@ -19955,18 +19955,18 @@ undefined4 FUN_0011ead4(int param_1,undefined4 param_2)
                         */
   uVar2 = (*g_pHelperFuncs->malloc)(0x40);
   local_18 = 0;
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5cc),uVar2,&local_18);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5d0),uVar2,&local_18);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5d4),uVar2,&local_18);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5d8),uVar2,&local_18);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5dc),uVar2,&local_18);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5e0),uVar2,&local_18);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5e4),uVar2,&local_18);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x594),uVar2,&local_18);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x598),uVar2,&local_18);
+  save_write_int((Progress *)param_1,((Progress *)param_1)->controls[0],(uint8 *)uVar2,(int32 *)&local_18);
+  save_write_int((Progress *)param_1,((Progress *)param_1)->controls[1],(uint8 *)uVar2,(int32 *)&local_18);
+  save_write_int((Progress *)param_1,((Progress *)param_1)->controls[2],(uint8 *)uVar2,(int32 *)&local_18);
+  save_write_int((Progress *)param_1,((Progress *)param_1)->controls[3],(uint8 *)uVar2,(int32 *)&local_18);
+  save_write_int((Progress *)param_1,((Progress *)param_1)->controls[4],(uint8 *)uVar2,(int32 *)&local_18);
+  save_write_int((Progress *)param_1,((Progress *)param_1)->controls[5],(uint8 *)uVar2,(int32 *)&local_18);
+  save_write_int((Progress *)param_1,((Progress *)param_1)->controls[6],(uint8 *)uVar2,(int32 *)&local_18);
+  save_write_int((Progress *)param_1,((Progress *)param_1)->field_594,(uint8 *)uVar2,(int32 *)&local_18);
+  save_write_int((Progress *)param_1,*(undefined4 *)(param_1 + 0x598),(uint8 *)uVar2,(int32 *)&local_18);
   FUN_00124734(param_1,((Progress *)param_1)->userId,uVar2,&local_18);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5c4),uVar2,&local_18);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5c8),uVar2,&local_18);
+  save_write_int((Progress *)param_1,*(undefined4 *)(param_1 + 0x5c4),(uint8 *)uVar2,(int32 *)&local_18);
+  save_write_int((Progress *)param_1,*(undefined4 *)(param_1 + 0x5c8),(uint8 *)uVar2,(int32 *)&local_18);
   uVar3 = FUN_0011e574(param_1,param_2,uVar2,local_18);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
   (*g_pHelperFuncs->free)(uVar2);
@@ -23805,43 +23805,35 @@ void save_write_byte(Progress *progress,uint8 byte,uint8 *data,int32 *position)
 }
 
 
-/* ==== 0x001246B4  (file offset 0x246B4)  FUN_001246b4 ================================================ */
-undefined8 FUN_001246b4(undefined4 param_1,undefined4 param_2,int param_3,int *param_4)
+/* ==== 0x001246B4  (file offset 0x246B4)  save_write_float ============================================ */
+/* GUESS: name. Appends a float (its bits) to the saved game being written (`data` at *position, which it
+   advances by 4): health, maximum health. Copied with memmove, so it need not be aligned; the same code as
+   save_write_int. `progress` is not read. Returns nothing: r0 is only reloaded from the spill of r0 - r3.
+   Ghidra had dropped the memmove's size (r2 = 4). */
+void save_write_float(Progress *progress,uint32 value,uint8 *data,int32 *position)
 
 {
-  undefined4 uStack_14;
-  int iStack_10;
-  int *piStack_c;
-  undefined8 uVar1;
-  
-  uStack_14 = param_2;
-  iStack_10 = param_3;
-  piStack_c = param_4;
-                    /* helper[0] void * memmove(void *dst, const void *src, uint32 n)
-                       (AEEHelperFuncs +0x0, via *(base-4)) */
-  (*(code *)g_pHelperFuncs->memmove)(*param_4 + param_3,&uStack_14);
-  *param_4 = *param_4 + 4;
-  return MAKE_WORDS(uVar1,uStack_14,param_1);
+                    /* helper[0] void * memmove(void *dst, const void *src, uint32 n)  (AEEHelperFuncs
+                       +0x0, via *(base-4)) */
+  (*g_pHelperFuncs->memmove)(data + *position,&value,4);
+  *position = *position + 4;
 }
 
-/* ==== 0x001246F4  (file offset 0x246F4)  FUN_001246f4 ================================================ */
-undefined8 FUN_001246f4(undefined4 param_1,undefined4 param_2,int param_3,int *param_4)
+
+/* ==== 0x001246F4  (file offset 0x246F4)  save_write_int ============================================== */
+/* GUESS: name. Appends a word to the saved game being written (`data` at *position, which it advances by
+   4): a count, a key code, a record's values. Copied with memmove, so it need not be aligned; the same
+   code as save_write_float. `progress` is not read. Returns nothing: r0 is only reloaded from the spill of
+   r0 - r3. Ghidra had dropped the memmove's size (r2 = 4). */
+void save_write_int(Progress *progress,int32 value,uint8 *data,int32 *position)
 
 {
-  undefined4 uStack_14;
-  int iStack_10;
-  int *piStack_c;
-  undefined8 uVar1;
-  
-  uStack_14 = param_2;
-  iStack_10 = param_3;
-  piStack_c = param_4;
-                    /* helper[0] void * memmove(void *dst, const void *src, uint32 n)
-                       (AEEHelperFuncs +0x0, via *(base-4)) */
-  (*(code *)g_pHelperFuncs->memmove)(*param_4 + param_3,&uStack_14);
-  *param_4 = *param_4 + 4;
-  return MAKE_WORDS(uVar1,uStack_14,param_1);
+                    /* helper[0] void * memmove(void *dst, const void *src, uint32 n)  (AEEHelperFuncs
+                       +0x0, via *(base-4)) */
+  (*g_pHelperFuncs->memmove)(data + *position,&value,4);
+  *position = *position + 4;
 }
+
 
 /* ==== 0x00124734  (file offset 0x24734)  FUN_00124734 ================================================ */
 void FUN_00124734(undefined4 param_1,int param_2,int param_3,int *param_4)
