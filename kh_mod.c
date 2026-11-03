@@ -16636,7 +16636,7 @@ LAB_0011a13c:
           bVar6 = false;
         }
         else {
-          iVar7 = FUN_0011d168(param_1,param_2,param_3);
+          iVar7 = collision_shape_poly_contains((CollisionShape *)param_1,param_2,param_3);
           uVar9 = iVar7 == 0;
           bVar6 = true;
           if ((bool)uVar9) goto LAB_0011a13c;
@@ -16657,7 +16657,7 @@ LAB_0011a13c:
         if (((((bool)cVar11) && (float_compare_less(param_2,param_1[8]), !(bool)cVar11 || (bool)uVar9)) &&
             (float_compare_greater(param_3,param_1[6]), (bool)cVar11)) &&
            (float_compare_less(param_3,param_1[9]), !(bool)cVar11 || (bool)uVar9)) {
-          iVar7 = FUN_0011d168(param_1,param_2,param_3);
+          iVar7 = collision_shape_poly_contains((CollisionShape *)param_1,param_2,param_3);
           iVar7 = 1 - iVar7;
         }
         uVar9 = iVar7 == 0;
@@ -18798,56 +18798,43 @@ int32 animations_play(Animations *animations,int32 index,int32 loop)
   return animations_set_position(animations,index,position);
 }
 
-/* ==== 0x0011D168  (file offset 0x1D168)  FUN_0011d168 ================================================ */
-int FUN_0011d168(int param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x0011D168  (file offset 0x1D168)  collision_shape_poly_contains =============================== */
+/* GUESS: name. 1 when the point (x, y) (floats, their bits) is inside the "poly" shape, by the even-odd
+   rule: for each edge from vertex i to the next (wrapping), when one end is below y and the other at or
+   above it, the edge's x at y is worked out, and each one left of x flips the result. The vertices' z is
+   not used; the compares follow the binary's branches (a NaN never counts as a crossing). Used by the
+   collision test FUN_00119d58 for shapes of form 8 ("poly"). */
+int32 collision_shape_poly_contains(CollisionShape *shape,uint32 x,uint32 y)
 
 {
-  undefined4 uVar1;
-  uint uVar2;
-  uint uVar3;
-  int iVar4;
-  undefined4 uVar5;
-  int iVar6;
-  undefined4 uVar7;
-  int iVar8;
-  undefined1 uVar9;
-  bool bVar10;
-  
-  uVar3 = 0;
-  iVar8 = 0;
-  for (iVar4 = 0; uVar2 = *(uint *)(param_1 + 0x3c), iVar4 < (int)uVar2; iVar4 = iVar4 + 1) {
-    uVar3 = uVar3 + 1;
-    bVar10 = uVar3 <= uVar2;
-    if (uVar2 == uVar3) {
-      uVar3 = 0;
-    }
-    float_compare_less(*(undefined4 *)(*(int *)(param_1 + 0x38) + iVar4 * 0xc + 4),param_3);
-    uVar9 = bVar10;
-    if (((!bVar10) &&
-        (float_compare_greater(*(undefined4 *)(*(int *)(param_1 + 0x38) + uVar3 * 0xc + 4),param_3),
-        uVar9 = 0, bVar10)) ||
-       ((float_compare_less(*(undefined4 *)(*(int *)(param_1 + 0x38) + uVar3 * 0xc + 4),param_3),
-        !(bool)uVar9 &&
-        (float_compare_greater(*(undefined4 *)(*(int *)(param_1 + 0x38) + iVar4 * 0xc + 4),param_3),
-        (bool)uVar9)))) {
-      uVar9 = 1;
-      iVar6 = *(int *)(param_1 + 0x38);
-      uVar7 = *(undefined4 *)(iVar6 + iVar4 * 0xc + 4);
-      uVar1 = float_subtract(param_3,uVar7);
-      uVar7 = float_subtract(*(undefined4 *)(iVar6 + uVar3 * 0xc + 4),uVar7);
-      uVar1 = float_reverse_divide(uVar7,uVar1);
-      uVar5 = *(undefined4 *)(iVar6 + iVar4 * 0xc);
-      uVar7 = float_subtract(*(undefined4 *)(iVar6 + uVar3 * 0xc),uVar5);
-      uVar1 = float_multiply(uVar7,uVar1);
-      uVar1 = float_add(uVar1,uVar5);
-      float_compare_less(uVar1,param_2);
-      if (!(bool)uVar9) {
-        iVar8 = 1 - iVar8;
-      }
+  int32 inside = 0;
+  int32 i;
+  int32 j = 0;
+  uint32 *a;
+  uint32 *b;
+  uint32 offset;
+  uint32 ratio;
+  uint32 cross;
+
+  for (i = 0; i < shape->vertexCount; i++) {
+    if (++j == shape->vertexCount)
+      j = 0;
+    a = &shape->vertices[i * 3];
+    b = &shape->vertices[j * 3];
+    if (((float_compare_less(a[1],y), *(float *)&a[1] < *(float *)&y) &&
+         (float_compare_greater(b[1],y), *(float *)&b[1] >= *(float *)&y)) ||
+        ((float_compare_less(b[1],y), *(float *)&b[1] < *(float *)&y) &&
+         (float_compare_greater(a[1],y), *(float *)&a[1] >= *(float *)&y))) {
+      offset = float_subtract(y,a[1]);
+      ratio = float_reverse_divide(float_subtract(b[1],a[1]),offset);   /* offset / (yj - yi) */
+      cross = float_add(float_multiply(float_subtract(b[0],a[0]),ratio),a[0]);
+      if (float_compare_less(cross,x), *(float *)&cross < *(float *)&x)
+        inside = 1 - inside;
     }
   }
-  return iVar8;
+  return inside;
 }
+
 
 /* ==== 0x0011D28C  (file offset 0x1D28C)  FUN_0011d28c ================================================ */
 void FUN_0011d28c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)

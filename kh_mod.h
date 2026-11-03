@@ -746,7 +746,7 @@ undefined8 FUN_0011ceac(int param_1);
 undefined4 FUN_0011cfdc(int param_1,undefined4 param_2,int param_3);
 void FUN_0011d040(int param_1,undefined4 param_2,void *param_3);
 int32 animations_play(Animations *animations,int32 index,int32 loop);   /* 0x0011D104 GUESS: names */
-int FUN_0011d168(int param_1,undefined4 param_2,undefined4 param_3);
+int32 collision_shape_poly_contains(CollisionShape *shape,uint32 x,uint32 y);   /* 0x0011D168 GUESS: name, see kh_mod.c */
 void FUN_0011d28c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 undefined8 FUN_0011d3ec(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0011d6cc(int param_1,int param_2);
