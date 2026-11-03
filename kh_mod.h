@@ -819,7 +819,7 @@ void game_create_objects(Game *game,ISwerveObject *node,LevelObject *parent);   
 undefined8 FUN_001213fc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 ,undefined4 param_6,undefined4 param_7);
 void FUN_00121584(int param_1,int *param_2,int *param_3,int param_4);
 void FUN_0012164c(int param_1,undefined4 param_2,int param_3);
-void FUN_001216c4(int param_1);
+void progress_add_play_time(Progress *progress);   /* 0x001216C4 GUESS: name, see kh_mod.c */
 void FUN_0012171c(int32 object,int32 now,int32 elapsed);   /* 0x0012171C (no Ghidra function) */
 void FUN_00121780(int param_1,undefined4 *param_2,uint param_3);
 void FUN_00121ab0(int param_1);

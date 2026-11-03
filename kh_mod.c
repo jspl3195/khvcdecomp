@@ -2418,11 +2418,11 @@ LAB_001050b0:
       iVar7 = (int)web_request_create((WebRequest *)0x0,(int32)param_1,(WebRequestListener)FUN_0010888c);
       param_1[6] = iVar7;
       uVar10 = progress_score(*(undefined4 *)(*param_1 + 0xa8));
-      FUN_001216c4(*(undefined4 *)(*param_1 + 0xa8));
+      progress_add_play_time((Progress *)*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
       web_request_post_rank(param_1[6],2,((Progress *)iVar7)->userId,uVar10,
-                   *(undefined4 *)(*param_1 + 0xc4),((Progress *)iVar7)->field_5c4,
-                   ((Progress *)iVar7)->field_5c8,0);
+                   *(undefined4 *)(*param_1 + 0xc4),((Progress *)iVar7)->playTime,
+                   ((Progress *)iVar7)->launchCount,0);
       goto LAB_00104dcc;
     case 0x7e:
       iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
@@ -2537,10 +2537,10 @@ LAB_00104a24:
       }
       iVar7 = (int)web_request_create((WebRequest *)0x0,(int32)param_1,(WebRequestListener)FUN_0010888c);
       param_1[6] = iVar7;
-      FUN_001216c4(*(undefined4 *)(*param_1 + 0xa8));
+      progress_add_play_time((Progress *)*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
       web_request_download(param_1[6],*(undefined4 *)(*param_1 + 0xc4),0,((Progress *)iVar7)->userId,
-                   ((Progress *)iVar7)->field_5c4);
+                   ((Progress *)iVar7)->playTime);
       return local_34;
     case 0x82:
       iVar9 = screen_stack_top(param_1);
@@ -2586,10 +2586,10 @@ LAB_00104a24:
       }
       iVar7 = (int)web_request_create((WebRequest *)0x0,(int32)param_1,(WebRequestListener)FUN_0010888c);
       param_1[6] = iVar7;
-      FUN_001216c4(*(undefined4 *)(*param_1 + 0xa8));
+      progress_add_play_time((Progress *)*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
       web_request_post_rank_ex(param_1[6],((Progress *)iVar7)->userId,pvVar16,pvVar5,
-                   ((Progress *)iVar7)->field_5c4,((Progress *)iVar7)->field_5c8);
+                   ((Progress *)iVar7)->playTime,((Progress *)iVar7)->launchCount);
       helper_free(pvVar16);
       helper_free(pvVar5);
 LAB_00104dcc:
@@ -5950,7 +5950,7 @@ void web_request_retry(WebRequest *request)
       request->retries++;
       web_request_notify(request,3,request->retries,3,0);
       web_request_download(request,request->url,request->received,(char *)0x0,
-                           request->app->progress->field_5c4);
+                           request->app->progress->playTime);
       return;
     }
     request->retries = -1;
@@ -7254,7 +7254,7 @@ CombatRegion * combat_region_create(CombatRegion *region,ISwerveObject *node,cha
 /* GUESS: names. Progress's constructor (0x72c bytes, INTEGER_1836, allocated when `progress` is 0;
    returns 0 when out of memory): the app (GetAppInstance) and no saved-game copy; then, unless
    `skipSetup` is set (kh_OnAppStart passes 0), empty status, variable and record tables, no user id (one
-   already there is freed), both volumes (soundVolume, musicVolume) 40, field_5c8 1, field_5c4 0, the new
+   already there is freed), both volumes (soundVolume, musicVolume) 40, launchCount 1, playTime 0, the new
    game's values (progress_new_game, progress_reset, progress_set_default_controls), and the saved
    settings and records loaded (FUN_0011b6f0 with "settings.dat", FUN_0011b5f0). progress_destroy is its
    destructor. */
@@ -7287,8 +7287,8 @@ Progress * progress_create(Progress *progress,int32 skipSetup)
   progress->soundVolume = 40;
   progress->summaryPending = 0;
   progress->musicVolume = 40;
-  progress->field_5c8 = 1;
-  progress->field_5c4 = 0;
+  progress->launchCount = 1;
+  progress->playTime = 0;
   progress_new_game(progress);
   progress_reset(progress);
   progress_set_default_controls(progress);
@@ -12164,7 +12164,7 @@ void kh_OnAppStop(KHApp *pMe)
     pMe->context = (void *)0x0;
   }
   if (pMe->progress != (void *)0x0) {
-    FUN_001216c4(pMe->progress);
+    progress_add_play_time(pMe->progress);
     FUN_0011ead4(pMe->progress,(int32)STRING_SETTINGS_DOT_DAT_00127A58);
     if (pMe->progress != (void *)0x0) {
       progress_destroy(pMe->progress,1);
@@ -17316,13 +17316,13 @@ void FUN_0011b6f0(int param_1,undefined4 param_2)
     uVar4 = (int32)save_read_string((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     ((Progress *)param_1)->userId = (char *)uVar4;
     uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
-    ((Progress *)param_1)->field_5c4 = uVar4;
+    ((Progress *)param_1)->playTime = uVar4;
     iVar3 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
-    ((Progress *)param_1)->field_5c8 = iVar3;
-    if (*(int *)(*(int *)(param_1 + 0x724) + 0xb4) != 0) {
-      ((Progress *)param_1)->field_5c8 = iVar3 + 1;
+    ((Progress *)param_1)->launchCount = iVar3;
+    if (((Progress *)param_1)->app->bStarted != 0) {
+      ((Progress *)param_1)->launchCount = iVar3 + 1;
     }
-    *(undefined4 *)(*(int *)(param_1 + 0x724) + 0xb4) = 0;
+    ((Progress *)param_1)->app->bStarted = 0;
     (*g_pHelperFuncs->free)(uVar2);
     return;
   }
@@ -19631,8 +19631,8 @@ undefined4 FUN_0011ead4(int param_1,undefined4 param_2)
   save_write_int((Progress *)param_1,((Progress *)param_1)->soundVolume,(uint8 *)uVar2,(int32 *)&local_18);
   save_write_int((Progress *)param_1,((Progress *)param_1)->musicVolume,(uint8 *)uVar2,(int32 *)&local_18);
   save_write_string((Progress *)param_1,((Progress *)param_1)->userId,(uint8 *)uVar2,(int32 *)&local_18);
-  save_write_int((Progress *)param_1,((Progress *)param_1)->field_5c4,(uint8 *)uVar2,(int32 *)&local_18);
-  save_write_int((Progress *)param_1,((Progress *)param_1)->field_5c8,(uint8 *)uVar2,(int32 *)&local_18);
+  save_write_int((Progress *)param_1,((Progress *)param_1)->playTime,(uint8 *)uVar2,(int32 *)&local_18);
+  save_write_int((Progress *)param_1,((Progress *)param_1)->launchCount,(uint8 *)uVar2,(int32 *)&local_18);
   uVar3 = FUN_0011e574(param_1,param_2,uVar2,local_18);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
   (*g_pHelperFuncs->free)(uVar2);
@@ -21500,23 +21500,26 @@ void FUN_0012164c(int param_1,undefined4 param_2,int param_3)
   return;
 }
 
-/* ==== 0x001216C4  (file offset 0x216C4)  FUN_001216c4 ================================================ */
-void FUN_001216c4(int param_1)
+/* ==== 0x001216C4  (file offset 0x216C4)  progress_add_play_time ====================================== */
+/* GUESS: name. Adds the whole seconds since the app's dwStartTimeMS (set at EVT_APP_START) to the time
+   played (playTime), then sets dwStartTimeMS to the time now, so the next call counts from here. The
+   leftover milliseconds are dropped, and the clock is read a second time for the new start
+   (research_notes/decomp/GAME_BUGS.md). kh_OnAppStop calls it before saving the settings, and the online
+   menu (FUN_00101ad8) before each request that sends playTime as t=. */
+void progress_add_play_time(Progress *progress)
 
 {
-  int iVar2;
-  undefined4 uVar3;
+  uint32 now;
+
                     /* helper[43] uint32 aee_GetTimeMS(void)  (AEEHelperFuncs +0xac, via *(base-4))
                         */
-  iVar2 = (*g_pHelperFuncs->aee_GetTimeMS)();
-  iVar2 = rt_udiv(1000,iVar2 - *(int *)(*(int *)(param_1 + 0x724) + 0xb0)).low;
-  ((Progress *)param_1)->field_5c4 = iVar2 + ((Progress *)param_1)->field_5c4;
+  now = (*g_pHelperFuncs->aee_GetTimeMS)();
+  progress->playTime = progress->playTime + rt_udiv(1000,now - progress->app->dwStartTimeMS).low;
                     /* helper[43] uint32 aee_GetTimeMS(void)  (AEEHelperFuncs +0xac, via *(base-4))
                         */
-  uVar3 = (*g_pHelperFuncs->aee_GetTimeMS)();
-  *(undefined4 *)(*(int *)(param_1 + 0x724) + 0xb0) = uVar3;
-  return;
+  progress->app->dwStartTimeMS = (*g_pHelperFuncs->aee_GetTimeMS)();
 }
+
 
 /* ==== 0x0012171C  (file offset 0x2171C)  FUN_0012171c ================================================ */
 /* A routine Ghidra has no function for (it is only reached by FUN_0010ea64's tail jump at 0x0010eb68,

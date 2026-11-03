@@ -60,7 +60,9 @@ typedef struct KHApp {
                                         created by 0x10b4e4; EVT_APP_MESSAGE handled only while set */
     uint32         field_ac;         /* +0xac */
     uint32         dwStartTimeMS;    /* +0xb0 aee_GetTimeMS() at EVT_APP_START */
-    uint32         bStarted;         /* +0xb4 GUESS: set to 1 at EVT_APP_START */
+    uint32         bStarted;         /* +0xb4 GUESS: set to 1 at EVT_APP_START; the settings loader
+                                        (FUN_0011b6f0) counts a launch (Progress launchCount) and
+                                        clears it */
     uint32         bSuspended;       /* +0xb8 GUESS: set to 1 at EVT_APP_SUSPEND */
     uint32         field_bc;         /* +0xbc */
     uint32         field_c0;         /* +0xc0 */
@@ -391,11 +393,13 @@ typedef struct Progress {
     int32    field_5b8;             /* +0x5b8 0 at the start; GUESS: a count of items that refill all of it */
     AECHAR  *collectablesText;      /* +0x5bc script setCollectables: the collectables' name */
     int32    collectables;          /* +0x5c0 and their number */
-    int32    field_5c4;             /* +0x5c4 0 at creation; sent as the time (t=) of the ranking and
-                                     download requests; FUN_001216c4 adds the seconds since app +0xb0
-                                     (GUESS: the time played); saved with the settings */
-    int32    field_5c8;             /* +0x5c8 1 at creation; sent as the ranking's u1= value; +1 when the
-                                     settings are loaded with app +0xb4 set (FUN_0011b6f0) */
+    int32    playTime;              /* +0x5c4 GUESS: name; the time played, in seconds: 0 at creation;
+                                     progress_add_play_time adds the seconds since app->dwStartTimeMS;
+                                     sent as the time (t=) of the ranking and download requests; saved
+                                     with the settings */
+    int32    launchCount;           /* +0x5c8 GUESS: name; 1 at creation; +1 when the settings are loaded
+                                     with app->bStarted set (FUN_0011b6f0, which clears it), so once per
+                                     launch; sent as the ranking's u1= value; saved with the settings */
     int32    controls[7];           /* +0x5cc the Controls key bindings (BREW key codes): Forwards, Backwards,
                                      Left, Right, Action, Status, Magic */
     int32    softKeys[2];           /* +0x5e8 the keys that act as the left and the right soft key (screen_handle_key):
