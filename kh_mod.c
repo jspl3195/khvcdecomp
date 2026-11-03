@@ -7070,31 +7070,27 @@ ScriptCommand * script_command_create(ScriptCommand *command)
 }
 
 
-/* ==== 0x0010B014  (file offset 0x0B014)  FUN_0010b014 ================================================ */
-undefined4 * FUN_0010b014(undefined4 *param_1,undefined4 param_2)
+/* ==== 0x0010B014  (file offset 0x0B014)  item_drops_create =========================================== */
+/* GUESS: name. The item drops' constructor (100 bytes, allocated when `drops` is 0; returns 0 when out of
+   memory): the app (GetAppInstance), the munny a pickup gives (a float, its bits: 1.0 or 2.0, by the
+   combat region's field_120), the ten balls (item_drops_find_balls) and all ten slots free. Made by
+   combat_region_create and FUN_0011868c; item_drops_destroy is its destructor. */
+ItemDrops * item_drops_create(ItemDrops *drops,uint32 munnyPerPickup)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  int iVar3;
-  
-  if ((param_1 != (undefined4 *)0x0) ||
-     (param_1 = helper_malloc_2(100), param_1 != (undefined4 *)0x0)) {
-                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
-                        */
-    uVar1 = (*g_pHelperFuncs->GetAppInstance)();
-    *param_1 = uVar1;
-    param_1[0x18] = param_2;
-    FUN_00112c44(param_1);
-    iVar2 = 0;
-    do {
-      iVar3 = iVar2 + 1;
-      param_1[iVar2 + 0xe] = 0;
-      iVar2 = iVar3;
-    } while (iVar3 < 10);
-  }
-  return param_1;
+  int32 i;
+
+  if (drops == (ItemDrops *)0x0 && (drops = helper_malloc_2(100)) == (ItemDrops *)0x0)
+    return drops;
+                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4)) */
+  drops->app = (*g_pHelperFuncs->GetAppInstance)();
+  drops->munnyPerPickup = munnyPerPickup;
+  item_drops_find_balls(drops);
+  for (i = 0; i < 10; i++)
+    drops->timeLeft[i] = 0;
+  return drops;
 }
+
 
 /* ==== 0x0010B080  (file offset 0x0B080)  script_sequence_create ====================================== */
 /* GUESS: names. A timed script (0x14 bytes, allocated when `sequence` is 0; returns 0 when out of
@@ -8036,28 +8032,24 @@ void script_command_destroy(ScriptCommand *command,int32 freeIt)
 }
 
 
-/* ==== 0x0010C66C  (file offset 0x0C66C)  FUN_0010c66c ================================================ */
-void FUN_0010c66c(int param_1,int param_2)
+/* ==== 0x0010C66C  (file offset 0x0C66C)  item_drops_destroy ========================================== */
+/* GUESS: name. The item drops' destructor: finds the ten balls again (item_drops_find_balls) and hides
+   each one there is (FUN_001201cc with 0, as the script's setVis), then, when `freeSelf` is set, frees
+   the object (the binary's conditional tail jump to helper_free, 0x0010c6ac). Called with 1 by the
+   combat regions' destructors FUN_0010c790 and FUN_0010ca1c. */
+void item_drops_destroy(ItemDrops *drops,int32 freeSelf)
 
 {
-  int iVar1;
-  int iVar2;
-  
-  FUN_00112c44(param_1);
-  iVar2 = 0;
-  do {
-    iVar1 = *(int *)(param_1 + iVar2 * 4 + 4);
-    if (iVar1 != 0) {
-      FUN_001201cc(iVar1,0);
-    }
-    iVar2 = iVar2 + 1;
-  } while (iVar2 < 10);
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
-  return;
+  int32 i;
+
+  item_drops_find_balls(drops);
+  for (i = 0; i < 10; i++)
+    if (drops->entities[i] != 0)
+      FUN_001201cc(drops->entities[i],0);
+  if (freeSelf != 0)
+    helper_free(drops);               /* the binary's tail jump (0x0010c6ac) */
 }
+
 
 /* ==== 0x0010C6B4  (file offset 0x0C6B4)  script_sequence_destroy ===================================== */
 /* GUESS: names. A timed script's destructor: destroys its commands and frees its arrays, and the sequence
@@ -8126,7 +8118,7 @@ void FUN_0010c790(int param_1,int param_2)
   }
   helper_free(*(void **)(param_1 + 0x14c));
   if (*(int *)(param_1 + 0x114) != 0) {
-    FUN_0010c66c(*(int *)(param_1 + 0x114),1);
+    item_drops_destroy(*(ItemDrops **)(param_1 + 0x114),1);
   }
   FUN_0010cab0(param_1,0);
   if (param_2 == 0) {
@@ -8256,7 +8248,7 @@ void FUN_0010ca1c(int param_1,int param_2)
   helper_free(*(void **)(param_1 + 0x120));
   helper_free(*(void **)(param_1 + 0x118));
   if (*(int *)(param_1 + 0x114) != 0) {
-    FUN_0010c66c(*(int *)(param_1 + 0x114),1);
+    item_drops_destroy(*(ItemDrops **)(param_1 + 0x114),1);
   }
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
   (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x138));
@@ -12316,25 +12308,21 @@ int32 item_drops_find_free_slot(ItemDrops *drops)
   return -1;
 }
 
-/* ==== 0x00112C44  (file offset 0x12C44)  FUN_00112c44 ================================================ */
-void FUN_00112c44(int *param_1)
+/* ==== 0x00112C44  (file offset 0x12C44)  item_drops_find_balls ======================================= */
+/* GUESS: name. Finds the item drops' ten objects in the level: the balls "ball1" - "ball10"
+   (ITEM_DROP_BALL_HASHES, their string_hash; copied to the stack first, as the binary does). Called by the
+   constructor item_drops_create and the destructor item_drops_destroy. */
+void item_drops_find_balls(ItemDrops *drops)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  undefined4 local_34 [10];
-  
-  memcpy_word_aligned(local_34,(int32)DATA_AT_00126DEC,0x28);
-  iVar2 = 0;
-  do {
-    iVar1 = (int32)game_find_object((Game *)((KHApp *)*param_1)->pGame,local_34[iVar2]);
-    iVar3 = iVar2 + 1;
-    param_1[iVar2 + 1] = iVar1;
-    iVar2 = iVar3;
-  } while (iVar3 < 10);
-  return;
+  uint32 names[10];
+  int32 i;
+
+  memcpy_word_aligned(names,(int32)ITEM_DROP_BALL_HASHES,0x28);
+  for (i = 0; i < 10; i++)
+    drops->entities[i] = (int32)game_find_object((Game *)drops->app->pGame,names[i]);
 }
+
 
 /* ==== 0x00112C9C  (file offset 0x12C9C)  boss_combat_region_find_hitsphere =========================== */
 /* GUESS: names (the hitsphere reading too). The hitsphere of `region` that follows the scene entity
@@ -15162,7 +15150,7 @@ void combat_region_setup(CombatRegion *region,int32 context)
   region->enemies = helper_malloc(region->enemyCount << 2);
   for (i = 0; i < region->enemyCount; i++)
     region->enemies[i] = enemy_create((Enemy *)0x0,i + 1,region,type);
-  region->itemDrops = (ItemDrops *)FUN_0010b014((uint32 *)0x0,region->field_120 < 5 ? 0x3f800000 : 0x40000000);
+  region->itemDrops = item_drops_create((ItemDrops *)0x0,region->field_120 < 5 ? 0x3f800000 : 0x40000000);
 }
 
 /* ==== 0x001180C4  (file offset 0x180C4)  FUN_001180c4 ================================================ */
@@ -15510,7 +15498,7 @@ void FUN_0011868c(int param_1,undefined4 param_2)
   *(undefined4 *)(param_1 + 0x138) = uVar5;
   FUN_001145b4((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_275AA16E,param_1 + 0x124);
-  uVar5 = FUN_0010b014(0,*(undefined4 *)(param_1 + 0x124));
+  uVar5 = (undefined4)item_drops_create((ItemDrops *)0x0,*(uint32 *)(param_1 + 0x124));
   *(undefined4 *)(param_1 + 0x114) = uVar5;
   return;
 }

@@ -772,7 +772,7 @@ struct CombatRegion;
  * down and gives the reward when the player picks one up. */
 typedef struct ItemDrops {
     struct KHApp *app;            /* +0x00 GetAppInstance() at creation */
-    int32    entities[10];          /* +0x04 the item shown in each slot */
+    int32    entities[10];          /* +0x04 the item shown in each slot: the objects "ball1" - "ball10" */
     uint8  kinds[10];             /* +0x2c 0: health +1.0, 1: MP +1, 2: munny */
     uint8  unknown_36[0x02];
     int32    timeLeft[10];          /* +0x38 ms the item stays on the ground; 0 = free slot */

@@ -522,7 +522,7 @@ int * FUN_0010aa8c(int *param_1,int *param_2);
 int * FUN_0010ac6c(int *param_1,int param_2);
 WebRequest * web_request_create(WebRequest *request,int32 context,WebRequestListener listener);   /* 0x0010AF3C GUESS: name, see kh_mod.c */
 ScriptCommand * script_command_create(ScriptCommand *command);   /* 0x0010AFC4 GUESS: name, see kh_mod.c */
-undefined4 * FUN_0010b014(undefined4 *param_1,undefined4 param_2);
+ItemDrops * item_drops_create(ItemDrops *drops,uint32 munnyPerPickup);   /* 0x0010B014 GUESS: name, see kh_mod.c */
 ScriptSequence * script_sequence_create(ScriptSequence *sequence,char *text);   /* 0x0010B080 GUESS: name, see kh_mod.c */
 Enemy * enemy_create(Enemy *enemy,int32 number,CombatRegion *region,int32 type);   /* 0x0010B230 GUESS: name */
 TextBox * text_box_create(TextBox *box,int32 x,int32 y,int32 width,int32 height,int32 *owner,TextStyle *style);   /* 0x0010B2DC GUESS: name, see kh_mod.c */
@@ -550,7 +550,7 @@ void FUN_0010c2c4(int *param_1,int param_2);
 void FUN_0010c3f8(int param_1,int param_2);
 void web_request_destroy(WebRequest *request,int32 freeIt);   /* 0x0010C598 GUESS: name, see kh_mod.c */
 void script_command_destroy(ScriptCommand *command,int32 freeIt);   /* 0x0010C620 GUESS: name, see kh_mod.c */
-void FUN_0010c66c(int param_1,int param_2);
+void item_drops_destroy(ItemDrops *drops,int32 freeSelf);   /* 0x0010C66C GUESS: name, see kh_mod.c */
 void script_sequence_destroy(ScriptSequence *sequence,int32 freeIt);   /* 0x0010C6B4 GUESS: name, see kh_mod.c */
 void enemy_destroy(Enemy *enemy,int32 freeIt);   /* 0x0010C720 GUESS: name, see kh_mod.c */
 void FUN_0010c73c(int param_1,int param_2);
@@ -639,7 +639,7 @@ undefined8 FUN_0011295c(undefined4 *param_1,int *param_2,int *param_3,int *param
 bool FUN_00112a98(int param_1,undefined4 param_2,int param_3);
 void intro_find_animations(Intro *intro);   /* 0x00112B4C GUESS: name, see kh_mod.c */
 int32 item_drops_find_free_slot(ItemDrops *drops);   /* 0x00112C18 GUESS: name */
-void FUN_00112c44(int *param_1);
+void item_drops_find_balls(ItemDrops *drops);   /* 0x00112C44 GUESS: name, see kh_mod.c */
 Hitsphere * boss_combat_region_find_hitsphere(BossCombatRegion *region,int32 entity);   /* 0x00112C9C GUESS: name */
 undefined8 FUN_00112cdc(int param_1,int *param_2,int param_3);
 int32 game_find_free_object_slot(Game *game);   /* 0x00112CFC GUESS: name */
@@ -1391,7 +1391,7 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 /* ---- The read-only data of kh.mod (0x00126DEC - 0x00128247) that the code refers to, one object per
    address the code takes (in kh.mod, an offset from the pc), each reaching to the next such address:
    strings as string literals, the rest as words or bytes. The comment gives the address. */
-static const uint32 DATA_AT_00126DEC[10] = {   /* 0x00126DEC */
+static const uint32 ITEM_DROP_BALL_HASHES[10] = {   /* 0x00126DEC; string_hash of "ball1" - "ball10" */
   0x05208EC5,0x045958CC,0x0DD3405D,0x174D27EE,0x20C70F7F,0x2A40F710,0x33BADEA1,0x3D34C632,
   0x06AEADC3,0x3544E42E
 };
