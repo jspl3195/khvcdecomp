@@ -9493,7 +9493,7 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
   bool bVar16;
   bool bVar17;
   undefined1 uVar18;
-  undefined8 uVar19;
+  CollisionShape *blocking;
   undefined4 local_38;
   uint local_34;
   int *local_30;
@@ -9525,16 +9525,16 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
     FUN_001254d4(uVar2,dVar2.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD);
     if (!(bool)uVar18) {
       uVar2 = float_add(*(uint *)(param_1 + 0x68),*param_2);
-      uVar19 = FUN_00119c60(*(int *)(*(int *)(param_1 + 0x84) + 0xa4),uVar2,
-                            *(undefined4 *)(param_1 + 0x6c),*(undefined4 *)(param_1 + 0x70));
-      local_30 = (int *)uVar19.low;
+      blocking = game_find_blocking_shape((Game *)*(int *)(*(int *)(param_1 + 0x84) + 0xa4),uVar2,
+                                          *(undefined4 *)(param_1 + 0x6c),*(undefined4 *)(param_1 + 0x70));
+      local_30 = (int *)blocking;
       uVar18 = local_30 == (int *)0x0;
       if (!(bool)uVar18) {
         local_28 = float_add(*(uint *)(param_1 + 0x70),param_2[2]);
         uVar2 = float_add(*(uint *)(param_1 + 0x68),*param_2);
-        uVar19 = FUN_00119c60(*(int *)(*(int *)(param_1 + 0x84) + 0xa4),uVar2,
-                              *(undefined4 *)(param_1 + 0x6c),local_28);
-        uVar18 = (int)uVar19.low == 0;
+        blocking = game_find_blocking_shape((Game *)*(int *)(*(int *)(param_1 + 0x84) + 0xa4),uVar2,
+                                            *(undefined4 *)(param_1 + 0x6c),local_28);
+        uVar18 = (int)blocking == 0;
         if (!(bool)uVar18) {
           uVar7 = motion_entity_get_heading((MotionEntity *)param_1);
           uVar8 = *(uint *)(param_1 + 0x68);
@@ -9560,15 +9560,15 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
     FUN_001254d4(uVar2,dVar2.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD);
     if (!(bool)uVar18) {
       uVar2 = float_add(*(uint *)(param_1 + 0x6c),param_2[1]);
-      uVar19 = FUN_00119c60(*(int *)(*(int *)(param_1 + 0x84) + 0xa4),*(int *)(param_1 + 0x68),uVar2
-                            ,*(undefined4 *)(param_1 + 0x70));
-      local_30 = (int *)uVar19.low;
+      blocking = game_find_blocking_shape((Game *)*(int *)(*(int *)(param_1 + 0x84) + 0xa4),
+                                          *(int *)(param_1 + 0x68),uVar2,*(undefined4 *)(param_1 + 0x70));
+      local_30 = (int *)blocking;
       if (local_30 != (int *)0x0) {
         local_2c = float_add(*(uint *)(param_1 + 0x70),param_2[2]);
         uVar2 = float_add(*(uint *)(param_1 + 0x6c),param_2[1]);
-        uVar19 = FUN_00119c60(*(int *)(*(int *)(param_1 + 0x84) + 0xa4),*(int *)(param_1 + 0x68),
-                              uVar2,local_2c);
-        if ((int)uVar19.low != 0) {
+        blocking = game_find_blocking_shape((Game *)*(int *)(*(int *)(param_1 + 0x84) + 0xa4),
+                                            *(int *)(param_1 + 0x68),uVar2,local_2c);
+        if ((int)blocking != 0) {
           if (!bVar11) {
             uVar7 = motion_entity_get_heading((MotionEntity *)param_1);
             uVar8 = *(uint *)(param_1 + 0x6c);
@@ -9591,16 +9591,17 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
     if (!bVar12 && !bVar13) {
       uVar2 = float_add(*(uint *)(param_1 + 0x6c),param_2[1]);
       uVar8 = float_add(*(uint *)(param_1 + 0x68),*param_2);
-      uVar19 = FUN_00119c60(*(int *)(*(int *)(param_1 + 0x84) + 0xa4),uVar8,uVar2,
-                            *(undefined4 *)(param_1 + 0x70));
-      local_30 = (int *)uVar19.low;
+      blocking = game_find_blocking_shape((Game *)*(int *)(*(int *)(param_1 + 0x84) + 0xa4),uVar8,uVar2,
+                                          *(undefined4 *)(param_1 + 0x70));
+      local_30 = (int *)blocking;
       if (local_30 != (int *)0x0) {
         uVar2 = float_add(*(uint *)(param_1 + 0x70),param_2[2]);
         uVar2 = float_add(uVar2,*(uint *)(param_1 + 0x288));
         uVar8 = float_add(*(uint *)(param_1 + 0x6c),param_2[1]);
         uVar3 = float_add(*(uint *)(param_1 + 0x68),*param_2);
-        uVar19 = FUN_00119c60(*(int *)(*(int *)(param_1 + 0x84) + 0xa4),uVar3,uVar8,uVar2);
-        if ((int)uVar19.low != 0) {
+        blocking = game_find_blocking_shape((Game *)*(int *)(*(int *)(param_1 + 0x84) + 0xa4),uVar3,uVar8,
+                                            uVar2);
+        if ((int)blocking != 0) {
           if (!bVar11) {
             uVar7 = motion_entity_get_heading((MotionEntity *)param_1);
             uVar3 = *(uint *)(param_1 + 0x6c);
@@ -16153,70 +16154,50 @@ int32 level_object_allows(LevelObject *object,uint32 x,uint32 y,uint32 z,uint32 
 }
 
 
-/* ==== 0x00119C60  (file offset 0x19C60)  FUN_00119c60 ================================================ */
-undefined8 FUN_00119c60(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
+/* ==== 0x00119C60  (file offset 0x19C60)  game_find_blocking_shape ==================================== */
+/* GUESS: name. What the player character would bump into standing at (x, y, z) (floats, their bits):
+   for each of the game's 120 objects that has field_48 and field_38 set (GUESS: active and solid), the
+   first of its scene shapes that does not allow the character there, with the character's radius and
+   height (level_object_find_blocking_shape); 0 when nothing blocks. Ghidra's high word was r1 reloaded.
+   The character's movement FUN_0010e448 tries its steps with it. */
+CollisionShape * game_find_blocking_shape(Game *game,uint32 x,uint32 y,uint32 z)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  int iVar3;
-  int iVar4;
-  int iVar5;
-  int iVar6;
-  bool bVar7;
-  undefined4 uVar9;
-  undefined8 uVar10;
-  
-  iVar5 = 0;
-  iVar3 = param_2;
-  iVar4 = param_2;
-  uVar9 = param_4;
-  do {
-    iVar6 = param_1 + iVar5 * 4;
-    iVar1 = *(int *)(iVar6 + 0x10);
-    bVar7 = iVar1 != 0;
-    if (bVar7) {
-      iVar3 = *(int *)(iVar1 + 0x48);
-    }
-    if (bVar7 && iVar3 != 0) {
-      iVar1 = *(int *)(iVar1 + 0x38);
-    }
-    if ((bVar7 && iVar3 != 0) && iVar1 != 0) {
-      uVar2 = level_object_get_height((LevelObject *)*(undefined4 *)(param_1 + 0x1f8));
-      iVar4 = *(int *)(*(int *)(param_1 + 0x1f8) + 0x80);
-      iVar1 = FUN_00119ce0(*(undefined4 *)(iVar6 + 0x10),param_2,param_3,param_4,iVar4,uVar2 /* not arguments, value leftovers: uVar9 */);
-      if (iVar1 != 0) goto LAB_00119cdc;
-    }
-    iVar5 = iVar5 + 1;
-  } while (iVar5 < 0x78);
-  iVar1 = 0;
-LAB_00119cdc:
-  return MAKE_WORDS(uVar10,iVar4,iVar1);
-}
+  LevelObject *object;
+  CollisionShape *shape;
+  uint32 height;
+  int32 i;
 
-/* ==== 0x00119CE0  (file offset 0x19CE0)  FUN_00119ce0 ================================================ */
-undefined4
-FUN_00119ce0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5
-            ,undefined4 param_6)
-
-{
-  int iVar1;
-  int iVar2;
-  undefined4 uVar3;
-  
-  iVar2 = 0;
-  uVar3 = param_4;
-  while( true ) {
-    if (*(int *)(param_1 + 0xe0) <= iVar2) {
-      return 0;
-    }
-    iVar1 = collision_shape_allows(*(CollisionShape **)(param_1 + iVar2 * 4 + 0x90),param_2,param_3,
-                                   param_4,param_5,param_6);
-    if (iVar1 == 0) break;
-    iVar2 = iVar2 + 1;
+  for (i = 0; i < 0x78; i++) {
+    object = game->objects[i];
+    if (object == (LevelObject *)0x0 || object->field_48 == 0 || object->field_38 == 0)
+      continue;
+    height = level_object_get_height((LevelObject *)game->character);
+    shape = level_object_find_blocking_shape(object,x,y,z,((LevelObject *)game->character)->radius,height);
+    if (shape != (CollisionShape *)0x0)
+      return shape;
   }
-  return *(undefined4 *)(param_1 + iVar2 * 4 + 0x90);
+  return (CollisionShape *)0x0;
 }
+
+
+/* ==== 0x00119CE0  (file offset 0x19CE0)  level_object_find_blocking_shape ============================ */
+/* GUESS: name. The first of the object's scene shapes (sceneShapes, any kind) that does not allow a body
+   at (x, y, z) with `radius` and `height` (collision_shape_allows), or 0 when none blocks it. The binary
+   passes a third stack word, 0, that collision_shape_allows does not read. Used by
+   game_find_blocking_shape for the player character. */
+CollisionShape * level_object_find_blocking_shape(LevelObject *object,uint32 x,uint32 y,uint32 z,
+                                                  uint32 radius,uint32 height)
+
+{
+  int32 i;
+
+  for (i = 0; i < object->sceneShapeCount; i++)
+    if (collision_shape_allows(object->sceneShapes[i],x,y,z,radius,height) == 0)
+      return object->sceneShapes[i];
+  return (CollisionShape *)0x0;
+}
+
 
 /* ==== 0x00119D58  (file offset 0x19D58)  collision_shape_allows ====================================== */
 /* GUESS: names. Whether a body standing at (x, y, z) (its feet; floats, their bits) with `radius` and
@@ -16234,9 +16215,9 @@ FUN_00119ce0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
        radius (inner) or not (outer). The outer test adds the radius where the circle's subtracts it
        (research_notes/decomp/GAME_BUGS.md).
      any other form: 1.
-   The compares are the binary's float_compare_greater / float_compare_less with their branches,
-   written after the comma. FUN_00119ce0 returns the first of an object's shapes that does not allow a
-   position. */
+   The compares are the binary's float_compare_greater / float_compare_less with their branches, written
+   after the comma. level_object_find_blocking_shape returns the first of an object's shapes that does not
+   allow a position. */
 uint32 collision_shape_allows(CollisionShape *shape,uint32 x,uint32 y,uint32 z,uint32 radius,
                               uint32 height)
 

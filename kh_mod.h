@@ -711,8 +711,8 @@ void FUN_00119a28(int param_1,int *param_2);
 int32 screen_stack_all_keys_bound(ScreenStack *stack);   /* 0x00119ABC GUESS: name, see kh_mod.c */
 undefined8 FUN_00119b0c(undefined4 param_1,int param_2,undefined4 param_3);
 int32 level_object_allows(LevelObject *object,uint32 x,uint32 y,uint32 z,uint32 radius,uint32 height);   /* 0x00119C10 GUESS: name, see kh_mod.c */
-undefined8 FUN_00119c60(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
-undefined4 FUN_00119ce0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 ,undefined4 param_6);
+CollisionShape * game_find_blocking_shape(Game *game,uint32 x,uint32 y,uint32 z);   /* 0x00119C60 GUESS: name, see kh_mod.c */
+CollisionShape * level_object_find_blocking_shape(LevelObject *object,uint32 x,uint32 y,uint32 z,uint32 radius,uint32 height);   /* 0x00119CE0 GUESS: name, see kh_mod.c */
 uint32 collision_shape_allows(CollisionShape *shape,uint32 x,uint32 y,uint32 z,uint32 radius,uint32 height);   /* 0x00119D58 GUESS: name, see kh_mod.c */
 void FUN_0011a2f4(int param_1,int param_2);
 void FUN_0011a3ec(int param_1,int param_2,undefined4 param_3);
