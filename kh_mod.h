@@ -655,7 +655,7 @@ void FUN_00113340(int param_1);
 undefined8 FUN_00113374(undefined4 param_1,uint param_2,uint param_3,uint param_4,uint param_5);
 void FUN_00113474(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);
 void hitsphere_get_player_point(uint32 *point,Hitsphere *hitsphere);   /* 0x00113490 GUESS: name, see kh_mod.c */
-void FUN_00113524(undefined4 *param_1,int param_2);
+void enemy_get_player_point(uint32 *point,Enemy *enemy);   /* 0x00113524 GUESS: name, see kh_mod.c */
 int32 animations_get_duration(Animations *animations,int32 index);   /* 0x001135B8 GUESS: name */
 void FUN_001135dc(int param_1);
 uint32 string_hash(int32 context,const char *text);   /* 0x00113654 GUESS: name, see kh_mod.c */
@@ -1459,7 +1459,7 @@ static const uint32 DATA_AT_001270AC[16] = {   /* 0x001270AC */
   0xC0000000,0x00000000,0xC0000000,0x40000000,0x00000000,0x40000000,0x40000000,0x40000000,
   0x40000000,0x00000000,0x40000000,0xC0000000,0x00000000,0xC0000000,0xC0000000,0xC0000000
 };
-static const uint32 DATA_AT_001270EC[3] = {   /* 0x001270EC */
+static const uint32 ENEMY_PLAYER_POINT_OFFSET[3] = {   /* 0x001270EC; floats: 0, 0.25, 0 */
   0x00000000,0x3E800000,0x00000000
 };
 static const char STRING_CARRIAGE_RETURN_NEWLINE_001270F8[] = "\r\n";   /* 0x001270F8 */

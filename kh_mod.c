@@ -8893,7 +8893,7 @@ LAB_0010d710:
       if (iVar4 != 0xce) {
         return 0;
       }
-      FUN_00113524(&local_2c,param_1);
+      enemy_get_player_point((uint32 *)&local_2c,(Enemy *)param_1);
       level_object_get_position((uint32 *)(param_1 + 0x184),(LevelObject *)*(undefined4 *)(param_1 + 0x20));
       uVar5 = *(undefined4 *)(param_1 + 0x184);
       uVar2 = float_subtract(local_2c,uVar5);
@@ -8991,7 +8991,7 @@ undefined4 FUN_0010d7c4(int param_1,int param_2)
       if (iVar1 != 0xce) {
         return 0;
       }
-      FUN_00113524(&local_1c,param_1);
+      enemy_get_player_point((uint32 *)&local_1c,(Enemy *)param_1);
       level_object_get_position((uint32 *)&local_28,(LevelObject *)*(undefined4 *)(param_1 + 0x20));
       uVar2 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,local_1c,local_18,
                            local_28,local_24).low;
@@ -9035,7 +9035,7 @@ undefined4 FUN_0010d95c(int param_1,int param_2)
   uVar3 = uVar1 == 0x65;
   if ((bool)uVar3) {
     enemy_play_animation((Enemy *)param_1,*(undefined4 *)(param_1 + 0x48),1);
-    FUN_00113524(&local_20,param_1);
+    enemy_get_player_point((uint32 *)&local_20,(Enemy *)param_1);
     level_object_get_position((uint32 *)&local_2c,(LevelObject *)*(undefined4 *)(param_1 + 0x20));
     uVar2 = planar_distance_squared_2(param_1,local_20,local_1c,uStack_18,local_2c,local_28 /* not arguments, value leftovers: uStack_24 */);
     float_compare_greater(uVar2,FLOAT_16);
@@ -10312,14 +10312,15 @@ FUN_0010f2e8(int param_1,uint param_2,undefined4 param_3,uint param_4,undefined4
   uVar8 = 6 < param_7;
   if ((param_7 == 7) && (uVar8 = true, uVar9 = param_2, *(int *)(param_1 + 0x110) != 0))
   goto LAB_0010f4c0;
-  FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,*(undefined4 *)(param_1 + 4),
-               *(undefined4 *)(param_1 + 8),*(undefined4 *)(param_1 + 0x10),
-               *(undefined4 *)(param_1 + 0x14) /* not arguments, value leftovers: param_3,param_4 */);
+  FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,((Enemy *)param_1)->playerPoint[0],
+               ((Enemy *)param_1)->playerPoint[1],((Enemy *)param_1)->position[0],
+               ((Enemy *)param_1)->position[1] /* not arguments, value leftovers: param_3,param_4 */);
   motion_entity_get_heading((MotionEntity *)*(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xa4) + 0x1f8));
   rt_div0(0x168);
   rt_div0(0x168);
-  uVar2 = planar_distance_squared_2(param_1,*(undefined4 *)(param_1 + 0x10),*(undefined4 *)(param_1 + 0x14),
-                       *(undefined4 *)(param_1 + 0x18),param_4,param_5 /* not arguments, value leftovers: param_6 */);
+  uVar2 = planar_distance_squared_2(param_1,((Enemy *)param_1)->position[0],
+                                    ((Enemy *)param_1)->position[1],((Enemy *)param_1)->position[2],
+                                    param_4,param_5 /* not arguments, value leftovers: param_6 */);
   float_compare_less(uVar2,0x3f800000);
   iVar1 = INTEGER_2004;
   uVar9 = param_4;
@@ -12708,31 +12709,28 @@ void hitsphere_get_player_point(uint32 *point,Hitsphere *hitsphere)
 }
 
 
-/* ==== 0x00113524  (file offset 0x13524)  FUN_00113524 ================================================ */
-void FUN_00113524(undefined4 *param_1,int param_2)
+/* ==== 0x00113524  (file offset 0x13524)  enemy_get_player_point ====================================== */
+/* GUESS: names. The point an enemy aims at: the player character's position less
+   ENEMY_PLAYER_POINT_OFFSET (0, 0.25, 0; a copy of PLAYER_POINT_OFFSET) turned by the player's heading.
+   The same code as hitsphere_get_player_point, with the app at Enemy +0x74. enemy_update stores it in
+   playerPoint every frame; six other enemy routines use it for their own aim. */
+void enemy_get_player_point(uint32 *point,Enemy *enemy)
 
 {
-  undefined4 uVar1;
-  undefined4 local_24;
-  undefined4 local_20;
-  undefined4 local_1c;
-  undefined4 local_18;
-  undefined4 local_14;
-  undefined4 local_10;
-  
-  level_object_get_position((uint32 *)&local_18,(LevelObject *)*(undefined4 *)(*(int *)(*(int *)(param_2 + 0x74) + 0xa4) + 0x1f8));
-  local_24 = *(undefined4 *)((int32)DATA_AT_001270EC);
-  local_20 = *(undefined4 *)(((int32)DATA_AT_001270EC + 0x4));
-  local_1c = *(undefined4 *)(((int32)DATA_AT_001270EC + 0x8));
-  motion_entity_rotate_by_heading((MotionEntity *)*(undefined4 *)(*(int *)(*(int *)(param_2 + 0x74) + 0xa4) + 0x1f8),(uint32 *)&local_24);
-  local_18 = float_subtract(local_18,local_24);
-  local_14 = float_subtract(local_14,local_20);
-  uVar1 = float_subtract(local_10,local_1c);
-  *param_1 = local_18;
-  param_1[1] = local_14;
-  param_1[2] = uVar1;
-  return;
+  Character *player = ((Game *)enemy->app->pGame)->character;
+  uint32 position[3];
+  uint32 offset[3];
+
+  level_object_get_position(position,(LevelObject *)player);
+  offset[0] = ENEMY_PLAYER_POINT_OFFSET[0];
+  offset[1] = ENEMY_PLAYER_POINT_OFFSET[1];
+  offset[2] = ENEMY_PLAYER_POINT_OFFSET[2];
+  motion_entity_rotate_by_heading((MotionEntity *)player,offset);
+  point[0] = float_subtract(position[0],offset[0]);
+  point[1] = float_subtract(position[1],offset[1]);
+  point[2] = float_subtract(position[2],offset[2]);
 }
+
 
 /* ==== 0x001135B8  (file offset 0x135B8)  animations_get_duration ===================================== */
 /* GUESS: name. The duration of animation `index` (Animations.durations: its controller's longest
@@ -16950,7 +16948,7 @@ undefined8 FUN_0011abc4(int param_1,int param_2)
   local_30 = param_2;
   if (uVar1 == 0x65) {
     level_object_get_position((uint32 *)((undefined4 *)(param_1 + 400)),(LevelObject *)*(int *)(param_1 + 0x20));
-    FUN_00113524(&local_30,param_1);
+    enemy_get_player_point((uint32 *)&local_30,(Enemy *)param_1);
     uVar1 = motion_entity_get_heading((MotionEntity *)*(int *)(param_1 + 0x20));
     uVar1 = float_add(uVar1,FLOAT_90);
     dVar1 = FUN_00126248(uVar1);
@@ -18033,8 +18031,8 @@ undefined8 FUN_0011c330(int param_1,int param_2,uint param_3)
   uVar9 = 0xb9 < iVar1 - 0xb00U;
   iVar7 = param_2;
   if (iVar1 - 0xb00U == 0xba) {
-    uVar2 = float_subtract(*(uint *)(param_1 + 4),*(uint *)(param_1 + 0x10));
-    uVar4 = float_subtract(*(uint *)(param_1 + 8),*(uint *)(param_1 + 0x14));
+    uVar2 = float_subtract(((Enemy *)param_1)->playerPoint[0],((Enemy *)param_1)->position[0]);
+    uVar4 = float_subtract(((Enemy *)param_1)->playerPoint[1],((Enemy *)param_1)->position[1]);
     uVar2 = float_multiply(uVar2,uVar2);
     uVar4 = float_multiply(uVar4,uVar4);
     uVar2 = float_add(uVar4,uVar2);
@@ -18066,13 +18064,14 @@ LAB_0011c694:
   }
   uVar9 = 0xba < iVar1 - 0xb00U;
   if (iVar1 - 0xb00U != 0xbb) goto LAB_0011c424;
-  *(undefined4 *)(param_1 + 0xa8) = *(undefined4 *)(param_1 + 0x10);
-  *(undefined4 *)(param_1 + 0xac) = *(undefined4 *)(param_1 + 0x14);
-  *(uint *)(param_1 + 0xb0) = *(uint *)(param_1 + 0x18);
-  iVar6 = *(int *)(param_1 + 4);
-  iVar7 = *(int *)(param_1 + 8);
-  uVar2 = planar_distance_squared_2(param_1,*(undefined4 *)(param_1 + 0x10),*(undefined4 *)(param_1 + 0x14),
-                       *(uint *)(param_1 + 0x18),iVar6,iVar7);
+  *(undefined4 *)(param_1 + 0xa8) = ((Enemy *)param_1)->position[0];
+  *(undefined4 *)(param_1 + 0xac) = ((Enemy *)param_1)->position[1];
+  *(uint *)(param_1 + 0xb0) = ((Enemy *)param_1)->position[2];
+  iVar6 = ((Enemy *)param_1)->playerPoint[0];
+  iVar7 = ((Enemy *)param_1)->playerPoint[1];
+  uVar2 = planar_distance_squared_2(param_1,((Enemy *)param_1)->position[0],
+                                    ((Enemy *)param_1)->position[1],((Enemy *)param_1)->position[2],
+                                    iVar6,iVar7);
   float_compare_less(uVar2,param_3);
   if ((bool)uVar9) {
     uVar4 = param_2 * *(int *)(param_1 + 0x1c);
@@ -18089,10 +18088,10 @@ LAB_0011c694:
   else {
     uVar9 = 1;
     if (*(int *)(param_1 + 0xf8) == 0) {
-      uVar2 = float_subtract(*(uint *)(param_1 + 0xa8),*(uint *)(param_1 + 4));
+      uVar2 = float_subtract(*(uint *)(param_1 + 0xa8),((Enemy *)param_1)->playerPoint[0]);
       float_compare_greater(uVar2,0);
       if ((bool)uVar9) {
-        uVar2 = float_subtract(*(uint *)(param_1 + 0xac),*(uint *)(param_1 + 8));
+        uVar2 = float_subtract(*(uint *)(param_1 + 0xac),((Enemy *)param_1)->playerPoint[1]);
         float_compare_greater(uVar2,0);
         if ((bool)uVar9) {
           uVar3 = 3;
@@ -18104,7 +18103,7 @@ LAB_0011c440:
         *(undefined4 *)(param_1 + 0xfc) = uVar3;
       }
       else {
-        uVar2 = float_subtract(*(uint *)(param_1 + 0xac),*(uint *)(param_1 + 8));
+        uVar2 = float_subtract(*(uint *)(param_1 + 0xac),((Enemy *)param_1)->playerPoint[1]);
         float_compare_greater(uVar2,0);
         if (!(bool)uVar9) {
           uVar3 = 7;
@@ -18123,9 +18122,9 @@ LAB_0011c440:
     *(undefined4 *)(param_1 + 0xb8) = *(undefined4 *)(iVar1 + *(int *)(param_1 + 0xfc) * 8 + 4);
   }
   if (FUN_00112e84(param_1) != 0) {
-    uVar2 = float_subtract(*(uint *)(param_1 + 4),*(uint *)(param_1 + 0xa8));
+    uVar2 = float_subtract(((Enemy *)param_1)->playerPoint[0],*(uint *)(param_1 + 0xa8));
     uVar2 = float_multiply(uVar2,uVar2);
-    uVar4 = float_subtract(*(uint *)(param_1 + 8),*(uint *)(param_1 + 0xac));
+    uVar4 = float_subtract(((Enemy *)param_1)->playerPoint[1],*(uint *)(param_1 + 0xac));
     uVar4 = float_multiply(uVar4,uVar4);
     uVar2 = float_add(uVar4,uVar2);
     *(uint *)(param_1 + 0xd0) = uVar2;
@@ -18229,16 +18228,16 @@ bool FUN_0011c860(int param_1,int param_2,undefined4 param_3)
     uVar8 = *(int *)(param_1 + 0x9c) - 0xf00;
     uVar9 = 0xa1 < uVar8;
     if (uVar8 == 0xa2) {
-      uVar1 = float_subtract(*(undefined4 *)(param_1 + 4),*(undefined4 *)(param_1 + 0x10));
-      uVar2 = float_subtract(*(undefined4 *)(param_1 + 8),*(undefined4 *)(param_1 + 0x14));
+      uVar1 = float_subtract(((Enemy *)param_1)->playerPoint[0],((Enemy *)param_1)->position[0]);
+      uVar2 = float_subtract(((Enemy *)param_1)->playerPoint[1],((Enemy *)param_1)->position[1]);
       uVar3 = float_multiply(uVar1,uVar1);
       uVar4 = float_multiply(uVar2,uVar2);
       uVar3 = float_sqrt(float_add(uVar4,uVar3));
       uVar1 = float_divide(uVar1,uVar3);
       uVar2 = float_divide(uVar2,uVar3);
-      local_2c = *(undefined4 *)(param_1 + 0x10);
-      local_28 = *(undefined4 *)(param_1 + 0x18);
-      uVar4 = *(undefined4 *)(param_1 + 0x14);
+      local_2c = ((Enemy *)param_1)->position[0];
+      local_28 = ((Enemy *)param_1)->position[2];
+      uVar4 = ((Enemy *)param_1)->position[1];
       float_compare_less(uVar3,param_3);
       if ((bool)uVar9) {
         uVar6 = *(undefined4 *)(param_1 + 0x11c);
@@ -18252,15 +18251,16 @@ bool FUN_0011c860(int param_1,int param_2,undefined4 param_3)
       }
       else {
         uVar1 = float_multiply(uVar1,param_3);
-        uVar1 = float_reverse_subtract(uVar1,*(undefined4 *)(param_1 + 4));
+        uVar1 = float_reverse_subtract(uVar1,((Enemy *)param_1)->playerPoint[0]);
         uVar2 = float_multiply(uVar2,param_3);
-        uVar2 = float_reverse_subtract(uVar2,*(undefined4 *)(param_1 + 8));
+        uVar2 = float_reverse_subtract(uVar2,((Enemy *)param_1)->playerPoint[1]);
         *(undefined4 *)(param_1 + 0x9c) = 0xfa1;
       }
       bVar7 = !(bool)uVar9;
       thunk_FUN_0011fd90(*(undefined4 *)(param_1 + 0x28),uVar1,uVar2,local_28);
       uVar1 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,
-                           *(undefined4 *)(param_1 + 4),*(undefined4 *)(param_1 + 8),uVar1,uVar2).low;
+                           ((Enemy *)param_1)->playerPoint[0],
+                           ((Enemy *)param_1)->playerPoint[1],uVar1,uVar2).low;
       local_30 = float_add(uVar1,FLOAT_180);
       uVar1 = motion_entity_get_heading((MotionEntity *)*(undefined4 *)(param_1 + 0x20));
       local_30 = float_reverse_subtract(uVar1,local_30);
@@ -18869,7 +18869,7 @@ void FUN_0011d6cc(int param_1,int param_2)
   uVar10 = uVar9 == 0x71;
   if ((bool)uVar10) {
     enemy_play_animation((Enemy *)param_1,*(int *)(param_1 + 0x44),1);
-    FUN_00113524(&local_30,param_1);
+    enemy_get_player_point((uint32 *)&local_30,(Enemy *)param_1);
     level_object_get_position((uint32 *)((undefined4 *)(param_1 + 0x254)),(LevelObject *)*(int *)(param_1 + 0x20));
     FUN_001201cc(*(int *)(param_1 + 0x20),1);
     uVar9 = planar_distance_squared_2(param_1,*(undefined4 *)(param_1 + 0x254),*(undefined4 *)(param_1 + 600),
@@ -19769,7 +19769,7 @@ undefined4 FUN_0011ec28(int param_1,int param_2)
         return 0;
       }
       FUN_0011f7d4(param_1,1);
-      FUN_00113524(&local_1c,param_1);
+      enemy_get_player_point((uint32 *)&local_1c,(Enemy *)param_1);
       level_object_get_position((uint32 *)&local_28,(LevelObject *)*(undefined4 *)(param_1 + 0x20));
       uVar2 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,local_1c,local_18,
                            local_28,local_24).low;
@@ -22374,8 +22374,8 @@ void enemy_update(Enemy *enemy,int32 now,int32 elapsed)
   uint32 angle;
   uint32 position[3];
 
-  FUN_00113524((uint32 *)&enemy->field_04,(int32)enemy);
-  level_object_get_position((uint32 *)(&enemy->field_10),(LevelObject *)(enemy->field_20));
+  enemy_get_player_point(enemy->playerPoint,enemy);
+  level_object_get_position(enemy->position,(LevelObject *)(enemy->field_20));
   if (enemy->mode == 1) {
     /* ---- the code at 0x0011db34 */
     if (enemy->field_90 == 0x1b59) {              /* 7001 */
@@ -22401,8 +22401,8 @@ void enemy_update(Enemy *enemy,int32 now,int32 elapsed)
       if (enemy->field_60 != 0)
         enemy_play_animation(enemy,enemy->field_60,1);
       enemy->field_68 = 0;
-      angle = float_add(FUN_00113374(enemy->app->context,enemy->field_04,enemy->field_08,
-                                              enemy->field_10,enemy->field_14).low,FLOAT_180);
+      angle = float_add(FUN_00113374(enemy->app->context,enemy->playerPoint[0],enemy->playerPoint[1],
+                                              enemy->position[0],enemy->position[1]).low,FLOAT_180);
       angle = float_reverse_subtract(motion_entity_get_heading((MotionEntity *)enemy->field_20),angle);
       wrap_angle((int32)enemy->app->context,(uint32 *)&angle);
       motion_entity_start_turn((MotionEntity *)enemy->field_20,angle,0x3f000000);

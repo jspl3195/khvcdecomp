@@ -782,12 +782,10 @@ typedef struct ItemDrops {
 typedef struct Enemy {
     int32    vtable;                /* +0x000 slots hold self-relative offsets; +4 is enemy_update, 0 and +0xc
                                      run when the region's field_148 is set */
-    int32    field_04;              /* +0x004 FUN_00113524 fills +0x04.. (GUESS: its position) */
-    int32    field_08;              /* +0x008 */
-    uint8  unknown_0c[0x04];
-    int32    field_10;              /* +0x010 level_object_get_position fills +0x10.. from field_20 */
-    int32    field_14;              /* +0x014 */
-    uint8  unknown_18[0x04];
+    uint32   playerPoint[3];      /* +0x004 GUESS: name; floats (their bits): the point near the player it
+                                     aims at, set every update (enemy_get_player_point) */
+    uint32   position[3];         /* +0x010 GUESS: name; floats (their bits): its model's (field_20)
+                                     position, read every update (level_object_get_position) */
     int32    number;                /* +0x01c 1, 2, ...: its place among the region's enemies */
     int32    field_20;              /* +0x020 GUESS: its model (an object) */
     int32    field_24;              /* +0x024 */
