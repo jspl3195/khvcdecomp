@@ -40,6 +40,30 @@ typedef struct int64 {
   uint32 low;
   int32 high;
 } int64;
+/* A double (IEEE-754 double precision), as its two words: a type of its own, so a double is not taken
+   for a 64-bit integer (uint64) or the other way round. The soft-float library's double routines take
+   and return it; the word macros work on it too (they only use .low and .high). */
+typedef struct float64 {
+  uint32 low;
+  uint32 high;
+} float64;
+/* Comparisons of two float64 on their words, with no C floating type: the comparison a caller's branch
+   makes after double_compare_equal / _greater / _less (which leave the result in the flags), written
+   after the comma. +0 == -0; every comparison is false for a NaN, so the negations stand for the
+   branches a NaN takes. a > b is DOUBLE_LESS(b,a), a >= b DOUBLE_LESS_EQUAL(b,a). Macros, not calls; the
+   arguments are evaluated more than once. */
+#define DOUBLE_IS_NAN(a) (((a).high << 1 | ((a).low != 0)) > 0xFFE00000u)
+#define DOUBLE_IS_ZERO(a) (((a).high << 1 | (a).low) == 0)
+#define DOUBLE_WORDS_LESS(a,b) ((a).high < (b).high || ((a).high == (b).high && (a).low < (b).low))
+#define DOUBLE_EQUAL(a,b) \
+  (!DOUBLE_IS_NAN(a) && !DOUBLE_IS_NAN(b) && \
+   (((a).high == (b).high && (a).low == (b).low) || (DOUBLE_IS_ZERO(a) && DOUBLE_IS_ZERO(b))))
+/* both negative: the larger magnitude is the smaller; signs differ: the negative one; else the words */
+#define DOUBLE_LESS(a,b) \
+  (!DOUBLE_IS_NAN(a) && !DOUBLE_IS_NAN(b) && !(DOUBLE_IS_ZERO(a) && DOUBLE_IS_ZERO(b)) && \
+   ((int32)((a).high & (b).high) < 0 ? DOUBLE_WORDS_LESS(b,a) : \
+    (int32)((a).high ^ (b).high) < 0 ? (int32)(a).high < 0 : DOUBLE_WORDS_LESS(a,b)))
+#define DOUBLE_LESS_EQUAL(a,b) (DOUBLE_LESS(a,b) || DOUBLE_EQUAL(a,b))
 typedef uint64 undefined8;
 /* What the code does with 64-bit values, as macros on the two words (no calls; the arguments are
    evaluated more than once, and the result is assigned high word first).
@@ -280,7 +304,7 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                 reduced value by 8 ... */
 #define NINE_DOUBLE_LOW_WORD   0x00000000u    /* was DAT_00101250 (word at 0x00101250) */
 #define NINE_DOUBLE_HIGH_WORD  0x40220000u    /* was DAT_00101254 (word at 0x00101254) */
-                                             /* ... and adds 9.0, then converts to int (FUN_00125554)
+                                             /* ... and adds 9.0, then converts to int (double_to_int)
                                                 and halves it: the quadrant. GUESS: why 8 and 9 */
 #define TWO_OVER_PI_LOW_WORD   0x6DC9C883u    /* was DAT_0010118c (word at 0x0010118C) */
 #define TWO_OVER_PI_HIGH_WORD  0x3FE45F30u    /* was DAT_00101190 (word at 0x00101190) */
@@ -368,11 +392,11 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                 prefix: the words sit in a code area and were never
                                                 defined as data */
 /* Literal-pool data the code takes the address of (so: objects, not #defines). */
-extern undefined8 ZERO_DOUBLE;              /* was DAT_001007b4: the IEEE-754 double 0.0, two zero words
+extern float64 ZERO_DOUBLE;                 /* was DAT_001007b4: the IEEE-754 double 0.0, two zero words
                                                at 0x001007B4..0x001007BB. FUN_0010041c (GUESS: acos)
                                                returns it for x == 1: `adr r1, ZERO_DOUBLE;
                                                ldmia r1, {r0, r1}` loads both words as the result */
-extern undefined8 NAN_DOUBLE;               /* was DAT_001007bc: the IEEE-754 double quiet NaN
+extern float64 NAN_DOUBLE;                  /* was DAT_001007bc: the IEEE-754 double quiet NaN
                                                0x7FF80000_00000001 (low word 1, high 0x7FF80000) at
                                                0x001007BC..0x001007C3. FUN_0010041c (GUESS: acos)
                                                returns it for |x| > 1, after errno = EDOM */
@@ -416,19 +440,19 @@ uint64 memcpy(void *destination,void *source,uint32 byteCount);   /* 0x00100168 
 uint64 memcpy_word_aligned(void *destination,void *source,uint32 byteCount);   /* 0x0010021C GUESS: name, see kh_mod.c */
 uint64 rt_sdiv(int32 divisor,int32 dividend);   /* 0x00100288 GUESS: name (ARM's __rt_sdiv), see kh_mod.c */
 uint64 rt_udiv(uint32 divisor,uint32 dividend);   /* 0x0010035C GUESS: name (ARM's __rt_udiv), see kh_mod.c */
-undefined8 FUN_0010041c(int param_1,uint param_2);
-undefined8 FUN_001007f4(int param_1,uint param_2);
-undefined8 FUN_001008d0(int param_1,uint param_2);
-undefined8 FUN_001009b8(uint param_1,uint param_2);
+float64 FUN_0010041c(float64 x);
+float64 FUN_001007f4(float64 x);
+float64 FUN_001008d0(float64 x);
+float64 FUN_001009b8(float64 x);
 /* errno values of ARM's C library that kh.mod sets (set_errno) */
 #define ERRNO_EDOM 1   /* an argument outside the function's domain */
 int32 * set_errno(int32 value);   /* 0x00100A38 GUESS: name, see kh_mod.c */
 int32 rt_div0_raise(void);   /* 0x00100A4C (no Ghidra function) GUESS: name, see kh_mod.c */
-undefined8 FUN_00100a58(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param_4);
-undefined8 FUN_00100c2c(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
-int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3);
-undefined8 FUN_00101268(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param_4,int param_5);
-uint64 float_raise_exception(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh,uint32 control);   /* 0x001013E0 GUESS: name, see kh_mod.c */
+float64 FUN_00100a58(float64 x,float64 y);
+float64 FUN_00100c2c(int param_1,int param_2,float64 x);
+int FUN_00100d88(float64 x,float64 *param_3);
+float64 FUN_00101268(float64 x,float64 y,int param_5);
+float64 float_raise_exception(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh,uint32 control);   /* 0x001013E0 GUESS: name, see kh_mod.c */
 int32 raise_signal_and_exit(int32 signal,int32 type);   /* 0x00101440 GUESS: name, see kh_mod.c */
 int32 raise_signal(int32 signal,int32 type);   /* 0x00101458 GUESS: name, see kh_mod.c */
 int32 semihosting_exit(void);   /* 0x001014BC (no Ghidra function) */
@@ -843,29 +867,29 @@ void save_write_byte(Progress *progress,uint8 byte,uint8 *data,int32 *position);
 void save_write_float(Progress *progress,uint32 value,uint8 *data,int32 *position);   /* 0x001246B4 GUESS: name, see kh_mod.c */
 void save_write_int(Progress *progress,int32 value,uint8 *data,int32 *position);   /* 0x001246F4 GUESS: name, see kh_mod.c */
 int32 save_write_string(Progress *progress,const char *text,uint8 *data,int32 *position);   /* 0x00124734 GUESS: name, see kh_mod.c */
-uint32 double_to_float(uint32 low,uint32 high);   /* 0x0012479C GUESS: name, see kh_mod.c */
-uint64 double_add(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00124954 GUESS: name, see kh_mod.c */
-uint64 double_reverse_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00124B40 GUESS: name, see kh_mod.c */
-uint64 double_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00124B84 GUESS: name, see kh_mod.c */
-uint64 double_reverse_divide(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00124F24 GUESS: name, see kh_mod.c */
-uint64 double_divide(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00124F44 GUESS: name, see kh_mod.c */
+uint32 double_to_float(float64 x);   /* 0x0012479C GUESS: name, see kh_mod.c */
+float64 double_add(float64 a,float64 b);   /* 0x00124954 GUESS: name, see kh_mod.c */
+float64 double_reverse_subtract(float64 a,float64 b);   /* 0x00124B40 GUESS: name, see kh_mod.c */
+float64 double_subtract(float64 a,float64 b);   /* 0x00124B84 GUESS: name, see kh_mod.c */
+float64 double_reverse_divide(float64 a,float64 b);   /* 0x00124F24 GUESS: name, see kh_mod.c */
+float64 double_divide(float64 a,float64 b);   /* 0x00124F44 GUESS: name, see kh_mod.c */
 uint64 double_divide_mantissas(uint32 dividendLow,uint32 dividendHigh,uint32 divisorLow,uint32 divisorHigh);   /* 0x001251EC GUESS: name */
-uint32 double_compare_equal(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x001254D4 GUESS: name, see kh_mod.c */
-uint FUN_00125554(uint param_1,uint param_2);
-uint64 int_to_double(int32 value);   /* 0x00125604 GUESS: name, see kh_mod.c */
-uint32 double_compare_greater(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00125634 GUESS: name, see kh_mod.c */
-uint32 double_compare_less(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x001256B4 GUESS: name, see kh_mod.c */
-undefined8 FUN_00125734(uint param_1,uint param_2,uint param_3,uint param_4);
-undefined8 FUN_001259e8(uint param_1,uint param_2,uint param_3,uint param_4);
-undefined8 FUN_00125cd0(uint param_1,uint param_2);
-undefined8 FUN_00126248(uint param_1);
+uint32 double_compare_equal(float64 a,float64 b);   /* 0x001254D4 GUESS: name, see kh_mod.c */
+int32 double_to_int(float64 x);   /* 0x00125554 GUESS: name, see kh_mod.c */
+float64 int_to_double(int32 value);   /* 0x00125604 GUESS: name, see kh_mod.c */
+uint32 double_compare_greater(float64 a,float64 b);   /* 0x00125634 GUESS: name, see kh_mod.c */
+uint32 double_compare_less(float64 a,float64 b);   /* 0x001256B4 GUESS: name, see kh_mod.c */
+float64 FUN_00125734(float64 a,float64 b);
+float64 FUN_001259e8(float64 a,float64 b);
+float64 FUN_00125cd0(float64 x);
+float64 FUN_00126248(uint param_1);
 uint32 float_add(uint32 a,uint32 b);   /* 0x001262B0 GUESS: name; a + b, float bits (__aeabi_fadd) */
 uint32 float_reverse_subtract(uint32 a,uint32 b);   /* 0x001263F8 GUESS: name; b - a (__aeabi_frsub) */
 uint32 float_subtract(uint32 a,uint32 b);   /* 0x0012642C GUESS: name; a - b (__aeabi_fsub) */
 uint32 float_reverse_divide(uint32 a,uint32 b);   /* 0x00126608 GUESS: name, see kh_mod.c */
 uint32 float_divide(uint32 a,uint32 b);   /* 0x00126618 GUESS: name, see kh_mod.c */
 uint32 float_compare_equal(uint32 a,uint32 b);   /* 0x001267F0 GUESS: name; == / !=, result in the flags (__aeabi_cfcmpeq) */
-uint FUN_00126858(uint param_1);
+int32 float_to_int(uint32 a);   /* 0x00126858 GUESS: name, see kh_mod.c */
 uint32 int_to_float(int32 value);   /* 0x001268C8 GUESS: name, see kh_mod.c */
 uint32 float_compare_greater(uint32 a,uint32 b);   /* 0x001268FC GUESS: name; > / >=, result in the flags (__aeabi_cfcmple) */
 uint32 float_compare_less(uint32 a,uint32 b);   /* 0x00126964 GUESS: name; < / <=, result in the flags */
@@ -2033,5 +2057,41 @@ static code *const VTABLE_00101724[8] = {   /* 0x00101724; in kh.mod each entry 
   (code *)ui_element_get_secondary_color,
   (code *)ui_element_get_border_color
 };
+
+/* The double constants the code passes to the double routines, as float64 (their words are the
+   *_LOW_WORD / *_HIGH_WORD literals above). */
+static const float64 DOUBLE_180 = { DOUBLE_180_LOW_WORD, DOUBLE_180_HIGH_WORD };
+static const float64 DOUBLE_1_POINT_1 = { DOUBLE_1_POINT_1_LOW_WORD, DOUBLE_1_POINT_1_HIGH_WORD };
+static const float64 DOUBLE_360 = { DOUBLE_360_LOW_WORD, DOUBLE_360_HIGH_WORD };
+static const float64 DOUBLE_4_POINT_5 = { DOUBLE_4_POINT_5_LOW_WORD, DOUBLE_4_POINT_5_HIGH_WORD };
+static const float64 DOUBLE_800 = { DOUBLE_800_LOW_WORD, DOUBLE_800_HIGH_WORD };
+static const float64 DOUBLE_MINUS_180 = { DOUBLE_MINUS_180_LOW_WORD, DOUBLE_MINUS_180_HIGH_WORD };
+static const float64 DOUBLE_MINUS_ONE = { DOUBLE_MINUS_ONE_LOW_WORD, DOUBLE_MINUS_ONE_HIGH_WORD };
+static const float64 EIGHT_DOUBLE = { EIGHT_DOUBLE_LOW_WORD, EIGHT_DOUBLE_HIGH_WORD };
+static const float64 HALF_DOUBLE = { HALF_DOUBLE_LOW_WORD, HALF_DOUBLE_HIGH_WORD };
+static const float64 HALF_PI_CORRECTION = { HALF_PI_CORRECTION_LOW_WORD, HALF_PI_CORRECTION_HIGH_WORD };
+static const float64 HALF_PI_FIRST_33_BITS =
+  { HALF_PI_FIRST_33_BITS_LOW_WORD, HALF_PI_FIRST_33_BITS_HIGH_WORD };
+static const float64 HALF_PI_FIRST_33_BITS_TAIL =
+  { HALF_PI_FIRST_33_BITS_TAIL_LOW_WORD, HALF_PI_FIRST_33_BITS_TAIL_HIGH_WORD };
+static const float64 HALF_PI_SECOND_33_BITS =
+  { HALF_PI_SECOND_33_BITS_LOW_WORD, HALF_PI_SECOND_33_BITS_HIGH_WORD };
+static const float64 HALF_PI_SECOND_33_BITS_TAIL =
+  { HALF_PI_SECOND_33_BITS_TAIL_LOW_WORD, HALF_PI_SECOND_33_BITS_TAIL_HIGH_WORD };
+static const float64 NINE_DOUBLE = { NINE_DOUBLE_LOW_WORD, NINE_DOUBLE_HIGH_WORD };
+static const float64 ONE_DOUBLE = { ONE_DOUBLE_LOW_WORD, ONE_DOUBLE_HIGH_WORD };
+static const float64 REDUCTION_CONSTANT = { REDUCTION_CONSTANT_LOW_WORD, REDUCTION_CONSTANT_HIGH_WORD };
+static const float64 REDUCTION_CONSTANT_HIGH_PART =
+  { REDUCTION_CONSTANT_HIGH_PART_LOW_WORD, REDUCTION_CONSTANT_HIGH_PART_HIGH_WORD };
+static const float64 REDUCTION_CONSTANT_LOW_PART =
+  { REDUCTION_CONSTANT_LOW_PART_LOW_WORD, REDUCTION_CONSTANT_LOW_PART_HIGH_WORD };
+static const float64 REDUCTION_PERIOD = { REDUCTION_PERIOD_LOW_WORD, REDUCTION_PERIOD_HIGH_WORD };
+static const float64 REDUCTION_QUARTER_PERIOD =
+  { REDUCTION_QUARTER_PERIOD_LOW_WORD, REDUCTION_QUARTER_PERIOD_HIGH_WORD };
+static const float64 SIN_KERNEL_S1 = { SIN_KERNEL_S1_LOW_WORD, SIN_KERNEL_S1_HIGH_WORD };
+static const float64 TWO_DOUBLE = { TWO_DOUBLE_LOW_WORD, TWO_DOUBLE_HIGH_WORD };
+static const float64 TWO_OVER_PI = { TWO_OVER_PI_LOW_WORD, TWO_OVER_PI_HIGH_WORD };
+static const float64 DOUBLE_0_POINT_01 = { WORD_HEXADECIMAL_47AE147B, FLOAT_1_POINT_035 };   /* the double
+                                             0.01 (0x3F847AE1:47AE147B), FUN_0012312c's words */
 
 #endif /* KH_MOD_H */

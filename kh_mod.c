@@ -322,12 +322,16 @@ uint64 rt_udiv(uint32 divisor,uint32 dividend)
 
 
 /* ==== 0x0010041C  (file offset 0x0041C)  FUN_0010041c ================================================ */
-undefined8 FUN_0010041c(int param_1,uint param_2)
+float64 FUN_0010041c(float64 x)
 
 {
+  float64 pair1;   /* a double built from its two words, for a call */
+  float64 pair2;   /* a double built from its two words, for a call */
+  int param_1 = x.low;   /* the double's words, as Ghidra named the registers */
+  uint param_2 = x.high;
   uint uVar1;
   undefined4 uVar2;
-  undefined8 *puVar3;
+  float64 *puVar3;
   undefined4 uVar4;
   undefined4 uVar5;
   int iVar6;
@@ -336,10 +340,10 @@ undefined8 FUN_0010041c(int param_1,uint param_2)
   int iVar9;
   bool bVar10;
   bool bVar11;
-  undefined8 uVar12;
-  undefined8 uVar13;
-  undefined8 uVar14;
-  undefined8 uVar15;
+  float64 uVar12;
+  float64 uVar13;
+  float64 uVar14;
+  float64 uVar15;
   
   uVar1 = param_2 & 0x7fffffff;
   bVar10 = ADD_OVERFLOWS(uVar1,-0x30000000);
@@ -374,7 +378,7 @@ undefined8 FUN_0010041c(int param_1,uint param_2)
         bVar10 = iVar7 == 0xff00000;
       }
       if ((!bVar10 && iVar6 < 0 == bVar11) || ((bVar10 && (param_1 != 0)))) {
-        return double_add(param_1,param_2,param_1,param_2);
+        return double_add(x,x);
       }
                     /* |x| > 1 (outside acos's domain): errno = EDOM (set_errno), then the result
                        is NaN: NAN_DOUBLE, loaded through puVar3 below
@@ -395,50 +399,43 @@ undefined8 FUN_0010041c(int param_1,uint param_2)
     }
     if (iVar8 < 0 == bVar10) {
       if (-1 < (int)param_2) {
-        uVar12 = double_reverse_subtract(param_1,param_2,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
-        uVar12 = FUN_00125734((int)uVar12.low,(int)uVar12.high,HALF_DOUBLE_LOW_WORD,HALF_DOUBLE_HIGH_WORD
-                             );
+        uVar12 = double_reverse_subtract(x,ONE_DOUBLE);
+        uVar12 = FUN_00125734(uVar12,HALF_DOUBLE);
         uVar5 = uVar12.high;
         uVar2 = uVar12.low;
-        uVar12 = FUN_001009b8(uVar2,uVar5);
+        uVar12 = FUN_001009b8(MAKE_WORDS(pair1,uVar5,uVar2));
         uVar4 = uVar12.high;
-        uVar13 = FUN_00125734(0,uVar4,0,uVar4);
-        uVar13 = double_reverse_subtract((int)uVar13.low,(int)uVar13.high,uVar2,uVar5);
-        uVar14 = double_add((int)uVar12.low,uVar4,0,uVar4);
-        uVar13 = double_reverse_divide((int)uVar14.low,(int)uVar14.high,(int)uVar13.low,
-                              (int)uVar13.high);
-        uVar14 = FUN_00100c2c(iVar7,6,uVar2,uVar5);
-        uVar14 = FUN_00125734((int)uVar14.low,(int)uVar14.high,uVar2,uVar5);
-        uVar15 = FUN_00100c2c(iVar6,4,uVar2,uVar5);
-        uVar15 = FUN_00125734((int)uVar15.low,(int)uVar15.high,uVar2,uVar5);
-        uVar15 = double_add((int)uVar15.low,(int)uVar15.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD
-                             );
-        uVar14 = double_divide((int)uVar14.low,(int)uVar14.high,(int)uVar15.low,
-                              (int)uVar15.high);
-        uVar12 = FUN_00125734((int)uVar14.low,(int)uVar14.high,(int)uVar12.low,uVar4);
-        uVar12 = double_add((int)uVar12.low,(int)uVar12.high,(int)uVar13.low,
-                              (int)uVar13.high);
-        uVar12 = double_add(0,uVar4,(int)uVar12.low,(int)uVar12.high);
-        return FUN_00125734((int)uVar12.low,(int)uVar12.high,TWO_DOUBLE_LOW_WORD,TWO_DOUBLE_HIGH_WORD);
+        uVar13 = FUN_00125734(MAKE_WORDS(pair1,uVar4,0),MAKE_WORDS(pair2,uVar4,0));
+        uVar13 = double_reverse_subtract(uVar13,MAKE_WORDS(pair1,uVar5,uVar2));
+        uVar14 = double_add(MAKE_WORDS(pair1,uVar4,(int)uVar12.low),MAKE_WORDS(pair2,uVar4,0));
+        uVar13 = double_reverse_divide(uVar14,uVar13);
+        uVar14 = FUN_00100c2c(iVar7,6,MAKE_WORDS(pair1,uVar5,uVar2));
+        uVar14 = FUN_00125734(uVar14,MAKE_WORDS(pair1,uVar5,uVar2));
+        uVar15 = FUN_00100c2c(iVar6,4,MAKE_WORDS(pair1,uVar5,uVar2));
+        uVar15 = FUN_00125734(uVar15,MAKE_WORDS(pair1,uVar5,uVar2));
+        uVar15 = double_add(uVar15,ONE_DOUBLE);
+        uVar14 = double_divide(uVar14,uVar15);
+        uVar12 = FUN_00125734(uVar14,MAKE_WORDS(pair1,uVar4,(int)uVar12.low));
+        uVar12 = double_add(uVar12,uVar13);
+        uVar12 = double_add(MAKE_WORDS(pair1,uVar4,0),uVar12);
+        return FUN_00125734(uVar12,TWO_DOUBLE);
       }
-      uVar12 = double_add(param_1,param_2,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
-      uVar12 = FUN_00125734((int)uVar12.low,(int)uVar12.high,HALF_DOUBLE_LOW_WORD,HALF_DOUBLE_HIGH_WORD);
+      uVar12 = double_add(x,ONE_DOUBLE);
+      uVar12 = FUN_00125734(uVar12,HALF_DOUBLE);
       uVar5 = uVar12.high;
       uVar2 = uVar12.low;
-      uVar12 = FUN_00100c2c(iVar7,6,uVar2,uVar5);
-      uVar12 = FUN_00125734((int)uVar12.low,(int)uVar12.high,uVar2,uVar5);
-      uVar13 = FUN_00100c2c(iVar6,4,uVar2,uVar5);
-      uVar13 = FUN_00125734((int)uVar13.low,(int)uVar13.high,uVar2,uVar5);
-      uVar13 = double_add((int)uVar13.low,(int)uVar13.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
-      uVar14 = FUN_001009b8(uVar2,uVar5);
+      uVar12 = FUN_00100c2c(iVar7,6,MAKE_WORDS(pair1,uVar5,uVar2));
+      uVar12 = FUN_00125734(uVar12,MAKE_WORDS(pair1,uVar5,uVar2));
+      uVar13 = FUN_00100c2c(iVar6,4,MAKE_WORDS(pair1,uVar5,uVar2));
+      uVar13 = FUN_00125734(uVar13,MAKE_WORDS(pair1,uVar5,uVar2));
+      uVar13 = double_add(uVar13,ONE_DOUBLE);
+      uVar14 = FUN_001009b8(MAKE_WORDS(pair1,uVar5,uVar2));
       uVar2 = uVar14.high;
-      uVar12 = double_divide((int)uVar12.low,(int)uVar12.high,(int)uVar13.low,
-                            (int)uVar13.high);
-      uVar12 = FUN_00125734((int)uVar12.low,(int)uVar12.high,(int)uVar14.low,uVar2);
-      uVar12 = double_subtract((int)uVar12.low,(int)uVar12.high,HALF_PI_CORRECTION_LOW_WORD,
-                               HALF_PI_CORRECTION_HIGH_WORD);
-      uVar12 = double_add((int)uVar14.low,uVar2,(int)uVar12.low,(int)uVar12.high);
-      uVar12 = FUN_00125734((int)uVar12.low,(int)uVar12.high,TWO_DOUBLE_LOW_WORD,TWO_DOUBLE_HIGH_WORD);
+      uVar12 = double_divide(uVar12,uVar13);
+      uVar12 = FUN_00125734(uVar12,MAKE_WORDS(pair1,uVar2,(int)uVar14.low));
+      uVar12 = double_subtract(uVar12,HALF_PI_CORRECTION);
+      uVar12 = double_add(MAKE_WORDS(pair1,uVar2,(int)uVar14.low),uVar12);
+      uVar12 = FUN_00125734(uVar12,TWO_DOUBLE);
       uVar2 = PI_DOUBLE_LOW_WORD;
       uVar5 = PI_DOUBLE_HIGH_WORD;
     }
@@ -455,31 +452,33 @@ undefined8 FUN_0010041c(int param_1,uint param_2)
       if (bVar10 || iVar8 < 0 != bVar11) {
         return MAKE_WORDS(uVar12,HALF_PI_DOUBLE_HIGH_WORD,HALF_PI_DOUBLE_LOW_WORD);
       }
-      uVar12 = FUN_00125734(param_1,param_2,param_1,param_2);
+      uVar12 = FUN_00125734(x,x);
       uVar5 = uVar12.high;
       uVar2 = uVar12.low;
-      uVar12 = FUN_00100c2c(iVar7,6,uVar2,uVar5);
-      uVar12 = FUN_00125734((int)uVar12.low,(int)uVar12.high,uVar2,uVar5);
-      uVar13 = FUN_00100c2c(iVar6,4,uVar2,uVar5);
-      uVar13 = FUN_00125734((int)uVar13.low,(int)uVar13.high,uVar2,uVar5);
-      uVar13 = double_add((int)uVar13.low,(int)uVar13.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
-      uVar12 = double_divide((int)uVar12.low,(int)uVar12.high,(int)uVar13.low,
-                            (int)uVar13.high);
-      uVar12 = FUN_00125734(param_1,param_2,(int)uVar12.low,(int)uVar12.high);
-      uVar12 = double_reverse_subtract((int)uVar12.low,(int)uVar12.high,HALF_PI_CORRECTION_LOW_WORD,
-                                       HALF_PI_CORRECTION_HIGH_WORD);
-      uVar12 = double_reverse_subtract((int)uVar12.low,(int)uVar12.high,param_1,param_2);
+      uVar12 = FUN_00100c2c(iVar7,6,MAKE_WORDS(pair1,uVar5,uVar2));
+      uVar12 = FUN_00125734(uVar12,MAKE_WORDS(pair1,uVar5,uVar2));
+      uVar13 = FUN_00100c2c(iVar6,4,MAKE_WORDS(pair1,uVar5,uVar2));
+      uVar13 = FUN_00125734(uVar13,MAKE_WORDS(pair1,uVar5,uVar2));
+      uVar13 = double_add(uVar13,ONE_DOUBLE);
+      uVar12 = double_divide(uVar12,uVar13);
+      uVar12 = FUN_00125734(x,uVar12);
+      uVar12 = double_reverse_subtract(uVar12,HALF_PI_CORRECTION);
+      uVar12 = double_reverse_subtract(uVar12,x);
       uVar2 = HALF_PI_DOUBLE_LOW_WORD;
       uVar5 = HALF_PI_DOUBLE_HIGH_WORD;
     }
-    return double_reverse_subtract((int)uVar12.low,(int)uVar12.high,uVar2,uVar5);
+    return double_reverse_subtract(uVar12,MAKE_WORDS(pair1,uVar5,uVar2));
   }
 }
 
 /* ==== 0x001007F4  (file offset 0x007F4)  FUN_001007f4 ================================================ */
-undefined8 FUN_001007f4(int param_1,uint param_2)
+float64 FUN_001007f4(float64 x)
 
 {
+  float64 pair1;   /* a double built from its two words, for a call */
+  float64 pair2;   /* a double built from its two words, for a call */
+  int param_1 = x.low;   /* the double's words, as Ghidra named the registers */
+  uint param_2 = x.high;
   undefined4 uVar1;
   undefined4 uVar2;
   uint uVar3;
@@ -487,11 +486,9 @@ undefined8 FUN_001007f4(int param_1,uint param_2)
   int iVar5;
   bool bVar6;
   bool bVar7;
-  int iStack_14;
-  uint uStack_10;
-  undefined4 uStack_c;
-  undefined4 uStack_8;
-  undefined8 uVar8;
+  float64 y[2];      /* rem_pio2's (FUN_00100d88) result: the reduced argument as two doubles,
+                        head and tail (Ghidra's iStack_14, uStack_10, uStack_c, uStack_8) */
+  float64 uVar8;
   
   uVar3 = param_2 & 0x7fffffff;
   uVar1 = ZERO_DOUBLE_LOW_WORD;
@@ -513,52 +510,53 @@ undefined8 FUN_001007f4(int param_1,uint param_2)
       }
     }
     else if (iVar5 < 0 != bVar7) {
-      uVar3 = FUN_00100d88(param_1,param_2,(undefined8 *)&iStack_14);
+      uVar3 = FUN_00100d88(x,y);
       uVar3 = uVar3 & 3;
-      param_1 = iStack_14;
-      param_2 = uStack_10;
-      uVar1 = uStack_c;
-      uVar2 = uStack_8;
+      param_1 = y[0].low;
+      param_2 = y[0].high;
+      uVar1 = y[1].low;
+      uVar2 = y[1].high;
       if (uVar3 != 0) {
         if (uVar3 == 1) {
-          uVar8 = FUN_00101268(iStack_14,uStack_10,uStack_c,uStack_8,1);
+          uVar8 = FUN_00101268(y[0],y[1],1);
           uVar8.high = uVar8.high ^ 0x80000000;
           return uVar8;
         }
         if (uVar3 == 2) {
-          uVar8 = FUN_00100a58(iStack_14,uStack_10,uStack_c,uStack_8);
+          uVar8 = FUN_00100a58(y[0],y[1]);
           uVar8.high = uVar8.high ^ 0x80000000;
           return uVar8;
         }
-        uVar8 = FUN_00101268(iStack_14,uStack_10,uStack_c,uStack_8,1);
+        uVar8 = FUN_00101268(y[0],y[1],1);
         return uVar8;
       }
       goto LAB_00100814;
     }
-    uVar8 = double_add(param_1,param_2,param_1,param_2);
+    uVar8 = double_add(x,x);
   }
   else {
 LAB_00100814:
-    uVar8 = FUN_00100a58(param_1,param_2,uVar1,uVar2);
+    uVar8 = FUN_00100a58(MAKE_WORDS(pair1,param_2,param_1),MAKE_WORDS(pair2,uVar2,uVar1));
   }
   return uVar8;
 }
 
 /* ==== 0x001008D0  (file offset 0x008D0)  FUN_001008d0 ================================================ */
-undefined8 FUN_001008d0(int param_1,uint param_2)
+float64 FUN_001008d0(float64 x)
 
 {
+  float64 pair1;   /* a double built from its two words, for a call */
+  int param_1 = x.low;   /* the double's words, as Ghidra named the registers */
+  uint param_2 = x.high;
   uint uVar1;
   int iVar2;
   int iVar3;
   bool bVar4;
   bool bVar5;
   int iVar6;
-  undefined8 uVar7;
-  int iStack_14;
-  uint uStack_10;
-  undefined4 uStack_c;
-  undefined4 uStack_8;
+  float64 uVar7;
+  float64 y[2];      /* rem_pio2's (FUN_00100d88) result: the reduced argument as two doubles,
+                        head and tail (Ghidra's iStack_14, uStack_10, uStack_c, uStack_8) */
   
   uVar1 = param_2 & 0x7fffffff;
   if (QUARTER_PI_HIGH_WORD < (int)uVar1) {
@@ -578,51 +576,52 @@ undefined8 FUN_001008d0(int param_1,uint param_2)
       }
     }
     else if (iVar3 < 0 != bVar5) {
-      uVar1 = FUN_00100d88(param_1,param_2,&iStack_14);
+      uVar1 = FUN_00100d88(x,y);
       uVar1 = uVar1 & 3;
       if (uVar1 != 0) {
         if (uVar1 == 1) {
-          uVar7 = FUN_00100a58(iStack_14,uStack_10,uStack_c,uStack_8);
+          uVar7 = FUN_00100a58(y[0],y[1]);
           return uVar7;
         }
         if (uVar1 == 2) {
-          uVar7 = FUN_00101268(iStack_14,uStack_10,uStack_c,uStack_8,1);
+          uVar7 = FUN_00101268(y[0],y[1],1);
           uVar7.high = uVar7.high ^ 0x80000000;
           return uVar7;
         }
-        uVar7 = FUN_00100a58(iStack_14,uStack_10,uStack_c,uStack_8);
+        uVar7 = FUN_00100a58(y[0],y[1]);
         uVar7.high = uVar7.high ^ 0x80000000;
         return uVar7;
       }
       iVar6 = 1;
-      param_1 = iStack_14;
-      param_2 = uStack_10;
+      param_1 = y[0].low;
+      param_2 = y[0].high;
       goto LAB_00100980;
     }
-    uVar7 = double_add(param_1,param_2,param_1,param_2);
+    uVar7 = double_add(x,x);
   }
   else {
     iVar6 = 0;
-    uStack_c = ZERO_DOUBLE_LOW_WORD;
-    uStack_8 = ZERO_DOUBLE_HIGH_WORD;
+    y[1].low = ZERO_DOUBLE_LOW_WORD;
+    y[1].high = ZERO_DOUBLE_HIGH_WORD;
 LAB_00100980:
-    uVar7 = FUN_00101268(param_1,param_2,uStack_c,uStack_8,iVar6);
+    uVar7 = FUN_00101268(MAKE_WORDS(pair1,param_2,param_1),y[1],iVar6);
   }
   return uVar7;
 }
 
 /* ==== 0x001009B8  (file offset 0x009B8)  FUN_001009b8 ================================================ */
-undefined8 FUN_001009b8(uint param_1,uint param_2)
+float64 FUN_001009b8(float64 x)
 
 {
-  undefined8 uVar1;
+  uint param_1 = x.low;   /* the double's words, as Ghidra named the registers */
+  uint param_2 = x.high;
+  float64 uVar1;
   int iVar2;
   
   iVar2 = 0x7ff00000 - (param_2 & 0x7fffffff | (param_1 | -param_1) >> 0x1f);
   if (iVar2 < 0 ||
-      (double_compare_less(param_1,param_2,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
-       (int)param_2 >= 0 || (param_2 << 1 | param_1) == 0)) {   /* x >= 0.0 (-0 too) */
-    uVar1 = FUN_00125cd0(param_1,param_2);
+      (double_compare_less(x,ZERO_DOUBLE), !DOUBLE_LESS(x,ZERO_DOUBLE))) {   /* x >= 0.0 (-0 too) */
+    uVar1 = FUN_00125cd0(x);
   }
   else {
     set_errno(ERRNO_EDOM);
@@ -660,9 +659,15 @@ int32 rt_div0_raise(void)
 
 
 /* ==== 0x00100A58  (file offset 0x00A58)  FUN_00100a58 ================================================ */
-undefined8 FUN_00100a58(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param_4)
+float64 FUN_00100a58(float64 x,float64 y)
 
 {
+  float64 pair1;   /* a double built from its two words, for a call */
+  float64 pair2;   /* a double built from its two words, for a call */
+  undefined4 param_1 = x.low;   /* the double's words, as Ghidra named the registers */
+  uint param_2 = x.high;
+  undefined4 param_3 = y.low;
+  undefined4 param_4 = y.high;
   int iVar1;
   undefined4 uVar2;
   undefined4 uVar3;
@@ -673,29 +678,28 @@ undefined8 FUN_00100a58(undefined4 param_1,uint param_2,undefined4 param_3,undef
   int iVar8;
   bool bVar9;
   bool bVar10;
-  undefined8 uVar11;
-  undefined8 uVar12;
-  undefined8 uVar13;
-  undefined8 uVar14;
+  float64 uVar11;
+  float64 uVar12;
+  float64 uVar13;
+  float64 uVar14;
   
   uVar6 = param_2 & 0x7fffffff;
   if ((0x3e3fffff < uVar6) ||
-     (iVar1 = FUN_00125554(param_1,param_2), uVar2 = ONE_DOUBLE_LOW_WORD, iVar1 != 0)) {
-    uVar11 = FUN_00125734(param_1,param_2,param_1,param_2);
+     (iVar1 = double_to_int(x), uVar2 = ONE_DOUBLE_LOW_WORD, iVar1 != 0)) {
+    uVar11 = FUN_00125734(x,x);
     uVar3 = uVar11.high;
     uVar2 = uVar11.low;
-    uVar11 = FUN_00100c2c((int32)COS_KERNEL_TABLE,6,uVar2,uVar3);
-    uVar11 = FUN_00125734((int)uVar11.low,(int)uVar11.high,uVar2,uVar3);
+    uVar11 = FUN_00100c2c((int32)COS_KERNEL_TABLE,6,MAKE_WORDS(pair1,uVar3,uVar2));
+    uVar11 = FUN_00125734(uVar11,MAKE_WORDS(pair1,uVar3,uVar2));
     iVar1 = THREE_TENTHS_HIGH_WORD;
     uVar4 = uVar11.high;
-    uVar12 = FUN_00125734(param_1,param_2,param_3,param_4);
+    uVar12 = FUN_00125734(x,y);
     uVar5 = uVar12.high;
     if ((int)uVar6 < iVar1) {
-      uVar13 = FUN_00125734(uVar2,uVar3,HALF_DOUBLE_LOW_WORD,HALF_DOUBLE_HIGH_WORD);
-      uVar11 = FUN_00125734(uVar2,uVar3,(int)uVar11.low,uVar4);
-      uVar11 = double_reverse_subtract((int)uVar12.low,uVar5,(int)uVar11.low,(int)uVar11.high);
-      uVar11 = double_reverse_subtract((int)uVar11.low,(int)uVar11.high,(int)uVar13.low,
-                            (int)uVar13.high);
+      uVar13 = FUN_00125734(MAKE_WORDS(pair1,uVar3,uVar2),HALF_DOUBLE);
+      uVar11 = FUN_00125734(MAKE_WORDS(pair1,uVar3,uVar2),MAKE_WORDS(pair2,uVar4,(int)uVar11.low));
+      uVar11 = double_reverse_subtract(MAKE_WORDS(pair1,uVar5,(int)uVar12.low),uVar11);
+      uVar11 = double_reverse_subtract(uVar11,uVar13);
       MAKE_WORDS(uVar13,ONE_DOUBLE_HIGH_WORD,ONE_DOUBLE_LOW_WORD);
     }
     else {
@@ -714,15 +718,14 @@ undefined8 FUN_00100a58(undefined4 param_1,uint param_2,undefined4 param_3,undef
         uVar7 = 0;
         iVar8 = uVar6 - 0x200000;
       }
-      uVar13 = FUN_00125734(uVar2,uVar3,HALF_DOUBLE_LOW_WORD,HALF_DOUBLE_HIGH_WORD);
-      uVar14 = double_subtract((int)uVar13.low,(int)uVar13.high,uVar7,iVar8);
-      uVar13 = double_reverse_subtract(uVar7,iVar8,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
-      uVar11 = FUN_00125734(uVar2,uVar3,(int)uVar11.low,uVar4);
-      uVar11 = double_reverse_subtract((int)uVar12.low,uVar5,(int)uVar11.low,(int)uVar11.high);
-      uVar11 = double_reverse_subtract((int)uVar11.low,(int)uVar11.high,(int)uVar14.low,
-                            (int)uVar14.high);
+      uVar13 = FUN_00125734(MAKE_WORDS(pair1,uVar3,uVar2),HALF_DOUBLE);
+      uVar14 = double_subtract(uVar13,MAKE_WORDS(pair1,iVar8,uVar7));
+      uVar13 = double_reverse_subtract(MAKE_WORDS(pair1,iVar8,uVar7),ONE_DOUBLE);
+      uVar11 = FUN_00125734(MAKE_WORDS(pair1,uVar3,uVar2),MAKE_WORDS(pair2,uVar4,(int)uVar11.low));
+      uVar11 = double_reverse_subtract(MAKE_WORDS(pair1,uVar5,(int)uVar12.low),uVar11);
+      uVar11 = double_reverse_subtract(uVar11,uVar14);
     }
-    return double_reverse_subtract((int)uVar11.low,(int)uVar11.high,(int)uVar13.low,(int)uVar13.high);
+    return double_reverse_subtract(uVar11,uVar13);
   }
   return MAKE_WORDS(uVar11,ONE_DOUBLE_HIGH_WORD,uVar2);
 }
@@ -732,20 +735,23 @@ undefined8 FUN_00100a58(undefined4 param_1,uint param_2,undefined4 param_3,undef
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
-undefined8 FUN_00100c2c(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
+float64 FUN_00100c2c(int param_1,int param_2,float64 x)
 
 {
+  float64 pair1;   /* a double built from its two words, for a call */
+  undefined4 param_3 = x.low;   /* the double's words, as Ghidra named the registers */
+  undefined4 param_4 = x.high;
   uint uVar1;
   uint uVar2;
   uint uVar3;
   uint uVar4;
   uint *puVar5;
   undefined4 uVar6;
-  undefined8 *puVar7;
+  float64 *puVar7;
   uint uVar8;
   undefined4 uVar9;
   undefined4 *puVar10;
-  uint64 *puVar11;
+  float64 *puVar11;
   uint uVar12;
   int iVar13;
   uint uVar14;
@@ -756,12 +762,12 @@ undefined8 FUN_00100c2c(int param_1,int param_2,undefined4 param_3,undefined4 pa
   uint uVar19;
   bool bVar20;
   bool bVar21;
-  undefined8 uVar22;
-  uint64 uVar23;
+  float64 uVar22;
+  float64 uVar23;
   uint uVar24;
   
   param_2 = param_2 + -1;
-  puVar7 = (undefined8 *)(param_1 + param_2 * 8);
+  puVar7 = (float64 *)(param_1 + param_2 * 8);
   uVar22 = *puVar7;
   switch(param_2) {
   case 0:
@@ -769,10 +775,10 @@ undefined8 FUN_00100c2c(int param_1,int param_2,undefined4 param_3,undefined4 pa
   default:
     while( true ) {
       if (param_2 < 9) break;
-      uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
+      uVar22 = FUN_00125734(uVar22,MAKE_WORDS(pair1,param_4,param_3));
       param_2 = param_2 + -1;
       puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-      uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+      uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
     }
     break;
   case 1:
@@ -792,45 +798,45 @@ undefined8 FUN_00100c2c(int param_1,int param_2,undefined4 param_3,undefined4 pa
   case 8:
     break;
   }
-  uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
+  uVar22 = FUN_00125734(uVar22,MAKE_WORDS(pair1,param_4,param_3));
   param_2 = param_2 + -1;
   puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+  uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
 LAB_00100cbc:
-  uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
+  uVar22 = FUN_00125734(uVar22,MAKE_WORDS(pair1,param_4,param_3));
   param_2 = param_2 + -1;
   puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+  uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
 LAB_00100cd8:
-  uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
+  uVar22 = FUN_00125734(uVar22,MAKE_WORDS(pair1,param_4,param_3));
   param_2 = param_2 + -1;
   puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+  uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
 LAB_00100cf4:
-  uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
+  uVar22 = FUN_00125734(uVar22,MAKE_WORDS(pair1,param_4,param_3));
   param_2 = param_2 + -1;
   puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+  uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
 LAB_00100d10:
-  uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
+  uVar22 = FUN_00125734(uVar22,MAKE_WORDS(pair1,param_4,param_3));
   param_2 = param_2 + -1;
   puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+  uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
 LAB_00100d2c:
-  uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
+  uVar22 = FUN_00125734(uVar22,MAKE_WORDS(pair1,param_4,param_3));
   param_2 = param_2 + -1;
   puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+  uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
 LAB_00100d48:
-  uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
+  uVar22 = FUN_00125734(uVar22,MAKE_WORDS(pair1,param_4,param_3));
   param_2 = param_2 + -1;
   puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+  uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
 LAB_00100d64:
-  uVar23 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
+  uVar23 = FUN_00125734(uVar22,MAKE_WORDS(pair1,param_4,param_3));
   uVar8 = uVar23.high;
   uVar3 = uVar23.low;
-  puVar11 = (uint64 *)(param_1 + (param_2 + -1) * 8);
+  puVar11 = (float64 *)(param_1 + (param_2 + -1) * 8);
   uVar12 = puVar11->low;
   uVar14 = *(uint *)((int)puVar11 + 4);
   if ((DOUBLE_EXPONENT_MASK_SHIFTED & ~(uVar8 << 1)) == 0 || (DOUBLE_EXPONENT_MASK_SHIFTED & ~(uVar14 << 1)) == 0) {
@@ -1396,9 +1402,13 @@ LAB_00126d6c:
 }
 
 /* ==== 0x00100D88  (file offset 0x00D88)  FUN_00100d88 ================================================ */
-int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
+int FUN_00100d88(float64 x,float64 *param_3)
 
 {
+  float64 pair1;   /* a double built from its two words, for a call */
+  float64 pair2;   /* a double built from its two words, for a call */
+  undefined4 param_1 = x.low;   /* the double's words, as Ghidra named the registers */
+  uint param_2 = x.high;
   uint uVar1;
   int iVar2;
   int iVar3;
@@ -1414,10 +1424,10 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
   undefined4 uVar13;
   undefined4 *puVar14;
   bool bVar15;
-  undefined8 uVar16;
-  undefined8 uVar17;
-  undefined8 uVar18;
-  undefined8 uVar19;
+  float64 uVar16;
+  float64 uVar17;
+  float64 uVar18;
+  float64 uVar19;
   
   uVar4 = ZERO_DOUBLE_HIGH_WORD;
   uVar7 = ZERO_DOUBLE_LOW_WORD;
@@ -1436,17 +1446,13 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
       if ((int)param_2 < 1) {
                     /* x <= 0: z = x + pio2_1; y[0] = z + pio2_1t, or near pi/2
                        z += pio2_2; y[0] = z + pio2_2t. Returns -1. */
-        uVar16 = double_add(param_1,param_2,HALF_PI_FIRST_33_BITS_LOW_WORD,
-                            HALF_PI_FIRST_33_BITS_HIGH_WORD);
+        uVar16 = double_add(x,HALF_PI_FIRST_33_BITS);
         if (uVar9 == uVar1) {
-          uVar16 = double_add((int)uVar16.low,(int)uVar16.high,HALF_PI_SECOND_33_BITS_LOW_WORD,
-                              HALF_PI_SECOND_33_BITS_HIGH_WORD);
-          uVar16 = double_add((int)uVar16.low,(int)uVar16.high,HALF_PI_SECOND_33_BITS_TAIL_LOW_WORD,
-                              HALF_PI_SECOND_33_BITS_TAIL_HIGH_WORD);
+          uVar16 = double_add(uVar16,HALF_PI_SECOND_33_BITS);
+          uVar16 = double_add(uVar16,HALF_PI_SECOND_33_BITS_TAIL);
         }
         else {
-          uVar16 = double_add((int)uVar16.low,(int)uVar16.high,HALF_PI_FIRST_33_BITS_TAIL_LOW_WORD,
-                              HALF_PI_FIRST_33_BITS_TAIL_HIGH_WORD);
+          uVar16 = double_add(uVar16,HALF_PI_FIRST_33_BITS_TAIL);
         }
         *param_3 = uVar16;
         iVar2 = -1;
@@ -1454,17 +1460,13 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
       else {
                     /* x > 0: z = x - pio2_1; y[0] = z - pio2_1t, or near pi/2
                        z -= pio2_2; y[0] = z - pio2_2t. Returns 1. */
-        uVar16 = double_subtract(param_1,param_2,HALF_PI_FIRST_33_BITS_LOW_WORD,
-                                 HALF_PI_FIRST_33_BITS_HIGH_WORD);
+        uVar16 = double_subtract(x,HALF_PI_FIRST_33_BITS);
         if (uVar9 == uVar1) {
-          uVar16 = double_subtract((int)uVar16.low,(int)uVar16.high,HALF_PI_SECOND_33_BITS_LOW_WORD,
-                                   HALF_PI_SECOND_33_BITS_HIGH_WORD);
-          uVar16 = double_subtract((int)uVar16.low,(int)uVar16.high,HALF_PI_SECOND_33_BITS_TAIL_LOW_WORD,
-                                   HALF_PI_SECOND_33_BITS_TAIL_HIGH_WORD);
+          uVar16 = double_subtract(uVar16,HALF_PI_SECOND_33_BITS);
+          uVar16 = double_subtract(uVar16,HALF_PI_SECOND_33_BITS_TAIL);
         }
         else {
-          uVar16 = double_subtract((int)uVar16.low,(int)uVar16.high,HALF_PI_FIRST_33_BITS_TAIL_LOW_WORD,
-                                   HALF_PI_FIRST_33_BITS_TAIL_HIGH_WORD);
+          uVar16 = double_subtract(uVar16,HALF_PI_FIRST_33_BITS_TAIL);
         }
         *param_3 = uVar16;
         iVar2 = 1;
@@ -1490,7 +1492,7 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
                          - the sum is reduced modulo REDUCTION_PERIOD K = 2.67690020242726545163
                            (FUN_001259e8);
                          - the rest (lines below) uses 8.0 and 9.0 (EIGHT_DOUBLE, NINE_DOUBLE) to
-                           get the quadrant (FUN_00125554 then >> 1), and K/4 and C again
+                           get the quadrant (double_to_int then >> 1), and K/4 and C again
                            (REDUCTION_QUARTER_PERIOD, REDUCTION_CONSTANT) to scale the remainder into y[0].
                        Checked: C_hi + C_lo = 0.426041899379994537522 = K / (2*pi) exactly, and the
                        pool holds C itself (0x00101260) and K/4 (0x00101258).
@@ -1500,65 +1502,60 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
         iVar2 = rt_sdiv(0x36,(((int)LARGE_ARGUMENT_EXPONENT_LIMIT >> 0xb) -
                               LARGE_ARGUMENT_EXPONENT_LIMIT) + ((param_2 & 0x7fffffff) >> 0x14)).low;
         puVar14 = (undefined4 *)((int32)LARGE_ARGUMENT_SCALE_TABLE + iVar2 * 8);
-        uVar16 = FUN_00125734(param_1,param_2,*puVar14,puVar14[1]);
+        uVar16 = FUN_00125734(x,MAKE_WORDS(pair2,puVar14[1],*puVar14));
       }
       uVar13 = uVar16.high;
       uVar4 = uVar16.low & 0xfc000000;
-      uVar16 = double_subtract(uVar16.low,uVar13,uVar4,uVar13);
+      uVar16 = double_subtract(MAKE_WORDS(pair1,uVar13,uVar16.low),MAKE_WORDS(pair2,uVar13,uVar4));
       uVar7 = uVar16.high;
-      uVar17 = FUN_00125734(uVar4,uVar13,REDUCTION_CONSTANT_HIGH_PART_LOW_WORD,REDUCTION_CONSTANT_HIGH_PART_HIGH_WORD);
+      uVar17 = FUN_00125734(MAKE_WORDS(pair1,uVar13,uVar4),REDUCTION_CONSTANT_HIGH_PART);
       uVar8 = uVar17.high;
-      uVar18 = FUN_00125734(uVar4,uVar13,REDUCTION_CONSTANT_LOW_PART_LOW_WORD,REDUCTION_CONSTANT_LOW_PART_HIGH_WORD);
-      uVar19 = FUN_00125734((int)uVar16.low,uVar7,REDUCTION_CONSTANT_HIGH_PART_LOW_WORD,REDUCTION_CONSTANT_HIGH_PART_HIGH_WORD);
-      uVar16 = FUN_00125734((int)uVar16.low,uVar7,REDUCTION_CONSTANT_LOW_PART_LOW_WORD,REDUCTION_CONSTANT_LOW_PART_HIGH_WORD);
-      uVar18 = double_add((int)uVar18.low,(int)uVar18.high,(int)uVar19.low,
-                            (int)uVar19.high);
+      uVar18 = FUN_00125734(MAKE_WORDS(pair1,uVar13,uVar4),REDUCTION_CONSTANT_LOW_PART);
+      uVar19 = FUN_00125734(MAKE_WORDS(pair1,uVar7,(int)uVar16.low),REDUCTION_CONSTANT_HIGH_PART);
+      uVar16 = FUN_00125734(MAKE_WORDS(pair1,uVar7,(int)uVar16.low),REDUCTION_CONSTANT_LOW_PART);
+      uVar18 = double_add(uVar18,uVar19);
       uVar13 = uVar18.high;
-      uVar19 = double_add((int)uVar17.low,uVar8,(int)uVar18.low,uVar13);
+      uVar19 = double_add(MAKE_WORDS(pair1,uVar8,(int)uVar17.low),
+                          MAKE_WORDS(pair2,uVar13,(int)uVar18.low));
       uVar11 = uVar19.high;
       uVar7 = uVar19.low;
-      uVar17 = double_subtract(uVar7,uVar11,(int)uVar17.low,uVar8);
-      uVar17 = double_reverse_subtract((int)uVar17.low,(int)uVar17.high,(int)uVar18.low,uVar13);
-      uVar16 = double_add((int)uVar17.low,(int)uVar17.high,(int)uVar16.low,
-                            (int)uVar16.high);
-      uVar17 = FUN_001259e8(uVar7,uVar11,REDUCTION_PERIOD_LOW_WORD,REDUCTION_PERIOD_HIGH_WORD);
-      uVar17 = double_divide((int)uVar17.low,(int)uVar17.high,REDUCTION_PERIOD_LOW_WORD,
-                             REDUCTION_PERIOD_HIGH_WORD);
-      uVar17 = FUN_00125734((int)uVar17.low,(int)uVar17.high,EIGHT_DOUBLE_LOW_WORD,EIGHT_DOUBLE_HIGH_WORD);
+      uVar17 = double_subtract(MAKE_WORDS(pair1,uVar11,uVar7),MAKE_WORDS(pair2,uVar8,(int)uVar17.low));
+      uVar17 = double_reverse_subtract(uVar17,MAKE_WORDS(pair1,uVar13,(int)uVar18.low));
+      uVar16 = double_add(uVar17,uVar16);
+      uVar17 = FUN_001259e8(MAKE_WORDS(pair1,uVar11,uVar7),REDUCTION_PERIOD);
+      uVar17 = double_divide(uVar17,REDUCTION_PERIOD);
+      uVar17 = FUN_00125734(uVar17,EIGHT_DOUBLE);
                     /* Ghidra dropped the data flow here: the sum stays in r0:r1 and is the
                        argument of the double -> int conversion (0x001011ec bl add; 0x001011f0
-                       bl FUN_00125554). Written out explicitly. */
-      uVar17 = double_add((int)uVar17.low,(int)uVar17.high,NINE_DOUBLE_LOW_WORD,NINE_DOUBLE_HIGH_WORD);
-      iVar2 = FUN_00125554(uVar17.low,uVar17.high);
+                       bl double_to_int). Written out explicitly. */
+      uVar17 = double_add(uVar17,NINE_DOUBLE);
+      iVar2 = double_to_int(uVar17);
       iVar2 = iVar2 >> 1;
-      uVar17 = FUN_001259e8(uVar7,uVar11,REDUCTION_QUARTER_PERIOD_LOW_WORD,REDUCTION_QUARTER_PERIOD_HIGH_WORD);
-      uVar16 = double_add((int)uVar17.low,(int)uVar17.high,(int)uVar16.low,
-                            (int)uVar16.high);
-      uVar16 = FUN_001259e8((int)uVar16.low,(int)uVar16.high,REDUCTION_QUARTER_PERIOD_LOW_WORD,REDUCTION_QUARTER_PERIOD_HIGH_WORD);
-      uVar16 = double_divide((int)uVar16.low,(int)uVar16.high,REDUCTION_CONSTANT_LOW_WORD,
-                             REDUCTION_CONSTANT_HIGH_WORD);
+      uVar17 = FUN_001259e8(MAKE_WORDS(pair1,uVar11,uVar7),REDUCTION_QUARTER_PERIOD);
+      uVar16 = double_add(uVar17,uVar16);
+      uVar16 = FUN_001259e8(uVar16,REDUCTION_QUARTER_PERIOD);
+      uVar16 = double_divide(uVar16,REDUCTION_CONSTANT);
       *param_3 = uVar16;
     }
     else {
-      uVar16 = FUN_00125734(param_1,param_2 & 0x7fffffff,TWO_OVER_PI_LOW_WORD,TWO_OVER_PI_HIGH_WORD);
+      uVar16 = FUN_00125734(MAKE_WORDS(pair1,param_2 & 0x7fffffff,param_1),TWO_OVER_PI);
                     /* fdlibm: n = (int)(t*invpio2 + half); fn = (double)n. Ghidra dropped the
                        data flow: the sum in r0:r1 is the argument of the double -> int conversion
                        and n (r0) that of the int -> double one (0x00100ea8 bl add; 0x00100eac
-                       bl FUN_00125554; 0x00100eb4 bl int_to_double). Written out explicitly. */
-      uVar16 = double_add((int)uVar16.low,(int)uVar16.high,HALF_DOUBLE_LOW_WORD,HALF_DOUBLE_HIGH_WORD);
-      iVar2 = FUN_00125554(uVar16.low,uVar16.high);
+                       bl double_to_int; 0x00100eb4 bl int_to_double). Written out explicitly. */
+      uVar16 = double_add(uVar16,HALF_DOUBLE);
+      iVar2 = double_to_int(uVar16);
       uVar16 = int_to_double(iVar2);
       uVar13 = uVar16.high;
       uVar8 = uVar16.low;
-      uVar16 = FUN_00125734(uVar8,uVar13,HALF_PI_FIRST_33_BITS_LOW_WORD,HALF_PI_FIRST_33_BITS_HIGH_WORD);
-      uVar16 = double_reverse_subtract((int)uVar16.low,(int)uVar16.high,param_1,
-                            param_2 & 0x7fffffff);
-      uVar17 = FUN_00125734(uVar8,uVar13,HALF_PI_FIRST_33_BITS_TAIL_LOW_WORD,HALF_PI_FIRST_33_BITS_TAIL_HIGH_WORD);
+      uVar16 = FUN_00125734(MAKE_WORDS(pair1,uVar13,uVar8),HALF_PI_FIRST_33_BITS);
+      uVar16 = double_reverse_subtract(uVar16,MAKE_WORDS(pair1,param_2 & 0x7fffffff,param_1));
+      uVar17 = FUN_00125734(MAKE_WORDS(pair1,uVar13,uVar8),HALF_PI_FIRST_33_BITS_TAIL);
       iVar10 = 1;
       while( true ) {
         uVar12 = uVar16.high;
         uVar11 = uVar16.low;
-        uVar16 = double_subtract(uVar11,uVar12,(int)uVar17.low,(int)uVar17.high);
+        uVar16 = double_subtract(MAKE_WORDS(pair1,uVar12,uVar11),uVar17);
         *param_3 = uVar16;
         bVar15 = SUBTRACT_OVERFLOWS(iVar10,3);
         iVar5 = iVar10 + -3;
@@ -1570,14 +1567,13 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
         }
         if (iVar5 < 0 == bVar15) break;
         puVar14 = (undefined4 *)((int32)HALF_PI_PIECES_TABLE + iVar10 * 0x10);
-        uVar17 = FUN_00125734(uVar8,uVar13,*puVar14,puVar14[1]);
+        uVar17 = FUN_00125734(MAKE_WORDS(pair1,uVar13,uVar8),MAKE_WORDS(pair2,puVar14[1],*puVar14));
         uVar6 = uVar17.high;
-        uVar16 = double_subtract(uVar11,uVar12,(int)uVar17.low,uVar6);
-        uVar18 = FUN_00125734(uVar8,uVar13,puVar14[2],puVar14[3]);
-        uVar19 = double_subtract(uVar11,uVar12,(int)uVar16.low,(int)uVar16.high);
-        uVar17 = double_subtract((int)uVar19.low,(int)uVar19.high,(int)uVar17.low,uVar6);
-        uVar17 = double_reverse_subtract((int)uVar17.low,(int)uVar17.high,(int)uVar18.low,
-                              (int)uVar18.high);
+        uVar16 = double_subtract(MAKE_WORDS(pair1,uVar12,uVar11),MAKE_WORDS(pair2,uVar6,(int)uVar17.low));
+        uVar18 = FUN_00125734(MAKE_WORDS(pair1,uVar13,uVar8),MAKE_WORDS(pair2,puVar14[3],puVar14[2]));
+        uVar19 = double_subtract(MAKE_WORDS(pair1,uVar12,uVar11),uVar16);
+        uVar17 = double_subtract(uVar19,MAKE_WORDS(pair1,uVar6,(int)uVar17.low));
+        uVar17 = double_reverse_subtract(uVar17,uVar18);
         iVar10 = iVar10 + 1;
       }
       if ((int)param_2 < 0) {
@@ -1598,46 +1594,50 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
 }
 
 /* ==== 0x00101268  (file offset 0x01268)  FUN_00101268 ================================================ */
-undefined8
-FUN_00101268(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param_4,int param_5)
+float64
+FUN_00101268(float64 x,float64 y,int param_5)
 
 {
+  float64 pair1;   /* a double built from its two words, for a call */
+  float64 pair2;   /* a double built from its two words, for a call */
+  undefined4 param_1 = x.low;   /* the double's words, as Ghidra named the registers */
+  uint param_2 = x.high;
+  undefined4 param_3 = y.low;
+  undefined4 param_4 = y.high;
   int iVar1;
   undefined4 uVar2;
   undefined4 uVar3;
   undefined4 uVar4;
   undefined4 uVar5;
   undefined4 uVar6;
-  undefined8 uVar7;
-  undefined8 uVar8;
+  float64 uVar7;
+  float64 uVar8;
   
-  if ((0x3e3fffff < (param_2 & 0x7fffffff)) || (iVar1 = FUN_00125554(param_1,param_2), iVar1 != 0))
+  if ((0x3e3fffff < (param_2 & 0x7fffffff)) || (iVar1 = double_to_int(x), iVar1 != 0))
   {
-    uVar7 = FUN_00125734(param_1,param_2,param_1,param_2);
+    uVar7 = FUN_00125734(x,x);
     uVar4 = uVar7.high;
     uVar2 = uVar7.low;
-    uVar7 = FUN_00125734(uVar2,uVar4,param_1,param_2);
+    uVar7 = FUN_00125734(MAKE_WORDS(pair1,uVar4,uVar2),x);
     uVar5 = uVar7.high;
     uVar3 = uVar7.low;
-    uVar7 = FUN_00100c2c((int32)SIN_KERNEL_TABLE,5,uVar2,uVar4);
+    uVar7 = FUN_00100c2c((int32)SIN_KERNEL_TABLE,5,MAKE_WORDS(pair1,uVar4,uVar2));
     uVar6 = uVar7.high;
     if (param_5 == 0) {
-      uVar7 = FUN_00125734(uVar2,uVar4,(int)uVar7.low,uVar6);
-      uVar7 = double_add((int)uVar7.low,(int)uVar7.high,SIN_KERNEL_S1_LOW_WORD,SIN_KERNEL_S1_HIGH_WORD);
-      uVar7 = FUN_00125734((int)uVar7.low,(int)uVar7.high,uVar3,uVar5);
-      uVar7 = double_add((int)uVar7.low,(int)uVar7.high,param_1,param_2);
+      uVar7 = FUN_00125734(MAKE_WORDS(pair1,uVar4,uVar2),MAKE_WORDS(pair2,uVar6,(int)uVar7.low));
+      uVar7 = double_add(uVar7,SIN_KERNEL_S1);
+      uVar7 = FUN_00125734(uVar7,MAKE_WORDS(pair1,uVar5,uVar3));
+      uVar7 = double_add(uVar7,x);
     }
     else {
-      uVar8 = FUN_00125734(param_3,param_4,HALF_DOUBLE_LOW_WORD,HALF_DOUBLE_HIGH_WORD);
-      uVar7 = FUN_00125734(uVar3,uVar5,(int)uVar7.low,uVar6);
-      uVar7 = double_reverse_subtract((int)uVar7.low,(int)uVar7.high,(int)uVar8.low,
-                           (int)uVar8.high);
-      uVar7 = FUN_00125734((int)uVar7.low,(int)uVar7.high,uVar2,uVar4);
-      uVar7 = double_subtract((int)uVar7.low,(int)uVar7.high,param_3,param_4);
-      uVar8 = FUN_00125734(uVar3,uVar5,SIN_KERNEL_S1_LOW_WORD,SIN_KERNEL_S1_HIGH_WORD);
-      uVar7 = double_reverse_subtract((int)uVar8.low,(int)uVar8.high,(int)uVar7.low,
-                           (int)uVar7.high);
-      uVar7 = double_reverse_subtract((int)uVar7.low,(int)uVar7.high,param_1,param_2);
+      uVar8 = FUN_00125734(y,HALF_DOUBLE);
+      uVar7 = FUN_00125734(MAKE_WORDS(pair1,uVar5,uVar3),MAKE_WORDS(pair2,uVar6,(int)uVar7.low));
+      uVar7 = double_reverse_subtract(uVar7,uVar8);
+      uVar7 = FUN_00125734(uVar7,MAKE_WORDS(pair1,uVar4,uVar2));
+      uVar7 = double_subtract(uVar7,y);
+      uVar8 = FUN_00125734(MAKE_WORDS(pair1,uVar5,uVar3),SIN_KERNEL_S1);
+      uVar7 = double_reverse_subtract(uVar8,uVar7);
+      uVar7 = double_reverse_subtract(uVar7,x);
     }
     return uVar7;
   }
@@ -1654,10 +1654,10 @@ FUN_00101268(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param
    instruction, so r0 stays 0 and the "handled: return its result" path (0x00101410 - 0x00101418,
    Ghidra's unreachable blocks) never runs; it is not written here. a and b are only stored for that
    handler. Returns the double 0.0 (a float caller takes its low word, 0.0f). */
-uint64 float_raise_exception(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh,uint32 control)
+float64 float_raise_exception(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh,uint32 control)
 
 {
-  uint64 result;
+  float64 result;
 
   raise_signal_and_exit(2,(int32)(control & 0x7c000000));
   return MAKE_WORDS(result,0,0);
@@ -3042,7 +3042,7 @@ LAB_001042b8:
     FUN_00109a10(iVar9,1,WORD_HEXADECIMAL_225D20E5,0x15);
     FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0xffffffff);
     memset(local_74 + 9,0x1c);
-    local_74[9] = FUN_00126858(*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x514));
+    local_74[9] = float_to_int(*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x514));
     local_74[10] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x524);
     local_74[0xb] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x530);
     local_44 = *(void **)(*(int *)(*param_1 + 0xa8) + 0x534);
@@ -3077,7 +3077,7 @@ LAB_001042b8:
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
         (*g_pHelperFuncs->free)(local_a8[6]);
         if (iVar19 == 0) {
-          uVar13 = FUN_00126858(*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x518));
+          uVar13 = float_to_int(*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x518));
         }
         else {
           uVar13 = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x528);
@@ -4194,15 +4194,15 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
         if ((!bVar9 || bVar10) ||
            (float_compare_less(*(uint *)(*(int *)(*(int *)(param_1 + 0x44) + 0xa8) + 0x514),0x3f800000),
            bVar9)) {
-          uVar3 = FUN_00126858(*(uint *)(*(int *)(*(int *)(param_1 + 0x44) + 0xa8) + 0x514));
+          uVar3 = float_to_int(*(uint *)(*(int *)(*(int *)(param_1 + 0x44) + 0xa8) + 0x514));
         }
         else {
           uVar3 = 1;
         }
         iVar2 = *(int *)(*(int *)(param_1 + 0x44) + 0xa8);
-        uVar4 = FUN_00126858(*(uint *)(iVar2 + 0x520));
-        uVar5 = FUN_00126858(*(uint *)(iVar2 + 0x51c));
-        uVar6 = FUN_00126858(*(uint *)(iVar2 + 0x518));
+        uVar4 = float_to_int(*(uint *)(iVar2 + 0x520));
+        uVar5 = float_to_int(*(uint *)(iVar2 + 0x51c));
+        uVar6 = float_to_int(*(uint *)(iVar2 + 0x518));
         FUN_001077d0(param_1,param_3,1,uVar3,uVar6,uVar5,uVar4);
       }
       iVar2 = *(int *)(*(int *)(*(int *)(param_1 + 0x44) + 0xa4) + 0x1f8);
@@ -4240,7 +4240,7 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
             iVar7 = *(int *)(iVar8 + 0x58);
             uVar4 = int_to_float(*(int16 *)(*(int *)(iVar7 + 8) + 2));
             uVar3 = float_reverse_subtract(uVar4,uVar3);
-            uVar3 = FUN_00126858(uVar3);
+            uVar3 = float_to_int(uVar3);
             ui_element_move_by((UIElement *)iVar7,(short)uVar3);
             iVar7 = *(int *)(*(int *)(iVar8 + 0x58) + 8);
             if ((int)*(short *)(iVar7 + 6) - (int)*(short *)(iVar7 + 2) < 0) {
@@ -4257,7 +4257,7 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
             uVar5 = (uint)*(short *)(*(int *)(iVar7 + 8) + 2);
             uVar4 = int_to_float(uVar5);
             uVar3 = float_reverse_subtract(uVar4,uVar3);
-            uVar3 = FUN_00126858(uVar3);
+            uVar3 = float_to_int(uVar3);
             if (0 < (int)(uVar5 + uVar3)) {
               uVar3 = -uVar5;
             }
@@ -4599,9 +4599,9 @@ void FUN_00107230(int *param_1,undefined4 param_2,int *param_3)
   uint uVar6;
   uint uVar7;
   bool bVar8;
-  uint64 maximum;   /* obj->+0x58 as a double */
-  uint64 value;     /* obj->+0x54 as a double */
-  uint64 ratio;     /* value / maximum */
+  float64 maximum;   /* obj->+0x58 as a double */
+  float64 value;     /* obj->+0x54 as a double */
+  float64 ratio;     /* value / maximum */
   undefined4 local_2c;
   undefined4 local_28;
   
@@ -4762,12 +4762,12 @@ LAB_00107384:
                     /* the two doubles travel as bit patterns in r0:r1 and r2:r3, the operation
                        code on the stack: `mov r3, #3; str r3, [sp]` at 0x1076fc = FO_DIV */
     *(double *)&ratio = (*g_pHelperFuncs->f_op)(*(double *)&value,*(double *)&maximum,FO_DIV);
-    uVar3 = double_to_float(ratio.low,ratio.high);
+    uVar3 = double_to_float(ratio);
     uVar4 = int_to_float(*(int16 *)(param_1[2] + 4));
     uVar3 = float_multiply(uVar4,uVar3);
     bar.x = *(int16 *)param_1[2] + 1;
     bar.y = ((int16 *)param_1[2])[1] + 1;
-    bar.dx = FUN_00126858(uVar3) - 2;
+    bar.dx = float_to_int(uVar3) - 2;
     bar.dy = ((int16 *)param_1[2])[3] - 2;
     (**(code **)(*param_3 + 0x78))(param_3,&bar);
     break;
@@ -6269,10 +6269,10 @@ void key_picker_setup(UIElement *picker,KeyOption *options,int32 *setting,int32 
 void FUN_00109940(int param_1,int param_2)
 
 {
-  uint64 dVar1;   /* the double whose low word is uVar1 */
+  float64 dVar1;   /* the double whose low word is uVar1 */
   uint uVar1;
   int iVar5;
-  uint64 width;     /* the 16-bit width at +0x70 +0x14, as a double */
+  float64 width;     /* the 16-bit width at +0x70 +0x14, as a double */
   
   *(int *)(param_1 + 0xc0) = param_2;
   if (param_2 == 0) {
@@ -6288,9 +6288,9 @@ void FUN_00109940(int param_1,int param_2)
          *(undefined2 *)(*(int *)(*(int *)(param_1 + 0x44) + 0x70) + 0x14);
     iVar5 = *(int *)(param_1 + 0x44);
     width = int_to_double((int32)*(uint16 *)(*(int *)(iVar5 + 0x70) + 0x14));
-    dVar1 = double_divide(width.low,width.high,DOUBLE_1_POINT_1_LOW_WORD,DOUBLE_1_POINT_1_HIGH_WORD);
+    dVar1 = double_divide(width,DOUBLE_1_POINT_1);
     uVar1 = dVar1.low;
-    uVar1 = FUN_00125554(uVar1,dVar1.high);
+    uVar1 = double_to_int(dVar1);
     *(short *)(iVar5 + 0x7a) = (short)uVar1;
     *(undefined2 *)(*(int *)(param_1 + 0x44) + 0x74) = 0;
     iVar5 = *(int *)(param_1 + 0x44);
@@ -6910,7 +6910,7 @@ int * FUN_0010aa8c(int *param_1,int *param_2)
     *(undefined1 *)(param_1 + 0x34) = 0;
     *(undefined1 *)((int)param_1 + 0xd1) = 1;
     param_1[0xf] = 4;
-    iVar1 = FUN_00126858(*(undefined4 *)(*(int *)(param_1[0x11] + 0xa8) + 0x520));
+    iVar1 = float_to_int(*(undefined4 *)(*(int *)(param_1[0x11] + 0xa8) + 0x520));
     param_1[0x15] = iVar1;
     *(undefined1 *)(param_1 + 0x12) = 1;
     *(undefined1 *)((int)param_1 + 0x49) = 1;
@@ -7133,7 +7133,7 @@ ScriptSequence * script_sequence_create(ScriptSequence *sequence,char *text)
   for (i = 0; i < sequence->count + 1; i++) {
     parts = helper_malloc(8);
     string_split((int32)app->context,lines[i],(char *)DATA_AT_00127784,parts,2);   /* ":" */
-    sequence->times[i] = FUN_00126858(string_to_float((int32)app->context,parts[0]));
+    sequence->times[i] = float_to_int(string_to_float((int32)app->context,parts[0]));
     if (sequence->count != i) {
       sequence->commands[i] = script_command_create((ScriptCommand *)0x0);
       script_command_parse(sequence->commands[i],0,parts[1]);
@@ -8798,7 +8798,7 @@ uint32 string_to_float(int32 context,char *text)
   AECHAR *wide;
   union {
     double value;
-    uint64 words;   /* low word first, as the soft-float code takes it in r0:r1 */
+    float64 words;  /* low word first, as the soft-float code takes it in r0:r1 */
   } number;
 
                     /* helper[5] uint32 strlen(const char *s), helper[26] void * malloc(uint32 size) */
@@ -8809,7 +8809,7 @@ uint32 string_to_float(int32 context,char *text)
                        helper[18] double wstrtofloat(const AECHAR *s), helper[27] void free(void *p) */
     (*g_pHelperFuncs->strtowstr)(text,wide,size);
     number.value = (*g_pHelperFuncs->wstrtofloat)(wide);
-    value = double_to_float(number.words.low,number.words.high);
+    value = double_to_float(number.words);
     (*g_pHelperFuncs->free)(wide);
   }
   return value;
@@ -9101,7 +9101,7 @@ undefined4 FUN_0010d95c(int param_1,int param_2)
 void FUN_0010db04(int param_1,undefined4 param_2)
 
 {
-  uint64 dVar7;   /* the double whose low word is uVar7 */
+  float64 dVar7;   /* the double whose low word is uVar7 */
   undefined4 *puVar1;
   int *piVar2;
   int iVar3;
@@ -9191,7 +9191,7 @@ LAB_0010dde4:
           uVar9 = float_subtract(*(uint *)(param_1 + 0x218),local_2c);
           uVar5 = vector_length3((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,uVar9,uVar6,uVar5);
           uVar5 = float_multiply(uVar5,FLOAT_100);
-          uVar5 = FUN_00126858(uVar5);
+          uVar5 = float_to_int(uVar5);
           *(uint *)(param_1 + 0x2a0) = uVar5;
           if ((*(int *)(param_1 + 0x228) == 0) &&
              (iVar3 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x84))->pGame,WORD_HEXADECIMAL_3361CE32),
@@ -9223,8 +9223,8 @@ LAB_0010dde4:
     character_play_animation((Character *)param_1,*(int *)(param_1 + 0x2f4),2,0);
     dVar7 = FUN_00126248(uVar4);
     uVar7 = dVar7.low;
-    if (double_compare_greater(uVar7,dVar7.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD),
-        !(*(double *)&dVar7 > 1.0)) {
+    if (double_compare_greater(dVar7,ONE_DOUBLE),
+        !DOUBLE_LESS(ONE_DOUBLE,dVar7)) {
       iVar3 = *(int *)(param_1 + 0x300);
     }
     else {
@@ -9243,8 +9243,8 @@ LAB_0010dde4:
   if ((bool)uVar12) {
     dVar7 = FUN_00126248(uVar4);
     uVar7 = dVar7.low;
-    if (double_compare_less(uVar7,dVar7.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD),
-        *(double *)&dVar7 <= 1.0) {
+    if (double_compare_less(dVar7,ONE_DOUBLE),
+        DOUBLE_LESS_EQUAL(dVar7,ONE_DOUBLE)) {
       if ((*(uint *)(param_1 + 0x88) & 1) == 0) {
         character_play_animation((Character *)param_1,*(int *)(param_1 + 0x2fc),2,0);
         *(undefined4 *)(param_1 + 0x2a0) = 700;
@@ -9256,8 +9256,8 @@ LAB_0010dde4:
       character_play_animation((Character *)param_1,*(int *)(param_1 + 0x300),3,0);
       goto LAB_0010dcf8;
     }
-    if (double_compare_less(uVar7,dVar7.high,TWO_DOUBLE_LOW_WORD,TWO_DOUBLE_HIGH_WORD),
-        !(*(double *)&dVar7 <= 2.0)) {
+    if (double_compare_less(dVar7,TWO_DOUBLE),
+        !DOUBLE_LESS_EQUAL(dVar7,TWO_DOUBLE)) {
       character_play_animation((Character *)param_1,*(int *)(param_1 + 0x30c),0,0);
       *(undefined4 *)(param_1 + 0x2a0) = 0xfa;
       goto LAB_0010dcf8;
@@ -9482,8 +9482,8 @@ void FUN_0010e280(int param_1,undefined4 *param_2,undefined4 *param_3)
 undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
 
 {
-  uint64 dVar2;   /* the double whose low word is uVar2 */
-  uint64 dVar4;   /* the double whose low word is uVar4 */
+  float64 dVar2;   /* the double whose low word is uVar2 */
+  float64 dVar4;   /* the double whose low word is uVar4 */
   int iVar1;
   uint uVar2;
   uint uVar3;
@@ -9531,8 +9531,8 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
     bVar11 = false;
     dVar2 = FUN_00126248(*param_2);
     uVar2 = dVar2.low;
-    if (double_compare_equal(uVar2,dVar2.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
-        *(double *)&dVar2 != 0.0) {
+    if (double_compare_equal(dVar2,ZERO_DOUBLE),
+        !DOUBLE_EQUAL(dVar2,ZERO_DOUBLE)) {
       uVar2 = float_add(*(uint *)(param_1 + 0x68),*param_2);
       blocking = game_find_blocking_shape((Game *)*(int *)(*(int *)(param_1 + 0x84) + 0xa4),uVar2,
                                           *(undefined4 *)(param_1 + 0x6c),*(undefined4 *)(param_1 + 0x70));
@@ -9566,8 +9566,8 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
     }
     dVar2 = FUN_00126248(param_2[1]);
     uVar2 = dVar2.low;
-    if (double_compare_equal(uVar2,dVar2.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
-        *(double *)&dVar2 != 0.0) {
+    if (double_compare_equal(dVar2,ZERO_DOUBLE),
+        !DOUBLE_EQUAL(dVar2,ZERO_DOUBLE)) {
       uVar2 = float_add(*(uint *)(param_1 + 0x6c),param_2[1]);
       blocking = game_find_blocking_shape((Game *)*(int *)(*(int *)(param_1 + 0x84) + 0xa4),
                                           *(int *)(param_1 + 0x68),uVar2,*(undefined4 *)(param_1 + 0x70));
@@ -9646,12 +9646,12 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
   if ((bVar11 || bVar12) || uVar4 == 5) {
     dVar4 = FUN_00126248(param_2[2]);
     uVar4 = dVar4.low;
-    if (double_compare_greater(uVar4,dVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
-        !(*(double *)&dVar4 > 0.0)) {
+    if (double_compare_greater(dVar4,ZERO_DOUBLE),
+        !DOUBLE_LESS(ZERO_DOUBLE,dVar4)) {
       dVar4 = FUN_00126248(param_2[2]);
       uVar4 = dVar4.low;
-      if (double_compare_less(uVar4,dVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
-          *(double *)&dVar4 < 0.0) {
+      if (double_compare_less(dVar4,ZERO_DOUBLE),
+          DOUBLE_LESS(dVar4,ZERO_DOUBLE)) {
         uVar4 = float_add(*(uint *)(param_1 + 0x70),param_2[2]);
         float_compare_less(uVar4,*(uint *)(param_1 + 0x208));
         if (!(bool)uVar18) {
@@ -10058,10 +10058,10 @@ void motion_entity_rotate_by_heading(MotionEntity *entity,uint32 *vector)
 uint32 float_cos(uint32 angle)
 
 {
-  uint64 value = FUN_00126248(angle);
+  float64 value = FUN_00126248(angle);
 
-  value = FUN_001007f4(value.low,value.high);
-  return double_to_float(value.low,value.high);
+  value = FUN_001007f4(value);
+  return double_to_float(value);
 }
 
 /* ==== 0x0010ED54  (file offset 0x0ED54)  FUN_0010ed54 ================================================ */
@@ -10349,9 +10349,9 @@ FUN_0010f2e8(int param_1,uint param_2,undefined4 param_3,uint param_4,undefined4
     if (!(bool)uVar8) {
       *(undefined4 *)(param_1 + 0x3c) = 0;
     }
-    uVar2 = FUN_00126858(*(undefined4 *)(param_1 + 0x3c));
+    uVar2 = float_to_int(*(undefined4 *)(param_1 + 0x3c));
     *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x4c) = uVar2;
-    uVar2 = FUN_00126858(*(undefined4 *)(*(int *)(param_1 + 0x40) + 0x118));
+    uVar2 = float_to_int(*(undefined4 *)(*(int *)(param_1 + 0x40) + 0x118));
     *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x50) = uVar2;
     enemy_reset_states((Enemy *)param_1);
     *(undefined4 *)(param_1 + 0x128) = *(undefined4 *)(param_1 + 0x124);
@@ -10403,9 +10403,9 @@ LAB_0010f3cc:
   if (!(bool)uVar8) {
     *(undefined4 *)(param_1 + 0x3c) = 0;
   }
-  uVar2 = FUN_00126858(*(undefined4 *)(param_1 + 0x3c));
+  uVar2 = float_to_int(*(undefined4 *)(param_1 + 0x3c));
   *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x4c) = uVar2;
-  uVar2 = FUN_00126858(*(undefined4 *)(*(int *)(param_1 + 0x40) + 0x118));
+  uVar2 = float_to_int(*(undefined4 *)(*(int *)(param_1 + 0x40) + 0x118));
   *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x50) = uVar2;
   enemy_reset_states((Enemy *)param_1);
   *(int *)(param_1 + 0x88) = iVar1;
@@ -10443,7 +10443,7 @@ void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4
                  uint param_6)
 
 {
-  uint64 dVar3;   /* the double whose low word is uVar3 */
+  float64 dVar3;   /* the double whose low word is uVar3 */
   bool bVar1;
   void *pvVar2;
   uint uVar3;
@@ -10466,8 +10466,8 @@ void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4
   if ((bool)uVar10) {
     dVar3 = FUN_00126248(uVar3);
     uVar3 = dVar3.low;
-    if (double_compare_less(uVar3,dVar3.high,DOUBLE_4_POINT_5_LOW_WORD,DOUBLE_4_POINT_5_HIGH_WORD),
-        *(double *)&dVar3 <= 4.5) {
+    if (double_compare_less(dVar3,DOUBLE_4_POINT_5),
+        DOUBLE_LESS_EQUAL(dVar3,DOUBLE_4_POINT_5)) {
       uVar7 = float_multiply(param_2,*(uint *)(param_1 + 0x10));
       bVar1 = true;
     }
@@ -10475,8 +10475,8 @@ void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4
   else {
     dVar3 = FUN_00126248(uVar3);
     uVar3 = dVar3.low;
-    if (double_compare_less(uVar3,dVar3.high,DOUBLE_4_POINT_5_LOW_WORD,DOUBLE_4_POINT_5_HIGH_WORD),
-        *(double *)&dVar3 <= 4.5) {
+    if (double_compare_less(dVar3,DOUBLE_4_POINT_5),
+        DOUBLE_LESS_EQUAL(dVar3,DOUBLE_4_POINT_5)) {
       uVar7 = float_multiply(param_2,*(uint *)(param_1 + 0xc));
     }
   }
@@ -10744,7 +10744,7 @@ void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param
                  int param_7,uint param_8,uint param_9,uint param_10)
 
 {
-  uint64 dVar2;   /* the double whose low word is uVar2 */
+  float64 dVar2;   /* the double whose low word is uVar2 */
   undefined4 uVar1;
   uint uVar2;
   int iVar3;
@@ -10780,9 +10780,9 @@ void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param
   local_28 = param_4;
   dVar2 = FUN_00126248(param_4);
   uVar2 = dVar2.low;
-  dVar2 = double_add(uVar2,dVar2.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
+  dVar2 = double_add(dVar2,ONE_DOUBLE);
   uVar2 = dVar2.low;
-  local_28 = double_to_float(uVar2,dVar2.high);
+  local_28 = double_to_float(dVar2);
   item_drops_get_chances((ItemDrops *)param_1,chances);
   iVar3 = (int)random_floats((int32)((KHApp *)*param_1)->context,0xf);
   iVar9 = 0;
@@ -10825,10 +10825,10 @@ void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param
       uVar6 = float_multiply(param_8,*(uint *)(local_3c + 4));
       uVar7 = float_multiply(param_8,*(uint *)(local_3c + 8));
       uVar8 = float_multiply(*(uint *)(local_3c + 0xc),FLOAT_100);
-      uVar8 = FUN_00126858(uVar8);
+      uVar8 = float_to_int(uVar8);
       local_4c = uVar8 + 500;
       uVar8 = float_multiply(*(uint *)(local_3c + 0x10),FLOAT_5000);
-      uVar8 = FUN_00126858(uVar8);
+      uVar8 = float_to_int(uVar8);
       local_50 = uVar8 + 15000;
       motion_entity_set_heading((MotionEntity *)piVar15[1],local_38);
       float_compare_greater(uVar6,0);
@@ -11430,8 +11430,8 @@ int32 script_command_run(ScriptCommand *command)
       if (command->number[1] == -2)
         FUN_00105538((int)hud,(undefined4)wideText,value);
       else {
-        height = FUN_00126858(command->value[1]);
-        width = FUN_00126858(command->value[0]);
+        height = float_to_int(command->value[1]);
+        width = float_to_int(command->value[0]);
         FUN_001052e0((int)hud,(undefined4)wideText,command->number[0],command->number[1],
                      command->number[2],command->number[3],width,height,value);
       }
@@ -11986,9 +11986,9 @@ int32 script_command_run(ScriptCommand *command)
           shown[2] = 0;
         }
         else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_LOADING_00127738) == 0) {
-          red = FUN_00126858(string_to_float(context,words[1]));
-          green = FUN_00126858(string_to_float(context,words[2]));
-          blue = FUN_00126858(string_to_float(context,words[3]));
+          red = float_to_int(string_to_float(context,words[1]));
+          green = float_to_int(string_to_float(context,words[2]));
+          blue = float_to_int(string_to_float(context,words[3]));
           hud_show_loading((Hud *)hud,red << 16 | green << 8 | blue);
           break;
         }
@@ -12081,11 +12081,11 @@ int32 script_command_run(ScriptCommand *command)
     else if ((variable = progress_find_variable(app->progress,words[0])) != (int32 *)0x0)
       left = *variable;
     else   /* words[2], not words[0]: research_notes/decomp/GAME_BUGS.md */
-      left = FUN_00126858(string_to_float(context,words[2]));
+      left = float_to_int(string_to_float(context,words[2]));
     if ((variable = progress_find_variable(app->progress,words[2])) != (int32 *)0x0)
       right = *variable;
     else
-      right = FUN_00126858(string_to_float(context,words[2]));
+      right = float_to_int(string_to_float(context,words[2]));
     result = 0;
     if ((*g_pHelperFuncs->strcmp)(words[1],STRING_EQUALS_EQUALS) == 0)
       result = left == right;
@@ -12640,8 +12640,8 @@ void FUN_00113340(int param_1)
 undefined8 FUN_00113374(undefined4 param_1,uint param_2,uint param_3,uint param_4,uint param_5)
 
 {
-  uint64 dVar1;   /* the double whose low word is uVar1 */
-  uint64 dVar2;   /* the double whose low word is uVar2 */
+  float64 dVar1;   /* the double whose low word is uVar1 */
+  float64 dVar2;   /* the double whose low word is uVar2 */
   uint uVar1;
   uint uVar2;
   undefined1 in_ZR;
@@ -12663,26 +12663,26 @@ undefined8 FUN_00113374(undefined4 param_1,uint param_2,uint param_3,uint param_
     uVar1 = float_divide(local_1c,uVar1);
     dVar2 = FUN_00126248(uVar1);
     uVar2 = dVar2.low;
-    if (double_compare_greater(uVar2,dVar2.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD),
-        *(double *)&dVar2 > 1.0) {
+    if (double_compare_greater(dVar2,ONE_DOUBLE),
+        DOUBLE_LESS(ONE_DOUBLE,dVar2)) {
       uVar1 = 0x3f800000;
     }
     dVar2 = FUN_00126248(uVar1);
     uVar2 = dVar2.low;
-    if (double_compare_less(uVar2,dVar2.high,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD),
-        *(double *)&dVar2 < -1.0) {
+    if (double_compare_less(dVar2,DOUBLE_MINUS_ONE),
+        DOUBLE_LESS(dVar2,DOUBLE_MINUS_ONE)) {
       uVar1 = FLOAT_MINUS_1;
     }
     dVar1 = FUN_00126248(uVar1);
     uVar1 = dVar1.low;
-    dVar1 = FUN_0010041c(uVar1,dVar1.high);
+    dVar1 = FUN_0010041c(dVar1);
     uVar1 = dVar1.low;
-    uVar1 = double_to_float(uVar1,dVar1.high);
+    uVar1 = double_to_float(dVar1);
     uVar2 = float_multiply(uVar1,WORD_HEXADECIMAL_42652F1B);
     dVar1 = FUN_00126248(local_20);
     uVar1 = dVar1.low;
-    if (double_compare_greater(uVar1,dVar1.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
-        *(double *)&dVar1 > 0.0) {
+    if (double_compare_greater(dVar1,ZERO_DOUBLE),
+        DOUBLE_LESS(ZERO_DOUBLE,dVar1)) {
       uVar2 = uVar2 ^ 0x80000000;
     }
   }
@@ -13584,7 +13584,7 @@ void FUN_00114610(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *
   
   local_c = 0;
   FUN_001145b4(param_1,param_2,param_3,&local_c);
-  uVar1 = FUN_00126858(local_c);
+  uVar1 = float_to_int(local_c);
   *param_4 = uVar1;
   return;
 }
@@ -13609,7 +13609,7 @@ undefined4 FUN_00114638(int param_1)
   }
   puVar2 = random_floats((int32)((KHApp *)*(int *)(param_1 + 0x84))->context,1);
   
-  iVar4 = FUN_00126858(float_multiply(*puVar2,FLOAT_1000));
+  iVar4 = float_to_int(float_multiply(*puVar2,FLOAT_1000));
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
   (*g_pHelperFuncs->free)(puVar2);
   if (iVar4 < 0) {
@@ -13873,7 +13873,7 @@ int32 combat_region_hit_enemies(CombatRegion *region,int32 part,uint32 damage,ui
    attack state 7 (FUN_00123588), with `damage` (a float: the player's Progress +0x530 as a float), the
    attack's position and the player's state (+0x228). It hits the game's current target
    (pGame->character->[0x20c], set by FUN_00123d7c): a hitsphere takes the hit (vtable +8) and the HUD value
-   (field_d4 +0x4c) is refreshed from the first hitsphere's field_14 (FUN_00126858, float to integer);
+   (field_d4 +0x4c) is refreshed from the first hitsphere's field_14 (float_to_int, float to integer);
    the extra entity is hidden (FUN_001201cc) and made untargetable instead. `part` (r1; as
    combat_region_hit_enemies gets it) is never read. Always returns 0. combat_region_hit_enemies is the combat region's counterpart. */
 int32 boss_combat_region_hit_target(BossCombatRegion *region,int32 part,uint32 damage,uint32 x,uint32 y,uint32 z,
@@ -13889,7 +13889,7 @@ int32 boss_combat_region_hit_target(BossCombatRegion *region,int32 part,uint32 d
   if (hitsphere != (Hitsphere *)0x0) {
     (*(code *)(*(int32 *)(hitsphere->vtable + 8)))
               (hitsphere,damage,x,y,z,playerState);              /* take a hit: vtable +8 */
-    *(uint32 *)(region->app->field_d4 + 0x4c) = FUN_00126858(region->hitspheres[0]->field_14);
+    *(uint32 *)(region->app->field_d4 + 0x4c) = float_to_int(region->hitspheres[0]->field_14);
   }
   else if (region->extraEntity == target) {
     FUN_001201cc(region->extraEntity,0);
@@ -14040,7 +14040,7 @@ void FUN_001150d0(int param_1,int *param_2)
 /* ==== 0x00115118  (file offset 0x15118)  script_command_parse ======================================== */
 /* GUESS: names. Parses one line of a script into `command`: the words (split at " "), the first one the
    command's name, which gives its type; the others its arguments, by command (objects by name,
-   FUN_00112e20; names hashed, string_hash; numbers, string_to_float, made integers by FUN_00126858; texts
+   FUN_00112e20; names hashed, string_hash; numbers, string_to_float, made integers by float_to_int; texts
    copied, string_replace). A command needs its number of words, else only its type is set; an unknown
    name gives type 0x4c, which does nothing. `owner` is the object or screen whose script it is (0 for a
    sequence's). The binary's branches share their last steps (jumps to 0x00115800, 0x00116828, 0x00116654,
@@ -14089,7 +14089,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
     command->type = 3;
     if (count >= 3) {
       string_replace((AppContext *)context,words[1],&command->text);
-      command->number[0] = FUN_00126858(string_to_float(context,words[2]));
+      command->number[0] = float_to_int(string_to_float(context,words[2]));
       if (count >= 4)
         objectName = words[2];
     }
@@ -14114,12 +14114,12 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
     if (count >= 7) {   /* a rectangle in fractions of the screen, made pixels */
       value = string_to_float(context,words[1]);
       width = int_to_float((int16)app->devInfo.cxScreen);
-      command->number[0] = FUN_00126858(float_multiply(width,value));
+      command->number[0] = float_to_int(float_multiply(width,value));
       value = string_to_float(context,words[2]);
       height = int_to_float((int16)app->devInfo.cyScreen);
-      command->number[1] = FUN_00126858(float_multiply(height,value));
-      command->number[2] = FUN_00126858(float_multiply(width,string_to_float(context,words[3])));
-      command->number[3] = FUN_00126858(float_multiply(height,string_to_float(context,words[4])));
+      command->number[1] = float_to_int(float_multiply(height,value));
+      command->number[2] = float_to_int(float_multiply(width,string_to_float(context,words[3])));
+      command->number[3] = float_to_int(float_multiply(height,string_to_float(context,words[4])));
       if (command->number[1] == command->number[3])
         command->flag[0] = 1;
       command->object = FUN_00112e20((int)command,(undefined4)words[5]);
@@ -14152,9 +14152,9 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
     if (count >= 7) {
       command->value[0] = string_to_float(context,words[1]);
       command->value[1] = string_to_float(context,words[2]);
-      red = FUN_00126858(string_to_float(context,words[3]));
-      green = FUN_00126858(string_to_float(context,words[4]));
-      blue = FUN_00126858(string_to_float(context,words[5]));
+      red = float_to_int(string_to_float(context,words[3]));
+      green = float_to_int(string_to_float(context,words[4]));
+      blue = float_to_int(string_to_float(context,words[5]));
       command->number[0] = red << 16 | green << 8 | blue;
       number2Word = words[6];
     }
@@ -14164,7 +14164,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
     if (count == 4) {
       command->object = FUN_00112e20((int)command,(undefined4)words[1]);
       command->target = FUN_00112e20((int)command,(undefined4)words[2]);
-      command->number[0] = FUN_00126858(string_to_float(context,words[3]));
+      command->number[0] = float_to_int(string_to_float(context,words[3]));
       command->flag[0] = 1;
     }
     else if (count == 6) {
@@ -14328,7 +14328,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
       if ((*g_pHelperFuncs->strcmp)(words[2],STRING_END) == 0)
         command->number[1] = -1;
       else
-        command->number[1] = FUN_00126858(string_to_float(context,words[2]));
+        command->number[1] = float_to_int(string_to_float(context,words[2]));
       if (count >= 4 && (*g_pHelperFuncs->strcmp)(words[3],one) == 0)
         command->flag[0] = 1;
     }
@@ -14346,9 +14346,9 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
     if (count == 2)   /* an image */
       copyName = 1;
     else if (count >= 4) {   /* a colour 0xRRGGBB */
-      red = FUN_00126858(string_to_float(context,words[1]));
-      green = FUN_00126858(string_to_float(context,words[2]));
-      blue = FUN_00126858(string_to_float(context,words[3]));
+      red = float_to_int(string_to_float(context,words[1]));
+      green = float_to_int(string_to_float(context,words[2]));
+      blue = float_to_int(string_to_float(context,words[3]));
       command->number[0] = red << 16 | green << 8 | blue;
     }
   }
@@ -14480,7 +14480,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETLEVELUP) == 0) {
     command->type = 0x32;
     if (count >= 3) {
-      command->number[0] = FUN_00126858(string_to_float(context,words[1]));
+      command->number[0] = float_to_int(string_to_float(context,words[1]));
       number2Word = words[2];
     }
   }
@@ -14691,11 +14691,11 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
     roundNumber = 1;
   }
   if (roundNumber != 0)   /* 0x00116e74 */
-    command->number[0] = FUN_00126858(number);
+    command->number[0] = float_to_int(number);
   if (hashWord != (char *)0x0)   /* 0x00116f14 */
     command->number[0] = string_hash(context,hashWord);
   if (number2Word != (char *)0x0)   /* 0x00116828 */
-    command->number[1] = FUN_00126858(string_to_float(context,number2Word));
+    command->number[1] = float_to_int(string_to_float(context,number2Word));
   if (valueWord != (char *)0x0)   /* 0x001171a0 */
     command->value[0] = string_to_float(context,valueWord);
   if (prefix != (const char *)0x0) {   /* 0x0011705c: the rest of the line, its last character cut */
@@ -15728,7 +15728,7 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
   uint32 size2 = FLOAT_MINUS_1;
   uint32 size3 = FLOAT_MINUS_1;
   uint32 half;
-  uint64 value;   /* a size as a double (FUN_00126248), r0:r1 */
+  float64 value;   /* a size as a double (FUN_00126248), r0:r1 */
   int32 i;
 
   wordCount = string_split((int32)shape->app->context,(int32)text,(int32)DATA_AT_00126FCC,0,0);
@@ -15782,8 +15782,8 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
   case 3:                                            /* circle */
   case 4:                                            /* cylinder */
     if (value = FUN_00126248(size1),
-        double_compare_equal(value.low,value.high,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD),
-        *(float *)&size1 != -1.0f)
+        double_compare_equal(value,DOUBLE_MINUS_ONE),
+        !DOUBLE_EQUAL(value,DOUBLE_MINUS_ONE))
       shape->radius = size1;
     else {
       shape->radius = float_multiply(float_subtract(shape->maximum[0],shape->minimum[0]),0x3f000000);
@@ -15792,8 +15792,8 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
         shape->radius = half;
     }
     if (value = FUN_00126248(size2),
-        double_compare_equal(value.low,value.high,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD),
-        *(float *)&size2 != -1.0f) {
+        double_compare_equal(value,DOUBLE_MINUS_ONE),
+        !DOUBLE_EQUAL(value,DOUBLE_MINUS_ONE)) {
       shape->height = size2;
       shape->minimum[2] = float_multiply(size2 ^ 0x80000000,0x3f000000);   /* -size2 * 0.5 */
       shape->maximum[2] = float_multiply(size2,0x3f000000);
@@ -15802,8 +15802,8 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
     break;
   case 7:                                            /* sphere */
     if (value = FUN_00126248(size1),
-        double_compare_equal(value.low,value.high,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD),
-        *(float *)&size1 != -1.0f) {
+        double_compare_equal(value,DOUBLE_MINUS_ONE),
+        !DOUBLE_EQUAL(value,DOUBLE_MINUS_ONE)) {
       shape->radius = size1;
       return;
     }
@@ -16009,7 +16009,7 @@ void kh_OnAppStart(KHApp *pMe)
                   pMe->field_8c = 0x1e;
                 }
                 else {
-                  iVar6 = FUN_00126858(string_to_float(pMe->context,local_18));
+                  iVar6 = float_to_int(string_to_float(pMe->context,local_18));
                   pMe->field_8c = iVar6;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
                   (*g_pHelperFuncs->free)(local_18);
@@ -16410,7 +16410,7 @@ void FUN_0011a2f4(int param_1,int param_2)
     iVar3 = **(int **)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4);
     uVar2 = (*(code *)(*(int *)(iVar3 + 0x18)))
                       (*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4));
-    uVar2 = FUN_00126858(uVar2);
+    uVar2 = float_to_int(uVar2);
     *(uint *)(param_1 + 0x140) = param_2 + uVar2 * 1000 + 5000;
     uVar1 = 2;
   }
@@ -16831,8 +16831,9 @@ void character_freeze_held_keys(Character *character)
 undefined8 FUN_0011abc4(int param_1,int param_2)
 
 {
-  uint64 dVar1;   /* the double whose low word is uVar1 */
-  uint64 dVar5;   /* the double whose low word is uVar5 */
+  float64 pair1;   /* a double built from its two words, for a call */
+  float64 dVar1;   /* the double whose low word is uVar1 */
+  float64 dVar5;   /* the double whose low word is uVar5 */
   uint uVar1;
   undefined4 uVar2;
   int iVar3;
@@ -16855,23 +16856,23 @@ undefined8 FUN_0011abc4(int param_1,int param_2)
     uVar1 = float_add(uVar1,FLOAT_90);
     dVar1 = FUN_00126248(uVar1);
     uVar1 = dVar1.low;
-    dVar1 = FUN_00125734(uVar1,dVar1.high,WORD_HEXADECIMAL_1EB851EC,FLOAT_1_POINT_14);
+    dVar1 = FUN_00125734(dVar1,MAKE_WORDS(pair1,FLOAT_1_POINT_14,WORD_HEXADECIMAL_1EB851EC));
     uVar1 = dVar1.low;
-    dVar5 = FUN_001007f4(uVar1,dVar1.high);
+    dVar5 = FUN_001007f4(dVar1);
     uVar5 = dVar5.low;
-    dVar5 = FUN_00125734(uVar5,dVar5.high,TWO_DOUBLE_LOW_WORD,TWO_DOUBLE_HIGH_WORD);
+    dVar5 = FUN_00125734(dVar5,TWO_DOUBLE);
     uVar5 = dVar5.low;
-    dVar5 = double_divide(uVar5,dVar5.high,DOUBLE_800_LOW_WORD,DOUBLE_800_HIGH_WORD);
+    dVar5 = double_divide(dVar5,DOUBLE_800);
     uVar5 = dVar5.low;
-    uVar5 = double_to_float(uVar5,dVar5.high);
+    uVar5 = double_to_float(dVar5);
     *(uint *)(param_1 + 0xb4) = uVar5;
-    dVar1 = FUN_001008d0(uVar1,dVar1.high);
+    dVar1 = FUN_001008d0(dVar1);
     uVar1 = dVar1.low;
-    dVar1 = FUN_00125734(uVar1,dVar1.high,TWO_DOUBLE_LOW_WORD,TWO_DOUBLE_HIGH_WORD);
+    dVar1 = FUN_00125734(dVar1,TWO_DOUBLE);
     uVar1 = dVar1.low;
-    dVar1 = double_divide(uVar1,dVar1.high,DOUBLE_800_LOW_WORD,DOUBLE_800_HIGH_WORD);
+    dVar1 = double_divide(dVar1,DOUBLE_800);
     uVar1 = dVar1.low;
-    uVar1 = double_to_float(uVar1,dVar1.high);
+    uVar1 = double_to_float(dVar1);
     *(uint *)(param_1 + 0xb8) = uVar1;
     uVar5 = float_add(*(uint *)(param_1 + 400),uVar5);
     uVar5 = float_reverse_subtract(uVar5,local_30);
@@ -18048,7 +18049,7 @@ LAB_0011c440:
     *(uint *)(param_1 + 0xb4) = uVar4;
     uVar4 = float_divide(*(uint *)(param_1 + 0xb8),uVar2);
     *(uint *)(param_1 + 0xb8) = uVar4;
-    uVar2 = FUN_00126858(uVar2);
+    uVar2 = float_to_int(uVar2);
     *(uint *)(param_1 + 200) = uVar2;
     *(undefined4 *)(param_1 + 0x84) = INTEGER_3002;
   }
@@ -18227,21 +18228,21 @@ void FUN_0011ca8c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 void wrap_angle(int32 context,uint32 *angle)
 
 {
-  uint64 value;   /* the angle as a double, r0:r1 */
+  float64 value;   /* the angle as a double, r0:r1 */
 
   while (value = FUN_00126248(*angle),
-         double_compare_greater(value.low,value.high,DOUBLE_180_LOW_WORD,DOUBLE_180_HIGH_WORD),
-         *(float *)angle > 180.0f) {
+         double_compare_greater(value,DOUBLE_180),
+         DOUBLE_LESS(DOUBLE_180,value)) {
     value = FUN_00126248(*angle);
-    value = double_subtract(value.low,value.high,DOUBLE_360_LOW_WORD,DOUBLE_360_HIGH_WORD);
-    *angle = double_to_float(value.low,value.high);
+    value = double_subtract(value,DOUBLE_360);
+    *angle = double_to_float(value);
   }
   while (value = FUN_00126248(*angle),
-         double_compare_less(value.low,value.high,DOUBLE_MINUS_180_LOW_WORD,DOUBLE_MINUS_180_HIGH_WORD),
-         *(float *)angle < -180.0f) {
+         double_compare_less(value,DOUBLE_MINUS_180),
+         DOUBLE_LESS(value,DOUBLE_MINUS_180)) {
     value = FUN_00126248(*angle);
-    value = double_add(value.low,value.high,DOUBLE_360_LOW_WORD,DOUBLE_360_HIGH_WORD);
-    *angle = double_to_float(value.low,value.high);
+    value = double_add(value,DOUBLE_360);
+    *angle = double_to_float(value);
   }
 }
 
@@ -18355,7 +18356,7 @@ undefined8 FUN_0011ceac(int param_1)
   
   puVar1 = random_floats((int32)((KHApp *)*(int *)(param_1 + 0x20))->context,1);
   uVar2 = float_multiply(*puVar1,FLOAT_1000);
-  uVar2 = FUN_00126858(uVar2);
+  uVar2 = float_to_int(uVar2);
   iVar3 = (int)uVar2 % 2;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
   (*g_pHelperFuncs->free)(puVar1);
@@ -18543,9 +18544,9 @@ void FUN_0011d28c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
     if (!(bool)uVar6 || (bool)uVar5) {
       iVar3 = *(int *)(param_1 + 0x74);
       if (((KHApp *)iVar3)->progress->showEnemyHealth != 0) {
-        uVar2 = FUN_00126858(*(undefined4 *)(param_1 + 0x3c));
+        uVar2 = float_to_int(*(undefined4 *)(param_1 + 0x3c));
         *(undefined4 *)(*(int *)(iVar3 + 0xd4) + 0x4c) = uVar2;
-        uVar2 = FUN_00126858(*(undefined4 *)(*(int *)(param_1 + 0x40) + 0x118));
+        uVar2 = float_to_int(*(undefined4 *)(*(int *)(param_1 + 0x40) + 0x118));
         *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x50) = uVar2;
       }
       *(undefined4 *)(param_1 + 0x88) = INTEGER_2010;
@@ -18665,9 +18666,9 @@ LAB_0011d4b4:
     enemy_set_target((Enemy *)param_1,1);
     iVar8 = *(int *)(param_1 + 0x74);
     if (((KHApp *)iVar8)->progress->showEnemyHealth != 0) {
-      uVar11 = FUN_00126858(*(uint *)(param_1 + 0x3c));
+      uVar11 = float_to_int(*(uint *)(param_1 + 0x3c));
       *(uint *)(*(int *)(iVar8 + 0xd4) + 0x4c) = uVar11;
-      uVar11 = FUN_00126858(*(uint *)(*(int *)(param_1 + 0x40) + 0x118));
+      uVar11 = float_to_int(*(uint *)(*(int *)(param_1 + 0x40) + 0x118));
       *(uint *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x50) = uVar11;
       *(undefined1 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x4a) = 1;
     }
@@ -18814,7 +18815,7 @@ void FUN_0011d6cc(int param_1,int param_2)
                               *(undefined4 *)(iVar6 + 0x1cc),*(undefined4 *)(iVar6 + 0x1d0));
         uVar4 = float_subtract(uVar13.low,uVar12.low);
         uVar4 = float_add(uVar4,uVar9);
-        uVar4 = FUN_00126858(uVar4);
+        uVar4 = float_to_int(uVar4);
         uVar14 = rt_sdiv(0x168,uVar4);
         uVar4 = int_to_float((int32)uVar14.high);
         float_compare_greater(uVar4,FLOAT_180);
@@ -18842,7 +18843,7 @@ void FUN_0011d6cc(int param_1,int param_2)
                             *(uint *)(param_1 + 0x25c),*(undefined4 *)(param_1 + 0x244),
                             *(undefined4 *)(param_1 + 0x248)));
     uVar9 = float_multiply(uVar9,FLOAT_250);
-    uVar9 = FUN_00126858(uVar9);
+    uVar9 = float_to_int(uVar9);
     *(uint *)(param_1 + 0x260) = uVar9;
     *(int *)(param_1 + 0x264) = param_2;
     *(int *)(param_1 + 0x268) = param_2;
@@ -19969,7 +19970,7 @@ void FUN_0011f394(int param_1,char *param_2,undefined4 param_3,undefined4 param_
   undefined4 uVar1;
   int *piVar2;
   undefined1 uVar3;
-  undefined8 uVar4;
+  float64 uVar4;
   int *local_34;
   uint local_30 [3];
   uint local_24;
@@ -20006,8 +20007,8 @@ void FUN_0011f394(int param_1,char *param_2,undefined4 param_3,undefined4 param_
     piVar2 = *(int **)(*(int *)(param_1 + 0x1cc) + 8);
     (**(code **)(*piVar2 + 0x58))(piVar2,local_30);
     uVar4 = FUN_00126248(local_24);
-    if (double_compare_less(uVar4.low,uVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
-        *(double *)&uVar4 < 0.0) {
+    if (double_compare_less(uVar4,ZERO_DOUBLE),
+        DOUBLE_LESS(uVar4,ZERO_DOUBLE)) {
       local_24 = local_24 ^ 0x80000000;
       local_30[0] = local_30[0] ^ 0x80000000;
     }
@@ -20732,10 +20733,10 @@ void camera_set_yaw(Camera *camera,uint32 angle)
 uint32 float_sin(uint32 angle)
 
 {
-  uint64 value = FUN_00126248(angle);
+  float64 value = FUN_00126248(angle);
 
-  value = FUN_001008d0(value.low,value.high);
-  return double_to_float(value.low,value.high);
+  value = FUN_001008d0(value);
+  return double_to_float(value);
 }
 
 /* ==== 0x00120308  (file offset 0x20308)  float_sqrt ================================================== */
@@ -20746,10 +20747,10 @@ uint32 float_sin(uint32 angle)
 uint32 float_sqrt(uint32 value)
 
 {
-  uint64 root = FUN_00126248(value);
+  float64 root = FUN_00126248(value);
 
-  root = FUN_001009b8(root.low,root.high);
-  return double_to_float(root.low,root.high);
+  root = FUN_001009b8(root);
+  return double_to_float(root);
 }
 
 /* ==== 0x0012031C  (file offset 0x2031C)  FUN_0012031c ================================================ */
@@ -21554,8 +21555,8 @@ void FUN_0012171c(int32 object,int32 now,int32 elapsed)
 void FUN_00121780(int param_1,undefined4 *param_2,uint param_3)
 
 {
-  uint64 dVar1;   /* the double whose low word is uVar1 */
-  uint64 dVar3;   /* the double whose low word is uVar3 */
+  float64 dVar1;   /* the double whose low word is uVar1 */
+  float64 dVar3;   /* the double whose low word is uVar3 */
   uint uVar1;
   uint uVar2;
   uint uVar3;
@@ -21614,9 +21615,9 @@ void FUN_00121780(int param_1,undefined4 *param_2,uint param_3)
   uVar1 = float_divide(uVar2,uVar1);
   dVar1 = FUN_00126248(uVar1);
   uVar1 = dVar1.low;
-  dVar1 = FUN_0010041c(uVar1,dVar1.high);
+  dVar1 = FUN_0010041c(dVar1);
   uVar1 = dVar1.low;
-  uVar1 = double_to_float(uVar1,dVar1.high);
+  uVar1 = double_to_float(dVar1);
   uVar1 = float_multiply(uVar1,WORD_HEXADECIMAL_42652F1B);
   float_compare_less(*(uint *)(param_1 + 0x20c),0);
   if (!(bool)uVar5) {
@@ -21635,8 +21636,8 @@ void FUN_00121780(int param_1,undefined4 *param_2,uint param_3)
   uVar2 = float_divide(angle,FLOAT_60);
   dVar3 = FUN_00126248(uVar2);
   uVar3 = dVar3.low;
-  if (double_compare_less(uVar3,dVar3.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
-      *(float *)&uVar2 < 0.0f) {
+  if (double_compare_less(dVar3,ZERO_DOUBLE),
+      DOUBLE_LESS(dVar3,ZERO_DOUBLE)) {
     uVar2 = uVar2 ^ 0x80000000;
   }
   uVar3 = int_to_float(param_3);
@@ -21720,7 +21721,7 @@ void FUN_00121b98(int param_1,undefined4 param_2)
   uint uVar3;
   undefined1 in_ZR;
   undefined1 in_CY;
-  undefined8 uVar4;
+  float64 uVar4;
   uint local_14;
   
   local_14 = param_4;
@@ -21729,8 +21730,8 @@ void FUN_00121b98(int param_1,undefined4 param_2)
   wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,(uint32 *)&local_14);
   uVar2 = float_divide(local_14,FLOAT_60);
   uVar4 = FUN_00126248(uVar2);
-  if (double_compare_less(uVar4.low,uVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
-      *(double *)&uVar4 < 0.0) {
+  if (double_compare_less(uVar4,ZERO_DOUBLE),
+      DOUBLE_LESS(uVar4,ZERO_DOUBLE)) {
     uVar2 = uVar2 ^ 0x80000000;
   }
   uVar1 = int_to_float(param_2);
@@ -22061,7 +22062,7 @@ switchD_00021cbc_default:
 void FUN_00122450(int param_1,byte *param_2,int param_3)
 
 {
-  uint64 dVar4;   /* the double whose low word is uVar4 */
+  float64 dVar4;   /* the double whose low word is uVar4 */
   int iVar1;
   byte *pbVar2;
   undefined4 uVar3;
@@ -22135,8 +22136,8 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
   }
   dVar4 = FUN_00126248(*(uint *)(param_1 + 0x210));
   uVar4 = dVar4.low;
-  if ((double_compare_greater(uVar4,dVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
-       *(double *)&dVar4 > 0.0) && *(int *)(param_1 + 0x22c) != 0) {
+  if ((double_compare_greater(dVar4,ZERO_DOUBLE),
+       DOUBLE_LESS(ZERO_DOUBLE,dVar4)) && *(int *)(param_1 + 0x22c) != 0) {
     local_24 = (int *)0x0;
     piVar5 = *(int **)(*(int *)(param_1 + 0x214) + 0x6c);
     (**(code **)(*piVar5 + 0xc4))(piVar5,&local_24);
@@ -22188,7 +22189,7 @@ void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed)
   uint32 offsetX;
   uint32 offsetY;
   uint32 distance;
-  uint64 value;   /* the distance as a double (FUN_00126248), r0:r1 */
+  float64 value;   /* the distance as a double (FUN_00126248), r0:r1 */
   int32 visible;
   int32 i;
 
@@ -22213,8 +22214,8 @@ void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed)
         offsetY ^= 0x80000000;
       distance = float_add(offsetX,offsetY);
       if (value = FUN_00126248(distance),
-          double_compare_less(value.low,value.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD),
-          *(float *)&distance < 1.0f) {       /* within 1.0 of the player: picked up */
+          double_compare_less(value,ONE_DOUBLE),
+          DOUBLE_LESS(value,ONE_DOUBLE)) {       /* within 1.0 of the player: picked up */
         if (drops->app->progress->soundVolume > 0 && drops->app->field_bc != 0)
           FUN_00108f28((int32)drops->app->field_bc,5);
         if (drops->kinds[i] == 0)
@@ -22222,7 +22223,8 @@ void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed)
         else if (drops->kinds[i] == 1)
           progress_add_magic_points(drops->app->progress,1);
         else
-          progress_add_munny(drops->app->progress,FUN_00126858(float_multiply(drops->munnyPerPickup,0x3f800000)));
+          progress_add_munny(drops->app->progress,
+                             float_to_int(float_multiply(drops->munnyPerPickup,0x3f800000)));
         drops->timeLeft[i] = 0;
       }
       visible = drops->timeLeft[i] >= 5000 ||               /* the last 5000 ms: blinking */
@@ -22327,8 +22329,8 @@ void enemy_update(Enemy *enemy,int32 now,int32 elapsed)
       enemy->state = INTEGER_1002;
       if (enemy->type == 2 || enemy->field_108 != 0) {   /* show its health bar */
         *(uint8 *)(enemy->app->field_d4 + 0x4a) = 1;
-        *(uint32 *)(enemy->app->field_d4 + 0x4c) = FUN_00126858(enemy->health);
-        *(uint32 *)(enemy->app->field_d4 + 0x50) = FUN_00126858(enemy->region->enemyMaximumHealth);
+        *(uint32 *)(enemy->app->field_d4 + 0x4c) = float_to_int(enemy->health);
+        *(uint32 *)(enemy->app->field_d4 + 0x50) = float_to_int(enemy->region->enemyMaximumHealth);
       }
     }
     break;
@@ -22570,9 +22572,9 @@ void combat_region_update(CombatRegion *region,int32 now,int32 elapsed)
 void FUN_0012312c(int param_1,int param_2,int param_3)
 
 {
-  uint64 dVar3;   /* the double whose low word is uVar3 */
-  uint64 dVar2;   /* the double whose low word is uVar2 */
-  uint64 dVar6;   /* the double whose low word is uVar6 */
+  float64 dVar3;   /* the double whose low word is uVar3 */
+  float64 dVar2;   /* the double whose low word is uVar2 */
+  float64 dVar6;   /* the double whose low word is uVar6 */
   uint32 position[3];
   uint uVar1;
   uint uVar2;
@@ -22626,8 +22628,8 @@ void FUN_0012312c(int param_1,int param_2,int param_3)
       *(uint *)(param_1 + 0x1b0) = uVar2;
       dVar2 = FUN_00126248(uVar2);
       uVar2 = dVar2.low;
-      if (double_compare_less(uVar2,dVar2.high,WORD_HEXADECIMAL_47AE147B,FLOAT_1_POINT_035),
-          *(double *)&dVar2 < 0.01) {     /* the two words are the double 0.01 */
+      if (double_compare_less(dVar2,DOUBLE_0_POINT_01),
+          DOUBLE_LESS(dVar2,DOUBLE_0_POINT_01)) {     /* the two words are the double 0.01 */
         *(undefined4 *)(param_1 + 0x1b0) = 0;
       }
       uVar2 = *(uint *)(param_1 + 0x1b0);
@@ -22660,7 +22662,7 @@ void FUN_0012312c(int param_1,int param_2,int param_3)
         if (*(int *)(param_1 + 0x1a4) < 0) {
           uVar2 = vector_length3((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,uVar2,uVar3,uVar6);
           uVar2 = float_divide(uVar2,*(uint *)(param_1 + 0x1a8));
-          uVar2 = FUN_00126858(uVar2);
+          uVar2 = float_to_int(uVar2);
           *(uint *)(param_1 + 0x1a4) = uVar2;
         }
         FUN_001201cc(param_1,1);
@@ -22673,8 +22675,8 @@ void FUN_0012312c(int param_1,int param_2,int param_3)
     uVar2 = float_reverse_divide(uVar3,uVar2);
     dVar3 = FUN_00126248(uVar2);
     uVar3 = dVar3.low;
-    if (double_compare_greater(uVar3,dVar3.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD),
-        *(double *)&dVar3 >= 1.0) {
+    if (double_compare_greater(dVar3,ONE_DOUBLE),
+        DOUBLE_LESS_EQUAL(ONE_DOUBLE,dVar3)) {
       if (*(char *)(param_1 + 0x198) == '\0') {
         *(undefined4 *)(param_1 + 0x38) = 0;
       }
@@ -22712,9 +22714,9 @@ void FUN_0012312c(int param_1,int param_2,int param_3)
           uVar6 = float_cos(uVar3);
           dVar6 = FUN_00126248(uVar6);
           uVar6 = dVar6.low;
-          dVar6 = double_reverse_subtract(uVar6,dVar6.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
+          dVar6 = double_reverse_subtract(dVar6,ONE_DOUBLE);
           uVar6 = dVar6.low;
-          uVar6 = double_to_float(uVar6,dVar6.high);
+          uVar6 = double_to_float(dVar6);
         }
         uVar6 = float_multiply(*(uint *)(iVar5 + 0x180),uVar6);
         uVar6 = float_add(uVar6,*(uint *)(iVar5 + 0x168));
@@ -23045,7 +23047,7 @@ LAB_00123ba8:
 /* ==== 0x00123C24  (file offset 0x23C24)  animations_update =========================================== */
 /* GUESS: names. Advances the animations: stores the world time and the ms elapsed; with a world and
    `animate` set, moves each playing animation by elapsed * speed (int_to_float makes elapsed a float,
-   float_multiply multiplies, FUN_00126858 makes the product an integer) and hands its controller the new
+   float_multiply multiplies, float_to_int makes the product an integer) and hands its controller the new
    position: a looping one (state 3) wraps around its duration, one playing once (state 2) stops at
    either end (state 4); one never played (state 1) is stopped. Then animates the world at worldTime
    (Animate). */
@@ -23066,7 +23068,7 @@ void animations_update(Animations *animations,int32 worldTime,int32 elapsed,int3
       continue;
     switch (animations->states[i]) {
     case 3:                                          /* looping */
-      animations->positions[i] += FUN_00126858(float_multiply(elapsedAsFloat,animations->speeds[i]));
+      animations->positions[i] += float_to_int(float_multiply(elapsedAsFloat,animations->speeds[i]));
       while (animations->positions[i] > animations->durations[i] - 1)
         animations->positions[i] -= animations->durations[i];
       while (animations->positions[i] < 0)
@@ -23074,7 +23076,7 @@ void animations_update(Animations *animations,int32 worldTime,int32 elapsed,int3
       animations_set_position(animations,i,animations->positions[i]);
       break;
     case 2:                                          /* playing once */
-      animations->positions[i] += FUN_00126858(float_multiply(elapsedAsFloat,animations->speeds[i]));
+      animations->positions[i] += float_to_int(float_multiply(elapsedAsFloat,animations->speeds[i]));
       if (animations->positions[i] > animations->durations[i] - 1) {
         animations->positions[i] = animations->durations[i] - 1;
         animations->states[i] = 4;
@@ -23123,9 +23125,9 @@ void FUN_00123d7c(int param_1,undefined4 param_2,int param_3)
       (*(code *)(*piVar2))();
     }
     *(undefined1 *)(*(int *)(*(int *)(param_1 + 0x84) + 0xd4) + 0x4a) = 1;
-    uVar1 = FUN_00126858(*(uint *)(**(int **)(param_1 + 0x120) + 0x14));
+    uVar1 = float_to_int(*(uint *)(**(int **)(param_1 + 0x120) + 0x14));
     *(uint *)(*(int *)(*(int *)(param_1 + 0x84) + 0xd4) + 0x4c) = uVar1;
-    uVar1 = FUN_00126858(*(uint *)(**(int **)(param_1 + 0x120) + 0x14));
+    uVar1 = float_to_int(*(uint *)(**(int **)(param_1 + 0x120) + 0x14));
     *(uint *)(*(int *)(*(int *)(param_1 + 0x84) + 0xd4) + 0x50) = uVar1;
     *(undefined4 *)(param_1 + 0x130) = 0;
   }
@@ -23541,8 +23543,8 @@ int32 save_write_string(Progress *progress,const char *text,uint8 *data,int32 *p
 
 /* ==== 0x0012479C  (file offset 0x2479C)  double_to_float ============================================= */
 /* GUESS: name (the routine is certain: the soft-float library's double -> float conversion, ARM's
-   run-time ABI __aeabi_d2f). Takes the double as its two words (r0 low, r1 high) and returns the
-   float's bits. A finite value is rounded to nearest, ties to even, on the 29 bits it drops, and its
+   run-time ABI __aeabi_d2f). Takes the double (a float64, its words in r0 low, r1 high) and returns
+   the float's bits. A finite value is rounded to nearest, ties to even, on the 29 bits it drops, and its
    exponent rebiased by 896 (1023 - 127); an in-range result raises nothing, not even inexact. Out of
    range it takes the library's shared exception code, which Ghidra decompiled into every routine that
    branches to it, written here for this routine's cases (the control word, ip: 0x88 a double operand
@@ -23564,9 +23566,11 @@ int32 save_write_string(Progress *progress,const char *text,uint8 *data,int32 *p
    denormal code (0x00126b6c) cannot be true either, the status word being unchanged since the first.
    Neither is written. The trap gets r0 - r3 as the binary leaves them: the result's words, and in r2 the
    status word or the high word, in r3 the sign or what the denormal code left there. */
-uint32 double_to_float(uint32 low,uint32 high)
+uint32 double_to_float(float64 x)
 
 {
+  uint32 low = x.low;       /* the operand's words, r0 and r1 */
+  uint32 high = x.high;
   uint32 *status;
   uint32 word;                        /* the status word */
   uint32 sign = high & 0x80000000;
@@ -23742,7 +23746,7 @@ uint32 double_to_float(uint32 low,uint32 high)
 
 /* ==== 0x00124954  (file offset 0x24954)  double_add ================================================== */
 /* GUESS: name (the routine is certain: the soft-float library's double-precision add, ARM's run-time
-   ABI __aeabi_dadd). Returns a + b, a and b given and returned as their two words (low, high).
+   ABI __aeabi_dadd). Returns a + b, a, b and the result float64 (in r0:r1 and r2:r3, low word first).
    Same signs add the magnitudes, different signs subtract them (0x00124ba4, in
    double_subtract's code).
    Like float_add: the operands are swapped so |a| >= |b|, b is aligned to a's exponent and added or
@@ -23767,10 +23771,14 @@ uint32 double_to_float(uint32 low,uint32 high)
    lowest bit no smaller than the operands' (at least 2^-1074). Neither is written. The trap gets
    r0 - r3 as the binary leaves them. Verified under emulation (research_notes/soft_float_test,
    double_reference.py, kind dd). */
-uint64 double_add(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
+float64 double_add(float64 a,float64 b)
 
 {
-  uint64 result;
+  uint32 aLow = a.low;      /* the operands' words, worked on as the binary's r0 - r3 */
+  uint32 aHigh = a.high;
+  uint32 bLow = b.low;
+  uint32 bHigh = b.high;
+  float64 result;
   uint32 *status;
   uint32 word;        /* the status word */
   uint32 control;     /* ip: the exception word, see the comment above */
@@ -24166,9 +24174,9 @@ uint64 double_add(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
 
 /* ==== 0x00124B40  (file offset 0x24B40)  double_reverse_subtract ===================================== */
 /* GUESS: name (the routine is certain: the soft-float library's double-precision reverse
-   subtract, ARM's run-time ABI __aeabi_drsub). Returns b - a, a and b given and returned as their two
-   words (low, high): -a + b, with an Inf or NaN operand the subtract's special cases with the operands
-   swapped.
+   subtract, ARM's run-time ABI __aeabi_drsub). Returns b - a, a, b and the result float64 (in r0:r1 and
+   r2:r3, low word first): -a + b, with an Inf or NaN operand the subtract's special cases with the
+   operands swapped.
    Like float_add: the operands are swapped so |a| >= |b|, b is aligned to a's exponent and added or
    subtracted, and the result rounded to nearest, ties to even, on b's dropped bits; rounding never
    signals inexact. The status word (kh_GetFpStatusPtr) and the exception word ip are float_add's
@@ -24191,10 +24199,14 @@ uint64 double_add(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
    lowest bit no smaller than the operands' (at least 2^-1074). Neither is written. The trap gets
    r0 - r3 as the binary leaves them. Verified under emulation (research_notes/soft_float_test,
    double_reference.py, kind dd). */
-uint64 double_reverse_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
+float64 double_reverse_subtract(float64 a,float64 b)
 
 {
-  uint64 result;
+  uint32 aLow = a.low;      /* the operands' words, worked on as the binary's r0 - r3 */
+  uint32 aHigh = a.high;
+  uint32 bLow = b.low;
+  uint32 bHigh = b.high;
+  float64 result;
   uint32 *status;
   uint32 word;        /* the status word */
   uint32 control;     /* ip: the exception word, see the comment above */
@@ -24598,8 +24610,8 @@ uint64 double_reverse_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh
 
 /* ==== 0x00124B84  (file offset 0x24B84)  double_subtract ============================================= */
 /* GUESS: name (the routine is certain: the soft-float library's double-precision subtract, ARM's
-   run-time ABI __aeabi_dsub). Returns a - b, a and b given and returned as their two words (low,
-   high). Same signs subtract the magnitudes (0x00124ba4), different signs add them (0x00124974, in
+   run-time ABI __aeabi_dsub). Returns a - b, a, b and the result float64 (in r0:r1 and r2:r3, low
+   word first). Same signs subtract the magnitudes (0x00124ba4), different signs add them (0x00124974, in
    double_add's code).
    Like float_add: the operands are swapped so |a| >= |b|, b is aligned to a's exponent and added or
    subtracted, and the result rounded to nearest, ties to even, on b's dropped bits; rounding never
@@ -24623,10 +24635,14 @@ uint64 double_reverse_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh
    lowest bit no smaller than the operands' (at least 2^-1074). Neither is written. The trap gets
    r0 - r3 as the binary leaves them. Verified under emulation (research_notes/soft_float_test,
    double_reference.py, kind dd). */
-uint64 double_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
+float64 double_subtract(float64 a,float64 b)
 
 {
-  uint64 result;
+  uint32 aLow = a.low;      /* the operands' words, worked on as the binary's r0 - r3 */
+  uint32 aHigh = a.high;
+  uint32 bLow = b.low;
+  uint32 bHigh = b.high;
+  float64 result;
   uint32 *status;
   uint32 word;        /* the status word */
   uint32 control;     /* ip: the exception word, see the comment above */
@@ -25022,8 +25038,8 @@ uint64 double_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
 
 /* ==== 0x00124F24  (file offset 0x24F24)  double_reverse_divide ======================================= */
 /* GUESS: name (the routine is certain: the soft-float library's double-precision reverse divide,
-   ARM's run-time ABI __aeabi_ddrdiv). Returns b / a, a and b given and returned as their two words
-   (low, high): the operands swapped, then the divide (0x00124f48, in double_divide's code).
+   ARM's run-time ABI __aeabi_ddrdiv). Returns b / a, a, b and the result float64 (in r0:r1 and r2:r3,
+   low word first): the operands swapped, then the divide (0x00124f48, in double_divide's code).
    Special operands (0x00125180, 0x00125044): a NaN takes the shared NaN choice (0x00124e18; a
    signalling one is invalid, otherwise the first NaN as it is); Inf / Inf and 0 / 0 are invalid
    (WORD_HEXADECIMAL_04000014: invalid, double precision, operation 4); x / 0 is a division by zero
@@ -25051,10 +25067,14 @@ uint64 double_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
    which the C function does not model (mantissaR2, never set). Each of double_divide and
    double_reverse_divide holds this code, as the binary's two entries share it. Verified under
    emulation (research_notes/soft_float_test, double_reference.py, kind dd). */
-uint64 double_reverse_divide(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
+float64 double_reverse_divide(float64 a,float64 b)
 
 {
-  uint64 result;
+  uint32 aLow = a.low;      /* the operands' words, worked on as the binary's r0 - r3 */
+  uint32 aHigh = a.high;
+  uint32 bLow = b.low;
+  uint32 bHigh = b.high;
+  float64 result;
   uint64 quotient;
   uint32 *status;
   uint32 word;        /* the status word */
@@ -25322,8 +25342,8 @@ uint64 double_reverse_divide(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
 
 /* ==== 0x00124F44  (file offset 0x24F44)  double_divide =============================================== */
 /* GUESS: name (the routine is certain: the soft-float library's double-precision divide, ARM's
-   run-time ABI __aeabi_ddiv). Returns a / b, a and b given and returned as their two words (low,
-   high).
+   run-time ABI __aeabi_ddiv). Returns a / b, a, b and the result float64 (in r0:r1 and r2:r3, low
+   word first).
    Special operands (0x00125180, 0x00125044): a NaN takes the shared NaN choice (0x00124e18; a
    signalling one is invalid, otherwise the first NaN as it is); Inf / Inf and 0 / 0 are invalid
    (WORD_HEXADECIMAL_04000014: invalid, double precision, operation 4); x / 0 is a division by zero
@@ -25351,10 +25371,14 @@ uint64 double_reverse_divide(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
    which the C function does not model (mantissaR2, never set). Each of double_divide and
    double_reverse_divide holds this code, as the binary's two entries share it. Verified under
    emulation (research_notes/soft_float_test, double_reference.py, kind dd). */
-uint64 double_divide(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
+float64 double_divide(float64 a,float64 b)
 
 {
-  uint64 result;
+  uint32 aLow = a.low;      /* the operands' words, worked on as the binary's r0 - r3 */
+  uint32 aHigh = a.high;
+  uint32 bLow = b.low;
+  uint32 bHigh = b.high;
+  float64 result;
   uint64 quotient;
   uint32 *status;
   uint32 word;        /* the status word */
@@ -25701,26 +25725,31 @@ uint64 double_divide_mantissas(uint32 dividendLow,uint32 dividendHigh,uint32 div
 
 /* ==== 0x001254D4  (file offset 0x254D4)  double_compare_equal ======================================== */
 /* GUESS: name (the routine is certain: the soft-float library's quiet double-precision compare, ARM's
-   run-time ABI __aeabi_cdcmpeq), for == and !=, as float_compare_equal is for floats. a and b are given
-   as their two words (low, high). Leaves the result in the CPU flags, as an unsigned `cmp a, b` would:
-   Z set when a == b (+0 == -0), C set with Z clear when a > b, C clear when a < b (N and V mean
-   nothing): both operands non-negative compare as their two words, either negative the other way round
-   (0x0012550c), and an exponent of all ones goes through 0x00124e70, where the infinities compare as
-   numbers (0x00124e94, which only fixes V). C cannot express that: the listing writes the call as
-   (double_compare_equal(aLow,aHigh,bLow,bHigh), *(double *)&x != *(double *)&y), the comparison after
-   the comma the one the caller's branch makes, an unordered compare (a NaN) leaves C and Z clear. No
-   caller reads r0, but it is returned as the binary leaves it: aLow when there is no NaN; 8 after a NaN
-   (the compare exit, 0x00126cb0 / 0x00126d6c); after a trap, the handler's result t, or 2 - t when its
-   bit 3 is clear (0x00126d7c). What C can express is the rest, below: only a signalling NaN raises
-   invalid (status bit 0); when that is trapped (bit 0x100), it calls the exception routine
-   float_raise_exception with a and b and the control word (0x04120019: invalid, double precision,
-   operation 9, a compare) with the status word's bits 22-24. The listing's second kh_GetFpStatusPtr
-   call (0x00126dac) is the compare exit for a control word without bits 16-19, which this one has; it
-   is not written. Verified under emulation (research_notes/soft_float_test, double_reference.py, kind
-   dd), the flags against the IEEE comparison. */
-uint32 double_compare_equal(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
+   run-time ABI __aeabi_cdcmpeq), for == and !=, as float_compare_equal is for floats. a and b are
+   float64. Leaves the result in the CPU flags, as an unsigned `cmp a, b` would: Z set when a == b (+0
+   == -0), C set with Z clear when a > b, C clear when a < b (N and V mean nothing): both operands
+   non-negative compare as their two words, either negative the other way round (0x0012550c), and an
+   exponent of all ones goes through 0x00124e70, where the infinities compare as numbers (0x00124e94,
+   which only fixes V). C cannot express that: the listing writes the call as
+   (double_compare_equal(x,y), !DOUBLE_EQUAL(x,y)), the comparison after the comma (kh_mod.h's word
+   macros DOUBLE_EQUAL, DOUBLE_LESS and DOUBLE_LESS_EQUAL) the one the caller's branch makes, an
+   unordered compare (a NaN) leaves C and Z clear. No caller reads r0, but it is returned as the binary
+   leaves it: aLow when there is no NaN; 8 after a NaN (the compare exit, 0x00126cb0 / 0x00126d6c);
+   after a trap, the handler's result t, or 2 - t when its bit 3 is clear (0x00126d7c). What C can
+   express is the rest, below: only a signalling NaN raises invalid (status bit 0); when that is trapped
+   (bit 0x100), it calls the exception routine float_raise_exception with a and b and the control word
+   (0x04120019: invalid, double precision, operation 9, a compare) with the status word's bits 22-24.
+   The listing's second kh_GetFpStatusPtr call (0x00126dac) is the compare exit for a control word
+   without bits 16-19, which this one has; it is not written. Verified under emulation
+   (research_notes/soft_float_test, double_reference.py, kind dd), the flags against the IEEE
+   comparison. */
+uint32 double_compare_equal(float64 a,float64 b)
 
 {
+  uint32 aLow = a.low;      /* the operands' words, worked on as the binary's r0 - r3 */
+  uint32 aHigh = a.high;
+  uint32 bLow = b.low;
+  uint32 bHigh = b.high;
   uint32 *status;
   uint32 word;
   uint32 result;
@@ -25741,211 +25770,58 @@ uint32 double_compare_equal(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
 }
 
 
-/* ==== 0x00125554  (file offset 0x25554)  FUN_00125554 ================================================ */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint FUN_00125554(uint param_1,uint param_2)
+/* ==== 0x00125554  (file offset 0x25554)  double_to_int =============================================== */
+/* GUESS: name (the routine is certain: the soft-float library's double -> int conversion, ARM's run-time
+   ABI __aeabi_d2iz, C's (int)x). Truncates toward zero: the mantissa's top 32 bits (high << 11 | low >>
+   21, the hidden bit at 31 unless the exponent is 0) shifted right by 1054 - exponent, negated for a
+   negative x; no rounding and no inexact flag, so |x| < 1 and the denormals give 0. Out of range (2^31
+   or more, below -2^31), Inf or NaN (0x001255c8): invalid, through the library's exception code
+   (0x001260e4) with the control word 0x040200C8 (invalid, a double operand 0x80, an integer result 0x40,
+   operation 8; 0x10000 more for a NaN, quiet or signalling: 0x00124e58 sends both on): the invalid flag
+   (status bit 0), the control word's status bits 22-24 and 0xC00000 (0x00126140, its bit 0x20000);
+   then the trap when status 0x100 is set, with the words, the high word again and high << 1 | (low !=
+   0) as r3, and the trap's r0 is the result; otherwise the integer default (0x00126cb0 / 0x00126ce0): 0
+   for a NaN, 0x7FFFFFFF, or 0x80000000 for a negative x. The listing's second kh_GetFpStatusPtr call
+   (0x00126dac) is the compare exit, which a conversion never reaches; it is not written. Verified under
+   emulation (research_notes/soft_float_test, double_reference.py, kind d). */
+int32 double_to_int(float64 x)
 
 {
-  uint32 *puVar1;
-  undefined4 uVar2;
-  uint uVar3;
-  undefined4 uVar4;
-  uint uVar5;
-  int iVar6;
-  uint uVar7;
-  uint uVar8;
-  uint uVar9;
-  bool bVar10;
-  undefined8 uVar11;
-  
-  uVar9 = (int)param_2 >> 0x14;
-  uVar7 = param_2 << 0xb | param_1 >> 0x15;
-  if (uVar9 != 0) {
-    uVar7 = uVar7 | 0x80000000;
+  uint32 *status;
+  uint32 word;
+  uint32 control = 0x040200C8;
+  uint32 mantissa = x.high << 11 | x.low >> 21;
+  uint32 exponent = x.high >> 20 & 0x7ff;
+  uint32 shift = 0x41e - exponent;          /* 31 - the unbiased exponent */
+  uint32 magnitude;
+  uint32 words = x.high << 1 | (x.low != 0);
+
+  if ((x.high >> 20) != 0)                  /* the hidden bit: the sign and exponent are not 0 (`asr`) */
+    mantissa |= 0x80000000;
+  if ((int32)x.high >= 0) {
+    if ((int32)shift > 0)
+      return shift > 0xff ? 0 : (int32)SHIFT_RIGHT(mantissa,shift);
   }
-  if ((int)uVar9 < 0) {
-    if ((uVar9 & 0x7ff) == 0) {
-      uVar7 = uVar7 & 0x7fffffff;
-    }
-    uVar8 = 0;
-    iVar6 = (uVar9 & 0x7ff) - 0x380;
-    uVar5 = 0x9e - iVar6;
-    if (iVar6 < 0x9f) {
-      if ((int)uVar5 < 0x100) {
-        uVar8 = -(SHIFT_RIGHT(uVar7,uVar5));
-      }
-      if ((int)uVar8 < 1) {
-        return uVar8;
-      }
+  else {                                    /* negative (0x00125590) */
+    if (exponent == 0)
+      mantissa &= ~0x80000000;
+    if ((int32)shift >= 0) {
+      magnitude = shift > 0xff ? 0 : SHIFT_RIGHT(mantissa,shift);
+      if ((int32)(0 - magnitude) <= 0)
+        return (int32)(0 - magnitude);
     }
   }
-  else {
-    uVar5 = 0x9e - (uVar9 - 0x380);
-    if (uVar5 != 0 && (int)(uVar9 - 0x380) < 0x9f) {
-      if ((int)uVar5 < 0x100) {
-        uVar7 = SHIFT_RIGHT(uVar7,uVar5);
-      }
-      else {
-        uVar7 = 0;
-      }
-      return uVar7;
-    }
-  }
-  uVar7 = param_2 * 2 + (uint)(param_1 != 0);
-  uVar9 = WORD_HEXADECIMAL_040200C8;
-  if ((0xffe00000 < uVar7) &&
-     (uVar8 = WORD_HEXADECIMAL_040200C8 | 0x10000, uVar9 = uVar8, (param_2 & 0x80000) != 0)) {
-    uVar5 = WORD_HEXADECIMAL_040200C8 & 0x4f;
-    if (uVar5 == 0x48) {
-      uVar5 = 0x48;
-      goto LAB_001260e4;
-    }
-LAB_00126cb0:
-    if ((uVar8 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x00126cc4. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar8 & 0xf) != 8) {
-        return param_1;
-      }
-      if ((uVar8 & 0x40) == 0) {
-        uVar2 = FLOAT_DEFAULT_NAN;
-        if ((uVar8 & 0x10) != 0) {
-          uVar2 = 0;
-          param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD;
-        }
-        return uVar2;
-      }
-      if ((uVar8 & 0x10000) != 0) {
-        return 0;
-      }
-      if ((uVar8 & 0x20) != 0) {
-        uVar2 = 0xffffffff;
-        uVar4 = 0xffffffff;
-        if ((uVar5 & 0x80000000) != 0) {
-          uVar2 = 0;
-          uVar4 = 0;
-        }
-        return uVar2;
-      }
-      if ((uVar8 & 0x10) == 0) {
-        uVar7 = 0x7fffffff;
-        uVar9 = param_2;
-      }
-      else {
-        uVar9 = 0x7fffffff;
-        uVar7 = 0xffffffff;
-        param_1 = param_2;
-      }
-      if ((param_1 & 0x80000000) != 0) {
-        uVar7 = ~uVar7;
-        uVar9 = ~uVar9;
-      }
-      return uVar7;
-    }
-    uVar9 = 8;
-    goto LAB_00126d6c;
-  }
-LAB_001260e4:
-  if ((uVar9 & 0x10) == 0) {
-    uVar5 = param_2;
-  }
-  puVar1 = kh_GetFpStatusPtr();
-  uVar3 = *puVar1;
-  if ((uVar9 & ~(uVar3 << 0x12) & 0x30000000) != 0) {
-    uVar9 = uVar9 | 0x40000000;
-  }
-  uVar8 = uVar9 | uVar3 & 0x1c00000;
-  *puVar1 = uVar3 | (uVar9 & 0x7fffffff) >> 0x1a;
-  bVar10 = (uVar9 & 0xf) != 8;
-  if (bVar10) {
-    uVar9 = uVar9 & 0x70;
-    uVar8 = uVar8 | uVar9 << 3;
-  }
-  else {
-    uVar9 = 0x20000;
-  }
-  if (!bVar10 && (uVar9 & ~uVar8) == 0) {
-    uVar8 = uVar8 | 0xc00000;
-  }
-  if ((uVar8 & 0x20000000) == 0) {
-    if ((uVar8 & 0x10000000) == 0) {
-      if ((uVar8 & 0x40000000) != 0) {
-        uVar3 = uVar3 & 0x1000;
-        goto joined_r0x00126194;
-      }
-      if ((uVar8 & 0x8000000) == 0) {
-        if ((uVar3 & 0x100) == 0) {
-          uVar5 = param_2;
-          if ((uVar8 & 0x80) == 0) {
-            uVar5 = param_1;
-          }
-          uVar5 = uVar5 & 0x80000000;
-          if ((uVar8 & 0x10) == 0) {
-            param_1 = FLOAT_DEFAULT_NAN | uVar5;
-          }
-          else {
-            param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD | uVar5;
-            param_1 = DOUBLE_DEFAULT_NAN_LOW_WORD;
-          }
-          goto LAB_00126cb0;
-        }
-      }
-      else if ((uVar3 & 0x200) == 0) {
-        if ((uVar8 & 0x10) == 0) {
-          uVar7 = param_1 ^ uVar5;
-        }
-        else {
-          uVar7 = param_2 ^ uVar7;
-        }
-        goto LAB_001261dc;
-      }
-    }
-    else if ((uVar3 & 0x400) == 0) {
-      if ((uVar8 & 0x80) == 0) {
-        uVar7 = param_1 & 0x80000000;
-      }
-      else {
-        uVar7 = param_2 & 0x80000000;
-      }
-LAB_001261dc:
-      uVar9 = INTEGER_0;
-      if ((uVar8 & 0x10) == 0) {
-        uVar9 = WORD_HEXADECIMAL_7F800000 | uVar7 & 0x80000000;
-      }
-      return uVar9;
-    }
-  }
-  else {
-    uVar3 = uVar3 & 0x800;
-joined_r0x00126194:
-    if (uVar3 == 0) {
-      return param_1;
-    }
-  }
-  uVar11 = float_raise_exception(param_1,param_2,uVar5,uVar7,uVar8);
-  uVar9 = uVar11.low;
-  if ((uVar8 & 0xf) != 9) {
-    return uVar9;
-  }
-LAB_00126d6c:
-  if ((uVar8 & 0x100000) == 0) {
-    return (uint)((uVar8 & uVar9 << 0x10) != 0);
-  }
-  if ((uVar8 & 0xf0000) == 0) {
-    uVar7 = uVar9 << 0x1d;
-    if ((bool)((byte)(uVar9 >> 3) & 1)) {
-      uVar7 = uVar7 | 0x30000000;
-    }
-    puVar1 = kh_GetFpStatusPtr();
-    *puVar1 = *puVar1 & 0xfffffff | uVar7;
-    return uVar9;
-  }
-  if ((uVar9 & 8) != 0) {
-    return uVar9;
-  }
-  return 2 - uVar9;
+  if (words > DOUBLE_EXPONENT_MASK_SHIFTED)
+    control |= 0x10000;                     /* a NaN */
+  status = kh_GetFpStatusPtr();             /* invalid (the library's exception code, 0x001260e4) */
+  word = *status | 1;
+  *status = word;
+  control |= (word & 0x1c00000) | 0xc00000;
+  if ((word & 0x100) == 0)
+    return control & 0x10000 ? 0 : (int32)x.high < 0 ? (int32)0x80000000 : 0x7fffffff;
+  return (int32)float_raise_exception(x.low,x.high,x.high,words,control).low;
 }
+
 
 /* ==== 0x00125604  (file offset 0x25604)  int_to_double =============================================== */
 /* GUESS: name (the routine is certain: the soft-float library's int -> double conversion, ARM's run-time
@@ -25954,10 +25830,10 @@ LAB_00126d6c:
    (0x00125604 - 0x00125630) adds 0x41F00000 and the mantissa shifted right arithmetically, whose sign
    bits and implicit bit make 0x41E00000; written here with unsigned arithmetic. Verified under emulation
    (research_notes/soft_float_test, double_reference.py, kind f). */
-uint64 int_to_double(int32 value)
+float64 int_to_double(int32 value)
 
 {
-  uint64 result;
+  float64 result;
   uint32 sign = (uint32)value & 0x80000000u;
   uint32 magnitude = sign != 0 ? 0u - (uint32)value : (uint32)value;
   uint32 zeros;
@@ -25974,26 +25850,30 @@ uint64 int_to_double(int32 value)
 /* ==== 0x00125634  (file offset 0x25634)  double_compare_greater ====================================== */
 /* GUESS: name (the routine is certain: the soft-float library's double-precision compare, ARM's
    run-time ABI __aeabi_cdcmple), for > and >= (bhi / bhs are false for a NaN), as float_compare_greater
-   is for floats. a and b are given as their two words (low, high). Leaves the result in the CPU flags,
-   as an unsigned `cmp a, b` would: Z set when a == b (+0 == -0), C set with Z clear when a > b, C clear
-   when a < b (N and V mean nothing): both operands non-negative compare as their two words, either
-   negative the other way round (0x0012566c), and an exponent of all ones goes through 0x00124e70, where
-   the infinities compare as numbers (0x00124e94, which only fixes V). C cannot express that: the
-   listing writes the call as (double_compare_greater(aLow,aHigh,bLow,bHigh), *(double *)&x >
-   *(double *)&y), the comparison after the comma the one the caller's branch makes, an unordered
-   compare (a NaN) leaves C and Z clear, so >, >= are false and !(x > y), !(x >= y) stand for bls and
-   blo. No caller reads r0, but it is returned as the binary leaves it: aLow when there is no NaN; 8
-   after a NaN (the compare exit, 0x00126cb0 / 0x00126d6c); after a trap, the handler's result t, or 2 -
-   t when its bit 3 is clear (0x00126d7c). What C can express is the rest, below: any NaN raises invalid
-   (status bit 0); when that is trapped (bit 0x100), it calls the exception routine
+   is for floats. a and b are float64. Leaves the result in the CPU flags, as an unsigned `cmp a, b`
+   would: Z set when a == b (+0 == -0), C set with Z clear when a > b, C clear when a < b (N and V mean
+   nothing): both operands non-negative compare as their two words, either negative the other way round
+   (0x0012566c), and an exponent of all ones goes through 0x00124e70, where the infinities compare as
+   numbers (0x00124e94, which only fixes V). C cannot express that: the listing writes the call as
+   (double_compare_greater(x,y), DOUBLE_LESS(y,x)), the comparison after the comma (kh_mod.h's word
+   macros DOUBLE_EQUAL, DOUBLE_LESS and DOUBLE_LESS_EQUAL) the one the caller's branch makes, an
+   unordered compare (a NaN) leaves C and Z clear, so >, >= are false and !(x > y), !(x >= y) stand for
+   bls and blo. No caller reads r0, but it is returned as the binary leaves it: aLow when there is no
+   NaN; 8 after a NaN (the compare exit, 0x00126cb0 / 0x00126d6c); after a trap, the handler's result t,
+   or 2 - t when its bit 3 is clear (0x00126d7c). What C can express is the rest, below: any NaN raises
+   invalid (status bit 0); when that is trapped (bit 0x100), it calls the exception routine
    float_raise_exception with a and b and the control word (0x04130019: invalid, double precision,
    operation 9, a compare) with the status word's bits 22-24. The listing's second kh_GetFpStatusPtr
    call (0x00126dac) is the compare exit for a control word without bits 16-19, which this one has; it
    is not written. Verified under emulation (research_notes/soft_float_test, double_reference.py, kind
    dd), the flags against the IEEE comparison. */
-uint32 double_compare_greater(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
+uint32 double_compare_greater(float64 a,float64 b)
 
 {
+  uint32 aLow = a.low;      /* the operands' words, worked on as the binary's r0 - r3 */
+  uint32 aHigh = a.high;
+  uint32 bLow = b.low;
+  uint32 bHigh = b.high;
   uint32 *status;
   uint32 word;
   uint32 result;
@@ -26014,13 +25894,13 @@ uint32 double_compare_greater(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
 /* ==== 0x001256B4  (file offset 0x256B4)  double_compare_less ========================================= */
 /* GUESS: name (the routine is certain: the soft-float library's double-precision compare with an
    unordered result of "greater"), for < and <= (blo / bls are false for a NaN), as float_compare_less
-   is for floats. a and b are given as their two words (low, high). Leaves the result in the CPU flags,
-   as an unsigned `cmp a, b` would: Z set when a == b (+0 == -0), C set with Z clear when a > b, C clear
-   when a < b (N and V mean nothing): both operands non-negative compare as their two words, either
-   negative the other way round (0x001256ec), and an exponent of all ones goes through 0x00124e70, where
-   the infinities compare as numbers (0x00124e94, which only fixes V). C cannot express that: the
-   listing writes the call as (double_compare_less(aLow,aHigh,bLow,bHigh), *(double *)&x <
-   *(double *)&y), the comparison after the comma the one the caller's branch makes, an unordered
+   is for floats. a and b are float64. Leaves the result in the CPU flags, as an unsigned `cmp a, b`
+   would: Z set when a == b (+0 == -0), C set with Z clear when a > b, C clear when a < b (N and V mean
+   nothing): both operands non-negative compare as their two words, either negative the other way round
+   (0x001256ec), and an exponent of all ones goes through 0x00124e70, where the infinities compare as
+   numbers (0x00124e94, which only fixes V). C cannot express that: the listing writes the call as
+   (double_compare_less(x,y), DOUBLE_LESS(x,y)), the comparison after the comma (kh_mod.h's word macros
+   DOUBLE_EQUAL, DOUBLE_LESS and DOUBLE_LESS_EQUAL) the one the caller's branch makes, an unordered
    compare (a NaN) leaves C set and Z clear, so <, <= are false and !(x < y), !(x <= y) stand for bhs
    and bhi. No caller reads r0, but it is returned as the binary leaves it: aLow when there is no NaN; 8
    after a NaN (the compare exit, 0x00126cb0 / 0x00126d6c); after a trap, the handler's result t, or 2 -
@@ -26031,9 +25911,13 @@ uint32 double_compare_greater(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
    call (0x00126dac) is the compare exit for a control word without bits 16-19, which this one has; it
    is not written. Verified under emulation (research_notes/soft_float_test, double_reference.py, kind
    dd), the flags against the IEEE comparison. */
-uint32 double_compare_less(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
+uint32 double_compare_less(float64 a,float64 b)
 
 {
+  uint32 aLow = a.low;      /* the operands' words, worked on as the binary's r0 - r3 */
+  uint32 aHigh = a.high;
+  uint32 bLow = b.low;
+  uint32 bHigh = b.high;
   uint32 *status;
   uint32 word;
   uint32 result;
@@ -26054,9 +25938,13 @@ uint32 double_compare_less(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
 /* ==== 0x00125734  (file offset 0x25734)  FUN_00125734 ================================================ */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-undefined8 FUN_00125734(uint param_1,uint param_2,uint param_3,uint param_4)
+float64 FUN_00125734(float64 a,float64 b)
 
 {
+  uint param_1 = a.low;     /* the operands' words, as Ghidra named the registers */
+  uint param_2 = a.high;
+  uint param_3 = b.low;
+  uint param_4 = b.high;
   uint64 lVar1;
   uint64 lVar2;
   uint64 lVar3;
@@ -26079,7 +25967,7 @@ undefined8 FUN_00125734(uint param_1,uint param_2,uint param_3,uint param_4)
   bool bVar20;
   bool bVar21;
   uint uVar22;
-  undefined8 uVar23;
+  float64 uVar23;
   
   if ((WORD_HEXADECIMAL_07FF0000 & ~(param_2 >> 4)) != 0 && (WORD_HEXADECIMAL_07FF0000 & ~(param_4 >> 4)) != 0) {
     uVar15 = WORD_HEXADECIMAL_07FF0000 & param_2 >> 4;
@@ -26487,9 +26375,13 @@ LAB_00126d6c:
 /* ==== 0x001259E8  (file offset 0x259E8)  FUN_001259e8 ================================================ */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-undefined8 FUN_001259e8(uint param_1,uint param_2,uint param_3,uint param_4)
+float64 FUN_001259e8(float64 a,float64 b)
 
 {
+  uint param_1 = a.low;     /* the operands' words, as Ghidra named the registers */
+  uint param_2 = a.high;
+  uint param_3 = b.low;
+  uint param_4 = b.high;
   uint uVar1;
   uint *puVar2;
   undefined4 uVar3;
@@ -26504,7 +26396,7 @@ undefined8 FUN_001259e8(uint param_1,uint param_2,uint param_3,uint param_4)
   bool bVar12;
   bool bVar13;
   bool bVar14;
-  undefined8 uVar15;
+  float64 uVar15;
   uint uVar16;
   
   uVar4 = WORD_HEXADECIMAL_04000015;
@@ -26991,9 +26883,11 @@ LAB_00126d6c:
 /* ==== 0x00125CD0  (file offset 0x25CD0)  FUN_00125cd0 ================================================ */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-undefined8 FUN_00125cd0(uint param_1,uint param_2)
+float64 FUN_00125cd0(float64 x)
 
 {
+  uint param_1 = x.low;   /* the double's words, as Ghidra named the registers */
+  uint param_2 = x.high;
   uint param_3;
   uint param_4;
   /* not parameters: param_3, param_4. kh.mod reads r2 / r3 only on paths where it was already written, or as a
@@ -27012,7 +26906,7 @@ undefined8 FUN_00125cd0(uint param_1,uint param_2)
   uint uVar12;
   uint uVar13;
   bool bVar14;
-  undefined8 uVar15;
+  float64 uVar15;
   
   uVar12 = WORD_HEXADECIMAL_04000017;
   if ((param_2 & 0x7ff00000) != 0) {
@@ -27293,7 +27187,7 @@ LAB_00126d6c:
 /* ==== 0x00126248  (file offset 0x26248)  FUN_00126248 ================================================ */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-undefined8 FUN_00126248(uint param_1)
+float64 FUN_00126248(uint param_1)
 
 {
   uint param_2;
@@ -27310,7 +27204,7 @@ undefined8 FUN_00126248(uint param_1)
   uint uVar8;
   bool bVar9;
   int iVar10;
-  undefined8 uVar11;
+  float64 uVar11;
   
   uVar7 = WORD_HEXADECIMAL_04000018;
   if ((param_1 + 0x800000 & 0x7f000000) != 0) {
@@ -28504,196 +28398,51 @@ uint32 float_compare_equal(uint32 a,uint32 b)
   return result & 8 ? result : 2 - result;
 }
 
-/* ==== 0x00126858  (file offset 0x26858)  FUN_00126858 ================================================ */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint FUN_00126858(uint param_1)
+/* ==== 0x00126858  (file offset 0x26858)  float_to_int ================================================ */
+/* GUESS: name (the routine is certain: the soft-float library's float -> int conversion, ARM's run-time
+   ABI __aeabi_f2iz, C's (int)a), double_to_int for floats. Truncates toward zero: a << 8 with the hidden
+   bit at 31 (unless the sign and exponent are 0, `asrs` at 0x00126858) shifted right by 158 - exponent,
+   negated for a negative a (whose exponent 0 drops the hidden bit again, 0x00126884); no rounding and no
+   inexact flag. Out of range (2^31 or more, below -2^31; -2^31 itself, 0xCF000000, converts), Inf or NaN
+   (0x00126898): invalid, through the library's exception code (0x001260e4) with the control word
+   0x04020048 (invalid, an integer result 0x40, operation 8; 0x10000 more for a NaN, quiet or
+   signalling: 0x001265b0 sends both on): the invalid flag (status bit 0), the control word's status bits
+   22-24 and 0xC00000; then the trap when status 0x100 is set, with a, a << 1 twice and the shifted
+   mantissa as r3, and the trap's r0 is the result; otherwise the integer default: 0 for a NaN,
+   0x7FFFFFFF, or 0x80000000 for a negative a. The listing's second kh_GetFpStatusPtr call (0x00126dac)
+   is the compare exit, which a conversion never reaches; it is not written. Verified under emulation
+   (research_notes/soft_float_test, double_reference.py, kind f). */
+int32 float_to_int(uint32 a)
 
 {
-  uint *puVar1;
-  undefined4 uVar2;
-  uint uVar3;
-  uint uVar4;
-  undefined4 uVar5;
-  uint uVar6;
-  uint uVar7;
-  uint uVar8;
-  uint uVar9;
-  bool bVar10;
-  
-  uVar6 = (int)param_1 >> 0x17;
-  uVar7 = param_1 << 8;
-  if (uVar6 != 0) {
-    uVar7 = uVar7 | 0x80000000;
+  uint32 *status;
+  uint32 word;
+  uint32 control = 0x04020048;
+  uint32 mantissa = a << 8;
+  uint32 exponent = a >> 23 & 0xff;
+
+  if ((a >> 23) != 0)                       /* the hidden bit: the sign and exponent are not 0 */
+    mantissa |= 0x80000000;
+  if ((int32)a >= 0) {
+    if (exponent < 0x9e)
+      return (int32)SHIFT_RIGHT(mantissa,0x9e - exponent);
   }
-  if ((int)uVar6 < 0) {
-    if (param_1 < 0xcf000001) {
-      if ((uVar6 & 0xff) == 0) {
-        uVar7 = uVar7 & 0x7fffffff;
-      }
-      return -SHIFT_RIGHT(uVar7,0x9e - (uVar6 & 0xff));
-    }
+  else if (a <= 0xcf000000) {               /* negative, down to -2^31 (0x00126880) */
+    if (exponent == 0)
+      mantissa &= ~0x80000000;
+    return (int32)(0 - SHIFT_RIGHT(mantissa,0x9e - exponent));
   }
-  else {
-    bVar10 = uVar6 < 0x9f;
-    uVar6 = 0x9e - uVar6;
-    if (bVar10 && uVar6 != 0) {
-      return SHIFT_RIGHT(uVar7,uVar6);
-    }
-  }
-  uVar4 = param_1 * 2;
-  uVar8 = WORD_HEXADECIMAL_04020048;
-  if ((0xff000000 < uVar4) &&
-     (uVar9 = WORD_HEXADECIMAL_04020048 | 0x10000, uVar8 = uVar9, (param_1 & 0x400000) != 0)) {
-    uVar6 = WORD_HEXADECIMAL_04020048 & 0x4f;
-    if (uVar6 == 0x48) {
-      uVar6 = 0x48;
-      goto LAB_001260e4;
-    }
-LAB_00126cb0:
-    if ((uVar9 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x00126cc4. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar9 & 0xf) != 8) {
-        return param_1;
-      }
-      if ((uVar9 & 0x40) == 0) {
-        uVar2 = FLOAT_DEFAULT_NAN;
-        if ((uVar9 & 0x10) != 0) {
-          uVar2 = 0;
-          uVar4 = DOUBLE_DEFAULT_NAN_HIGH_WORD;
-        }
-        return uVar2;
-      }
-      if ((uVar9 & 0x10000) != 0) {
-        return 0;
-      }
-      if ((uVar9 & 0x20) != 0) {
-        uVar2 = 0xffffffff;
-        uVar5 = 0xffffffff;
-        if ((uVar6 & 0x80000000) != 0) {
-          uVar2 = 0;
-          uVar5 = 0;
-        }
-        return uVar2;
-      }
-      if ((uVar9 & 0x10) == 0) {
-        uVar6 = 0x7fffffff;
-        uVar7 = uVar4;
-        uVar4 = param_1;
-      }
-      else {
-        uVar7 = 0x7fffffff;
-        uVar6 = 0xffffffff;
-      }
-      if ((uVar4 & 0x80000000) != 0) {
-        uVar6 = ~uVar6;
-        uVar7 = ~uVar7;
-      }
-      return uVar6;
-    }
-    uVar7 = 8;
-    goto LAB_00126d6c;
-  }
-LAB_001260e4:
-  if ((uVar8 & 0x10) == 0) {
-    uVar6 = uVar4;
-  }
-  puVar1 = kh_GetFpStatusPtr();
-  uVar3 = *puVar1;
-  if ((uVar8 & ~(uVar3 << 0x12) & 0x30000000) != 0) {
-    uVar8 = uVar8 | 0x40000000;
-  }
-  uVar9 = uVar8 | uVar3 & 0x1c00000;
-  *puVar1 = uVar3 | (uVar8 & 0x7fffffff) >> 0x1a;
-  bVar10 = (uVar8 & 0xf) != 8;
-  if (bVar10) {
-    uVar8 = uVar8 & 0x70;
-    uVar9 = uVar9 | uVar8 << 3;
-  }
-  else {
-    uVar8 = 0x20000;
-  }
-  if (!bVar10 && (uVar8 & ~uVar9) == 0) {
-    uVar9 = uVar9 | 0xc00000;
-  }
-  if ((uVar9 & 0x20000000) == 0) {
-    if ((uVar9 & 0x10000000) == 0) {
-      if ((uVar9 & 0x40000000) != 0) {
-        uVar3 = uVar3 & 0x1000;
-        goto joined_r0x00126194;
-      }
-      if ((uVar9 & 0x8000000) == 0) {
-        if ((uVar3 & 0x100) == 0) {
-          uVar6 = uVar4;
-          if ((uVar9 & 0x80) == 0) {
-            uVar6 = param_1;
-          }
-          uVar6 = uVar6 & 0x80000000;
-          if ((uVar9 & 0x10) == 0) {
-            param_1 = FLOAT_DEFAULT_NAN | uVar6;
-          }
-          else {
-            uVar4 = DOUBLE_DEFAULT_NAN_HIGH_WORD | uVar6;
-            param_1 = DOUBLE_DEFAULT_NAN_LOW_WORD;
-          }
-          goto LAB_00126cb0;
-        }
-      }
-      else if ((uVar3 & 0x200) == 0) {
-        if ((uVar9 & 0x10) == 0) {
-          uVar4 = param_1 ^ uVar6;
-        }
-        else {
-          uVar4 = uVar4 ^ uVar7;
-        }
-        goto LAB_001261dc;
-      }
-    }
-    else if ((uVar3 & 0x400) == 0) {
-      if ((uVar9 & 0x80) == 0) {
-        uVar4 = param_1 & 0x80000000;
-      }
-      else {
-        uVar4 = uVar4 & 0x80000000;
-      }
-LAB_001261dc:
-      uVar7 = INTEGER_0;
-      if ((uVar9 & 0x10) == 0) {
-        uVar7 = WORD_HEXADECIMAL_7F800000 | uVar4 & 0x80000000;
-      }
-      return uVar7;
-    }
-  }
-  else {
-    uVar3 = uVar3 & 0x800;
-joined_r0x00126194:
-    if (uVar3 == 0) {
-      return param_1;
-    }
-  }
-  uVar7 = float_raise_exception(param_1,uVar4,uVar6,uVar7,uVar9).low;
-  if ((uVar9 & 0xf) != 9) {
-    return uVar7;
-  }
-LAB_00126d6c:
-  if ((uVar9 & 0x100000) == 0) {
-    return (uint)((uVar9 & uVar7 << 0x10) != 0);
-  }
-  if ((uVar9 & 0xf0000) == 0) {
-    uVar6 = uVar7 << 0x1d;
-    if ((bool)((byte)(uVar7 >> 3) & 1)) {
-      uVar6 = uVar6 | 0x30000000;
-    }
-    puVar1 = kh_GetFpStatusPtr();
-    *puVar1 = *puVar1 & 0xfffffff | uVar6;
-    return uVar7;
-  }
-  if ((uVar7 & 8) != 0) {
-    return uVar7;
-  }
-  return 2 - uVar7;
+  if ((a << 1) > 0xff000000)
+    control |= 0x10000;                     /* a NaN */
+  status = kh_GetFpStatusPtr();             /* invalid (the library's exception code, 0x001260e4) */
+  word = *status | 1;
+  *status = word;
+  control |= (word & 0x1c00000) | 0xc00000;
+  if ((word & 0x100) == 0)
+    return control & 0x10000 ? 0 : (int32)a < 0 ? (int32)0x80000000 : 0x7fffffff;
+  return (int32)float_raise_exception(a,a << 1,a << 1,mantissa,control).low;
 }
+
 
 /* ==== 0x001268C8  (file offset 0x268C8)  int_to_float ================================================ */
 /* GUESS: name (the routine is certain: the soft-float library's int -> float conversion, ARM's run-time
