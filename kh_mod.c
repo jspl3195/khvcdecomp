@@ -7394,7 +7394,7 @@ TextBox * text_box_create(TextBox *box,int32 x,int32 y,int32 width,int32 height,
 /* ==== 0x0010B3E8  (file offset 0x0B3E8)  camera_create =============================================== */
 /* GUESS: names. The camera's constructor (0x214 bytes, allocated when `camera` is 0; returns 0 when out of
    memory): a motion entity (motion_entity_create) of kind 3, with the standard view (90, 0, 10, as the
-   script's setCameraFocus STANDARD_VIEW) and field_208 3.5, the rest cleared. Made once, by the game's
+   script's setCameraFocus STANDARD_VIEW) and distance 3.5, the rest cleared. Made once, by the game's
    set-up, from the scene node with user id 0x038AD7F2, named "Camera" (Game.camera). */
 Camera * camera_create(Camera *camera,ISwerveObject *node,char *name)
 
@@ -7411,11 +7411,11 @@ Camera * camera_create(Camera *camera,ISwerveObject *node,char *name)
   camera->target = (LevelObject *)0x0;
   camera->field_204 = (ISwerveObject *)0x0;
   camera->activeRotation = 0;
-  camera->field_208 = 0x40600000;   /* 3.5; the binary takes 0xc00000 off FLOAT_10 */
+  camera->distance = 0x40600000;   /* 3.5; the binary takes 0xc00000 off FLOAT_10 */
   camera->field_20c = (LevelObject *)0x0;
-  camera->field_1f8 = 0;
-  camera->field_1fc = 0;
-  camera->field_210 = 0;
+  camera->pitch = 0;
+  camera->yaw = 0;
+  camera->skipCollision = 0;
   return camera;
 }
 
@@ -9252,8 +9252,8 @@ undefined4 FUN_0010d95c(int param_1,int param_2)
     uVar2 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,local_20,local_1c,local_2c
                          ,local_28).low;
     uVar2 = float_add(uVar2,FLOAT_180);
-    FUN_00120290(*(undefined4 *)(param_1 + 0x2c),uVar2);
-    FUN_00120290(*(undefined4 *)(param_1 + 0x20),uVar2);
+    motion_entity_set_heading((MotionEntity *)*(undefined4 *)(param_1 + 0x2c),uVar2);
+    motion_entity_set_heading((MotionEntity *)*(undefined4 *)(param_1 + 0x20),uVar2);
     FUN_001201cc(*(undefined4 *)(param_1 + 0x20),1);
     motion_entity_set_pitch((MotionEntity *)*(undefined4 *)(param_1 + 0x2c),FLOAT_10);
     FUN_001201cc(*(undefined4 *)(param_1 + 0x2c),1);
@@ -9330,7 +9330,7 @@ void FUN_0010db04(int param_1,undefined4 param_2)
     uVar14 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                           *(undefined4 *)(param_1 + 0x68),*(undefined4 *)(param_1 + 0x6c),
                           *(undefined4 *)(param_1 + 0x218),*(undefined4 *)(param_1 + 0x21c));
-    FUN_00120290(param_1,(int)uVar14.low);
+    motion_entity_set_heading((MotionEntity *)param_1,uVar14.low);
     uVar4 = float_subtract(*(uint *)(param_1 + 0x70),*(uint *)(param_1 + 0x220));
     uVar5 = float_subtract(*(uint *)(param_1 + 0x6c),*(uint *)(param_1 + 0x21c));
     uVar6 = float_subtract(*(uint *)(param_1 + 0x68),*(uint *)(param_1 + 0x218));
@@ -9371,7 +9371,8 @@ LAB_0010dde4:
       FUN_001147ec(&local_2c,(int)((KHApp *)*(int *)(param_1 + 0x84))->context,*(int **)(param_1 + 0x1ec));
       FUN_001201cc(*(int *)(param_1 + 0x230),1);
       thunk_FUN_0011fd90(*(int *)(param_1 + 0x230),local_2c,local_28,local_24);
-      FUN_00120290(*(int *)(param_1 + 0x230),*(undefined4 *)(param_1 + 0x140));
+      motion_entity_set_heading((MotionEntity *)*(int *)(param_1 + 0x230),
+                                *(undefined4 *)(param_1 + 0x140));
       animations_play((Animations *)*(int *)(*(int *)(param_1 + 0x84) + 0x9c),iVar11,0);
       if (*(uint *)(param_1 + 0x228) < 2) {
         if (*(int *)(param_1 + 0x20c) != 0) {
@@ -9659,8 +9660,8 @@ void FUN_0010e280(int param_1,undefined4 *param_2,undefined4 *param_3)
                              *(undefined4 *)(*(int *)(param_1 + 0x1cc) + 0x68),
                              *(undefined4 *)(*(int *)(param_1 + 0x1cc) + 0x6c),uVar3,uVar5 /* not arguments, value leftovers: uVar6, uVar4,uVar1 */).low;
         uVar6 = float_add(uVar6,FLOAT_90);
-        *(undefined4 *)(param_1 + 0x1fc) = uVar6;
-        wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,(uint32 *)(param_1 + 0x1fc));
+        ((Camera *)param_1)->yaw = uVar6;
+        wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,&((Camera *)param_1)->yaw);
       }
     }
   }
@@ -10229,7 +10230,7 @@ void motion_entity_rotate_by_heading(MotionEntity *entity,uint32 *vector)
   uint32 xCosine;
   uint32 xSine;
 
-  angle = float_multiply(entity->heading,WORD_HEXADECIMAL_3C8EFA39);   /* degrees to radians: pi / 180 */
+  angle = float_multiply(entity->heading,FLOAT_DEGREES_TO_RADIANS);   /* degrees to radians: pi / 180 */
   sine = float_sin(angle);
   cosine = float_cos(angle);
   xCosine = float_multiply(x,cosine);
@@ -11022,7 +11023,7 @@ void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param
       uVar8 = float_multiply(*(uint *)(local_3c + 0x10),FLOAT_5000);
       uVar8 = FUN_00126858(uVar8);
       local_50 = uVar8 + 15000;
-      FUN_00120290(piVar15[1],local_38);
+      motion_entity_set_heading((MotionEntity *)piVar15[1],local_38);
       float_compare_greater(uVar6,0);
       if ((((!(bool)uVar11) || (float_compare_less(uVar6,param_9), uVar8 = param_9, (bool)uVar11)) &&
           (float_compare_less(uVar6,0), uVar8 = uVar6, !(bool)uVar11)) &&
@@ -11781,7 +11782,7 @@ int32 script_command_run(ScriptCommand *command)
       ((Camera *)object)->focus[0] = position[0];
       ((Camera *)object)->focus[1] = position[1];
       ((Camera *)object)->focus[2] = position[2];
-      ((Camera *)command->object)->field_1f8 = FLOAT_10;
+      ((Camera *)command->object)->pitch = FLOAT_10;
       break;
     }
     if (command->flag[0] != 0) {
@@ -12222,7 +12223,7 @@ int32 script_command_run(ScriptCommand *command)
   case 0x46:   /* setXRot */
     if (command->object != (LevelObject *)0x0) {
       if (command->object->nameId == WORD_HEXADECIMAL_2E6723BD)
-        ((Camera *)command->object)->field_1f8 = command->value[0];
+        ((Camera *)command->object)->pitch = command->value[0];
       else
         motion_entity_set_pitch((MotionEntity *)command->object,command->value[0]);
     }
@@ -12230,9 +12231,9 @@ int32 script_command_run(ScriptCommand *command)
   case 0x47:   /* setYRot */
     if (command->object != (LevelObject *)0x0) {
       if (command->object->nameId == WORD_HEXADECIMAL_2E6723BD)
-        FUN_001202cc((int)command->object,command->value[0]);
+        camera_set_yaw((Camera *)command->object,command->value[0]);
       else
-        FUN_00120290((int)command->object,command->value[0]);
+        motion_entity_set_heading((MotionEntity *)command->object,command->value[0]);
     }
     break;
   case 0x48:   /* stopAnim */
@@ -12728,7 +12729,7 @@ void FUN_00113030(int param_1,undefined4 param_2,uint param_3,uint param_4,undef
     thunk_FUN_0011fd90(*(int *)(param_1 + 0x11c),local_20,local_1c,uStack_18);
     uVar5 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_20,local_1c,param_3,
                          param_4);
-    FUN_00120290(*(int *)(param_1 + 0x11c),(int)uVar5.low);
+    motion_entity_set_heading((MotionEntity *)*(int *)(param_1 + 0x11c),uVar5.low);
     uVar1 = float_subtract(param_3,local_20);
     uVar1 = float_add(uVar1,param_3);
     uVar2 = float_subtract(param_4,local_1c);
@@ -19476,7 +19477,7 @@ void FUN_0011e07c(int param_1)
      leftover (no caller sets it); Ghidra listed it as input */
   FUN_0011fd90(param_1,0,0,0 /* not arguments, value leftovers: param_4 */);
   motion_entity_set_pitch((MotionEntity *)param_1,0);
-  FUN_00120290(param_1,0);
+  motion_entity_set_heading((MotionEntity *)param_1,0);
   return;
 }
 
@@ -19489,7 +19490,7 @@ void FUN_0011e0b4(int param_1)
      leftover (no caller sets it); Ghidra listed it as input */
   FUN_0011fd90(param_1,0,0,0 /* not arguments, value leftovers: param_4 */);
   motion_entity_set_pitch((MotionEntity *)param_1,0);
-  FUN_00120290(param_1,0);
+  motion_entity_set_heading((MotionEntity *)param_1,0);
   ((Character *)param_1)->carried = (LevelObject *)0x0;
   *(undefined4 *)(param_1 + 0x244) = 0;
   *(undefined4 *)(param_1 + 300) = 0;
@@ -19676,7 +19677,7 @@ void motion_entity_pitch_by(MotionEntity *entity,uint32 angle)
    grows by `angle`; with one (the camera's target), the entity moves around it: the new heading is the
    direction from the entity to the centre (FUN_00113374) plus `angle`, and the entity goes to the point
    at the same distance (vector_length3) on that line, x = centre x - distance * cos, y = centre y +
-   distance * sin (the heading in radians: times WORD_HEXADECIMAL_3C8EFA39 = pi/180; GUESS: float_sin
+   distance * sin (the heading in radians: times FLOAT_DEGREES_TO_RADIANS = pi/180; GUESS: float_sin
    cosine, float_cos sine), handed to its node (slot +0x4c). Then the heading, wrapped into -180..180,
    goes to its node (slot +0x5c; the binary tail-jumps to it, 0x0011e528). Ghidra's listing had read the
    centre's y from the wrong stack slot (in_r2). */
@@ -19705,7 +19706,7 @@ void motion_entity_turn(MotionEntity *entity,uint32 angle)
     offsetY = float_subtract(entity->position[1],centerY);
     distance = vector_length3((int32)entity->app->context,float_subtract(entity->position[0],centerX),offsetY,0);
     entity->heading = float_add(direction,angle);
-    radians = float_multiply(entity->heading,WORD_HEXADECIMAL_3C8EFA39);
+    radians = float_multiply(entity->heading,FLOAT_DEGREES_TO_RADIANS);
     cosine = float_sin(radians);
     sine = float_cos(radians);
     level_object_get_position(center,entity->orbitCenter);
@@ -20341,7 +20342,7 @@ void FUN_0011f394(int param_1,char *param_2,undefined4 param_3,undefined4 param_
       piVar2 = *(int **)(*(int *)(param_1 + 0x1cc) + 8);
       (**(code **)(*piVar2 + 0x5c))(piVar2,local_30);
     }
-    FUN_00120290(param_1,local_30[0]);
+    motion_entity_set_heading((MotionEntity *)param_1,local_30[0]);
     if (local_34 != (int *)0x0) {
       motion_entity_set_pitch((MotionEntity *)param_1,local_20);
     }
@@ -21017,29 +21018,33 @@ void motion_entity_set_pitch(MotionEntity *entity,uint32 pitch)
   (**(code **)((int32)entity->field_158->pvt + 0x5c))(entity->field_158,&entity->pitch);
 }
 
-/* ==== 0x00120290  (file offset 0x20290)  FUN_00120290 ================================================ */
-void FUN_00120290(int param_1,undefined4 param_2)
+/* ==== 0x00120290  (file offset 0x20290)  motion_entity_set_heading =================================== */
+/* GUESS: name. Sets the heading (a float, its bits, in degrees), wrapped into -180..180, and hands it to
+   the scene node (slot +0x5c; the binary tail-jumps to it, 0x001202c8). Unlike motion_entity_set_pitch
+   there is no check for the node. Used by the script's setYRot for anything but the camera
+   (camera_set_yaw is the camera's), and by 10 other call sites (GUESS: to face a point or another
+   object). */
+void motion_entity_set_heading(MotionEntity *entity,uint32 heading)
 
 {
-  *(undefined4 *)(param_1 + 0x140) = param_2;
-  wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,(uint32 *)((undefined4 *)(param_1 + 0x140)));
-                    /* WARNING: Could not recover jumptable at 0x001202c8. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (**(code **)(**(int **)(param_1 + 8) + 0x5c))(*(int **)(param_1 + 8),param_1 + 0x140);
-  return;
+  entity->heading = heading;
+  wrap_angle((int32)entity->app->context,&entity->heading);
+  (**(code **)((int32)entity->node->pvt + 0x5c))(entity->node,&entity->heading);
 }
 
-/* ==== 0x001202CC  (file offset 0x202CC)  FUN_001202cc ================================================ */
-void FUN_001202cc(int param_1,undefined4 param_2)
+
+/* ==== 0x001202CC  (file offset 0x202CC)  camera_set_yaw ============================================== */
+/* GUESS: name. The script's setYRot for the camera: its yaw around the focus point is the angle minus 90
+   (degrees; the update FUN_00122b90 places it at focus - (cos yaw, sin yaw) * cos pitch * distance, up by
+   sin pitch * distance), and the next update skips the wall check (FUN_0010e280) once, so the new angle is
+   not turned back. */
+void camera_set_yaw(Camera *camera,uint32 angle)
 
 {
-  undefined4 uVar1;
-  
-  uVar1 = float_subtract(param_2,FLOAT_90);
-  *(undefined4 *)(param_1 + 0x1fc) = uVar1;
-  *(undefined4 *)(param_1 + 0x210) = 1;
-  return;
+  camera->yaw = float_subtract(angle,FLOAT_90);
+  camera->skipCollision = 1;
 }
+
 
 /* ==== 0x001202F4  (file offset 0x202F4)  float_sin =================================================== */
 /* GUESS: name. sinf: the sine of a float angle in radians: widens it (FUN_00126248), takes the double
@@ -22036,7 +22041,7 @@ void FUN_00121b98(int param_1,undefined4 param_2)
   
   local_14 = param_4;
   uVar1 = float_subtract(*(undefined4 *)(param_1 + 0x1d4),FLOAT_90 /* not arguments, register leftovers: param_3,param_4,param_3 */);
-  local_14 = float_subtract(uVar1,*(undefined4 *)(param_1 + 0x1fc));
+  local_14 = float_subtract(uVar1,((Camera *)param_1)->yaw);
   wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,(uint32 *)&local_14);
   uVar2 = float_divide(local_14,FLOAT_60);
   uVar4 = FUN_00126248(uVar2);
@@ -22057,9 +22062,9 @@ void FUN_00121b98(int param_1,undefined4 param_2)
     }
   }
   local_14 = uVar2;
-  uVar1 = float_add(*(undefined4 *)(param_1 + 0x1fc),local_14);
-  *(undefined4 *)(param_1 + 0x1fc) = uVar1;
-  wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,(uint32 *)(param_1 + 0x1fc));
+  uVar1 = float_add(((Camera *)param_1)->yaw,local_14);
+  ((Camera *)param_1)->yaw = uVar1;
+  wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,&((Camera *)param_1)->yaw);
   return;
 }
 
@@ -22708,7 +22713,7 @@ void FUN_00122b90(int param_1,int param_2,uint param_3)
   if (*(int *)(param_1 + 0x1cc) == 0) {
     FUN_001135dc(param_1);
     level_object_get_position((uint32 *)((undefined4 *)(param_1 + 0x1ec)),(LevelObject *)*(int *)(param_1 + 0x1cc));
-    *(undefined4 *)(param_1 + 0x1f8) = FLOAT_10;
+    ((Camera *)param_1)->pitch = FLOAT_10;
     if (*(int *)(param_1 + 0x1cc) == 0) {
       return;
     }
@@ -22749,40 +22754,40 @@ void FUN_00122b90(int param_1,int param_2,uint param_3)
       FUN_00121b98(param_1,param_3);
     }
   }
-  uVar5 = *(uint *)(param_1 + 0x208);
+  uVar5 = ((Camera *)param_1)->distance;
   uVar2 = float_reverse_subtract(uVar5,0x40600000);
   uVar4 = int_to_float(param_3);
   uVar2 = float_multiply(uVar4,uVar2);
   uVar2 = float_multiply(uVar2,**(uint **)(param_1 + 0x110));
   uVar2 = float_add(uVar5,uVar2);
-  *(uint *)(param_1 + 0x208) = uVar2;
+  ((Camera *)param_1)->distance = uVar2;
   float_compare_greater(uVar2,0x40600000);
-  uVar2 = WORD_HEXADECIMAL_3C8EFA39;
+  uVar2 = FLOAT_DEGREES_TO_RADIANS;
   if ((bool)uVar6 && !(bool)uVar7) {
-    *(undefined4 *)(param_1 + 0x208) = 0x40600000;
+    ((Camera *)param_1)->distance = 0x40600000;
   }
-  uVar4 = float_multiply(*(uint *)(param_1 + 0x1fc),uVar2);
+  uVar4 = float_multiply(((Camera *)param_1)->yaw,uVar2);
   uVar4 = float_cos(uVar4);
-  uVar5 = float_multiply(*(uint *)(param_1 + 0x1f8),uVar2);
+  uVar5 = float_multiply(((Camera *)param_1)->pitch,uVar2);
   uVar5 = float_cos(uVar5);
   uVar4 = float_multiply(uVar5,uVar4);
-  uVar4 = float_multiply(uVar4,*(uint *)(param_1 + 0x208));
+  uVar4 = float_multiply(uVar4,((Camera *)param_1)->distance);
   local_30 = float_reverse_subtract(uVar4,*(uint *)(param_1 + 0x1ec));
-  uVar4 = float_multiply(*(uint *)(param_1 + 0x1fc),uVar2);
+  uVar4 = float_multiply(((Camera *)param_1)->yaw,uVar2);
   uVar4 = float_sin(uVar4);
-  uVar5 = float_multiply(*(uint *)(param_1 + 0x1f8),uVar2);
+  uVar5 = float_multiply(((Camera *)param_1)->pitch,uVar2);
   uVar5 = float_cos(uVar5);
   uVar4 = float_multiply(uVar5,uVar4);
-  uVar4 = float_multiply(uVar4,*(uint *)(param_1 + 0x208));
+  uVar4 = float_multiply(uVar4,((Camera *)param_1)->distance);
   local_2c = float_reverse_subtract(uVar4,*(uint *)(param_1 + 0x1f0));
   if (*(int *)(param_1 + 0x1e4) == 0) {
     FUN_00121780(param_1,&local_30,param_3);
   }
-  uVar2 = float_multiply(*(uint *)(param_1 + 0x1f8),uVar2);
+  uVar2 = float_multiply(((Camera *)param_1)->pitch,uVar2);
   uVar2 = float_sin(uVar2);
-  uVar2 = float_multiply(uVar2,*(uint *)(param_1 + 0x208));
+  uVar2 = float_multiply(uVar2,((Camera *)param_1)->distance);
   local_28 = float_add(uVar2,*(uint *)(param_1 + 500));
-  iVar1 = *(int *)(param_1 + 0x210);
+  iVar1 = ((Camera *)param_1)->skipCollision;
   bVar8 = iVar1 == 0;
   if (bVar8) {
     iVar1 = *(int *)(param_1 + 0x1e4);
@@ -22791,7 +22796,7 @@ void FUN_00122b90(int param_1,int param_2,uint param_3)
     FUN_0010e280(param_1,(undefined4 *)(param_1 + 0x68),&local_30);
   }
   else {
-    *(undefined4 *)(param_1 + 0x210) = 0;
+    ((Camera *)param_1)->skipCollision = 0;
   }
   thunk_FUN_0011fd90(param_1,local_30,local_2c,local_28);
   uVar9 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
@@ -22819,7 +22824,7 @@ void FUN_00122b90(int param_1,int param_2,uint param_3)
   offset[1] = float_subtract(local_2c,*(uint *)(param_1 + 0x1f0));
   offset[2] = float_subtract(local_28,*(uint *)(param_1 + 500));
   uVar2 = vector_length((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,offset);
-  *(uint *)(param_1 + 0x208) = uVar2;
+  ((Camera *)param_1)->distance = uVar2;
   return;
 }
 
@@ -23207,7 +23212,7 @@ void FUN_00123588(int param_1,int param_2,int param_3)
       uVar2 = uVar2 ^ 0x80000000;
     }
     uVar2 = float_add(uVar2,*(uint *)(param_1 + 0x260));
-    FUN_00120290(*(int *)(param_1 + 0x250),uVar2);
+    motion_entity_set_heading((MotionEntity *)*(int *)(param_1 + 0x250),uVar2);
     if (*(int *)(param_1 + 0x26c) != 0) {
       motion_entity_set_pitch((MotionEntity *)*(int *)(param_1 + 0x250),FLOAT_180);
     }

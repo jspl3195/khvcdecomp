@@ -800,8 +800,8 @@ void progress_set_user_id(Progress *progress,const char *userId);   /* 0x001200A
 void progress_set_variable(Progress *progress,const char *name,int32 value);   /* 0x00120120 GUESS: name, see kh_mod.c */
 void FUN_001201cc(int param_1,undefined4 param_2);
 void motion_entity_set_pitch(MotionEntity *entity,uint32 pitch);   /* 0x00120244 GUESS: name */
-void FUN_00120290(int param_1,undefined4 param_2);
-void FUN_001202cc(int param_1,undefined4 param_2);
+void motion_entity_set_heading(MotionEntity *entity,uint32 heading);   /* 0x00120290 GUESS: name, see kh_mod.c */
+void camera_set_yaw(Camera *camera,uint32 angle);   /* 0x001202CC GUESS: name, see kh_mod.c */
 uint32 float_sin(uint32 angle);   /* 0x001202F4 GUESS: name, see kh_mod.c */
 uint32 float_sqrt(uint32 value);   /* 0x00120308 GUESS: name, see kh_mod.c */
 void FUN_0012031c(int *param_1,int param_2);
@@ -1043,7 +1043,7 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 #define INTEGER_750 0x000002EE   /* was DAT_0010e058, DAT_0011c328 (word at 0x0010E058); integer 750 */
 #define FLOAT_1_POINT_1 0x3F8CCCCD   /* was DAT_0010e440 (word at 0x0010E440); the float 1.100000023841858 */
 #define FLOAT_5 0x40A00000   /* was DAT_0010e834, DAT_0010f8e4, DAT_0010ffc8, DAT_00110560, DAT_00113298, DAT_001180b8, DAT_0011cfd8 (word at 0x0010E834); the float 5.0 */
-#define WORD_HEXADECIMAL_3C8EFA39 0x3C8EFA39   /* was DAT_0010ed3c, DAT_0011e52c, DAT_00122f8c (word at 0x0010ED3C); value 0x3C8EFA39 (1016003129) */
+#define FLOAT_DEGREES_TO_RADIANS 0x3C8EFA39   /* was DAT_0010ed3c, DAT_0011e52c, DAT_00122f8c (word at 0x0010ED3C); the float 0.0174533 (GUESS: name; pi / 180, 4 ULP above it, 0x3C8EFA35), the degrees-to-radians factor */
 #define WORD_HEXADECIMAL_0493FC17 0x0493FC17   /* was DAT_0010f240 (word at 0x0010F240); value 0x0493FC17 (76807191) */
 #define INTEGER_2004 0x000007D4   /* was DAT_0010f4c8 (word at 0x0010F4C8); integer 2004 */
 #define INTEGER_2007 0x000007D7   /* was DAT_0010f4cc, DAT_0011d6bc (word at 0x0010F4CC); integer 2007 */

@@ -498,14 +498,20 @@ typedef struct Camera {
     uint32   field_1e4;           /* +0x1e4 0 at creation */
     int32    activeRotation;      /* +0x1e8 setActiveRotOn / setActiveRotOff */
     uint32   focus[3];            /* +0x1ec floats (their bits): a point it looks at (matchPosition) */
-    uint32   field_1f8;           /* +0x1f8 a float (its bits): setXRot's angle; 10.0 from matchPosition; 0 at
+    uint32   pitch;               /* +0x1f8 a float (its bits), degrees (GUESS: name): how far above the
+                                     focus it sits, z = focus + sin pitch * distance; setXRot's angle;
+                                     10.0 from matchPosition; 0 at creation */
+    uint32   yaw;                 /* +0x1fc a float (its bits), degrees (GUESS: name): its direction around
+                                     the focus, x, y = focus - (cos yaw, sin yaw) * cos pitch * distance
+                                     (the update FUN_00122b90); setYRot - 90 (camera_set_yaw); 0 at
                                      creation */
-    uint32   field_1fc;           /* +0x1fc a float (its bits); 0 at creation */
     uint8    unknown_200[0x04];
     ISwerveObject *field_204;     /* +0x204 0 at creation */
-    uint32   field_208;           /* +0x208 a float (its bits); 3.5 at creation */
+    uint32   distance;            /* +0x208 a float (its bits; GUESS: name): how far it is from the focus;
+                                     3.5 at creation, eased back to 3.5 by the update */
     LevelObject *field_20c;       /* +0x20c 0 at creation */
-    uint32   field_210;           /* +0x210 a float (its bits); 0 at creation */
+    int32    skipCollision;       /* +0x210 GUESS: name; when set, the next update skips the wall check
+                                     (FUN_0010e280) and clears it; set by camera_set_yaw; 0 at creation */
 } Camera;                         /* 0x214 bytes (camera_create) */
 
 /* "Character" (kind 2, 0x338 bytes, character_create; GUESS: names): the player's character, a MotionEntity.
