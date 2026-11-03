@@ -796,7 +796,7 @@ void animations_set_speed(Animations *animations,int32 index,uint32 speed);   /*
 void progress_set_status(Progress *progress,const char *name,int32 flag);   /* 0x0011FEF4 GUESS: name, see kh_mod.c */
 void FUN_0011ffc0(undefined4 *param_1,undefined4 param_2);
 void enemy_set_target(Enemy *enemy,int32 how);   /* 0x00120024 GUESS: names */
-void FUN_001200ac(int param_1,undefined4 param_2);
+void progress_set_user_id(Progress *progress,const char *userId);   /* 0x001200AC GUESS: name, see kh_mod.c */
 void progress_set_variable(Progress *progress,const char *name,int32 value);   /* 0x00120120 GUESS: name, see kh_mod.c */
 void FUN_001201cc(int param_1,undefined4 param_2);
 void motion_entity_set_pitch(MotionEntity *entity,uint32 pitch);   /* 0x00120244 GUESS: name */

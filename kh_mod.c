@@ -2610,7 +2610,7 @@ LAB_001050b0:
       uVar10 = progress_score(*(undefined4 *)(*param_1 + 0xa8));
       FUN_001216c4(*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
-      web_request_post_rank(param_1[6],2,*(undefined4 *)(iVar7 + 0x590),uVar10,
+      web_request_post_rank(param_1[6],2,((Progress *)iVar7)->userId,uVar10,
                    *(undefined4 *)(*param_1 + 0xc4),*(undefined4 *)(iVar7 + 0x5c4),
                    *(undefined4 *)(iVar7 + 0x5c8),0);
       goto LAB_00104dcc;
@@ -2729,7 +2729,7 @@ LAB_00104a24:
       param_1[6] = iVar7;
       FUN_001216c4(*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
-      web_request_download(param_1[6],*(undefined4 *)(*param_1 + 0xc4),0,*(undefined4 *)(iVar7 + 0x590),
+      web_request_download(param_1[6],*(undefined4 *)(*param_1 + 0xc4),0,((Progress *)iVar7)->userId,
                    *(undefined4 *)(iVar7 + 0x5c4));
       return local_34;
     case 0x82:
@@ -2778,7 +2778,7 @@ LAB_00104a24:
       param_1[6] = iVar7;
       FUN_001216c4(*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
-      web_request_post_rank_ex(param_1[6],*(undefined4 *)(iVar7 + 0x590),pvVar16,pvVar5,
+      web_request_post_rank_ex(param_1[6],((Progress *)iVar7)->userId,pvVar16,pvVar5,
                    *(undefined4 *)(iVar7 + 0x5c4),*(undefined4 *)(iVar7 + 0x5c8));
       helper_free(pvVar16);
       helper_free(pvVar5);
@@ -3895,16 +3895,16 @@ void key_picker_restore_original(UIElement *picker)
    are the same request: the binary reads the data through r1 and, for a download, notifies and cancels
    with r0.
    A download's reply (state 3) is "<kind>|<id>|<rest>", a leading space skipped. Unless what follows the
-   first "|" is "invalidentry", the id is stored (FUN_001200ac, in the player's progress) and the kind
-   says what the rest is: "*d" data - notify 9, then FUN_0010a12c handles it and its result is the
+   first "|" is "invalidentry", the id is stored (progress_set_user_id, in the player's progress) and
+   the kind says what the rest is: "*d" data - notify 9, then FUN_0010a12c handles it and its result is the
    event (value 1); "*t" text - event 2, value 2, with a copy of the rest; anything else, event 5. The
    event is sent with value 2 for event 5, and the copy (or 0) as the last argument. The copy of the
    kind gets no terminator of its own: BREW's MALLOC zeroes the memory.
    A ranking's reply (any other state) is "|"-separated fields, a leading space skipped: "*r", not
-   "invalidentry", an id up to "~" (stored by FUN_001200ac), ...; with state 4 (rankex) event 7 with the
-   number of fields from the fourth on and those fields; otherwise event 6 with the number after the
-   "~" of the fourth field; a reply of another form gives event 5, value 6. Written from its disassembly
-   (0x00105734 - 0x00105c08). */
+   "invalidentry", an id up to "~" (stored by progress_set_user_id), ...; with state 4 (rankex) event 7
+   with the number of fields from the fourth on and those fields; otherwise event 6 with the number after
+   the "~" of the fourth field; a reply of another form gives event 5, value 6. Written from its
+   disassembly (0x00105734 - 0x00105c08). */
 void web_request_parse_reply(WebRequest *caller,WebRequest *request)
 
 {
@@ -3936,7 +3936,7 @@ void web_request_parse_reply(WebRequest *caller,WebRequest *request)
     else {
       id = helper_malloc(length + 1);
       (*g_pHelperFuncs->strncpy)(id,reply,length);
-      FUN_001200ac((int32)request->app->progress,(int32)id);
+      progress_set_user_id(request->app->progress,id);
       helper_free(id);
       rest = end + 1;
       if ((*g_pHelperFuncs->strcmp)(kind,STRING_STAR_D) == 0) {
@@ -3994,7 +3994,7 @@ void web_request_parse_reply(WebRequest *caller,WebRequest *request)
     length = end - fields[2];
     id = helper_malloc(length + 1);
     (*g_pHelperFuncs->strncpy)(id,fields[2],length);
-    FUN_001200ac((int32)request->app->progress,(int32)id);
+    progress_set_user_id(request->app->progress,id);
     helper_free(id);
     if (request->state == 4) {
       event = 7;
@@ -7474,10 +7474,10 @@ void * FUN_0010b4e4(void *param_1,int param_2)
         *(undefined4 *)((int)param_1 + iVar3 * 8 + 0x658) = 0;
         iVar3 = iVar2;
       } while (iVar2 < 0x19);
-      if (*(void **)((int)param_1 + 0x590) != (void *)0x0) {
-        helper_free(*(void **)((int)param_1 + 0x590));
+      if (((Progress *)param_1)->userId != (char *)0x0) {
+        helper_free(((Progress *)param_1)->userId);
       }
-      *(undefined4 *)((int)param_1 + 0x590) = 0;
+      ((Progress *)param_1)->userId = (char *)0x0;
       *(undefined4 *)((int)param_1 + 0x594) = 0x28;
       *(undefined4 *)((int)param_1 + 0x71c) = 0;
       *(undefined4 *)((int)param_1 + 0x598) = 0x28;
@@ -8335,10 +8335,10 @@ void FUN_0010c800(int param_1,int param_2)
   int iVar3;
   
   progress_clear_states((Progress *)param_1);
-  if (*(int *)(param_1 + 0x590) != 0) {
+  if (((Progress *)param_1)->userId != (char *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x590));
-    *(undefined4 *)(param_1 + 0x590) = 0;
+    (*g_pHelperFuncs->free)(((Progress *)param_1)->userId);
+    ((Progress *)param_1)->userId = (char *)0x0;
   }
   if (*(int *)(param_1 + 0x5bc) != 0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -17640,12 +17640,12 @@ void FUN_0011b6f0(int param_1,undefined4 param_2)
     *(undefined4 *)(param_1 + 0x594) = uVar4;
     uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     *(undefined4 *)(param_1 + 0x598) = uVar4;
-    if (*(int *)(param_1 + 0x590) != 0) {
-      (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x590));
-      *(undefined4 *)(param_1 + 0x590) = 0;
+    if (((Progress *)param_1)->userId != (char *)0x0) {
+      (*g_pHelperFuncs->free)(((Progress *)param_1)->userId);
+      ((Progress *)param_1)->userId = (char *)0x0;
     }
     uVar4 = (int32)save_read_string((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
-    *(undefined4 *)(param_1 + 0x590) = uVar4;
+    ((Progress *)param_1)->userId = (char *)uVar4;
     uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     *(undefined4 *)(param_1 + 0x5c4) = uVar4;
     iVar3 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
@@ -19961,7 +19961,7 @@ undefined4 FUN_0011ead4(int param_1,undefined4 param_2)
   FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5e4),uVar2,&local_18);
   FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x594),uVar2,&local_18);
   FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x598),uVar2,&local_18);
-  FUN_00124734(param_1,*(undefined4 *)(param_1 + 0x590),uVar2,&local_18);
+  FUN_00124734(param_1,((Progress *)param_1)->userId,uVar2,&local_18);
   FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5c4),uVar2,&local_18);
   FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5c8),uVar2,&local_18);
   uVar3 = FUN_0011e574(param_1,param_2,uVar2,local_18);
@@ -20928,31 +20928,26 @@ void enemy_set_target(Enemy *enemy,int32 how)
     character->targets[enemy->number] = enemy->field_28;
 }
 
-/* ==== 0x001200AC  (file offset 0x200AC)  FUN_001200ac ================================================ */
-void FUN_001200ac(int param_1,undefined4 param_2)
+/* ==== 0x001200AC  (file offset 0x200AC)  progress_set_user_id ======================================== */
+/* GUESS: name. Stores a copy of the online user id a server reply gave (web_request_parse_reply, for a
+   download's and a ranking's reply), unless the player has one already (not 0, not ""): it is the uid= of
+   the web requests (FUN_00101ad8) and is saved with the game (FUN_0011ead4, FUN_0011b6f0). A stored ""
+   is overwritten without being freed, and the malloc is not checked (research_notes/decomp/GAME_BUGS.md).
+   Returns nothing: r0 is strcmp's result on the early exit, strcpy's after the tail jump, and no caller
+   reads it. */
+void progress_set_user_id(Progress *progress,const char *userId)
 
 {
-  int iVar2;
-  void *pvVar3;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-  if ((*(int *)(param_1 + 0x590) != 0) &&
-     (iVar2 = (*g_pHelperFuncs->strcmp)
-                        (*(int *)(param_1 + 0x590),(int32)STRING_EMPTY_001278E8), iVar2 != 0)) {
+                    /* helper[4] int strcmp(const char *a, const char *b), helper[5] uint32 strlen(const
+                       char *s), helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs
+                       +0x10, +0x14, +0x8, via *(base-4)) */
+  if (progress->userId != (char *)0x0 &&
+      (*g_pHelperFuncs->strcmp)(progress->userId,STRING_EMPTY_001278E8) != 0)
     return;
-  }
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-  iVar2 = (*g_pHelperFuncs->strlen)(param_2);
-  pvVar3 = helper_malloc(iVar2 + 1);
-  *(void **)(param_1 + 0x590) = pvVar3;
-                    /* WARNING: Could not recover jumptable at 0x00120114. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) - tail call */
-  (*g_pHelperFuncs->strcpy)(pvVar3,param_2);
-  return;
+  progress->userId = helper_malloc((*g_pHelperFuncs->strlen)(userId) + 1);
+  (*g_pHelperFuncs->strcpy)(progress->userId,userId);   /* the binary's tail jump (0x00120114) */
 }
+
 
 /* ==== 0x00120120  (file offset 0x20120)  progress_set_variable ======================================= */
 /* GUESS: names. Sets the level script's variable `name` to `value` (the script's setVar): the existing one,

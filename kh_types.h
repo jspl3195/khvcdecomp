@@ -344,7 +344,8 @@ typedef struct Progress {
     int32    field_584;             /* +0x584 script setLevelUp of level 9 also sets it */
     uint8  unknown_588[0x04];
     int32    level;                 /* +0x58c 0-9; no level-ups after 9 */
-    uint8  unknown_590[0x04];
+    char    *userId;                /* +0x590 GUESS: name; the online user id (the web requests'
+                                     uid=), set once by progress_set_user_id */
     int32    field_594;             /* +0x594 GUESS: a tutorial step; above 0, the action key tells the app's
                                      field_bc screen (FUN_00108f28) */
     uint8  unknown_598[0x04];
