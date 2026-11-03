@@ -320,7 +320,7 @@ typedef struct ProgressRecord {
 typedef struct Progress {
     uint8  statusFlags[100];      /* +0x000 one byte per status text (GUESS: names) */
     char  *statusTexts[100];      /* +0x064 named status texts, for example "Out of magic" while magicPoints is
-                                     0; set and cleared by FUN_0011fef4 */
+                                     0; set and cleared by progress_set_status */
     uint8  unknown_1f4[0x320];
     uint32 health;                /* +0x514 GUESS: a float (its bits); refilled from maximumHealth */
     uint32 maximumHealth;         /* +0x518 GUESS: a float (its bits); +1.0f by a level reward of type 1 */

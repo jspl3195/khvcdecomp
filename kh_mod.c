@@ -2348,12 +2348,12 @@ LAB_00104fa4:
               *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x524) =
                    *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x528);
               FUN_0011e010(*(undefined4 *)(*param_1 + 0xa8));
-              FUN_0011fef4(*(undefined4 *)(*param_1 + 0xa8),(int32)STRING_OUT_OF_MAGIC_00127D78,0);
+              progress_set_status(((KHApp *)*param_1)->progress,STRING_OUT_OF_MAGIC_00127D78,0);
                     /* 0x105180 bl FUN_0011e6b8: only r0 (object) and r1 (file name) are set.
                        Ghidra's param_3/param_4 are register spills: param_4 goes into local_24,
                        which is set to 0 before it is read, and param_3 is passed only as an
                        extra fifth argument to the four-parameter FUN_001246b4. r2/r3 are
-                       leftovers from FUN_0011fef4. */
+                       leftovers from progress_set_status. */
               FUN_0011e6b8(*(undefined4 *)(*param_1 + 0xa8),(int32)STRING_REPLAYGAME_DOT_DAT);
               goto LAB_0010423c;
             }
@@ -8852,7 +8852,7 @@ LAB_0010d124:
 /* ==== 0x0010D18C  (file offset 0x0D18C)  progress_add_magic_points =================================== */
 /* GUESS: name. Adds `amount` MP (negative to spend), kept between 0 and maximumMagicPoints, and keeps the
    "Out of magic" status text on while MP is 0. The binary computes outOfMagic (rsbs / movlo at 0x0010d1c4)
-   and tail-jumps (0x0010d1d8) to FUN_0011fef4(app->progress, "Out of magic", outOfMagic), which with the
+   and tail-jumps (0x0010d1d8) to progress_set_status(app->progress, "OUT_OF_MAGIC", outOfMagic), which with the
    flag clear removes the text from the status table, with it set stores the text in a free slot
    (progress_find_free_status). Called with +1 by an item drop. */
 void progress_add_magic_points(Progress *progress,int32 amount)
@@ -8863,9 +8863,7 @@ void progress_add_magic_points(Progress *progress,int32 amount)
     progress->magicPoints = progress->app->progress->maximumMagicPoints;
   if (progress->magicPoints < 1)
     progress->magicPoints = 0;
-  FUN_0011fef4((int32)progress->app->progress,
-               (int32)STRING_OUT_OF_MAGIC_001278F4,
-               progress->magicPoints == 0);
+  progress_set_status(progress->app->progress,STRING_OUT_OF_MAGIC_001278F4,progress->magicPoints == 0);
 }
 
 /* ==== 0x0010D1E0  (file offset 0x0D1E0)  progress_add_munny ========================================== */
@@ -9407,7 +9405,7 @@ LAB_0010dde4:
     uVar12 = *(int *)(iVar3 + 0x524) == 0;
     uVar13 = 1;
     if ((bool)uVar12) {
-      FUN_0011fef4(iVar3,(int32)STRING_OUT_OF_MAGIC_00126FBC,1);
+      progress_set_status((Progress *)iVar3,STRING_OUT_OF_MAGIC_00126FBC,1);
     }
     FUN_0011492c(param_1);
     character_play_animation((Character *)param_1,*(int *)(param_1 + 0x2f4),2,0);
@@ -11714,14 +11712,14 @@ int32 script_command_run(ScriptCommand *command)
     words = helper_malloc(count << 2);
     string_split(context,command->text,(char *)DATA_AT_0012710C,words,count);
     negate = string_remove_prefix(context,(const char *)DATA_AT_001276CC,words[0],words[0]);   /* "!" */
-    result = FUN_00114198((int)app->progress,(undefined4)words[0]) != 0;
+    result = progress_get_status(app->progress,words[0]) != 0;
     half = count / 2;
     if (negate != 0)
       result = 1 - result;
     for (i = 0; i < half; i++) {
       negate = string_remove_prefix(context,(const char *)DATA_AT_001276CC,words[i * 2 + 2],
                                     words[i * 2 + 2]);
-      value = FUN_00114198((int)app->progress,(undefined4)words[i * 2 + 2]) != 0;
+      value = progress_get_status(app->progress,words[i * 2 + 2]) != 0;
       if (negate != 0)
         value = 1 - value;
       if ((*g_pHelperFuncs->strcmp)(words[i * 2 + 1],STRING_BAR_BAR) == 0)
@@ -12129,14 +12127,14 @@ int32 script_command_run(ScriptCommand *command)
   case 0x3c:   /* setSpellType */
     player->selectedSpell = command->number[0];
     break;
-  case 0x3d:   /* setState: a progress flag (FUN_0011fef4), or ALL cleared */
+  case 0x3d:   /* setState: a progress flag (progress_set_status), or ALL cleared */
     if (command->text != (char *)0x0) {
       if ((*g_pHelperFuncs->strcmp)(command->text,STRING_ALL_00127714) == 0) {
         if (command->number[0] == 0)
           FUN_0011e010((int)app->progress);
       }
       else
-        FUN_0011fef4((int)app->progress,(undefined4)command->text,command->number[0] & 0xff);
+        progress_set_status(app->progress,command->text,command->number[0] & 0xff);
     }
     break;
   case 0x3e:   /* setStaticCamera */
@@ -12609,7 +12607,7 @@ int32 animations_find_free_slot(Animations *animations)
 
 /* ==== 0x00112D54  (file offset 0x12D54)  progress_find_free_status =================================== */
 /* GUESS: name. The first free slot of the player's status texts (no text, or an empty one), or -1 when
-   all 100 are in use. Used by FUN_0011fef4 to add a status text. */
+   all 100 are in use. Used by progress_set_status to add a status text. */
 int32 progress_find_free_status(Progress *progress)
 
 {
@@ -13602,24 +13600,24 @@ int32 progress_find_record(Progress *progress,const char *name,int32 *best,int32
 }
 
 
-/* ==== 0x00114198  (file offset 0x14198)  FUN_00114198 ================================================ */
-undefined1 FUN_00114198(int param_1,undefined4 param_2)
+/* ==== 0x00114198  (file offset 0x14198)  progress_get_status ========================================= */
+/* GUESS: names. The flag byte of the player's status text `name` (statusFlags[i] of the statusTexts[i] equal
+   to it), or 0 when there is no such text: the status texts double as named flags, set by progress_set_status
+   (the script's setState, "Out of magic") and read here by the script's `if`. */
+uint8 progress_get_status(Progress *progress,const char *name)
 
 {
-  int iVar2;
-  int iVar3;
-  iVar3 = 0;
+  int32 i;
+
                     /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
                        via *(base-4)) */
-  while ((iVar2 = *(int *)(param_1 + iVar3 * 4 + 100), iVar2 == 0 ||
-         (iVar2 = (*g_pHelperFuncs->strcmp)(iVar2,param_2), iVar2 != 0))) {
-    iVar3 = iVar3 + 1;
-    if (99 < iVar3) {
-      return 0;
-    }
-  }
-  return *(undefined1 *)(param_1 + iVar3);
+  for (i = 0; i < 100; i++)
+    if (progress->statusTexts[i] != (char *)0x0 &&
+        (*g_pHelperFuncs->strcmp)(progress->statusTexts[i],name) == 0)
+      return progress->statusFlags[i];
+  return 0;
 }
+
 
 /* ==== 0x001141F4  (file offset 0x141F4)  animations_get_state ======================================== */
 /* GUESS: name. The state of animation `index` (Animations.states), or 0 for a negative index or a free
@@ -16843,7 +16841,7 @@ void FUN_0011a3ec(int param_1,int param_2,undefined4 param_3)
        state is 3, 0x10 or 0x13 or field_1cc is 0xb, sets field_1cc to 8 and, while Progress.field_594 is
        above 0, tells the app's field_bc screen (FUN_00108f28 with 0; the binary tail-jumps, 0x0011a6a4).
    The Magic binding (controls[6]) uses magic: with no MP left, one item of field_5b8 refills all of it,
-   else one of field_5b4 half of it ((maximum + 1) / 2), and "Out of magic" is cleared (FUN_0011fef4);
+   else one of field_5b4 half of it ((maximum + 1) / 2), and "Out of magic" is cleared (progress_set_status);
    with MP, the selected spell is cast when the player has it (FUN_0010db04; the binary tail-jumps,
    0x0011a770), and the "random" choice 8 casts one of the player's spells: the (field_88 / 1000) % count
    th (FUN_00100288 divides: quotient in the low word, remainder in the high word). The rest of Ghidra's
@@ -16918,7 +16916,7 @@ void character_on_key(Character *character,int32 key)
     }
     else
       return;
-    FUN_0011fef4((int32)progress,(int32)STRING_OUT_OF_MAGIC_00126FBC,0);
+    progress_set_status(progress,STRING_OUT_OF_MAGIC_00126FBC,0);
     character->field_224 = 1;
     return;
   }
@@ -20881,49 +20879,38 @@ void animations_set_speed(Animations *animations,int32 index,uint32 speed)
     animations->speeds[index] = speed;
 }
 
-/* ==== 0x0011FEF4  (file offset 0x1FEF4)  FUN_0011fef4 ================================================ */
-void FUN_0011fef4(int param_1,undefined4 param_2,int param_3)
+/* ==== 0x0011FEF4  (file offset 0x1FEF4)  progress_set_status ========================================= */
+/* GUESS: names. Sets the player's status text `name` (a named flag, progress_get_status): with `flag` 0,
+   removes the first text equal to it (its flag cleared, the text freed); else stores a copy of it with the
+   flag (its low byte) in a free slot (progress_find_free_status), when there is one and `name` is not
+   empty. It does not look for the name first, so setting it again adds a second copy (see
+   research_notes/decomp/GAME_BUGS.md). Used for "OUT_OF_MAGIC" and by the script's setState. */
+void progress_set_status(Progress *progress,const char *name,int32 flag)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  
-  iVar2 = WORD_HEXADECIMAL_FFFE00F0;
-  if (param_3 == 0) {
-    iVar3 = 0;
-    while( true ) {
-      iVar4 = param_1 + iVar3 * 4;
-      iVar1 = *(int *)(iVar4 + 100);
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-      if ((iVar1 != 0) &&
-         (iVar1 = (*g_pHelperFuncs->strcmp)(iVar1,param_2), iVar1 == 0))
-      break;
-      iVar3 = iVar3 + 1;
-      if (99 < iVar3) {
+  int32 i;
+
+                    /* helper[4] int strcmp(const char *a, const char *b), helper[27] void free(void
+                       *p), helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x10, +0x6c,
+                       +0x14, via *(base-4)) */
+  if (flag == 0) {
+    for (i = 0; i < 100; i++)
+      if (progress->statusTexts[i] != (char *)0x0 &&
+          (*g_pHelperFuncs->strcmp)(progress->statusTexts[i],name) == 0) {
+        progress->statusFlags[i] = 0;
+        (*g_pHelperFuncs->free)(progress->statusTexts[i]);
+        progress->statusTexts[i] = (char *)0x0;
         return;
       }
-    }
-    *(undefined1 *)(param_1 + iVar3) = 0;
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + iVar3 * 4 + 100));
-    *(undefined4 *)(iVar4 + 100) = 0;
     return;
   }
-  iVar3 = progress_find_free_status((Progress *)param_1);
-  if (iVar3 == -1) {
+  i = progress_find_free_status(progress);
+  if (i == -1 || (*g_pHelperFuncs->strlen)(name) == 0)
     return;
-  }
-  iVar2 = (*g_pHelperFuncs->strlen)(param_2);
-  if (iVar2 == 0) {
-    return;
-  }
-  FUN_001204f0((undefined4)((KHApp *)*(int *)(param_1 + 0x724))->context,param_2,param_1 + iVar3 * 4 + 100);
-  *(char *)(param_1 + iVar3) = (char)param_3;
-  return;
+  FUN_001204f0((undefined4)progress->app->context,(undefined4)name,(int *)&progress->statusTexts[i]);
+  progress->statusFlags[i] = (uint8)flag;
 }
+
 
 /* ==== 0x0011FFC0  (file offset 0x1FFC0)  FUN_0011ffc0 ================================================ */
 void FUN_0011ffc0(undefined4 *param_1,undefined4 param_2)

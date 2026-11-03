@@ -669,7 +669,7 @@ uint8 animations_get_priority(Animations *animations,int32 index);   /* 0x00113C
 int FUN_00113cfc(undefined4 param_1,int param_2);
 int FUN_00113da4(int *param_1,int param_2,int param_3,int param_4,int param_5,uint param_6);
 int32 progress_find_record(Progress *progress,const char *name,int32 *best,int32 *second);   /* 0x00114120 GUESS: name, see kh_mod.c */
-undefined1 FUN_00114198(int param_1,undefined4 param_2);
+uint8 progress_get_status(Progress *progress,const char *name);   /* 0x00114198 GUESS: name, see kh_mod.c */
 uint8 animations_get_state(Animations *animations,int32 index);   /* 0x001141F4 GUESS: name */
 int32 text_table_get_text(TextTable *table,int32 textId,char **text);   /* 0x0011421C GUESS: name, see kh_mod.c */
 undefined4 FUN_00114240(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,undefined4 *param_6,int param_7,undefined4 param_8,int param_9);
@@ -793,7 +793,7 @@ void FUN_0011fd90(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 void animations_set_priority(Animations *animations,int32 index,uint8 priority);   /* 0x0011FDBC GUESS: name */
 undefined4 FUN_0011fddc(int param_1,undefined4 param_2,int param_3,undefined4 param_4);
 void animations_set_speed(Animations *animations,int32 index,uint32 speed);   /* 0x0011FED8 GUESS: name */
-void FUN_0011fef4(int param_1,undefined4 param_2,int param_3);
+void progress_set_status(Progress *progress,const char *name,int32 flag);   /* 0x0011FEF4 GUESS: name, see kh_mod.c */
 void FUN_0011ffc0(undefined4 *param_1,undefined4 param_2);
 void enemy_set_target(Enemy *enemy,int32 how);   /* 0x00120024 GUESS: names */
 void FUN_001200ac(int param_1,undefined4 param_2);
