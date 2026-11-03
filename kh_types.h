@@ -369,9 +369,13 @@ typedef struct Progress {
     int32    level;                 /* +0x58c 0-9; no level-ups after 9 */
     char    *userId;                /* +0x590 GUESS: name; the online user id (the web requests'
                                      uid=), set once by progress_set_user_id */
-    int32    field_594;             /* +0x594 GUESS: a tutorial step; above 0, the action key tells the app's
-                                     field_bc screen (FUN_00108f28) */
-    uint8  unknown_598[0x04];
+    int32    soundVolume;           /* +0x594 GUESS: name; the sound effects' volume: 40 at creation, the
+                                     menu (FUN_00101ad8) cycles it through 20, 40, 60 and 0; set on the
+                                     app's effects (field_bc) with FUN_0010a03c, and an effect plays
+                                     (FUN_00108f28) only while it is above 0; saved with the settings */
+    int32    musicVolume;           /* +0x598 GUESS: name; the music's volume: 40 at creation, cycled the
+                                     same way; set with FUN_0010a03c on the context's two sound sets, a
+                                     level's and the training's music; saved with the settings */
     int32    spells[3];             /* +0x59c 0 at the start; set for each spell the player has (GUESS: names);
                                      character_on_key casts only those */
     int32    showEnemyHealth;       /* +0x5a8 GUESS: name (a fourth ability after the spells, a "scan"); 1
@@ -384,7 +388,11 @@ typedef struct Progress {
     int32    field_5b8;             /* +0x5b8 0 at the start; GUESS: a count of items that refill all of it */
     AECHAR  *collectablesText;      /* +0x5bc script setCollectables: the collectables' name */
     int32    collectables;          /* +0x5c0 and their number */
-    uint8  unknown_5c4[0x08];
+    int32    field_5c4;             /* +0x5c4 0 at creation; sent as the time (t=) of the ranking and
+                                     download requests; FUN_001216c4 adds the seconds since app +0xb0
+                                     (GUESS: the time played); saved with the settings */
+    int32    field_5c8;             /* +0x5c8 1 at creation; sent as the ranking's u1= value; +1 when the
+                                     settings are loaded with app +0xb4 set (FUN_0011b6f0) */
     int32    controls[7];           /* +0x5cc the Controls key bindings (BREW key codes): Forwards, Backwards,
                                      Left, Right, Action, Status, Magic */
     int32    softKeys[2];           /* +0x5e8 the keys that act as the left and the right soft key (screen_handle_key):

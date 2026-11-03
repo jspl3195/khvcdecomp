@@ -528,7 +528,7 @@ Enemy * enemy_create(Enemy *enemy,int32 number,CombatRegion *region,int32 type);
 TextBox * text_box_create(TextBox *box,int32 x,int32 y,int32 width,int32 height,int32 *owner,TextStyle *style);   /* 0x0010B2DC GUESS: name, see kh_mod.c */
 Camera * camera_create(Camera *camera,ISwerveObject *node,char *name);   /* 0x0010B3E8 GUESS: name, see kh_mod.c */
 CombatRegion * combat_region_create(CombatRegion *region,ISwerveObject *node,char *name);   /* 0x0010B478 GUESS: name */
-void * FUN_0010b4e4(void *param_1,int param_2);
+Progress * progress_create(Progress *progress,int32 skipSetup);   /* 0x0010B4E4 GUESS: name, see kh_mod.c */
 MotionEntity * motion_entity_create(MotionEntity *entity,ISwerveObject *node,char *name);   /* 0x0010B5E8 GUESS: name */
 TextLine * text_line_create(TextLine *line,int32 x,int32 y,int32 width,int32 height,int32 *owner,int32 textId, uint32 alignment);   /* 0x0010B650 GUESS: name, see kh_mod.c */
 Character * character_create(Character *character,ISwerveObject *node,char *name);   /* 0x0010B70C GUESS: name, see kh_mod.c */
@@ -555,7 +555,7 @@ void script_sequence_destroy(ScriptSequence *sequence,int32 freeIt);   /* 0x0010
 void enemy_destroy(Enemy *enemy,int32 freeIt);   /* 0x0010C720 GUESS: name, see kh_mod.c */
 void FUN_0010c73c(int param_1,int param_2);
 void FUN_0010c790(int param_1,int param_2);
-void FUN_0010c800(int param_1,int param_2);
+void progress_destroy(Progress *progress,int32 freeSelf);   /* 0x0010C800 GUESS: name, see kh_mod.c */
 void FUN_0010c8b8(int param_1,int param_2);
 void FUN_0010c92c(int param_1,int param_2);
 void animations_destroy(Animations *animations,int32 freeIt);   /* 0x0010C9DC GUESS: name, see kh_mod.c */

@@ -2421,8 +2421,8 @@ LAB_001050b0:
       FUN_001216c4(*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
       web_request_post_rank(param_1[6],2,((Progress *)iVar7)->userId,uVar10,
-                   *(undefined4 *)(*param_1 + 0xc4),*(undefined4 *)(iVar7 + 0x5c4),
-                   *(undefined4 *)(iVar7 + 0x5c8),0);
+                   *(undefined4 *)(*param_1 + 0xc4),((Progress *)iVar7)->field_5c4,
+                   ((Progress *)iVar7)->field_5c8,0);
       goto LAB_00104dcc;
     case 0x7e:
       iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
@@ -2540,7 +2540,7 @@ LAB_00104a24:
       FUN_001216c4(*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
       web_request_download(param_1[6],*(undefined4 *)(*param_1 + 0xc4),0,((Progress *)iVar7)->userId,
-                   *(undefined4 *)(iVar7 + 0x5c4));
+                   ((Progress *)iVar7)->field_5c4);
       return local_34;
     case 0x82:
       iVar9 = screen_stack_top(param_1);
@@ -2589,7 +2589,7 @@ LAB_00104a24:
       FUN_001216c4(*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
       web_request_post_rank_ex(param_1[6],((Progress *)iVar7)->userId,pvVar16,pvVar5,
-                   *(undefined4 *)(iVar7 + 0x5c4),*(undefined4 *)(iVar7 + 0x5c8));
+                   ((Progress *)iVar7)->field_5c4,((Progress *)iVar7)->field_5c8);
       helper_free(pvVar16);
       helper_free(pvVar5);
 LAB_00104dcc:
@@ -2758,21 +2758,21 @@ LAB_00101db4:
   }
   if (param_2 == 0x11) {
     iVar7 = *(int *)(*param_1 + 0xa8);
-    iVar9 = *(int *)(iVar7 + 0x598);
+    iVar9 = ((Progress *)iVar7)->musicVolume;
     if (iVar9 == 0) {
-      *(undefined4 *)(iVar7 + 0x598) = 0x14;
+      ((Progress *)iVar7)->musicVolume = 0x14;
       pvVar16 = WORD_HEXADECIMAL_13DD8E16;
     }
     else if (iVar9 == 0x14) {
-      *(undefined4 *)(iVar7 + 0x598) = 0x28;
+      ((Progress *)iVar7)->musicVolume = 0x28;
       pvVar16 = WORD_HEXADECIMAL_0AFA190E;
     }
     else if (iVar9 == 0x28) {
-      *(undefined4 *)(iVar7 + 0x598) = 0x3c;
+      ((Progress *)iVar7)->musicVolume = 0x3c;
       pvVar16 = WORD_HEXADECIMAL_2714CFF7;
     }
     else if (iVar9 == 0x3c) {
-      *(undefined4 *)(iVar7 + 0x598) = 0;
+      ((Progress *)iVar7)->musicVolume = 0;
       pvVar16 = WORD_HEXADECIMAL_27B2CEEB;
     }
     uVar10 = screen_stack_top(param_1);
@@ -2780,13 +2780,13 @@ LAB_00101db4:
     text_line_set_text_id(*(undefined4 *)(iVar7 + 0x30),pvVar16);
     iVar7 = ((KHApp *)*param_1)->context->sounds[0];
     if (iVar7 != 0) {
-      FUN_0010a03c(iVar7,*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x598));
+      FUN_0010a03c(iVar7,((KHApp *)*param_1)->progress->musicVolume);
     }
     iVar7 = ((KHApp *)*param_1)->context->sounds[1];
     if (iVar7 == 0) {
       return local_34;
     }
-    uVar10 = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x598);
+    uVar10 = ((KHApp *)*param_1)->progress->musicVolume;
 LAB_0010489c:
     FUN_0010a03c(iVar7,uVar10);
     return local_34;
@@ -3112,13 +3112,13 @@ LAB_001042b8:
     memcpy_word_aligned(local_74 + 0xb,(int32)DATA_AT_00127BD4,0x14);
     memcpy_word_aligned(local_74 + 6,(int32)DATA_AT_00127BE8,0x14);
     memcpy_word_aligned(local_74 + 1,(int32)DATA_AT_00127BFC,0x14);
-    iVar7 = *(int *)(*(int *)(*param_1 + 0xa8) + 0x594);
+    iVar7 = ((KHApp *)*param_1)->progress->soundVolume;
     pvVar16 = WORD_HEXADECIMAL_2F7413EE;
     if (((iVar7 == 0x14) || (pvVar16 = WORD_HEXADECIMAL_31B444EE, iVar7 == 0x28)) ||
        (pvVar16 = WORD_HEXADECIMAL_15998E05, iVar7 == 0x3c)) {
       local_44 = pvVar16;
     }
-    iVar7 = *(int *)(*(int *)(*param_1 + 0xa8) + 0x598);
+    iVar7 = ((KHApp *)*param_1)->progress->musicVolume;
     pvVar16 = WORD_HEXADECIMAL_13DD8E16;
     if (((iVar7 == 0x14) || (pvVar16 = WORD_HEXADECIMAL_0AFA190E, iVar7 == 0x28)) ||
        (pvVar16 = WORD_HEXADECIMAL_2714CFF7, iVar7 == 0x3c)) {
@@ -3333,21 +3333,21 @@ LAB_00104360:
     break;
   case 0xc:
     iVar7 = *(int *)(*param_1 + 0xa8);
-    iVar9 = *(int *)(iVar7 + 0x594);
+    iVar9 = ((Progress *)iVar7)->soundVolume;
     if (iVar9 == 0) {
-      *(undefined4 *)(iVar7 + 0x594) = 0x14;
+      ((Progress *)iVar7)->soundVolume = 0x14;
       pvVar16 = WORD_HEXADECIMAL_2F7413EE;
     }
     else if (iVar9 == 0x14) {
-      *(undefined4 *)(iVar7 + 0x594) = 0x28;
+      ((Progress *)iVar7)->soundVolume = 0x28;
       pvVar16 = WORD_HEXADECIMAL_31B444EE;
     }
     else if (iVar9 == 0x28) {
-      *(undefined4 *)(iVar7 + 0x594) = 0x3c;
+      ((Progress *)iVar7)->soundVolume = 0x3c;
       pvVar16 = WORD_HEXADECIMAL_15998E05;
     }
     else if (iVar9 == 0x3c) {
-      *(undefined4 *)(iVar7 + 0x594) = 0;
+      ((Progress *)iVar7)->soundVolume = 0;
       pvVar16 = WORD_HEXADECIMAL_14FB8F11;
     }
     uVar10 = screen_stack_top(param_1);
@@ -3355,13 +3355,13 @@ LAB_00104360:
     text_line_set_text_id(*(undefined4 *)(iVar7 + 0x30),pvVar16);
     iVar7 = *(int *)(*param_1 + 0xbc);
     if (iVar7 != 0) {
-      FUN_0010a03c(iVar7,*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x594));
+      FUN_0010a03c(iVar7,((KHApp *)*param_1)->progress->soundVolume);
     }
     iVar7 = *(int *)(*param_1 + 0xc0);
     if (iVar7 == 0) {
       return local_34;
     }
-    uVar10 = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x594);
+    uVar10 = ((KHApp *)*param_1)->progress->soundVolume;
     goto LAB_0010489c;
   case 0xd:
     return 0;
@@ -5947,7 +5947,7 @@ void web_request_retry(WebRequest *request)
       request->retries++;
       web_request_notify(request,3,request->retries,3,0);
       web_request_download(request,request->url,request->received,(char *)0x0,
-                           *(int32 *)((int32)request->app->progress + 0x5c4));
+                           request->app->progress->field_5c4);
       return;
     }
     request->retries = -1;
@@ -6869,7 +6869,7 @@ LAB_0010a894:
   string_replace(((KHApp *)param_1[0x85])->context,STRING_MAGIC_CAST_DOT_QCP,&p[12]);
   uVar4 = FUN_0010bec4(0,(int)p,0xd,1).low;
   *(undefined4 *)(param_1[0x85] + 0xbc) = uVar4;
-  FUN_0010a03c(uVar4,*(undefined4 *)(*(int *)(param_1[0x85] + 0xa8) + 0x594));
+  FUN_0010a03c(uVar4,((KHApp *)param_1[0x85])->progress->soundVolume);
   iVar1 = 0;
   do {
     helper_free(p[iVar1]);
@@ -7251,57 +7251,52 @@ CombatRegion * combat_region_create(CombatRegion *region,ISwerveObject *node,cha
   return region;
 }
 
-/* ==== 0x0010B4E4  (file offset 0x0B4E4)  FUN_0010b4e4 ================================================ */
-void * FUN_0010b4e4(void *param_1,int param_2)
+/* ==== 0x0010B4E4  (file offset 0x0B4E4)  progress_create ============================================= */
+/* GUESS: names. Progress's constructor (0x72c bytes, INTEGER_1836, allocated when `progress` is 0;
+   returns 0 when out of memory): the app (GetAppInstance) and no saved-game copy; then, unless
+   `skipSetup` is set (kh_OnAppStart passes 0), empty status, variable and record tables, no user id (one
+   already there is freed), both volumes (soundVolume, musicVolume) 40, field_5c8 1, field_5c4 0, the new
+   game's values (FUN_0010f9a4, progress_reset, FUN_0010f8e8), and the saved settings and records loaded
+   (FUN_0011b6f0 with "settings.dat", FUN_0011b5f0). progress_destroy is its destructor. */
+Progress * progress_create(Progress *progress,int32 skipSetup)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  int iVar3;
-  
-  if ((param_1 != (void *)0x0) || (param_1 = helper_malloc_2(INTEGER_1836), param_1 != (void *)0x0))
-  {
-                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
-                        */
-    uVar1 = (*g_pHelperFuncs->GetAppInstance)();
-    *(undefined4 *)((int)param_1 + 0x724) = uVar1;
-    ((Progress *)param_1)->saveCopy = (uint8 *)0x0;
-    if (param_2 == 0) {
-      iVar3 = 0;
-      do {
-        *(undefined1 *)((int)param_1 + iVar3) = 0;
-        *(undefined4 *)((int)param_1 + iVar3 * 4 + 100) = 0;
-        *(undefined4 *)((int)param_1 + iVar3 * 4 + 500) = 0;
-        iVar2 = iVar3 + 1;
-        *(undefined4 *)((int)param_1 + iVar3 * 4 + 900) = 0;
-        iVar3 = iVar2;
-      } while (iVar2 < 100);
-      iVar3 = 0;
-      do {
-        *(undefined4 *)((int)param_1 + iVar3 * 4 + 0x5f0) = 0;
-        *(undefined4 *)((int)param_1 + iVar3 * 8 + 0x654) = 0;
-        iVar2 = iVar3 + 1;
-        *(undefined4 *)((int)param_1 + iVar3 * 8 + 0x658) = 0;
-        iVar3 = iVar2;
-      } while (iVar2 < 0x19);
-      if (((Progress *)param_1)->userId != (char *)0x0) {
-        helper_free(((Progress *)param_1)->userId);
-      }
-      ((Progress *)param_1)->userId = (char *)0x0;
-      *(undefined4 *)((int)param_1 + 0x594) = 0x28;
-      ((Progress *)param_1)->summaryPending = 0;
-      *(undefined4 *)((int)param_1 + 0x598) = 0x28;
-      *(undefined4 *)((int)param_1 + 0x5c8) = 1;
-      *(undefined4 *)((int)param_1 + 0x5c4) = 0;
-      FUN_0010f9a4(param_1);
-      progress_reset(param_1);
-      FUN_0010f8e8(param_1);
-      FUN_0011b6f0(param_1,(int32)STRING_SETTINGS_DOT_DAT_001278D8);
-      FUN_0011b5f0(param_1);
-    }
+  int32 i;
+
+  if (progress == (Progress *)0x0 && (progress = helper_malloc_2(INTEGER_1836)) == (Progress *)0x0)
+    return progress;
+                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4)) */
+  progress->app = (*g_pHelperFuncs->GetAppInstance)();
+  progress->saveCopy = (uint8 *)0x0;
+  if (skipSetup != 0)
+    return progress;
+  for (i = 0; i < 100; i++) {
+    progress->statusFlags[i] = 0;
+    progress->statusTexts[i] = (char *)0x0;
+    progress->variableValues[i] = 0;
+    progress->variableNames[i] = (char *)0x0;
   }
-  return param_1;
+  for (i = 0; i < 25; i++) {
+    progress->recordNames[i] = (char *)0x0;
+    progress->records[i].best = 0;
+    progress->records[i].field_04 = 0;
+  }
+  if (progress->userId != (char *)0x0)
+    helper_free(progress->userId);
+  progress->userId = (char *)0x0;
+  progress->soundVolume = 40;
+  progress->summaryPending = 0;
+  progress->musicVolume = 40;
+  progress->field_5c8 = 1;
+  progress->field_5c4 = 0;
+  FUN_0010f9a4((int)progress);
+  progress_reset(progress);
+  FUN_0010f8e8((int)progress);
+  FUN_0011b6f0((int)progress,(int32)STRING_SETTINGS_DOT_DAT_001278D8);
+  FUN_0011b5f0((int)progress);
+  return progress;
 }
+
 
 /* ==== 0x0010B5E8  (file offset 0x0B5E8)  motion_entity_create ======================================== */
 /* GUESS: name. Sets up a "MotionEntity" level object (kind 1, 0x1c8 bytes, allocated when `entity` is 0);
@@ -8140,45 +8135,39 @@ void FUN_0010c790(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x0010C800  (file offset 0x0C800)  FUN_0010c800 ================================================ */
-void FUN_0010c800(int param_1,int param_2)
+/* ==== 0x0010C800  (file offset 0x0C800)  progress_destroy ============================================ */
+/* GUESS: name. Progress's destructor: clears the named states (progress_clear_states), frees the user id,
+   the collectables' name, the saved-game copy and the 25 record names, then, when `freeSelf` is set, the
+   object itself (the binary's conditional tail jump to helper_free, 0x0010c8ac). kh_OnAppStop destroys
+   the app's with freeSelf 1. */
+void progress_destroy(Progress *progress,int32 freeSelf)
 
 {
-  int iVar2;
-  int iVar3;
-  
-  progress_clear_states((Progress *)param_1);
-  if (((Progress *)param_1)->userId != (char *)0x0) {
+  int32 i;
+
+  progress_clear_states(progress);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(((Progress *)param_1)->userId);
-    ((Progress *)param_1)->userId = (char *)0x0;
+  if (progress->userId != (char *)0x0) {
+    (*g_pHelperFuncs->free)(progress->userId);
+    progress->userId = (char *)0x0;
   }
-  if (*(int *)(param_1 + 0x5bc) != 0) {
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x5bc));
-    *(undefined4 *)(param_1 + 0x5bc) = 0;
+  if (progress->collectablesText != (AECHAR *)0x0) {
+    (*g_pHelperFuncs->free)(progress->collectablesText);
+    progress->collectablesText = (AECHAR *)0x0;
   }
-  if (((Progress *)param_1)->saveCopy != (uint8 *)0x0) {
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(((Progress *)param_1)->saveCopy);
-    ((Progress *)param_1)->saveCopy = (uint8 *)0x0;
+  if (progress->saveCopy != (uint8 *)0x0) {
+    (*g_pHelperFuncs->free)(progress->saveCopy);
+    progress->saveCopy = (uint8 *)0x0;
   }
-  iVar2 = 0;
-  do {
-    iVar3 = param_1 + iVar2 * 4;
-    if (*(int *)(iVar3 + 0x5f0) != 0) {
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-      (*g_pHelperFuncs->free)(*(undefined4 *)(iVar3 + 0x5f0));
-      *(undefined4 *)(iVar3 + 0x5f0) = 0;
+  for (i = 0; i < 25; i++)
+    if (progress->recordNames[i] != (char *)0x0) {
+      (*g_pHelperFuncs->free)(progress->recordNames[i]);
+      progress->recordNames[i] = (char *)0x0;
     }
-    iVar2 = iVar2 + 1;
-  } while (iVar2 < 0x19);
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
-  return;
+  if (freeSelf != 0)
+    helper_free(progress);            /* the binary's tail jump (0x0010c8ac) */
 }
+
 
 /* ==== 0x0010C8B8  (file offset 0x0C8B8)  FUN_0010c8b8 ================================================ */
 void FUN_0010c8b8(int param_1,int param_2)
@@ -9210,7 +9199,7 @@ LAB_0010dde4:
         *(undefined4 *)(param_1 + 0x2a0) = INTEGER_750;
       }
     }
-    if ((0 < *(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa8) + 0x594)) &&
+    if ((0 < ((KHApp *)*(int *)(param_1 + 0x84))->progress->soundVolume) &&
        (iVar3 = *(int *)(*(int *)(param_1 + 0x84) + 0xbc), iVar3 != 0)) {
       FUN_00108f28(iVar3,0xc);
     }
@@ -9278,7 +9267,7 @@ LAB_0010dde4:
 LAB_0010dcf8:
   *(undefined4 *)(param_1 + 0x1c8) = 0xd;
   (**(code **)(**(int **)(param_1 + 0x1f0) + 0x8c))(*(int **)(param_1 + 0x1f0),0);
-  if ((0 < *(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa8) + 0x594)) &&
+  if ((0 < ((KHApp *)*(int *)(param_1 + 0x84))->progress->soundVolume) &&
      (iVar3 = *(int *)(*(int *)(param_1 + 0x84) + 0xbc), iVar3 != 0)) {
     if (*(int *)(iVar3 + 0xc) < 4) {
       return;
@@ -10230,7 +10219,7 @@ int FUN_0010f058(int param_1,int param_2)
       goto LAB_0010f0cc;
     }
     if (*(int *)(param_1 + 0x20) != *(int *)(param_1 + 0x28)) {
-      if ((0 < *(int *)(*(int *)(*(int *)(param_1 + 0x74) + 0xa8) + 0x594)) &&
+      if ((0 < ((KHApp *)*(int *)(param_1 + 0x74))->progress->soundVolume) &&
          (iVar1 = *(int *)(*(int *)(param_1 + 0x74) + 0xbc), iVar1 != 0)) {
         FUN_00108f28(iVar1,2);
       }
@@ -10590,7 +10579,7 @@ joined_r0x0010f71c:
 
 /* ==== 0x0010F880  (file offset 0x0F880)  progress_reset ============================================== */
 /* GUESS: name. The values of a new game: health 5.0 of 5.0, MP 5 of 5, no munny or experience, level 0.
-   Called by the Progress constructor (FUN_0010b4e4) and when Training starts (FUN_00101ad8, 0x3d). */
+   Called by the Progress constructor (progress_create) and when Training starts (FUN_00101ad8, 0x3d). */
 void progress_reset(Progress *progress)
 
 {
@@ -11578,7 +11567,7 @@ int32 script_command_run(ScriptCommand *command)
     if (count > 0) {
       created = FUN_0010bec4((int *)0x0,(int)words,count,1);
       app->field_c0 = created.low;
-      FUN_0010a03c((int)created.low,app->progress->field_594);
+      FUN_0010a03c((int)created.low,app->progress->soundVolume);
     }
     for (i = 0; i < count; i++)
       helper_free(words[i]);
@@ -11617,10 +11606,10 @@ int32 script_command_run(ScriptCommand *command)
     break;
   case 0x1b:   /* playSound: a game sound (flag 0, KHApp.field_bc) or a level one (field_c0) */
     if (command->flag[0] != 0) {
-      if (app->progress->field_594 > 0 && app->field_bc != 0)
+      if (app->progress->soundVolume > 0 && app->field_bc != 0)
         sound = app->field_bc;
     }
-    else if (app->progress->field_594 > 0 && app->field_c0 != 0)
+    else if (app->progress->soundVolume > 0 && app->field_c0 != 0)
       sound = app->field_c0;
     soundId = command->number[0];
     break;
@@ -11755,7 +11744,7 @@ int32 script_command_run(ScriptCommand *command)
       player->swimNoClimb = command->flag[0];
       if (player->field_1e4 != (ISwerveObject *)0x0)
         (**(code **)(*(int32 *)player->field_1e4 + 0x8c))(player->field_1e4,1);
-      if (app->progress->field_594 > 0 && app->field_bc != 0) {
+      if (app->progress->soundVolume > 0 && app->field_bc != 0) {
         sound = app->field_bc;
         soundId = 8;
       }
@@ -12197,7 +12186,7 @@ void kh_OnAppStop(KHApp *pMe)
     FUN_001216c4(pMe->progress);
     FUN_0011ead4(pMe->progress,(int32)STRING_SETTINGS_DOT_DAT_00127A58);
     if (pMe->progress != (void *)0x0) {
-      FUN_0010c800(pMe->progress,1);
+      progress_destroy(pMe->progress,1);
     }
     pMe->progress = (void *)0x0;
   }
@@ -13824,7 +13813,7 @@ void FUN_0011498c(int param_1,uint param_2)
   
   FUN_0011ca8c(param_1,0,0x3e800000,0,1 /* not arguments, value leftovers: param_4 */);
   character_play_animation((Character *)param_1,*(undefined4 *)(param_1 + 0x310),0,0);
-  if ((0 < *(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa8) + 0x594)) &&
+  if ((0 < ((KHApp *)*(int *)(param_1 + 0x84))->progress->soundVolume) &&
      (iVar1 = *(int *)(*(int *)(param_1 + 0x84) + 0xbc), iVar1 != 0)) {
     FUN_00108f28(iVar1,1);
   }
@@ -13862,7 +13851,7 @@ void FUN_00114a1c(int param_1,undefined4 param_2)
       iVar3 = *(int *)(*(int *)(*(int *)(param_1 + 0x74) + 0xa4) + 0x1f8);
       FUN_0011ca8c(iVar3,0,0x3e800000,0,1);
       character_play_animation((Character *)iVar3,*(undefined4 *)(iVar3 + 0x310),0,0);
-      if ((0 < *(int *)(*(int *)(*(int *)(iVar3 + 0x84) + 0xa8) + 0x594)) &&
+      if ((0 < ((KHApp *)*(int *)(iVar3 + 0x84))->progress->soundVolume) &&
          (iVar1 = *(int *)(*(int *)(iVar3 + 0x84) + 0xbc), iVar1 != 0)) {
         FUN_00108f28(iVar1,1);
       }
@@ -16025,7 +16014,7 @@ void kh_OnAppStart(KHApp *pMe)
         }
         else {
           if (pMe->nErr != 0) goto LAB_001199b0;
-          pvVar4 = (void *)FUN_0010b4e4(0,0);
+          pvVar4 = progress_create((Progress *)0x0,0);
           pMe->progress = pvVar4;
           if (pvVar4 == (void *)0x0) {
             iVar6 = 0x104;
@@ -16648,8 +16637,9 @@ void FUN_0011a3ec(int param_1,int param_2,undefined4 param_3)
      forwards: also, in state 0x11, goes to state 0x13;
      action: sets its flag; in states 4, 5, 6, 0x11 and 0x12 starts an attack (state 0, field_1cc 0xb,
        motion_entity_rotate_by_heading and FUN_0011ca70 with an offset of 0, the radius, half the height); else, unless the
-       state is 3, 0x10 or 0x13 or field_1cc is 0xb, sets field_1cc to 8 and, while Progress.field_594 is
-       above 0, tells the app's field_bc screen (FUN_00108f28 with 0; the binary tail-jumps, 0x0011a6a4).
+       state is 3, 0x10 or 0x13 or field_1cc is 0xb, sets field_1cc to 8 and, while Progress.soundVolume is
+       above 0, plays sound 0 of the app's effects (field_bc, FUN_00108f28; the binary tail-jumps,
+       0x0011a6a4).
    The Magic binding (controls[6]) uses magic: with no MP left, one item of field_5b8 refills all of it,
    else one of field_5b4 half of it ((maximum + 1) / 2), and "Out of magic" is cleared (progress_set_status);
    with MP, the selected spell is cast when the player has it (FUN_0010db04; the binary tail-jumps,
@@ -16709,7 +16699,7 @@ void character_on_key(Character *character,int32 key)
         character->field_1cc == 0xb)
       return;
     character->field_1cc = 8;
-    if (progress->field_594 > 0 && character->app->field_bc != 0)
+    if (progress->soundVolume > 0 && character->app->field_bc != 0)
       FUN_00108f28((int32)character->app->field_bc,0);
     return;
   }
@@ -17453,9 +17443,9 @@ void FUN_0011b6f0(int param_1,undefined4 param_2)
     uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     *(undefined4 *)(param_1 + 0x5e4) = uVar4;
     uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
-    *(undefined4 *)(param_1 + 0x594) = uVar4;
+    ((Progress *)param_1)->soundVolume = uVar4;
     uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
-    *(undefined4 *)(param_1 + 0x598) = uVar4;
+    ((Progress *)param_1)->musicVolume = uVar4;
     if (((Progress *)param_1)->userId != (char *)0x0) {
       (*g_pHelperFuncs->free)(((Progress *)param_1)->userId);
       ((Progress *)param_1)->userId = (char *)0x0;
@@ -17463,11 +17453,11 @@ void FUN_0011b6f0(int param_1,undefined4 param_2)
     uVar4 = (int32)save_read_string((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     ((Progress *)param_1)->userId = (char *)uVar4;
     uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
-    *(undefined4 *)(param_1 + 0x5c4) = uVar4;
+    ((Progress *)param_1)->field_5c4 = uVar4;
     iVar3 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
-    *(int *)(param_1 + 0x5c8) = iVar3;
+    ((Progress *)param_1)->field_5c8 = iVar3;
     if (*(int *)(*(int *)(param_1 + 0x724) + 0xb4) != 0) {
-      *(int *)(param_1 + 0x5c8) = iVar3 + 1;
+      ((Progress *)param_1)->field_5c8 = iVar3 + 1;
     }
     *(undefined4 *)(*(int *)(param_1 + 0x724) + 0xb4) = 0;
     (*g_pHelperFuncs->free)(uVar2);
@@ -18545,7 +18535,7 @@ undefined4 FUN_0011cfdc(int param_1,undefined4 param_2,int param_3)
   }
   uVar1 = FUN_0010bec4(0,&uStack_14,1,1).low;
   *(undefined4 *)(param_1 + 8) = uVar1;
-  FUN_0010a03c(uVar1,*(undefined4 *)(*(int *)(*(int *)(param_1 + 0xc) + 0xa8) + 0x598));
+  FUN_0010a03c(uVar1,((KHApp *)*(int *)(param_1 + 0xc))->progress->musicVolume);
   if (param_3 != 0) {
     FUN_0011bb58(*(undefined4 *)(param_1 + 8),0);
   }
@@ -19262,7 +19252,7 @@ void FUN_0011df14(undefined4 *param_1)
    (their names freed, their values 0). The status flag bytes are left as they are (out of reach without
    their texts, and set again when a slot is reused). Used by the script's setState ALL 0, the menu's
    restart, the saved-game loader (FUN_0011b178) and Progress's reset and destructor (FUN_0010f9a4,
-   FUN_0010c800). */
+   progress_destroy). */
 void progress_clear_states(Progress *progress)
 
 {
@@ -19773,11 +19763,11 @@ undefined4 FUN_0011ead4(int param_1,undefined4 param_2)
   save_write_int((Progress *)param_1,((Progress *)param_1)->controls[4],(uint8 *)uVar2,(int32 *)&local_18);
   save_write_int((Progress *)param_1,((Progress *)param_1)->controls[5],(uint8 *)uVar2,(int32 *)&local_18);
   save_write_int((Progress *)param_1,((Progress *)param_1)->controls[6],(uint8 *)uVar2,(int32 *)&local_18);
-  save_write_int((Progress *)param_1,((Progress *)param_1)->field_594,(uint8 *)uVar2,(int32 *)&local_18);
-  save_write_int((Progress *)param_1,*(undefined4 *)(param_1 + 0x598),(uint8 *)uVar2,(int32 *)&local_18);
+  save_write_int((Progress *)param_1,((Progress *)param_1)->soundVolume,(uint8 *)uVar2,(int32 *)&local_18);
+  save_write_int((Progress *)param_1,((Progress *)param_1)->musicVolume,(uint8 *)uVar2,(int32 *)&local_18);
   save_write_string((Progress *)param_1,((Progress *)param_1)->userId,(uint8 *)uVar2,(int32 *)&local_18);
-  save_write_int((Progress *)param_1,*(undefined4 *)(param_1 + 0x5c4),(uint8 *)uVar2,(int32 *)&local_18);
-  save_write_int((Progress *)param_1,*(undefined4 *)(param_1 + 0x5c8),(uint8 *)uVar2,(int32 *)&local_18);
+  save_write_int((Progress *)param_1,((Progress *)param_1)->field_5c4,(uint8 *)uVar2,(int32 *)&local_18);
+  save_write_int((Progress *)param_1,((Progress *)param_1)->field_5c8,(uint8 *)uVar2,(int32 *)&local_18);
   uVar3 = FUN_0011e574(param_1,param_2,uVar2,local_18);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
   (*g_pHelperFuncs->free)(uVar2);
@@ -20904,7 +20894,7 @@ void FUN_0012031c(int *param_1,int param_2)
       local_18 = (int32)STRING_TRAINING_DOT_MID;
       iVar1 = FUN_0010bec4(0,&local_18,1,1).low;
       param_1[1] = iVar1;
-      FUN_0010a03c(iVar1,*(undefined4 *)(*(int *)(param_1[3] + 0xa8) + 0x598));
+      FUN_0010a03c(iVar1,((KHApp *)param_1[3])->progress->musicVolume);
       FUN_0011bb58(param_1[1],0);
       FUN_00108f28(param_1[1],0);
     }
@@ -21049,7 +21039,7 @@ bool FUN_0012059c(int param_1,int param_2)
       FUN_001201cc(*(undefined4 *)(param_1 + 0x24),0);
       return true;
     }
-    if ((0 < *(int *)(*(int *)(*(int *)(param_1 + 0x74) + 0xa8) + 0x594)) &&
+    if ((0 < ((KHApp *)*(int *)(param_1 + 0x74))->progress->soundVolume) &&
        (iVar1 = *(int *)(*(int *)(param_1 + 0x74) + 0xbc), iVar1 != 0)) {
       FUN_00108f28(iVar1,2);
     }
@@ -21654,7 +21644,7 @@ void FUN_001216c4(int param_1)
                         */
   iVar2 = (*g_pHelperFuncs->aee_GetTimeMS)();
   iVar2 = rt_udiv(1000,iVar2 - *(int *)(*(int *)(param_1 + 0x724) + 0xb0)).low;
-  *(int *)(param_1 + 0x5c4) = iVar2 + *(int *)(param_1 + 0x5c4);
+  ((Progress *)param_1)->field_5c4 = iVar2 + ((Progress *)param_1)->field_5c4;
                     /* helper[43] uint32 aee_GetTimeMS(void)  (AEEHelperFuncs +0xac, via *(base-4))
                         */
   uVar3 = (*g_pHelperFuncs->aee_GetTimeMS)();
@@ -22306,9 +22296,9 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
 /* GUESS: what it does. Updates the item drops (combat_region_update tail-jumps here with
    region->itemDrops at 0x00123124; `now` is not read): each item's time runs down and it disappears at 0;
    one within 1.0 of the player (|dx| + |dy|, a double compare: `bcs` at 0x001227b8, written after the
-   comma) is picked up: health + 1.0, MP + 1 or munny, by its kind, and the tutorial screen is told
-   (field_594, FUN_00108f28 with 5); in its last 5000 ms an item blinks (shown while time % 200 >= 100;
-   rt_sdiv divides, the remainder in the high word). Written from its disassembly. */
+   comma) is picked up: health + 1.0, MP + 1 or munny, by its kind, and sound 5 of the app's effects
+   plays (while soundVolume is above 0, FUN_00108f28); in its last 5000 ms an item blinks (shown while time
+   % 200 >= 100; rt_sdiv divides, the remainder in the high word). Written from its disassembly. */
 void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed)
 
 {
@@ -22344,7 +22334,7 @@ void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed)
       if (value = FUN_00126248(distance),
           FUN_001256b4(value.low,value.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD),
           *(float *)&distance < 1.0f) {       /* within 1.0 of the player: picked up */
-        if (drops->app->progress->field_594 > 0 && drops->app->field_bc != 0)
+        if (drops->app->progress->soundVolume > 0 && drops->app->field_bc != 0)
           FUN_00108f28((int32)drops->app->field_bc,5);
         if (drops->kinds[i] == 0)
           FUN_0010d074((int32)drops->app->progress,0x3f800000);   /* health + 1.0 */
