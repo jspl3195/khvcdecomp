@@ -679,7 +679,7 @@ void FUN_00114520(undefined4 param_1,int *param_2,undefined4 param_3,undefined4 
 void FUN_001145b4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param_4);
 void FUN_00114610(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param_4);
 undefined4 FUN_00114638(int param_1);
-int FUN_001146f0(int param_1,undefined4 param_2);
+int32 * progress_find_variable(Progress *progress,const char *name);   /* 0x001146F0 GUESS: name, see kh_mod.c */
 undefined4 FUN_00114750(int param_1);
 void text_table_get_wide_text(TextTable *table,int32 textId,AECHAR **text);   /* 0x00114774 GUESS: name, see kh_mod.c */
 void FUN_001147ec(undefined4 *param_1,int param_2,int *param_3);
@@ -797,7 +797,7 @@ void progress_set_status(Progress *progress,const char *name,int32 flag);   /* 0
 void FUN_0011ffc0(undefined4 *param_1,undefined4 param_2);
 void enemy_set_target(Enemy *enemy,int32 how);   /* 0x00120024 GUESS: names */
 void FUN_001200ac(int param_1,undefined4 param_2);
-void FUN_00120120(int param_1,undefined4 param_2,undefined4 param_3);
+void progress_set_variable(Progress *progress,const char *name,int32 value);   /* 0x00120120 GUESS: name, see kh_mod.c */
 void FUN_001201cc(int param_1,undefined4 param_2);
 void motion_entity_set_pitch(MotionEntity *entity,uint32 pitch);   /* 0x00120244 GUESS: name */
 void FUN_00120290(int param_1,undefined4 param_2);

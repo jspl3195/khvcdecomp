@@ -321,7 +321,9 @@ typedef struct Progress {
     uint8  statusFlags[100];      /* +0x000 one byte per status text (GUESS: names) */
     char  *statusTexts[100];      /* +0x064 named status texts, for example "Out of magic" while magicPoints is
                                      0; set and cleared by progress_set_status */
-    uint8  unknown_1f4[0x320];
+    int32    variableValues[100];   /* +0x1f4 GUESS: names; the level script's variables (setVar, incVar, decVar,
+                                     ifVar): their values (progress_find_variable, progress_set_variable) */
+    char    *variableNames[100];    /* +0x384 and their names; 0 = free slot */
     uint32 health;                /* +0x514 GUESS: a float (its bits); refilled from maximumHealth */
     uint32 maximumHealth;         /* +0x518 GUESS: a float (its bits); +1.0f by a level reward of type 1 */
     uint32 field_51c;             /* +0x51c a float (its bits), 9.0 at the start; drawn with the health */

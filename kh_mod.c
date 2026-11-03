@@ -2996,8 +2996,7 @@ LAB_0010489c:
               FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_0DB81F00,0);
               FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0x1f);
               memcpy_word_aligned(local_74 + 10,(int32)DATA_AT_00127BA4,0x18);
-              puVar6 = (undefined4 *)
-                       FUN_001146f0(*(undefined4 *)(*param_1 + 0xa8),(int32)STRING_COLLECTABLES);
+              puVar6 = (undefined4 *)progress_find_variable(((KHApp *)*param_1)->progress,STRING_COLLECTABLES);
               local_74[9] = 0;
               if (puVar6 != (undefined4 *)0x0) {
                 local_74[9] = *puVar6;
@@ -12261,18 +12260,18 @@ int32 script_command_run(ScriptCommand *command)
     break;
   case 0x4d:   /* setVar */
     if (command->text != (char *)0x0)
-      FUN_00120120((int)app->progress,(undefined4)command->text,command->number[0]);
+      progress_set_variable(app->progress,command->text,command->number[0]);
     break;
   case 0x4e:   /* incVar */
     if (command->text != (char *)0x0) {
-      variable = (int32 *)FUN_001146f0((int)app->progress,(undefined4)command->text);
+      variable = progress_find_variable(app->progress,command->text);
       if (variable != (int32 *)0x0)
         *variable = *variable + command->number[0];
     }
     break;
   case 0x4f:   /* decVar */
     if (command->text != (char *)0x0) {
-      variable = (int32 *)FUN_001146f0((int)app->progress,(undefined4)command->text);
+      variable = progress_find_variable(app->progress,command->text);
       if (variable != (int32 *)0x0)
         *variable = *variable - command->number[0];
     }
@@ -12284,11 +12283,11 @@ int32 script_command_run(ScriptCommand *command)
     string_split(context,command->text,(char *)DATA_AT_0012710C,words,count);
     if ((*g_pHelperFuncs->strcmp)(words[0],STRING_ENGINE_VER) == 0)
       left = 1;
-    else if ((variable = (int32 *)FUN_001146f0((int)app->progress,(undefined4)words[0])) != (int32 *)0x0)
+    else if ((variable = progress_find_variable(app->progress,words[0])) != (int32 *)0x0)
       left = *variable;
     else   /* words[2], not words[0]: research_notes/decomp/GAME_BUGS.md */
       left = FUN_00126858(string_to_float(context,words[2]));
-    if ((variable = (int32 *)FUN_001146f0((int)app->progress,(undefined4)words[2])) != (int32 *)0x0)
+    if ((variable = progress_find_variable(app->progress,words[2])) != (int32 *)0x0)
       right = *variable;
     else
       right = FUN_00126858(string_to_float(context,words[2]));
@@ -13838,24 +13837,24 @@ undefined4 FUN_00114638(int param_1)
   return *(undefined4 *)(*(int *)(param_1 + 0x138) + (int)FUN_00100288(iVar3,iVar4).high * 4);   /* % iVar3 */
 }
 
-/* ==== 0x001146F0  (file offset 0x146F0)  FUN_001146f0 ================================================ */
-int FUN_001146f0(int param_1,undefined4 param_2)
+/* ==== 0x001146F0  (file offset 0x146F0)  progress_find_variable ====================================== */
+/* GUESS: names. The value of the level script's variable `name` (a pointer into
+   Progress.variableValues, which the caller may change), or 0 when there is no such variable. Used by the
+   script's incVar, decVar and ifVar, and for "COLLECTABLES" by the menu code. */
+int32 * progress_find_variable(Progress *progress,const char *name)
 
 {
-  int iVar2;
-  int iVar3;
-  iVar3 = 0;
+  int32 i;
+
                     /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
                        via *(base-4)) */
-  while ((iVar2 = *(int *)(param_1 + iVar3 * 4 + 900), iVar2 == 0 ||
-         (iVar2 = (*g_pHelperFuncs->strcmp)(iVar2,param_2), iVar2 != 0))) {
-    iVar3 = iVar3 + 1;
-    if (99 < iVar3) {
-      return 0;
-    }
-  }
-  return param_1 + iVar3 * 4 + 500;
+  for (i = 0; i < 100; i++)
+    if (progress->variableNames[i] != (char *)0x0 &&
+        (*g_pHelperFuncs->strcmp)(progress->variableNames[i],name) == 0)
+      return &progress->variableValues[i];
+  return (int32 *)0x0;
 }
+
 
 /* ==== 0x00114750  (file offset 0x14750)  FUN_00114750 ================================================ */
 undefined4 FUN_00114750(int param_1)
@@ -20976,38 +20975,32 @@ void FUN_001200ac(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x00120120  (file offset 0x20120)  FUN_00120120 ================================================ */
-void FUN_00120120(int param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x00120120  (file offset 0x20120)  progress_set_variable ======================================= */
+/* GUESS: names. Sets the level script's variable `name` to `value` (the script's setVar): the existing one,
+   else a new one in the first free slot (a copy of the name, FUN_001204f0); nothing when all 100 are in
+   use. The binary keeps a flag for the second search that is always set (r8 = 1 at 0x00120130, tested at
+   0x0012017c). */
+void progress_set_variable(Progress *progress,const char *name,int32 value)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  
-  iVar2 = WORD_HEXADECIMAL_FFFDFEBC;
-  iVar3 = 0;
+  int32 i;
+
                     /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
                        via *(base-4)) */
-  while ((iVar1 = *(int *)(param_1 + iVar3 * 4 + 900), iVar1 == 0 ||
-         (iVar1 = (*g_pHelperFuncs->strcmp)(iVar1,param_2), iVar1 != 0))) {
-    iVar3 = iVar3 + 1;
-    if (99 < iVar3) {
-      iVar2 = 0;
-      do {
-        if (*(int *)(param_1 + iVar2 * 4 + 900) == 0) {
-          iVar2 = param_1 + iVar2 * 4;
-          FUN_001204f0((undefined4)((KHApp *)*(int *)(param_1 + 0x724))->context,param_2,iVar2 + 900);
-          *(undefined4 *)(iVar2 + 500) = param_3;
-          return;
-        }
-        iVar2 = iVar2 + 1;
-      } while (iVar2 < 100);
+  for (i = 0; i < 100; i++)
+    if (progress->variableNames[i] != (char *)0x0 &&
+        (*g_pHelperFuncs->strcmp)(progress->variableNames[i],name) == 0) {
+      progress->variableValues[i] = value;
       return;
     }
-  }
-  *(undefined4 *)(param_1 + iVar3 * 4 + 500) = param_3;
-  return;
+  for (i = 0; i < 100; i++)
+    if (progress->variableNames[i] == (char *)0x0) {
+      FUN_001204f0((undefined4)progress->app->context,(undefined4)name,(int *)&progress->variableNames[i]);
+      progress->variableValues[i] = value;
+      return;
+    }
 }
+
 
 /* ==== 0x001201CC  (file offset 0x201CC)  FUN_001201cc ================================================ */
 void FUN_001201cc(int param_1,undefined4 param_2)
