@@ -308,9 +308,9 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                      to match a high word shifted left by 1 (sign bit
                                                      dropped). (MASK & ~(hi << 1)) == 0 means "all
                                                      exponent bits set": the operand is Inf or NaN.
-                                                     Used by the add/subtract routines FUN_00124954,
-                                                     FUN_00124b40, FUN_00124b84 and by their copy
-                                                     inlined into FUN_00100c2c */
+                                                     Used by the add/subtract routines double_add,
+                                                     double_reverse_subtract, double_subtract and by
+                                                     their copy inlined into FUN_00100c2c */
 #define DOUBLE_ADD_NONFINITE_OPERAND_CODE 0x04000011u  /* was DAT_00124e10 (word at 0x00124E10), in
                                                      the soft-float library's literal pool. Not a
                                                      number: a control word handed to the library's
@@ -326,7 +326,7 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                        0x04000000 = which special case; the finite path
                                                                    passes DOUBLE_ADD_FINITE_OPERANDS_CODE
                                                      GUESS: the exact IEEE exception class each top bit
-                                                     stands for. Used in FUN_00124954 (double add) and
+                                                     stands for. Used in double_add (double add) and
                                                      in its copy inlined into FUN_00100c2c */
 #define DOUBLE_ADD_FINITE_OPERANDS_CODE 0x10000011u  /* was DAT_00124e0c (word at 0x00124E0C), next to
                                                      DOUBLE_ADD_NONFINITE_OPERAND_CODE: the control word
@@ -337,9 +337,10 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                      special-case bit 0x10000000 instead of 0x04000000.
                                                      GUESS: which IEEE exception class that bit stands
                                                      for (for finite operands, presumably overflow /
-                                                     inexact). Used in FUN_00124954 (add), FUN_00124b40
-                                                     and FUN_00124b84 (subtract, through the same add
-                                                     core) and the copy inlined into FUN_00100c2c */
+                                                     inexact). Used in double_add (add),
+                                                     double_reverse_subtract and double_subtract
+                                                     (subtract, through the same add core) and the copy
+                                                     inlined into FUN_00100c2c */
 #define FLOAT_DEFAULT_NAN            0x7FC00000u  /* was _UNK_00126d40 (word at 0x00126D40) and
                                                      DAT_00126244 (word at 0x00126244) */
 #define DOUBLE_DEFAULT_NAN_HIGH_WORD 0x7FF80000u  /* was _UNK_00126d44 (word at 0x00126D44) and
@@ -843,9 +844,9 @@ void save_write_float(Progress *progress,uint32 value,uint8 *data,int32 *positio
 void save_write_int(Progress *progress,int32 value,uint8 *data,int32 *position);   /* 0x001246F4 GUESS: name, see kh_mod.c */
 int32 save_write_string(Progress *progress,const char *text,uint8 *data,int32 *position);   /* 0x00124734 GUESS: name, see kh_mod.c */
 uint32 double_to_float(uint32 low,uint32 high);   /* 0x0012479C GUESS: name, see kh_mod.c */
-undefined8 FUN_00124954(uint param_1,uint param_2,uint param_3,uint param_4);
-undefined8 FUN_00124b40(uint param_1,uint param_2,uint param_3,uint param_4);
-undefined8 FUN_00124b84(uint param_1,uint param_2,uint param_3,uint param_4);
+uint64 double_add(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00124954 GUESS: name, see kh_mod.c */
+uint64 double_reverse_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00124B40 GUESS: name, see kh_mod.c */
+uint64 double_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00124B84 GUESS: name, see kh_mod.c */
 undefined8 FUN_00124f24(uint param_1,uint param_2,uint param_3,uint param_4);
 undefined8 FUN_00124f44(uint param_1,uint param_2,uint param_3,uint param_4);
 uint64 double_divide_mantissas(uint32 dividendLow,uint32 dividendHigh,uint32 divisorLow,uint32 divisorHigh);   /* 0x001251EC GUESS: name */

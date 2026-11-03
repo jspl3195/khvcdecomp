@@ -374,7 +374,7 @@ undefined8 FUN_0010041c(int param_1,uint param_2)
         bVar10 = iVar7 == 0xff00000;
       }
       if ((!bVar10 && iVar6 < 0 == bVar11) || ((bVar10 && (param_1 != 0)))) {
-        return FUN_00124954(param_1,param_2,param_1,param_2);
+        return double_add(param_1,param_2,param_1,param_2);
       }
                     /* |x| > 1 (outside acos's domain): errno = EDOM (set_errno), then the result
                        is NaN: NAN_DOUBLE, loaded through puVar3 below
@@ -395,7 +395,7 @@ undefined8 FUN_0010041c(int param_1,uint param_2)
     }
     if (iVar8 < 0 == bVar10) {
       if (-1 < (int)param_2) {
-        uVar12 = FUN_00124b40(param_1,param_2,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
+        uVar12 = double_reverse_subtract(param_1,param_2,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
         uVar12 = FUN_00125734((int)uVar12.low,(int)uVar12.high,HALF_DOUBLE_LOW_WORD,HALF_DOUBLE_HIGH_WORD
                              );
         uVar5 = uVar12.high;
@@ -403,25 +403,25 @@ undefined8 FUN_0010041c(int param_1,uint param_2)
         uVar12 = FUN_001009b8(uVar2,uVar5);
         uVar4 = uVar12.high;
         uVar13 = FUN_00125734(0,uVar4,0,uVar4);
-        uVar13 = FUN_00124b40((int)uVar13.low,(int)uVar13.high,uVar2,uVar5);
-        uVar14 = FUN_00124954((int)uVar12.low,uVar4,0,uVar4);
+        uVar13 = double_reverse_subtract((int)uVar13.low,(int)uVar13.high,uVar2,uVar5);
+        uVar14 = double_add((int)uVar12.low,uVar4,0,uVar4);
         uVar13 = FUN_00124f24((int)uVar14.low,(int)uVar14.high,(int)uVar13.low,
                               (int)uVar13.high);
         uVar14 = FUN_00100c2c(iVar7,6,uVar2,uVar5);
         uVar14 = FUN_00125734((int)uVar14.low,(int)uVar14.high,uVar2,uVar5);
         uVar15 = FUN_00100c2c(iVar6,4,uVar2,uVar5);
         uVar15 = FUN_00125734((int)uVar15.low,(int)uVar15.high,uVar2,uVar5);
-        uVar15 = FUN_00124954((int)uVar15.low,(int)uVar15.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD
+        uVar15 = double_add((int)uVar15.low,(int)uVar15.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD
                              );
         uVar14 = FUN_00124f44((int)uVar14.low,(int)uVar14.high,(int)uVar15.low,
                               (int)uVar15.high);
         uVar12 = FUN_00125734((int)uVar14.low,(int)uVar14.high,(int)uVar12.low,uVar4);
-        uVar12 = FUN_00124954((int)uVar12.low,(int)uVar12.high,(int)uVar13.low,
+        uVar12 = double_add((int)uVar12.low,(int)uVar12.high,(int)uVar13.low,
                               (int)uVar13.high);
-        uVar12 = FUN_00124954(0,uVar4,(int)uVar12.low,(int)uVar12.high);
+        uVar12 = double_add(0,uVar4,(int)uVar12.low,(int)uVar12.high);
         return FUN_00125734((int)uVar12.low,(int)uVar12.high,TWO_DOUBLE_LOW_WORD,TWO_DOUBLE_HIGH_WORD);
       }
-      uVar12 = FUN_00124954(param_1,param_2,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
+      uVar12 = double_add(param_1,param_2,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
       uVar12 = FUN_00125734((int)uVar12.low,(int)uVar12.high,HALF_DOUBLE_LOW_WORD,HALF_DOUBLE_HIGH_WORD);
       uVar5 = uVar12.high;
       uVar2 = uVar12.low;
@@ -429,14 +429,15 @@ undefined8 FUN_0010041c(int param_1,uint param_2)
       uVar12 = FUN_00125734((int)uVar12.low,(int)uVar12.high,uVar2,uVar5);
       uVar13 = FUN_00100c2c(iVar6,4,uVar2,uVar5);
       uVar13 = FUN_00125734((int)uVar13.low,(int)uVar13.high,uVar2,uVar5);
-      uVar13 = FUN_00124954((int)uVar13.low,(int)uVar13.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
+      uVar13 = double_add((int)uVar13.low,(int)uVar13.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
       uVar14 = FUN_001009b8(uVar2,uVar5);
       uVar2 = uVar14.high;
       uVar12 = FUN_00124f44((int)uVar12.low,(int)uVar12.high,(int)uVar13.low,
                             (int)uVar13.high);
       uVar12 = FUN_00125734((int)uVar12.low,(int)uVar12.high,(int)uVar14.low,uVar2);
-      uVar12 = FUN_00124b84((int)uVar12.low,(int)uVar12.high,HALF_PI_CORRECTION_LOW_WORD,HALF_PI_CORRECTION_HIGH_WORD);
-      uVar12 = FUN_00124954((int)uVar14.low,uVar2,(int)uVar12.low,(int)uVar12.high);
+      uVar12 = double_subtract((int)uVar12.low,(int)uVar12.high,HALF_PI_CORRECTION_LOW_WORD,
+                               HALF_PI_CORRECTION_HIGH_WORD);
+      uVar12 = double_add((int)uVar14.low,uVar2,(int)uVar12.low,(int)uVar12.high);
       uVar12 = FUN_00125734((int)uVar12.low,(int)uVar12.high,TWO_DOUBLE_LOW_WORD,TWO_DOUBLE_HIGH_WORD);
       uVar2 = PI_DOUBLE_LOW_WORD;
       uVar5 = PI_DOUBLE_HIGH_WORD;
@@ -461,16 +462,17 @@ undefined8 FUN_0010041c(int param_1,uint param_2)
       uVar12 = FUN_00125734((int)uVar12.low,(int)uVar12.high,uVar2,uVar5);
       uVar13 = FUN_00100c2c(iVar6,4,uVar2,uVar5);
       uVar13 = FUN_00125734((int)uVar13.low,(int)uVar13.high,uVar2,uVar5);
-      uVar13 = FUN_00124954((int)uVar13.low,(int)uVar13.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
+      uVar13 = double_add((int)uVar13.low,(int)uVar13.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
       uVar12 = FUN_00124f44((int)uVar12.low,(int)uVar12.high,(int)uVar13.low,
                             (int)uVar13.high);
       uVar12 = FUN_00125734(param_1,param_2,(int)uVar12.low,(int)uVar12.high);
-      uVar12 = FUN_00124b40((int)uVar12.low,(int)uVar12.high,HALF_PI_CORRECTION_LOW_WORD,HALF_PI_CORRECTION_HIGH_WORD);
-      uVar12 = FUN_00124b40((int)uVar12.low,(int)uVar12.high,param_1,param_2);
+      uVar12 = double_reverse_subtract((int)uVar12.low,(int)uVar12.high,HALF_PI_CORRECTION_LOW_WORD,
+                                       HALF_PI_CORRECTION_HIGH_WORD);
+      uVar12 = double_reverse_subtract((int)uVar12.low,(int)uVar12.high,param_1,param_2);
       uVar2 = HALF_PI_DOUBLE_LOW_WORD;
       uVar5 = HALF_PI_DOUBLE_HIGH_WORD;
     }
-    return FUN_00124b40((int)uVar12.low,(int)uVar12.high,uVar2,uVar5);
+    return double_reverse_subtract((int)uVar12.low,(int)uVar12.high,uVar2,uVar5);
   }
 }
 
@@ -533,7 +535,7 @@ undefined8 FUN_001007f4(int param_1,uint param_2)
       }
       goto LAB_00100814;
     }
-    uVar8 = FUN_00124954(param_1,param_2,param_1,param_2);
+    uVar8 = double_add(param_1,param_2,param_1,param_2);
   }
   else {
 LAB_00100814:
@@ -597,7 +599,7 @@ undefined8 FUN_001008d0(int param_1,uint param_2)
       param_2 = uStack_10;
       goto LAB_00100980;
     }
-    uVar7 = FUN_00124954(param_1,param_2,param_1,param_2);
+    uVar7 = double_add(param_1,param_2,param_1,param_2);
   }
   else {
     iVar6 = 0;
@@ -694,8 +696,8 @@ undefined8 FUN_00100a58(undefined4 param_1,uint param_2,undefined4 param_3,undef
     if ((int)uVar6 < iVar1) {
       uVar13 = FUN_00125734(uVar2,uVar3,HALF_DOUBLE_LOW_WORD,HALF_DOUBLE_HIGH_WORD);
       uVar11 = FUN_00125734(uVar2,uVar3,(int)uVar11.low,uVar4);
-      uVar11 = FUN_00124b40((int)uVar12.low,uVar5,(int)uVar11.low,(int)uVar11.high);
-      uVar11 = FUN_00124b40((int)uVar11.low,(int)uVar11.high,(int)uVar13.low,
+      uVar11 = double_reverse_subtract((int)uVar12.low,uVar5,(int)uVar11.low,(int)uVar11.high);
+      uVar11 = double_reverse_subtract((int)uVar11.low,(int)uVar11.high,(int)uVar13.low,
                             (int)uVar13.high);
       MAKE_WORDS(uVar13,ONE_DOUBLE_HIGH_WORD,ONE_DOUBLE_LOW_WORD);
     }
@@ -716,14 +718,14 @@ undefined8 FUN_00100a58(undefined4 param_1,uint param_2,undefined4 param_3,undef
         iVar8 = uVar6 - 0x200000;
       }
       uVar13 = FUN_00125734(uVar2,uVar3,HALF_DOUBLE_LOW_WORD,HALF_DOUBLE_HIGH_WORD);
-      uVar14 = FUN_00124b84((int)uVar13.low,(int)uVar13.high,uVar7,iVar8);
-      uVar13 = FUN_00124b40(uVar7,iVar8,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
+      uVar14 = double_subtract((int)uVar13.low,(int)uVar13.high,uVar7,iVar8);
+      uVar13 = double_reverse_subtract(uVar7,iVar8,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
       uVar11 = FUN_00125734(uVar2,uVar3,(int)uVar11.low,uVar4);
-      uVar11 = FUN_00124b40((int)uVar12.low,uVar5,(int)uVar11.low,(int)uVar11.high);
-      uVar11 = FUN_00124b40((int)uVar11.low,(int)uVar11.high,(int)uVar14.low,
+      uVar11 = double_reverse_subtract((int)uVar12.low,uVar5,(int)uVar11.low,(int)uVar11.high);
+      uVar11 = double_reverse_subtract((int)uVar11.low,(int)uVar11.high,(int)uVar14.low,
                             (int)uVar14.high);
     }
-    return FUN_00124b40((int)uVar11.low,(int)uVar11.high,(int)uVar13.low,(int)uVar13.high);
+    return double_reverse_subtract((int)uVar11.low,(int)uVar11.high,(int)uVar13.low,(int)uVar13.high);
   }
   return MAKE_WORDS(uVar11,ONE_DOUBLE_HIGH_WORD,uVar2);
 }
@@ -773,7 +775,7 @@ undefined8 FUN_00100c2c(int param_1,int param_2,undefined4 param_3,undefined4 pa
       uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
       param_2 = param_2 + -1;
       puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-      uVar22 = FUN_00124954((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+      uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
     }
     break;
   case 1:
@@ -796,37 +798,37 @@ undefined8 FUN_00100c2c(int param_1,int param_2,undefined4 param_3,undefined4 pa
   uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
   param_2 = param_2 + -1;
   puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = FUN_00124954((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+  uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
 LAB_00100cbc:
   uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
   param_2 = param_2 + -1;
   puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = FUN_00124954((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+  uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
 LAB_00100cd8:
   uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
   param_2 = param_2 + -1;
   puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = FUN_00124954((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+  uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
 LAB_00100cf4:
   uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
   param_2 = param_2 + -1;
   puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = FUN_00124954((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+  uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
 LAB_00100d10:
   uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
   param_2 = param_2 + -1;
   puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = FUN_00124954((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+  uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
 LAB_00100d2c:
   uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
   param_2 = param_2 + -1;
   puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = FUN_00124954((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+  uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
 LAB_00100d48:
   uVar22 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
   param_2 = param_2 + -1;
   puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = FUN_00124954((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
+  uVar22 = double_add((int)uVar22.low,(int)uVar22.high,*puVar10,puVar10[1]);
 LAB_00100d64:
   uVar23 = FUN_00125734((int)uVar22.low,(int)uVar22.high,param_3,param_4);
   uVar8 = uVar23.high;
@@ -1432,18 +1434,22 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
                     /* Rewritten from the instructions (0x00100dec-0x00100e74): Ghidra's output
                        lost the arguments of the calls fed from conditionally loaded registers and
                        the assignment of the near-pi/2 step, so these calls did not compile.
-                       FUN_00124954(a, b) = a + b, FUN_00124b84(a, b) = a - b (doubles as
+                       double_add(a, b) = a + b, double_subtract(a, b) = a - b (doubles as
                        low:high word pairs). Only y[0] is computed; y[1] keeps the preset 0.0. */
       if ((int)param_2 < 1) {
                     /* x <= 0: z = x + pio2_1; y[0] = z + pio2_1t, or near pi/2
                        z += pio2_2; y[0] = z + pio2_2t. Returns -1. */
-        uVar16 = FUN_00124954(param_1,param_2,HALF_PI_FIRST_33_BITS_LOW_WORD,HALF_PI_FIRST_33_BITS_HIGH_WORD);
+        uVar16 = double_add(param_1,param_2,HALF_PI_FIRST_33_BITS_LOW_WORD,
+                            HALF_PI_FIRST_33_BITS_HIGH_WORD);
         if (uVar9 == uVar1) {
-          uVar16 = FUN_00124954((int)uVar16.low,(int)uVar16.high,HALF_PI_SECOND_33_BITS_LOW_WORD,HALF_PI_SECOND_33_BITS_HIGH_WORD);
-          uVar16 = FUN_00124954((int)uVar16.low,(int)uVar16.high,HALF_PI_SECOND_33_BITS_TAIL_LOW_WORD,HALF_PI_SECOND_33_BITS_TAIL_HIGH_WORD);
+          uVar16 = double_add((int)uVar16.low,(int)uVar16.high,HALF_PI_SECOND_33_BITS_LOW_WORD,
+                              HALF_PI_SECOND_33_BITS_HIGH_WORD);
+          uVar16 = double_add((int)uVar16.low,(int)uVar16.high,HALF_PI_SECOND_33_BITS_TAIL_LOW_WORD,
+                              HALF_PI_SECOND_33_BITS_TAIL_HIGH_WORD);
         }
         else {
-          uVar16 = FUN_00124954((int)uVar16.low,(int)uVar16.high,HALF_PI_FIRST_33_BITS_TAIL_LOW_WORD,HALF_PI_FIRST_33_BITS_TAIL_HIGH_WORD);
+          uVar16 = double_add((int)uVar16.low,(int)uVar16.high,HALF_PI_FIRST_33_BITS_TAIL_LOW_WORD,
+                              HALF_PI_FIRST_33_BITS_TAIL_HIGH_WORD);
         }
         *param_3 = uVar16;
         iVar2 = -1;
@@ -1451,13 +1457,17 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
       else {
                     /* x > 0: z = x - pio2_1; y[0] = z - pio2_1t, or near pi/2
                        z -= pio2_2; y[0] = z - pio2_2t. Returns 1. */
-        uVar16 = FUN_00124b84(param_1,param_2,HALF_PI_FIRST_33_BITS_LOW_WORD,HALF_PI_FIRST_33_BITS_HIGH_WORD);
+        uVar16 = double_subtract(param_1,param_2,HALF_PI_FIRST_33_BITS_LOW_WORD,
+                                 HALF_PI_FIRST_33_BITS_HIGH_WORD);
         if (uVar9 == uVar1) {
-          uVar16 = FUN_00124b84((int)uVar16.low,(int)uVar16.high,HALF_PI_SECOND_33_BITS_LOW_WORD,HALF_PI_SECOND_33_BITS_HIGH_WORD);
-          uVar16 = FUN_00124b84((int)uVar16.low,(int)uVar16.high,HALF_PI_SECOND_33_BITS_TAIL_LOW_WORD,HALF_PI_SECOND_33_BITS_TAIL_HIGH_WORD);
+          uVar16 = double_subtract((int)uVar16.low,(int)uVar16.high,HALF_PI_SECOND_33_BITS_LOW_WORD,
+                                   HALF_PI_SECOND_33_BITS_HIGH_WORD);
+          uVar16 = double_subtract((int)uVar16.low,(int)uVar16.high,HALF_PI_SECOND_33_BITS_TAIL_LOW_WORD,
+                                   HALF_PI_SECOND_33_BITS_TAIL_HIGH_WORD);
         }
         else {
-          uVar16 = FUN_00124b84((int)uVar16.low,(int)uVar16.high,HALF_PI_FIRST_33_BITS_TAIL_LOW_WORD,HALF_PI_FIRST_33_BITS_TAIL_HIGH_WORD);
+          uVar16 = double_subtract((int)uVar16.low,(int)uVar16.high,HALF_PI_FIRST_33_BITS_TAIL_LOW_WORD,
+                                   HALF_PI_FIRST_33_BITS_TAIL_HIGH_WORD);
         }
         *param_3 = uVar16;
         iVar2 = 1;
@@ -1497,22 +1507,22 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
       }
       uVar13 = uVar16.high;
       uVar4 = uVar16.low & 0xfc000000;
-      uVar16 = FUN_00124b84(uVar16.low,uVar13,uVar4,uVar13);
+      uVar16 = double_subtract(uVar16.low,uVar13,uVar4,uVar13);
       uVar7 = uVar16.high;
       uVar17 = FUN_00125734(uVar4,uVar13,REDUCTION_CONSTANT_HIGH_PART_LOW_WORD,REDUCTION_CONSTANT_HIGH_PART_HIGH_WORD);
       uVar8 = uVar17.high;
       uVar18 = FUN_00125734(uVar4,uVar13,REDUCTION_CONSTANT_LOW_PART_LOW_WORD,REDUCTION_CONSTANT_LOW_PART_HIGH_WORD);
       uVar19 = FUN_00125734((int)uVar16.low,uVar7,REDUCTION_CONSTANT_HIGH_PART_LOW_WORD,REDUCTION_CONSTANT_HIGH_PART_HIGH_WORD);
       uVar16 = FUN_00125734((int)uVar16.low,uVar7,REDUCTION_CONSTANT_LOW_PART_LOW_WORD,REDUCTION_CONSTANT_LOW_PART_HIGH_WORD);
-      uVar18 = FUN_00124954((int)uVar18.low,(int)uVar18.high,(int)uVar19.low,
+      uVar18 = double_add((int)uVar18.low,(int)uVar18.high,(int)uVar19.low,
                             (int)uVar19.high);
       uVar13 = uVar18.high;
-      uVar19 = FUN_00124954((int)uVar17.low,uVar8,(int)uVar18.low,uVar13);
+      uVar19 = double_add((int)uVar17.low,uVar8,(int)uVar18.low,uVar13);
       uVar11 = uVar19.high;
       uVar7 = uVar19.low;
-      uVar17 = FUN_00124b84(uVar7,uVar11,(int)uVar17.low,uVar8);
-      uVar17 = FUN_00124b40((int)uVar17.low,(int)uVar17.high,(int)uVar18.low,uVar13);
-      uVar16 = FUN_00124954((int)uVar17.low,(int)uVar17.high,(int)uVar16.low,
+      uVar17 = double_subtract(uVar7,uVar11,(int)uVar17.low,uVar8);
+      uVar17 = double_reverse_subtract((int)uVar17.low,(int)uVar17.high,(int)uVar18.low,uVar13);
+      uVar16 = double_add((int)uVar17.low,(int)uVar17.high,(int)uVar16.low,
                             (int)uVar16.high);
       uVar17 = FUN_001259e8(uVar7,uVar11,REDUCTION_PERIOD_LOW_WORD,REDUCTION_PERIOD_HIGH_WORD);
       uVar17 = FUN_00124f44((int)uVar17.low,(int)uVar17.high,REDUCTION_PERIOD_LOW_WORD,REDUCTION_PERIOD_HIGH_WORD);
@@ -1520,11 +1530,11 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
                     /* Ghidra dropped the data flow here: the sum stays in r0:r1 and is the
                        argument of the double -> int conversion (0x001011ec bl add; 0x001011f0
                        bl FUN_00125554). Written out explicitly. */
-      uVar17 = FUN_00124954((int)uVar17.low,(int)uVar17.high,NINE_DOUBLE_LOW_WORD,NINE_DOUBLE_HIGH_WORD);
+      uVar17 = double_add((int)uVar17.low,(int)uVar17.high,NINE_DOUBLE_LOW_WORD,NINE_DOUBLE_HIGH_WORD);
       iVar2 = FUN_00125554(uVar17.low,uVar17.high);
       iVar2 = iVar2 >> 1;
       uVar17 = FUN_001259e8(uVar7,uVar11,REDUCTION_QUARTER_PERIOD_LOW_WORD,REDUCTION_QUARTER_PERIOD_HIGH_WORD);
-      uVar16 = FUN_00124954((int)uVar17.low,(int)uVar17.high,(int)uVar16.low,
+      uVar16 = double_add((int)uVar17.low,(int)uVar17.high,(int)uVar16.low,
                             (int)uVar16.high);
       uVar16 = FUN_001259e8((int)uVar16.low,(int)uVar16.high,REDUCTION_QUARTER_PERIOD_LOW_WORD,REDUCTION_QUARTER_PERIOD_HIGH_WORD);
       uVar16 = FUN_00124f44((int)uVar16.low,(int)uVar16.high,REDUCTION_CONSTANT_LOW_WORD,REDUCTION_CONSTANT_HIGH_WORD);
@@ -1536,20 +1546,20 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
                        data flow: the sum in r0:r1 is the argument of the double -> int conversion
                        and n (r0) that of the int -> double one (0x00100ea8 bl add; 0x00100eac
                        bl FUN_00125554; 0x00100eb4 bl int_to_double). Written out explicitly. */
-      uVar16 = FUN_00124954((int)uVar16.low,(int)uVar16.high,HALF_DOUBLE_LOW_WORD,HALF_DOUBLE_HIGH_WORD);
+      uVar16 = double_add((int)uVar16.low,(int)uVar16.high,HALF_DOUBLE_LOW_WORD,HALF_DOUBLE_HIGH_WORD);
       iVar2 = FUN_00125554(uVar16.low,uVar16.high);
       uVar16 = int_to_double(iVar2);
       uVar13 = uVar16.high;
       uVar8 = uVar16.low;
       uVar16 = FUN_00125734(uVar8,uVar13,HALF_PI_FIRST_33_BITS_LOW_WORD,HALF_PI_FIRST_33_BITS_HIGH_WORD);
-      uVar16 = FUN_00124b40((int)uVar16.low,(int)uVar16.high,param_1,
+      uVar16 = double_reverse_subtract((int)uVar16.low,(int)uVar16.high,param_1,
                             param_2 & 0x7fffffff);
       uVar17 = FUN_00125734(uVar8,uVar13,HALF_PI_FIRST_33_BITS_TAIL_LOW_WORD,HALF_PI_FIRST_33_BITS_TAIL_HIGH_WORD);
       iVar10 = 1;
       while( true ) {
         uVar12 = uVar16.high;
         uVar11 = uVar16.low;
-        uVar16 = FUN_00124b84(uVar11,uVar12,(int)uVar17.low,(int)uVar17.high);
+        uVar16 = double_subtract(uVar11,uVar12,(int)uVar17.low,(int)uVar17.high);
         *param_3 = uVar16;
         bVar15 = SUBTRACT_OVERFLOWS(iVar10,3);
         iVar5 = iVar10 + -3;
@@ -1563,11 +1573,11 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
         puVar14 = (undefined4 *)((int32)HALF_PI_PIECES_TABLE + iVar10 * 0x10);
         uVar17 = FUN_00125734(uVar8,uVar13,*puVar14,puVar14[1]);
         uVar6 = uVar17.high;
-        uVar16 = FUN_00124b84(uVar11,uVar12,(int)uVar17.low,uVar6);
+        uVar16 = double_subtract(uVar11,uVar12,(int)uVar17.low,uVar6);
         uVar18 = FUN_00125734(uVar8,uVar13,puVar14[2],puVar14[3]);
-        uVar19 = FUN_00124b84(uVar11,uVar12,(int)uVar16.low,(int)uVar16.high);
-        uVar17 = FUN_00124b84((int)uVar19.low,(int)uVar19.high,(int)uVar17.low,uVar6);
-        uVar17 = FUN_00124b40((int)uVar17.low,(int)uVar17.high,(int)uVar18.low,
+        uVar19 = double_subtract(uVar11,uVar12,(int)uVar16.low,(int)uVar16.high);
+        uVar17 = double_subtract((int)uVar19.low,(int)uVar19.high,(int)uVar17.low,uVar6);
+        uVar17 = double_reverse_subtract((int)uVar17.low,(int)uVar17.high,(int)uVar18.low,
                               (int)uVar18.high);
         iVar10 = iVar10 + 1;
       }
@@ -1614,21 +1624,21 @@ FUN_00101268(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param
     uVar6 = uVar7.high;
     if (param_5 == 0) {
       uVar7 = FUN_00125734(uVar2,uVar4,(int)uVar7.low,uVar6);
-      uVar7 = FUN_00124954((int)uVar7.low,(int)uVar7.high,SIN_KERNEL_S1_LOW_WORD,SIN_KERNEL_S1_HIGH_WORD);
+      uVar7 = double_add((int)uVar7.low,(int)uVar7.high,SIN_KERNEL_S1_LOW_WORD,SIN_KERNEL_S1_HIGH_WORD);
       uVar7 = FUN_00125734((int)uVar7.low,(int)uVar7.high,uVar3,uVar5);
-      uVar7 = FUN_00124954((int)uVar7.low,(int)uVar7.high,param_1,param_2);
+      uVar7 = double_add((int)uVar7.low,(int)uVar7.high,param_1,param_2);
     }
     else {
       uVar8 = FUN_00125734(param_3,param_4,HALF_DOUBLE_LOW_WORD,HALF_DOUBLE_HIGH_WORD);
       uVar7 = FUN_00125734(uVar3,uVar5,(int)uVar7.low,uVar6);
-      uVar7 = FUN_00124b40((int)uVar7.low,(int)uVar7.high,(int)uVar8.low,
+      uVar7 = double_reverse_subtract((int)uVar7.low,(int)uVar7.high,(int)uVar8.low,
                            (int)uVar8.high);
       uVar7 = FUN_00125734((int)uVar7.low,(int)uVar7.high,uVar2,uVar4);
-      uVar7 = FUN_00124b84((int)uVar7.low,(int)uVar7.high,param_3,param_4);
+      uVar7 = double_subtract((int)uVar7.low,(int)uVar7.high,param_3,param_4);
       uVar8 = FUN_00125734(uVar3,uVar5,SIN_KERNEL_S1_LOW_WORD,SIN_KERNEL_S1_HIGH_WORD);
-      uVar7 = FUN_00124b40((int)uVar8.low,(int)uVar8.high,(int)uVar7.low,
+      uVar7 = double_reverse_subtract((int)uVar8.low,(int)uVar8.high,(int)uVar7.low,
                            (int)uVar7.high);
-      uVar7 = FUN_00124b40((int)uVar7.low,(int)uVar7.high,param_1,param_2);
+      uVar7 = double_reverse_subtract((int)uVar7.low,(int)uVar7.high,param_1,param_2);
     }
     return uVar7;
   }
@@ -10771,7 +10781,7 @@ void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param
   local_28 = param_4;
   dVar2 = FUN_00126248(param_4);
   uVar2 = dVar2.low;
-  dVar2 = FUN_00124954(uVar2,dVar2.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
+  dVar2 = double_add(uVar2,dVar2.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
   uVar2 = dVar2.low;
   local_28 = double_to_float(uVar2,dVar2.high);
   item_drops_get_chances((ItemDrops *)param_1,chances);
@@ -18211,7 +18221,7 @@ void FUN_0011ca8c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 /* ==== 0x0011CB34  (file offset 0x1CB34)  wrap_angle ================================================== */
 /* GUESS: name. Wraps an angle in degrees (a float, its bits) into -180..180: subtracts 360 while it is
    above 180, adds 360 while it is below -180. The work is done in doubles: FUN_00126248 widens the float,
-   FUN_00124b84 / FUN_00124954 subtract / add 360.0, double_to_float narrows back; FUN_00125634 and
+   double_subtract / double_add subtract / add 360.0, double_to_float narrows back; FUN_00125634 and
    FUN_001256b4 compare with 180.0 and -180.0 and leave the result in the flags (`bhi` at 0x0011cb70,
    `bcc` at 0x0011cba4), written after the commas. The first argument, app->context, is never read. */
 void wrap_angle(int32 context,uint32 *angle)
@@ -18222,14 +18232,14 @@ void wrap_angle(int32 context,uint32 *angle)
   while (value = FUN_00126248(*angle),
          FUN_00125634(value.low,value.high,DOUBLE_180_LOW_WORD,DOUBLE_180_HIGH_WORD), *(float *)angle > 180.0f) {
     value = FUN_00126248(*angle);
-    value = FUN_00124b84(value.low,value.high,DOUBLE_360_LOW_WORD,DOUBLE_360_HIGH_WORD);
+    value = double_subtract(value.low,value.high,DOUBLE_360_LOW_WORD,DOUBLE_360_HIGH_WORD);
     *angle = double_to_float(value.low,value.high);
   }
   while (value = FUN_00126248(*angle),
          FUN_001256b4(value.low,value.high,DOUBLE_MINUS_180_LOW_WORD,DOUBLE_MINUS_180_HIGH_WORD),
          *(float *)angle < -180.0f) {
     value = FUN_00126248(*angle);
-    value = FUN_00124954(value.low,value.high,DOUBLE_360_LOW_WORD,DOUBLE_360_HIGH_WORD);
+    value = double_add(value.low,value.high,DOUBLE_360_LOW_WORD,DOUBLE_360_HIGH_WORD);
     *angle = double_to_float(value.low,value.high);
   }
 }
@@ -22700,7 +22710,7 @@ void FUN_0012312c(int param_1,int param_2,int param_3)
           uVar6 = float_cos(uVar3);
           dVar6 = FUN_00126248(uVar6);
           uVar6 = dVar6.low;
-          dVar6 = FUN_00124b40(uVar6,dVar6.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
+          dVar6 = double_reverse_subtract(uVar6,dVar6.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
           uVar6 = dVar6.low;
           uVar6 = double_to_float(uVar6,dVar6.high);
         }
@@ -23728,1776 +23738,1285 @@ uint32 double_to_float(uint32 low,uint32 high)
 }
 
 
-/* ==== 0x00124954  (file offset 0x24954)  FUN_00124954 ================================================ */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-undefined8 FUN_00124954(uint param_1,uint param_2,uint param_3,uint param_4)
+/* ==== 0x00124954  (file offset 0x24954)  double_add ================================================== */
+/* GUESS: name (the routine is certain: the soft-float library's double-precision add, ARM's run-time
+   ABI __aeabi_dadd). Returns a + b, a and b given and returned as their two words (low, high).
+   Same signs add the magnitudes, different signs subtract them (0x00124ba4, in
+   double_subtract's code).
+   Like float_add: the operands are swapped so |a| >= |b|, b is aligned to a's exponent and added or
+   subtracted, and the result rounded to nearest, ties to even, on b's dropped bits; rounding never
+   signals inexact. The status word (kh_GetFpStatusPtr) and the exception word ip are float_add's
+   (0x11 add, 0x12 subtract, 0x10 double precision; 0x04000000 invalid, 0x10000000 overflow,
+   0x20000000 underflow); the library's shared code is written here for this routine's cases:
+     an overflow (the exponent reaching 0x7ff): +-Inf, or the trap (status 0x400) with the exponent
+       wrapped by 1536;
+     an exact zero from opposite signs: +0;
+     a denormal result, exact (0x00124d80, 0x00126018): flush to zero (bit 24) gives +-0, an untrapped
+       underflow the denormal and no flag, a trapped one (0x800) the trap with the result normalized
+       and its exponent wrapped by 1536; a cancellation's denormal (0x00125eb4) takes the same flush
+       and trap, or is shifted into place;
+     a NaN: a signalling one is invalid (the trap, status 0x100, or the default NaN with a's sign),
+       otherwise the first NaN as it is; Inf - Inf is invalid the same way.
+   Each of double_add, double_subtract and double_reverse_subtract holds both cores and these tails,
+   as the binary's three entries share them. The listing's fifth kh_GetFpStatusPtr call, after the
+   trap, is the compare routines' result code (0x00126d6c), which an add never reaches, and the shared
+   denormal code's rounding (0x00125f88 - 0x00126014: a shift of 53 or more, the rounding and the
+   underflow flag with its own status read) cannot run here: a cancellation's result is exact, its
+   lowest bit no smaller than the operands' (at least 2^-1074). Neither is written. The trap gets
+   r0 - r3 as the binary leaves them. Verified under emulation (research_notes/soft_float_test,
+   double_reference.py, kind dd). */
+uint64 double_add(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
 
 {
-  byte bVar1;
-  uint uVar2;
-  uint uVar3;
-  uint32 *puVar4;
-  undefined4 uVar5;
-  uint uVar6;
-  undefined4 uVar7;
-  int iVar8;
-  uint uVar9;
-  uint uVar10;
-  int iVar11;
-  uint uVar12;
-  uint uVar13;
-  int iVar14;
-  uint uVar15;
-  bool bVar16;
-  bool bVar17;
-  undefined8 uVar18;
-  uint uVar19;
-  
-  if ((DOUBLE_EXPONENT_MASK_SHIFTED & ~(param_2 << 1)) == 0 ||
-      (DOUBLE_EXPONENT_MASK_SHIFTED & ~(param_4 << 1)) == 0) {
-    uVar9 = param_2 * 2 + (uint)(param_1 != 0);
-    uVar13 = param_4 * 2 + (uint)(param_3 != 0);
-    bVar17 = DOUBLE_EXPONENT_MASK_SHIFTED <= uVar9;
-    bVar16 = uVar9 == DOUBLE_EXPONENT_MASK_SHIFTED;
-    if (!bVar17 || bVar16) {
-      bVar17 = DOUBLE_EXPONENT_MASK_SHIFTED <= uVar13;
-      bVar16 = uVar13 == DOUBLE_EXPONENT_MASK_SHIFTED;
-    }
-    uVar9 = DOUBLE_ADD_NONFINITE_OPERAND_CODE;
-    if (bVar17 && !bVar16) {
-      uVar15 = param_2 * 2 + 0x100000 + (uint)(param_1 != 0);
-      uVar13 = uVar15;
-      if (uVar15 < 0xfff00001) {
-        uVar13 = param_4 * 2 + 0x100000 + (uint)(param_3 != 0);
-      }
-      if (0xfff00000 < uVar13) goto LAB_001260e4;
-      uVar13 = DOUBLE_ADD_NONFINITE_OPERAND_CODE;
-      if (0xfffff < uVar15) {
-        param_1 = param_3;
-        param_2 = param_4;
-      }
-LAB_00126cb0:
-      if ((uVar13 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x00126cc4. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        if ((uVar13 & 0xf) != 8) {
-          return MAKE_WORDS(uVar18,param_2,param_1);
-        }
-        if ((uVar13 & 0x40) == 0) {
-          uVar5 = FLOAT_DEFAULT_NAN;
-          if ((uVar13 & 0x10) != 0) {
-            uVar5 = 0;
-            param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD;
-          }
-          return MAKE_WORDS(uVar18,param_2,uVar5);
-        }
-        if ((uVar13 & 0x10000) != 0) {
-          return MAKE_WORDS(uVar18,0,0);
-        }
-        if ((uVar13 & 0x20) != 0) {
-          uVar5 = 0xffffffff;
-          uVar7 = 0xffffffff;
-          if ((param_3 & 0x80000000) != 0) {
-            uVar5 = 0;
-            uVar7 = 0;
-          }
-          return MAKE_WORDS(uVar18,uVar7,uVar5);
-        }
-        if ((uVar13 & 0x10) == 0) {
-          uVar13 = 0x7fffffff;
-          uVar9 = param_2;
-        }
-        else {
-          uVar9 = 0x7fffffff;
-          uVar13 = 0xffffffff;
-          param_1 = param_2;
-        }
-        if ((param_1 & 0x80000000) != 0) {
-          uVar13 = ~uVar13;
-          uVar9 = ~uVar9;
-        }
-        return MAKE_WORDS(uVar18,uVar9,uVar13);
-      }
-      MAKE_WORDS(uVar18,param_2,8);
-      goto LAB_00126d6c;
-    }
-    iVar14 = param_2 * 2 + (uint)(param_1 != 0);
-    if (iVar14 != param_4 * 2 + (uint)(param_3 != 0)) {
-      if (iVar14 != -0x200000) {
-        return MAKE_WORDS(uVar18,param_4,0);
-      }
-      return MAKE_WORDS(uVar18,param_2,0);
-    }
-    param_1 = 0;
-    if (-1 < (int)(param_2 ^ param_4)) {
-      return MAKE_WORDS(uVar18,param_2,0);
-    }
-    param_3 = 0;
-LAB_001260e4:
-    if ((uVar9 & 0x10) == 0) {
-      param_3 = param_2;
-    }
-    uVar10 = param_1;
-    puVar4 = kh_GetFpStatusPtr();
-    uVar15 = *puVar4;
-    if ((uVar9 & ~(uVar15 << 0x12) & 0x30000000) != 0) {
-      uVar9 = uVar9 | 0x40000000;
-    }
-    uVar13 = uVar9 | uVar15 & 0x1c00000;
-    *puVar4 = uVar15 | (uVar9 & 0x7fffffff) >> 0x1a;
-    bVar16 = (uVar9 & 0xf) != 8;
-    if (bVar16) {
-      uVar9 = uVar9 & 0x70;
-      uVar13 = uVar13 | uVar9 << 3;
-    }
+  uint64 result;
+  uint32 *status;
+  uint32 word;        /* the status word */
+  uint32 control;     /* ip: the exception word, see the comment above */
+  uint32 exponent;    /* r4: the larger operand's sign and exponent (bit 11, bits 0-10) */
+  uint32 shift;       /* lr: the exponent difference; in the denormal code, the trap's exponent */
+  uint32 round;       /* r12: the shift that brings b's dropped bits to the top */
+  uint32 lost;        /* b's dropped bits, the first (the round bit) at bit 31 */
+  uint32 sum;
+  uint32 carry;
+  uint32 x;           /* an operand's high word shifted left, the low word's bits as bit 0 */
+  uint32 y;
+  uint32 negative;
+  int32 zeros;
+  int32 tail = 0;     /* where the result goes: 0 returned, 1 the zero and denormal check
+                         (0x00124d80), 2 the denormal rounding (0x00125eb4), 3 the exception code
+                         (0x001260e4), 4 the NaN choice (0x00124e18), 5 the trap (0x00126d48) */
+  int32 subtracts = 0; /* the operands' magnitudes are subtracted (0x00124ba4), not added */
+  int32 aligned = 0;   /* b is aligned to a and added or subtracted (0x001249ac / 0x00124be4) */
+  int32 renormalize = 0;  /* the sum carried into a's exponent (0x00124a34) */
+
+  if ((DOUBLE_EXPONENT_MASK_SHIFTED & ~(aHigh << 1)) == 0 ||
+      (DOUBLE_EXPONENT_MASK_SHIFTED & ~(bHigh << 1)) == 0) {   /* an Inf or NaN operand (0x00124ad0) */
+    x = aHigh << 1 | (aLow != 0);
+    y = bHigh << 1 | (bLow != 0);
+    control = DOUBLE_ADD_NONFINITE_OPERAND_CODE;
+    if (x > DOUBLE_EXPONENT_MASK_SHIFTED || y > DOUBLE_EXPONENT_MASK_SHIFTED)
+      tail = 4;
     else {
-      uVar9 = 0x20000;
-    }
-    if (!bVar16 && (uVar9 & ~uVar13) == 0) {
-      uVar13 = uVar13 | 0xc00000;
-    }
-    if ((uVar13 & 0x20000000) == 0) {
-      if ((uVar13 & 0x10000000) == 0) {
-        if ((uVar13 & 0x40000000) != 0) {
-          uVar15 = uVar15 & 0x1000;
-          goto joined_r0x00126194;
-        }
-        if ((uVar13 & 0x8000000) == 0) {
-          if ((uVar15 & 0x100) == 0) {
-            uVar9 = param_2;
-            if ((uVar13 & 0x80) == 0) {
-              uVar9 = uVar10;
-            }
-            param_3 = uVar9 & 0x80000000;
-            if ((uVar13 & 0x10) == 0) {
-              param_1 = FLOAT_DEFAULT_NAN | param_3;
-            }
-            else {
-              param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD | param_3;
-              param_1 = DOUBLE_DEFAULT_NAN_LOW_WORD;
-            }
-            goto LAB_00126cb0;
-          }
-        }
-        else if ((uVar15 & 0x200) == 0) {
-          if ((uVar13 & 0x10) == 0) {
-            uVar10 = uVar10 ^ param_3;
-          }
-          else {
-            uVar10 = param_2 ^ param_4;
-          }
-          goto LAB_001261dc;
-        }
+      if (x == y) {                         /* two infinities */
+        if ((int32)(aHigh ^ bHigh) >= 0)
+          return MAKE_WORDS(result,aHigh,0);
+        aLow = 0;                           /* Inf - Inf: invalid */
+        bLow = 0;
+        tail = 3;
       }
-      else if ((uVar15 & 0x400) == 0) {
-        if ((uVar13 & 0x80) == 0) {
-          uVar10 = uVar10 & 0x80000000;
-        }
-        else {
-          uVar10 = param_2 & 0x80000000;
-        }
-LAB_001261dc:
-        if ((uVar13 & 0x10) == 0) {
-          return MAKE_WORDS(uVar18,param_2,WORD_HEXADECIMAL_7F800000 | uVar10 & 0x80000000);
-        }
-        return MAKE_WORDS(uVar18,WORD_HEXADECIMAL_7FF00000 | uVar10 & 0x80000000,INTEGER_0);
-      }
-    }
-    else {
-      uVar15 = uVar15 & 0x800;
-joined_r0x00126194:
-      if (uVar15 == 0) {
-        return MAKE_WORDS(uVar18,param_2,uVar10);
-      }
+      else if (x == DOUBLE_EXPONENT_MASK_SHIFTED)
+        return MAKE_WORDS(result,aHigh,0);  /* the infinite operand */
+      else
+        return MAKE_WORDS(result,bHigh,0);
     }
   }
   else {
-    if ((int)(param_2 ^ param_4) < 0) {
-      uVar9 = param_4 ^ 0x80000000;
-      uVar13 = param_1 - param_3;
-      if (param_2 <= uVar9 && (uint)(param_3 <= param_1) <= param_2 - uVar9) {
-        uVar15 = param_2 - (uVar9 + (param_3 > param_1)) ^ 0x80000000;
-        bVar16 = ADD_CARRIES(param_3,uVar13);
-        param_3 = param_3 + uVar13;
-        uVar9 = uVar9 + uVar15 + (uint)bVar16;
-        bVar16 = param_1 < uVar13;
-        param_1 = param_1 - uVar13;
-        param_2 = param_2 - (uVar15 + bVar16);
+    if ((int32)(aHigh ^ bHigh) < 0) {
+      bHigh ^= 0x80000000;                  /* a + b = a - (-b) */
+      subtracts = 1;
+    }
+    if (!subtracts) {
+      /* add the magnitudes (0x00124974) */
+      if (aHigh < bHigh || (aHigh == bHigh && aLow < bLow)) {   /* |a| < |b|: swap them */
+        x = aHigh;
+        aHigh = bHigh;
+        bHigh = x;
+        x = aLow;
+        aLow = bLow;
+        bLow = x;
       }
-      uVar13 = param_2 >> 0x14;
-      uVar15 = uVar13 - (uVar9 >> 0x14);
-      if ((DOUBLE_EXPONENT_MASK_SHIFTED & uVar9 << 1) == 0) {
-        if (param_3 == 0 && (uVar9 & 0xfffff) == 0) {
-          if (param_1 == 0 && (param_2 & 0x7fffffff) == 0) {
-            return MAKE_WORDS(uVar18,0,param_1);
-          }
+      exponent = aHigh >> 20;
+      shift = exponent - (bHigh >> 20);
+      if ((bHigh << 1 & DOUBLE_EXPONENT_MASK_SHIFTED) == 0) {   /* b is zero or a denormal */
+        if ((bLow | bHigh << 1) == 0) {     /* b is zero (0x00124ab4), a is the result */
+          if ((exponent << 21) != 0 || (aLow | aHigh << 1) == 0)
+            return MAKE_WORDS(result,aHigh,aLow);
+          control = 0x11;                   /* a denormal */
+          tail = 1;
         }
         else {
-          uVar10 = param_2 & ~(uVar13 << 0x14);
-          if ((uVar13 & 0x7ff) != 0) {
-            uVar15 = uVar15 - 1;
-            iVar14 = -((uVar9 & 0x7fffffff) + (uint)(param_3 != 0));
-            goto LAB_00124be4;
+          aHigh &= ~(exponent << 20);
+          if ((exponent << 21) == 0) {      /* two denormals: b's high word brings the sign */
+            aLow += bLow;
+            aHigh += bHigh + (aLow < bLow);
+            control = 0x11;
+            tail = 1;
           }
-          bVar16 = param_1 < param_3;
-          param_1 = param_1 - param_3;
-          param_2 = uVar10 - (uVar9 + bVar16);
+          else {                            /* a is normal: b counts as exponent 1 */
+            bHigh &= ~0x80000000;
+            shift--;
+            aligned = 1;
+          }
         }
-LAB_00124d7c:
-        uVar13 = 0x12;
-        goto LAB_00124d80;
-      }
-      uVar10 = param_2 & ~(uVar13 << 0x14);
-      iVar14 = ((int)DOUBLE_EXPONENT_MASK_SHIFTED >> 1) -
-               ((uVar9 & ~((int)DOUBLE_EXPONENT_MASK_SHIFTED >> 1)) + (uint)(param_3 != 0));
-LAB_00124be4:
-      uVar9 = -param_3;
-      uVar6 = 0x20 - uVar15;
-      if (uVar15 < 0x21) {
-        uVar12 = SHIFT_RIGHT(uVar9,uVar15);
-        uVar3 = param_1 + uVar12;
-        uVar10 = uVar10 + (SHIFT_RIGHT_SIGNED(iVar14,uVar15)) + (uint)ADD_CARRIES(param_1,uVar12);
-        uVar15 = SHIFT_LEFT(iVar14,uVar6);
-        uVar12 = uVar3 + uVar15;
-        bVar16 = ADD_CARRIES(uVar10,(uint)ADD_CARRIES(uVar3,uVar15));
-        iVar14 = uVar10 + ADD_CARRIES(uVar3,uVar15);
       }
       else {
-        uVar9 = (uint)(param_3 * -2 != 0) | (iVar14 * 2 + (uint)ADD_CARRIES(uVar9,uVar9)) * 2;
-        uVar15 = uVar15 - 0x20;
-        uVar6 = 0x1e - uVar15;
-        if (0x1e < uVar15 || uVar6 == 0) {
-          return MAKE_WORDS(uVar18,uVar10 + uVar13 * 0x100000,param_1);
+        aHigh &= ~(exponent << 20);
+        bHigh = (bHigh & 0xfffff) | 0x100000;
+        aligned = 1;
+      }
+      if (aligned) {                        /* 0x001249ac: a's mantissa without its hidden bit */
+        if (shift <= 32) {
+          round = 32 - shift;
+          sum = aLow + SHIFT_RIGHT(bLow,shift);
+          aHigh += SHIFT_RIGHT(bHigh,shift) + (sum < aLow);
+          aLow = sum + SHIFT_LEFT(bHigh,round);
+          aHigh += aLow < sum;
+          if (aHigh >= 0x100000)
+            renormalize = 1;                /* the sum carried past the hidden bit */
+          else
+            aHigh += exponent << 20;
         }
-        uVar15 = SHIFT_RIGHT_SIGNED(iVar14,uVar15);
-        uVar12 = param_1 + uVar15;
-        bVar16 = uVar10 != 0 || uVar10 < ADD_CARRIES(param_1,uVar15);
-        iVar14 = uVar10 - !ADD_CARRIES(param_1,uVar15);
-      }
-      if (-1 < iVar14) {
-        iVar14 = iVar14 + uVar13 * 0x100000;
-        iVar8 = SHIFT_LEFT(uVar9,uVar6);
-        if (-1 < iVar8) {
-          return MAKE_WORDS(uVar18,iVar14,uVar12);
-        }
-        uVar12 = uVar12 + 1;
-        if (uVar12 == 0 || iVar8 == -0x80000000) {
-          if (uVar12 == 0) {
-            iVar14 = iVar14 + 1;
-            uVar12 = 0;
+        else {                              /* 0x00124a0c */
+          x = bHigh << 1 | (bLow != 0);
+          shift -= 32;
+          carry = 0;
+          round = 0;
+          if (shift <= 31) {
+            round = 31 - shift;
+            sum = aLow + (bHigh >> shift);
+            carry = sum < aLow;
+            aLow = sum;
           }
-          else {
-            uVar12 = uVar12 & 0xfffffffe;
-          }
-          return MAKE_WORDS(uVar18,iVar14,uVar12);
-        }
-        return MAKE_WORDS(uVar18,iVar14,uVar12);
-      }
-      uVar15 = uVar6 + 1 & 0xff;
-      bVar16 = uVar15 == 0 && bVar16 || uVar15 != 0 && (bool)((byte)(SHIFT_RIGHT(uVar9,0x20 - uVar15)) & 1);
-      uVar10 = uVar12 * 2 + (uint)bVar16;
-      iVar14 = iVar14 * 2 + (uint)(ADD_CARRIES(uVar12,uVar12) || ADD_CARRIES(uVar12 * 2,(uint)bVar16));
-      uVar6 = iVar14 + uVar13 * 0x200000;
-      bVar16 = (bool)((byte)(uVar6 >> 0x14) & 1);
-      if (bVar16 && uVar6 >> 0x15 != 0) {
-        iVar14 = iVar14 + uVar13 * 0x100000;
-        uVar13 = -((int)(SHIFT_LEFT(uVar9,uVar15)) >> 0x1f);
-        uVar6 = uVar10 + uVar13;
-        bVar16 = uVar6 == 0;
-        if (!ADD_CARRIES(uVar10,uVar13)) {
-          bVar16 = SHIFT_LEFT(uVar9,uVar15) == -0x80000000;
-        }
-        if (bVar16) {
-          if (uVar6 == 0) {
-            iVar14 = iVar14 + 1;
-            uVar6 = 0;
-          }
-          else {
-            uVar6 = uVar6 & 0xfffffffe;
-          }
-          return MAKE_WORDS(uVar18,iVar14,uVar6);
-        }
-        return MAKE_WORDS(uVar18,iVar14,uVar6);
-      }
-      if (bVar16) {
-        param_1 = (uint)((byte)iVar14 & 1) << 0x1f | uVar10 >> 1;
-        param_2 = (iVar14 >> 1) + uVar13 * 0x100000;
-        goto LAB_00124d7c;
-      }
-      iVar14 = iVar14 + 0x200000;
-      if (iVar14 == 0 && uVar10 == 0) {
-        return MAKE_WORDS(uVar18,0,uVar10);
-      }
-      iVar8 = LEADING_ZEROS(iVar14);
-      if (iVar8 == 0x20) {
-        iVar8 = LEADING_ZEROS(uVar10) + 0x20;
-      }
-      param_3 = iVar8 - 0xb;
-      iVar11 = ((uVar13 & 0xfffff7ff) - 2) - param_3;
-      if (param_3 < 0x20) {
-        uVar9 = SHIFT_LEFT(iVar14,param_3) | SHIFT_RIGHT(uVar10,0x20 - param_3);
-        uVar10 = SHIFT_LEFT(uVar10,param_3);
-      }
-      else {
-        uVar9 = SHIFT_LEFT(uVar10,iVar8 - 0x2bU);
-        uVar10 = 0;
-      }
-                    /* WARNING: Could not recover jumptable at 0x00124d04. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if (0 < iVar11) {
-        return MAKE_WORDS(uVar18,uVar9 + (param_2 & 0x80000000) + iVar11 * 0x100000,uVar10);
-      }
-      param_2 = uVar9 + (param_2 & 0x80000000) + iVar11 * 0x100000 + 0x60000000;
-      uVar13 = 0x12;
-      puVar4 = kh_GetFpStatusPtr();
-      param_4 = *puVar4;
-      if ((param_4 & 0x1000000) != 0) {
-        return MAKE_WORDS(uVar18,param_2 & 0x80000000,0);
-      }
-      if ((param_4 & 0x800) == 0) {
-        if ((int)param_2 < 0) {
-          uVar13 = uVar13 | 0x10000;
-        }
-        uVar9 = param_2 & ~((param_2 >> 0x14) << 0x14);
-        iVar14 = -(param_2 >> 0x14 & 0xfffff7ff);
-        uVar6 = iVar14 + 0x601;
-        uVar15 = uVar9 | 0x100000;
-        if (uVar6 < 0x36) {
-          if (uVar6 == 0x35) {
-            uVar19 = 0;
-            uVar6 = 0;
-            uVar12 = 0x80000000;
-            if (uVar10 != 0 || (uVar9 & 0xfffff) != 0) {
-              uVar12 = 0x80000001;
-            }
-          }
-          else if (uVar6 < 0x15) {
-            uVar19 = SHIFT_RIGHT(uVar15,uVar6);
-            uVar12 = SHIFT_LEFT(uVar10,0x20 - uVar6);
-            uVar6 = SHIFT_LEFT(uVar15,0x20 - uVar6) | SHIFT_RIGHT(uVar10,uVar6);
-          }
-          else {
-            uVar9 = iVar14 + 0x5e1;
-            uVar19 = 0;
-            if (uVar6 < 0x20 || uVar9 == 0) {
-              uVar6 = SHIFT_LEFT(uVar15,-uVar9) | SHIFT_RIGHT(uVar10,uVar6);
-              uVar12 = SHIFT_LEFT(uVar10,-uVar9);
-            }
-            else {
-              uVar6 = SHIFT_RIGHT(uVar15,uVar9);
-              uVar12 = SHIFT_LEFT(uVar15,0x20 - uVar9);
-              if (uVar10 != 0) {
-                uVar12 = uVar12 | 1;
-              }
-            }
+          aHigh += (exponent << 20) + carry;
+          bLow = x;
+          if (exponent != aHigh >> 20) {
+            aHigh -= exponent << 20;
+            renormalize = 1;
           }
         }
-        else {
-          uVar12 = 1;
-          uVar19 = 0;
-          uVar6 = 0;
-        }
-        if ((uVar13 & 0x10000) != 0) {
-          uVar19 = uVar19 | 0x80000000;
-        }
-        if (uVar12 == 0) {
-          return MAKE_WORDS(uVar18,uVar19,uVar6);
-        }
-        if ((uint8)(uVar12 >> 0x1f)) {
-          if (((uVar12 & 0x7fffffff) == 0) && (-1 < (int)uVar13 >> 0x1e)) {
-            if ((int)uVar13 >> 0x1e == 0) {
-              uVar19 = uVar19 + (0xfffffffe < uVar6);
-              uVar6 = uVar6 + 1 & 0xfffffffe;
-            }
+        if (!renormalize) {                 /* 0x001249d0: round on b's dropped bits */
+          lost = SHIFT_LEFT(bLow,round);
+          if ((lost & 0x80000000) == 0)
+            return MAKE_WORDS(result,aHigh,aLow);
+          aLow++;
+          if (aLow != 0) {
+            if ((lost << 1) != 0)
+              return MAKE_WORDS(result,aHigh,aLow);
+            aLow &= ~1u;                    /* a tie: to even */
+            return MAKE_WORDS(result,aHigh,aLow);
           }
-          else {
-            uVar19 = uVar19 + (0xfffffffe < uVar6);
-            uVar6 = uVar6 + 1;
+          aHigh++;
+          bLow = lost;
+        }
+        else {                              /* 0x00124a34: one more bit to drop */
+          aHigh += 0x100000;
+          carry = aHigh & 1;
+          aHigh = (aHigh >> 1) + (exponent << 20);
+          x = aLow & 1;                     /* the round bit */
+          aLow = aLow >> 1 | carry << 31;
+          if (x) {
+            aLow++;
+            if (aLow == 0)
+              aHigh++;
+            else if (SHIFT_LEFT(bLow,round) == 0)
+              aLow &= ~1u;                  /* a tie: to even */
           }
         }
-        puVar4 = kh_GetFpStatusPtr();
-        *puVar4 = *puVar4 | 8;
-        return MAKE_WORDS(uVar18,uVar19,uVar6);
+        if ((aHigh << 1) < DOUBLE_EXPONENT_MASK_SHIFTED)   /* 0x001249f4 / 0x00124a6c */
+          return MAKE_WORDS(result,aHigh,aLow);
+        bHigh = aHigh << 1;                 /* overflow: for the trap, the exponent wrapped by 1536 */
+        aHigh -= 0x60000000;
+        control = DOUBLE_ADD_FINITE_OPERANDS_CODE;
+        tail = 3;
       }
     }
     else {
-      uVar9 = param_1 - param_3;
-      iVar14 = param_2 - (param_4 + (param_3 > param_1));
-      if (param_2 <= param_4 && (uint)(param_3 <= param_1) <= param_2 - param_4) {
-        bVar16 = ADD_CARRIES(param_3,uVar9);
-        param_3 = param_3 + uVar9;
-        param_4 = param_4 + iVar14 + (uint)bVar16;
-        bVar16 = param_1 < uVar9;
-        param_1 = param_1 - uVar9;
-        param_2 = param_2 - (iVar14 + (uint)bVar16);
+      /* subtract the magnitudes (0x00124ba4), the signs the same */
+      if (aHigh < bHigh || (aHigh == bHigh && aLow < bLow)) {   /* |a| < |b|: swap them and flip */
+        x = aHigh ^ 0x80000000;                                 /* both signs */
+        aHigh = bHigh ^ 0x80000000;
+        bHigh = x;
+        x = aLow;
+        aLow = bLow;
+        bLow = x;
       }
-      uVar13 = param_2 >> 0x14;
-      uVar15 = uVar13 - (param_4 >> 0x14);
-      if ((DOUBLE_EXPONENT_MASK_SHIFTED & param_4 << 1) != 0) {
-        uVar6 = param_2 & ~(uVar13 << 0x14);
-        uVar10 = param_4 & ~DOUBLE_EXPONENT_MASK_SHIFTED | 0x100000;
-LAB_001249ac:
-        uVar12 = 0x20 - uVar15;
-        uVar9 = DOUBLE_ADD_FINITE_OPERANDS_CODE;
-        if (uVar15 < 0x21) {
-          uVar2 = SHIFT_RIGHT(param_3,uVar15);
-          bVar16 = ADD_CARRIES(param_1,uVar2);
-          uVar2 = param_1 + uVar2;
-          uVar3 = SHIFT_LEFT(uVar10,uVar12);
-          param_1 = uVar2 + uVar3;
-          uVar10 = uVar6 + (SHIFT_RIGHT(uVar10,uVar15)) + (uint)bVar16 + (uint)ADD_CARRIES(uVar2,uVar3);
-          if (0xfffff < uVar10) goto LAB_00124a34;
-          uVar15 = uVar10 + uVar13 * 0x100000;
-LAB_001249d0:
-          param_3 = SHIFT_LEFT(param_3,uVar12);
-          if (-1 < (int)param_3) {
-            return MAKE_WORDS(uVar18,uVar15,param_1);
-          }
-          bVar16 = param_1 != 0xffffffff;
-          param_1 = param_1 + 1;
-          uVar13 = param_1;
-          if (bVar16) {
-            param_3 = param_3 << 1;
-            uVar13 = param_3;
-          }
-          if (uVar13 != 0) {
-            return MAKE_WORDS(uVar18,uVar15,param_1);
-          }
-LAB_001249e8:
-          if (param_1 == 0) {
-            uVar15 = uVar15 + 1;
-            param_1 = 0;
-          }
-          else {
-            param_1 = param_1 & 0xfffffffe;
-          }
-          param_4 = uVar15 << 1;
-          if (param_4 < 0xffe00000) {
-            return MAKE_WORDS(uVar18,uVar15,param_1);
-          }
-          param_2 = uVar15 + 0xa0000000;
+      exponent = aHigh >> 20;
+      shift = exponent - (bHigh >> 20);
+      if ((bHigh << 1 & DOUBLE_EXPONENT_MASK_SHIFTED) == 0) {   /* b is zero or a denormal (0x00124d30) */
+        if ((bLow | bHigh << 12) == 0) {    /* b is zero */
+          if ((aLow | aHigh << 1) == 0)
+            return MAKE_WORDS(result,0,0);  /* 0 - 0 = +0 */
+          control = 0x12;
+          tail = 1;
         }
         else {
-          param_3 = uVar10 * 2 + (uint)(param_3 != 0);
-          uVar15 = uVar15 - 0x20;
-          bVar16 = uVar15 < 0x20;
-          uVar12 = 0x1f - uVar15;
-          if (bVar16) {
-            uVar10 = SHIFT_RIGHT(uVar10,uVar15);
-            bVar16 = ADD_CARRIES(param_1,uVar10);
-            param_1 = param_1 + uVar10;
+          aHigh &= ~(exponent << 20);
+          if ((exponent << 21) == 0) {      /* two denormals: b's high word brings the sign */
+            x = aLow;
+            aLow -= bLow;
+            aHigh -= bHigh + (x < bLow);
+            control = 0x12;
+            tail = 1;
           }
-          else {
-            uVar12 = 0;
+          else {                            /* a is normal: b counts as exponent 1, negated */
+            bHigh &= ~0x80000000;
+            shift--;
+            x = bLow;
+            bLow = 0 - x;
+            bHigh = 0 - bHigh - (x != 0);
+            aligned = 1;
           }
-          uVar15 = uVar6 + uVar13 * 0x100000 + (uint)bVar16;
-          if (uVar13 == uVar15 >> 0x14) goto LAB_001249d0;
-          uVar10 = uVar15 + uVar13 * -0x100000;
-LAB_00124a34:
-          uVar15 = (uVar10 + 0x100000 >> 1) + uVar13 * 0x100000;
-          bVar1 = (byte)param_1;
-          param_1 = (uint)((byte)(uVar10 + 0x100000) & 1) << 0x1f | param_1 >> 1;
-          if ((bool)(bVar1 & 1)) {
-            bVar16 = param_1 != 0xffffffff;
-            param_1 = param_1 + 1;
-            uVar13 = param_1;
-            if (bVar16) {
-              uVar13 = SHIFT_LEFT(param_3,uVar12);
-            }
-            if (uVar13 == 0) goto LAB_001249e8;
-          }
-          param_4 = uVar15 * 2;
-          if (param_4 < 0xffe00000) {
-            return MAKE_WORDS(uVar18,uVar15,param_1);
-          }
-          param_2 = uVar15 + 0xa0000000;
         }
-        goto LAB_001260e4;
-      }
-      if (param_3 == 0 && (param_4 & 0x7fffffff) == 0) {
-        if ((uVar13 & 0x7ff) != 0) {
-          return MAKE_WORDS(uVar18,param_2,param_1);
-        }
-        if (param_1 == 0 && (param_2 & 0x7fffffff) == 0) {
-          return MAKE_WORDS(uVar18,param_2,param_1);
-        }
-        uVar13 = 0x11;
       }
       else {
-        uVar6 = param_2 & ~(uVar13 << 0x14);
-        if ((uVar13 & 0x7ff) != 0) {
-          uVar10 = param_4 & 0x7fffffff;
-          uVar15 = uVar15 - 1;
-          goto LAB_001249ac;
+        aHigh &= ~(exponent << 20);
+        bHigh &= 0xfffff;                   /* b with its hidden bit, negated */
+        x = bLow;
+        bLow = 0 - x;
+        bHigh = 0xfff00000 - bHigh - (x != 0);
+        aligned = 1;
+      }
+      if (aligned) {                        /* 0x00124be4 */
+        if (shift <= 32) {
+          round = 32 - shift;
+          sum = aLow + SHIFT_RIGHT(bLow,shift);
+          aHigh += (uint32)SHIFT_RIGHT_SIGNED(bHigh,shift) + (sum < aLow);
+          aLow = sum + SHIFT_LEFT(bHigh,round);
+          aHigh += aLow < sum;
         }
-        bVar16 = ADD_CARRIES(param_1,param_3);
-        param_1 = param_1 + param_3;
-        param_2 = uVar6 + param_4 + (uint)bVar16;
-        uVar13 = 0x11;
+        else {                              /* 0x00124c30 */
+          x = bLow << 1;
+          bLow = (bHigh << 1 | bLow >> 31) << 1 | (x != 0);
+          shift -= 32;
+          if (shift >= 30)                  /* b is too small to matter */
+            return MAKE_WORDS(result,aHigh + (exponent << 20),aLow);
+          round = 30 - shift;
+          sum = aLow + (uint32)((int32)bHigh >> shift);
+          aHigh += (sum < aLow) - 1;
+          aLow = sum;
+        }
+        if ((int32)aHigh >= 0) {            /* still normalized (0x00124c00): round */
+          aHigh += exponent << 20;
+          lost = SHIFT_LEFT(bLow,round);
+          if ((lost & 0x80000000) == 0)
+            return MAKE_WORDS(result,aHigh,aLow);
+          aLow++;
+          if (aLow == 0)
+            aHigh++;
+          else if (lost == 0x80000000)
+            aLow &= ~1u;                    /* a tie: to even */
+          return MAKE_WORDS(result,aHigh,aLow);
+        }
+        round++;                            /* the hidden bit is gone (0x00124c58): one bit left, */
+        carry = round <= 32 ? SHIFT_RIGHT(bLow,32 - round) & 1 : 0;   /* the round bit brought in */
+        lost = SHIFT_LEFT(bLow,round);
+        aHigh = aHigh << 1 | aLow >> 31;
+        aLow = aLow << 1 | carry;
+        x = aHigh + (exponent << 21);
+        if ((x >> 21) != 0 && (x >> 20 & 1)) {   /* normalized (0x00124c74): round */
+          aHigh += exponent << 20;
+          aLow += lost >> 31;
+          if (aLow == 0 && (lost >> 31))
+            aHigh++;
+          else if (lost == 0x80000000)
+            aLow &= ~1u;                    /* a tie: to even */
+          return MAKE_WORDS(result,aHigh,aLow);
+        }
+        if (x >> 20 & 1) {                  /* exponent 0: a denormal (0x00124d1c), shifted back */
+          carry = aHigh & 1;
+          aHigh = (uint32)((int32)aHigh >> 1) + (exponent << 20);
+          aLow = aLow >> 1 | carry << 31;
+          control = 0x12;
+          tail = 1;
+        }
+        else {                              /* more cancellation (0x00124c9c): normalize, exact */
+          aHigh += 0x200000;
+          if (aHigh == 0 && aLow == 0)
+            return MAKE_WORDS(result,0,0);  /* x - x = +0 */
+          negative = exponent >> 11;
+          exponent = (exponent & ~0x800u) - 2;
+          zeros = LEADING_ZEROS(aHigh);
+          if (zeros == 32)
+            zeros += LEADING_ZEROS(aLow);
+          zeros -= 11;
+          exponent -= zeros;
+          if ((uint32)zeros >= 32) {
+            aHigh = SHIFT_LEFT(aLow,zeros - 32);
+            aLow = 0;
+          }
+          else {
+            aHigh = SHIFT_LEFT(aHigh,zeros) | SHIFT_RIGHT(aLow,32 - zeros);
+            aLow = SHIFT_LEFT(aLow,zeros);
+          }
+          aHigh += (negative << 31) + (exponent << 20);
+          if ((int32)exponent > 0)
+            return MAKE_WORDS(result,aHigh,aLow);
+          aHigh += 0x60000000;              /* below the smallest exponent: wrapped by 1536 */
+          bLow = (uint32)zeros;
+          control = 0x12;
+          tail = 2;
+        }
       }
-LAB_00124d80:
-      if (param_2 << 1 == 0 && param_1 == 0) {
-        return MAKE_WORDS(uVar18,0,param_1);
-      }
-      if (0x1fffff < param_2 << 1) {
-        return MAKE_WORDS(uVar18,param_2,param_1);
-      }
-      puVar4 = kh_GetFpStatusPtr();
-      if ((*puVar4 & 0x1000000) != 0) {
-        return MAKE_WORDS(uVar18,param_2 & 0x80000000,0);
-      }
-      if ((*puVar4 & 0x800) == 0) {
-        return MAKE_WORDS(uVar18,param_2,param_1);
-      }
-      uVar15 = param_2 >> 0x1f | 0x6000000;
-      uVar9 = param_2 & 0x7fffffff;
-      if (uVar9 == 0 && param_1 >> 0xc == 0) {
-        param_1 = param_1 << 0x14;
-        uVar15 = uVar15 - 0x140000;
-      }
-      if (uVar9 == 0) {
-        uVar9 = param_1 >> 0xc;
-        param_1 = param_1 << 0x14;
-        uVar15 = uVar15 - 0x140000;
-      }
-      iVar14 = 0;
-      if (uVar9 >> 5 == 0) {
-        uVar9 = uVar9 << 0x10;
-        iVar14 = 0x10;
-      }
-      if (uVar9 >> 0xd == 0) {
-        uVar9 = uVar9 << 8;
-        iVar14 = iVar14 + 8;
-      }
-      if (uVar9 >> 0x11 == 0) {
-        uVar9 = uVar9 << 4;
-        iVar14 = iVar14 + 4;
-      }
-      if (uVar9 >> 0x13 == 0) {
-        uVar9 = uVar9 << 2;
-        iVar14 = iVar14 + 2;
-      }
-      if (uVar9 >> 0x14 == 0) {
-        uVar9 = uVar9 << 1;
-        iVar14 = iVar14 + 1;
-      }
-      uVar10 = param_1 << iVar14;
-      param_3 = 0x20 - iVar14;
-      param_2 = ((uVar9 | SHIFT_RIGHT(param_1,param_3)) ^ uVar15 * -0x80000000) +
-                (uVar15 + iVar14 * -0x10000 & 0xfffffffe) * 0x10;
-      param_4 = uVar10;
     }
-    uVar13 = uVar13 | 0x20000000;
   }
-  uVar18 = float_raise_exception(uVar10,param_2,param_3,param_4,uVar13);
-  if ((uVar13 & 0xf) != 9) {
-    return uVar18;
-  }
-LAB_00126d6c:
-  if ((uVar13 & 0x100000) == 0) {
-    uVar18.low = (uint)((uVar13 & uVar18.low << 0x10) != 0);
-    return uVar18;
-  }
-  if ((uVar13 & 0xf0000) == 0) {
-    uVar13 = uVar18.low << 0x1d;
-    if ((bool)((byte)(uVar18.low >> 3) & 1)) {
-      uVar13 = uVar13 | 0x30000000;
+  if (tail == 4) {                          /* a NaN operand (0x00124e18) */
+    x = 0x100000 + (aHigh << 1) + (aLow != 0);   /* above 0xfff00000: a signalling NaN */
+    y = 0x100000 + (bHigh << 1) + (bLow != 0);
+    if (x <= 0xfff00000 && y <= 0xfff00000) {
+      if (x >= 0x100000)
+        return MAKE_WORDS(result,bHigh,bLow);   /* the first quiet NaN, as it is */
+      return MAKE_WORDS(result,aHigh,aLow);
     }
-    puVar4 = kh_GetFpStatusPtr();
-    *puVar4 = *puVar4 & 0xfffffff | uVar13;
-    uVar18.high = uVar13;
-    return uVar18;
+    tail = 3;                               /* a signalling NaN: invalid */
   }
-  if ((uVar18.low & 8) != 0) {
-    uVar18.high = uVar13 & 0xf0000;
-    return uVar18;
+  if (tail == 1) {                          /* 0x00124d80: a zero or denormal result, exact */
+    if ((aHigh << 1) == 0 && aLow == 0)
+      return MAKE_WORDS(result,0,0);
+    if ((aHigh << 1) >= 0x200000)
+      return MAKE_WORDS(result,aHigh,aLow);
+    status = kh_GetFpStatusPtr();           /* 0x00126018 */
+    word = *status;
+    if (word & 0x1000000)
+      return MAKE_WORDS(result,aHigh & 0x80000000,0);   /* flush to zero */
+    if ((word & 0x800) == 0)
+      return MAKE_WORDS(result,aHigh,aLow); /* underflow not trapped: the denormal, no flag */
+    shift = 0x6000000 | aHigh >> 31;        /* for the trap: normalized, the exponent wrapped by 1536 */
+    aHigh &= ~0x80000000;
+    if ((aHigh | aLow >> 12) == 0) {
+      aLow <<= 20;
+      shift -= 0x140000;
+    }
+    if (aHigh == 0) {
+      aHigh = aLow >> 12;
+      aLow <<= 20;
+      shift -= 0x140000;
+    }
+    zeros = 0;
+    if ((aHigh >> 5) == 0) {
+      aHigh <<= 16;
+      zeros += 16;
+    }
+    if ((aHigh >> 13) == 0) {
+      aHigh <<= 8;
+      zeros += 8;
+    }
+    if ((aHigh >> 17) == 0) {
+      aHigh <<= 4;
+      zeros += 4;
+    }
+    if ((aHigh >> 19) == 0) {
+      aHigh <<= 2;
+      zeros += 2;
+    }
+    if ((aHigh >> 20) == 0) {
+      aHigh <<= 1;
+      zeros += 1;
+    }
+    shift -= (uint32)zeros << 16;
+    bHigh = aLow << zeros;
+    bLow = 32 - zeros;
+    aHigh |= SHIFT_RIGHT(aLow,bLow);
+    aLow = bHigh;
+    aHigh ^= shift << 31;
+    aHigh += (shift & ~1u) << 4;
+    control |= 0x20000000;
+    tail = 5;
   }
-  uVar18.low = 2 - uVar18.low;
-  return uVar18;
+  if (tail == 2) {                          /* 0x00125eb4: a denormal result, rounded */
+    status = kh_GetFpStatusPtr();
+    word = *status;
+    if (word & 0x1000000)
+      return MAKE_WORDS(result,aHigh & 0x80000000,0);   /* flush to zero */
+    if (word & 0x800) {                     /* underflow trapped */
+      bHigh = word;
+      control |= 0x20000000;
+      tail = 5;
+    }
+    else {                                  /* the denormal: exact, the cancellation's lowest bit */
+      negative = aHigh & 0x80000000;        /* being at or above 2^-1074 (0x00125f18 - 0x00125f84) */
+      shift = 0x601 - (aHigh >> 20 & 0x7ff);   /* the right shift into the denormal, 1 - 52 */
+      aHigh = (aHigh & 0xfffff) | 0x100000;
+      if (shift < 21) {
+        aLow = SHIFT_LEFT(aHigh,32 - shift) | SHIFT_RIGHT(aLow,shift);
+        aHigh = SHIFT_RIGHT(aHigh,shift);
+      }
+      else if (shift <= 32) {
+        aLow = SHIFT_LEFT(aHigh,32 - shift) | SHIFT_RIGHT(aLow,shift);
+        aHigh = 0;
+      }
+      else {
+        aLow = SHIFT_RIGHT(aHigh,shift - 32);
+        aHigh = 0;
+      }
+      return MAKE_WORDS(result,aHigh | negative,aLow);
+    }
+  }
+  if (tail == 3) {                          /* the library's exception code (0x001260e4) */
+    status = kh_GetFpStatusPtr();
+    word = *status;
+    if (control & ~(word << 18) & 0x30000000)
+      control |= 0x40000000;                /* an untrapped overflow is also inexact */
+    word |= (control << 1) >> 27;           /* the sticky flags */
+    control |= word & 0x1c00000;
+    *status = word;
+    control |= (control & 0x70) << 3;       /* 0x80: the result's sign is the high word's */
+    if (control & 0x10000000) {             /* overflow */
+      if ((word & 0x400) == 0)
+        return MAKE_WORDS(result,WORD_HEXADECIMAL_7FF00000 | (aHigh & 0x80000000),INTEGER_0);
+    }
+    else if ((word & 0x100) == 0)           /* invalid */
+      return MAKE_WORDS(result,DOUBLE_DEFAULT_NAN_HIGH_WORD | (aHigh & 0x80000000),
+                        DOUBLE_DEFAULT_NAN_LOW_WORD);
+  }
+  return float_raise_exception(aLow,aHigh,bLow,bHigh,control);
 }
 
-/* ==== 0x00124B40  (file offset 0x24B40)  FUN_00124b40 ================================================ */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
 
-undefined8 FUN_00124b40(uint param_1,uint param_2,uint param_3,uint param_4)
+/* ==== 0x00124B40  (file offset 0x24B40)  double_reverse_subtract ===================================== */
+/* GUESS: name (the routine is certain: the soft-float library's double-precision reverse
+   subtract, ARM's run-time ABI __aeabi_drsub). Returns b - a, a and b given and returned as their two
+   words (low, high): -a + b, with an Inf or NaN operand the subtract's special cases with the operands
+   swapped.
+   Like float_add: the operands are swapped so |a| >= |b|, b is aligned to a's exponent and added or
+   subtracted, and the result rounded to nearest, ties to even, on b's dropped bits; rounding never
+   signals inexact. The status word (kh_GetFpStatusPtr) and the exception word ip are float_add's
+   (0x11 add, 0x12 subtract, 0x10 double precision; 0x04000000 invalid, 0x10000000 overflow,
+   0x20000000 underflow); the library's shared code is written here for this routine's cases:
+     an overflow (the exponent reaching 0x7ff): +-Inf, or the trap (status 0x400) with the exponent
+       wrapped by 1536;
+     an exact zero from opposite signs: +0;
+     a denormal result, exact (0x00124d80, 0x00126018): flush to zero (bit 24) gives +-0, an untrapped
+       underflow the denormal and no flag, a trapped one (0x800) the trap with the result normalized
+       and its exponent wrapped by 1536; a cancellation's denormal (0x00125eb4) takes the same flush
+       and trap, or is shifted into place;
+     a NaN: a signalling one is invalid (the trap, status 0x100, or the default NaN with a's sign),
+       otherwise the first NaN as it is; Inf - Inf is invalid the same way.
+   Each of double_add, double_subtract and double_reverse_subtract holds both cores and these tails,
+   as the binary's three entries share them. The listing's fifth kh_GetFpStatusPtr call, after the
+   trap, is the compare routines' result code (0x00126d6c), which an add never reaches, and the shared
+   denormal code's rounding (0x00125f88 - 0x00126014: a shift of 53 or more, the rounding and the
+   underflow flag with its own status read) cannot run here: a cancellation's result is exact, its
+   lowest bit no smaller than the operands' (at least 2^-1074). Neither is written. The trap gets
+   r0 - r3 as the binary leaves them. Verified under emulation (research_notes/soft_float_test,
+   double_reference.py, kind dd). */
+uint64 double_reverse_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
 
 {
-  uint uVar1;
-  uint uVar2;
-  uint uVar3;
-  uint32 *puVar4;
-  undefined4 uVar5;
-  uint uVar6;
-  uint uVar7;
-  undefined4 uVar8;
-  int iVar9;
-  uint uVar10;
-  int iVar11;
-  uint uVar12;
-  int iVar13;
-  uint uVar14;
-  uint uVar15;
-  bool bVar16;
-  bool bVar17;
-  undefined8 uVar18;
-  uint uVar19;
-  
-  if ((DOUBLE_EXPONENT_MASK_SHIFTED & ~(param_2 << 1)) == 0 ||
-      (DOUBLE_EXPONENT_MASK_SHIFTED & ~(param_4 << 1)) == 0) {
-    uVar10 = param_4 * 2 + (uint)(param_3 != 0);
-    uVar12 = param_2 * 2 + (uint)(param_1 != 0);
-    bVar17 = DOUBLE_EXPONENT_MASK_SHIFTED <= uVar10;
-    bVar16 = uVar10 == DOUBLE_EXPONENT_MASK_SHIFTED;
-    if (!bVar17 || bVar16) {
-      bVar17 = DOUBLE_EXPONENT_MASK_SHIFTED <= uVar12;
-      bVar16 = uVar12 == DOUBLE_EXPONENT_MASK_SHIFTED;
-    }
-    uVar10 = WORD_HEXADECIMAL_04000012;
-    if (bVar17 && !bVar16) {
-      uVar6 = param_4 * 2 + 0x100000 + (uint)(param_3 != 0);
-      uVar12 = uVar6;
-      if (uVar6 < 0xfff00001) {
-        uVar12 = param_2 * 2 + 0x100000 + (uint)(param_1 != 0);
-      }
-      if (0xfff00000 < uVar12) goto LAB_001260e4;
-      uVar12 = WORD_HEXADECIMAL_04000012;
-      if (0xfffff < uVar6) {
-        param_3 = param_1;
-        param_4 = param_2;
-      }
-LAB_00126cb0:
-      if ((uVar12 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x00126cc4. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        if ((uVar12 & 0xf) != 8) {
-          return MAKE_WORDS(uVar18,param_4,param_3);
-        }
-        if ((uVar12 & 0x40) == 0) {
-          uVar5 = FLOAT_DEFAULT_NAN;
-          if ((uVar12 & 0x10) != 0) {
-            uVar5 = 0;
-            param_4 = DOUBLE_DEFAULT_NAN_HIGH_WORD;
-          }
-          return MAKE_WORDS(uVar18,param_4,uVar5);
-        }
-        if ((uVar12 & 0x10000) != 0) {
-          return MAKE_WORDS(uVar18,0,0);
-        }
-        if ((uVar12 & 0x20) != 0) {
-          uVar5 = 0xffffffff;
-          uVar8 = 0xffffffff;
-          if ((param_1 & 0x80000000) != 0) {
-            uVar5 = 0;
-            uVar8 = 0;
-          }
-          return MAKE_WORDS(uVar18,uVar8,uVar5);
-        }
-        if ((uVar12 & 0x10) == 0) {
-          uVar12 = 0x7fffffff;
-          uVar10 = param_4;
-        }
-        else {
-          uVar10 = 0x7fffffff;
-          uVar12 = 0xffffffff;
-          param_3 = param_4;
-        }
-        if ((param_3 & 0x80000000) != 0) {
-          uVar12 = ~uVar12;
-          uVar10 = ~uVar10;
-        }
-        return MAKE_WORDS(uVar18,uVar10,uVar12);
-      }
-      MAKE_WORDS(uVar18,param_4,8);
-      goto LAB_00126d6c;
-    }
-    iVar11 = param_4 * 2 + (uint)(param_3 != 0);
-    if (iVar11 != param_2 * 2 + (uint)(param_1 != 0)) {
-      if (iVar11 != -0x200000) {
-        return MAKE_WORDS(uVar18,param_2 ^ 0x80000000,0);
-      }
-      return MAKE_WORDS(uVar18,param_4,0);
-    }
-    param_3 = 0;
-    if ((int)(param_4 ^ param_2) < 0) {
-      return MAKE_WORDS(uVar18,param_4,0);
-    }
-    param_1 = 0;
-LAB_001260e4:
-    if ((uVar10 & 0x10) == 0) {
-      param_1 = param_4;
-    }
-    puVar4 = kh_GetFpStatusPtr();
-    uVar6 = *puVar4;
-    if ((uVar10 & ~(uVar6 << 0x12) & 0x30000000) != 0) {
-      uVar10 = uVar10 | 0x40000000;
-    }
-    uVar12 = uVar10 | uVar6 & 0x1c00000;
-    *puVar4 = uVar6 | (uVar10 & 0x7fffffff) >> 0x1a;
-    bVar16 = (uVar10 & 0xf) != 8;
-    if (bVar16) {
-      uVar10 = uVar10 & 0x70;
-      uVar12 = uVar12 | uVar10 << 3;
-    }
+  uint64 result;
+  uint32 *status;
+  uint32 word;        /* the status word */
+  uint32 control;     /* ip: the exception word, see the comment above */
+  uint32 exponent;    /* r4: the larger operand's sign and exponent (bit 11, bits 0-10) */
+  uint32 shift;       /* lr: the exponent difference; in the denormal code, the trap's exponent */
+  uint32 round;       /* r12: the shift that brings b's dropped bits to the top */
+  uint32 lost;        /* b's dropped bits, the first (the round bit) at bit 31 */
+  uint32 sum;
+  uint32 carry;
+  uint32 x;           /* an operand's high word shifted left, the low word's bits as bit 0 */
+  uint32 y;
+  uint32 negative;
+  int32 zeros;
+  int32 tail = 0;     /* where the result goes: 0 returned, 1 the zero and denormal check
+                         (0x00124d80), 2 the denormal rounding (0x00125eb4), 3 the exception code
+                         (0x001260e4), 4 the NaN choice (0x00124e18), 5 the trap (0x00126d48) */
+  int32 subtracts = 0; /* the operands' magnitudes are subtracted (0x00124ba4), not added */
+  int32 aligned = 0;   /* b is aligned to a and added or subtracted (0x001249ac / 0x00124be4) */
+  int32 renormalize = 0;  /* the sum carried into a's exponent (0x00124a34) */
+
+  if ((DOUBLE_EXPONENT_MASK_SHIFTED & ~(aHigh << 1)) == 0 ||
+      (DOUBLE_EXPONENT_MASK_SHIFTED & ~(bHigh << 1)) == 0) {   /* an Inf or NaN operand (0x00124d98) */
+    x = aHigh;                              /* b - a: the operands swapped (0x00124b68) */
+    aHigh = bHigh;
+    bHigh = x;
+    x = aLow;
+    aLow = bLow;
+    bLow = x;
+    x = aHigh << 1 | (aLow != 0);
+    y = bHigh << 1 | (bLow != 0);
+    control = WORD_HEXADECIMAL_04000012;
+    if (x > DOUBLE_EXPONENT_MASK_SHIFTED || y > DOUBLE_EXPONENT_MASK_SHIFTED)
+      tail = 4;
     else {
-      uVar10 = 0x20000;
-    }
-    if (!bVar16 && (uVar10 & ~uVar12) == 0) {
-      uVar12 = uVar12 | 0xc00000;
-    }
-    if ((uVar12 & 0x20000000) == 0) {
-      if ((uVar12 & 0x10000000) == 0) {
-        if ((uVar12 & 0x40000000) != 0) {
-          uVar6 = uVar6 & 0x1000;
-          goto joined_r0x00126194;
-        }
-        if ((uVar12 & 0x8000000) == 0) {
-          if ((uVar6 & 0x100) == 0) {
-            uVar10 = param_4;
-            if ((uVar12 & 0x80) == 0) {
-              uVar10 = param_3;
-            }
-            param_1 = uVar10 & 0x80000000;
-            if ((uVar12 & 0x10) == 0) {
-              param_3 = FLOAT_DEFAULT_NAN | param_1;
-            }
-            else {
-              param_4 = DOUBLE_DEFAULT_NAN_HIGH_WORD | param_1;
-              param_3 = DOUBLE_DEFAULT_NAN_LOW_WORD;
-            }
-            goto LAB_00126cb0;
-          }
-        }
-        else if ((uVar6 & 0x200) == 0) {
-          if ((uVar12 & 0x10) == 0) {
-            uVar10 = param_3 ^ param_1;
-          }
-          else {
-            uVar10 = param_4 ^ param_2;
-          }
-          goto LAB_001261dc;
-        }
+      if (x == y) {                         /* two infinities */
+        if ((int32)(aHigh ^ bHigh) < 0)
+          return MAKE_WORDS(result,aHigh,0);
+        aLow = 0;                           /* Inf - Inf: invalid */
+        bLow = 0;
+        tail = 3;
       }
-      else if ((uVar6 & 0x400) == 0) {
-        if ((uVar12 & 0x80) == 0) {
-          uVar10 = param_3 & 0x80000000;
-        }
-        else {
-          uVar10 = param_4 & 0x80000000;
-        }
-LAB_001261dc:
-        if ((uVar12 & 0x10) == 0) {
-          return MAKE_WORDS(uVar18,param_4,WORD_HEXADECIMAL_7F800000 | uVar10 & 0x80000000);
-        }
-        return MAKE_WORDS(uVar18,WORD_HEXADECIMAL_7FF00000 | uVar10 & 0x80000000,INTEGER_0);
-      }
-    }
-    else {
-      uVar6 = uVar6 & 0x800;
-joined_r0x00126194:
-      if (uVar6 == 0) {
-        return MAKE_WORDS(uVar18,param_4,param_3);
-      }
+      else if (x == DOUBLE_EXPONENT_MASK_SHIFTED)
+        return MAKE_WORDS(result,aHigh,0);  /* the infinite operand */
+      else
+        return MAKE_WORDS(result,bHigh ^ 0x80000000,0);
     }
   }
   else {
-    uVar6 = param_2 ^ 0x80000000;
-    if ((int)(param_2 ^ param_4) < 0) {
-      uVar10 = param_1 - param_3;
-      iVar11 = uVar6 - (param_4 + (param_3 > param_1));
-      uVar12 = param_3;
-      if (uVar6 <= param_4 && (uint)(param_3 <= param_1) <= uVar6 - param_4) {
-        uVar12 = param_3 + uVar10;
-        param_4 = param_4 + iVar11 + (uint)ADD_CARRIES(param_3,uVar10);
-        bVar16 = param_1 < uVar10;
-        param_1 = param_1 - uVar10;
-        uVar6 = uVar6 - (iVar11 + (uint)bVar16);
+    negative = (aHigh ^ bHigh) & 0x80000000;
+    aHigh ^= 0x80000000;                    /* b - a = -a + b */
+    if (negative == 0) {
+      bHigh ^= 0x80000000;                  /* -a - (-b) */
+      subtracts = 1;
+    }
+    if (!subtracts) {
+      /* add the magnitudes (0x00124974) */
+      if (aHigh < bHigh || (aHigh == bHigh && aLow < bLow)) {   /* |a| < |b|: swap them */
+        x = aHigh;
+        aHigh = bHigh;
+        bHigh = x;
+        x = aLow;
+        aLow = bLow;
+        bLow = x;
       }
-      uVar15 = uVar6 >> 0x14;
-      uVar7 = uVar15 - (param_4 >> 0x14);
-      if ((DOUBLE_EXPONENT_MASK_SHIFTED & param_4 << 1) != 0) {
-        uVar6 = uVar6 & ~(uVar15 << 0x14);
-        uVar14 = param_4 & ~DOUBLE_EXPONENT_MASK_SHIFTED | 0x100000;
-LAB_001249ac:
-        uVar3 = 0x20 - uVar7;
-        uVar10 = DOUBLE_ADD_FINITE_OPERANDS_CODE;
-        if (uVar7 < 0x21) {
-          uVar1 = SHIFT_RIGHT(uVar12,uVar7);
-          bVar16 = ADD_CARRIES(param_1,uVar1);
-          uVar1 = param_1 + uVar1;
-          uVar2 = SHIFT_LEFT(uVar14,uVar3);
-          param_1 = uVar1 + uVar2;
-          uVar7 = uVar6 + (SHIFT_RIGHT(uVar14,uVar7)) + (uint)bVar16 + (uint)ADD_CARRIES(uVar1,uVar2);
-          if (0xfffff < uVar7) goto LAB_00124a34;
-          uVar6 = uVar7 + uVar15 * 0x100000;
-LAB_001249d0:
-          uVar12 = SHIFT_LEFT(uVar12,uVar3);
-          if (-1 < (int)uVar12) {
-            return MAKE_WORDS(uVar18,uVar6,param_1);
-          }
-          param_3 = param_1 + 1;
-          uVar15 = param_3;
-          if (param_1 != 0xffffffff) {
-            uVar12 = uVar12 << 1;
-            uVar15 = uVar12;
-          }
-          if (uVar15 != 0) {
-            return MAKE_WORDS(uVar18,uVar6,param_3);
-          }
-LAB_001249e8:
-          if (param_3 == 0) {
-            uVar6 = uVar6 + 1;
-            param_3 = 0;
-          }
-          else {
-            param_3 = param_3 & 0xfffffffe;
-          }
-          param_2 = uVar6 << 1;
-          if (param_2 < 0xffe00000) {
-            return MAKE_WORDS(uVar18,uVar6,param_3);
-          }
-          param_4 = uVar6 + 0xa0000000;
-          param_1 = uVar12;
+      exponent = aHigh >> 20;
+      shift = exponent - (bHigh >> 20);
+      if ((bHigh << 1 & DOUBLE_EXPONENT_MASK_SHIFTED) == 0) {   /* b is zero or a denormal */
+        if ((bLow | bHigh << 1) == 0) {     /* b is zero (0x00124ab4), a is the result */
+          if ((exponent << 21) != 0 || (aLow | aHigh << 1) == 0)
+            return MAKE_WORDS(result,aHigh,aLow);
+          control = 0x11;                   /* a denormal */
+          tail = 1;
         }
         else {
-          uVar12 = uVar14 * 2 + (uint)(uVar12 != 0);
-          uVar7 = uVar7 - 0x20;
-          bVar16 = uVar7 < 0x20;
-          uVar3 = 0x1f - uVar7;
-          if (bVar16) {
-            uVar14 = SHIFT_RIGHT(uVar14,uVar7);
-            bVar16 = ADD_CARRIES(param_1,uVar14);
-            param_1 = param_1 + uVar14;
+          aHigh &= ~(exponent << 20);
+          if ((exponent << 21) == 0) {      /* two denormals: b's high word brings the sign */
+            aLow += bLow;
+            aHigh += bHigh + (aLow < bLow);
+            control = 0x11;
+            tail = 1;
           }
-          else {
-            uVar3 = 0;
+          else {                            /* a is normal: b counts as exponent 1 */
+            bHigh &= ~0x80000000;
+            shift--;
+            aligned = 1;
           }
-          uVar6 = uVar6 + uVar15 * 0x100000 + (uint)bVar16;
-          if (uVar15 == uVar6 >> 0x14) goto LAB_001249d0;
-          uVar7 = uVar6 + uVar15 * -0x100000;
-LAB_00124a34:
-          uVar6 = (uVar7 + 0x100000 >> 1) + uVar15 * 0x100000;
-          param_3 = (uint)((byte)(uVar7 + 0x100000) & 1) << 0x1f | param_1 >> 1;
-          if ((bool)((byte)param_1 & 1)) {
-            bVar16 = param_3 != 0xffffffff;
-            param_3 = param_3 + 1;
-            uVar15 = param_3;
-            if (bVar16) {
-              uVar15 = SHIFT_LEFT(uVar12,uVar3);
-            }
-            if (uVar15 == 0) goto LAB_001249e8;
-          }
-          param_2 = uVar6 * 2;
-          if (param_2 < 0xffe00000) {
-            return MAKE_WORDS(uVar18,uVar6,param_3);
-          }
-          param_4 = uVar6 + 0xa0000000;
-          param_1 = uVar12;
         }
-        goto LAB_001260e4;
-      }
-      if (uVar12 == 0 && (param_4 & 0x7fffffff) == 0) {
-        if ((uVar15 & 0x7ff) != 0) {
-          return MAKE_WORDS(uVar18,uVar6,param_1);
-        }
-        if (param_1 == 0 && (uVar6 & 0x7fffffff) == 0) {
-          return MAKE_WORDS(uVar18,uVar6,param_1);
-        }
-        uVar12 = 0x11;
       }
       else {
-        uVar6 = uVar6 & ~(uVar15 << 0x14);
-        if ((uVar15 & 0x7ff) != 0) {
-          uVar14 = param_4 & 0x7fffffff;
-          uVar7 = uVar7 - 1;
-          goto LAB_001249ac;
+        aHigh &= ~(exponent << 20);
+        bHigh = (bHigh & 0xfffff) | 0x100000;
+        aligned = 1;
+      }
+      if (aligned) {                        /* 0x001249ac: a's mantissa without its hidden bit */
+        if (shift <= 32) {
+          round = 32 - shift;
+          sum = aLow + SHIFT_RIGHT(bLow,shift);
+          aHigh += SHIFT_RIGHT(bHigh,shift) + (sum < aLow);
+          aLow = sum + SHIFT_LEFT(bHigh,round);
+          aHigh += aLow < sum;
+          if (aHigh >= 0x100000)
+            renormalize = 1;                /* the sum carried past the hidden bit */
+          else
+            aHigh += exponent << 20;
         }
-        bVar16 = ADD_CARRIES(param_1,uVar12);
-        param_1 = param_1 + uVar12;
-        uVar6 = uVar6 + param_4 + (uint)bVar16;
-        uVar12 = 0x11;
+        else {                              /* 0x00124a0c */
+          x = bHigh << 1 | (bLow != 0);
+          shift -= 32;
+          carry = 0;
+          round = 0;
+          if (shift <= 31) {
+            round = 31 - shift;
+            sum = aLow + (bHigh >> shift);
+            carry = sum < aLow;
+            aLow = sum;
+          }
+          aHigh += (exponent << 20) + carry;
+          bLow = x;
+          if (exponent != aHigh >> 20) {
+            aHigh -= exponent << 20;
+            renormalize = 1;
+          }
+        }
+        if (!renormalize) {                 /* 0x001249d0: round on b's dropped bits */
+          lost = SHIFT_LEFT(bLow,round);
+          if ((lost & 0x80000000) == 0)
+            return MAKE_WORDS(result,aHigh,aLow);
+          aLow++;
+          if (aLow != 0) {
+            if ((lost << 1) != 0)
+              return MAKE_WORDS(result,aHigh,aLow);
+            aLow &= ~1u;                    /* a tie: to even */
+            return MAKE_WORDS(result,aHigh,aLow);
+          }
+          aHigh++;
+          bLow = lost;
+        }
+        else {                              /* 0x00124a34: one more bit to drop */
+          aHigh += 0x100000;
+          carry = aHigh & 1;
+          aHigh = (aHigh >> 1) + (exponent << 20);
+          x = aLow & 1;                     /* the round bit */
+          aLow = aLow >> 1 | carry << 31;
+          if (x) {
+            aLow++;
+            if (aLow == 0)
+              aHigh++;
+            else if (SHIFT_LEFT(bLow,round) == 0)
+              aLow &= ~1u;                  /* a tie: to even */
+          }
+        }
+        if ((aHigh << 1) < DOUBLE_EXPONENT_MASK_SHIFTED)   /* 0x001249f4 / 0x00124a6c */
+          return MAKE_WORDS(result,aHigh,aLow);
+        bHigh = aHigh << 1;                 /* overflow: for the trap, the exponent wrapped by 1536 */
+        aHigh -= 0x60000000;
+        control = DOUBLE_ADD_FINITE_OPERANDS_CODE;
+        tail = 3;
       }
-LAB_00124d80:
-      if (uVar6 << 1 == 0 && param_1 == 0) {
-        return MAKE_WORDS(uVar18,0,param_1);
-      }
-      if (0x1fffff < uVar6 << 1) {
-        return MAKE_WORDS(uVar18,uVar6,param_1);
-      }
-      puVar4 = kh_GetFpStatusPtr();
-      if ((*puVar4 & 0x1000000) != 0) {
-        return MAKE_WORDS(uVar18,uVar6 & 0x80000000,0);
-      }
-      if ((*puVar4 & 0x800) == 0) {
-        return MAKE_WORDS(uVar18,uVar6,param_1);
-      }
-      uVar10 = uVar6 >> 0x1f | 0x6000000;
-      uVar6 = uVar6 & 0x7fffffff;
-      if (uVar6 == 0 && param_1 >> 0xc == 0) {
-        param_1 = param_1 << 0x14;
-        uVar10 = uVar10 - 0x140000;
-      }
-      uVar15 = param_1;
-      if (uVar6 == 0) {
-        uVar6 = param_1 >> 0xc;
-        uVar15 = param_1 << 0x14;
-        uVar10 = uVar10 - 0x140000;
-      }
-      iVar11 = 0;
-      if (uVar6 >> 5 == 0) {
-        uVar6 = uVar6 << 0x10;
-        iVar11 = 0x10;
-      }
-      if (uVar6 >> 0xd == 0) {
-        uVar6 = uVar6 << 8;
-        iVar11 = iVar11 + 8;
-      }
-      if (uVar6 >> 0x11 == 0) {
-        uVar6 = uVar6 << 4;
-        iVar11 = iVar11 + 4;
-      }
-      if (uVar6 >> 0x13 == 0) {
-        uVar6 = uVar6 << 2;
-        iVar11 = iVar11 + 2;
-      }
-      if (uVar6 >> 0x14 == 0) {
-        uVar6 = uVar6 << 1;
-        iVar11 = iVar11 + 1;
-      }
-      param_3 = uVar15 << iVar11;
-      param_1 = 0x20 - iVar11;
-      param_4 = ((uVar6 | SHIFT_RIGHT(uVar15,param_1)) ^ uVar10 * -0x80000000) +
-                (uVar10 + iVar11 * -0x10000 & 0xfffffffe) * 0x10;
-      param_2 = param_3;
     }
     else {
-      uVar10 = param_4 ^ 0x80000000;
-      uVar12 = param_1 - param_3;
-      if (uVar6 <= uVar10 && (uint)(param_3 <= param_1) <= uVar6 - uVar10) {
-        uVar15 = uVar6 - (uVar10 + (param_3 > param_1)) ^ 0x80000000;
-        bVar16 = ADD_CARRIES(param_3,uVar12);
-        param_3 = param_3 + uVar12;
-        uVar10 = uVar10 + uVar15 + (uint)bVar16;
-        bVar16 = param_1 < uVar12;
-        param_1 = param_1 - uVar12;
-        uVar6 = uVar6 - (uVar15 + bVar16);
+      /* subtract the magnitudes (0x00124ba4), the signs the same */
+      if (aHigh < bHigh || (aHigh == bHigh && aLow < bLow)) {   /* |a| < |b|: swap them and flip */
+        x = aHigh ^ 0x80000000;                                 /* both signs */
+        aHigh = bHigh ^ 0x80000000;
+        bHigh = x;
+        x = aLow;
+        aLow = bLow;
+        bLow = x;
       }
-      uVar12 = uVar6 >> 0x14;
-      uVar15 = uVar12 - (uVar10 >> 0x14);
-      if ((DOUBLE_EXPONENT_MASK_SHIFTED & uVar10 << 1) == 0) {
-        if (param_3 == 0 && (uVar10 & 0xfffff) == 0) {
-          if (param_1 == 0 && (uVar6 & 0x7fffffff) == 0) {
-            return MAKE_WORDS(uVar18,0,param_1);
-          }
+      exponent = aHigh >> 20;
+      shift = exponent - (bHigh >> 20);
+      if ((bHigh << 1 & DOUBLE_EXPONENT_MASK_SHIFTED) == 0) {   /* b is zero or a denormal (0x00124d30) */
+        if ((bLow | bHigh << 12) == 0) {    /* b is zero */
+          if ((aLow | aHigh << 1) == 0)
+            return MAKE_WORDS(result,0,0);  /* 0 - 0 = +0 */
+          control = 0x12;
+          tail = 1;
         }
         else {
-          uVar7 = uVar6 & ~(uVar12 << 0x14);
-          if ((uVar12 & 0x7ff) != 0) {
-            uVar15 = uVar15 - 1;
-            iVar11 = -((uVar10 & 0x7fffffff) + (uint)(param_3 != 0));
-            goto LAB_00124be4;
+          aHigh &= ~(exponent << 20);
+          if ((exponent << 21) == 0) {      /* two denormals: b's high word brings the sign */
+            x = aLow;
+            aLow -= bLow;
+            aHigh -= bHigh + (x < bLow);
+            control = 0x12;
+            tail = 1;
           }
-          bVar16 = param_1 < param_3;
-          param_1 = param_1 - param_3;
-          uVar6 = uVar7 - (uVar10 + bVar16);
+          else {                            /* a is normal: b counts as exponent 1, negated */
+            bHigh &= ~0x80000000;
+            shift--;
+            x = bLow;
+            bLow = 0 - x;
+            bHigh = 0 - bHigh - (x != 0);
+            aligned = 1;
+          }
         }
-LAB_00124d7c:
-        uVar12 = 0x12;
-        goto LAB_00124d80;
-      }
-      uVar7 = uVar6 & ~(uVar12 << 0x14);
-      iVar11 = ((int)DOUBLE_EXPONENT_MASK_SHIFTED >> 1) -
-               ((uVar10 & ~((int)DOUBLE_EXPONENT_MASK_SHIFTED >> 1)) + (uint)(param_3 != 0));
-LAB_00124be4:
-      uVar10 = -param_3;
-      uVar14 = 0x20 - uVar15;
-      if (uVar15 < 0x21) {
-        uVar3 = SHIFT_RIGHT(uVar10,uVar15);
-        uVar2 = param_1 + uVar3;
-        uVar7 = uVar7 + (SHIFT_RIGHT_SIGNED(iVar11,uVar15)) + (uint)ADD_CARRIES(param_1,uVar3);
-        uVar15 = SHIFT_LEFT(iVar11,uVar14);
-        uVar3 = uVar2 + uVar15;
-        bVar16 = ADD_CARRIES(uVar7,(uint)ADD_CARRIES(uVar2,uVar15));
-        iVar11 = uVar7 + ADD_CARRIES(uVar2,uVar15);
       }
       else {
-        uVar10 = (uint)(param_3 * -2 != 0) | (iVar11 * 2 + (uint)ADD_CARRIES(uVar10,uVar10)) * 2;
-        uVar15 = uVar15 - 0x20;
-        uVar14 = 0x1e - uVar15;
-        if (0x1e < uVar15 || uVar14 == 0) {
-          return MAKE_WORDS(uVar18,uVar7 + uVar12 * 0x100000,param_1);
-        }
-        uVar15 = SHIFT_RIGHT_SIGNED(iVar11,uVar15);
-        uVar3 = param_1 + uVar15;
-        bVar16 = uVar7 != 0 || uVar7 < ADD_CARRIES(param_1,uVar15);
-        iVar11 = uVar7 - !ADD_CARRIES(param_1,uVar15);
+        aHigh &= ~(exponent << 20);
+        bHigh &= 0xfffff;                   /* b with its hidden bit, negated */
+        x = bLow;
+        bLow = 0 - x;
+        bHigh = 0xfff00000 - bHigh - (x != 0);
+        aligned = 1;
       }
-      if (-1 < iVar11) {
-        iVar11 = iVar11 + uVar12 * 0x100000;
-        iVar9 = SHIFT_LEFT(uVar10,uVar14);
-        if (-1 < iVar9) {
-          return MAKE_WORDS(uVar18,iVar11,uVar3);
+      if (aligned) {                        /* 0x00124be4 */
+        if (shift <= 32) {
+          round = 32 - shift;
+          sum = aLow + SHIFT_RIGHT(bLow,shift);
+          aHigh += (uint32)SHIFT_RIGHT_SIGNED(bHigh,shift) + (sum < aLow);
+          aLow = sum + SHIFT_LEFT(bHigh,round);
+          aHigh += aLow < sum;
         }
-        uVar3 = uVar3 + 1;
-        if (uVar3 == 0 || iVar9 == -0x80000000) {
-          if (uVar3 == 0) {
-            iVar11 = iVar11 + 1;
-            uVar3 = 0;
+        else {                              /* 0x00124c30 */
+          x = bLow << 1;
+          bLow = (bHigh << 1 | bLow >> 31) << 1 | (x != 0);
+          shift -= 32;
+          if (shift >= 30)                  /* b is too small to matter */
+            return MAKE_WORDS(result,aHigh + (exponent << 20),aLow);
+          round = 30 - shift;
+          sum = aLow + (uint32)((int32)bHigh >> shift);
+          aHigh += (sum < aLow) - 1;
+          aLow = sum;
+        }
+        if ((int32)aHigh >= 0) {            /* still normalized (0x00124c00): round */
+          aHigh += exponent << 20;
+          lost = SHIFT_LEFT(bLow,round);
+          if ((lost & 0x80000000) == 0)
+            return MAKE_WORDS(result,aHigh,aLow);
+          aLow++;
+          if (aLow == 0)
+            aHigh++;
+          else if (lost == 0x80000000)
+            aLow &= ~1u;                    /* a tie: to even */
+          return MAKE_WORDS(result,aHigh,aLow);
+        }
+        round++;                            /* the hidden bit is gone (0x00124c58): one bit left, */
+        carry = round <= 32 ? SHIFT_RIGHT(bLow,32 - round) & 1 : 0;   /* the round bit brought in */
+        lost = SHIFT_LEFT(bLow,round);
+        aHigh = aHigh << 1 | aLow >> 31;
+        aLow = aLow << 1 | carry;
+        x = aHigh + (exponent << 21);
+        if ((x >> 21) != 0 && (x >> 20 & 1)) {   /* normalized (0x00124c74): round */
+          aHigh += exponent << 20;
+          aLow += lost >> 31;
+          if (aLow == 0 && (lost >> 31))
+            aHigh++;
+          else if (lost == 0x80000000)
+            aLow &= ~1u;                    /* a tie: to even */
+          return MAKE_WORDS(result,aHigh,aLow);
+        }
+        if (x >> 20 & 1) {                  /* exponent 0: a denormal (0x00124d1c), shifted back */
+          carry = aHigh & 1;
+          aHigh = (uint32)((int32)aHigh >> 1) + (exponent << 20);
+          aLow = aLow >> 1 | carry << 31;
+          control = 0x12;
+          tail = 1;
+        }
+        else {                              /* more cancellation (0x00124c9c): normalize, exact */
+          aHigh += 0x200000;
+          if (aHigh == 0 && aLow == 0)
+            return MAKE_WORDS(result,0,0);  /* x - x = +0 */
+          negative = exponent >> 11;
+          exponent = (exponent & ~0x800u) - 2;
+          zeros = LEADING_ZEROS(aHigh);
+          if (zeros == 32)
+            zeros += LEADING_ZEROS(aLow);
+          zeros -= 11;
+          exponent -= zeros;
+          if ((uint32)zeros >= 32) {
+            aHigh = SHIFT_LEFT(aLow,zeros - 32);
+            aLow = 0;
           }
           else {
-            uVar3 = uVar3 & 0xfffffffe;
+            aHigh = SHIFT_LEFT(aHigh,zeros) | SHIFT_RIGHT(aLow,32 - zeros);
+            aLow = SHIFT_LEFT(aLow,zeros);
           }
-          return MAKE_WORDS(uVar18,iVar11,uVar3);
+          aHigh += (negative << 31) + (exponent << 20);
+          if ((int32)exponent > 0)
+            return MAKE_WORDS(result,aHigh,aLow);
+          aHigh += 0x60000000;              /* below the smallest exponent: wrapped by 1536 */
+          bLow = (uint32)zeros;
+          control = 0x12;
+          tail = 2;
         }
-        return MAKE_WORDS(uVar18,iVar11,uVar3);
       }
-      uVar15 = uVar14 + 1 & 0xff;
-      bVar16 = uVar15 == 0 && bVar16 || uVar15 != 0 && (bool)((byte)(SHIFT_RIGHT(uVar10,0x20 - uVar15)) & 1);
-      uVar7 = uVar3 * 2 + (uint)bVar16;
-      iVar11 = iVar11 * 2 + (uint)(ADD_CARRIES(uVar3,uVar3) || ADD_CARRIES(uVar3 * 2,(uint)bVar16));
-      uVar14 = iVar11 + uVar12 * 0x200000;
-      bVar16 = (bool)((byte)(uVar14 >> 0x14) & 1);
-      if (bVar16 && uVar14 >> 0x15 != 0) {
-        iVar11 = iVar11 + uVar12 * 0x100000;
-        uVar12 = -((int)(SHIFT_LEFT(uVar10,uVar15)) >> 0x1f);
-        uVar6 = uVar7 + uVar12;
-        bVar16 = uVar6 == 0;
-        if (!ADD_CARRIES(uVar7,uVar12)) {
-          bVar16 = SHIFT_LEFT(uVar10,uVar15) == -0x80000000;
-        }
-        if (bVar16) {
-          if (uVar6 == 0) {
-            iVar11 = iVar11 + 1;
-            uVar6 = 0;
-          }
-          else {
-            uVar6 = uVar6 & 0xfffffffe;
-          }
-          return MAKE_WORDS(uVar18,iVar11,uVar6);
-        }
-        return MAKE_WORDS(uVar18,iVar11,uVar6);
+    }
+  }
+  if (tail == 4) {                          /* a NaN operand (0x00124e18) */
+    x = 0x100000 + (aHigh << 1) + (aLow != 0);   /* above 0xfff00000: a signalling NaN */
+    y = 0x100000 + (bHigh << 1) + (bLow != 0);
+    if (x <= 0xfff00000 && y <= 0xfff00000) {
+      if (x >= 0x100000)
+        return MAKE_WORDS(result,bHigh,bLow);   /* the first quiet NaN, as it is */
+      return MAKE_WORDS(result,aHigh,aLow);
+    }
+    tail = 3;                               /* a signalling NaN: invalid */
+  }
+  if (tail == 1) {                          /* 0x00124d80: a zero or denormal result, exact */
+    if ((aHigh << 1) == 0 && aLow == 0)
+      return MAKE_WORDS(result,0,0);
+    if ((aHigh << 1) >= 0x200000)
+      return MAKE_WORDS(result,aHigh,aLow);
+    status = kh_GetFpStatusPtr();           /* 0x00126018 */
+    word = *status;
+    if (word & 0x1000000)
+      return MAKE_WORDS(result,aHigh & 0x80000000,0);   /* flush to zero */
+    if ((word & 0x800) == 0)
+      return MAKE_WORDS(result,aHigh,aLow); /* underflow not trapped: the denormal, no flag */
+    shift = 0x6000000 | aHigh >> 31;        /* for the trap: normalized, the exponent wrapped by 1536 */
+    aHigh &= ~0x80000000;
+    if ((aHigh | aLow >> 12) == 0) {
+      aLow <<= 20;
+      shift -= 0x140000;
+    }
+    if (aHigh == 0) {
+      aHigh = aLow >> 12;
+      aLow <<= 20;
+      shift -= 0x140000;
+    }
+    zeros = 0;
+    if ((aHigh >> 5) == 0) {
+      aHigh <<= 16;
+      zeros += 16;
+    }
+    if ((aHigh >> 13) == 0) {
+      aHigh <<= 8;
+      zeros += 8;
+    }
+    if ((aHigh >> 17) == 0) {
+      aHigh <<= 4;
+      zeros += 4;
+    }
+    if ((aHigh >> 19) == 0) {
+      aHigh <<= 2;
+      zeros += 2;
+    }
+    if ((aHigh >> 20) == 0) {
+      aHigh <<= 1;
+      zeros += 1;
+    }
+    shift -= (uint32)zeros << 16;
+    bHigh = aLow << zeros;
+    bLow = 32 - zeros;
+    aHigh |= SHIFT_RIGHT(aLow,bLow);
+    aLow = bHigh;
+    aHigh ^= shift << 31;
+    aHigh += (shift & ~1u) << 4;
+    control |= 0x20000000;
+    tail = 5;
+  }
+  if (tail == 2) {                          /* 0x00125eb4: a denormal result, rounded */
+    status = kh_GetFpStatusPtr();
+    word = *status;
+    if (word & 0x1000000)
+      return MAKE_WORDS(result,aHigh & 0x80000000,0);   /* flush to zero */
+    if (word & 0x800) {                     /* underflow trapped */
+      bHigh = word;
+      control |= 0x20000000;
+      tail = 5;
+    }
+    else {                                  /* the denormal: exact, the cancellation's lowest bit */
+      negative = aHigh & 0x80000000;        /* being at or above 2^-1074 (0x00125f18 - 0x00125f84) */
+      shift = 0x601 - (aHigh >> 20 & 0x7ff);   /* the right shift into the denormal, 1 - 52 */
+      aHigh = (aHigh & 0xfffff) | 0x100000;
+      if (shift < 21) {
+        aLow = SHIFT_LEFT(aHigh,32 - shift) | SHIFT_RIGHT(aLow,shift);
+        aHigh = SHIFT_RIGHT(aHigh,shift);
       }
-      if (bVar16) {
-        param_1 = (uint)((byte)iVar11 & 1) << 0x1f | uVar7 >> 1;
-        uVar6 = (iVar11 >> 1) + uVar12 * 0x100000;
-        goto LAB_00124d7c;
-      }
-      iVar11 = iVar11 + 0x200000;
-      if (iVar11 == 0 && uVar7 == 0) {
-        return MAKE_WORDS(uVar18,0,uVar7);
-      }
-      iVar9 = LEADING_ZEROS(iVar11);
-      if (iVar9 == 0x20) {
-        iVar9 = LEADING_ZEROS(uVar7) + 0x20;
-      }
-      param_1 = iVar9 - 0xb;
-      iVar13 = ((uVar12 & 0xfffff7ff) - 2) - param_1;
-      if (param_1 < 0x20) {
-        uVar10 = SHIFT_LEFT(iVar11,param_1) | SHIFT_RIGHT(uVar7,0x20 - param_1);
-        param_3 = SHIFT_LEFT(uVar7,param_1);
+      else if (shift <= 32) {
+        aLow = SHIFT_LEFT(aHigh,32 - shift) | SHIFT_RIGHT(aLow,shift);
+        aHigh = 0;
       }
       else {
-        uVar10 = SHIFT_LEFT(uVar7,iVar9 - 0x2bU);
-        param_3 = 0;
+        aLow = SHIFT_RIGHT(aHigh,shift - 32);
+        aHigh = 0;
       }
-                    /* WARNING: Could not recover jumptable at 0x00124d04. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if (0 < iVar13) {
-        return MAKE_WORDS(uVar18,uVar10 + (uVar6 & 0x80000000) + iVar13 * 0x100000,param_3);
-      }
-      param_4 = uVar10 + (uVar6 & 0x80000000) + iVar13 * 0x100000 + 0x60000000;
-      uVar12 = 0x12;
-      puVar4 = kh_GetFpStatusPtr();
-      param_2 = *puVar4;
-      if ((param_2 & 0x1000000) != 0) {
-        return MAKE_WORDS(uVar18,param_4 & 0x80000000,0);
-      }
-      if ((param_2 & 0x800) == 0) {
-        if ((int)param_4 < 0) {
-          uVar12 = uVar12 | 0x10000;
-        }
-        uVar10 = param_4 & ~((param_4 >> 0x14) << 0x14);
-        iVar11 = -(param_4 >> 0x14 & 0xfffff7ff);
-        uVar15 = iVar11 + 0x601;
-        uVar6 = uVar10 | 0x100000;
-        if (uVar15 < 0x36) {
-          if (uVar15 == 0x35) {
-            uVar19 = 0;
-            uVar15 = 0;
-            uVar7 = 0x80000000;
-            if (param_3 != 0 || (uVar10 & 0xfffff) != 0) {
-              uVar7 = 0x80000001;
-            }
-          }
-          else if (uVar15 < 0x15) {
-            uVar19 = SHIFT_RIGHT(uVar6,uVar15);
-            uVar7 = SHIFT_LEFT(param_3,0x20 - uVar15);
-            uVar15 = SHIFT_LEFT(uVar6,0x20 - uVar15) | SHIFT_RIGHT(param_3,uVar15);
-          }
-          else {
-            uVar10 = iVar11 + 0x5e1;
-            uVar19 = 0;
-            if (uVar15 < 0x20 || uVar10 == 0) {
-              uVar15 = SHIFT_LEFT(uVar6,-uVar10) | SHIFT_RIGHT(param_3,uVar15);
-              uVar7 = SHIFT_LEFT(param_3,-uVar10);
-            }
-            else {
-              uVar15 = SHIFT_RIGHT(uVar6,uVar10);
-              uVar7 = SHIFT_LEFT(uVar6,0x20 - uVar10);
-              if (param_3 != 0) {
-                uVar7 = uVar7 | 1;
-              }
-            }
-          }
-        }
-        else {
-          uVar7 = 1;
-          uVar19 = 0;
-          uVar15 = 0;
-        }
-        if ((uVar12 & 0x10000) != 0) {
-          uVar19 = uVar19 | 0x80000000;
-        }
-        if (uVar7 == 0) {
-          return MAKE_WORDS(uVar18,uVar19,uVar15);
-        }
-        if ((uint8)(uVar7 >> 0x1f)) {
-          if (((uVar7 & 0x7fffffff) == 0) && (-1 < (int)uVar12 >> 0x1e)) {
-            if ((int)uVar12 >> 0x1e == 0) {
-              uVar19 = uVar19 + (0xfffffffe < uVar15);
-              uVar15 = uVar15 + 1 & 0xfffffffe;
-            }
-          }
-          else {
-            uVar19 = uVar19 + (0xfffffffe < uVar15);
-            uVar15 = uVar15 + 1;
-          }
-        }
-        puVar4 = kh_GetFpStatusPtr();
-        *puVar4 = *puVar4 | 8;
-        return MAKE_WORDS(uVar18,uVar19,uVar15);
-      }
+      return MAKE_WORDS(result,aHigh | negative,aLow);
     }
-    uVar12 = uVar12 | 0x20000000;
   }
-  uVar18 = float_raise_exception(param_3,param_4,param_1,param_2,uVar12);
-  if ((uVar12 & 0xf) != 9) {
-    return uVar18;
-  }
-LAB_00126d6c:
-  if ((uVar12 & 0x100000) == 0) {
-    uVar18.low = (uint)((uVar12 & uVar18.low << 0x10) != 0);
-    return uVar18;
-  }
-  if ((uVar12 & 0xf0000) == 0) {
-    uVar12 = uVar18.low << 0x1d;
-    if ((bool)((byte)(uVar18.low >> 3) & 1)) {
-      uVar12 = uVar12 | 0x30000000;
+  if (tail == 3) {                          /* the library's exception code (0x001260e4) */
+    status = kh_GetFpStatusPtr();
+    word = *status;
+    if (control & ~(word << 18) & 0x30000000)
+      control |= 0x40000000;                /* an untrapped overflow is also inexact */
+    word |= (control << 1) >> 27;           /* the sticky flags */
+    control |= word & 0x1c00000;
+    *status = word;
+    control |= (control & 0x70) << 3;       /* 0x80: the result's sign is the high word's */
+    if (control & 0x10000000) {             /* overflow */
+      if ((word & 0x400) == 0)
+        return MAKE_WORDS(result,WORD_HEXADECIMAL_7FF00000 | (aHigh & 0x80000000),INTEGER_0);
     }
-    puVar4 = kh_GetFpStatusPtr();
-    *puVar4 = *puVar4 & 0xfffffff | uVar12;
-    uVar18.high = uVar12;
-    return uVar18;
+    else if ((word & 0x100) == 0)           /* invalid */
+      return MAKE_WORDS(result,DOUBLE_DEFAULT_NAN_HIGH_WORD | (aHigh & 0x80000000),
+                        DOUBLE_DEFAULT_NAN_LOW_WORD);
   }
-  if ((uVar18.low & 8) != 0) {
-    uVar18.high = uVar12 & 0xf0000;
-    return uVar18;
-  }
-  uVar18.low = 2 - uVar18.low;
-  return uVar18;
+  return float_raise_exception(aLow,aHigh,bLow,bHigh,control);
 }
 
-/* ==== 0x00124B84  (file offset 0x24B84)  FUN_00124b84 ================================================ */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
 
-undefined8 FUN_00124b84(uint param_1,uint param_2,uint param_3,uint param_4)
+/* ==== 0x00124B84  (file offset 0x24B84)  double_subtract ============================================= */
+/* GUESS: name (the routine is certain: the soft-float library's double-precision subtract, ARM's
+   run-time ABI __aeabi_dsub). Returns a - b, a and b given and returned as their two words (low,
+   high). Same signs subtract the magnitudes (0x00124ba4), different signs add them (0x00124974, in
+   double_add's code).
+   Like float_add: the operands are swapped so |a| >= |b|, b is aligned to a's exponent and added or
+   subtracted, and the result rounded to nearest, ties to even, on b's dropped bits; rounding never
+   signals inexact. The status word (kh_GetFpStatusPtr) and the exception word ip are float_add's
+   (0x11 add, 0x12 subtract, 0x10 double precision; 0x04000000 invalid, 0x10000000 overflow,
+   0x20000000 underflow); the library's shared code is written here for this routine's cases:
+     an overflow (the exponent reaching 0x7ff): +-Inf, or the trap (status 0x400) with the exponent
+       wrapped by 1536;
+     an exact zero from opposite signs: +0;
+     a denormal result, exact (0x00124d80, 0x00126018): flush to zero (bit 24) gives +-0, an untrapped
+       underflow the denormal and no flag, a trapped one (0x800) the trap with the result normalized
+       and its exponent wrapped by 1536; a cancellation's denormal (0x00125eb4) takes the same flush
+       and trap, or is shifted into place;
+     a NaN: a signalling one is invalid (the trap, status 0x100, or the default NaN with a's sign),
+       otherwise the first NaN as it is; Inf - Inf is invalid the same way.
+   Each of double_add, double_subtract and double_reverse_subtract holds both cores and these tails,
+   as the binary's three entries share them. The listing's fifth kh_GetFpStatusPtr call, after the
+   trap, is the compare routines' result code (0x00126d6c), which an add never reaches, and the shared
+   denormal code's rounding (0x00125f88 - 0x00126014: a shift of 53 or more, the rounding and the
+   underflow flag with its own status read) cannot run here: a cancellation's result is exact, its
+   lowest bit no smaller than the operands' (at least 2^-1074). Neither is written. The trap gets
+   r0 - r3 as the binary leaves them. Verified under emulation (research_notes/soft_float_test,
+   double_reference.py, kind dd). */
+uint64 double_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
 
 {
-  byte bVar1;
-  uint uVar2;
-  uint uVar3;
-  uint uVar4;
-  uint32 *puVar5;
-  undefined4 uVar6;
-  uint uVar7;
-  uint uVar8;
-  undefined4 uVar9;
-  int iVar10;
-  uint uVar11;
-  int iVar12;
-  uint uVar13;
-  int iVar14;
-  uint uVar15;
-  bool bVar16;
-  bool bVar17;
-  undefined8 uVar18;
-  uint uVar19;
-  
-  if ((DOUBLE_EXPONENT_MASK_SHIFTED & ~(param_2 << 1)) == 0 ||
-      (DOUBLE_EXPONENT_MASK_SHIFTED & ~(param_4 << 1)) == 0) {
-    uVar13 = param_2 * 2 + (uint)(param_1 != 0);
-    uVar11 = param_4 * 2 + (uint)(param_3 != 0);
-    bVar17 = DOUBLE_EXPONENT_MASK_SHIFTED <= uVar13;
-    bVar16 = uVar13 == DOUBLE_EXPONENT_MASK_SHIFTED;
-    if (!bVar17 || bVar16) {
-      bVar17 = DOUBLE_EXPONENT_MASK_SHIFTED <= uVar11;
-      bVar16 = uVar11 == DOUBLE_EXPONENT_MASK_SHIFTED;
-    }
-    uVar13 = WORD_HEXADECIMAL_04000012;
-    if (bVar17 && !bVar16) {
-      uVar7 = param_2 * 2 + 0x100000 + (uint)(param_1 != 0);
-      uVar11 = uVar7;
-      if (uVar7 < 0xfff00001) {
-        uVar11 = param_4 * 2 + 0x100000 + (uint)(param_3 != 0);
-      }
-      if (0xfff00000 < uVar11) goto LAB_001260e4;
-      uVar11 = WORD_HEXADECIMAL_04000012;
-      if (0xfffff < uVar7) {
-        param_1 = param_3;
-        param_2 = param_4;
-      }
-LAB_00126cb0:
-      if ((uVar11 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x00126cc4. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        if ((uVar11 & 0xf) != 8) {
-          return MAKE_WORDS(uVar18,param_2,param_1);
-        }
-        if ((uVar11 & 0x40) == 0) {
-          uVar6 = FLOAT_DEFAULT_NAN;
-          if ((uVar11 & 0x10) != 0) {
-            uVar6 = 0;
-            param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD;
-          }
-          return MAKE_WORDS(uVar18,param_2,uVar6);
-        }
-        if ((uVar11 & 0x10000) != 0) {
-          return MAKE_WORDS(uVar18,0,0);
-        }
-        if ((uVar11 & 0x20) != 0) {
-          uVar6 = 0xffffffff;
-          uVar9 = 0xffffffff;
-          if ((param_3 & 0x80000000) != 0) {
-            uVar6 = 0;
-            uVar9 = 0;
-          }
-          return MAKE_WORDS(uVar18,uVar9,uVar6);
-        }
-        if ((uVar11 & 0x10) == 0) {
-          uVar11 = 0x7fffffff;
-          uVar13 = param_2;
-        }
-        else {
-          uVar13 = 0x7fffffff;
-          uVar11 = 0xffffffff;
-          param_1 = param_2;
-        }
-        if ((param_1 & 0x80000000) != 0) {
-          uVar11 = ~uVar11;
-          uVar13 = ~uVar13;
-        }
-        return MAKE_WORDS(uVar18,uVar13,uVar11);
-      }
-      MAKE_WORDS(uVar18,param_2,8);
-      goto LAB_00126d6c;
-    }
-    iVar12 = param_2 * 2 + (uint)(param_1 != 0);
-    if (iVar12 != param_4 * 2 + (uint)(param_3 != 0)) {
-      if (iVar12 != -0x200000) {
-        return MAKE_WORDS(uVar18,param_4 ^ 0x80000000,0);
-      }
-      return MAKE_WORDS(uVar18,param_2,0);
-    }
-    param_1 = 0;
-    if ((int)(param_2 ^ param_4) < 0) {
-      return MAKE_WORDS(uVar18,param_2,0);
-    }
-    param_3 = 0;
-LAB_001260e4:
-    if ((uVar13 & 0x10) == 0) {
-      param_3 = param_2;
-    }
-    uVar7 = param_1;
-    puVar5 = kh_GetFpStatusPtr();
-    uVar8 = *puVar5;
-    if ((uVar13 & ~(uVar8 << 0x12) & 0x30000000) != 0) {
-      uVar13 = uVar13 | 0x40000000;
-    }
-    uVar11 = uVar13 | uVar8 & 0x1c00000;
-    *puVar5 = uVar8 | (uVar13 & 0x7fffffff) >> 0x1a;
-    bVar16 = (uVar13 & 0xf) != 8;
-    if (bVar16) {
-      uVar13 = uVar13 & 0x70;
-      uVar11 = uVar11 | uVar13 << 3;
-    }
+  uint64 result;
+  uint32 *status;
+  uint32 word;        /* the status word */
+  uint32 control;     /* ip: the exception word, see the comment above */
+  uint32 exponent;    /* r4: the larger operand's sign and exponent (bit 11, bits 0-10) */
+  uint32 shift;       /* lr: the exponent difference; in the denormal code, the trap's exponent */
+  uint32 round;       /* r12: the shift that brings b's dropped bits to the top */
+  uint32 lost;        /* b's dropped bits, the first (the round bit) at bit 31 */
+  uint32 sum;
+  uint32 carry;
+  uint32 x;           /* an operand's high word shifted left, the low word's bits as bit 0 */
+  uint32 y;
+  uint32 negative;
+  int32 zeros;
+  int32 tail = 0;     /* where the result goes: 0 returned, 1 the zero and denormal check
+                         (0x00124d80), 2 the denormal rounding (0x00125eb4), 3 the exception code
+                         (0x001260e4), 4 the NaN choice (0x00124e18), 5 the trap (0x00126d48) */
+  int32 subtracts = 0; /* the operands' magnitudes are subtracted (0x00124ba4), not added */
+  int32 aligned = 0;   /* b is aligned to a and added or subtracted (0x001249ac / 0x00124be4) */
+  int32 renormalize = 0;  /* the sum carried into a's exponent (0x00124a34) */
+
+  if ((DOUBLE_EXPONENT_MASK_SHIFTED & ~(aHigh << 1)) == 0 ||
+      (DOUBLE_EXPONENT_MASK_SHIFTED & ~(bHigh << 1)) == 0) {   /* an Inf or NaN operand (0x00124d98) */
+    x = aHigh << 1 | (aLow != 0);
+    y = bHigh << 1 | (bLow != 0);
+    control = WORD_HEXADECIMAL_04000012;
+    if (x > DOUBLE_EXPONENT_MASK_SHIFTED || y > DOUBLE_EXPONENT_MASK_SHIFTED)
+      tail = 4;
     else {
-      uVar13 = 0x20000;
-    }
-    if (!bVar16 && (uVar13 & ~uVar11) == 0) {
-      uVar11 = uVar11 | 0xc00000;
-    }
-    if ((uVar11 & 0x20000000) == 0) {
-      if ((uVar11 & 0x10000000) == 0) {
-        if ((uVar11 & 0x40000000) != 0) {
-          uVar8 = uVar8 & 0x1000;
-          goto joined_r0x00126194;
-        }
-        if ((uVar11 & 0x8000000) == 0) {
-          if ((uVar8 & 0x100) == 0) {
-            uVar13 = param_2;
-            if ((uVar11 & 0x80) == 0) {
-              uVar13 = uVar7;
-            }
-            param_3 = uVar13 & 0x80000000;
-            if ((uVar11 & 0x10) == 0) {
-              param_1 = FLOAT_DEFAULT_NAN | param_3;
-            }
-            else {
-              param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD | param_3;
-              param_1 = DOUBLE_DEFAULT_NAN_LOW_WORD;
-            }
-            goto LAB_00126cb0;
-          }
-        }
-        else if ((uVar8 & 0x200) == 0) {
-          if ((uVar11 & 0x10) == 0) {
-            uVar7 = uVar7 ^ param_3;
-          }
-          else {
-            uVar7 = param_2 ^ param_4;
-          }
-          goto LAB_001261dc;
-        }
+      if (x == y) {                         /* two infinities */
+        if ((int32)(aHigh ^ bHigh) < 0)
+          return MAKE_WORDS(result,aHigh,0);
+        aLow = 0;                           /* Inf - Inf: invalid */
+        bLow = 0;
+        tail = 3;
       }
-      else if ((uVar8 & 0x400) == 0) {
-        if ((uVar11 & 0x80) == 0) {
-          uVar7 = uVar7 & 0x80000000;
-        }
-        else {
-          uVar7 = param_2 & 0x80000000;
-        }
-LAB_001261dc:
-        if ((uVar11 & 0x10) == 0) {
-          return MAKE_WORDS(uVar18,param_2,WORD_HEXADECIMAL_7F800000 | uVar7 & 0x80000000);
-        }
-        return MAKE_WORDS(uVar18,WORD_HEXADECIMAL_7FF00000 | uVar7 & 0x80000000,INTEGER_0);
-      }
-    }
-    else {
-      uVar8 = uVar8 & 0x800;
-joined_r0x00126194:
-      if (uVar8 == 0) {
-        return MAKE_WORDS(uVar18,param_2,uVar7);
-      }
+      else if (x == DOUBLE_EXPONENT_MASK_SHIFTED)
+        return MAKE_WORDS(result,aHigh,0);  /* the infinite operand */
+      else
+        return MAKE_WORDS(result,bHigh ^ 0x80000000,0);
     }
   }
   else {
-    if ((int)(param_2 ^ param_4) < 0) {
-      uVar11 = param_4 ^ 0x80000000;
-      uVar13 = param_1 - param_3;
-      iVar12 = param_2 - (uVar11 + (param_3 > param_1));
-      if (param_2 <= uVar11 && (uint)(param_3 <= param_1) <= param_2 - uVar11) {
-        bVar16 = ADD_CARRIES(param_3,uVar13);
-        param_3 = param_3 + uVar13;
-        uVar11 = uVar11 + iVar12 + (uint)bVar16;
-        bVar16 = param_1 < uVar13;
-        param_1 = param_1 - uVar13;
-        param_2 = param_2 - (iVar12 + (uint)bVar16);
+    if ((int32)(aHigh ^ bHigh) < 0)
+      bHigh ^= 0x80000000;                  /* a - b = a + (-b) */
+    else
+      subtracts = 1;
+    if (!subtracts) {
+      /* add the magnitudes (0x00124974) */
+      if (aHigh < bHigh || (aHigh == bHigh && aLow < bLow)) {   /* |a| < |b|: swap them */
+        x = aHigh;
+        aHigh = bHigh;
+        bHigh = x;
+        x = aLow;
+        aLow = bLow;
+        bLow = x;
       }
-      uVar7 = param_2 >> 0x14;
-      uVar8 = uVar7 - (uVar11 >> 0x14);
-      if ((DOUBLE_EXPONENT_MASK_SHIFTED & uVar11 << 1) != 0) {
-        uVar15 = param_2 & ~(uVar7 << 0x14);
-        uVar11 = uVar11 & ~DOUBLE_EXPONENT_MASK_SHIFTED | 0x100000;
-LAB_001249ac:
-        uVar4 = 0x20 - uVar8;
-        uVar13 = DOUBLE_ADD_FINITE_OPERANDS_CODE;
-        if (uVar8 < 0x21) {
-          uVar2 = SHIFT_RIGHT(param_3,uVar8);
-          bVar16 = ADD_CARRIES(param_1,uVar2);
-          uVar2 = param_1 + uVar2;
-          uVar3 = SHIFT_LEFT(uVar11,uVar4);
-          param_1 = uVar2 + uVar3;
-          uVar8 = uVar15 + (SHIFT_RIGHT(uVar11,uVar8)) + (uint)bVar16 + (uint)ADD_CARRIES(uVar2,uVar3);
-          if (0xfffff < uVar8) goto LAB_00124a34;
-          uVar11 = uVar8 + uVar7 * 0x100000;
-LAB_001249d0:
-          param_3 = SHIFT_LEFT(param_3,uVar4);
-          if (-1 < (int)param_3) {
-            return MAKE_WORDS(uVar18,uVar11,param_1);
-          }
-          bVar16 = param_1 != 0xffffffff;
-          param_1 = param_1 + 1;
-          uVar7 = param_1;
-          if (bVar16) {
-            param_3 = param_3 << 1;
-            uVar7 = param_3;
-          }
-          if (uVar7 != 0) {
-            return MAKE_WORDS(uVar18,uVar11,param_1);
-          }
-LAB_001249e8:
-          if (param_1 == 0) {
-            uVar11 = uVar11 + 1;
-            param_1 = 0;
-          }
-          else {
-            param_1 = param_1 & 0xfffffffe;
-          }
-          param_4 = uVar11 << 1;
-          if (param_4 < 0xffe00000) {
-            return MAKE_WORDS(uVar18,uVar11,param_1);
-          }
-          param_2 = uVar11 + 0xa0000000;
+      exponent = aHigh >> 20;
+      shift = exponent - (bHigh >> 20);
+      if ((bHigh << 1 & DOUBLE_EXPONENT_MASK_SHIFTED) == 0) {   /* b is zero or a denormal */
+        if ((bLow | bHigh << 1) == 0) {     /* b is zero (0x00124ab4), a is the result */
+          if ((exponent << 21) != 0 || (aLow | aHigh << 1) == 0)
+            return MAKE_WORDS(result,aHigh,aLow);
+          control = 0x11;                   /* a denormal */
+          tail = 1;
         }
         else {
-          param_3 = uVar11 * 2 + (uint)(param_3 != 0);
-          uVar8 = uVar8 - 0x20;
-          bVar16 = uVar8 < 0x20;
-          uVar4 = 0x1f - uVar8;
-          if (bVar16) {
-            uVar11 = SHIFT_RIGHT(uVar11,uVar8);
-            bVar16 = ADD_CARRIES(param_1,uVar11);
-            param_1 = param_1 + uVar11;
+          aHigh &= ~(exponent << 20);
+          if ((exponent << 21) == 0) {      /* two denormals: b's high word brings the sign */
+            aLow += bLow;
+            aHigh += bHigh + (aLow < bLow);
+            control = 0x11;
+            tail = 1;
           }
-          else {
-            uVar4 = 0;
+          else {                            /* a is normal: b counts as exponent 1 */
+            bHigh &= ~0x80000000;
+            shift--;
+            aligned = 1;
           }
-          uVar11 = uVar15 + uVar7 * 0x100000 + (uint)bVar16;
-          if (uVar7 == uVar11 >> 0x14) goto LAB_001249d0;
-          uVar8 = uVar11 + uVar7 * -0x100000;
-LAB_00124a34:
-          uVar11 = (uVar8 + 0x100000 >> 1) + uVar7 * 0x100000;
-          bVar1 = (byte)param_1;
-          param_1 = (uint)((byte)(uVar8 + 0x100000) & 1) << 0x1f | param_1 >> 1;
-          if ((bool)(bVar1 & 1)) {
-            bVar16 = param_1 != 0xffffffff;
-            param_1 = param_1 + 1;
-            uVar7 = param_1;
-            if (bVar16) {
-              uVar7 = SHIFT_LEFT(param_3,uVar4);
-            }
-            if (uVar7 == 0) goto LAB_001249e8;
-          }
-          param_4 = uVar11 * 2;
-          if (param_4 < 0xffe00000) {
-            return MAKE_WORDS(uVar18,uVar11,param_1);
-          }
-          param_2 = uVar11 + 0xa0000000;
         }
-        goto LAB_001260e4;
-      }
-      if (param_3 == 0 && (uVar11 & 0x7fffffff) == 0) {
-        if ((uVar7 & 0x7ff) != 0) {
-          return MAKE_WORDS(uVar18,param_2,param_1);
-        }
-        if (param_1 == 0 && (param_2 & 0x7fffffff) == 0) {
-          return MAKE_WORDS(uVar18,param_2,param_1);
-        }
-        uVar11 = 0x11;
       }
       else {
-        uVar15 = param_2 & ~(uVar7 << 0x14);
-        if ((uVar7 & 0x7ff) != 0) {
-          uVar11 = uVar11 & 0x7fffffff;
-          uVar8 = uVar8 - 1;
-          goto LAB_001249ac;
+        aHigh &= ~(exponent << 20);
+        bHigh = (bHigh & 0xfffff) | 0x100000;
+        aligned = 1;
+      }
+      if (aligned) {                        /* 0x001249ac: a's mantissa without its hidden bit */
+        if (shift <= 32) {
+          round = 32 - shift;
+          sum = aLow + SHIFT_RIGHT(bLow,shift);
+          aHigh += SHIFT_RIGHT(bHigh,shift) + (sum < aLow);
+          aLow = sum + SHIFT_LEFT(bHigh,round);
+          aHigh += aLow < sum;
+          if (aHigh >= 0x100000)
+            renormalize = 1;                /* the sum carried past the hidden bit */
+          else
+            aHigh += exponent << 20;
         }
-        bVar16 = ADD_CARRIES(param_1,param_3);
-        param_1 = param_1 + param_3;
-        param_2 = uVar15 + uVar11 + (uint)bVar16;
-        uVar11 = 0x11;
+        else {                              /* 0x00124a0c */
+          x = bHigh << 1 | (bLow != 0);
+          shift -= 32;
+          carry = 0;
+          round = 0;
+          if (shift <= 31) {
+            round = 31 - shift;
+            sum = aLow + (bHigh >> shift);
+            carry = sum < aLow;
+            aLow = sum;
+          }
+          aHigh += (exponent << 20) + carry;
+          bLow = x;
+          if (exponent != aHigh >> 20) {
+            aHigh -= exponent << 20;
+            renormalize = 1;
+          }
+        }
+        if (!renormalize) {                 /* 0x001249d0: round on b's dropped bits */
+          lost = SHIFT_LEFT(bLow,round);
+          if ((lost & 0x80000000) == 0)
+            return MAKE_WORDS(result,aHigh,aLow);
+          aLow++;
+          if (aLow != 0) {
+            if ((lost << 1) != 0)
+              return MAKE_WORDS(result,aHigh,aLow);
+            aLow &= ~1u;                    /* a tie: to even */
+            return MAKE_WORDS(result,aHigh,aLow);
+          }
+          aHigh++;
+          bLow = lost;
+        }
+        else {                              /* 0x00124a34: one more bit to drop */
+          aHigh += 0x100000;
+          carry = aHigh & 1;
+          aHigh = (aHigh >> 1) + (exponent << 20);
+          x = aLow & 1;                     /* the round bit */
+          aLow = aLow >> 1 | carry << 31;
+          if (x) {
+            aLow++;
+            if (aLow == 0)
+              aHigh++;
+            else if (SHIFT_LEFT(bLow,round) == 0)
+              aLow &= ~1u;                  /* a tie: to even */
+          }
+        }
+        if ((aHigh << 1) < DOUBLE_EXPONENT_MASK_SHIFTED)   /* 0x001249f4 / 0x00124a6c */
+          return MAKE_WORDS(result,aHigh,aLow);
+        bHigh = aHigh << 1;                 /* overflow: for the trap, the exponent wrapped by 1536 */
+        aHigh -= 0x60000000;
+        control = DOUBLE_ADD_FINITE_OPERANDS_CODE;
+        tail = 3;
       }
-LAB_00124d80:
-      if (param_2 << 1 == 0 && param_1 == 0) {
-        return MAKE_WORDS(uVar18,0,param_1);
-      }
-      if (0x1fffff < param_2 << 1) {
-        return MAKE_WORDS(uVar18,param_2,param_1);
-      }
-      puVar5 = kh_GetFpStatusPtr();
-      if ((*puVar5 & 0x1000000) != 0) {
-        return MAKE_WORDS(uVar18,param_2 & 0x80000000,0);
-      }
-      if ((*puVar5 & 0x800) == 0) {
-        return MAKE_WORDS(uVar18,param_2,param_1);
-      }
-      uVar8 = param_2 >> 0x1f | 0x6000000;
-      uVar13 = param_2 & 0x7fffffff;
-      if (uVar13 == 0 && param_1 >> 0xc == 0) {
-        param_1 = param_1 << 0x14;
-        uVar8 = uVar8 - 0x140000;
-      }
-      if (uVar13 == 0) {
-        uVar13 = param_1 >> 0xc;
-        param_1 = param_1 << 0x14;
-        uVar8 = uVar8 - 0x140000;
-      }
-      iVar12 = 0;
-      if (uVar13 >> 5 == 0) {
-        uVar13 = uVar13 << 0x10;
-        iVar12 = 0x10;
-      }
-      if (uVar13 >> 0xd == 0) {
-        uVar13 = uVar13 << 8;
-        iVar12 = iVar12 + 8;
-      }
-      if (uVar13 >> 0x11 == 0) {
-        uVar13 = uVar13 << 4;
-        iVar12 = iVar12 + 4;
-      }
-      if (uVar13 >> 0x13 == 0) {
-        uVar13 = uVar13 << 2;
-        iVar12 = iVar12 + 2;
-      }
-      if (uVar13 >> 0x14 == 0) {
-        uVar13 = uVar13 << 1;
-        iVar12 = iVar12 + 1;
-      }
-      uVar7 = param_1 << iVar12;
-      param_3 = 0x20 - iVar12;
-      param_2 = ((uVar13 | SHIFT_RIGHT(param_1,param_3)) ^ uVar8 * -0x80000000) +
-                (uVar8 + iVar12 * -0x10000 & 0xfffffffe) * 0x10;
-      param_4 = uVar7;
     }
     else {
-      uVar13 = param_1 - param_3;
-      if (param_2 <= param_4 && (uint)(param_3 <= param_1) <= param_2 - param_4) {
-        uVar11 = param_2 - (param_4 + (param_3 > param_1)) ^ 0x80000000;
-        bVar16 = ADD_CARRIES(param_3,uVar13);
-        param_3 = param_3 + uVar13;
-        param_4 = param_4 + uVar11 + (uint)bVar16;
-        bVar16 = param_1 < uVar13;
-        param_1 = param_1 - uVar13;
-        param_2 = param_2 - (uVar11 + bVar16);
+      /* subtract the magnitudes (0x00124ba4), the signs the same */
+      if (aHigh < bHigh || (aHigh == bHigh && aLow < bLow)) {   /* |a| < |b|: swap them and flip */
+        x = aHigh ^ 0x80000000;                                 /* both signs */
+        aHigh = bHigh ^ 0x80000000;
+        bHigh = x;
+        x = aLow;
+        aLow = bLow;
+        bLow = x;
       }
-      uVar13 = param_2 >> 0x14;
-      uVar11 = uVar13 - (param_4 >> 0x14);
-      if ((DOUBLE_EXPONENT_MASK_SHIFTED & param_4 << 1) == 0) {
-        if (param_3 == 0 && (param_4 & 0xfffff) == 0) {
-          if (param_1 == 0 && (param_2 & 0x7fffffff) == 0) {
-            return MAKE_WORDS(uVar18,0,param_1);
-          }
+      exponent = aHigh >> 20;
+      shift = exponent - (bHigh >> 20);
+      if ((bHigh << 1 & DOUBLE_EXPONENT_MASK_SHIFTED) == 0) {   /* b is zero or a denormal (0x00124d30) */
+        if ((bLow | bHigh << 12) == 0) {    /* b is zero */
+          if ((aLow | aHigh << 1) == 0)
+            return MAKE_WORDS(result,0,0);  /* 0 - 0 = +0 */
+          control = 0x12;
+          tail = 1;
         }
         else {
-          uVar7 = param_2 & ~(uVar13 << 0x14);
-          if ((uVar13 & 0x7ff) != 0) {
-            uVar11 = uVar11 - 1;
-            iVar12 = -((param_4 & 0x7fffffff) + (uint)(param_3 != 0));
-            goto LAB_00124be4;
+          aHigh &= ~(exponent << 20);
+          if ((exponent << 21) == 0) {      /* two denormals: b's high word brings the sign */
+            x = aLow;
+            aLow -= bLow;
+            aHigh -= bHigh + (x < bLow);
+            control = 0x12;
+            tail = 1;
           }
-          bVar16 = param_1 < param_3;
-          param_1 = param_1 - param_3;
-          param_2 = uVar7 - (param_4 + bVar16);
+          else {                            /* a is normal: b counts as exponent 1, negated */
+            bHigh &= ~0x80000000;
+            shift--;
+            x = bLow;
+            bLow = 0 - x;
+            bHigh = 0 - bHigh - (x != 0);
+            aligned = 1;
+          }
         }
-LAB_00124d7c:
-        uVar11 = 0x12;
-        goto LAB_00124d80;
-      }
-      uVar7 = param_2 & ~(uVar13 << 0x14);
-      iVar12 = ((int)DOUBLE_EXPONENT_MASK_SHIFTED >> 1) -
-               ((param_4 & ~((int)DOUBLE_EXPONENT_MASK_SHIFTED >> 1)) + (uint)(param_3 != 0));
-LAB_00124be4:
-      uVar8 = -param_3;
-      uVar15 = 0x20 - uVar11;
-      if (uVar11 < 0x21) {
-        uVar4 = SHIFT_RIGHT(uVar8,uVar11);
-        uVar3 = param_1 + uVar4;
-        uVar7 = uVar7 + (SHIFT_RIGHT_SIGNED(iVar12,uVar11)) + (uint)ADD_CARRIES(param_1,uVar4);
-        uVar11 = SHIFT_LEFT(iVar12,uVar15);
-        uVar4 = uVar3 + uVar11;
-        bVar16 = ADD_CARRIES(uVar7,(uint)ADD_CARRIES(uVar3,uVar11));
-        iVar12 = uVar7 + ADD_CARRIES(uVar3,uVar11);
       }
       else {
-        uVar8 = (uint)(param_3 * -2 != 0) | (iVar12 * 2 + (uint)ADD_CARRIES(uVar8,uVar8)) * 2;
-        uVar11 = uVar11 - 0x20;
-        uVar15 = 0x1e - uVar11;
-        if (0x1e < uVar11 || uVar15 == 0) {
-          return MAKE_WORDS(uVar18,uVar7 + uVar13 * 0x100000,param_1);
-        }
-        uVar11 = SHIFT_RIGHT_SIGNED(iVar12,uVar11);
-        uVar4 = param_1 + uVar11;
-        bVar16 = uVar7 != 0 || uVar7 < ADD_CARRIES(param_1,uVar11);
-        iVar12 = uVar7 - !ADD_CARRIES(param_1,uVar11);
+        aHigh &= ~(exponent << 20);
+        bHigh &= 0xfffff;                   /* b with its hidden bit, negated */
+        x = bLow;
+        bLow = 0 - x;
+        bHigh = 0xfff00000 - bHigh - (x != 0);
+        aligned = 1;
       }
-      if (-1 < iVar12) {
-        iVar12 = iVar12 + uVar13 * 0x100000;
-        iVar10 = SHIFT_LEFT(uVar8,uVar15);
-        if (-1 < iVar10) {
-          return MAKE_WORDS(uVar18,iVar12,uVar4);
+      if (aligned) {                        /* 0x00124be4 */
+        if (shift <= 32) {
+          round = 32 - shift;
+          sum = aLow + SHIFT_RIGHT(bLow,shift);
+          aHigh += (uint32)SHIFT_RIGHT_SIGNED(bHigh,shift) + (sum < aLow);
+          aLow = sum + SHIFT_LEFT(bHigh,round);
+          aHigh += aLow < sum;
         }
-        uVar4 = uVar4 + 1;
-        if (uVar4 == 0 || iVar10 == -0x80000000) {
-          if (uVar4 == 0) {
-            iVar12 = iVar12 + 1;
-            uVar4 = 0;
+        else {                              /* 0x00124c30 */
+          x = bLow << 1;
+          bLow = (bHigh << 1 | bLow >> 31) << 1 | (x != 0);
+          shift -= 32;
+          if (shift >= 30)                  /* b is too small to matter */
+            return MAKE_WORDS(result,aHigh + (exponent << 20),aLow);
+          round = 30 - shift;
+          sum = aLow + (uint32)((int32)bHigh >> shift);
+          aHigh += (sum < aLow) - 1;
+          aLow = sum;
+        }
+        if ((int32)aHigh >= 0) {            /* still normalized (0x00124c00): round */
+          aHigh += exponent << 20;
+          lost = SHIFT_LEFT(bLow,round);
+          if ((lost & 0x80000000) == 0)
+            return MAKE_WORDS(result,aHigh,aLow);
+          aLow++;
+          if (aLow == 0)
+            aHigh++;
+          else if (lost == 0x80000000)
+            aLow &= ~1u;                    /* a tie: to even */
+          return MAKE_WORDS(result,aHigh,aLow);
+        }
+        round++;                            /* the hidden bit is gone (0x00124c58): one bit left, */
+        carry = round <= 32 ? SHIFT_RIGHT(bLow,32 - round) & 1 : 0;   /* the round bit brought in */
+        lost = SHIFT_LEFT(bLow,round);
+        aHigh = aHigh << 1 | aLow >> 31;
+        aLow = aLow << 1 | carry;
+        x = aHigh + (exponent << 21);
+        if ((x >> 21) != 0 && (x >> 20 & 1)) {   /* normalized (0x00124c74): round */
+          aHigh += exponent << 20;
+          aLow += lost >> 31;
+          if (aLow == 0 && (lost >> 31))
+            aHigh++;
+          else if (lost == 0x80000000)
+            aLow &= ~1u;                    /* a tie: to even */
+          return MAKE_WORDS(result,aHigh,aLow);
+        }
+        if (x >> 20 & 1) {                  /* exponent 0: a denormal (0x00124d1c), shifted back */
+          carry = aHigh & 1;
+          aHigh = (uint32)((int32)aHigh >> 1) + (exponent << 20);
+          aLow = aLow >> 1 | carry << 31;
+          control = 0x12;
+          tail = 1;
+        }
+        else {                              /* more cancellation (0x00124c9c): normalize, exact */
+          aHigh += 0x200000;
+          if (aHigh == 0 && aLow == 0)
+            return MAKE_WORDS(result,0,0);  /* x - x = +0 */
+          negative = exponent >> 11;
+          exponent = (exponent & ~0x800u) - 2;
+          zeros = LEADING_ZEROS(aHigh);
+          if (zeros == 32)
+            zeros += LEADING_ZEROS(aLow);
+          zeros -= 11;
+          exponent -= zeros;
+          if ((uint32)zeros >= 32) {
+            aHigh = SHIFT_LEFT(aLow,zeros - 32);
+            aLow = 0;
           }
           else {
-            uVar4 = uVar4 & 0xfffffffe;
+            aHigh = SHIFT_LEFT(aHigh,zeros) | SHIFT_RIGHT(aLow,32 - zeros);
+            aLow = SHIFT_LEFT(aLow,zeros);
           }
-          return MAKE_WORDS(uVar18,iVar12,uVar4);
+          aHigh += (negative << 31) + (exponent << 20);
+          if ((int32)exponent > 0)
+            return MAKE_WORDS(result,aHigh,aLow);
+          aHigh += 0x60000000;              /* below the smallest exponent: wrapped by 1536 */
+          bLow = (uint32)zeros;
+          control = 0x12;
+          tail = 2;
         }
-        return MAKE_WORDS(uVar18,iVar12,uVar4);
       }
-      uVar11 = uVar15 + 1 & 0xff;
-      bVar16 = uVar11 == 0 && bVar16 || uVar11 != 0 && (bool)((byte)(SHIFT_RIGHT(uVar8,0x20 - uVar11)) & 1);
-      uVar7 = uVar4 * 2 + (uint)bVar16;
-      iVar12 = iVar12 * 2 + (uint)(ADD_CARRIES(uVar4,uVar4) || ADD_CARRIES(uVar4 * 2,(uint)bVar16));
-      uVar15 = iVar12 + uVar13 * 0x200000;
-      bVar16 = (bool)((byte)(uVar15 >> 0x14) & 1);
-      if (bVar16 && uVar15 >> 0x15 != 0) {
-        iVar12 = iVar12 + uVar13 * 0x100000;
-        uVar13 = -((int)(SHIFT_LEFT(uVar8,uVar11)) >> 0x1f);
-        uVar15 = uVar7 + uVar13;
-        bVar16 = uVar15 == 0;
-        if (!ADD_CARRIES(uVar7,uVar13)) {
-          bVar16 = SHIFT_LEFT(uVar8,uVar11) == -0x80000000;
-        }
-        if (bVar16) {
-          if (uVar15 == 0) {
-            iVar12 = iVar12 + 1;
-            uVar15 = 0;
-          }
-          else {
-            uVar15 = uVar15 & 0xfffffffe;
-          }
-          return MAKE_WORDS(uVar18,iVar12,uVar15);
-        }
-        return MAKE_WORDS(uVar18,iVar12,uVar15);
+    }
+  }
+  if (tail == 4) {                          /* a NaN operand (0x00124e18) */
+    x = 0x100000 + (aHigh << 1) + (aLow != 0);   /* above 0xfff00000: a signalling NaN */
+    y = 0x100000 + (bHigh << 1) + (bLow != 0);
+    if (x <= 0xfff00000 && y <= 0xfff00000) {
+      if (x >= 0x100000)
+        return MAKE_WORDS(result,bHigh,bLow);   /* the first quiet NaN, as it is */
+      return MAKE_WORDS(result,aHigh,aLow);
+    }
+    tail = 3;                               /* a signalling NaN: invalid */
+  }
+  if (tail == 1) {                          /* 0x00124d80: a zero or denormal result, exact */
+    if ((aHigh << 1) == 0 && aLow == 0)
+      return MAKE_WORDS(result,0,0);
+    if ((aHigh << 1) >= 0x200000)
+      return MAKE_WORDS(result,aHigh,aLow);
+    status = kh_GetFpStatusPtr();           /* 0x00126018 */
+    word = *status;
+    if (word & 0x1000000)
+      return MAKE_WORDS(result,aHigh & 0x80000000,0);   /* flush to zero */
+    if ((word & 0x800) == 0)
+      return MAKE_WORDS(result,aHigh,aLow); /* underflow not trapped: the denormal, no flag */
+    shift = 0x6000000 | aHigh >> 31;        /* for the trap: normalized, the exponent wrapped by 1536 */
+    aHigh &= ~0x80000000;
+    if ((aHigh | aLow >> 12) == 0) {
+      aLow <<= 20;
+      shift -= 0x140000;
+    }
+    if (aHigh == 0) {
+      aHigh = aLow >> 12;
+      aLow <<= 20;
+      shift -= 0x140000;
+    }
+    zeros = 0;
+    if ((aHigh >> 5) == 0) {
+      aHigh <<= 16;
+      zeros += 16;
+    }
+    if ((aHigh >> 13) == 0) {
+      aHigh <<= 8;
+      zeros += 8;
+    }
+    if ((aHigh >> 17) == 0) {
+      aHigh <<= 4;
+      zeros += 4;
+    }
+    if ((aHigh >> 19) == 0) {
+      aHigh <<= 2;
+      zeros += 2;
+    }
+    if ((aHigh >> 20) == 0) {
+      aHigh <<= 1;
+      zeros += 1;
+    }
+    shift -= (uint32)zeros << 16;
+    bHigh = aLow << zeros;
+    bLow = 32 - zeros;
+    aHigh |= SHIFT_RIGHT(aLow,bLow);
+    aLow = bHigh;
+    aHigh ^= shift << 31;
+    aHigh += (shift & ~1u) << 4;
+    control |= 0x20000000;
+    tail = 5;
+  }
+  if (tail == 2) {                          /* 0x00125eb4: a denormal result, rounded */
+    status = kh_GetFpStatusPtr();
+    word = *status;
+    if (word & 0x1000000)
+      return MAKE_WORDS(result,aHigh & 0x80000000,0);   /* flush to zero */
+    if (word & 0x800) {                     /* underflow trapped */
+      bHigh = word;
+      control |= 0x20000000;
+      tail = 5;
+    }
+    else {                                  /* the denormal: exact, the cancellation's lowest bit */
+      negative = aHigh & 0x80000000;        /* being at or above 2^-1074 (0x00125f18 - 0x00125f84) */
+      shift = 0x601 - (aHigh >> 20 & 0x7ff);   /* the right shift into the denormal, 1 - 52 */
+      aHigh = (aHigh & 0xfffff) | 0x100000;
+      if (shift < 21) {
+        aLow = SHIFT_LEFT(aHigh,32 - shift) | SHIFT_RIGHT(aLow,shift);
+        aHigh = SHIFT_RIGHT(aHigh,shift);
       }
-      if (bVar16) {
-        param_1 = (uint)((byte)iVar12 & 1) << 0x1f | uVar7 >> 1;
-        param_2 = (iVar12 >> 1) + uVar13 * 0x100000;
-        goto LAB_00124d7c;
-      }
-      iVar12 = iVar12 + 0x200000;
-      if (iVar12 == 0 && uVar7 == 0) {
-        return MAKE_WORDS(uVar18,0,uVar7);
-      }
-      iVar10 = LEADING_ZEROS(iVar12);
-      if (iVar10 == 0x20) {
-        iVar10 = LEADING_ZEROS(uVar7) + 0x20;
-      }
-      param_3 = iVar10 - 0xb;
-      iVar14 = ((uVar13 & 0xfffff7ff) - 2) - param_3;
-      if (param_3 < 0x20) {
-        uVar13 = SHIFT_LEFT(iVar12,param_3) | SHIFT_RIGHT(uVar7,0x20 - param_3);
-        uVar7 = SHIFT_LEFT(uVar7,param_3);
+      else if (shift <= 32) {
+        aLow = SHIFT_LEFT(aHigh,32 - shift) | SHIFT_RIGHT(aLow,shift);
+        aHigh = 0;
       }
       else {
-        uVar13 = SHIFT_LEFT(uVar7,iVar10 - 0x2bU);
-        uVar7 = 0;
+        aLow = SHIFT_RIGHT(aHigh,shift - 32);
+        aHigh = 0;
       }
-                    /* WARNING: Could not recover jumptable at 0x00124d04. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if (0 < iVar14) {
-        return MAKE_WORDS(uVar18,uVar13 + (param_2 & 0x80000000) + iVar14 * 0x100000,uVar7);
-      }
-      param_2 = uVar13 + (param_2 & 0x80000000) + iVar14 * 0x100000 + 0x60000000;
-      uVar11 = 0x12;
-      puVar5 = kh_GetFpStatusPtr();
-      param_4 = *puVar5;
-      if ((param_4 & 0x1000000) != 0) {
-        return MAKE_WORDS(uVar18,param_2 & 0x80000000,0);
-      }
-      if ((param_4 & 0x800) == 0) {
-        if ((int)param_2 < 0) {
-          uVar11 = uVar11 | 0x10000;
-        }
-        uVar13 = param_2 & ~((param_2 >> 0x14) << 0x14);
-        iVar12 = -(param_2 >> 0x14 & 0xfffff7ff);
-        uVar15 = iVar12 + 0x601;
-        uVar8 = uVar13 | 0x100000;
-        if (uVar15 < 0x36) {
-          if (uVar15 == 0x35) {
-            uVar19 = 0;
-            uVar15 = 0;
-            uVar4 = 0x80000000;
-            if (uVar7 != 0 || (uVar13 & 0xfffff) != 0) {
-              uVar4 = 0x80000001;
-            }
-          }
-          else if (uVar15 < 0x15) {
-            uVar19 = SHIFT_RIGHT(uVar8,uVar15);
-            uVar4 = SHIFT_LEFT(uVar7,0x20 - uVar15);
-            uVar15 = SHIFT_LEFT(uVar8,0x20 - uVar15) | SHIFT_RIGHT(uVar7,uVar15);
-          }
-          else {
-            uVar13 = iVar12 + 0x5e1;
-            uVar19 = 0;
-            if (uVar15 < 0x20 || uVar13 == 0) {
-              uVar15 = SHIFT_LEFT(uVar8,-uVar13) | SHIFT_RIGHT(uVar7,uVar15);
-              uVar4 = SHIFT_LEFT(uVar7,-uVar13);
-            }
-            else {
-              uVar15 = SHIFT_RIGHT(uVar8,uVar13);
-              uVar4 = SHIFT_LEFT(uVar8,0x20 - uVar13);
-              if (uVar7 != 0) {
-                uVar4 = uVar4 | 1;
-              }
-            }
-          }
-        }
-        else {
-          uVar4 = 1;
-          uVar19 = 0;
-          uVar15 = 0;
-        }
-        if ((uVar11 & 0x10000) != 0) {
-          uVar19 = uVar19 | 0x80000000;
-        }
-        if (uVar4 == 0) {
-          return MAKE_WORDS(uVar18,uVar19,uVar15);
-        }
-        if ((uint8)(uVar4 >> 0x1f)) {
-          if (((uVar4 & 0x7fffffff) == 0) && (-1 < (int)uVar11 >> 0x1e)) {
-            if ((int)uVar11 >> 0x1e == 0) {
-              uVar19 = uVar19 + (0xfffffffe < uVar15);
-              uVar15 = uVar15 + 1 & 0xfffffffe;
-            }
-          }
-          else {
-            uVar19 = uVar19 + (0xfffffffe < uVar15);
-            uVar15 = uVar15 + 1;
-          }
-        }
-        puVar5 = kh_GetFpStatusPtr();
-        *puVar5 = *puVar5 | 8;
-        return MAKE_WORDS(uVar18,uVar19,uVar15);
-      }
+      return MAKE_WORDS(result,aHigh | negative,aLow);
     }
-    uVar11 = uVar11 | 0x20000000;
   }
-  uVar18 = float_raise_exception(uVar7,param_2,param_3,param_4,uVar11);
-  if ((uVar11 & 0xf) != 9) {
-    return uVar18;
-  }
-LAB_00126d6c:
-  if ((uVar11 & 0x100000) == 0) {
-    uVar18.low = (uint)((uVar11 & uVar18.low << 0x10) != 0);
-    return uVar18;
-  }
-  if ((uVar11 & 0xf0000) == 0) {
-    uVar11 = uVar18.low << 0x1d;
-    if ((bool)((byte)(uVar18.low >> 3) & 1)) {
-      uVar11 = uVar11 | 0x30000000;
+  if (tail == 3) {                          /* the library's exception code (0x001260e4) */
+    status = kh_GetFpStatusPtr();
+    word = *status;
+    if (control & ~(word << 18) & 0x30000000)
+      control |= 0x40000000;                /* an untrapped overflow is also inexact */
+    word |= (control << 1) >> 27;           /* the sticky flags */
+    control |= word & 0x1c00000;
+    *status = word;
+    control |= (control & 0x70) << 3;       /* 0x80: the result's sign is the high word's */
+    if (control & 0x10000000) {             /* overflow */
+      if ((word & 0x400) == 0)
+        return MAKE_WORDS(result,WORD_HEXADECIMAL_7FF00000 | (aHigh & 0x80000000),INTEGER_0);
     }
-    puVar5 = kh_GetFpStatusPtr();
-    *puVar5 = *puVar5 & 0xfffffff | uVar11;
-    uVar18.high = uVar11;
-    return uVar18;
+    else if ((word & 0x100) == 0)           /* invalid */
+      return MAKE_WORDS(result,DOUBLE_DEFAULT_NAN_HIGH_WORD | (aHigh & 0x80000000),
+                        DOUBLE_DEFAULT_NAN_LOW_WORD);
   }
-  if ((uVar18.low & 8) != 0) {
-    uVar18.high = uVar11 & 0xf0000;
-    return uVar18;
-  }
-  uVar18.low = 2 - uVar18.low;
-  return uVar18;
+  return float_raise_exception(aLow,aHigh,bLow,bHigh,control);
 }
+
 
 /* ==== 0x00124F24  (file offset 0x24F24)  FUN_00124f24 ================================================ */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
