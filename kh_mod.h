@@ -443,7 +443,7 @@ void FUN_001053a8(undefined4 param_1,undefined4 param_2,int param_3,int param_4,
 int32 ui_element_add_child(UIElement *parent,UIElement *child,int32 id);   /* 0x001054D8 GUESS: name */
 void FUN_00105538(int param_1,undefined4 param_2,int param_3);
 void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5);
-void FUN_001056d0(int *param_1,int param_2);
+int32 hud_show_loading(Hud *hud,uint32 color);   /* 0x001056D0 GUESS: name, see kh_mod.c */
 int32 ui_element_set_key_target(UIElement *element,int32 keyCode,UIElement *target);   /* 0x001056EC GUESS: name, see kh_mod.c */
 void key_picker_restore_original(UIElement *picker);   /* 0x001056F4 GUESS: name */
 void web_request_parse_reply(WebRequest *caller,WebRequest *request);   /* 0x00105734 GUESS: name, see kh_mod.c */
@@ -492,7 +492,7 @@ int32 list_set_entry(UIList *list,int32 id,int32 entry);   /* 0x001090FC GUESS: 
 void web_request_retry(WebRequest *request);   /* 0x001091FC GUESS: name, see kh_mod.c */
 void FUN_001092c0(int param_1,int param_2);
 int32 ui_element_remove_child(UIElement *element,int32 id,int32 destroy);   /* 0x00109308 GUESS: name */
-void FUN_00109368(int param_1);
+void hud_hide_loading(Hud *hud);   /* 0x00109368 GUESS: name, see kh_mod.c */
 void list_remove_entry(UIList *list,int32 id);   /* 0x00109380 GUESS: name */
 void thunk_FUN_0011e154(int param_1);
 undefined4 FUN_001093f8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 );

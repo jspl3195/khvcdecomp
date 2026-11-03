@@ -217,6 +217,17 @@ typedef struct UIElement {
     int32    originalKeyCode;       /* +0x68 key picker: the setting's value when it was set up */
 } UIElement;
 
+/* The in-game HUD screen (KHApp.field_d4; FUN_0010aa8c, vtable VTABLE_0010165C): a screen element with
+ * the player's bars and the level script's texts. Only what hud_show_loading / hud_hide_loading use is
+ * named so far; the script code (script_command_run) still reads the rest through offsets. */
+typedef struct Hud {
+    UIElement screen;             /* +0x00 the screen it is (FUN_0010bd7c), 0x6c bytes */
+    uint8    unknown_6c[0x70];
+    UIElement *loadingText;       /* +0xdc GUESS: name; child 900 (text 0x254DA109), hidden until
+                                     hud_show_loading */
+    uint32   savedColor;          /* +0xe0 the primary colour from before hud_show_loading */
+} Hud;                           /* 0xe4 bytes (FUN_0010aa8c) */
+
 /* ---- Text boxes and text lines (GUESS: names) -------------------------------------------------------
  * A text box (text_box_create, VTABLE_001016A0) shows a wide text wrapped into text lines
  * (text_box_set_text), a page at a time (UP / DOWN scroll it, text_box_handle_key), in the look of its

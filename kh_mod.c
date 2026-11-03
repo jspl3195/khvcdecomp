@@ -3653,20 +3653,18 @@ void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
   return;
 }
 
-/* ==== 0x001056D0  (file offset 0x056D0)  FUN_001056d0 ================================================ */
-void FUN_001056d0(int *param_1,int param_2)
+/* ==== 0x001056D0  (file offset 0x056D0)  hud_show_loading ============================================ */
+/* GUESS: names. The HUD (KHApp.field_d4) shows its "loading" text (the hidden child 900 its constructor
+   FUN_0010aa8c makes, text 0x254DA109) and takes `color` (0xRRGGBB) as its primary colour, the old one
+   kept in savedColor; then it is drawn (the binary's tail jump to ui_element_draw, 0x001056e8), whose
+   result it returns. The level script's "LOADING r g b"; hud_hide_loading ("!LOADING") undoes it. */
+int32 hud_show_loading(Hud *hud,uint32 color)
 
 {
-  int iVar3;
-  int iVar4;
-  
-  iVar4 = param_1[0x37];
-  *(undefined1 *)(iVar4 + 4) = 1;
-  iVar3 = param_1[4];
-  param_1[4] = param_2;
-  param_1[0x38] = iVar3;
-  ui_element_draw((UIElement *)param_1);         /* the binary's tail jump (0x001056e8) */
-  return;
+  hud->loadingText->visible = 1;
+  hud->savedColor = hud->screen.primaryColor;
+  hud->screen.primaryColor = color;
+  return ui_element_draw(&hud->screen);   /* the binary's tail jump (0x001056e8) */
 }
 
 
@@ -6007,16 +6005,18 @@ int32 ui_element_remove_child(UIElement *element,int32 id,int32 destroy)
   return 1;
 }
 
-/* ==== 0x00109368  (file offset 0x09368)  FUN_00109368 ================================================ */
-void FUN_00109368(int param_1)
+/* ==== 0x00109368  (file offset 0x09368)  hud_hide_loading ============================================ */
+/* GUESS: names. Undoes hud_show_loading: hides the HUD's "loading" text, puts its primary colour back and
+   redraws its rectangle (FUN_0010ea00, the binary's tail jump at 0x0010937c). The level script's
+   "!LOADING". */
+void hud_hide_loading(Hud *hud)
 
 {
-  
-  *(undefined1 *)(*(int *)(param_1 + 0xdc) + 4) = 0;
-  *(undefined4 *)(param_1 + 0x10) = *(undefined4 *)(param_1 + 0xe0);
-  FUN_0010ea00(param_1);
-  return;
+  hud->loadingText->visible = 0;
+  hud->screen.primaryColor = hud->savedColor;
+  FUN_0010ea00((int)hud);               /* the binary's tail jump (0x0010937c) */
 }
+
 
 /* ==== 0x00109380  (file offset 0x09380)  list_remove_entry =========================================== */
 /* GUESS: name. Takes the entry with id `id` out of a list (nothing when it is not there): the entries
@@ -11319,7 +11319,8 @@ void FUN_001108ac(undefined4 param_1,int param_2,int param_3)
    The binary's cases share some calls (FUN_00109a10 at 0x00111948, FUN_00108f28 at 0x00111df8,
    thunk_FUN_0011fd90 at 0x001121cc, FUN_0011f8e0 at 0x00111f68 and helper_free at 0x001116c8): each is
    made once, after the switch (or the inner one), from what the case left in the locals softKey ...
-   words. The UI the commands drive (KHApp.field_d4, `hud`) has no struct yet: its fields are offsets. */
+   words. The UI the commands drive (KHApp.field_d4, `hud`; its struct Hud has only the "loading" text so
+   far) is mostly read through offsets. */
 int32 script_command_run(ScriptCommand *command)
 
 {
@@ -11368,7 +11369,7 @@ int32 script_command_run(ScriptCommand *command)
   app = (KHApp *)(*g_pHelperFuncs->GetAppInstance)();
   game = (Game *)app->pGame;
   player = game->character;
-  hud = hud;
+  hud = (uint8 *)app->field_d4;
   context = (int32)app->context;
                     /* helper[4] int strcmp(const char *a, const char *b), helper[27] void free(void *p)
                        (AEEHelperFuncs +0x10, +0x6c, via *(base-4)) */
@@ -12010,11 +12011,11 @@ int32 script_command_run(ScriptCommand *command)
           red = FUN_00126858(string_to_float(context,words[1]));
           green = FUN_00126858(string_to_float(context,words[2]));
           blue = FUN_00126858(string_to_float(context,words[3]));
-          FUN_001056d0((int *)hud,red << 16 | green << 8 | blue);
+          hud_show_loading((Hud *)hud,red << 16 | green << 8 | blue);
           break;
         }
         else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_LOADING_00127740) == 0) {
-          FUN_00109368((int)hud);
+          hud_hide_loading((Hud *)hud);
           break;
         }
         continue;
