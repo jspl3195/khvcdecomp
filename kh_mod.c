@@ -10774,7 +10774,7 @@ void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param
   uVar2 = dVar2.low;
   local_28 = FUN_0012479c(uVar2,dVar2.high);
   item_drops_get_chances((ItemDrops *)param_1,chances);
-  iVar3 = FUN_00113cfc((undefined4)((KHApp *)*param_1)->context,0xf);
+  iVar3 = (int)random_floats((int32)((KHApp *)*param_1)->context,0xf);
   iVar9 = 0;
   uVar2 = param_9 ^ 0x80000000;
   local_38 = float_add(param_5,param_10);
@@ -13132,35 +13132,31 @@ uint8 animations_get_priority(Animations *animations,int32 index)
   return index >= 0 && animations->userIds[index] != -1 ? animations->priorities[index] : 2;
 }
 
-/* ==== 0x00113CFC  (file offset 0x13CFC)  FUN_00113cfc ================================================ */
-int FUN_00113cfc(undefined4 param_1,int param_2)
+/* ==== 0x00113CFC  (file offset 0x13CFC)  random_floats =============================================== */
+/* GUESS: name. `count` random floats (their bits) in a new array the caller frees: random words
+   (aee_GetRand) % 1000 / 1000.0. The % is the signed rt_sdiv's remainder, so a word with its top bit set
+   gives a negative value: they lie in (-0.999, 0.999), and the callers take the absolute value where they
+   need it. The mallocs are not checked. `context` (the app's) is not read. */
+uint32 * random_floats(int32 context,int32 count)
 
 {
-  undefined4 uVar2;
-  int iVar3;
-  int iVar4;
-  undefined4 uVar5;
-  int iVar6;
-  iVar6 = param_2 << 2;
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-  iVar3 = (*g_pHelperFuncs->malloc)(iVar6);
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-  iVar4 = (*g_pHelperFuncs->malloc)(iVar6);
-                    /* helper[42] void aee_GetRand(uint8 *buf, int n)  (AEEHelperFuncs +0xa8, via
+  int32 size = count << 2;
+  int32 *random;
+  uint32 *values;
+  int32 i;
+
+                    /* helper[26] void * malloc(uint32 size), helper[42] void aee_GetRand(uint8 *buf, int
+                       n), helper[27] void free(void *p)  (AEEHelperFuncs +0x68, +0xa8, +0x6c, via
                        *(base-4)) */
-  (*g_pHelperFuncs->aee_GetRand)(iVar3,iVar6);
-  uVar2 = FLOAT_1000;
-  for (iVar6 = 0; iVar6 < param_2; iVar6 = iVar6 + 1) {
-    uVar5 = int_to_float((int32)rt_sdiv(1000,*(undefined4 *)(iVar3 + iVar6 * 4)).high);   /* % 1000 */
-    uVar5 = float_divide(uVar5,uVar2);
-    *(undefined4 *)(iVar4 + iVar6 * 4) = uVar5;
-  }
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-  (*g_pHelperFuncs->free)(iVar3);
-  return iVar4;
+  random = (*g_pHelperFuncs->malloc)(size);
+  values = (*g_pHelperFuncs->malloc)(size);
+  (*g_pHelperFuncs->aee_GetRand)((uint8 *)random,size);
+  for (i = 0; i < count; i++)
+    values[i] = float_divide(int_to_float((int32)rt_sdiv(1000,random[i]).high),FLOAT_1000);   /* % 1000 */
+  (*g_pHelperFuncs->free)(random);
+  return values;
 }
+
 
 /* ==== 0x00113DA4  (file offset 0x13DA4)  FUN_00113da4 ================================================ */
 int FUN_00113da4(int *param_1,int param_2,int param_3,int param_4,int param_5,uint param_6)
@@ -13599,7 +13595,7 @@ undefined4 FUN_00114638(int param_1)
       iVar3 = iVar3 + 1;
     }
   }
-  puVar2 = (undefined4 *)FUN_00113cfc((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,1);
+  puVar2 = random_floats((int32)((KHApp *)*(int *)(param_1 + 0x84))->context,1);
   
   iVar4 = FUN_00126858(float_multiply(*puVar2,FLOAT_1000));
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -18370,7 +18366,7 @@ undefined8 FUN_0011ceac(int param_1)
   uint auStack_1c [3];
   undefined8 uVar7;
   
-  puVar1 = (uint *)FUN_00113cfc((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,1);
+  puVar1 = random_floats((int32)((KHApp *)*(int *)(param_1 + 0x20))->context,1);
   uVar2 = float_multiply(*puVar1,FLOAT_1000);
   uVar2 = FUN_00126858(uVar2);
   iVar3 = (int)uVar2 % 2;

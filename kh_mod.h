@@ -667,7 +667,7 @@ uint32 vector_length3(void *context,uint32 x,uint32 y,uint32 z);   /* 0x00113820
 void FUN_0011386c(uint param_1,int param_2);
 void level_object_get_position(uint32 *position,LevelObject *object);   /* 0x00113CC4 GUESS: name */
 uint8 animations_get_priority(Animations *animations,int32 index);   /* 0x00113CD4 GUESS: name */
-int FUN_00113cfc(undefined4 param_1,int param_2);
+uint32 * random_floats(int32 context,int32 count);   /* 0x00113CFC GUESS: name, see kh_mod.c */
 int FUN_00113da4(int *param_1,int param_2,int param_3,int param_4,int param_5,uint param_6);
 int32 progress_find_record(Progress *progress,const char *name,int32 *best,int32 *second);   /* 0x00114120 GUESS: name, see kh_mod.c */
 uint8 progress_get_status(Progress *progress,const char *name);   /* 0x00114198 GUESS: name, see kh_mod.c */
