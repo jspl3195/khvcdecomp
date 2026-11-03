@@ -847,8 +847,8 @@ uint32 double_to_float(uint32 low,uint32 high);   /* 0x0012479C GUESS: name, see
 uint64 double_add(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00124954 GUESS: name, see kh_mod.c */
 uint64 double_reverse_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00124B40 GUESS: name, see kh_mod.c */
 uint64 double_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00124B84 GUESS: name, see kh_mod.c */
-undefined8 FUN_00124f24(uint param_1,uint param_2,uint param_3,uint param_4);
-undefined8 FUN_00124f44(uint param_1,uint param_2,uint param_3,uint param_4);
+uint64 double_reverse_divide(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00124F24 GUESS: name, see kh_mod.c */
+uint64 double_divide(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00124F44 GUESS: name, see kh_mod.c */
 uint64 double_divide_mantissas(uint32 dividendLow,uint32 dividendHigh,uint32 divisorLow,uint32 divisorHigh);   /* 0x001251EC GUESS: name */
 uint FUN_001254d4(uint param_1,uint param_2,uint param_3,uint param_4);
 uint FUN_00125554(uint param_1,uint param_2);

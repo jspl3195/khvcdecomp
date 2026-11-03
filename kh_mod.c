@@ -405,7 +405,7 @@ undefined8 FUN_0010041c(int param_1,uint param_2)
         uVar13 = FUN_00125734(0,uVar4,0,uVar4);
         uVar13 = double_reverse_subtract((int)uVar13.low,(int)uVar13.high,uVar2,uVar5);
         uVar14 = double_add((int)uVar12.low,uVar4,0,uVar4);
-        uVar13 = FUN_00124f24((int)uVar14.low,(int)uVar14.high,(int)uVar13.low,
+        uVar13 = double_reverse_divide((int)uVar14.low,(int)uVar14.high,(int)uVar13.low,
                               (int)uVar13.high);
         uVar14 = FUN_00100c2c(iVar7,6,uVar2,uVar5);
         uVar14 = FUN_00125734((int)uVar14.low,(int)uVar14.high,uVar2,uVar5);
@@ -413,7 +413,7 @@ undefined8 FUN_0010041c(int param_1,uint param_2)
         uVar15 = FUN_00125734((int)uVar15.low,(int)uVar15.high,uVar2,uVar5);
         uVar15 = double_add((int)uVar15.low,(int)uVar15.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD
                              );
-        uVar14 = FUN_00124f44((int)uVar14.low,(int)uVar14.high,(int)uVar15.low,
+        uVar14 = double_divide((int)uVar14.low,(int)uVar14.high,(int)uVar15.low,
                               (int)uVar15.high);
         uVar12 = FUN_00125734((int)uVar14.low,(int)uVar14.high,(int)uVar12.low,uVar4);
         uVar12 = double_add((int)uVar12.low,(int)uVar12.high,(int)uVar13.low,
@@ -432,7 +432,7 @@ undefined8 FUN_0010041c(int param_1,uint param_2)
       uVar13 = double_add((int)uVar13.low,(int)uVar13.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
       uVar14 = FUN_001009b8(uVar2,uVar5);
       uVar2 = uVar14.high;
-      uVar12 = FUN_00124f44((int)uVar12.low,(int)uVar12.high,(int)uVar13.low,
+      uVar12 = double_divide((int)uVar12.low,(int)uVar12.high,(int)uVar13.low,
                             (int)uVar13.high);
       uVar12 = FUN_00125734((int)uVar12.low,(int)uVar12.high,(int)uVar14.low,uVar2);
       uVar12 = double_subtract((int)uVar12.low,(int)uVar12.high,HALF_PI_CORRECTION_LOW_WORD,
@@ -463,7 +463,7 @@ undefined8 FUN_0010041c(int param_1,uint param_2)
       uVar13 = FUN_00100c2c(iVar6,4,uVar2,uVar5);
       uVar13 = FUN_00125734((int)uVar13.low,(int)uVar13.high,uVar2,uVar5);
       uVar13 = double_add((int)uVar13.low,(int)uVar13.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
-      uVar12 = FUN_00124f44((int)uVar12.low,(int)uVar12.high,(int)uVar13.low,
+      uVar12 = double_divide((int)uVar12.low,(int)uVar12.high,(int)uVar13.low,
                             (int)uVar13.high);
       uVar12 = FUN_00125734(param_1,param_2,(int)uVar12.low,(int)uVar12.high);
       uVar12 = double_reverse_subtract((int)uVar12.low,(int)uVar12.high,HALF_PI_CORRECTION_LOW_WORD,
@@ -1525,7 +1525,8 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
       uVar16 = double_add((int)uVar17.low,(int)uVar17.high,(int)uVar16.low,
                             (int)uVar16.high);
       uVar17 = FUN_001259e8(uVar7,uVar11,REDUCTION_PERIOD_LOW_WORD,REDUCTION_PERIOD_HIGH_WORD);
-      uVar17 = FUN_00124f44((int)uVar17.low,(int)uVar17.high,REDUCTION_PERIOD_LOW_WORD,REDUCTION_PERIOD_HIGH_WORD);
+      uVar17 = double_divide((int)uVar17.low,(int)uVar17.high,REDUCTION_PERIOD_LOW_WORD,
+                             REDUCTION_PERIOD_HIGH_WORD);
       uVar17 = FUN_00125734((int)uVar17.low,(int)uVar17.high,EIGHT_DOUBLE_LOW_WORD,EIGHT_DOUBLE_HIGH_WORD);
                     /* Ghidra dropped the data flow here: the sum stays in r0:r1 and is the
                        argument of the double -> int conversion (0x001011ec bl add; 0x001011f0
@@ -1537,7 +1538,8 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
       uVar16 = double_add((int)uVar17.low,(int)uVar17.high,(int)uVar16.low,
                             (int)uVar16.high);
       uVar16 = FUN_001259e8((int)uVar16.low,(int)uVar16.high,REDUCTION_QUARTER_PERIOD_LOW_WORD,REDUCTION_QUARTER_PERIOD_HIGH_WORD);
-      uVar16 = FUN_00124f44((int)uVar16.low,(int)uVar16.high,REDUCTION_CONSTANT_LOW_WORD,REDUCTION_CONSTANT_HIGH_WORD);
+      uVar16 = double_divide((int)uVar16.low,(int)uVar16.high,REDUCTION_CONSTANT_LOW_WORD,
+                             REDUCTION_CONSTANT_HIGH_WORD);
       *param_3 = uVar16;
     }
     else {
@@ -6289,7 +6291,7 @@ void FUN_00109940(int param_1,int param_2)
          *(undefined2 *)(*(int *)(*(int *)(param_1 + 0x44) + 0x70) + 0x14);
     iVar5 = *(int *)(param_1 + 0x44);
     width = int_to_double((int32)*(uint16 *)(*(int *)(iVar5 + 0x70) + 0x14));
-    dVar1 = FUN_00124f44(width.low,width.high,DOUBLE_1_POINT_1_LOW_WORD,DOUBLE_1_POINT_1_HIGH_WORD);
+    dVar1 = double_divide(width.low,width.high,DOUBLE_1_POINT_1_LOW_WORD,DOUBLE_1_POINT_1_HIGH_WORD);
     uVar1 = dVar1.low;
     uVar1 = FUN_00125554(uVar1,dVar1.high);
     *(short *)(iVar5 + 0x7a) = (short)uVar1;
@@ -16862,7 +16864,7 @@ undefined8 FUN_0011abc4(int param_1,int param_2)
     uVar5 = dVar5.low;
     dVar5 = FUN_00125734(uVar5,dVar5.high,TWO_DOUBLE_LOW_WORD,TWO_DOUBLE_HIGH_WORD);
     uVar5 = dVar5.low;
-    dVar5 = FUN_00124f44(uVar5,dVar5.high,DOUBLE_800_LOW_WORD,DOUBLE_800_HIGH_WORD);
+    dVar5 = double_divide(uVar5,dVar5.high,DOUBLE_800_LOW_WORD,DOUBLE_800_HIGH_WORD);
     uVar5 = dVar5.low;
     uVar5 = double_to_float(uVar5,dVar5.high);
     *(uint *)(param_1 + 0xb4) = uVar5;
@@ -16870,7 +16872,7 @@ undefined8 FUN_0011abc4(int param_1,int param_2)
     uVar1 = dVar1.low;
     dVar1 = FUN_00125734(uVar1,dVar1.high,TWO_DOUBLE_LOW_WORD,TWO_DOUBLE_HIGH_WORD);
     uVar1 = dVar1.low;
-    dVar1 = FUN_00124f44(uVar1,dVar1.high,DOUBLE_800_LOW_WORD,DOUBLE_800_HIGH_WORD);
+    dVar1 = double_divide(uVar1,dVar1.high,DOUBLE_800_LOW_WORD,DOUBLE_800_HIGH_WORD);
     uVar1 = dVar1.low;
     uVar1 = double_to_float(uVar1,dVar1.high);
     *(uint *)(param_1 + 0xb8) = uVar1;
@@ -25018,867 +25020,607 @@ uint64 double_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
 }
 
 
-/* ==== 0x00124F24  (file offset 0x24F24)  FUN_00124f24 ================================================ */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-undefined8 FUN_00124f24(uint param_1,uint param_2,uint param_3,uint param_4)
-
-{
-  uint uVar1;
-  uint *puVar2;
-  undefined4 uVar3;
-  undefined4 uVar4;
-  uint uVar5;
-  uint uVar6;
-  uint uVar7;
-  int iVar8;
-  int iVar9;
-  int iVar10;
-  uint uVar11;
-  bool bVar12;
-  bool bVar13;
-  bool bVar14;
-  uint64 uVar15;
-  uint uVar16;
-  uint uVar17;
-  undefined8 uVar18;
-  
-  uVar1 = WORD_HEXADECIMAL_04000014;
-  if ((WORD_HEXADECIMAL_07FF0000 & ~(param_4 >> 4)) == 0 || (WORD_HEXADECIMAL_07FF0000 & ~(param_2 >> 4)) == 0) {
-    uVar6 = param_4 * 2;
-    uVar7 = WORD_HEXADECIMAL_07FF0000 * 0x20;
-    bVar12 = uVar6 == uVar7;
-    bVar13 = bVar12 && param_3 == 0;
-    bVar14 = bVar12 || uVar7 <= uVar6;
-    if (!bVar12 && uVar7 > uVar6 || bVar12 && param_3 == 0) {
-      bVar14 = WORD_HEXADECIMAL_07FF0000 * 0x20 <= param_2 * 2;
-      bVar13 = param_2 * 2 == WORD_HEXADECIMAL_07FF0000 * 0x20;
-    }
-    if (bVar13) {
-      bVar14 = true;
-    }
-    if (!bVar14 || bVar13 && param_1 == 0) {
-      if ((WORD_HEXADECIMAL_07FF0000 & ~(param_4 >> 4)) != 0) {
-        return MAKE_WORDS(uVar18,(param_4 ^ param_2) & 0x80000000,0);
-      }
-      param_3 = 0;
-      if ((WORD_HEXADECIMAL_07FF0000 & ~(param_2 >> 4)) != 0) {
-        return MAKE_WORDS(uVar18,param_4 & 0x7fffffff | (param_4 ^ param_2) & 0x80000000,0);
-      }
-      goto LAB_001260e4;
-    }
-    uVar7 = param_4 * 2 + 0x100000 + (uint)(param_3 != 0);
-    uVar6 = uVar7;
-    if (uVar7 < 0xfff00001) {
-      uVar6 = param_2 * 2 + 0x100000 + (uint)(param_1 != 0);
-    }
-    if (0xfff00000 < uVar6) goto LAB_001260e4;
-    uVar6 = WORD_HEXADECIMAL_04000014;
-    if (0xfffff < uVar7) {
-      param_3 = param_1;
-      param_4 = param_2;
-    }
-LAB_00126cb0:
-    if ((uVar6 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x00126cc4. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar6 & 0xf) != 8) {
-        return MAKE_WORDS(uVar18,param_4,param_3);
-      }
-      if ((uVar6 & 0x40) == 0) {
-        uVar3 = FLOAT_DEFAULT_NAN;
-        if ((uVar6 & 0x10) != 0) {
-          uVar3 = 0;
-          param_4 = DOUBLE_DEFAULT_NAN_HIGH_WORD;
-        }
-        return MAKE_WORDS(uVar18,param_4,uVar3);
-      }
-      if ((uVar6 & 0x10000) != 0) {
-        return MAKE_WORDS(uVar18,0,0);
-      }
-      if ((uVar6 & 0x20) == 0) {
-        if ((uVar6 & 0x10) == 0) {
-          uVar6 = 0x7fffffff;
-          uVar1 = param_4;
-          param_4 = param_3;
-        }
-        else {
-          uVar1 = 0x7fffffff;
-          uVar6 = 0xffffffff;
-        }
-        if ((param_4 & 0x80000000) != 0) {
-          uVar6 = ~uVar6;
-          uVar1 = ~uVar1;
-        }
-        return MAKE_WORDS(uVar18,uVar1,uVar6);
-      }
-      uVar3 = 0xffffffff;
-      uVar4 = 0xffffffff;
-      if ((param_1 & 0x80000000) != 0) {
-        uVar3 = 0;
-        uVar4 = 0;
-      }
-      return MAKE_WORDS(uVar18,uVar4,uVar3);
-    }
-    MAKE_WORDS(uVar18,param_4,8);
-    goto LAB_00126d6c;
-  }
-  uVar6 = WORD_HEXADECIMAL_07FF0000 & param_4 >> 4;
-  uVar7 = uVar6 | (param_4 ^ param_2) >> 0x1f;
-  uVar11 = WORD_HEXADECIMAL_07FF0000 & param_2 >> 4;
-  if (uVar11 == 0 || (param_4 & WORD_HEXADECIMAL_07FF0000 << 4) == 0) {
-    if (param_3 == 0 && (param_4 & 0x7fffffff) == 0) {
-      if (param_1 != 0 || (param_2 & 0x7fffffff) != 0) {
-        if ((int)param_2 < 0) {
-          param_4 = param_4 ^ 0x80000000;
-        }
-        return MAKE_WORDS(uVar18,param_4,param_3);
-      }
-    }
-    else {
-      uVar1 = WORD_HEXADECIMAL_08000014;
-      if (param_1 != 0 || (param_2 & 0x7fffffff) != 0) {
-        if (uVar11 == 0) {
-          iVar10 = 0x10000;
-          param_2 = param_2 & 0x7fffffff;
-          if (param_2 == 0 && param_1 >> 0xc == 0) {
-            param_1 = param_1 << 0x14;
-            iVar10 = -0x130000;
-          }
-          uVar1 = param_1;
-          if (param_2 == 0) {
-            param_2 = param_1 >> 0xc;
-            uVar1 = param_1 << 0x14;
-            iVar10 = iVar10 + -0x140000;
-          }
-          iVar8 = 0;
-          if (param_2 >> 5 == 0) {
-            param_2 = param_2 << 0x10;
-            iVar8 = 0x10;
-          }
-          if (param_2 >> 0xd == 0) {
-            param_2 = param_2 << 8;
-            iVar8 = iVar8 + 8;
-          }
-          if (param_2 >> 0x11 == 0) {
-            param_2 = param_2 << 4;
-            iVar8 = iVar8 + 4;
-          }
-          if (param_2 >> 0x13 == 0) {
-            param_2 = param_2 << 2;
-            iVar8 = iVar8 + 2;
-          }
-          if (param_2 >> 0x14 == 0) {
-            param_2 = param_2 << 1;
-            iVar8 = iVar8 + 1;
-          }
-          uVar11 = iVar10 + iVar8 * -0x10000;
-          param_1 = uVar1 << iVar8;
-          param_2 = param_2 | SHIFT_RIGHT(uVar1,0x20U - iVar8);
-        }
-        if ((uVar6 & 0xfffffffe) == 0) {
-          iVar10 = uVar7 + 0x10000;
-          param_4 = param_4 & 0x7fffffff;
-          if (param_4 == 0 && param_3 >> 0xc == 0) {
-            param_3 = param_3 << 0x14;
-            iVar10 = uVar7 - 0x130000;
-          }
-          uVar1 = param_3;
-          if (param_4 == 0) {
-            param_4 = param_3 >> 0xc;
-            uVar1 = param_3 << 0x14;
-            iVar10 = iVar10 + -0x140000;
-          }
-          iVar8 = 0;
-          if (param_4 >> 5 == 0) {
-            param_4 = param_4 << 0x10;
-            iVar8 = 0x10;
-          }
-          if (param_4 >> 0xd == 0) {
-            param_4 = param_4 << 8;
-            iVar8 = iVar8 + 8;
-          }
-          if (param_4 >> 0x11 == 0) {
-            param_4 = param_4 << 4;
-            iVar8 = iVar8 + 4;
-          }
-          if (param_4 >> 0x13 == 0) {
-            param_4 = param_4 << 2;
-            iVar8 = iVar8 + 2;
-          }
-          if (param_4 >> 0x14 == 0) {
-            param_4 = param_4 << 1;
-            iVar8 = iVar8 + 1;
-          }
-          uVar7 = iVar10 + iVar8 * -0x10000;
-          param_3 = uVar1 << iVar8;
-          param_4 = param_4 | SHIFT_RIGHT(uVar1,0x20U - iVar8);
-        }
-        goto LAB_00124f70;
-      }
-    }
-LAB_001260e4:
-    if ((uVar1 & 0x10) == 0) {
-      param_1 = param_4;
-    }
-    puVar2 = kh_GetFpStatusPtr();
-    uVar7 = *puVar2;
-    if ((uVar1 & ~(uVar7 << 0x12) & 0x30000000) != 0) {
-      uVar1 = uVar1 | 0x40000000;
-    }
-    uVar6 = uVar1 | uVar7 & 0x1c00000;
-    *puVar2 = uVar7 | (uVar1 & 0x7fffffff) >> 0x1a;
-    bVar13 = (uVar1 & 0xf) != 8;
-    if (bVar13) {
-      uVar1 = uVar1 & 0x70;
-      uVar6 = uVar6 | uVar1 << 3;
-    }
-    else {
-      uVar1 = 0x20000;
-    }
-    if (!bVar13 && (uVar1 & ~uVar6) == 0) {
-      uVar6 = uVar6 | 0xc00000;
-    }
-    if ((uVar6 & 0x20000000) == 0) {
-      if ((uVar6 & 0x10000000) == 0) {
-        if ((uVar6 & 0x40000000) != 0) {
-          uVar7 = uVar7 & 0x1000;
-          goto joined_r0x00126194;
-        }
-        if ((uVar6 & 0x8000000) == 0) {
-          if ((uVar7 & 0x100) == 0) {
-            param_1 = param_4;
-            if ((uVar6 & 0x80) == 0) {
-              param_1 = param_3;
-            }
-            param_1 = param_1 & 0x80000000;
-            if ((uVar6 & 0x10) == 0) {
-              param_3 = FLOAT_DEFAULT_NAN | param_1;
-            }
-            else {
-              param_4 = DOUBLE_DEFAULT_NAN_HIGH_WORD | param_1;
-              param_3 = DOUBLE_DEFAULT_NAN_LOW_WORD;
-            }
-            goto LAB_00126cb0;
-          }
-        }
-        else if ((uVar7 & 0x200) == 0) {
-          if ((uVar6 & 0x10) == 0) {
-            param_1 = param_3 ^ param_1;
-          }
-          else {
-            param_1 = param_4 ^ param_2;
-          }
-          goto LAB_001261dc;
-        }
-      }
-      else if ((uVar7 & 0x400) == 0) {
-        if ((uVar6 & 0x80) == 0) {
-          param_1 = param_3 & 0x80000000;
-        }
-        else {
-          param_1 = param_4 & 0x80000000;
-        }
-LAB_001261dc:
-        if ((uVar6 & 0x10) == 0) {
-          return MAKE_WORDS(uVar18,param_4,WORD_HEXADECIMAL_7F800000 | param_1 & 0x80000000);
-        }
-        return MAKE_WORDS(uVar18,WORD_HEXADECIMAL_7FF00000 | param_1 & 0x80000000,INTEGER_0);
-      }
-    }
-    else {
-      uVar7 = uVar7 & 0x800;
-joined_r0x00126194:
-      if (uVar7 == 0) {
-        return MAKE_WORDS(uVar18,param_4,param_3);
-      }
-    }
-  }
-  else {
-LAB_00124f70:
-    iVar8 = uVar7 - uVar11;
-    iVar9 = iVar8 + 0x3fc0000;
-    param_2 = param_2 << 0xb | param_1 >> 0x15 | 0x80000000;
-    param_1 = param_1 << 0xb;
-    /* double_divide_mantissas also leaves r3: 2 when the dividend's mantissa is at least the
-       divisor's (the quotient needs no shift), else 1; the binary adds it to the exponent below
-       (0x00124f9c), where Ghidra read r3 as param_2 */
-    uVar16 = param_4 << 0xb | param_3 >> 0x15 | 0x80000000;
-    uVar16 = uVar16 > param_2 || uVar16 == param_2 && param_3 << 0xb >= param_1 ? 2 : 1;
-    uVar15 = double_divide_mantissas(param_3 << 0xb,param_4 << 0xb | param_3 >> 0x15 | 0x80000000,param_1,param_2);
-    param_2 = uVar16 + (iVar9 >> 0x10);
-    iVar10 = (int)uVar15.low << 0x15;
-    param_3 = uVar15.low >> 0xb | uVar15.high << 0x15;
-    param_4 = (uVar15.high >> 0xb) + param_2 * 0x100000 ^ iVar8 * -0x80000000;
-    uVar6 = 0;
-    if (iVar10 != 0) {
-      if ((uint8)((uint)iVar10 >> 0x1f)) {
-        if ((uVar15.low & 0x3ff) == 0) {
-          param_2 = 0x80000000;
-        }
-        else {
-          param_2 = 0;
-        }
-        uVar1 = param_3 + 1;
-        param_4 = param_4 + (0xfffffffe < param_3);
-        uVar6 = 0x40000000;
-        param_3 = uVar1 & ~(param_2 >> 0x1f);
-        if ((uVar1 & param_2 >> 0x1f) != 0) {
-          uVar6 = 0xc0000000;
-        }
-      }
-      else {
-        uVar6 = 0xc0000000;
-      }
-    }
-    if ((-1 < (int)(param_4 ^ iVar8 * -0x80000000)) &&
-       ((param_4 & WORD_HEXADECIMAL_7FF00000) != 0 && (WORD_HEXADECIMAL_7FF00000 & ~param_4) != 0)) {
-      return MAKE_WORDS(uVar18,param_4,param_3);
-    }
-    if (iVar9 < 0x4000001) {
-      param_4 = param_4 + 0x60000000;
-    }
-    if (0x3ffffff < iVar9) {
-      param_4 = param_4 + 0xa0000000;
-    }
-    uVar1 = uVar6 | 0x14;
-    if (0x3ffffff < iVar9) {
-      uVar1 = uVar6 | 0x10000014;
-    }
-    if (0x4000000 < iVar9) goto LAB_001260e4;
-    puVar2 = kh_GetFpStatusPtr();
-    param_2 = *puVar2;
-    if ((param_2 & 0x1000000) != 0) {
-      return MAKE_WORDS(uVar18,param_4 & 0x80000000,0);
-    }
-    if ((param_2 & 0x800) == 0) {
-      if ((int)param_4 < 0) {
-        uVar1 = uVar1 | 0x10000;
-      }
-      uVar6 = param_4 & ~((param_4 >> 0x14) << 0x14);
-      iVar10 = -(param_4 >> 0x14 & 0xfffff7ff);
-      uVar11 = iVar10 + 0x601;
-      uVar7 = uVar6 | 0x100000;
-      if (uVar11 < 0x36) {
-        if (uVar11 == 0x35) {
-          uVar17 = 0;
-          uVar11 = 0;
-          uVar5 = 0x80000000;
-          if (param_3 != 0 || (uVar6 & 0xfffff) != 0) {
-            uVar5 = 0x80000001;
-          }
-        }
-        else if (uVar11 < 0x15) {
-          uVar17 = SHIFT_RIGHT(uVar7,uVar11);
-          uVar5 = SHIFT_LEFT(param_3,0x20 - uVar11);
-          uVar11 = SHIFT_LEFT(uVar7,0x20 - uVar11) | SHIFT_RIGHT(param_3,uVar11);
-        }
-        else {
-          uVar6 = iVar10 + 0x5e1;
-          uVar17 = 0;
-          if (uVar11 < 0x20 || uVar6 == 0) {
-            uVar11 = SHIFT_LEFT(uVar7,-uVar6) | SHIFT_RIGHT(param_3,uVar11);
-            uVar5 = SHIFT_LEFT(param_3,-uVar6);
-          }
-          else {
-            uVar11 = SHIFT_RIGHT(uVar7,uVar6);
-            uVar5 = SHIFT_LEFT(uVar7,0x20 - uVar6);
-            if (param_3 != 0) {
-              uVar5 = uVar5 | 1;
-            }
-          }
-        }
-      }
-      else {
-        uVar5 = 1;
-        uVar17 = 0;
-        uVar11 = 0;
-      }
-      if ((uVar1 & 0x10000) != 0) {
-        uVar17 = uVar17 | 0x80000000;
-      }
-      if (uVar5 == 0) {
-        return MAKE_WORDS(uVar18,uVar17,uVar11);
-      }
-      if ((uint8)(uVar5 >> 0x1f)) {
-        if (((uVar5 & 0x7fffffff) == 0) && (-1 < (int)uVar1 >> 0x1e)) {
-          if ((int)uVar1 >> 0x1e == 0) {
-            uVar17 = uVar17 + (0xfffffffe < uVar11);
-            uVar11 = uVar11 + 1 & 0xfffffffe;
-          }
-        }
-        else {
-          uVar17 = uVar17 + (0xfffffffe < uVar11);
-          uVar11 = uVar11 + 1;
-        }
-      }
-      puVar2 = kh_GetFpStatusPtr();
-      *puVar2 = *puVar2 | 8;
-      return MAKE_WORDS(uVar18,uVar17,uVar11);
-    }
-    uVar6 = uVar1 | 0x20000000;
-  }
-  uVar18 = float_raise_exception(param_3,param_4,param_1,param_2,uVar6);
-  if ((uVar6 & 0xf) != 9) {
-    return uVar18;
-  }
-LAB_00126d6c:
-  if ((uVar6 & 0x100000) == 0) {
-    uVar18.low = (uint)((uVar6 & uVar18.low << 0x10) != 0);
-    return uVar18;
-  }
-  if ((uVar6 & 0xf0000) == 0) {
-    uVar6 = uVar18.low << 0x1d;
-    if ((bool)((byte)(uVar18.low >> 3) & 1)) {
-      uVar6 = uVar6 | 0x30000000;
-    }
-    puVar2 = kh_GetFpStatusPtr();
-    *puVar2 = *puVar2 & 0xfffffff | uVar6;
-    uVar18.high = uVar6;
-    return uVar18;
-  }
-  if ((uVar18.low & 8) != 0) {
-    uVar18.high = uVar6 & 0xf0000;
-    return uVar18;
-  }
-  uVar18.low = 2 - uVar18.low;
-  return uVar18;
-}
-
-/* ==== 0x00124F44  (file offset 0x24F44)  FUN_00124f44 ================================================ */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-undefined8 FUN_00124f44(uint param_1,uint param_2,uint param_3,uint param_4)
+/* ==== 0x00124F24  (file offset 0x24F24)  double_reverse_divide ======================================= */
+/* GUESS: name (the routine is certain: the soft-float library's double-precision reverse divide,
+   ARM's run-time ABI __aeabi_ddrdiv). Returns b / a, a and b given and returned as their two words
+   (low, high): the operands swapped, then the divide (0x00124f48, in double_divide's code).
+   Special operands (0x00125180, 0x00125044): a NaN takes the shared NaN choice (0x00124e18; a
+   signalling one is invalid, otherwise the first NaN as it is); Inf / Inf and 0 / 0 are invalid
+   (WORD_HEXADECIMAL_04000014: invalid, double precision, operation 4); x / 0 is a division by zero
+   (WORD_HEXADECIMAL_08000014): +-Inf, or the trap (status 0x200); Inf / x is +-Inf, x / Inf and 0 / x
+   are +-0, the sign the two signs' exclusive or. A denormal operand is normalized first (0x00125088,
+   0x00125104). Otherwise the exponent is ea - eb + 1020 (in units of 0x10000, the sign at bit 0),
+   both mantissas go to the top of 64 bits with the hidden bit at 63, and double_divide_mantissas
+   divides them; it also leaves r3 = 2 when the dividend's mantissa is at least the divisor's (the
+   quotient needs no shift), else 1, which the binary adds to the exponent (0x00124f9c) and which is
+   written here as that comparison. The quotient is rounded to nearest on its 11 low bits, the last a
+   sticky bit, the exception word's top bits saying how: 0 exact, 0x40000000 up, 0xc0000000 down. The
+   binary also handles a tie there (0x00124fcc - 0x00124fe4: to even, flagged as rounded down), but a
+   quotient is never exactly halfway: that would make the dividend's 53-bit mantissa the product of a
+   54-bit quotient and the divisor; it is not written. Out of range (0x00125024), the exponent
+   wrapped by 1536:
+     overflow: the library's exception code (0x001260e4): the sticky flags, then +-Inf or the trap
+       (status 0x400);
+     underflow: the denormal code (0x00125eb4): flush to zero (bit 24) gives +-0, the trap (status
+       0x800), or the denormal, rounded to nearest even again (a tie settled by the first rounding:
+       up if that went down, kept if it went up), setting the underflow flag (bit 3) when bits are
+       lost; rounding never signals inexact.
+   The listing's fourth kh_GetFpStatusPtr call, after the trap, is the compare routines' result code
+   (0x00126d6c), which a divide never reaches; it is not written. The trap gets r0 - r3 as the binary
+   leaves them; on the overflow and underflow paths r2 is what double_divide_mantissas leaves there,
+   which the C function does not model (mantissaR2, never set). Each of double_divide and
+   double_reverse_divide holds this code, as the binary's two entries share it. Verified under
+   emulation (research_notes/soft_float_test, double_reference.py, kind dd). */
+uint64 double_reverse_divide(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
 
 {
-  uint uVar1;
-  uint *puVar2;
-  undefined4 uVar3;
-  undefined4 uVar4;
-  uint uVar5;
-  uint uVar6;
-  uint uVar7;
-  int iVar8;
-  int iVar9;
-  int iVar10;
-  uint uVar11;
-  bool bVar12;
-  bool bVar13;
-  bool bVar14;
-  uint64 uVar15;
-  uint uVar16;
-  uint uVar17;
-  undefined8 uVar18;
-  
-  uVar1 = WORD_HEXADECIMAL_04000014;
-  if ((WORD_HEXADECIMAL_07FF0000 & ~(param_2 >> 4)) == 0 || (WORD_HEXADECIMAL_07FF0000 & ~(param_4 >> 4)) == 0) {
-    uVar6 = param_2 * 2;
-    uVar7 = WORD_HEXADECIMAL_07FF0000 * 0x20;
-    bVar12 = uVar6 == uVar7;
-    bVar13 = bVar12 && param_1 == 0;
-    bVar14 = bVar12 || uVar7 <= uVar6;
-    if (!bVar12 && uVar7 > uVar6 || bVar12 && param_1 == 0) {
-      bVar14 = WORD_HEXADECIMAL_07FF0000 * 0x20 <= param_4 * 2;
-      bVar13 = param_4 * 2 == WORD_HEXADECIMAL_07FF0000 * 0x20;
+  uint64 result;
+  uint64 quotient;
+  uint32 *status;
+  uint32 word;        /* the status word */
+  uint32 control = 0; /* ip: the exception word, see above */
+  uint32 exponent;    /* r4: the result's exponent at bit 16, its sign at bit 0 */
+  uint32 divisorExponent;   /* r5 */
+  uint32 normalized;  /* r3 as double_divide_mantissas leaves it, 1 or 2 */
+  uint32 mantissaR2;  /* r2 as double_divide_mantissas leaves it (not modelled) */
+  uint32 shift;
+  uint32 lost;        /* the bits rounded away, the first (the round bit) at bit 31 */
+  uint32 negative;
+  uint32 x;
+  uint32 y;
+  int32 zeros;
+  int32 tail = 0;     /* where the result goes: 0 the quotient, 2 the denormal code (0x00125eb4),
+                         3 the exception code (0x001260e4), 4 the NaN choice (0x00124e18), 5 the
+                         trap (0x00126d48) */
+  int32 divides = 0;  /* both operands finite and nonzero: divide (0x00124f70) */
+
+  x = aHigh;                                /* b / a: the operands swapped (0x00124f28) */
+  aHigh = bHigh;
+  bHigh = x;
+  x = aLow;
+  aLow = bLow;
+  bLow = x;
+  if ((WORD_HEXADECIMAL_07FF0000 & ~(aHigh >> 4)) == 0 ||
+      (WORD_HEXADECIMAL_07FF0000 & ~(bHigh >> 4)) == 0) {   /* an Inf or NaN operand (0x00125180) */
+    control = WORD_HEXADECIMAL_04000014;
+    x = aHigh << 1;
+    y = bHigh << 1;
+    if (x > 0xffe00000 || (x == 0xffe00000 && aLow != 0) ||
+        y > 0xffe00000 || (y == 0xffe00000 && bLow != 0))
+      tail = 4;
+    else if ((WORD_HEXADECIMAL_07FF0000 & ~(aHigh >> 4)) != 0)   /* x / Inf */
+      return MAKE_WORDS(result,(aHigh ^ bHigh) & 0x80000000,0);
+    else if ((WORD_HEXADECIMAL_07FF0000 & ~(bHigh >> 4)) == 0) { /* Inf / Inf: invalid */
+      aLow = 0;
+      tail = 3;
     }
-    if (bVar13) {
-      bVar14 = true;
-    }
-    if (!bVar14 || bVar13 && param_3 == 0) {
-      if ((WORD_HEXADECIMAL_07FF0000 & ~(param_2 >> 4)) != 0) {
-        return MAKE_WORDS(uVar18,(param_2 ^ param_4) & 0x80000000,0);
-      }
-      param_1 = 0;
-      if ((WORD_HEXADECIMAL_07FF0000 & ~(param_4 >> 4)) != 0) {
-        return MAKE_WORDS(uVar18,param_2 & 0x7fffffff | (param_2 ^ param_4) & 0x80000000,0);
-      }
-      goto LAB_001260e4;
-    }
-    uVar7 = param_2 * 2 + 0x100000 + (uint)(param_1 != 0);
-    uVar6 = uVar7;
-    if (uVar7 < 0xfff00001) {
-      uVar6 = param_4 * 2 + 0x100000 + (uint)(param_3 != 0);
-    }
-    if (0xfff00000 < uVar6) goto LAB_001260e4;
-    uVar6 = WORD_HEXADECIMAL_04000014;
-    if (0xfffff < uVar7) {
-      param_1 = param_3;
-      param_2 = param_4;
-    }
-LAB_00126cb0:
-    if ((uVar6 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x00126cc4. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar6 & 0xf) != 8) {
-        return MAKE_WORDS(uVar18,param_2,param_1);
-      }
-      if ((uVar6 & 0x40) == 0) {
-        uVar3 = FLOAT_DEFAULT_NAN;
-        if ((uVar6 & 0x10) != 0) {
-          uVar3 = 0;
-          param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD;
-        }
-        return MAKE_WORDS(uVar18,param_2,uVar3);
-      }
-      if ((uVar6 & 0x10000) != 0) {
-        return MAKE_WORDS(uVar18,0,0);
-      }
-      if ((uVar6 & 0x20) == 0) {
-        if ((uVar6 & 0x10) == 0) {
-          uVar6 = 0x7fffffff;
-          uVar1 = param_2;
-          param_2 = param_1;
-        }
-        else {
-          uVar1 = 0x7fffffff;
-          uVar6 = 0xffffffff;
-        }
-        if ((param_2 & 0x80000000) != 0) {
-          uVar6 = ~uVar6;
-          uVar1 = ~uVar1;
-        }
-        return MAKE_WORDS(uVar18,uVar1,uVar6);
-      }
-      uVar3 = 0xffffffff;
-      uVar4 = 0xffffffff;
-      if ((param_3 & 0x80000000) != 0) {
-        uVar3 = 0;
-        uVar4 = 0;
-      }
-      return MAKE_WORDS(uVar18,uVar4,uVar3);
-    }
-    MAKE_WORDS(uVar18,param_2,8);
-    goto LAB_00126d6c;
-  }
-  uVar6 = WORD_HEXADECIMAL_07FF0000 & param_2 >> 4;
-  uVar7 = uVar6 | (param_2 ^ param_4) >> 0x1f;
-  uVar11 = WORD_HEXADECIMAL_07FF0000 & param_4 >> 4;
-  if (uVar11 == 0 || (param_2 & WORD_HEXADECIMAL_07FF0000 << 4) == 0) {
-    if (param_1 == 0 && (param_2 & 0x7fffffff) == 0) {
-      if (param_3 != 0 || (param_4 & 0x7fffffff) != 0) {
-        if ((int)param_4 < 0) {
-          param_2 = param_2 ^ 0x80000000;
-        }
-        return MAKE_WORDS(uVar18,param_2,param_1);
-      }
-    }
-    else {
-      uVar1 = WORD_HEXADECIMAL_08000014;
-      if (param_3 != 0 || (param_4 & 0x7fffffff) != 0) {
-        if (uVar11 == 0) {
-          iVar10 = 0x10000;
-          param_4 = param_4 & 0x7fffffff;
-          if (param_4 == 0 && param_3 >> 0xc == 0) {
-            param_3 = param_3 << 0x14;
-            iVar10 = -0x130000;
-          }
-          uVar1 = param_3;
-          if (param_4 == 0) {
-            param_4 = param_3 >> 0xc;
-            uVar1 = param_3 << 0x14;
-            iVar10 = iVar10 + -0x140000;
-          }
-          iVar8 = 0;
-          if (param_4 >> 5 == 0) {
-            param_4 = param_4 << 0x10;
-            iVar8 = 0x10;
-          }
-          if (param_4 >> 0xd == 0) {
-            param_4 = param_4 << 8;
-            iVar8 = iVar8 + 8;
-          }
-          if (param_4 >> 0x11 == 0) {
-            param_4 = param_4 << 4;
-            iVar8 = iVar8 + 4;
-          }
-          if (param_4 >> 0x13 == 0) {
-            param_4 = param_4 << 2;
-            iVar8 = iVar8 + 2;
-          }
-          if (param_4 >> 0x14 == 0) {
-            param_4 = param_4 << 1;
-            iVar8 = iVar8 + 1;
-          }
-          uVar11 = iVar10 + iVar8 * -0x10000;
-          param_3 = uVar1 << iVar8;
-          param_4 = param_4 | SHIFT_RIGHT(uVar1,0x20U - iVar8);
-        }
-        if ((uVar6 & 0xfffffffe) == 0) {
-          iVar10 = uVar7 + 0x10000;
-          param_2 = param_2 & 0x7fffffff;
-          if (param_2 == 0 && param_1 >> 0xc == 0) {
-            param_1 = param_1 << 0x14;
-            iVar10 = uVar7 - 0x130000;
-          }
-          uVar1 = param_1;
-          if (param_2 == 0) {
-            param_2 = param_1 >> 0xc;
-            uVar1 = param_1 << 0x14;
-            iVar10 = iVar10 + -0x140000;
-          }
-          iVar8 = 0;
-          if (param_2 >> 5 == 0) {
-            param_2 = param_2 << 0x10;
-            iVar8 = 0x10;
-          }
-          if (param_2 >> 0xd == 0) {
-            param_2 = param_2 << 8;
-            iVar8 = iVar8 + 8;
-          }
-          if (param_2 >> 0x11 == 0) {
-            param_2 = param_2 << 4;
-            iVar8 = iVar8 + 4;
-          }
-          if (param_2 >> 0x13 == 0) {
-            param_2 = param_2 << 2;
-            iVar8 = iVar8 + 2;
-          }
-          if (param_2 >> 0x14 == 0) {
-            param_2 = param_2 << 1;
-            iVar8 = iVar8 + 1;
-          }
-          uVar7 = iVar10 + iVar8 * -0x10000;
-          param_1 = uVar1 << iVar8;
-          param_2 = param_2 | SHIFT_RIGHT(uVar1,0x20U - iVar8);
-        }
-        goto LAB_00124f70;
-      }
-    }
-LAB_001260e4:
-    if ((uVar1 & 0x10) == 0) {
-      param_3 = param_2;
-    }
-    puVar2 = kh_GetFpStatusPtr();
-    uVar7 = *puVar2;
-    if ((uVar1 & ~(uVar7 << 0x12) & 0x30000000) != 0) {
-      uVar1 = uVar1 | 0x40000000;
-    }
-    uVar6 = uVar1 | uVar7 & 0x1c00000;
-    *puVar2 = uVar7 | (uVar1 & 0x7fffffff) >> 0x1a;
-    bVar13 = (uVar1 & 0xf) != 8;
-    if (bVar13) {
-      uVar1 = uVar1 & 0x70;
-      uVar6 = uVar6 | uVar1 << 3;
-    }
-    else {
-      uVar1 = 0x20000;
-    }
-    if (!bVar13 && (uVar1 & ~uVar6) == 0) {
-      uVar6 = uVar6 | 0xc00000;
-    }
-    if ((uVar6 & 0x20000000) == 0) {
-      if ((uVar6 & 0x10000000) == 0) {
-        if ((uVar6 & 0x40000000) != 0) {
-          uVar7 = uVar7 & 0x1000;
-          goto joined_r0x00126194;
-        }
-        if ((uVar6 & 0x8000000) == 0) {
-          if ((uVar7 & 0x100) == 0) {
-            param_3 = param_2;
-            if ((uVar6 & 0x80) == 0) {
-              param_3 = param_1;
-            }
-            param_3 = param_3 & 0x80000000;
-            if ((uVar6 & 0x10) == 0) {
-              param_1 = FLOAT_DEFAULT_NAN | param_3;
-            }
-            else {
-              param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD | param_3;
-              param_1 = DOUBLE_DEFAULT_NAN_LOW_WORD;
-            }
-            goto LAB_00126cb0;
-          }
-        }
-        else if ((uVar7 & 0x200) == 0) {
-          if ((uVar6 & 0x10) == 0) {
-            param_3 = param_1 ^ param_3;
-          }
-          else {
-            param_3 = param_2 ^ param_4;
-          }
-          goto LAB_001261dc;
-        }
-      }
-      else if ((uVar7 & 0x400) == 0) {
-        if ((uVar6 & 0x80) == 0) {
-          param_3 = param_1 & 0x80000000;
-        }
-        else {
-          param_3 = param_2 & 0x80000000;
-        }
-LAB_001261dc:
-        if ((uVar6 & 0x10) == 0) {
-          return MAKE_WORDS(uVar18,param_2,WORD_HEXADECIMAL_7F800000 | param_3 & 0x80000000);
-        }
-        return MAKE_WORDS(uVar18,WORD_HEXADECIMAL_7FF00000 | param_3 & 0x80000000,INTEGER_0);
-      }
-    }
-    else {
-      uVar7 = uVar7 & 0x800;
-joined_r0x00126194:
-      if (uVar7 == 0) {
-        return MAKE_WORDS(uVar18,param_2,param_1);
-      }
-    }
+    else                                                         /* Inf / x */
+      return MAKE_WORDS(result,(aHigh & ~0x80000000) | ((aHigh ^ bHigh) & 0x80000000),0);
   }
   else {
-LAB_00124f70:
-    iVar8 = uVar7 - uVar11;
-    iVar9 = iVar8 + 0x3fc0000;
-    param_4 = param_4 << 0xb | param_3 >> 0x15 | 0x80000000;
-    param_3 = param_3 << 0xb;
-    /* double_divide_mantissas also leaves r3: 2 when the dividend's mantissa is at least the
-       divisor's (the quotient needs no shift), else 1; the binary adds it to the exponent below
-       (0x00124f9c), where Ghidra read r3 as param_4 */
-    uVar16 = param_2 << 0xb | param_1 >> 0x15 | 0x80000000;
-    uVar16 = uVar16 > param_4 || uVar16 == param_4 && param_1 << 0xb >= param_3 ? 2 : 1;
-    uVar15 = double_divide_mantissas(param_1 << 0xb,param_2 << 0xb | param_1 >> 0x15 | 0x80000000,param_3,param_4);
-    param_4 = uVar16 + (iVar9 >> 0x10);
-    iVar10 = (int)uVar15.low << 0x15;
-    param_1 = uVar15.low >> 0xb | uVar15.high << 0x15;
-    param_2 = (uVar15.high >> 0xb) + param_4 * 0x100000 ^ iVar8 * -0x80000000;
-    uVar6 = 0;
-    if (iVar10 != 0) {
-      if ((uint8)((uint)iVar10 >> 0x1f)) {
-        if ((uVar15.low & 0x3ff) == 0) {
-          param_4 = 0x80000000;
+    exponent = (WORD_HEXADECIMAL_07FF0000 & aHigh >> 4) | (aHigh ^ bHigh) >> 31;
+    divisorExponent = WORD_HEXADECIMAL_07FF0000 & bHigh >> 4;
+    if (divisorExponent == 0 || (aHigh & 0x7ff00000) == 0) {   /* a zero or denormal (0x00125044) */
+      if ((aLow | aHigh << 1) == 0) {
+        if ((bLow | bHigh << 1) == 0) {
+          control = WORD_HEXADECIMAL_04000014;   /* 0 / 0: invalid */
+          tail = 3;
         }
-        else {
-          param_4 = 0;
-        }
-        uVar1 = param_1 + 1;
-        param_2 = param_2 + (0xfffffffe < param_1);
-        uVar6 = 0x40000000;
-        param_1 = uVar1 & ~(param_4 >> 0x1f);
-        if ((uVar1 & param_4 >> 0x1f) != 0) {
-          uVar6 = 0xc0000000;
-        }
+        else
+          return MAKE_WORDS(result,aHigh ^ (bHigh & 0x80000000),aLow);   /* 0 / x */
+      }
+      else if ((bLow | bHigh << 1) == 0) {
+        control = WORD_HEXADECIMAL_08000014;     /* x / 0: a division by zero */
+        tail = 3;
       }
       else {
-        uVar6 = 0xc0000000;
-      }
-    }
-    if ((-1 < (int)(param_2 ^ iVar8 * -0x80000000)) &&
-       ((param_2 & WORD_HEXADECIMAL_7FF00000) != 0 && (WORD_HEXADECIMAL_7FF00000 & ~param_2) != 0)) {
-      return MAKE_WORDS(uVar18,param_2,param_1);
-    }
-    if (iVar9 < 0x4000001) {
-      param_2 = param_2 + 0x60000000;
-    }
-    if (0x3ffffff < iVar9) {
-      param_2 = param_2 + 0xa0000000;
-    }
-    uVar1 = uVar6 | 0x14;
-    if (0x3ffffff < iVar9) {
-      uVar1 = uVar6 | 0x10000014;
-    }
-    if (0x4000000 < iVar9) goto LAB_001260e4;
-    puVar2 = kh_GetFpStatusPtr();
-    param_4 = *puVar2;
-    if ((param_4 & 0x1000000) != 0) {
-      return MAKE_WORDS(uVar18,param_2 & 0x80000000,0);
-    }
-    if ((param_4 & 0x800) == 0) {
-      if ((int)param_2 < 0) {
-        uVar1 = uVar1 | 0x10000;
-      }
-      uVar6 = param_2 & ~((param_2 >> 0x14) << 0x14);
-      iVar10 = -(param_2 >> 0x14 & 0xfffff7ff);
-      uVar11 = iVar10 + 0x601;
-      uVar7 = uVar6 | 0x100000;
-      if (uVar11 < 0x36) {
-        if (uVar11 == 0x35) {
-          uVar17 = 0;
-          uVar11 = 0;
-          uVar5 = 0x80000000;
-          if (param_1 != 0 || (uVar6 & 0xfffff) != 0) {
-            uVar5 = 0x80000001;
+        if (divisorExponent == 0) {     /* b a denormal: normalized (0x00125104) */
+          divisorExponent += 0x10000;
+          bHigh &= ~0x80000000;
+          if ((bHigh | bLow >> 12) == 0) {
+            bLow <<= 20;
+            divisorExponent -= 0x140000;
           }
+          if (bHigh == 0) {
+            bHigh = bLow >> 12;
+            bLow <<= 20;
+            divisorExponent -= 0x140000;
+          }
+          zeros = 0;
+          if ((bHigh >> 5) == 0) {
+            bHigh <<= 16;
+            zeros += 16;
+          }
+          if ((bHigh >> 13) == 0) {
+            bHigh <<= 8;
+            zeros += 8;
+          }
+          if ((bHigh >> 17) == 0) {
+            bHigh <<= 4;
+            zeros += 4;
+          }
+          if ((bHigh >> 19) == 0) {
+            bHigh <<= 2;
+            zeros += 2;
+          }
+          if ((bHigh >> 20) == 0) {
+            bHigh <<= 1;
+            zeros += 1;
+          }
+          divisorExponent -= (uint32)zeros << 16;
+          bHigh |= SHIFT_RIGHT(bLow,32 - zeros);
+          bLow <<= zeros;
         }
-        else if (uVar11 < 0x15) {
-          uVar17 = SHIFT_RIGHT(uVar7,uVar11);
-          uVar5 = SHIFT_LEFT(param_1,0x20 - uVar11);
-          uVar11 = SHIFT_LEFT(uVar7,0x20 - uVar11) | SHIFT_RIGHT(param_1,uVar11);
+        if ((exponent & ~1u) == 0) {    /* a a denormal: normalized (0x00125088) */
+          exponent += 0x10000;
+          aHigh &= ~0x80000000;
+          if ((aHigh | aLow >> 12) == 0) {
+            aLow <<= 20;
+            exponent -= 0x140000;
+          }
+          if (aHigh == 0) {
+            aHigh = aLow >> 12;
+            aLow <<= 20;
+            exponent -= 0x140000;
+          }
+          zeros = 0;
+          if ((aHigh >> 5) == 0) {
+            aHigh <<= 16;
+            zeros += 16;
+          }
+          if ((aHigh >> 13) == 0) {
+            aHigh <<= 8;
+            zeros += 8;
+          }
+          if ((aHigh >> 17) == 0) {
+            aHigh <<= 4;
+            zeros += 4;
+          }
+          if ((aHigh >> 19) == 0) {
+            aHigh <<= 2;
+            zeros += 2;
+          }
+          if ((aHigh >> 20) == 0) {
+            aHigh <<= 1;
+            zeros += 1;
+          }
+          exponent -= (uint32)zeros << 16;
+          aHigh |= SHIFT_RIGHT(aLow,32 - zeros);
+          aLow <<= zeros;
         }
+        divides = 1;
+      }
+    }
+    else
+      divides = 1;
+    if (divides) {                      /* 0x00124f70 */
+      exponent = exponent - divisorExponent + 0x3fc0000;
+      aHigh = aHigh << 11 | aLow >> 21 | 0x80000000;
+      bHigh = bHigh << 11 | bLow >> 21 | 0x80000000;
+      aLow <<= 11;
+      bLow <<= 11;
+      normalized = aHigh > bHigh || (aHigh == bHigh && aLow >= bLow) ? 2 : 1;
+      quotient = double_divide_mantissas(aLow,aHigh,bLow,bHigh);
+      bHigh = normalized + (uint32)((int32)exponent >> 16);
+      lost = quotient.low << 21;
+      aLow = quotient.low >> 11 | quotient.high << 21;
+      aHigh = ((quotient.high >> 11) + (bHigh << 20)) ^ exponent << 31;
+      if (lost != 0) {                  /* round: never a tie (see above) */
+        if ((lost & 0x80000000) == 0)
+          control = 0xc0000000;         /* rounded down */
         else {
-          uVar6 = iVar10 + 0x5e1;
-          uVar17 = 0;
-          if (uVar11 < 0x20 || uVar6 == 0) {
-            uVar11 = SHIFT_LEFT(uVar7,-uVar6) | SHIFT_RIGHT(param_1,uVar11);
-            uVar5 = SHIFT_LEFT(param_1,-uVar6);
-          }
-          else {
-            uVar11 = SHIFT_RIGHT(uVar7,uVar6);
-            uVar5 = SHIFT_LEFT(uVar7,0x20 - uVar6);
-            if (param_1 != 0) {
-              uVar5 = uVar5 | 1;
-            }
-          }
+          bHigh = 0;
+          aLow++;
+          aHigh += aLow == 0;
+          control = 0x40000000;         /* rounded up */
         }
+      }
+      if ((int32)(aHigh ^ exponent << 31) >= 0 && (aHigh & WORD_HEXADECIMAL_7FF00000) != 0 &&
+          (WORD_HEXADECIMAL_7FF00000 & ~aHigh) != 0)
+        return MAKE_WORDS(result,aHigh,aLow);
+      control |= 0x14;                  /* out of range (0x00125024): the exponent wrapped by 1536 */
+      if ((int32)exponent <= 0x4000000)
+        aHigh += 0x60000000;
+      if ((int32)exponent >= 0x4000000) {
+        aHigh -= 0x60000000;
+        control |= 0x10000000;          /* overflow */
+      }
+      bLow = mantissaR2;
+      tail = (int32)exponent <= 0x4000000 ? 2 : 3;
+    }
+  }
+  if (tail == 4) {                      /* a NaN operand (0x00124e18) */
+    x = 0x100000 + (aHigh << 1) + (aLow != 0);   /* above 0xfff00000: a signalling NaN */
+    y = 0x100000 + (bHigh << 1) + (bLow != 0);
+    if (x <= 0xfff00000 && y <= 0xfff00000) {
+      if (x >= 0x100000)
+        return MAKE_WORDS(result,bHigh,bLow);   /* the first quiet NaN, as it is */
+      return MAKE_WORDS(result,aHigh,aLow);
+    }
+    tail = 3;                           /* a signalling NaN: invalid */
+  }
+  if (tail == 2) {                      /* 0x00125eb4: a denormal result */
+    status = kh_GetFpStatusPtr();
+    word = *status;
+    if (word & 0x1000000)
+      return MAKE_WORDS(result,aHigh & 0x80000000,0);   /* flush to zero */
+    if (word & 0x800) {                 /* underflow trapped */
+      bHigh = word;
+      control |= 0x20000000;
+      tail = 5;
+    }
+    else {
+      negative = aHigh & 0x80000000;
+      shift = 0x601 - (aHigh >> 20 & 0x7ff);   /* the right shift into the denormal */
+      aHigh = (aHigh & 0xfffff) | 0x100000;
+      if (shift > 53) {
+        lost = 1;
+        aHigh = 0;
+        aLow = 0;
+      }
+      else if (shift == 53) {
+        lost = 0x80000000 + ((aLow | aHigh << 12) != 0);
+        aHigh = 0;
+        aLow = 0;
+      }
+      else if (shift < 21) {
+        lost = SHIFT_LEFT(aLow,32 - shift);
+        aLow = SHIFT_LEFT(aHigh,32 - shift) | SHIFT_RIGHT(aLow,shift);
+        aHigh = SHIFT_RIGHT(aHigh,shift);
+      }
+      else if (shift <= 32) {
+        lost = SHIFT_LEFT(aLow,32 - shift);
+        aLow = SHIFT_LEFT(aHigh,32 - shift) | SHIFT_RIGHT(aLow,shift);
+        aHigh = 0;
       }
       else {
-        uVar5 = 1;
-        uVar17 = 0;
-        uVar11 = 0;
+        lost = SHIFT_LEFT(aHigh,64 - shift) | (aLow != 0);
+        aLow = SHIFT_RIGHT(aHigh,shift - 32);
+        aHigh = 0;
       }
-      if ((uVar1 & 0x10000) != 0) {
-        uVar17 = uVar17 | 0x80000000;
-      }
-      if (uVar5 == 0) {
-        return MAKE_WORDS(uVar18,uVar17,uVar11);
-      }
-      if ((uint8)(uVar5 >> 0x1f)) {
-        if (((uVar5 & 0x7fffffff) == 0) && (-1 < (int)uVar1 >> 0x1e)) {
-          if ((int)uVar1 >> 0x1e == 0) {
-            uVar17 = uVar17 + (0xfffffffe < uVar11);
-            uVar11 = uVar11 + 1 & 0xfffffffe;
-          }
-        }
-        else {
-          uVar17 = uVar17 + (0xfffffffe < uVar11);
-          uVar11 = uVar11 + 1;
+      aHigh |= negative;
+      if (lost == 0)
+        return MAKE_WORDS(result,aHigh,aLow);
+      if (lost & 0x80000000) {
+        x = (uint32)((int32)control >> 30);   /* a tie: by how the first rounding went */
+        if ((lost << 1) != 0 || (int32)x < 0 || x == 0) {
+          aLow++;
+          aHigh += aLow == 0;
+          if ((lost << 1) == 0 && x == 0)
+            aLow &= ~1u;                /* a true tie: to even */
         }
       }
-      puVar2 = kh_GetFpStatusPtr();
-      *puVar2 = *puVar2 | 8;
-      return MAKE_WORDS(uVar18,uVar17,uVar11);
+      status = kh_GetFpStatusPtr();
+      *status |= 8;                     /* the underflow flag */
+      return MAKE_WORDS(result,aHigh,aLow);
     }
-    uVar6 = uVar1 | 0x20000000;
   }
-  uVar18 = float_raise_exception(param_1,param_2,param_3,param_4,uVar6);
-  if ((uVar6 & 0xf) != 9) {
-    return uVar18;
-  }
-LAB_00126d6c:
-  if ((uVar6 & 0x100000) == 0) {
-    uVar18.low = (uint)((uVar6 & uVar18.low << 0x10) != 0);
-    return uVar18;
-  }
-  if ((uVar6 & 0xf0000) == 0) {
-    uVar6 = uVar18.low << 0x1d;
-    if ((bool)((byte)(uVar18.low >> 3) & 1)) {
-      uVar6 = uVar6 | 0x30000000;
+  if (tail == 3) {                      /* the library's exception code (0x001260e4) */
+    status = kh_GetFpStatusPtr();
+    word = *status;
+    if (control & ~(word << 18) & 0x30000000)
+      control |= 0x40000000;            /* an untrapped overflow is also inexact */
+    word |= (control << 1) >> 27;       /* the sticky flags */
+    control |= word & 0x1c00000;
+    *status = word;
+    control |= (control & 0x70) << 3;   /* 0x80: the result's sign is the high word's */
+    if (control & 0x10000000) {         /* overflow */
+      if ((word & 0x400) == 0)
+        return MAKE_WORDS(result,WORD_HEXADECIMAL_7FF00000 | (aHigh & 0x80000000),INTEGER_0);
     }
-    puVar2 = kh_GetFpStatusPtr();
-    *puVar2 = *puVar2 & 0xfffffff | uVar6;
-    uVar18.high = uVar6;
-    return uVar18;
+    else if (control & 0x8000000) {     /* a division by zero */
+      if ((word & 0x200) == 0)
+        return MAKE_WORDS(result,WORD_HEXADECIMAL_7FF00000 | ((aHigh ^ bHigh) & 0x80000000),INTEGER_0);
+    }
+    else if ((word & 0x100) == 0)       /* invalid */
+      return MAKE_WORDS(result,DOUBLE_DEFAULT_NAN_HIGH_WORD | (aHigh & 0x80000000),
+                        DOUBLE_DEFAULT_NAN_LOW_WORD);
   }
-  if ((uVar18.low & 8) != 0) {
-    uVar18.high = uVar6 & 0xf0000;
-    return uVar18;
-  }
-  uVar18.low = 2 - uVar18.low;
-  return uVar18;
+  return float_raise_exception(aLow,aHigh,bLow,bHigh,control);
 }
+
+
+/* ==== 0x00124F44  (file offset 0x24F44)  double_divide =============================================== */
+/* GUESS: name (the routine is certain: the soft-float library's double-precision divide, ARM's
+   run-time ABI __aeabi_ddiv). Returns a / b, a and b given and returned as their two words (low,
+   high).
+   Special operands (0x00125180, 0x00125044): a NaN takes the shared NaN choice (0x00124e18; a
+   signalling one is invalid, otherwise the first NaN as it is); Inf / Inf and 0 / 0 are invalid
+   (WORD_HEXADECIMAL_04000014: invalid, double precision, operation 4); x / 0 is a division by zero
+   (WORD_HEXADECIMAL_08000014): +-Inf, or the trap (status 0x200); Inf / x is +-Inf, x / Inf and 0 / x
+   are +-0, the sign the two signs' exclusive or. A denormal operand is normalized first (0x00125088,
+   0x00125104). Otherwise the exponent is ea - eb + 1020 (in units of 0x10000, the sign at bit 0),
+   both mantissas go to the top of 64 bits with the hidden bit at 63, and double_divide_mantissas
+   divides them; it also leaves r3 = 2 when the dividend's mantissa is at least the divisor's (the
+   quotient needs no shift), else 1, which the binary adds to the exponent (0x00124f9c) and which is
+   written here as that comparison. The quotient is rounded to nearest on its 11 low bits, the last a
+   sticky bit, the exception word's top bits saying how: 0 exact, 0x40000000 up, 0xc0000000 down. The
+   binary also handles a tie there (0x00124fcc - 0x00124fe4: to even, flagged as rounded down), but a
+   quotient is never exactly halfway: that would make the dividend's 53-bit mantissa the product of a
+   54-bit quotient and the divisor; it is not written. Out of range (0x00125024), the exponent
+   wrapped by 1536:
+     overflow: the library's exception code (0x001260e4): the sticky flags, then +-Inf or the trap
+       (status 0x400);
+     underflow: the denormal code (0x00125eb4): flush to zero (bit 24) gives +-0, the trap (status
+       0x800), or the denormal, rounded to nearest even again (a tie settled by the first rounding:
+       up if that went down, kept if it went up), setting the underflow flag (bit 3) when bits are
+       lost; rounding never signals inexact.
+   The listing's fourth kh_GetFpStatusPtr call, after the trap, is the compare routines' result code
+   (0x00126d6c), which a divide never reaches; it is not written. The trap gets r0 - r3 as the binary
+   leaves them; on the overflow and underflow paths r2 is what double_divide_mantissas leaves there,
+   which the C function does not model (mantissaR2, never set). Each of double_divide and
+   double_reverse_divide holds this code, as the binary's two entries share it. Verified under
+   emulation (research_notes/soft_float_test, double_reference.py, kind dd). */
+uint64 double_divide(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
+
+{
+  uint64 result;
+  uint64 quotient;
+  uint32 *status;
+  uint32 word;        /* the status word */
+  uint32 control = 0; /* ip: the exception word, see above */
+  uint32 exponent;    /* r4: the result's exponent at bit 16, its sign at bit 0 */
+  uint32 divisorExponent;   /* r5 */
+  uint32 normalized;  /* r3 as double_divide_mantissas leaves it, 1 or 2 */
+  uint32 mantissaR2;  /* r2 as double_divide_mantissas leaves it (not modelled) */
+  uint32 shift;
+  uint32 lost;        /* the bits rounded away, the first (the round bit) at bit 31 */
+  uint32 negative;
+  uint32 x;
+  uint32 y;
+  int32 zeros;
+  int32 tail = 0;     /* where the result goes: 0 the quotient, 2 the denormal code (0x00125eb4),
+                         3 the exception code (0x001260e4), 4 the NaN choice (0x00124e18), 5 the
+                         trap (0x00126d48) */
+  int32 divides = 0;  /* both operands finite and nonzero: divide (0x00124f70) */
+
+  if ((WORD_HEXADECIMAL_07FF0000 & ~(aHigh >> 4)) == 0 ||
+      (WORD_HEXADECIMAL_07FF0000 & ~(bHigh >> 4)) == 0) {   /* an Inf or NaN operand (0x00125180) */
+    control = WORD_HEXADECIMAL_04000014;
+    x = aHigh << 1;
+    y = bHigh << 1;
+    if (x > 0xffe00000 || (x == 0xffe00000 && aLow != 0) ||
+        y > 0xffe00000 || (y == 0xffe00000 && bLow != 0))
+      tail = 4;
+    else if ((WORD_HEXADECIMAL_07FF0000 & ~(aHigh >> 4)) != 0)   /* x / Inf */
+      return MAKE_WORDS(result,(aHigh ^ bHigh) & 0x80000000,0);
+    else if ((WORD_HEXADECIMAL_07FF0000 & ~(bHigh >> 4)) == 0) { /* Inf / Inf: invalid */
+      aLow = 0;
+      tail = 3;
+    }
+    else                                                         /* Inf / x */
+      return MAKE_WORDS(result,(aHigh & ~0x80000000) | ((aHigh ^ bHigh) & 0x80000000),0);
+  }
+  else {
+    exponent = (WORD_HEXADECIMAL_07FF0000 & aHigh >> 4) | (aHigh ^ bHigh) >> 31;
+    divisorExponent = WORD_HEXADECIMAL_07FF0000 & bHigh >> 4;
+    if (divisorExponent == 0 || (aHigh & 0x7ff00000) == 0) {   /* a zero or denormal (0x00125044) */
+      if ((aLow | aHigh << 1) == 0) {
+        if ((bLow | bHigh << 1) == 0) {
+          control = WORD_HEXADECIMAL_04000014;   /* 0 / 0: invalid */
+          tail = 3;
+        }
+        else
+          return MAKE_WORDS(result,aHigh ^ (bHigh & 0x80000000),aLow);   /* 0 / x */
+      }
+      else if ((bLow | bHigh << 1) == 0) {
+        control = WORD_HEXADECIMAL_08000014;     /* x / 0: a division by zero */
+        tail = 3;
+      }
+      else {
+        if (divisorExponent == 0) {     /* b a denormal: normalized (0x00125104) */
+          divisorExponent += 0x10000;
+          bHigh &= ~0x80000000;
+          if ((bHigh | bLow >> 12) == 0) {
+            bLow <<= 20;
+            divisorExponent -= 0x140000;
+          }
+          if (bHigh == 0) {
+            bHigh = bLow >> 12;
+            bLow <<= 20;
+            divisorExponent -= 0x140000;
+          }
+          zeros = 0;
+          if ((bHigh >> 5) == 0) {
+            bHigh <<= 16;
+            zeros += 16;
+          }
+          if ((bHigh >> 13) == 0) {
+            bHigh <<= 8;
+            zeros += 8;
+          }
+          if ((bHigh >> 17) == 0) {
+            bHigh <<= 4;
+            zeros += 4;
+          }
+          if ((bHigh >> 19) == 0) {
+            bHigh <<= 2;
+            zeros += 2;
+          }
+          if ((bHigh >> 20) == 0) {
+            bHigh <<= 1;
+            zeros += 1;
+          }
+          divisorExponent -= (uint32)zeros << 16;
+          bHigh |= SHIFT_RIGHT(bLow,32 - zeros);
+          bLow <<= zeros;
+        }
+        if ((exponent & ~1u) == 0) {    /* a a denormal: normalized (0x00125088) */
+          exponent += 0x10000;
+          aHigh &= ~0x80000000;
+          if ((aHigh | aLow >> 12) == 0) {
+            aLow <<= 20;
+            exponent -= 0x140000;
+          }
+          if (aHigh == 0) {
+            aHigh = aLow >> 12;
+            aLow <<= 20;
+            exponent -= 0x140000;
+          }
+          zeros = 0;
+          if ((aHigh >> 5) == 0) {
+            aHigh <<= 16;
+            zeros += 16;
+          }
+          if ((aHigh >> 13) == 0) {
+            aHigh <<= 8;
+            zeros += 8;
+          }
+          if ((aHigh >> 17) == 0) {
+            aHigh <<= 4;
+            zeros += 4;
+          }
+          if ((aHigh >> 19) == 0) {
+            aHigh <<= 2;
+            zeros += 2;
+          }
+          if ((aHigh >> 20) == 0) {
+            aHigh <<= 1;
+            zeros += 1;
+          }
+          exponent -= (uint32)zeros << 16;
+          aHigh |= SHIFT_RIGHT(aLow,32 - zeros);
+          aLow <<= zeros;
+        }
+        divides = 1;
+      }
+    }
+    else
+      divides = 1;
+    if (divides) {                      /* 0x00124f70 */
+      exponent = exponent - divisorExponent + 0x3fc0000;
+      aHigh = aHigh << 11 | aLow >> 21 | 0x80000000;
+      bHigh = bHigh << 11 | bLow >> 21 | 0x80000000;
+      aLow <<= 11;
+      bLow <<= 11;
+      normalized = aHigh > bHigh || (aHigh == bHigh && aLow >= bLow) ? 2 : 1;
+      quotient = double_divide_mantissas(aLow,aHigh,bLow,bHigh);
+      bHigh = normalized + (uint32)((int32)exponent >> 16);
+      lost = quotient.low << 21;
+      aLow = quotient.low >> 11 | quotient.high << 21;
+      aHigh = ((quotient.high >> 11) + (bHigh << 20)) ^ exponent << 31;
+      if (lost != 0) {                  /* round: never a tie (see above) */
+        if ((lost & 0x80000000) == 0)
+          control = 0xc0000000;         /* rounded down */
+        else {
+          bHigh = 0;
+          aLow++;
+          aHigh += aLow == 0;
+          control = 0x40000000;         /* rounded up */
+        }
+      }
+      if ((int32)(aHigh ^ exponent << 31) >= 0 && (aHigh & WORD_HEXADECIMAL_7FF00000) != 0 &&
+          (WORD_HEXADECIMAL_7FF00000 & ~aHigh) != 0)
+        return MAKE_WORDS(result,aHigh,aLow);
+      control |= 0x14;                  /* out of range (0x00125024): the exponent wrapped by 1536 */
+      if ((int32)exponent <= 0x4000000)
+        aHigh += 0x60000000;
+      if ((int32)exponent >= 0x4000000) {
+        aHigh -= 0x60000000;
+        control |= 0x10000000;          /* overflow */
+      }
+      bLow = mantissaR2;
+      tail = (int32)exponent <= 0x4000000 ? 2 : 3;
+    }
+  }
+  if (tail == 4) {                      /* a NaN operand (0x00124e18) */
+    x = 0x100000 + (aHigh << 1) + (aLow != 0);   /* above 0xfff00000: a signalling NaN */
+    y = 0x100000 + (bHigh << 1) + (bLow != 0);
+    if (x <= 0xfff00000 && y <= 0xfff00000) {
+      if (x >= 0x100000)
+        return MAKE_WORDS(result,bHigh,bLow);   /* the first quiet NaN, as it is */
+      return MAKE_WORDS(result,aHigh,aLow);
+    }
+    tail = 3;                           /* a signalling NaN: invalid */
+  }
+  if (tail == 2) {                      /* 0x00125eb4: a denormal result */
+    status = kh_GetFpStatusPtr();
+    word = *status;
+    if (word & 0x1000000)
+      return MAKE_WORDS(result,aHigh & 0x80000000,0);   /* flush to zero */
+    if (word & 0x800) {                 /* underflow trapped */
+      bHigh = word;
+      control |= 0x20000000;
+      tail = 5;
+    }
+    else {
+      negative = aHigh & 0x80000000;
+      shift = 0x601 - (aHigh >> 20 & 0x7ff);   /* the right shift into the denormal */
+      aHigh = (aHigh & 0xfffff) | 0x100000;
+      if (shift > 53) {
+        lost = 1;
+        aHigh = 0;
+        aLow = 0;
+      }
+      else if (shift == 53) {
+        lost = 0x80000000 + ((aLow | aHigh << 12) != 0);
+        aHigh = 0;
+        aLow = 0;
+      }
+      else if (shift < 21) {
+        lost = SHIFT_LEFT(aLow,32 - shift);
+        aLow = SHIFT_LEFT(aHigh,32 - shift) | SHIFT_RIGHT(aLow,shift);
+        aHigh = SHIFT_RIGHT(aHigh,shift);
+      }
+      else if (shift <= 32) {
+        lost = SHIFT_LEFT(aLow,32 - shift);
+        aLow = SHIFT_LEFT(aHigh,32 - shift) | SHIFT_RIGHT(aLow,shift);
+        aHigh = 0;
+      }
+      else {
+        lost = SHIFT_LEFT(aHigh,64 - shift) | (aLow != 0);
+        aLow = SHIFT_RIGHT(aHigh,shift - 32);
+        aHigh = 0;
+      }
+      aHigh |= negative;
+      if (lost == 0)
+        return MAKE_WORDS(result,aHigh,aLow);
+      if (lost & 0x80000000) {
+        x = (uint32)((int32)control >> 30);   /* a tie: by how the first rounding went */
+        if ((lost << 1) != 0 || (int32)x < 0 || x == 0) {
+          aLow++;
+          aHigh += aLow == 0;
+          if ((lost << 1) == 0 && x == 0)
+            aLow &= ~1u;                /* a true tie: to even */
+        }
+      }
+      status = kh_GetFpStatusPtr();
+      *status |= 8;                     /* the underflow flag */
+      return MAKE_WORDS(result,aHigh,aLow);
+    }
+  }
+  if (tail == 3) {                      /* the library's exception code (0x001260e4) */
+    status = kh_GetFpStatusPtr();
+    word = *status;
+    if (control & ~(word << 18) & 0x30000000)
+      control |= 0x40000000;            /* an untrapped overflow is also inexact */
+    word |= (control << 1) >> 27;       /* the sticky flags */
+    control |= word & 0x1c00000;
+    *status = word;
+    control |= (control & 0x70) << 3;   /* 0x80: the result's sign is the high word's */
+    if (control & 0x10000000) {         /* overflow */
+      if ((word & 0x400) == 0)
+        return MAKE_WORDS(result,WORD_HEXADECIMAL_7FF00000 | (aHigh & 0x80000000),INTEGER_0);
+    }
+    else if (control & 0x8000000) {     /* a division by zero */
+      if ((word & 0x200) == 0)
+        return MAKE_WORDS(result,WORD_HEXADECIMAL_7FF00000 | ((aHigh ^ bHigh) & 0x80000000),INTEGER_0);
+    }
+    else if ((word & 0x100) == 0)       /* invalid */
+      return MAKE_WORDS(result,DOUBLE_DEFAULT_NAN_HIGH_WORD | (aHigh & 0x80000000),
+                        DOUBLE_DEFAULT_NAN_LOW_WORD);
+  }
+  return float_raise_exception(aLow,aHigh,bLow,bHigh,control);
+}
+
 
 /* ==== 0x001251EC  (file offset 0x251EC)  double_divide_mantissas ===================================== */
 /* GUESS: name (the routine is certain: the mantissa division of the soft-float library's double divide,
-   double_divide 0x00124F44 and its reverse 0x00124F24). Both mantissas have their top bit set (the
-   hidden 1 at bit 63). Returns dividend / divisor as a 64-bit quotient normalized to bit 63, with bit 0
-   set when the division was not exact (a sticky bit, for the caller's rounding); it also leaves r3 = 2
-   when the quotient was already normalized and 1 when it was shifted left by one, which the caller adds
-   to the exponent (Ghidra's listing of the caller reads r3 as the divisor's high word).
+   double_divide 0x00124F44 and double_reverse_divide 0x00124F24). Both mantissas have their top bit
+   set (the hidden 1 at bit 63). Returns dividend / divisor as a 64-bit quotient normalized to bit 63,
+   with bit 0 set when the division was not exact (a sticky bit, for the caller's rounding); it also
+   leaves r3 = 2 when the quotient was already normalized and 1 when it was shifted left by one, which
+   the caller adds to the exponent (the callers write that as the same comparison).
    How: an 8-bit estimate of 1/divisor from the table at 0x001253C4 (indexed by the divisor's top byte),
    refined by two Newton-Raphson steps (32-bit arithmetic, as in the binary); four quotient digits from
    it, 13 bits apart (each subtracted, times the divisor, from the 96-bit remainder; the binary writes the
