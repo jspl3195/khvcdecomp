@@ -11160,87 +11160,79 @@ void character_drop(Character *character,int32 notBehind,LevelObject *target)
 }
 
 
-/* ==== 0x001106A0  (file offset 0x106A0)  FUN_001106a0 ================================================ */
-undefined4 FUN_001106a0(undefined4 param_1,int *param_2,int param_3,int param_4)
+/* ==== 0x001106A0  (file offset 0x106A0)  script_run_if_block ========================================= */
+/* GUESS: names. Runs the block after an If / IfVar (0x10 / 0x50) whose result is `holds`, with *index just
+   past it: the commands up to the Else (0x11) or the EndIf (0x12) when it holds, else those from the Else
+   (the Else itself included, a no-op) to the EndIf; the other branch is skipped, a nested block whole (by
+   its depth). A nested If / IfVar recurses with its own result. Leaves *index past the EndIf and returns
+   1, or -1 at once for a Break (8), which ends the whole script (script_run). The command count is not
+   checked: a block without its EndIf would run past the end. `context` is only passed on (FUN_00110860
+   passes the app's context, FUN_0011d040 its own object). */
+int32 script_run_if_block(int32 context,int32 *index,int32 holds,ScriptCommand **commands)
 
 {
-  int iVar1;
-  uint uVar2;
-  int *piVar3;
-  int iVar4;
-  
-  if (param_3 == 0) {
-    iVar1 = 0;
-    while (iVar4 = **(int **)(param_4 + *param_2 * 4), iVar4 != 0x11) {
-      if (iVar4 == 0x12) goto LAB_0011084c;
+  int32 depth = 0;
+  int32 type;
+  int32 result;
+
+  if (holds == 0) {
+    while ((type = commands[*index]->type) != 0x11) {          /* skip to the Else */
+      if (type == 0x12) {                                      /* there is none */
+        (*index)++;
+        return 1;
+      }
       do {
-        iVar4 = **(int **)(param_4 + *param_2 * 4);
-        if (iVar4 == 0x10 || iVar4 == 0x50) {
-          iVar1 = iVar1 + 1;
-        }
-        else if (iVar4 == 0x12) {
-          iVar1 = iVar1 + -1;
-        }
-        *param_2 = *param_2 + 1;
-      } while (iVar1 != 0);
+        type = commands[*index]->type;
+        if (type == 0x10 || type == 0x50)
+          depth++;
+        else if (type == 0x12)
+          depth--;
+        (*index)++;
+      } while (depth != 0);
     }
-    do {
-      uVar2 = script_command_run(*(int **)(param_4 + *param_2 * 4));
-      iVar1 = *param_2;
-      iVar4 = **(int **)(param_4 + iVar1 * 4);
-      if (iVar4 == 0x10 || iVar4 == 0x50) {
-        *param_2 = iVar1 + 1;
-        iVar1 = FUN_001106a0(param_1,param_2,uVar2,param_4);
-        if (iVar1 == -1) {
-          return 0xffffffff;
-        }
+    do {                                                       /* run the Else branch */
+      result = script_command_run(commands[*index]);
+      type = commands[*index]->type;
+      if (type == 0x10 || type == 0x50) {
+        (*index)++;
+        if (script_run_if_block(context,index,result,commands) == -1)
+          return -1;
       }
-      else {
-        if (iVar4 == 8) {
-          return 0xffffffff;
-        }
-        *param_2 = iVar1 + 1;
-      }
-    } while (**(int **)(param_4 + *param_2 * 4) != 0x12);
+      else if (type == 8)
+        return -1;
+      else
+        (*index)++;
+    } while (commands[*index]->type != 0x12);
   }
   else {
-    while (piVar3 = *(int **)(param_4 + *param_2 * 4), iVar1 = *piVar3,
-          iVar1 != 0x11 && iVar1 != 0x12) {
-      uVar2 = script_command_run(piVar3);
-      iVar1 = *param_2;
-      iVar4 = **(int **)(param_4 + iVar1 * 4);
-      if (iVar4 == 0x10 || iVar4 == 0x50) {
-        *param_2 = iVar1 + 1;
-        iVar1 = FUN_001106a0(param_1,param_2,uVar2,param_4);
-        if (iVar1 == -1) {
-          return 0xffffffff;
-        }
+    while ((type = commands[*index]->type) != 0x11 && type != 0x12) {   /* run the If branch */
+      result = script_command_run(commands[*index]);
+      type = commands[*index]->type;
+      if (type == 0x10 || type == 0x50) {
+        (*index)++;
+        if (script_run_if_block(context,index,result,commands) == -1)
+          return -1;
       }
-      else {
-        if (iVar4 == 8) {
-          return 0xffffffff;
-        }
-        *param_2 = iVar1 + 1;
-      }
+      else if (type == 8)
+        return -1;
+      else
+        (*index)++;
     }
-    iVar1 = 0;
-    while (**(int **)(param_4 + *param_2 * 4) != 0x12) {
+    while (commands[*index]->type != 0x12) {                   /* skip to the EndIf */
       do {
-        iVar4 = **(int **)(param_4 + *param_2 * 4);
-        if (iVar4 == 0x10 || iVar4 == 0x50) {
-          iVar1 = iVar1 + 1;
-        }
-        else if (iVar4 == 0x12) {
-          iVar1 = iVar1 + -1;
-        }
-        *param_2 = *param_2 + 1;
-      } while (iVar1 != 0);
+        type = commands[*index]->type;
+        if (type == 0x10 || type == 0x50)
+          depth++;
+        else if (type == 0x12)
+          depth--;
+        (*index)++;
+      } while (depth != 0);
     }
   }
-LAB_0011084c:
-  *param_2 = *param_2 + 1;
+  (*index)++;                                                  /* past the EndIf */
   return 1;
 }
+
 
 /* ==== 0x00110860  (file offset 0x10860)  FUN_00110860 ================================================ */
 void FUN_00110860(int param_1,int param_2)
@@ -11265,36 +11257,35 @@ void FUN_00110860(int param_1,int param_2)
     param_2 = *(int *)(param_1 + 0x10c);
     iVar1 = *(int *)(param_1 + 0xfc);
   }
-  FUN_001108ac((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,param_2,iVar1);
+  script_run((int32)((KHApp *)*(int *)(param_1 + 0x84))->context,param_2,(ScriptCommand **)iVar1);
   return;
 }
 
-/* ==== 0x001108AC  (file offset 0x108AC)  FUN_001108ac ================================================ */
-void FUN_001108ac(undefined4 param_1,int param_2,int param_3)
+/* ==== 0x001108AC  (file offset 0x108AC)  script_run ================================================== */
+/* GUESS: names. Runs a script: its `count` commands in order (script_command_run); after an If / IfVar,
+   the block that follows (script_run_if_block, with the condition's result). A Break inside a block ends
+   the script (-1 returned); one outside any block is only run, and the script goes on. Otherwise returns
+   the index it stopped at (count). `context` is only passed on to the blocks. Used by FUN_00110860 (an
+   object's scripts) and FUN_0011d040. */
+int32 script_run(int32 context,int32 count,ScriptCommand **commands)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  int iVar3;
-  int local_14;
-  
-  local_14 = 0;
-  iVar3 = param_3;
-  do {
-    while( true ) {
-      if (param_2 <= local_14) {
-        return;
-      }
-      uVar1 = script_command_run(*(undefined4 *)(param_3 + local_14 * 4));
-      iVar2 = **(int **)(param_3 + local_14 * 4);
-      if (iVar2 == 0x10 || iVar2 == 0x50) break;
-      local_14 = local_14 + 1;
+  int32 index = 0;
+  int32 result;
+
+  while (index < count) {
+    result = script_command_run(commands[index]);
+    if (commands[index]->type == 0x10 || commands[index]->type == 0x50) {
+      index++;
+      if (script_run_if_block(context,&index,result,commands) == -1)
+        return -1;
     }
-    local_14 = local_14 + 1;
-    iVar2 = FUN_001106a0(param_1,&local_14,uVar1,param_3 /* not arguments, value leftovers: iVar3 */);
-  } while (iVar2 != -1);
-  return;
+    else
+      index++;
+  }
+  return index;
 }
+
 
 /* ==== 0x00110924  (file offset 0x10924)  script_command_run ========================================== */
 /* GUESS: names. Runs a script command (made by script_command_parse), by its type. Returns 1, except
@@ -18561,7 +18552,7 @@ void FUN_0011d040(int param_1,undefined4 param_2,void *param_3)
                  &local_10 /* not arguments, value leftovers: param_2 */);
     if (local_10 != 0) {
       iVar1 = script_parse_lines((undefined4)((KHApp *)*(int *)(param_1 + 0xc))->context,local_10,&local_14,0);
-      FUN_001108ac(param_1,iVar1,local_14);
+      script_run(param_1,iVar1,(ScriptCommand **)local_14);
       for (iVar3 = 0; iVar3 < iVar1; iVar3 = iVar3 + 1) {
         iVar2 = *(int *)((int)local_14 + iVar3 * 4);
         if (iVar2 != 0) {
