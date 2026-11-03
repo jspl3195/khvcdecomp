@@ -620,7 +620,7 @@ void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4
                  uint param_6);
 void progress_reset(Progress *progress);   /* 0x0010F880 GUESS: name */
 void progress_set_default_controls(Progress *progress);   /* 0x0010F8E8 GUESS: name, see kh_mod.c */
-void FUN_0010f9a4(int param_1);
+void progress_new_game(Progress *progress);   /* 0x0010F9A4 GUESS: name, see kh_mod.c */
 int32 enemy_wait(Enemy *enemy,int32 now,int32 duration);   /* 0x0010FA50 GUESS: name */
 int FUN_0010faa8(int param_1,undefined4 param_2);
 void FUN_0010fb90(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);

@@ -363,9 +363,12 @@ typedef struct Progress {
     int32    levelRewardThreeCount; /* +0x534 GUESS: meaning (a stat level?); 1 at the start, +1 by a level
                                      reward of type 3 */
     int32    experience;            /* +0x538 progress_add_experience */
-    ProgressLevel levels[9];      /* +0x53c the level-ups of levels 0-8 */
-    int32    field_584;             /* +0x584 script setLevelUp of level 9 also sets it */
-    uint8  unknown_588[0x04];
+    ProgressLevel levels[10];     /* +0x53c the level-ups of levels 0-8 (progress_add_experience), and
+                                     levels[9] (+0x584): GUESS, a tenth entry nothing reads - 500 and 0 for
+                                     a new game (progress_new_game), its experience also set by the
+                                     script's setLevelUp of level 9. Until 2026-11-03 this was levels[9]
+                                     followed by field_584 and unknown_588[4]; split them again if a
+                                     reader of +0x584 / +0x588 turns up. */
     int32    level;                 /* +0x58c 0-9; no level-ups after 9 */
     char    *userId;                /* +0x590 GUESS: name; the online user id (the web requests'
                                      uid=), set once by progress_set_user_id */

@@ -2960,7 +2960,7 @@ LAB_0010489c:
         if (iVar9 == 0) {
           string_replace(((KHApp *)*param_1)->context,STRING_TRAINING_00127D10,
                          &((KHApp *)*param_1)->pBufc4);
-          FUN_0010f9a4(*(undefined4 *)(*param_1 + 0xa8));
+          progress_new_game(((KHApp *)*param_1)->progress);
 LAB_00102910:
           uVar10 = 0x6a;
           goto LAB_00104de4;
@@ -7256,8 +7256,9 @@ CombatRegion * combat_region_create(CombatRegion *region,ISwerveObject *node,cha
    returns 0 when out of memory): the app (GetAppInstance) and no saved-game copy; then, unless
    `skipSetup` is set (kh_OnAppStart passes 0), empty status, variable and record tables, no user id (one
    already there is freed), both volumes (soundVolume, musicVolume) 40, field_5c8 1, field_5c4 0, the new
-   game's values (FUN_0010f9a4, progress_reset, progress_set_default_controls), and the saved settings and
-   records loaded (FUN_0011b6f0 with "settings.dat", FUN_0011b5f0). progress_destroy is its destructor. */
+   game's values (progress_new_game, progress_reset, progress_set_default_controls), and the saved
+   settings and records loaded (FUN_0011b6f0 with "settings.dat", FUN_0011b5f0). progress_destroy is its
+   destructor. */
 Progress * progress_create(Progress *progress,int32 skipSetup)
 
 {
@@ -7289,7 +7290,7 @@ Progress * progress_create(Progress *progress,int32 skipSetup)
   progress->musicVolume = 40;
   progress->field_5c8 = 1;
   progress->field_5c4 = 0;
-  FUN_0010f9a4((int)progress);
+  progress_new_game(progress);
   progress_reset(progress);
   progress_set_default_controls(progress);
   FUN_0011b6f0((int)progress,(int32)STRING_SETTINGS_DOT_DAT_001278D8);
@@ -10632,37 +10633,43 @@ void progress_set_default_controls(Progress *progress)
 }
 
 
-/* ==== 0x0010F9A4  (file offset 0x0F9A4)  FUN_0010f9a4 ================================================ */
-void FUN_0010f9a4(int param_1)
+/* ==== 0x0010F9A4  (file offset 0x0F9A4)  progress_new_game =========================================== */
+/* GUESS: name. Progress's reset for a new game (with progress_reset): the named states cleared
+   (progress_clear_states), the level-up table (levels 0 - 8: 4, 8, 50, 100, 150, 200, 300, 400 and 500
+   experience, the rewards 1, 2, 3 in turn; levels[9] 500 and 0, GUESS: an entry nothing reads), the enemy
+   health shown, no collectables (their name is dropped without being freed: research_notes/decomp/
+   GAME_BUGS.md) and no level loaded. The stores are in the binary's order. Called by progress_create, by
+   the menu when there is no saved game to load (event 0x3e) and by FUN_001242b4 (case 2). */
+void progress_new_game(Progress *progress)
 
 {
-  progress_clear_states((Progress *)param_1);
-  *(undefined4 *)(param_1 + 0x53c) = 4;
-  *(undefined4 *)(param_1 + 0x540) = 1;
-  *(undefined4 *)(param_1 + 0x544) = 8;
-  *(undefined4 *)(param_1 + 0x548) = 2;
-  *(undefined4 *)(param_1 + 0x54c) = 0x32;
-  *(undefined4 *)(param_1 + 0x550) = 3;
-  *(undefined4 *)(param_1 + 0x554) = 100;
-  *(undefined4 *)(param_1 + 0x558) = 1;
-  *(undefined4 *)(param_1 + 0x55c) = 0x96;
-  *(undefined4 *)(param_1 + 0x560) = 2;
-  *(undefined4 *)(param_1 + 0x564) = 200;
-  *(undefined4 *)(param_1 + 0x568) = 3;
-  *(undefined4 *)(param_1 + 0x56c) = 300;
-  *(undefined4 *)(param_1 + 0x570) = 1;
-  *(undefined4 *)(param_1 + 0x574) = 400;
-  *(undefined4 *)(param_1 + 0x578) = 2;
-  *(undefined4 *)(param_1 + 0x580) = 3;
-  *(undefined4 *)(param_1 + 0x57c) = 500;
-  ((Progress *)param_1)->showEnemyHealth = 1;
-  *(undefined4 *)(param_1 + 0x588) = 0;
-  *(undefined4 *)(param_1 + 0x584) = 500;
-  *(undefined4 *)(param_1 + 0x5bc) = 0;
-  *(undefined4 *)(param_1 + 0x5c0) = 0;
-  ((Progress *)param_1)->levelLoaded = 0;
-  return;
+  progress_clear_states(progress);
+  progress->levels[0].experienceNeeded = 4;
+  progress->levels[0].reward = 1;
+  progress->levels[1].experienceNeeded = 8;
+  progress->levels[1].reward = 2;
+  progress->levels[2].experienceNeeded = 50;
+  progress->levels[2].reward = 3;
+  progress->levels[3].experienceNeeded = 100;
+  progress->levels[3].reward = 1;
+  progress->levels[4].experienceNeeded = 150;
+  progress->levels[4].reward = 2;
+  progress->levels[5].experienceNeeded = 200;
+  progress->levels[5].reward = 3;
+  progress->levels[6].experienceNeeded = 300;
+  progress->levels[6].reward = 1;
+  progress->levels[7].experienceNeeded = 400;
+  progress->levels[7].reward = 2;
+  progress->levels[8].reward = 3;
+  progress->levels[8].experienceNeeded = 500;
+  progress->showEnemyHealth = 1;
+  progress->levels[9].reward = 0;
+  progress->levels[9].experienceNeeded = 500;
+  progress->collectablesText = (AECHAR *)0x0;
+  progress->collectables = 0;
+  progress->levelLoaded = 0;
 }
+
 
 /* ==== 0x0010FA50  (file offset 0x0FA50)  enemy_wait ================================================== */
 /* GUESS: name. A one-shot wait of `duration` ms, called once per update with the current time: the first
@@ -11861,8 +11868,8 @@ int32 script_command_run(ScriptCommand *command)
     index = command->number[0] - 1;
     if ((uint32)index < 9)
       app->progress->levels[index].experienceNeeded = command->number[1];
-    if (index == 8)
-      app->progress->field_584 = command->number[1];
+    if (index == 8)                 /* level 9 also sets the unread tenth entry (GUESS) */
+      app->progress->levels[9].experienceNeeded = command->number[1];
     break;
   case 0x33:   /* setMirror */
     player->mirrorObject = command->object;
@@ -19240,7 +19247,7 @@ void FUN_0011df14(undefined4 *param_1)
 /* GUESS: name. Clears all the player's named states: the 100 status texts and the 100 script variables
    (their names freed, their values 0). The status flag bytes are left as they are (out of reach without
    their texts, and set again when a slot is reused). Used by the script's setState ALL 0, the menu's
-   restart, the saved-game loader (FUN_0011b178) and Progress's reset and destructor (FUN_0010f9a4,
+   restart, the saved-game loader (FUN_0011b178) and Progress's reset and destructor (progress_new_game,
    progress_destroy). */
 void progress_clear_states(Progress *progress)
 
@@ -23450,7 +23457,7 @@ void FUN_001242b4(int param_1)
     break;
   case 2:
     screen_stack_close_all(*(undefined4 *)(param_1 + 0xd0));
-    FUN_0010f9a4(*(int *)(param_1 + 0xa8));
+    progress_new_game(((KHApp *)param_1)->progress);
     goto LAB_001244d4;
   case 3:
     FUN_0011e6b8(*(int *)(param_1 + 0xa8),0);
