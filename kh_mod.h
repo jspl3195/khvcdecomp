@@ -654,7 +654,7 @@ void FUN_001132a8(int param_1);
 void FUN_00113340(int param_1);
 undefined8 FUN_00113374(undefined4 param_1,uint param_2,uint param_3,uint param_4,uint param_5);
 void FUN_00113474(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);
-void FUN_00113490(undefined4 *param_1,int param_2);
+void hitsphere_get_player_point(uint32 *point,Hitsphere *hitsphere);   /* 0x00113490 GUESS: name, see kh_mod.c */
 void FUN_00113524(undefined4 *param_1,int param_2);
 int32 animations_get_duration(Animations *animations,int32 index);   /* 0x001135B8 GUESS: name */
 void FUN_001135dc(int param_1);
@@ -1402,7 +1402,7 @@ static const uint32 DATA_AT_00126E20[3] = {   /* 0x00126E20 */
   0x00000000,0xC1200000,0x00000000
 };
 static const char STRING_CARRIAGE_RETURN_NEWLINE_00126E2C[] = "\r\n";   /* 0x00126E2C */
-static const uint32 DATA_AT_00126E30[3] = {   /* 0x00126E30 */
+static const uint32 PLAYER_POINT_OFFSET[3] = {   /* 0x00126E30; floats: 0, 0.25, 0 */
   0x00000000,0x3E800000,0x00000000
 };
 static const char STRING_NOBALLSONHIT[] = "noBallsOnHit";   /* 0x00126E3C */

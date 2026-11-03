@@ -12685,31 +12685,28 @@ void FUN_00113474(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
   return;
 }
 
-/* ==== 0x00113490  (file offset 0x13490)  FUN_00113490 ================================================ */
-void FUN_00113490(undefined4 *param_1,int param_2)
+/* ==== 0x00113490  (file offset 0x13490)  hitsphere_get_player_point ================================== */
+/* GUESS: names. The point a boss's hitsphere aims at: the player character's position less
+   PLAYER_POINT_OFFSET (0, 0.25, 0) turned by the player's heading (motion_entity_rotate_by_heading),
+   GUESS: a little in front of or behind the player. The hitsphere's update FUN_00121c6c stores it in
+   playerPoint every frame. */
+void hitsphere_get_player_point(uint32 *point,Hitsphere *hitsphere)
 
 {
-  undefined4 uVar1;
-  undefined4 local_24;
-  undefined4 local_20;
-  undefined4 local_1c;
-  undefined4 local_18;
-  undefined4 local_14;
-  undefined4 local_10;
-  
-  level_object_get_position((uint32 *)&local_18,(LevelObject *)*(undefined4 *)(*(int *)(*(int *)(param_2 + 0x20) + 0xa4) + 0x1f8));
-  local_24 = *(undefined4 *)((int32)DATA_AT_00126E30);
-  local_20 = *(undefined4 *)(((int32)DATA_AT_00126E30 + 0x4));
-  local_1c = *(undefined4 *)(((int32)DATA_AT_00126E30 + 0x8));
-  motion_entity_rotate_by_heading((MotionEntity *)*(undefined4 *)(*(int *)(*(int *)(param_2 + 0x20) + 0xa4) + 0x1f8),(uint32 *)&local_24);
-  local_18 = float_subtract(local_18,local_24);
-  local_14 = float_subtract(local_14,local_20);
-  uVar1 = float_subtract(local_10,local_1c);
-  *param_1 = local_18;
-  param_1[1] = local_14;
-  param_1[2] = uVar1;
-  return;
+  Character *player = ((Game *)hitsphere->app->pGame)->character;
+  uint32 position[3];
+  uint32 offset[3];
+
+  level_object_get_position(position,(LevelObject *)player);
+  offset[0] = PLAYER_POINT_OFFSET[0];
+  offset[1] = PLAYER_POINT_OFFSET[1];
+  offset[2] = PLAYER_POINT_OFFSET[2];
+  motion_entity_rotate_by_heading((MotionEntity *)player,offset);
+  point[0] = float_subtract(position[0],offset[0]);
+  point[1] = float_subtract(position[1],offset[1]);
+  point[2] = float_subtract(position[2],offset[2]);
 }
+
 
 /* ==== 0x00113524  (file offset 0x13524)  FUN_00113524 ================================================ */
 void FUN_00113524(undefined4 *param_1,int param_2)
@@ -21867,8 +21864,8 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
   uint local_24;
   undefined8 uVar13;
   
-  FUN_00113490((undefined4 *)(param_1 + 0x28),param_1);
-  level_object_get_position((uint32 *)((undefined4 *)(param_1 + 0x34)),(LevelObject *)*(int *)(param_1 + 4));
+  hitsphere_get_player_point(((Hitsphere *)param_1)->playerPoint,(Hitsphere *)param_1);
+  level_object_get_position(((Hitsphere *)param_1)->position,(LevelObject *)*(int *)(param_1 + 4));
   iVar4 = WORD_HEXADECIMAL_FFFDE350;
   uVar6 = FLOAT_1000;
   if (*(int *)(param_1 + 0x48) != 0) goto switchD_00021cbc_default;
@@ -21888,10 +21885,10 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
       else {
         uVar11 = *(int *)(param_1 + 0xa4) == 0;
         if (!(bool)uVar11) {
-          uVar3 = *(uint *)(param_1 + 0x2c);
+          uVar3 = ((Hitsphere *)param_1)->playerPoint[1];
           uVar12 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
-                                *(undefined4 *)(param_1 + 0x34),*(undefined4 *)(param_1 + 0x38),
-                                *(undefined4 *)(param_1 + 0x28),uVar3);
+                                ((Hitsphere *)param_1)->position[0],((Hitsphere *)param_1)->position[1],
+                                ((Hitsphere *)param_1)->playerPoint[0],uVar3);
           local_24 = float_subtract(uVar12.low,*(uint *)(*(int *)(param_1 + 4) + 0x140));
           float_compare_equal(local_24,0);
           if (!(bool)uVar11) {
@@ -21922,9 +21919,9 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
       if (((0 < *(int *)(param_1 + 0xa0)) && (*(int *)(param_1 + 0x4c) == *(int *)(param_1 + 0x58)))
          && (iVar4 = (*g_pHelperFuncs->aee_GetTimeMS)(),
             *(int *)(param_1 + 0x9c) <= iVar4 - *(int *)(param_1 + 0xa0))) {
-        uVar3 = *(uint *)(param_1 + 0x30);
-        FUN_00113030(*(int *)(param_1 + 0x24),param_1,*(undefined4 *)(param_1 + 0x28),
-                     *(undefined4 *)(param_1 + 0x2c),uVar3);
+        uVar3 = ((Hitsphere *)param_1)->playerPoint[2];
+        FUN_00113030(*(int *)(param_1 + 0x24),param_1,((Hitsphere *)param_1)->playerPoint[0],
+                     ((Hitsphere *)param_1)->playerPoint[1],uVar3);
         *(undefined4 *)(param_1 + 0xa0) = 0xffffffff;
       }
       goto switchD_00021cbc_default;
@@ -21940,7 +21937,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
     level_object_get_position((uint32 *)&local_2c,(LevelObject *)*(int *)(*(int *)(*(int *)(param_1 + 0x24) + 0x118) + iVar4 * 4));
     uVar3 = local_28;
     uVar12 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
-                          *(undefined4 *)(param_1 + 0x34),*(undefined4 *)(param_1 + 0x38),local_2c,
+                          ((Hitsphere *)param_1)->position[0],((Hitsphere *)param_1)->position[1],local_2c,
                           local_28);
     if (*(int *)(param_1 + 0x78) == -1) {
       uVar11 = *(int *)(param_1 + 0xb0) == 0;

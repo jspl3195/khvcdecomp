@@ -891,7 +891,11 @@ typedef struct Hitsphere {
     uint8  unknown_18[0x08];
     struct KHApp *app;            /* +0x20 GetAppInstance() at creation */
     struct BossCombatRegion *owner; /* +0x24 */
-    uint8  unknown_28[0x1c];
+    uint32   playerPoint[3];      /* +0x28 GUESS: name; floats (their bits): the point near the player it
+                                     aims at, set every update (hitsphere_get_player_point) */
+    uint32   position[3];         /* +0x34 GUESS: name; floats (their bits): its entity's position, read
+                                     every update (level_object_get_position) */
+    uint8  unknown_40[0x04];
     int32    field_44;              /* +0x44 0 at creation */
     int32    secondary;             /* +0x48 set on every hitsphere but the first */
     int32    animation;             /* +0x4c GUESS: name; the animation it plays (hitsphere_play_animation), -1
