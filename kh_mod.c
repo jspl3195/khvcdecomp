@@ -20395,31 +20395,33 @@ void FUN_0011f540(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   return;
 }
 
-/* ==== 0x0011F624  (file offset 0x1F624)  FUN_0011f624 ================================================ */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101680): written from
-   its disassembly. */
-void FUN_0011f624(int param_1)
+/* ==== 0x0011F624  (file offset 0x1F624)  enemy_enter_mode_1 ========================================== */
+/* GUESS: name. The enemy class's slot 2 (+0x8 of VTABLE_00101680): mode 1 (enemy_update then runs the code
+   at 0x0011db34, the field_90 states 7001 - 7003, instead of its own) and all its state machines back at
+   their first states. Called for every enemy of a region by combat_region_enemies_enter_mode_1 when the
+   player leaves during a wave (GUESS: the enemies withdraw). Ghidra has no function here (only reached
+   through the vtable); written from its disassembly. */
+void enemy_enter_mode_1(Enemy *enemy)
 
 {
-  *(undefined4 *)(param_1 + 0x80) = 1;
-  enemy_reset_states((Enemy *)param_1);          /* the binary's tail jump (0x0011f62c) */
-  return;
+  enemy->mode = 1;
+  enemy_reset_states(enemy);          /* the binary's tail jump (0x0011f62c) */
 }
 
 
-/* ==== 0x0011F630  (file offset 0x1F630)  FUN_0011f630 ================================================ */
-void FUN_0011f630(int param_1)
+/* ==== 0x0011F630  (file offset 0x1F630)  combat_region_enemies_enter_mode_1 ========================== */
+/* GUESS: name. Puts every enemy of the region in mode 1 (their slot 2, enemy_enter_mode_1). Called by
+   combat_region_update when the region stops being active while fighting (state 2 -> 3). Ghidra had
+   dropped the enemy passed to the slot (r0, ldr r0, [r0, r4, lsl #2] at 0x0011f644). */
+void combat_region_enemies_enter_mode_1(CombatRegion *region)
 
 {
-  int iVar1;
-  int iVar2;
-  
-  for (iVar2 = 0; iVar2 < *(int *)(param_1 + 300); iVar2 = iVar2 + 1) {
-    iVar1 = **(int **)(*(int *)(param_1 + 0x14c) + iVar2 * 4);
-    (*(code *)(*(int *)(iVar1 + 8)))();
-  }
-  return;
+  int32 i;
+
+  for (i = 0; i < region->enemyCount; i++)
+    (*(code *)(*(int32 *)(region->enemies[i]->vtable + 0x8)))(region->enemies[i]);
 }
+
 
 /* ==== 0x0011F66C  (file offset 0x1F66C)  character_set_control_direction ============================= */
 /* GUESS: name. -1 reverses the character's movement keys (forwards and backwards swap, and left and
@@ -22877,7 +22879,7 @@ void combat_region_update(CombatRegion *region,int32 now,int32 elapsed)
   case 2:                                         /* fighting */
     if (region->active == 0) {
       region->state = 3;
-      FUN_0011f630((int32)region);
+      combat_region_enemies_enter_mode_1(region);
       region->field_13c = 1;
     }
     else
