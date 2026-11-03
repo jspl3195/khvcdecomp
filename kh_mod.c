@@ -9874,7 +9874,7 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
         local_34 = float_multiply(*(uint *)(param_1 + 0x80),0xc0000000);
         local_30 = piVar5;
 LAB_0010e8a8:
-        FUN_0010ecb8(param_1,&local_38);
+        motion_entity_rotate_by_heading((MotionEntity *)param_1,(uint32 *)&local_38);
         FUN_0011ca70(param_1,local_38,local_34,local_30,0);
       }
     }
@@ -10217,36 +10217,30 @@ switchD_0000eb88_default:
   return uVar2;
 }
 
-/* ==== 0x0010ECB8  (file offset 0x0ECB8)  FUN_0010ecb8 ================================================ */
-void FUN_0010ecb8(int param_1,undefined4 *param_2)
+/* ==== 0x0010ECB8  (file offset 0x0ECB8)  motion_entity_rotate_by_heading ============================= */
+/* GUESS: name. Turns the 2-D vector (x, y; floats, their bits) by the entity's heading, in place: an
+   offset given relative to where it faces becomes one in the world (x cos - y sin, x sin + y cos). A z
+   after them is left as it is. The binary leaves the new y in r0; no caller reads it. */
+void motion_entity_rotate_by_heading(MotionEntity *entity,uint32 *vector)
 
 {
-  undefined4 param_3;
-  undefined4 param_4;
-  /* not parameters: param_3, param_4. kh.mod reads r2 / r3 only on paths where it was already written, or as a
-     leftover (no caller sets them); Ghidra listed them as inputs */
-  undefined4 uVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  undefined4 uVar4;
-  undefined4 uVar5;
-  undefined4 uVar6;
-  
-  uVar5 = *param_2;
-  uVar6 = param_2[1];
-  uVar1 = float_multiply(*(undefined4 *)(param_1 + 0x140),WORD_HEXADECIMAL_3C8EFA39 /* not arguments, register leftovers: param_3,param_4,param_4 */);
-  uVar2 = float_sin(uVar1);
-  uVar1 = float_cos(uVar1);
-  uVar3 = float_multiply(uVar5,uVar1);
-  uVar4 = float_multiply(uVar6,uVar2);
-  uVar3 = float_reverse_subtract(uVar4,uVar3);
-  *param_2 = uVar3;
-  uVar2 = float_multiply(uVar5,uVar2);
-  uVar1 = float_multiply(uVar6,uVar1);
-  uVar1 = float_add(uVar1,uVar2);
-  param_2[1] = uVar1;
-  return;
+  uint32 x = vector[0];
+  uint32 y = vector[1];
+  uint32 angle;
+  uint32 sine;
+  uint32 cosine;
+  uint32 xCosine;
+  uint32 xSine;
+
+  angle = float_multiply(entity->heading,WORD_HEXADECIMAL_3C8EFA39);   /* degrees to radians: pi / 180 */
+  sine = float_sin(angle);
+  cosine = float_cos(angle);
+  xCosine = float_multiply(x,cosine);
+  vector[0] = float_reverse_subtract(float_multiply(y,sine),xCosine);
+  xSine = float_multiply(x,sine);
+  vector[1] = float_add(float_multiply(y,cosine),xSine);
 }
+
 
 /* ==== 0x0010ED40  (file offset 0x0ED40)  float_cos =================================================== */
 /* GUESS: name. cosf: the cosine of a float angle in radians, through the double routines: widens the
@@ -11074,7 +11068,7 @@ LAB_0010fe64:
       local_54 = 0;
       local_5c = uVar8;
       local_58 = uVar6;
-      FUN_0010ecb8(piVar15[1],&local_5c);
+      motion_entity_rotate_by_heading((MotionEntity *)piVar15[1],(uint32 *)&local_5c);
       local_5c = float_add(local_5c,local_30);
       local_58 = float_add(local_58,local_2c);
       local_54 = local_28;
@@ -11307,7 +11301,7 @@ LAB_00110540:
         else {
           local_3c = 0xbf000000;
         }
-        FUN_0010ecb8(param_1,&local_40);
+        motion_entity_rotate_by_heading((MotionEntity *)param_1,(uint32 *)&local_40);
         local_40 = float_add(local_40,*(uint *)(param_1 + 0x68));
         local_3c = float_add(local_3c,*(uint *)(param_1 + 0x6c));
         local_38 = float_add(local_38,*(uint *)(param_1 + 0x70));
@@ -11349,7 +11343,7 @@ void FUN_00110564(int param_1,int param_2,int param_3)
       if (param_2 == 0) {
         local_28 = 0x3fc00000;
       }
-      FUN_0010ecb8(param_1,&local_2c);
+      motion_entity_rotate_by_heading((MotionEntity *)param_1,(uint32 *)&local_2c);
       local_20 = float_add(*(undefined4 *)(param_1 + 0x68),local_2c);
       local_1c = float_add(*(undefined4 *)(param_1 + 0x6c),local_28);
       uVar1 = level_object_get_height((LevelObject *)param_1);
@@ -12003,7 +11997,7 @@ int32 script_command_run(ScriptCommand *command)
         position[0] = 0;
         position[1] = player->radius;
         position[2] = float_multiply(level_object_get_height((LevelObject *)player),0x3f000000);
-        FUN_0010ecb8((int)player,(undefined4 *)position);
+        motion_entity_rotate_by_heading((MotionEntity *)player,position);
         FUN_0011ca70((undefined4)player,position[0],position[1],position[2],0);
       }
       break;
@@ -12946,7 +12940,7 @@ void FUN_00113490(undefined4 *param_1,int param_2)
   local_24 = *(undefined4 *)((int32)DATA_AT_00126E30);
   local_20 = *(undefined4 *)(((int32)DATA_AT_00126E30 + 0x4));
   local_1c = *(undefined4 *)(((int32)DATA_AT_00126E30 + 0x8));
-  FUN_0010ecb8(*(undefined4 *)(*(int *)(*(int *)(param_2 + 0x20) + 0xa4) + 0x1f8),&local_24);
+  motion_entity_rotate_by_heading((MotionEntity *)*(undefined4 *)(*(int *)(*(int *)(param_2 + 0x20) + 0xa4) + 0x1f8),(uint32 *)&local_24);
   local_18 = float_subtract(local_18,local_24);
   local_14 = float_subtract(local_14,local_20);
   uVar1 = float_subtract(local_10,local_1c);
@@ -12972,7 +12966,7 @@ void FUN_00113524(undefined4 *param_1,int param_2)
   local_24 = *(undefined4 *)((int32)DATA_AT_001270EC);
   local_20 = *(undefined4 *)(((int32)DATA_AT_001270EC + 0x4));
   local_1c = *(undefined4 *)(((int32)DATA_AT_001270EC + 0x8));
-  FUN_0010ecb8(*(undefined4 *)(*(int *)(*(int *)(param_2 + 0x74) + 0xa4) + 0x1f8),&local_24);
+  motion_entity_rotate_by_heading((MotionEntity *)*(undefined4 *)(*(int *)(*(int *)(param_2 + 0x74) + 0xa4) + 0x1f8),(uint32 *)&local_24);
   local_18 = float_subtract(local_18,local_24);
   local_14 = float_subtract(local_14,local_20);
   uVar1 = float_subtract(local_10,local_1c);
@@ -13222,7 +13216,7 @@ LAB_00113954:
         }
         *(uint *)(param_2 + 4) = uVar3 ^ 0x80000000;
         *(undefined4 *)(param_1 + 0x29c) = 1;
-        FUN_0010ecb8(param_1,param_2);
+        motion_entity_rotate_by_heading((MotionEntity *)param_1,(uint32 *)param_2);
         animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                      *(undefined4 *)(param_1 + 0x2cc),0x3f800000);
         animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
@@ -13335,7 +13329,7 @@ LAB_00113bf0:
     if (cVar9 != '\x01') goto LAB_00113c30;
   }
   *(undefined4 *)(param_1 + 0x29c) = 1;
-  FUN_0010ecb8(param_1,param_2);
+  motion_entity_rotate_by_heading((MotionEntity *)param_1,(uint32 *)param_2);
 LAB_00113c30:
   iVar8 = *(int *)(param_1 + 0x1cc);
   if (iVar8 == 8 || iVar8 == 0xb) {
@@ -13359,7 +13353,7 @@ LAB_00113c30:
       }
       *(uint *)(param_2 + 8) = uVar3;
       *(uint *)(param_2 + 4) = uVar3 ^ 0x80000000;
-      FUN_0010ecb8(param_1,param_2);
+      motion_entity_rotate_by_heading((MotionEntity *)param_1,(uint32 *)param_2);
     }
   }
   return;
@@ -16857,7 +16851,7 @@ void FUN_0011a3ec(int param_1,int param_2,undefined4 param_3)
      left, right, backwards: set the held flag;
      forwards: also, in state 0x11, goes to state 0x13;
      action: sets its flag; in states 4, 5, 6, 0x11 and 0x12 starts an attack (state 0, field_1cc 0xb,
-       FUN_0010ecb8 and FUN_0011ca70 with an offset of 0, the radius, half the height); else, unless the
+       motion_entity_rotate_by_heading and FUN_0011ca70 with an offset of 0, the radius, half the height); else, unless the
        state is 3, 0x10 or 0x13 or field_1cc is 0xb, sets field_1cc to 8 and, while Progress.field_594 is
        above 0, tells the app's field_bc screen (FUN_00108f28 with 0; the binary tail-jumps, 0x0011a6a4).
    The Magic binding (controls[6]) uses magic: with no MP left, one item of field_5b8 refills all of it,
@@ -16911,7 +16905,7 @@ void character_on_key(Character *character,int32 key)
       offset[0] = 0;
       offset[1] = character->radius;
       offset[2] = float_multiply(level_object_get_height((LevelObject *)character),0x3f000000);   /* * 0.5 */
-      FUN_0010ecb8((int32)character,(uint32 *)offset);
+      motion_entity_rotate_by_heading((MotionEntity *)character,(uint32 *)offset);
       FUN_0011ca70((uint32)character,offset[0],offset[1],offset[2],0);
       return;
     }
@@ -18421,7 +18415,7 @@ void FUN_0011c708(int param_1,int param_2,int param_3)
     local_28 = *(uint *)((int32)DATA_AT_00126E20);
     local_24 = *(uint *)(((int32)DATA_AT_00126E20 + 0x4));
     iStack_20 = *(undefined4 *)(((int32)DATA_AT_00126E20 + 0x8));
-    FUN_0010ecb8(*(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa4) + 0x1f8),&local_28);
+    motion_entity_rotate_by_heading((MotionEntity *)*(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa4) + 0x1f8),(uint32 *)&local_28);
     level_object_get_position((uint32 *)&local_1c,(LevelObject *)*(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa4) + 0x1f8));
     local_1c = float_add(local_1c,local_28);
     local_18 = float_add(local_18,local_24);
@@ -18544,7 +18538,7 @@ void FUN_0011ca8c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
     uVar1 = *(undefined4 *)(param_1 + 0x6c);
   }
   else {
-    FUN_0010ecb8(param_1,&local_1c /* not arguments, register leftovers: 0,0,param_1 */);
+    motion_entity_rotate_by_heading((MotionEntity *)param_1,(uint32 *)&local_1c);
     uVar1 = float_add(*(undefined4 *)(param_1 + 0x68),local_1c);
     *(undefined4 *)(param_1 + 0x68) = uVar1;
     uVar1 = *(undefined4 *)(param_1 + 0x6c);
@@ -19366,7 +19360,7 @@ void FUN_0011de04(int param_1,undefined4 *param_2)
   param_2[1] = uVar1;
   uVar1 = float_subtract(local_10,*(undefined4 *)(param_1 + 0x200));
   param_2[2] = uVar1;
-  FUN_0010ecb8(param_1,param_2);
+  motion_entity_rotate_by_heading((MotionEntity *)param_1,(uint32 *)param_2);
   return;
 }
 
@@ -20682,7 +20676,7 @@ LAB_0011fa40:
       local_4c = *(undefined4 *)((int32)DATA_AT_00126F9C);
       local_48 = *(undefined4 *)(iVar2 + 0x11faf8);
       uStack_44 = *(undefined4 *)(iVar2 + 0x11fafc);
-      FUN_0010ecb8(param_1,&local_4c);
+      motion_entity_rotate_by_heading((MotionEntity *)param_1,(uint32 *)&local_4c);
       local_28 = float_add(local_28,local_4c);
       local_24 = float_add(local_24,local_48);
       uVar3 = level_object_get_height((LevelObject *)param_1);

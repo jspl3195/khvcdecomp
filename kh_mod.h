@@ -604,7 +604,7 @@ int32 animations_release_controllers(Animations *animations);   /* 0x0010E9BC GU
 void FUN_0010ea00(int param_1);
 void FUN_0010ea64(int param_1);
 undefined4 FUN_0010eb74(int param_1);
-void FUN_0010ecb8(int param_1,undefined4 *param_2);
+void motion_entity_rotate_by_heading(MotionEntity *entity,uint32 *vector);   /* 0x0010ECB8 GUESS: name, see kh_mod.c */
 uint32 float_cos(uint32 angle);   /* 0x0010ED40 GUESS: name, see kh_mod.c */
 void FUN_0010ed54(int param_1,int param_2,undefined4 param_3);
 void FUN_0010f1fc(int32 character);   /* 0x0010F1FC (no Ghidra function) */
