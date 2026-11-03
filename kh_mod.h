@@ -632,7 +632,7 @@ int32 string_split(int32 context,char *text,char *separator,char **parts,int32 m
 undefined4 FUN_00110190(int param_1,undefined4 *param_2,undefined4 *param_3);
 void character_drop(Character *character,int32 notBehind,LevelObject *target);   /* 0x00110564 GUESS: name, see kh_mod.c */
 int32 script_run_if_block(int32 context,int32 *index,int32 holds,ScriptCommand **commands);   /* 0x001106A0 GUESS: name, see kh_mod.c */
-void FUN_00110860(int param_1,int param_2);
+int32 level_object_run_script(LevelObject *object,int32 which);   /* 0x00110860 GUESS: name, see kh_mod.c */
 int32 script_run(int32 context,int32 count,ScriptCommand **commands);   /* 0x001108AC GUESS: name, see kh_mod.c */
 int32 script_command_run(ScriptCommand *command);   /* 0x00110924 GUESS: name, see kh_mod.c */
 undefined8 FUN_0011295c(undefined4 *param_1,int *param_2,int *param_3,int *param_4,undefined4 param_5);

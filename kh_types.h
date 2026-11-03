@@ -485,14 +485,11 @@ typedef struct LevelObject {
     int32    sceneShapeCount;       /* +0x0e0 0 at creation */
     CollisionShape *shapes[2];    /* +0x0e4 the shapes its node's user parameter 0x2101870D lists */
     int32    shapeCount;            /* +0x0ec 0 at creation */
-    int32    field_f0;              /* +0x0f0 0 at creation */
-    int32    field_f4;              /* +0x0f4 0 at creation */
-    int32    field_f8;              /* +0x0f8 0 at creation */
-    int32    field_fc;              /* +0x0fc 0 at creation */
-    int32    field_100;             /* +0x100 0 at creation */
-    int32    field_104;             /* +0x104 0 at creation */
-    int32    field_108;             /* +0x108 0 at creation */
-    int32    field_10c;             /* +0x10c 0 at creation */
+    struct ScriptCommand **scripts[4]; /* +0x0f0 its event scripts (level_object_run_script), parsed by
+                                     FUN_00118910 from its node's user parameters: onInit, onEntry,
+                                     onExit and onUIAction (their string_hash 0x3310A2A1, 0x0B090BAC,
+                                     0x08E8548D, 0x19631267); 0 at creation */
+    int32    scriptLengths[4];     /* +0x100 their numbers of commands */
 } LevelObject;                    /* 0x110 bytes */
 
 /* "MotionEntity" (kind 1): a LevelObject that moves; the base of kinds 2 and 3. */

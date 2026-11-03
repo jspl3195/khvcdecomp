@@ -7457,8 +7457,11 @@ LevelObject * level_object_create(LevelObject *object,ISwerveObject *node,char *
   object->clipart = (char *)0x0;
   object->field_1c = 0;
   object->sceneShapeCount = 0;
-  object->shapeCount = object->field_f0 = object->field_f4 = object->field_f8 = object->field_fc = 0;
-  object->field_100 = object->field_104 = object->field_108 = object->field_10c = 0;
+  object->shapeCount = 0;
+  object->scripts[0] = object->scripts[1] = object->scripts[2] = object->scripts[3] =
+    (ScriptCommand **)0x0;
+  object->scriptLengths[0] = object->scriptLengths[1] = object->scriptLengths[2] =
+    object->scriptLengths[3] = 0;
   return object;
 }
 
@@ -8290,41 +8293,41 @@ void FUN_0010cab0(int param_1,int param_2)
   if (*(int **)(param_1 + 8) != (int *)0x0) {
     (**(code **)(**(int **)(param_1 + 8) + 4))();
   }
-  if (*(int *)(param_1 + 0xf0) != 0) {
-    for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0x100); iVar1 = iVar1 + 1) {
-      iVar2 = *(int *)(*(int *)(param_1 + 0xf0) + iVar1 * 4);
+  if (((LevelObject *)param_1)->scripts[0] != (ScriptCommand **)0x0) {
+    for (iVar1 = 0; iVar1 < ((LevelObject *)param_1)->scriptLengths[0]; iVar1 = iVar1 + 1) {
+      iVar2 = (int)((LevelObject *)param_1)->scripts[0][iVar1];
       if (iVar2 != 0) {
         script_command_destroy(iVar2,1);
       }
     }
-    helper_free(*(void **)(param_1 + 0xf0));
+    helper_free(((LevelObject *)param_1)->scripts[0]);
   }
-  if (*(int *)(param_1 + 0xf4) != 0) {
-    for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0x104); iVar1 = iVar1 + 1) {
-      iVar2 = *(int *)(*(int *)(param_1 + 0xf4) + iVar1 * 4);
+  if (((LevelObject *)param_1)->scripts[1] != (ScriptCommand **)0x0) {
+    for (iVar1 = 0; iVar1 < ((LevelObject *)param_1)->scriptLengths[1]; iVar1 = iVar1 + 1) {
+      iVar2 = (int)((LevelObject *)param_1)->scripts[1][iVar1];
       if (iVar2 != 0) {
         script_command_destroy(iVar2,1);
       }
     }
-    helper_free(*(void **)(param_1 + 0xf4));
+    helper_free(((LevelObject *)param_1)->scripts[1]);
   }
-  if (*(int *)(param_1 + 0xf8) != 0) {
-    for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0x108); iVar1 = iVar1 + 1) {
-      iVar2 = *(int *)(*(int *)(param_1 + 0xf8) + iVar1 * 4);
+  if (((LevelObject *)param_1)->scripts[2] != (ScriptCommand **)0x0) {
+    for (iVar1 = 0; iVar1 < ((LevelObject *)param_1)->scriptLengths[2]; iVar1 = iVar1 + 1) {
+      iVar2 = (int)((LevelObject *)param_1)->scripts[2][iVar1];
       if (iVar2 != 0) {
         script_command_destroy(iVar2,1);
       }
     }
-    helper_free(*(void **)(param_1 + 0xf8));
+    helper_free(((LevelObject *)param_1)->scripts[2]);
   }
-  if (*(int *)(param_1 + 0xfc) != 0) {
-    for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0x10c); iVar1 = iVar1 + 1) {
-      iVar2 = *(int *)(*(int *)(param_1 + 0xfc) + iVar1 * 4);
+  if (((LevelObject *)param_1)->scripts[3] != (ScriptCommand **)0x0) {
+    for (iVar1 = 0; iVar1 < ((LevelObject *)param_1)->scriptLengths[3]; iVar1 = iVar1 + 1) {
+      iVar2 = (int)((LevelObject *)param_1)->scripts[3][iVar1];
       if (iVar2 != 0) {
         script_command_destroy(iVar2,1);
       }
     }
-    helper_free(*(void **)(param_1 + 0xfc));
+    helper_free(((LevelObject *)param_1)->scripts[3]);
   }
   for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0xe0); iVar1 = iVar1 + 1) {
     iVar2 = *(int *)(param_1 + iVar1 * 4 + 0x90);
@@ -11157,13 +11160,13 @@ void character_drop(Character *character,int32 notBehind,LevelObject *target)
 
 
 /* ==== 0x001106A0  (file offset 0x106A0)  script_run_if_block ========================================= */
-/* GUESS: names. Runs the block after an If / IfVar (0x10 / 0x50) whose result is `holds`, with *index just
-   past it: the commands up to the Else (0x11) or the EndIf (0x12) when it holds, else those from the Else
-   (the Else itself included, a no-op) to the EndIf; the other branch is skipped, a nested block whole (by
-   its depth). A nested If / IfVar recurses with its own result. Leaves *index past the EndIf and returns
-   1, or -1 at once for a Break (8), which ends the whole script (script_run). The command count is not
-   checked: a block without its EndIf would run past the end. `context` is only passed on (FUN_00110860
-   passes the app's context, FUN_0011d040 its own object). */
+/* GUESS: names. Runs the block after an If / IfVar (0x10 / 0x50) whose result is `holds`, with *index
+   just past it: the commands up to the Else (0x11) or the EndIf (0x12) when it holds, else those from the
+   Else (the Else itself included, a no-op) to the EndIf; the other branch is skipped, a nested block
+   whole (by its depth). A nested If / IfVar recurses with its own result. Leaves *index past the EndIf
+   and returns 1, or -1 at once for a Break (8), which ends the whole script (script_run). The command
+   count is not checked: a block without its EndIf would run past the end. `context` is only passed on
+   (level_object_run_script passes the app's context, FUN_0011d040 its own object). */
 int32 script_run_if_block(int32 context,int32 *index,int32 holds,ScriptCommand **commands)
 
 {
@@ -11230,39 +11233,33 @@ int32 script_run_if_block(int32 context,int32 *index,int32 holds,ScriptCommand *
 }
 
 
-/* ==== 0x00110860  (file offset 0x10860)  FUN_00110860 ================================================ */
-void FUN_00110860(int param_1,int param_2)
+/* ==== 0x00110860  (file offset 0x10860)  level_object_run_script ===================================== */
+/* GUESS: name. Runs one of a level object's event scripts (script_run, the binary's tail jump, whose
+   result it returns): 0 onInit (FUN_00118910, once they are loaded), 1 onEntry and 2 onExit (the
+   collision handler FUN_001213fc; FUN_00123588), 3 onUIAction (the key handler FUN_0011a3ec, for
+   Game.actionObject on the Action key or SELECT). The names are the scene node's user parameters the
+   scripts are read from (their string_hash). Another `which` runs `which` commands from address 0: no
+   caller passes one. */
+int32 level_object_run_script(LevelObject *object,int32 which)
 
 {
-  int iVar1;
+  ScriptCommand **commands = (ScriptCommand **)0x0;
+  int32 count = which;
 
-  iVar1 = 0;
-  if (param_2 == 0) {
-    param_2 = *(int *)(param_1 + 0x100);
-    iVar1 = *(int *)(param_1 + 0xf0);
+  if (which >= 0 && which < 4) {
+    count = object->scriptLengths[which];
+    commands = object->scripts[which];
   }
-  else if (param_2 == 1) {
-    param_2 = *(int *)(param_1 + 0x104);
-    iVar1 = *(int *)(param_1 + 0xf4);
-  }
-  else if (param_2 == 2) {
-    param_2 = *(int *)(param_1 + 0x108);
-    iVar1 = *(int *)(param_1 + 0xf8);
-  }
-  else if (param_2 == 3) {
-    param_2 = *(int *)(param_1 + 0x10c);
-    iVar1 = *(int *)(param_1 + 0xfc);
-  }
-  script_run((int32)((KHApp *)*(int *)(param_1 + 0x84))->context,param_2,(ScriptCommand **)iVar1);
-  return;
+  return script_run((int32)object->app->context,count,commands);   /* the binary's tail jump */
 }
+
 
 /* ==== 0x001108AC  (file offset 0x108AC)  script_run ================================================== */
 /* GUESS: names. Runs a script: its `count` commands in order (script_command_run); after an If / IfVar,
    the block that follows (script_run_if_block, with the condition's result). A Break inside a block ends
    the script (-1 returned); one outside any block is only run, and the script goes on. Otherwise returns
-   the index it stopped at (count). `context` is only passed on to the blocks. Used by FUN_00110860 (an
-   object's scripts) and FUN_0011d040. */
+   the index it stopped at (count). `context` is only passed on to the blocks. Used by
+   level_object_run_script (an object's scripts) and FUN_0011d040. */
 int32 script_run(int32 context,int32 count,ScriptCommand **commands)
 
 {
@@ -15595,9 +15592,9 @@ void FUN_00118910(int param_1,undefined4 param_2)
   FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_3310A2A1,&local_28);
   if (local_28 != 0) {
-    uVar4 = script_parse_lines((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,param_1 + 0xf0,
-                         param_1);
-    *(undefined4 *)(param_1 + 0x100) = uVar4;
+    uVar4 = script_parse_lines((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,
+                               &((LevelObject *)param_1)->scripts[0],param_1);
+    ((LevelObject *)param_1)->scriptLengths[0] = uVar4;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(local_28);
     local_28 = 0;
@@ -15605,9 +15602,9 @@ void FUN_00118910(int param_1,undefined4 param_2)
   FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_0B090BAC,&local_28);
   if (local_28 != 0) {
-    uVar4 = script_parse_lines((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,param_1 + 0xf4,
-                         param_1);
-    *(undefined4 *)(param_1 + 0x104) = uVar4;
+    uVar4 = script_parse_lines((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,
+                               &((LevelObject *)param_1)->scripts[1],param_1);
+    ((LevelObject *)param_1)->scriptLengths[1] = uVar4;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(local_28);
     local_28 = 0;
@@ -15616,9 +15613,9 @@ void FUN_00118910(int param_1,undefined4 param_2)
   FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_08E8548D,&local_28);
   if (local_28 != 0) {
-    uVar4 = script_parse_lines((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,param_1 + 0xf8,
-                         param_1);
-    *(undefined4 *)(param_1 + 0x108) = uVar4;
+    uVar4 = script_parse_lines((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,
+                               &((LevelObject *)param_1)->scripts[2],param_1);
+    ((LevelObject *)param_1)->scriptLengths[2] = uVar4;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(local_28);
     local_28 = 0;
@@ -15627,9 +15624,9 @@ void FUN_00118910(int param_1,undefined4 param_2)
   FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_19631267,&local_28);
   if (local_28 != 0) {
-    uVar4 = script_parse_lines((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,param_1 + 0xfc,
-                         param_1);
-    *(undefined4 *)(param_1 + 0x10c) = uVar4;
+    uVar4 = script_parse_lines((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,
+                               &((LevelObject *)param_1)->scripts[3],param_1);
+    ((LevelObject *)param_1)->scriptLengths[3] = uVar4;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(local_28);
     local_28 = 0;
@@ -15693,7 +15690,7 @@ void FUN_00118910(int param_1,undefined4 param_2)
   *(undefined4 *)(param_1 + 0x50) = uVar4;
   FUN_00114750(param_1);
   FUN_001201cc(param_1,*(undefined4 *)(param_1 + 0x5c));
-  FUN_00110860(param_1,0);
+  level_object_run_script((LevelObject *)param_1,0);
   return;
 }
 
@@ -16493,7 +16490,7 @@ void FUN_0011a3ec(int param_1,int param_2,undefined4 param_3)
     bVar6 = iVar5 == 0;
   }
   if ((bVar6) && (*(int *)(param_1 + 0x1fc) != 0)) {
-    FUN_00110860(*(int *)(param_1 + 0x1fc),3);
+    level_object_run_script(*(LevelObject **)(param_1 + 0x1fc),3);
     return;
   }
   if (*(int *)(*(int *)(param_1 + 0x1f8) + 0x3c) != 0) {
@@ -21438,7 +21435,7 @@ FUN_001213fc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
           if ((bool)uVar4 && !(bool)uVar5) goto LAB_001214d4;
         }
         if (*(int *)(param_1 + 0x34) != 0) {
-          FUN_00110860(param_1,1);
+          level_object_run_script((LevelObject *)param_1,1);
         }
         *(undefined4 *)(param_1 + 0x58) = 1;
       }
@@ -21467,7 +21464,7 @@ LAB_00121530:
     if (!(bool)uVar4 || (bool)uVar5) goto LAB_00121530;
   }
   if (*(int *)(param_1 + 0x34) != 0) {
-    FUN_00110860(param_1,2);
+    level_object_run_script((LevelObject *)param_1,2);
   }
   *(undefined4 *)(param_1 + 0x58) = 0;
 LAB_001214d4:
@@ -22987,7 +22984,7 @@ LAB_00123b40:
       if (iVar9 == 0) {
         iVar9 = *(int *)(param_1 + 0x240);
       }
-      FUN_00110860(iVar9,2);
+      level_object_run_script((LevelObject *)iVar9,2);
       *(undefined4 *)(param_1 + 0x23c) = 0;
       *(undefined4 *)(param_1 + 0x240) = 0;
     }
