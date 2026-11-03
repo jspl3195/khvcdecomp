@@ -2184,18 +2184,18 @@ LAB_00104fa4:
           memcpy_word_aligned(local_74 + 0xb,iVar7,0x14);
                     /* 0x101e04 bl memcpy_word_aligned: same as the copy above, only r0-r2 are set */
           memcpy_word_aligned(local_74 + 6,(int32)DATA_AT_00127AF0,0x14);
-          uVar10 = FUN_00107fd0(param_1,0x208,2).low;
-          uVar11 = FUN_00107fd0(param_1,400,1).low;
-          uVar13 = FUN_00107fd0(param_1,0x208,2).low;
-          uVar14 = FUN_00107fd0(param_1,0x5a,1).low;
-          local_dc[2] = FUN_00107fd0(param_1,0x1e,1).low;
+          uVar10 = screen_stack_scale((ScreenStack *)param_1,0x208,2).low;
+          uVar11 = screen_stack_scale((ScreenStack *)param_1,400,1).low;
+          uVar13 = screen_stack_scale((ScreenStack *)param_1,0x208,2).low;
+          uVar14 = screen_stack_scale((ScreenStack *)param_1,0x5a,1).low;
+          local_dc[2] = screen_stack_scale((ScreenStack *)param_1,0x1e,1).low;
           local_dc[3] = 1;
           local_dc[0] = uVar13;
           local_dc[1] = uVar14;
                     /* 0x101e98 bl FUN_001053a8, 13 arguments: r0-r3 = param_1, iVar9, 5,
                        sp+0xa8 (local_74 + 0xb); on the stack: [sp] = sp+0x94 (local_74 + 6),
                        stmib sp,{r0,r1,r6,r7,r8,r9} puts 0, 5, uVar10, uVar11, uVar13, uVar14 at
-                       [sp+4..sp+0x18], then [sp+0x1c] = the last FUN_00107fd0 result and
+                       [sp+4..sp+0x18], then [sp+0x1c] = the last screen_stack_scale result and
                        [sp+0x20] = 1. Ghidra kept the last four as stores into local_dc[0..3]
                        (sp+0x14..sp+0x20, the outgoing argument area) instead of passing them. */
           FUN_001053a8(param_1,iVar9,5,local_74 + 0xb,local_74 + 6,0,5,uVar10,uVar11,local_dc[0],
@@ -2263,9 +2263,9 @@ LAB_00103858:
           if (local_38 != (void *)0x0) {
             iVar19 = text_style_create(0,6);
             *(undefined4 *)(iVar19 + 4) = 0x24;
-            uVar10 = FUN_00107fd0(param_1,600,1).low;
-            uVar11 = FUN_00107fd0(param_1,800,2).low;
-            uVar13 = FUN_00107fd0(param_1,200,1).low;
+            uVar10 = screen_stack_scale((ScreenStack *)param_1,600,1).low;
+            uVar11 = screen_stack_scale((ScreenStack *)param_1,800,2).low;
+            uVar13 = screen_stack_scale((ScreenStack *)param_1,200,1).low;
             uVar10 = text_box_create(0,0x19,uVar13,uVar11,uVar10,param_1,iVar19);
             string_to_wide((int32)((KHApp *)*param_1)->context,(char **)&local_38,(AECHAR **)&local_3c);
             text_box_set_text(uVar10,local_3c,0);
@@ -2318,9 +2318,9 @@ LAB_00103858:
       local_44 = *(void **)(*(int *)(*param_1 + 0xa8) + 0x538);
       local_40 = *(void **)(*(int *)(*param_1 + 0xa8) + 0x58c);
       local_3c = local_38;
-      uVar11 = FUN_00107fd0(param_1,0x96,2).low;
-      uVar13 = FUN_00107fd0(param_1,700,2).low;
-      iVar7 = FUN_00107fd0(param_1,0xfa,1).low;
+      uVar11 = screen_stack_scale((ScreenStack *)param_1,0x96,2).low;
+      uVar13 = screen_stack_scale((ScreenStack *)param_1,700,2).low;
+      iVar7 = screen_stack_scale((ScreenStack *)param_1,0xfa,1).low;
       memcpy_word_aligned(local_74 + 3,(int32)DATA_AT_00127B04,0x18);
       memcpy_word_aligned(local_a8 + 10,(int32)DATA_AT_00127B1C,0x18);
       iVar9 = 0;
@@ -2340,12 +2340,12 @@ LAB_00103858:
         helper_free(pvVar16);
         *(int *)(iVar19 + 0x10) = local_a8[iVar9 + 10];
         ui_element_add_child(uVar10,iVar19,0);
-        iVar17 = FUN_00107fd0(param_1,10,1).low;
+        iVar17 = screen_stack_scale((ScreenStack *)param_1,10,1).low;
         iVar7 = iVar17 + *(int *)(iVar19 + 0x34) + iVar7;
         iVar19 = ui_element_create(0,uVar11,iVar7,uVar13,1,param_1);
         *(undefined1 *)(iVar19 + 0x1c) = 1;
         ui_element_add_child(uVar10,iVar19,0);
-        iVar17 = FUN_00107fd0(param_1,10,1).low;
+        iVar17 = screen_stack_scale((ScreenStack *)param_1,10,1).low;
         iVar9 = iVar9 + 1;
         iVar7 = iVar17 + *(short *)(*(int *)(iVar19 + 8) + 6) + iVar7;
       } while (iVar9 < 6);
@@ -2405,7 +2405,7 @@ LAB_001050b0:
       iVar9 = screen_stack_top(param_1);
       iVar7 = text_style_create(0,6);
       *(undefined4 *)(iVar7 + 4) = 0x21;
-      uVar10 = FUN_00107fd0(param_1,700,1).low;
+      uVar10 = screen_stack_scale((ScreenStack *)param_1,700,1).low;
       uVar10 = text_box_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar7);
       text_box_set_text_id((TextBox *)uVar10,(int32)WORD_HEXADECIMAL_2E8D6E9D);
@@ -2452,9 +2452,9 @@ LAB_001050b0:
       local_74[0xb] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x58c);
       local_44 = local_38;
       local_40 = local_3c;
-      uVar10 = FUN_00107fd0(param_1,0x96,2).low;
-      uVar11 = FUN_00107fd0(param_1,700,2).low;
-      iVar7 = FUN_00107fd0(param_1,0xfa,1).low;
+      uVar10 = screen_stack_scale((ScreenStack *)param_1,0x96,2).low;
+      uVar11 = screen_stack_scale((ScreenStack *)param_1,700,2).low;
+      iVar7 = screen_stack_scale((ScreenStack *)param_1,0xfa,1).low;
       memcpy_word_aligned(local_74,(int32)DATA_AT_00127B34,0x1c);
       memcpy_word_aligned(local_a8 + 6,(int32)DATA_AT_00127B50,0x1c);
       iVar19 = 0;
@@ -2474,13 +2474,13 @@ LAB_001050b0:
         helper_free(pvVar16);
         *(int *)(iVar17 + 0x10) = local_a8[iVar19 + 6];
         ui_element_add_child(iVar9,iVar17,0);
-        iVar8 = FUN_00107fd0(param_1,10,1).low;
+        iVar8 = screen_stack_scale((ScreenStack *)param_1,10,1).low;
         iVar7 = iVar8 + *(int *)(iVar17 + 0x34) + iVar7;
         iVar17 = ui_element_create(0,uVar10,iVar7,uVar11,1,param_1);
         *(undefined1 *)(iVar17 + 0x1c) = 1;
         *(undefined4 *)(iVar17 + 0x10) = 0xff000000;
         ui_element_add_child(iVar9,iVar17,0);
-        iVar8 = FUN_00107fd0(param_1,10,1).low;
+        iVar8 = screen_stack_scale((ScreenStack *)param_1,10,1).low;
         iVar19 = iVar19 + 1;
         iVar7 = iVar8 + *(short *)(*(int *)(iVar17 + 8) + 6) + iVar7;
       } while (iVar19 < 7);
@@ -2498,16 +2498,16 @@ LAB_00104a24:
       iVar9 = screen_stack_top(param_1);
       FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_10FB280A,0x73);
       FUN_00109a10(iVar9,1,0,0);
-      uVar10 = FUN_00107fd0(param_1,100,1).low;
-      iVar19 = FUN_00107fd0(param_1,100,2).low;
+      uVar10 = screen_stack_scale((ScreenStack *)param_1,100,1).low;
+      iVar19 = screen_stack_scale((ScreenStack *)param_1,100,2).low;
       sVar1 = *(short *)(*(int *)(iVar9 + 8) + 4);
-      uVar11 = FUN_00107fd0(param_1,INTEGER_790,1).low;
-      uVar13 = FUN_00107fd0(param_1,100,2).low;
+      uVar11 = screen_stack_scale((ScreenStack *)param_1,INTEGER_790,1).low;
+      uVar13 = screen_stack_scale((ScreenStack *)param_1,100,2).low;
       uVar10 = FUN_0010bba0(0,uVar13,uVar11,(int)sVar1 + iVar19 * -2,uVar10,param_1,0xb,0,1);
       ui_element_add_child(iVar9,uVar10,700);
       iVar19 = text_style_create(0,6);
       *(undefined4 *)(iVar19 + 4) = 0x21;
-      uVar10 = FUN_00107fd0(param_1,800,1).low;
+      uVar10 = screen_stack_scale((ScreenStack *)param_1,800,1).low;
       uVar10 = text_box_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar19);
       text_box_set_text_id((TextBox *)uVar10,(int32)WORD_HEXADECIMAL_0528CA88);
@@ -2546,7 +2546,7 @@ LAB_00104a24:
       iVar9 = screen_stack_top(param_1);
       iVar19 = text_style_create(0,6);
       *(undefined4 *)(iVar19 + 4) = 0x21;
-      uVar10 = FUN_00107fd0(param_1,700,1).low;
+      uVar10 = screen_stack_scale((ScreenStack *)param_1,700,1).low;
       uVar10 = text_box_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar19);
       text_box_set_text_id((TextBox *)uVar10,(int32)WORD_HEXADECIMAL_0528CA88);
@@ -2600,16 +2600,16 @@ LAB_00101fa8:
       iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
       *(undefined4 *)(iVar9 + 0x3c) = 3;
       FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_24017E3E,WORD_HEXADECIMAL_01B449A3);
-      uVar10 = FUN_00107fd0(param_1,0xfa,1).low;
-      uVar11 = FUN_00107fd0(param_1,0x32,2).low;
+      uVar10 = screen_stack_scale((ScreenStack *)param_1,0xfa,1).low;
+      uVar11 = screen_stack_scale((ScreenStack *)param_1,0x32,2).low;
       uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_272E6865,0x24);
       ui_element_add_child(iVar9,uVar10,0);
-      uVar10 = FUN_00107fd0(param_1,0xfa,1).low;
+      uVar10 = screen_stack_scale((ScreenStack *)param_1,0xfa,1).low;
       uVar10 = (int)text_line_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),0,param_1,
                             WORD_HEXADECIMAL_00C833EC,0x21);
       ui_element_add_child(iVar9,uVar10,0);
-      uVar10 = FUN_00107fd0(param_1,0xfa,1).low;
-      uVar11 = FUN_00107fd0(param_1,0x3b6,2).low;
+      uVar10 = screen_stack_scale((ScreenStack *)param_1,0xfa,1).low;
+      uVar11 = screen_stack_scale((ScreenStack *)param_1,0x3b6,2).low;
       uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_04D4D70F,0x22);
       ui_element_add_child(iVar9,uVar10,0);
       iVar19 = 1;
@@ -2623,8 +2623,8 @@ LAB_00101fa8:
                                (iVar17,(int32)DATA_AT_00127D2C), iVar17 != 0)) {
           local_2c = iVar19 * 100 + 0xfa;
           local_28 = local_2c;
-          uVar10 = FUN_00107fd0(param_1,local_2c,1).low;
-          uVar11 = FUN_00107fd0(param_1,0x32,2).low;
+          uVar10 = screen_stack_scale((ScreenStack *)param_1,local_2c,1).low;
+          uVar11 = screen_stack_scale((ScreenStack *)param_1,0x32,2).low;
           iVar17 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,0,0x24);
           p = helper_malloc(0x80);
                     /* helper[16] AECHAR * strtowstr(const char *src, AECHAR *dst, int nDstBytes)
@@ -2646,7 +2646,7 @@ LAB_00101fa8:
           progress_find_record(((KHApp *)*param_1)->progress,
                                ((KHApp *)*param_1)->progress->recordNames[iVar7],(int32 *)&local_38,
                                (int32 *)&local_3c);
-          uVar10 = FUN_00107fd0(param_1,local_2c,1).low;
+          uVar10 = screen_stack_scale((ScreenStack *)param_1,local_2c,1).low;
           local_40 = (void *)(int)text_line_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),0,
                                           param_1,0,0x21);
           pvVar16 = helper_malloc(0x80);
@@ -2663,8 +2663,8 @@ LAB_00101fa8:
           helper_free(pvVar5);
           ui_element_add_child(iVar9,local_40,0);
           if (local_3c != (void *)0xffffffff) {
-            uVar10 = FUN_00107fd0(param_1,local_28,1).low;
-            uVar11 = FUN_00107fd0(param_1,0x3b6,2).low;
+            uVar10 = screen_stack_scale((ScreenStack *)param_1,local_28,1).low;
+            uVar11 = screen_stack_scale((ScreenStack *)param_1,0x3b6,2).low;
             local_44 = (void *)(int)text_line_create(0,uVar11,uVar10,0,0,param_1,0,0x22);
             pvVar16 = helper_malloc(0x80);
             pvVar5 = helper_malloc(0x40);
@@ -2742,10 +2742,10 @@ LAB_00101db4:
       iVar7 = text_style_create(0,6);
       *(undefined4 *)(iVar7 + 4) = 9;
       *(undefined4 *)(iVar7 + 0x18) = WORD_HEXADECIMAL_FFEFEFEF;
-      uVar10 = FUN_00107fd0(param_1,600,1).low;
-      uVar11 = FUN_00107fd0(param_1,800,2).low;
-      uVar13 = FUN_00107fd0(param_1,200,1).low;
-      uVar14 = FUN_00107fd0(param_1,100,2).low;
+      uVar10 = screen_stack_scale((ScreenStack *)param_1,600,1).low;
+      uVar11 = screen_stack_scale((ScreenStack *)param_1,800,2).low;
+      uVar13 = screen_stack_scale((ScreenStack *)param_1,200,1).low;
+      uVar14 = screen_stack_scale((ScreenStack *)param_1,100,2).low;
       iVar7 = text_box_create(0,uVar14,uVar13,uVar11,uVar10,param_1,iVar7);
       text_box_set_text_id((TextBox *)iVar7,(int32)WORD_HEXADECIMAL_27B19885);
       uVar10 = 1000;
@@ -2818,9 +2818,9 @@ LAB_0010489c:
               local_74[7] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x5b4);
               local_74[8] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x5b8);
               memcpy_word_aligned(local_a8 + 0xb,(int32)DATA_AT_00127BBC,0x18);
-              uVar10 = FUN_00107fd0(param_1,0x96,2).low;
-              iVar19 = FUN_00107fd0(param_1,0x82,1).low;
-              uVar11 = FUN_00107fd0(param_1,700,2).low;
+              uVar10 = screen_stack_scale((ScreenStack *)param_1,0x96,2).low;
+              iVar19 = screen_stack_scale((ScreenStack *)param_1,0x82,1).low;
+              uVar11 = screen_stack_scale((ScreenStack *)param_1,700,2).low;
               iVar17 = 0;
               local_a8[10] = *(int *)(*param_1 + 0xa8);
               bVar21 = *(int *)(local_a8[10] + 0x5bc) == 0;
@@ -2870,13 +2870,13 @@ LAB_0010489c:
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
                 (*g_pHelperFuncs->free)(local_a8[9]);
                 ui_element_add_child(iVar9,iVar7,0);
-                iVar8 = FUN_00107fd0(param_1,10,1).low;
+                iVar8 = screen_stack_scale((ScreenStack *)param_1,10,1).low;
                 iVar19 = iVar8 + *(int *)(iVar7 + 0x34) + iVar19;
                 iVar7 = ui_element_create(0,uVar10,iVar19,uVar11,1,param_1);
                 *(undefined1 *)(iVar7 + 0x1c) = 1;
                 *(undefined4 *)(iVar7 + 0x10) = 0xff000000;
                 ui_element_add_child(iVar9,iVar7,0);
-                iVar8 = FUN_00107fd0(param_1,10,1).low;
+                iVar8 = screen_stack_scale((ScreenStack *)param_1,10,1).low;
                 iVar19 = iVar8 + *(short *)(*(int *)(iVar7 + 8) + 6) + iVar19;
               }
               goto LAB_0010423c;
@@ -2931,8 +2931,8 @@ LAB_0010489c:
                               param_1,iVar19);
         text_box_set_text_id((TextBox *)uVar10,(int32)uVar11);
         ui_element_add_child(iVar9,uVar10,0);
-        uVar10 = FUN_00107fd0(param_1,0x2a8,1).low;
-        uVar11 = FUN_00107fd0(param_1,500,2).low;
+        uVar10 = screen_stack_scale((ScreenStack *)param_1,0x2a8,1).low;
+        uVar11 = screen_stack_scale((ScreenStack *)param_1,500,2).low;
         uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_16A5390B,0x21);
         ui_element_add_child(iVar9,uVar10,0);
         local_38 = helper_malloc(0x20);
@@ -2941,8 +2941,8 @@ LAB_0010489c:
         (*g_pHelperFuncs->sprintf)
                   (local_38,(int32)STRING_PERCENT_D,
                    *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x52c));
-        uVar10 = FUN_00107fd0(param_1,INTEGER_735,1).low;
-        uVar11 = FUN_00107fd0(param_1,500,2).low;
+        uVar10 = screen_stack_scale((ScreenStack *)param_1,INTEGER_735,1).low;
+        uVar11 = screen_stack_scale((ScreenStack *)param_1,500,2).low;
         uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,0,0x21);
         string_to_wide((int32)((KHApp *)*param_1)->context,(char **)&local_38,(AECHAR **)&local_3c);
         text_line_set_text(uVar10,local_3c);
@@ -3042,9 +3042,9 @@ LAB_001042b8:
     local_3c = (void *)(*(int *)(iVar7 + *(int *)(iVar7 + 0x58c) * 8 + 0x53c) -
                        *(int *)(iVar7 + 0x538));
     local_38 = *(void **)(*(int *)(*param_1 + 0xa8) + 0x58c);
-    uVar10 = FUN_00107fd0(param_1,0x96,2).low;
-    uVar11 = FUN_00107fd0(param_1,700,2).low;
-    iVar7 = FUN_00107fd0(param_1,0x82,1).low;
+    uVar10 = screen_stack_scale((ScreenStack *)param_1,0x96,2).low;
+    uVar11 = screen_stack_scale((ScreenStack *)param_1,700,2).low;
+    iVar7 = screen_stack_scale((ScreenStack *)param_1,0x82,1).low;
     memcpy_word_aligned(local_74 + 2,(int32)DATA_AT_00127B6C,0x1c);
     memcpy_word_aligned(local_a8 + 8,(int32)DATA_AT_00127B88,0x1c);
     iVar19 = 0;
@@ -3084,13 +3084,13 @@ LAB_001042b8:
       helper_free(pvVar16);
       *(int *)(iVar17 + 0x10) = local_a8[iVar19 + 8];
       ui_element_add_child(iVar9,iVar17,0);
-      iVar8 = FUN_00107fd0(param_1,10,1).low;
+      iVar8 = screen_stack_scale((ScreenStack *)param_1,10,1).low;
       iVar7 = iVar8 + *(int *)(iVar17 + 0x34) + iVar7;
       iVar17 = ui_element_create(0,uVar10,iVar7,uVar11,1,param_1);
       *(undefined1 *)(iVar17 + 0x1c) = 1;
       *(undefined4 *)(iVar17 + 0x10) = 0xff000000;
       ui_element_add_child(iVar9,iVar17,0);
-      iVar8 = FUN_00107fd0(param_1,10,1).low;
+      iVar8 = screen_stack_scale((ScreenStack *)param_1,10,1).low;
       iVar19 = iVar19 + 1;
       iVar7 = iVar8 + *(short *)(*(int *)(iVar17 + 8) + 6) + iVar7;
     } while (iVar19 < 7);
@@ -3124,11 +3124,11 @@ LAB_001042b8:
        (pvVar16 = WORD_HEXADECIMAL_2714CFF7, iVar7 == 0x3c)) {
       local_40 = pvVar16;
     }
-    uVar10 = FUN_00107fd0(param_1,0x96,2).low;
-    uVar11 = FUN_00107fd0(param_1,0xb4,1).low;
-    uVar13 = FUN_00107fd0(param_1,700,2).low;
-    uVar14 = FUN_00107fd0(param_1,0x5a,1).low;
-    local_dc[2] = FUN_00107fd0(param_1,0x10,1).low;
+    uVar10 = screen_stack_scale((ScreenStack *)param_1,0x96,2).low;
+    uVar11 = screen_stack_scale((ScreenStack *)param_1,0xb4,1).low;
+    uVar13 = screen_stack_scale((ScreenStack *)param_1,700,2).low;
+    uVar14 = screen_stack_scale((ScreenStack *)param_1,0x5a,1).low;
+    local_dc[2] = screen_stack_scale((ScreenStack *)param_1,0x10,1).low;
     local_dc[3] = 1;
     local_dc[0] = uVar13;
     local_dc[1] = uVar14;
@@ -3144,15 +3144,15 @@ LAB_001042b8:
     FUN_001055c4(param_1,iVar9,0,uVar10,WORD_HEXADECIMAL_133529B8);
     FUN_00109a10(iVar9,1,uVar11,0xfffffffe);
     FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0x10);
-    iVar19 = FUN_00107fd0(param_1,100,2).low;
-    iVar17 = FUN_00107fd0(param_1,0x118,1).low;
+    iVar19 = screen_stack_scale((ScreenStack *)param_1,100,2).low;
+    iVar17 = screen_stack_scale((ScreenStack *)param_1,0x118,1).low;
     iVar12 = (int)*(short *)(*(int *)(iVar9 + 8) + 4) + iVar19 * -2;
     iVar7 = ui_element_create(0,iVar19,iVar17,iVar12,0,param_1);
     *(undefined4 *)(iVar7 + 0x14) = WORD_HEXADECIMAL_FFEFEFEF;
     *(undefined4 *)(iVar7 + 0x10) = 0xff000000;
     *(undefined1 *)(iVar7 + 0x1c) = 1;
-    iVar8 = FUN_00107fd0(param_1,0x14,2).low;
-    local_40 = (void *)FUN_00107fd0(param_1,0x14,1).low;
+    iVar8 = screen_stack_scale((ScreenStack *)param_1,0x14,2).low;
+    local_40 = (void *)screen_stack_scale((ScreenStack *)param_1,0x14,1).low;
     local_38 = (void *)(iVar19 + iVar8);
     iVar17 = iVar17 + (int)local_40;
     local_3c = (void *)(iVar12 + iVar8 * -2);
@@ -3162,7 +3162,7 @@ LAB_001042b8:
     ui_element_add_child(iVar7,uVar10,0);
     iVar19 = (int)text_line_create(0,iVar19,iVar17,pvVar16,0,param_1,WORD_HEXADECIMAL_1A43CB02,0x22);
     ui_element_add_child(iVar7,iVar19,0);
-    iVar12 = FUN_00107fd0(param_1,0x1e,1).low;
+    iVar12 = screen_stack_scale((ScreenStack *)param_1,0x1e,1).low;
     iVar17 = iVar12 + *(int *)(iVar19 + 0x34) + iVar17;
     local_74[9] = *(undefined4 *)((int32)DATA_AT_00127C10);
     local_74[10] = *(undefined4 *)(((int32)DATA_AT_00127C10 + 0x4));
@@ -3202,8 +3202,8 @@ LAB_001042b8:
       iVar19 = iVar19 + 1;
       local_74[0] = iVar12;
     } while (iVar19 < 4);
-    uVar10 = FUN_00107fd0(param_1,0x2a8,1).low;
-    uVar11 = FUN_00107fd0(param_1,500,2).low;
+    uVar10 = screen_stack_scale((ScreenStack *)param_1,0x2a8,1).low;
+    uVar11 = screen_stack_scale((ScreenStack *)param_1,500,2).low;
     uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_16A5390B,0x21);
     ui_element_add_child(iVar9,uVar10,0);
     local_78 = helper_malloc(0x20);
@@ -3212,8 +3212,8 @@ LAB_001042b8:
                        +0x20, via *(base-4)) */
     (*g_pHelperFuncs->sprintf)
               (local_78,(int32)STRING_PERCENT_D,*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x52c));
-    uVar10 = FUN_00107fd0(param_1,INTEGER_735,1).low;
-    uVar11 = FUN_00107fd0(param_1,500,2).low;
+    uVar10 = screen_stack_scale((ScreenStack *)param_1,INTEGER_735,1).low;
+    uVar11 = screen_stack_scale((ScreenStack *)param_1,500,2).low;
     uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,0,0x21);
     string_to_wide((int32)((KHApp *)*param_1)->context,(char **)&local_78,(AECHAR **)(local_a8 + 0xb));
     text_line_set_text(uVar10,local_a8[0xb]);
@@ -3265,10 +3265,10 @@ LAB_00104360:
     FUN_00109a10(iVar9,1,uVar13,0x46);
     FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0x48);
     memcpy_word_aligned(local_74 + 9,(int32)DATA_AT_00127C40,0x1c);
-    uVar10 = FUN_00107fd0(param_1,0x50,2).low;
-    iVar19 = FUN_00107fd0(param_1,0xa0,1).low;
-    iVar7 = FUN_00107fd0(param_1,0x348,2).low;
-    iVar17 = FUN_00107fd0(param_1,10,1).low;
+    uVar10 = screen_stack_scale((ScreenStack *)param_1,0x50,2).low;
+    iVar19 = screen_stack_scale((ScreenStack *)param_1,0xa0,1).low;
+    iVar7 = screen_stack_scale((ScreenStack *)param_1,0x348,2).low;
+    iVar17 = screen_stack_scale((ScreenStack *)param_1,10,1).low;
     iVar8 = 0;
     do {
       iVar12 = (int)text_line_create(0,uVar10,iVar19,0,0,param_1,local_74[iVar8 + 9],0x24);
@@ -3310,9 +3310,9 @@ LAB_00104360:
       }
       iVar19 = iVar19 + 1;
     } while (iVar19 < 0xd);
-    local_74[8] = FUN_00107fd0(param_1,0x230,2).low;
-    iVar19 = FUN_00107fd0(param_1,0xa0,1).low;
-    local_74[7] = FUN_00107fd0(param_1,0x140,2).low;
+    local_74[8] = screen_stack_scale((ScreenStack *)param_1,0x230,2).low;
+    iVar19 = screen_stack_scale((ScreenStack *)param_1,0xa0,1).low;
+    local_74[7] = screen_stack_scale((ScreenStack *)param_1,0x140,2).low;
     iVar8 = 0;
     do {
       iVar12 = FUN_0010bba0(0,local_74[8],iVar19,local_74[7],iVar20,param_1,8,0,0);
@@ -3381,10 +3381,10 @@ LAB_001048a4:
     iVar19 = text_style_create(0,5);
     *(undefined4 *)(iVar19 + 4) = 0x24;
     *(undefined4 *)(iVar19 + 0x18) = WORD_HEXADECIMAL_FFEFEFEF;
-    local_38 = (void *)FUN_00107fd0(param_1,600,1).low;
-    uVar10 = FUN_00107fd0(param_1,800,2).low;
-    uVar13 = FUN_00107fd0(param_1,200,1).low;
-    uVar14 = FUN_00107fd0(param_1,100,2).low;
+    local_38 = (void *)screen_stack_scale((ScreenStack *)param_1,600,1).low;
+    uVar10 = screen_stack_scale((ScreenStack *)param_1,800,2).low;
+    uVar13 = screen_stack_scale((ScreenStack *)param_1,200,1).low;
+    uVar14 = screen_stack_scale((ScreenStack *)param_1,100,2).low;
     uVar10 = text_box_create(0,uVar14,uVar13,uVar10,local_38,param_1,iVar19);
     if (param_2 == 0xe || param_2 == 0xf) {
       text_table_get_text(*(undefined4 *)(*param_1 + 0x98),uVar11,&local_38);
@@ -3631,15 +3631,15 @@ void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
   int iVar3;
   int iVar4;
   
-  uVar1 = FUN_00107fd0(param_1,0x5a,1).low;
+  uVar1 = screen_stack_scale((ScreenStack *)param_1,0x5a,1).low;
   iVar2 = (int)text_line_create(0,0,uVar1,(int)*(short *)(*(int *)(param_1 + 0x14) + 4),0,param_1,param_4,9);
   if (param_3 != 0) {
     *(int *)(iVar2 + 0x10) = param_3;
   }
   ui_element_add_child(param_2,iVar2,0);
   if (param_5 != 0) {
-    iVar2 = FUN_00107fd0(param_1,0x6e,1).low;
-    iVar3 = FUN_00107fd0(param_1,100,2).low;
+    iVar2 = screen_stack_scale((ScreenStack *)param_1,0x6e,1).low;
+    iVar3 = screen_stack_scale((ScreenStack *)param_1,100,2).low;
     iVar4 = text_style_create(0,6);
     *(undefined4 *)(iVar4 + 4) = 0x21;
     iVar2 = text_box_create(0,iVar3,iVar2,(int)*(short *)(*(int *)(param_1 + 0x14) + 4) + iVar3 * -2,
@@ -4464,10 +4464,10 @@ void FUN_00106e44(int param_1,undefined4 param_2,int *param_3)
     }
     graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,WORD_HEXADECIMAL_FF615A6D,3);
     (**(code **)(*param_3 + 0x78))(param_3,psVar4);
-    sVar2 = FUN_00107fd0(*(undefined4 *)(param_1 + 0x20),0x96,1).low;
+    sVar2 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x96,1).low;
     psVar4[3] = psVar4[3] - sVar2;
-    sVar2 = FUN_00107fd0(*(undefined4 *)(param_1 + 0x20),0x14,2).low;
-    sVar3 = FUN_00107fd0(*(undefined4 *)(param_1 + 0x20),0x14,2).low;
+    sVar2 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x14,2).low;
+    sVar3 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x14,2).low;
     *psVar4 = *psVar4 + sVar2;
     uVar1 = WORD_HEXADECIMAL_FF9795A5;
     psVar4[1] = psVar4[1] + sVar2;
@@ -5149,20 +5149,23 @@ int32 text_box_get_content_height(TextBox *box)
 }
 
 
-/* ==== 0x00107FD0  (file offset 0x07FD0)  FUN_00107fd0 ================================================ */
-uint64 FUN_00107fd0(int param_1,int param_2,int param_3)
+/* ==== 0x00107FD0  (file offset 0x07FD0)  screen_stack_scale ========================================== */
+/* GUESS: names. `amount` thousandths of the display's width (axis 2) or height (any other axis; the
+   callers pass 1) in pixels: ScreenStack.rect's dx or dy times amount, divided by 1000 (the binary's tail
+   jump to rt_sdiv, whose result it returns: the pixels in the low word, the remainder in the high). The
+   menus lay out their screens with it, so they scale to the handset's display. */
+uint64 screen_stack_scale(ScreenStack *stack,int32 amount,int32 axis)
 
 {
-  short sVar1;
+  int16 size;
 
-  if (param_3 == 2) {
-    sVar1 = *(short *)(*(int *)(param_1 + 0x14) + 4);
-  }
-  else {
-    sVar1 = *(short *)(*(int *)(param_1 + 0x14) + 6);
-  }
-  return rt_sdiv(1000,sVar1 * param_2);
+  if (axis == 2)
+    size = stack->rect->dx;
+  else
+    size = stack->rect->dy;
+  return rt_sdiv(1000,size * amount);   /* the binary's tail jump (0x00107fe8) */
 }
+
 
 /* ==== 0x00107FEC  (file offset 0x07FEC)  screen_stack_get_text ======================================= */
 /* GUESS: names. A copy of the text with the id `textId` (a wide string the caller frees): one of the key
@@ -5639,7 +5642,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
       }
       puVar6 = text_style_create((undefined4 *)0x0,6);
       puVar6[1] = 0x21;
-      uVar11 = FUN_00107fd0((int)param_1,800,1);
+      uVar11 = screen_stack_scale((ScreenStack *)param_1,800,1);
       piVar1 = text_box_create((int *)0x0,0,(int)uVar11.low,(int)*(short *)(piVar1[2] + 4),
                             (int)*(short *)(piVar1[2] + 6),param_1,(int)puVar6);
       text_box_set_text((int)piVar1,(int)pvVar3,0);
@@ -5672,7 +5675,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
   case 0x4:
     iVar8 = ui_element_find_child((int)piVar1,500);
     psVar9 = (short *)(*(int *)(iVar8 + 8) + 2);
-    uVar11 = FUN_00107fd0((int)param_1,0x96,1);
+    uVar11 = screen_stack_scale((ScreenStack *)param_1,0x96,1);
     *psVar9 = *psVar9 - (short)uVar11.low;
     text_box_set_text_id((TextBox *)iVar8,(int32)uVar4);
     ui_element_remove_child((int)piVar1,700,1);
@@ -5697,7 +5700,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
         if (param_3 == (int *)0x6) {
           iVar8 = ui_element_find_child((int)piVar1,500);
           psVar9 = (short *)(*(int *)(iVar8 + 8) + 2);
-          uVar11 = FUN_00107fd0((int)param_1,0x96,1);
+          uVar11 = screen_stack_scale((ScreenStack *)param_1,0x96,1);
           *psVar9 = *psVar9 - (short)uVar11.low;
           text_box_set_text_id((TextBox *)iVar8,(int32)uVar4);
           FUN_00109a10((int)piVar1,1,0,0);
@@ -5712,7 +5715,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
         else {
           iVar8 = ui_element_find_child((int)piVar1,500);
           psVar9 = (short *)(*(int *)(iVar8 + 8) + 2);
-          uVar11 = FUN_00107fd0((int)param_1,0x96,1);
+          uVar11 = screen_stack_scale((ScreenStack *)param_1,0x96,1);
           *psVar9 = *psVar9 - (short)uVar11.low;
         }
       }
@@ -6310,10 +6313,10 @@ void FUN_00109a10(int param_1,int param_2,int param_3,undefined4 param_4)
     *(undefined4 *)(*(int *)(param_1 + 0x34) + iVar7 * 4) = 0;
   }
   if (param_3 != 0) {
-    iVar2 = FUN_00107fd0(*(undefined4 *)(param_1 + 0x20),0x14a,2).low;
-    iVar3 = FUN_00107fd0(*(undefined4 *)(param_1 + 0x20),0x5a,1).low;
-    iVar1 = FUN_00107fd0(*(undefined4 *)(param_1 + 0x20),0x14,2).low;
-    iVar4 = FUN_00107fd0(*(undefined4 *)(param_1 + 0x20),0x14,1).low;
+    iVar2 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x14a,2).low;
+    iVar3 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x5a,1).low;
+    iVar1 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x14,2).low;
+    iVar4 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x14,1).low;
     iVar5 = (*(short *)(*(int *)(param_1 + 8) + 4) - iVar1) - iVar2;
     iVar6 = iVar5;
     if (*(int *)(*(int *)(*(int *)(param_1 + 0x44) + 0xa8) + 0x5e8) == 0xe037) {

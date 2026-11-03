@@ -469,7 +469,7 @@ int32 list_get_entry(UIList *list,int32 index);   /* 0x00107EA4 GUESS: name, see
 int32 ui_element_find_child(UIElement *element,int32 id);   /* 0x00107EC4 GUESS: name */
 void * FUN_00107ecc(undefined4 param_1,undefined4 param_2);
 int32 text_box_get_content_height(TextBox *box);   /* 0x00107F88 GUESS: name, see kh_mod.c */
-uint64 FUN_00107fd0(int param_1,int param_2,int param_3);
+uint64 screen_stack_scale(ScreenStack *stack,int32 amount,int32 axis);   /* 0x00107FD0 GUESS: name, see kh_mod.c */
 AECHAR * screen_stack_get_text(ScreenStack *stack,int32 textId);   /* 0x00107FEC GUESS: name, see kh_mod.c */
 int32 screen_stack_top(ScreenStack *stack);   /* 0x001080AC GUESS: name */
 int32 list_find_entry(UIList *list,int32 id);   /* 0x001080C8 GUESS: name */
