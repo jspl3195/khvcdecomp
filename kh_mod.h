@@ -575,7 +575,7 @@ uint32 ui_element_get_secondary_color(UIElement *element);   /* 0x00108048 (no G
 uint32 ui_element_get_primary_color(UIElement *element);   /* 0x0010807C (no Ghidra function; a virtual method) */
 int32 screen_handle_key_nothing(int32 screen,int32 eventCode,int32 keyCode);   /* 0x0010872C (no Ghidra function; a virtual method) */
 int32 ui_element_handle_key_nothing(int32 element,int32 eventCode,int32 keyCode);   /* 0x00108734 (no Ghidra function; a virtual method) */
-int FUN_001136c0(int param_1);   /* 0x001136C0 (no Ghidra function; a virtual method) */
+uint32 enemy_get_health(Enemy *enemy);   /* 0x001136C0 (no Ghidra function; a virtual method) */
 int FUN_00119af4(int param_1);   /* 0x00119AF4 (no Ghidra function; a virtual method) */
 void FUN_0011f260(int param_1);   /* 0x0011F260 (no Ghidra function; a virtual method) */
 void FUN_0011f26c(int param_1);   /* 0x0011F26C (no Ghidra function; a virtual method) */
@@ -1972,7 +1972,7 @@ static code *const VTABLE_00101680[8] = {   /* 0x00101680; in kh.mod each entry 
   (code *)FUN_0011f26c,
   (code *)FUN_0011f260,
   (code *)FUN_0010f2e8,
-  (code *)FUN_001136c0,
+  (code *)enemy_get_health,
   (code *)FUN_00119af4
 };
 static code *const VTABLE_001016A0[8] = {   /* 0x001016A0; in kh.mod each entry is the method's offset from

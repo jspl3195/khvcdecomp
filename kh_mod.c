@@ -8900,8 +8900,8 @@ void progress_add_munny(Progress *progress,int32 amount)
 }
 
 /* ==== 0x0010D2FC  (file offset 0x0D2FC)  combat_region_all_enemies_defeated ========================== */
-/* GUESS: names. 1 when no enemy of the region has a value above 0 left (vtable slot +0x18, a float;
-   GUESS: its health), else 0 (float_compare_greater, then `bls` at 0x0010d330, written after the comma).
+/* GUESS: names. 1 when no enemy of the region has health above 0 left (vtable slot +0x18,
+   enemy_get_health), else 0 (float_compare_greater, then `bls` at 0x0010d330, written after the comma).
    Ghidra had dropped the enemy passed to the slot. */
 int32 combat_region_all_enemies_defeated(CombatRegion *region)
 
@@ -13019,13 +13019,14 @@ uint32 string_hash(int32 context,const char *text)
 }
 
 
-/* ==== 0x001136C0  (file offset 0x136C0)  FUN_001136c0 ================================================ */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101680): written from
-   its disassembly. */
-int FUN_001136c0(int param_1)
+/* ==== 0x001136C0  (file offset 0x136C0)  enemy_get_health ============================================ */
+/* GUESS: name. The enemy class's slot 6 (+0x18 of VTABLE_00101680): its health (a float, its bits; above 0
+   it is alive). Read by combat_region_all_enemies_defeated. Ghidra has no function here (only reached
+   through the vtable); written from its disassembly (ldr r0, [r0, #0x3c]; bx lr). */
+uint32 enemy_get_health(Enemy *enemy)
 
 {
-  return *(int *)(param_1 + 0x3c);
+  return enemy->health;
 }
 
 
