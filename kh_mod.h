@@ -685,7 +685,7 @@ void text_table_get_wide_text(TextTable *table,int32 textId,AECHAR **text);   /*
 void FUN_001147ec(undefined4 *param_1,int param_2,int *param_3);
 uint32 motion_entity_get_pitch(MotionEntity *entity);   /* 0x00114898 GUESS: name */
 uint32 motion_entity_get_heading(MotionEntity *entity);   /* 0x001148A0 GUESS: name */
-void FUN_001148a8(int param_1,int param_2);
+int32 animations_rewind(Animations *animations,int32 index);   /* 0x001148A8 GUESS: name, see kh_mod.c */
 int32 animations_finish(Animations *animations,int32 index);   /* 0x001148C8 GUESS: name */
 int32 combat_region_take_attack_token(CombatRegion *region);   /* 0x00114910 GUESS: names */
 void FUN_0011492c(int param_1);

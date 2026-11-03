@@ -11331,7 +11331,7 @@ void FUN_00110564(int param_1,int param_2,int param_3)
   undefined4 local_18;
   
   if (*(int *)(param_1 + 0x24c) != 0) {
-    FUN_001148a8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x31c));
+    animations_rewind(((KHApp *)*(int *)(param_1 + 0x84))->animations,*(undefined4 *)(param_1 + 0x31c));
     FUN_0011f8e0(param_1,0xc);
     uVar2 = 1;
     if (param_3 == 0) {
@@ -13932,19 +13932,18 @@ uint32 motion_entity_get_heading(MotionEntity *entity)
   return entity->heading;
 }
 
-/* ==== 0x001148A8  (file offset 0x148A8)  FUN_001148a8 ================================================ */
-void FUN_001148a8(int param_1,int param_2)
+/* ==== 0x001148A8  (file offset 0x148A8)  animations_rewind =========================================== */
+/* GUESS: name. Puts animation `index` back at its start (animations_set_position with 0; the binary's tail
+   jump at 0x001148c0); nothing for a negative index or a free slot. Returns r0 as kh.mod leaves it, as
+   animations_finish does: animations_set_position's result, else `animations`. */
+int32 animations_rewind(Animations *animations,int32 index)
 
 {
-  
-  if (param_2 < 0) {
-    return;
-  }
-  if (*(int *)(param_1 + param_2 * 4 + 0x10) != -1) {
-    animations_set_position((Animations *)param_1,param_2,0);
-  }
-  return;
+  if (index < 0 || animations->userIds[index] == -1)
+    return (int32)animations;
+  return animations_set_position(animations,index,0);
 }
+
 
 /* ==== 0x001148C8  (file offset 0x148C8)  animations_finish =========================================== */
 /* GUESS: name. Jumps animation `index` to its last frame (animations_set_position with duration - 1) and
@@ -18007,8 +18006,7 @@ LAB_0011c180:
       uVar10 = bVar8 || uVar3 == 5;
       if (!bVar8 && uVar3 != 5) {
         FUN_0011492c(param_1);
-        FUN_001148a8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
-                     *(undefined4 *)(param_1 + 0x2c0));
+        animations_rewind(((KHApp *)*(int *)(param_1 + 0x84))->animations,*(undefined4 *)(param_1 + 0x2c0));
       }
       float_compare_greater(param_2[2],0);
       if (!(bool)uVar9 || (bool)uVar10) {
@@ -18173,8 +18171,7 @@ LAB_0011c204:
     uVar9 = *(uint *)(param_1 + 0x1d0) == 4;
     if (!(bool)uVar9) {
       FUN_0011492c(param_1);
-      FUN_001148a8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2c8)
-                  );
+      animations_rewind(((KHApp *)*(int *)(param_1 + 0x84))->animations,*(undefined4 *)(param_1 + 0x2c8));
     }
     float_compare_greater(param_2[2],0);
     if (!(bool)uVar10 || (bool)uVar9) {
@@ -20692,7 +20689,7 @@ LAB_0011fba4:
     }
     if (bVar8 && iVar2 != 0) {
       FUN_0011492c(param_1);
-      FUN_001148a8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 800));
+      animations_rewind(((KHApp *)*(int *)(param_1 + 0x84))->animations,*(undefined4 *)(param_1 + 800));
       FUN_001147ec(&local_28,(undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                    *(undefined4 *)(param_1 + 0x1e8));
       level_object_get_position((uint32 *)&local_34,(LevelObject *)*(undefined4 *)(param_1 + 300));
@@ -20712,7 +20709,7 @@ LAB_0011fba4:
     *(undefined4 *)(param_1 + 0x244) = 0;
     *(undefined4 *)(param_1 + 0x1cc) = 10;
     *(undefined4 *)(param_1 + 300) = 0;
-    FUN_001148a8(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2b8));
+    animations_rewind(((KHApp *)*(int *)(param_1 + 0x84))->animations,*(undefined4 *)(param_1 + 0x2b8));
     param_2 = 0xc;
     *(undefined4 *)(param_1 + 0x150) = 0;
   }
