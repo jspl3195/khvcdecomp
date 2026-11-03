@@ -615,16 +615,13 @@ LAB_00100980:
 undefined8 FUN_001009b8(uint param_1,uint param_2)
 
 {
-  undefined4 param_4;
-  /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
   undefined8 uVar1;
   int iVar2;
-  bool bVar3;
   
   iVar2 = 0x7ff00000 - (param_2 & 0x7fffffff | (param_1 | -param_1) >> 0x1f);
-  bVar3 = (bool)((byte)((uint)iVar2 >> 0x1e) & 1);
-  if ((iVar2 < 0) || (FUN_001256b4(param_1,param_2,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD /* not arguments, value leftovers: param_4 */), bVar3)) {
+  if (iVar2 < 0 ||
+      (double_compare_less(param_1,param_2,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
+       (int)param_2 >= 0 || (param_2 << 1 | param_1) == 0)) {   /* x >= 0.0 (-0 too) */
     uVar1 = FUN_00125cd0(param_1,param_2);
   }
   else {
@@ -9226,8 +9223,8 @@ LAB_0010dde4:
     character_play_animation((Character *)param_1,*(int *)(param_1 + 0x2f4),2,0);
     dVar7 = FUN_00126248(uVar4);
     uVar7 = dVar7.low;
-    FUN_00125634(uVar7,dVar7.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
-    if (!(bool)uVar13 || (bool)uVar12) {
+    if (double_compare_greater(uVar7,dVar7.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD),
+        !(*(double *)&dVar7 > 1.0)) {
       iVar3 = *(int *)(param_1 + 0x300);
     }
     else {
@@ -9246,8 +9243,8 @@ LAB_0010dde4:
   if ((bool)uVar12) {
     dVar7 = FUN_00126248(uVar4);
     uVar7 = dVar7.low;
-    FUN_001256b4(uVar7,dVar7.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
-    if (!(bool)uVar13 || (bool)uVar12) {
+    if (double_compare_less(uVar7,dVar7.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD),
+        *(double *)&dVar7 <= 1.0) {
       if ((*(uint *)(param_1 + 0x88) & 1) == 0) {
         character_play_animation((Character *)param_1,*(int *)(param_1 + 0x2fc),2,0);
         *(undefined4 *)(param_1 + 0x2a0) = 700;
@@ -9259,8 +9256,8 @@ LAB_0010dde4:
       character_play_animation((Character *)param_1,*(int *)(param_1 + 0x300),3,0);
       goto LAB_0010dcf8;
     }
-    FUN_001256b4(uVar7,dVar7.high,TWO_DOUBLE_LOW_WORD,TWO_DOUBLE_HIGH_WORD);
-    if ((bool)uVar13 && !(bool)uVar12) {
+    if (double_compare_less(uVar7,dVar7.high,TWO_DOUBLE_LOW_WORD,TWO_DOUBLE_HIGH_WORD),
+        !(*(double *)&dVar7 <= 2.0)) {
       character_play_animation((Character *)param_1,*(int *)(param_1 + 0x30c),0,0);
       *(undefined4 *)(param_1 + 0x2a0) = 0xfa;
       goto LAB_0010dcf8;
@@ -9534,8 +9531,8 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
     bVar11 = false;
     dVar2 = FUN_00126248(*param_2);
     uVar2 = dVar2.low;
-    FUN_001254d4(uVar2,dVar2.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD);
-    if (!(bool)uVar18) {
+    if (double_compare_equal(uVar2,dVar2.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
+        *(double *)&dVar2 != 0.0) {
       uVar2 = float_add(*(uint *)(param_1 + 0x68),*param_2);
       blocking = game_find_blocking_shape((Game *)*(int *)(*(int *)(param_1 + 0x84) + 0xa4),uVar2,
                                           *(undefined4 *)(param_1 + 0x6c),*(undefined4 *)(param_1 + 0x70));
@@ -9569,8 +9566,8 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
     }
     dVar2 = FUN_00126248(param_2[1]);
     uVar2 = dVar2.low;
-    FUN_001254d4(uVar2,dVar2.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD);
-    if (!(bool)uVar18) {
+    if (double_compare_equal(uVar2,dVar2.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
+        *(double *)&dVar2 != 0.0) {
       uVar2 = float_add(*(uint *)(param_1 + 0x6c),param_2[1]);
       blocking = game_find_blocking_shape((Game *)*(int *)(*(int *)(param_1 + 0x84) + 0xa4),
                                           *(int *)(param_1 + 0x68),uVar2,*(undefined4 *)(param_1 + 0x70));
@@ -9649,12 +9646,12 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
   if ((bVar11 || bVar12) || uVar4 == 5) {
     dVar4 = FUN_00126248(param_2[2]);
     uVar4 = dVar4.low;
-    FUN_00125634(uVar4,dVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD);
-    if (!(bool)uVar18 || (bool)uVar10) {
+    if (double_compare_greater(uVar4,dVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
+        !(*(double *)&dVar4 > 0.0)) {
       dVar4 = FUN_00126248(param_2[2]);
       uVar4 = dVar4.low;
-      FUN_001256b4(uVar4,dVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD);
-      if (!(bool)uVar18) {
+      if (double_compare_less(uVar4,dVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
+          *(double *)&dVar4 < 0.0) {
         uVar4 = float_add(*(uint *)(param_1 + 0x70),param_2[2]);
         float_compare_less(uVar4,*(uint *)(param_1 + 0x208));
         if (!(bool)uVar18) {
@@ -10469,8 +10466,8 @@ void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4
   if ((bool)uVar10) {
     dVar3 = FUN_00126248(uVar3);
     uVar3 = dVar3.low;
-    FUN_001256b4(uVar3,dVar3.high,DOUBLE_4_POINT_5_LOW_WORD,DOUBLE_4_POINT_5_HIGH_WORD);
-    if (!(bool)uVar8 || (bool)uVar10) {
+    if (double_compare_less(uVar3,dVar3.high,DOUBLE_4_POINT_5_LOW_WORD,DOUBLE_4_POINT_5_HIGH_WORD),
+        *(double *)&dVar3 <= 4.5) {
       uVar7 = float_multiply(param_2,*(uint *)(param_1 + 0x10));
       bVar1 = true;
     }
@@ -10478,8 +10475,8 @@ void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4
   else {
     dVar3 = FUN_00126248(uVar3);
     uVar3 = dVar3.low;
-    FUN_001256b4(uVar3,dVar3.high,DOUBLE_4_POINT_5_LOW_WORD,DOUBLE_4_POINT_5_HIGH_WORD);
-    if (!(bool)uVar8 || (bool)uVar10) {
+    if (double_compare_less(uVar3,dVar3.high,DOUBLE_4_POINT_5_LOW_WORD,DOUBLE_4_POINT_5_HIGH_WORD),
+        *(double *)&dVar3 <= 4.5) {
       uVar7 = float_multiply(param_2,*(uint *)(param_1 + 0xc));
     }
   }
@@ -12666,14 +12663,14 @@ undefined8 FUN_00113374(undefined4 param_1,uint param_2,uint param_3,uint param_
     uVar1 = float_divide(local_1c,uVar1);
     dVar2 = FUN_00126248(uVar1);
     uVar2 = dVar2.low;
-    FUN_00125634(uVar2,dVar2.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
-    if ((bool)in_CY && !(bool)in_ZR) {
+    if (double_compare_greater(uVar2,dVar2.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD),
+        *(double *)&dVar2 > 1.0) {
       uVar1 = 0x3f800000;
     }
     dVar2 = FUN_00126248(uVar1);
     uVar2 = dVar2.low;
-    FUN_001256b4(uVar2,dVar2.high,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD);
-    if (!(bool)in_CY) {
+    if (double_compare_less(uVar2,dVar2.high,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD),
+        *(double *)&dVar2 < -1.0) {
       uVar1 = FLOAT_MINUS_1;
     }
     dVar1 = FUN_00126248(uVar1);
@@ -12684,8 +12681,8 @@ undefined8 FUN_00113374(undefined4 param_1,uint param_2,uint param_3,uint param_
     uVar2 = float_multiply(uVar1,WORD_HEXADECIMAL_42652F1B);
     dVar1 = FUN_00126248(local_20);
     uVar1 = dVar1.low;
-    FUN_00125634(uVar1,dVar1.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD);
-    if ((bool)in_CY && !(bool)in_ZR) {
+    if (double_compare_greater(uVar1,dVar1.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
+        *(double *)&dVar1 > 0.0) {
       uVar2 = uVar2 ^ 0x80000000;
     }
   }
@@ -15719,7 +15716,7 @@ void FUN_00118910(int param_1,undefined4 param_2)
      others (cuboid, rect)  the box: sizes 1 and 2 across x and y (when both are given), 0..size 3 in z;
                        its 4 corners as vertices (x, y only); height: the box's z size.
    The float comparisons leave their results in the flags (float_compare_equal equality, float_compare_greater `bhi`;
-   FUN_001254d4 compares the size as a double with -1.0), written after the commas. */
+   double_compare_equal compares the size as a double with -1.0), written after the commas. */
 void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
 
 {
@@ -15785,7 +15782,7 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
   case 3:                                            /* circle */
   case 4:                                            /* cylinder */
     if (value = FUN_00126248(size1),
-        FUN_001254d4(value.low,value.high,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD),
+        double_compare_equal(value.low,value.high,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD),
         *(float *)&size1 != -1.0f)
       shape->radius = size1;
     else {
@@ -15795,7 +15792,7 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
         shape->radius = half;
     }
     if (value = FUN_00126248(size2),
-        FUN_001254d4(value.low,value.high,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD),
+        double_compare_equal(value.low,value.high,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD),
         *(float *)&size2 != -1.0f) {
       shape->height = size2;
       shape->minimum[2] = float_multiply(size2 ^ 0x80000000,0x3f000000);   /* -size2 * 0.5 */
@@ -15805,7 +15802,7 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
     break;
   case 7:                                            /* sphere */
     if (value = FUN_00126248(size1),
-        FUN_001254d4(value.low,value.high,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD),
+        double_compare_equal(value.low,value.high,DOUBLE_MINUS_ONE_LOW_WORD,DOUBLE_MINUS_ONE_HIGH_WORD),
         *(float *)&size1 != -1.0f) {
       shape->radius = size1;
       return;
@@ -18223,22 +18220,24 @@ void FUN_0011ca8c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 /* ==== 0x0011CB34  (file offset 0x1CB34)  wrap_angle ================================================== */
 /* GUESS: name. Wraps an angle in degrees (a float, its bits) into -180..180: subtracts 360 while it is
    above 180, adds 360 while it is below -180. The work is done in doubles: FUN_00126248 widens the float,
-   double_subtract / double_add subtract / add 360.0, double_to_float narrows back; FUN_00125634 and
-   FUN_001256b4 compare with 180.0 and -180.0 and leave the result in the flags (`bhi` at 0x0011cb70,
-   `bcc` at 0x0011cba4), written after the commas. The first argument, app->context, is never read. */
+   double_subtract / double_add subtract / add 360.0, double_to_float narrows back;
+   double_compare_greater and double_compare_less compare with 180.0 and -180.0 and leave the result in
+   the flags (`bhi` at 0x0011cb70, `bcc` at 0x0011cba4), written after the commas. The first argument,
+   app->context, is never read. */
 void wrap_angle(int32 context,uint32 *angle)
 
 {
   uint64 value;   /* the angle as a double, r0:r1 */
 
   while (value = FUN_00126248(*angle),
-         FUN_00125634(value.low,value.high,DOUBLE_180_LOW_WORD,DOUBLE_180_HIGH_WORD), *(float *)angle > 180.0f) {
+         double_compare_greater(value.low,value.high,DOUBLE_180_LOW_WORD,DOUBLE_180_HIGH_WORD),
+         *(float *)angle > 180.0f) {
     value = FUN_00126248(*angle);
     value = double_subtract(value.low,value.high,DOUBLE_360_LOW_WORD,DOUBLE_360_HIGH_WORD);
     *angle = double_to_float(value.low,value.high);
   }
   while (value = FUN_00126248(*angle),
-         FUN_001256b4(value.low,value.high,DOUBLE_MINUS_180_LOW_WORD,DOUBLE_MINUS_180_HIGH_WORD),
+         double_compare_less(value.low,value.high,DOUBLE_MINUS_180_LOW_WORD,DOUBLE_MINUS_180_HIGH_WORD),
          *(float *)angle < -180.0f) {
     value = FUN_00126248(*angle);
     value = double_add(value.low,value.high,DOUBLE_360_LOW_WORD,DOUBLE_360_HIGH_WORD);
@@ -20007,8 +20006,8 @@ void FUN_0011f394(int param_1,char *param_2,undefined4 param_3,undefined4 param_
     piVar2 = *(int **)(*(int *)(param_1 + 0x1cc) + 8);
     (**(code **)(*piVar2 + 0x58))(piVar2,local_30);
     uVar4 = FUN_00126248(local_24);
-    FUN_001256b4((int)uVar4.low,(int)uVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD);
-    if (!(bool)uVar3) {
+    if (double_compare_less(uVar4.low,uVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
+        *(double *)&uVar4 < 0.0) {
       local_24 = local_24 ^ 0x80000000;
       local_30[0] = local_30[0] ^ 0x80000000;
     }
@@ -21636,7 +21635,8 @@ void FUN_00121780(int param_1,undefined4 *param_2,uint param_3)
   uVar2 = float_divide(angle,FLOAT_60);
   dVar3 = FUN_00126248(uVar2);
   uVar3 = dVar3.low;
-  if (FUN_001256b4(uVar3,dVar3.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD), *(float *)&uVar2 < 0.0f) {
+  if (double_compare_less(uVar3,dVar3.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
+      *(float *)&uVar2 < 0.0f) {
     uVar2 = uVar2 ^ 0x80000000;
   }
   uVar3 = int_to_float(param_3);
@@ -21729,8 +21729,8 @@ void FUN_00121b98(int param_1,undefined4 param_2)
   wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,(uint32 *)&local_14);
   uVar2 = float_divide(local_14,FLOAT_60);
   uVar4 = FUN_00126248(uVar2);
-  FUN_001256b4((int)uVar4.low,(int)uVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD);
-  if (!(bool)in_CY) {
+  if (double_compare_less(uVar4.low,uVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
+      *(double *)&uVar4 < 0.0) {
     uVar2 = uVar2 ^ 0x80000000;
   }
   uVar1 = int_to_float(param_2);
@@ -22135,8 +22135,8 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
   }
   dVar4 = FUN_00126248(*(uint *)(param_1 + 0x210));
   uVar4 = dVar4.low;
-  FUN_00125634(uVar4,dVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD);
-  if (((bool)uVar9 && !(bool)uVar12) && (*(int *)(param_1 + 0x22c) != 0)) {
+  if ((double_compare_greater(uVar4,dVar4.high,ZERO_DOUBLE_LOW_WORD,ZERO_DOUBLE_HIGH_WORD),
+       *(double *)&dVar4 > 0.0) && *(int *)(param_1 + 0x22c) != 0) {
     local_24 = (int *)0x0;
     piVar5 = *(int **)(*(int *)(param_1 + 0x214) + 0x6c);
     (**(code **)(*piVar5 + 0xc4))(piVar5,&local_24);
@@ -22213,7 +22213,7 @@ void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed)
         offsetY ^= 0x80000000;
       distance = float_add(offsetX,offsetY);
       if (value = FUN_00126248(distance),
-          FUN_001256b4(value.low,value.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD),
+          double_compare_less(value.low,value.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD),
           *(float *)&distance < 1.0f) {       /* within 1.0 of the player: picked up */
         if (drops->app->progress->soundVolume > 0 && drops->app->field_bc != 0)
           FUN_00108f28((int32)drops->app->field_bc,5);
@@ -22626,8 +22626,8 @@ void FUN_0012312c(int param_1,int param_2,int param_3)
       *(uint *)(param_1 + 0x1b0) = uVar2;
       dVar2 = FUN_00126248(uVar2);
       uVar2 = dVar2.low;
-      FUN_001256b4(uVar2,dVar2.high,WORD_HEXADECIMAL_47AE147B,FLOAT_1_POINT_035);
-      if (!(bool)uVar7) {
+      if (double_compare_less(uVar2,dVar2.high,WORD_HEXADECIMAL_47AE147B,FLOAT_1_POINT_035),
+          *(double *)&dVar2 < 0.01) {     /* the two words are the double 0.01 */
         *(undefined4 *)(param_1 + 0x1b0) = 0;
       }
       uVar2 = *(uint *)(param_1 + 0x1b0);
@@ -22673,8 +22673,8 @@ void FUN_0012312c(int param_1,int param_2,int param_3)
     uVar2 = float_reverse_divide(uVar3,uVar2);
     dVar3 = FUN_00126248(uVar2);
     uVar3 = dVar3.low;
-    FUN_00125634(uVar3,dVar3.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
-    if ((bool)uVar8) {
+    if (double_compare_greater(uVar3,dVar3.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD),
+        *(double *)&dVar3 >= 1.0) {
       if (*(char *)(param_1 + 0x198) == '\0') {
         *(undefined4 *)(param_1 + 0x38) = 0;
       }
@@ -25699,236 +25699,47 @@ uint64 double_divide_mantissas(uint32 dividendLow,uint32 dividendHigh,uint32 div
   return quotient;
 }
 
-/* ==== 0x001254D4  (file offset 0x254D4)  FUN_001254d4 ================================================ */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint FUN_001254d4(uint param_1,uint param_2,uint param_3,uint param_4)
+/* ==== 0x001254D4  (file offset 0x254D4)  double_compare_equal ======================================== */
+/* GUESS: name (the routine is certain: the soft-float library's quiet double-precision compare, ARM's
+   run-time ABI __aeabi_cdcmpeq), for == and !=, as float_compare_equal is for floats. a and b are given
+   as their two words (low, high). Leaves the result in the CPU flags, as an unsigned `cmp a, b` would:
+   Z set when a == b (+0 == -0), C set with Z clear when a > b, C clear when a < b (N and V mean
+   nothing): both operands non-negative compare as their two words, either negative the other way round
+   (0x0012550c), and an exponent of all ones goes through 0x00124e70, where the infinities compare as
+   numbers (0x00124e94, which only fixes V). C cannot express that: the listing writes the call as
+   (double_compare_equal(aLow,aHigh,bLow,bHigh), *(double *)&x != *(double *)&y), the comparison after
+   the comma the one the caller's branch makes, an unordered compare (a NaN) leaves C and Z clear. No
+   caller reads r0, but it is returned as the binary leaves it: aLow when there is no NaN; 8 after a NaN
+   (the compare exit, 0x00126cb0 / 0x00126d6c); after a trap, the handler's result t, or 2 - t when its
+   bit 3 is clear (0x00126d7c). What C can express is the rest, below: only a signalling NaN raises
+   invalid (status bit 0); when that is trapped (bit 0x100), it calls the exception routine
+   float_raise_exception with a and b and the control word (0x04120019: invalid, double precision,
+   operation 9, a compare) with the status word's bits 22-24. The listing's second kh_GetFpStatusPtr
+   call (0x00126dac) is the compare exit for a control word without bits 16-19, which this one has; it
+   is not written. Verified under emulation (research_notes/soft_float_test, double_reference.py, kind
+   dd), the flags against the IEEE comparison. */
+uint32 double_compare_equal(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
 
 {
-  uint uVar1;
-  undefined4 uVar2;
-  uint *puVar3;
-  undefined4 uVar4;
-  uint uVar5;
-  uint uVar6;
-  bool bVar7;
-  bool bVar8;
-  
-  uVar1 = WORD_HEXADECIMAL_04120019;
-  uVar6 = param_2 | param_4;
-  if ((int)uVar6 < 0) {
-    if ((int)(uVar6 + 0x100000) < 0) {
-      bVar7 = (param_2 & 0x7fffffff) == 0;
-      bVar8 = param_1 == 0 && bVar7;
-      if (param_1 == 0 && bVar7) {
-        bVar8 = param_3 == 0 && (param_4 & 0x7fffffff) == 0;
-      }
-      if (!bVar8) {
-        bVar8 = param_4 == param_2;
-      }
-      if (!bVar8) {
-        return param_1;
-      }
-      return param_1;
-    }
-    if (param_2 << 1 < 0xffe00000 && param_4 << 1 < 0xffe00000) {
-      return param_1;
-    }
-  }
-  else {
-    if (-1 < (int)(uVar6 + 0x100000)) {
-      if (param_2 != param_4) {
-        return param_1;
-      }
-      return param_1;
-    }
-    if (-1 < (int)(param_2 + 0x100000) && -1 < (int)(param_4 + 0x100000)) {
-      return param_1;
-    }
-  }
-  uVar6 = param_2 * 2;
-  bVar7 = uVar6 == 0xffe00000 && param_1 == 0;
-  if (uVar6 < 0xffe00000 || uVar6 == 0xffe00000 && param_1 == 0) {
-    uVar6 = param_4 * 2;
-    bVar7 = uVar6 == 0xffe00000;
-  }
-  if (!bVar7 && uVar6 < 0xffe00000 || bVar7 && param_3 == 0) {
-    if ((int)(param_2 | param_4) < 0) {
-      bVar7 = SUBTRACT_OVERFLOWS(param_4,param_2);
-      if (param_4 == param_2) {
-        bVar7 = SUBTRACT_OVERFLOWS(param_3,param_1);
-      }
-      if (!bVar7) {
-        return param_1;
-      }
-    }
-    else {
-      bVar7 = SUBTRACT_OVERFLOWS(param_2,param_4);
-      if (param_2 == param_4) {
-        bVar7 = SUBTRACT_OVERFLOWS(param_1,param_3);
-      }
-      if (!bVar7) {
-        return param_1;
-      }
-    }
-    return param_1;
-  }
-  if ((WORD_HEXADECIMAL_04120019 & 0x50000) == 0) {
-    uVar5 = param_2 * 2 + 0x100000 + (uint)(param_1 != 0);
-    uVar6 = uVar5;
-    if (uVar5 < 0xfff00001) {
-      uVar6 = param_4 * 2 + 0x100000 + (uint)(param_3 != 0);
-    }
-    if (0xfff00000 < uVar6) goto LAB_001260e4;
-    uVar6 = WORD_HEXADECIMAL_04120019;
-    if (0xfffff < uVar5) {
-      param_1 = param_3;
-      param_2 = param_4;
-    }
-LAB_00126cb0:
-    if ((uVar6 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x00126cc4. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar6 & 0xf) != 8) {
-        return param_1;
-      }
-      if ((uVar6 & 0x40) == 0) {
-        uVar2 = FLOAT_DEFAULT_NAN;
-        if ((uVar6 & 0x10) != 0) {
-          uVar2 = 0;
-          param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD;
-        }
-        return uVar2;
-      }
-      if ((uVar6 & 0x10000) != 0) {
-        return 0;
-      }
-      if ((uVar6 & 0x20) == 0) {
-        if ((uVar6 & 0x10) == 0) {
-          uVar6 = 0x7fffffff;
-          uVar1 = param_2;
-          param_2 = param_1;
-        }
-        else {
-          uVar1 = 0x7fffffff;
-          uVar6 = 0xffffffff;
-        }
-        if ((param_2 & 0x80000000) != 0) {
-          uVar6 = ~uVar6;
-          uVar1 = ~uVar1;
-        }
-        return uVar6;
-      }
-      uVar2 = 0xffffffff;
-      uVar4 = 0xffffffff;
-      if ((param_3 & 0x80000000) != 0) {
-        uVar2 = 0;
-        uVar4 = 0;
-      }
-      return uVar2;
-    }
-    uVar1 = 8;
-    goto LAB_00126d6c;
-  }
-LAB_001260e4:
-  if ((WORD_HEXADECIMAL_04120019 & 0x10) == 0) {
-    param_3 = param_2;
-  }
-  puVar3 = kh_GetFpStatusPtr();
-  uVar5 = *puVar3;
-  if ((uVar1 & ~(uVar5 << 0x12) & 0x30000000) != 0) {
-    uVar1 = uVar1 | 0x40000000;
-  }
-  uVar6 = uVar1 | uVar5 & 0x1c00000;
-  *puVar3 = uVar5 | (uVar1 & 0x7fffffff) >> 0x1a;
-  bVar7 = (uVar1 & 0xf) != 8;
-  if (bVar7) {
-    uVar1 = uVar1 & 0x70;
-    uVar6 = uVar6 | uVar1 << 3;
-  }
-  else {
-    uVar1 = 0x20000;
-  }
-  if (!bVar7 && (uVar1 & ~uVar6) == 0) {
-    uVar6 = uVar6 | 0xc00000;
-  }
-  if ((uVar6 & 0x20000000) == 0) {
-    if ((uVar6 & 0x10000000) == 0) {
-      if ((uVar6 & 0x40000000) != 0) {
-        uVar5 = uVar5 & 0x1000;
-        goto joined_r0x00126194;
-      }
-      if ((uVar6 & 0x8000000) == 0) {
-        if ((uVar5 & 0x100) == 0) {
-          param_3 = param_2;
-          if ((uVar6 & 0x80) == 0) {
-            param_3 = param_1;
-          }
-          param_3 = param_3 & 0x80000000;
-          if ((uVar6 & 0x10) == 0) {
-            param_1 = FLOAT_DEFAULT_NAN | param_3;
-          }
-          else {
-            param_1 = DOUBLE_DEFAULT_NAN_LOW_WORD;
-            param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD | param_3;
-          }
-          goto LAB_00126cb0;
-        }
-      }
-      else if ((uVar5 & 0x200) == 0) {
-        if ((uVar6 & 0x10) == 0) {
-          param_2 = param_1 ^ param_3;
-        }
-        else {
-          param_2 = param_2 ^ param_4;
-        }
-        goto LAB_001261dc;
-      }
-    }
-    else if ((uVar5 & 0x400) == 0) {
-      if ((uVar6 & 0x80) == 0) {
-        param_2 = param_1 & 0x80000000;
-      }
-      else {
-        param_2 = param_2 & 0x80000000;
-      }
-LAB_001261dc:
-      uVar1 = INTEGER_0;
-      if ((uVar6 & 0x10) == 0) {
-        uVar1 = WORD_HEXADECIMAL_7F800000 | param_2 & 0x80000000;
-      }
-      return uVar1;
-    }
-  }
-  else {
-    uVar5 = uVar5 & 0x800;
-joined_r0x00126194:
-    if (uVar5 == 0) {
-      return param_1;
-    }
-  }
-  uVar1 = float_raise_exception(param_1,param_2,param_3,param_4,uVar6).low;
-  if ((uVar6 & 0xf) != 9) {
-    return uVar1;
-  }
-LAB_00126d6c:
-  if ((uVar6 & 0x100000) == 0) {
-    return (uint)((uVar6 & uVar1 << 0x10) != 0);
-  }
-  if ((uVar6 & 0xf0000) != 0) {
-    if ((uVar1 & 8) == 0) {
-      return 2 - uVar1;
-    }
-    return uVar1;
-  }
-  uVar6 = uVar1 << 0x1d;
-  if ((bool)((byte)(uVar1 >> 3) & 1)) {
-    uVar6 = uVar6 | 0x30000000;
-  }
-  puVar3 = kh_GetFpStatusPtr();
-  *puVar3 = *puVar3 & 0xfffffff | uVar6;
-  return uVar1;
+  uint32 *status;
+  uint32 word;
+  uint32 result;
+
+  if ((aHigh << 1 | (aLow != 0)) <= DOUBLE_EXPONENT_MASK_SHIFTED &&
+      (bHigh << 1 | (bLow != 0)) <= DOUBLE_EXPONENT_MASK_SHIFTED)
+    return aLow;                              /* no NaN: the flags hold the comparison */
+  if (0x100000 + (aHigh << 1) + (aLow != 0) <= 0xfff00000 &&   /* 0x00124e18: above 0xfff00000 */
+      0x100000 + (bHigh << 1) + (bLow != 0) <= 0xfff00000)     /* a signalling NaN */
+    return 8;                                 /* only quiet NaNs: unordered, no exception */
+  status = kh_GetFpStatusPtr();               /* invalid (the library's exception code, 0x001260e4) */
+  word = *status | 1;
+  *status = word;
+  if ((word & 0x100) == 0)
+    return 8;
+  result = float_raise_exception(aLow,aHigh,bLow,bHigh,0x4120099 | (word & 0x1c00000)).low;
+  return result & 8 ? result : 2 - result;
 }
+
 
 /* ==== 0x00125554  (file offset 0x25554)  FUN_00125554 ================================================ */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
@@ -26160,467 +25971,85 @@ uint64 int_to_double(int32 value)
 }
 
 
-/* ==== 0x00125634  (file offset 0x25634)  FUN_00125634 ================================================ */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint FUN_00125634(uint param_1,uint param_2,uint param_3,uint param_4)
-
-{
-  uint uVar1;
-  undefined4 uVar2;
-  uint *puVar3;
-  undefined4 uVar4;
-  uint uVar5;
-  uint uVar6;
-  bool bVar7;
-  bool bVar8;
-  
-  uVar1 = WORD_HEXADECIMAL_04130019;
-  uVar6 = param_2 | param_4;
-  if ((int)uVar6 < 0) {
-    if ((int)(uVar6 + 0x100000) < 0) {
-      bVar7 = (param_2 & 0x7fffffff) == 0;
-      bVar8 = param_1 == 0 && bVar7;
-      if (param_1 == 0 && bVar7) {
-        bVar8 = param_3 == 0 && (param_4 & 0x7fffffff) == 0;
-      }
-      if (!bVar8) {
-        bVar8 = param_4 == param_2;
-      }
-      if (!bVar8) {
-        return param_1;
-      }
-      return param_1;
-    }
-    if (param_2 << 1 < 0xffe00000 && param_4 << 1 < 0xffe00000) {
-      return param_1;
-    }
-  }
-  else {
-    if (-1 < (int)(uVar6 + 0x100000)) {
-      if (param_2 != param_4) {
-        return param_1;
-      }
-      return param_1;
-    }
-    if (-1 < (int)(param_2 + 0x100000) && -1 < (int)(param_4 + 0x100000)) {
-      return param_1;
-    }
-  }
-  uVar6 = param_2 * 2;
-  bVar7 = uVar6 == 0xffe00000 && param_1 == 0;
-  if (uVar6 < 0xffe00000 || uVar6 == 0xffe00000 && param_1 == 0) {
-    uVar6 = param_4 * 2;
-    bVar7 = uVar6 == 0xffe00000;
-  }
-  if (!bVar7 && uVar6 < 0xffe00000 || bVar7 && param_3 == 0) {
-    if ((int)(param_2 | param_4) < 0) {
-      bVar7 = SUBTRACT_OVERFLOWS(param_4,param_2);
-      if (param_4 == param_2) {
-        bVar7 = SUBTRACT_OVERFLOWS(param_3,param_1);
-      }
-      if (!bVar7) {
-        return param_1;
-      }
-    }
-    else {
-      bVar7 = SUBTRACT_OVERFLOWS(param_2,param_4);
-      if (param_2 == param_4) {
-        bVar7 = SUBTRACT_OVERFLOWS(param_1,param_3);
-      }
-      if (!bVar7) {
-        return param_1;
-      }
-    }
-    return param_1;
-  }
-  if ((WORD_HEXADECIMAL_04130019 & 0x50000) == 0) {
-    uVar5 = param_2 * 2 + 0x100000 + (uint)(param_1 != 0);
-    uVar6 = uVar5;
-    if (uVar5 < 0xfff00001) {
-      uVar6 = param_4 * 2 + 0x100000 + (uint)(param_3 != 0);
-    }
-    if (0xfff00000 < uVar6) goto LAB_001260e4;
-    uVar6 = WORD_HEXADECIMAL_04130019;
-    if (0xfffff < uVar5) {
-      param_1 = param_3;
-      param_2 = param_4;
-    }
-LAB_00126cb0:
-    if ((uVar6 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x00126cc4. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar6 & 0xf) != 8) {
-        return param_1;
-      }
-      if ((uVar6 & 0x40) == 0) {
-        uVar2 = FLOAT_DEFAULT_NAN;
-        if ((uVar6 & 0x10) != 0) {
-          uVar2 = 0;
-          param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD;
-        }
-        return uVar2;
-      }
-      if ((uVar6 & 0x10000) != 0) {
-        return 0;
-      }
-      if ((uVar6 & 0x20) == 0) {
-        if ((uVar6 & 0x10) == 0) {
-          uVar6 = 0x7fffffff;
-          uVar1 = param_2;
-          param_2 = param_1;
-        }
-        else {
-          uVar1 = 0x7fffffff;
-          uVar6 = 0xffffffff;
-        }
-        if ((param_2 & 0x80000000) != 0) {
-          uVar6 = ~uVar6;
-          uVar1 = ~uVar1;
-        }
-        return uVar6;
-      }
-      uVar2 = 0xffffffff;
-      uVar4 = 0xffffffff;
-      if ((param_3 & 0x80000000) != 0) {
-        uVar2 = 0;
-        uVar4 = 0;
-      }
-      return uVar2;
-    }
-    uVar1 = 8;
-    goto LAB_00126d6c;
-  }
-LAB_001260e4:
-  if ((WORD_HEXADECIMAL_04130019 & 0x10) == 0) {
-    param_3 = param_2;
-  }
-  puVar3 = kh_GetFpStatusPtr();
-  uVar5 = *puVar3;
-  if ((uVar1 & ~(uVar5 << 0x12) & 0x30000000) != 0) {
-    uVar1 = uVar1 | 0x40000000;
-  }
-  uVar6 = uVar1 | uVar5 & 0x1c00000;
-  *puVar3 = uVar5 | (uVar1 & 0x7fffffff) >> 0x1a;
-  bVar7 = (uVar1 & 0xf) != 8;
-  if (bVar7) {
-    uVar1 = uVar1 & 0x70;
-    uVar6 = uVar6 | uVar1 << 3;
-  }
-  else {
-    uVar1 = 0x20000;
-  }
-  if (!bVar7 && (uVar1 & ~uVar6) == 0) {
-    uVar6 = uVar6 | 0xc00000;
-  }
-  if ((uVar6 & 0x20000000) == 0) {
-    if ((uVar6 & 0x10000000) == 0) {
-      if ((uVar6 & 0x40000000) != 0) {
-        uVar5 = uVar5 & 0x1000;
-        goto joined_r0x00126194;
-      }
-      if ((uVar6 & 0x8000000) == 0) {
-        if ((uVar5 & 0x100) == 0) {
-          param_3 = param_2;
-          if ((uVar6 & 0x80) == 0) {
-            param_3 = param_1;
-          }
-          param_3 = param_3 & 0x80000000;
-          if ((uVar6 & 0x10) == 0) {
-            param_1 = FLOAT_DEFAULT_NAN | param_3;
-          }
-          else {
-            param_1 = DOUBLE_DEFAULT_NAN_LOW_WORD;
-            param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD | param_3;
-          }
-          goto LAB_00126cb0;
-        }
-      }
-      else if ((uVar5 & 0x200) == 0) {
-        if ((uVar6 & 0x10) == 0) {
-          param_2 = param_1 ^ param_3;
-        }
-        else {
-          param_2 = param_2 ^ param_4;
-        }
-        goto LAB_001261dc;
-      }
-    }
-    else if ((uVar5 & 0x400) == 0) {
-      if ((uVar6 & 0x80) == 0) {
-        param_2 = param_1 & 0x80000000;
-      }
-      else {
-        param_2 = param_2 & 0x80000000;
-      }
-LAB_001261dc:
-      uVar1 = INTEGER_0;
-      if ((uVar6 & 0x10) == 0) {
-        uVar1 = WORD_HEXADECIMAL_7F800000 | param_2 & 0x80000000;
-      }
-      return uVar1;
-    }
-  }
-  else {
-    uVar5 = uVar5 & 0x800;
-joined_r0x00126194:
-    if (uVar5 == 0) {
-      return param_1;
-    }
-  }
-  uVar1 = float_raise_exception(param_1,param_2,param_3,param_4,uVar6).low;
-  if ((uVar6 & 0xf) != 9) {
-    return uVar1;
-  }
-LAB_00126d6c:
-  if ((uVar6 & 0x100000) == 0) {
-    return (uint)((uVar6 & uVar1 << 0x10) != 0);
-  }
-  if ((uVar6 & 0xf0000) != 0) {
-    if ((uVar1 & 8) == 0) {
-      return 2 - uVar1;
-    }
-    return uVar1;
-  }
-  uVar6 = uVar1 << 0x1d;
-  if ((bool)((byte)(uVar1 >> 3) & 1)) {
-    uVar6 = uVar6 | 0x30000000;
-  }
-  puVar3 = kh_GetFpStatusPtr();
-  *puVar3 = *puVar3 & 0xfffffff | uVar6;
-  return uVar1;
-}
-
-/* ==== 0x001256B4  (file offset 0x256B4)  FUN_001256b4 ================================================ */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint FUN_001256b4(uint param_1,uint param_2,uint param_3,uint param_4)
+/* ==== 0x00125634  (file offset 0x25634)  double_compare_greater ====================================== */
+/* GUESS: name (the routine is certain: the soft-float library's double-precision compare, ARM's
+   run-time ABI __aeabi_cdcmple), for > and >= (bhi / bhs are false for a NaN), as float_compare_greater
+   is for floats. a and b are given as their two words (low, high). Leaves the result in the CPU flags,
+   as an unsigned `cmp a, b` would: Z set when a == b (+0 == -0), C set with Z clear when a > b, C clear
+   when a < b (N and V mean nothing): both operands non-negative compare as their two words, either
+   negative the other way round (0x0012566c), and an exponent of all ones goes through 0x00124e70, where
+   the infinities compare as numbers (0x00124e94, which only fixes V). C cannot express that: the
+   listing writes the call as (double_compare_greater(aLow,aHigh,bLow,bHigh), *(double *)&x >
+   *(double *)&y), the comparison after the comma the one the caller's branch makes, an unordered
+   compare (a NaN) leaves C and Z clear, so >, >= are false and !(x > y), !(x >= y) stand for bls and
+   blo. No caller reads r0, but it is returned as the binary leaves it: aLow when there is no NaN; 8
+   after a NaN (the compare exit, 0x00126cb0 / 0x00126d6c); after a trap, the handler's result t, or 2 -
+   t when its bit 3 is clear (0x00126d7c). What C can express is the rest, below: any NaN raises invalid
+   (status bit 0); when that is trapped (bit 0x100), it calls the exception routine
+   float_raise_exception with a and b and the control word (0x04130019: invalid, double precision,
+   operation 9, a compare) with the status word's bits 22-24. The listing's second kh_GetFpStatusPtr
+   call (0x00126dac) is the compare exit for a control word without bits 16-19, which this one has; it
+   is not written. Verified under emulation (research_notes/soft_float_test, double_reference.py, kind
+   dd), the flags against the IEEE comparison. */
+uint32 double_compare_greater(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
 
 {
-  uint uVar1;
-  undefined4 uVar2;
-  uint *puVar3;
-  undefined4 uVar4;
-  uint uVar5;
-  uint uVar6;
-  bool bVar7;
-  bool bVar8;
-  
-  uVar1 = WORD_HEXADECIMAL_04160019;
-  uVar6 = param_2 | param_4;
-  if ((int)uVar6 < 0) {
-    if ((int)(uVar6 + 0x100000) < 0) {
-      bVar7 = (param_2 & 0x7fffffff) == 0;
-      bVar8 = param_1 == 0 && bVar7;
-      if (param_1 == 0 && bVar7) {
-        bVar8 = param_3 == 0 && (param_4 & 0x7fffffff) == 0;
-      }
-      if (!bVar8) {
-        bVar8 = param_4 == param_2;
-      }
-      if (!bVar8) {
-        return param_1;
-      }
-      return param_1;
-    }
-    if (param_2 << 1 < 0xffe00000 && param_4 << 1 < 0xffe00000) {
-      return param_1;
-    }
-  }
-  else {
-    if (-1 < (int)(uVar6 + 0x100000)) {
-      if (param_2 != param_4) {
-        return param_1;
-      }
-      return param_1;
-    }
-    if (-1 < (int)(param_2 + 0x100000) && -1 < (int)(param_4 + 0x100000)) {
-      return param_1;
-    }
-  }
-  uVar6 = param_2 * 2;
-  bVar7 = uVar6 == 0xffe00000 && param_1 == 0;
-  if (uVar6 < 0xffe00000 || uVar6 == 0xffe00000 && param_1 == 0) {
-    uVar6 = param_4 * 2;
-    bVar7 = uVar6 == 0xffe00000;
-  }
-  if (!bVar7 && uVar6 < 0xffe00000 || bVar7 && param_3 == 0) {
-    if ((int)(param_2 | param_4) < 0) {
-      bVar7 = SUBTRACT_OVERFLOWS(param_4,param_2);
-      if (param_4 == param_2) {
-        bVar7 = SUBTRACT_OVERFLOWS(param_3,param_1);
-      }
-      if (!bVar7) {
-        return param_1;
-      }
-    }
-    else {
-      bVar7 = SUBTRACT_OVERFLOWS(param_2,param_4);
-      if (param_2 == param_4) {
-        bVar7 = SUBTRACT_OVERFLOWS(param_1,param_3);
-      }
-      if (!bVar7) {
-        return param_1;
-      }
-    }
-    return param_1;
-  }
-  if ((WORD_HEXADECIMAL_04160019 & 0x50000) == 0) {
-    uVar5 = param_2 * 2 + 0x100000 + (uint)(param_1 != 0);
-    uVar6 = uVar5;
-    if (uVar5 < 0xfff00001) {
-      uVar6 = param_4 * 2 + 0x100000 + (uint)(param_3 != 0);
-    }
-    if (0xfff00000 < uVar6) goto LAB_001260e4;
-    uVar6 = WORD_HEXADECIMAL_04160019;
-    if (0xfffff < uVar5) {
-      param_1 = param_3;
-      param_2 = param_4;
-    }
-LAB_00126cb0:
-    if ((uVar6 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x00126cc4. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar6 & 0xf) != 8) {
-        return param_1;
-      }
-      if ((uVar6 & 0x40) == 0) {
-        uVar2 = FLOAT_DEFAULT_NAN;
-        if ((uVar6 & 0x10) != 0) {
-          uVar2 = 0;
-          param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD;
-        }
-        return uVar2;
-      }
-      if ((uVar6 & 0x10000) != 0) {
-        return 0;
-      }
-      if ((uVar6 & 0x20) == 0) {
-        if ((uVar6 & 0x10) == 0) {
-          uVar6 = 0x7fffffff;
-          uVar1 = param_2;
-          param_2 = param_1;
-        }
-        else {
-          uVar1 = 0x7fffffff;
-          uVar6 = 0xffffffff;
-        }
-        if ((param_2 & 0x80000000) != 0) {
-          uVar6 = ~uVar6;
-          uVar1 = ~uVar1;
-        }
-        return uVar6;
-      }
-      uVar2 = 0xffffffff;
-      uVar4 = 0xffffffff;
-      if ((param_3 & 0x80000000) != 0) {
-        uVar2 = 0;
-        uVar4 = 0;
-      }
-      return uVar2;
-    }
-    uVar1 = 8;
-    goto LAB_00126d6c;
-  }
-LAB_001260e4:
-  if ((WORD_HEXADECIMAL_04160019 & 0x10) == 0) {
-    param_3 = param_2;
-  }
-  puVar3 = kh_GetFpStatusPtr();
-  uVar5 = *puVar3;
-  if ((uVar1 & ~(uVar5 << 0x12) & 0x30000000) != 0) {
-    uVar1 = uVar1 | 0x40000000;
-  }
-  uVar6 = uVar1 | uVar5 & 0x1c00000;
-  *puVar3 = uVar5 | (uVar1 & 0x7fffffff) >> 0x1a;
-  bVar7 = (uVar1 & 0xf) != 8;
-  if (bVar7) {
-    uVar1 = uVar1 & 0x70;
-    uVar6 = uVar6 | uVar1 << 3;
-  }
-  else {
-    uVar1 = 0x20000;
-  }
-  if (!bVar7 && (uVar1 & ~uVar6) == 0) {
-    uVar6 = uVar6 | 0xc00000;
-  }
-  if ((uVar6 & 0x20000000) == 0) {
-    if ((uVar6 & 0x10000000) == 0) {
-      if ((uVar6 & 0x40000000) != 0) {
-        uVar5 = uVar5 & 0x1000;
-        goto joined_r0x00126194;
-      }
-      if ((uVar6 & 0x8000000) == 0) {
-        if ((uVar5 & 0x100) == 0) {
-          param_3 = param_2;
-          if ((uVar6 & 0x80) == 0) {
-            param_3 = param_1;
-          }
-          param_3 = param_3 & 0x80000000;
-          if ((uVar6 & 0x10) == 0) {
-            param_1 = FLOAT_DEFAULT_NAN | param_3;
-          }
-          else {
-            param_1 = DOUBLE_DEFAULT_NAN_LOW_WORD;
-            param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD | param_3;
-          }
-          goto LAB_00126cb0;
-        }
-      }
-      else if ((uVar5 & 0x200) == 0) {
-        if ((uVar6 & 0x10) == 0) {
-          param_2 = param_1 ^ param_3;
-        }
-        else {
-          param_2 = param_2 ^ param_4;
-        }
-        goto LAB_001261dc;
-      }
-    }
-    else if ((uVar5 & 0x400) == 0) {
-      if ((uVar6 & 0x80) == 0) {
-        param_2 = param_1 & 0x80000000;
-      }
-      else {
-        param_2 = param_2 & 0x80000000;
-      }
-LAB_001261dc:
-      uVar1 = INTEGER_0;
-      if ((uVar6 & 0x10) == 0) {
-        uVar1 = WORD_HEXADECIMAL_7F800000 | param_2 & 0x80000000;
-      }
-      return uVar1;
-    }
-  }
-  else {
-    uVar5 = uVar5 & 0x800;
-joined_r0x00126194:
-    if (uVar5 == 0) {
-      return param_1;
-    }
-  }
-  uVar1 = float_raise_exception(param_1,param_2,param_3,param_4,uVar6).low;
-  if ((uVar6 & 0xf) != 9) {
-    return uVar1;
-  }
-LAB_00126d6c:
-  if ((uVar6 & 0x100000) == 0) {
-    return (uint)((uVar6 & uVar1 << 0x10) != 0);
-  }
-  if ((uVar6 & 0xf0000) != 0) {
-    if ((uVar1 & 8) == 0) {
-      return 2 - uVar1;
-    }
-    return uVar1;
-  }
-  uVar6 = uVar1 << 0x1d;
-  if ((bool)((byte)(uVar1 >> 3) & 1)) {
-    uVar6 = uVar6 | 0x30000000;
-  }
-  puVar3 = kh_GetFpStatusPtr();
-  *puVar3 = *puVar3 & 0xfffffff | uVar6;
-  return uVar1;
+  uint32 *status;
+  uint32 word;
+  uint32 result;
+
+  if ((aHigh << 1 | (aLow != 0)) <= DOUBLE_EXPONENT_MASK_SHIFTED &&
+      (bHigh << 1 | (bLow != 0)) <= DOUBLE_EXPONENT_MASK_SHIFTED)
+    return aLow;                              /* no NaN: the flags hold the comparison */
+  status = kh_GetFpStatusPtr();               /* invalid (the library's exception code, 0x001260e4) */
+  word = *status | 1;
+  *status = word;
+  if ((word & 0x100) == 0)
+    return 8;
+  result = float_raise_exception(aLow,aHigh,bLow,bHigh,0x4130099 | (word & 0x1c00000)).low;
+  return result & 8 ? result : 2 - result;
 }
+
+
+/* ==== 0x001256B4  (file offset 0x256B4)  double_compare_less ========================================= */
+/* GUESS: name (the routine is certain: the soft-float library's double-precision compare with an
+   unordered result of "greater"), for < and <= (blo / bls are false for a NaN), as float_compare_less
+   is for floats. a and b are given as their two words (low, high). Leaves the result in the CPU flags,
+   as an unsigned `cmp a, b` would: Z set when a == b (+0 == -0), C set with Z clear when a > b, C clear
+   when a < b (N and V mean nothing): both operands non-negative compare as their two words, either
+   negative the other way round (0x001256ec), and an exponent of all ones goes through 0x00124e70, where
+   the infinities compare as numbers (0x00124e94, which only fixes V). C cannot express that: the
+   listing writes the call as (double_compare_less(aLow,aHigh,bLow,bHigh), *(double *)&x <
+   *(double *)&y), the comparison after the comma the one the caller's branch makes, an unordered
+   compare (a NaN) leaves C set and Z clear, so <, <= are false and !(x < y), !(x <= y) stand for bhs
+   and bhi. No caller reads r0, but it is returned as the binary leaves it: aLow when there is no NaN; 8
+   after a NaN (the compare exit, 0x00126cb0 / 0x00126d6c); after a trap, the handler's result t, or 2 -
+   t when its bit 3 is clear (0x00126d7c). What C can express is the rest, below: any NaN raises invalid
+   (status bit 0); when that is trapped (bit 0x100), it calls the exception routine
+   float_raise_exception with a and b and the control word (0x04160019: invalid, double precision,
+   operation 9, a compare) with the status word's bits 22-24. The listing's second kh_GetFpStatusPtr
+   call (0x00126dac) is the compare exit for a control word without bits 16-19, which this one has; it
+   is not written. Verified under emulation (research_notes/soft_float_test, double_reference.py, kind
+   dd), the flags against the IEEE comparison. */
+uint32 double_compare_less(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh)
+
+{
+  uint32 *status;
+  uint32 word;
+  uint32 result;
+
+  if ((aHigh << 1 | (aLow != 0)) <= DOUBLE_EXPONENT_MASK_SHIFTED &&
+      (bHigh << 1 | (bLow != 0)) <= DOUBLE_EXPONENT_MASK_SHIFTED)
+    return aLow;                              /* no NaN: the flags hold the comparison */
+  status = kh_GetFpStatusPtr();               /* invalid (the library's exception code, 0x001260e4) */
+  word = *status | 1;
+  *status = word;
+  if ((word & 0x100) == 0)
+    return 8;
+  result = float_raise_exception(aLow,aHigh,bLow,bHigh,0x4160099 | (word & 0x1c00000)).low;
+  return result & 8 ? result : 2 - result;
+}
+
 
 /* ==== 0x00125734  (file offset 0x25734)  FUN_00125734 ================================================ */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */

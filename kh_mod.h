@@ -167,7 +167,7 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                 sin passes it as kernel_sin's tail argument for
                                                 |x| <= pi/4 (kh_mod.c FUN_001008d0). A third copy is in
                                                 FUN_001009b8's pool (GUESS: sqrt), which compares x with
-                                                it (FUN_001256b4) and sets errno = EDOM and returns NaN
+                                                it (double_compare_less) and sets errno = EDOM and returns NaN
                                                 for x < 0. A fourth copy is in FUN_00100d88's pool
                                                 (GUESS: rem_pio2), which presets y[1] = 0 with it.
                                                 In cos it is
@@ -850,11 +850,11 @@ uint64 double_subtract(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 
 uint64 double_reverse_divide(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00124F24 GUESS: name, see kh_mod.c */
 uint64 double_divide(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00124F44 GUESS: name, see kh_mod.c */
 uint64 double_divide_mantissas(uint32 dividendLow,uint32 dividendHigh,uint32 divisorLow,uint32 divisorHigh);   /* 0x001251EC GUESS: name */
-uint FUN_001254d4(uint param_1,uint param_2,uint param_3,uint param_4);
+uint32 double_compare_equal(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x001254D4 GUESS: name, see kh_mod.c */
 uint FUN_00125554(uint param_1,uint param_2);
 uint64 int_to_double(int32 value);   /* 0x00125604 GUESS: name, see kh_mod.c */
-uint FUN_00125634(uint param_1,uint param_2,uint param_3,uint param_4);
-uint FUN_001256b4(uint param_1,uint param_2,uint param_3,uint param_4);
+uint32 double_compare_greater(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x00125634 GUESS: name, see kh_mod.c */
+uint32 double_compare_less(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh);   /* 0x001256B4 GUESS: name, see kh_mod.c */
 undefined8 FUN_00125734(uint param_1,uint param_2,uint param_3,uint param_4);
 undefined8 FUN_001259e8(uint param_1,uint param_2,uint param_3,uint param_4);
 undefined8 FUN_00125cd0(uint param_1,uint param_2);
