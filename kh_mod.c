@@ -9348,20 +9348,20 @@ void FUN_0010db04(int param_1,undefined4 param_2)
     }
     iVar11 = -1;
     if (iVar3 == 0) {
-      uVar8 = FUN_00112dbc(*(int *)(iVar10 + 0xa4),WORD_HEXADECIMAL_24D6C48B);
+      uVar8 = (int32)game_find_object((Game *)((KHApp *)iVar10)->pGame,WORD_HEXADECIMAL_24D6C48B);
       *(undefined4 *)(param_1 + 0x230) = uVar8;
       iVar10 = *(int *)(*(int *)(param_1 + 0x84) + 0x9c);
       iVar3 = WORD_HEXADECIMAL_14A090F6;
     }
     else if (iVar3 == 1) {
-      uVar8 = FUN_00112dbc(*(int *)(iVar10 + 0xa4),WORD_HEXADECIMAL_36420037);
+      uVar8 = (int32)game_find_object((Game *)((KHApp *)iVar10)->pGame,WORD_HEXADECIMAL_36420037);
       *(undefined4 *)(param_1 + 0x230) = uVar8;
       iVar10 = *(int *)(*(int *)(param_1 + 0x84) + 0x9c);
       iVar3 = WORD_HEXADECIMAL_387C837A;
     }
     else {
       if (iVar3 != 2) goto LAB_0010dde4;
-      uVar8 = FUN_00112dbc(*(int *)(iVar10 + 0xa4),WORD_HEXADECIMAL_2DF1CDEC);
+      uVar8 = (int32)game_find_object((Game *)((KHApp *)iVar10)->pGame,WORD_HEXADECIMAL_2DF1CDEC);
       *(undefined4 *)(param_1 + 0x230) = uVar8;
       iVar10 = *(int *)(*(int *)(param_1 + 0x84) + 0x9c);
       iVar3 = WORD_HEXADECIMAL_254FCFF2;
@@ -9384,7 +9384,7 @@ LAB_0010dde4:
           uVar5 = FUN_00126858(uVar5);
           *(uint *)(param_1 + 0x2a0) = uVar5;
           if ((*(int *)(param_1 + 0x228) == 0) &&
-             (iVar3 = FUN_00112dbc(*(int *)(*(int *)(param_1 + 0x84) + 0xa4),WORD_HEXADECIMAL_3361CE32),
+             (iVar3 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x84))->pGame,WORD_HEXADECIMAL_3361CE32),
              iVar3 != 0)) {
             FUN_001201cc(iVar3,0);
             thunk_FUN_0011fd90(iVar3,local_2c,local_28,local_24);
@@ -10614,7 +10614,7 @@ LAB_0010f4c0:
 void FUN_0010f1fc(int32 character)
 
 {
-  int32 object = FUN_00112dbc(*(int32 *)(*(int32 *)(character + 0x84) + 0xa4),WORD_HEXADECIMAL_21BF9442);
+  int32 object = (int32)game_find_object((Game *)((KHApp *)*(int32 *)(character + 0x84))->pGame,WORD_HEXADECIMAL_21BF9442);
 
   FUN_0010ed54(*(int32 *)(*(int32 *)(character + 0x84) + 0xa4),*(int32 *)(object + 8),WORD_HEXADECIMAL_0493FC17);
   FUN_0012031c((int *)((KHApp *)*(int32 *)(character + 0x84))->context,2);
@@ -12541,7 +12541,7 @@ void FUN_00112c44(int *param_1)
   memcpy_word_aligned(local_34,(int32)DATA_AT_00126DEC,0x28);
   iVar2 = 0;
   do {
-    iVar1 = FUN_00112dbc(*(undefined4 *)(*param_1 + 0xa4),local_34[iVar2]);
+    iVar1 = (int32)game_find_object((Game *)((KHApp *)*param_1)->pGame,local_34[iVar2]);
     iVar3 = iVar2 + 1;
     param_1[iVar2 + 1] = iVar1;
     iVar2 = iVar3;
@@ -12625,29 +12625,25 @@ int32 progress_find_free_status(Progress *progress)
 }
 
 
-/* ==== 0x00112DBC  (file offset 0x12DBC)  FUN_00112dbc ================================================ */
-undefined4 FUN_00112dbc(int param_1,int param_2)
+/* ==== 0x00112DBC  (file offset 0x12DBC)  game_find_object ============================================ */
+/* GUESS: name. The level object with the name hash `nameId`: the player's character (0x10C617E4) and the
+   camera (0x2E6723BD), which are not in the object table, else the first of the game's 120 objects with
+   that name; 0 when there is none. */
+LevelObject * game_find_object(Game *game,uint32 nameId)
 
 {
-  int iVar1;
-  int iVar2;
-  
-  if (param_2 == WORD_HEXADECIMAL_10C617E4) {
-    return *(undefined4 *)(param_1 + 0x1f8);
-  }
-  if (param_2 != WORD_HEXADECIMAL_2E6723BD) {
-    iVar1 = 0;
-    while ((iVar2 = *(int *)(param_1 + iVar1 * 4 + 0x10), iVar2 == 0 ||
-           (*(int *)(iVar2 + 0xc) != param_2))) {
-      iVar1 = iVar1 + 1;
-      if (0x77 < iVar1) {
-        return 0;
-      }
-    }
-    return *(undefined4 *)(param_1 + iVar1 * 4 + 0x10);
-  }
-  return *(undefined4 *)(param_1 + 0x1f0);
+  int32 i;
+
+  if (nameId == WORD_HEXADECIMAL_10C617E4)   /* the player */
+    return (LevelObject *)game->character;
+  if (nameId == WORD_HEXADECIMAL_2E6723BD)   /* the camera */
+    return (LevelObject *)game->camera;
+  for (i = 0; i < 120; i++)
+    if (game->objects[i] != (LevelObject *)0x0 && game->objects[i]->nameId == nameId)
+      return game->objects[i];
+  return (LevelObject *)0x0;
 }
+
 
 /* ==== 0x00112E20  (file offset 0x12E20)  FUN_00112e20 ================================================ */
 undefined4 FUN_00112e20(int param_1,undefined4 param_2)
@@ -12669,7 +12665,7 @@ undefined4 FUN_00112e20(int param_1,undefined4 param_2)
   }
   else {
     uVar2 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 4))->context,param_2);
-    uVar2 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 4) + 0xa4),uVar2);
+    uVar2 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 4))->pGame,uVar2);
   }
   return uVar2;
 }
@@ -12991,7 +12987,7 @@ void FUN_001135dc(int param_1)
                WORD_HEXADECIMAL_39B9295D,&local_c /* not arguments, value leftovers: param_3 */);
   if (local_c != 0) {
     uVar1 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_c);
-    uVar1 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0xa4),uVar1);
+    uVar1 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x84))->pGame,uVar1);
     *(undefined4 *)(param_1 + 0x1cc) = uVar1;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(local_c);
@@ -14186,7 +14182,7 @@ void FUN_00114c00(int param_1,undefined4 param_2,undefined4 param_3,int param_4)
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_0AFEF300,&local_10);
   if (local_10 != 0) {
     uVar1 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,local_10);
-    uVar1 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x20) + 0xa4),uVar1);
+    uVar1 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x20))->pGame,uVar1);
     *(undefined4 *)(param_1 + 0x1c) = uVar1;
     if (local_10 != 0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -15056,7 +15052,7 @@ void FUN_001174ac(int param_1,undefined4 param_2)
     *(undefined4 *)(param_1 + 0x17c) = uVar16;
     uVar16 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_020A2432);
     *(undefined4 *)(param_1 + 0x180) = uVar16;
-    uVar16 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0xa4),WORD_HEXADECIMAL_3D8F67C0);
+    uVar16 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x74))->pGame,WORD_HEXADECIMAL_3D8F67C0);
     *(undefined4 *)(param_1 + 0x134) = uVar16;
     uVar19 = uVar14;
     uVar20 = uVar1;
@@ -15078,7 +15074,7 @@ void FUN_001174ac(int param_1,undefined4 param_2)
     *(undefined4 *)(param_1 + 0x1c4) = WORD_HEXADECIMAL_09981F59;
     *(undefined4 *)(param_1 + 0x1c8) = WORD_HEXADECIMAL_1C67FA2B;
     do {
-      uVar14 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0xa4),
+      uVar14 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x74))->pGame,
                             *(undefined4 *)(param_1 + iVar15 * 4 + 0x1a4));
       level_object_get_position((uint32 *)(param_1 + iVar15 * 0xc + 0x1cc),(LevelObject *)uVar14);
       uVar27 = WORD_HEXADECIMAL_21E5FC16;
@@ -15095,7 +15091,7 @@ void FUN_001174ac(int param_1,undefined4 param_2)
     uVar14 = DOUBLE_1_POINT_640496717_TIMES_TEN_TO_THE_MINUS_22_LOW_WORD;
     *(undefined4 *)(param_1 + 0xec) = DOUBLE_1_POINT_640496717_TIMES_TEN_TO_THE_MINUS_22_LOW_WORD;
     *(undefined4 *)(param_1 + 0xf0) = uVar14;
-    uVar14 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0xa4),uVar16);
+    uVar14 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x74))->pGame,uVar16);
     *(undefined4 *)(param_1 + 0x2c) = uVar14;
     *(undefined4 *)(param_1 + 0x108) = 1;
     *(undefined4 *)(param_1 + 0x10c) = 1;
@@ -15255,9 +15251,9 @@ LAB_00117ac8:
     *(undefined4 *)(param_1 + 0x27c) = 0x3f400000;
     uVar19 = uVar18;
   }
-  uVar14 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0xa4),uVar19);
+  uVar14 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x74))->pGame,uVar19);
   *(undefined4 *)(param_1 + 0x24) = uVar14;
-  uVar14 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0xa4),uVar18);
+  uVar14 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x74))->pGame,uVar18);
   *(undefined4 *)(param_1 + 0x28) = uVar14;
   *(undefined4 *)(param_1 + 0x20) = uVar14;
   *(undefined4 *)(param_1 + 0x78) = local_28;
@@ -15281,9 +15277,9 @@ LAB_00117ac8:
   *(undefined4 *)(param_1 + 0x54) = uVar14;
   uVar14 = animations_find((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),WORD_HEXADECIMAL_08A18ABF);
   *(undefined4 *)(param_1 + 0x58) = uVar14;
-  uVar14 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0xa4),WORD_HEXADECIMAL_11218F6E);
+  uVar14 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x74))->pGame,WORD_HEXADECIMAL_11218F6E);
   *(undefined4 *)(param_1 + 0x6c) = uVar14;
-  uVar14 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x74) + 0xa4),WORD_HEXADECIMAL_2E48DA58);
+  uVar14 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x74))->pGame,WORD_HEXADECIMAL_2E48DA58);
   *(undefined4 *)(param_1 + 0x70) = uVar14;
   iVar15 = *(int *)(param_1 + 0x104);
   if (iVar15 == 5) {
@@ -15483,7 +15479,7 @@ undefined8 FUN_001180c4(int param_1,uint param_2)
        them (animation slots from the table at 0x00126F1C, priorities from 0x00126F5C), speed 2.0 for
        animations 9-12 and 1.5 for 19, 21 and 27;
      - five objects of the game's scene by user id (Find), the "CharacterShadow" scene (FUN_0011ae04)
-       and two level objects by name hash (FUN_00112dbc);
+       and two level objects by name hash (game_find_object);
    then FUN_0011fc80(character, 0). Ghidra dropped the fifth Find's output (+0x1ec) and the 0 passed to
    slots +0x8c and +0x94. */
 void character_setup(Character *character,int32 *error)
@@ -15530,8 +15526,8 @@ void character_setup(Character *character,int32 *error)
     (**(code **)((int32)character->shadow->pvt + 0x94))(character->shadow,0);
     character->hasShadow = 1;
   }
-  character->field_234 = (LevelObject *)FUN_00112dbc((int32)character->app->pGame,WORD_HEXADECIMAL_2BB0C920);
-  character->field_238 = (LevelObject *)FUN_00112dbc((int32)character->app->pGame,WORD_HEXADECIMAL_19DB98DB);
+  character->field_234 = game_find_object((Game *)character->app->pGame,WORD_HEXADECIMAL_2BB0C920);
+  character->field_238 = game_find_object((Game *)character->app->pGame,WORD_HEXADECIMAL_19DB98DB);
   character->field_4c = 1;
   FUN_0011fc80((int32)character,0);
 }
@@ -15691,7 +15687,7 @@ void FUN_0011868c(int param_1,undefined4 param_2)
       for (iVar2 = 0; iVar2 < *(int *)(param_1 + 0x128); iVar2 = iVar2 + 1) {
         uVar5 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                              *(undefined4 *)((int)pvVar3 + iVar2 * 4));
-        uVar5 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0xa4),uVar5);
+        uVar5 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x84))->pGame,uVar5);
         uVar5 = (undefined4)hitsphere_create((Hitsphere *)0x0,uVar5,(BossCombatRegion *)param_1,iVar2 != 0);
         *(undefined4 *)(*(int *)(param_1 + 0x120) + iVar2 * 4) = uVar5;
         helper_free(*(void **)((int)pvVar3 + iVar2 * 4));
@@ -15716,7 +15712,7 @@ void FUN_0011868c(int param_1,undefined4 param_2)
       for (iVar6 = 0; iVar6 < *(int *)(param_1 + 300); iVar6 = iVar6 + 1) {
         uVar5 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                              *(undefined4 *)((int)pvVar3 + iVar6 * 4));
-        uVar5 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0xa4),uVar5);
+        uVar5 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x84))->pGame,uVar5);
         *(undefined4 *)(*(int *)(param_1 + 0x118) + iVar6 * 4) = uVar5;
         helper_free(*(void **)((int)pvVar3 + iVar6 * 4));
       }
@@ -15726,7 +15722,7 @@ void FUN_0011868c(int param_1,undefined4 param_2)
     (*g_pHelperFuncs->free)(local_1c);
   }
   *(undefined4 *)(param_1 + 0x11c) = 0;
-  uVar5 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0xa4),WORD_HEXADECIMAL_2E583064);
+  uVar5 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x84))->pGame,WORD_HEXADECIMAL_2E583064);
   *(undefined4 *)(param_1 + 0x11c) = uVar5;
                     /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
                         */
@@ -18755,7 +18751,7 @@ void FUN_0011d040(int param_1,undefined4 param_2,void *param_3)
   
   local_14 = param_3;
   local_10 = param_4;
-  iVar1 = FUN_00112dbc(*(undefined4 *)(*(int *)(param_1 + 0xc) + 0xa4),param_2);
+  iVar1 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0xc))->pGame,param_2);
   if (iVar1 != 0) {
     local_10 = 0;
     FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0xc))->context,*(undefined4 *)(iVar1 + 8),param_3,
@@ -23400,7 +23396,7 @@ LAB_00123b40:
   *(undefined4 *)(param_1 + 0x2a0) = 2000;
 LAB_00123ba8:
   if (*(int *)(param_1 + 0x224) != 0) {
-    iVar9 = FUN_00112dbc(*(int *)(*(int *)(param_1 + 0x84) + 0xa4),WORD_HEXADECIMAL_21BF9442);
+    iVar9 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x84))->pGame,WORD_HEXADECIMAL_21BF9442);
     FUN_0010ed54(*(int *)(*(int *)(param_1 + 0x84) + 0xa4),*(int *)(iVar9 + 8),WORD_HEXADECIMAL_1812C1C3);
     *(undefined4 *)(param_1 + 0x224) = 0;
   }

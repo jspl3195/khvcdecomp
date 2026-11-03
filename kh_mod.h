@@ -644,7 +644,7 @@ undefined8 FUN_00112cdc(int param_1,int *param_2,int param_3);
 int32 game_find_free_object_slot(Game *game);   /* 0x00112CFC GUESS: name */
 int32 animations_find_free_slot(Animations *animations);   /* 0x00112D28 GUESS: name */
 int32 progress_find_free_status(Progress *progress);   /* 0x00112D54 GUESS: name, see kh_mod.c */
-undefined4 FUN_00112dbc(int param_1,int param_2);
+LevelObject * game_find_object(Game *game,uint32 nameId);   /* 0x00112DBC GUESS: name, see kh_mod.c */
 undefined4 FUN_00112e20(int param_1,undefined4 param_2);
 int32 FUN_00112e84(int32 enemy);
 void FUN_00113030(int param_1,undefined4 param_2,uint param_3,uint param_4,undefined4 param_5);
