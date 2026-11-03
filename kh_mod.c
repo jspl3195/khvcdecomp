@@ -4753,7 +4753,7 @@ LAB_00107384:
                     /* the two doubles travel as bit patterns in r0:r1 and r2:r3, the operation
                        code on the stack: `mov r3, #3; str r3, [sp]` at 0x1076fc = FO_DIV */
     *(double *)&ratio = (*g_pHelperFuncs->f_op)(*(double *)&value,*(double *)&maximum,FO_DIV);
-    uVar3 = FUN_0012479c(ratio.low,ratio.high);
+    uVar3 = double_to_float(ratio.low,ratio.high);
     uVar4 = int_to_float(*(int16 *)(param_1[2] + 4));
     uVar3 = float_multiply(uVar4,uVar3);
     bar.x = *(int16 *)param_1[2] + 1;
@@ -8800,7 +8800,7 @@ uint32 string_to_float(int32 context,char *text)
                        helper[18] double wstrtofloat(const AECHAR *s), helper[27] void free(void *p) */
     (*g_pHelperFuncs->strtowstr)(text,wide,size);
     number.value = (*g_pHelperFuncs->wstrtofloat)(wide);
-    value = FUN_0012479c(number.words.low,number.words.high);
+    value = double_to_float(number.words.low,number.words.high);
     (*g_pHelperFuncs->free)(wide);
   }
   return value;
@@ -10045,14 +10045,14 @@ void motion_entity_rotate_by_heading(MotionEntity *entity,uint32 *vector)
 /* ==== 0x0010ED40  (file offset 0x0ED40)  float_cos =================================================== */
 /* GUESS: name. cosf: the cosine of a float angle in radians, through the double routines: widens the
    float (FUN_00126248), takes the double cosine (FUN_001007f4, GUESS: cos), and narrows the result
-   (FUN_0012479c, a tail jump at 0x0010ed50). Ghidra listed FUN_0012479c's body here. */
+   (double_to_float, a tail jump at 0x0010ed50). Ghidra listed double_to_float's body here. */
 uint32 float_cos(uint32 angle)
 
 {
   uint64 value = FUN_00126248(angle);
 
   value = FUN_001007f4(value.low,value.high);
-  return FUN_0012479c(value.low,value.high);
+  return double_to_float(value.low,value.high);
 }
 
 /* ==== 0x0010ED54  (file offset 0x0ED54)  FUN_0010ed54 ================================================ */
@@ -10773,7 +10773,7 @@ void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param
   uVar2 = dVar2.low;
   dVar2 = FUN_00124954(uVar2,dVar2.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
   uVar2 = dVar2.low;
-  local_28 = FUN_0012479c(uVar2,dVar2.high);
+  local_28 = double_to_float(uVar2,dVar2.high);
   item_drops_get_chances((ItemDrops *)param_1,chances);
   iVar3 = (int)random_floats((int32)((KHApp *)*param_1)->context,0xf);
   iVar9 = 0;
@@ -12668,7 +12668,7 @@ undefined8 FUN_00113374(undefined4 param_1,uint param_2,uint param_3,uint param_
     uVar1 = dVar1.low;
     dVar1 = FUN_0010041c(uVar1,dVar1.high);
     uVar1 = dVar1.low;
-    uVar1 = FUN_0012479c(uVar1,dVar1.high);
+    uVar1 = double_to_float(uVar1,dVar1.high);
     uVar2 = float_multiply(uVar1,WORD_HEXADECIMAL_42652F1B);
     dVar1 = FUN_00126248(local_20);
     uVar1 = dVar1.low;
@@ -16854,7 +16854,7 @@ undefined8 FUN_0011abc4(int param_1,int param_2)
     uVar5 = dVar5.low;
     dVar5 = FUN_00124f44(uVar5,dVar5.high,DOUBLE_800_LOW_WORD,DOUBLE_800_HIGH_WORD);
     uVar5 = dVar5.low;
-    uVar5 = FUN_0012479c(uVar5,dVar5.high);
+    uVar5 = double_to_float(uVar5,dVar5.high);
     *(uint *)(param_1 + 0xb4) = uVar5;
     dVar1 = FUN_001008d0(uVar1,dVar1.high);
     uVar1 = dVar1.low;
@@ -16862,7 +16862,7 @@ undefined8 FUN_0011abc4(int param_1,int param_2)
     uVar1 = dVar1.low;
     dVar1 = FUN_00124f44(uVar1,dVar1.high,DOUBLE_800_LOW_WORD,DOUBLE_800_HIGH_WORD);
     uVar1 = dVar1.low;
-    uVar1 = FUN_0012479c(uVar1,dVar1.high);
+    uVar1 = double_to_float(uVar1,dVar1.high);
     *(uint *)(param_1 + 0xb8) = uVar1;
     uVar5 = float_add(*(uint *)(param_1 + 400),uVar5);
     uVar5 = float_reverse_subtract(uVar5,local_30);
@@ -18211,7 +18211,7 @@ void FUN_0011ca8c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 /* ==== 0x0011CB34  (file offset 0x1CB34)  wrap_angle ================================================== */
 /* GUESS: name. Wraps an angle in degrees (a float, its bits) into -180..180: subtracts 360 while it is
    above 180, adds 360 while it is below -180. The work is done in doubles: FUN_00126248 widens the float,
-   FUN_00124b84 / FUN_00124954 subtract / add 360.0, FUN_0012479c narrows back; FUN_00125634 and
+   FUN_00124b84 / FUN_00124954 subtract / add 360.0, double_to_float narrows back; FUN_00125634 and
    FUN_001256b4 compare with 180.0 and -180.0 and leave the result in the flags (`bhi` at 0x0011cb70,
    `bcc` at 0x0011cba4), written after the commas. The first argument, app->context, is never read. */
 void wrap_angle(int32 context,uint32 *angle)
@@ -18223,14 +18223,14 @@ void wrap_angle(int32 context,uint32 *angle)
          FUN_00125634(value.low,value.high,DOUBLE_180_LOW_WORD,DOUBLE_180_HIGH_WORD), *(float *)angle > 180.0f) {
     value = FUN_00126248(*angle);
     value = FUN_00124b84(value.low,value.high,DOUBLE_360_LOW_WORD,DOUBLE_360_HIGH_WORD);
-    *angle = FUN_0012479c(value.low,value.high);
+    *angle = double_to_float(value.low,value.high);
   }
   while (value = FUN_00126248(*angle),
          FUN_001256b4(value.low,value.high,DOUBLE_MINUS_180_LOW_WORD,DOUBLE_MINUS_180_HIGH_WORD),
          *(float *)angle < -180.0f) {
     value = FUN_00126248(*angle);
     value = FUN_00124954(value.low,value.high,DOUBLE_360_LOW_WORD,DOUBLE_360_HIGH_WORD);
-    *angle = FUN_0012479c(value.low,value.high);
+    *angle = double_to_float(value.low,value.high);
   }
 }
 
@@ -20716,21 +20716,21 @@ void camera_set_yaw(Camera *camera,uint32 angle)
 
 /* ==== 0x001202F4  (file offset 0x202F4)  float_sin =================================================== */
 /* GUESS: name. sinf: the sine of a float angle in radians: widens it (FUN_00126248), takes the double
-   sine (FUN_001008d0, GUESS: sin) and narrows the result (FUN_0012479c, a tail jump at 0x00120304).
-   Ghidra listed FUN_0012479c's body here. */
+   sine (FUN_001008d0, GUESS: sin) and narrows the result (double_to_float, a tail jump at 0x00120304).
+   Ghidra listed double_to_float's body here. */
 uint32 float_sin(uint32 angle)
 
 {
   uint64 value = FUN_00126248(angle);
 
   value = FUN_001008d0(value.low,value.high);
-  return FUN_0012479c(value.low,value.high);
+  return double_to_float(value.low,value.high);
 }
 
 /* ==== 0x00120308  (file offset 0x20308)  float_sqrt ================================================== */
 /* GUESS: name. sqrtf: the square root of a float, through the double routines: widens it
    (FUN_00126248), takes the double square root (FUN_001009b8, GUESS: sqrt) and narrows the result
-   (FUN_0012479c, a tail jump at 0x00120318). Ghidra listed FUN_0012479c's body here and missed the
+   (double_to_float, a tail jump at 0x00120318). Ghidra listed double_to_float's body here and missed the
    argument in r0. */
 uint32 float_sqrt(uint32 value)
 
@@ -20738,7 +20738,7 @@ uint32 float_sqrt(uint32 value)
   uint64 root = FUN_00126248(value);
 
   root = FUN_001009b8(root.low,root.high);
-  return FUN_0012479c(root.low,root.high);
+  return double_to_float(root.low,root.high);
 }
 
 /* ==== 0x0012031C  (file offset 0x2031C)  FUN_0012031c ================================================ */
@@ -21605,7 +21605,7 @@ void FUN_00121780(int param_1,undefined4 *param_2,uint param_3)
   uVar1 = dVar1.low;
   dVar1 = FUN_0010041c(uVar1,dVar1.high);
   uVar1 = dVar1.low;
-  uVar1 = FUN_0012479c(uVar1,dVar1.high);
+  uVar1 = double_to_float(uVar1,dVar1.high);
   uVar1 = float_multiply(uVar1,WORD_HEXADECIMAL_42652F1B);
   float_compare_less(*(uint *)(param_1 + 0x20c),0);
   if (!(bool)uVar5) {
@@ -22702,7 +22702,7 @@ void FUN_0012312c(int param_1,int param_2,int param_3)
           uVar6 = dVar6.low;
           dVar6 = FUN_00124b40(uVar6,dVar6.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
           uVar6 = dVar6.low;
-          uVar6 = FUN_0012479c(uVar6,dVar6.high);
+          uVar6 = double_to_float(uVar6,dVar6.high);
         }
         uVar6 = float_multiply(*(uint *)(iVar5 + 0x180),uVar6);
         uVar6 = float_add(uVar6,*(uint *)(iVar5 + 0x168));
@@ -23527,332 +23527,206 @@ int32 save_write_string(Progress *progress,const char *text,uint8 *data,int32 *p
 }
 
 
-/* ==== 0x0012479C  (file offset 0x2479C)  FUN_0012479c ================================================ */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint FUN_0012479c(uint param_1,uint param_2)
+/* ==== 0x0012479C  (file offset 0x2479C)  double_to_float ============================================= */
+/* GUESS: name (the routine is certain: the soft-float library's double -> float conversion, ARM's
+   run-time ABI __aeabi_d2f). Takes the double as its two words (r0 low, r1 high) and returns the
+   float's bits. A finite value is rounded to nearest, ties to even, on the 29 bits it drops, and its
+   exponent rebiased by 896 (1023 - 127); an in-range result raises nothing, not even inexact. Out of
+   range it takes the library's shared exception code, which Ghidra decompiled into every routine that
+   branches to it, written here for this routine's cases (the control word, ip: 0x88 a double operand
+   converted, operation 8; 0x04000000 invalid, 0x10000000 overflow, 0x20000000 underflow, 0x40000000
+   inexact; bits 30-31 also say how the first rounding went: 0 exact, 0x40000000 up, 0xc0000000 down):
+     overflow: the sticky flags, then +-Inf, or the trap (status 0x400) with the exponent wrapped by 192;
+     underflow trapped (status 0x800): the trap at once (0x00126d48), the exponent wrapped by 192;
+     underflow not trapped: +-0 with flush to zero (bit 24), otherwise the float denormal (0x00126b44),
+       rounded to nearest even again, with a correction for the first rounding (a tie that the first
+       rounding made is broken the other way); an inexact one sets the underflow flag (bit 3), and the
+       exception code adds inexact (bit 4) and the trap when status 0x1000 is set;
+     a double denormal: with the underflow trap normalized first, so the trap sees it exactly; without,
+       it counts as exponent 1 with its high mantissa bits dropped (it is +-0 as a float anyway);
+     +-Inf: +-Inf (bits 20-22 of the high word cleared); a quiet NaN: FLOAT_DEFAULT_NAN, its sign and
+       payload dropped (0x00126cb0 / 0x00126d2c); a signalling NaN: invalid, the trap (status 0x100) or
+       FLOAT_DEFAULT_NAN, the sign the exception code puts in overwritten at 0x00126d2c.
+   The listing's fifth kh_GetFpStatusPtr call, after the trap, is the compare routines' result code
+   (0x00126d6c, operation 9), which a conversion never reaches; the second underflow-trap test in the
+   denormal code (0x00126b6c) cannot be true either, the status word being unchanged since the first.
+   Neither is written. The trap gets r0 - r3 as the binary leaves them: the result's words, and in r2 the
+   status word or the high word, in r3 the sign or what the denormal code left there. */
+uint32 double_to_float(uint32 low,uint32 high)
 
 {
-  uint *puVar1;
-  undefined4 uVar2;
-  uint uVar3;
-  int iVar4;
-  uint uVar5;
-  undefined4 uVar6;
-  uint uVar7;
-  uint uVar8;
-  uint uVar9;
-  bool bVar10;
-  
-  uVar8 = param_2 & 0x80000000;
-  uVar3 = param_2 & 0x7fffffff;
-  uVar7 = uVar3 ^ param_2 << 1;
-  if ((uVar7 & 0x7f000000) == 0 && (uVar7 & 0xe00000) == 0) {
-    if ((param_2 & 0x100000) == 0) {
-      if (param_1 == 0 && (param_2 & 0x7fffffff) == 0) {
-        return uVar8;
+  uint32 *status;
+  uint32 word;                        /* the status word */
+  uint32 sign = high & 0x80000000;
+  uint32 control;                     /* ip, see above */
+  uint32 adjust;                      /* the denormal's exponent, as it is normalized */
+  uint32 shift;                       /* the denormal result's right shift */
+  uint32 lost;                        /* the bits it shifts out, from bit 31 down */
+  uint32 r2 = 0;
+  uint32 r3 = sign;
+  int32 exponent;                     /* the high word, rebiased: exponent at bit 20 */
+  int32 raises = 0;                   /* to the exception code (0x001260e4) rather than the trap */
+
+  high &= 0x7fffffff;
+  if (((high ^ high << 1) & 0x7fe00000) == 0) {   /* the exponent all zeros or all ones */
+    if (high & 0x100000) {                        /* Inf or NaN (0x00124934) */
+      high |= sign;
+      if ((low | high << 12) == 0)
+        return high & ~0x700000u;                 /* +-Inf */
+      control = WORD_HEXADECIMAL_04000088;
+      if (high & 0x80000)                         /* quiet (0x00124e58) */
+        return FLOAT_DEFAULT_NAN;
+      raises = 1;                                 /* signalling: invalid */
+    }
+    else {
+      if ((low | high << 1) == 0)
+        return sign;                              /* +-0 */
+      status = kh_GetFpStatusPtr();               /* a denormal (0x00124888) */
+      if ((*status & 0x800) == 0)
+        high = 0x100000;
+      else {
+        adjust = 0;
+        if (high == 0) {
+          high = low >> 11;
+          low <<= 21;
+          adjust = 0xfeb00000;                    /* - 21 */
+        }
+        if ((high >> 5) == 0) {
+          high = high << 16 | low >> 16;
+          low <<= 16;
+          adjust -= 0x1000000;
+        }
+        if ((high >> 13) == 0) {
+          high = high << 8 | low >> 24;
+          low <<= 8;
+          adjust -= 0x800000;
+        }
+        if ((high >> 17) == 0) {
+          high = high << 4 | low >> 28;
+          low <<= 4;
+          adjust -= 0x400000;
+        }
+        if ((high >> 19) == 0) {
+          high = high << 2 | low >> 30;
+          low <<= 2;
+          adjust -= 0x200000;
+        }
+        if ((high >> 20) == 0) {
+          high = high << 1 | low >> 31;
+          low <<= 1;
+          adjust -= 0x100000;
+        }
+        high += adjust;
       }
-      puVar1 = kh_GetFpStatusPtr();
-      if ((*puVar1 & 0x800) == 0) {
-        uVar3 = 0x100000;
+    }
+  }
+  if (!raises) {
+    control = 0xc0000000;                         /* round (0x001247b4) */
+    if (low & 0x10000000) {
+      if ((low << 4) != 0 || (low & 0x20000000)) {   /* above the tie, or a tie to an odd result */
+        control = 0x40000000;
+        high += low >= 0xe0000000;
+        low += 0x20000000;
+      }
+    }
+    else if ((low << 4) == 0)
+      control = 0;
+    exponent = (int32)(high - 0x38000000);
+    if (exponent >= 0xff00000) {                  /* overflow (0x00124858) */
+      low &= 0xe0000000;
+      high = (uint32)(exponent + 0x2c000000) | sign;
+      control |= 0x10000088;
+      raises = 1;
+    }
+    else if (exponent >= 0x100000)
+      return sign | (uint32)exponent << 3 | low >> 29;
+    else {                                        /* underflow (0x00124804) */
+      exponent += 0xc000000;
+      status = kh_GetFpStatusPtr();
+      word = *status;
+      if (word & 0x800) {
+        control |= 0x20000088;
+        high = (uint32)(exponent + 0x38000000) | sign;
+        low &= 0xe0000000;
+        r2 = word;
       }
       else {
-        iVar4 = 0;
-        if (uVar3 == 0) {
-          uVar3 = param_1 >> 0xb;
-          param_1 = param_1 << 0x15;
-          iVar4 = -0x1500000;
-        }
-        if (uVar3 >> 5 == 0) {
-          uVar3 = uVar3 << 0x10 | param_1 >> 0x10;
-          param_1 = param_1 << 0x10;
-          iVar4 = iVar4 + -0x1000000;
-        }
-        if (uVar3 >> 0xd == 0) {
-          uVar3 = uVar3 << 8 | param_1 >> 0x18;
-          param_1 = param_1 << 8;
-          iVar4 = iVar4 + -0x800000;
-        }
-        if (uVar3 >> 0x11 == 0) {
-          uVar3 = uVar3 << 4 | param_1 >> 0x1c;
-          param_1 = param_1 << 4;
-          iVar4 = iVar4 + -0x400000;
-        }
-        if (uVar3 >> 0x13 == 0) {
-          uVar3 = uVar3 << 2 | param_1 >> 0x1e;
-          param_1 = param_1 << 2;
-          iVar4 = iVar4 + -0x200000;
-        }
-        if (uVar3 >> 0x14 == 0) {
-          uVar3 = uVar3 << 1 | param_1 >> 0x1f;
-          param_1 = param_1 << 1;
-          iVar4 = iVar4 + -0x100000;
-        }
-        uVar3 = uVar3 + iVar4;
-      }
-      goto LAB_001247b4;
-    }
-    uVar7 = param_1 | param_2 << 0xc;
-    if (uVar7 == 0) {
-      return param_2 & 0xff8fffff;
-    }
-    uVar3 = WORD_HEXADECIMAL_04000088;
-    if ((param_2 & 0x80000) == 0) goto LAB_001260e4;
-    uVar7 = WORD_HEXADECIMAL_04000088 & 0x4f;
-    uVar9 = WORD_HEXADECIMAL_04000088;
-    if (uVar7 == 0x48) {
-      uVar7 = 0x48;
-      goto LAB_001260e4;
-    }
-LAB_00126cb0:
-    if ((uVar9 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x00126cc4. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar9 & 0xf) != 8) {
-        return param_1;
-      }
-      if ((uVar9 & 0x40) == 0) {
-        uVar2 = FLOAT_DEFAULT_NAN;
-        if ((uVar9 & 0x10) != 0) {
-          uVar2 = 0;
-          param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD;
-        }
-        return uVar2;
-      }
-      if ((uVar9 & 0x10000) != 0) {
-        return 0;
-      }
-      if ((uVar9 & 0x20) == 0) {
-        if ((uVar9 & 0x10) == 0) {
-          uVar8 = 0x7fffffff;
-          uVar3 = param_2;
-          param_2 = param_1;
-        }
-        else {
-          uVar3 = 0x7fffffff;
-          uVar8 = 0xffffffff;
-        }
-        if ((param_2 & 0x80000000) != 0) {
-          uVar8 = ~uVar8;
-          uVar3 = ~uVar3;
-        }
-        return uVar8;
-      }
-      uVar2 = 0xffffffff;
-      uVar6 = 0xffffffff;
-      if ((uVar7 & 0x80000000) != 0) {
-        uVar2 = 0;
-        uVar6 = 0;
-      }
-      return uVar2;
-    }
-    uVar3 = 8;
-    goto LAB_00126d6c;
-  }
-LAB_001247b4:
-  uVar9 = 0xc0000000;
-  bVar10 = (bool)((byte)(param_1 >> 0x1c) & 1);
-  uVar7 = param_1 << 4;
-  if (bVar10 && uVar7 != 0) {
-LAB_001247d8:
-    uVar9 = 0x40000000;
-    bVar10 = 0xdfffffff < param_1;
-    param_1 = param_1 + 0x20000000;
-    uVar3 = uVar3 + bVar10;
-  }
-  else if (bVar10) {
-    uVar7 = param_1 & 0x20000000;
-    uVar9 = uVar7 * 4 + 0xc0000000;
-    if (-1 < (int)uVar9) goto LAB_001247d8;
-  }
-  else if (uVar7 == 0) {
-    uVar9 = 0;
-  }
-  iVar4 = uVar3 + 0xc8000000;
-  if (iVar4 < 0x100000) {
-    uVar3 = uVar3 + 0xd4000000;
-    uVar7 = uVar9;
-    puVar1 = kh_GetFpStatusPtr();
-    if ((*puVar1 & 0x800) == 0) {
-      if ((int)uVar3 < 0x100000) {
-        uVar3 = uVar3 & 0xffffff;
-      }
-      uVar8 = uVar8 | uVar3 << 3;
-      param_1 = uVar8 | param_1 >> 0x1d;
-      puVar1 = kh_GetFpStatusPtr();
-      param_2 = *puVar1;
-      if ((param_2 & 0x1000000) != 0) {
-        return param_1 & 0x80000000;
-      }
-      if ((param_2 & 0x800) == 0) {
-        uVar8 = 0xc1 - (param_1 & 0x80000000 | param_1 >> 0x17 & 0xfffffeff);
-        if ((uVar8 & 0x7fffffff) < 0x18) {
-          uVar3 = SHIFT_LEFT(param_1,0x20 - uVar8);
-          uVar9 = 0x20 - (0x20 - uVar8);
-          uVar8 = uVar9 & 0x80000000;
-          param_1 = SHIFT_RIGHT((param_1 & 0xffffff | 0x800000),uVar9) | uVar8;
-          if (uVar3 == 0) {
-            param_2 = 0;
-            uVar3 = uVar7;
-            if ((uVar7 & 0x40000000) == 0) {
-              return param_1;
-            }
+        if (exponent < 0x100000)
+          exponent &= 0xffffff;
+        low = sign | (uint32)exponent << 3 | low >> 29;   /* the exponent wrapped by 192 */
+        status = kh_GetFpStatusPtr();             /* the denormal result (0x00126b44) */
+        word = *status;
+        if (word & 0x1000000)
+          return low & 0x80000000;                /* flush to zero */
+        r3 = 0xc1 - ((low & 0x80000000) | (low >> 23 & 0xff));
+        shift = r3 & 0x7fffffff;
+        if (shift <= 0x17) {
+          lost = low << (32 - shift);
+          low = ((low & 0x7fffff) | 0x800000) >> shift | (r3 & 0x80000000);
+          r3 &= 0x80000000;
+          if (lost == 0) {
+            if ((control & 0x40000000) == 0)
+              return low;
+            high = 0;
           }
           else {
-            *puVar1 = *puVar1 | 8;
-            param_2 = uVar3 << 1;
-            if ((uint8)(uVar3 >> 0x1f)) {
-              if (param_2 == 0) {
-                bVar10 = (bool)((byte)(uVar7 >> 0x1e) & 1);
-                uVar3 = ~((int)uVar7 >> 0x1f);
-                if (!bVar10 || uVar3 == 0) {
-                  param_1 = param_1 + 1;
-                }
-                if (!bVar10) {
-                  param_1 = param_1 & 0xfffffffe;
-                }
-              }
-              else {
-                param_1 = param_1 + 1;
+            *status |= 8;
+            high = lost << 1;
+            r3 = lost;
+            if (lost & 0x80000000) {
+              if (high != 0)
+                low++;
+              else {                              /* a tie: settle it by the first rounding */
+                r3 = ~(uint32)((int32)control >> 31);
+                if ((control & 0x40000000) == 0 || r3 == 0)
+                  low++;
+                if ((control & 0x40000000) == 0)
+                  low &= ~1u;
               }
             }
-            uVar8 = uVar3;
-            uVar3 = uVar7 | 0x40000000;
+            control |= 0x40000000;
           }
         }
-        else {
-          param_2 = *puVar1 | 8;
-          *puVar1 = param_2;
-          if (SUBTRACT_OVERFLOWS(uVar8 & 0x7fffffff,-0x7fffffe7)) {
-            param_1 = uVar8 & 0x80000000;
-          }
+        else {                                    /* 0x00126bf8 */
+          *status |= 8;
+          high = *status;
+          if (shift >= 0x19)
+            low = r3 & 0x80000000;
           else {
-            uVar3 = param_1 & 0x7fffff;
-            param_1 = (uVar8 & 0x80000000) + 1;
-            if (uVar3 == 0 && (uVar7 & 0x80000000) == 0) {
-              param_1 = uVar8 & 0x80000000;
-            }
+            lost = low << 9;
+            low = (r3 & 0x80000000) + 1;
+            if (lost == 0 && (control & 0x80000000) == 0)
+              low &= ~1u;
           }
-          uVar3 = 0x40000000;
+          control = 0x40000000;
         }
-        goto LAB_001260e4;
-      }
-      uVar9 = uVar7 | 0x20000000;
-    }
-    else {
-      uVar9 = uVar7 | 0x20000088;
-      param_2 = uVar3 + 0x38000000 | uVar8;
-      param_1 = param_1 & 0xe0000000;
-      uVar7 = *puVar1;
-    }
-  }
-  else {
-    if (iVar4 < 0xff00000) {
-      return uVar8 | iVar4 * 8 | param_1 >> 0x1d;
-    }
-    param_1 = param_1 & 0xe0000000;
-    param_2 = uVar3 + 0xf4000000 | uVar8;
-    uVar3 = uVar9 | 0x10000088;
-LAB_001260e4:
-    if ((uVar3 & 0x10) == 0) {
-      uVar7 = param_2;
-    }
-    puVar1 = kh_GetFpStatusPtr();
-    uVar5 = *puVar1;
-    if ((uVar3 & ~(uVar5 << 0x12) & 0x30000000) != 0) {
-      uVar3 = uVar3 | 0x40000000;
-    }
-    uVar9 = uVar3 | uVar5 & 0x1c00000;
-    *puVar1 = uVar5 | (uVar3 & 0x7fffffff) >> 0x1a;
-    bVar10 = (uVar3 & 0xf) != 8;
-    if (bVar10) {
-      uVar3 = uVar3 & 0x70;
-      uVar9 = uVar9 | uVar3 << 3;
-    }
-    else {
-      uVar3 = 0x20000;
-    }
-    if (!bVar10 && (uVar3 & ~uVar9) == 0) {
-      uVar9 = uVar9 | 0xc00000;
-    }
-    if ((uVar9 & 0x20000000) == 0) {
-      if ((uVar9 & 0x10000000) == 0) {
-        if ((uVar9 & 0x40000000) != 0) {
-          uVar5 = uVar5 & 0x1000;
-          goto joined_r0x00126194;
-        }
-        if ((uVar9 & 0x8000000) == 0) {
-          if ((uVar5 & 0x100) == 0) {
-            uVar7 = param_2;
-            if ((uVar9 & 0x80) == 0) {
-              uVar7 = param_1;
-            }
-            uVar7 = uVar7 & 0x80000000;
-            if ((uVar9 & 0x10) == 0) {
-              param_1 = FLOAT_DEFAULT_NAN | uVar7;
-            }
-            else {
-              param_2 = DOUBLE_DEFAULT_NAN_HIGH_WORD | uVar7;
-              param_1 = DOUBLE_DEFAULT_NAN_LOW_WORD;
-            }
-            goto LAB_00126cb0;
-          }
-        }
-        else if ((uVar5 & 0x200) == 0) {
-          if ((uVar9 & 0x10) == 0) {
-            param_2 = param_1 ^ uVar7;
-          }
-          else {
-            param_2 = param_2 ^ uVar8;
-          }
-          goto LAB_001261dc;
-        }
-      }
-      else if ((uVar5 & 0x400) == 0) {
-        if ((uVar9 & 0x80) == 0) {
-          param_2 = param_1 & 0x80000000;
-        }
-        else {
-          param_2 = param_2 & 0x80000000;
-        }
-LAB_001261dc:
-        uVar3 = INTEGER_0;
-        if ((uVar9 & 0x10) == 0) {
-          uVar3 = WORD_HEXADECIMAL_7F800000 | param_2 & 0x80000000;
-        }
-        return uVar3;
-      }
-    }
-    else {
-      uVar5 = uVar5 & 0x800;
-joined_r0x00126194:
-      if (uVar5 == 0) {
-        return param_1;
+        raises = 1;
       }
     }
   }
-  uVar3 = float_raise_exception(param_1,param_2,uVar7,uVar8,uVar9).low;
-  if ((uVar9 & 0xf) != 9) {
-    return uVar3;
-  }
-LAB_00126d6c:
-  if ((uVar9 & 0x100000) == 0) {
-    return (uint)((uVar9 & uVar3 << 0x10) != 0);
-  }
-  if ((uVar9 & 0xf0000) != 0) {
-    if ((uVar3 & 8) == 0) {
-      return 2 - uVar3;
+  if (raises) {                                   /* the exception code (0x001260e4) */
+    r2 = high;
+    status = kh_GetFpStatusPtr();
+    word = *status;
+    if (control & ~(word << 18) & 0x30000000)
+      control |= 0x40000000;                      /* an untrapped overflow is also inexact */
+    word |= (control << 1) >> 27;                 /* the sticky flags */
+    control |= word & 0x1c00000;
+    *status = word;
+    if (control & 0x10000000) {                   /* overflow */
+      if ((word & 0x400) == 0)
+        return WORD_HEXADECIMAL_7F800000 | (high & 0x80000000);
     }
-    return uVar3;
+    else if (control & 0x40000000) {              /* inexact */
+      if ((word & 0x1000) == 0)
+        return low;
+    }
+    else if ((word & 0x100) == 0)                 /* invalid */
+      return FLOAT_DEFAULT_NAN;
   }
-  uVar8 = uVar3 << 0x1d;
-  if ((bool)((byte)(uVar3 >> 3) & 1)) {
-    uVar8 = uVar8 | 0x30000000;
-  }
-  puVar1 = kh_GetFpStatusPtr();
-  *puVar1 = *puVar1 & 0xfffffff | uVar8;
-  return uVar3;
+  return float_raise_exception(low,high,r2,r3,control).low;
 }
+
 
 /* ==== 0x00124954  (file offset 0x24954)  FUN_00124954 ================================================ */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */

@@ -842,7 +842,7 @@ void save_write_byte(Progress *progress,uint8 byte,uint8 *data,int32 *position);
 void save_write_float(Progress *progress,uint32 value,uint8 *data,int32 *position);   /* 0x001246B4 GUESS: name, see kh_mod.c */
 void save_write_int(Progress *progress,int32 value,uint8 *data,int32 *position);   /* 0x001246F4 GUESS: name, see kh_mod.c */
 int32 save_write_string(Progress *progress,const char *text,uint8 *data,int32 *position);   /* 0x00124734 GUESS: name, see kh_mod.c */
-uint FUN_0012479c(uint param_1,uint param_2);
+uint32 double_to_float(uint32 low,uint32 high);   /* 0x0012479C GUESS: name, see kh_mod.c */
 undefined8 FUN_00124954(uint param_1,uint param_2,uint param_3,uint param_4);
 undefined8 FUN_00124b40(uint param_1,uint param_2,uint param_3,uint param_4);
 undefined8 FUN_00124b84(uint param_1,uint param_2,uint param_3,uint param_4);
