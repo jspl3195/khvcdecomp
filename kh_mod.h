@@ -713,7 +713,7 @@ undefined8 FUN_00119b0c(undefined4 param_1,int param_2,undefined4 param_3);
 undefined8 FUN_00119c10(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 ,undefined4 param_6,undefined4 param_7);
 undefined8 FUN_00119c60(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 undefined4 FUN_00119ce0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 ,undefined4 param_6);
-bool FUN_00119d58(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,undefined4 param_6);
+uint32 collision_shape_allows(CollisionShape *shape,uint32 x,uint32 y,uint32 z,uint32 radius,uint32 height);   /* 0x00119D58 GUESS: name, see kh_mod.c */
 void FUN_0011a2f4(int param_1,int param_2);
 void FUN_0011a3ec(int param_1,int param_2,undefined4 param_3);
 void character_on_key(Character *character,int32 key);   /* 0x0011A4D8 GUESS: name */

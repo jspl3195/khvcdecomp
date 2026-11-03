@@ -12824,7 +12824,7 @@ FUN_001136c8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param
       uVar1 = float_add(iVar6,piVar4[10]);
       uVar2 = float_add(iVar6,piVar4[7]);
       uVar3 = float_subtract(uVar1,FLOAT_0_POINT_05);
-      iVar6 = FUN_00119d58(piVar4,param_2,param_3,uVar3,param_6,0 /* not arguments, value leftovers: 0,iVar8 */);
+      iVar6 = collision_shape_allows((CollisionShape *)piVar4,param_2,param_3,uVar3,param_6,0);
       if (iVar6 == 0) {
         *param_5 = uVar1;
         uVar7 = 1;
@@ -16153,7 +16153,8 @@ FUN_00119c10(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
   undefined8 uVar3;
   
   if ((*(int *)(param_1 + 0xec) < 1) ||
-     (iVar1 = FUN_00119d58(*(undefined4 *)(param_1 + 0xe4),param_2,param_3,param_4,param_5,param_6 /* not arguments, value leftovers: param_7 */), param_2 = param_5, iVar1 == 0)) {
+     (iVar1 = collision_shape_allows(*(CollisionShape **)(param_1 + 0xe4),param_2,param_3,param_4,param_5,
+                                     param_6), param_2 = param_5, iVar1 == 0)) {
     uVar2 = 0;
     param_5 = param_2;
   }
@@ -16220,270 +16221,192 @@ FUN_00119ce0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     if (*(int *)(param_1 + 0xe0) <= iVar2) {
       return 0;
     }
-    iVar1 = FUN_00119d58(*(undefined4 *)(param_1 + iVar2 * 4 + 0x90),param_2,param_3,param_4,param_5
-                         ,param_6 /* not arguments, value leftovers: 0,uVar3 */);
+    iVar1 = collision_shape_allows(*(CollisionShape **)(param_1 + iVar2 * 4 + 0x90),param_2,param_3,
+                                   param_4,param_5,param_6);
     if (iVar1 == 0) break;
     iVar2 = iVar2 + 1;
   }
   return *(undefined4 *)(param_1 + iVar2 * 4 + 0x90);
 }
 
-/* ==== 0x00119D58  (file offset 0x19D58)  FUN_00119d58 ================================================ */
-bool FUN_00119d58(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
-                 undefined4 param_5,undefined4 param_6)
+/* ==== 0x00119D58  (file offset 0x19D58)  collision_shape_allows ====================================== */
+/* GUESS: names. Whether a body standing at (x, y, z) (its feet; floats, their bits) with `radius` and
+   `height` is allowed by the shape: an inner one (kind 1) must hold it, an outer one (kind 2) must not
+   overlap it. 1 or 0. By the shape's form:
+     3 circle, 4 cylinder: the horizontal distance to the shape's position, plus (inner) or less (outer)
+       the radius, against the shape's radius; a cylinder also tests the height, the body overlapping the
+       box's z range (inner) or above or below it (outer).
+     5 cuboid, 6 rect: the body's square (x, y +- radius) inside the box (inner) or apart from it on x or
+       y (outer); a cuboid also tests z the same way, outer with a 0.0001 margin on the body's feet
+       (WORD_HEXADECIMAL_38D1B717).
+     8 poly: (x, y) inside the box and the polygon (collision_shape_poly_contains) (inner) or not
+       (outer); with a height above 0, also the z range from position[2] to position[2] + height.
+     7 sphere: the distance to the body's middle (z + height / 2) plus the radius, under the shape's
+       radius (inner) or not (outer). The outer test adds the radius where the circle's subtracts it
+       (research_notes/decomp/GAME_BUGS.md).
+     any other form: 1.
+   The compares are the binary's float_compare_greater / float_compare_less with their branches,
+   written after the comma. FUN_00119ce0 returns the first of an object's shapes that does not allow a
+   position. */
+uint32 collision_shape_allows(CollisionShape *shape,uint32 x,uint32 y,uint32 z,uint32 radius,
+                              uint32 height)
 
 {
-  bool bVar1;
-  bool bVar2;
-  undefined4 uVar3;
-  undefined4 uVar4;
-  undefined4 uVar5;
-  bool bVar6;
-  int iVar7;
-  undefined1 uVar8;
-  undefined1 uVar9;
-  undefined1 uVar10;
-  char cVar11;
-  undefined4 local_40;
-  undefined4 local_3c;
-  undefined4 local_38;
-  undefined4 local_34;
-  undefined4 local_30;
-  undefined4 local_2c;
-  undefined4 local_28;
-  
-  iVar7 = param_1[1];
-  uVar3 = float_add(param_4,param_6);
-  if (iVar7 == 4 || iVar7 == 3) {
-    local_40 = 0;
-    local_3c = 0;
-    local_38 = 0;
-    local_40 = float_subtract(param_1[2],param_2);
-    local_3c = float_subtract(param_1[3],param_3);
-    uVar4 = vector_length((undefined4)((KHApp *)param_1[0xd])->context,&local_40);
-    bVar6 = true;
-    uVar9 = *param_1 != 0;
-    bVar1 = true;
-    if (*param_1 == 1) {
-      uVar4 = float_add(uVar4,param_5);
-      float_compare_greater(uVar4,param_1[0xb]);
-      uVar10 = 3 < (uint)param_1[1];
-      uVar8 = param_1[1] == 4;
-      if ((bool)uVar8) {
-        uVar4 = float_add(param_1[4],param_1[10]);
-        float_compare_less(uVar4,param_4);
-        if ((bool)uVar10) {
-          uVar4 = float_add(param_1[4],param_1[7]);
-          float_compare_greater(uVar4,uVar3);
-          if (!(bool)uVar10 || (bool)uVar8) goto LAB_00119e44;
-        }
-        bVar1 = false;
-      }
-LAB_00119e44:
-      if ((bool)uVar9 || !bVar1) goto LAB_0011a2e0;
-    }
-    else {
-      uVar4 = float_subtract(uVar4,param_5);
-      float_compare_less(uVar4,param_1[0xb]);
-      if ((bool)uVar9) {
-LAB_00119eac:
-        if (!bVar6 || !bVar1) goto LAB_0011a2e0;
-      }
-      else {
-        bVar6 = false;
-        uVar8 = 3 < (uint)param_1[1];
-        uVar9 = param_1[1] == 4;
-        if (!(bool)uVar9) goto LAB_0011a2e0;
-        uVar4 = float_add(param_1[4],param_1[10]);
-        float_compare_greater(uVar4,param_4);
-        if ((bool)uVar8 && !(bool)uVar9) {
-          uVar4 = float_add(param_1[4],param_1[7]);
-          float_compare_less(uVar4,uVar3);
-          if (!(bool)uVar8) {
-            bVar1 = false;
-            goto LAB_00119eac;
-          }
-        }
-      }
-    }
-LAB_0011a238:
-    bVar6 = true;
-  }
-  else {
-    if (iVar7 == 5 || iVar7 == 6) {
-      iVar7 = *param_1;
-      local_28 = float_add(param_3,param_5);
-      local_2c = float_subtract(param_3,param_5);
-      local_30 = float_add(param_2,param_5);
-      local_34 = float_add(param_1[2],param_1[5]);
-      uVar4 = float_subtract(param_2,param_5);
-      bVar6 = true;
-      bVar2 = true;
-      bVar1 = true;
-      uVar8 = iVar7 != 0;
-      uVar9 = iVar7 == 1;
-      if (!(bool)uVar9) {
-        float_compare_less(local_34,local_30);
-        if (!(bool)uVar8) {
-          uVar5 = float_add(param_1[2],param_1[8]);
-          float_compare_greater(uVar5,uVar4);
-          if ((bool)uVar8 && !(bool)uVar9) {
-            bVar6 = false;
-          }
-        }
-        uVar4 = float_add(param_1[3],param_1[6]);
-        float_compare_less(uVar4,local_28);
-        if (!(bool)uVar8) {
-          uVar4 = float_add(param_1[3],param_1[9]);
-          float_compare_greater(uVar4,local_2c);
-          if ((bool)uVar8 && !(bool)uVar9) {
-            bVar1 = false;
-          }
-        }
-        uVar8 = 4 < (uint)param_1[1];
-        uVar9 = param_1[1] == 5;
-        if (!(bool)uVar9) {
-          return bVar6 || bVar1;
-        }
-        uVar4 = float_add(param_4,WORD_HEXADECIMAL_38D1B717);
-        uVar5 = float_add(param_1[4],param_1[10]);
-        float_compare_greater(uVar5,uVar4);
-        if ((bool)uVar8 && !(bool)uVar9) {
-          uVar4 = float_add(param_1[4],param_1[7]);
-          float_compare_less(uVar4,uVar3);
-          if (!(bool)uVar8) {
-            bVar2 = false;
-          }
-        }
-        if ((bVar6 || bVar1) || bVar2) goto LAB_0011a238;
-        goto LAB_0011a2e0;
-      }
-      float_compare_greater(local_34,uVar4);
-      if ((bool)uVar8 && !(bool)uVar9) {
-LAB_00119f5c:
-        bVar6 = false;
-      }
-      else {
-        uVar4 = float_add(param_1[2],param_1[8]);
-        float_compare_less(uVar4,local_30);
-        if (!(bool)uVar8) goto LAB_00119f5c;
-      }
-      uVar4 = float_add(param_1[3],param_1[6]);
-      float_compare_greater(uVar4,local_2c);
-      if ((bool)uVar8 && !(bool)uVar9) {
-LAB_00119f90:
-        bVar1 = false;
-      }
-      else {
-        uVar4 = float_add(param_1[3],param_1[9]);
-        float_compare_less(uVar4,local_28);
-        if (!(bool)uVar8) goto LAB_00119f90;
-      }
-      uVar8 = 4 < (uint)param_1[1];
-      uVar9 = param_1[1] == 5;
-      if (!(bool)uVar9) {
-        return bVar6 && bVar1;
-      }
-      uVar4 = float_add(param_1[4],param_1[10]);
-      float_compare_less(uVar4,param_4);
-      if ((bool)uVar8) {
-        uVar4 = float_add(param_1[4],param_1[7]);
-        float_compare_greater(uVar4,uVar3);
-        if ((bool)uVar8 && !(bool)uVar9) goto LAB_00119fe0;
-      }
-      else {
-LAB_00119fe0:
-        bVar2 = false;
-      }
-      if ((bVar6 && bVar1) && bVar2) goto LAB_0011a238;
-    }
-    else if (iVar7 == 8) {
-      iVar7 = 1;
-      cVar11 = *param_1 != 0;
-      uVar9 = *param_1 == 1;
-      if ((bool)uVar9) {
-        float_compare_greater(param_2,param_1[5]);
-        if (((!(bool)cVar11) || (float_compare_less(param_2,param_1[8]), (bool)cVar11 && !(bool)uVar9)) ||
-           ((float_compare_greater(param_3,param_1[6]), !(bool)cVar11 ||
-            (float_compare_less(param_3,param_1[9]), (bool)cVar11 && !(bool)uVar9)))) {
-          iVar7 = 0;
-LAB_0011a13c:
-          bVar6 = false;
-        }
+  uint32 top = float_add(z,height);
+  uint32 vector[3];
+  uint32 distance;
+  uint32 edge;
+  uint32 left;
+  uint32 right;
+  uint32 front;
+  uint32 back;
+  uint32 boxLeft;
+  int32 inX = 1;
+  int32 inY = 1;
+  int32 inZ = 1;
+  int32 inside;
+
+  if (shape->form == 4 || shape->form == 3) {
+    vector[0] = 0;
+    vector[1] = 0;
+    vector[2] = 0;
+    vector[0] = float_subtract(shape->position[0],x);
+    vector[1] = float_subtract(shape->position[1],y);
+    distance = vector_length(shape->app->context,vector);
+    if (shape->kind == 1) {
+      distance = float_add(distance,radius);
+      if (float_compare_greater(distance,shape->radius), *(float *)&distance >= *(float *)&shape->radius)
+        inX = 0;
+      if (shape->form == 4) {
+        edge = float_add(shape->position[2],shape->maximum[2]);
+        if (float_compare_less(edge,z), *(float *)&edge < *(float *)&z)
+          inZ = 0;
         else {
-          iVar7 = collision_shape_poly_contains((CollisionShape *)param_1,param_2,param_3);
-          uVar9 = iVar7 == 0;
-          bVar6 = true;
-          if ((bool)uVar9) goto LAB_0011a13c;
+          edge = float_add(shape->position[2],shape->minimum[2]);
+          if (float_compare_greater(edge,top), *(float *)&edge > *(float *)&top)
+            inZ = 0;
         }
-        float_compare_greater(param_1[0xc],0);
-        if (!(bool)cVar11 || (bool)uVar9) {
-          return bVar6;
-        }
-        uVar4 = float_add(param_1[4],param_1[0xc]);
-        float_compare_less(uVar4,param_4);
-        if ((bool)cVar11) {
-          float_compare_less(uVar3,param_1[4]);
-        }
-        if (iVar7 != 0 && cVar11 != '\0') goto LAB_0011a238;
       }
-      else {
-        float_compare_greater(param_2,param_1[5]);
-        if (((((bool)cVar11) && (float_compare_less(param_2,param_1[8]), !(bool)cVar11 || (bool)uVar9)) &&
-            (float_compare_greater(param_3,param_1[6]), (bool)cVar11)) &&
-           (float_compare_less(param_3,param_1[9]), !(bool)cVar11 || (bool)uVar9)) {
-          iVar7 = collision_shape_poly_contains((CollisionShape *)param_1,param_2,param_3);
-          iVar7 = 1 - iVar7;
-        }
-        uVar9 = iVar7 == 0;
-        uVar8 = true;
-        bVar6 = !(bool)uVar9;
-        float_compare_greater(param_1[0xc],0);
-        if (!(bool)uVar8 || (bool)uVar9) {
-          return bVar6;
-        }
-        uVar4 = float_add(param_1[4],param_1[0xc]);
-        float_compare_greater(uVar4,param_4);
-        if ((bool)uVar8 && !(bool)uVar9) {
-          float_compare_greater(uVar3,param_1[4]);
-        }
-        if (iVar7 != 0 || (!(bool)uVar8 || (bool)uVar9)) goto LAB_0011a238;
-      }
+      return inX != 0 && inZ != 0;
     }
-    else {
-      if (iVar7 != 7) {
-        return true;
-      }
-      local_40 = 0;
-      local_3c = 0;
-      local_38 = 0;
-      local_40 = float_subtract(param_2,param_1[2]);
-      local_3c = float_subtract(param_3,param_1[3]);
-      uVar3 = float_multiply(param_6,0x3f000000);
-      uVar3 = float_add(uVar3,param_4);
-      local_38 = float_subtract(uVar3,param_1[4]);
-      uVar3 = vector_length((undefined4)((KHApp *)param_1[0xd])->context,&local_40);
-      uVar9 = *param_1 != 0;
-      if (*param_1 == 1) {
-        uVar3 = float_add(uVar3,param_5);
-        float_compare_greater(uVar3,param_1[0xb]);
-        if (!(bool)uVar9) {
-          return true;
-        }
-      }
-      else {
-        uVar3 = float_add(uVar3,param_5);
-        float_compare_less(uVar3,param_1[0xb]);
-        if ((bool)uVar9) {
-          return true;
-        }
-      }
-    }
-LAB_0011a2e0:
-    bVar6 = false;
+    distance = float_subtract(distance,radius);
+    if (float_compare_less(distance,shape->radius), *(float *)&distance >= *(float *)&shape->radius)
+      return 1;
+    if (shape->form != 4)
+      return 0;
+    edge = float_add(shape->position[2],shape->maximum[2]);
+    if (float_compare_greater(edge,z), *(float *)&edge <= *(float *)&z)
+      return 1;
+    edge = float_add(shape->position[2],shape->minimum[2]);
+    if (float_compare_less(edge,top), *(float *)&edge >= *(float *)&top)
+      return 1;
+    return 0;
   }
-  return bVar6;
+  if (shape->form == 5 || shape->form == 6) {
+    back = float_add(y,radius);
+    front = float_subtract(y,radius);
+    right = float_add(x,radius);
+    boxLeft = float_add(shape->position[0],shape->minimum[0]);
+    left = float_subtract(x,radius);
+    if (shape->kind == 1) {
+      if (float_compare_greater(boxLeft,left), *(float *)&boxLeft > *(float *)&left)
+        inX = 0;
+      else {
+        edge = float_add(shape->position[0],shape->maximum[0]);
+        if (float_compare_less(edge,right), *(float *)&edge < *(float *)&right)
+          inX = 0;
+      }
+      edge = float_add(shape->position[1],shape->minimum[1]);
+      if (float_compare_greater(edge,front), *(float *)&edge > *(float *)&front)
+        inY = 0;
+      else {
+        edge = float_add(shape->position[1],shape->maximum[1]);
+        if (float_compare_less(edge,back), *(float *)&edge < *(float *)&back)
+          inY = 0;
+      }
+      if (shape->form != 5)
+        return inX != 0 && inY != 0;
+      edge = float_add(shape->position[2],shape->maximum[2]);
+      if (float_compare_less(edge,z), *(float *)&edge < *(float *)&z)
+        inZ = 0;
+      else {
+        edge = float_add(shape->position[2],shape->minimum[2]);
+        if (float_compare_greater(edge,top), *(float *)&edge > *(float *)&top)
+          inZ = 0;
+      }
+      return inX != 0 && inY != 0 && inZ != 0;
+    }
+    if (float_compare_less(boxLeft,right), *(float *)&boxLeft < *(float *)&right) {
+      edge = float_add(shape->position[0],shape->maximum[0]);
+      if (float_compare_greater(edge,left), *(float *)&edge > *(float *)&left)
+        inX = 0;
+    }
+    edge = float_add(shape->position[1],shape->minimum[1]);
+    if (float_compare_less(edge,back), *(float *)&edge < *(float *)&back) {
+      edge = float_add(shape->position[1],shape->maximum[1]);
+      if (float_compare_greater(edge,front), *(float *)&edge > *(float *)&front)
+        inY = 0;
+    }
+    if (shape->form != 5)
+      return inX != 0 || inY != 0;
+    z = float_add(z,WORD_HEXADECIMAL_38D1B717);           /* + 0.0001 */
+    edge = float_add(shape->position[2],shape->maximum[2]);
+    if (float_compare_greater(edge,z), *(float *)&edge > *(float *)&z) {
+      edge = float_add(shape->position[2],shape->minimum[2]);
+      if (float_compare_less(edge,top), *(float *)&edge < *(float *)&top)
+        inZ = 0;
+    }
+    return inX != 0 || inY != 0 || inZ != 0;
+  }
+  if (shape->form == 8) {
+    inside = 0;
+    if (shape->kind == 1) {
+      if ((float_compare_greater(x,shape->minimum[0]), *(float *)&x >= *(float *)&shape->minimum[0]) &&
+          (float_compare_less(x,shape->maximum[0]), *(float *)&x <= *(float *)&shape->maximum[0]) &&
+          (float_compare_greater(y,shape->minimum[1]), *(float *)&y >= *(float *)&shape->minimum[1]) &&
+          (float_compare_less(y,shape->maximum[1]), *(float *)&y <= *(float *)&shape->maximum[1]))
+        inside = collision_shape_poly_contains(shape,x,y);
+      if (float_compare_greater(shape->height,0), *(float *)&shape->height <= 0.0f)
+        return inside != 0;
+      edge = float_add(shape->position[2],shape->height);
+      if ((float_compare_less(edge,z), *(float *)&edge < *(float *)&z) ||
+          (float_compare_less(top,shape->position[2]), *(float *)&top < *(float *)&shape->position[2]))
+        inZ = 0;
+      return inside != 0 && inZ != 0;
+    }
+    inside = 1;                                            /* outside the box, or 1 - the poly's */
+    if ((float_compare_greater(x,shape->minimum[0]), *(float *)&x >= *(float *)&shape->minimum[0]) &&
+        (float_compare_less(x,shape->maximum[0]), *(float *)&x <= *(float *)&shape->maximum[0]) &&
+        (float_compare_greater(y,shape->minimum[1]), *(float *)&y >= *(float *)&shape->minimum[1]) &&
+        (float_compare_less(y,shape->maximum[1]), *(float *)&y <= *(float *)&shape->maximum[1]))
+      inside = 1 - collision_shape_poly_contains(shape,x,y);
+    if (float_compare_greater(shape->height,0), *(float *)&shape->height <= 0.0f)
+      return inside != 0;
+    edge = float_add(shape->position[2],shape->height);
+    if ((float_compare_greater(edge,z), *(float *)&edge > *(float *)&z) &&
+        (float_compare_greater(top,shape->position[2]), *(float *)&top > *(float *)&shape->position[2]))
+      inZ = 0;
+    return inside != 0 || inZ != 0;
+  }
+  if (shape->form != 7)
+    return 1;
+  vector[0] = 0;
+  vector[1] = 0;
+  vector[2] = 0;
+  vector[0] = float_subtract(x,shape->position[0]);
+  vector[1] = float_subtract(y,shape->position[1]);
+  edge = float_multiply(height,0x3f000000);                /* * 0.5 */
+  edge = float_add(edge,z);
+  vector[2] = float_subtract(edge,shape->position[2]);
+  distance = vector_length(shape->app->context,vector);
+  if (shape->kind == 1) {
+    distance = float_add(distance,radius);
+    return (float_compare_greater(distance,shape->radius), *(float *)&distance < *(float *)&shape->radius);
+  }
+  distance = float_add(distance,radius);
+  return (float_compare_less(distance,shape->radius), *(float *)&distance >= *(float *)&shape->radius);
 }
+
 
 /* ==== 0x0011A2F4  (file offset 0x1A2F4)  FUN_0011a2f4 ================================================ */
 void FUN_0011a2f4(int param_1,int param_2)
@@ -18581,7 +18504,7 @@ int32 animations_play(Animations *animations,int32 index,int32 loop)
    rule: for each edge from vertex i to the next (wrapping), when one end is below y and the other at or
    above it, the edge's x at y is worked out, and each one left of x flips the result. The vertices' z is
    not used; the compares follow the binary's branches (a NaN never counts as a crossing). Used by the
-   collision test FUN_00119d58 for shapes of form 8 ("poly"). */
+   collision test collision_shape_allows for shapes of form 8 ("poly"). */
 int32 collision_shape_poly_contains(CollisionShape *shape,uint32 x,uint32 y)
 
 {
@@ -21493,7 +21416,8 @@ FUN_001213fc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
   if (*(int *)(param_1 + 0x58) == 0) {
     if (0 < *(int *)(param_1 + 0xec)) {
       iVar6 = 0;
-      iVar1 = FUN_00119d58(*(undefined4 *)(param_1 + 0xe4),param_2,param_3,param_4,0,param_6 /* not arguments, value leftovers: 0 */);
+      iVar1 = collision_shape_allows(*(CollisionShape **)(param_1 + 0xe4),param_2,param_3,param_4,0,
+                                    param_6);
       uVar2 = param_6;
       if (iVar1 != 0) {
         uVar5 = *(int *)(param_1 + 0x60) == 0;
@@ -21524,7 +21448,7 @@ FUN_001213fc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
 LAB_00121530:
     if (*(int *)(param_1 + 0xec) < 2) goto LAB_001214d4;
     iVar6 = 0;
-    iVar1 = FUN_00119d58(*(undefined4 *)(param_1 + 0xe8),param_2,param_3,param_4,0,param_6 /* not arguments, value leftovers: 0 */);
+    iVar1 = collision_shape_allows(*(CollisionShape **)(param_1 + 0xe8),param_2,param_3,param_4,0,param_6);
     uVar2 = param_6;
     if (iVar1 == 0) goto LAB_001214d4;
   }
