@@ -688,7 +688,7 @@ uint32 motion_entity_get_heading(MotionEntity *entity);   /* 0x001148A0 GUESS: n
 int32 animations_rewind(Animations *animations,int32 index);   /* 0x001148A8 GUESS: name, see kh_mod.c */
 int32 animations_finish(Animations *animations,int32 index);   /* 0x001148C8 GUESS: name */
 int32 combat_region_take_attack_token(CombatRegion *region);   /* 0x00114910 GUESS: names */
-void FUN_0011492c(int param_1);
+void character_stop_animations(Character *character);   /* 0x0011492C GUESS: name, see kh_mod.c */
 void FUN_0011498c(int param_1,uint param_2);
 void FUN_00114a1c(int param_1,undefined4 param_2);
 int32 combat_region_hit_enemies(CombatRegion *region,int32 part,uint32 damage,uint32 x,uint32 y,uint32 z,int32 playerState);   /* 0x00114A94 GUESS: names */

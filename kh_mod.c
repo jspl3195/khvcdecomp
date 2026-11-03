@@ -9406,7 +9406,7 @@ LAB_0010dde4:
     if ((bool)uVar12) {
       progress_set_status((Progress *)iVar3,STRING_OUT_OF_MAGIC_00126FBC,1);
     }
-    FUN_0011492c(param_1);
+    character_stop_animations((Character *)param_1);
     character_play_animation((Character *)param_1,*(int *)(param_1 + 0x2f4),2,0);
     dVar7 = FUN_00126248(uVar4);
     uVar7 = dVar7.low;
@@ -9424,7 +9424,7 @@ LAB_0010dde4:
     (**(code **)(**(int **)(param_1 + 0x1f0) + 0x8c))(*(int **)(param_1 + 0x1f0),0);
     return;
   }
-  FUN_0011492c(param_1);
+  character_stop_animations((Character *)param_1);
   uVar13 = 9 < *(uint *)(param_1 + 0x1cc);
   uVar12 = *(uint *)(param_1 + 0x1cc) == 10;
   if ((bool)uVar12) {
@@ -12153,7 +12153,7 @@ int32 script_command_run(ScriptCommand *command)
   case 0x41:   /* setUpdateOff */
     if (command->object != (LevelObject *)0x0) {
       if (command->object->nameId == WORD_HEXADECIMAL_10C617E4)
-        FUN_0011492c((int)player);
+        character_stop_animations(player);
       command->object->field_3c = 0;
     }
     break;
@@ -13976,29 +13976,25 @@ int32 combat_region_take_attack_token(CombatRegion *region)
   return 1;
 }
 
-/* ==== 0x0011492C  (file offset 0x1492C)  FUN_0011492c ================================================ */
-void FUN_0011492c(int param_1)
+/* ==== 0x0011492C  (file offset 0x1492C)  character_stop_animations =================================== */
+/* GUESS: name. Stops the character's current animations at once (animations_stop, `immediately` 1) and
+   forgets them (-1): its channel-0 animation, or, while `layered`, those of channels 3 and 2. `layered` is
+   left as it is. Called before another animation is started, and by the script's setUpdateOff. */
+void character_stop_animations(Character *character)
 
 {
-  undefined4 param_4;
-  /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  undefined4 uVar1;
-  
-  uVar1 = *(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c);
-  if (*(int *)(param_1 + 0x2a4) == 0) {
-    animations_stop((Animations *)uVar1,*(undefined4 *)(param_1 + 0x2ac),1 /* not arguments, register leftovers: param_4,param_4 */);
-    *(undefined4 *)(param_1 + 0x2ac) = 0xffffffff;
+  if (character->layered == 0) {
+    animations_stop(character->app->animations,character->animation,1);
+    character->animation = -1;
   }
   else {
-    animations_stop((Animations *)uVar1,*(undefined4 *)(param_1 + 0x2b4),1 /* not arguments, register leftovers: param_4,param_4 */);
-    animations_stop((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2b0),1
-                );
-    *(undefined4 *)(param_1 + 0x2b0) = 0xffffffff;
-    *(undefined4 *)(param_1 + 0x2b4) = 0xffffffff;
+    animations_stop(character->app->animations,character->channelThreeAnimation,1);
+    animations_stop(character->app->animations,character->channelTwoAnimation,1);
+    character->channelTwoAnimation = -1;
+    character->channelThreeAnimation = -1;
   }
-  return;
 }
+
 
 /* ==== 0x0011498C  (file offset 0x1498C)  FUN_0011498c ================================================ */
 void FUN_0011498c(int param_1,uint param_2)
@@ -17851,7 +17847,7 @@ LAB_0011bc6c:
       uVar4 = *(undefined4 *)(param_1 + 0x2f0);
       goto LAB_0011bc6c;
     }
-    FUN_0011492c(param_1);
+    character_stop_animations((Character *)param_1);
     animations_finish((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2e8));
     iVar2 = animations_finish((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),
                          *(undefined4 *)(param_1 + 0x2e4));
@@ -18005,7 +18001,7 @@ LAB_0011c180:
       }
       uVar10 = bVar8 || uVar3 == 5;
       if (!bVar8 && uVar3 != 5) {
-        FUN_0011492c(param_1);
+        character_stop_animations((Character *)param_1);
         animations_rewind(((KHApp *)*(int *)(param_1 + 0x84))->animations,*(undefined4 *)(param_1 + 0x2c0));
       }
       float_compare_greater(param_2[2],0);
@@ -18170,7 +18166,7 @@ LAB_0011c204:
     uVar10 = 3 < *(uint *)(param_1 + 0x1d0);
     uVar9 = *(uint *)(param_1 + 0x1d0) == 4;
     if (!(bool)uVar9) {
-      FUN_0011492c(param_1);
+      character_stop_animations((Character *)param_1);
       animations_rewind(((KHApp *)*(int *)(param_1 + 0x84))->animations,*(undefined4 *)(param_1 + 0x2c8));
     }
     float_compare_greater(param_2[2],0);
@@ -20606,7 +20602,7 @@ void FUN_0011f8e0(int param_1,uint param_2)
       iVar2 = *(int *)(param_1 + 0x1d0);
     }
     if (bVar8 && iVar2 != 0xe) {
-      FUN_0011492c(param_1);
+      character_stop_animations((Character *)param_1);
       character_play_animation((Character *)param_1,*(undefined4 *)(param_1 + 0x2fc),2,0);
       animations_finish((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x84) + 0x9c),*(undefined4 *)(param_1 + 0x2fc)
                   );
@@ -20688,7 +20684,7 @@ LAB_0011fba4:
       iVar2 = *(int *)(param_1 + 300);
     }
     if (bVar8 && iVar2 != 0) {
-      FUN_0011492c(param_1);
+      character_stop_animations((Character *)param_1);
       animations_rewind(((KHApp *)*(int *)(param_1 + 0x84))->animations,*(undefined4 *)(param_1 + 800));
       FUN_001147ec(&local_28,(undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                    *(undefined4 *)(param_1 + 0x1e8));
