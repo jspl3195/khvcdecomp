@@ -659,7 +659,7 @@ void enemy_get_player_point(uint32 *point,Enemy *enemy);   /* 0x00113524 GUESS: 
 int32 animations_get_duration(Animations *animations,int32 index);   /* 0x001135B8 GUESS: name */
 void FUN_001135dc(int param_1);
 uint32 string_hash(int32 context,const char *text);   /* 0x00113654 GUESS: name, see kh_mod.c */
-undefined4 FUN_001136c8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param_4, undefined4 *param_5,undefined4 param_6);
+int32 level_object_get_surface(LevelObject *object,uint32 x,uint32 y,uint32 *bottom,uint32 *top,uint32 radius);   /* 0x001136C8 GUESS: name, see kh_mod.c */
 uint32 level_object_get_height(LevelObject *object);   /* 0x00113784 GUESS: name */
 int32 animations_find(Animations *animations,int32 userId);   /* 0x001137A4 GUESS: name */
 uint32 vector_length(void *context,uint32 *vector);   /* 0x001137D4 GUESS: name, see kh_mod.c */

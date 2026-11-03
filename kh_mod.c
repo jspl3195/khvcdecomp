@@ -12800,40 +12800,37 @@ uint32 enemy_get_health(Enemy *enemy)
 }
 
 
-/* ==== 0x001136C8  (file offset 0x136C8)  FUN_001136c8 ================================================ */
-undefined4
-FUN_001136c8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param_4,
-            undefined4 *param_5,undefined4 param_6)
+/* ==== 0x001136C8  (file offset 0x136C8)  level_object_get_surface ==================================== */
+/* GUESS: names. Whether the point (x, y) (floats, their bits) is over one of the object's solid scene
+   shapes (kind 2): one that a body of `radius`, no height, just under the shape's top (0.05 below it)
+   would overlap (collision_shape_allows says no). Then *bottom and *top are that shape's z range (its
+   position plus its box's minimum and maximum z); the last such shape counts. 1 when there is one, else 0.
+   The ground and ceiling query FUN_00114240 asks every object that has collision (+0x38) for it. */
+int32 level_object_get_surface(LevelObject *object,uint32 x,uint32 y,uint32 *bottom,uint32 *top,
+                               uint32 radius)
 
 {
-  undefined4 uVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  int *piVar4;
-  int iVar5;
-  int iVar6;
-  undefined4 uVar7;
-  int iVar8;
-  
-  uVar7 = 0;
-  iVar8 = param_1;
-  for (iVar5 = 0; iVar5 < *(int *)(param_1 + 0xe0); iVar5 = iVar5 + 1) {
-    piVar4 = *(int **)(param_1 + iVar5 * 4 + 0x90);
-    if (*piVar4 == 2) {
-      iVar6 = piVar4[4];
-      uVar1 = float_add(iVar6,piVar4[10]);
-      uVar2 = float_add(iVar6,piVar4[7]);
-      uVar3 = float_subtract(uVar1,FLOAT_0_POINT_05);
-      iVar6 = collision_shape_allows((CollisionShape *)piVar4,param_2,param_3,uVar3,param_6,0);
-      if (iVar6 == 0) {
-        *param_5 = uVar1;
-        uVar7 = 1;
-        *param_4 = uVar2;
-      }
+  CollisionShape *shape;
+  uint32 shapeTop;
+  uint32 shapeBottom;
+  int32 found = 0;
+  int32 i;
+
+  for (i = 0; i < object->sceneShapeCount; i++) {
+    shape = object->sceneShapes[i];
+    if (shape->kind != 2)
+      continue;
+    shapeTop = float_add(shape->position[2],shape->maximum[2]);
+    shapeBottom = float_add(shape->position[2],shape->minimum[2]);
+    if (collision_shape_allows(shape,x,y,float_subtract(shapeTop,FLOAT_0_POINT_05),radius,0) == 0) {
+      *top = shapeTop;
+      found = 1;
+      *bottom = shapeBottom;
     }
   }
-  return uVar7;
+  return found;
 }
+
 
 /* ==== 0x00113784  (file offset 0x13784)  level_object_get_height ===================================== */
 /* GUESS: name. The height (a float, its bits) of a level object's first collision shape: the first one
@@ -13414,14 +13411,15 @@ int32 text_table_get_text(TextTable *table,int32 textId,char **text)
 
 
 /* ==== 0x00114240  (file offset 0x14240)  FUN_00114240 ================================================ */
-/* GUESS: what it does. The height of the ground or ceiling at (param_2, param_3) from height param_4
-   in the direction param_5 (+1.0 / -1.0): unless param_7 asks for the fixed height (+0x204 set, then
-   +0x208), casts a ray (a RayIntersection, ISwerve class 0x15) from (param_2, param_3, param_4) along
-   (0, 0, param_5) and takes the hit's distance (default 999999 * param_5), then with param_9 lets the
-   120 objects at +0x10 (those with +0x38 set) give a nearer surface (FUN_001136c8: height1 and height2
-   at (param_2, param_3)); *param_6 tells whether anything was found. The compares leave their result in
-   the flags (`blo` / `bhs` / `bls` at 0x001143b8 - 0x00114400), written after the comma. Written from its
-   disassembly: Ghidra read stale flags and r1 leftovers there. */
+/* GUESS: what it does. The height of the ground or ceiling at (param_2, param_3) from height param_4 in
+   the direction param_5 (+1.0 / -1.0): unless param_7 asks for the fixed height (+0x204 set, then
+   +0x208), casts a ray (a RayIntersection, ISwerve class 0x15) from (param_2, param_3, param_4) along (0,
+   0, param_5) and takes the hit's distance (default 999999 * param_5), then with param_9 lets the 120
+   objects at +0x10 (those with +0x38 set) give a nearer surface (level_object_get_surface: the top of a
+   shape under (param_2, param_3) as the ground, its bottom as the ceiling); *param_6 tells whether
+   anything was found. The compares leave their result in the flags (`blo` / `bhs` / `bls` at 0x001143b8 -
+   0x00114400), written after the comma. Written from its disassembly: Ghidra read stale flags and r1
+   leftovers there. */
 undefined4
 FUN_00114240(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
             undefined4 param_5,undefined4 *param_6,int param_7,undefined4 param_8,int param_9)
@@ -13434,8 +13432,8 @@ FUN_00114240(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined
   uint32 direction[3];
   uint32 distance;
   uint32 hit;
-  uint32 height1;
-  uint32 height2;
+  uint32 bottom;
+  uint32 top;
   int *ray;
 
   if (param_7 != 0 && param_1[0x81] != 0) {
@@ -13469,18 +13467,18 @@ FUN_00114240(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined
   for (i = 0; i < 0x78; i++) {
     object = param_1[i + 4];
     if (object == 0 || *(int32 *)(object + 0x38) == 0 ||
-        FUN_001136c8(object,param_2,param_3,&height1,&height2,param_8) == 0)
+        level_object_get_surface((LevelObject *)object,param_2,param_3,&bottom,&top,param_8) == 0)
       continue;
     if (float_compare_less(param_5,0), *(float *)&param_5 < 0.0f) {
-      if ((float_compare_greater(height2,height), *(float *)&height2 > *(float *)&height) &&
-          (float_compare_less(height2,param_4), *(float *)&height2 < *(float *)&param_4)) {
-        height = height2;
+      if ((float_compare_greater(top,height), *(float *)&top > *(float *)&height) &&
+          (float_compare_less(top,param_4), *(float *)&top < *(float *)&param_4)) {
+        height = top;
         *param_6 = 1;
       }
     }
-    else if ((float_compare_less(height1,height), *(float *)&height1 < *(float *)&height) &&
-             (float_compare_greater(height1,param_4), *(float *)&height1 > *(float *)&param_4)) {
-      height = height1;
+    else if ((float_compare_less(bottom,height), *(float *)&bottom < *(float *)&height) &&
+             (float_compare_greater(bottom,param_4), *(float *)&bottom > *(float *)&param_4)) {
+      height = bottom;
       *param_6 = 1;
     }
   }
