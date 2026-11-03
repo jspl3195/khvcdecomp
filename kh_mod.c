@@ -2549,8 +2549,8 @@ LAB_00103858:
         return local_34;
       }
       local_a8[9] = 0;
-      FUN_00114120(*(undefined4 *)(*param_1 + 0xa8),*(undefined4 *)(*param_1 + 0xc4),local_a8 + 9,
-                   local_a8 + 8);
+      progress_find_record(((KHApp *)*param_1)->progress,(const char *)((KHApp *)*param_1)->pBufc4,
+                           (int32 *)(local_a8 + 9),(int32 *)(local_a8 + 8));
       if ((int)local_38 <= local_a8[9]) {
         return local_34;
       }
@@ -2632,8 +2632,8 @@ LAB_001050b0:
       FUN_00109a10(iVar9,2,uVar2,0x3f);
       local_38 = (void *)0x0;
       local_3c = (void *)0x0;
-      FUN_00114120(*(undefined4 *)(*param_1 + 0xa8),*(undefined4 *)(*param_1 + 0xc4),&local_38,
-                   &local_3c);
+      progress_find_record(((KHApp *)*param_1)->progress,(const char *)((KHApp *)*param_1)->pBufc4,
+                           (int32 *)&local_38,(int32 *)&local_3c);
       memset(local_74 + 7,0x1c);
       local_74[7] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x52c);
       local_74[8] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x530);
@@ -2758,9 +2758,9 @@ LAB_00104a24:
                     (pvVar16,*(undefined4 *)(*(int *)(*param_1 + 0xa8) + iVar19 * 4 + 0x5f0));
           local_38 = (void *)0x0;
           local_3c = (void *)0x0;
-          FUN_00114120(*(int *)(*param_1 + 0xa8),
-                       *(undefined4 *)(*(int *)(*param_1 + 0xa8) + iVar19 * 4 + 0x5f0),&local_38,
-                       &local_3c);
+          progress_find_record(((KHApp *)*param_1)->progress,
+                               ((KHApp *)*param_1)->progress->recordNames[iVar19],(int32 *)&local_38,
+                               (int32 *)&local_3c);
           p_01 = helper_malloc(0x40);
           (*g_pHelperFuncs->sprintf)(p_01,(int32)STRING_PERCENT_D,local_38);
           (*g_pHelperFuncs->strcat)(pvVar5,p_01);
@@ -2833,9 +2833,9 @@ LAB_00101fa8:
           ui_element_add_child(iVar9,iVar17,0);
           local_38 = (void *)0x0;
           local_3c = (void *)0x0;
-          FUN_00114120(*(int *)(*param_1 + 0xa8),
-                       *(undefined4 *)(*(int *)(*param_1 + 0xa8) + iVar7 * 4 + 0x5f0),&local_38,
-                       &local_3c);
+          progress_find_record(((KHApp *)*param_1)->progress,
+                               ((KHApp *)*param_1)->progress->recordNames[iVar7],(int32 *)&local_38,
+                               (int32 *)&local_3c);
           uVar10 = FUN_00107fd0(param_1,local_2c,1).low;
           local_40 = (void *)(int)text_line_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),0,
                                           param_1,0,0x21);
@@ -13579,27 +13579,28 @@ LAB_00114080:
   } while( true );
 }
 
-/* ==== 0x00114120  (file offset 0x14120)  FUN_00114120 ================================================ */
-undefined4 FUN_00114120(int param_1,undefined4 param_2,undefined4 *param_3,undefined4 *param_4)
+/* ==== 0x00114120  (file offset 0x14120)  progress_find_record ======================================== */
+/* GUESS: names (and that the first value is a best score). The saved record with the name `name` (a
+   level's, e.g. KHApp.pBufc4): its two values in *best and *second and 1; 0 when there is none, the outputs
+   left as they are (the callers clear them first). The menu code (FUN_00101ad8) reads it after a level, to
+   store a better score with FUN_0011fddc, and to list the records. */
+int32 progress_find_record(Progress *progress,const char *name,int32 *best,int32 *second)
 
 {
-  int iVar2;
-  int iVar3;
-  iVar3 = 0;
+  int32 i;
+
                     /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
                        via *(base-4)) */
-  while ((*(int *)(param_1 + iVar3 * 4 + 0x5f0) == 0 ||
-         (iVar2 = (*g_pHelperFuncs->strcmp)(param_2,*(undefined4 *)(param_1 + iVar3 * 4 + 0x5f0)), iVar2 != 0))) {
-    iVar3 = iVar3 + 1;
-    if (0x18 < iVar3) {
-      return 0;
+  for (i = 0; i < 25; i++)
+    if (progress->recordNames[i] != (char *)0x0 &&
+        (*g_pHelperFuncs->strcmp)(name,progress->recordNames[i]) == 0) {
+      *best = progress->records[i].best;
+      *second = progress->records[i].field_04;
+      return 1;
     }
-  }
-  param_1 = param_1 + iVar3 * 8;
-  *param_3 = *(undefined4 *)(param_1 + 0x654);
-  *param_4 = *(undefined4 *)(param_1 + 0x658);
-  return 1;
+  return 0;
 }
+
 
 /* ==== 0x00114198  (file offset 0x14198)  FUN_00114198 ================================================ */
 undefined1 FUN_00114198(int param_1,undefined4 param_2)
@@ -20820,19 +20821,16 @@ undefined4 FUN_0011fddc(int param_1,undefined4 param_2,int param_3,undefined4 pa
 
 {
   int iVar1;
-  int iVar2;
   undefined4 uVar3;
   int iVar4;
   int iVar5;
   int iVar6;
-  int iVar7;
+  Progress *progress = (Progress *)param_1;
   
-  iVar2 = WORD_HEXADECIMAL_FFFE01FC;
   iVar4 = 0;
   iVar5 = -1;
   while( true ) {
-    iVar7 = param_1 + iVar4 * 4;
-    iVar1 = *(int *)(iVar7 + 0x5f0);
+    iVar1 = (int)progress->recordNames[iVar4];
     iVar6 = iVar4;
                     /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
                        via *(base-4)) */
@@ -20842,7 +20840,7 @@ undefined4 FUN_0011fddc(int param_1,undefined4 param_2,int param_3,undefined4 pa
         (iVar1 = (*g_pHelperFuncs->strcmp)(iVar1,(int32)STRING_EMPTY_001278E8),
         iVar1 != 0)) &&
        (iVar1 = (*g_pHelperFuncs->strcmp)
-                          (param_2,*(undefined4 *)(iVar7 + 0x5f0)), iVar6 = iVar5, iVar1 == 0))
+                          (param_2,progress->recordNames[iVar4]), iVar6 = iVar5, iVar1 == 0))
     break;
     iVar4 = iVar4 + 1;
     iVar5 = iVar6;
@@ -20851,16 +20849,14 @@ undefined4 FUN_0011fddc(int param_1,undefined4 param_2,int param_3,undefined4 pa
         uVar3 = 0;
       }
       else {
-        iVar5 = param_1 + iVar6 * 4;
-        if (*(int *)(iVar5 + 0x5f0) != 0) {
+        if (progress->recordNames[iVar6] != (char *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-          (*g_pHelperFuncs->free)(*(undefined4 *)(iVar5 + 0x5f0));
-          *(undefined4 *)(iVar5 + 0x5f0) = 0;
+          (*g_pHelperFuncs->free)(progress->recordNames[iVar6]);
+          progress->recordNames[iVar6] = (char *)0x0;
         }
-        FUN_001204f0((undefined4)((KHApp *)*(int *)(param_1 + 0x724))->context,param_2,iVar5 + 0x5f0);
-        iVar2 = param_1 + iVar6 * 8;
-        *(int *)(iVar2 + 0x654) = param_3;
-        *(undefined4 *)(iVar2 + 0x658) = param_4;
+        FUN_001204f0((undefined4)progress->app->context,param_2,(int *)&progress->recordNames[iVar6]);
+        progress->records[iVar6].best = param_3;
+        progress->records[iVar6].field_04 = param_4;
         FUN_0011ea18(param_1);
 LAB_0011fec8:
         uVar3 = 1;
@@ -20869,9 +20865,9 @@ LAB_0011fec8:
     }
   }
   if (param_3 != -1) {
-    *(int *)(param_1 + iVar4 * 8 + 0x654) = param_3;
+    progress->records[iVar4].best = param_3;
   }
-  *(undefined4 *)(param_1 + iVar4 * 8 + 0x658) = param_4;
+  progress->records[iVar4].field_04 = param_4;
   goto LAB_0011fec8;
 }
 

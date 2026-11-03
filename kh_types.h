@@ -313,6 +313,10 @@ typedef struct ProgressLevel {
                                      3: levelRewardThreeCount + 1 */
 } ProgressLevel;
 
+typedef struct ProgressRecord {
+    int32    best;                  /* +0x00 GUESS: a best score; replaced only by a higher one after a level */
+    int32    field_04;              /* +0x04 GUESS: meaning unknown; -1 from the setter call after a level */
+} ProgressRecord;                 /* GUESS: names; Progress.records */
 typedef struct Progress {
     uint8  statusFlags[100];      /* +0x000 one byte per status text (GUESS: names) */
     char  *statusTexts[100];      /* +0x064 named status texts, for example "Out of magic" while magicPoints is
@@ -353,7 +357,10 @@ typedef struct Progress {
                                      Left, Right, Action, Status, Magic */
     int32    softKeys[2];           /* +0x5e8 the keys that act as the left and the right soft key (screen_handle_key):
                                      AVK_SOFT1 and AVK_SOFT2, swapped when the text 0x052F918F exists */
-    uint8  unknown_5f0[0x134];
+    char    *recordNames[25];       /* +0x5f0 GUESS: names; the saved records' names (a level's, KHApp.pBufc4);
+                                     0 or "" when free (progress_find_record, FUN_0011fddc) */
+    ProgressRecord records[25];   /* +0x654 their values */
+    uint8  unknown_71c[0x08];
     struct KHApp *app;            /* +0x724 the app it belongs to */
 } Progress;
 

@@ -668,7 +668,7 @@ void level_object_get_position(uint32 *position,LevelObject *object);   /* 0x001
 uint8 animations_get_priority(Animations *animations,int32 index);   /* 0x00113CD4 GUESS: name */
 int FUN_00113cfc(undefined4 param_1,int param_2);
 int FUN_00113da4(int *param_1,int param_2,int param_3,int param_4,int param_5,uint param_6);
-undefined4 FUN_00114120(int param_1,undefined4 param_2,undefined4 *param_3,undefined4 *param_4);
+int32 progress_find_record(Progress *progress,const char *name,int32 *best,int32 *second);   /* 0x00114120 GUESS: name, see kh_mod.c */
 undefined1 FUN_00114198(int param_1,undefined4 param_2);
 uint8 animations_get_state(Animations *animations,int32 index);   /* 0x001141F4 GUESS: name */
 int32 text_table_get_text(TextTable *table,int32 textId,char **text);   /* 0x0011421C GUESS: name, see kh_mod.c */
