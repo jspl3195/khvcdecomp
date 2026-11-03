@@ -504,7 +504,7 @@ void key_picker_setup(UIElement *picker,KeyOption *options,int32 *setting,int32 
 void FUN_00109940(int param_1,int param_2);
 void FUN_00109a10(int param_1,int param_2,int param_3,undefined4 param_4);
 int32 text_box_set_text(TextBox *box,AECHAR *text,int32 narrow);   /* 0x00109B4C GUESS: name, see kh_mod.c */
-void FUN_00109f00(int param_1,undefined4 param_2);
+void text_box_set_text_id(TextBox *box,int32 textId);   /* 0x00109F00 GUESS: name, see kh_mod.c */
 void text_line_set_text(TextLine *line,AECHAR *text);   /* 0x00109F48 GUESS: name, see kh_mod.c */
 void text_line_set_text_id(TextLine *line,int32 textId);   /* 0x00109FF8 GUESS: name, see kh_mod.c */
 void FUN_0010a03c(int param_1,undefined4 param_2);

@@ -2408,7 +2408,7 @@ LAB_001050b0:
       uVar10 = FUN_00107fd0(param_1,700,1).low;
       uVar10 = text_box_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar7);
-      FUN_00109f00(uVar10,WORD_HEXADECIMAL_2E8D6E9D);
+      text_box_set_text_id((TextBox *)uVar10,(int32)WORD_HEXADECIMAL_2E8D6E9D);
       ui_element_add_child(iVar9,uVar10,500);
       FUN_00109a10(iVar9,1,0,0);
       FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_10FB280A,0x56);
@@ -2510,7 +2510,7 @@ LAB_00104a24:
       uVar10 = FUN_00107fd0(param_1,800,1).low;
       uVar10 = text_box_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar19);
-      FUN_00109f00(uVar10,WORD_HEXADECIMAL_0528CA88);
+      text_box_set_text_id((TextBox *)uVar10,(int32)WORD_HEXADECIMAL_0528CA88);
       ui_element_add_child(iVar9,uVar10,500);
       if (((ScreenStack *)param_1)->savedLevelName != (char *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -2549,7 +2549,7 @@ LAB_00104a24:
       uVar10 = FUN_00107fd0(param_1,700,1).low;
       uVar10 = text_box_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar19);
-      FUN_00109f00(uVar10,WORD_HEXADECIMAL_0528CA88);
+      text_box_set_text_id((TextBox *)uVar10,(int32)WORD_HEXADECIMAL_0528CA88);
       ui_element_add_child(iVar9,uVar10,500);
       pvVar16 = helper_malloc(0x100);
       pvVar5 = helper_malloc(0x80);
@@ -2747,7 +2747,7 @@ LAB_00101db4:
       uVar13 = FUN_00107fd0(param_1,200,1).low;
       uVar14 = FUN_00107fd0(param_1,100,2).low;
       iVar7 = text_box_create(0,uVar14,uVar13,uVar11,uVar10,param_1,iVar7);
-      FUN_00109f00(iVar7,WORD_HEXADECIMAL_27B19885);
+      text_box_set_text_id((TextBox *)iVar7,(int32)WORD_HEXADECIMAL_27B19885);
       uVar10 = 1000;
       goto LAB_00104da0;
     default:
@@ -2929,7 +2929,7 @@ LAB_0010489c:
         *(undefined4 *)(iVar19 + 0x18) = WORD_HEXADECIMAL_FFEFEFEF;
         uVar10 = text_box_create(0,(int)*psVar18,(int)psVar18[1],(int)psVar18[2],(int)psVar18[3],
                               param_1,iVar19);
-        FUN_00109f00(uVar10,uVar11);
+        text_box_set_text_id((TextBox *)uVar10,(int32)uVar11);
         ui_element_add_child(iVar9,uVar10,0);
         uVar10 = FUN_00107fd0(param_1,0x2a8,1).low;
         uVar11 = FUN_00107fd0(param_1,500,2).low;
@@ -3238,7 +3238,7 @@ LAB_00104da0:
     uVar10 = screen_stack_top(param_1);
     iVar7 = ui_element_find_child(uVar10,0x2d);
     if (iVar7 != 0) {
-      FUN_00109f00(iVar7,WORD_HEXADECIMAL_1650919F);
+      text_box_set_text_id((TextBox *)iVar7,(int32)WORD_HEXADECIMAL_1650919F);
       FUN_00109a10(uVar10,2,WORD_HEXADECIMAL_19408333,8);
       uVar13 = 7;
       uVar11 = 1;
@@ -3395,7 +3395,7 @@ LAB_001048a4:
       (*g_pHelperFuncs->free)(local_3c);
     }
     else {
-      FUN_00109f00(uVar10,uVar11);
+      text_box_set_text_id((TextBox *)uVar10,(int32)uVar11);
     }
     ui_element_add_child(iVar9,uVar10,0);
     *(undefined4 *)(iVar9 + 0x30) = uVar10;
@@ -3644,7 +3644,7 @@ void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
     *(undefined4 *)(iVar4 + 4) = 0x21;
     iVar2 = text_box_create(0,iVar3,iVar2,(int)*(short *)(*(int *)(param_1 + 0x14) + 4) + iVar3 * -2,
                          *(short *)(*(int *)(param_1 + 0x14) + 6) - iVar2,param_1,iVar4);
-    FUN_00109f00(iVar2,param_5);
+    text_box_set_text_id((TextBox *)iVar2,(int32)param_5);
     if (param_3 != 0) {
       *(int *)(iVar2 + 0x10) = param_3;
     }
@@ -5674,7 +5674,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
     psVar9 = (short *)(*(int *)(iVar8 + 8) + 2);
     uVar11 = FUN_00107fd0((int)param_1,0x96,1);
     *psVar9 = *psVar9 - (short)uVar11.low;
-    FUN_00109f00(iVar8,uVar4);
+    text_box_set_text_id((TextBox *)iVar8,(int32)uVar4);
     ui_element_remove_child((int)piVar1,700,1);
     break;
   case 0x5:
@@ -5699,7 +5699,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
           psVar9 = (short *)(*(int *)(iVar8 + 8) + 2);
           uVar11 = FUN_00107fd0((int)param_1,0x96,1);
           *psVar9 = *psVar9 - (short)uVar11.low;
-          FUN_00109f00(iVar8,uVar4);
+          text_box_set_text_id((TextBox *)iVar8,(int32)uVar4);
           FUN_00109a10((int)piVar1,1,0,0);
           FUN_00109a10((int)piVar1,2,WORD_HEXADECIMAL_19408333,0xffffffff);
           goto LAB_00108a4c;
@@ -5716,7 +5716,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
           *psVar9 = *psVar9 - (short)uVar11.low;
         }
       }
-      FUN_00109f00(iVar8,uVar4);
+      text_box_set_text_id((TextBox *)iVar8,(int32)uVar4);
     }
 LAB_00108a4c:
     ui_element_draw((UIElement *)piVar1);
@@ -5748,7 +5748,7 @@ LAB_00108d50:
     break;
   case 0x9:
     iVar5 = ui_element_find_child((int)piVar1,500);
-    FUN_00109f00(iVar5,WORD_HEXADECIMAL_3D569D08);
+    text_box_set_text_id((TextBox *)iVar5,(int32)WORD_HEXADECIMAL_3D569D08);
     iVar5 = WORD_HEXADECIMAL_0001F14C;
     ((KHApp *)*param_1)->progress->levelLoaded = 0;
     FUN_0011e6b8(*(int *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
@@ -6433,22 +6433,20 @@ int32 text_box_set_text(TextBox *box,AECHAR *text,int32 narrow)
 }
 
 
-/* ==== 0x00109F00  (file offset 0x09F00)  FUN_00109f00 ================================================ */
-void FUN_00109f00(int param_1,undefined4 param_2)
+/* ==== 0x00109F00  (file offset 0x09F00)  text_box_set_text_id ======================================== */
+/* GUESS: name. Sets a text box's text to the text with the id `textId` (screen_stack_get_text: its owner's
+   key glyphs, else the text table), wide (text_box_set_text with narrow 0), then frees that copy (the
+   binary's tail call at 0x00109f40). The text-box twin of text_line_set_text_id. */
+void text_box_set_text_id(TextBox *box,int32 textId)
 
 {
-  /* param_2: not in Ghidra's prototype; kh.mod reads r1 at entry and its callers set it */
-  undefined4 uVar1;
-  
-  uVar1 = screen_stack_get_text(*(undefined4 *)(param_1 + 0x20),param_2);
-  text_box_set_text(param_1,uVar1,0);
-                    /* WARNING: Could not recover jumptable at 0x00109f40. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) - tail
-                       call */
-  (*g_pHelperFuncs->free)(uVar1);
-  return;
+  AECHAR *text = screen_stack_get_text((ScreenStack *)((UIElement *)box)->owner,textId);
+
+  text_box_set_text(box,text,0);
+                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
+  (*g_pHelperFuncs->free)(text);
 }
+
 
 /* ==== 0x00109F48  (file offset 0x09F48)  text_line_set_text ========================================== */
 /* GUESS: name. Sets a text line's text (copied; 0 for none) and its width (IDisplay MeasureTextEx). */
