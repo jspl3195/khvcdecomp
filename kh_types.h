@@ -555,7 +555,8 @@ typedef struct Character {
     int32    field_244;             /* +0x244 cleared when the action key starts an attack; the tree or ladder
                                      climbed (script setCharacterMode) */
     LevelObject *hangTarget;      /* +0x248 script setCharacterMode HANG's second object */
-    int32    field_24c;             /* +0x24c 0 at creation */
+    LevelObject *carried;         /* +0x24c GUESS: name; the object it carries (character_lift; character_drop
+                                     clears it) */
     LevelObject *mirrorObject;    /* +0x250 script setMirror: the object, or 0 */
     uint32 mirrorOffset[3];       /* +0x254 floats (their bits) */
     uint32 mirrorAngle;           /* +0x260 a float (its bits) */

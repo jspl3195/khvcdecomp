@@ -7583,7 +7583,7 @@ Character * character_create(Character *character,ISwerveObject *node,char *name
   character->field_1e8 = (ISwerveObject *)0x0;
   character->field_1ec = (ISwerveObject *)0x0;
   character->field_244 = 0;
-  character->field_24c = 0;
+  character->carried = (LevelObject *)0x0;
   character->mirrorObject = (LevelObject *)0x0;
   ((MotionEntity *)character)->field_120 = 0;
   ((MotionEntity *)character)->field_124 = 0;
@@ -11307,7 +11307,7 @@ LAB_00110540:
         local_38 = float_add(local_38,*(uint *)(param_1 + 0x70));
         FUN_0011316c(param_1,local_40,local_3c,local_38,0,0,0,0,0,0xffffffff,FLOAT_5);
       }
-      FUN_00110564(param_1,0,*(int *)(param_1 + 0x24c));
+      character_drop((Character *)param_1,0,((Character *)param_1)->carried);
       return 0xb;
     }
     float_compare_greater(uVar4,uVar3);
@@ -11319,48 +11319,47 @@ LAB_00110540:
   return 0xffffffff;
 }
 
-/* ==== 0x00110564  (file offset 0x10564)  FUN_00110564 ================================================ */
-void FUN_00110564(int param_1,int param_2,int param_3)
+/* ==== 0x00110564  (file offset 0x10564)  character_drop ============================================== */
+/* GUESS: names. Puts down what the character carries (character_lift), if anything: the lifting animation
+   rewound, the character back to state 0xc (FUN_0011f8e0), and the carried object moved (FUN_0011316c)
+   either to `target`'s position or to a point near the character: an offset of (0, -5.0, 0), or
+   (0, 1.5, 0) when `notBehind` is 0 (the script's DROP BEHIND), turned by its heading, from its position
+   at its top (position z plus its height). FUN_0011316c's fifth argument is 1 for that computed point and
+   0 for a target. The script's DROP passes its flag 0 and object; the character's update passes its
+   carried object as the target. */
+void character_drop(Character *character,int32 notBehind,LevelObject *target)
 
 {
-  undefined4 uVar1;
-  undefined4 uVar2;
-  undefined4 local_2c;
-  undefined4 local_28;
-  undefined4 local_24;
-  undefined4 local_20;
-  undefined4 local_1c;
-  undefined4 local_18;
-  
-  if (*(int *)(param_1 + 0x24c) != 0) {
-    animations_rewind(((KHApp *)*(int *)(param_1 + 0x84))->animations,*(undefined4 *)(param_1 + 0x31c));
-    FUN_0011f8e0(param_1,0xc);
-    uVar2 = 1;
-    if (param_3 == 0) {
-      local_2c = 0;
-      local_24 = 0;
-      local_28 = FLOAT_MINUS_5;
-      if (param_2 == 0) {
-        local_28 = 0x3fc00000;
-      }
-      motion_entity_rotate_by_heading((MotionEntity *)param_1,(uint32 *)&local_2c);
-      local_20 = float_add(*(undefined4 *)(param_1 + 0x68),local_2c);
-      local_1c = float_add(*(undefined4 *)(param_1 + 0x6c),local_28);
-      uVar1 = level_object_get_height((LevelObject *)param_1);
-      uVar1 = float_add(uVar1,*(undefined4 *)(param_1 + 0x70));
-      local_18 = float_add(uVar1,local_24);
-    }
-    else {
-      level_object_get_position((uint32 *)&local_20,(LevelObject *)param_3);
-      uVar2 = 0;
-    }
-    local_28 = *(undefined4 *)(param_1 + 0x24c);
-    local_2c = 0;
-    FUN_0011316c(local_28,local_20,local_1c,local_18,uVar2,2,2,1,0,0xffffffff,FLOAT_7_POINT_5 /* not arguments, value leftovers: 1,1,1,0 */);
-    *(undefined4 *)(param_1 + 0x24c) = 0;
+  uint32 offset[3];
+  uint32 position[3];
+  int32 computed = 1;
+
+  if (character->carried == (LevelObject *)0x0)
+    return;
+  animations_rewind(character->app->animations,character->animations[25]);
+  FUN_0011f8e0((int)character,0xc);
+  if (target != (LevelObject *)0x0) {
+    level_object_get_position(position,target);
+    computed = 0;
   }
-  return;
+  else {
+    offset[0] = 0;
+    offset[1] = 0;
+    offset[2] = 0;
+    offset[1] = notBehind != 0 ? FLOAT_MINUS_5 : 0x3fc00000;   /* -5.0, or 1.5 */
+    motion_entity_rotate_by_heading((MotionEntity *)character,offset);
+    position[0] = float_add(((LevelObject *)character)->position[0],offset[0]);
+    position[1] = float_add(((LevelObject *)character)->position[1],offset[1]);
+    position[2] = float_add(float_add(level_object_get_height((LevelObject *)character),
+                                      ((LevelObject *)character)->position[2]),offset[2]);
+  }
+                    /* the binary also stores 1, 1, 1, 0, 0 and the carried object after these
+                       arguments (sp+0x1c - sp+0x30) */
+  FUN_0011316c((int)character->carried,position[0],position[1],position[2],computed,2,2,1,0,0xffffffff,
+               FLOAT_7_POINT_5);
+  character->carried = (LevelObject *)0x0;
 }
+
 
 /* ==== 0x001106A0  (file offset 0x106A0)  FUN_001106a0 ================================================ */
 undefined4 FUN_001106a0(undefined4 param_1,int *param_2,int param_3,int param_4)
@@ -11971,10 +11970,10 @@ int32 script_command_run(ScriptCommand *command)
       break;
     case 9:   /* LIFT */
       if (command->object != (LevelObject *)0x0)
-        FUN_0011add0((uint)player,(int)command->object);
+        character_lift(player,command->object);
       break;
     case 10:   /* DROP */
-      FUN_00110564((int)player,command->flag[0],(int)command->object);
+      character_drop(player,command->flag[0],command->object);
       break;
     case 0xb:   /* HANG */
       if (command->object != (LevelObject *)0x0) {
@@ -17242,19 +17241,24 @@ LAB_0011adac:
   return MAKE_WORDS(uVar8,local_30,uVar6);
 }
 
-/* ==== 0x0011ADD0  (file offset 0x1ADD0)  FUN_0011add0 ================================================ */
-uint FUN_0011add0(uint param_1,int param_2)
+/* ==== 0x0011ADD0  (file offset 0x1ADD0)  character_lift ============================================== */
+/* GUESS: names. The script's setCharacterMode LIFT: when the character is free to act (field_1cc 10, GUESS)
+   it picks `object` up: state 0x10, `carried` the object, the object's script and collision switched off
+   (field_34 and field_38, as setScriptOff / setCollisionOff do), and the lifting animation
+   (animations[25]) played on channel 0, once; returns what character_play_animation returns (the binary's
+   tail jump at 0x0011ae00), or r0 as kh.mod leaves it, the character. character_drop puts it down. */
+int32 character_lift(Character *character,LevelObject *object)
 
 {
-  if (*(int *)(param_1 + 0x1cc) == 10) {
-    *(undefined4 *)(param_1 + 0x1c8) = 0x10;
-    *(int *)(param_1 + 0x24c) = param_2;
-    *(undefined4 *)(param_2 + 0x34) = 0;
-    *(undefined4 *)(*(int *)(param_1 + 0x24c) + 0x38) = 0;
-    return character_play_animation((Character *)param_1,*(int32 *)(param_1 + 0x31c),0,0);
-  }
-  return param_1;
+  if (character->field_1cc != 10)
+    return (int32)character;
+  character->state = 0x10;
+  character->carried = object;
+  object->field_34 = 0;
+  character->carried->field_38 = 0;
+  return character_play_animation(character,character->animations[25],0,0);
 }
+
 
 /* ==== 0x0011AE04  (file offset 0x1AE04)  FUN_0011ae04 ================================================ */
 undefined4 FUN_0011ae04(int param_1,undefined4 param_2,int *param_3,int param_4,int param_5)
@@ -19492,7 +19496,7 @@ void FUN_0011e0b4(int param_1)
   FUN_0011fd90(param_1,0,0,0 /* not arguments, value leftovers: param_4 */);
   motion_entity_set_pitch((MotionEntity *)param_1,0);
   FUN_00120290(param_1,0);
-  *(undefined4 *)(param_1 + 0x24c) = 0;
+  ((Character *)param_1)->carried = (LevelObject *)0x0;
   *(undefined4 *)(param_1 + 0x244) = 0;
   *(undefined4 *)(param_1 + 300) = 0;
   *(undefined4 *)(param_1 + 0x250) = 0;
@@ -21321,8 +21325,8 @@ void FUN_0012070c(int param_1,int param_2)
           else if (iVar4 == *(int *)(iVar3 + 0x240)) {
             *(undefined4 *)(iVar3 + 0x240) = 0;
           }
-          else if (iVar4 == *(int *)(iVar3 + 0x24c)) {
-            *(undefined4 *)(iVar3 + 0x24c) = 0;
+          else if (iVar4 == (int)((Character *)iVar3)->carried) {
+            ((Character *)iVar3)->carried = (LevelObject *)0x0;
           }
           else if (iVar4 == *(int *)(iVar3 + 0x250)) {
             *(undefined4 *)(iVar3 + 0x250) = 0;
@@ -23202,10 +23206,10 @@ void FUN_00123588(int param_1,int param_2,int param_3)
     pcVar7 = *(code **)(*piVar3 + 0x4c);
     (*pcVar7)();
   }
-  if (*(int *)(param_1 + 0x24c) != 0) {
+  if (((Character *)param_1)->carried != (LevelObject *)0x0) {
     FUN_001147ec(&local_40,(int)((KHApp *)*(int *)(param_1 + 0x84))->context,*(int **)(param_1 + 0x1e0));
-    thunk_FUN_0011fd90(*(int *)(param_1 + 0x24c),local_40,local_3c,local_38);
-    piVar3 = *(int **)(*(int *)(param_1 + 0x24c) + 8);
+    thunk_FUN_0011fd90((int)((Character *)param_1)->carried,local_40,local_3c,local_38);
+    piVar3 = (int *)((Character *)param_1)->carried->node;
     pcVar7 = *(code **)(*piVar3 + 0x5c);
     (*pcVar7)(piVar3,param_1 + 0x140);
   }

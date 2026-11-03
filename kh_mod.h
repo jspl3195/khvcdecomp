@@ -629,7 +629,7 @@ uint32 planar_distance_squared(void *object,uint32 x1,uint32 y1,uint32 z1,uint32
 uint32 planar_distance_squared_2(void *object,uint32 x1,uint32 y1,uint32 z1,uint32 x2,uint32 y2);   /* 0x00110030 GUESS: name, see kh_mod.c */
 int32 string_split(int32 context,char *text,char *separator,char **parts,int32 maxParts);   /* 0x00110084 GUESS: name, see kh_mod.c */
 undefined4 FUN_00110190(int param_1,undefined4 *param_2,undefined4 *param_3);
-void FUN_00110564(int param_1,int param_2,int param_3);
+void character_drop(Character *character,int32 notBehind,LevelObject *target);   /* 0x00110564 GUESS: name, see kh_mod.c */
 undefined4 FUN_001106a0(undefined4 param_1,int *param_2,int param_3,int param_4);
 void FUN_00110860(int param_1,int param_2);
 void FUN_001108ac(undefined4 param_1,int param_2,int param_3);
@@ -720,7 +720,7 @@ void intro_on_key(Intro *intro,int32 key);   /* 0x0011A7DC GUESS: name */
 void character_on_key_release(Character *character,int32 key);   /* 0x0011AAD0 GUESS: name */
 void character_freeze_held_keys(Character *character);   /* 0x0011AB60 GUESS: name */
 undefined8 FUN_0011abc4(int param_1,int param_2);
-uint FUN_0011add0(uint param_1,int param_2);
+int32 character_lift(Character *character,LevelObject *object);   /* 0x0011ADD0 GUESS: name, see kh_mod.c */
 undefined4 FUN_0011ae04(int param_1,undefined4 param_2,int *param_3,int param_4,int param_5);
 void FUN_0011b044(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5, undefined4 *param_6);
 bool FUN_0011b0cc(int param_1,undefined4 param_2,undefined4 param_3,int *param_4);
