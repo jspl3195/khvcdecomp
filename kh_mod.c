@@ -8929,7 +8929,8 @@ undefined4 FUN_0010d354(int param_1)
       return 1;
     }
     iVar1 = **(int **)(*(int *)(param_1 + 0x14c) + iVar2 * 4);
-    iVar1 = (*(code *)(*(int *)(iVar1 + 0x1c)))();
+                    /* enemy_is_waiting(enemy); Ghidra had dropped the enemy, passed in r0 */
+    iVar1 = (*(code *)(*(int *)(iVar1 + 0x1c)))(*(int *)(*(int *)(param_1 + 0x14c) + iVar2 * 4));
     if (iVar1 == 0) break;
     iVar2 = iVar2 + 1;
   }
@@ -16313,13 +16314,15 @@ int32 screen_stack_all_keys_bound(ScreenStack *stack)
 }
 
 
-/* ==== 0x00119AF4  (file offset 0x19AF4)  FUN_00119af4 ================================================ */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101680): written from
-   its disassembly. */
-int FUN_00119af4(int param_1)
+/* ==== 0x00119AF4  (file offset 0x19AF4)  enemy_is_waiting ============================================ */
+/* GUESS: name. The enemy class's slot 7 (+0x1c of VTABLE_00101680): 1 while the enemy is waiting to appear
+   (state 1001, as enemy_create leaves it), else 0. Read by FUN_0010d354 and FUN_0011a2f4. Ghidra has no
+   function here (only reached through the vtable); written from its disassembly (the compare with 0x3E9
+   in two steps, sub #0x300 then subs #0xe9). */
+int32 enemy_is_waiting(Enemy *enemy)
 
 {
-  return *(int *)(param_1 + 0xa4) == 0x3e9;
+  return enemy->state == 1001;
 }
 
 
@@ -16725,9 +16728,12 @@ void FUN_0011a2f4(int param_1,int param_2)
     iVar3 = (int)uVar4.high;
     *(int *)(param_1 + 0x150) = iVar3;
     iVar3 = **(int **)(*(int *)(param_1 + 0x14c) + iVar3 * 4);
-    (*(code *)(*(int *)(iVar3 + 0x10)))();
+                    /* slot 4, then enemy_get_health: Ghidra had dropped the enemy, passed in r0 */
+    (*(code *)(*(int *)(iVar3 + 0x10)))
+              (*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4));
     iVar3 = **(int **)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4);
-    uVar2 = (*(code *)(*(int *)(iVar3 + 0x18)))();
+    uVar2 = (*(code *)(*(int *)(iVar3 + 0x18)))
+                      (*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4));
     uVar2 = FUN_00126858(uVar2);
     *(uint *)(param_1 + 0x140) = param_2 + uVar2 * 1000 + 5000;
     uVar1 = 2;
@@ -16738,7 +16744,9 @@ void FUN_0011a2f4(int param_1,int param_2)
     }
     if ((param_2 <= *(int *)(param_1 + 0x140)) &&
        (iVar3 = **(int **)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4),
-       iVar3 = (*(code *)(*(int *)(iVar3 + 0x1c)))(), iVar3 == 0)) {
+       iVar3 = (*(code *)(*(int *)(iVar3 + 0x1c)))   /* enemy_is_waiting; Ghidra had dropped the enemy */
+                 (*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4)),
+       iVar3 == 0)) {
       return;
     }
     if (*(int *)(*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4) + 0x130) != 0)
