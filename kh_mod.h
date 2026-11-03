@@ -752,9 +752,9 @@ undefined8 FUN_0011d3ec(int param_1,int param_2,undefined4 param_3,undefined4 pa
 void FUN_0011d6cc(int param_1,int param_2);
 int FUN_0011daac(int param_1,int param_2,undefined4 param_3,uint param_4);
 uint32 save_read_byte(Progress *progress,const uint8 *data,int32 *position);   /* 0x0011DC9C GUESS: name, see kh_mod.c */
-undefined4 FUN_0011dce8(undefined4 param_1,int param_2,int *param_3);
-undefined4 FUN_0011dd34(undefined4 param_1,int param_2,int *param_3);
-int FUN_0011dd80(undefined4 param_1,int param_2,int *param_3);
+uint32 save_read_float(Progress *progress,const uint8 *data,int32 *position);   /* 0x0011DCE8 GUESS: name, see kh_mod.c */
+int32 save_read_int(Progress *progress,const uint8 *data,int32 *position);   /* 0x0011DD34 GUESS: name, see kh_mod.c */
+char * save_read_string(Progress *progress,const uint8 *data,int32 *position);   /* 0x0011DD80 GUESS: name, see kh_mod.c */
 void FUN_0011de04(int param_1,undefined4 *param_2);
 void combat_region_release_attack_token(CombatRegion *region);   /* 0x0011DE64 GUESS: name */
 void enemy_reset_states(Enemy *enemy);   /* 0x0011DE70 GUESS: name */

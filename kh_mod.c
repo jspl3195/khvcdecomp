@@ -17429,29 +17429,29 @@ undefined4 FUN_0011b178(int param_1,int param_2)
   }
   FUN_0011e010(param_1);
   local_24 = 0;
-  uVar4 = FUN_0011dce8(param_1,iVar3,&local_24);
+  uVar4 = save_read_float((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(param_1 + 0x514) = uVar4;
-  uVar4 = FUN_0011dce8(param_1,iVar3,&local_24);
+  uVar4 = save_read_float((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(param_1 + 0x518) = uVar4;
-  uVar4 = FUN_0011dd34(param_1,iVar3,&local_24);
+  uVar4 = save_read_int((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(param_1 + 0x524) = uVar4;
-  uVar4 = FUN_0011dd34(param_1,iVar3,&local_24);
+  uVar4 = save_read_int((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(param_1 + 0x528) = uVar4;
-  uVar4 = FUN_0011dd34(param_1,iVar3,&local_24);
+  uVar4 = save_read_int((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(param_1 + 0x52c) = uVar4;
-  uVar4 = FUN_0011dd34(param_1,iVar3,&local_24);
+  uVar4 = save_read_int((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(param_1 + 0x530) = uVar4;
-  uVar4 = FUN_0011dd34(param_1,iVar3,&local_24);
+  uVar4 = save_read_int((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(param_1 + 0x534) = uVar4;
-  uVar4 = FUN_0011dd34(param_1,iVar3,&local_24);
+  uVar4 = save_read_int((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(param_1 + 0x538) = uVar4;
-  uVar4 = FUN_0011dd34(param_1,iVar3,&local_24);
+  uVar4 = save_read_int((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(param_1 + 0x58c) = uVar4;
-  uVar4 = FUN_0011dd34(param_1,iVar3,&local_24);
+  uVar4 = save_read_int((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(param_1 + 0x5ac) = uVar4;
-  uVar4 = FUN_0011dd34(param_1,iVar3,&local_24);
+  uVar4 = save_read_int((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(param_1 + 0x5b0) = uVar4;
-  uVar4 = FUN_0011dd34(param_1,iVar3,&local_24);
+  uVar4 = save_read_int((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   iVar6 = 0;
   *(undefined4 *)(param_1 + 0x5b4) = uVar4;
   do {
@@ -17467,20 +17467,20 @@ undefined4 FUN_0011b178(int param_1,int param_2)
     (*g_pHelperFuncs->free)(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xc4));
     *(undefined4 *)(*(int *)(param_1 + 0x724) + 0xc4) = 0;
   }
-  uVar4 = FUN_0011dd80(param_1,iVar3,&local_24);
+  uVar4 = (int32)save_read_string((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(*(int *)(param_1 + 0x724) + 0xc4) = uVar4;
   if (*(int *)(*(int *)(param_1 + 0x724) + 200) != 0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(*(undefined4 *)(*(int *)(param_1 + 0x724) + 200));
     *(undefined4 *)(*(int *)(param_1 + 0x724) + 200) = 0;
   }
-  uVar4 = FUN_0011dd80(param_1,iVar3,&local_24);
+  uVar4 = (int32)save_read_string((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(*(int *)(param_1 + 0x724) + 200) = uVar4;
   iVar6 = save_read_byte((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(uint *)(param_1 + 0x71c) = (uint)(iVar6 != 0x30);
   iVar6 = save_read_byte((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(uint *)(param_1 + 0x720) = (uint)(iVar6 != 0x30);
-  iVar6 = FUN_0011dd34(param_1,iVar3,&local_24);
+  iVar6 = save_read_int((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   for (iVar7 = 0; iVar7 < iVar6; iVar7 = iVar7 + 1) {
     uVar2 = save_read_byte((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
     *(undefined1 *)(param_1 + iVar7) = uVar2;
@@ -17490,12 +17490,12 @@ undefined4 FUN_0011b178(int param_1,int param_2)
       (*g_pHelperFuncs->free)(*(undefined4 *)(iVar5 + 100));
       *(undefined4 *)(iVar5 + 100) = 0;
     }
-    uVar4 = FUN_0011dd80(param_1,iVar3,&local_24);
+    uVar4 = (int32)save_read_string((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
     *(undefined4 *)(iVar5 + 100) = uVar4;
   }
-  iVar6 = FUN_0011dd34(param_1,iVar3,&local_24);
+  iVar6 = save_read_int((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   for (iVar7 = 0; iVar7 < iVar6; iVar7 = iVar7 + 1) {
-    uVar4 = FUN_0011dd34(param_1,iVar3,&local_24);
+    uVar4 = save_read_int((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
     iVar5 = param_1 + iVar7 * 4;
     *(undefined4 *)(iVar5 + 500) = uVar4;
     if (*(int *)(iVar5 + 900) != 0) {
@@ -17503,10 +17503,10 @@ undefined4 FUN_0011b178(int param_1,int param_2)
       (*g_pHelperFuncs->free)(*(undefined4 *)(iVar5 + 900));
       *(undefined4 *)(iVar5 + 900) = 0;
     }
-    uVar4 = FUN_0011dd80(param_1,iVar3,&local_24);
+    uVar4 = (int32)save_read_string((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
     *(undefined4 *)(iVar5 + 900) = uVar4;
   }
-  uVar4 = FUN_0011dd34(param_1,iVar3,&local_24);
+  uVar4 = save_read_int((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(param_1 + 0x5b8) = uVar4;
   if (iVar3 != 0) {
     (*g_pHelperFuncs->free)(iVar3);
@@ -17587,12 +17587,12 @@ undefined4 FUN_0011b5f0(int param_1)
         (*g_pHelperFuncs->free)(*(undefined4 *)(iVar5 + 0x5f0));
         *(undefined4 *)(iVar5 + 0x5f0) = 0;
       }
-      uVar4 = FUN_0011dd80(param_1,iVar2,&local_20);
+      uVar4 = (int32)save_read_string((Progress *)param_1,(const uint8 *)iVar2,(int32 *)&local_20);
       *(undefined4 *)(iVar5 + 0x5f0) = uVar4;
-      uVar4 = FUN_0011dd34(param_1,iVar2,&local_20);
+      uVar4 = save_read_int((Progress *)param_1,(const uint8 *)iVar2,(int32 *)&local_20);
       iVar5 = param_1 + iVar3 * 8;
       *(undefined4 *)(iVar5 + 0x654) = uVar4;
-      uVar4 = FUN_0011dd34(param_1,iVar2,&local_20);
+      uVar4 = save_read_int((Progress *)param_1,(const uint8 *)iVar2,(int32 *)&local_20);
       iVar3 = iVar3 + 1;
       *(undefined4 *)(iVar5 + 0x658) = uVar4;
     } while (iVar3 < 0x19);
@@ -17622,33 +17622,33 @@ void FUN_0011b6f0(int param_1,undefined4 param_2)
   iVar3 = FUN_0011b0cc(param_1,param_2,uVar2,0x40);
   if (iVar3 != 0) {
     uStack_18 = 0;
-    uVar4 = FUN_0011dd34(param_1,uVar2,&uStack_18);
+    uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     *(undefined4 *)(param_1 + 0x5cc) = uVar4;
-    uVar4 = FUN_0011dd34(param_1,uVar2,&uStack_18);
+    uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     *(undefined4 *)(param_1 + 0x5d0) = uVar4;
-    uVar4 = FUN_0011dd34(param_1,uVar2,&uStack_18);
+    uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     *(undefined4 *)(param_1 + 0x5d4) = uVar4;
-    uVar4 = FUN_0011dd34(param_1,uVar2,&uStack_18);
+    uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     *(undefined4 *)(param_1 + 0x5d8) = uVar4;
-    uVar4 = FUN_0011dd34(param_1,uVar2,&uStack_18);
+    uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     *(undefined4 *)(param_1 + 0x5dc) = uVar4;
-    uVar4 = FUN_0011dd34(param_1,uVar2,&uStack_18);
+    uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     *(undefined4 *)(param_1 + 0x5e0) = uVar4;
-    uVar4 = FUN_0011dd34(param_1,uVar2,&uStack_18);
+    uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     *(undefined4 *)(param_1 + 0x5e4) = uVar4;
-    uVar4 = FUN_0011dd34(param_1,uVar2,&uStack_18);
+    uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     *(undefined4 *)(param_1 + 0x594) = uVar4;
-    uVar4 = FUN_0011dd34(param_1,uVar2,&uStack_18);
+    uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     *(undefined4 *)(param_1 + 0x598) = uVar4;
     if (*(int *)(param_1 + 0x590) != 0) {
       (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x590));
       *(undefined4 *)(param_1 + 0x590) = 0;
     }
-    uVar4 = FUN_0011dd80(param_1,uVar2,&uStack_18);
+    uVar4 = (int32)save_read_string((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     *(undefined4 *)(param_1 + 0x590) = uVar4;
-    uVar4 = FUN_0011dd34(param_1,uVar2,&uStack_18);
+    uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     *(undefined4 *)(param_1 + 0x5c4) = uVar4;
-    iVar3 = FUN_0011dd34(param_1,uVar2,&uStack_18);
+    iVar3 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
     *(int *)(param_1 + 0x5c8) = iVar3;
     if (*(int *)(*(int *)(param_1 + 0x724) + 0xb4) != 0) {
       *(int *)(param_1 + 0x5c8) = iVar3 + 1;
@@ -19256,59 +19256,62 @@ uint32 save_read_byte(Progress *progress,const uint8 *data,int32 *position)
 }
 
 
-/* ==== 0x0011DCE8  (file offset 0x1DCE8)  FUN_0011dce8 ================================================ */
-undefined4 FUN_0011dce8(undefined4 param_1,int param_2,int *param_3)
+/* ==== 0x0011DCE8  (file offset 0x1DCE8)  save_read_float ============================================= */
+/* GUESS: names. The next word of the saved game (`data` at *position, which it advances by 4), a float (its bits): health, maximum health;
+   copied with memmove, so it need not be aligned. The same code as save_read_int. `progress` (what the loaders
+   fill) is not read. Ghidra had five arguments for the memmove (r3 only held its address). */
+uint32 save_read_float(Progress *progress,const uint8 *data,int32 *position)
 
 {
-  undefined4 local_c;
-  
-  local_c = 0;
-                    /* helper[0] void * memmove(void *dst, const void *src, uint32 n)
-                       (AEEHelperFuncs +0x0, via *(base-4)) */
-  (*(code *)g_pHelperFuncs->memmove)
-            (&local_c,*param_3 + param_2,4,(code *)g_pHelperFuncs->memmove,
-             param_3);
-  *param_3 = *param_3 + 4;
-  return local_c;
+  uint32 value = 0;
+
+                    /* helper[0] void * memmove(void *dst, const void *src, uint32 n)  (AEEHelperFuncs
+                       +0x0, via *(base-4)) */
+  (*g_pHelperFuncs->memmove)(&value,data + *position,4);
+  *position = *position + 4;
+  return value;
 }
 
-/* ==== 0x0011DD34  (file offset 0x1DD34)  FUN_0011dd34 ================================================ */
-undefined4 FUN_0011dd34(undefined4 param_1,int param_2,int *param_3)
+
+/* ==== 0x0011DD34  (file offset 0x1DD34)  save_read_int =============================================== */
+/* GUESS: names. The next word of the saved game (`data` at *position, which it advances by 4), an integer;
+   copied with memmove, so it need not be aligned. The same code as save_read_float. `progress` (what the loaders
+   fill) is not read. Ghidra had five arguments for the memmove (r3 only held its address). */
+int32 save_read_int(Progress *progress,const uint8 *data,int32 *position)
 
 {
-  undefined4 local_c;
-  
-  local_c = 0;
-                    /* helper[0] void * memmove(void *dst, const void *src, uint32 n)
-                       (AEEHelperFuncs +0x0, via *(base-4)) */
-  (*(code *)g_pHelperFuncs->memmove)
-            (&local_c,*param_3 + param_2,4,(code *)g_pHelperFuncs->memmove,
-             param_3);
-  *param_3 = *param_3 + 4;
-  return local_c;
+  int32 value = 0;
+
+                    /* helper[0] void * memmove(void *dst, const void *src, uint32 n)  (AEEHelperFuncs
+                       +0x0, via *(base-4)) */
+  (*g_pHelperFuncs->memmove)(&value,data + *position,4);
+  *position = *position + 4;
+  return value;
 }
 
-/* ==== 0x0011DD80  (file offset 0x1DD80)  FUN_0011dd80 ================================================ */
-int FUN_0011dd80(undefined4 param_1,int param_2,int *param_3)
+
+/* ==== 0x0011DD80  (file offset 0x1DD80)  save_read_string ============================================ */
+/* GUESS: names. The next string of the saved game (`data` at *position, zero-terminated), as a new copy;
+   *position is moved past its terminator. The terminator is written again after the copy, as the binary
+   does. There is no check that the malloc worked (research_notes/decomp/GAME_BUGS.md). `progress` (what
+   the loaders fill) is not read. */
+char * save_read_string(Progress *progress,const uint8 *data,int32 *position)
 
 {
-  int iVar2;
-  int iVar3;
-  iVar2 = 0;
-  do {
-    iVar3 = *param_3 + iVar2;
-    iVar2 = iVar2 + 1;
-  } while (*(char *)(param_2 + iVar3) != '\0');
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-  iVar3 = (*g_pHelperFuncs->malloc)(iVar2);
-                    /* helper[0] void * memmove(void *dst, const void *src, uint32 n)
-                       (AEEHelperFuncs +0x0, via *(base-4)) */
-  (*(code *)g_pHelperFuncs->memmove)(iVar3,*param_3 + param_2,iVar2);
-  *(undefined1 *)(iVar3 + iVar2 + -1) = 0;
-  *param_3 = *param_3 + iVar2;
-  return iVar3;
+  int32 size = 0;
+  char *text;
+
+  while (data[*position + size++] != 0)
+    ;
+                    /* helper[26] void * malloc(uint32 size), helper[0] void * memmove(void *dst, const
+                       void *src, uint32 n)  (AEEHelperFuncs +0x68, +0x0, via *(base-4)) */
+  text = (*g_pHelperFuncs->malloc)(size);
+  (*g_pHelperFuncs->memmove)(text,data + *position,size);
+  text[size - 1] = 0;
+  *position = *position + size;
+  return text;
 }
+
 
 /* ==== 0x0011DE04  (file offset 0x1DE04)  FUN_0011de04 ================================================ */
 void FUN_0011de04(int param_1,undefined4 *param_2)
