@@ -9621,26 +9621,24 @@ void FUN_0010e280(int param_1,undefined4 *param_2,undefined4 *param_3)
   undefined4 local_30;
   undefined4 uStack_2c;
   undefined4 uStack_28;
-  undefined4 local_24;
-  undefined4 local_20;
-  undefined4 local_1c;
+  uint32 direction[3];   /* the vector from param_2 to param_3, then normalised */
   
-  local_24 = 0;
-  local_20 = 0;
-  local_1c = 0;
-  local_24 = float_subtract(*param_3,*param_2);
-  local_20 = float_subtract(param_3[1],param_2[1]);
-  local_1c = float_subtract(param_3[2],param_2[2]);
-  uVar1 = vector_length((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,&local_24);
+  direction[0] = 0;
+  direction[1] = 0;
+  direction[2] = 0;
+  direction[0] = float_subtract(*param_3,*param_2);
+  direction[1] = float_subtract(param_3[1],param_2[1]);
+  direction[2] = float_subtract(param_3[2],param_2[2]);
+  uVar1 = vector_length(((KHApp *)*(int *)(param_1 + 0x84))->context,direction);
   uVar6 = FLOAT_1_POINT_1;
   uVar1 = float_add(uVar1,FLOAT_1_POINT_1);
-  FUN_0011442c((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,&local_24);
+  vector_normalize(((KHApp *)*(int *)(param_1 + 0x84))->context,direction);
   local_30 = *param_2;
   uStack_2c = param_2[1];
   uStack_28 = param_2[2];
   if (*(int *)(param_1 + 0x204) != 0) {
     piVar2 = (int *)**(undefined4 **)(*(int *)(param_1 + 0x84) + 0xa4);
-    (**(code **)(*piVar2 + 0xbc))(piVar2,1,&local_30,&local_24,*(int *)(param_1 + 0x204),local_34);
+    (**(code **)(*piVar2 + 0xbc))(piVar2,1,&local_30,direction,*(int *)(param_1 + 0x204),local_34);
     uVar7 = 1;
     if (local_34[0] != '\0') {
       (**(code **)(**(int **)(param_1 + 0x204) + 0xc))(*(int **)(param_1 + 0x204),&local_38);
@@ -9648,10 +9646,10 @@ void FUN_0010e280(int param_1,undefined4 *param_2,undefined4 *param_3)
       if (!(bool)uVar7) {
         uVar1 = float_subtract(local_38,uVar6);
         local_38 = uVar1;
-        uVar3 = float_multiply(local_24,uVar1);
+        uVar3 = float_multiply(direction[0],uVar1);
         uVar6 = uVar3;
-        uVar4 = float_multiply(local_20,uVar1);
-        uVar1 = float_multiply(local_1c,uVar1);
+        uVar4 = float_multiply(direction[1],uVar1);
+        uVar1 = float_multiply(direction[2],uVar1);
         uVar3 = float_add(*param_2,uVar3);
         *param_3 = uVar3;
         uVar5 = float_add(param_2[1],uVar4);
@@ -13715,30 +13713,26 @@ FUN_00114240(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined
   return height;
 }
 
-/* ==== 0x0011442C  (file offset 0x1442C)  FUN_0011442c ================================================ */
-void FUN_0011442c(undefined4 param_1,undefined4 *param_2)
+/* ==== 0x0011442C  (file offset 0x1442C)  vector_normalize ============================================ */
+/* GUESS: name. Makes the 3-D vector (floats, their bits) one long, in place: each component divided by its
+   length (vector_length); a vector of length 0 becomes (0, 0, 0). `context` (the app's) is only passed on
+   to vector_length. */
+void vector_normalize(void *context,uint32 *vector)
 
 {
-  undefined4 uVar1;
-  undefined4 uVar2;
-  undefined1 in_ZR;
-  
-  uVar1 = vector_length(param_1,param_2);
-  float_compare_equal(uVar1,0);
-  if (!(bool)in_ZR) {
-    uVar2 = float_divide(*param_2,uVar1);
-    *param_2 = uVar2;
-    uVar2 = float_divide(param_2[1],uVar1);
-    param_2[1] = uVar2;
-    uVar1 = float_divide(param_2[2],uVar1);
-    param_2[2] = uVar1;
+  uint32 length = vector_length(context,vector);
+
+  if (float_compare_equal(length,0), *(float *)&length == 0.0f) {
+    vector[0] = 0;
+    vector[1] = 0;
+    vector[2] = 0;
     return;
   }
-  *param_2 = 0;
-  param_2[1] = 0;
-  param_2[2] = 0;
-  return;
+  vector[0] = float_divide(vector[0],length);
+  vector[1] = float_divide(vector[1],length);
+  vector[2] = float_divide(vector[2],length);
 }
+
 
 /* ==== 0x0011448C  (file offset 0x1448C)  FUN_0011448c ================================================ */
 int FUN_0011448c(undefined4 param_1,int *param_2,undefined4 param_3,undefined4 *param_4)

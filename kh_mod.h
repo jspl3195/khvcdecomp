@@ -673,7 +673,7 @@ uint8 progress_get_status(Progress *progress,const char *name);   /* 0x00114198 
 uint8 animations_get_state(Animations *animations,int32 index);   /* 0x001141F4 GUESS: name */
 int32 text_table_get_text(TextTable *table,int32 textId,char **text);   /* 0x0011421C GUESS: name, see kh_mod.c */
 undefined4 FUN_00114240(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,undefined4 *param_6,int param_7,undefined4 param_8,int param_9);
-void FUN_0011442c(undefined4 param_1,undefined4 *param_2);
+void vector_normalize(void *context,uint32 *vector);   /* 0x0011442C GUESS: name, see kh_mod.c */
 int FUN_0011448c(undefined4 param_1,int *param_2,undefined4 param_3,undefined4 *param_4);
 void FUN_00114520(undefined4 param_1,int *param_2,undefined4 param_3,undefined4 *param_4);
 void FUN_001145b4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param_4);
