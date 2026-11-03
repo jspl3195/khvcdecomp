@@ -1367,9 +1367,9 @@ LAB_00124d80:
   }
                     /* 5th argument uVar2 (the control word) was missing in Ghidra's output: the
                        call at 0x00126d50 passes it on the stack (`stmdb sp!, {r12, lr}` leaves r12,
-                       the control word, at [sp]); FUN_001013e0 reads it with `ldr r4, [sp, #0x28]`
-                       and raises SIGFPE with its exception bits (& 0x7c000000). */
-  uVar22 = FUN_001013e0(uVar3,uVar8,uVar12,uVar14,uVar2);
+                       the control word, at [sp]); float_raise_exception reads it with `ldr r4, [sp,
+                       #0x28]` and raises SIGFPE with its exception bits (& 0x7c000000). */
+  uVar22 = float_raise_exception(uVar3,uVar8,uVar12,uVar14,uVar2);
   if ((uVar2 & 0xf) != 9) {
     return uVar22;
   }
@@ -1635,70 +1635,30 @@ FUN_00101268(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param
   return MAKE_WORDS(uVar7,param_2,param_1);
 }
 
-/* ==== 0x001013E0  (file offset 0x013E0)  FUN_001013e0 ================================================ */
-/* WARNING: Removing unreachable block (ram,0x00101414) */
-/* WARNING: Removing unreachable block (ram,0x00101410) */
-/* WARNING: Removing unreachable block (ram,0x00101418) */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-/* ---- The code behind the "unreachable block" warnings above ------------------------------------
- *
- * What the function is: the soft-float library's "report a floating-point exception" routine,
- * called from the special-case handler's shared tail (0x00126d50) with the two operands a (r0:r1)
- * and b (r2:r3) and the control word on the stack (see the comment at its call in FUN_00100c2c).
- *
- * Why the blocks were removed, and why that is correct here: the function first offers the
- * exception to a user trap handler, and returns that handler's result if it took it. That call is
- * `bl 0x0010140c` at 0x00101408 - the word 0xEBFFFFFF, a bl with offset -1, which lands on the next
- * instruction. That is what ARM's linker writes for a call to a weak function that was not linked:
- * the call does nothing and r0 keeps the 0 set just before it, so `cmp r0, #0` always finds 0 and
- * the three conditional instructions at 0x00101410-0x00101418 (the "handled: return its result"
- * path) never run. Unlike engine_memory_set_caching, the decompiler is right: in this build the blocks are dead.
- * They are kept here so the full logic of the routine is on record. GUESS: the handler's name (it
- * is unresolved, so the binary does not say).
- *
- * The whole function, reconstructed by hand from its instructions (0x001013e0-0x0010143c):
- *
- * undefined8 FUN_001013e0(double a, double b, uint controlWord)   // a in r0:r1, b in r2:r3,
- * {                                                               // controlWord at [sp]
- *   double result;
- *
- *   // offer the exception to a user trap handler first
- *   if (floating_point_trap_handler(0, &result, &a, &b, controlWord) != 0)  // 0x00101408: weak,
- *     return result;                                // not linked - a bl to the next instruction,
- *                                                   // so this is never taken (0x00101410-18)
- *   // otherwise: raise SIGFPE with the exception bits, and return 0.0
- *   raise_signal_and_exit(2, controlWord & 0x7c000000);      // 2 = SIGFPE; bits 26-30 = the five IEEE
- *                                                   // exceptions (invalid, divide by zero,
- *                                                   // overflow, underflow, inexact - GUESS: order)
- *   result = 0.0;
- *   return result;
- * }
- */
-
-undefined8
-FUN_001013e0(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
-            uint param_5)
+/* ==== 0x001013E0  (file offset 0x013E0)  float_raise_exception ======================================= */
+/* GUESS: name. The soft-float library's floating-point exception routine, reached from the special-case
+   handler's shared tail (0x00126d50; Ghidra decompiled that tail into each routine that branches to it,
+   hence its many callers) with the operands a (r0:r1) and b (r2:r3) and the control word on the stack:
+   raises SIGFPE with the five IEEE exception bits (control & 0x7c000000; GUESS: their order) and returns
+   0.0. It first offers the exception to a user trap handler (with 0, &result, &a, &b, control), but that
+   weak function is not linked: its call (0x00101408) is the word 0xEBFFFFFF, a bl to the next
+   instruction, so r0 stays 0 and the "handled: return its result" path (0x00101410 - 0x00101418,
+   Ghidra's unreachable blocks) never runs; it is not written here. a and b are only stored for that
+   handler. Returns the double 0.0 (a float caller takes its low word, 0.0f). */
+uint64 float_raise_exception(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh,uint32 control)
 
 {
-  undefined4 uStack_1c;
-  undefined4 uStack_18;
-  undefined4 uStack_14;
-  undefined4 uStack_10;
-  undefined8 uVar1;
-  
-  uStack_1c = param_1;
-  uStack_18 = param_2;
-  uStack_14 = param_3;
-  uStack_10 = param_4;
-  raise_signal_and_exit(2,param_5 & 0x7c000000 /* not arguments, register leftovers: &uStack_1c,&uStack_14 */);
-  return MAKE_WORDS(uVar1,0,0);
+  uint64 result;
+
+  raise_signal_and_exit(2,(int32)(control & 0x7c000000));
+  return MAKE_WORDS(result,0,0);
 }
+
 
 /* ==== 0x00101440  (file offset 0x01440)  raise_signal_and_exit ======================================= */
 /* GUESS: name. Raises `signal` (raise_signal) and, when nothing handled it (raise_signal returns 1 from
    the default handler), exits through semihosting: the binary's tail jump to semihosting_exit
-   (0x00101454). Called by the floating-point exception routine FUN_001013e0 as
+   (0x00101454). Called by the floating-point exception routine float_raise_exception as
    raise_signal_and_exit(2, controlWord & 0x7c000000) (SIGFPE with the IEEE exception bits). Returns r0 as
    the binary leaves it: 0, or semihosting_exit's result. */
 int32 raise_signal_and_exit(int32 signal,int32 type)
@@ -1715,7 +1675,7 @@ int32 raise_signal_and_exit(int32 signal,int32 type)
    It asks a handler-lookup routine for the handler installed for `signal`, passing the default handler's
    value (SIG_DFL): that call, `bl 0x00101478` at 0x00101474, is the word 0xEBFFFFFF, a bl to the next
    instruction - ARM's linker's placeholder for a weak function that was not linked (as in
-   FUN_001013e0). r0 keeps SIG_DFL, the `cmp r0, r6` always finds it, and the binary tail-jumps
+   float_raise_exception). r0 keeps SIG_DFL, the `cmp r0, r6` always finds it, and the binary tail-jumps
    (0x0010148c) to the default handler, default_signal_handler. What the rest would do, and never does in
    this build (0x00101490 - 0x001014b0, Ghidra's "unreachable" blocks):
        if (handler != SIG_IGN)
@@ -24012,7 +23972,7 @@ joined_r0x00126194:
       }
     }
   }
-  uVar3 = FUN_001013e0(param_1,param_2,uVar7,uVar8,uVar9 /* not arguments, value leftovers: in_lr,uVar9,in_lr */).low;
+  uVar3 = float_raise_exception(param_1,param_2,uVar7,uVar8,uVar9).low;
   if ((uVar9 & 0xf) != 9) {
     return uVar3;
   }
@@ -24598,7 +24558,7 @@ LAB_00124d80:
     }
     uVar13 = uVar13 | 0x20000000;
   }
-  uVar18 = FUN_001013e0(uVar10,param_2,param_3,param_4,uVar13);
+  uVar18 = float_raise_exception(uVar10,param_2,param_3,param_4,uVar13);
   if ((uVar13 & 0xf) != 9) {
     return uVar18;
   }
@@ -25189,7 +25149,7 @@ LAB_00124be4:
     }
     uVar12 = uVar12 | 0x20000000;
   }
-  uVar18 = FUN_001013e0(param_3,param_4,param_1,param_2,uVar12);
+  uVar18 = float_raise_exception(param_3,param_4,param_1,param_2,uVar12);
   if ((uVar12 & 0xf) != 9) {
     return uVar18;
   }
@@ -25779,7 +25739,7 @@ LAB_00124be4:
     }
     uVar11 = uVar11 | 0x20000000;
   }
-  uVar18 = FUN_001013e0(uVar7,param_2,param_3,param_4,uVar11);
+  uVar18 = float_raise_exception(uVar7,param_2,param_3,param_4,uVar11);
   if ((uVar11 & 0xf) != 9) {
     return uVar18;
   }
@@ -26206,7 +26166,7 @@ LAB_00124f70:
     }
     uVar6 = uVar1 | 0x20000000;
   }
-  uVar18 = FUN_001013e0(param_3,param_4,param_1,param_2,uVar6 /* not arguments, value leftovers: in_lr,uVar6,in_lr */);
+  uVar18 = float_raise_exception(param_3,param_4,param_1,param_2,uVar6);
   if ((uVar6 & 0xf) != 9) {
     return uVar18;
   }
@@ -26633,7 +26593,7 @@ LAB_00124f70:
     }
     uVar6 = uVar1 | 0x20000000;
   }
-  uVar18 = FUN_001013e0(param_1,param_2,param_3,param_4,uVar6 /* not arguments, value leftovers: in_lr,uVar6,in_lr */);
+  uVar18 = float_raise_exception(param_1,param_2,param_3,param_4,uVar6);
   if ((uVar6 & 0xf) != 9) {
     return uVar18;
   }
@@ -26953,7 +26913,7 @@ joined_r0x00126194:
       return param_1;
     }
   }
-  uVar1 = FUN_001013e0(param_1,param_2,param_3,param_4,uVar6 /* not arguments, value leftovers: in_lr,uVar6,in_lr */).low;
+  uVar1 = float_raise_exception(param_1,param_2,param_3,param_4,uVar6).low;
   if ((uVar6 & 0xf) != 9) {
     return uVar1;
   }
@@ -27158,7 +27118,7 @@ joined_r0x00126194:
       return param_1;
     }
   }
-  uVar11 = FUN_001013e0(param_1,param_2,uVar5,uVar7,uVar8);
+  uVar11 = float_raise_exception(param_1,param_2,uVar5,uVar7,uVar8);
   uVar9 = uVar11.low;
   if ((uVar8 & 0xf) != 9) {
     return uVar9;
@@ -27414,7 +27374,7 @@ joined_r0x00126194:
       return param_1;
     }
   }
-  uVar1 = FUN_001013e0(param_1,param_2,param_3,param_4,uVar6 /* not arguments, value leftovers: in_lr,uVar6,in_lr */).low;
+  uVar1 = float_raise_exception(param_1,param_2,param_3,param_4,uVar6).low;
   if ((uVar6 & 0xf) != 9) {
     return uVar1;
   }
@@ -27645,7 +27605,7 @@ joined_r0x00126194:
       return param_1;
     }
   }
-  uVar1 = FUN_001013e0(param_1,param_2,param_3,param_4,uVar6 /* not arguments, value leftovers: in_lr,uVar6,in_lr */).low;
+  uVar1 = float_raise_exception(param_1,param_2,param_3,param_4,uVar6).low;
   if ((uVar6 & 0xf) != 9) {
     return uVar1;
   }
@@ -28074,7 +28034,7 @@ joined_r0x00126194:
     }
   }
 LAB_00126d48:
-  uVar23 = FUN_001013e0(param_1,param_2,param_3,param_4,uVar15 /* not arguments, value leftovers: in_lr,uVar15,in_lr */);
+  uVar23 = float_raise_exception(param_1,param_2,param_3,param_4,uVar15);
   if ((uVar15 & 0xf) != 9) {
     return uVar23;
   }
@@ -28578,7 +28538,7 @@ LAB_00125b24:
 LAB_001260dc:
     uVar7 = uVar7 | 0x20000000;
   }
-  uVar15 = FUN_001013e0(param_1,param_2,param_3,param_4,uVar7 /* not arguments, value leftovers: in_lr,uVar7,in_lr */);
+  uVar15 = float_raise_exception(param_1,param_2,param_3,param_4,uVar7);
   if ((uVar7 & 0xf) != 9) {
     return uVar15;
   }
@@ -28880,7 +28840,7 @@ joined_r0x00126194:
       return MAKE_WORDS(uVar15,param_2,param_1);
     }
   }
-  uVar15 = FUN_001013e0(param_1,param_2,param_3,param_4,uVar13 /* not arguments, value leftovers: in_lr,uVar13,in_lr */);
+  uVar15 = float_raise_exception(param_1,param_2,param_3,param_4,uVar13);
   if ((uVar13 & 0xf) != 9) {
     return uVar15;
   }
@@ -29080,7 +29040,7 @@ joined_r0x00126194:
       return MAKE_WORDS(uVar11,param_2,param_1);
     }
   }
-  uVar11 = FUN_001013e0(param_1,param_2,uVar6,param_4,uVar8 /* not arguments, value leftovers: in_lr,uVar8,in_lr */);
+  uVar11 = float_raise_exception(param_1,param_2,uVar6,param_4,uVar8);
   if ((uVar8 & 0xf) != 9) {
     return uVar11;
   }
@@ -29114,8 +29074,8 @@ LAB_00126d6c:
    float_subtract and float_reverse_subtract); an Inf or NaN operand takes the special cases. Like the
    rest of the library it keeps the status word through kh_GetFpStatusPtr (sticky flags bits 0-4,
    trap enables bits 8-12: 0x100 invalid, 0x400 overflow, 0x800 underflow; bit 24 flush to zero) and
-   calls the trap handler FUN_001013e0 for a trapped exception. Only an invalid operation or an
-   overflow raises a flag; rounding does not signal inexact, and an untrapped denormal result raises
+   calls the exception routine float_raise_exception for a trapped exception. Only an invalid operation or
+   an overflow raises a flag; rounding does not signal inexact, and an untrapped denormal result raises
    nothing. Verified against the binary under emulation: over 1,009,800 cases (special values, ties at
    every exponent difference, cancellation, overflow and denormal edges, every status word
    combination; every instruction of the three routines executed) float_add, float_subtract and
@@ -29341,7 +29301,7 @@ uint32 float_add(uint32 a,uint32 b)
     else
       b += 0x800000;
     result = (result & ~0x800000) | b;
-    return FUN_001013e0(result,b,exponent,shift,exponent | 0x20000000).low;
+    return float_raise_exception(result,b,exponent,shift,exponent | 0x20000000).low;
   }
   status = kh_GetFpStatusPtr();              /* 0x001260e4: the library's exception code (only its */
   if (control & 0x30000000 & ~(*status << 18))   /* invalid and overflow cases are reachable here) */
@@ -29354,7 +29314,7 @@ uint32 float_add(uint32 a,uint32 b)
   }
   else if (!(*status & 0x100))               /* invalid */
     return FLOAT_DEFAULT_NAN | (result & 0x80000000);
-  return FUN_001013e0(result,b,b,shift,control).low;
+  return float_raise_exception(result,b,b,shift,control).low;
 }
 
 /* ==== 0x001263F8  (file offset 0x263F8)  float_reverse_subtract ====================================== */
@@ -29588,7 +29548,7 @@ uint32 float_reverse_subtract(uint32 a,uint32 b)
     else
       b += 0x800000;
     result = (result & ~0x800000) | b;
-    return FUN_001013e0(result,b,exponent,shift,exponent | 0x20000000).low;
+    return float_raise_exception(result,b,exponent,shift,exponent | 0x20000000).low;
   }
   status = kh_GetFpStatusPtr();              /* 0x001260e4: the library's exception code (only its */
   if (control & 0x30000000 & ~(*status << 18))   /* invalid and overflow cases are reachable here) */
@@ -29601,7 +29561,7 @@ uint32 float_reverse_subtract(uint32 a,uint32 b)
   }
   else if (!(*status & 0x100))               /* invalid */
     return FLOAT_DEFAULT_NAN | (result & 0x80000000);
-  return FUN_001013e0(result,b,b,shift,control).low;
+  return float_raise_exception(result,b,b,shift,control).low;
 }
 
 /* ==== 0x0012642C  (file offset 0x2642C)  float_subtract ============================================== */
@@ -29829,7 +29789,7 @@ uint32 float_subtract(uint32 a,uint32 b)
     else
       b += 0x800000;
     result = (result & ~0x800000) | b;
-    return FUN_001013e0(result,b,exponent,shift,exponent | 0x20000000).low;
+    return float_raise_exception(result,b,exponent,shift,exponent | 0x20000000).low;
   }
   status = kh_GetFpStatusPtr();              /* 0x001260e4: the library's exception code (only its */
   if (control & 0x30000000 & ~(*status << 18))   /* invalid and overflow cases are reachable here) */
@@ -29842,7 +29802,7 @@ uint32 float_subtract(uint32 a,uint32 b)
   }
   else if (!(*status & 0x100))               /* invalid */
     return FLOAT_DEFAULT_NAN | (result & 0x80000000);
-  return FUN_001013e0(result,b,b,shift,control).low;
+  return float_raise_exception(result,b,b,shift,control).low;
 }
 
 /* ==== 0x00126608  (file offset 0x26608)  float_reverse_divide ======================================== */
@@ -30026,7 +29986,7 @@ uint32 float_divide(uint32 a,uint32 b)
     if (*status & 0x1000000)                 /* flush to zero */
       return result & 0x80000000;
     if (*status & 0x800)                     /* underflow trapped: the result, its exponent wrapped */
-      return FUN_001013e0(result,*status,control,other,control | 0x20000000).low;
+      return float_raise_exception(result,*status,control,other,control | 0x20000000).low;
     shift = 0xc1 - ((result & 0x80000000 | result >> 23) & ~0x100);   /* the denormal's shift, the sign */
     if ((int32)(shift & 0x7fffffff) <= 0x17) {                         /* in bit 31 */
       lost = SHIFT_LEFT(result,0x20 - shift);   /* the bits shifted out */
@@ -30086,7 +30046,7 @@ uint32 float_divide(uint32 a,uint32 b)
   }
   else if (!(*status & 0x100))               /* invalid */
     return FLOAT_DEFAULT_NAN | (result & 0x80000000);
-  return FUN_001013e0(result,second,second,other,control).low;
+  return float_raise_exception(result,second,second,other,control).low;
 }
 
 /* ==== 0x001267F0  (file offset 0x267F0)  float_compare_equal ========================================= */
@@ -30099,10 +30059,10 @@ uint32 float_divide(uint32 a,uint32 b)
    returned as the binary leaves it: a when there is no NaN; 8 after a NaN (the exception code's
    compare exit, 0x00126cb0 / 0x00126d6c); after a trap, the handler's result t, or 2 - t when its bit 3
    is clear (0x00126d7c). What C can express is the rest, below: an unordered compare (a NaN) leaves C and Z clear; only
-   a signalling NaN raises invalid (status bit 0) and, when that is trapped (bit 0x100), calls the trap
-   handler FUN_001013e0 (with r3 = (b << 1) + 0x800000, as the binary leaves it). Verified under emulation
-   (research_notes/soft_float_test, compare_reference.py): status word and trap arguments on 68,400
-   cases, and the flags against the IEEE comparison. */
+   a signalling NaN raises invalid (status bit 0) and, when that is trapped (bit 0x100), calls the
+   exception routine float_raise_exception (with r3 = (b << 1) + 0x800000, as the binary leaves it).
+   Verified under emulation (research_notes/soft_float_test, compare_reference.py): status word and trap
+   arguments on 68,400 cases, and the flags against the IEEE comparison. */
 uint32 float_compare_equal(uint32 a,uint32 b)
 
 {
@@ -30117,7 +30077,7 @@ uint32 float_compare_equal(uint32 a,uint32 b)
   *status |= 1;
   if (!(*status & 0x100))
     return 8;
-  result = FUN_001013e0(a,b,b,(b << 1) + 0x800000,0x4120009 | (*status & 0x1c00000)).low;
+  result = float_raise_exception(a,b,b,(b << 1) + 0x800000,0x4120009 | (*status & 0x1c00000)).low;
   return result & 8 ? result : 2 - result;
 }
 
@@ -30289,7 +30249,7 @@ joined_r0x00126194:
       return param_1;
     }
   }
-  uVar7 = FUN_001013e0(param_1,uVar4,uVar6,uVar7,uVar9 /* not arguments, value leftovers: in_lr,uVar9,in_lr */).low;
+  uVar7 = float_raise_exception(param_1,uVar4,uVar6,uVar7,uVar9).low;
   if ((uVar9 & 0xf) != 9) {
     return uVar7;
   }
@@ -30349,8 +30309,8 @@ uint32 int_to_float(int32 value)
    returned as the binary leaves it: a when there is no NaN; 8 after a NaN (the exception code's
    compare exit, 0x00126cb0 / 0x00126d6c); after a trap, the handler's result t, or 2 - t when its bit 3
    is clear (0x00126d7c). What C can express is the rest, below: an unordered compare (a NaN) leaves C and Z clear and
-   raises invalid (status bit 0) for any NaN; when that is trapped (bit 0x100), it calls the trap handler
-   FUN_001013e0. Verified as float_compare_equal. */
+   raises invalid (status bit 0) for any NaN; when that is trapped (bit 0x100), it calls the exception
+   routine float_raise_exception. Verified as float_compare_equal. */
 uint32 float_compare_greater(uint32 a,uint32 b)
 
 {
@@ -30365,7 +30325,7 @@ uint32 float_compare_greater(uint32 a,uint32 b)
   *status |= 1;
   if (!(*status & 0x100))
     return 8;
-  result = FUN_001013e0(a,b,b,callerR3,0x4130009 | (*status & 0x1c00000)).low;
+  result = float_raise_exception(a,b,b,callerR3,0x4130009 | (*status & 0x1c00000)).low;
   return result & 8 ? result : 2 - result;
 }
 
@@ -30379,8 +30339,8 @@ uint32 float_compare_greater(uint32 a,uint32 b)
    returned as the binary leaves it: a when there is no NaN; 8 after a NaN (the exception code's
    compare exit, 0x00126cb0 / 0x00126d6c); after a trap, the handler's result t, or 2 - t when its bit 3
    is clear (0x00126d7c). What C can express is the rest, below: an unordered compare (a NaN) leaves C set and Z clear
-   and raises invalid (status bit 0) for any NaN; when that is trapped (bit 0x100), it calls the trap
-   handler FUN_001013e0. Verified as float_compare_equal. */
+   and raises invalid (status bit 0) for any NaN; when that is trapped (bit 0x100), it calls the exception
+   routine float_raise_exception. Verified as float_compare_equal. */
 uint32 float_compare_less(uint32 a,uint32 b)
 
 {
@@ -30395,7 +30355,7 @@ uint32 float_compare_less(uint32 a,uint32 b)
   *status |= 1;
   if (!(*status & 0x100))
     return 8;
-  result = FUN_001013e0(a,b,b,callerR3,0x4160009 | (*status & 0x1c00000)).low;
+  result = float_raise_exception(a,b,b,callerR3,0x4160009 | (*status & 0x1c00000)).low;
   return result & 8 ? result : 2 - result;
 }
 
@@ -30405,10 +30365,10 @@ uint32 float_compare_less(uint32 a,uint32 b)
    from the disassembly: Ghidra's listing read uninitialized registers and took the stack pointer for a
    number (the binary's `adc ip, sp, r0, lsl #1` only keeps the round bit and the result's lowest bit,
    since sp is word-aligned). Like the other routines it keeps the status word through
-   kh_GetFpStatusPtr and calls the trap handler FUN_001013e0 for a trapped exception; a result below the
-   normal range is rounded to a denormal (underflow and inexact) or flushed to zero. Verified against the
-   binary under emulation (research_notes/soft_float_test, double_reference.py, kind ff). */
-uint32 float_multiply(uint32 a,uint32 b)
+   kh_GetFpStatusPtr and calls the exception routine float_raise_exception for a trapped exception; a
+   result below the normal range is rounded to a denormal (underflow and inexact) or flushed to zero.
+   Verified against the binary under emulation (research_notes/soft_float_test, double_reference.py, kind
+ff). */ uint32 float_multiply(uint32 a,uint32 b)
 
 {
   uint32 *status;
@@ -30528,7 +30488,7 @@ uint32 float_multiply(uint32 a,uint32 b)
     if (*status & 0x1000000)                 /* flush to zero */
       return result & 0x80000000;
     if (*status & 0x800)                     /* underflow trapped: the result, its exponent wrapped */
-      return FUN_001013e0(result,*status,control,other,control | 0x20000000).low;
+      return float_raise_exception(result,*status,control,other,control | 0x20000000).low;
     shift = 0xc1 - ((result & 0x80000000 | result >> 23) & ~0x100);   /* the denormal's shift, the sign */
     if ((int32)(shift & 0x7fffffff) <= 0x17) {                         /* in bit 31 */
       lost = SHIFT_LEFT(result,0x20 - shift);   /* the bits shifted out */
@@ -30588,5 +30548,5 @@ uint32 float_multiply(uint32 a,uint32 b)
   }
   else if (!(*status & 0x100))               /* invalid */
     return FLOAT_DEFAULT_NAN | (result & 0x80000000);
-  return FUN_001013e0(result,second,second,other,control).low;
+  return float_raise_exception(result,second,second,other,control).low;
 }

@@ -427,7 +427,7 @@ undefined8 FUN_00100a58(undefined4 param_1,uint param_2,undefined4 param_3,undef
 undefined8 FUN_00100c2c(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3);
 undefined8 FUN_00101268(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param_4,int param_5);
-undefined8 FUN_001013e0(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, uint param_5);
+uint64 float_raise_exception(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh,uint32 control);   /* 0x001013E0 GUESS: name, see kh_mod.c */
 int32 raise_signal_and_exit(int32 signal,int32 type);   /* 0x00101440 GUESS: name, see kh_mod.c */
 int32 raise_signal(int32 signal,int32 type);   /* 0x00101458 GUESS: name, see kh_mod.c */
 int32 semihosting_exit(void);   /* 0x001014BC (no Ghidra function) */
