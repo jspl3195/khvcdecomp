@@ -577,8 +577,8 @@ int32 screen_handle_key_nothing(int32 screen,int32 eventCode,int32 keyCode);   /
 int32 ui_element_handle_key_nothing(int32 element,int32 eventCode,int32 keyCode);   /* 0x00108734 (no Ghidra function; a virtual method) */
 uint32 enemy_get_health(Enemy *enemy);   /* 0x001136C0 (no Ghidra function; a virtual method) */
 int32 enemy_is_waiting(Enemy *enemy);   /* 0x00119AF4 (no Ghidra function; a virtual method) */
-void FUN_0011f260(int param_1);   /* 0x0011F260 (no Ghidra function; a virtual method) */
-void FUN_0011f26c(int param_1);   /* 0x0011F26C (no Ghidra function; a virtual method) */
+void enemy_enter_mode_3(Enemy *enemy);   /* 0x0011F260 (no Ghidra function; a virtual method) */
+void enemy_enter_mode_2(Enemy *enemy);   /* 0x0011F26C (no Ghidra function; a virtual method) */
 void FUN_0011f624(int param_1);   /* 0x0011F624 (no Ghidra function; a virtual method) */
 void FUN_0010ce08(undefined4 *param_1,int param_2);
 void app_context_destroy(AppContext *context,int32 freeIt);   /* 0x0010CEE4 GUESS: name, see kh_mod.c */
@@ -776,7 +776,7 @@ undefined4 FUN_0011ea18(int param_1);
 undefined4 FUN_0011ead4(int param_1,undefined4 param_2);
 undefined4 FUN_0011ec28(int param_1,int param_2);
 void FUN_0011ed3c(int param_1,undefined4 *param_2);
-void FUN_0011f280(int param_1);
+void combat_region_enemies_enter_mode_2(CombatRegion *region);   /* 0x0011F280 GUESS: name, see kh_mod.c */
 void FUN_0011f2bc(int param_1,int *param_2,int param_3);
 void FUN_0011f394(int param_1,char *param_2,undefined4 param_3,undefined4 param_4,int param_5);
 void FUN_0011f540(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
@@ -1969,8 +1969,8 @@ static code *const VTABLE_00101680[8] = {   /* 0x00101680; in kh.mod each entry 
   (code *)FUN_001174ac,
   (code *)enemy_update,
   (code *)FUN_0011f624,
-  (code *)FUN_0011f26c,
-  (code *)FUN_0011f260,
+  (code *)enemy_enter_mode_2,
+  (code *)enemy_enter_mode_3,
   (code *)FUN_0010f2e8,
   (code *)enemy_get_health,
   (code *)enemy_is_waiting

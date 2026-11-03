@@ -16727,7 +16727,7 @@ void FUN_0011a2f4(int param_1,int param_2)
     iVar3 = (int)uVar4.high;
     *(int *)(param_1 + 0x150) = iVar3;
     iVar3 = **(int **)(*(int *)(param_1 + 0x14c) + iVar3 * 4);
-                    /* slot 4, then enemy_get_health: Ghidra had dropped the enemy, passed in r0 */
+                    /* enemy_enter_mode_3, then enemy_get_health: Ghidra had dropped the enemy, passed in r0 */
     (*(code *)(*(int *)(iVar3 + 0x10)))
               (*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4));
     iVar3 = **(int **)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4);
@@ -16752,7 +16752,7 @@ void FUN_0011a2f4(int param_1,int param_2)
     {
       return;
     }
-    FUN_0011f280(param_1);
+    combat_region_enemies_enter_mode_2((CombatRegion *)param_1);
     uVar1 = 1;
     *(int *)(param_1 + 0x140) = param_2;
   }
@@ -20211,45 +20211,46 @@ void FUN_0011ed3c(int param_1,undefined4 *param_2)
   return;
 }
 
-/* ==== 0x0011F260  (file offset 0x1F260)  FUN_0011f260 ================================================ */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101680): written from
-   its disassembly. */
-void FUN_0011f260(int param_1)
+/* ==== 0x0011F260  (file offset 0x1F260)  enemy_enter_mode_3 ========================================== */
+/* GUESS: name. The enemy class's slot 4 (+0x10 of VTABLE_00101680): mode 3 (an alive enemy then runs its
+   field_1a0 behaviour, enemy_update) and all its state machines back at their first states. Called by the
+   combat region's turn (FUN_0011a2f4) on the enemy whose turn it is. Ghidra has no function here (only
+   reached through the vtable); written from its disassembly. */
+void enemy_enter_mode_3(Enemy *enemy)
 
 {
-  *(undefined4 *)(param_1 + 0x80) = 3;
-  enemy_reset_states((Enemy *)param_1);          /* the binary's tail jump (0x0011f268) */
-  return;
+  enemy->mode = 3;
+  enemy_reset_states(enemy);          /* the binary's tail jump (0x0011f268) */
 }
 
 
-/* ==== 0x0011F26C  (file offset 0x1F26C)  FUN_0011f26c ================================================ */
-/* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101680): written from
-   its disassembly. */
-void FUN_0011f26c(int param_1)
+/* ==== 0x0011F26C  (file offset 0x1F26C)  enemy_enter_mode_2 ========================================== */
+/* GUESS: name. The enemy class's slot 3 (+0xc of VTABLE_00101680): mode 2, unless field_130 is set (an
+   alive enemy then runs its field_19c behaviour, enemy_update), and all its state machines back at their
+   first states. Called for every enemy of a region by combat_region_enemies_enter_mode_2. Ghidra has no
+   function here (only reached through the vtable); written from its disassembly. */
+void enemy_enter_mode_2(Enemy *enemy)
 
 {
-  if (*(int *)(param_1 + 0x130) == 0) {
-    *(undefined4 *)(param_1 + 0x80) = 2;
-  }
-  enemy_reset_states((Enemy *)param_1);          /* the binary's tail jump (0x0011f27c) */
-  return;
+  if (enemy->field_130 == 0)
+    enemy->mode = 2;
+  enemy_reset_states(enemy);          /* the binary's tail jump (0x0011f27c) */
 }
 
 
-/* ==== 0x0011F280  (file offset 0x1F280)  FUN_0011f280 ================================================ */
-void FUN_0011f280(int param_1)
+/* ==== 0x0011F280  (file offset 0x1F280)  combat_region_enemies_enter_mode_2 ========================== */
+/* GUESS: name. Puts every enemy of the region in mode 2 (their slot 3, enemy_enter_mode_2). Called by
+   combat_region_update (state 3, before fighting again) and by the region's turn (FUN_0011a2f4). Ghidra
+   had dropped the enemy passed to the slot (r0, ldr r0, [r0, r4, lsl #2] at 0x0011f294). */
+void combat_region_enemies_enter_mode_2(CombatRegion *region)
 
 {
-  int iVar1;
-  int iVar2;
-  
-  for (iVar2 = 0; iVar2 < *(int *)(param_1 + 300); iVar2 = iVar2 + 1) {
-    iVar1 = **(int **)(*(int *)(param_1 + 0x14c) + iVar2 * 4);
-    (*(code *)(*(int *)(iVar1 + 0xc)))();
-  }
-  return;
+  int32 i;
+
+  for (i = 0; i < region->enemyCount; i++)
+    (*(code *)(*(int32 *)(region->enemies[i]->vtable + 0xc)))(region->enemies[i]);
 }
+
 
 /* ==== 0x0011F2BC  (file offset 0x1F2BC)  FUN_0011f2bc ================================================ */
 void FUN_0011f2bc(int param_1,int *param_2,int param_3)
@@ -22890,7 +22891,7 @@ void combat_region_update(CombatRegion *region,int32 now,int32 elapsed)
       FUN_0011d040((int32)region->app->context,region->nameId,(void *)WORD_HEXADECIMAL_11E3EE3E);
     }
     else {
-      FUN_0011f280((int32)region);
+      combat_region_enemies_enter_mode_2(region);
       region->state = 2;
     }
     break;
