@@ -2480,16 +2480,16 @@ LAB_00103858:
     case 0x75:
       game_pause(*param_1);
       iVar9 = *(int *)(*param_1 + 0xa8);
-      if ((*(int *)(iVar9 + 0x71c) == 0) && (*(int *)(*param_1 + 200) != 0)) {
-        *(undefined4 *)(iVar9 + 0x71c) = 1;
+      if ((((Progress *)iVar9)->summaryPending == 0) && (*(int *)(*param_1 + 200) != 0)) {
+        ((Progress *)iVar9)->summaryPending = 1;
         FUN_0011e6b8(*(undefined4 *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
       }
-      *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x71c) = 0;
+      ((KHApp *)*param_1)->progress->summaryPending = 0;
       uVar10 = FUN_0010bd7c(0,param_1,1);
       FUN_001055c4(param_1,uVar10,0,uVar3,WORD_HEXADECIMAL_21C1059D);
       if ((*(int *)(*param_1 + 200) == 0) ||
          (iVar7 = (*g_pHelperFuncs->strlen)(*(undefined4 *)(*param_1 + 200)), iVar7 == 0)) {
-        *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x71c) = 1;
+        ((KHApp *)*param_1)->progress->summaryPending = 1;
         FUN_0011e6b8(*(undefined4 *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
         uVar24 = 6;
         uVar23 = uVar15;
@@ -2569,7 +2569,7 @@ LAB_00103858:
       (*g_pHelperFuncs->free)(*(undefined4 *)(*param_1 + 200));
       *(undefined4 *)(*param_1 + 200) = 0;
       iVar7 = WORD_HEXADECIMAL_000253E4;
-      *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x720) = 0;
+      ((KHApp *)*param_1)->progress->levelLoaded = 0;
       FUN_0011e6b8(*(undefined4 *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
       goto LAB_00102910;
     case 0x77:
@@ -2619,7 +2619,7 @@ LAB_001050b0:
       FUN_001055c4(param_1,iVar9,0,uVar3,WORD_HEXADECIMAL_21C1059D);
       if ((*(int *)(*param_1 + 200) == 0) ||
          (iVar7 = (*g_pHelperFuncs->strlen)(*(undefined4 *)(*param_1 + 200)), iVar7 == 0)) {
-        *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x71c) = 1;
+        ((KHApp *)*param_1)->progress->summaryPending = 1;
         FUN_0011e6b8(*(undefined4 *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
         uVar24 = 6;
         uVar23 = uVar15;
@@ -3156,7 +3156,7 @@ LAB_00102910:
           goto LAB_00104de4;
         }
         iVar9 = *(int *)(*param_1 + 0xa8);
-        if (*(int *)(iVar9 + 0x71c) == 0) {
+        if (((Progress *)iVar9)->summaryPending == 0) {
           iVar9 = FUN_00112a98(iVar9,*(undefined4 *)(*param_1 + 0xc4),1);
           if (iVar9 == 0) {
             if (*(int *)(*param_1 + 200) != 0) {
@@ -3169,7 +3169,7 @@ LAB_00102910:
             uVar10 = 0x7f;
             goto LAB_00104de4;
           }
-          if (*(int *)(*(int *)(*param_1 + 0xa8) + 0x720) == 0) goto LAB_00101f40;
+          if (((KHApp *)*param_1)->progress->levelLoaded == 0) goto LAB_00101f40;
         }
 LAB_00101f10:
         uVar10 = 0x70;
@@ -5942,7 +5942,7 @@ LAB_00108d50:
     iVar5 = ui_element_find_child((int)piVar1,500);
     FUN_00109f00(iVar5,WORD_HEXADECIMAL_3D569D08);
     iVar5 = WORD_HEXADECIMAL_0001F14C;
-    *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x720) = 0;
+    ((KHApp *)*param_1)->progress->levelLoaded = 0;
     FUN_0011e6b8(*(int *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
     FUN_0010faa8((int)((KHApp *)*param_1)->context,(int32)STRING_ISLAND);
     FUN_0010faa8((int)((KHApp *)*param_1)->context,(int32)STRING_WONDERLAND);
@@ -7023,7 +7023,7 @@ int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3)
               param_1[1] = iVar2;
               iVar1 = INTEGER_501;
               if (iVar2 != 0) {
-                *(undefined4 *)(*(int *)(param_1[0x85] + 0xa8) + 0x720) = 1;
+                ((KHApp *)param_1[0x85])->progress->levelLoaded = 1;
                 iVar1 = iVar6;
               }
               goto LAB_0010a85c;
@@ -7457,7 +7457,7 @@ void * FUN_0010b4e4(void *param_1,int param_2)
                         */
     uVar1 = (*g_pHelperFuncs->GetAppInstance)();
     *(undefined4 *)((int)param_1 + 0x724) = uVar1;
-    *(undefined4 *)((int)param_1 + 0x728) = 0;
+    ((Progress *)param_1)->saveCopy = (uint8 *)0x0;
     if (param_2 == 0) {
       iVar3 = 0;
       do {
@@ -7481,7 +7481,7 @@ void * FUN_0010b4e4(void *param_1,int param_2)
       }
       ((Progress *)param_1)->userId = (char *)0x0;
       *(undefined4 *)((int)param_1 + 0x594) = 0x28;
-      *(undefined4 *)((int)param_1 + 0x71c) = 0;
+      ((Progress *)param_1)->summaryPending = 0;
       *(undefined4 *)((int)param_1 + 0x598) = 0x28;
       *(undefined4 *)((int)param_1 + 0x5c8) = 1;
       *(undefined4 *)((int)param_1 + 0x5c4) = 0;
@@ -8349,10 +8349,10 @@ void FUN_0010c800(int param_1,int param_2)
     (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x5bc));
     *(undefined4 *)(param_1 + 0x5bc) = 0;
   }
-  if (*(int *)(param_1 + 0x728) != 0) {
+  if (((Progress *)param_1)->saveCopy != (uint8 *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x728));
-    *(undefined4 *)(param_1 + 0x728) = 0;
+    (*g_pHelperFuncs->free)(((Progress *)param_1)->saveCopy);
+    ((Progress *)param_1)->saveCopy = (uint8 *)0x0;
   }
   iVar2 = 0;
   do {
@@ -10868,12 +10868,12 @@ void FUN_0010f9a4(int param_1)
   *(undefined4 *)(param_1 + 0x578) = 2;
   *(undefined4 *)(param_1 + 0x580) = 3;
   *(undefined4 *)(param_1 + 0x57c) = 500;
-  *(undefined4 *)(param_1 + 0x5a8) = 1;
+  ((Progress *)param_1)->showEnemyHealth = 1;
   *(undefined4 *)(param_1 + 0x588) = 0;
   *(undefined4 *)(param_1 + 0x584) = 500;
   *(undefined4 *)(param_1 + 0x5bc) = 0;
   *(undefined4 *)(param_1 + 0x5c0) = 0;
-  *(undefined4 *)(param_1 + 0x720) = 0;
+  ((Progress *)param_1)->levelLoaded = 0;
   return;
 }
 
@@ -17416,12 +17416,12 @@ undefined4 FUN_0011b178(int param_1,int param_2)
                         */
   iVar3 = (*g_pHelperFuncs->malloc)(0x800);
   if (param_2 == 0) {
-    if (*(int *)(param_1 + 0x728) == 0) {
+    if (((Progress *)param_1)->saveCopy == (uint8 *)0x0) {
       return 0;
     }
                     /* helper[0] void * memmove(void *dst, const void *src, uint32 n)
                        (AEEHelperFuncs +0x0, via *(base-4)) */
-    (*(code *)g_pHelperFuncs->memmove)(iVar3,*(int *)(param_1 + 0x728),0x800);
+    (*(code *)g_pHelperFuncs->memmove)(iVar3,((Progress *)param_1)->saveCopy,0x800);
   }
   else {
     iVar6 = FUN_0011b0cc(param_1,param_2,iVar3,0x800 /* not arguments, value leftovers: param_3 */);
@@ -17467,7 +17467,7 @@ undefined4 FUN_0011b178(int param_1,int param_2)
     *(uint *)(param_1 + iVar7 + 0x59c) = (uint)(iVar5 != 0x30);
   } while (iVar6 < 3);
   iVar6 = save_read_byte((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
-  *(uint *)(param_1 + 0x5a8) = (uint)(iVar6 != 0x30);
+  ((Progress *)param_1)->showEnemyHealth = (uint)(iVar6 != 0x30);
   if (*(int *)(*(int *)(param_1 + 0x724) + 0xc4) != 0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xc4));
@@ -17483,9 +17483,9 @@ undefined4 FUN_0011b178(int param_1,int param_2)
   uVar4 = (int32)save_read_string((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(*(int *)(param_1 + 0x724) + 200) = uVar4;
   iVar6 = save_read_byte((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
-  *(uint *)(param_1 + 0x71c) = (uint)(iVar6 != 0x30);
+  ((Progress *)param_1)->summaryPending = (uint)(iVar6 != 0x30);
   iVar6 = save_read_byte((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
-  *(uint *)(param_1 + 0x720) = (uint)(iVar6 != 0x30);
+  ((Progress *)param_1)->levelLoaded = (uint)(iVar6 != 0x30);
   iVar6 = save_read_int((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   for (iVar7 = 0; iVar7 < iVar6; iVar7 = iVar7 + 1) {
     uVar2 = save_read_byte((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
@@ -18866,7 +18866,7 @@ void FUN_0011d28c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
     float_compare_greater(uVar2,FLOAT_16);
     if (!(bool)uVar6 || (bool)uVar5) {
       iVar3 = *(int *)(param_1 + 0x74);
-      if (*(int *)(*(int *)(iVar3 + 0xa8) + 0x5a8) != 0) {
+      if (((KHApp *)iVar3)->progress->showEnemyHealth != 0) {
         uVar2 = FUN_00126858(*(undefined4 *)(param_1 + 0x3c));
         *(undefined4 *)(*(int *)(iVar3 + 0xd4) + 0x4c) = uVar2;
         uVar2 = FUN_00126858(*(undefined4 *)(*(int *)(param_1 + 0x40) + 0x118));
@@ -18988,7 +18988,7 @@ LAB_0011d4b4:
     if (!bVar3) goto switchD_0001d418_default;
     enemy_set_target((Enemy *)param_1,1);
     iVar8 = *(int *)(param_1 + 0x74);
-    if (*(int *)(*(int *)(iVar8 + 0xa8) + 0x5a8) != 0) {
+    if (((KHApp *)iVar8)->progress->showEnemyHealth != 0) {
       uVar11 = FUN_00126858(*(uint *)(param_1 + 0x3c));
       *(uint *)(*(int *)(iVar8 + 0xd4) + 0x4c) = uVar11;
       uVar11 = FUN_00126858(*(uint *)(*(int *)(param_1 + 0x40) + 0x118));
@@ -19796,113 +19796,110 @@ undefined4 FUN_0011e6b8(int param_1,int param_2)
   undefined4 param_4;
   /* not parameters: param_3, param_4. kh.mod reads r2 / r3 only on paths where it was already written, or as a
      leftover (no caller sets them); Ghidra listed them as inputs */
-  int iVar1;
-  char *pcVar2;
   undefined4 uVar4;
   undefined4 uVar5;
   int iVar6;
   int iVar7;
   undefined4 uVar8;
   undefined4 local_24;
+  Progress *progress = (Progress *)param_1;
+
   local_24 = param_4;
                     /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
                         */
   uVar4 = (*g_pHelperFuncs->malloc)(0x800);
   local_24 = 0;
   uVar8 = 1;
-  FUN_001246b4(param_1,*(undefined4 *)(param_1 + 0x514),uVar4,&local_24 /* not arguments, value leftovers: param_3 */);
-  FUN_001246b4(param_1,*(undefined4 *)(param_1 + 0x518),uVar4,&local_24);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x524),uVar4,&local_24);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x528),uVar4,&local_24);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x52c),uVar4,&local_24);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x530),uVar4,&local_24);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x534),uVar4,&local_24);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x538),uVar4,&local_24);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x58c),uVar4,&local_24);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5ac),uVar4,&local_24);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5b0),uVar4,&local_24);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5b4),uVar4,&local_24);
+  FUN_001246b4(param_1,progress->health,uVar4,&local_24 /* not arguments, value leftovers: param_3 */);
+  FUN_001246b4(param_1,progress->maximumHealth,uVar4,&local_24);
+  FUN_001246f4(param_1,progress->magicPoints,uVar4,&local_24);
+  FUN_001246f4(param_1,progress->maximumMagicPoints,uVar4,&local_24);
+  FUN_001246f4(param_1,progress->munny,uVar4,&local_24);
+  FUN_001246f4(param_1,progress->levelRewardTwoCount,uVar4,&local_24);
+  FUN_001246f4(param_1,progress->levelRewardThreeCount,uVar4,&local_24);
+  FUN_001246f4(param_1,progress->experience,uVar4,&local_24);
+  FUN_001246f4(param_1,progress->level,uVar4,&local_24);
+  FUN_001246f4(param_1,progress->field_5ac,uVar4,&local_24);
+  FUN_001246f4(param_1,progress->field_5b0,uVar4,&local_24);
+  FUN_001246f4(param_1,progress->field_5b4,uVar4,&local_24);
   iVar7 = 0;
   do {
-    if (*(int *)(param_1 + iVar7 * 4 + 0x59c) == 0) {
+    if (progress->spells[iVar7] == 0) {
       uVar5 = 0x30;
     }
     else {
       uVar5 = 0x31;
     }
-    FUN_00124674(param_1,uVar5,uVar4,&local_24);
+    save_write_byte(progress,(uint8)uVar5,(uint8 *)uVar4,(int32 *)&local_24);
     iVar7 = iVar7 + 1;
   } while (iVar7 < 3);
-  if (*(int *)(param_1 + 0x5a8) == 0) {
+  if (progress->showEnemyHealth == 0) {
     uVar5 = 0x30;
   }
   else {
     uVar5 = 0x31;
   }
-  FUN_00124674(param_1,uVar5,uVar4,&local_24);
-  FUN_00124734(param_1,*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xc4),uVar4,&local_24);
-  FUN_00124734(param_1,*(undefined4 *)(*(int *)(param_1 + 0x724) + 200),uVar4,&local_24);
-  if (*(int *)(param_1 + 0x71c) == 0) {
+  save_write_byte(progress,(uint8)uVar5,(uint8 *)uVar4,(int32 *)&local_24);
+  FUN_00124734(param_1,progress->app->pBufc4,uVar4,&local_24);
+  FUN_00124734(param_1,progress->app->pBufc8,uVar4,&local_24);
+  if (progress->summaryPending == 0) {
     uVar5 = 0x30;
   }
   else {
     uVar5 = 0x31;
   }
-  FUN_00124674(param_1,uVar5,uVar4,&local_24);
-  if (*(int *)(param_1 + 0x720) == 0) {
+  save_write_byte(progress,(uint8)uVar5,(uint8 *)uVar4,(int32 *)&local_24);
+  if (progress->levelLoaded == 0) {
     uVar5 = 0x30;
   }
   else {
     uVar5 = 0x31;
   }
-  FUN_00124674(param_1,uVar5,uVar4,&local_24);
+  save_write_byte(progress,(uint8)uVar5,(uint8 *)uVar4,(int32 *)&local_24);
   iVar6 = 0;
   iVar7 = 0;
   do {
-    pcVar2 = (char *)(param_1 + iVar7);
-    iVar7 = iVar7 + 1;
-    if (*pcVar2 != '\0') {
+    if (progress->statusFlags[iVar7] != 0) {
       iVar6 = iVar6 + 1;
     }
+    iVar7 = iVar7 + 1;
   } while (iVar7 < 100);
   FUN_001246f4(param_1,iVar6,uVar4,&local_24);
   iVar7 = 0;
   do {
-    if (*(char *)(param_1 + iVar7) != '\0') {
-      FUN_00124674(param_1,*(char *)(param_1 + iVar7),uVar4,&local_24);
-      FUN_00124734(param_1,*(undefined4 *)(param_1 + iVar7 * 4 + 100),uVar4,&local_24);
+    if (progress->statusFlags[iVar7] != 0) {
+      save_write_byte(progress,progress->statusFlags[iVar7],(uint8 *)uVar4,(int32 *)&local_24);
+      FUN_00124734(param_1,progress->statusTexts[iVar7],uVar4,&local_24);
     }
     iVar7 = iVar7 + 1;
   } while (iVar7 < 100);
   iVar6 = 0;
   iVar7 = 0;
   do {
-    iVar1 = iVar7 * 4;
-    iVar7 = iVar7 + 1;
-    if (*(int *)(param_1 + iVar1 + 900) != 0) {
+    if (progress->variableNames[iVar7] != (char *)0x0) {
       iVar6 = iVar6 + 1;
     }
+    iVar7 = iVar7 + 1;
   } while (iVar7 < 100);
   FUN_001246f4(param_1,iVar6,uVar4,&local_24);
   iVar7 = 0;
   do {
-    iVar6 = param_1 + iVar7 * 4;
-    if (*(int *)(iVar6 + 900) != 0) {
-      FUN_001246f4(param_1,*(undefined4 *)(iVar6 + 500),uVar4,&local_24);
-      FUN_00124734(param_1,*(undefined4 *)(iVar6 + 900),uVar4,&local_24);
+    if (progress->variableNames[iVar7] != (char *)0x0) {
+      FUN_001246f4(param_1,progress->variableValues[iVar7],uVar4,&local_24);
+      FUN_00124734(param_1,progress->variableNames[iVar7],uVar4,&local_24);
     }
     iVar7 = iVar7 + 1;
   } while (iVar7 < 100);
-  FUN_001246f4(param_1,*(undefined4 *)(param_1 + 0x5b8),uVar4,&local_24);
-  if (*(int *)(param_1 + 0x728) == 0) {
+  FUN_001246f4(param_1,progress->field_5b8,uVar4,&local_24);
+  if (progress->saveCopy == (uint8 *)0x0) {
                     /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
                         */
     uVar5 = (*g_pHelperFuncs->malloc)(0x800);
-    *(undefined4 *)(param_1 + 0x728) = uVar5;
+    progress->saveCopy = (uint8 *)uVar5;
   }
                     /* helper[0] void * memmove(void *dst, const void *src, uint32 n)
                        (AEEHelperFuncs +0x0, via *(base-4)) */
-  (*(code *)g_pHelperFuncs->memmove)(*(undefined4 *)(param_1 + 0x728),uVar4,0x800);
+  (*(code *)g_pHelperFuncs->memmove)(progress->saveCopy,uVar4,0x800);
   if (param_2 != 0) {
     uVar8 = FUN_0011e574(param_1,param_2,uVar4,local_24);
   }
@@ -23668,7 +23665,7 @@ void FUN_001242b4(int param_1)
   case 3:
     FUN_0011e6b8(*(int *)(param_1 + 0xa8),0);
     FUN_0010edec(param_1);
-    if (*(int *)(*(int *)(param_1 + 0xa8) + 0x71c) != 0) {
+    if (((KHApp *)param_1)->progress->summaryPending != 0) {
       FUN_00101ad8(*(int **)(param_1 + 0xd0),0x75);
     }
     break;
@@ -23792,24 +23789,21 @@ LAB_00124580:
   return;
 }
 
-/* ==== 0x00124674  (file offset 0x24674)  FUN_00124674 ================================================ */
-undefined8 FUN_00124674(undefined4 param_1,undefined4 param_2,int param_3,int *param_4)
+/* ==== 0x00124674  (file offset 0x24674)  save_write_byte ============================================= */
+/* GUESS: name. Appends one byte to the saved game being written (`data` at *position, which it advances):
+   a flag as the character '0' or '1', or a status flag. The byte is copied by memmove from the argument's
+   stack slot (the binary spills r0 - r3 for it). `progress` (what the writer FUN_0011e6b8 saves) is not
+   read. Returns nothing: r0 is only reloaded from that spill (Ghidra's undefined8), and no caller reads
+   it. */
+void save_write_byte(Progress *progress,uint8 byte,uint8 *data,int32 *position)
 
 {
-  undefined4 uStack_14;
-  int iStack_10;
-  int *piStack_c;
-  undefined8 uVar1;
-  
-  uStack_14 = param_2;
-  iStack_10 = param_3;
-  piStack_c = param_4;
-                    /* helper[0] void * memmove(void *dst, const void *src, uint32 n)
-                       (AEEHelperFuncs +0x0, via *(base-4)) */
-  (*(code *)g_pHelperFuncs->memmove)(*param_4 + param_3,&uStack_14,1);
-  *param_4 = *param_4 + 1;
-  return MAKE_WORDS(uVar1,uStack_14,param_1);
+                    /* helper[0] void * memmove(void *dst, const void *src, uint32 n)  (AEEHelperFuncs
+                       +0x0, via *(base-4)) */
+  (*g_pHelperFuncs->memmove)(data + *position,&byte,1);
+  *position = *position + 1;
 }
+
 
 /* ==== 0x001246B4  (file offset 0x246B4)  FUN_001246b4 ================================================ */
 undefined8 FUN_001246b4(undefined4 param_1,undefined4 param_2,int param_3,int *param_4)

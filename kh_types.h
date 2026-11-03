@@ -356,7 +356,9 @@ typedef struct Progress {
     uint8  unknown_598[0x04];
     int32    spells[3];             /* +0x59c 0 at the start; set for each spell the player has (GUESS: names);
                                      character_on_key casts only those */
-    uint8  unknown_5a8[0x04];
+    int32    showEnemyHealth;       /* +0x5a8 GUESS: name (a fourth ability after the spells, a "scan"); 1
+                                     after a reset (FUN_0010f9a4); when set, an enemy that is hit shows its
+                                     health in the HUD (FUN_0011d28c, FUN_0011d3ec); saved as '0'/'1' */
     int32    field_5ac;             /* +0x5ac 0 at the start */
     int32    field_5b0;             /* +0x5b0 0 at the start */
     int32    field_5b4;             /* +0x5b4 0 at the start; GUESS: a count of items that refill half the MP
@@ -372,9 +374,16 @@ typedef struct Progress {
     char    *recordNames[25];       /* +0x5f0 GUESS: names; the saved records' names (a level's, KHApp.pBufc4);
                                      0 or "" when free (progress_find_record, FUN_0011fddc) */
     ProgressRecord records[25];   /* +0x654 their values */
-    uint8  unknown_71c[0x08];
+    int32    summaryPending;        /* +0x71c GUESS: name; set when the level's summary (event 0x75) saves
+                                     the game, so that after a suspend (FUN_001242b4) the summary opens
+                                     again; saved as '0'/'1' */
+    int32    levelLoaded;           /* +0x720 GUESS: name; 1 once the level file is loaded (FUN_0010a5d8),
+                                     0 after a reset and a finished download (FUN_0010888c); saved */
     struct KHApp *app;            /* +0x724 the app it belongs to */
-} Progress;
+    uint8   *saveCopy;             /* +0x728 GUESS: name; the last saved game, 0x800 bytes (FUN_0011e6b8
+                                     copies it there), which the loader FUN_0011b178 reads with no file
+                                     name */
+} Progress;                       /* 0x72c bytes (INTEGER_1836, FUN_0010b4e4) */
 
 /* ---- Level objects -------------------------------------------------------------------------------
  * game_create_objects walks the level's scene (Swerve nodes) and makes a level object for every node
