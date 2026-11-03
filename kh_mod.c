@@ -10463,31 +10463,29 @@ LAB_0010f0cc:
   return iVar1;
 }
 
-/* ==== 0x0010F244  (file offset 0x0F244)  FUN_0010f244 ================================================ */
-void FUN_0010f244(int *param_1,undefined4 *param_2)
+/* ==== 0x0010F244  (file offset 0x0F244)  item_drops_get_chances ====================================== */
+/* GUESS: names. The chances (floats, their bits; they add up to 1.0) that a dropped item is of each kind
+   (ItemDrops.kinds): [0] health, 1 - the health fraction; [1] MP, the rest times the MP missing;
+   [2] munny, what is left. FUN_0010fbf4 compares a random value with them for each item it drops. The
+   binary computes the health fraction back from chances[0], and reads app->progress twice (the same
+   pointer). */
+void item_drops_get_chances(ItemDrops *drops,uint32 *chances)
 
 {
-  undefined4 uVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  int iVar4;
-  
-  uVar1 = float_divide(*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x514),
-                       *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x518));
-  uVar1 = float_reverse_subtract(uVar1,0x3f800000);
-  *param_2 = uVar1;
-  uVar1 = float_reverse_subtract(uVar1,0x3f800000);
-  iVar4 = *(int *)(*param_1 + 0xa8);
-  uVar2 = int_to_float(*(int32 *)(iVar4 + 0x524));
-  uVar3 = int_to_float(*(int32 *)(iVar4 + 0x528));
-  uVar2 = float_reverse_divide(uVar3,uVar2);
-  uVar2 = float_reverse_subtract(uVar2,0x3f800000);
-  uVar2 = float_multiply(uVar2,uVar1);
-  param_2[1] = uVar2;
-  uVar1 = float_subtract(uVar1,uVar2);
-  param_2[2] = uVar1;
-  return;
+  Progress *progress = drops->app->progress;
+  uint32 health;
+  uint32 points;
+  uint32 magic;
+
+  health = float_divide(progress->health,progress->maximumHealth);
+  chances[0] = float_reverse_subtract(health,0x3f800000);   /* 1.0 - health */
+  health = float_reverse_subtract(chances[0],0x3f800000);   /* 1.0 - chances[0]: the fraction again */
+  points = int_to_float(progress->magicPoints);
+  magic = float_reverse_divide(int_to_float(progress->maximumMagicPoints),points);   /* points / maximum */
+  chances[1] = float_multiply(float_reverse_subtract(magic,0x3f800000),health);  /* (1 - magic) * health */
+  chances[2] = float_subtract(health,chances[1]);
 }
+
 
 /* ==== 0x0010F2CC  (file offset 0x0F2CC)  combat_region_take_one ====================================== */
 /* GUESS: name. Lets one more enemy of the current wave appear: takes one from enemiesLeftInWave and
@@ -10963,8 +10961,7 @@ void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param
   uint local_54;
   int local_50;
   int local_4c;
-  uint local_48;
-  uint local_44;
+  uint32 chances[3];   /* item_drops_get_chances; [2] is not read */
   int local_3c;
   uint local_38;
   int *piStack_34;
@@ -10981,7 +10978,7 @@ void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param
   dVar2 = FUN_00124954(uVar2,dVar2.high,ONE_DOUBLE_LOW_WORD,ONE_DOUBLE_HIGH_WORD);
   uVar2 = dVar2.low;
   local_28 = FUN_0012479c(uVar2,dVar2.high);
-  FUN_0010f244(param_1,&local_48);
+  item_drops_get_chances((ItemDrops *)param_1,chances);
   iVar3 = FUN_00113cfc((undefined4)((KHApp *)*param_1)->context,0xf);
   iVar9 = 0;
   uVar2 = param_9 ^ 0x80000000;
@@ -11002,9 +10999,9 @@ void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param
       if (!(bool)uVar11) {
         *(uint *)(iVar3 + iVar9 * 0x14) = *(uint *)(iVar3 + iVar9 * 0x14) ^ 0x80000000;
       }
-      float_compare_less(*(uint *)(iVar3 + iVar9 * 0x14),local_48);
+      float_compare_less(*(uint *)(iVar3 + iVar9 * 0x14),chances[0]);
       if ((bool)uVar11) {
-        uVar6 = float_add(local_48,local_44);
+        uVar6 = float_add(chances[0],chances[1]);
         float_compare_greater(uVar6,*(uint *)(iVar3 + iVar9 * 0x14));
         if (!(bool)uVar11 || (bool)uVar10) {
           uVar12 = 2;

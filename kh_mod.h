@@ -612,7 +612,7 @@ void FUN_0010edec(int param_1);
 int32 script_parse_lines(int32 context,char *text,ScriptCommand ***commands,int32 owner);   /* 0x0010EEFC GUESS: name, see kh_mod.c */
 int32 string_remove_prefix(int32 context,const char *prefix,char *text,char *out);   /* 0x0010EFD4 GUESS: name, see kh_mod.c */
 int FUN_0010f058(int param_1,int param_2);
-void FUN_0010f244(int *param_1,undefined4 *param_2);
+void item_drops_get_chances(ItemDrops *drops,uint32 *chances);   /* 0x0010F244 GUESS: name, see kh_mod.c */
 int32 combat_region_take_one(CombatRegion *region);   /* 0x0010F2CC GUESS: name */
 undefined8 FUN_0010f2e8(int param_1,uint param_2,undefined4 param_3,uint param_4,undefined4 param_5, undefined4 param_6,uint param_7);
 void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5,
