@@ -782,7 +782,7 @@ void FUN_0011f394(int param_1,char *param_2,undefined4 param_3,undefined4 param_
 void FUN_0011f540(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
 void combat_region_enemies_enter_mode_1(CombatRegion *region);   /* 0x0011F630 GUESS: name, see kh_mod.c */
 void character_set_control_direction(Character *character,int32 direction);   /* 0x0011F66C GUESS: name */
-void FUN_0011f680(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
+void camera_move_focus(Camera *camera,uint32 x,uint32 y,uint32 z,int32 elapsed);   /* 0x0011F680 GUESS: name, see kh_mod.c */
 void FUN_0011f7d4(int param_1,int param_2);
 void FUN_0011f8ac(int param_1);
 void FUN_0011f8e0(int param_1,uint param_2);

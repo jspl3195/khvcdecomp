@@ -20434,68 +20434,46 @@ void character_set_control_direction(Character *character,int32 direction)
   character->controlDirection = direction == -1 ? -1 : 1;
 }
 
-/* ==== 0x0011F680  (file offset 0x1F680)  FUN_0011f680 ================================================ */
-void FUN_0011f680(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
-                 undefined4 param_5)
+/* ==== 0x0011F680  (file offset 0x1F680)  camera_move_focus =========================================== */
+/* GUESS: name. Moves the camera's look-at point (focus) toward (x, y, z) (floats, their bits) for `elapsed`
+   ms: each axis moves by its distance to the target, at most step = elapsed * (distance / 0.85) * speed,
+   so it eases in, faster when far away. `speed` is a float the camera's MotionEntity +0x110 points at
+   (GUESS: its follow speed). The camera's update (FUN_00122b90) calls it with the middle of the object it
+   follows. The clamps are the binary's float_compare_greater and movhi, written after the comma. */
+void camera_move_focus(Camera *camera,uint32 x,uint32 y,uint32 z,int32 elapsed)
 
 {
-  uint uVar1;
-  uint uVar2;
-  uint uVar3;
-  undefined4 uVar4;
-  undefined4 uVar5;
-  undefined4 uVar6;
-  uint uVar7;
-  uint uVar8;
-  undefined1 in_ZR;
-  undefined1 in_CY;
-  
-  uVar1 = float_subtract(param_2,*(undefined4 *)(param_1 + 0x1ec));
-  uVar2 = float_subtract(param_3,*(undefined4 *)(param_1 + 0x1f0));
-  uVar3 = float_subtract(param_4,*(undefined4 *)(param_1 + 500));
-  uVar6 = FLOAT_0_POINT_85;
-  uVar4 = float_multiply(uVar1,uVar1);
-  uVar5 = float_multiply(uVar2,uVar2);
-  uVar4 = float_add(uVar5,uVar4);
-  uVar5 = float_multiply(uVar3,uVar3);
-  uVar4 = float_sqrt(float_add(uVar5,uVar4));
-  uVar6 = float_divide(uVar4,uVar6);
-  uVar4 = int_to_float(param_5);
-  uVar6 = float_multiply(uVar4,uVar6);
-  uVar7 = float_multiply(uVar6,**(undefined4 **)(param_1 + 0x110));
-  float_compare_greater(uVar1,uVar7);
-  if ((bool)in_CY && !(bool)in_ZR) {
-    uVar1 = uVar7;
-  }
-  uVar8 = uVar7 ^ 0x80000000;
-  float_compare_greater(uVar8,uVar1);
-  if ((bool)in_CY && !(bool)in_ZR) {
-    uVar1 = uVar8;
-  }
-  float_compare_greater(uVar2,uVar7);
-  if ((bool)in_CY && !(bool)in_ZR) {
-    uVar2 = uVar7;
-  }
-  float_compare_greater(uVar8,uVar2);
-  if ((bool)in_CY && !(bool)in_ZR) {
-    uVar2 = uVar8;
-  }
-  float_compare_greater(uVar3,uVar7);
-  if ((bool)in_CY && !(bool)in_ZR) {
-    uVar3 = uVar7;
-  }
-  float_compare_greater(uVar8,uVar3);
-  if ((bool)in_CY && !(bool)in_ZR) {
-    uVar3 = uVar8;
-  }
-  uVar6 = float_add(*(undefined4 *)(param_1 + 0x1ec),uVar1);
-  *(undefined4 *)(param_1 + 0x1ec) = uVar6;
-  uVar6 = float_add(*(undefined4 *)(param_1 + 0x1f0),uVar2);
-  *(undefined4 *)(param_1 + 0x1f0) = uVar6;
-  uVar6 = float_add(*(undefined4 *)(param_1 + 500),uVar3);
-  *(undefined4 *)(param_1 + 500) = uVar6;
-  return;
+  uint32 dx = float_subtract(x,camera->focus[0]);
+  uint32 dy = float_subtract(y,camera->focus[1]);
+  uint32 dz = float_subtract(z,camera->focus[2]);
+  uint32 sum;
+  uint32 step;
+  uint32 minusStep;
+
+  sum = float_multiply(dx,dx);
+  sum = float_add(float_multiply(dy,dy),sum);
+  sum = float_add(float_multiply(dz,dz),sum);
+  step = float_divide(float_sqrt(sum),FLOAT_0_POINT_85);
+  step = float_multiply(int_to_float(elapsed),step);
+  step = float_multiply(step,*(uint32 *)((MotionEntity *)camera)->field_110);
+  minusStep = step ^ 0x80000000;
+  if (float_compare_greater(dx,step), *(float *)&dx > *(float *)&step)
+    dx = step;
+  if (float_compare_greater(minusStep,dx), *(float *)&minusStep > *(float *)&dx)
+    dx = minusStep;
+  if (float_compare_greater(dy,step), *(float *)&dy > *(float *)&step)
+    dy = step;
+  if (float_compare_greater(minusStep,dy), *(float *)&minusStep > *(float *)&dy)
+    dy = minusStep;
+  if (float_compare_greater(dz,step), *(float *)&dz > *(float *)&step)
+    dz = step;
+  if (float_compare_greater(minusStep,dz), *(float *)&minusStep > *(float *)&dz)
+    dz = minusStep;
+  camera->focus[0] = float_add(camera->focus[0],dx);
+  camera->focus[1] = float_add(camera->focus[1],dy);
+  camera->focus[2] = float_add(camera->focus[2],dz);
 }
+
 
 /* ==== 0x0011F7D4  (file offset 0x1F7D4)  FUN_0011f7d4 ================================================ */
 void FUN_0011f7d4(int param_1,int param_2)
@@ -22747,7 +22725,7 @@ void FUN_00122b90(int param_1,int param_2,uint param_3)
   uVar2 = level_object_get_height((LevelObject *)iVar1);
   uVar2 = float_multiply(uVar2,0x3f000000);
   local_1c = float_add(uVar2,*(uint *)(*(int *)(param_1 + 0x1cc) + 0x70));
-  FUN_0011f680(param_1,local_24,local_20,local_1c,param_3);
+  camera_move_focus((Camera *)param_1,local_24,local_20,local_1c,param_3);
   local_30 = 0;
   local_2c = 0;
   local_28 = 0;
