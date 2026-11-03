@@ -657,7 +657,7 @@ void FUN_00113490(undefined4 *param_1,int param_2);
 void FUN_00113524(undefined4 *param_1,int param_2);
 int32 animations_get_duration(Animations *animations,int32 index);   /* 0x001135B8 GUESS: name */
 void FUN_001135dc(int param_1);
-uint FUN_00113654(undefined4 param_1,int param_2);
+uint32 string_hash(int32 context,const char *text);   /* 0x00113654 GUESS: name, see kh_mod.c */
 undefined4 FUN_001136c8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param_4, undefined4 *param_5,undefined4 param_6);
 uint32 level_object_get_height(LevelObject *object);   /* 0x00113784 GUESS: name */
 int32 animations_find(Animations *animations,int32 userId);   /* 0x001137A4 GUESS: name */

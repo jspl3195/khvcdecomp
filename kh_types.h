@@ -288,7 +288,7 @@ typedef struct ScriptCommand {
     uint32   value[2];              /* +0x14 floats (their bits): a speed, an angle, an amount, ... */
     int32    number[4];             /* +0x1c integers: a mode, a sound, an animation's user id (a hash),
                                      a colour 0xRRGGBB, a text box's rectangle, ... */
-    uint32   hash;                  /* +0x2c a name's hash (FUN_00113654): a text's parameter */
+    uint32   hash;                  /* +0x2c a name's hash (string_hash): a text's parameter */
     int32    flag[4];               /* +0x30 options, by command */
     char    *text;                  /* +0x40 a text argument: a name, a condition, a list (freed by
                                      script_command_destroy) */
@@ -362,7 +362,7 @@ typedef struct Progress {
  * that has a name (its user parameter 0x009660B3), choosing the class by the node's tags (FUN_00119b0c):
  * "MotionEntity", "CombatRegion", "BossCombatRegion", or a plain LevelObject. All of them start with the
  * LevelObject fields (kind, parent, node, nameId, app at +0x84); the subclasses are written out flat
- * rather than embedding it. Names are hashed by FUN_00113654 (strlen, then from the last character
+ * rather than embedding it. Names are hashed by string_hash (strlen, then from the last character
  * hash = hash * 0x19660D + c + 0x3C6EF35F, made positive, & 0x3FFFFFFF); the WORD_HEXADECIMAL_ ids
  * passed around with level data are such hashes. Fields whose meaning is not known are named by offset. */
 struct LevelObject;
@@ -394,7 +394,7 @@ typedef struct LevelObject {
     struct LevelObject *parent;   /* +0x004 the object of the nearest named node above it, or 0 for the
                                      "NoParent" tag */
     ISwerveObject *node;          /* +0x008 its scene node (AddRef'd) */
-    uint32 nameId;                /* +0x00c the hash (FUN_00113654) of its name */
+    uint32 nameId;                /* +0x00c the hash (string_hash) of its name */
     int32    field_10;              /* +0x010 0 at creation */
     int32    field_14;              /* +0x014 0 at creation */
     int32    field_18;              /* +0x018 0 at creation */

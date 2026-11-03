@@ -7640,7 +7640,7 @@ LevelObject * level_object_create(LevelObject *object,ISwerveObject *node,char *
   object->kind = 0;
   object->node = node;
   (*node->pvt->AddRef)(node);
-  object->nameId = FUN_00113654((int32)object->app->context,(int32)name);
+  object->nameId = string_hash((int32)object->app->context,(const char *)name);
   object->parent = (LevelObject *)0x0;
   object->field_10 = 0;
   object->field_34 = 1;
@@ -12664,7 +12664,7 @@ undefined4 FUN_00112e20(int param_1,undefined4 param_2)
     uVar2 = *(undefined4 *)(param_1 + 8);
   }
   else {
-    uVar2 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 4))->context,param_2);
+    uVar2 = string_hash((int32)((KHApp *)*(int *)(param_1 + 4))->context,(const char *)param_2);
     uVar2 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 4))->pGame,uVar2);
   }
   return uVar2;
@@ -12986,7 +12986,7 @@ void FUN_001135dc(int param_1)
   FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_39B9295D,&local_c /* not arguments, value leftovers: param_3 */);
   if (local_c != 0) {
-    uVar1 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_c);
+    uVar1 = string_hash((int32)((KHApp *)*(int *)(param_1 + 0x84))->context,(const char *)local_c);
     uVar1 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x84))->pGame,uVar1);
     *(undefined4 *)(param_1 + 0x1cc) = uVar1;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -12995,29 +12995,29 @@ void FUN_001135dc(int param_1)
   return;
 }
 
-/* ==== 0x00113654  (file offset 0x13654)  FUN_00113654 ================================================ */
-uint FUN_00113654(undefined4 param_1,int param_2)
+/* ==== 0x00113654  (file offset 0x13654)  string_hash ================================================= */
+/* GUESS: name. The game's name hash: every name in the scenes, level data and scripts is turned into a
+   number by it (LevelObject.nameId, ScriptCommand.hash, animation user ids, text parameters). From the last
+   character back to the first, h = h * 1664525 + c + 1013904223; then the absolute value (as a signed
+   word), kept to 30 bits. The two constants (0x0019660D, 0x3C6EF35F) are the well-known linear
+   congruential generator multiplier and increment from Numerical Recipes, here used with each character
+   mixed in. "Camera" gives 0x2E6723BD and "Character" 0x10C617E4, the hashes game_find_object tests;
+   "" gives 0. `context` (the app's) is not read. */
+uint32 string_hash(int32 context,const char *text)
 
 {
-  bool bVar1;
-  int iVar2;
-  byte *pbVar3;
-  uint uVar4;
-  
-  uVar4 = 0;
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-  iVar2 = (*g_pHelperFuncs->strlen)(param_2);
-  pbVar3 = (byte *)(param_2 + iVar2);
-  while (bVar1 = 0 < iVar2, iVar2 = iVar2 + -1, bVar1) {
-    pbVar3 = pbVar3 + -1;
-    uVar4 = WORD_HEXADECIMAL_0019660D * uVar4 + (uint)*pbVar3 + WORD_HEXADECIMAL_3C6EF35F;
-  }
-  if ((int)uVar4 < 0) {
-    uVar4 = -uVar4;
-  }
-  return uVar4 & 0x3fffffff;
+  uint32 hash = 0;
+  int32 length;
+
+                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4)) */
+  length = (*g_pHelperFuncs->strlen)(text);
+  while (length-- > 0)
+    hash = hash * WORD_HEXADECIMAL_0019660D + (uint8)text[length] + WORD_HEXADECIMAL_3C6EF35F;
+  if ((int32)hash < 0)
+    hash = -hash;
+  return hash & 0x3fffffff;
 }
+
 
 /* ==== 0x001136C0  (file offset 0x136C0)  FUN_001136c0 ================================================ */
 /* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101680): written from
@@ -14181,7 +14181,7 @@ void FUN_00114c00(int param_1,undefined4 param_2,undefined4 param_3,int param_4)
   FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
                *(undefined4 *)(*(int *)(param_1 + 4) + 8),WORD_HEXADECIMAL_0AFEF300,&local_10);
   if (local_10 != 0) {
-    uVar1 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,local_10);
+    uVar1 = string_hash((int32)((KHApp *)*(int *)(param_1 + 0x20))->context,(const char *)local_10);
     uVar1 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x20))->pGame,uVar1);
     *(undefined4 *)(param_1 + 0x1c) = uVar1;
     if (local_10 != 0) {
@@ -14271,7 +14271,7 @@ void FUN_001150d0(int param_1,int *param_2)
 /* ==== 0x00115118  (file offset 0x15118)  script_command_parse ======================================== */
 /* GUESS: names. Parses one line of a script into `command`: the words (split at " "), the first one the
    command's name, which gives its type; the others its arguments, by command (objects by name,
-   FUN_00112e20; names hashed, FUN_00113654; numbers, string_to_float, made integers by FUN_00126858;
+   FUN_00112e20; names hashed, string_hash; numbers, string_to_float, made integers by FUN_00126858;
    texts copied, FUN_001204f0). A command needs its number of words, else only its type is set; an unknown
    name gives type 0x4c, which does nothing. `owner` is the object or screen whose script it is (0 for a
    sequence's). The binary's branches share their last steps (jumps to 0x00115800, 0x00116828,
@@ -14337,7 +14337,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
     if (count >= 3) {
       command->number[1] = -2;
       command->object = FUN_00112e20((int)command,(undefined4)words[1]);
-      command->hash = FUN_00113654(context,(int)words[2]);
+      command->hash = string_hash(context,words[2]);
     }
   }
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_ADDUITEXT) == 0) {
@@ -14354,7 +14354,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
       if (command->number[1] == command->number[3])
         command->flag[0] = 1;
       command->object = FUN_00112e20((int)command,(undefined4)words[5]);
-      command->hash = FUN_00113654(context,(int)words[6]);
+      command->hash = string_hash(context,words[6]);
       if (count >= 8) {
         if ((*g_pHelperFuncs->strcmp)(words[7],one) == 0)
           command->flag[1] = 1;
@@ -14485,7 +14485,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_PLAYANIM) == 0) {
     command->type = 0x19;
     if (count >= 2) {
-      command->number[0] = FUN_00113654(context,(int)words[1]);
+      command->number[0] = string_hash(context,words[1]);
       if (count >= 3 && (*g_pHelperFuncs->strcmp)(words[2],STRING_LOOP) == 0)
         command->flag[0] = 1;
     }
@@ -14548,14 +14548,14 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETANIMSPEED) == 0) {
     command->type = 0x23;
     if (count >= 3) {
-      command->number[0] = FUN_00113654(context,(int)words[1]);
+      command->number[0] = string_hash(context,words[1]);
       valueWord = words[2];
     }
   }
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETANIMPOSITION) == 0) {
     command->type = 0x24;
     if (count >= 3) {
-      command->number[0] = FUN_00113654(context,(int)words[1]);
+      command->number[0] = string_hash(context,words[1]);
       if ((*g_pHelperFuncs->strcmp)(words[2],STRING_END) == 0)
         command->number[1] = -1;
       else
@@ -14567,9 +14567,9 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETAPPEARANCE) == 0) {
     command->type = 0x25;
     if (count >= 4) {
-      command->number[0] = FUN_00113654(context,(int)words[1]);
+      command->number[0] = string_hash(context,words[1]);
       command->object = FUN_00112e20((int)command,(undefined4)words[2]);
-      command->number[1] = FUN_00113654(context,(int)words[3]);
+      command->number[1] = string_hash(context,words[3]);
     }
   }
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETBACKGROUND) == 0) {
@@ -14679,7 +14679,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
     else if (count == 4) {
       command->flag[0] = 1;
       FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
-      command->number[1] = FUN_00113654(context,(int)words[2]);
+      command->number[1] = string_hash(context,words[2]);
       numberWord = words[3];
     }
   }
@@ -14875,7 +14875,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_STOPANIM) == 0) {
     command->type = 0x48;
     if (count >= 2) {
-      command->number[0] = FUN_00113654(context,(int)words[1]);
+      command->number[0] = string_hash(context,words[1]);
       if (count >= 3 && (*g_pHelperFuncs->strcmp)(words[2],STRING_NOW) == 0)
         command->flag[0] = 1;
     }
@@ -14924,7 +14924,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   if (roundNumber != 0)   /* 0x00116e74 */
     command->number[0] = FUN_00126858(number);
   if (hashWord != (char *)0x0)   /* 0x00116f14 */
-    command->number[0] = FUN_00113654(context,(int)hashWord);
+    command->number[0] = string_hash(context,hashWord);
   if (number2Word != (char *)0x0)   /* 0x00116828 */
     command->number[1] = FUN_00126858(string_to_float(context,number2Word));
   if (valueWord != (char *)0x0)   /* 0x001171a0 */
@@ -15685,8 +15685,8 @@ void FUN_0011868c(int param_1,undefined4 param_2)
       pvVar4 = helper_malloc(*(int *)(param_1 + 0x128) << 2);
       *(void **)(param_1 + 0x120) = pvVar4;
       for (iVar2 = 0; iVar2 < *(int *)(param_1 + 0x128); iVar2 = iVar2 + 1) {
-        uVar5 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
-                             *(undefined4 *)((int)pvVar3 + iVar2 * 4));
+        uVar5 = string_hash((int32)((KHApp *)*(int *)(param_1 + 0x84))->context,
+                             (const char *)*(undefined4 *)((int)pvVar3 + iVar2 * 4));
         uVar5 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x84))->pGame,uVar5);
         uVar5 = (undefined4)hitsphere_create((Hitsphere *)0x0,uVar5,(BossCombatRegion *)param_1,iVar2 != 0);
         *(undefined4 *)(*(int *)(param_1 + 0x120) + iVar2 * 4) = uVar5;
@@ -15710,8 +15710,8 @@ void FUN_0011868c(int param_1,undefined4 param_2)
       pvVar4 = helper_malloc(*(int *)(param_1 + 300) << 2);
       *(void **)(param_1 + 0x118) = pvVar4;
       for (iVar6 = 0; iVar6 < *(int *)(param_1 + 300); iVar6 = iVar6 + 1) {
-        uVar5 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
-                             *(undefined4 *)((int)pvVar3 + iVar6 * 4));
+        uVar5 = string_hash((int32)((KHApp *)*(int *)(param_1 + 0x84))->context,
+                             (const char *)*(undefined4 *)((int)pvVar3 + iVar6 * 4));
         uVar5 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x84))->pGame,uVar5);
         *(undefined4 *)(*(int *)(param_1 + 0x118) + iVar6 * 4) = uVar5;
         helper_free(*(void **)((int)pvVar3 + iVar6 * 4));
@@ -15818,7 +15818,7 @@ void FUN_00118910(int param_1,undefined4 param_2)
   FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
                WORD_HEXADECIMAL_18FC8335,&local_28);
   if (local_28 != 0) {
-    uVar4 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,iVar7);
+    uVar4 = string_hash((int32)((KHApp *)*(int *)(param_1 + 0x84))->context,(const char *)iVar7);
     piVar5 = *(int **)(*(int *)(param_1 + 0x84) + 0x6c);
     (**(code **)(*piVar5 + 0x28))(piVar5,uVar4,param_1 + 0x10);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -16054,7 +16054,7 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
       (*g_pHelperFuncs->sprintf)(name,(char *)((int32)STRING_PERCENT_DTRANSFORM),i + 1);
       shape->vertexEntities[i] = 0;
       (*((const SwerveObject3DVtbl *)node->pvt)->Find)
-                (node,FUN_00113654((int32)shape->app->context,(int32)name),(ISwerveObject **)&shape->vertexEntities[i]);
+                (node,string_hash((int32)shape->app->context,(const char *)name),(ISwerveObject **)&shape->vertexEntities[i]);
     }
     FUN_00121ab0((int32)shape);
     shape->height = size1;
@@ -17289,7 +17289,7 @@ undefined4 FUN_0011ae04(int param_1,undefined4 param_2,int *param_3,int param_4,
                     /* helper[3] char * strcat(char *dst, const char *src)  (AEEHelperFuncs +0xc,
                        via *(base-4)) */
   (*g_pHelperFuncs->strcat)(uVar3,(int32)STRING_TRANSFORM);
-  uVar4 = FUN_00113654((undefined4)((KHApp *)*(int *)(param_1 + 0xc))->context,uVar3);
+  uVar4 = string_hash((int32)((KHApp *)*(int *)(param_1 + 0xc))->context,(const char *)uVar3);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
   (*g_pHelperFuncs->free)(uVar3);
   piVar5 = *(int **)(*(int *)(param_1 + 0xc) + 0x6c);
