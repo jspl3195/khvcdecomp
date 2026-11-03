@@ -409,12 +409,12 @@ void AEEMod_FreeResources(IModule *po, IHeap *ph, IFileMgr *pfm);
 
 /* Not yet identified (auto-named by Ghidra). */
 int32 engine_memory_set_caching(ISwerve *swerve,int32 mode);   /* 0x00100028 GUESS: name, see kh_mod.c */
-void FUN_00100104(int param_1);
+int32 rt_div0(int32 divisor);   /* 0x00100104 GUESS: name (ARM's __rt_div0), see kh_mod.c */
 void * memset(void *destination,uint32 byteCount);   /* 0x00100110 GUESS: name, see kh_mod.c */
 uint64 memcpy(void *destination,void *source,uint32 byteCount);   /* 0x00100168 GUESS: name, see kh_mod.c */
 uint64 memcpy_word_aligned(void *destination,void *source,uint32 byteCount);   /* 0x0010021C GUESS: name, see kh_mod.c */
-uint64 FUN_00100288(uint param_1,uint param_2);
-int FUN_0010035c(uint param_1,uint param_2);
+uint64 rt_sdiv(int32 divisor,int32 dividend);   /* 0x00100288 GUESS: name (ARM's __rt_sdiv), see kh_mod.c */
+uint64 rt_udiv(uint32 divisor,uint32 dividend);   /* 0x0010035C GUESS: name (ARM's __rt_udiv), see kh_mod.c */
 undefined8 FUN_0010041c(int param_1,uint param_2);
 undefined8 FUN_001007f4(int param_1,uint param_2);
 undefined8 FUN_001008d0(int param_1,uint param_2);
@@ -422,6 +422,7 @@ undefined8 FUN_001009b8(uint param_1,uint param_2);
 /* errno values of ARM's C library that kh.mod sets (set_errno) */
 #define ERRNO_EDOM 1   /* an argument outside the function's domain */
 int32 * set_errno(int32 value);   /* 0x00100A38 GUESS: name, see kh_mod.c */
+int32 rt_div0_raise(void);   /* 0x00100A4C (no Ghidra function) GUESS: name, see kh_mod.c */
 undefined8 FUN_00100a58(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param_4);
 undefined8 FUN_00100c2c(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3);

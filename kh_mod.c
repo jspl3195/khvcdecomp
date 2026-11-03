@@ -144,59 +144,20 @@ int32 engine_memory_set_caching(ISwerve *swerve,int32 mode)
   return 0;
 }
 
-/* ==== 0x00100104  (file offset 0x00104)  FUN_00100104 ================================================ */
-/* ---- What this function is, and how to read its decompiled body ------------------------------
- *
- * The function itself is three instructions - the ARM C library's integer divide-by-zero check
- * (__rt_div0 in ARM's library), called by the division routines with the divisor in r0:
- *   00100104  cmp   r0, #0
- *   00100108  movne pc, lr            ; divisor != 0: return
- *   0010010c  b     0x00100a4c        ; divisor == 0: error path
- *
- * Everything after `if (param_1 != 0) return;` below is code the decompiler followed through
- * tail branches, not this function's own body:
- *   0x00100a4c  `mov r0,#2; mov r1,#2; b ...`  -> raise signal 2 (SIGFPE, arithmetic exception)
- *               with subtype 2 (divide by zero); shown as raise_signal(2,2).
- *   raise_signal / 0x001014d4  the library's raise and default signal handler: picks a message from
- *               its table ("Abnormal termination", "Arithmetic exception: ", ...) and, if nothing
- *               handles the signal, exits:
- *   0x001014bc  mov r0, #0x18        ; semihosting SYS_EXIT (angel_SWIreason_ReportException)
- *   0x001014c0  ldr r1, =0x00020026  ; ADP_Stopped_ApplicationExit (Ghidra: DAT_001014d0)
- *   0x001014c4  swi 0x123456         ; software_interrupt(0x123456): the semihosting trap - asks an
- *                                    ; attached debugger to stop the program
- *   0x001014c8  mov pc, lr           ; return to the caller
- *
- * Reading the last two lines of the body:
- *   software_interrupt(0x123456);   ARM semihosting: the debugger interface of ARM's C library on a
- *                                   development board. On a phone (and in khvcemu, which does not
- *                                   emulate swi) nothing services it - reaching it means the game
- *                                   has already crashed with a division by zero.
- *   (*(code *)(in_lr & 0xfffffffc))(0x18, ADP_Stopped_ApplicationExit);
- *                                   just `mov pc, lr`, i.e. return to the caller. in_lr is the
- *                                   return address the code was entered with; & 0xfffffffc is how
- *                                   the decompiler models a jump to lr in ARM state; 0x18 and
- *                                   ADP_Stopped_ApplicationExit are only the values still in r0 / r1 (the
- *                                   semihosting arguments), not arguments of a call. The decompiler
- *                                   reached this code through branches, so it did not recognise the
- *                                   return ("Treating indirect jump as call").
- *
- * GUESS: name - __rt_div0, from the code shape and the ARM library's signal table in kh.mod.
- */
-void FUN_00100104(int param_1)
+/* ==== 0x00100104  (file offset 0x00104)  rt_div0 ===================================================== */
+/* GUESS: name, ARM's __rt_div0. The integer divides' divide-by-zero check: returns the divisor when it is
+   not 0 (cmp r0, #0; movne pc, lr), else raises SIGFPE / divide by zero (rt_div0_raise: the binary's tail
+   jump to 0x00100a4c) and returns its result. Ghidra had followed that jump and the next two
+   (raise_signal_and_exit, semihosting_exit) and shown their code as this function's. FUN_0010f2e8 calls it
+   twice with 360 (GUESS: the leftover check of two `% 360` whose results the compiler dropped). */
+int32 rt_div0(int32 divisor)
 
 {
-  int iVar1;
-  
-  if (param_1 != 0) {
-    return;
-  }
-  iVar1 = raise_signal(2,2);
-  if (iVar1 == 0) {
-    return;
-  }
-  software_interrupt(0x123456);
-  return;
+  if (divisor != 0)
+    return divisor;
+  return rt_div0_raise();          /* the binary's tail jump (0x0010010c) */
 }
+
 
 /* ==== 0x00100110  (file offset 0x00110)  memset ====================================================== */
 /* GUESS: name. memset(destination, 0, byteCount) for a word-aligned destination: the ARM C library's
@@ -300,189 +261,65 @@ uint64 memcpy_word_aligned(void *destination,void *source,uint32 byteCount)
   return MAKE_WORDS(ends,(uint32)from,(uint32)to);
 }
 
-/* ==== 0x00100288  (file offset 0x00288)  FUN_00100288 ================================================ */
-uint64 FUN_00100288(uint param_1,uint param_2)
+/* ==== 0x00100288  (file offset 0x00288)  rt_sdiv ===================================================== */
+/* GUESS: name, ARM's __rt_sdiv. Signed integer division: the quotient (truncated toward 0) in the low word
+   (r0), the remainder (with the dividend's sign) in the high word (r1); the divisor comes first, as ARM's
+   routine takes it. The binary runs a shift-and-subtract unrolled 8 bits per pass, entered past the passes
+   the dividend does not need and ended by a sentinel bit carrying out of the quotient; written here as one
+   loop over the 32 bits, with the same results. A divisor of 0 goes to rt_div0_raise (the binary's tail
+   jump, bcs at 0x001002e0): its result in the low word, the high word as that path leaves r1 (not set
+   here). */
+uint64 rt_sdiv(int32 divisor,int32 dividend)
 
 {
-  uint uVar1;
-  uint uVar2;
-  uint uVar3;
-  uint uVar4;
-  bool bVar5;
-  bool bVar6;
-  bool bVar7;
-  bool bVar8;
-  int iVar9;
-  int remainder;      /* never set: on a divide by zero the binary returns r1 as raise_signal leaves
-                         it */
-  undefined8 uVar10;
-  
-  uVar2 = param_1 & 0x80000000;
-  if ((int)uVar2 < 0) {
-    param_1 = -param_1;
+  uint32 d = divisor < 0 ? 0 - (uint32)divisor : (uint32)divisor;
+  uint32 r = dividend < 0 ? 0 - (uint32)dividend : (uint32)dividend;
+  uint32 q = 0;
+  int32 bit;
+  uint64 result;
+
+  if (d == 0) {
+    result.low = rt_div0_raise();          /* the binary's tail jump (0x001002e0) */
+    return result;
   }
-  uVar4 = uVar2 ^ (int)param_2 >> 0x1f;   /* asr #32: the sign in every bit */
-  if ((uint8)(param_2 >> 0x1f)) {
-    param_2 = -param_2;
-  }
-  uVar1 = param_1;
-  if (param_2 >> 3 < param_1) goto LAB_00100324;
-  if (param_2 >> 8 < param_1) goto LAB_001002e8;
-  uVar1 = param_1 << 8;
-  uVar2 = 0xff000000;
-  if (param_2 >> 4 < uVar1) goto LAB_00100318;
-  if (param_2 >> 8 < uVar1) goto LAB_001002e8;
-  uVar1 = param_1 << 0x10;
-  uVar2 = 0xffff0000;
-  if (uVar1 <= param_2 >> 8) {
-    uVar1 = param_1 << 0x18;
-    uVar2 = 0xffffff00;
-  }
-  if (param_2 >> 4 < uVar1) goto LAB_00100318;
-  bVar5 = false;
-  if (uVar1 == 0) {
-    iVar9 = raise_signal(2,2);
-    if (iVar9 != 0) {
-      software_interrupt(0x123456);
-      return MAKE_WORDS(uVar10,ADP_Stopped_ApplicationExit,0x18);
+  for (bit = 31; bit >= 0; bit--)
+    if ((r >> bit) >= d) {
+      r -= d << bit;
+      q |= (uint32)1 << bit;
     }
-    return MAKE_WORDS(uVar10,remainder,0);
-  }
-  do {
-    if (bVar5) {
-      uVar1 = uVar1 >> 8;
-    }
-LAB_001002e8:
-    bVar5 = uVar1 <= param_2 >> 7;
-    if (bVar5) {
-      param_2 = param_2 + uVar1 * -0x80;
-    }
-    bVar6 = uVar1 <= param_2 >> 6;
-    if (bVar6) {
-      param_2 = param_2 + uVar1 * -0x40;
-    }
-    bVar7 = uVar1 <= param_2 >> 5;
-    if (bVar7) {
-      param_2 = param_2 + uVar1 * -0x20;
-    }
-    bVar8 = uVar1 <= param_2 >> 4;
-    if (bVar8) {
-      param_2 = param_2 + uVar1 * -0x10;
-    }
-    uVar2 = (((uVar2 * 2 + (uint)bVar5) * 2 + (uint)bVar6) * 2 + (uint)bVar7) * 2 + (uint)bVar8;
-LAB_00100318:
-    bVar5 = uVar1 <= param_2 >> 3;
-    if (bVar5) {
-      param_2 = param_2 + uVar1 * -8;
-    }
-    uVar2 = uVar2 * 2 + (uint)bVar5;
-LAB_00100324:
-    bVar5 = uVar1 <= param_2 >> 2;
-    if (bVar5) {
-      param_2 = param_2 + uVar1 * -4;
-    }
-    bVar6 = uVar1 <= param_2 >> 1;
-    if (bVar6) {
-      param_2 = param_2 + uVar1 * -2;
-    }
-    uVar3 = (uVar2 * 2 + (uint)bVar5) * 2 + (uint)bVar6;
-    bVar6 = uVar1 <= param_2;
-    if (bVar6) {
-      param_2 = param_2 - uVar1;
-    }
-    uVar2 = uVar3 * 2 + (uint)bVar6;
-    bVar5 = true;
-  } while (ADD_CARRIES(uVar3,uVar3) || ADD_CARRIES(uVar3 * 2,(uint)bVar6));
-  uVar1 = (int)uVar4 >> 0x1f;
-  if ((bool)((byte)(uVar4 >> 0x1e) & 1)) {
-    param_2 = -param_2;
-  }
-  return MAKE_WORDS(uVar10,param_2,(uVar2 ^ uVar1) - uVar1);
+  result.low = (divisor < 0) != (dividend < 0) ? 0 - q : q;
+  result.high = dividend < 0 ? 0 - r : r;
+  return result;
 }
 
-/* ==== 0x0010035C  (file offset 0x0035C)  FUN_0010035c ================================================ */
-int FUN_0010035c(uint param_1,uint param_2)
+
+/* ==== 0x0010035C  (file offset 0x0035C)  rt_udiv ===================================================== */
+/* GUESS: name, ARM's __rt_udiv. Unsigned integer division: the quotient in the low word (r0), the
+   remainder in the high word (r1, which the binary leaves there; Ghidra returned only r0); the divisor
+   comes first. The same shift-and-subtract as rt_sdiv without the signs, written here as one loop. A
+   divisor of 0 goes to rt_div0_raise (the binary's tail jump, bcs at 0x001003a8): its result in the low
+   word, the high word as that path leaves r1 (not set here). */
+uint64 rt_udiv(uint32 divisor,uint32 dividend)
 
 {
-  uint uVar1;
-  int iVar2;
-  uint uVar3;
-  bool bVar4;
-  bool bVar5;
-  bool bVar6;
-  bool bVar7;
-  
-  iVar2 = 0;
-  uVar1 = param_1;
-  if (param_2 >> 3 < param_1) goto LAB_001003ec;
-  if (param_2 >> 8 < param_1) goto LAB_001003b0;
-  uVar1 = param_1 << 8;
-  iVar2 = -0x1000000;
-  if (param_2 >> 4 < uVar1) goto LAB_001003e0;
-  if (param_2 >> 8 < uVar1) goto LAB_001003b0;
-  uVar1 = param_1 << 0x10;
-  iVar2 = -0x10000;
-  if (uVar1 <= param_2 >> 8) {
-    uVar1 = param_1 << 0x18;
-    iVar2 = -0x100;
+  uint32 q = 0;
+  int32 bit;
+  uint64 result;
+
+  if (divisor == 0) {
+    result.low = rt_div0_raise();          /* the binary's tail jump (0x001003a8) */
+    return result;
   }
-  if (param_2 >> 4 < uVar1) goto LAB_001003e0;
-  bVar4 = false;
-  if (uVar1 == 0) {
-    iVar2 = raise_signal(2,2);
-    if (iVar2 != 0) {
-      software_interrupt(0x123456);
-      return 0x18;
+  for (bit = 31; bit >= 0; bit--)
+    if ((dividend >> bit) >= divisor) {
+      dividend -= divisor << bit;
+      q |= (uint32)1 << bit;
     }
-    return 0;
-  }
-  do {
-    if (bVar4) {
-      uVar1 = uVar1 >> 8;
-    }
-LAB_001003b0:
-    bVar4 = uVar1 <= param_2 >> 7;
-    if (bVar4) {
-      param_2 = param_2 + uVar1 * -0x80;
-    }
-    bVar5 = uVar1 <= param_2 >> 6;
-    if (bVar5) {
-      param_2 = param_2 + uVar1 * -0x40;
-    }
-    bVar6 = uVar1 <= param_2 >> 5;
-    if (bVar6) {
-      param_2 = param_2 + uVar1 * -0x20;
-    }
-    bVar7 = uVar1 <= param_2 >> 4;
-    if (bVar7) {
-      param_2 = param_2 + uVar1 * -0x10;
-    }
-    iVar2 = (((iVar2 * 2 + (uint)bVar4) * 2 + (uint)bVar5) * 2 + (uint)bVar6) * 2 + (uint)bVar7;
-LAB_001003e0:
-    bVar4 = uVar1 <= param_2 >> 3;
-    if (bVar4) {
-      param_2 = param_2 + uVar1 * -8;
-    }
-    iVar2 = iVar2 * 2 + (uint)bVar4;
-LAB_001003ec:
-    bVar4 = uVar1 <= param_2 >> 2;
-    if (bVar4) {
-      param_2 = param_2 + uVar1 * -4;
-    }
-    bVar5 = uVar1 <= param_2 >> 1;
-    if (bVar5) {
-      param_2 = param_2 + uVar1 * -2;
-    }
-    uVar3 = (iVar2 * 2 + (uint)bVar4) * 2 + (uint)bVar5;
-    bVar5 = uVar1 <= param_2;
-    if (bVar5) {
-      param_2 = param_2 - uVar1;
-    }
-    iVar2 = uVar3 * 2 + (uint)bVar5;
-    bVar4 = true;
-  } while (ADD_CARRIES(uVar3,uVar3) || ADD_CARRIES(uVar3 * 2,(uint)bVar5));
-  return iVar2;
+  result.low = q;
+  result.high = dividend;
+  return result;
 }
+
 
 /* ==== 0x0010041C  (file offset 0x0041C)  FUN_0010041c ================================================ */
 undefined8 FUN_0010041c(int param_1,uint param_2)
@@ -808,6 +645,18 @@ int32 * set_errno(int32 value)
 
   *pointer = value;
   return pointer;
+}
+
+
+/* ==== 0x00100A4C  (file offset 0x00A4C)  rt_div0_raise =============================================== */
+/* GUESS: name. The divide-by-zero error path shared by rt_div0 and the integer divides rt_sdiv and
+   rt_udiv (their jumps at 0x001002e0, 0x001003a8): raise_signal_and_exit(SIGFPE 2, divide by zero 2),
+   the binary's tail jump (0x00100a54). A routine Ghidra has no function for; written from its
+   disassembly (mov r0, #2; mov r1, #2; b 0x00101440). */
+int32 rt_div0_raise(void)
+
+{
+  return raise_signal_and_exit(2,2);
 }
 
 
@@ -1624,7 +1473,7 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
                        What this branch does (from the code and the values):
                          - |x| >= 2^106 (LARGE_ARGUMENT_EXPONENT_LIMIT): x is first multiplied by an
                            entry of the table at 0x00128034 (LARGE_ARGUMENT_SCALE_TABLE),
-                           picked by FUN_00100288;
+                           picked by rt_sdiv;
                          - x is split into a high part (low word & 0xfc000000) and the rest;
                          - both parts are multiplied by the two-part constant
                            C = REDUCTION_CONSTANT_HIGH_PART + REDUCTION_CONSTANT_LOW_PART
@@ -1641,8 +1490,8 @@ int FUN_00100d88(undefined4 param_1,uint param_2,undefined8 *param_3)
                        GUESS: what C stands for, and so the precise meaning of this reduction. */
     else if (MEDIUM_ARGUMENT_LIMIT_HIGH_WORD < (int)uVar9) {
       if (LARGE_ARGUMENT_EXPONENT_LIMIT <= (param_2 & 0x7fffffff) >> 0x14) {
-        iVar2 = FUN_00100288(0x36,(((int)LARGE_ARGUMENT_EXPONENT_LIMIT >> 0xb) - LARGE_ARGUMENT_EXPONENT_LIMIT) +
-                                  ((param_2 & 0x7fffffff) >> 0x14)).low;
+        iVar2 = rt_sdiv(0x36,(((int)LARGE_ARGUMENT_EXPONENT_LIMIT >> 0xb) -
+                              LARGE_ARGUMENT_EXPONENT_LIMIT) + ((param_2 & 0x7fffffff) >> 0x14)).low;
         puVar14 = (undefined4 *)((int32)LARGE_ARGUMENT_SCALE_TABLE + iVar2 * 8);
         uVar16 = FUN_00125734(param_1,param_2,*puVar14,puVar14[1]);
       }
@@ -1873,9 +1722,10 @@ int32 raise_signal_and_exit(int32 signal,int32 type)
          handler(signal, type);
        return 0;
    SIG_DFL and SIG_IGN are PC-relative values in the binary: 0x000FFFFF and 0x000FFFFD, the module base
-   - 1 and - 3 (GUESS: ARM's (void (*)(int))-1 and -3). Callers: raise_signal_and_exit, and the integer
-   divides' division by zero (FUN_00100104, FUN_00100288, FUN_0010035c, with (2, 2): SIGFPE, divide by
-   zero). Returns the default handler's result, 1. */
+   - 1 and - 3 (GUESS: ARM's (void (*)(int))-1 and -3). Callers: raise_signal_and_exit only; the
+   divides' division by zero reaches it there (rt_div0_raise, with (2, 2): SIGFPE, divide by zero;
+   Ghidra had shown that path inlined in rt_div0, rt_sdiv and rt_udiv). Returns the default handler's
+   result, 1. */
 int32 raise_signal(int32 signal,int32 type)
 
 {
@@ -4219,7 +4069,7 @@ void web_request_read(WebRequest *request)
             (*g_pHelperFuncs->memmove)(request->data + request->received,buffer,count);
             request->received = request->received + count;
           }
-          if (FUN_00100288(0x14,request->readCount++).high == 0)    /* every 20 reads */
+          if (rt_sdiv(0x14,request->readCount++).high == 0)    /* every 20 reads */
             web_request_notify(request,1,request->received,info->lContentLength,0);
           (*source->pvt->Readable)(source,&request->callback);
         }
@@ -5024,14 +4874,14 @@ void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,u
   piStack_30 = param_2;
   iStack_2c = param_3;
   local_28 = param_4;
-  iVar6 = FUN_00100288(param_6,param_5 * 0x50).low;
-  iVar7 = FUN_00100288(param_6,local_28 * 0x50).low;
+  iVar6 = rt_sdiv(param_6,param_5 * 0x50).low;
+  iVar7 = rt_sdiv(param_6,local_28 * 0x50).low;
   (**(code **)(*param_2 + 0x18))(param_2,1);
   graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,1);
   graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,2);
   iVar10 = INTEGER_270;
   if (iVar6 < 0x35) {
-    iVar10 = FUN_00100288(local_40,INTEGER_270 * iVar6).low;
+    iVar10 = rt_sdiv(local_40,INTEGER_270 * iVar6).low;
   }
   uVar3 = (ushort)iVar10;
   sVar5 = (short)iVar14;
@@ -5073,7 +4923,7 @@ void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,u
     graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,uVar12,2);
     iVar10 = INTEGER_270;
     if (iVar7 < 0x35) {
-      iVar10 = FUN_00100288(local_40,INTEGER_270 * iVar7).low;
+      iVar10 = rt_sdiv(local_40,INTEGER_270 * iVar7).low;
     }
     sVar1 = -(short)iVar10;
     if (param_3 == 0) {
@@ -5353,7 +5203,7 @@ uint64 FUN_00107fd0(int param_1,int param_2,int param_3)
   else {
     sVar1 = *(short *)(*(int *)(param_1 + 0x14) + 6);
   }
-  return FUN_00100288(1000,sVar1 * param_2);
+  return rt_sdiv(1000,sVar1 * param_2);
 }
 
 /* ==== 0x00107FEC  (file offset 0x07FEC)  screen_stack_get_text ======================================= */
@@ -6597,7 +6447,7 @@ int32 text_box_set_text(TextBox *box,AECHAR *text,int32 narrow)
         if (box->visibleLines < 0)
           box->visibleLines =
                box->style->autoSize != 0 ? INTEGER_10000 :
-               (int32)FUN_00100288(line->height + box->style->lineSpacing,
+               (int32)rt_sdiv(line->height + box->style->lineSpacing,
                                    element->rect->dy - box->style->verticalMargin * 2).low;
       }
     }
@@ -9325,7 +9175,7 @@ void FUN_0010db04(int param_1,undefined4 param_2)
   *(undefined4 *)(param_1 + 0x228) = param_2;
   uVar7 = FLOAT_10;
   if (*(int *)(param_1 + 0x20c) == 0) {
-    uVar15 = FUN_00100288(0x1e,*(uint *)(param_1 + 0x88));
+    uVar15 = rt_sdiv(0x1e,*(uint *)(param_1 + 0x88));
     uVar4 = int_to_float((int32)uVar15.high);
     uVar4 = float_divide(uVar4,uVar7);
   }
@@ -10525,8 +10375,8 @@ FUN_0010f2e8(int param_1,uint param_2,undefined4 param_3,uint param_4,undefined4
                *(undefined4 *)(param_1 + 8),*(undefined4 *)(param_1 + 0x10),
                *(undefined4 *)(param_1 + 0x14) /* not arguments, value leftovers: param_3,param_4 */);
   motion_entity_get_heading((MotionEntity *)*(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xa4) + 0x1f8));
-  FUN_00100104(0x168);
-  FUN_00100104(0x168);
+  rt_div0(0x168);
+  rt_div0(0x168);
   uVar2 = planar_distance_squared_2(param_1,*(undefined4 *)(param_1 + 0x10),*(undefined4 *)(param_1 + 0x14),
                        *(undefined4 *)(param_1 + 0x18),param_4,param_5 /* not arguments, value leftovers: param_6 */);
   float_compare_less(uVar2,0x3f800000);
@@ -13387,7 +13237,7 @@ int FUN_00113cfc(undefined4 param_1,int param_2)
   (*g_pHelperFuncs->aee_GetRand)(iVar3,iVar6);
   uVar2 = FLOAT_1000;
   for (iVar6 = 0; iVar6 < param_2; iVar6 = iVar6 + 1) {
-    uVar5 = int_to_float((int32)FUN_00100288(1000,*(undefined4 *)(iVar3 + iVar6 * 4)).high);   /* % 1000 */
+    uVar5 = int_to_float((int32)rt_sdiv(1000,*(undefined4 *)(iVar3 + iVar6 * 4)).high);   /* % 1000 */
     uVar5 = float_divide(uVar5,uVar2);
     *(undefined4 *)(iVar4 + iVar6 * 4) = uVar5;
   }
@@ -13840,7 +13690,7 @@ undefined4 FUN_00114638(int param_1)
   if (iVar4 < 0) {
     iVar4 = -iVar4;
   }
-  return *(undefined4 *)(*(int *)(param_1 + 0x138) + (int)FUN_00100288(iVar3,iVar4).high * 4);   /* % iVar3 */
+  return *(undefined4 *)(*(int *)(param_1 + 0x138) + (int)rt_sdiv(iVar3,iVar4).high * 4);   /* % iVar3 */
 }
 
 /* ==== 0x001146F0  (file offset 0x146F0)  progress_find_variable ====================================== */
@@ -16729,7 +16579,7 @@ void FUN_0011a2f4(int param_1,int param_2)
     if (param_2 <= *(int *)(param_1 + 0x140)) {
       return;
     }
-    uVar4 = FUN_00100288(*(uint *)(param_1 + 300),*(int *)(param_1 + 0x150) + 1);
+    uVar4 = rt_sdiv(*(uint *)(param_1 + 300),*(int *)(param_1 + 0x150) + 1);
     iVar3 = (int)uVar4.high;
     *(int *)(param_1 + 0x150) = iVar3;
     iVar3 = **(int **)(*(int *)(param_1 + 0x14c) + iVar3 * 4);
@@ -16844,7 +16694,7 @@ void FUN_0011a3ec(int param_1,int param_2,undefined4 param_3)
    else one of field_5b4 half of it ((maximum + 1) / 2), and "Out of magic" is cleared (progress_set_status);
    with MP, the selected spell is cast when the player has it (FUN_0010db04; the binary tail-jumps,
    0x0011a770), and the "random" choice 8 casts one of the player's spells: the (field_88 / 1000) % count
-   th (FUN_00100288 divides: quotient in the low word, remainder in the high word). The rest of Ghidra's
+   th (rt_sdiv divides: quotient in the low word, remainder in the high word). The rest of Ghidra's
    listing was its copy of FUN_0010db04 and of FUN_00108f28, which the binary jumps to. */
 void character_on_key(Character *character,int32 key)
 
@@ -16931,7 +16781,7 @@ void character_on_key(Character *character,int32 key)
       known[count++] = i;
   if (count <= 0)
     return;
-  FUN_0010db04((int32)character,known[(int32)FUN_00100288(count,FUN_00100288(1000,character->field_88).low).high]);
+  FUN_0010db04((int32)character,known[(int32)rt_sdiv(count,rt_sdiv(1000,character->field_88).low).high]);
 }
 
 /* ==== 0x0011A7DC  (file offset 0x1A7DC)  intro_on_key ================================================ */
@@ -18304,11 +18154,11 @@ LAB_0011c694:
   float_compare_less(uVar2,param_3);
   if ((bool)uVar9) {
     uVar4 = param_2 * *(int *)(param_1 + 0x1c);
-    uVar10 = FUN_00100288(2000,uVar4);
+    uVar10 = rt_sdiv(2000,uVar4);
     uVar2 = int_to_float((int32)uVar10.high - 1000);
     uVar2 = float_divide(uVar2,FLOAT_100);
     *(uint *)(param_1 + 0xb4) = uVar2;
-    uVar10 = FUN_00100288(INTEGER_7000,uVar4);
+    uVar10 = rt_sdiv(INTEGER_7000,uVar4);
     uVar2 = int_to_float((int32)uVar10.high - 0xdac);
     uVar2 = float_divide(uVar2,FLOAT_350);
     *(uint *)(param_1 + 0xb8) = uVar2;
@@ -19139,7 +18989,7 @@ void FUN_0011d6cc(int param_1,int param_2)
         uVar4 = float_subtract(uVar13.low,uVar12.low);
         uVar4 = float_add(uVar4,uVar9);
         uVar4 = FUN_00126858(uVar4);
-        uVar14 = FUN_00100288(0x168,uVar4);
+        uVar14 = rt_sdiv(0x168,uVar4);
         uVar4 = int_to_float((int32)uVar14.high);
         float_compare_greater(uVar4,FLOAT_180);
         if ((bool)uVar11 && !(bool)uVar10) {
@@ -21843,7 +21693,7 @@ void FUN_001216c4(int param_1)
                     /* helper[43] uint32 aee_GetTimeMS(void)  (AEEHelperFuncs +0xac, via *(base-4))
                         */
   iVar2 = (*g_pHelperFuncs->aee_GetTimeMS)();
-  iVar2 = FUN_0010035c(1000,iVar2 - *(int *)(*(int *)(param_1 + 0x724) + 0xb0));
+  iVar2 = rt_udiv(1000,iVar2 - *(int *)(*(int *)(param_1 + 0x724) + 0xb0)).low;
   *(int *)(param_1 + 0x5c4) = iVar2 + *(int *)(param_1 + 0x5c4);
                     /* helper[43] uint32 aee_GetTimeMS(void)  (AEEHelperFuncs +0xac, via *(base-4))
                         */
@@ -22498,7 +22348,7 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
    one within 1.0 of the player (|dx| + |dy|, a double compare: `bcs` at 0x001227b8, written after the
    comma) is picked up: health + 1.0, MP + 1 or munny, by its kind, and the tutorial screen is told
    (field_594, FUN_00108f28 with 5); in its last 5000 ms an item blinks (shown while time % 200 >= 100;
-   FUN_00100288 divides, the remainder in the high word). Written from its disassembly. */
+   rt_sdiv divides, the remainder in the high word). Written from its disassembly. */
 void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed)
 
 {
@@ -22545,7 +22395,7 @@ void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed)
         drops->timeLeft[i] = 0;
       }
       visible = drops->timeLeft[i] >= 5000 ||               /* the last 5000 ms: blinking */
-                (int32)FUN_00100288(200,drops->timeLeft[i]).high >= 100;
+                (int32)rt_sdiv(200,drops->timeLeft[i]).high >= 100;
     }
     FUN_001201cc(drops->entities[i],visible);
   }
