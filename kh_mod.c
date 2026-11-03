@@ -6923,7 +6923,7 @@ Hitsphere * hitsphere_create(Hitsphere *hitsphere,int32 entity,BossCombatRegion 
   hitsphere->entity = entity;
   hitsphere->field_44 = 0;
   hitsphere->secondary = secondary;
-  hitsphere->field_4c = -1;
+  hitsphere->animation = -1;
   hitsphere->owner = owner;
   hitsphere->field_80 = 0;
   hitsphere->field_a4 = hitsphere->field_a8 = hitsphere->field_ac = 0;
@@ -7346,7 +7346,7 @@ Enemy * enemy_create(Enemy *enemy,int32 number,CombatRegion *region,int32 type)
   enemy->field_28 = 0;
   enemy->region = region;
   enemy->field_f8 = 0;
-  enemy->field_100 = -1;
+  enemy->animation = -1;
   enemy->type = type;
   enemy->field_270 = 1;
   enemy->state = INTEGER_1001;
@@ -9119,7 +9119,7 @@ LAB_0010d710:
       local_30 = float_reverse_subtract(uVar3,local_30);
       wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,(uint32 *)&local_30);
       motion_entity_start_turn((MotionEntity *)*(undefined4 *)(param_1 + 0x20),local_30,0x3f800000);
-      FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x4c),0);
+      enemy_play_animation((Enemy *)param_1,*(undefined4 *)(param_1 + 0x4c),0);
       *(int *)(param_1 + 0x168) = param_2 + 200;
       uVar3 = 0xcd;
     }
@@ -9205,7 +9205,7 @@ undefined4 FUN_0010d7c4(int param_1,int param_2)
       local_2c = float_reverse_subtract(uVar2,local_2c);
       wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,(uint32 *)&local_2c);
       motion_entity_start_turn((MotionEntity *)*(undefined4 *)(param_1 + 0x20),local_2c,0x3f800000);
-      FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x48),0);
+      enemy_play_animation((Enemy *)param_1,*(undefined4 *)(param_1 + 0x48),0);
       iVar1 = animations_get_duration((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),
                            *(undefined4 *)(param_1 + 0x48));
       *(int *)(param_1 + 0x16c) = iVar1 + param_2;
@@ -9239,7 +9239,7 @@ undefined4 FUN_0010d95c(int param_1,int param_2)
   uVar4 = 100 < uVar1;
   uVar3 = uVar1 == 0x65;
   if ((bool)uVar3) {
-    FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x48),1);
+    enemy_play_animation((Enemy *)param_1,*(undefined4 *)(param_1 + 0x48),1);
     FUN_00113524(&local_20,param_1);
     level_object_get_position((uint32 *)&local_2c,(LevelObject *)*(undefined4 *)(param_1 + 0x20));
     uVar2 = planar_distance_squared_2(param_1,local_20,local_1c,uStack_18,local_2c,local_28 /* not arguments, value leftovers: uStack_24 */);
@@ -9267,7 +9267,7 @@ undefined4 FUN_0010d95c(int param_1,int param_2)
       if (param_2 < *(int *)(param_1 + 0x16c)) {
         return 0;
       }
-      FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x44),1);
+      enemy_play_animation((Enemy *)param_1,*(undefined4 *)(param_1 + 0x44),1);
       FUN_001201cc(*(undefined4 *)(param_1 + 0x2c),0);
       *(undefined4 *)(param_1 + 0x140) = 0x65;
       return 1;
@@ -10152,7 +10152,7 @@ undefined4 FUN_0010eb74(int param_1)
     if (*(int *)(param_1 + 0x138) == 0x65) {
       if (*(int *)(param_1 + 0x20) != *(int *)(param_1 + 0x28)) {
         *(int *)(param_1 + 0x160) = param_2 + 500;
-        FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x180),0);
+        enemy_play_animation((Enemy *)param_1,*(undefined4 *)(param_1 + 0x180),0);
         *(undefined4 *)(param_1 + 0x138) = 0x66;
         return 0;
       }
@@ -10189,7 +10189,7 @@ LAB_0010ec48:
       *(undefined4 *)(param_1 + 0x68) = 1;
       animations_set_speed((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 100),
                    0x3f800000);
-      FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 100),0);
+      enemy_play_animation((Enemy *)param_1,*(undefined4 *)(param_1 + 100),0);
       return 0;
     }
     iVar1 = animations_get_state((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),
@@ -10207,7 +10207,7 @@ LAB_0010ec48:
   default:
     goto switchD_0000eb88_default;
   }
-  FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x44),1);
+  enemy_play_animation((Enemy *)param_1,*(undefined4 *)(param_1 + 0x44),1);
 LAB_0010ecac:
   uVar2 = 1;
 switchD_0000eb88_default:
@@ -10431,7 +10431,7 @@ int FUN_0010f058(int param_1,int param_2)
   }
   else {
     if (iVar1 == 0x65) {
-      FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x50),1 /* not arguments, register leftovers: param_4,param_1 */);
+      enemy_play_animation((Enemy *)param_1,*(undefined4 *)(param_1 + 0x50),1);
       level_object_get_position((uint32 *)&iStack_24,(LevelObject *)*(undefined4 *)(param_1 + 0x20));
       uVar2 = float_add(*(undefined4 *)(param_1 + 0x27c),0x3f000000);
       local_1c = float_add(uVar2,local_1c);
@@ -10736,7 +10736,7 @@ LAB_0010f714:
     float_compare_less(*(uint *)(**(int **)(*(int *)(param_1 + 0x24) + 0x120) + 0x14),0);
     if (!(bool)uVar8 || (bool)uVar10) {
       *(undefined4 *)(**(int **)(*(int *)(param_1 + 0x24) + 0x120) + 0x14) = 0;
-      FUN_0011cbc4(**(int **)(*(int *)(param_1 + 0x24) + 0x120),*(int *)(param_1 + 0x74),0);
+      hitsphere_play_animation(((Hitsphere *)param_1)->owner->hitspheres[0],*(int *)(param_1 + 0x74),0);
       FUN_0011d040((int)((KHApp *)*(int *)(param_1 + 0x20))->context,
                    *(undefined4 *)(*(int *)(param_1 + 4) + 0xc),pvVar2);
       *(undefined4 *)(param_1 + 0x44) = 8;
@@ -10745,19 +10745,19 @@ LAB_0010f714:
       goto LAB_0010f68c;
     }
     if (*(int *)(param_1 + 0x68) != -1) {
-      FUN_0011cbc4(**(int **)(*(int *)(param_1 + 0x24) + 0x120),*(int *)(param_1 + 0x68),0);
+      hitsphere_play_animation(((Hitsphere *)param_1)->owner->hitspheres[0],*(int *)(param_1 + 0x68),0);
       *(undefined4 *)(**(int **)(*(int *)(param_1 + 0x24) + 0x120) + 0x44) = 7;
       goto LAB_0010f68c;
     }
     if (!bVar1) {
       if (*(int *)(param_1 + 0xac) == 0) {
-        FUN_0011cbc4(**(int **)(*(int *)(param_1 + 0x24) + 0x120),*(int *)(param_1 + 0x70),0);
+        hitsphere_play_animation(((Hitsphere *)param_1)->owner->hitspheres[0],*(int *)(param_1 + 0x70),0);
         *(undefined4 *)(**(int **)(*(int *)(param_1 + 0x24) + 0x120) + 0x44) = 7;
       }
       goto LAB_0010f714;
     }
     if (*(int *)(param_1 + 0xac) != 0) {
-      FUN_0011cbc4(**(int **)(*(int *)(param_1 + 0x24) + 0x120),*(int *)(param_1 + 0x6c),0);
+      hitsphere_play_animation(((Hitsphere *)param_1)->owner->hitspheres[0],*(int *)(param_1 + 0x6c),0);
       *(undefined4 *)(**(int **)(*(int *)(param_1 + 0x24) + 0x120) + 0x44) = 7;
     }
   }
@@ -15289,7 +15289,7 @@ LAB_00117ac8:
   }
   uVar16 = 0;
 LAB_00117c94:
-  FUN_0011cc14(param_1,uVar14,uVar16);
+  enemy_play_animation((Enemy *)param_1,uVar14,uVar16);
   return;
 }
 
@@ -17209,7 +17209,7 @@ undefined8 FUN_0011abc4(int param_1,int param_2)
       uVar1 = float_subtract(*(uint *)(param_1 + 0xb8),*(uint *)(param_1 + 0xb8));
       *(uint *)(param_1 + 0xb8) = uVar1;
     }
-    FUN_0011cc14(param_1,*(int *)(param_1 + 0x4c),0);
+    enemy_play_animation((Enemy *)param_1,*(int *)(param_1 + 0x4c),0);
     *(int *)(param_1 + 0x15c) = param_2 + 200;
     uVar2 = 0xcd;
   }
@@ -18563,31 +18563,35 @@ void wrap_angle(int32 context,uint32 *angle)
   }
 }
 
-/* ==== 0x0011CBC4  (file offset 0x1CBC4)  FUN_0011cbc4 ================================================ */
-void FUN_0011cbc4(int param_1,int param_2,int param_3)
+/* ==== 0x0011CBC4  (file offset 0x1CBC4)  hitsphere_play_animation ==================================== */
+/* GUESS: names. Plays animation `index` (`loop` set: looping) on the boss hitsphere: nothing when that one already
+   loops; else its current one is stopped at once (animations_stop) and the new one started
+   (animations_play) and remembered. The same code as enemy_play_animation, for a hitsphere. */
+void hitsphere_play_animation(Hitsphere *hitsphere,int32 index,int32 loop)
 
 {
-  if ((*(int *)(param_1 + 0x4c) == param_2) && (param_3 != 0)) {
+  if (hitsphere->animation == index && loop != 0)
     return;
-  }
-  animations_stop((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c),1);
-  animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x9c),param_2,param_3);
-  *(int *)(param_1 + 0x4c) = param_2;
-  return;
+  animations_stop(hitsphere->app->animations,hitsphere->animation,1);
+  animations_play(hitsphere->app->animations,index,loop);
+  hitsphere->animation = index;
 }
 
-/* ==== 0x0011CC14  (file offset 0x1CC14)  FUN_0011cc14 ================================================ */
-void FUN_0011cc14(int param_1,int param_2,int param_3)
+
+/* ==== 0x0011CC14  (file offset 0x1CC14)  enemy_play_animation ======================================== */
+/* GUESS: names. Plays animation `index` (`loop` set: looping) on the enemy: nothing when that one already
+   loops; else its current one is stopped at once (animations_stop) and the new one started
+   (animations_play) and remembered. The same code as hitsphere_play_animation, for an enemy. */
+void enemy_play_animation(Enemy *enemy,int32 index,int32 loop)
 
 {
-  if ((*(int *)(param_1 + 0x100) == param_2) && (param_3 != 0)) {
+  if (enemy->animation == index && loop != 0)
     return;
-  }
-  animations_stop((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(int *)(param_1 + 0x100),1);
-  animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),param_2,param_3);
-  *(int *)(param_1 + 0x100) = param_2;
-  return;
+  animations_stop(enemy->app->animations,enemy->animation,1);
+  animations_play(enemy->app->animations,index,loop);
+  enemy->animation = index;
 }
+
 
 /* ==== 0x0011CC64  (file offset 0x1CC64)  character_play_animation ==================================== */
 /* GUESS: names. Plays animation `index` (looping with `loop`) on one of the character's channels:
@@ -18700,7 +18704,7 @@ undefined8 FUN_0011ceac(int param_1)
   float_compare_less(uVar2,FLOAT_5);
   if (((!(bool)uVar5 || (bool)uVar4) && (iVar3 = *(int *)(param_1 + 0x50), iVar3 != -1)) ||
      (iVar3 = *(int *)(param_1 + 0x54), iVar3 != -1)) {
-    FUN_0011cbc4(param_1,iVar3,0);
+    hitsphere_play_animation((Hitsphere *)param_1,iVar3,0);
   }
   return MAKE_WORDS(uVar7,auStack_1c[0],param_1);
 }
@@ -18862,7 +18866,7 @@ void FUN_0011d28c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   uVar6 = 0xd0 < iVar1 - 0x700U;
   uVar5 = iVar1 - 0x700U == 0xd1;
   if ((bool)uVar5) {
-    FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x44),1);
+    enemy_play_animation((Enemy *)param_1,*(undefined4 *)(param_1 + 0x44),1);
     uVar2 = planar_distance_squared_2(param_1,*(undefined4 *)(param_1 + 4),*(undefined4 *)(param_1 + 8),
                          *(undefined4 *)(param_1 + 0xc),*(undefined4 *)(param_1 + 0x10),
                          *(undefined4 *)(param_1 + 0x14) /* not arguments, value leftovers: *(undefined4 *)(param_1 + 0x18) */);
@@ -19099,7 +19103,7 @@ void FUN_0011d6cc(int param_1,int param_2)
   uVar11 = 0x70 < uVar9;
   uVar10 = uVar9 == 0x71;
   if ((bool)uVar10) {
-    FUN_0011cc14(param_1,*(int *)(param_1 + 0x44),1);
+    enemy_play_animation((Enemy *)param_1,*(int *)(param_1 + 0x44),1);
     FUN_00113524(&local_30,param_1);
     level_object_get_position((uint32 *)((undefined4 *)(param_1 + 0x254)),(LevelObject *)*(int *)(param_1 + 0x20));
     FUN_001201cc(*(int *)(param_1 + 0x20),1);
@@ -19611,7 +19615,7 @@ undefined4 FUN_0011e250(int param_1,int param_2)
   default:
     goto switchD_0001e264_default;
   }
-  FUN_0011cc14(param_1,*(int *)(param_1 + 0x44),1);
+  enemy_play_animation((Enemy *)param_1,*(int *)(param_1 + 0x44),1);
 LAB_0011e2f4:
   uVar2 = 1;
 switchD_0001e264_default:
@@ -19657,7 +19661,7 @@ undefined4 FUN_0011e300(int param_1)
   default:
     goto switchD_0001e310_default;
   }
-  FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x44),1 /* not arguments, register leftovers: *(undefined4 *)(param_1 + 0x104),param_4 */);
+  enemy_play_animation((Enemy *)param_1,*(undefined4 *)(param_1 + 0x44),1);
   uVar1 = 1;
 switchD_0001e310_default:
   return uVar1;
@@ -20008,7 +20012,7 @@ undefined4 FUN_0011ec28(int param_1,int param_2)
       local_2c = float_reverse_subtract(uVar2,local_2c);
       wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,(uint32 *)&local_2c);
       motion_entity_start_turn((MotionEntity *)*(undefined4 *)(param_1 + 0x20),local_2c,0x3f800000);
-      FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x17c),0);
+      enemy_play_animation((Enemy *)param_1,*(undefined4 *)(param_1 + 0x17c),0);
       *(int *)(param_1 + 0x164) = param_2 + 500;
       *(undefined4 *)(param_1 + 0x13c) = 0x66;
       return 0;
@@ -21270,7 +21274,7 @@ bool FUN_0012059c(int param_1,int param_2)
     FUN_001201cc(*(undefined4 *)(param_1 + 0x6c),1);
     animations_play((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),*(undefined4 *)(param_1 + 0x58),0)
     ;
-    FUN_0011cc14(param_1,*(undefined4 *)(param_1 + 0x54),0);
+    enemy_play_animation((Enemy *)param_1,*(undefined4 *)(param_1 + 0x54),0);
     iVar1 = animations_get_duration((Animations *)*(undefined4 *)(*(int *)(param_1 + 0x74) + 0x9c),
                          *(undefined4 *)(param_1 + 0x54));
     *(int *)(param_1 + 0x170) = iVar1 + param_2;
@@ -22122,7 +22126,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
   switch(*(undefined4 *)(param_1 + 0x44)) {
   case 0:
     if (*(int *)(param_1 + 0x88) == *(int *)(param_1 + 0x84)) {
-      FUN_0011cbc4(param_1,*(int *)(param_1 + 0x5c),1);
+      hitsphere_play_animation((Hitsphere *)param_1,*(int *)(param_1 + 0x5c),1);
     }
     else {
       if (*(int *)(param_1 + 0x88) < 1) {
@@ -22162,7 +22166,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
   case 1:
     if ((((*(int *)(param_1 + 0x4c) != -1) &&
          ((*(int *)(param_1 + 0x4c) != *(int *)(param_1 + 0x60) ||
-          (FUN_0011cbc4(param_1,-1,0), *(int *)(param_1 + 0x4c) != -1)))) &&
+          (hitsphere_play_animation((Hitsphere *)param_1,-1,0), *(int *)(param_1 + 0x4c) != -1)))) &&
         (*(int *)(param_1 + 0x4c) != *(int *)(param_1 + 0x5c))) &&
        (cVar1 = animations_get_state((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
        cVar1 != '\x04')) {
@@ -22217,14 +22221,14 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
     }
     else {
       animations_set_speed((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x78),0x3f800000);
-      FUN_0011cbc4(param_1,*(int *)(param_1 + 0x78),0);
+      hitsphere_play_animation((Hitsphere *)param_1,*(int *)(param_1 + 0x78),0);
     }
     if (*(int *)(param_1 + 0x94) < 1) {
       uVar7 = 4;
     }
     else {
       *(int *)(param_1 + 0x98) = *(int *)(param_1 + 0x94);
-      FUN_0011cbc4(param_1,*(int *)(param_1 + 0x7c),1);
+      hitsphere_play_animation((Hitsphere *)param_1,*(int *)(param_1 + 0x7c),1);
       uVar7 = 10;
     }
     break;
@@ -22258,14 +22262,14 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
     if (*(int *)(param_1 + 0x78) != -1) {
       motion_entity_turn((MotionEntity *)*(int *)(param_1 + 4),uVar5);
       animations_set_speed((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x78),FLOAT_MINUS_1);
-      FUN_0011cbc4(param_1,*(int *)(param_1 + 0x78),0);
+      hitsphere_play_animation((Hitsphere *)param_1,*(int *)(param_1 + 0x78),0);
     }
     uVar7 = 5;
     break;
   case 3:
     if ((*(int *)(param_1 + 0x4c) != -1) &&
        (((*(int *)(param_1 + 0x4c) != *(int *)(param_1 + 0x60) ||
-         (FUN_0011cbc4(param_1,-1,0), *(int *)(param_1 + 0x4c) != -1)) &&
+         (hitsphere_play_animation((Hitsphere *)param_1,-1,0), *(int *)(param_1 + 0x4c) != -1)) &&
         (cVar1 = animations_get_state((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
         cVar1 != '\x04')))) goto switchD_00021cbc_default;
     FUN_0011d040((int)((KHApp *)*(int *)(param_1 + 0x20))->context,
@@ -22275,7 +22279,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
   case 4:
     if ((*(int *)(param_1 + 0x4c) != -1) && (*(int *)(param_1 + 0x4c) == *(int *)(param_1 + 0x60)))
     {
-      FUN_0011cbc4(param_1,-1,0);
+      hitsphere_play_animation((Hitsphere *)param_1,-1,0);
     }
     if (*(int *)(*(int *)(param_1 + 4) + 0x154) != 0) goto switchD_00021cbc_default;
     iVar8 = *(int *)(param_1 + 0x4c);
@@ -22309,7 +22313,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
         iVar8 = *(int *)(param_1 + 0x7c);
       }
       if (!bVar10 || iVar4 == iVar8) {
-        FUN_0011cbc4(param_1,-1,0);
+        hitsphere_play_animation((Hitsphere *)param_1,-1,0);
       }
     }
     if ((*(int *)(*(int *)(param_1 + 4) + 0x154) != 0) ||
@@ -22321,7 +22325,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
                                            *(int *)(param_1 + 0x80) * 4) + 8),
                           (int32)STRING_PLAYARRIVEANIM);
     if ((int)uVar12.low != 0) {
-      FUN_0011cbc4(param_1,*(int *)(param_1 + 100),0);
+      hitsphere_play_animation((Hitsphere *)param_1,*(int *)(param_1 + 100),0);
     }
     bVar10 = *(int *)(param_1 + 0xb0) != 0;
     iVar4 = 0;
@@ -22355,7 +22359,7 @@ LAB_001222f0:
        (cVar1 = animations_get_state((Animations *)*(int *)(*(int *)(param_1 + 0x20) + 0x9c),*(int *)(param_1 + 0x4c)),
        cVar1 != '\x04')) goto switchD_00021cbc_default;
     *(undefined4 *)(param_1 + 0x44) = 0;
-    FUN_0011cbc4(param_1,*(int *)(param_1 + 0x5c),1);
+    hitsphere_play_animation((Hitsphere *)param_1,*(int *)(param_1 + 0x5c),1);
     uVar11 = *(int *)(param_1 + 0xb0) == 0;
     if ((bool)uVar11) {
       float_compare_equal(**(uint **)(*(int *)(param_1 + 4) + 0x110),0);
@@ -22387,7 +22391,7 @@ LAB_0012236c:
     iVar4 = *(int *)(param_1 + 0x60);
 joined_r0x00122038:
     if (iVar4 != -1) {
-      FUN_0011cbc4(param_1,iVar4,1);
+      hitsphere_play_animation((Hitsphere *)param_1,iVar4,1);
     }
     *(undefined4 *)(param_1 + 0x44) = 2;
   default:
@@ -22635,7 +22639,7 @@ void enemy_update(Enemy *enemy,int32 now,int32 elapsed)
         return;
       if (enemy->type == 5 || enemy->type == 8) {
         animations_set_speed(enemy->app->animations,enemy->field_64,FLOAT_MINUS_1);
-        FUN_0011cc14((int32)enemy,enemy->field_64,0);
+        enemy_play_animation(enemy,enemy->field_64,0);
         enemy->field_90 = INTEGER_7003;
         return;
       }
@@ -22649,7 +22653,7 @@ void enemy_update(Enemy *enemy,int32 now,int32 elapsed)
         return;
       animations_set_speed(enemy->app->animations,enemy->field_64,0x3f800000);
       if (enemy->field_60 != 0)
-        FUN_0011cc14((int32)enemy,enemy->field_60,1);
+        enemy_play_animation(enemy,enemy->field_60,1);
       enemy->field_68 = 0;
       angle = float_add(FUN_00113374(enemy->app->context,enemy->field_04,enemy->field_08,
                                               enemy->field_10,enemy->field_14).low,FLOAT_180);

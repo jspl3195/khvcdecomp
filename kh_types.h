@@ -765,7 +765,8 @@ typedef struct Enemy {
     uint8  unknown_c0[0x38];
     int32    field_f8;              /* +0x0f8 */
     uint8  unknown_fc[0x04];
-    int32    field_100;             /* +0x100 -1 at creation */
+    int32    animation;             /* +0x100 GUESS: name; the animation it plays (enemy_play_animation), -1
+                                     none */
     int32    type;                  /* +0x104 1-11, from the region's enemy name (combat_region_setup) */
     int32    field_108;             /* +0x108 when set (or for type 2) its health bar is shown */
     uint8  unknown_10c[0x14];
@@ -841,7 +842,8 @@ typedef struct Hitsphere {
     uint8  unknown_28[0x1c];
     int32    field_44;              /* +0x44 0 at creation */
     int32    secondary;             /* +0x48 set on every hitsphere but the first */
-    int32    field_4c;              /* +0x4c -1 at creation */
+    int32    animation;             /* +0x4c GUESS: name; the animation it plays (hitsphere_play_animation), -1
+                                     none */
     uint8  unknown_50[0x30];
     int32    field_80;              /* +0x80 0 at creation */
     uint8  unknown_84[0x20];

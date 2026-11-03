@@ -739,8 +739,8 @@ bool FUN_0011c860(int param_1,int param_2,undefined4 param_3);
 void FUN_0011ca70(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);
 void FUN_0011ca8c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5);
 void wrap_angle(int32 context,uint32 *angle);   /* 0x0011CB34 GUESS: name */
-void FUN_0011cbc4(int param_1,int param_2,int param_3);
-void FUN_0011cc14(int param_1,int param_2,int param_3);
+void hitsphere_play_animation(Hitsphere *hitsphere,int32 index,int32 loop);   /* 0x0011CBC4 GUESS: name, see kh_mod.c */
+void enemy_play_animation(Enemy *enemy,int32 index,int32 loop);   /* 0x0011CC14 GUESS: name, see kh_mod.c */
 int32 character_play_animation(Character *character,int32 index,int32 channel,int32 loop);   /* 0x0011CC64 GUESS: names */
 undefined8 FUN_0011ceac(int param_1);
 undefined4 FUN_0011cfdc(int param_1,undefined4 param_2,int param_3);
