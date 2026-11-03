@@ -619,7 +619,7 @@ undefined8 FUN_0010f2e8(int param_1,uint param_2,undefined4 param_3,uint param_4
 void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5,
                  uint param_6);
 void progress_reset(Progress *progress);   /* 0x0010F880 GUESS: name */
-void FUN_0010f8e8(int param_1);
+void progress_set_default_controls(Progress *progress);   /* 0x0010F8E8 GUESS: name, see kh_mod.c */
 void FUN_0010f9a4(int param_1);
 int32 enemy_wait(Enemy *enemy,int32 now,int32 duration);   /* 0x0010FA50 GUESS: name */
 int FUN_0010faa8(int param_1,undefined4 param_2);
@@ -1050,12 +1050,12 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 #define INTEGER_2007 0x000007D7   /* was DAT_0010f4cc, DAT_0011d6bc (word at 0x0010F4CC); integer 2007 */
 #define WORD_HEXADECIMAL_397714A4 0x397714A4   /* was DAT_0012244c (word at 0x0010F878); value 0x397714A4 (964105380) */
 #define WORD_HEXADECIMAL_0B7E4D24 0x0B7E4D24   /* was DAT_0010f87c (word at 0x0010F87C); value 0x0B7E4D24 (192826660) */
-#define INTEGER_57379 0x0000E023   /* was DAT_0010f988 (word at 0x0010F988); integer 57379 */
-#define INTEGER_57381 0x0000E025   /* was DAT_0010f98c (word at 0x0010F98C); integer 57381 */
-#define INTEGER_57382 0x0000E026   /* was DAT_0010f990 (word at 0x0010F990); integer 57382 */
-#define INTEGER_57387 0x0000E02B   /* was DAT_0010f994 (word at 0x0010F994); integer 57387 */
+#define INTEGER_57379 0x0000E023   /* was DAT_0010f988 (word at 0x0010F988); integer 57379, AVK_2 (progress_set_default_controls) */
+#define INTEGER_57381 0x0000E025   /* was DAT_0010f98c (word at 0x0010F98C); integer 57381, AVK_4 (progress_set_default_controls) */
+#define INTEGER_57382 0x0000E026   /* was DAT_0010f990 (word at 0x0010F990); integer 57382, AVK_5 (progress_set_default_controls) */
+#define INTEGER_57387 0x0000E02B   /* was DAT_0010f994 (word at 0x0010F994); integer 57387, AVK_STAR (progress_set_default_controls) */
 #define WORD_HEXADECIMAL_052F918F 0x052F918F   /* was DAT_0010f998 (word at 0x0010F998); value 0x052F918F (87003535) */
-#define INTEGER_57398 0x0000E036   /* was DAT_0010f99c (word at 0x0010F99C); integer 57398 */
+#define INTEGER_57398 0x0000E036   /* was DAT_0010f99c (word at 0x0010F99C); integer 57398, AVK_SOFT1 (progress_set_default_controls) */
 #define FLOAT_0_POINT_1 0x3DCCCCCD   /* was DAT_0010fbf0, DAT_00110550, DAT_0011302c, DAT_0011da94 (word at 0x0010FBF0); the float 0.10000000149011612 */
 #define FLOAT_5000 0x459C4000   /* was DAT_0010ffc4 (word at 0x0010FFC4); the float 5000.0 */
 #define FLOAT_0_POINT_001 0x3A83126F   /* was DAT_0010ffcc, DAT_00110558, DAT_00113028, DAT_0011329c (word at 0x0010FFCC); the float 0.0010000000474974513 */

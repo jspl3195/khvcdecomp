@@ -7256,8 +7256,8 @@ CombatRegion * combat_region_create(CombatRegion *region,ISwerveObject *node,cha
    returns 0 when out of memory): the app (GetAppInstance) and no saved-game copy; then, unless
    `skipSetup` is set (kh_OnAppStart passes 0), empty status, variable and record tables, no user id (one
    already there is freed), both volumes (soundVolume, musicVolume) 40, field_5c8 1, field_5c4 0, the new
-   game's values (FUN_0010f9a4, progress_reset, FUN_0010f8e8), and the saved settings and records loaded
-   (FUN_0011b6f0 with "settings.dat", FUN_0011b5f0). progress_destroy is its destructor. */
+   game's values (FUN_0010f9a4, progress_reset, progress_set_default_controls), and the saved settings and
+   records loaded (FUN_0011b6f0 with "settings.dat", FUN_0011b5f0). progress_destroy is its destructor. */
 Progress * progress_create(Progress *progress,int32 skipSetup)
 
 {
@@ -7291,7 +7291,7 @@ Progress * progress_create(Progress *progress,int32 skipSetup)
   progress->field_5c4 = 0;
   FUN_0010f9a4((int)progress);
   progress_reset(progress);
-  FUN_0010f8e8((int)progress);
+  progress_set_default_controls(progress);
   FUN_0011b6f0((int)progress,(int32)STRING_SETTINGS_DOT_DAT_001278D8);
   FUN_0011b5f0((int)progress);
   return progress;
@@ -10596,52 +10596,41 @@ void progress_reset(Progress *progress)
   progress->field_5ac = progress->field_5b0 = progress->field_5b4 = progress->field_5b8 = 0;
 }
 
-/* ==== 0x0010F8E8  (file offset 0x0F8E8)  FUN_0010f8e8 ================================================ */
-void FUN_0010f8e8(int param_1)
+/* ==== 0x0010F8E8  (file offset 0x0F8E8)  progress_set_default_controls =============================== */
+/* GUESS: name. The default key bindings: the Controls keys 2, 8, 4, 6, 5, 0 and * (Forwards, Backwards,
+   Left, Right, Action, Status, Magic; the binary loads AVK_2, AVK_4, AVK_5 and AVK_STAR, INTEGER_57379 -
+   INTEGER_57387, and adds the rest), and, when the app has its text table, the soft keys AVK_SOFT1 and
+   AVK_SOFT2 (INTEGER_57398) - swapped when the text 0x052F918F exists (GUESS: a layout the text file
+   selects; its copy is freed). Called by progress_create. */
+void progress_set_default_controls(Progress *progress)
 
 {
-  undefined4 param_3;
-  undefined4 param_4;
-  /* not parameters: param_3, param_4. kh.mod reads r2 / r3 only on paths where it was already written, or as a
-     leftover (no caller sets them); Ghidra listed them as inputs */
-  int iVar1;
-  int iVar2;
-  int local_14;
-  int iVar3;
-  
-  /* the default Controls key bindings (BREW key codes; key_picker_setup edits them):
-     +0x5cc Forwards 2 (AVK_2), +0x5d0 Backwards 8, +0x5d4 Left 4, +0x5d8 Right 6, +0x5dc Action 5,
-     +0x5e0 Status 0, +0x5e4 Magic * (AVK_STAR) */
-  iVar1 = INTEGER_57379;
-  *(int *)(param_1 + 0x5cc) = INTEGER_57379;
-  *(int *)(param_1 + 0x5d0) = iVar1 + 6;
-  iVar1 = INTEGER_57381;
-  *(int *)(param_1 + 0x5d4) = INTEGER_57381;
-  *(int *)(param_1 + 0x5d8) = iVar1 + 2;
-  iVar1 = INTEGER_57382;
-  *(int *)(param_1 + 0x5dc) = INTEGER_57382;
-  *(int *)(param_1 + 0x5e0) = iVar1 + -5;
-  *(undefined4 *)(param_1 + 0x5e4) = INTEGER_57387;
-  iVar1 = *(int *)(*(int *)(param_1 + 0x724) + 0x98);
-  if (iVar1 != 0) {
-    local_14 = 0;
-    text_table_get_text(iVar1,WORD_HEXADECIMAL_052F918F,&local_14 /* not arguments, register leftovers: param_4,param_3 */);
-    iVar1 = INTEGER_57398;
-    iVar2 = INTEGER_57398 + 1;
-    iVar3 = INTEGER_57398 + 1;
-    if (local_14 == 0) {
-      *(int *)(param_1 + 0x5e8) = INTEGER_57398;
-      *(int *)(param_1 + 0x5ec) = iVar2;
-    }
-    else {
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-      (*g_pHelperFuncs->free)(local_14);
-      *(int *)(param_1 + 0x5e8) = iVar3;
-      *(int *)(param_1 + 0x5ec) = iVar1;
-    }
+  TextTable *texts = (TextTable *)progress->app->pObj98;
+  char *text;
+
+  progress->controls[0] = AVK_2;
+  progress->controls[1] = AVK_2 + 6;          /* AVK_8 */
+  progress->controls[2] = AVK_4;
+  progress->controls[3] = AVK_4 + 2;          /* AVK_6 */
+  progress->controls[4] = AVK_5;
+  progress->controls[5] = AVK_5 - 5;          /* AVK_0 */
+  progress->controls[6] = AVK_STAR;
+  if (texts == (TextTable *)0x0)
+    return;
+  text = (char *)0x0;
+  text_table_get_text(texts,WORD_HEXADECIMAL_052F918F,&text);
+  if (text == (char *)0x0) {
+    progress->softKeys[0] = AVK_SOFT1;
+    progress->softKeys[1] = AVK_SOFT1 + 1;    /* AVK_SOFT2 */
   }
-  return;
+  else {
+                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
+    (*g_pHelperFuncs->free)(text);
+    progress->softKeys[0] = AVK_SOFT1 + 1;
+    progress->softKeys[1] = AVK_SOFT1;
+  }
 }
+
 
 /* ==== 0x0010F9A4  (file offset 0x0F9A4)  FUN_0010f9a4 ================================================ */
 void FUN_0010f9a4(int param_1)
