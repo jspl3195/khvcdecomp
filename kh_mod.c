@@ -2347,7 +2347,7 @@ LAB_00104fa4:
                    *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x518);
               *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x524) =
                    *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x528);
-              FUN_0011e010(*(undefined4 *)(*param_1 + 0xa8));
+              progress_clear_states(((KHApp *)*param_1)->progress);
               progress_set_status(((KHApp *)*param_1)->progress,STRING_OUT_OF_MAGIC_00127D78,0);
                     /* 0x105180 bl FUN_0011e6b8: only r0 (object) and r1 (file name) are set.
                        Ghidra's param_3/param_4 are register spills: param_4 goes into local_24,
@@ -8334,7 +8334,7 @@ void FUN_0010c800(int param_1,int param_2)
   int iVar2;
   int iVar3;
   
-  FUN_0011e010(param_1);
+  progress_clear_states((Progress *)param_1);
   if (*(int *)(param_1 + 0x590) != 0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x590));
@@ -10844,7 +10844,7 @@ void FUN_0010f8e8(int param_1)
 void FUN_0010f9a4(int param_1)
 
 {
-  FUN_0011e010(param_1);
+  progress_clear_states((Progress *)param_1);
   *(undefined4 *)(param_1 + 0x53c) = 4;
   *(undefined4 *)(param_1 + 0x540) = 1;
   *(undefined4 *)(param_1 + 0x544) = 8;
@@ -12129,7 +12129,7 @@ int32 script_command_run(ScriptCommand *command)
     if (command->text != (char *)0x0) {
       if ((*g_pHelperFuncs->strcmp)(command->text,STRING_ALL_00127714) == 0) {
         if (command->number[0] == 0)
-          FUN_0011e010((int)app->progress);
+          progress_clear_states(app->progress);
       }
       else
         progress_set_status(app->progress,command->text,command->number[0] & 0xff);
@@ -17427,7 +17427,7 @@ undefined4 FUN_0011b178(int param_1,int param_2)
       return 0;
     }
   }
-  FUN_0011e010(param_1);
+  progress_clear_states((Progress *)param_1);
   local_24 = 0;
   uVar4 = save_read_float((Progress *)param_1,(const uint8 *)iVar3,(int32 *)&local_24);
   *(undefined4 *)(param_1 + 0x514) = uVar4;
@@ -19441,30 +19441,31 @@ void FUN_0011df14(undefined4 *param_1)
   return;
 }
 
-/* ==== 0x0011E010  (file offset 0x1E010)  FUN_0011e010 ================================================ */
-void FUN_0011e010(int param_1)
+/* ==== 0x0011E010  (file offset 0x1E010)  progress_clear_states ======================================= */
+/* GUESS: name. Clears all the player's named states: the 100 status texts and the 100 script variables
+   (their names freed, their values 0). The status flag bytes are left as they are (out of reach without
+   their texts, and set again when a slot is reused). Used by the script's setState ALL 0, the menu's
+   restart, the saved-game loader (FUN_0011b178) and Progress's reset and destructor (FUN_0010f9a4,
+   FUN_0010c800). */
+void progress_clear_states(Progress *progress)
 
 {
-  int iVar2;
-  int iVar3;
-  iVar3 = 0;
-  do {
-    iVar2 = param_1 + iVar3 * 4;
-    if (*(int *)(iVar2 + 100) != 0) {
+  int32 i;
+
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-      (*g_pHelperFuncs->free)(*(undefined4 *)(iVar2 + 100));
-      *(undefined4 *)(iVar2 + 100) = 0;
+  for (i = 0; i < 100; i++) {
+    if (progress->statusTexts[i] != (char *)0x0) {
+      (*g_pHelperFuncs->free)(progress->statusTexts[i]);
+      progress->statusTexts[i] = (char *)0x0;
     }
-    if (*(int *)(iVar2 + 900) != 0) {
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-      (*g_pHelperFuncs->free)(*(undefined4 *)(iVar2 + 900));
-      *(undefined4 *)(iVar2 + 900) = 0;
+    if (progress->variableNames[i] != (char *)0x0) {
+      (*g_pHelperFuncs->free)(progress->variableNames[i]);
+      progress->variableNames[i] = (char *)0x0;
     }
-    iVar3 = iVar3 + 1;
-    *(undefined4 *)(iVar2 + 500) = 0;
-  } while (iVar3 < 100);
-  return;
+    progress->variableValues[i] = 0;
+  }
 }
+
 
 /* ==== 0x0011E07C  (file offset 0x1E07C)  FUN_0011e07c ================================================ */
 void FUN_0011e07c(int param_1)

@@ -760,7 +760,7 @@ void combat_region_release_attack_token(CombatRegion *region);   /* 0x0011DE64 G
 void enemy_reset_states(Enemy *enemy);   /* 0x0011DE70 GUESS: name */
 void FUN_0011dedc(int param_1);
 void FUN_0011df14(undefined4 *param_1);
-void FUN_0011e010(int param_1);
+void progress_clear_states(Progress *progress);   /* 0x0011E010 GUESS: name, see kh_mod.c */
 void FUN_0011e07c(int param_1);
 void FUN_0011e0b4(int param_1);
 void animations_reset(Animations *animations);   /* 0x0011E0FC GUESS: name */
