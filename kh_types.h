@@ -140,7 +140,9 @@ typedef struct ScreenStack {
     IDisplay *display;            /* +0x0c passed to the elements' draw methods (ui_element_draw); GUESS: the
                                      IDisplay */
     IGraphics *graphics;          /* +0x10 what the elements draw with (ui_element_draw, graphics_set_color) */
-    uint8  unknown_14[0x08];
+    AEERect *rect;                /* +0x14 GUESS: name; the display's rectangle: every screen's size
+                                     (screen_create) */
+    uint8  unknown_18[0x04];
     IImage *frameImages[6];       /* +0x1c the corners of the framed text boxes (text_box_draw): left and
                                      right for style 1, 3 and 2 */
     UIList *screens;              /* +0x34 the open screens, by position */
@@ -217,16 +219,6 @@ typedef struct UIElement {
     int32    originalKeyCode;       /* +0x68 key picker: the setting's value when it was set up */
 } UIElement;
 
-/* The in-game HUD screen (KHApp.field_d4; FUN_0010aa8c, vtable VTABLE_0010165C): a screen element with
- * the player's bars and the level script's texts. Only what hud_show_loading / hud_hide_loading use is
- * named so far; the script code (script_command_run) still reads the rest through offsets. */
-typedef struct Hud {
-    UIElement screen;             /* +0x00 the screen it is (FUN_0010bd7c), 0x6c bytes */
-    uint8    unknown_6c[0x70];
-    UIElement *loadingText;       /* +0xdc GUESS: name; child 900 (text 0x254DA109), hidden until
-                                     hud_show_loading */
-    uint32   savedColor;          /* +0xe0 the primary colour from before hud_show_loading */
-} Hud;                           /* 0xe4 bytes (FUN_0010aa8c) */
 
 /* ---- Text boxes and text lines (GUESS: names) -------------------------------------------------------
  * A text box (text_box_create, VTABLE_001016A0) shows a wide text wrapped into text lines
@@ -278,20 +270,35 @@ typedef struct TextBox {
 } TextBox;                        /* 0x50 bytes */
 
 /* ---- A screen (GUESS: names) -------------------------------------------------------------------------
- * A plain screen (FUN_0010bd7c, VTABLE_00101700): a UI element the size of the display, put on the screen
- * stack, with the element that has the focus and up to two soft key entries. Starts with the UI
- * element's 0x30 bytes: cast to UIElement for those. */
+ * A plain screen (screen_create, VTABLE_00101700): a UI element the size of the display, put on the
+ * screen stack, with the element that has the focus and up to two soft key entries. Starts with the UI
+ * element's 0x30 bytes: cast to UIElement for those (the UIElement struct also carries the menu items'
+ * fields from +0x30 on, which a screen does not have). The menus' pages and dialogs are plain screens;
+ * the HUD (Hud) builds on one. */
 typedef struct Screen {
     uint8    element[0x30];       /* +0x00 the UI element */
     UIElement *focus;             /* +0x30 the element with the focus (FUN_00105224 sets it) */
     UIElement **softKeys;         /* +0x34 its first and second soft key entries (8 bytes); their selectEvent
                                      is sent when the player's soft key is pressed */
-    uint8    field_38;            /* +0x38 FUN_0010bd7c's third argument */
+    uint8    framed;              /* +0x38 screen_create's third argument; set: the draw method
+                                     FUN_00106e44 paints a window frame (dark 0xFF615A6D, light
+                                     0xFF9795A5, then frameFillColor inside) */
     uint8    unknown_39[0x03];
     int32    field_3c;            /* +0x3c 0 */
-    uint32   field_40;            /* +0x40 0xFFEBEBF7 */
-    struct KHApp *app;            /* +0x44 */
-} Screen;                         /* 0x48 bytes */
+    uint32   frameFillColor;      /* +0x40 GUESS: name; 0xFFEBEBF7 at creation */
+    struct KHApp *app;            /* +0x44 the stack's app */
+} Screen;                         /* 0x48 bytes (screen_create) */
+
+/* The in-game HUD screen (KHApp.field_d4; FUN_0010aa8c, vtable VTABLE_0010165C): a screen element with
+ * the player's bars and the level script's texts. Only what hud_show_loading / hud_hide_loading use is
+ * named so far; the script code (script_command_run) still reads the rest through offsets. */
+typedef struct Hud {
+    Screen   screen;              /* +0x00 the plain screen it builds on (screen_create, framed 0) */
+    uint8    unknown_48[0x94];
+    UIElement *loadingText;       /* +0xdc GUESS: name; child 900 (text 0x254DA109), hidden until
+                                     hud_show_loading */
+    uint32   savedColor;          /* +0xe0 the primary colour from before hud_show_loading */
+} Hud;                           /* 0xe4 bytes (FUN_0010aa8c) */
 
 /* ---- Level scripts (GUESS: names) ------------------------------------------------------------------
  * The levels and screens are driven by scripts: lines of text, one command each ("AddSoftKey ...",

@@ -2120,7 +2120,7 @@ LAB_00104dac:
             return 0;
           }
 LAB_00104fa4:
-          iVar9 = FUN_0010bd7c(0,param_1,0);
+          iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,0);
           *(undefined4 *)(iVar9 + 0x3c) = 2;
           uVar10 = FUN_0010bba0(0,0,0,(int)*(short *)(param_1[5] + 4),
                                 (int)*(short *)(param_1[5] + 6),param_1,0xc,0,1);
@@ -2176,7 +2176,7 @@ LAB_00104fa4:
           goto LAB_001050b0;
         }
         if (param_2 == 0x5a) {
-          iVar9 = FUN_0010bd7c(0,param_1,0);
+          iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,0);
           iVar7 = (int32)DATA_AT_00127ADC;
           *(undefined4 *)(iVar9 + 0x3c) = 1;
                     /* 0x101df0 bl memcpy_word_aligned (0x0010021c): only r0-r2 are set; Ghidra's
@@ -2250,7 +2250,7 @@ LAB_00103858:
         helper_free(pvVar16);
         if (piVar4 != (int *)0x0) {
           game_pause(*param_1);
-          iVar9 = FUN_0010bd7c(0,param_1,0);
+          iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,0);
           uVar10 = FUN_0010bba0(0,0,0,(int)*(short *)(param_1[5] + 4),
                                 (int)*(short *)(param_1[5] + 6),param_1,0xc,0,1);
           ui_element_add_child(iVar9,uVar10,0);
@@ -2295,7 +2295,7 @@ LAB_00103858:
         FUN_0011e6b8(*(undefined4 *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
       }
       ((KHApp *)*param_1)->progress->summaryPending = 0;
-      uVar10 = FUN_0010bd7c(0,param_1,1);
+      uVar10 = (int32)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
       FUN_001055c4(param_1,uVar10,0,uVar3,WORD_HEXADECIMAL_21C1059D);
       if ((*(int *)(*param_1 + 200) == 0) ||
          (iVar7 = (*g_pHelperFuncs->strlen)(*(undefined4 *)(*param_1 + 200)), iVar7 == 0)) {
@@ -2393,7 +2393,7 @@ LAB_00103858:
     case 0x7b:
       return 0;
     case 0x7c:
-      iVar9 = FUN_0010bd7c(0,param_1,1);
+      iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
       FUN_001055c4(param_1,iVar9,0,DOUBLE_1_POINT_72879609_TIMES_TEN_TO_THE_MINUS_20_HIGH_WORD,DOUBLE_1_POINT_72879609_TIMES_TEN_TO_THE_MINUS_20_LOW_WORD);
       FUN_00109a10(iVar9,1,WORD_HEXADECIMAL_03B0A428,0x7d);
       uVar10 = 0xffffffff;
@@ -2425,7 +2425,7 @@ LAB_001050b0:
                    *(undefined4 *)(iVar7 + 0x5c8),0);
       goto LAB_00104dcc;
     case 0x7e:
-      iVar9 = FUN_0010bd7c(0,param_1,1);
+      iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
       FUN_001055c4(param_1,iVar9,0,uVar3,WORD_HEXADECIMAL_21C1059D);
       if ((*(int *)(*param_1 + 200) == 0) ||
          (iVar7 = (*g_pHelperFuncs->strlen)(*(undefined4 *)(*param_1 + 200)), iVar7 == 0)) {
@@ -2597,7 +2597,7 @@ LAB_00104dcc:
       return local_34;
     case 0x83:
 LAB_00101fa8:
-      iVar9 = FUN_0010bd7c(0,param_1,1);
+      iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
       *(undefined4 *)(iVar9 + 0x3c) = 3;
       FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_24017E3E,WORD_HEXADECIMAL_01B449A3);
       uVar10 = FUN_00107fd0(param_1,0xfa,1).low;
@@ -2736,7 +2736,7 @@ LAB_00101db4:
       return 0;
     case 0x88:
       screen_stack_close_top(param_1,1);
-      iVar9 = FUN_0010bd7c(0,param_1,1);
+      iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
       FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_10FB280A,0x73);
       FUN_00109a10(iVar9,1,0,0);
       iVar7 = text_style_create(0,6);
@@ -2802,7 +2802,7 @@ LAB_0010489c:
         if (param_2 != 0x2a) {
           if (param_2 < 0x2b) {
             if (param_2 == 0x15) {
-              iVar9 = FUN_0010bd7c(0,param_1,1);
+              iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
               FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_0DB81F00,0);
               FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0x1f);
               memcpy_word_aligned(local_74 + 10,(int32)DATA_AT_00127BA4,0x18);
@@ -2915,7 +2915,7 @@ LAB_0010489c:
             uVar11 = WORD_HEXADECIMAL_07A0110B;
           }
         }
-        iVar9 = FUN_0010bd7c(0,param_1,1);
+        iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
         FUN_001055c4(param_1,iVar9,0,uVar10,0);
         FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0x84);
         if (iVar19 <= *(int *)(*(int *)(*param_1 + 0xa8) + 0x52c)) {
@@ -3028,7 +3028,7 @@ LAB_001042b8:
     return 0;
   case 1:
     game_pause(*param_1);
-    iVar9 = FUN_0010bd7c(0,param_1,1);
+    iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
     FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_2B21E3F9,0);
     FUN_00109a10(iVar9,1,WORD_HEXADECIMAL_225D20E5,0x15);
     FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0xffffffff);
@@ -3105,7 +3105,7 @@ LAB_001042b8:
     if (*(int *)(*param_1 + 0xc0) != 0) {
       FUN_0010a0d0(*(int *)(*param_1 + 0xc0));
     }
-    iVar9 = FUN_0010bd7c(0,param_1,1);
+    iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
     FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_2E66608C,0);
     FUN_00109a10(iVar9,1,uVar11,0xfffffffe);
     FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0xffffffff);
@@ -3140,7 +3140,7 @@ LAB_001042b8:
     break;
   case 4:
     game_pause(*param_1);
-    iVar9 = FUN_0010bd7c(0,param_1,1);
+    iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
     FUN_001055c4(param_1,iVar9,0,uVar10,WORD_HEXADECIMAL_133529B8);
     FUN_00109a10(iVar9,1,uVar11,0xfffffffe);
     FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0x10);
@@ -3260,7 +3260,7 @@ LAB_00104360:
   case 10:
     return 0;
   case 0xb:
-    iVar9 = FUN_0010bd7c(0,param_1,1);
+    iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
     FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_111CB9DB,0);
     FUN_00109a10(iVar9,1,uVar13,0x46);
     FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0x48);
@@ -3375,7 +3375,7 @@ LAB_001048a4:
       uVar11 = WORD_HEXADECIMAL_0CB59575;
       uVar10 = WORD_HEXADECIMAL_37E4CCE1;
     }
-    iVar9 = FUN_0010bd7c(0,param_1,1);
+    iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
     FUN_001055c4(param_1,iVar9,0,uVar10,0);
     FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0xffffffff);
     iVar19 = text_style_create(0,5);
@@ -3489,7 +3489,7 @@ LAB_001052c0:
 
 /* ==== 0x001052DC  (file offset 0x052DC)  screen_resume_nothing ======================================= */
 /* GUESS: name. The resume method (vtable slot 8, +0x20) of the plain screen class (VTABLE_00101700, made by
-   FUN_0010bd7c): screen_stack_open calls it when the screen is pushed, screen_stack_close_top when it is
+   screen_create): screen_stack_open calls it when the screen is pushed, screen_stack_close_top when it is
    the top again; for this class it does nothing (`bx lr`, 0x001052dc). The game screen's (VTABLE_0010165C)
    is FUN_001051d4. Ghidra has no function here (only reached through the vtable); written from its
    disassembly. */
@@ -3662,9 +3662,9 @@ int32 hud_show_loading(Hud *hud,uint32 color)
 
 {
   hud->loadingText->visible = 1;
-  hud->savedColor = hud->screen.primaryColor;
-  hud->screen.primaryColor = color;
-  return ui_element_draw(&hud->screen);   /* the binary's tail jump (0x001056e8) */
+  hud->savedColor = ((UIElement *)hud)->primaryColor;
+  ((UIElement *)hud)->primaryColor = color;
+  return ui_element_draw((UIElement *)hud);   /* the binary's tail jump (0x001056e8) */
 }
 
 
@@ -6013,7 +6013,7 @@ void hud_hide_loading(Hud *hud)
 
 {
   hud->loadingText->visible = 0;
-  hud->screen.primaryColor = hud->savedColor;
+  ((UIElement *)hud)->primaryColor = hud->savedColor;
   FUN_0010ea00((int)hud);               /* the binary's tail jump (0x0010937c) */
 }
 
@@ -6889,7 +6889,7 @@ int * FUN_0010aa8c(int *param_1,int *param_2)
   int *piVar3;
   
   if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(0xe4), param_1 != (int *)0x0)) {
-    FUN_0010bd7c(param_1,param_2,0);
+    screen_create((Screen *)param_1,(ScreenStack *)param_2,0);
     *param_1 = (int32)VTABLE_0010165C;
                     /* helper[44] uint32 aee_GetUpTimeMS(void)  (AEEHelperFuncs +0xb0, via
                        *(base-4)) */
@@ -7622,30 +7622,31 @@ int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
   return param_1;
 }
 
-/* ==== 0x0010BD7C  (file offset 0x0BD7C)  FUN_0010bd7c ================================================ */
-int * FUN_0010bd7c(int *param_1,int *param_2,undefined1 param_3)
+/* ==== 0x0010BD7C  (file offset 0x0BD7C)  screen_create =============================================== */
+/* GUESS: names. The plain screen's constructor (VTABLE_00101700; 0x48 bytes, allocated when `screen` is
+   0; returns 0 when out of memory): a UI element covering the display (ScreenStack.rect's size), owned by
+   the stack, with the app, no focus, two empty soft key entries (their 8-byte block's malloc is not
+   checked) and, when `framed` is set, a window frame drawn by FUN_00106e44 with frameFillColor
+   (0xFFEBEBF7) inside. The menu handler FUN_00101ad8 makes its pages (0) and dialogs (1) with it; the
+   HUD's constructor FUN_0010aa8c builds on it. */
+Screen * screen_create(Screen *screen,ScreenStack *stack,uint8 framed)
 
 {
-  int iVar1;
-  undefined4 *puVar2;
-  
-  if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(0x48), param_1 != (int *)0x0)) {
-    ui_element_create(param_1,0,0,(int)*(short *)(param_2[5] + 4),(int)*(short *)(param_2[5] + 6),param_2
-                );
-    *param_1 = (int32)VTABLE_00101700;
-    param_1[0x11] = *param_2;
-    param_1[0xc] = 0;
-    *(undefined1 *)(param_1 + 0xe) = param_3;
-    puVar2 = helper_malloc(8);
-    param_1[0xd] = (int)puVar2;
-    *puVar2 = 0;
-    *(undefined4 *)(param_1[0xd] + 4) = 0;
-    iVar1 = WORD_HEXADECIMAL_FFEBEBF7;
-    param_1[0xf] = 0;
-    param_1[0x10] = iVar1;
-  }
-  return param_1;
+  if (screen == (Screen *)0x0 && (screen = helper_malloc_2(0x48)) == (Screen *)0x0)
+    return screen;
+  ui_element_create((UIElement *)screen,0,0,stack->rect->dx,stack->rect->dy,(int32 *)stack);
+  *(int32 *)screen = (int32)VTABLE_00101700;
+  screen->app = stack->app;
+  screen->focus = (UIElement *)0x0;
+  screen->framed = framed;
+  screen->softKeys = helper_malloc(8);
+  screen->softKeys[0] = (UIElement *)0x0;
+  screen->softKeys[1] = (UIElement *)0x0;
+  screen->field_3c = 0;
+  screen->frameFillColor = WORD_HEXADECIMAL_FFEBEBF7;
+  return screen;
 }
+
 
 /* ==== 0x0010BE14  (file offset 0x0BE14)  FUN_0010be14 ================================================ */
 int * FUN_0010be14(int *param_1)
@@ -7794,7 +7795,7 @@ LAB_0010c0cc:
    `element` is 0 (returns 0 when out of memory), installs VTABLE_00101724 and sets the owner screen, the
    rectangle (x, y, width, height), an empty child list (16 entries, growing by 16), the three colours to
    -1 ("not set": the parent's), no parent, no background, visible. Every other UI class's constructor
-   calls it first and then installs its own vtable (FUN_0010bba0, FUN_0010bd7c, ...); FUN_00101ad8 makes
+   calls it first and then installs its own vtable (FUN_0010bba0, screen_create, ...); FUN_00101ad8 makes
    plain elements with it as containers. */
 UIElement * ui_element_create(UIElement *element,int16 x,int16 y,int16 width,int16 height,int32 *owner)
 

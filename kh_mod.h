@@ -539,7 +539,7 @@ CollisionShape * collision_shape_create(CollisionShape *shape);   /* 0x0010B9B4 
 TextStyle * text_style_create(TextStyle *style,int32 type);   /* 0x0010BA08 GUESS: name, see kh_mod.c */
 Intro * intro_create(Intro *intro,int32 atTitle,int32 *error);   /* 0x0010BB2C GUESS: names */
 int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,int param_6,int param_7,int param_8,undefined1 param_9);
-int * FUN_0010bd7c(int *param_1,int *param_2,undefined1 param_3);
+Screen * screen_create(Screen *screen,ScreenStack *stack,uint8 framed);   /* 0x0010BD7C GUESS: name, see kh_mod.c */
 int * FUN_0010be14(int *param_1);
 UIList * list_create(UIList *list,int32 capacity,int32 growBy);   /* 0x0010BE6C GUESS: name, see kh_mod.c */
 undefined8 FUN_0010bec4(int *param_1,int param_2,int param_3,int param_4);
