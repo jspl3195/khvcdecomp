@@ -8854,7 +8854,7 @@ LAB_0010d124:
    "Out of magic" status text on while MP is 0. The binary computes outOfMagic (rsbs / movlo at 0x0010d1c4)
    and tail-jumps (0x0010d1d8) to FUN_0011fef4(app->progress, "Out of magic", outOfMagic), which with the
    flag clear removes the text from the status table, with it set stores the text in a free slot
-   (FUN_00112d54). Called with +1 by an item drop. */
+   (progress_find_free_status). Called with +1 by an item drop. */
 void progress_add_magic_points(Progress *progress,int32 amount)
 
 {
@@ -12607,31 +12607,23 @@ int32 animations_find_free_slot(Animations *animations)
   return -1;
 }
 
-/* ==== 0x00112D54  (file offset 0x12D54)  FUN_00112d54 ================================================ */
-int FUN_00112d54(int param_1)
+/* ==== 0x00112D54  (file offset 0x12D54)  progress_find_free_status =================================== */
+/* GUESS: name. The first free slot of the player's status texts (no text, or an empty one), or -1 when
+   all 100 are in use. Used by FUN_0011fef4 to add a status text. */
+int32 progress_find_free_status(Progress *progress)
 
 {
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  iVar3 = 0;
-  iVar4 = (int32)DATA_AT_001278E8;
-  while( true ) {
-    iVar2 = *(int *)(param_1 + iVar3 * 4 + 100);
-    if (iVar2 == 0) {
-      return iVar3;
-    }
+  int32 i;
+
                     /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
                        via *(base-4)) */
-    iVar2 = (*g_pHelperFuncs->strcmp)(iVar2,iVar4);
-    if (iVar2 == 0) break;
-    iVar3 = iVar3 + 1;
-    if (99 < iVar3) {
-      return -1;
-    }
-  }
-  return iVar3;
+  for (i = 0; i < 100; i++)
+    if (progress->statusTexts[i] == (char *)0x0 ||
+        (*g_pHelperFuncs->strcmp)(progress->statusTexts[i],STRING_EMPTY_001278E8) == 0)
+      return i;
+  return -1;
 }
+
 
 /* ==== 0x00112DBC  (file offset 0x12DBC)  FUN_00112dbc ================================================ */
 undefined4 FUN_00112dbc(int param_1,int param_2)
@@ -20850,7 +20842,7 @@ undefined4 FUN_0011fddc(int param_1,undefined4 param_2,int param_3,undefined4 pa
                     /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
                        via *(base-4)) */
     if (((iVar1 != 0) &&
-        (iVar1 = (*g_pHelperFuncs->strcmp)(iVar1,(int32)DATA_AT_001278E8),
+        (iVar1 = (*g_pHelperFuncs->strcmp)(iVar1,(int32)STRING_EMPTY_001278E8),
         iVar1 != 0)) &&
        (iVar1 = (*g_pHelperFuncs->strcmp)
                           (param_2,*(undefined4 *)(iVar7 + 0x5f0)), iVar6 = iVar5, iVar1 == 0))
@@ -20927,7 +20919,7 @@ void FUN_0011fef4(int param_1,undefined4 param_2,int param_3)
     *(undefined4 *)(iVar4 + 100) = 0;
     return;
   }
-  iVar3 = FUN_00112d54(param_1);
+  iVar3 = progress_find_free_status((Progress *)param_1);
   if (iVar3 == -1) {
     return;
   }
@@ -20994,7 +20986,7 @@ void FUN_001200ac(int param_1,undefined4 param_2)
                        via *(base-4)) */
   if ((*(int *)(param_1 + 0x590) != 0) &&
      (iVar2 = (*g_pHelperFuncs->strcmp)
-                        (*(int *)(param_1 + 0x590),(int32)DATA_AT_001278E8), iVar2 != 0)) {
+                        (*(int *)(param_1 + 0x590),(int32)STRING_EMPTY_001278E8), iVar2 != 0)) {
     return;
   }
                     /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
@@ -23912,7 +23904,7 @@ void FUN_00124734(undefined4 param_1,int param_2,int param_3,int *param_4)
 {
   int iVar2;
   if (param_2 == 0) {
-    param_2 = (int32)DATA_AT_001278E8;
+    param_2 = (int32)STRING_EMPTY_001278E8;
   }
                     /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
                         */

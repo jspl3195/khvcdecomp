@@ -643,7 +643,7 @@ Hitsphere * boss_combat_region_find_hitsphere(BossCombatRegion *region,int32 ent
 undefined8 FUN_00112cdc(int param_1,int *param_2,int param_3);
 int32 game_find_free_object_slot(Game *game);   /* 0x00112CFC GUESS: name */
 int32 animations_find_free_slot(Animations *animations);   /* 0x00112D28 GUESS: name */
-int FUN_00112d54(int param_1);
+int32 progress_find_free_status(Progress *progress);   /* 0x00112D54 GUESS: name, see kh_mod.c */
 undefined4 FUN_00112dbc(int param_1,int param_2);
 undefined4 FUN_00112e20(int param_1,undefined4 param_2);
 int32 FUN_00112e84(int32 enemy);
@@ -1675,9 +1675,7 @@ static const char STRING_SORA_HIT_DOT_QCP[] = "sora_hit.qcp";   /* 0x001278A8 */
 static const char STRING_SORA_JUMP_DOT_QCP[] = "sora_jump.qcp";   /* 0x001278B8 */
 static const char STRING_SCOREDATA_DOT_DAT[] = "scoredata.dat";   /* 0x001278C8 */
 static const char STRING_SETTINGS_DOT_DAT_001278D8[] = "settings.dat";   /* 0x001278D8 */
-static const uint32 DATA_AT_001278E8[1] = {   /* 0x001278E8 */
-  0x00000000
-};
+static const char STRING_EMPTY_001278E8[4] = "";   /* 0x001278E8 (4 bytes: "" and its padding) */
 static const char STRING_TMP_DOT_DAT[] = "tmp.dat";   /* 0x001278EC */
 static const char STRING_OUT_OF_MAGIC_001278F4[] = "OUT_OF_MAGIC";   /* 0x001278F4 */
 static const char STRING_PERCENT_S_EQUALS_PERCENT_D[] = "%s = %d";   /* 0x00127904 */
