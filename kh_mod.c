@@ -12450,10 +12450,10 @@ undefined4 FUN_00112e20(int param_1,undefined4 param_2)
 /* GUESS: what it does. Finds where the enemy can stand along its step (+0xb4, +0xb8) by halving: while
    either half-step (+-0.1 bounds, float_compare_greater / float_compare_less leave their result in the
    flags: `bhi` / `bhs` / `blo` at 0x00112f58 - 0x00112f88, written after the comma) is larger than 0.1,
-   halves it and moves the step forward when FUN_00119c10 accepts the point +0xa8 + step (with height
-   +0xb0), back when it does not; then steps back once. Returns 0 when the step is 0, else whether
-   FUN_00119c10 accepts the final point. Written from its disassembly; r1, which Ghidra returned as the
-   high word, is only a register leftover. */
+   halves it and moves the step forward when level_object_allows accepts the point +0xa8 + step (with
+   height +0xb0), back when it does not; then steps back once. Returns 0 when the step is 0, else whether
+   level_object_allows accepts the final point. Written from its disassembly; r1, which Ghidra returned as
+   the high word, is only a register leftover. */
 int32 FUN_00112e84(int32 enemy)
 
 {
@@ -12468,8 +12468,9 @@ int32 FUN_00112e84(int32 enemy)
     halfX = float_multiply(halfX,0x3f000000);
     halfY = float_multiply(halfY,0x3f000000);
     y = float_add(*(uint32 *)(enemy + 0xac),*(uint32 *)(enemy + 0xb8));
-    if (FUN_00119c10(*(int32 *)(enemy + 0x40),float_add(*(uint32 *)(enemy + 0xa8),*(uint32 *)(enemy + 0xb4)),y,
-                     *(uint32 *)(enemy + 0xb0),FLOAT_0_POINT_001,FLOAT_0_POINT_001,0).low != 0) {
+    if (level_object_allows((LevelObject *)*(int32 *)(enemy + 0x40),
+                            float_add(*(uint32 *)(enemy + 0xa8),*(uint32 *)(enemy + 0xb4)),y,
+                            *(uint32 *)(enemy + 0xb0),FLOAT_0_POINT_001,FLOAT_0_POINT_001) != 0) {
       *(uint32 *)(enemy + 0xb4) = float_add(*(uint32 *)(enemy + 0xb4),halfX);
       *(uint32 *)(enemy + 0xb8) = float_add(*(uint32 *)(enemy + 0xb8),halfY);
     }
@@ -12484,8 +12485,9 @@ int32 FUN_00112e84(int32 enemy)
       (float_compare_equal(*(uint32 *)(enemy + 0xb8),0), *(float *)(enemy + 0xb8) == 0.0f))
     return 0;
   y = float_add(*(uint32 *)(enemy + 0xac),*(uint32 *)(enemy + 0xb8));
-  return FUN_00119c10(*(int32 *)(enemy + 0x40),float_add(*(uint32 *)(enemy + 0xa8),*(uint32 *)(enemy + 0xb4)),y,
-                      *(uint32 *)(enemy + 0xb0),FLOAT_0_POINT_001,FLOAT_0_POINT_001,0).low != 0;
+  return level_object_allows((LevelObject *)*(int32 *)(enemy + 0x40),
+                             float_add(*(uint32 *)(enemy + 0xa8),*(uint32 *)(enemy + 0xb4)),y,
+                             *(uint32 *)(enemy + 0xb0),FLOAT_0_POINT_001,FLOAT_0_POINT_001) != 0;
 }
 
 /* ==== 0x00113030  (file offset 0x13030)  FUN_00113030 ================================================ */
@@ -16136,27 +16138,20 @@ undefined8 FUN_00119b0c(undefined4 param_1,int param_2,undefined4 param_3)
   return MAKE_WORDS(uVar6,param_2,uVar5);
 }
 
-/* ==== 0x00119C10  (file offset 0x19C10)  FUN_00119c10 ================================================ */
-undefined8
-FUN_00119c10(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5
-            ,undefined4 param_6,undefined4 param_7)
+/* ==== 0x00119C10  (file offset 0x19C10)  level_object_allows ========================================= */
+/* GUESS: name. Whether the object's first shape (shapes[0], the first its node's user parameter
+   0x2101870D lists) allows a body at (x, y, z) with `radius` and `height` (collision_shape_allows): 1 or
+   0, and 0 when it has no shapes. A second shape is not tested. The enemies' step finder FUN_00112e84 asks
+   it of the enemy's combat region, whose shape holds them in. Ghidra's 7th parameter is a stack word the
+   binary passes on and collision_shape_allows does not read; the high word it returned is r1 reloaded. */
+int32 level_object_allows(LevelObject *object,uint32 x,uint32 y,uint32 z,uint32 radius,uint32 height)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined8 uVar3;
-  
-  if ((*(int *)(param_1 + 0xec) < 1) ||
-     (iVar1 = collision_shape_allows(*(CollisionShape **)(param_1 + 0xe4),param_2,param_3,param_4,param_5,
-                                     param_6), param_2 = param_5, iVar1 == 0)) {
-    uVar2 = 0;
-    param_5 = param_2;
-  }
-  else {
-    uVar2 = 1;
-  }
-  return MAKE_WORDS(uVar3,param_5,uVar2);
+  if (object->shapeCount < 1)
+    return 0;
+  return collision_shape_allows(object->shapes[0],x,y,z,radius,height) != 0;
 }
+
 
 /* ==== 0x00119C60  (file offset 0x19C60)  FUN_00119c60 ================================================ */
 undefined8 FUN_00119c60(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
