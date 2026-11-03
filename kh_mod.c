@@ -2549,7 +2549,7 @@ LAB_00103858:
         return local_34;
       }
       local_a8[9] = 0;
-      progress_find_record(((KHApp *)*param_1)->progress,(const char *)((KHApp *)*param_1)->pBufc4,
+      progress_find_record(((KHApp *)*param_1)->progress,((KHApp *)*param_1)->pBufc4,
                            (int32 *)(local_a8 + 9),(int32 *)(local_a8 + 8));
       if ((int)local_38 <= local_a8[9]) {
         return local_34;
@@ -2565,7 +2565,7 @@ LAB_00103858:
         goto LAB_00104de4;
       }
       iVar9 = *param_1;
-      FUN_001204f0((undefined4)((KHApp *)iVar9)->context,*(undefined4 *)(iVar9 + 200),iVar9 + 0xc4);
+      string_replace(((KHApp *)iVar9)->context,((KHApp *)iVar9)->pBufc8,&((KHApp *)iVar9)->pBufc4);
       (*g_pHelperFuncs->free)(*(undefined4 *)(*param_1 + 200));
       *(undefined4 *)(*param_1 + 200) = 0;
       iVar7 = WORD_HEXADECIMAL_000253E4;
@@ -2632,7 +2632,7 @@ LAB_001050b0:
       FUN_00109a10(iVar9,2,uVar2,0x3f);
       local_38 = (void *)0x0;
       local_3c = (void *)0x0;
-      progress_find_record(((KHApp *)*param_1)->progress,(const char *)((KHApp *)*param_1)->pBufc4,
+      progress_find_record(((KHApp *)*param_1)->progress,((KHApp *)*param_1)->pBufc4,
                            (int32 *)&local_38,(int32 *)&local_3c);
       memset(local_74 + 7,0x1c);
       local_74[7] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x52c);
@@ -2702,25 +2702,25 @@ LAB_00104a24:
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar19);
       FUN_00109f00(uVar10,WORD_HEXADECIMAL_0528CA88);
       ui_element_add_child(iVar9,uVar10,500);
-      if (param_1[0x19] != 0) {
+      if (((ScreenStack *)param_1)->savedLevelName != (char *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-        (*g_pHelperFuncs->free)(param_1[0x19]);
-        param_1[0x19] = 0;
+        (*g_pHelperFuncs->free)(((ScreenStack *)param_1)->savedLevelName);
+        ((ScreenStack *)param_1)->savedLevelName = (char *)0x0;
       }
-      FUN_001204f0((undefined4)((KHApp *)*param_1)->context,*(undefined4 *)(*param_1 + 0xc4),param_1 + 0x19)
-      ;
+      string_replace(((KHApp *)*param_1)->context,((KHApp *)*param_1)->pBufc4,
+                     &((ScreenStack *)param_1)->savedLevelName);
       iVar9 = *param_1;
-      FUN_001204f0((undefined4)((KHApp *)iVar9)->context,*(undefined4 *)(iVar9 + 200),iVar9 + 0xc4);
+      string_replace(((KHApp *)iVar9)->context,((KHApp *)iVar9)->pBufc8,&((KHApp *)iVar9)->pBufc4);
       if (*(int *)(*param_1 + 200) != 0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
         (*g_pHelperFuncs->free)(*(undefined4 *)(*param_1 + 200));
         *(undefined4 *)(*param_1 + 200) = 0;
       }
       if (param_2 == 100) {
-        param_1[0x18] = 0;
+        ((ScreenStack *)param_1)->field_60 = 0;
       }
       else {
-        param_1[0x18] = 1;
+        ((ScreenStack *)param_1)->field_60 = 1;
       }
       if (param_1[6] != 0) {
         web_request_destroy(param_1[6],1);
@@ -3148,7 +3148,8 @@ LAB_0010489c:
       if (param_2 == 0x3e) {
         iVar9 = FUN_0011b178(*(undefined4 *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
         if (iVar9 == 0) {
-          FUN_001204f0((undefined4)((KHApp *)*param_1)->context,(int32)STRING_TRAINING_00127D10,*param_1 + 0xc4);
+          string_replace(((KHApp *)*param_1)->context,STRING_TRAINING_00127D10,
+                         &((KHApp *)*param_1)->pBufc4);
           FUN_0010f9a4(*(undefined4 *)(*param_1 + 0xa8));
 LAB_00102910:
           uVar10 = 0x6a;
@@ -3164,7 +3165,7 @@ LAB_00102910:
               *(undefined4 *)(*param_1 + 200) = 0;
             }
             iVar7 = *param_1;
-            FUN_001204f0((undefined4)((KHApp *)iVar7)->context,*(undefined4 *)(iVar7 + 0xc4),iVar7 + 200);
+            string_replace(((KHApp *)iVar7)->context,((KHApp *)iVar7)->pBufc4,&((KHApp *)iVar7)->pBufc8);
             uVar10 = 0x7f;
             goto LAB_00104de4;
           }
@@ -3198,7 +3199,8 @@ LAB_00101f40:
             return 0;
           }
           progress_reset(*(undefined4 *)(*param_1 + 0xa8));
-          FUN_001204f0((undefined4)((KHApp *)*param_1)->context,(int32)STRING_TRAINING_00127D10,*param_1 + 0xc4);
+          string_replace(((KHApp *)*param_1)->context,STRING_TRAINING_00127D10,
+                         &((KHApp *)*param_1)->pBufc4);
           goto LAB_00102910;
         }
         piVar4 = (int *)(*(int *)(*param_1 + 0xa8) + 0x52c);
@@ -5823,7 +5825,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
       iVar5 = screen_stack_top((int)param_1);
       ui_element_remove_child(iVar5,700,1);
       ui_element_remove_child(iVar5,500,1);
-      if (param_1[0x18] == 0) {
+      if (((ScreenStack *)param_1)->field_60 == 0) {
         FUN_00109a10(iVar5,2,WORD_HEXADECIMAL_19408333,0x80);
         FUN_00109a10(iVar5,1,WORD_HEXADECIMAL_251509C8,0x73);
       }
@@ -5946,9 +5948,9 @@ LAB_00108d50:
     FUN_0010faa8((int)((KHApp *)*param_1)->context,(int32)STRING_WONDERLAND);
     FUN_0010faa8((int)((KHApp *)*param_1)->context,(int32)STRING_AGRABAH);
     FUN_0010faa8((int)((KHApp *)*param_1)->context,(int32)STRING_CASTLE);
-    if (param_1[0x19] != 0) {
-      (*g_pHelperFuncs->free)(param_1[0x19]);
-      param_1[0x19] = 0;
+    if (((ScreenStack *)param_1)->savedLevelName != (char *)0x0) {
+      (*g_pHelperFuncs->free)(((ScreenStack *)param_1)->savedLevelName);
+      ((ScreenStack *)param_1)->savedLevelName = (char *)0x0;
     }
   }
   return;
@@ -6945,7 +6947,7 @@ int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3)
   int iVar1;
   int iVar2;
   int *piVar3;
-  void *p;
+  char **p;   /* the 13 sound file names */
   undefined4 uVar4;
   code *pcVar5;
   int iVar6;
@@ -7044,25 +7046,25 @@ LAB_0010a85c:
   }
 LAB_0010a894:
   p = helper_malloc(0x34);
-  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_SORA_JUMP_DOT_QCP,p);
-  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_SORA_HIT_DOT_QCP,(int)p + 4);
-  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_ENEMY_HIT_DOT_QCP,(int)p + 8);
-  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_SORA_SWIPE_DOT_QCP,(int)p + 0xc);
-  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_BAD_DOT_MID,(int)p + 0x10);
-  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_GOOD_DOT_MID,(int)p + 0x14);
-  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_KEYBLADE_DOT_MID,(int)p + 0x18);
-  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_EXPLODE_DOT_QCP,(int)p + 0x1c);
-  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_WATER_DOT_QCP,(int)p + 0x20);
-  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_THUD_DOT_QCP,(int)p + 0x24);
-  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_TRANSITION_DOT_QCP,(int)p + 0x28);
-  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_MAGIC_ALERT_DOT_MID,(int)p + 0x2c);
-  FUN_001204f0((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_MAGIC_CAST_DOT_QCP,(int)p + 0x30);
-  uVar4 = FUN_0010bec4(0,p,0xd,1).low;
+  string_replace(((KHApp *)param_1[0x85])->context,STRING_SORA_JUMP_DOT_QCP,&p[0]);
+  string_replace(((KHApp *)param_1[0x85])->context,STRING_SORA_HIT_DOT_QCP,&p[1]);
+  string_replace(((KHApp *)param_1[0x85])->context,STRING_ENEMY_HIT_DOT_QCP,&p[2]);
+  string_replace(((KHApp *)param_1[0x85])->context,STRING_SORA_SWIPE_DOT_QCP,&p[3]);
+  string_replace(((KHApp *)param_1[0x85])->context,STRING_BAD_DOT_MID,&p[4]);
+  string_replace(((KHApp *)param_1[0x85])->context,STRING_GOOD_DOT_MID,&p[5]);
+  string_replace(((KHApp *)param_1[0x85])->context,STRING_KEYBLADE_DOT_MID,&p[6]);
+  string_replace(((KHApp *)param_1[0x85])->context,STRING_EXPLODE_DOT_QCP,&p[7]);
+  string_replace(((KHApp *)param_1[0x85])->context,STRING_WATER_DOT_QCP,&p[8]);
+  string_replace(((KHApp *)param_1[0x85])->context,STRING_THUD_DOT_QCP,&p[9]);
+  string_replace(((KHApp *)param_1[0x85])->context,STRING_TRANSITION_DOT_QCP,&p[10]);
+  string_replace(((KHApp *)param_1[0x85])->context,STRING_MAGIC_ALERT_DOT_MID,&p[11]);
+  string_replace(((KHApp *)param_1[0x85])->context,STRING_MAGIC_CAST_DOT_QCP,&p[12]);
+  uVar4 = FUN_0010bec4(0,(int)p,0xd,1).low;
   *(undefined4 *)(param_1[0x85] + 0xbc) = uVar4;
   FUN_0010a03c(uVar4,*(undefined4 *)(*(int *)(param_1[0x85] + 0xa8) + 0x594));
   iVar1 = 0;
   do {
-    helper_free(*(void **)((int)p + iVar1 * 4));
+    helper_free(p[iVar1]);
     iVar1 = iVar1 + 1;
   } while (iVar1 < 0xd);
   helper_free(p);
@@ -7205,7 +7207,7 @@ int * FUN_0010ac6c(int *param_1,int param_2)
     iVar1 = (**(code **)(**(int **)(*param_1 + 0xc) + 0x4c))
                       (*(int **)(*param_1 + 0xc),(int32)STRING_KH_DOT_BAR_00127CC4,INTEGER_5008,0);
     param_1[0xc] = iVar1;
-    param_1[0x19] = 0;
+    ((ScreenStack *)param_1)->savedLevelName = (char *)0x0;
   }
   return param_1;
 }
@@ -7648,7 +7650,9 @@ LevelObject * level_object_create(LevelObject *object,ISwerveObject *node,char *
   object->field_38 = object->field_3c = 1;
   object->field_40 = object->field_44 = object->field_48 = object->field_4c = 0;
   object->field_50 = object->field_54 = object->field_58 = object->field_60 = 0;
-  object->field_1c = object->field_14 = object->field_18 = 0;
+  object->field_18 = 0;
+  object->clipart = (char *)0x0;
+  object->field_1c = 0;
   object->sceneShapeCount = 0;
   object->shapeCount = object->field_f0 = object->field_f4 = object->field_f8 = object->field_fc = 0;
   object->field_100 = object->field_104 = object->field_108 = object->field_10c = 0;
@@ -11734,8 +11738,8 @@ int32 script_command_run(ScriptCommand *command)
       ((MotionEntity *)command->object)->field_12c = (int32)command->target;
     break;
   case 0x14:   /* loadClipart: loads the object's clipart once */
-    if (command->object != (LevelObject *)0x0 && command->object->field_14 == 0) {
-      FUN_001204f0(context,(undefined4)command->text,&command->object->field_14);
+    if (command->object != (LevelObject *)0x0 && command->object->clipart == (char *)0x0) {
+      string_replace((AppContext *)context,command->text,&command->object->clipart);
       FUN_0011b044((int)command->object,command->flag[0],command->flag[1],command->flag[2],
                    command->flag[3],(undefined4 *)&app->nErr);
     }
@@ -12243,11 +12247,11 @@ int32 script_command_run(ScriptCommand *command)
   case 0x49:   /* summary: the level's summary screen (event 0x75), its name in KHApp.pBufc8 */
     FUN_00109940((int)hud,0);
     if (command->text != (char *)0x0) {
-      if (app->pBufc8 != (void *)0x0) {
+      if (app->pBufc8 != (char *)0x0) {
         (*g_pHelperFuncs->free)(app->pBufc8);
-        app->pBufc8 = (void *)0x0;
+        app->pBufc8 = (char *)0x0;
       }
-      FUN_001204f0(context,(undefined4)command->text,(int *)&app->pBufc8);
+      string_replace((AppContext *)context,command->text,&app->pBufc8);
     }
     FUN_00101ad8((int *)app->screens,0x75);
     break;
@@ -12357,15 +12361,15 @@ void kh_OnAppStop(KHApp *pMe)
     FUN_0010cd2c(pMe->intro,1);
     pMe->intro = (void *)0x0;
   }
-  if (pMe->pBufc4 != (void *)0x0) {
+  if (pMe->pBufc4 != (char *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(pMe->pBufc4);
-    pMe->pBufc4 = (void *)0x0;
+    pMe->pBufc4 = (char *)0x0;
   }
-  if (pMe->pBufc8 != (void *)0x0) {
+  if (pMe->pBufc8 != (char *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(pMe->pBufc8);
-    pMe->pBufc8 = (void *)0x0;
+    pMe->pBufc8 = (char *)0x0;
   }
   if (pMe->pGame != (void *)0x0) {
     FUN_0010c2c4(pMe->pGame,1);
@@ -14261,13 +14265,13 @@ void FUN_001150d0(int param_1,int *param_2)
 /* ==== 0x00115118  (file offset 0x15118)  script_command_parse ======================================== */
 /* GUESS: names. Parses one line of a script into `command`: the words (split at " "), the first one the
    command's name, which gives its type; the others its arguments, by command (objects by name,
-   FUN_00112e20; names hashed, string_hash; numbers, string_to_float, made integers by FUN_00126858;
-   texts copied, FUN_001204f0). A command needs its number of words, else only its type is set; an unknown
+   FUN_00112e20; names hashed, string_hash; numbers, string_to_float, made integers by FUN_00126858; texts
+   copied, string_replace). A command needs its number of words, else only its type is set; an unknown
    name gives type 0x4c, which does nothing. `owner` is the object or screen whose script it is (0 for a
-   sequence's). The binary's branches share their last steps (jumps to 0x00115800, 0x00116828,
-   0x00116654, 0x00116e68, 0x00116e74, 0x00116f14, 0x0011705c, 0x001171a0 and 0x00117258): each is done
-   once, at the end, from what the branch left in the locals objectName ... copyName. Its words are freed
-   at the end (the binary's tail jump to helper_free at 0x001173c4). */
+   sequence's). The binary's branches share their last steps (jumps to 0x00115800, 0x00116828, 0x00116654,
+   0x00116e68, 0x00116e74, 0x00116f14, 0x0011705c, 0x001171a0 and 0x00117258): each is done once, at the
+   end, from what the branch left in the locals objectName ... copyName. Its words are freed at the end
+   (the binary's tail jump to helper_free at 0x001173c4). */
 void script_command_parse(ScriptCommand *command,int32 owner,char *text)
 
 {
@@ -14309,7 +14313,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   if ((*g_pHelperFuncs->strcmp)(words[0],STRING_ADDSOFTKEY) == 0) {
     command->type = 3;
     if (count >= 3) {
-      FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+      string_replace((AppContext *)context,words[1],&command->text);
       command->number[0] = FUN_00126858(string_to_float(context,words[2]));
       if (count >= 4)
         objectName = words[2];
@@ -14318,7 +14322,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_ADDUIACTION) == 0) {
     command->type = 4;
     if (count >= 3) {
-      FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+      string_replace((AppContext *)context,words[1],&command->text);
       objectName = words[2];
     }
   }
@@ -14361,7 +14365,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_ADJUSTVALUE) == 0) {
     command->type = 6;
     if (count >= 3) {
-      FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+      string_replace((AppContext *)context,words[1],&command->text);
       command->value[0] = number = string_to_float(context,words[2]);
       roundNumber = 1;
     }
@@ -14435,7 +14439,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
     command->type = 0x14;
     if (count >= 5) {
       command->object = FUN_00112e20((int)command,(undefined4)words[1]);
-      FUN_001204f0(context,(undefined4)words[2],(int *)&command->text);
+      string_replace((AppContext *)context,words[2],&command->text);
       if ((*g_pHelperFuncs->strcmp)(words[3],one) == 0)
         command->flag[0] = 1;
       if ((*g_pHelperFuncs->strcmp)(words[4],one) == 0)
@@ -14668,7 +14672,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
       copyName = 2;
     else if (count == 4) {
       command->flag[0] = 1;
-      FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+      string_replace((AppContext *)context,words[1],&command->text);
       command->number[1] = string_hash(context,words[2]);
       numberWord = words[3];
     }
@@ -14797,7 +14801,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_INCVAR) == 0) {
     command->type = 0x4e;   /* by number 0: 1 without an amount */
     if (count >= 2)
-      FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+      string_replace((AppContext *)context,words[1],&command->text);
     if (count >= 3)
       numberWord = words[2];
     else
@@ -14806,7 +14810,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_DECVAR) == 0) {
     command->type = 0x4f;
     if (count >= 2)
-      FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+      string_replace((AppContext *)context,words[1],&command->text);
     if (count >= 3)
       numberWord = words[2];
     else
@@ -14902,9 +14906,9 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else
     command->type = 0x4c;
   if (copyName == 1)   /* 0x00117258: a name */
-    FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+    string_replace((AppContext *)context,words[1],&command->text);
   else if (copyName == 2) {   /* 0x00116654: a name, then a number */
-    FUN_001204f0(context,(undefined4)words[1],(int *)&command->text);
+    string_replace((AppContext *)context,words[1],&command->text);
     numberWord = words[2];
   }
   if (numberWord != (char *)0x0) {   /* 0x00116e68 */
@@ -15761,7 +15765,8 @@ void FUN_00118910(int param_1,undefined4 param_2)
     p = helper_malloc(iVar1 << 2);
     string_split((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_28,(int32)DATA_AT_0012774C,p
                  ,iVar1);
-    FUN_001204f0((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*p,param_1 + 0x14);
+    string_replace(((KHApp *)*(int *)(param_1 + 0x84))->context,(const char *)*p,
+                   &((LevelObject *)param_1)->clipart);
     iVar7 = (int32)DATA_AT_00127750;
     if (1 < iVar1) {
                     /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
@@ -16132,7 +16137,7 @@ void kh_OnAppStart(KHApp *pMe)
   pMe->intro = (void *)0x0;
   pMe->pGame = (void *)0x0;
   pMe->progress = (void *)0x0;
-  pMe->pBufc4 = (void *)0x0;
+  pMe->pBufc4 = (char *)0x0;
   pMe->bSuspended = 0;
   pIVar1 = (pMe->a).m_pIShell;
   iVar2 = (*pIVar1->pvt->CreateInstance)(pIVar1,CLASS_IDENTIFIER_HEXADECIMAL_0100A004,&local_14);
@@ -17348,7 +17353,7 @@ void FUN_0011b044(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
   int iVar1;
   
   iVar1 = FUN_0011ae04((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
-                       *(undefined4 *)(param_1 + 0x14),*(undefined4 *)(param_1 + 8),param_2,param_4)
+                       ((LevelObject *)param_1)->clipart,*(undefined4 *)(param_1 + 8),param_2,param_4)
   ;
   *(int *)(param_1 + 0x18) = iVar1;
   if (iVar1 == 0) {
@@ -20825,7 +20830,7 @@ undefined4 FUN_0011fddc(int param_1,undefined4 param_2,int param_3,undefined4 pa
           (*g_pHelperFuncs->free)(progress->recordNames[iVar6]);
           progress->recordNames[iVar6] = (char *)0x0;
         }
-        FUN_001204f0((undefined4)progress->app->context,param_2,(int *)&progress->recordNames[iVar6]);
+        string_replace(progress->app->context,(const char *)param_2,&progress->recordNames[iVar6]);
         progress->records[iVar6].best = param_3;
         progress->records[iVar6].field_04 = param_4;
         FUN_0011ea18(param_1);
@@ -20880,7 +20885,7 @@ void progress_set_status(Progress *progress,const char *name,int32 flag)
   i = progress_find_free_status(progress);
   if (i == -1 || (*g_pHelperFuncs->strlen)(name) == 0)
     return;
-  FUN_001204f0((undefined4)progress->app->context,(undefined4)name,(int *)&progress->statusTexts[i]);
+  string_replace(progress->app->context,name,&progress->statusTexts[i]);
   progress->statusFlags[i] = (uint8)flag;
 }
 
@@ -20952,7 +20957,7 @@ void progress_set_user_id(Progress *progress,const char *userId)
 
 /* ==== 0x00120120  (file offset 0x20120)  progress_set_variable ======================================= */
 /* GUESS: names. Sets the level script's variable `name` to `value` (the script's setVar): the existing one,
-   else a new one in the first free slot (a copy of the name, FUN_001204f0); nothing when all 100 are in
+   else a new one in the first free slot (a copy of the name, string_replace); nothing when all 100 are in
    use. The binary keeps a flag for the second search that is always set (r8 = 1 at 0x00120130, tested at
    0x0012017c). */
 void progress_set_variable(Progress *progress,const char *name,int32 value)
@@ -20970,7 +20975,7 @@ void progress_set_variable(Progress *progress,const char *name,int32 value)
     }
   for (i = 0; i < 100; i++)
     if (progress->variableNames[i] == (char *)0x0) {
-      FUN_001204f0((undefined4)progress->app->context,(undefined4)name,(int *)&progress->variableNames[i]);
+      string_replace(progress->app->context,name,&progress->variableNames[i]);
       progress->variableValues[i] = value;
       return;
     }
@@ -21159,30 +21164,30 @@ void animations_stop(Animations *animations,int32 index,int32 immediately)
   animations->states[index] = immediately ? 4 : 2;
 }
 
-/* ==== 0x001204F0  (file offset 0x204F0)  FUN_001204f0 ================================================ */
-void FUN_001204f0(undefined4 param_1,undefined4 param_2,int *param_3)
+/* ==== 0x001204F0  (file offset 0x204F0)  string_replace ============================================== */
+/* GUESS: name. Replaces the heap string in *slot by a copy of `text` (the old one freed first) and returns
+   the copy (r0 is strcpy's result). The terminator is written again after the strcpy, as the binary does;
+   the malloc is not checked (research_notes/decomp/GAME_BUGS.md). `context` (the app's, at every call) is
+   not read. */
+char * string_replace(AppContext *context,const char *text,char **slot)
 
 {
-  int iVar2;
-  int iVar3;
-  if (*param_3 != 0) {
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(*param_3);
-    *param_3 = 0;
+  uint32 length;
+
+                    /* helper[27] void free(void *p), helper[5] uint32 strlen(const char *s), helper[26]
+                       void * malloc(uint32 size), helper[2] char * strcpy(char *dst, const char *src)
+                       (AEEHelperFuncs +0x6c, +0x14, +0x68, +0x8, via *(base-4)) */
+  if (*slot != (char *)0x0) {
+    (*g_pHelperFuncs->free)(*slot);
+    *slot = (char *)0x0;
   }
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-  iVar2 = (*g_pHelperFuncs->strlen)(param_2);
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-  iVar3 = (*g_pHelperFuncs->malloc)(iVar2 + 1);
-  *param_3 = iVar3;
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-  (*g_pHelperFuncs->strcpy)(iVar3,param_2);
-  *(undefined1 *)(*param_3 + iVar2) = 0;
-  return;
+  length = (*g_pHelperFuncs->strlen)(text);
+  *slot = (*g_pHelperFuncs->malloc)(length + 1);
+  (*g_pHelperFuncs->strcpy)(*slot,text);
+  (*slot)[length] = 0;
+  return *slot;
 }
+
 
 /* ==== 0x0012056C  (file offset 0x2056C)  FUN_0012056c ================================================ */
 void FUN_0012056c(int param_1,int param_2)

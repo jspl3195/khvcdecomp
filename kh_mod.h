@@ -807,7 +807,7 @@ uint32 float_sqrt(uint32 value);   /* 0x00120308 GUESS: name, see kh_mod.c */
 void FUN_0012031c(int *param_1,int param_2);
 void FUN_00120450(undefined4 *param_1);
 void animations_stop(Animations *animations,int32 index,int32 immediately);   /* 0x001204B0 GUESS: name */
-void FUN_001204f0(undefined4 param_1,undefined4 param_2,int *param_3);
+char * string_replace(AppContext *context,const char *text,char **slot);   /* 0x001204F0 GUESS: name, see kh_mod.c */
 void FUN_0012056c(int param_1,int param_2);
 bool FUN_0012059c(int param_1,int param_2);
 void FUN_0012070c(int param_1,int param_2);

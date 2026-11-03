@@ -64,8 +64,10 @@ typedef struct KHApp {
     uint32         bSuspended;       /* +0xb8 GUESS: set to 1 at EVT_APP_SUSPEND */
     uint32         field_bc;         /* +0xbc */
     uint32         field_c0;         /* +0xc0 */
-    void          *pBufc4;           /* +0xc4 heap block (helper free in kh_OnAppStop) */
-    void          *pBufc8;           /* +0xc8 heap block (helper free in kh_OnAppStop) */
+    char          *pBufc4;           /* +0xc4 a heap string (string_replace; freed in kh_OnAppStop): the
+                                        level's name ("training", a progress record's name) */
+    char          *pBufc8;           /* +0xc8 a heap string (string_replace; freed in kh_OnAppStop): the
+                                        script summary's level name, copied to pBufc4 */
     uint32         field_cc;         /* +0xcc */
     struct ScreenStack *screens;     /* +0xd0 the open screens (menus); created by 0x10ac6c(0, pMe),
                                         destroyed by 0x10c3f8. FUN_00101ad8 handles its events */
@@ -149,7 +151,10 @@ typedef struct ScreenStack {
                                      -1011 (FUN_0010ac6c; screen_stack_get_text) */
     struct UIElement *keyPickers[7]; /* +0x44 GUESS: name; the Controls screen's key pickers (ids 400 -
                                      406), one per Progress.controls[] entry (screen_stack_all_keys_bound) */
-    uint8  unknown_60[0x08];
+    int32    field_60;              /* +0x60 0 when FUN_00101ad8 starts a download for event 100, else 1;
+                                     the web reply handler (FUN_0010888c) reads it */
+    char    *savedLevelName;        /* +0x64 GUESS: name; a copy of KHApp.pBufc4 made (string_replace)
+                                     before pBufc8 replaces it for a download; 0 at creation */
 } ScreenStack;                    /* 0x68 bytes (FUN_0010ac6c); only the fields named so far */
 
 /* ---- The text table (GUESS: names) -------------------------------------------------------------------
@@ -410,7 +415,9 @@ typedef struct LevelObject {
     ISwerveObject *node;          /* +0x008 its scene node (AddRef'd) */
     uint32 nameId;                /* +0x00c the hash (string_hash) of its name */
     int32    field_10;              /* +0x010 0 at creation */
-    int32    field_14;              /* +0x014 0 at creation */
+    char    *clipart;               /* +0x014 GUESS: name; 0 at creation; the name of its clipart (script
+                                     loadClipart, or the first word of its node's user data, FUN_00118910),
+                                     loaded by FUN_0011b044 */
     int32    field_18;              /* +0x018 0 at creation */
     int32    field_1c;              /* +0x01c 0 at creation */
     uint8  unknown_020[0x10];
