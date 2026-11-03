@@ -19840,8 +19840,8 @@ undefined4 FUN_0011e6b8(int param_1,int param_2)
     uVar5 = 0x31;
   }
   save_write_byte(progress,(uint8)uVar5,(uint8 *)uVar4,(int32 *)&local_24);
-  FUN_00124734(param_1,progress->app->pBufc4,uVar4,&local_24);
-  FUN_00124734(param_1,progress->app->pBufc8,uVar4,&local_24);
+  save_write_string(progress,progress->app->pBufc4,(uint8 *)uVar4,(int32 *)&local_24);
+  save_write_string(progress,progress->app->pBufc8,(uint8 *)uVar4,(int32 *)&local_24);
   if (progress->summaryPending == 0) {
     uVar5 = 0x30;
   }
@@ -19869,7 +19869,7 @@ undefined4 FUN_0011e6b8(int param_1,int param_2)
   do {
     if (progress->statusFlags[iVar7] != 0) {
       save_write_byte(progress,progress->statusFlags[iVar7],(uint8 *)uVar4,(int32 *)&local_24);
-      FUN_00124734(param_1,progress->statusTexts[iVar7],uVar4,&local_24);
+      save_write_string(progress,progress->statusTexts[iVar7],(uint8 *)uVar4,(int32 *)&local_24);
     }
     iVar7 = iVar7 + 1;
   } while (iVar7 < 100);
@@ -19886,7 +19886,7 @@ undefined4 FUN_0011e6b8(int param_1,int param_2)
   do {
     if (progress->variableNames[iVar7] != (char *)0x0) {
       save_write_int(progress,progress->variableValues[iVar7],(uint8 *)uVar4,(int32 *)&local_24);
-      FUN_00124734(param_1,progress->variableNames[iVar7],uVar4,&local_24);
+      save_write_string(progress,progress->variableNames[iVar7],(uint8 *)uVar4,(int32 *)&local_24);
     }
     iVar7 = iVar7 + 1;
   } while (iVar7 < 100);
@@ -19927,7 +19927,8 @@ undefined4 FUN_0011ea18(int param_1)
   local_1c = 0;
   iVar4 = 0;
   do {
-    FUN_00124734(param_1,*(undefined4 *)(param_1 + iVar4 * 4 + 0x5f0),uVar2,&local_1c /* not arguments, value leftovers: param_3 */);
+    save_write_string((Progress *)param_1,((Progress *)param_1)->recordNames[iVar4],(uint8 *)uVar2,
+                      (int32 *)&local_1c);
     save_write_int((Progress *)param_1,((Progress *)param_1)->records[iVar4].best,(uint8 *)uVar2,
                    (int32 *)&local_1c);
     save_write_int((Progress *)param_1,((Progress *)param_1)->records[iVar4].field_04,(uint8 *)uVar2,
@@ -19964,7 +19965,7 @@ undefined4 FUN_0011ead4(int param_1,undefined4 param_2)
   save_write_int((Progress *)param_1,((Progress *)param_1)->controls[6],(uint8 *)uVar2,(int32 *)&local_18);
   save_write_int((Progress *)param_1,((Progress *)param_1)->field_594,(uint8 *)uVar2,(int32 *)&local_18);
   save_write_int((Progress *)param_1,*(undefined4 *)(param_1 + 0x598),(uint8 *)uVar2,(int32 *)&local_18);
-  FUN_00124734(param_1,((Progress *)param_1)->userId,uVar2,&local_18);
+  save_write_string((Progress *)param_1,((Progress *)param_1)->userId,(uint8 *)uVar2,(int32 *)&local_18);
   save_write_int((Progress *)param_1,*(undefined4 *)(param_1 + 0x5c4),(uint8 *)uVar2,(int32 *)&local_18);
   save_write_int((Progress *)param_1,*(undefined4 *)(param_1 + 0x5c8),(uint8 *)uVar2,(int32 *)&local_18);
   uVar3 = FUN_0011e574(param_1,param_2,uVar2,local_18);
@@ -23835,23 +23836,27 @@ void save_write_int(Progress *progress,int32 value,uint8 *data,int32 *position)
 }
 
 
-/* ==== 0x00124734  (file offset 0x24734)  FUN_00124734 ================================================ */
-void FUN_00124734(undefined4 param_1,int param_2,int param_3,int *param_4)
+/* ==== 0x00124734  (file offset 0x24734)  save_write_string =========================================== */
+/* GUESS: name. Appends a string with its terminator to the saved game being written (`data` at *position,
+   which it advances past it); a null one is written as "", so that save_read_string gives back an empty
+   string: level names, status texts, variable and record names, the user id. There is no check against
+   the buffer's size (research_notes/decomp/GAME_BUGS.md). `progress` is not read. Returns the new position
+   (r0 is what it stores last); no caller reads it. */
+int32 save_write_string(Progress *progress,const char *text,uint8 *data,int32 *position)
 
 {
-  int iVar2;
-  if (param_2 == 0) {
-    param_2 = (int32)STRING_EMPTY_001278E8;
-  }
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-  iVar2 = (*g_pHelperFuncs->strlen)(param_2);
-                    /* helper[0] void * memmove(void *dst, const void *src, uint32 n)
-                       (AEEHelperFuncs +0x0, via *(base-4)) */
-  (*(code *)g_pHelperFuncs->memmove)(*param_4 + param_3,param_2,iVar2 + 1);
-  *param_4 = *param_4 + iVar2 + 1;
-  return;
+  int32 size;
+
+  if (text == (const char *)0x0)
+    text = STRING_EMPTY_001278E8;
+                    /* helper[5] uint32 strlen(const char *s), helper[0] void * memmove(void *dst, const
+                       void *src, uint32 n)  (AEEHelperFuncs +0x14, +0x0, via *(base-4)) */
+  size = (*g_pHelperFuncs->strlen)(text) + 1;
+  (*g_pHelperFuncs->memmove)(data + *position,text,size);
+  *position = *position + size;
+  return *position;
 }
+
 
 /* ==== 0x0012479C  (file offset 0x2479C)  FUN_0012479c ================================================ */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
