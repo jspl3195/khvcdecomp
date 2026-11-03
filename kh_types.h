@@ -143,9 +143,13 @@ typedef struct ScreenStack {
                                      right for style 1, 3 and 2 */
     UIList *screens;              /* +0x34 the open screens, by position */
     int32    depth;                 /* +0x38 how many screens are open */
-    int32    unknown_3c;
+    struct KeyOption *keyOptions; /* +0x3c GUESS: name; the Controls screen's ring of key options
+                                     (key_picker_setup), freed when the screen closes */
     UIList  *keyTexts;              /* +0x40 the key glyphs "0" - "9", "*", "#" (wide), by the ids -1000 -
                                      -1011 (FUN_0010ac6c; screen_stack_get_text) */
+    struct UIElement *keyPickers[7]; /* +0x44 GUESS: name; the Controls screen's key pickers (ids 400 -
+                                     406), one per Progress.controls[] entry (screen_stack_all_keys_bound) */
+    uint8  unknown_60[0x08];
 } ScreenStack;                    /* 0x68 bytes (FUN_0010ac6c); only the fields named so far */
 
 /* ---- The text table (GUESS: names) -------------------------------------------------------------------

@@ -707,7 +707,7 @@ void FUN_00118910(int param_1,undefined4 param_2);
 void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text);   /* 0x00118ED8 GUESS: name */
 void intro_start(Intro *intro);   /* 0x001195F8 GUESS: name */
 void FUN_00119a28(int param_1,int *param_2);
-undefined4 FUN_00119abc(int param_1);
+int32 screen_stack_all_keys_bound(ScreenStack *stack);   /* 0x00119ABC GUESS: name, see kh_mod.c */
 undefined8 FUN_00119b0c(undefined4 param_1,int param_2,undefined4 param_3);
 undefined8 FUN_00119c10(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 ,undefined4 param_6,undefined4 param_7);
 undefined8 FUN_00119c60(int param_1,int param_2,undefined4 param_3,undefined4 param_4);

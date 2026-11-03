@@ -2412,14 +2412,14 @@ LAB_00104fa4:
                        parameters: param_3 was never read, and param_4 only went on as a fifth
                        (stack) argument to a call that already gets its four arguments in r0-r3). */
           FUN_0010a498(param_1,*(undefined4 *)(*(int *)(iVar7 + 0x30) + 0x48));
-          iVar7 = FUN_00119abc(param_1);
+          iVar7 = screen_stack_all_keys_bound((ScreenStack *)param_1);
           if (iVar7 == 0) {
             return local_34;
           }
 LAB_00103858:
           screen_stack_close_top(param_1,1);
-          helper_free((void *)param_1[0xf]);
-          param_1[0xf] = 0;
+          helper_free(((ScreenStack *)param_1)->keyOptions);
+          ((ScreenStack *)param_1)->keyOptions = (KeyOption *)0x0;
           return local_34;
         }
         if (param_2 == 100) goto LAB_00104a24;
@@ -3481,18 +3481,19 @@ LAB_00104360:
     memcpy_word_aligned(local_a8,(int32)DATA_AT_00127C5C,0x34);
     memcpy_word_aligned(local_dc,(int32)DATA_AT_00127C90,0x34);
     pvVar16 = helper_malloc(0xd0);
-    param_1[0xf] = (int)pvVar16;
+    ((ScreenStack *)param_1)->keyOptions = pvVar16;
     iVar19 = 0;
     do {
-      *(int *)(param_1[0xf] + iVar19 * 0x10 + 8) = local_a8[iVar19];
-      *(undefined4 *)(param_1[0xf] + iVar19 * 0x10 + 0xc) = local_dc[iVar19];
-      if (0 < iVar19) {
-        iVar8 = param_1[0xf] + iVar19 * 0x10;
-        *(int *)(iVar8 + -0xc) = iVar8;
-        *(int *)(param_1[0xf] + iVar19 * 0x10) = param_1[0xf] + iVar19 * 0x10 + -0x10;
+      ((ScreenStack *)param_1)->keyOptions[iVar19].label = local_a8[iVar19];
+      ((ScreenStack *)param_1)->keyOptions[iVar19].keyCode = local_dc[iVar19];
+      if (0 < iVar19) {   /* linked in a ring of 13 */
+        ((ScreenStack *)param_1)->keyOptions[iVar19 - 1].next =
+          &((ScreenStack *)param_1)->keyOptions[iVar19];
+        ((ScreenStack *)param_1)->keyOptions[iVar19].previous =
+          &((ScreenStack *)param_1)->keyOptions[iVar19 - 1];
         if (iVar19 == 0xc) {
-          *(int *)(param_1[0xf] + 0xc4) = param_1[0xf];
-          *(int *)param_1[0xf] = (int)((int *)param_1[0xf] + 0x30);
+          ((ScreenStack *)param_1)->keyOptions[12].next = ((ScreenStack *)param_1)->keyOptions;
+          ((ScreenStack *)param_1)->keyOptions[0].previous = &((ScreenStack *)param_1)->keyOptions[12];
         }
       }
       iVar19 = iVar19 + 1;
@@ -3503,9 +3504,9 @@ LAB_00104360:
     iVar8 = 0;
     do {
       iVar12 = FUN_0010bba0(0,local_74[8],iVar19,local_74[7],iVar20,param_1,8,0,0);
-      key_picker_setup(iVar12,param_1[0xf],local_74[iVar8],iVar8);
+      key_picker_setup(iVar12,((ScreenStack *)param_1)->keyOptions,local_74[iVar8],iVar8);
       ui_element_add_child(iVar9,iVar12,iVar8 + 400);
-      param_1[iVar8 + 0x11] = iVar12;
+      ((ScreenStack *)param_1)->keyPickers[iVar8] = (UIElement *)iVar12;
       iVar19 = *(short *)(*(int *)(iVar12 + 8) + 6) + iVar17 + iVar17 + iVar19;
       if (iVar8 == 0) {
         FUN_00105224(iVar12,iVar9);
@@ -16294,25 +16295,23 @@ void FUN_00119a28(int param_1,int *param_2)
   return;
 }
 
-/* ==== 0x00119ABC  (file offset 0x19ABC)  FUN_00119abc ================================================ */
-undefined4 FUN_00119abc(int param_1)
+/* ==== 0x00119ABC  (file offset 0x19ABC)  screen_stack_all_keys_bound ================================= */
+/* GUESS: name. 1 when each of the Controls screen's 7 key pickers has a key bound (its setting, a
+   Progress.controls[] entry, is not AVK_UNDEFINED), else 0; all 7 are checked. The Controls screen
+   (FUN_00101ad8, events 0x46 and 0x48) stays open while it is 0. The binary compares with 0xE010 as
+   `sub ip, r2, #0xe000; subs ip, ip, #0x10`. */
+int32 screen_stack_all_keys_bound(ScreenStack *stack)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  int iVar3;
-  
-  uVar2 = 1;
-  iVar3 = 0;
-  do {
-    iVar1 = iVar3 * 4;
-    iVar3 = iVar3 + 1;
-    if (**(int **)(*(int *)(param_1 + iVar1 + 0x44) + 0x44) == 0xe010) {
-      uVar2 = 0;
-    }
-  } while (iVar3 < 7);
-  return uVar2;
+  int32 bound = 1;
+  int32 i;
+
+  for (i = 0; i < 7; i++)
+    if (*stack->keyPickers[i]->setting == AVK_UNDEFINED)
+      bound = 0;
+  return bound;
 }
+
 
 /* ==== 0x00119AF4  (file offset 0x19AF4)  FUN_00119af4 ================================================ */
 /* A virtual method Ghidra has no function for (only reached through the vtable at 0x00101680): written from
