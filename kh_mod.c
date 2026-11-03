@@ -10362,24 +10362,30 @@ int32 script_parse_lines(int32 context,char *text,ScriptCommand ***commands,int3
 }
 
 
-/* ==== 0x0010EFD4  (file offset 0x0EFD4)  FUN_0010efd4 ================================================ */
-undefined4 FUN_0010efd4(undefined4 param_1,undefined4 param_2,int param_3,int param_4)
+/* ==== 0x0010EFD4  (file offset 0x0EFD4)  string_remove_prefix ======================================== */
+/* GUESS: name. When `text` begins with `prefix`, copies what follows it into `out` and returns 1; else
+   returns 0 and leaves `out` as it is. The terminator is written twice (by strcpy, then by hand), as the
+   binary does. The script's parser takes a line's arguments this way ("if ", "loadSounds ", ...); its
+   runner strips a condition's "!" in place (out == text: strcpy copies over its own source, which BREW's
+   forward copy allows). `context` (the app's) is not read. */
+int32 string_remove_prefix(int32 context,const char *prefix,char *text,char *out)
 
 {
-  int iVar2;
-  int iVar3;
-                    /* helper[62] boolean strbegins(const char *prefix, const char *s)
-                       (AEEHelperFuncs +0xf8, via *(base-4)) */
-  iVar2 = (*g_pHelperFuncs->strbegins)(param_2,param_3);
-  if (iVar2 == 0) {
+  int32 prefixLength;
+  int32 textLength;
+
+                    /* helper[62] boolean strbegins(const char *prefix, const char *s), helper[5] uint32
+                       strlen(const char *s), helper[2] char * strcpy(char *dst, const char *src)
+                       (AEEHelperFuncs +0xf8, +0x14, +0x08, via *(base-4)) */
+  if ((*g_pHelperFuncs->strbegins)(prefix,text) == 0)
     return 0;
-  }
-  iVar2 = (*g_pHelperFuncs->strlen)(param_2);
-  iVar3 = (*g_pHelperFuncs->strlen)(param_3);
-  (*g_pHelperFuncs->strcpy)(param_4,param_3 + iVar2);
-  *(undefined1 *)(param_4 + (iVar3 - iVar2)) = 0;
+  prefixLength = (*g_pHelperFuncs->strlen)(prefix);
+  textLength = (*g_pHelperFuncs->strlen)(text);
+  (*g_pHelperFuncs->strcpy)(out,text + prefixLength);
+  out[textLength - prefixLength] = 0;
   return 1;
 }
+
 
 /* ==== 0x0010F058  (file offset 0x0F058)  FUN_0010f058 ================================================ */
 int FUN_0010f058(int param_1,int param_2)
@@ -11710,14 +11716,14 @@ int32 script_command_run(ScriptCommand *command)
     count = string_split(context,command->text,(char *)DATA_AT_0012710C,(char **)0x0,0);   /* " " */
     words = helper_malloc(count << 2);
     string_split(context,command->text,(char *)DATA_AT_0012710C,words,count);
-    negate = FUN_0010efd4(context,(undefined4)DATA_AT_001276CC,(int)words[0],(int)words[0]);   /* "!" */
+    negate = string_remove_prefix(context,(const char *)DATA_AT_001276CC,words[0],words[0]);   /* "!" */
     result = FUN_00114198((int)app->progress,(undefined4)words[0]) != 0;
     half = count / 2;
     if (negate != 0)
       result = 1 - result;
     for (i = 0; i < half; i++) {
-      negate = FUN_0010efd4(context,(undefined4)DATA_AT_001276CC,(int)words[i * 2 + 2],
-                            (int)words[i * 2 + 2]);
+      negate = string_remove_prefix(context,(const char *)DATA_AT_001276CC,words[i * 2 + 2],
+                                    words[i * 2 + 2]);
       value = FUN_00114198((int)app->progress,(undefined4)words[i * 2 + 2]) != 0;
       if (negate != 0)
         value = 1 - value;
@@ -14484,7 +14490,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
     if (count >= 2) {   /* the sound names: the line after "loadSounds " */
       command->number[0] = count - 1;
       command->text = (*g_pHelperFuncs->malloc)((*g_pHelperFuncs->strlen)(text) - 9);
-      FUN_0010efd4(context,(undefined4)STRING_LOADSOUNDS_001271C4,(int)text,(int)command->text);
+      string_remove_prefix(context,STRING_LOADSOUNDS_001271C4,text,command->text);
     }
   }
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_MATCHPOSITION) == 0) {
@@ -14944,7 +14950,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   if (valueWord != (char *)0x0)   /* 0x001171a0 */
     command->value[0] = string_to_float(context,valueWord);
   if (prefix != (const char *)0x0) {   /* 0x0011705c: the rest of the line, its last character cut */
-    FUN_0010efd4(context,(undefined4)prefix,(int)text,(int)command->text);
+    string_remove_prefix(context,prefix,text,command->text);
     command->text[textEnd] = 0;
   }
   if (objectName != (char *)0x0)   /* 0x00115800 */

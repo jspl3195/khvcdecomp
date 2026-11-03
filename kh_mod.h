@@ -610,7 +610,7 @@ void FUN_0010ed54(int param_1,int param_2,undefined4 param_3);
 void FUN_0010f1fc(int32 character);   /* 0x0010F1FC (no Ghidra function) */
 void FUN_0010edec(int param_1);
 int32 script_parse_lines(int32 context,char *text,ScriptCommand ***commands,int32 owner);   /* 0x0010EEFC GUESS: name, see kh_mod.c */
-undefined4 FUN_0010efd4(undefined4 param_1,undefined4 param_2,int param_3,int param_4);
+int32 string_remove_prefix(int32 context,const char *prefix,char *text,char *out);   /* 0x0010EFD4 GUESS: name, see kh_mod.c */
 int FUN_0010f058(int param_1,int param_2);
 void FUN_0010f244(int *param_1,undefined4 *param_2);
 int32 combat_region_take_one(CombatRegion *region);   /* 0x0010F2CC GUESS: name */
