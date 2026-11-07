@@ -6331,7 +6331,7 @@ Enemy * enemy_create(Enemy *enemy,int32 number,CombatRegion *region,int32 type)
   enemy->field_24 = 0;
   enemy->field_28 = 0;
   enemy->region = region;
-  enemy->field_f8 = 0;
+  enemy->walkAway = 0;
   enemy->animation = -1;
   enemy->type = type;
   enemy->field_270 = 1;
@@ -11624,19 +11624,20 @@ undefined4 FUN_00112e20(int param_1,undefined4 param_2)
   return uVar2;
 }
 
-/* ==== 0x00112E84  (file offset 0x12E84)  FUN_00112e84 ================================================ */
-/* GUESS: what it does. Finds where the enemy can stand along its step (+0xb4, +0xb8) by halving: while
-   either half-step (+-0.1 bounds, float_compare_greater / float_compare_less leave their result in the
-   flags: `bhi` / `bhs` / `blo` at 0x00112f58 - 0x00112f88, written after the comma) is larger than 0.1,
-   halves it and moves the step forward when level_object_allows accepts the point +0xa8 + step (with
-   height +0xb0), back when it does not; then steps back once. Returns 0 when the step is 0, else whether
-   level_object_allows accepts the final point. Written from its disassembly; r1, which Ghidra returned as
-   the high word, is only a register leftover. */
-int32 FUN_00112e84(int32 enemy)
+/* ==== 0x00112E84  (file offset 0x12E84)  enemy_fit_walk ============================================== */
+/* GUESS: names. Fits the enemy's walk (walk, from walkStart) to what its region allows, by halving:
+   while both halves of the step are larger than 0.1 (the float compares leave their result in the
+   flags: `bhi` / `bhs` / `blo` at 0x00112f58 - 0x00112f88, written after the comma), halves them, and
+   moves the walk's end forward when level_object_allows accepts walkStart + walk (at walkStart's height,
+   0.001 across), back when it does not; then steps back once. Returns 0 when the walk is then 0, else
+   whether its end is allowed. A walk with one component 0 (four of ENEMY_WALK_DIRECTIONS) never enters
+   the loop, so it is cut to 0 and refused (research_notes/decomp/GAME_BUGS.md). r1, which Ghidra
+   returned as the high word, is only a register leftover. Called by enemy_roam. */
+int32 enemy_fit_walk(Enemy *enemy)
 
 {
-  uint32 halfX = *(uint32 *)(enemy + 0xb4);
-  uint32 halfY = *(uint32 *)(enemy + 0xb8);
+  uint32 halfX = enemy->walk[0];
+  uint32 halfY = enemy->walk[1];
   uint32 y;
 
   while (((float_compare_greater(halfX,FLOAT_0_POINT_1), *(float *)&halfX > 0.1f) ||
@@ -11645,28 +11646,27 @@ int32 FUN_00112e84(int32 enemy)
           (float_compare_less(halfY,FLOAT_0_POINT_1 + 0x80000000), *(float *)&halfY < -0.1f))) {
     halfX = float_multiply(halfX,0x3f000000);
     halfY = float_multiply(halfY,0x3f000000);
-    y = float_add(*(uint32 *)(enemy + 0xac),*(uint32 *)(enemy + 0xb8));
-    if (level_object_allows((LevelObject *)*(int32 *)(enemy + 0x40),
-                            float_add(*(uint32 *)(enemy + 0xa8),*(uint32 *)(enemy + 0xb4)),y,
-                            *(uint32 *)(enemy + 0xb0),FLOAT_0_POINT_001,FLOAT_0_POINT_001) != 0) {
-      *(uint32 *)(enemy + 0xb4) = float_add(*(uint32 *)(enemy + 0xb4),halfX);
-      *(uint32 *)(enemy + 0xb8) = float_add(*(uint32 *)(enemy + 0xb8),halfY);
+    y = float_add(enemy->walkStart[1],enemy->walk[1]);
+    if (level_object_allows((LevelObject *)enemy->region,float_add(enemy->walkStart[0],enemy->walk[0]),y,
+                            enemy->walkStart[2],FLOAT_0_POINT_001,FLOAT_0_POINT_001) != 0) {
+      enemy->walk[0] = float_add(enemy->walk[0],halfX);
+      enemy->walk[1] = float_add(enemy->walk[1],halfY);
     }
     else {
-      *(uint32 *)(enemy + 0xb4) = float_subtract(*(uint32 *)(enemy + 0xb4),halfX);
-      *(uint32 *)(enemy + 0xb8) = float_subtract(*(uint32 *)(enemy + 0xb8),halfY);
+      enemy->walk[0] = float_subtract(enemy->walk[0],halfX);
+      enemy->walk[1] = float_subtract(enemy->walk[1],halfY);
     }
   }
-  *(uint32 *)(enemy + 0xb4) = float_subtract(*(uint32 *)(enemy + 0xb4),halfX);
-  *(uint32 *)(enemy + 0xb8) = float_subtract(*(uint32 *)(enemy + 0xb8),halfY);
-  if ((float_compare_equal(*(uint32 *)(enemy + 0xb4),0), *(float *)(enemy + 0xb4) == 0.0f) &&
-      (float_compare_equal(*(uint32 *)(enemy + 0xb8),0), *(float *)(enemy + 0xb8) == 0.0f))
+  enemy->walk[0] = float_subtract(enemy->walk[0],halfX);
+  enemy->walk[1] = float_subtract(enemy->walk[1],halfY);
+  if ((float_compare_equal(enemy->walk[0],0), *(float *)&enemy->walk[0] == 0.0f) &&
+      (float_compare_equal(enemy->walk[1],0), *(float *)&enemy->walk[1] == 0.0f))
     return 0;
-  y = float_add(*(uint32 *)(enemy + 0xac),*(uint32 *)(enemy + 0xb8));
-  return level_object_allows((LevelObject *)*(int32 *)(enemy + 0x40),
-                             float_add(*(uint32 *)(enemy + 0xa8),*(uint32 *)(enemy + 0xb4)),y,
-                             *(uint32 *)(enemy + 0xb0),FLOAT_0_POINT_001,FLOAT_0_POINT_001) != 0;
+  y = float_add(enemy->walkStart[1],enemy->walk[1]);
+  return level_object_allows((LevelObject *)enemy->region,float_add(enemy->walkStart[0],enemy->walk[0]),y,
+                             enemy->walkStart[2],FLOAT_0_POINT_001,FLOAT_0_POINT_001) != 0;
 }
+
 
 /* ==== 0x00113030  (file offset 0x13030)  FUN_00113030 ================================================ */
 void FUN_00113030(int param_1,undefined4 param_2,uint param_3,uint param_4,undefined4 param_5)
@@ -15318,10 +15318,11 @@ undefined8 FUN_00119b0c(undefined4 param_1,int param_2,undefined4 param_3)
 
 /* ==== 0x00119C10  (file offset 0x19C10)  level_object_allows ========================================= */
 /* GUESS: name. Whether the object's first shape (shapes[0], the first its node's user parameter
-   0x2101870D lists) allows a body at (x, y, z) with `radius` and `height` (collision_shape_allows): 1 or
-   0, and 0 when it has no shapes. A second shape is not tested. The enemies' step finder FUN_00112e84 asks
-   it of the enemy's combat region, whose shape holds them in. Ghidra's 7th parameter is a stack word the
-   binary passes on and collision_shape_allows does not read; the high word it returned is r1 reloaded. */
+   0x2101870D lists) allows a body at (x, y, z) with `radius` and `height` (collision_shape_allows): 1
+   or 0, and 0 when it has no shapes. A second shape is not tested. The enemies' step finder
+   enemy_fit_walk asks it of the enemy's combat region, whose shape holds them in. Ghidra's 7th
+   parameter is a stack word the binary passes on and collision_shape_allows does not read; the high
+   word it returned is r1 reloaded. */
 int32 level_object_allows(LevelObject *object,uint32 x,uint32 y,uint32 z,uint32 radius,uint32 height)
 
 {
@@ -17067,162 +17068,134 @@ LAB_0011c188:
   return param_1;
 }
 
-/* ==== 0x0011C330  (file offset 0x1C330)  FUN_0011c330 ================================================ */
-undefined8 FUN_0011c330(int param_1,int param_2,uint param_3)
+/* ==== 0x0011C330  (file offset 0x1C330)  enemy_roam ================================================== */
+/* GUESS: names. One step of an enemy's roaming, a state machine in field_84 (the enemy's state 2 runs it
+   with walkRange, FUN_0011daac with 9.0):
+     3001: waits for its action sequence (FUN_0010eb74), then FUN_001201cc(field_28, 1) and 3003;
+     3003: plans a walk from where it stands (walkStart): with the player's point closer than walkRange
+       (squared, planar_distance_squared_2), away from the player along a diagonal of
+       ENEMY_WALK_DIRECTIONS (1, 3, 5, 7 by the side the player is on), or, already walking away, the
+       next of the eight directions; farther, a random walk of up to 10 across (now * number, its
+       remainders by 2000 and 7000). enemy_fit_walk fits it to the region; when it is allowed, the enemy
+       turns toward it (FUN_00113374, GUESS: the vector's angle, then motion_entity_start_turn), and the
+       walk becomes a speed: walkDuration = |walk| * walkPace (ms), walk / that per ms; then 3002;
+     3002: walks: the model (field_28) at walkStart + elapsed * walk, until walkDuration; plans again
+       (3003) when the walk is over, or the player comes closer than walkRange and than before (squared,
+       plus 0.000001), unless walking away with the player still 1.0 or more off. walkDistance keeps the
+       squared distance.
+   The float compares leave their result in the flags (`bhs` / `blo` / `movlo` at 0x0011c3b4 -
+   0x0011c678), written after the comma. Returns r0:r1 as the binary pops them from where it saved them:
+   the enemy and now, but on the 3003 path the stack arguments of its calls overwrite them (the player's
+   point, then the walk's y). */
+uint64 enemy_roam(Enemy *enemy,int32 now,uint32 walkRange)
 
 {
-  int iVar1;
-  uint uVar2;
-  undefined4 uVar3;
-  uint uVar4;
-  uint uVar5;
-  int iVar6;
-  int iVar7;
-  bool bVar8;
-  undefined1 uVar9;
-  uint64 uVar10;
-  undefined8 uVar11;
-  uint local_24;
-  undefined8 uVar12;
-  
-  uVar3 = INTEGER_3003;
-  iVar1 = *(int *)(param_1 + 0x84);
-  iVar6 = param_1;
-  if (iVar1 == 0xbb9) {
-    iVar1 = FUN_0010eb74(param_1);
-    iVar7 = param_2;
-    if (iVar1 != 0) {
-      FUN_001201cc(*(int *)(param_1 + 0x28),1);
-      *(undefined4 *)(param_1 + 0x84) = uVar3;
-      iVar7 = param_2;
+  uint64 result;
+  uint32 distance;
+  uint32 dx;
+  uint32 dy;
+  uint32 turn;
+  uint32 length;
+  uint32 duration;
+  uint32 elapsed;
+  uint32 x;
+  uint32 y;
+  uint32 z;
+  int32 seed;
+
+  MAKE_WORDS(result,(uint32)now,(uint32)enemy);
+  if (enemy->field_84 == 3001) {
+    if (FUN_0010eb74((int)enemy) != 0) {
+      FUN_001201cc(enemy->field_28,1);
+      enemy->field_84 = INTEGER_3003;
     }
-    goto LAB_0011c424;
+    return result;
   }
-  uVar9 = 0xb9 < iVar1 - 0xb00U;
-  iVar7 = param_2;
-  if (iVar1 - 0xb00U == 0xba) {
-    uVar2 = float_subtract(((Enemy *)param_1)->playerPoint[0],((Enemy *)param_1)->position[0]);
-    uVar4 = float_subtract(((Enemy *)param_1)->playerPoint[1],((Enemy *)param_1)->position[1]);
-    uVar2 = float_multiply(uVar2,uVar2);
-    uVar4 = float_multiply(uVar4,uVar4);
-    uVar2 = float_add(uVar4,uVar2);
-    uVar2 = float_add(uVar2,WORD_HEXADECIMAL_358637BD);
-    float_compare_less(uVar2,param_3);
-    if (!(bool)uVar9) {
-      float_compare_less(uVar2,*(uint *)(param_1 + 0xd0));
-    }
-    if ((bool)uVar9) {
-      uVar4 = param_2 - *(int *)(param_1 + 0xc4);
-      if (*(int *)(param_1 + 200) <= (int)uVar4) goto LAB_0011c694;
-      uVar3 = *(undefined4 *)(param_1 + 0xb0);
-      uVar4 = int_to_float(uVar4);
-      uVar5 = float_multiply(uVar4,*(uint *)(param_1 + 0xb8));
-      uVar5 = float_add(uVar5,*(uint *)(param_1 + 0xac));
-      uVar4 = float_multiply(uVar4,*(uint *)(param_1 + 0xb4));
-      uVar4 = float_add(uVar4,*(uint *)(param_1 + 0xa8));
-      thunk_FUN_0011fd90(*(int *)(param_1 + 0x28),uVar4,uVar5,uVar3);
+  if (enemy->field_84 == 3002) {           /* walking (0x0011c5f8) */
+    dx = float_subtract(enemy->playerPoint[0],enemy->position[0]);
+    dy = float_subtract(enemy->playerPoint[1],enemy->position[1]);
+    dx = float_multiply(dx,dx);
+    dy = float_multiply(dy,dy);
+    distance = float_add(dy,dx);
+    distance = float_add(distance,FLOAT_0_POINT_000001);
+    if ((float_compare_less(distance,walkRange), *(float *)&distance < *(float *)&walkRange) &&
+        (float_compare_less(distance,enemy->walkDistance),
+         *(float *)&distance < *(float *)&enemy->walkDistance)) {   /* the player came closer */
+      if (enemy->walkAway == 0 ||
+          (float_compare_less(distance,0x3f800000), *(float *)&distance < 1.0f))
+        enemy->field_84 = INTEGER_3003;
     }
     else {
-      bVar8 = true;
-      if ((*(int *)(param_1 + 0xf8) == 0) || (float_compare_less(uVar2,0x3f800000), !bVar8)) {
-LAB_0011c694:
-        *(undefined4 *)(param_1 + 0x84) = uVar3;
+      elapsed = (uint32)(now - enemy->walkStartTime);
+      if ((int32)elapsed < enemy->walkDuration) {
+        z = enemy->walkStart[2];
+        elapsed = int_to_float((int32)elapsed);
+        y = float_add(float_multiply(elapsed,enemy->walk[1]),enemy->walkStart[1]);
+        x = float_add(float_multiply(elapsed,enemy->walk[0]),enemy->walkStart[0]);
+        thunk_FUN_0011fd90(enemy->field_28,x,y,z);
       }
+      else
+        enemy->field_84 = INTEGER_3003;     /* the walk is over */
     }
-    *(uint *)(param_1 + 0xd0) = uVar2;
-    goto LAB_0011c424;
+    enemy->walkDistance = distance;
+    return result;
   }
-  uVar9 = 0xba < iVar1 - 0xb00U;
-  if (iVar1 - 0xb00U != 0xbb) goto LAB_0011c424;
-  *(undefined4 *)(param_1 + 0xa8) = ((Enemy *)param_1)->position[0];
-  *(undefined4 *)(param_1 + 0xac) = ((Enemy *)param_1)->position[1];
-  *(uint *)(param_1 + 0xb0) = ((Enemy *)param_1)->position[2];
-  iVar6 = ((Enemy *)param_1)->playerPoint[0];
-  iVar7 = ((Enemy *)param_1)->playerPoint[1];
-  uVar2 = planar_distance_squared_2(param_1,((Enemy *)param_1)->position[0],
-                                    ((Enemy *)param_1)->position[1],((Enemy *)param_1)->position[2],
-                                    iVar6,iVar7);
-  float_compare_less(uVar2,param_3);
-  if ((bool)uVar9) {
-    uVar4 = param_2 * *(int *)(param_1 + 0x1c);
-    uVar10 = rt_sdiv(2000,uVar4);
-    uVar2 = int_to_float((int32)uVar10.high - 1000);
-    uVar2 = float_divide(uVar2,FLOAT_100);
-    *(uint *)(param_1 + 0xb4) = uVar2;
-    uVar10 = rt_sdiv(INTEGER_7000,uVar4);
-    uVar2 = int_to_float((int32)uVar10.high - 0xdac);
-    uVar2 = float_divide(uVar2,FLOAT_350);
-    *(uint *)(param_1 + 0xb8) = uVar2;
-    *(undefined4 *)(param_1 + 0xf8) = 0;
-  }
-  else {
-    uVar9 = 1;
-    if (*(int *)(param_1 + 0xf8) == 0) {
-      uVar2 = float_subtract(*(uint *)(param_1 + 0xa8),((Enemy *)param_1)->playerPoint[0]);
-      float_compare_greater(uVar2,0);
-      if ((bool)uVar9) {
-        uVar2 = float_subtract(*(uint *)(param_1 + 0xac),((Enemy *)param_1)->playerPoint[1]);
-        float_compare_greater(uVar2,0);
-        if ((bool)uVar9) {
-          uVar3 = 3;
-        }
-        else {
-          uVar3 = 5;
-        }
-LAB_0011c440:
-        *(undefined4 *)(param_1 + 0xfc) = uVar3;
+  if (enemy->field_84 != 3003)
+    return result;
+  enemy->walkStart[0] = enemy->position[0];   /* plan a walk (0x0011c374) */
+  enemy->walkStart[1] = enemy->position[1];
+  enemy->walkStart[2] = enemy->position[2];
+  MAKE_WORDS(result,enemy->playerPoint[1],enemy->playerPoint[0]);   /* the next call's stack arguments, */
+  distance = planar_distance_squared_2(enemy,enemy->position[0],enemy->position[1],   /* over r0 and r1 */
+                                       enemy->position[2],enemy->playerPoint[0],enemy->playerPoint[1]);
+  if (float_compare_less(distance,walkRange), *(float *)&distance < *(float *)&walkRange) {   /* near */
+    if (enemy->walkAway != 0)
+      enemy->walkDirection = (enemy->walkDirection + 1) % 8;
+    else {
+      dx = float_subtract(enemy->walkStart[0],enemy->playerPoint[0]);
+      if (float_compare_greater(dx,0), !(*(float *)&dx >= 0.0f)) {
+        dy = float_subtract(enemy->walkStart[1],enemy->playerPoint[1]);
+        enemy->walkDirection = (float_compare_greater(dy,0), *(float *)&dy >= 0.0f) ? 1 : 7;
       }
       else {
-        uVar2 = float_subtract(*(uint *)(param_1 + 0xac),((Enemy *)param_1)->playerPoint[1]);
-        float_compare_greater(uVar2,0);
-        if (!(bool)uVar9) {
-          uVar3 = 7;
-          goto LAB_0011c440;
-        }
-        *(undefined4 *)(param_1 + 0xfc) = 1;
+        dy = float_subtract(enemy->walkStart[1],enemy->playerPoint[1]);
+        enemy->walkDirection = (float_compare_greater(dy,0), *(float *)&dy >= 0.0f) ? 3 : 5;
       }
-      *(undefined4 *)(param_1 + 0xf8) = 1;
+      enemy->walkAway = 1;
     }
-    else {
-      iVar1 = *(int *)(param_1 + 0xfc) + 1;
-      *(int *)(param_1 + 0xfc) = iVar1 + ((int)(iVar1 + ((uint)(iVar1 >> 0x1f) >> 0x1d)) >> 3) * -8;
-    }
-    iVar1 = (int32)DATA_AT_001270AC;
-    *(undefined4 *)(param_1 + 0xb4) = *(undefined4 *)(iVar1 + *(int *)(param_1 + 0xfc) * 8);
-    *(undefined4 *)(param_1 + 0xb8) = *(undefined4 *)(iVar1 + *(int *)(param_1 + 0xfc) * 8 + 4);
+    enemy->walk[0] = ENEMY_WALK_DIRECTIONS[enemy->walkDirection * 2];
+    enemy->walk[1] = ENEMY_WALK_DIRECTIONS[enemy->walkDirection * 2 + 1];
   }
-  if (FUN_00112e84(param_1) != 0) {
-    uVar2 = float_subtract(((Enemy *)param_1)->playerPoint[0],*(uint *)(param_1 + 0xa8));
-    uVar2 = float_multiply(uVar2,uVar2);
-    uVar4 = float_subtract(((Enemy *)param_1)->playerPoint[1],*(uint *)(param_1 + 0xac));
-    uVar4 = float_multiply(uVar4,uVar4);
-    uVar2 = float_add(uVar4,uVar2);
-    *(uint *)(param_1 + 0xd0) = uVar2;
-    iVar6 = *(int *)(param_1 + 0xb8);
-    uVar11 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,0,0,
-                          *(undefined4 *)(param_1 + 0xb4),iVar6);
-    local_24 = uVar11.low;
-    uVar2 = motion_entity_get_heading((MotionEntity *)*(int *)(param_1 + 0x20));
-    local_24 = float_reverse_subtract(uVar2,local_24);
-    wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,(uint32 *)&local_24);
-    motion_entity_start_turn((MotionEntity *)*(int *)(param_1 + 0x20),local_24,0x3f800000);
-    *(int *)(param_1 + 0xc4) = param_2;
-    uVar2 = float_multiply(*(uint *)(param_1 + 0xb4),*(uint *)(param_1 + 0xb4));
-    uVar4 = float_multiply(*(uint *)(param_1 + 0xb8),*(uint *)(param_1 + 0xb8));
-    uVar2 = float_sqrt(float_add(uVar4,uVar2));
-    uVar4 = int_to_float(*(int32 *)(param_1 + 0x118));
-    uVar2 = float_multiply(uVar4,uVar2);
-    uVar4 = float_divide(*(uint *)(param_1 + 0xb4),uVar2);
-    *(uint *)(param_1 + 0xb4) = uVar4;
-    uVar4 = float_divide(*(uint *)(param_1 + 0xb8),uVar2);
-    *(uint *)(param_1 + 0xb8) = uVar4;
-    uVar2 = float_to_int(uVar2);
-    *(uint *)(param_1 + 200) = uVar2;
-    *(undefined4 *)(param_1 + 0x84) = INTEGER_3002;
+  else {                                   /* farther: a random walk (0x0011c48c) */
+    seed = now * enemy->number;
+    enemy->walk[0] = float_divide(int_to_float((int32)rt_sdiv(2000,seed).high - 1000),FLOAT_100);
+    enemy->walk[1] = float_divide(int_to_float((int32)rt_sdiv(INTEGER_7000,seed).high - 3500),FLOAT_350);
+    enemy->walkAway = 0;
   }
-LAB_0011c424:
-  return MAKE_WORDS(uVar12,iVar7,iVar6);
+  if (enemy_fit_walk(enemy) == 0)
+    return result;
+  dx = float_subtract(enemy->playerPoint[0],enemy->walkStart[0]);
+  dx = float_multiply(dx,dx);
+  dy = float_subtract(enemy->playerPoint[1],enemy->walkStart[1]);
+  dy = float_multiply(dy,dy);
+  enemy->walkDistance = float_add(dy,dx);
+  result.low = enemy->walk[1];             /* the next call's fifth argument, over the saved r0 */
+  turn = FUN_00113374((undefined4)enemy->app->context,0,0,enemy->walk[0],enemy->walk[1]).low;
+  turn = float_reverse_subtract(motion_entity_get_heading((MotionEntity *)enemy->field_20),turn);
+  wrap_angle((int32)enemy->app->context,&turn);
+  motion_entity_start_turn((MotionEntity *)enemy->field_20,turn,0x3f800000);
+  enemy->walkStartTime = now;
+  dx = float_multiply(enemy->walk[0],enemy->walk[0]);
+  dy = float_multiply(enemy->walk[1],enemy->walk[1]);
+  length = float_sqrt(float_add(dy,dx));
+  duration = float_multiply(int_to_float(enemy->walkPace),length);
+  enemy->walk[0] = float_divide(enemy->walk[0],duration);
+  enemy->walk[1] = float_divide(enemy->walk[1],duration);
+  enemy->walkDuration = float_to_int(duration);
+  enemy->field_84 = INTEGER_3002;
+  return result;
 }
+
 
 /* ==== 0x0011C708  (file offset 0x1C708)  FUN_0011c708 ================================================ */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
@@ -17848,7 +17821,7 @@ LAB_0011d4b4:
     }
     iVar9 = INTEGER_2001;
     if (bVar3)
-      return FUN_0011c330(param_1,param_2,*(uint *)(param_1 + 0x114));
+      return enemy_roam((Enemy *)param_1,param_2,((Enemy *)param_1)->walkRange);
     break;
   case 3:
     bVar3 = FUN_0012059c(param_1,param_2);
@@ -18085,7 +18058,7 @@ int FUN_0011daac(int param_1,int param_2,undefined4 param_3,uint param_4)
   if (iVar5 != 0x1772) {
     return iVar5;
   }
-  return (int)FUN_0011c330(param_1,param_2,FLOAT_9).low;
+  return (int)enemy_roam((Enemy *)param_1,param_2,FLOAT_9).low;
 }
 
 /* ==== 0x0011DC9C  (file offset 0x1DC9C)  save_read_byte ============================================== */

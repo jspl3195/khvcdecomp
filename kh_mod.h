@@ -672,7 +672,7 @@ int32 animations_find_free_slot(Animations *animations);   /* 0x00112D28 GUESS: 
 int32 progress_find_free_status(Progress *progress);   /* 0x00112D54 GUESS: name, see kh_mod.c */
 LevelObject * game_find_object(Game *game,uint32 nameId);   /* 0x00112DBC GUESS: name, see kh_mod.c */
 undefined4 FUN_00112e20(int param_1,undefined4 param_2);
-int32 FUN_00112e84(int32 enemy);
+int32 enemy_fit_walk(Enemy *enemy);   /* 0x00112E84 GUESS: name, see kh_mod.c */
 void FUN_00113030(int param_1,undefined4 param_2,uint param_3,uint param_4,undefined4 param_5);
 void FUN_0011316c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5,undefined4 param_6,undefined4 param_7,undefined4 param_8,int param_9,undefined4 param_10,undefined4 param_11);
 void FUN_001132a8(int param_1);
@@ -759,7 +759,7 @@ undefined4 FUN_0011ba0c(int param_1,undefined4 param_2);
 void FUN_0011bb00(undefined4 *param_1,int param_2);
 void FUN_0011bb58(int param_1,int param_2);
 int FUN_0011bb9c(int param_1,undefined4 *param_2);
-undefined8 FUN_0011c330(int param_1,int param_2,uint param_3);
+uint64 enemy_roam(Enemy *enemy,int32 now,uint32 walkRange);   /* 0x0011C330 GUESS: name, see kh_mod.c */
 void FUN_0011c708(int param_1,int param_2,int param_3);
 bool FUN_0011c860(int param_1,int param_2,undefined4 param_3);
 void FUN_0011ca70(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);
@@ -1381,7 +1381,7 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 #define INTEGER_7000 0x00001B58   /* was DAT_0011c6f8 (word at 0x0011C6F8); integer 7000 */
 #define FLOAT_350 0x43AF0000   /* was DAT_0011c6fc (word at 0x0011C6FC); the float 350.0 */
 #define INTEGER_3002 0x00000BBA   /* was DAT_0011c700 (word at 0x0011C700); integer 3002 */
-#define WORD_HEXADECIMAL_358637BD 0x358637BD   /* was DAT_0011c704 (word at 0x0011C704); value 0x358637BD (897988541) */
+#define FLOAT_0_POINT_000001 0x358637BD   /* was DAT_0011c704 (word at 0x0011C704); the float 0.000001 */
 #define INTEGER_42736 0x0000A6F0   /* was DAT_0011c858 (word at 0x0011C858); integer 42736 */
 #define INTEGER_4002 0x00000FA2   /* was DAT_0011ca68 (word at 0x0011CA68); integer 4002 */
 #define INTEGER_2003 0x000007D3   /* was DAT_0011d3e0, DAT_0011d6a4 (word at 0x0011D3E0); integer 2003 */
@@ -1566,7 +1566,9 @@ static const char STRING_POTSPIDER[] = "Potspider";   /* 0x00127080 */
 static const char STRING_MUMMY[] = "Mummy";   /* 0x0012708C */
 static const char STRING_DARKBALL[] = "Darkball";   /* 0x00127094 */
 static const char STRING_PIGSOLDIER[] = "PigSoldier";   /* 0x001270A0 */
-static const uint32 DATA_AT_001270AC[16] = {   /* 0x001270AC */
+static const uint32 ENEMY_WALK_DIRECTIONS[16] = {   /* 0x001270AC: the eight (x, y) walks enemy_roam
+                                                     picks from, floats: (-2, 0), (-2, 2), (0, 2), (2, 2),
+                                                     (2, 0), (2, -2), (0, -2), (-2, -2) */
   0xC0000000,0x00000000,0xC0000000,0x40000000,0x00000000,0x40000000,0x40000000,0x40000000,
   0x40000000,0x00000000,0x40000000,0xC0000000,0x00000000,0xC0000000,0xC0000000,0xC0000000
 };

@@ -811,16 +811,30 @@ typedef struct Enemy {
     int32    field_9c;              /* +0x09c a state machine: 4001 first */
     int32    waitState;             /* +0x0a0 enemy_wait: 5001 idle, 5002 waiting */
     int32    state;                 /* +0x0a4 1001 waiting, 1002 alive, 1003 dying, 1004 gone */
-    uint8  unknown_a8[0x14];
+    uint32   walkStart[3];        /* +0x0a8 GUESS: names. Floats (their bits): where its walk starts, its
+                                     position when enemy_roam plans one */
+    uint32   walk[2];             /* +0x0b4 the walk (x, y): planned as the whole step, fitted by
+                                     enemy_fit_walk, then made a speed (per ms) */
     int32    waitUntil;             /* +0x0bc enemy_wait: the time (ms) the wait ends */
-    uint8  unknown_c0[0x38];
-    int32    field_f8;              /* +0x0f8 */
-    uint8  unknown_fc[0x04];
+    uint8  unknown_c0[0x04];
+    int32    walkStartTime;         /* +0x0c4 the time (ms) its walk started */
+    int32    walkDuration;          /* +0x0c8 the walk's length in ms (|walk| * walkPace) */
+    uint8  unknown_cc[0x04];
+    uint32   walkDistance;        /* +0x0d0 a float (its bits): the squared distance to the player's
+                                     point, kept by enemy_roam */
+    uint8  unknown_d4[0x24];
+    int32    walkAway;              /* +0x0f8 1: the walk was picked away from the player (the next tries
+                                     take the next directions); 0: at random */
+    int32    walkDirection;         /* +0x0fc the index in ENEMY_WALK_DIRECTIONS */
     int32    animation;             /* +0x100 GUESS: name; the animation it plays (enemy_play_animation), -1
                                      none */
     int32    type;                  /* +0x104 1-11, from the region's enemy name (combat_region_setup) */
     int32    field_108;             /* +0x108 when set (or for type 2) its health bar is shown */
-    uint8  unknown_10c[0x14];
+    uint8  unknown_10c[0x08];
+    uint32   walkRange;           /* +0x114 GUESS: name. A float (its bits): the squared distance below
+                                     which enemy_roam walks away from the player */
+    int32    walkPace;              /* +0x118 the ms a walk takes per unit */
+    uint8  unknown_11c[0x04];
     int32    field_120;             /* +0x120 cleared by enemy_reset_states */
     uint8  unknown_124[0x04];
     int32    field_128;             /* +0x128 a countdown (enemy_update subtracts the elapsed time) */
