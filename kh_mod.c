@@ -1222,13 +1222,13 @@ undefined4 FUN_00101ad8(int *param_1,int param_2)
   int local_2c;
   int local_28;
   
-  uVar3 = WORD_HEXADECIMAL_310668B6;
-  uVar15 = WORD_HEXADECIMAL_251509C8;
-  uVar2 = WORD_HEXADECIMAL_0252B33F;
-  uVar14 = WORD_HEXADECIMAL_03D18088;
-  uVar13 = WORD_HEXADECIMAL_1F10FB19;
-  uVar11 = WORD_HEXADECIMAL_0017A510;
-  uVar10 = WORD_HEXADECIMAL_2DE9998F;
+  uVar3 = TEXT_SUMMARY;
+  uVar15 = TEXT_MENU;
+  uVar2 = TEXT_REPLAY;
+  uVar14 = TEXT_CONTINUE;
+  uVar13 = TEXT_SAVE;
+  uVar11 = TEXT_SELECT;
+  uVar10 = TEXT_BUY_HEADING;
   pvVar16 = (void *)0x0;
   local_34 = 1;
   if (param_2 == 0x41) {
@@ -1312,7 +1312,7 @@ LAB_00104fa4:
           if (param_2 != 0x6f) {
             if (param_2 == 0x7f) {
               uVar24 = 0x81;
-              uVar23 = WORD_HEXADECIMAL_1D73D1AE;
+              uVar23 = TEXT_DOWNLOAD;
               goto LAB_001024bc;
             }
                     /* 0x1050e0 bl FUN_0012031c: the function only uses r0/r1 (Ghidra's prototype
@@ -1341,9 +1341,9 @@ LAB_00104fa4:
             uVar10 = 0x74;
             goto LAB_00105108;
           }
-          FUN_00109a10(iVar9,1,WORD_HEXADECIMAL_1D73D1AE,100);
+          FUN_00109a10(iVar9,1,TEXT_DOWNLOAD,100);
           uVar10 = 0x72;
-          uVar14 = WORD_HEXADECIMAL_14741FD6;
+          uVar14 = TEXT_END;
           goto LAB_001050b0;
         }
         if (param_2 == 0x5a) {
@@ -1467,7 +1467,7 @@ LAB_00103858:
       }
       ((KHApp *)*param_1)->progress->summaryPending = 0;
       uVar10 = (int32)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
-      FUN_001055c4(param_1,uVar10,0,uVar3,WORD_HEXADECIMAL_21C1059D);
+      screen_add_heading((ScreenStack *)param_1,(UIElement *)uVar10,0,uVar3,TEXT_GAME_AUTOSAVED);
       if ((*(int *)(*param_1 + 200) == 0) ||
          (iVar7 = (*g_pHelperFuncs->strlen)(*(undefined4 *)(*param_1 + 200)), iVar7 == 0)) {
         ((KHApp *)*param_1)->progress->summaryPending = 1;
@@ -1565,10 +1565,10 @@ LAB_00103858:
       return 0;
     case 0x7c:
       iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
-      FUN_001055c4(param_1,iVar9,0,DOUBLE_1_POINT_72879609_TIMES_TEN_TO_THE_MINUS_20_HIGH_WORD,DOUBLE_1_POINT_72879609_TIMES_TEN_TO_THE_MINUS_20_LOW_WORD);
-      FUN_00109a10(iVar9,1,WORD_HEXADECIMAL_03B0A428,0x7d);
+      screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,TEXT_HIGH_SCORE,TEXT_NEW_HIGH_SCORE);
+      FUN_00109a10(iVar9,1,TEXT_YES,0x7d);
       uVar10 = 0xffffffff;
-      uVar14 = WORD_HEXADECIMAL_30D96C27;
+      uVar14 = TEXT_NO;
 LAB_001050b0:
       uVar11 = 2;
       break;
@@ -1579,10 +1579,10 @@ LAB_001050b0:
       uVar10 = screen_stack_scale((ScreenStack *)param_1,700,1).low;
       uVar10 = text_box_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar7);
-      text_box_set_text_id((TextBox *)uVar10,(int32)WORD_HEXADECIMAL_2E8D6E9D);
+      text_box_set_text_id((TextBox *)uVar10,(int32)TEXT_SENDING);
       ui_element_add_child(iVar9,uVar10,500);
       FUN_00109a10(iVar9,1,0,0);
-      FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_10FB280A,0x56);
+      FUN_00109a10(iVar9,2,TEXT_CANCEL,0x56);
       if (param_1[6] != 0) {
         web_request_destroy(param_1[6],1);
       }
@@ -1597,7 +1597,7 @@ LAB_001050b0:
       goto LAB_00104dcc;
     case 0x7e:
       iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
-      FUN_001055c4(param_1,iVar9,0,uVar3,WORD_HEXADECIMAL_21C1059D);
+      screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,uVar3,TEXT_GAME_AUTOSAVED);
       if ((*(int *)(*param_1 + 200) == 0) ||
          (iVar7 = (*g_pHelperFuncs->strlen)(*(undefined4 *)(*param_1 + 200)), iVar7 == 0)) {
         ((KHApp *)*param_1)->progress->summaryPending = 1;
@@ -1667,7 +1667,7 @@ LAB_001050b0:
     case 0x81:
 LAB_00104a24:
       iVar9 = screen_stack_top(param_1);
-      FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_10FB280A,0x73);
+      FUN_00109a10(iVar9,2,TEXT_CANCEL,0x73);
       FUN_00109a10(iVar9,1,0,0);
       uVar10 = screen_stack_scale((ScreenStack *)param_1,100,1).low;
       iVar19 = screen_stack_scale((ScreenStack *)param_1,100,2).low;
@@ -1681,7 +1681,7 @@ LAB_00104a24:
       uVar10 = screen_stack_scale((ScreenStack *)param_1,800,1).low;
       uVar10 = text_box_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar19);
-      text_box_set_text_id((TextBox *)uVar10,(int32)WORD_HEXADECIMAL_0528CA88);
+      text_box_set_text_id((TextBox *)uVar10,(int32)TEXT_DOWNLOADING);
       ui_element_add_child(iVar9,uVar10,500);
       if (((ScreenStack *)param_1)->savedLevelName != (char *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -1720,7 +1720,7 @@ LAB_00104a24:
       uVar10 = screen_stack_scale((ScreenStack *)param_1,700,1).low;
       uVar10 = text_box_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar19);
-      text_box_set_text_id((TextBox *)uVar10,(int32)WORD_HEXADECIMAL_0528CA88);
+      text_box_set_text_id((TextBox *)uVar10,(int32)TEXT_DOWNLOADING);
       ui_element_add_child(iVar9,uVar10,500);
       pvVar16 = helper_malloc(0x100);
       pvVar5 = helper_malloc(0x80);
@@ -1751,7 +1751,7 @@ LAB_00104a24:
         iVar19 = iVar19 + 1;
       } while (iVar19 < 0x19);
       FUN_00109a10(iVar9,1,0,0);
-      FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_10FB280A,0x56);
+      FUN_00109a10(iVar9,2,TEXT_CANCEL,0x56);
       if (param_1[6] != 0) {
         web_request_destroy(param_1[6],1);
       }
@@ -1770,18 +1770,18 @@ LAB_00104dcc:
 LAB_00101fa8:
       iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
       *(undefined4 *)(iVar9 + 0x3c) = 3;
-      FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_24017E3E,WORD_HEXADECIMAL_01B449A3);
+      screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,TEXT_HIGH_SCORES,TEXT_SCORE_FORMULA);
       uVar10 = screen_stack_scale((ScreenStack *)param_1,0xfa,1).low;
       uVar11 = screen_stack_scale((ScreenStack *)param_1,0x32,2).low;
-      uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_272E6865,0x24);
+      uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,TEXT_LEVEL,0x24);
       ui_element_add_child(iVar9,uVar10,0);
       uVar10 = screen_stack_scale((ScreenStack *)param_1,0xfa,1).low;
       uVar10 = (int)text_line_create(0,0,uVar10,(int)*(short *)(*(int *)(iVar9 + 8) + 4),0,param_1,
-                            WORD_HEXADECIMAL_00C833EC,0x21);
+                            TEXT_SCORE,0x21);
       ui_element_add_child(iVar9,uVar10,0);
       uVar10 = screen_stack_scale((ScreenStack *)param_1,0xfa,1).low;
       uVar11 = screen_stack_scale((ScreenStack *)param_1,0x3b6,2).low;
-      uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_04D4D70F,0x22);
+      uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,TEXT_RANK,0x22);
       ui_element_add_child(iVar9,uVar10,0);
       iVar19 = 1;
       iVar7 = 0x18;
@@ -1868,15 +1868,15 @@ LAB_00101fa8:
         }
         else {
           uVar24 = 0x82;
-          uVar23 = WORD_HEXADECIMAL_3B4C67C7;
+          uVar23 = TEXT_UPDATE;
         }
 LAB_001024bc:
         FUN_00109a10(iVar9,1,uVar23,uVar24);
         uVar10 = 0xffffffff;
-        uVar14 = WORD_HEXADECIMAL_19408333;
+        uVar14 = TEXT_BACK;
         goto LAB_001050b0;
       }
-      FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0xffffffff);
+      FUN_00109a10(iVar9,2,TEXT_BACK,0xffffffff);
       uVar10 = 0;
       uVar14 = 0;
 LAB_00105108:
@@ -1908,7 +1908,7 @@ LAB_00101db4:
     case 0x88:
       screen_stack_close_top(param_1,1);
       iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
-      FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_10FB280A,0x73);
+      FUN_00109a10(iVar9,2,TEXT_CANCEL,0x73);
       FUN_00109a10(iVar9,1,0,0);
       iVar7 = text_style_create(0,6);
       *(undefined4 *)(iVar7 + 4) = 9;
@@ -1918,7 +1918,7 @@ LAB_00101db4:
       uVar13 = screen_stack_scale((ScreenStack *)param_1,200,1).low;
       uVar14 = screen_stack_scale((ScreenStack *)param_1,100,2).low;
       iVar7 = text_box_create(0,uVar14,uVar13,uVar11,uVar10,param_1,iVar7);
-      text_box_set_text_id((TextBox *)iVar7,(int32)WORD_HEXADECIMAL_27B19885);
+      text_box_set_text_id((TextBox *)iVar7,(int32)TEXT_DOWNLOAD_ERROR);
       uVar10 = 1000;
       goto LAB_00104da0;
     default:
@@ -1932,19 +1932,19 @@ LAB_00101db4:
     iVar9 = ((Progress *)iVar7)->musicVolume;
     if (iVar9 == 0) {
       ((Progress *)iVar7)->musicVolume = 0x14;
-      pvVar16 = WORD_HEXADECIMAL_13DD8E16;
+      pvVar16 = TEXT_MUSIC_LOW;
     }
     else if (iVar9 == 0x14) {
       ((Progress *)iVar7)->musicVolume = 0x28;
-      pvVar16 = WORD_HEXADECIMAL_0AFA190E;
+      pvVar16 = TEXT_MUSIC_MEDIUM;
     }
     else if (iVar9 == 0x28) {
       ((Progress *)iVar7)->musicVolume = 0x3c;
-      pvVar16 = WORD_HEXADECIMAL_2714CFF7;
+      pvVar16 = TEXT_MUSIC_HIGH;
     }
     else if (iVar9 == 0x3c) {
       ((Progress *)iVar7)->musicVolume = 0;
-      pvVar16 = WORD_HEXADECIMAL_27B2CEEB;
+      pvVar16 = TEXT_MUSIC_OFF;
     }
     uVar10 = screen_stack_top(param_1);
     iVar7 = ui_element_find_child(uVar10,0xc9);
@@ -1974,8 +1974,8 @@ LAB_0010489c:
           if (param_2 < 0x2b) {
             if (param_2 == 0x15) {
               iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
-              FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_0DB81F00,0);
-              FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0x1f);
+              screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,TEXT_ITEMS,0);
+              FUN_00109a10(iVar9,2,TEXT_BACK,0x1f);
               memcpy_word_aligned(local_74 + 10,(int32)DATA_AT_00127BA4,0x18);
               puVar6 = (undefined4 *)progress_find_variable(((KHApp *)*param_1)->progress,STRING_COLLECTABLES);
               local_74[9] = 0;
@@ -2021,7 +2021,7 @@ LAB_0010489c:
                        +0x28, via *(base-4)) */
                 (*g_pHelperFuncs->wstrcat)(pvVar16,local_a8[9]);
                 if (iVar17 == 5) {
-                  local_a8[8] = screen_stack_get_text(param_1,WORD_HEXADECIMAL_1EC39991);
+                  local_a8[8] = screen_stack_get_text(param_1,TEXT_OF);
                     /* helper[10] AECHAR * wstrcat(AECHAR *dst, const AECHAR *src)  (AEEHelperFuncs
                        +0x28, via *(base-4)) */
                   (*g_pHelperFuncs->wstrcat)(pvVar16,local_a8[8]);
@@ -2072,25 +2072,25 @@ LAB_0010489c:
         if (param_2 == 0x2a) {
           uVar24 = 0x34;
           iVar19 = 0xf;
-          uVar11 = WORD_HEXADECIMAL_0955306E;
+          uVar11 = TEXT_HI_POTION_HELP;
         }
         else if (param_2 == 0x2b) {
           uVar24 = 0x35;
-          uVar11 = WORD_HEXADECIMAL_2C7A1EE9;
+          uVar11 = TEXT_ETHER_HELP;
         }
         else {
-          uVar11 = WORD_HEXADECIMAL_2CF7E187;
+          uVar11 = TEXT_POTION_HELP;
           if (param_2 == 0x2c) {
             iVar19 = 0xf;
             uVar24 = 0x36;
-            uVar11 = WORD_HEXADECIMAL_07A0110B;
+            uVar11 = TEXT_ELIXIR_HELP;
           }
         }
         iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
-        FUN_001055c4(param_1,iVar9,0,uVar10,0);
-        FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0x84);
+        screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,uVar10,0);
+        FUN_00109a10(iVar9,2,TEXT_BACK,0x84);
         if (iVar19 <= *(int *)(*(int *)(*param_1 + 0xa8) + 0x52c)) {
-          FUN_00109a10(iVar9,1,WORD_HEXADECIMAL_0B259095,uVar24);
+          FUN_00109a10(iVar9,1,TEXT_BUY,uVar24);
         }
         uVar10 = screen_stack_top(param_1);
         iVar19 = ui_element_find_child(uVar10,300);
@@ -2104,7 +2104,7 @@ LAB_0010489c:
         ui_element_add_child(iVar9,uVar10,0);
         uVar10 = screen_stack_scale((ScreenStack *)param_1,0x2a8,1).low;
         uVar11 = screen_stack_scale((ScreenStack *)param_1,500,2).low;
-        uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_16A5390B,0x21);
+        uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,TEXT_MUNNY,0x21);
         ui_element_add_child(iVar9,uVar10,0);
         local_38 = helper_malloc(0x20);
                     /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
@@ -2200,9 +2200,9 @@ LAB_001042b8:
   case 1:
     game_pause(*param_1);
     iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
-    FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_2B21E3F9,0);
-    FUN_00109a10(iVar9,1,WORD_HEXADECIMAL_225D20E5,0x15);
-    FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0xffffffff);
+    screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,TEXT_STATUS,0);
+    FUN_00109a10(iVar9,1,TEXT_NEXT,0x15);
+    FUN_00109a10(iVar9,2,TEXT_BACK,0xffffffff);
     memset(local_74 + 9,0x1c);
     local_74[9] = float_to_int(*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x514));
     local_74[10] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x524);
@@ -2232,7 +2232,7 @@ LAB_001042b8:
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
       (*g_pHelperFuncs->free)(local_a8[7]);
       if (iVar19 < 2) {
-        local_a8[6] = screen_stack_get_text(param_1,WORD_HEXADECIMAL_1EC39991);
+        local_a8[6] = screen_stack_get_text(param_1,TEXT_OF);
                     /* helper[10] AECHAR * wstrcat(AECHAR *dst, const AECHAR *src)  (AEEHelperFuncs
                        +0x28, via *(base-4)) */
         (*g_pHelperFuncs->wstrcat)(pvVar16,local_a8[6]);
@@ -2277,22 +2277,22 @@ LAB_001042b8:
       FUN_0010a0d0(*(int *)(*param_1 + 0xc0));
     }
     iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
-    FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_2E66608C,0);
+    screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,TEXT_OPTIONS,0);
     FUN_00109a10(iVar9,1,uVar11,0xfffffffe);
-    FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0xffffffff);
+    FUN_00109a10(iVar9,2,TEXT_BACK,0xffffffff);
     memcpy_word_aligned(local_74 + 0xb,(int32)DATA_AT_00127BD4,0x14);
     memcpy_word_aligned(local_74 + 6,(int32)DATA_AT_00127BE8,0x14);
     memcpy_word_aligned(local_74 + 1,(int32)DATA_AT_00127BFC,0x14);
     iVar7 = ((KHApp *)*param_1)->progress->soundVolume;
-    pvVar16 = WORD_HEXADECIMAL_2F7413EE;
-    if (((iVar7 == 0x14) || (pvVar16 = WORD_HEXADECIMAL_31B444EE, iVar7 == 0x28)) ||
-       (pvVar16 = WORD_HEXADECIMAL_15998E05, iVar7 == 0x3c)) {
+    pvVar16 = TEXT_SOUND_LOW;
+    if (((iVar7 == 0x14) || (pvVar16 = TEXT_SOUND_MEDIUM, iVar7 == 0x28)) ||
+       (pvVar16 = TEXT_SOUND_HIGH, iVar7 == 0x3c)) {
       local_44 = pvVar16;
     }
     iVar7 = ((KHApp *)*param_1)->progress->musicVolume;
-    pvVar16 = WORD_HEXADECIMAL_13DD8E16;
-    if (((iVar7 == 0x14) || (pvVar16 = WORD_HEXADECIMAL_0AFA190E, iVar7 == 0x28)) ||
-       (pvVar16 = WORD_HEXADECIMAL_2714CFF7, iVar7 == 0x3c)) {
+    pvVar16 = TEXT_MUSIC_LOW;
+    if (((iVar7 == 0x14) || (pvVar16 = TEXT_MUSIC_MEDIUM, iVar7 == 0x28)) ||
+       (pvVar16 = TEXT_MUSIC_HIGH, iVar7 == 0x3c)) {
       local_40 = pvVar16;
     }
     uVar10 = screen_stack_scale((ScreenStack *)param_1,0x96,2).low;
@@ -2312,9 +2312,9 @@ LAB_001042b8:
   case 4:
     game_pause(*param_1);
     iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
-    FUN_001055c4(param_1,iVar9,0,uVar10,WORD_HEXADECIMAL_133529B8);
+    screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,uVar10,TEXT_SELECT_AN_ITEM);
     FUN_00109a10(iVar9,1,uVar11,0xfffffffe);
-    FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0x10);
+    FUN_00109a10(iVar9,2,TEXT_BACK,0x10);
     iVar19 = screen_stack_scale((ScreenStack *)param_1,100,2).low;
     iVar17 = screen_stack_scale((ScreenStack *)param_1,0x118,1).low;
     iVar12 = (int)*(short *)(*(int *)(iVar9 + 8) + 4) + iVar19 * -2;
@@ -2329,9 +2329,9 @@ LAB_001042b8:
     local_3c = (void *)(iVar12 + iVar8 * -2);
     pvVar16 = (void *)((int)local_3c + iVar8 * -2);
     iVar19 = (int)local_38 + iVar8;
-    uVar10 = (int)text_line_create(0,iVar19,iVar17,pvVar16,0,param_1,WORD_HEXADECIMAL_02AAF639,0x24);
+    uVar10 = (int)text_line_create(0,iVar19,iVar17,pvVar16,0,param_1,TEXT_ITEM_HEADING,0x24);
     ui_element_add_child(iVar7,uVar10,0);
-    iVar19 = (int)text_line_create(0,iVar19,iVar17,pvVar16,0,param_1,WORD_HEXADECIMAL_1A43CB02,0x22);
+    iVar19 = (int)text_line_create(0,iVar19,iVar17,pvVar16,0,param_1,TEXT_VALUE_HEADING,0x22);
     ui_element_add_child(iVar7,iVar19,0);
     iVar12 = screen_stack_scale((ScreenStack *)param_1,0x1e,1).low;
     iVar17 = iVar12 + *(int *)(iVar19 + 0x34) + iVar17;
@@ -2375,7 +2375,7 @@ LAB_001042b8:
     } while (iVar19 < 4);
     uVar10 = screen_stack_scale((ScreenStack *)param_1,0x2a8,1).low;
     uVar11 = screen_stack_scale((ScreenStack *)param_1,500,2).low;
-    uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,WORD_HEXADECIMAL_16A5390B,0x21);
+    uVar10 = (int)text_line_create(0,uVar11,uVar10,0,0,param_1,TEXT_MUNNY,0x21);
     ui_element_add_child(iVar9,uVar10,0);
     local_78 = helper_malloc(0x20);
     iVar19 = INTEGER_MINUS_16076;
@@ -2409,11 +2409,11 @@ LAB_00104da0:
     uVar10 = screen_stack_top(param_1);
     iVar7 = ui_element_find_child(uVar10,0x2d);
     if (iVar7 != 0) {
-      text_box_set_text_id((TextBox *)iVar7,(int32)WORD_HEXADECIMAL_1650919F);
-      FUN_00109a10(uVar10,2,WORD_HEXADECIMAL_19408333,8);
+      text_box_set_text_id((TextBox *)iVar7,(int32)TEXT_CONFIRM_END_GAME);
+      FUN_00109a10(uVar10,2,TEXT_BACK,8);
       uVar13 = 7;
       uVar11 = 1;
-      uVar15 = WORD_HEXADECIMAL_03B0A428;
+      uVar15 = TEXT_YES;
       goto LAB_001043c4;
     }
     goto LAB_00104338;
@@ -2432,9 +2432,9 @@ LAB_00104360:
     return 0;
   case 0xb:
     iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
-    FUN_001055c4(param_1,iVar9,0,WORD_HEXADECIMAL_111CB9DB,0);
+    screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,TEXT_CONTROLS,0);
     FUN_00109a10(iVar9,1,uVar13,0x46);
-    FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0x48);
+    FUN_00109a10(iVar9,2,TEXT_BACK,0x48);
     memcpy_word_aligned(local_74 + 9,(int32)DATA_AT_00127C40,0x1c);
     uVar10 = screen_stack_scale((ScreenStack *)param_1,0x50,2).low;
     iVar19 = screen_stack_scale((ScreenStack *)param_1,0xa0,1).low;
@@ -2507,19 +2507,19 @@ LAB_00104360:
     iVar9 = ((Progress *)iVar7)->soundVolume;
     if (iVar9 == 0) {
       ((Progress *)iVar7)->soundVolume = 0x14;
-      pvVar16 = WORD_HEXADECIMAL_2F7413EE;
+      pvVar16 = TEXT_SOUND_LOW;
     }
     else if (iVar9 == 0x14) {
       ((Progress *)iVar7)->soundVolume = 0x28;
-      pvVar16 = WORD_HEXADECIMAL_31B444EE;
+      pvVar16 = TEXT_SOUND_MEDIUM;
     }
     else if (iVar9 == 0x28) {
       ((Progress *)iVar7)->soundVolume = 0x3c;
-      pvVar16 = WORD_HEXADECIMAL_15998E05;
+      pvVar16 = TEXT_SOUND_HIGH;
     }
     else if (iVar9 == 0x3c) {
       ((Progress *)iVar7)->soundVolume = 0;
-      pvVar16 = WORD_HEXADECIMAL_14FB8F11;
+      pvVar16 = TEXT_SOUND_OFF;
     }
     uVar10 = screen_stack_top(param_1);
     iVar7 = ui_element_find_child(uVar10,200);
@@ -2540,15 +2540,15 @@ LAB_00104360:
     goto LAB_001048a4;
   case 0xf:
 LAB_001048a4:
-    uVar11 = WORD_HEXADECIMAL_2F3E5828;
-    uVar10 = WORD_HEXADECIMAL_0C211E44;
+    uVar11 = TEXT_HELP_BODY;
+    uVar10 = TEXT_HELP;
     if (param_2 == 0xf) {
-      uVar11 = WORD_HEXADECIMAL_0CB59575;
-      uVar10 = WORD_HEXADECIMAL_37E4CCE1;
+      uVar11 = TEXT_ABOUT_BODY;
+      uVar10 = TEXT_ABOUT;
     }
     iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
-    FUN_001055c4(param_1,iVar9,0,uVar10,0);
-    FUN_00109a10(iVar9,2,WORD_HEXADECIMAL_19408333,0xffffffff);
+    screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,uVar10,0);
+    FUN_00109a10(iVar9,2,TEXT_BACK,0xffffffff);
     iVar19 = text_style_create(0,5);
     *(undefined4 *)(iVar19 + 4) = 0x24;
     *(undefined4 *)(iVar19 + 0x18) = WORD_HEXADECIMAL_FFEFEFEF;
@@ -2577,7 +2577,7 @@ LAB_001048a4:
     uVar13 = 4;
     uVar11 = 2;
     uVar10 = *(undefined4 *)(*param_1 + 0xd4);
-    uVar15 = WORD_HEXADECIMAL_2A6EBDD0;
+    uVar15 = TEXT_SHOP;
 LAB_001043c4:
     FUN_00109a10(uVar10,uVar11,uVar15,uVar13);
     return local_34;
@@ -2793,36 +2793,42 @@ void FUN_00105538(int param_1,undefined4 param_2,int param_3)
   return;
 }
 
-/* ==== 0x001055C4  (file offset 0x055C4)  FUN_001055c4 ================================================ */
-void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5)
+/* ==== 0x001055C4  (file offset 0x055C4)  screen_add_heading ========================================== */
+/* GUESS: names. Adds a heading to a menu screen, and a text below it when bodyId is not 0: the
+   heading a text line across the display's width, 9% (90 thousandths, screen_stack_scale) down, the
+   text with the id titleId, centred (alignment 9); the text a text box from 11% down to the bottom
+   with a margin of 10% of the width on each side, its style type 6 with its lines from the top
+   (alignment 0x21), filled with the text bodyId. Each gets `color` as its primary colour when it is
+   not 0 (no caller passes one). Both go to the screen as its children with the id 0. The menus
+   (FUN_00101ad8) call it for each screen they build. */
+void screen_add_heading(ScreenStack *stack,UIElement *screen,uint32 color,int32 titleId,int32 bodyId)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  
-  uVar1 = screen_stack_scale((ScreenStack *)param_1,0x5a,1).low;
-  iVar2 = (int)text_line_create(0,0,uVar1,(int)*(short *)(*(int *)(param_1 + 0x14) + 4),0,param_1,param_4,9);
-  if (param_3 != 0) {
-    *(int *)(iVar2 + 0x10) = param_3;
+  TextLine *line;
+  TextBox *box;
+  TextStyle *style;
+  int32 top;
+  int32 margin;
+
+  top = (int32)screen_stack_scale(stack,0x5a,1).low;
+  line = text_line_create((TextLine *)0x0,0,top,stack->rect->dx,0,(int32 *)stack,titleId,9);
+  if (color != 0)
+    ((UIElement *)line)->primaryColor = color;
+  ui_element_add_child(screen,(UIElement *)line,0);
+  if (bodyId != 0) {
+    top = (int32)screen_stack_scale(stack,0x6e,1).low;
+    margin = (int32)screen_stack_scale(stack,100,2).low;
+    style = text_style_create((TextStyle *)0x0,6);
+    style->alignment = 0x21;
+    box = text_box_create((TextBox *)0x0,margin,top,stack->rect->dx - margin * 2,stack->rect->dy - top,
+                          (int32 *)stack,style);
+    text_box_set_text_id(box,bodyId);
+    if (color != 0)
+      ((UIElement *)box)->primaryColor = color;
+    ui_element_add_child(screen,(UIElement *)box,0);
   }
-  ui_element_add_child(param_2,iVar2,0);
-  if (param_5 != 0) {
-    iVar2 = screen_stack_scale((ScreenStack *)param_1,0x6e,1).low;
-    iVar3 = screen_stack_scale((ScreenStack *)param_1,100,2).low;
-    iVar4 = text_style_create(0,6);
-    *(undefined4 *)(iVar4 + 4) = 0x21;
-    iVar2 = text_box_create(0,iVar3,iVar2,(int)*(short *)(*(int *)(param_1 + 0x14) + 4) + iVar3 * -2,
-                         *(short *)(*(int *)(param_1 + 0x14) + 6) - iVar2,param_1,iVar4);
-    text_box_set_text_id((TextBox *)iVar2,(int32)param_5);
-    if (param_3 != 0) {
-      *(int *)(iVar2 + 0x10) = param_3;
-    }
-    ui_element_add_child(param_2,iVar2,0);
-  }
-  return;
 }
+
 
 /* ==== 0x001056D0  (file offset 0x056D0)  hud_show_loading ============================================ */
 /* GUESS: names. The HUD (KHApp.field_d4) shows its "loading" text (the hidden child 900 its constructor
@@ -4786,7 +4792,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
   
   piVar1 = (int *)screen_stack_top((int)param_1);
   iVar8 = INTEGER_MINUS_35012;
-  uVar4 = WORD_HEXADECIMAL_1AB5DBD0;
+  uVar4 = TEXT_NETWORK_UNAVAILABLE;
   switch((int)param_2) {
   case 0x0:
     break;
@@ -4808,8 +4814,8 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
       ui_element_remove_child(iVar5,700,1);
       ui_element_remove_child(iVar5,500,1);
       if (((ScreenStack *)param_1)->field_60 == 0) {
-        FUN_00109a10(iVar5,2,WORD_HEXADECIMAL_19408333,0x80);
-        FUN_00109a10(iVar5,1,WORD_HEXADECIMAL_251509C8,0x73);
+        FUN_00109a10(iVar5,2,TEXT_BACK,0x80);
+        FUN_00109a10(iVar5,1,TEXT_MENU,0x73);
       }
       puVar6 = text_style_create((undefined4 *)0x0,6);
       puVar6[1] = 0x21;
@@ -4833,7 +4839,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
     iVar5 = ui_element_find_child((int)piVar1,500);
     text = helper_malloc(0x20);
     name = helper_malloc(0x20);
-    text_table_get_text((int *)param_1[2],WORD_HEXADECIMAL_3D198889,(undefined4 *)&name);
+    text_table_get_text((int *)param_1[2],TEXT_RETRY,(undefined4 *)&name);
     (*g_pHelperFuncs->sprintf)(text,(int32)STRING_PERCENT_S_PERCENT_D_SLASH_PERCENT,name,param_3,
                                param_4);
     helper_free(name);
@@ -4865,7 +4871,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
         FUN_00101ad8(param_1,0x88);
         piVar1 = (int *)screen_stack_top((int)param_1);
         iVar8 = ui_element_find_child((int)piVar1,1000);
-        uVar4 = WORD_HEXADECIMAL_0FA4E52C;
+        uVar4 = TEXT_NO_ROOM_TO_DOWNLOAD;
       }
       else {
         if (param_3 == (int *)0x6) {
@@ -4875,7 +4881,7 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
           *psVar9 = *psVar9 - (short)uVar11.low;
           text_box_set_text_id((TextBox *)iVar8,(int32)uVar4);
           FUN_00109a10((int)piVar1,1,0,0);
-          FUN_00109a10((int)piVar1,2,WORD_HEXADECIMAL_19408333,0xffffffff);
+          FUN_00109a10((int)piVar1,2,TEXT_BACK,0xffffffff);
           goto LAB_00108a4c;
         }
         if (piVar1[0xf] == 2 || piVar1[0xf] == 3) {
@@ -4922,7 +4928,7 @@ LAB_00108d50:
     break;
   case 0x9:
     iVar5 = ui_element_find_child((int)piVar1,500);
-    text_box_set_text_id((TextBox *)iVar5,(int32)WORD_HEXADECIMAL_3D569D08);
+    text_box_set_text_id((TextBox *)iVar5,(int32)TEXT_SAVING);
     iVar5 = WORD_HEXADECIMAL_0001F14C;
     ((KHApp *)*param_1)->progress->levelLoaded = 0;
     FUN_0011e6b8(*(int *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
@@ -5820,7 +5826,7 @@ TextBox * text_box_layout(TextBox *box)
     box->moreLine = text_line_create((TextLine *)0x0,
                                      element->rect->x + element->rect->dx - box->style->horizontalMargin * 2,
                                      element->rect->y + element->rect->dy - box->style->verticalMargin * 2,0,0,
-                                     element->owner,WORD_HEXADECIMAL_3D1D22E8,9);
+                                     element->owner,TEXT_DOTS,9);
     ui_element_add_child(element,(UIElement *)box->moreLine,0);
   }
   return box;
@@ -6101,7 +6107,7 @@ int * FUN_0010aa8c(int *param_1,int *param_2)
       (**(code **)(*piVar3 + 0x14))(piVar3,3);
     }
     iVar1 = (int)text_line_create(0,(int)*(short *)(param_1[2] + 4) / 2,(int)*(short *)(param_1[2] + 6) / 2,0
-                         ,0,*(undefined4 *)(param_1[0x11] + 0xd0),WORD_HEXADECIMAL_254DA109,9);
+                         ,0,*(undefined4 *)(param_1[0x11] + 0xd0),TEXT_LOADING,9);
     param_1[0x37] = iVar1;
     ui_element_add_child(param_1,iVar1,900);
     *(undefined1 *)(param_1[0x37] + 4) = 0;
@@ -7853,7 +7859,7 @@ void progress_add_munny(Progress *progress,int32 amount)
   app->progress->munny += amount;
   if (app->progress->munny < 1)
     app->progress->munny = 0;
-  text_table_get_text(app->pObj98,WORD_HEXADECIMAL_16A5390B,&label);
+  text_table_get_text(app->pObj98,TEXT_MUNNY,&label);
   if (label == (void *)0x0 || (text = helper_malloc(0x20)) == (void *)0x0)
     return;
   (*g_pHelperFuncs->sprintf)(text,(int32)STRING_PERCENT_S_EQUALS_PERCENT_D,label,app->progress->munny);
@@ -10519,27 +10525,27 @@ int32 script_command_run(ScriptCommand *command)
       break;
     if ((*g_pHelperFuncs->strcmp)(command->text,STRING_SAVE) == 0) {
       slot = 2;
-      textId = WORD_HEXADECIMAL_1F10FB19;
+      textId = TEXT_SAVE;
     }
     else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_SHOP) == 0) {
       slot = 4;
-      textId = WORD_HEXADECIMAL_2A6EBDD0;
+      textId = TEXT_SHOP;
     }
     else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_OPTIONS) == 0) {
       slot = 3;
-      textId = WORD_HEXADECIMAL_083D247B;
+      textId = TEXT_OPTIONS_ENTRY;
     }
     else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_MAIN_MENU) == 0) {
       slot = 6;
-      textId = WORD_HEXADECIMAL_14741FD6;
+      textId = TEXT_END;
     }
     else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_RESTART_GAME) == 0) {
       slot = 5;
-      textId = WORD_HEXADECIMAL_03D18088;
+      textId = TEXT_CONTINUE;
     }
     else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_UNPAUSE) == 0) {
       slot = 9;
-      textId = WORD_HEXADECIMAL_03D18088;
+      textId = TEXT_CONTINUE;
     }
     else
       break;
@@ -10548,23 +10554,23 @@ int32 script_command_run(ScriptCommand *command)
   case 4:   /* addUIAction: shows the action's name; the action key then acts on the object */
     if (hud != (uint8 *)0x0 && app->pObj98 != (void *)0x0) {
       if ((*g_pHelperFuncs->strcmp)(command->text,STRING_ACTIVATE) == 0)
-        textId = WORD_HEXADECIMAL_2ACA7E67;
+        textId = TEXT_ACTIVATE;
       else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_ATTACK) == 0)
-        textId = WORD_HEXADECIMAL_22837D60;
+        textId = TEXT_ATTACK;
       else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_DROP) == 0)
-        textId = WORD_HEXADECIMAL_29F2A761;
+        textId = TEXT_THROW;
       else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_GRAB) == 0)
-        textId = WORD_HEXADECIMAL_0C0AB7A6;
+        textId = TEXT_GRAB;
       else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_LIFT_001273C4) == 0)
-        textId = WORD_HEXADECIMAL_30BF44AD;
+        textId = TEXT_LIFT;
       else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_LOCK) == 0)
-        textId = WORD_HEXADECIMAL_1B18B1A5;
+        textId = TEXT_LOCK;
       else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_OPEN) == 0)
-        textId = WORD_HEXADECIMAL_0B0EC760;
+        textId = TEXT_OPEN;
       else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_TALK) == 0)
-        textId = WORD_HEXADECIMAL_18413CCA;
+        textId = TEXT_TALK;
       else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_PLACE) == 0)
-        textId = WORD_HEXADECIMAL_1BF8C522;
+        textId = TEXT_PLACE;
       else
         textId = 0;
       if (textId != 0) {
@@ -15166,7 +15172,7 @@ void kh_OnAppStart(KHApp *pMe)
               if (((pMe->nErr == 0) && (FUN_00118640(pMe->animations,pMe->pObj6c), pMe->nErr == 0)) &&
                  (intro_start(pMe->intro), pMe->nErr == 0)) {
                 local_18 = (IBitmap *)0x0;
-                text_table_get_text(pMe->pObj98,WORD_HEXADECIMAL_28500339,&local_18);
+                text_table_get_text(pMe->pObj98,TEXT_30,&local_18);
                 if (local_18 == (IBitmap *)0x0) {
                   pMe->field_8c = 0x1e;
                 }
@@ -15847,7 +15853,7 @@ void kh_OnKey(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
           if (iVar5 == 0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
             (*g_pHelperFuncs->free)(uVar6);
-            if (aiStack_48[iVar9] == WORD_HEXADECIMAL_0252B33F) {
+            if (aiStack_48[iVar9] == TEXT_REPLAY) {
               FUN_00101ad8(pMe->screens,7);
               return;
             }
@@ -22564,7 +22570,7 @@ LAB_001243b0:
       ui_element_add_child((int)piVar5,
                            (int)text_line_create((TextLine *)0x0,(int)*(short *)(piVar5[2] + 4) / 2,
                                                  *(short *)(piVar5[2] + 6) + -10,0,0,*(int32 **)(param_1 + 0xd0),
-                                                 WORD_HEXADECIMAL_254DA109,9),0);
+                                                 TEXT_LOADING,9),0);
       if (*(int *)(param_1 + 0xcc) == 0x10) {
         piVar5[4] = WORD_HEXADECIMAL_FFEFEFEF;
       }

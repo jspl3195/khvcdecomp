@@ -467,7 +467,7 @@ int FUN_001052e0(int param_1,undefined4 param_2,int param_3,int param_4,int para
 void FUN_001053a8(undefined4 param_1,undefined4 param_2,int param_3,int param_4,int param_5, int param_6,undefined4 param_7,int param_8,int param_9,int param_10,int param_11, int param_12,int param_13);
 int32 ui_element_add_child(UIElement *parent,UIElement *child,int32 id);   /* 0x001054D8 GUESS: name */
 void FUN_00105538(int param_1,undefined4 param_2,int param_3);
-void FUN_001055c4(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5);
+void screen_add_heading(ScreenStack *stack,UIElement *screen,uint32 color,int32 titleId,int32 bodyId);   /* 0x001055C4 GUESS: name, see kh_mod.c */
 int32 hud_show_loading(Hud *hud,uint32 color);   /* 0x001056D0 GUESS: name, see kh_mod.c */
 int32 ui_element_set_key_target(UIElement *element,int32 keyCode,UIElement *target);   /* 0x001056EC GUESS: name, see kh_mod.c */
 void key_picker_restore_original(UIElement *picker);   /* 0x001056F4 GUESS: name */
@@ -902,71 +902,128 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
    the word's address and how the name was derived. Generated, not reviewed one by one: names say
    what a word IS (its value or target), not necessarily what the code uses it for. */
 #define AEECLSID_KH_APPLET_VALUE 0x01026191   /* was DAT_0010197c (word at 0x0010197C); BREW class identifier AEECLSID_KH_APPLET */
-#define WORD_HEXADECIMAL_2DE9998F 0x2DE9998F   /* was DAT_00102ad0 (word at 0x00102AD0); value 0x2DE9998F (770283919) */
-#define WORD_HEXADECIMAL_1EC39991 0x1EC39991   /* was DAT_00102ad4 (word at 0x00102AD4); value 0x1EC39991 (516135313) */
-#define WORD_HEXADECIMAL_0017A510 0x0017A510   /* was DAT_00102ad8 (word at 0x00102AD8); value 0x0017A510 (1549584) */
-#define WORD_HEXADECIMAL_1F10FB19 0x1F10FB19   /* was DAT_00102adc (word at 0x00102ADC); value 0x1F10FB19 (521206553) */
-#define WORD_HEXADECIMAL_03D18088 0x03D18088   /* was DAT_00102ae4 (word at 0x00102AE4); value 0x03D18088 (64061576) */
-#define WORD_HEXADECIMAL_0252B33F 0x0252B33F   /* was DAT_00102af4, DAT_0011aa68 (word at 0x00102AF4); value 0x0252B33F (38974271) */
-#define WORD_HEXADECIMAL_251509C8 0x251509C8   /* was DAT_00102af8, DAT_00108e80 (word at 0x00102AF8); value 0x251509C8 (622135752) */
-#define WORD_HEXADECIMAL_310668B6 0x310668B6   /* was DAT_00102afc (word at 0x00102AFC); value 0x310668B6 (822503606) */
-#define WORD_HEXADECIMAL_01B449A3 0x01B449A3   /* was DAT_00102b14 (word at 0x00102B14); value 0x01B449A3 (28592547) */
-#define WORD_HEXADECIMAL_24017E3E 0x24017E3E   /* was DAT_00102b18 (word at 0x00102B18); value 0x24017E3E (604077630) */
-#define WORD_HEXADECIMAL_272E6865 0x272E6865   /* was DAT_00102b1c (word at 0x00102B1C); value 0x272E6865 (657352805) */
-#define WORD_HEXADECIMAL_00C833EC 0x00C833EC   /* was DAT_00102b20 (word at 0x00102B20); value 0x00C833EC (13120492) */
-#define WORD_HEXADECIMAL_04D4D70F 0x04D4D70F   /* was DAT_00102b24 (word at 0x00102B24); value 0x04D4D70F (81057551) */
+#define TEXT_BUY_HEADING 0x2DE9998F   /* was DAT_00102ad0 (word at 0x00102AD0); the text id of
+                                         "BUY" (language.m3g) */
+#define TEXT_OF 0x1EC39991   /* was DAT_00102ad4 (word at 0x00102AD4); the text id of
+                                " of " (language.m3g) */
+#define TEXT_SELECT 0x0017A510   /* was DAT_00102ad8 (word at 0x00102AD8); the text id of
+                                    "Select" (language.m3g) */
+#define TEXT_SAVE 0x1F10FB19   /* was DAT_00102adc (word at 0x00102ADC); the text id of
+                                  "Save" (language.m3g) */
+#define TEXT_CONTINUE 0x03D18088   /* was DAT_00102ae4 (word at 0x00102AE4); the text id of
+                                      "Continue" (language.m3g) */
+#define TEXT_REPLAY 0x0252B33F   /* was DAT_00102af4, DAT_0011aa68 (word at 0x00102AF4); the text id of
+                                    "Replay" (language.m3g) */
+#define TEXT_MENU 0x251509C8   /* was DAT_00102af8, DAT_00108e80 (word at 0x00102AF8); the text id of
+                                  "Menu" (language.m3g) */
+#define TEXT_SUMMARY 0x310668B6   /* was DAT_00102afc (word at 0x00102AFC); the text id of
+                                     "SUMMARY" (language.m3g) */
+#define TEXT_SCORE_FORMULA 0x01B449A3   /* was DAT_00102b14 (word at 0x00102B14); the text id of
+                                         "Score = Munny + (100 x EXP)" (language.m3g) */
+#define TEXT_HIGH_SCORES 0x24017E3E   /* was DAT_00102b18 (word at 0x00102B18); the text id of
+                                         "HIGH SCORES" (language.m3g) */
+#define TEXT_LEVEL 0x272E6865   /* was DAT_00102b1c (word at 0x00102B1C); the text id of
+                                   "Level" (language.m3g) */
+#define TEXT_SCORE 0x00C833EC   /* was DAT_00102b20 (word at 0x00102B20); the text id of
+                                   "Score" (language.m3g) */
+#define TEXT_RANK 0x04D4D70F   /* was DAT_00102b24 (word at 0x00102B24); the text id of
+                                  "Rank" (language.m3g) */
 #define WORD_HEXADECIMAL_FFC9C4DA 0xFFC9C4DA   /* was DAT_00102b50, DAT_00104c2c, DAT_001077b8, DAT_00108728 (word at 0x00102B50); value 0xFFC9C4DA (-3554086) */
-#define WORD_HEXADECIMAL_19408333 0x19408333   /* was DAT_00102b54, DAT_00104c08, DAT_00108e64 (word at 0x00102B54); value 0x19408333 (423658291) */
-#define WORD_HEXADECIMAL_0528CA88 0x0528CA88   /* was DAT_00102b5c, DAT_00104c58 (word at 0x00102B5C); value 0x0528CA88 (86559368) */
-#define WORD_HEXADECIMAL_10FB280A 0x10FB280A   /* was DAT_00102b70, DAT_00104c50 (word at 0x00102B70); value 0x10FB280A (284895242) */
-#define WORD_HEXADECIMAL_03B0A428 0x03B0A428   /* was DAT_00102b80, DAT_00104c18 (word at 0x00102B80); value 0x03B0A428 (61908008) */
-#define WORD_HEXADECIMAL_30D96C27 0x30D96C27   /* was DAT_00102b84 (word at 0x00102B84); value 0x30D96C27 (819555367) */
-#define WORD_HEXADECIMAL_2E8D6E9D 0x2E8D6E9D   /* was DAT_00102b88 (word at 0x00102B88); value 0x2E8D6E9D (781020829) */
+#define TEXT_BACK 0x19408333   /* was DAT_00102b54, DAT_00104c08, DAT_00108e64 (word at 0x00102B54);
+                                  the text id of
+                                  "Back" (language.m3g) */
+#define TEXT_DOWNLOADING 0x0528CA88   /* was DAT_00102b5c, DAT_00104c58 (word at 0x00102B5C);
+                                         the text id of
+                                         "Downloading....." (language.m3g) */
+#define TEXT_CANCEL 0x10FB280A   /* was DAT_00102b70, DAT_00104c50 (word at 0x00102B70); the text id of
+                                    "Cancel" (language.m3g) */
+#define TEXT_YES 0x03B0A428   /* was DAT_00102b80, DAT_00104c18 (word at 0x00102B80); the text id of
+                                 "Yes" (language.m3g) */
+#define TEXT_NO 0x30D96C27   /* was DAT_00102b84 (word at 0x00102B84); the text id of
+                                "No" (language.m3g) */
+#define TEXT_SENDING 0x2E8D6E9D   /* was DAT_00102b88 (word at 0x00102B88); the text id of
+                                     "Sending..." (language.m3g) */
 #define WORD_HEXADECIMAL_000253E4 0x000253E4   /* was DAT_00102b90 (word at 0x00102B90); value 0x000253E4 (152548) */
-#define WORD_HEXADECIMAL_21C1059D 0x21C1059D   /* was DAT_00102b98 (word at 0x00102B98); value 0x21C1059D (566298013) */
+#define TEXT_GAME_AUTOSAVED 0x21C1059D   /* was DAT_00102b98 (word at 0x00102B98); the text id of
+                                         "(Game autosaved)" (language.m3g) */
 #define WORD_HEXADECIMAL_00025038 0x00025038   /* was DAT_00102ba0 (word at 0x00102BA0); value 0x00025038 (151608) */
-#define WORD_HEXADECIMAL_2B21E3F9 0x2B21E3F9   /* was DAT_00103b84 (word at 0x00103B84); value 0x2B21E3F9 (723641337) */
-#define WORD_HEXADECIMAL_225D20E5 0x225D20E5   /* was DAT_00103b88 (word at 0x00103B88); value 0x225D20E5 (576528613) */
-#define WORD_HEXADECIMAL_0DB81F00 0x0DB81F00   /* was DAT_00103bac (word at 0x00103BAC); value 0x0DB81F00 (230170368) */
-#define WORD_HEXADECIMAL_2E66608C 0x2E66608C   /* was DAT_00103bd8 (word at 0x00103BD8); value 0x2E66608C (778461324) */
-#define WORD_HEXADECIMAL_2F7413EE 0x2F7413EE   /* was DAT_00103be8 (word at 0x00103BE8); value 0x2F7413EE (796136430) */
-#define WORD_HEXADECIMAL_31B444EE 0x31B444EE   /* was DAT_00103bec (word at 0x00103BEC); value 0x31B444EE (833897710) */
-#define WORD_HEXADECIMAL_15998E05 0x15998E05   /* was DAT_00103bf0 (word at 0x00103BF0); value 0x15998E05 (362384901) */
-#define WORD_HEXADECIMAL_13DD8E16 0x13DD8E16   /* was DAT_00103bf4 (word at 0x00103BF4); value 0x13DD8E16 (333286934) */
-#define WORD_HEXADECIMAL_0AFA190E 0x0AFA190E   /* was DAT_00103bf8 (word at 0x00103BF8); value 0x0AFA190E (184162574) */
-#define WORD_HEXADECIMAL_2714CFF7 0x2714CFF7   /* was DAT_00103bfc (word at 0x00103BFC); value 0x2714CFF7 (655675383) */
-#define WORD_HEXADECIMAL_133529B8 0x133529B8   /* was DAT_00103c00 (word at 0x00103C00); value 0x133529B8 (322251192) */
+#define TEXT_STATUS 0x2B21E3F9   /* was DAT_00103b84 (word at 0x00103B84); the text id of
+                                         "STATUS" (language.m3g) */
+#define TEXT_NEXT 0x225D20E5   /* was DAT_00103b88 (word at 0x00103B88); the text id of
+                                  "Next" (language.m3g) */
+#define TEXT_ITEMS 0x0DB81F00   /* was DAT_00103bac (word at 0x00103BAC); the text id of
+                                         "ITEMS" (language.m3g) */
+#define TEXT_OPTIONS 0x2E66608C   /* was DAT_00103bd8 (word at 0x00103BD8); the text id of
+                                         "OPTIONS" (language.m3g) */
+#define TEXT_SOUND_LOW 0x2F7413EE   /* was DAT_00103be8 (word at 0x00103BE8); the text id of
+                                       "Sound Low" (language.m3g) */
+#define TEXT_SOUND_MEDIUM 0x31B444EE   /* was DAT_00103bec (word at 0x00103BEC); the text id of
+                                          "Sound Medium" (language.m3g) */
+#define TEXT_SOUND_HIGH 0x15998E05   /* was DAT_00103bf0 (word at 0x00103BF0); the text id of
+                                        "Sound High" (language.m3g) */
+#define TEXT_MUSIC_LOW 0x13DD8E16   /* was DAT_00103bf4 (word at 0x00103BF4); the text id of
+                                       "Music Low" (language.m3g) */
+#define TEXT_MUSIC_MEDIUM 0x0AFA190E   /* was DAT_00103bf8 (word at 0x00103BF8); the text id of
+                                          "Music Medium" (language.m3g) */
+#define TEXT_MUSIC_HIGH 0x2714CFF7   /* was DAT_00103bfc (word at 0x00103BFC); the text id of
+                                        "Music High" (language.m3g) */
+#define TEXT_SELECT_AN_ITEM 0x133529B8   /* was DAT_00103c00 (word at 0x00103C00); the text id of
+                                         "Select an item for details" (language.m3g) */
 #define WORD_HEXADECIMAL_FFEFEFEF 0xFFEFEFEF   /* was DAT_00103c04, DAT_001051a0, DAT_001052d0, DAT_00108724, DAT_0010bb20, DAT_0012465c (word at 0x00103C04); value 0xFFEFEFEF (-1052689) */
-#define WORD_HEXADECIMAL_02AAF639 0x02AAF639   /* was DAT_00104bc4 (word at 0x00104BC4); value 0x02AAF639 (44758585) */
-#define WORD_HEXADECIMAL_1A43CB02 0x1A43CB02   /* was DAT_00104bc8 (word at 0x00104BC8); value 0x1A43CB02 (440650498) */
+#define TEXT_ITEM_HEADING 0x02AAF639   /* was DAT_00104bc4 (word at 0x00104BC4); the text id of
+                                          "ITEM" (language.m3g) */
+#define TEXT_VALUE_HEADING 0x1A43CB02   /* was DAT_00104bc8 (word at 0x00104BC8); the text id of
+                                           "VALUE" (language.m3g) */
 #define WORD_HEXADECIMAL_00023F3C 0x00023F3C   /* was DAT_00104bcc (word at 0x00104BCC); value 0x00023F3C (147260) */
 #define WORD_HEXADECIMAL_00023F38 0x00023F38   /* was DAT_00104bd0 (word at 0x00104BD0); value 0x00023F38 (147256) */
 #define WORD_HEXADECIMAL_00023F34 0x00023F34   /* was DAT_00104bd4 (word at 0x00104BD4); value 0x00023F34 (147252) */
 #define INTEGER_57393 0x0000E031   /* was DAT_00104bdc, DAT_001054d0, DAT_0011a4d4, DAT_0011aacc (word at 0x00104BDC); integer 57393 */
 #define INTEGER_57394 0x0000E032   /* was DAT_00104be0, DAT_001054d4 (word at 0x00104BE0); integer 57394 */
-#define WORD_HEXADECIMAL_16A5390B 0x16A5390B   /* was DAT_00104be4, DAT_0010d2f0 (word at 0x00104BE4); value 0x16A5390B (379926795) */
+#define TEXT_MUNNY 0x16A5390B   /* was DAT_00104be4, DAT_0010d2f0 (word at 0x00104BE4); the text id of
+                                   "Munny" (language.m3g) */
 #define INTEGER_MINUS_16076 0xFFFFC134   /* was DAT_00104be8 (word at 0x00104BE8); integer -16076 */
 #define INTEGER_735 0x000002DF   /* was DAT_00104bf0 (word at 0x00104BF0); integer 735 */
-#define WORD_HEXADECIMAL_2A6EBDD0 0x2A6EBDD0   /* was DAT_00104bf4 (word at 0x00104BF4); value 0x2A6EBDD0 (711900624) */
-#define WORD_HEXADECIMAL_2CF7E187 0x2CF7E187   /* was DAT_00104bf8 (word at 0x00104BF8); value 0x2CF7E187 (754442631) */
-#define WORD_HEXADECIMAL_0955306E 0x0955306E   /* was DAT_00104bfc (word at 0x00104BFC); value 0x0955306E (156577902) */
-#define WORD_HEXADECIMAL_2C7A1EE9 0x2C7A1EE9   /* was DAT_00104c00 (word at 0x00104C00); value 0x2C7A1EE9 (746200809) */
-#define WORD_HEXADECIMAL_07A0110B 0x07A0110B   /* was DAT_00104c04 (word at 0x00104C04); value 0x07A0110B (127930635) */
-#define WORD_HEXADECIMAL_1650919F 0x1650919F   /* was DAT_00104c14 (word at 0x00104C14); value 0x1650919F (374378911) */
+#define TEXT_SHOP 0x2A6EBDD0   /* was DAT_00104bf4 (word at 0x00104BF4); the text id of
+                                  "Shop" (language.m3g) */
+#define TEXT_POTION_HELP 0x2CF7E187   /* was DAT_00104bf8 (word at 0x00104BF8); the text id of
+                                         "Potion partially restores your character's health. Co..."
+                                         (language.m3g) */
+#define TEXT_HI_POTION_HELP 0x0955306E   /* was DAT_00104bfc (word at 0x00104BFC); the text id of
+                                            "Hi-Potion fully restores your character's health. Cos..."
+                                            (language.m3g) */
+#define TEXT_ETHER_HELP 0x2C7A1EE9   /* was DAT_00104c00 (word at 0x00104C00); the text id of
+                                        "Ether partially restores your character's magic. Cost..."
+                                        (language.m3g) */
+#define TEXT_ELIXIR_HELP 0x07A0110B   /* was DAT_00104c04 (word at 0x00104C04); the text id of
+                                         "Elixir fully restores your character's magic. Cost 15."
+                                         (language.m3g) */
+#define TEXT_CONFIRM_END_GAME 0x1650919F   /* was DAT_00104c14 (word at 0x00104C14); the text id of
+                                              "Are you sure you want to end the game ?" (language.m3g) */
 #define WORD_HEXADECIMAL_3C5A569E 0x3C5A569E   /* was DAT_00104c1c, DAT_0011a498, DAT_0011e240 (word at 0x00104C1C); value 0x3C5A569E (1012553374) */
 #define WORD_HEXADECIMAL_21BF9442 0x21BF9442   /* was DAT_00104c20, DAT_00105220, DAT_0010d070, DAT_0010f23c, DAT_0011a49c, DAT_0011e23c, DAT_00123c1c, DAT_00124668 (word at 0x00104C20); value 0x21BF9442 (566203458) */
-#define WORD_HEXADECIMAL_111CB9DB 0x111CB9DB   /* was DAT_00104c24 (word at 0x00104C24); value 0x111CB9DB (287095259) */
-#define WORD_HEXADECIMAL_14FB8F11 0x14FB8F11   /* was DAT_00104c38 (word at 0x00104C38); value 0x14FB8F11 (352030481) */
-#define WORD_HEXADECIMAL_27B2CEEB 0x27B2CEEB   /* was DAT_00104c3c (word at 0x00104C3C); value 0x27B2CEEB (666029803) */
-#define WORD_HEXADECIMAL_0C211E44 0x0C211E44   /* was DAT_00104c40 (word at 0x00104C40); value 0x0C211E44 (203497028) */
-#define WORD_HEXADECIMAL_2F3E5828 0x2F3E5828   /* was DAT_00104c44 (word at 0x00104C44); value 0x2F3E5828 (792614952) */
-#define WORD_HEXADECIMAL_37E4CCE1 0x37E4CCE1   /* was DAT_00104c48 (word at 0x00104C48); value 0x37E4CCE1 (937741537) */
-#define WORD_HEXADECIMAL_0CB59575 0x0CB59575   /* was DAT_00104c4c (word at 0x00104C4C); value 0x0CB59575 (213226869) */
+#define TEXT_CONTROLS 0x111CB9DB   /* was DAT_00104c24 (word at 0x00104C24); the text id of
+                                         "CONTROLS" (language.m3g) */
+#define TEXT_SOUND_OFF 0x14FB8F11   /* was DAT_00104c38 (word at 0x00104C38); the text id of
+                                       "Sound Off" (language.m3g) */
+#define TEXT_MUSIC_OFF 0x27B2CEEB   /* was DAT_00104c3c (word at 0x00104C3C); the text id of
+                                       "Music Off" (language.m3g) */
+#define TEXT_HELP 0x0C211E44   /* was DAT_00104c40 (word at 0x00104C40); the text id of
+                                  "HELP" (language.m3g) */
+#define TEXT_HELP_BODY 0x2F3E5828   /* was DAT_00104c44 (word at 0x00104C44); the text id of
+                                       "Use joypad up or <#UP> to walk forwards, joypad down..."
+                                       (language.m3g) */
+#define TEXT_ABOUT 0x37E4CCE1   /* was DAT_00104c48 (word at 0x00104C48); the text id of
+                                   "ABOUT" (language.m3g) */
+#define TEXT_ABOUT_BODY 0x0CB59575   /* was DAT_00104c4c (word at 0x00104C4C); the text id of
+                                        "Kingdom Hearts..." (language.m3g) */
 #define INTEGER_790 0x00000316   /* was DAT_00104c54 (word at 0x00104C54); integer 790 */
-#define WORD_HEXADECIMAL_27B19885 0x27B19885   /* was DAT_001051a4 (word at 0x001051A4); value 0x27B19885 (665950341) */
+#define TEXT_DOWNLOAD_ERROR 0x27B19885   /* was DAT_001051a4 (word at 0x001051A4); the text id of
+                                            "Download Error" (language.m3g) */
 #define WORD_HEXADECIMAL_0AE069A1 0x0AE069A1   /* was DAT_001051ac (word at 0x001051AC); value 0x0AE069A1 (182479265) */
-#define WORD_HEXADECIMAL_1D73D1AE 0x1D73D1AE   /* was DAT_001051c4 (word at 0x001051C4); value 0x1D73D1AE (494129582) */
-#define WORD_HEXADECIMAL_14741FD6 0x14741FD6   /* was DAT_001051c8 (word at 0x001051C8); value 0x14741FD6 (343154646) */
+#define TEXT_DOWNLOAD 0x1D73D1AE   /* was DAT_001051c4 (word at 0x001051C4); the text id of
+                                      "Download" (language.m3g) */
+#define TEXT_END 0x14741FD6   /* was DAT_001051c8 (word at 0x001051C8); the text id of
+                                 "End" (language.m3g) */
 #define WORD_HEXADECIMAL_1FEB4DB8 0x1FEB4DB8   /* was DAT_0010521c, DAT_0011e244 (word at 0x0010521C); value 0x1FEB4DB8 (535514552) */
 #define WORD_HEXADECIMAL_FF606060 0xFF606060   /* was DAT_001052cc (word at 0x001052CC); value 0xFF606060 (-10461088) */
 #define WORD_HEXADECIMAL_FFEBEBF7 0xFFEBEBF7   /* was DAT_001052d4, DAT_001077b4, DAT_0010871c, DAT_0010bb28, DAT_0010be10 (word at 0x001052D4); value 0xFFEBEBF7 (-1315849) */
@@ -993,15 +1050,22 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 #define WORD_HEXADECIMAL_0001FE30 0x0001FE30   /* was DAT_00107d20 (word at 0x00107D20); value 0x0001FE30 (130608) */
 #define WORD_HEXADECIMAL_FFC0C000 0xFFC0C000   /* was DAT_00108720 (word at 0x00108720); value 0xFFC0C000 (-4145152) */
 #define INTEGER_57397 0x0000E035   /* was DAT_0010883c (word at 0x0010883C); integer 57397 */
-#define WORD_HEXADECIMAL_1AB5DBD0 0x1AB5DBD0   /* was DAT_00108e58 (word at 0x00108E58); value 0x1AB5DBD0 (448125904) */
+#define TEXT_NETWORK_UNAVAILABLE 0x1AB5DBD0   /* was DAT_00108e58 (word at 0x00108E58); the text id of
+                                                 "The network is currently not available, please try ag..."
+                                                 (language.m3g) */
 #define INTEGER_MINUS_35012 0xFFFF773C   /* was DAT_00108e5c (word at 0x00108E5C); integer -35012 */
-#define WORD_HEXADECIMAL_0FA4E52C 0x0FA4E52C   /* was DAT_00108e60 (word at 0x00108E60); value 0x0FA4E52C (262464812) */
-#define WORD_HEXADECIMAL_3D569D08 0x3D569D08   /* was DAT_00108e68 (word at 0x00108E68); value 0x3D569D08 (1029086472) */
+#define TEXT_NO_ROOM_TO_DOWNLOAD 0x0FA4E52C   /* was DAT_00108e60 (word at 0x00108E60); the text id of
+                                                 "Not enough room on the device to download."
+                                                 (language.m3g) */
+#define TEXT_SAVING 0x3D569D08   /* was DAT_00108e68 (word at 0x00108E68); the text id of
+                                    "Saving...." (language.m3g) */
 #define WORD_HEXADECIMAL_0001F14C 0x0001F14C   /* was DAT_00108e6c (word at 0x00108E6C); value 0x0001F14C (127308) */
-#define WORD_HEXADECIMAL_3D198889 0x3D198889   /* was DAT_00108e84 (word at 0x00108E84); value 0x3D198889 (1025083529) */
+#define TEXT_RETRY 0x3D198889   /* was DAT_00108e84 (word at 0x00108E84); the text id of
+                                   "Retry" (language.m3g) */
 #define INTEGER_MINUS_55555 0xFFFF26FD   /* was DAT_001091f8 (word at 0x001091F8); integer -55555 */
 #define INTEGER_10000 0x00002710   /* was DAT_00109ef4 (word at 0x00109EF4); integer 10000 */
-#define WORD_HEXADECIMAL_3D1D22E8 0x3D1D22E8   /* was DAT_0010a3e4 (word at 0x0010A3E4); value 0x3D1D22E8 (1025319656) */
+#define TEXT_DOTS 0x3D1D22E8   /* was DAT_0010a3e4 (word at 0x0010A3E4); the text id of
+                                  "....." (language.m3g) */
 #define INTEGER_57396 0x0000E034   /* was DAT_0010a524 (word at 0x0010A524); integer 57396 */
 #define FLOAT_3 0x40400000   /* was DAT_0010a5cc, DAT_00110554, DAT_00121aac, DAT_00124078 (word at 0x0010A5CC); the float 3.0 */
 #define FLOAT_0_POINT_3 0x3E99999A   /* was DAT_0010a5d0, DAT_00117d0c (word at 0x0010A5D0); the float 0.30000001192092896 */
@@ -1013,7 +1077,8 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 #define INTEGER_501 0x000001F5   /* was DAT_0010aa54 (word at 0x0010AA54); integer 501 */
 #define INTEGER_5001 0x00001389   /* was DAT_0010ac58, DAT_0010faa4 (word at 0x0010AC58); integer 5001 */
 #define INTEGER_5002 0x0000138A   /* was DAT_0010ac60, DAT_0010faa0 (word at 0x0010AC60); integer 5002 */
-#define WORD_HEXADECIMAL_254DA109 0x254DA109   /* was DAT_0010ac68 (word at 0x0010AC68); value 0x254DA109 (625844489) */
+#define TEXT_LOADING 0x254DA109   /* was DAT_0010ac68 (word at 0x0010AC68); the text id of
+                                     "Loading....." (language.m3g) */
 #define AEECLSID_GRAPHICS_VALUE 0x01002001   /* was DAT_0010aefc (word at 0x0010AEFC); BREW class identifier AEECLSID_GRAPHICS */
 #define INTEGER_MINUS_44296 0xFFFF52F8   /* was DAT_0010af00 (word at 0x0010AF00); integer -44296 */
 #define WORD_HEXADECIMAL_0001CD1C 0x0001CD1C   /* was DAT_0010af08 (word at 0x0010AF08); value 0x0001CD1C (118044) */
@@ -1090,15 +1155,24 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 #define FLOAT_MINUS_5 0xC0A00000   /* was DAT_00110698, DAT_001169e4 (word at 0x00110698); the float -5.0 */
 #define FLOAT_7_POINT_5 0x40F00000   /* was DAT_0011069c (word at 0x0011069C); the float 7.5 */
 #define WORD_HEXADECIMAL_FFFEF6C4 0xFFFEF6C4   /* was DAT_001117b0 (word at 0x001117B0); value 0xFFFEF6C4 (-67900) */
-#define WORD_HEXADECIMAL_2ACA7E67 0x2ACA7E67   /* was DAT_001117e4 (word at 0x001117E4); value 0x2ACA7E67 (717913703) */
-#define WORD_HEXADECIMAL_22837D60 0x22837D60   /* was DAT_001117ec (word at 0x001117EC); value 0x22837D60 (579042656) */
-#define WORD_HEXADECIMAL_29F2A761 0x29F2A761   /* was DAT_001117f4 (word at 0x001117F4); value 0x29F2A761 (703768417) */
-#define WORD_HEXADECIMAL_0C0AB7A6 0x0C0AB7A6   /* was DAT_001117fc (word at 0x001117FC); value 0x0C0AB7A6 (202028966) */
-#define WORD_HEXADECIMAL_30BF44AD 0x30BF44AD   /* was DAT_00111804 (word at 0x00111804); value 0x30BF44AD (817841325) */
-#define WORD_HEXADECIMAL_1B18B1A5 0x1B18B1A5   /* was DAT_0011180c (word at 0x0011180C); value 0x1B18B1A5 (454603173) */
-#define WORD_HEXADECIMAL_0B0EC760 0x0B0EC760   /* was DAT_00111814 (word at 0x00111814); value 0x0B0EC760 (185517920) */
-#define WORD_HEXADECIMAL_18413CCA 0x18413CCA   /* was DAT_0011181c (word at 0x0011181C); value 0x18413CCA (406928586) */
-#define WORD_HEXADECIMAL_1BF8C522 0x1BF8C522   /* was DAT_00111824 (word at 0x00111824); value 0x1BF8C522 (469288226) */
+#define TEXT_ACTIVATE 0x2ACA7E67   /* was DAT_001117e4 (word at 0x001117E4); the text id of
+                                      "Activate" (language.m3g) */
+#define TEXT_ATTACK 0x22837D60   /* was DAT_001117ec (word at 0x001117EC); the text id of
+                                    "Attack" (language.m3g) */
+#define TEXT_THROW 0x29F2A761   /* was DAT_001117f4 (word at 0x001117F4); the text id of
+                                   "Throw" (language.m3g) */
+#define TEXT_GRAB 0x0C0AB7A6   /* was DAT_001117fc (word at 0x001117FC); the text id of
+                                  "Grab" (language.m3g) */
+#define TEXT_LIFT 0x30BF44AD   /* was DAT_00111804 (word at 0x00111804); the text id of
+                                  "Lift" (language.m3g) */
+#define TEXT_LOCK 0x1B18B1A5   /* was DAT_0011180c (word at 0x0011180C); the text id of
+                                  "Lock" (language.m3g) */
+#define TEXT_OPEN 0x0B0EC760   /* was DAT_00111814 (word at 0x00111814); the text id of
+                                  "Open" (language.m3g) */
+#define TEXT_TALK 0x18413CCA   /* was DAT_0011181c (word at 0x0011181C); the text id of
+                                  "Talk" (language.m3g) */
+#define TEXT_PLACE 0x1BF8C522   /* was DAT_00111824 (word at 0x00111824); the text id of
+                                   "Place" (language.m3g) */
 #define WORD_HEXADECIMAL_FFFEED2C 0xFFFEED2C   /* was DAT_00111868 (word at 0x00111868); value 0xFFFEED2C (-70356) */
 #define WORD_HEXADECIMAL_2E6723BD 0x2E6723BD   /* was DAT_001118a0, DAT_00112e1c (word at 0x001118A0); value 0x2E6723BD (778511293) */
 #define WORD_HEXADECIMAL_10C617E4 0x10C617E4   /* was DAT_001118a4, DAT_00112e18 (word at 0x001118A4); value 0x10C617E4 (281417700) */
@@ -1289,7 +1363,8 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 #define INTEGER_263 0x00000107   /* was DAT_00119a0c, DAT_0011b9fc, DAT_00124654 (word at 0x00119A0C); integer 263 */
 #define AEECLSID_DIB_VALUE 0x01001045   /* was DAT_00119a10 (word at 0x00119A10); BREW class identifier AEECLSID_DIB */
 #define INTEGER_265 0x00000109   /* was DAT_00119a14 (word at 0x00119A14); integer 265 */
-#define WORD_HEXADECIMAL_28500339 0x28500339   /* was DAT_00119a18 (word at 0x00119A18); value 0x28500339 (676332345) */
+#define TEXT_30 0x28500339   /* was DAT_00119a18 (word at 0x00119A18); the text id of
+                                "30" (language.m3g) */
 #define INTEGER_258 0x00000102   /* was DAT_00119a20 (word at 0x00119A20); integer 258 */
 #define INTEGER_257 0x00000101   /* was DAT_00119a24 (word at 0x00119A24); integer 257 */
 #define WORD_HEXADECIMAL_018B5704 0x018B5704   /* was DAT_00119c00 (word at 0x00119C00); value 0x018B5704 (25908996) */
@@ -1378,8 +1453,11 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 
 /* ---- Double-precision literal pairs (low word, high word), named by value ----------------
    The first naming pass missed these pairs and named each word on its own. */
-#define DOUBLE_1_POINT_72879609_TIMES_TEN_TO_THE_MINUS_20_LOW_WORD 0x2FDE3CD0   /* was DAT_00102b78 (word at 0x00102B78); with the word at 0x00102B7C: the double 1.728796089680687e-20 = 0x3BD468F72FDE3CD0 */
-#define DOUBLE_1_POINT_72879609_TIMES_TEN_TO_THE_MINUS_20_HIGH_WORD 0x3BD468F7   /* was DAT_00102b7c (word at 0x00102B7C); with the word at 0x00102B78: the double 1.728796089680687e-20 = 0x3BD468F72FDE3CD0 */
+#define TEXT_NEW_HIGH_SCORE 0x2FDE3CD0   /* was DAT_00102b78 (word at 0x00102B78); the text id of
+                                         "You have a new high score! Would you like to post it to
+                                         the server and get a ranking ?" (language.m3g) */
+#define TEXT_HIGH_SCORE 0x3BD468F7   /* was DAT_00102b7c (word at 0x00102B7C); the text id of
+                                         "HIGH SCORE" (language.m3g) */
 #define DOUBLE_1_POINT_1_LOW_WORD 0x9999999A   /* was DAT_00109a08 (word at 0x00109A08); with the word at 0x00109A0C: the double 1.1 = 0x3FF199999999999A */
 #define DOUBLE_1_POINT_1_HIGH_WORD 0x3FF19999   /* was DAT_00109a0c (word at 0x00109A0C); with the word at 0x00109A08: the double 1.1 = 0x3FF199999999999A */
 #define DOUBLE_7_POINT_112268678_TIMES_TEN_TO_THE_MINUS_32_LOW_WORD 0x43340000   /* was DAT_0010f874 (word at 0x0010F874); with the word at 0x0010F878: the double 7.112268678270473e-32 = 0x397714A443340000 */
@@ -1405,11 +1483,14 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
    are the data objects and function addresses at the end of this file now). The comment gives the old label(s),
    the word's address and how the name was derived. Generated, not reviewed one by one: names say
    what a word IS (its value or target), not necessarily what the code uses it for. */
-#define WORD_HEXADECIMAL_3B4C67C7 0x3B4C67C7   /* was DAT_00102b58 (word at 0x00102B58); value 0x3B4C67C7 (994863047); r2 of FUN_00109a10 at LAB_001024bc in FUN_00101ad8 */
-#define WORD_HEXADECIMAL_0B259095 0x0B259095   /* was DAT_00104c0c (word at 0x00104C0C); value 0x0B259095 (187011221); r2 of FUN_00109a10 in FUN_00101ad8 cases 0x29..0x2c */
+#define TEXT_UPDATE 0x3B4C67C7   /* was DAT_00102b58 (word at 0x00102B58); the text id of
+                                    "Update" (language.m3g) */
+#define TEXT_BUY 0x0B259095   /* was DAT_00104c0c (word at 0x00104C0C); the text id of
+                                 "Buy" (language.m3g) */
 #define DOUBLE_4_POINT_5_LOW_WORD 0x00000000   /* was DAT_0010f86c (word at 0x0010F86C); with the word at 0x0010F870: the double 4.5 = 0x4012000000000000 */
 #define DOUBLE_4_POINT_5_HIGH_WORD 0x40120000   /* was DAT_0010f870 (word at 0x0010F870); with the word at 0x0010F86C: the double 4.5 = 0x4012000000000000 */
-#define WORD_HEXADECIMAL_083D247B 0x083D247B   /* was DAT_001117c8 (word at 0x001117C8); value 0x083D247B (138224763) */
+#define TEXT_OPTIONS_ENTRY 0x083D247B   /* was DAT_001117c8 (word at 0x001117C8); the text id of
+                                           "Options" (language.m3g) */
 #define WORD_HEXADECIMAL_14F1CDC1 0x14F1CDC1   /* was DAT_00114b44 (word at 0x00114B44); value 0x14F1CDC1 (351391169) */
 #define WORD_HEXADECIMAL_262A32C2 0x262A32C2   /* was DAT_0011cfd4 (word at 0x0011CFD4); value 0x262A32C2 (640299714) */
 #define WORD_HEXADECIMAL_03AD1271 0x03AD1271   /* was DAT_00123564 (word at 0x00123564); value 0x03AD1271 (61674097) */
