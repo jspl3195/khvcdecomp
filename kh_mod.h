@@ -622,7 +622,7 @@ undefined4 FUN_0010d95c(int param_1,int param_2);
 void FUN_0010db04(int param_1,undefined4 param_2);
 int32 progress_score(Progress *progress);   /* 0x0010E1F8 GUESS: name */
 AECHAR * string_to_wide(int32 context,char **text,AECHAR **wide);   /* 0x0010E210 GUESS: name, see kh_mod.c */
-void camera_avoid_walls(int param_1,undefined4 *param_2,undefined4 *param_3);   /* 0x0010E280 GUESS */
+void camera_avoid_walls(Camera *camera,uint32 *from,uint32 *to);   /* 0x0010E280 GUESS: names */
 undefined4 FUN_0010e448(int param_1,undefined4 *param_2);
 void thunk_animations_add_from_scene(int param_1,int *param_2);
 void FUN_0010e94c(int *param_1);
@@ -677,7 +677,7 @@ void FUN_00113030(int param_1,undefined4 param_2,uint param_3,uint param_4,undef
 void FUN_0011316c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5,undefined4 param_6,undefined4 param_7,undefined4 param_8,int param_9,undefined4 param_10,undefined4 param_11);
 void FUN_001132a8(int param_1);
 void FUN_00113340(int param_1);
-undefined8 FUN_00113374(undefined4 param_1,uint param_2,uint param_3,uint param_4,uint param_5);
+uint32 direction_to(void *context,uint32 x1,uint32 y1,uint32 x2,uint32 y2);   /* 0x00113374 GUESS: names */
 void FUN_00113474(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);
 void hitsphere_get_player_point(uint32 *point,Hitsphere *hitsphere);   /* 0x00113490 GUESS: name, see kh_mod.c */
 void enemy_get_player_point(uint32 *point,Enemy *enemy);   /* 0x00113524 GUESS: name, see kh_mod.c */
@@ -846,7 +846,7 @@ void FUN_00121584(int param_1,int *param_2,int *param_3,int param_4);
 void FUN_0012164c(int param_1,undefined4 param_2,int param_3);
 void progress_add_play_time(Progress *progress);   /* 0x001216C4 GUESS: name, see kh_mod.c */
 void FUN_0012171c(int32 object,int32 now,int32 elapsed);   /* 0x0012171C (no Ghidra function) */
-void camera_pitch_over_ground(int param_1,undefined4 *param_2,uint param_3);   /* 0x00121780 GUESS: name */
+void camera_pitch_over_ground(Camera *camera,uint32 *point,int32 elapsed);   /* 0x00121780 GUESS: names */
 void FUN_00121ab0(int param_1);
 void camera_recenter_yaw(Camera *camera,int32 elapsed);   /* 0x00121B98 GUESS: name, see kh_mod.c */
 undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3);
@@ -1180,7 +1180,9 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 #define WORD_HEXADECIMAL_00015CF8 0x00015CF8   /* was DAT_001127a4 (word at 0x001127A4); value 0x00015CF8 (89336) */
 #define WORD_HEXADECIMAL_2BAC0EE7 0x2BAC0EE7   /* was DAT_00112a94 (word at 0x00112A94); value 0x2BAC0EE7 (732696295) */
 #define WORD_HEXADECIMAL_1D28D9CF 0x1D28D9CF   /* was DAT_00112c08 (word at 0x00112C08); value 0x1D28D9CF (489216463) */
-#define WORD_HEXADECIMAL_42652F1B 0x42652F1B   /* was DAT_00113468, DAT_00121a9c (word at 0x00113468); value 0x42652F1B (1113927451) */
+#define FLOAT_RADIANS_TO_DEGREES 0x42652F1B   /* was DAT_00113468, DAT_00121a9c (word at 0x00113468);
+                                                 the float 57.296 (GUESS: name; 180 / pi rounded, 58 ULP
+                                                 above 0x42652EE1), the radians-to-degrees factor */
 #define WORD_HEXADECIMAL_00013970 0x00013970   /* was DAT_00113520 (word at 0x00113520); value 0x00013970 (80240) */
 #define WORD_HEXADECIMAL_00013B98 0x00013B98   /* was DAT_001135b4 (word at 0x001135B4); value 0x00013B98 (80792) */
 #define WORD_HEXADECIMAL_39B9295D 0x39B9295D   /* was DAT_0011364c (word at 0x0011364C); value 0x39B9295D (968436061) */

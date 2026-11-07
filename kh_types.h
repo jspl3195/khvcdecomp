@@ -561,9 +561,9 @@ typedef struct Camera {
     ISwerveObject *field_204;     /* +0x204 0 at creation */
     uint32   distance;            /* +0x208 a float (its bits; GUESS: name): how far it is from the focus;
                                      3.5 at creation, eased back to 3.5 by the update */
-    uint32   groundOffset;        /* +0x20c a float (its bits; GUESS: name): how far the target's middle
-                                     is above the ground under the camera (camera_pitch_over_ground); 0 at
-                                     creation */
+    uint32   groundOffset;        /* +0x20c a float (its bits; GUESS: name): how far above the target's
+                                     middle the camera must be to stay 1.5 above the ground under it
+                                     (camera_pitch_over_ground); 0 at creation */
     int32    skipCollision;       /* +0x210 GUESS: name; when set, the next update skips the wall check
                                      (camera_avoid_walls) and clears it; set by camera_set_yaw; 0 at
                                      creation */

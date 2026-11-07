@@ -8090,8 +8090,8 @@ LAB_0010d710:
       uVar3 = float_multiply(uVar2,uVar3);
       uVar3 = float_divide(uVar3,iVar1);
       *(undefined4 *)(param_1 + 0xb8) = uVar3;
-      uVar3 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,local_2c,local_28,uVar5,
-                           uVar6).low;
+      uVar3 = direction_to(((KHApp *)*(int *)(param_1 + 0x74))->context,local_2c,local_28,uVar5,
+                           uVar6);
       local_30 = float_add(uVar3,iVar1 + -0x1140000);
       uVar3 = motion_entity_get_heading((MotionEntity *)*(undefined4 *)(param_1 + 0x20));
       local_30 = float_reverse_subtract(uVar3,local_30);
@@ -8176,8 +8176,8 @@ undefined4 FUN_0010d7c4(int param_1,int param_2)
       }
       enemy_get_player_point((uint32 *)&local_1c,(Enemy *)param_1);
       level_object_get_position((uint32 *)&local_28,(LevelObject *)*(undefined4 *)(param_1 + 0x20));
-      uVar2 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,local_1c,local_18,
-                           local_28,local_24).low;
+      uVar2 = direction_to(((KHApp *)*(int *)(param_1 + 0x74))->context,local_1c,local_18,
+                           local_28,local_24);
       local_2c = float_add(uVar2,FLOAT_180);
       uVar2 = motion_entity_get_heading((MotionEntity *)*(undefined4 *)(param_1 + 0x20));
       local_2c = float_reverse_subtract(uVar2,local_2c);
@@ -8227,8 +8227,8 @@ undefined4 FUN_0010d95c(int param_1,int param_2)
     }
     FUN_001201cc(*(undefined4 *)(param_1 + 0x2c),0);
     thunk_FUN_0011fd90(*(undefined4 *)(param_1 + 0x2c),local_2c,local_28,uStack_24);
-    uVar2 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,local_20,local_1c,local_2c
-                         ,local_28).low;
+    uVar2 = direction_to(((KHApp *)*(int *)(param_1 + 0x74))->context,local_20,local_1c,local_2c
+                         ,local_28);
     uVar2 = float_add(uVar2,FLOAT_180);
     motion_entity_set_heading((MotionEntity *)*(undefined4 *)(param_1 + 0x2c),uVar2);
     motion_entity_set_heading((MotionEntity *)*(undefined4 *)(param_1 + 0x20),uVar2);
@@ -8283,7 +8283,7 @@ void FUN_0010db04(int param_1,undefined4 param_2)
   int iVar11;
   undefined1 uVar12;
   undefined1 uVar13;
-  undefined8 uVar14;
+  uint32 uVar14;
   uint64 uVar15;
   uint local_2c;
   uint local_28;
@@ -8305,10 +8305,10 @@ void FUN_0010db04(int param_1,undefined4 param_2)
   }
   else {
     level_object_get_position((uint32 *)((undefined4 *)(param_1 + 0x218)),(LevelObject *)*(int *)(param_1 + 0x20c));
-    uVar14 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
+    uVar14 = direction_to(((KHApp *)*(int *)(param_1 + 0x84))->context,
                           *(undefined4 *)(param_1 + 0x68),*(undefined4 *)(param_1 + 0x6c),
                           *(undefined4 *)(param_1 + 0x218),*(undefined4 *)(param_1 + 0x21c));
-    motion_entity_set_heading((MotionEntity *)param_1,uVar14.low);
+    motion_entity_set_heading((MotionEntity *)param_1,uVar14);
     uVar4 = float_subtract(*(uint *)(param_1 + 0x70),*(uint *)(param_1 + 0x220));
     uVar5 = float_subtract(*(uint *)(param_1 + 0x6c),*(uint *)(param_1 + 0x21c));
     uVar6 = float_subtract(*(uint *)(param_1 + 0x68),*(uint *)(param_1 + 0x218));
@@ -8586,69 +8586,53 @@ AECHAR * string_to_wide(int32 context,char **text,AECHAR **wide)
 
 
 /* ==== 0x0010E280  (file offset 0x0E280)  camera_avoid_walls ========================================== */
-/* GUESS: name. Keeps the camera out of walls: casts a ray from param_2 (its position) toward param_3
-   (where it goes) through field_204; when something is hit closer than the distance + 1.1, pulls param_3
-   in to 1.1 short of the hit and points the yaw from the target to it. Called by camera_update unless
-   skipCollision or fixedView is set. Ghidra's listing below. */
-void camera_avoid_walls(int param_1,undefined4 *param_2,undefined4 *param_3)
+/* GUESS: names. Keeps the camera out of walls: casts a ray from `from` (its position) toward `to` (where
+   it goes) through the game's root scene (slot +0xbc, GUESS: a pick) against field_204, and when it hits
+   (field_204's slot +0xc gives the distance) closer than the way + 1.1, pulls `to` in to 1.1 short of
+   the hit along the ray and points the yaw from the target to it (+ 90). Only x and y are pulled in: z
+   keeps the planned height (research_notes/decomp/GAME_BUGS.md). The distance test is the binary's
+   float_compare_less and bcs, written after the comma. Called by camera_update unless skipCollision or
+   fixedView is set. */
+void camera_avoid_walls(Camera *camera,uint32 *from,uint32 *to)
 
 {
-  undefined4 uVar1;
-  int *piVar2;
-  undefined4 uVar3;
-  undefined4 uVar4;
-  undefined4 uVar5;
-  undefined4 uVar6;
-  undefined1 uVar7;
-  undefined4 local_38;
-  char local_34 [4];
-  undefined4 local_30;
-  undefined4 uStack_2c;
-  undefined4 uStack_28;
-  uint32 direction[3];   /* the vector from param_2 to param_3, then normalised */
-  
-  direction[0] = 0;
-  direction[1] = 0;
-  direction[2] = 0;
-  direction[0] = float_subtract(*param_3,*param_2);
-  direction[1] = float_subtract(param_3[1],param_2[1]);
-  direction[2] = float_subtract(param_3[2],param_2[2]);
-  uVar1 = vector_length(((KHApp *)*(int *)(param_1 + 0x84))->context,direction);
-  uVar6 = FLOAT_1_POINT_1;
-  uVar1 = float_add(uVar1,FLOAT_1_POINT_1);
-  vector_normalize(((KHApp *)*(int *)(param_1 + 0x84))->context,direction);
-  local_30 = *param_2;
-  uStack_2c = param_2[1];
-  uStack_28 = param_2[2];
-  if (*(int *)(param_1 + 0x204) != 0) {
-    piVar2 = (int *)**(undefined4 **)(*(int *)(param_1 + 0x84) + 0xa4);
-    (**(code **)(*piVar2 + 0xbc))(piVar2,1,&local_30,direction,*(int *)(param_1 + 0x204),local_34);
-    uVar7 = 1;
-    if (local_34[0] != '\0') {
-      (**(code **)(**(int **)(param_1 + 0x204) + 0xc))(*(int **)(param_1 + 0x204),&local_38);
-      float_compare_less(local_38,uVar1);
-      if (!(bool)uVar7) {
-        uVar1 = float_subtract(local_38,uVar6);
-        local_38 = uVar1;
-        uVar3 = float_multiply(direction[0],uVar1);
-        uVar6 = uVar3;
-        uVar4 = float_multiply(direction[1],uVar1);
-        uVar1 = float_multiply(direction[2],uVar1);
-        uVar3 = float_add(*param_2,uVar3);
-        *param_3 = uVar3;
-        uVar5 = float_add(param_2[1],uVar4);
-        param_3[1] = uVar5;
-        uVar6 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
-                             *(undefined4 *)(*(int *)(param_1 + 0x1cc) + 0x68),
-                             *(undefined4 *)(*(int *)(param_1 + 0x1cc) + 0x6c),uVar3,uVar5 /* not arguments, value leftovers: uVar6, uVar4,uVar1 */).low;
-        uVar6 = float_add(uVar6,FLOAT_90);
-        ((Camera *)param_1)->yaw = uVar6;
-        wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,&((Camera *)param_1)->yaw);
-      }
-    }
+  MotionEntity *entity = (MotionEntity *)camera;
+  ISwerveObject *root;
+  uint32 direction[3];
+  uint32 origin[3];
+  uint32 move[3];
+  uint32 reach;
+  uint32 distance;
+  uint8 hit[4];   /* the pick's flag; its first byte is read */
+
+  direction[0] = float_subtract(to[0],from[0]);
+  direction[1] = float_subtract(to[1],from[1]);
+  direction[2] = float_subtract(to[2],from[2]);
+  reach = float_add(vector_length(entity->app->context,direction),FLOAT_1_POINT_1);
+  vector_normalize(entity->app->context,direction);
+  origin[0] = from[0];
+  origin[1] = from[1];
+  origin[2] = from[2];
+  if (camera->field_204 == (ISwerveObject *)0x0)
+    return;
+  root = ((Game *)entity->app->pGame)->root;
+  (**(code **)((int32)root->pvt + 0xbc))(root,1,origin,direction,camera->field_204,hit);
+  if (hit[0] == 0)
+    return;
+  (**(code **)((int32)camera->field_204->pvt + 0xc))(camera->field_204,&distance);
+  if (float_compare_less(distance,reach), *(float *)&distance < *(float *)&reach) {
+    distance = float_subtract(distance,FLOAT_1_POINT_1);
+    move[0] = float_multiply(direction[0],distance);
+    move[1] = float_multiply(direction[1],distance);
+    move[2] = float_multiply(direction[2],distance);
+    to[0] = float_add(from[0],move[0]);
+    to[1] = float_add(from[1],move[1]);
+    camera->yaw = float_add(direction_to(entity->app->context,camera->target->position[0],
+                                         camera->target->position[1],to[0],to[1]),FLOAT_90);
+    wrap_angle((int32)entity->app->context,&camera->yaw);
   }
-  return;
 }
+
 
 /* ==== 0x0010E448  (file offset 0x0E448)  FUN_0010e448 ================================================ */
 undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
@@ -9500,7 +9484,7 @@ FUN_0010f2e8(int param_1,uint param_2,undefined4 param_3,uint param_4,undefined4
   uVar8 = 6 < param_7;
   if ((param_7 == 7) && (uVar8 = true, uVar9 = param_2, *(int *)(param_1 + 0x110) != 0))
   goto LAB_0010f4c0;
-  FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,((Enemy *)param_1)->playerPoint[0],
+  direction_to(((KHApp *)*(int *)(param_1 + 0x74))->context,((Enemy *)param_1)->playerPoint[0],
                ((Enemy *)param_1)->playerPoint[1],((Enemy *)param_1)->position[0],
                ((Enemy *)param_1)->position[1] /* not arguments, value leftovers: param_3,param_4 */);
   motion_entity_get_heading((MotionEntity *)*(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xa4) + 0x1f8));
@@ -11680,7 +11664,7 @@ void FUN_00113030(int param_1,undefined4 param_2,uint param_3,uint param_4,undef
   uint uVar2;
   uint uVar3;
   int iVar4;
-  undefined8 uVar5;
+  uint32 uVar5;
   uint local_20;
   uint local_1c;
   undefined4 uStack_18;
@@ -11690,9 +11674,9 @@ void FUN_00113030(int param_1,undefined4 param_2,uint param_3,uint param_4,undef
     FUN_001201cc(*(int *)(param_1 + 0x11c),1);
     *(undefined4 *)(*(int *)(param_1 + 0x11c) + 0x34) = 1;
     thunk_FUN_0011fd90(*(int *)(param_1 + 0x11c),local_20,local_1c,uStack_18);
-    uVar5 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,local_20,local_1c,param_3,
+    uVar5 = direction_to(((KHApp *)*(int *)(param_1 + 0x84))->context,local_20,local_1c,param_3,
                          param_4);
-    motion_entity_set_heading((MotionEntity *)*(int *)(param_1 + 0x11c),uVar5.low);
+    motion_entity_set_heading((MotionEntity *)*(int *)(param_1 + 0x11c),uVar5);
     uVar1 = float_subtract(param_3,local_20);
     uVar1 = float_add(uVar1,param_3);
     uVar2 = float_subtract(param_4,local_1c);
@@ -11806,60 +11790,44 @@ void FUN_00113340(int param_1)
   return;
 }
 
-/* ==== 0x00113374  (file offset 0x13374)  FUN_00113374 ================================================ */
-/* WARNING: Unknown calling convention -- yet parameter storage is locked */
-
-undefined8 FUN_00113374(undefined4 param_1,uint param_2,uint param_3,uint param_4,uint param_5)
+/* ==== 0x00113374  (file offset 0x13374)  direction_to ================================================ */
+/* GUESS: names. The direction from (x2, y2) toward (x1, y1) (floats, their bits), in degrees,
+   -180..180: the angle of d = (x1 - x2, y1 - y2) from +y, counter-clockwise positive (atan2(-dx, dy)),
+   worked out as acos(dy / |d|), clamped to -1..1 first (rounding can take it past), times
+   FLOAT_RADIANS_TO_DEGREES and negated when dx > 0. 0 when the points are the same. The compares are
+   the binary's beq, movhi, ldrcc and bls, written after the comma. r1, which Ghidra returned as the high
+   word, is only dx popped back from the stack vector. 23 call sites: turning enemies, the camera and
+   hitspheres toward points, motion_entity_turn's orbit. */
+uint32 direction_to(void *context,uint32 x1,uint32 y1,uint32 x2,uint32 y2)
 
 {
-  float64 dVar1;   /* the double whose low word is uVar1 */
-  float64 dVar2;   /* the double whose low word is uVar2 */
-  uint uVar1;
-  uint uVar2;
-  undefined1 in_ZR;
-  undefined1 in_CY;
-  uint local_20;
-  uint local_1c;
-  undefined4 local_18;
-  undefined8 uVar3;
-  
-  uVar2 = 0;
-  local_20 = 0;
-  local_1c = 0;
-  local_18 = 0;
-  local_20 = float_subtract(param_2,param_4);
-  local_1c = float_subtract(param_3,param_5);
-  uVar1 = vector_length(param_1,&local_20);
-  float_compare_equal(uVar1,0);
-  if (!(bool)in_ZR) {
-    uVar1 = float_divide(local_1c,uVar1);
-    dVar2 = float_to_double(uVar1);
-    uVar2 = dVar2.low;
-    if (double_compare_greater(dVar2,ONE_DOUBLE),
-        DOUBLE_LESS(ONE_DOUBLE,dVar2)) {
-      uVar1 = 0x3f800000;
-    }
-    dVar2 = float_to_double(uVar1);
-    uVar2 = dVar2.low;
-    if (double_compare_less(dVar2,DOUBLE_MINUS_ONE),
-        DOUBLE_LESS(dVar2,DOUBLE_MINUS_ONE)) {
-      uVar1 = FLOAT_MINUS_1;
-    }
-    dVar1 = float_to_double(uVar1);
-    uVar1 = dVar1.low;
-    dVar1 = math_acos(dVar1);
-    uVar1 = dVar1.low;
-    uVar1 = double_to_float(dVar1);
-    uVar2 = float_multiply(uVar1,WORD_HEXADECIMAL_42652F1B);
-    dVar1 = float_to_double(local_20);
-    uVar1 = dVar1.low;
-    if (double_compare_greater(dVar1,ZERO_DOUBLE),
-        DOUBLE_LESS(ZERO_DOUBLE,dVar1)) {
-      uVar2 = uVar2 ^ 0x80000000;
-    }
-  }
-  return MAKE_WORDS(uVar3,local_20,uVar2);
+  uint32 vector[3];
+  uint32 length;
+  uint32 cosine;
+  uint32 angle;
+  float64 wide;
+
+  vector[0] = float_subtract(x1,x2);
+  vector[1] = float_subtract(y1,y2);
+  vector[2] = 0;
+  length = vector_length(context,vector);
+  if (float_compare_equal(length,0), *(float *)&length == 0.0f)
+    return 0;
+  cosine = float_divide(vector[1],length);
+  wide = float_to_double(cosine);
+  if (double_compare_greater(wide,ONE_DOUBLE), DOUBLE_LESS(ONE_DOUBLE,wide))
+    cosine = 0x3f800000;
+  wide = float_to_double(cosine);
+  if (double_compare_less(wide,DOUBLE_MINUS_ONE), DOUBLE_LESS(wide,DOUBLE_MINUS_ONE))
+    cosine = FLOAT_MINUS_1;
+  angle = double_to_float(math_acos(float_to_double(cosine)));
+  angle = float_multiply(angle,FLOAT_RADIANS_TO_DEGREES);
+  wide = float_to_double(vector[0]);
+  if (double_compare_greater(wide,ZERO_DOUBLE), DOUBLE_LESS(ZERO_DOUBLE,wide))
+    angle = angle ^ 0x80000000;
+  return angle;
 }
+
 
 /* ==== 0x00113474  (file offset 0x13474)  FUN_00113474 ================================================ */
 void FUN_00113474(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5)
@@ -12357,7 +12325,7 @@ int FUN_00113da4(int *param_1,int param_2,int param_3,int param_4,int param_5,ui
   undefined1 uVar10;
   undefined1 uVar11;
   undefined1 uVar12;
-  undefined8 uVar13;
+  uint32 uVar13;
   uint local_64;
   uint local_60;
   int local_5c;
@@ -12501,9 +12469,9 @@ LAB_0011400c:
 LAB_00114080:
                     float_compare_equal(uVar3,0);
                     if (!(bool)uVar11) {
-                      uVar13 = FUN_00113374((undefined4)((KHApp *)param_1[0xd])->context,uVar5,uVar7,
+                      uVar13 = direction_to(((KHApp *)param_1[0xd])->context,uVar5,uVar7,
                                             local_58,uVar9);
-                      local_60 = float_subtract(uVar13.low,FLOAT_90);
+                      local_60 = float_subtract(uVar13,FLOAT_90);
                       wrap_angle((undefined4)((KHApp *)param_1[0xd])->context,(uint32 *)&local_60);
                       local_64 = float_subtract(local_60,param_6);
                       wrap_angle((undefined4)((KHApp *)param_1[0xd])->context,(uint32 *)&local_64);
@@ -17080,7 +17048,7 @@ LAB_0011c188:
        ENEMY_WALK_DIRECTIONS (1, 3, 5, 7 by the side the player is on), or, already walking away, the
        next of the eight directions; farther, a random walk of up to 10 across (now * number, its
        remainders by 2000 and 7000). enemy_fit_walk fits it to the region; when it is allowed, the enemy
-       turns toward it (FUN_00113374, GUESS: the vector's angle, then motion_entity_start_turn), and the
+       turns toward it (direction_to, GUESS: the vector's angle, then motion_entity_start_turn), and the
        walk becomes a speed: walkDuration = |walk| * walkPace (ms), walk / that per ms; then 3002;
      3002: walks: the model (field_28) at walkStart + elapsed * walk, until walkDuration; plans again
        (3003) when the walk is over, or the player comes closer than walkRange and than before (squared,
@@ -17183,7 +17151,7 @@ uint64 enemy_roam(Enemy *enemy,int32 now,uint32 walkRange)
   dy = float_multiply(dy,dy);
   enemy->walkDistance = float_add(dy,dx);
   result.low = enemy->walk[1];             /* the next call's fifth argument, over the saved r0 */
-  turn = FUN_00113374((undefined4)enemy->app->context,0,0,enemy->walk[0],enemy->walk[1]).low;
+  turn = direction_to(enemy->app->context,0,0,enemy->walk[0],enemy->walk[1]);
   turn = float_reverse_subtract(motion_entity_get_heading((MotionEntity *)enemy->field_20),turn);
   wrap_angle((int32)enemy->app->context,&turn);
   motion_entity_start_turn((MotionEntity *)enemy->field_20,turn,0x3f800000);
@@ -17304,9 +17272,9 @@ bool FUN_0011c860(int param_1,int param_2,undefined4 param_3)
       }
       bVar7 = !(bool)uVar9;
       thunk_FUN_0011fd90(*(undefined4 *)(param_1 + 0x28),uVar1,uVar2,local_28);
-      uVar1 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,
+      uVar1 = direction_to(((KHApp *)*(int *)(param_1 + 0x74))->context,
                            ((Enemy *)param_1)->playerPoint[0],
-                           ((Enemy *)param_1)->playerPoint[1],uVar1,uVar2).low;
+                           ((Enemy *)param_1)->playerPoint[1],uVar1,uVar2);
       local_30 = float_add(uVar1,FLOAT_180);
       uVar1 = motion_entity_get_heading((MotionEntity *)*(undefined4 *)(param_1 + 0x20));
       local_30 = float_reverse_subtract(uVar1,local_30);
@@ -17904,8 +17872,8 @@ void FUN_0011d6cc(int param_1,int param_2)
   uint uVar9;
   undefined1 uVar10;
   undefined1 uVar11;
-  undefined8 uVar12;
-  undefined8 uVar13;
+  uint32 uVar12;
+  uint32 uVar13;
   uint64 uVar14;
   uint local_34;
   undefined4 local_30;
@@ -17927,10 +17895,10 @@ void FUN_0011d6cc(int param_1,int param_2)
       uVar11 = 1;
       uVar10 = 0;
       if (*(int *)(param_1 + 0x270) == 0) {
-        uVar12 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,
+        uVar12 = direction_to(((KHApp *)*(int *)(param_1 + 0x74))->context,
                               *(undefined4 *)(param_1 + 0x254),*(undefined4 *)(param_1 + 600),
                               local_30,local_2c);
-        local_34 = uVar12.low;
+        local_34 = uVar12;
         uVar9 = motion_entity_get_heading((MotionEntity *)*(int *)(param_1 + 0x20));
         local_34 = float_reverse_subtract(uVar9,local_34);
         wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,(uint32 *)&local_34);
@@ -17939,7 +17907,7 @@ void FUN_0011d6cc(int param_1,int param_2)
       }
     }
     *(undefined4 *)(param_1 + 0x270) = 0;
-    uVar12 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,
+    uVar12 = direction_to(((KHApp *)*(int *)(param_1 + 0x74))->context,
                           *(undefined4 *)(param_1 + 0x254),*(undefined4 *)(param_1 + 600),local_30,
                           local_2c);
     uVar9 = FLOAT_360;
@@ -17953,10 +17921,10 @@ void FUN_0011d6cc(int param_1,int param_2)
                            *(undefined4 *)(iVar6 + 0x1d0));
       float_compare_greater(uVar4,FLOAT_0_POINT_1);
       if ((bool)uVar11 && !(bool)uVar10) {
-        uVar13 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,
+        uVar13 = direction_to(((KHApp *)*(int *)(param_1 + 0x74))->context,
                               *(undefined4 *)(param_1 + 0x254),*(undefined4 *)(param_1 + 600),
                               *(undefined4 *)(iVar6 + 0x1cc),*(undefined4 *)(iVar6 + 0x1d0));
-        uVar4 = float_subtract(uVar13.low,uVar12.low);
+        uVar4 = float_subtract(uVar13,uVar12);
         uVar4 = float_add(uVar4,uVar9);
         uVar4 = float_to_int(uVar4);
         uVar14 = rt_sdiv(0x168,uVar4);
@@ -18000,8 +17968,8 @@ void FUN_0011d6cc(int param_1,int param_2)
     uVar8 = float_subtract(*(uint *)(param_1 + 0x24c),*(uint *)(param_1 + 0x25c));
     uVar9 = float_reverse_divide(uVar9,uVar8);
     *(uint *)(param_1 + 0x24c) = uVar9;
-    uVar12 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,0,0,uVar2,uVar3);
-    local_34 = uVar12.low;
+    uVar12 = direction_to(((KHApp *)*(int *)(param_1 + 0x74))->context,0,0,uVar2,uVar3);
+    local_34 = uVar12;
     uVar9 = motion_entity_get_heading((MotionEntity *)*(int *)(param_1 + 0x20));
     local_34 = float_reverse_subtract(uVar9,local_34);
     wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,(uint32 *)&local_34);
@@ -18500,7 +18468,7 @@ void motion_entity_pitch_by(MotionEntity *entity,uint32 angle)
 /* ==== 0x0011E3C0  (file offset 0x1E3C0)  motion_entity_turn ========================================== */
 /* GUESS: names. Turns by `angle` degrees (a float, its bits). Without an orbit centre the heading simply
    grows by `angle`; with one (the camera's target), the entity moves around it: the new heading is the
-   direction from the entity to the centre (FUN_00113374) plus `angle`, and the entity goes to the point
+   direction from the entity to the centre (direction_to) plus `angle`, and the entity goes to the point
    at the same distance (vector_length3) on that line, x = centre x - distance * cos, y = centre y +
    distance * sin (the heading in radians: times FLOAT_DEGREES_TO_RADIANS = pi/180; GUESS: float_sin
    cosine, float_cos sine), handed to its node (slot +0x4c). Then the heading, wrapped into -180..180,
@@ -18526,8 +18494,8 @@ void motion_entity_turn(MotionEntity *entity,uint32 angle)
     centerX = center[0];
     level_object_get_position(center,entity->orbitCenter);
     centerY = center[1];
-    direction = FUN_00113374((int32)entity->app->context,entity->position[0],entity->position[1],
-                             centerX,centerY).low;
+    direction = direction_to(entity->app->context,entity->position[0],entity->position[1],
+                             centerX,centerY);
     offsetY = float_subtract(entity->position[1],centerY);
     distance = vector_length3((int32)entity->app->context,float_subtract(entity->position[0],centerX),offsetY,0);
     entity->heading = float_add(direction,angle);
@@ -18819,8 +18787,8 @@ undefined4 FUN_0011ec28(int param_1,int param_2)
       FUN_0011f7d4(param_1,1);
       enemy_get_player_point((uint32 *)&local_1c,(Enemy *)param_1);
       level_object_get_position((uint32 *)&local_28,(LevelObject *)*(undefined4 *)(param_1 + 0x20));
-      uVar2 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x74))->context,local_1c,local_18,
-                           local_28,local_24).low;
+      uVar2 = direction_to(((KHApp *)*(int *)(param_1 + 0x74))->context,local_1c,local_18,
+                           local_28,local_24);
       local_2c = float_add(uVar2,FLOAT_180);
       uVar2 = motion_entity_get_heading((MotionEntity *)*(undefined4 *)(param_1 + 0x20));
       local_2c = float_reverse_subtract(uVar2,local_2c);
@@ -20549,8 +20517,8 @@ FUN_001213fc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
         uVar4 = 1;
         if (!(bool)uVar5) {
           iVar6 = *(int *)(param_1 + 0x6c);
-          uVar2 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,param_2,param_3,
-                               *(undefined4 *)(param_1 + 0x68),iVar6).low;
+          uVar2 = direction_to(((KHApp *)*(int *)(param_1 + 0x84))->context,param_2,param_3,
+                               *(undefined4 *)(param_1 + 0x68),iVar6);
           uVar2 = float_subtract(uVar2,param_7);
           float_compare_greater(*(uint *)(param_1 + 100) ^ 0x80000000,uVar2);
           if (!(bool)uVar4 || (bool)uVar5) {
@@ -20579,8 +20547,9 @@ LAB_00121530:
   }
   else {
     iVar6 = *(int *)(param_1 + 0x6c);
-    uVar3 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,param_2,param_3,
-                         *(undefined4 *)(param_1 + 0x68),iVar6 /* not arguments, value leftovers: param_2,param_3,param_4 */).low;
+    uVar3 = direction_to(((KHApp *)*(int *)(param_1 + 0x84))->context,param_2,param_3,
+                         *(undefined4 *)(param_1 + 0x68),iVar6
+                         /* not arguments, value leftovers: param_2,param_3,param_4 */);
     uVar3 = float_subtract(uVar3,param_7);
     float_compare_greater(*(uint *)(param_1 + 100) ^ 0x80000000,uVar3);
     if (!(bool)uVar4 || (bool)uVar5) {
@@ -20695,121 +20664,94 @@ void FUN_0012171c(int32 object,int32 now,int32 elapsed)
 }
 
 /* ==== 0x00121780  (file offset 0x21780)  camera_pitch_over_ground ==================================== */
-/* GUESS: name. Tilts the camera so it clears the ground near `point` (its x and y; z is the target's
-   middle): casts a ray down from 50 above it (FUN_00114240), keeps how far the target's middle is above
-   the ground there in +0x20c (groundOffset), and eases the pitch toward the angle it gives, held between
-   view[0] and view[1], by at most elapsed * |difference / 60| * +0x118 * 3. Called by camera_update
-   unless fixedView is set. Ghidra's listing below. */
-void camera_pitch_over_ground(int param_1,undefined4 *param_2,uint param_3)
+/* GUESS: names. Tilts the camera so it stays above the ground near `point` (its x and y; its z is the
+   target's middle): groundOffset becomes how far above the target's middle the camera must be, 1.5 above
+   the ground a ray finds under the point from 50 above it (FUN_00114240), or 1.5 above the target's feet
+   when it finds none, plus the target's height less the flat distance to it when that is shorter. The
+   wanted pitch is that offset's elevation angle (acos of the flat distance over the slant one, negative
+   below), held between view[0] and view[1]; the pitch eases toward it by at most
+   elapsed * |difference / 60| * the camera's +0x118 * 3, and, while the target stands still (its +0x74,
+   GUESS: its last position, equals its position), only upward. The compares are the binary's bls, bcs,
+   ldrhi, ldrcc, strhi and bleq / bne, written after the comma. Called by camera_update unless fixedView
+   is set. */
+void camera_pitch_over_ground(Camera *camera,uint32 *point,int32 elapsed)
 
 {
-  float64 dVar1;   /* the double whose low word is uVar1 */
-  float64 dVar3;   /* the double whose low word is uVar3 */
-  uint uVar1;
-  uint uVar2;
-  uint uVar3;
-  int iVar4;
-  undefined1 uVar5;
-  undefined1 uVar6;
-  int local_34;
+  MotionEntity *entity = (MotionEntity *)camera;
+  uint32 *last = (uint32 *)((uint8 *)camera->target + 0x74);
+  uint32 eye;
+  uint32 middle;
+  uint32 ground;
+  uint32 flat;
+  uint32 half;
+  uint32 slant;
+  uint32 value;
   uint32 angle;
-  
-  iVar4 = *(int *)(param_1 + 0x1cc);
-  uVar1 = float_add(*(uint *)(iVar4 + 0x70),0x3fc00000);
-  uVar2 = level_object_get_height((LevelObject *)iVar4);
-  uVar2 = float_multiply(uVar2,0x3f000000);
-  uVar2 = float_add(uVar2,*(uint *)(*(int *)(param_1 + 0x1cc) + 0x70));
-  uVar1 = float_reverse_subtract(uVar2,uVar1);
-  *(uint *)(param_1 + 0x20c) = uVar1;
-  uVar1 = float_add(param_2[2],0x42480000);
-  uVar1 = FUN_00114240(*(undefined4 **)(*(int *)(param_1 + 0x84) + 0xa4),*param_2,param_2[1],uVar1,
-                       0xbf800000,&local_34,0,0,0);
-  iVar4 = *(int *)(param_1 + 0x1cc);
-  uVar2 = float_subtract(*(uint *)(param_1 + 0x6c),*(uint *)(iVar4 + 0x6c));
-  uVar3 = float_subtract(*(uint *)(param_1 + 0x68),*(uint *)(iVar4 + 0x68));
-  uVar2 = vector_length3((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,uVar3,uVar2,0);
-  uVar3 = level_object_get_height((LevelObject *)*(int *)(param_1 + 0x1cc));
-  uVar3 = float_multiply(uVar3,0x3f000000);
-  uVar6 = local_34 == 0;
-  uVar5 = 1;
-  if (!(bool)uVar6) {
-    uVar1 = float_add(uVar1,0x3fc00000);
-    uVar3 = float_add(*(uint *)(*(int *)(param_1 + 0x1cc) + 0x70),uVar3);
-    uVar1 = float_reverse_subtract(uVar3,uVar1);
-    *(uint *)(param_1 + 0x20c) = uVar1;
+  uint32 turn;
+  uint32 step;
+  int32 hit;
+  float64 wide;
+
+  eye = float_add(camera->target->position[2],0x3fc00000);   /* 1.5 */
+  value = float_multiply(level_object_get_height(camera->target),0x3f000000);
+  middle = float_add(value,camera->target->position[2]);
+  camera->groundOffset = float_reverse_subtract(middle,eye);
+  ground = FUN_00114240((undefined4 *)entity->app->pGame,point[0],point[1],float_add(point[2],0x42480000),
+                        0xbf800000,(undefined4 *)&hit,0,0,0);   /* 50 above, down (-1.0) */
+  value = float_subtract(entity->position[1],camera->target->position[1]);
+  flat = float_subtract(entity->position[0],camera->target->position[0]);
+  flat = vector_length3(entity->app->context,flat,value,0);
+  half = float_multiply(level_object_get_height(camera->target),0x3f000000);
+  if (hit != 0) {
+    ground = float_add(ground,0x3fc00000);
+    camera->groundOffset = float_reverse_subtract(float_add(camera->target->position[2],half),ground);
   }
-  uVar1 = level_object_get_height((LevelObject *)*(int *)(param_1 + 0x1cc));
-  float_compare_greater(uVar1,uVar2);
-  if ((bool)uVar5 && !(bool)uVar6) {
-    uVar1 = level_object_get_height((LevelObject *)*(int *)(param_1 + 0x1cc));
-    uVar1 = float_subtract(uVar1,uVar2);
-    uVar1 = float_add(uVar1,*(uint *)(param_1 + 0x20c));
-    *(uint *)(param_1 + 0x20c) = uVar1;
+  value = level_object_get_height(camera->target);
+  if (float_compare_greater(value,flat), *(float *)&value > *(float *)&flat) {
+    value = float_subtract(level_object_get_height(camera->target),flat);
+    camera->groundOffset = float_add(value,camera->groundOffset);
   }
-  iVar4 = *(int *)(param_1 + 0x1cc);
-  uVar1 = float_subtract(*param_2,*(uint *)(iVar4 + 0x68));
-  uVar1 = float_multiply(uVar1,uVar1);
-  uVar2 = float_subtract(param_2[1],*(uint *)(iVar4 + 0x6c));
-  uVar2 = float_multiply(uVar2,uVar2);
-  uVar1 = float_add(uVar2,uVar1);
-  uVar2 = float_multiply(*(uint *)(param_1 + 0x20c),*(uint *)(param_1 + 0x20c));
-  uVar1 = float_sqrt(float_add(uVar2,uVar1));
-  iVar4 = *(int *)(param_1 + 0x1cc);
-  uVar2 = float_subtract(*param_2,*(uint *)(iVar4 + 0x68));
-  uVar2 = float_multiply(uVar2,uVar2);
-  uVar3 = float_subtract(param_2[1],*(uint *)(iVar4 + 0x6c));
-  uVar3 = float_multiply(uVar3,uVar3);
-  uVar2 = float_sqrt(float_add(uVar3,uVar2));
-  uVar1 = float_divide(uVar2,uVar1);
-  dVar1 = float_to_double(uVar1);
-  uVar1 = dVar1.low;
-  dVar1 = math_acos(dVar1);
-  uVar1 = dVar1.low;
-  uVar1 = double_to_float(dVar1);
-  uVar1 = float_multiply(uVar1,WORD_HEXADECIMAL_42652F1B);
-  float_compare_less(*(uint *)(param_1 + 0x20c),0);
-  if (!(bool)uVar5) {
-    uVar1 = uVar1 ^ 0x80000000;
-  }
-  float_compare_greater(uVar1,*(uint *)(param_1 + 0x1d8));
-  if ((bool)uVar5 && !(bool)uVar6) {
-    uVar1 = *(uint *)(param_1 + 0x1d8);
-  }
-  float_compare_less(uVar1,*(uint *)(param_1 + 0x1dc));
-  if (!(bool)uVar5) {
-    uVar1 = *(uint *)(param_1 + 0x1dc);
-  }
-  angle = float_subtract(uVar1,*(uint *)(param_1 + 0x1f8));
-  wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,&angle);
-  uVar2 = float_divide(angle,FLOAT_60);
-  dVar3 = float_to_double(uVar2);
-  uVar3 = dVar3.low;
-  if (double_compare_less(dVar3,ZERO_DOUBLE),
-      DOUBLE_LESS(dVar3,ZERO_DOUBLE)) {
-    uVar2 = uVar2 ^ 0x80000000;
-  }
-  uVar3 = int_to_float(param_3);
-  uVar2 = float_multiply(uVar3,uVar2);
-  uVar2 = float_multiply(uVar2,*(uint *)(param_1 + 0x118));
-  uVar2 = float_multiply(uVar2,FLOAT_3);
-  if (float_compare_greater(angle,uVar2), *(float *)&angle > *(float *)&uVar2) {
-    angle = uVar2;
-  }
+  value = float_subtract(point[0],camera->target->position[0]);
+  slant = float_multiply(value,value);
+  value = float_subtract(point[1],camera->target->position[1]);
+  slant = float_add(float_multiply(value,value),slant);
+  slant = float_sqrt(float_add(float_multiply(camera->groundOffset,camera->groundOffset),slant));
+  value = float_subtract(point[0],camera->target->position[0]);
+  flat = float_multiply(value,value);
+  value = float_subtract(point[1],camera->target->position[1]);
+  flat = float_sqrt(float_add(float_multiply(value,value),flat));
+  angle = double_to_float(math_acos(float_to_double(float_divide(flat,slant))));
+  angle = float_multiply(angle,FLOAT_RADIANS_TO_DEGREES);
+  if (float_compare_less(camera->groundOffset,0), *(float *)&camera->groundOffset < 0.0f)
+    angle = angle ^ 0x80000000;
+  if (float_compare_greater(angle,camera->view[0]), *(float *)&angle > *(float *)&camera->view[0])
+    angle = camera->view[0];
+  if (float_compare_less(angle,camera->view[1]), *(float *)&angle < *(float *)&camera->view[1])
+    angle = camera->view[1];
+  turn = float_subtract(angle,camera->pitch);
+  wrap_angle((int32)entity->app->context,&turn);
+  step = float_divide(turn,FLOAT_60);
+  wide = float_to_double(step);
+  if (double_compare_less(wide,ZERO_DOUBLE), DOUBLE_LESS(wide,ZERO_DOUBLE))
+    step = step ^ 0x80000000;
+  step = float_multiply(int_to_float(elapsed),step);
+  step = float_multiply(step,*(uint32 *)(camera->entity + 0x118));
+  step = float_multiply(step,FLOAT_3);
+  if (float_compare_greater(turn,step), *(float *)&turn > *(float *)&step)
+    turn = step;
   else {
-    uVar2 = uVar2 ^ 0x80000000;
-    if (float_compare_greater(uVar2,angle), *(float *)&uVar2 > *(float *)&angle) {
-      angle = uVar2;
-    }
+    step = step ^ 0x80000000;
+    if (float_compare_greater(step,turn), *(float *)&step > *(float *)&turn)
+      turn = step;
   }
-  if (!(float_compare_equal(*(uint *)(*(int *)(param_1 + 0x1cc) + 0x74),*(uint *)(*(int *)(param_1 + 0x1cc) + 0x68)),
-        *(float *)(*(int *)(param_1 + 0x1cc) + 0x74) == *(float *)(*(int *)(param_1 + 0x1cc) + 0x68)) ||
-      !(float_compare_equal(*(uint *)(*(int *)(param_1 + 0x1cc) + 0x78),*(uint *)(*(int *)(param_1 + 0x1cc) + 0x6c)),
-        *(float *)(*(int *)(param_1 + 0x1cc) + 0x78) == *(float *)(*(int *)(param_1 + 0x1cc) + 0x6c)) ||
-      (float_compare_greater(angle,0), *(float *)&angle > 0.0f)) {
-    *(uint *)(param_1 + 0x1f8) = float_add(*(uint *)(param_1 + 0x1f8),angle);
-  }
-  return;
+  if (!(float_compare_equal(last[0],camera->target->position[0]),
+        *(float *)&last[0] == *(float *)&camera->target->position[0]) ||
+      !(float_compare_equal(last[1],camera->target->position[1]),
+        *(float *)&last[1] == *(float *)&camera->target->position[1]) ||
+      (float_compare_greater(turn,0), *(float *)&turn > 0.0f))
+    camera->pitch = float_add(camera->pitch,turn);
 }
+
 
 /* ==== 0x00121AB0  (file offset 0x21AB0)  FUN_00121ab0 ================================================ */
 void FUN_00121ab0(int param_1)
@@ -20932,7 +20874,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
         uVar11 = *(int *)(param_1 + 0xa4) == 0;
         if (!(bool)uVar11) {
           uVar3 = ((Hitsphere *)param_1)->playerPoint[1];
-          uVar12 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
+          uVar12.low = direction_to(((KHApp *)*(int *)(param_1 + 0x20))->context,
                                 ((Hitsphere *)param_1)->position[0],((Hitsphere *)param_1)->position[1],
                                 ((Hitsphere *)param_1)->playerPoint[0],uVar3);
           local_24 = float_subtract(uVar12.low,*(uint *)(*(int *)(param_1 + 4) + 0x140));
@@ -20982,7 +20924,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
     *(int *)(param_1 + 0x80) = iVar4;
     level_object_get_position((uint32 *)&local_2c,(LevelObject *)*(int *)(*(int *)(*(int *)(param_1 + 0x24) + 0x118) + iVar4 * 4));
     uVar3 = local_28;
-    uVar12 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x20))->context,
+    uVar12.low = direction_to(((KHApp *)*(int *)(param_1 + 0x20))->context,
                           ((Hitsphere *)param_1)->position[0],((Hitsphere *)param_1)->position[1],local_2c,
                           local_28);
     if (*(int *)(param_1 + 0x78) == -1) {
@@ -21448,8 +21390,8 @@ void enemy_update(Enemy *enemy,int32 now,int32 elapsed)
       if (enemy->field_60 != 0)
         enemy_play_animation(enemy,enemy->field_60,1);
       enemy->field_68 = 0;
-      angle = float_add(FUN_00113374(enemy->app->context,enemy->playerPoint[0],enemy->playerPoint[1],
-                                              enemy->position[0],enemy->position[1]).low,FLOAT_180);
+      angle = float_add(direction_to(enemy->app->context,enemy->playerPoint[0],enemy->playerPoint[1],
+                                              enemy->position[0],enemy->position[1]),FLOAT_180);
       angle = float_reverse_subtract(motion_entity_get_heading((MotionEntity *)enemy->field_20),angle);
       wrap_angle((int32)enemy->app->context,(uint32 *)&angle);
       motion_entity_start_turn((MotionEntity *)enemy->field_20,angle,0x3f000000);
@@ -21519,8 +21461,8 @@ void enemy_update(Enemy *enemy,int32 now,int32 elapsed)
      between, unless fixedView is set, camera_pitch_over_ground tilts the pitch to clear the ground (it
      reads the point's z, here still the target's middle), and unless skipCollision or fixedView is set,
      camera_avoid_walls pulls the point in front of a wall (skipCollision is cleared instead);
-   - moves there, turns to face the focus and tilts toward it (FUN_00113374, GUESS: a direction in
-     degrees), and keeps the real distance to the focus.
+   - moves there, turns to face the focus and tilts toward it (direction_to), and keeps the real
+     distance to the focus.
    The point's first x and y, 2 * position - focus, are overwritten before anything reads them (GUESS:
    leftover code); their calls are the binary's. */
 void camera_update(Camera *camera,int32 now,int32 elapsed)
@@ -21573,16 +21515,16 @@ void camera_update(Camera *camera,int32 now,int32 elapsed)
   value = float_multiply(float_multiply(cosine,value),camera->distance);
   point[1] = float_reverse_subtract(value,camera->focus[1]);
   if (camera->fixedView == 0)
-    camera_pitch_over_ground((int)camera,point,elapsed);
+    camera_pitch_over_ground(camera,point,elapsed);
   value = float_sin(float_multiply(camera->pitch,FLOAT_DEGREES_TO_RADIANS));
   point[2] = float_add(float_multiply(value,camera->distance),camera->focus[2]);
   if (camera->skipCollision == 0 && camera->fixedView == 0)
-    camera_avoid_walls((int)camera,entity->position,point);
+    camera_avoid_walls(camera,entity->position,point);
   else
     camera->skipCollision = 0;
   thunk_FUN_0011fd90((int)camera,point[0],point[1],point[2]);
-  turn = FUN_00113374((undefined4)entity->app->context,camera->focus[0],camera->focus[1],point[0],
-                      point[1]).low;
+  turn = direction_to(entity->app->context,camera->focus[0],camera->focus[1],point[0],
+                      point[1]);
   turn = float_subtract(float_add(turn,FLOAT_180),entity->heading);
   wrap_angle((int32)entity->app->context,&turn);
   motion_entity_turn(entity,turn);
@@ -21590,8 +21532,8 @@ void camera_update(Camera *camera,int32 now,int32 elapsed)
   toCamera[1] = float_subtract(point[1],camera->focus[1]);
   toCamera[2] = 0;
   value = vector_length(entity->app->context,toCamera);
-  tilt = FUN_00113374((undefined4)entity->app->context,value,float_subtract(point[2],camera->focus[2]),0,
-                      0).low;
+  tilt = direction_to(entity->app->context,value,float_subtract(point[2],camera->focus[2]),0,
+                      0);
   tilt = float_add(float_reverse_subtract(motion_entity_get_pitch(entity),FLOAT_90),tilt);
   wrap_angle((int32)entity->app->context,&tilt);
   motion_entity_pitch_by(entity,tilt);
