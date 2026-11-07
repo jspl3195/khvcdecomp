@@ -273,7 +273,7 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
 /* The large-argument path (|x| > ~2^20*pi/2) is the ARM library's own, not fdlibm's (fdlibm calls
    __kernel_rem_pio2 there). It splits x (low word & 0xfc000000 and the rest), multiplies both parts
    by a two-part constant C = HIGH_PART + LOW_PART, sums the partial products and reduces modulo the
-   period K (FUN_001259e8). Checked from the values: C_hi + C_lo = 0.426041899379994537522 and
+   period K (double_remainder). Checked from the values: C_hi + C_lo = 0.426041899379994537522 and
    K = 2*pi*C exactly; the pool also holds C itself (0x00101260) and K/4 (0x00101258).
    GUESS: what C stands for, and so the exact meaning of the reduction. */
 #define REDUCTION_CONSTANT_HIGH_PART_LOW_WORD  0x40000000u  /* was DAT_001011a8 (0x001011A8) */
@@ -292,7 +292,7 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
 #define REDUCTION_PERIOD_LOW_WORD  0xA740A5A7u      /* was DAT_001011b8 (word at 0x001011B8) */
 #define REDUCTION_PERIOD_HIGH_WORD 0x40056A4Au      /* was DAT_001011bc (word at 0x001011BC) */
                                              /* K = 2.67690020242726545163e+00 (0x40056A4AA740A5A7)
-                                                = 2*pi*C: the modulus FUN_001259e8 reduces by */
+                                                = 2*pi*C: the modulus double_remainder reduces by */
 #define REDUCTION_QUARTER_PERIOD_LOW_WORD  0xA740A5A7u  /* was DAT_00101258 (word at 0x00101258) */
 #define REDUCTION_QUARTER_PERIOD_HIGH_WORD 0x3FE56A4Au  /* was DAT_0010125c (word at 0x0010125C) */
                                              /* K/4 = 6.69225050606816362908e-01 (0x3FE56A4AA740A5A7,
@@ -879,10 +879,10 @@ int32 double_to_int(float64 x);   /* 0x00125554 GUESS: name, see kh_mod.c */
 float64 int_to_double(int32 value);   /* 0x00125604 GUESS: name, see kh_mod.c */
 uint32 double_compare_greater(float64 a,float64 b);   /* 0x00125634 GUESS: name, see kh_mod.c */
 uint32 double_compare_less(float64 a,float64 b);   /* 0x001256B4 GUESS: name, see kh_mod.c */
-float64 FUN_00125734(float64 a,float64 b);
-float64 FUN_001259e8(float64 a,float64 b);
-float64 FUN_00125cd0(float64 x);
-float64 FUN_00126248(uint param_1);
+float64 double_multiply(float64 a,float64 b);   /* 0x00125734 GUESS: name, see kh_mod.c */
+float64 double_remainder(float64 a,float64 b);   /* 0x001259E8 GUESS: name, see kh_mod.c */
+float64 double_sqrt(float64 x);   /* 0x00125CD0 GUESS: name, see kh_mod.c */
+float64 float_to_double(uint32 a);   /* 0x00126248 GUESS: name, see kh_mod.c */
 uint32 float_add(uint32 a,uint32 b);   /* 0x001262B0 GUESS: name; a + b, float bits (__aeabi_fadd) */
 uint32 float_reverse_subtract(uint32 a,uint32 b);   /* 0x001263F8 GUESS: name; b - a (__aeabi_frsub) */
 uint32 float_subtract(uint32 a,uint32 b);   /* 0x0012642C GUESS: name; a - b (__aeabi_fsub) */
