@@ -622,7 +622,7 @@ undefined4 FUN_0010d95c(int param_1,int param_2);
 void FUN_0010db04(int param_1,undefined4 param_2);
 int32 progress_score(Progress *progress);   /* 0x0010E1F8 GUESS: name */
 AECHAR * string_to_wide(int32 context,char **text,AECHAR **wide);   /* 0x0010E210 GUESS: name, see kh_mod.c */
-void FUN_0010e280(int param_1,undefined4 *param_2,undefined4 *param_3);
+void camera_avoid_walls(int param_1,undefined4 *param_2,undefined4 *param_3);   /* 0x0010E280 GUESS */
 undefined4 FUN_0010e448(int param_1,undefined4 *param_2);
 void thunk_animations_add_from_scene(int param_1,int *param_2);
 void FUN_0010e94c(int *param_1);
@@ -682,7 +682,7 @@ void FUN_00113474(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
 void hitsphere_get_player_point(uint32 *point,Hitsphere *hitsphere);   /* 0x00113490 GUESS: name, see kh_mod.c */
 void enemy_get_player_point(uint32 *point,Enemy *enemy);   /* 0x00113524 GUESS: name, see kh_mod.c */
 int32 animations_get_duration(Animations *animations,int32 index);   /* 0x001135B8 GUESS: name */
-void FUN_001135dc(int param_1);
+void camera_find_target(Camera *camera);   /* 0x001135DC GUESS: name, see kh_mod.c */
 uint32 string_hash(int32 context,const char *text);   /* 0x00113654 GUESS: name, see kh_mod.c */
 int32 level_object_get_surface(LevelObject *object,uint32 x,uint32 y,uint32 *bottom,uint32 *top,uint32 radius);   /* 0x001136C8 GUESS: name, see kh_mod.c */
 uint32 level_object_get_height(LevelObject *object);   /* 0x00113784 GUESS: name */
@@ -846,15 +846,15 @@ void FUN_00121584(int param_1,int *param_2,int *param_3,int param_4);
 void FUN_0012164c(int param_1,undefined4 param_2,int param_3);
 void progress_add_play_time(Progress *progress);   /* 0x001216C4 GUESS: name, see kh_mod.c */
 void FUN_0012171c(int32 object,int32 now,int32 elapsed);   /* 0x0012171C (no Ghidra function) */
-void FUN_00121780(int param_1,undefined4 *param_2,uint param_3);
+void camera_pitch_over_ground(int param_1,undefined4 *param_2,uint param_3);   /* 0x00121780 GUESS: name */
 void FUN_00121ab0(int param_1);
-void FUN_00121b98(int param_1,undefined4 param_2);
+void camera_recenter_yaw(Camera *camera,int32 elapsed);   /* 0x00121B98 GUESS: name, see kh_mod.c */
 undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3);
 void FUN_00122450(int param_1,byte *param_2,int param_3);
 void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed);
 int32 script_sequence_update(ScriptSequence *sequence,int32 now,int32 elapsed);   /* 0x0012289C GUESS: name, see kh_mod.c */
 void enemy_update(Enemy *enemy,int32 now,int32 elapsed);   /* 0x00122954 GUESS: name */
-void FUN_00122b90(int param_1,int param_2,uint param_3);
+void camera_update(Camera *camera,int32 now,int32 elapsed);   /* 0x00122B90 GUESS: names, see kh_mod.c */
 void combat_region_update(CombatRegion *region,int32 now,int32 elapsed);   /* 0x00122F98 GUESS: name */
 void FUN_0012312c(int param_1,int param_2,int param_3);
 void FUN_00123588(int param_1,int param_2,int param_3);

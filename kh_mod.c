@@ -6391,14 +6391,14 @@ Camera * camera_create(Camera *camera,ISwerveObject *node,char *name)
   camera->entity[0] = 3;   /* LevelObject.kind */
   camera->view[0] = FLOAT_90;
   camera->view[1] = 0;
-  camera->field_1e4 = 0;
+  camera->fixedView = 0;
   camera->view[2] = FLOAT_10;
   camera->field_1c8 = 0;
   camera->target = (LevelObject *)0x0;
   camera->field_204 = (ISwerveObject *)0x0;
   camera->activeRotation = 0;
   camera->distance = 0x40600000;   /* 3.5; the binary takes 0xc00000 off FLOAT_10 */
-  camera->field_20c = (LevelObject *)0x0;
+  camera->groundOffset = 0;
   camera->pitch = 0;
   camera->yaw = 0;
   camera->skipCollision = 0;
@@ -8585,8 +8585,12 @@ AECHAR * string_to_wide(int32 context,char **text,AECHAR **wide)
 }
 
 
-/* ==== 0x0010E280  (file offset 0x0E280)  FUN_0010e280 ================================================ */
-void FUN_0010e280(int param_1,undefined4 *param_2,undefined4 *param_3)
+/* ==== 0x0010E280  (file offset 0x0E280)  camera_avoid_walls ========================================== */
+/* GUESS: name. Keeps the camera out of walls: casts a ray from param_2 (its position) toward param_3
+   (where it goes) through field_204; when something is hit closer than the distance + 1.1, pulls param_3
+   in to 1.1 short of the hit and points the yaw from the target to it. Called by camera_update unless
+   skipCollision or fixedView is set. Ghidra's listing below. */
+void camera_avoid_walls(int param_1,undefined4 *param_2,undefined4 *param_3)
 
 {
   undefined4 uVar1;
@@ -11922,27 +11926,26 @@ int32 animations_get_duration(Animations *animations,int32 index)
   return index >= 0 && animations->userIds[index] != -1 ? animations->durations[index] : 0;
 }
 
-/* ==== 0x001135DC  (file offset 0x135DC)  FUN_001135dc ================================================ */
-void FUN_001135dc(int param_1)
+/* ==== 0x001135DC  (file offset 0x135DC)  camera_find_target ========================================== */
+/* GUESS: name. Finds the camera's target by name: the string its node's user parameter
+   WORD_HEXADECIMAL_39B9295D holds (FUN_00114520 allocates it), hashed (string_hash) and looked up in
+   the game (game_find_object), then freed. Nothing changes when the node has no such parameter.
+   Called by the camera's setup and by camera_update while the camera has no target. */
+void camera_find_target(Camera *camera)
 
 {
-  undefined4 param_3;
-  /* not parameters: param_3. kh.mod reads r2 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  undefined4 uVar1;
-  int local_c;
-  
-  local_c = 0;
-  FUN_00114520((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8),
-               WORD_HEXADECIMAL_39B9295D,&local_c /* not arguments, value leftovers: param_3 */);
-  if (local_c != 0) {
-    uVar1 = string_hash((int32)((KHApp *)*(int *)(param_1 + 0x84))->context,(const char *)local_c);
-    uVar1 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 0x84))->pGame,uVar1);
-    *(undefined4 *)(param_1 + 0x1cc) = uVar1;
+  MotionEntity *entity = (MotionEntity *)camera;
+  char *name = (char *)0x0;
+  uint32 nameId;
+
+  FUN_00114520((undefined4)entity->app->context,(int *)entity->node,WORD_HEXADECIMAL_39B9295D,
+               (undefined4 *)&name);
+  if (name == (char *)0x0)
+    return;
+  nameId = string_hash((int32)entity->app->context,name);
+  camera->target = game_find_object((Game *)entity->app->pGame,nameId);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(local_c);
-  }
-  return;
+  (*g_pHelperFuncs->free)(name);
 }
 
 /* ==== 0x00113654  (file offset 0x13654)  string_hash ================================================= */
@@ -14265,7 +14268,7 @@ void FUN_00117d30(int param_1,int *param_2)
     }
     motion_entity_set_pitch((MotionEntity *)param_1,*(uint32 *)(param_1 + 0x1e0));
   }
-  FUN_001135dc(param_1);
+  camera_find_target((Camera *)param_1);
 }
 
 /* ==== 0x00117DD8  (file offset 0x17DD8)  combat_region_setup ========================================= */
@@ -18483,7 +18486,7 @@ switchD_0001e310_default:
 /* ==== 0x0011E36C  (file offset 0x1E36C)  motion_entity_pitch_by ====================================== */
 /* GUESS: name. Tilts by `angle` degrees (a float, its bits; float_add adds): the pitch wrapped into
    -180..180 is handed to field_158 (slot +0x5c; the binary tail-jumps to it, 0x0011e3b8). Nothing
-   without field_158. The camera (FUN_00122b90) tilts with it to look at its target's middle. */
+   without field_158. The camera (camera_update) tilts with it to look at its target's middle. */
 void motion_entity_pitch_by(MotionEntity *entity,uint32 angle)
 
 {
@@ -19259,7 +19262,7 @@ void character_set_control_direction(Character *character,int32 direction)
 /* GUESS: name. Moves the camera's look-at point (focus) toward (x, y, z) (floats, their bits) for `elapsed`
    ms: each axis moves by its distance to the target, at most step = elapsed * (distance / 0.85) * speed,
    so it eases in, faster when far away. `speed` is a float the camera's MotionEntity +0x110 points at
-   (GUESS: its follow speed). The camera's update (FUN_00122b90) calls it with the middle of the object it
+   (GUESS: its follow speed). The camera's update (camera_update) calls it with the middle of the object it
    follows. The clamps are the binary's float_compare_greater and movhi, written after the comma. */
 void camera_move_focus(Camera *camera,uint32 x,uint32 y,uint32 z,int32 elapsed)
 
@@ -19855,9 +19858,9 @@ void motion_entity_set_heading(MotionEntity *entity,uint32 heading)
 
 /* ==== 0x001202CC  (file offset 0x202CC)  camera_set_yaw ============================================== */
 /* GUESS: name. The script's setYRot for the camera: its yaw around the focus point is the angle minus 90
-   (degrees; the update FUN_00122b90 places it at focus - (cos yaw, sin yaw) * cos pitch * distance, up by
-   sin pitch * distance), and the next update skips the wall check (FUN_0010e280) once, so the new angle is
-   not turned back. */
+   (degrees; camera_update places it at focus - (cos yaw, sin yaw) * cos pitch * distance, up by
+   sin pitch * distance), and the next update skips the wall check (camera_avoid_walls) once, so the new
+   angle is not turned back. */
 void camera_set_yaw(Camera *camera,uint32 angle)
 
 {
@@ -20677,7 +20680,7 @@ void progress_add_play_time(Progress *progress)
 /* A routine Ghidra has no function for (it is only reached by FUN_0010ea64's tail jump at 0x0010eb68,
    so Ghidra pasted its code there): written from its disassembly (0x0012171c - 0x0012177c). When the
    object at +0x1f8 has an object at +0x12c, updates it (FUN_0012407c), then +0x1f8 (FUN_00123588)
-   and +0x1f0 (FUN_00122b90, the binary's tail jump at 0x00121778) when their +0x3c is set; now and
+   and +0x1f0 (camera_update, the binary's tail jump at 0x00121778) when their +0x3c is set; now and
    elapsed are FUN_0010ea64's +0x84 and +0x88. */
 void FUN_0012171c(int32 object,int32 now,int32 elapsed)
 
@@ -20688,11 +20691,16 @@ void FUN_0012171c(int32 object,int32 now,int32 elapsed)
   if (*(int32 *)(*(int32 *)(object + 0x1f8) + 0x3c) != 0)
     FUN_00123588(*(int32 *)(object + 0x1f8),now,elapsed);
   if (*(int32 *)(*(int32 *)(object + 0x1f0) + 0x3c) != 0)
-    FUN_00122b90(*(int32 *)(object + 0x1f0),now,elapsed);
+    camera_update(*(Camera **)(object + 0x1f0),now,elapsed);
 }
 
-/* ==== 0x00121780  (file offset 0x21780)  FUN_00121780 ================================================ */
-void FUN_00121780(int param_1,undefined4 *param_2,uint param_3)
+/* ==== 0x00121780  (file offset 0x21780)  camera_pitch_over_ground ==================================== */
+/* GUESS: name. Tilts the camera so it clears the ground near `point` (its x and y; z is the target's
+   middle): casts a ray down from 50 above it (FUN_00114240), keeps how far the target's middle is above
+   the ground there in +0x20c (groundOffset), and eases the pitch toward the angle it gives, held between
+   view[0] and view[1], by at most elapsed * |difference / 60| * +0x118 * 3. Called by camera_update
+   unless fixedView is set. Ghidra's listing below. */
+void camera_pitch_over_ground(int param_1,undefined4 *param_2,uint param_3)
 
 {
   float64 dVar1;   /* the double whose low word is uVar1 */
@@ -20848,49 +20856,37 @@ void FUN_00121ab0(int param_1)
   return;
 }
 
-/* ==== 0x00121B98  (file offset 0x21B98)  FUN_00121b98 ================================================ */
-void FUN_00121b98(int param_1,undefined4 param_2)
+/* ==== 0x00121B98  (file offset 0x21B98)  camera_recenter_yaw ========================================= */
+/* GUESS: name. Turns the camera's yaw toward behind its target (targetHeading - 90, the yaw being the
+   angle minus 90; see camera_set_yaw) for `elapsed` ms: by the wrapped difference, at most
+   elapsed * |difference / 60| * the camera's +0x118 (GUESS: its turn speed) either way. The sign test is
+   the binary's double_compare_less and bcs, the clamps its float_compare_greater and strhi, written after
+   the comma. Called by camera_update while the target moves and the recentre key is held or
+   activeRotation is set. */
+void camera_recenter_yaw(Camera *camera,int32 elapsed)
 
 {
-  undefined4 param_3;
-  uint param_4;
-  /* not parameters: param_3, param_4. kh.mod reads r2 / r3 only on paths where it was already written, or as a
-     leftover (no caller sets them); Ghidra listed them as inputs */
-  undefined4 uVar1;
-  uint uVar2;
-  uint uVar3;
-  undefined1 in_ZR;
-  undefined1 in_CY;
-  float64 uVar4;
-  uint local_14;
-  
-  local_14 = param_4;
-  uVar1 = float_subtract(*(undefined4 *)(param_1 + 0x1d4),FLOAT_90 /* not arguments, register leftovers: param_3,param_4,param_3 */);
-  local_14 = float_subtract(uVar1,((Camera *)param_1)->yaw);
-  wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,(uint32 *)&local_14);
-  uVar2 = float_divide(local_14,FLOAT_60);
-  uVar4 = float_to_double(uVar2);
-  if (double_compare_less(uVar4,ZERO_DOUBLE),
-      DOUBLE_LESS(uVar4,ZERO_DOUBLE)) {
-    uVar2 = uVar2 ^ 0x80000000;
+  MotionEntity *entity = (MotionEntity *)camera;
+  uint32 turn = float_subtract(float_subtract(camera->targetHeading,FLOAT_90),camera->yaw);
+  uint32 step;
+  float64 wide;
+
+  wrap_angle((int32)entity->app->context,&turn);
+  step = float_divide(turn,FLOAT_60);
+  wide = float_to_double(step);
+  if (double_compare_less(wide,ZERO_DOUBLE), DOUBLE_LESS(wide,ZERO_DOUBLE))
+    step = step ^ 0x80000000;
+  step = float_multiply(int_to_float(elapsed),step);
+  step = float_multiply(step,*(uint32 *)(camera->entity + 0x118));
+  if (float_compare_greater(turn,step), *(float *)&turn > *(float *)&step)
+    turn = step;
+  else {
+    step = step ^ 0x80000000;
+    if (float_compare_greater(step,turn), *(float *)&step > *(float *)&turn)
+      turn = step;
   }
-  uVar1 = int_to_float(param_2);
-  uVar1 = float_multiply(uVar1,uVar2);
-  uVar3 = float_multiply(uVar1,*(undefined4 *)(param_1 + 0x118));
-  float_compare_greater(local_14,uVar3);
-  uVar2 = uVar3;
-  if (!(bool)in_CY || (bool)in_ZR) {
-    float_compare_greater(uVar3 ^ 0x80000000,local_14);
-    uVar2 = local_14;
-    if ((bool)in_CY && !(bool)in_ZR) {
-      uVar2 = uVar3 ^ 0x80000000;
-    }
-  }
-  local_14 = uVar2;
-  uVar1 = float_add(((Camera *)param_1)->yaw,local_14);
-  ((Camera *)param_1)->yaw = uVar1;
-  wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,&((Camera *)param_1)->yaw);
-  return;
+  camera->yaw = float_add(camera->yaw,turn);
+  wrap_angle((int32)entity->app->context,&camera->yaw);
 }
 
 /* ==== 0x00121C6C  (file offset 0x21C6C)  FUN_00121c6c ================================================ */
@@ -21271,7 +21267,7 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
     uVar12 = *(int *)(*(int *)(param_1 + 0x1f0) + 0x3c) == 0;
     uVar9 = 1;
     if (!(bool)uVar12) {
-      FUN_00122b90(*(int *)(param_1 + 0x1f0),(int)param_2,param_3);
+      camera_update(*(Camera **)(param_1 + 0x1f0),(int)param_2,param_3);
     }
   }
   dVar4 = float_to_double(*(uint *)(param_1 + 0x210));
@@ -21509,149 +21505,100 @@ void enemy_update(Enemy *enemy,int32 now,int32 elapsed)
     enemy->field_12c = 0;
 }
 
-/* ==== 0x00122B90  (file offset 0x22B90)  FUN_00122b90 ================================================ */
-void FUN_00122b90(int param_1,int param_2,uint param_3)
+/* ==== 0x00122B90  (file offset 0x22B90)  camera_update =============================================== */
+/* GUESS: names. The camera's update, once a frame (FUN_0012171c and the game's frame routine, while its
+   +0x3c is set). After the entity's own update (FUN_0012312c) it finds its target when it has none
+   (camera_find_target; the focus then snaps to the target and the pitch is 10), and returns when there
+   is still none. It then:
+   - eases the focus toward the target's middle (camera_move_focus);
+   - saves the target's heading (targetHeading) and, while the target moves (its +0x40) and the recentre
+     key is held or activeRotation is set, turns the yaw behind it (camera_recenter_yaw);
+   - eases the distance toward 3.5 by elapsed * (3.5 - distance) * speed and caps it at 3.5 (the binary's
+     float_compare_greater and strhi, written after the comma);
+   - places itself at focus - (cos yaw, sin yaw) * cos pitch * distance, up by sin pitch * distance; in
+     between, unless fixedView is set, camera_pitch_over_ground tilts the pitch to clear the ground (it
+     reads the point's z, here still the target's middle), and unless skipCollision or fixedView is set,
+     camera_avoid_walls pulls the point in front of a wall (skipCollision is cleared instead);
+   - moves there, turns to face the focus and tilts toward it (FUN_00113374, GUESS: a direction in
+     degrees), and keeps the real distance to the focus.
+   The point's first x and y, 2 * position - focus, are overwritten before anything reads them (GUESS:
+   leftover code); their calls are the binary's. */
+void camera_update(Camera *camera,int32 now,int32 elapsed)
 
 {
-  uint32 offset[3];
-  int iVar1;
-  uint uVar2;
-  undefined4 uVar3;
-  uint uVar4;
-  uint uVar5;
-  undefined1 uVar6;
-  undefined1 uVar7;
-  bool bVar8;
-  undefined8 uVar9;
-  uint local_44;
-  uint local_40;
-  uint local_3c;
-  undefined4 local_38;
-  uint local_34;
-  uint local_30;
-  uint local_2c;
-  uint local_28;
-  undefined4 local_24;
-  undefined4 local_20;
-  uint local_1c;
-  
-  FUN_0012312c(param_1,param_2,param_3);
-  if (*(int *)(param_1 + 0x1cc) == 0) {
-    FUN_001135dc(param_1);
-    level_object_get_position((uint32 *)((undefined4 *)(param_1 + 0x1ec)),(LevelObject *)*(int *)(param_1 + 0x1cc));
-    ((Camera *)param_1)->pitch = FLOAT_10;
-    if (*(int *)(param_1 + 0x1cc) == 0) {
+  MotionEntity *entity = (MotionEntity *)camera;
+  uint32 middle[3];     /* the target's middle */
+  uint32 point[3];      /* where the camera goes */
+  uint32 toCamera[3];   /* from the focus to the point, flat */
+  uint32 offset[3];     /* from the focus to the point */
+  uint32 value;
+  uint32 cosine;
+  uint32 turn;
+  uint32 tilt;
+
+  FUN_0012312c((int)camera,now,elapsed);
+  if (camera->target == (LevelObject *)0x0) {
+    camera_find_target(camera);
+    level_object_get_position(camera->focus,camera->target);
+    camera->pitch = FLOAT_10;
+    if (camera->target == (LevelObject *)0x0)
       return;
-    }
   }
-  local_1c = 0;
-  iVar1 = *(int *)(param_1 + 0x1cc);
-  local_24 = *(undefined4 *)(iVar1 + 0x68);
-  local_20 = *(undefined4 *)(iVar1 + 0x6c);
-  uVar2 = level_object_get_height((LevelObject *)iVar1);
-  uVar2 = float_multiply(uVar2,0x3f000000);
-  local_1c = float_add(uVar2,*(uint *)(*(int *)(param_1 + 0x1cc) + 0x70));
-  camera_move_focus((Camera *)param_1,local_24,local_20,local_1c,param_3);
-  local_30 = 0;
-  local_2c = 0;
-  local_28 = 0;
-  uVar4 = *(uint *)(param_1 + 0x68);
-  uVar2 = float_subtract(*(uint *)(param_1 + 0x1ec),uVar4);
-  local_30 = float_reverse_subtract(uVar2,uVar4);
-  uVar4 = *(uint *)(param_1 + 0x6c);
-  uVar2 = float_subtract(*(uint *)(param_1 + 0x1f0),uVar4);
-  local_2c = float_reverse_subtract(uVar2,uVar4);
-  uVar2 = level_object_get_height((LevelObject *)*(int *)(param_1 + 0x1cc));
-  uVar2 = float_multiply(uVar2,0x3f000000);
-  local_28 = float_add(uVar2,*(uint *)(*(int *)(param_1 + 0x1cc) + 0x70));
-  uVar3 = motion_entity_get_heading((MotionEntity *)*(int *)(param_1 + 0x1cc));
-  *(undefined4 *)(param_1 + 0x1d4) = uVar3;
-  uVar7 = *(int *)(*(int *)(param_1 + 0x1cc) + 0x40) == 0;
-  uVar6 = 1;
-  if (!(bool)uVar7) {
-    iVar1 = *(int *)(param_1 + 0x200);
-    bVar8 = iVar1 == 0;
-    if (bVar8) {
-      iVar1 = *(int *)(param_1 + 0x1e8);
-    }
-    uVar7 = bVar8 && iVar1 == 0;
-    uVar6 = 1;
-    if (!bVar8 || iVar1 != 0) {
-      FUN_00121b98(param_1,param_3);
-    }
-  }
-  uVar5 = ((Camera *)param_1)->distance;
-  uVar2 = float_reverse_subtract(uVar5,0x40600000);
-  uVar4 = int_to_float(param_3);
-  uVar2 = float_multiply(uVar4,uVar2);
-  uVar2 = float_multiply(uVar2,**(uint **)(param_1 + 0x110));
-  uVar2 = float_add(uVar5,uVar2);
-  ((Camera *)param_1)->distance = uVar2;
-  float_compare_greater(uVar2,0x40600000);
-  uVar2 = FLOAT_DEGREES_TO_RADIANS;
-  if ((bool)uVar6 && !(bool)uVar7) {
-    ((Camera *)param_1)->distance = 0x40600000;
-  }
-  uVar4 = float_multiply(((Camera *)param_1)->yaw,uVar2);
-  uVar4 = float_cos(uVar4);
-  uVar5 = float_multiply(((Camera *)param_1)->pitch,uVar2);
-  uVar5 = float_cos(uVar5);
-  uVar4 = float_multiply(uVar5,uVar4);
-  uVar4 = float_multiply(uVar4,((Camera *)param_1)->distance);
-  local_30 = float_reverse_subtract(uVar4,*(uint *)(param_1 + 0x1ec));
-  uVar4 = float_multiply(((Camera *)param_1)->yaw,uVar2);
-  uVar4 = float_sin(uVar4);
-  uVar5 = float_multiply(((Camera *)param_1)->pitch,uVar2);
-  uVar5 = float_cos(uVar5);
-  uVar4 = float_multiply(uVar5,uVar4);
-  uVar4 = float_multiply(uVar4,((Camera *)param_1)->distance);
-  local_2c = float_reverse_subtract(uVar4,*(uint *)(param_1 + 0x1f0));
-  if (*(int *)(param_1 + 0x1e4) == 0) {
-    FUN_00121780(param_1,&local_30,param_3);
-  }
-  uVar2 = float_multiply(((Camera *)param_1)->pitch,uVar2);
-  uVar2 = float_sin(uVar2);
-  uVar2 = float_multiply(uVar2,((Camera *)param_1)->distance);
-  local_28 = float_add(uVar2,*(uint *)(param_1 + 500));
-  iVar1 = ((Camera *)param_1)->skipCollision;
-  bVar8 = iVar1 == 0;
-  if (bVar8) {
-    iVar1 = *(int *)(param_1 + 0x1e4);
-  }
-  if (bVar8 && iVar1 == 0) {
-    FUN_0010e280(param_1,(undefined4 *)(param_1 + 0x68),&local_30);
-  }
-  else {
-    ((Camera *)param_1)->skipCollision = 0;
-  }
-  thunk_FUN_0011fd90(param_1,local_30,local_2c,local_28);
-  uVar9 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
-                       *(undefined4 *)(param_1 + 0x1ec),*(undefined4 *)(param_1 + 0x1f0),local_30,
-                       local_2c);
-  uVar2 = float_add(uVar9.low,FLOAT_180);
-  local_34 = float_subtract(uVar2,*(uint *)(param_1 + 0x140));
-  wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,(uint32 *)&local_34);
-  motion_entity_turn((MotionEntity *)param_1,local_34);
-  local_40 = 0;
-  local_3c = 0;
-  local_38 = 0;
-  local_40 = float_subtract(local_30,*(uint *)(param_1 + 0x1ec));
-  local_3c = float_subtract(local_2c,*(uint *)(param_1 + 0x1f0));
-  uVar2 = vector_length((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,&local_40);
-  uVar4 = float_subtract(local_28,*(uint *)(param_1 + 500));
-  uVar9 = FUN_00113374((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,uVar2,uVar4,0,0);
-  local_44 = uVar9.low;
-  uVar2 = motion_entity_get_pitch((MotionEntity *)param_1);
-  uVar2 = float_reverse_subtract(uVar2,FLOAT_90);
-  local_44 = float_add(uVar2,local_44);
-  wrap_angle((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,(uint32 *)&local_44);
-  motion_entity_pitch_by((MotionEntity *)param_1,local_44);
-  offset[0] = float_subtract(local_30,*(uint *)(param_1 + 0x1ec));
-  offset[1] = float_subtract(local_2c,*(uint *)(param_1 + 0x1f0));
-  offset[2] = float_subtract(local_28,*(uint *)(param_1 + 500));
-  uVar2 = vector_length((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,offset);
-  ((Camera *)param_1)->distance = uVar2;
-  return;
+  middle[0] = camera->target->position[0];
+  middle[1] = camera->target->position[1];
+  value = float_multiply(level_object_get_height(camera->target),0x3f000000);
+  middle[2] = float_add(value,camera->target->position[2]);
+  camera_move_focus(camera,middle[0],middle[1],middle[2],elapsed);
+  value = float_subtract(camera->focus[0],entity->position[0]);
+  point[0] = float_reverse_subtract(value,entity->position[0]);
+  value = float_subtract(camera->focus[1],entity->position[1]);
+  point[1] = float_reverse_subtract(value,entity->position[1]);
+  value = float_multiply(level_object_get_height(camera->target),0x3f000000);
+  point[2] = float_add(value,camera->target->position[2]);
+  camera->targetHeading = motion_entity_get_heading((MotionEntity *)camera->target);
+  if (camera->target->field_40 != 0 && (camera->recenterHeld != 0 || camera->activeRotation != 0))
+    camera_recenter_yaw(camera,elapsed);
+  value = float_reverse_subtract(camera->distance,0x40600000);   /* 3.5 - distance */
+  value = float_multiply(int_to_float(elapsed),value);
+  value = float_multiply(value,*(uint32 *)entity->field_110);
+  camera->distance = float_add(camera->distance,value);
+  if (float_compare_greater(camera->distance,0x40600000), *(float *)&camera->distance > 3.5f)
+    camera->distance = 0x40600000;
+  value = float_cos(float_multiply(camera->yaw,FLOAT_DEGREES_TO_RADIANS));
+  cosine = float_cos(float_multiply(camera->pitch,FLOAT_DEGREES_TO_RADIANS));
+  value = float_multiply(float_multiply(cosine,value),camera->distance);
+  point[0] = float_reverse_subtract(value,camera->focus[0]);
+  value = float_sin(float_multiply(camera->yaw,FLOAT_DEGREES_TO_RADIANS));
+  cosine = float_cos(float_multiply(camera->pitch,FLOAT_DEGREES_TO_RADIANS));
+  value = float_multiply(float_multiply(cosine,value),camera->distance);
+  point[1] = float_reverse_subtract(value,camera->focus[1]);
+  if (camera->fixedView == 0)
+    camera_pitch_over_ground((int)camera,point,elapsed);
+  value = float_sin(float_multiply(camera->pitch,FLOAT_DEGREES_TO_RADIANS));
+  point[2] = float_add(float_multiply(value,camera->distance),camera->focus[2]);
+  if (camera->skipCollision == 0 && camera->fixedView == 0)
+    camera_avoid_walls((int)camera,entity->position,point);
+  else
+    camera->skipCollision = 0;
+  thunk_FUN_0011fd90((int)camera,point[0],point[1],point[2]);
+  turn = FUN_00113374((undefined4)entity->app->context,camera->focus[0],camera->focus[1],point[0],
+                      point[1]).low;
+  turn = float_subtract(float_add(turn,FLOAT_180),entity->heading);
+  wrap_angle((int32)entity->app->context,&turn);
+  motion_entity_turn(entity,turn);
+  toCamera[0] = float_subtract(point[0],camera->focus[0]);
+  toCamera[1] = float_subtract(point[1],camera->focus[1]);
+  toCamera[2] = 0;
+  value = vector_length(entity->app->context,toCamera);
+  tilt = FUN_00113374((undefined4)entity->app->context,value,float_subtract(point[2],camera->focus[2]),0,
+                      0).low;
+  tilt = float_add(float_reverse_subtract(motion_entity_get_pitch(entity),FLOAT_90),tilt);
+  wrap_angle((int32)entity->app->context,&tilt);
+  motion_entity_pitch_by(entity,tilt);
+  offset[0] = float_subtract(point[0],camera->focus[0]);
+  offset[1] = float_subtract(point[1],camera->focus[1]);
+  offset[2] = float_subtract(point[2],camera->focus[2]);
+  camera->distance = vector_length(entity->app->context,offset);
 }
 
 /* ==== 0x00122F98  (file offset 0x22F98)  combat_region_update ======================================== */

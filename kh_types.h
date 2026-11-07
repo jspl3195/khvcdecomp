@@ -538,10 +538,14 @@ typedef struct Camera {
     int32    field_1c8;           /* +0x1c8 0 at creation */
     LevelObject *target;          /* +0x1cc the object it follows (the player's character, name hash
                                      0x10C617E4) */
-    uint8    unknown_1d0[0x08];
+    uint8    unknown_1d0[0x04];
+    uint32   targetHeading;       /* +0x1d4 a float (its bits), degrees: the target's heading, saved by
+                                     camera_update; camera_recenter_yaw turns the yaw behind it */
     uint32   view[3];             /* +0x1d8 floats (their bits): setCameraFocus's named views (STANDARD_VIEW
                                      90, 0, 10; HIGH_VIEW 60, 45, 45; ...) */
-    uint32   field_1e4;           /* +0x1e4 0 at creation */
+    uint32   fixedView;           /* +0x1e4 GUESS: name; when set, camera_update skips the ground pitch
+                                     (camera_pitch_over_ground) and the wall check (camera_avoid_walls);
+                                     0 at creation, set nowhere else in the listing */
     int32    activeRotation;      /* +0x1e8 setActiveRotOn / setActiveRotOff */
     uint32   focus[3];            /* +0x1ec floats (their bits): a point it looks at (matchPosition) */
     uint32   pitch;               /* +0x1f8 a float (its bits), degrees (GUESS: name): how far above the
@@ -549,15 +553,20 @@ typedef struct Camera {
                                      10.0 from matchPosition; 0 at creation */
     uint32   yaw;                 /* +0x1fc a float (its bits), degrees (GUESS: name): its direction around
                                      the focus, x, y = focus - (cos yaw, sin yaw) * cos pitch * distance
-                                     (the update FUN_00122b90); setYRot - 90 (camera_set_yaw); 0 at
+                                     (the update camera_update); setYRot - 90 (camera_set_yaw); 0 at
                                      creation */
-    uint8    unknown_200[0x04];
+    int32    recenterHeld;        /* +0x200 GUESS: name; set while one of the two stored keys or AVK_UP
+                                     is held (the key-press routine), cleared by kh_OnKeyRelease; while
+                                     set and the target moves, camera_update turns the yaw behind it */
     ISwerveObject *field_204;     /* +0x204 0 at creation */
     uint32   distance;            /* +0x208 a float (its bits; GUESS: name): how far it is from the focus;
                                      3.5 at creation, eased back to 3.5 by the update */
-    LevelObject *field_20c;       /* +0x20c 0 at creation */
+    uint32   groundOffset;        /* +0x20c a float (its bits; GUESS: name): how far the target's middle
+                                     is above the ground under the camera (camera_pitch_over_ground); 0 at
+                                     creation */
     int32    skipCollision;       /* +0x210 GUESS: name; when set, the next update skips the wall check
-                                     (FUN_0010e280) and clears it; set by camera_set_yaw; 0 at creation */
+                                     (camera_avoid_walls) and clears it; set by camera_set_yaw; 0 at
+                                     creation */
 } Camera;                         /* 0x214 bytes (camera_create) */
 
 /* "Character" (kind 2, 0x338 bytes, character_create; GUESS: names): the player's character, a MotionEntity.
