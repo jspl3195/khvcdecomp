@@ -144,7 +144,7 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                              /* together the IEEE-754 double 1.0 = 0x3FF0000000000000,
                                                 low word first: the second operand (r2:r3) of the
                                                 soft-float calls that pass it. The second copy is in
-                                                FUN_00100a58's pool (GUESS: fdlibm kernel_cos), which
+                                                math_kernel_cos's pool (GUESS: fdlibm kernel_cos), which
                                                 returns it for |x| < 2**-27 (fdlibm's `return one`) */
 #define HALF_DOUBLE_LOW_WORD  0x00000000u    /* was DAT_001007e4 (word at 0x001007E4),
                                                 DAT_00100c1c (word at 0x00100C1C),
@@ -155,12 +155,12 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                 DAT_00101198 (word at 0x00101198) and
                                                 DAT_001013dc (word at 0x001013DC) */
                                              /* together the IEEE-754 double 0.5 = 0x3FE0000000000000,
-                                                low word first. The second copy is in FUN_00100a58's
+                                                low word first. The second copy is in math_kernel_cos's
                                                 pool (GUESS: kernel_cos): the 0.5*z of fdlibm's
                                                 1 - (0.5*z - (z*r - x*y)), z = x*x. The third is in
-                                                FUN_00100d88's (GUESS: rem_pio2): fdlibm's `half` in the
+                                                math_rem_pio2's (GUESS: rem_pio2): fdlibm's `half` in the
                                                 rounding n = (int)(|x| * invpio2 + half). The fourth is in
-                                                FUN_00101268's (GUESS: kernel_sin): the half*y of
+                                                math_kernel_sin's (GUESS: kernel_sin): the half*y of
                                                 x - ((z*(half*y - v*r) - y) - v*S1) */
 #define TWO_DOUBLE_LOW_WORD  0x00000000u     /* was DAT_001007ec (word at 0x001007EC) */
 #define TWO_DOUBLE_HIGH_WORD 0x40000000u     /* was DAT_001007f0 (word at 0x001007F0) */
@@ -170,10 +170,10 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                 (word at 0x001009AC) and DAT_0010115c (word at
                                                 0x0010115C): three copies of the high word of pi/4
                                                 (0x3FE921FB54442D18 = 0.785398...), one in each of
-                                                three literal pools (the third: FUN_00100d88, GUESS:
+                                                three literal pools (the third: math_rem_pio2, GUESS:
                                                 rem_pio2, "no reduction needed"). fdlibm's range test
                                                 |x|_high <= 0x3fe921fb ("|x| <= ~pi/4") before reducing
-                                                the argument, in FUN_001007f4 and FUN_001008d0 (GUESS:
+                                                the argument, in math_cos and math_sin (GUESS:
                                                 fdlibm cos and sin - the small-|x| path is kernel_cos
                                                 in the first and kernel_sin(x, 0.0, 0) in the second).
                                                 Compared as a signed int, so no u suffix */
@@ -186,17 +186,17 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                 DAT_00100a1c (word at 0x00100A1C) and
                                                 DAT_00101158 (word at 0x00101158) */
                                              /* together the double 0.0, one copy in each of the
-                                                literal pools of FUN_001007f4 and FUN_001008d0 (GUESS:
+                                                literal pools of math_cos and math_sin (GUESS:
                                                 fdlibm cos and sin, whose `double z = 0.0` this is).
                                                 sin passes it as kernel_sin's tail argument for
-                                                |x| <= pi/4 (kh_mod.c FUN_001008d0). A third copy is in
-                                                FUN_001009b8's pool (GUESS: sqrt), which compares x with
+                                                |x| <= pi/4 (kh_mod.c math_sin). A third copy is in
+                                                math_sqrt's pool (GUESS: sqrt), which compares x with
                                                 it (double_compare_less) and sets errno = EDOM and returns NaN
-                                                for x < 0. A fourth copy is in FUN_00100d88's pool
+                                                for x < 0. A fourth copy is in math_rem_pio2's pool
                                                 (GUESS: rem_pio2), which presets y[1] = 0 with it.
                                                 In cos it is
                                                 loaded into r2:r3 at entry as kernel_cos's tail argument
-                                                for |x| <= pi/4. In the call to FUN_00100d88 (rem_pio2)
+                                                for |x| <= pi/4. In the call to math_rem_pio2 (rem_pio2)
                                                 the high word is only what r3 still holds - not an
                                                 argument rem_pio2 reads. Same value as the ZERO_DOUBLE
                                                 object (acos's copy, which the code takes the address of) */
@@ -207,9 +207,9 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                 (loaded with them; not shown in C) */
                                              /* together the IEEE-754 quiet NaN 0x7FF80000_00000001:
                                                 the same value as NAN_DOUBLE, with one copy in each of
-                                                the literal pools of FUN_001007f4 and FUN_001008d0
+                                                the literal pools of math_cos and math_sin
                                                 (GUESS: fdlibm cos and sin), and a third in
-                                                FUN_001009b8's (GUESS: sqrt). cos and sin return it for
+                                                math_sqrt's (GUESS: sqrt). cos and sin return it for
                                                 x = +-infinity, sqrt for x < 0, each after errno = EDOM
                                                 (`adr r1, 0x1008c8; ldmia r1, {r0, r1}`) */
 #define SIN_KERNEL_S1_LOW_WORD  0x55555549u  /* was DAT_001013d0 (word at 0x001013D0) */
@@ -227,12 +227,12 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                 for 0.3 <= |x| <= 0.78125 qx is |x|/4 instead
                                                 (INSERT_WORDS(qx, ix - 0x00200000, 0)). kernel_cos
                                                 then returns (1 - qx) - ((0.5*z - qx) - (z*r - x*y))
-                                                (FUN_00100a58, GUESS: kernel_cos) */
+                                                (math_kernel_cos, GUESS: kernel_cos) */
 #define THREE_TENTHS_HIGH_WORD 0x3FD33333    /* was DAT_00100c18 (word at 0x00100C18): the high word of
                                                 0.3 (0x3FD3333333333333), fdlibm k_cos.c's range test
                                                 ix < 0x3FD33333 ("|x| < 0.3"): below it kernel_cos uses
                                                 1 - (0.5*z - (z*r - x*y)), above it it subtracts qx
-                                                first (FUN_00100a58, GUESS: kernel_cos). Compared as a
+                                                first (math_kernel_cos, GUESS: kernel_cos). Compared as a
                                                 signed int, so no u suffix */
 #define THREE_QUARTER_PI_HIGH_WORD 0x4002D97C  /* was DAT_00101160 (word at 0x00101160): the high
                                                 word of 3*pi/4 (2.356194...), fdlibm e_rem_pio2.c's
@@ -262,7 +262,7 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                 0x3BA3198A2E037073, fdlibm's pio2_2t: pi/2 - (pio2_1 +
                                                 pio2_2), the tail after 66 bits, used when x is near
                                                 pi/2. Loaded with `ldmia r10, {r2, r3}`, r10 = 0x101170 */
-/* FUN_00100d88 (GUESS: rem_pio2) - limits between its three ways of reducing x */
+/* math_rem_pio2 (GUESS: rem_pio2) - limits between its three ways of reducing x */
 #define MEDIUM_ARGUMENT_LIMIT_HIGH_WORD 0x413921FB  /* was DAT_00101188 (word at 0x00101188): high word
                                                 of ~1647099 (about 2^20 * pi/2), fdlibm e_rem_pio2.c's
                                                 medium-size limit (ix <= 0x413921fb). Above it the large-
@@ -313,7 +313,7 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                 n = (int)(|x| * invpio2 + half) */
 #define HALF_PI_DOUBLE_LOW_WORD  0x54442D18u  /* was DAT_001007d4 (word at 0x001007D4) */
 #define HALF_PI_DOUBLE_HIGH_WORD 0x3FF921FBu  /* was DAT_001007d8 (word at 0x001007D8) and
-                                                 DAT_0010116c (word at 0x0010116C; in FUN_00100d88,
+                                                 DAT_0010116c (word at 0x0010116C; in math_rem_pio2,
                                                  GUESS: rem_pio2, the "x near pi/2" test
                                                  ix != 0x3ff921fb) */
                                              /* together the IEEE-754 double pi/2 = 1.5707963267948966
@@ -334,7 +334,7 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                      exponent bits set": the operand is Inf or NaN.
                                                      Used by the add/subtract routines double_add,
                                                      double_reverse_subtract, double_subtract and by
-                                                     their copy inlined into FUN_00100c2c */
+                                                     their copy inlined into math_polynomial */
 #define DOUBLE_ADD_NONFINITE_OPERAND_CODE 0x04000011u  /* was DAT_00124e10 (word at 0x00124E10), in
                                                      the soft-float library's literal pool. Not a
                                                      number: a control word handed to the library's
@@ -351,7 +351,7 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                                    passes DOUBLE_ADD_FINITE_OPERANDS_CODE
                                                      GUESS: the exact IEEE exception class each top bit
                                                      stands for. Used in double_add (double add) and
-                                                     in its copy inlined into FUN_00100c2c */
+                                                     in its copy inlined into math_polynomial */
 #define DOUBLE_ADD_FINITE_OPERANDS_CODE 0x10000011u  /* was DAT_00124e0c (word at 0x00124E0C), next to
                                                      DOUBLE_ADD_NONFINITE_OPERAND_CODE: the control word
                                                      for the same special-case handler when both
@@ -364,7 +364,7 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                      inexact). Used in double_add (add),
                                                      double_reverse_subtract and double_subtract
                                                      (subtract, through the same add core) and the copy
-                                                     inlined into FUN_00100c2c */
+                                                     inlined into math_polynomial */
 #define FLOAT_DEFAULT_NAN            0x7FC00000u  /* was _UNK_00126d40 (word at 0x00126D40) and
                                                      DAT_00126244 (word at 0x00126244) */
 #define DOUBLE_DEFAULT_NAN_HIGH_WORD 0x7FF80000u  /* was _UNK_00126d44 (word at 0x00126D44) and
@@ -393,12 +393,12 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
                                                 defined as data */
 /* Literal-pool data the code takes the address of (so: objects, not #defines). */
 extern float64 ZERO_DOUBLE;                 /* was DAT_001007b4: the IEEE-754 double 0.0, two zero words
-                                               at 0x001007B4..0x001007BB. FUN_0010041c (GUESS: acos)
+                                               at 0x001007B4..0x001007BB. math_acos (GUESS: acos)
                                                returns it for x == 1: `adr r1, ZERO_DOUBLE;
                                                ldmia r1, {r0, r1}` loads both words as the result */
 extern float64 NAN_DOUBLE;                  /* was DAT_001007bc: the IEEE-754 double quiet NaN
                                                0x7FF80000_00000001 (low word 1, high 0x7FF80000) at
-                                               0x001007BC..0x001007C3. FUN_0010041c (GUESS: acos)
+                                               0x001007BC..0x001007C3. math_acos (GUESS: acos)
                                                returns it for |x| > 1, after errno = EDOM */
 
 
@@ -440,18 +440,18 @@ uint64 memcpy(void *destination,void *source,uint32 byteCount);   /* 0x00100168 
 uint64 memcpy_word_aligned(void *destination,void *source,uint32 byteCount);   /* 0x0010021C GUESS: name, see kh_mod.c */
 uint64 rt_sdiv(int32 divisor,int32 dividend);   /* 0x00100288 GUESS: name (ARM's __rt_sdiv), see kh_mod.c */
 uint64 rt_udiv(uint32 divisor,uint32 dividend);   /* 0x0010035C GUESS: name (ARM's __rt_udiv), see kh_mod.c */
-float64 FUN_0010041c(float64 x);
-float64 FUN_001007f4(float64 x);
-float64 FUN_001008d0(float64 x);
-float64 FUN_001009b8(float64 x);
+float64 math_acos(float64 x);   /* 0x0010041C GUESS: name, see kh_mod.c */
+float64 math_cos(float64 x);   /* 0x001007F4 GUESS: name, see kh_mod.c */
+float64 math_sin(float64 x);   /* 0x001008D0 GUESS: name, see kh_mod.c */
+float64 math_sqrt(float64 x);   /* 0x001009B8 GUESS: name, see kh_mod.c */
 /* errno values of ARM's C library that kh.mod sets (set_errno) */
 #define ERRNO_EDOM 1   /* an argument outside the function's domain */
 int32 * set_errno(int32 value);   /* 0x00100A38 GUESS: name, see kh_mod.c */
 int32 rt_div0_raise(void);   /* 0x00100A4C (no Ghidra function) GUESS: name, see kh_mod.c */
-float64 FUN_00100a58(float64 x,float64 y);
-float64 FUN_00100c2c(int param_1,int param_2,float64 x);
-int FUN_00100d88(float64 x,float64 *param_3);
-float64 FUN_00101268(float64 x,float64 y,int param_5);
+float64 math_kernel_cos(float64 x,float64 y);   /* 0x00100A58 GUESS: name, see kh_mod.c */
+float64 math_polynomial(const float64 *table,int32 count,float64 x);   /* 0x00100C2C GUESS: name, see kh_mod.c */
+int32 math_rem_pio2(float64 x,float64 *y);   /* 0x00100D88 GUESS: name, see kh_mod.c */
+float64 math_kernel_sin(float64 x,float64 y,int32 tail);   /* 0x00101268 GUESS: name, see kh_mod.c */
 float64 float_raise_exception(uint32 aLow,uint32 aHigh,uint32 bLow,uint32 bHigh,uint32 control);   /* 0x001013E0 GUESS: name, see kh_mod.c */
 int32 raise_signal_and_exit(int32 signal,int32 type);   /* 0x00101440 GUESS: name, see kh_mod.c */
 int32 raise_signal(int32 signal,int32 type);   /* 0x00101458 GUESS: name, see kh_mod.c */
@@ -1296,8 +1296,11 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 #define WORD_HEXADECIMAL_FFFE646C 0xFFFE646C   /* was DAT_00119c0c (word at 0x00119C0C); value 0xFFFE646C (-105364) */
 #define WORD_HEXADECIMAL_38D1B717 0x38D1B717   /* was DAT_0011a2f0 (word at 0x0011A2F0); value 0x38D1B717 (953267991) */
 #define WORD_HEXADECIMAL_FFFE5718 0xFFFE5718   /* was DAT_0011aa64 (word at 0x0011AA64); value 0xFFFE5718 (-108776) */
-#define WORD_HEXADECIMAL_1EB851EC 0x1EB851EC   /* was DAT_0011adb8 (word at 0x0011ADB8); value 0x1EB851EC (515396076) */
-#define FLOAT_1_POINT_14 0x3F91EB85   /* was DAT_0011adbc (word at 0x0011ADBC); the float 1.1399999856948853 */
+#define DOUBLE_0_POINT_0175_LOW_WORD  0x1EB851EC   /* was DAT_0011adb8 (word at 0x0011ADB8): the
+                                                    low word of the double 0.0175, FUN_0011abc4's
+                                                    degrees to radians */
+#define DOUBLE_0_POINT_0175_HIGH_WORD 0x3F91EB85   /* was DAT_0011adbc (word at 0x0011ADBC): its high word
+                                                    (not a float, though the bits read as 1.14) */
 #define WORD_HEXADECIMAL_3E11FC00 0x3E11FC00   /* was DAT_0011ba00 (word at 0x0011BA00); value 0x3E11FC00 (1041366016) */
 #define INTEGER_3003 0x00000BBB   /* was DAT_0011c6ec (word at 0x0011C6EC); integer 3003 */
 #define INTEGER_7000 0x00001B58   /* was DAT_0011c6f8 (word at 0x0011C6F8); integer 7000 */
@@ -1341,8 +1344,10 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 #define INTEGER_1003 0x000003EB   /* was DAT_00122b8c (word at 0x00122B8C); integer 1003 */
 #define WORD_HEXADECIMAL_11E3EE3E 0x11E3EE3E   /* was DAT_00123128 (word at 0x00123128); value 0x11E3EE3E (300150334) */
 #define WORD_HEXADECIMAL_3FC90FD8 0x3FC90FD8   /* was DAT_00123568 (word at 0x00123568); value 0x3FC90FD8 (1070141400) */
-#define WORD_HEXADECIMAL_47AE147B 0x47AE147B   /* was DAT_0012356c (word at 0x0012356C); value 0x47AE147B (1202590843) */
-#define FLOAT_1_POINT_035 0x3F847AE1   /* was DAT_00123570 (word at 0x00123570); the float 1.034999966621399 */
+#define DOUBLE_0_POINT_01_LOW_WORD  0x47AE147B   /* was DAT_0012356c (word at 0x0012356C): the low
+                                                  word of the double 0.01, FUN_0012312c's compare */
+#define DOUBLE_0_POINT_01_HIGH_WORD 0x3F847AE1   /* was DAT_00123570 (word at 0x00123570): its high
+                                                  word (not a float, though the bits read as 1.035) */
 #define WORD_HEXADECIMAL_22735D97 0x22735D97   /* was DAT_00123c10 (word at 0x00123C10); value 0x22735D97 (577985943) */
 #define WORD_HEXADECIMAL_1812C1C3 0x1812C1C3   /* was DAT_00123c20 (word at 0x00123C20); value 0x1812C1C3 (403882435) */
 #define INTEGER_4467 0x00001173   /* was DAT_001242b0 (word at 0x001242B0); integer 4467 */
@@ -1954,8 +1959,12 @@ static const uint32 HALF_PI_PIECES_TABLE[12] = {   /* 0x001280C4 */
   0x54400000,0x3FF921FB,0x1A626331,0x3DD0B461,0x1A600000,0x3DD0B461,0x2E037073,0x3BA3198A,
   0x2E000000,0x3BA3198A,0x252049C1,0x397B839A
 };
-static const uint32 SIN_KERNEL_TABLE[4] = {   /* 0x001280F4 */
-  0x1110F8A6,0x3F811111,0x19C161D5,0xBF2A01A0
+static const uint32 SIN_KERNEL_TABLE[10] = {   /* 0x001280F4 .. 0x0012811B: the sine kernel's five
+                                                 coefficients S2 - S6 (math_kernel_sin's polynomial of 5
+                                                 terms). The last three are also SIGNAL_MESSAGE_TABLE's
+                                                 first words, the base its messages are indexed from */
+  0x1110F8A6,0x3F811111,0x19C161D5,0xBF2A01A0,0x57B1FE7D,0x3EC71DE3,0x8A2B9CEB,0xBE5AE5E6,
+  0x5ACFD57C,0x3DE5D93A
 };
 static const uint32 SIGNAL_MESSAGE_TABLE[81] = {   /* 0x00128104 */
   0x57B1FE7D,0x3EC71DE3,0x8A2B9CEB,0xBE5AE5E6,0x5ACFD57C,0x3DE5D93A,0x6F6E6241,0x6C616D72,
@@ -2091,7 +2100,8 @@ static const float64 REDUCTION_QUARTER_PERIOD =
 static const float64 SIN_KERNEL_S1 = { SIN_KERNEL_S1_LOW_WORD, SIN_KERNEL_S1_HIGH_WORD };
 static const float64 TWO_DOUBLE = { TWO_DOUBLE_LOW_WORD, TWO_DOUBLE_HIGH_WORD };
 static const float64 TWO_OVER_PI = { TWO_OVER_PI_LOW_WORD, TWO_OVER_PI_HIGH_WORD };
-static const float64 DOUBLE_0_POINT_01 = { WORD_HEXADECIMAL_47AE147B, FLOAT_1_POINT_035 };   /* the double
-                                             0.01 (0x3F847AE1:47AE147B), FUN_0012312c's words */
+static const float64 DOUBLE_0_POINT_01 = { DOUBLE_0_POINT_01_LOW_WORD, DOUBLE_0_POINT_01_HIGH_WORD };
+static const float64 DOUBLE_0_POINT_0175 =   /* GUESS: pi / 180 rounded to 0.0175 */
+  { DOUBLE_0_POINT_0175_LOW_WORD, DOUBLE_0_POINT_0175_HIGH_WORD };
 
 #endif /* KH_MOD_H */

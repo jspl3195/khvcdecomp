@@ -321,314 +321,214 @@ uint64 rt_udiv(uint32 divisor,uint32 dividend)
 }
 
 
-/* ==== 0x0010041C  (file offset 0x0041C)  FUN_0010041c ================================================ */
-float64 FUN_0010041c(float64 x)
+/* ==== 0x0010041C  (file offset 0x0041C)  math_acos =================================================== */
+/* GUESS: name (the routine is certain: the C library's acos, fdlibm's __ieee754_acos). With ix the high
+   word without its sign:
+     |x| >= 1 (0x3ff00000): acos(1) = ZERO_DOUBLE, acos(-1) = pi (the words PI_DOUBLE_*); a NaN gives
+       x + x; |x| > 1 sets errno to EDOM and gives NAN_DOUBLE;
+     0.5 <= x < 1: z = (1 - x) / 2, s = sqrt(z), head = s with its low word cleared, c = (z - head *
+       head) / (s + head), r = P(z) / Q(z), and 2 * (head + (r * s + c));
+     -1 < x <= -0.5: z = (1 + x) / 2, s = sqrt(z), r as above, and pi - 2 * (s + (r * s - pio2_lo));
+     |x| < 0.5: pi/2 for |x| <= 2^-57 (0x3c600000), otherwise z = x * x, r as above, and
+       pi/2 - (x - (pio2_lo - x * r)).
+   P(z) = z * (the 6-term polynomial in ACOS_NUMERATOR_TABLE), Q(z) = 1 + z * (the 4-term one in
+   ACOS_DENOMINATOR_TABLE), both through the polynomial routine math_polynomial; pio2_lo is
+   HALF_PI_CORRECTION. The last two cases end in the same subtraction from pi or pi/2 (one call, as in
+   the binary). The range tests are the binary's two-step compares (0x30000000, then the rest), written
+   as single ones. Verified under emulation (research_notes/soft_float_test, double_reference.py, kind
+   d, with errno). */
+float64 math_acos(float64 x)
 
 {
-  float64 pair1;   /* a double built from its two words, for a call */
-  float64 pair2;   /* a double built from its two words, for a call */
-  int param_1 = x.low;   /* the double's words, as Ghidra named the registers */
-  uint param_2 = x.high;
-  uint uVar1;
-  undefined4 uVar2;
-  float64 *puVar3;
-  undefined4 uVar4;
-  undefined4 uVar5;
-  int iVar6;
-  int iVar7;
-  int iVar8;
-  int iVar9;
-  bool bVar10;
-  bool bVar11;
-  float64 uVar12;
-  float64 uVar13;
-  float64 uVar14;
-  float64 uVar15;
-  
-  uVar1 = param_2 & 0x7fffffff;
-  bVar10 = ADD_OVERFLOWS(uVar1,-0x30000000);
-  iVar6 = uVar1 + 0xd0000000;
-  if (0x2fffffff < uVar1) {
-    bVar10 = SUBTRACT_OVERFLOWS(iVar6,0xff00000);
-    iVar6 = uVar1 + 0xc0100000;
-  }
-  if (iVar6 < 0 == bVar10) {
-                    /* |x| == 1.0 exactly (x is the double param_1:param_2, low:high word; the high
-                       word without its sign is 0x3ff00000 and the low word is 0). These are the two
-                       exact results of acos at the ends of its domain (GUESS: this function is
-                       acos - the literal pool also holds 0.0, NaN and 1.0, and |x| > 1 returns NaN):
-                         x == -1.0 -> pi   (acos(-1) = pi; both words PI_DOUBLE_LOW/HIGH_WORD go to
-                                            r0:r1)
-                         x == +1.0 -> 0.0  (acos(1) = 0; ZERO_DOUBLE, loaded through puVar3 below:
-                                            `adr r1, ZERO_DOUBLE; ldmia r1, {r0, r1}`) */
-    if (param_1 == 0 && uVar1 == 0x3ff00000) {
-      if ((int)param_2 < 1) {
-        return MAKE_WORDS(uVar12,PI_DOUBLE_HIGH_WORD,PI_DOUBLE_LOW_WORD);
-      }
-      puVar3 = &ZERO_DOUBLE;
+  float64 result;
+  float64 z;                /* the argument the polynomials take */
+  float64 s;                /* sqrt(z) */
+  float64 head;             /* s with its low word cleared (fdlibm's df) */
+  float64 c;
+  float64 p;
+  float64 q;
+  float64 w;
+  float64 from;             /* pi or pi/2, the result's last subtraction */
+  uint32 ix = x.high & 0x7fffffff;
+  const float64 *numerator = (const float64 *)ACOS_NUMERATOR_TABLE;
+  const float64 *denominator = (const float64 *)ACOS_DENOMINATOR_TABLE;
+
+  if (ix >= 0x3ff00000) {                 /* |x| >= 1 */
+    if (x.low == 0 && ix == 0x3ff00000) {
+      if ((int32)x.high <= 0)
+        return MAKE_WORDS(result,PI_DOUBLE_HIGH_WORD,PI_DOUBLE_LOW_WORD);   /* acos(-1) = pi */
+      return ZERO_DOUBLE;                 /* acos(1) = 0 */
     }
-    else {
-      bVar11 = ADD_OVERFLOWS(uVar1,-0x70000000);
-      iVar7 = uVar1 + 0x90000000;
-      bVar10 = iVar7 == 0;
-      iVar6 = iVar7;
-      if (0x6fffffff < uVar1) {
-        bVar11 = SUBTRACT_OVERFLOWS(iVar7,0xff00000);
-        iVar6 = uVar1 + 0x80100000;
-        bVar10 = iVar7 == 0xff00000;
-      }
-      if ((!bVar10 && iVar6 < 0 == bVar11) || ((bVar10 && (param_1 != 0)))) {
-        return double_add(x,x);
-      }
-                    /* |x| > 1 (outside acos's domain): errno = EDOM (set_errno), then the result
-                       is NaN: NAN_DOUBLE, loaded through puVar3 below
-                       (`adr r1, NAN_DOUBLE; ldmia r1, {r0, r1}`). GUESS: the errno reading. */
+    if (ix > 0x7ff00000 || (ix == 0x7ff00000 && x.low != 0))
+      return double_add(x,x);             /* a NaN */
+    set_errno(ERRNO_EDOM);                /* |x| > 1 */
+    return NAN_DOUBLE;
+  }
+  if (ix >= 0x3fe00000) {                 /* |x| >= 0.5 */
+    if ((int32)x.high >= 0) {
+      z = double_reverse_subtract(x,ONE_DOUBLE);   /* (1 - x) / 2 */
+      z = double_multiply(z,HALF_DOUBLE);
+      s = math_sqrt(z);
+      MAKE_WORDS(head,s.high,0);
+      c = double_multiply(head,head);
+      c = double_reverse_subtract(c,z);   /* z - head * head */
+      w = double_add(s,head);
+      c = double_reverse_divide(w,c);     /* (z - head * head) / (s + head) */
+      p = math_polynomial(numerator,6,z);
+      p = double_multiply(p,z);
+      q = math_polynomial(denominator,4,z);
+      q = double_multiply(q,z);
+      q = double_add(q,ONE_DOUBLE);
+      p = double_divide(p,q);
+      w = double_multiply(p,s);
+      w = double_add(w,c);
+      w = double_add(head,w);
+      return double_multiply(w,TWO_DOUBLE);
+    }
+    z = double_add(x,ONE_DOUBLE);         /* (1 + x) / 2 */
+    z = double_multiply(z,HALF_DOUBLE);
+    p = math_polynomial(numerator,6,z);
+    p = double_multiply(p,z);
+    q = math_polynomial(denominator,4,z);
+    q = double_multiply(q,z);
+    q = double_add(q,ONE_DOUBLE);
+    s = math_sqrt(z);
+    p = double_divide(p,q);
+    w = double_multiply(p,s);
+    w = double_subtract(w,HALF_PI_CORRECTION);
+    w = double_add(s,w);
+    w = double_multiply(w,TWO_DOUBLE);
+    MAKE_WORDS(from,PI_DOUBLE_HIGH_WORD,PI_DOUBLE_LOW_WORD);
+  }
+  else {                                  /* |x| < 0.5 */
+    if (ix <= 0x3c600000)
+      return MAKE_WORDS(result,HALF_PI_DOUBLE_HIGH_WORD,HALF_PI_DOUBLE_LOW_WORD);
+    z = double_multiply(x,x);
+    p = math_polynomial(numerator,6,z);
+    p = double_multiply(p,z);
+    q = math_polynomial(denominator,4,z);
+    q = double_multiply(q,z);
+    q = double_add(q,ONE_DOUBLE);
+    p = double_divide(p,q);
+    w = double_multiply(x,p);
+    w = double_reverse_subtract(w,HALF_PI_CORRECTION);   /* pio2_lo - x * r */
+    w = double_reverse_subtract(w,x);                    /* x - (pio2_lo - x * r) */
+    MAKE_WORDS(from,HALF_PI_DOUBLE_HIGH_WORD,HALF_PI_DOUBLE_LOW_WORD);
+  }
+  return double_reverse_subtract(w,from);
+}
+
+
+/* ==== 0x001007F4  (file offset 0x007F4)  math_cos ==================================================== */
+/* GUESS: name (the routine is certain: the C library's cos, fdlibm's cos). |x| <= pi/4 (the high word
+   up to QUARTER_PI_HIGH_WORD): the cosine kernel math_kernel_cos of x and 0.0. +-Inf sets errno to EDOM
+   and gives the quiet NaN NAN_DOUBLE_*; a NaN gives x + x. Otherwise rem_pio2 (math_rem_pio2) reduces x
+   to y[0] + y[1] and n, and by n mod 4: the cosine kernel (0), minus the sine kernel math_kernel_sin (1),
+   minus the cosine kernel (2), the sine kernel (3), of y. The 0 case and |x| <= pi/4 share the
+   kernel's call (0x00100814). The range tests are the binary's two-step compares, written as single
+   ones. Called by float_cos (cosf) and FUN_0011abc4. Verified under emulation
+   (research_notes/soft_float_test, double_reference.py, kind d, with errno). */
+float64 math_cos(float64 x)
+
+{
+  float64 result;
+  float64 y[2];             /* the argument for the kernels: x and 0.0, or rem_pio2's head and tail */
+  uint32 ix = x.high & 0x7fffffff;
+  uint32 quadrant;
+
+  y[0] = x;
+  MAKE_WORDS(y[1],ZERO_DOUBLE_HIGH_WORD,ZERO_DOUBLE_LOW_WORD);
+  if (ix > QUARTER_PI_HIGH_WORD) {
+    if (ix == 0x7ff00000 && x.low == 0) {   /* +-Inf */
       set_errno(ERRNO_EDOM);
-      puVar3 = &NAN_DOUBLE;
+      return MAKE_WORDS(result,NAN_DOUBLE_HIGH_WORD,NAN_DOUBLE_LOW_WORD);
     }
-    return *puVar3;
+    if (ix >= 0x7ff00000)
+      return double_add(x,x);             /* a NaN */
+    quadrant = (uint32)math_rem_pio2(x,y) & 3;
+    if (quadrant == 1) {
+      result = math_kernel_sin(y[0],y[1],1);
+      result.high ^= 0x80000000;
+      return result;
+    }
+    if (quadrant == 2) {
+      result = math_kernel_cos(y[0],y[1]);
+      result.high ^= 0x80000000;
+      return result;
+    }
+    if (quadrant == 3)
+      return math_kernel_sin(y[0],y[1],1);
   }
-  else {
-    iVar6 = (int32)ACOS_DENOMINATOR_TABLE;
-    iVar7 = (int32)ACOS_NUMERATOR_TABLE;
-    bVar10 = ADD_OVERFLOWS(uVar1,-0x30000000);
-    iVar8 = uVar1 + 0xd0000000;
-    if (0x2fffffff < uVar1) {
-      bVar10 = SUBTRACT_OVERFLOWS(iVar8,0xfe00000);
-      iVar8 = uVar1 + 0xc0200000;
-    }
-    if (iVar8 < 0 == bVar10) {
-      if (-1 < (int)param_2) {
-        uVar12 = double_reverse_subtract(x,ONE_DOUBLE);
-        uVar12 = double_multiply(uVar12,HALF_DOUBLE);
-        uVar5 = uVar12.high;
-        uVar2 = uVar12.low;
-        uVar12 = FUN_001009b8(MAKE_WORDS(pair1,uVar5,uVar2));
-        uVar4 = uVar12.high;
-        uVar13 = double_multiply(MAKE_WORDS(pair1,uVar4,0),MAKE_WORDS(pair2,uVar4,0));
-        uVar13 = double_reverse_subtract(uVar13,MAKE_WORDS(pair1,uVar5,uVar2));
-        uVar14 = double_add(MAKE_WORDS(pair1,uVar4,(int)uVar12.low),MAKE_WORDS(pair2,uVar4,0));
-        uVar13 = double_reverse_divide(uVar14,uVar13);
-        uVar14 = FUN_00100c2c(iVar7,6,MAKE_WORDS(pair1,uVar5,uVar2));
-        uVar14 = double_multiply(uVar14,MAKE_WORDS(pair1,uVar5,uVar2));
-        uVar15 = FUN_00100c2c(iVar6,4,MAKE_WORDS(pair1,uVar5,uVar2));
-        uVar15 = double_multiply(uVar15,MAKE_WORDS(pair1,uVar5,uVar2));
-        uVar15 = double_add(uVar15,ONE_DOUBLE);
-        uVar14 = double_divide(uVar14,uVar15);
-        uVar12 = double_multiply(uVar14,MAKE_WORDS(pair1,uVar4,(int)uVar12.low));
-        uVar12 = double_add(uVar12,uVar13);
-        uVar12 = double_add(MAKE_WORDS(pair1,uVar4,0),uVar12);
-        return double_multiply(uVar12,TWO_DOUBLE);
-      }
-      uVar12 = double_add(x,ONE_DOUBLE);
-      uVar12 = double_multiply(uVar12,HALF_DOUBLE);
-      uVar5 = uVar12.high;
-      uVar2 = uVar12.low;
-      uVar12 = FUN_00100c2c(iVar7,6,MAKE_WORDS(pair1,uVar5,uVar2));
-      uVar12 = double_multiply(uVar12,MAKE_WORDS(pair1,uVar5,uVar2));
-      uVar13 = FUN_00100c2c(iVar6,4,MAKE_WORDS(pair1,uVar5,uVar2));
-      uVar13 = double_multiply(uVar13,MAKE_WORDS(pair1,uVar5,uVar2));
-      uVar13 = double_add(uVar13,ONE_DOUBLE);
-      uVar14 = FUN_001009b8(MAKE_WORDS(pair1,uVar5,uVar2));
-      uVar2 = uVar14.high;
-      uVar12 = double_divide(uVar12,uVar13);
-      uVar12 = double_multiply(uVar12,MAKE_WORDS(pair1,uVar2,(int)uVar14.low));
-      uVar12 = double_subtract(uVar12,HALF_PI_CORRECTION);
-      uVar12 = double_add(MAKE_WORDS(pair1,uVar2,(int)uVar14.low),uVar12);
-      uVar12 = double_multiply(uVar12,TWO_DOUBLE);
-      uVar2 = PI_DOUBLE_LOW_WORD;
-      uVar5 = PI_DOUBLE_HIGH_WORD;
-    }
-    else {
-      bVar11 = ADD_OVERFLOWS(uVar1,-0x30000000);
-      iVar9 = uVar1 + 0xd0000000;
-      bVar10 = iVar9 == 0;
-      iVar8 = iVar9;
-      if (0x2fffffff < uVar1) {
-        bVar11 = SUBTRACT_OVERFLOWS(iVar9,0xc600000);
-        iVar8 = uVar1 + 0xc3a00000;
-        bVar10 = iVar9 == 0xc600000;
-      }
-      if (bVar10 || iVar8 < 0 != bVar11) {
-        return MAKE_WORDS(uVar12,HALF_PI_DOUBLE_HIGH_WORD,HALF_PI_DOUBLE_LOW_WORD);
-      }
-      uVar12 = double_multiply(x,x);
-      uVar5 = uVar12.high;
-      uVar2 = uVar12.low;
-      uVar12 = FUN_00100c2c(iVar7,6,MAKE_WORDS(pair1,uVar5,uVar2));
-      uVar12 = double_multiply(uVar12,MAKE_WORDS(pair1,uVar5,uVar2));
-      uVar13 = FUN_00100c2c(iVar6,4,MAKE_WORDS(pair1,uVar5,uVar2));
-      uVar13 = double_multiply(uVar13,MAKE_WORDS(pair1,uVar5,uVar2));
-      uVar13 = double_add(uVar13,ONE_DOUBLE);
-      uVar12 = double_divide(uVar12,uVar13);
-      uVar12 = double_multiply(x,uVar12);
-      uVar12 = double_reverse_subtract(uVar12,HALF_PI_CORRECTION);
-      uVar12 = double_reverse_subtract(uVar12,x);
-      uVar2 = HALF_PI_DOUBLE_LOW_WORD;
-      uVar5 = HALF_PI_DOUBLE_HIGH_WORD;
-    }
-    return double_reverse_subtract(uVar12,MAKE_WORDS(pair1,uVar5,uVar2));
-  }
+  return math_kernel_cos(y[0],y[1]);
 }
 
-/* ==== 0x001007F4  (file offset 0x007F4)  FUN_001007f4 ================================================ */
-float64 FUN_001007f4(float64 x)
+
+/* ==== 0x001008D0  (file offset 0x008D0)  math_sin ==================================================== */
+/* GUESS: name (the routine is certain: the C library's sin, fdlibm's sin). |x| <= pi/4 (the high word
+   up to QUARTER_PI_HIGH_WORD): the sine kernel math_kernel_sin of x, 0.0 and 0 (no tail). +-Inf sets errno
+   to EDOM and gives the quiet NaN NAN_DOUBLE_*; a NaN gives x + x. Otherwise rem_pio2 (math_rem_pio2)
+   reduces x to y[0] + y[1] and n, and by n mod 4: the sine kernel with the tail (0), the cosine kernel
+   math_kernel_cos (1), minus the sine kernel (2), minus the cosine kernel (3), of y. The 0 case and |x| <=
+   pi/4 share the kernel's call (0x00100980). The range tests are the binary's two-step compares,
+   written as single ones. Called by float_sin (sinf) and FUN_0011abc4. Verified under emulation
+   (research_notes/soft_float_test, double_reference.py, kind d, with errno). */
+float64 math_sin(float64 x)
 
 {
-  float64 pair1;   /* a double built from its two words, for a call */
-  float64 pair2;   /* a double built from its two words, for a call */
-  int param_1 = x.low;   /* the double's words, as Ghidra named the registers */
-  uint param_2 = x.high;
-  undefined4 uVar1;
-  undefined4 uVar2;
-  uint uVar3;
-  int iVar4;
-  int iVar5;
-  bool bVar6;
-  bool bVar7;
-  float64 y[2];      /* rem_pio2's (FUN_00100d88) result: the reduced argument as two doubles,
-                        head and tail (Ghidra's iStack_14, uStack_10, uStack_c, uStack_8) */
-  float64 uVar8;
-  
-  uVar3 = param_2 & 0x7fffffff;
-  uVar1 = ZERO_DOUBLE_LOW_WORD;
-  uVar2 = ZERO_DOUBLE_HIGH_WORD;
-  if (QUARTER_PI_HIGH_WORD < (int)uVar3) {
-    bVar7 = ADD_OVERFLOWS(uVar3,-0x70000000);
-    iVar4 = uVar3 + 0x90000000;
-    bVar6 = iVar4 == 0;
-    iVar5 = iVar4;
-    if (0x6fffffff < uVar3) {
-      bVar7 = SUBTRACT_OVERFLOWS(iVar4,0xff00000);
-      iVar5 = uVar3 + 0x80100000;
-      bVar6 = iVar4 == 0xff00000;
+  float64 result;
+  float64 y[2];             /* the argument for the kernels: x and 0.0, or rem_pio2's head and tail */
+  uint32 ix = x.high & 0x7fffffff;
+  uint32 quadrant;
+  int32 tail = 0;           /* the sine kernel's third argument: y[1] is a tail to use */
+
+  y[0] = x;
+  MAKE_WORDS(y[1],ZERO_DOUBLE_HIGH_WORD,ZERO_DOUBLE_LOW_WORD);
+  if (ix > QUARTER_PI_HIGH_WORD) {
+    if (ix == 0x7ff00000 && x.low == 0) {   /* +-Inf */
+      set_errno(ERRNO_EDOM);
+      return MAKE_WORDS(result,NAN_DOUBLE_HIGH_WORD,NAN_DOUBLE_LOW_WORD);
     }
-    if (bVar6) {
-      if (param_1 == 0) {
-        set_errno(ERRNO_EDOM);
-        return MAKE_WORDS(uVar8,NAN_DOUBLE_HIGH_WORD,NAN_DOUBLE_LOW_WORD);
-      }
+    if (ix >= 0x7ff00000)
+      return double_add(x,x);             /* a NaN */
+    quadrant = (uint32)math_rem_pio2(x,y) & 3;
+    if (quadrant == 1)
+      return math_kernel_cos(y[0],y[1]);
+    if (quadrant == 2) {
+      result = math_kernel_sin(y[0],y[1],1);
+      result.high ^= 0x80000000;
+      return result;
     }
-    else if (iVar5 < 0 != bVar7) {
-      uVar3 = FUN_00100d88(x,y);
-      uVar3 = uVar3 & 3;
-      param_1 = y[0].low;
-      param_2 = y[0].high;
-      uVar1 = y[1].low;
-      uVar2 = y[1].high;
-      if (uVar3 != 0) {
-        if (uVar3 == 1) {
-          uVar8 = FUN_00101268(y[0],y[1],1);
-          uVar8.high = uVar8.high ^ 0x80000000;
-          return uVar8;
-        }
-        if (uVar3 == 2) {
-          uVar8 = FUN_00100a58(y[0],y[1]);
-          uVar8.high = uVar8.high ^ 0x80000000;
-          return uVar8;
-        }
-        uVar8 = FUN_00101268(y[0],y[1],1);
-        return uVar8;
-      }
-      goto LAB_00100814;
+    if (quadrant == 3) {
+      result = math_kernel_cos(y[0],y[1]);
+      result.high ^= 0x80000000;
+      return result;
     }
-    uVar8 = double_add(x,x);
+    tail = 1;
   }
-  else {
-LAB_00100814:
-    uVar8 = FUN_00100a58(MAKE_WORDS(pair1,param_2,param_1),MAKE_WORDS(pair2,uVar2,uVar1));
-  }
-  return uVar8;
+  return math_kernel_sin(y[0],y[1],tail);
 }
 
-/* ==== 0x001008D0  (file offset 0x008D0)  FUN_001008d0 ================================================ */
-float64 FUN_001008d0(float64 x)
+
+/* ==== 0x001009B8  (file offset 0x009B8)  math_sqrt =================================================== */
+/* GUESS: name (the routine is certain: the C library's sqrt). The domain check before the soft-float
+   square root, double_sqrt: a NaN (0x7ff00000 - (|high| | low != 0) below zero, 0x001009bc) and any x
+   >= 0.0, -0 included (double_compare_less, `bhs` at 0x001009f0), go to double_sqrt; a negative x
+   sets errno to EDOM (set_errno) and gives the quiet NaN NAN_DOUBLE_HIGH_WORD:NAN_DOUBLE_LOW_WORD
+   (0x00100a20), without a floating-point exception. Nothing in the game reads errno back. Called by
+   float_sqrt (sqrtf) and twice by math_acos. Verified under emulation (research_notes/soft_float_test,
+   double_reference.py, kind d, with errno). */
+float64 math_sqrt(float64 x)
 
 {
-  float64 pair1;   /* a double built from its two words, for a call */
-  int param_1 = x.low;   /* the double's words, as Ghidra named the registers */
-  uint param_2 = x.high;
-  uint uVar1;
-  int iVar2;
-  int iVar3;
-  bool bVar4;
-  bool bVar5;
-  int iVar6;
-  float64 uVar7;
-  float64 y[2];      /* rem_pio2's (FUN_00100d88) result: the reduced argument as two doubles,
-                        head and tail (Ghidra's iStack_14, uStack_10, uStack_c, uStack_8) */
-  
-  uVar1 = param_2 & 0x7fffffff;
-  if (QUARTER_PI_HIGH_WORD < (int)uVar1) {
-    bVar5 = ADD_OVERFLOWS(uVar1,-0x70000000);
-    iVar2 = uVar1 + 0x90000000;
-    bVar4 = iVar2 == 0;
-    iVar3 = iVar2;
-    if (0x6fffffff < uVar1) {
-      bVar5 = SUBTRACT_OVERFLOWS(iVar2,0xff00000);
-      iVar3 = uVar1 + 0x80100000;
-      bVar4 = iVar2 == 0xff00000;
-    }
-    if (bVar4) {
-      if (param_1 == 0) {
-        set_errno(ERRNO_EDOM);
-        return MAKE_WORDS(uVar7,NAN_DOUBLE_HIGH_WORD,NAN_DOUBLE_LOW_WORD);
-      }
-    }
-    else if (iVar3 < 0 != bVar5) {
-      uVar1 = FUN_00100d88(x,y);
-      uVar1 = uVar1 & 3;
-      if (uVar1 != 0) {
-        if (uVar1 == 1) {
-          uVar7 = FUN_00100a58(y[0],y[1]);
-          return uVar7;
-        }
-        if (uVar1 == 2) {
-          uVar7 = FUN_00101268(y[0],y[1],1);
-          uVar7.high = uVar7.high ^ 0x80000000;
-          return uVar7;
-        }
-        uVar7 = FUN_00100a58(y[0],y[1]);
-        uVar7.high = uVar7.high ^ 0x80000000;
-        return uVar7;
-      }
-      iVar6 = 1;
-      param_1 = y[0].low;
-      param_2 = y[0].high;
-      goto LAB_00100980;
-    }
-    uVar7 = double_add(x,x);
-  }
-  else {
-    iVar6 = 0;
-    y[1].low = ZERO_DOUBLE_LOW_WORD;
-    y[1].high = ZERO_DOUBLE_HIGH_WORD;
-LAB_00100980:
-    uVar7 = FUN_00101268(MAKE_WORDS(pair1,param_2,param_1),y[1],iVar6);
-  }
-  return uVar7;
+  float64 result;
+
+  if (DOUBLE_IS_NAN(x) ||
+      (double_compare_less(x,ZERO_DOUBLE), !DOUBLE_LESS(x,ZERO_DOUBLE)))   /* x >= 0.0, -0 too */
+    return double_sqrt(x);
+  set_errno(ERRNO_EDOM);
+  return MAKE_WORDS(result,NAN_DOUBLE_HIGH_WORD,NAN_DOUBLE_LOW_WORD);
 }
 
-/* ==== 0x001009B8  (file offset 0x009B8)  FUN_001009b8 ================================================ */
-float64 FUN_001009b8(float64 x)
-
-{
-  uint param_1 = x.low;   /* the double's words, as Ghidra named the registers */
-  uint param_2 = x.high;
-  float64 uVar1;
-  int iVar2;
-  
-  iVar2 = 0x7ff00000 - (param_2 & 0x7fffffff | (param_1 | -param_1) >> 0x1f);
-  if (iVar2 < 0 ||
-      (double_compare_less(x,ZERO_DOUBLE), !DOUBLE_LESS(x,ZERO_DOUBLE))) {   /* x >= 0.0 (-0 too) */
-    uVar1 = double_sqrt(x);
-  }
-  else {
-    set_errno(ERRNO_EDOM);
-    MAKE_WORDS(uVar1,NAN_DOUBLE_HIGH_WORD,NAN_DOUBLE_LOW_WORD);
-  }
-  return uVar1;
-}
 
 /* ==== 0x00100A38  (file offset 0x00A38)  set_errno =================================================== */
 /* GUESS: name (the routine is certain: it stores `value` into the app's errno, at KHApp +0xdc; ARM's C
@@ -658,991 +558,253 @@ int32 rt_div0_raise(void)
 }
 
 
-/* ==== 0x00100A58  (file offset 0x00A58)  FUN_00100a58 ================================================ */
-float64 FUN_00100a58(float64 x,float64 y)
+/* ==== 0x00100A58  (file offset 0x00A58)  math_kernel_cos ============================================= */
+/* GUESS: name (the routine is certain: fdlibm's __kernel_cos). The cosine of x + y for |x| <= pi/4, y
+   the tail of a reduced argument. |x| < 2^-27 (0x3e400000) with (int)x 0: 1.0. Otherwise z = x * x,
+   r = z * (the 6-term polynomial in COS_KERNEL_TABLE), and with |x| < 0.3 (THREE_TENTHS_HIGH_WORD)
+   1 - (z / 2 - (z * r - x * y)); above, qx = |x| / 4 (the high word less 0x200000, the low word 0), or
+   0.28125 (COS_KERNEL_QX_*) above 0.78125 (0x3fe90000), and (1 - qx) - ((z / 2 - qx) - (z * r - x *
+   y)). Both end in the same subtraction (one call, as in the binary). Verified under emulation
+   (research_notes/soft_float_test, double_reference.py, kind dd). */
+float64 math_kernel_cos(float64 x,float64 y)
 
 {
-  float64 pair1;   /* a double built from its two words, for a call */
-  float64 pair2;   /* a double built from its two words, for a call */
-  undefined4 param_1 = x.low;   /* the double's words, as Ghidra named the registers */
-  uint param_2 = x.high;
-  undefined4 param_3 = y.low;
-  undefined4 param_4 = y.high;
-  int iVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  undefined4 uVar4;
-  undefined4 uVar5;
-  uint uVar6;
-  undefined4 uVar7;
-  int iVar8;
-  bool bVar9;
-  bool bVar10;
-  float64 uVar11;
-  float64 uVar12;
-  float64 uVar13;
-  float64 uVar14;
-  
-  uVar6 = param_2 & 0x7fffffff;
-  if ((0x3e3fffff < uVar6) ||
-     (iVar1 = double_to_int(x), uVar2 = ONE_DOUBLE_LOW_WORD, iVar1 != 0)) {
-    uVar11 = double_multiply(x,x);
-    uVar3 = uVar11.high;
-    uVar2 = uVar11.low;
-    uVar11 = FUN_00100c2c((int32)COS_KERNEL_TABLE,6,MAKE_WORDS(pair1,uVar3,uVar2));
-    uVar11 = double_multiply(uVar11,MAKE_WORDS(pair1,uVar3,uVar2));
-    iVar1 = THREE_TENTHS_HIGH_WORD;
-    uVar4 = uVar11.high;
-    uVar12 = double_multiply(x,y);
-    uVar5 = uVar12.high;
-    if ((int)uVar6 < iVar1) {
-      uVar13 = double_multiply(MAKE_WORDS(pair1,uVar3,uVar2),HALF_DOUBLE);
-      uVar11 = double_multiply(MAKE_WORDS(pair1,uVar3,uVar2),MAKE_WORDS(pair2,uVar4,(int)uVar11.low));
-      uVar11 = double_reverse_subtract(MAKE_WORDS(pair1,uVar5,(int)uVar12.low),uVar11);
-      uVar11 = double_reverse_subtract(uVar11,uVar13);
-      MAKE_WORDS(uVar13,ONE_DOUBLE_HIGH_WORD,ONE_DOUBLE_LOW_WORD);
-    }
-    else {
-      bVar10 = ADD_OVERFLOWS(uVar6,-0x3f000000);
-      iVar8 = uVar6 + 0xc1000000;
-      bVar9 = iVar8 == 0;
-      iVar1 = iVar8;
-      if (0x3effffff < uVar6) {
-        bVar10 = SUBTRACT_OVERFLOWS(iVar8,0xe90000);
-        iVar1 = uVar6 + 0xc0170000;
-        bVar9 = iVar8 == 0xe90000;
-      }
-      uVar7 = COS_KERNEL_QX_LOW_WORD;
-      iVar8 = COS_KERNEL_QX_HIGH_WORD;
-      if (bVar9 || iVar1 < 0 != bVar10) {
-        uVar7 = 0;
-        iVar8 = uVar6 - 0x200000;
-      }
-      uVar13 = double_multiply(MAKE_WORDS(pair1,uVar3,uVar2),HALF_DOUBLE);
-      uVar14 = double_subtract(uVar13,MAKE_WORDS(pair1,iVar8,uVar7));
-      uVar13 = double_reverse_subtract(MAKE_WORDS(pair1,iVar8,uVar7),ONE_DOUBLE);
-      uVar11 = double_multiply(MAKE_WORDS(pair1,uVar3,uVar2),MAKE_WORDS(pair2,uVar4,(int)uVar11.low));
-      uVar11 = double_reverse_subtract(MAKE_WORDS(pair1,uVar5,(int)uVar12.low),uVar11);
-      uVar11 = double_reverse_subtract(uVar11,uVar14);
-    }
-    return double_reverse_subtract(uVar11,uVar13);
-  }
-  return MAKE_WORDS(uVar11,ONE_DOUBLE_HIGH_WORD,uVar2);
-}
+  float64 result;
+  float64 z;
+  float64 r;
+  float64 xy;
+  float64 hz;
+  float64 qx;
+  float64 a;                /* the term the result is subtracted from: 1, or 1 - qx */
+  float64 w;
+  uint32 ix = x.high & 0x7fffffff;
 
-/* ==== 0x00100C2C  (file offset 0x00C2C)  FUN_00100c2c ================================================ */
-/* WARNING: Type propagation algorithm not settling */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-float64 FUN_00100c2c(int param_1,int param_2,float64 x)
-
-{
-  float64 pair1;   /* a double built from its two words, for a call */
-  undefined4 param_3 = x.low;   /* the double's words, as Ghidra named the registers */
-  undefined4 param_4 = x.high;
-  uint uVar1;
-  uint uVar2;
-  uint uVar3;
-  uint uVar4;
-  uint *puVar5;
-  undefined4 uVar6;
-  float64 *puVar7;
-  uint uVar8;
-  undefined4 uVar9;
-  undefined4 *puVar10;
-  float64 *puVar11;
-  uint uVar12;
-  int iVar13;
-  uint uVar14;
-  uint uVar15;
-  int iVar16;
-  uint uVar17;
-  int iVar18;
-  uint uVar19;
-  bool bVar20;
-  bool bVar21;
-  float64 uVar22;
-  float64 uVar23;
-  uint uVar24;
-  
-  param_2 = param_2 + -1;
-  puVar7 = (float64 *)(param_1 + param_2 * 8);
-  uVar22 = *puVar7;
-  switch(param_2) {
-  case 0:
-    uVar22 = *puVar7;
-  default:
-    while( true ) {
-      if (param_2 < 9) break;
-      uVar22 = double_multiply(uVar22,MAKE_WORDS(pair1,param_4,param_3));
-      param_2 = param_2 + -1;
-      puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-      uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
-    }
-    break;
-  case 1:
-    goto LAB_00100d64;
-  case 2:
-    goto LAB_00100d48;
-  case 3:
-    goto LAB_00100d2c;
-  case 4:
-    goto LAB_00100d10;
-  case 5:
-    goto LAB_00100cf4;
-  case 6:
-    goto LAB_00100cd8;
-  case 7:
-    goto LAB_00100cbc;
-  case 8:
-    break;
-  }
-  uVar22 = double_multiply(uVar22,MAKE_WORDS(pair1,param_4,param_3));
-  param_2 = param_2 + -1;
-  puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
-LAB_00100cbc:
-  uVar22 = double_multiply(uVar22,MAKE_WORDS(pair1,param_4,param_3));
-  param_2 = param_2 + -1;
-  puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
-LAB_00100cd8:
-  uVar22 = double_multiply(uVar22,MAKE_WORDS(pair1,param_4,param_3));
-  param_2 = param_2 + -1;
-  puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
-LAB_00100cf4:
-  uVar22 = double_multiply(uVar22,MAKE_WORDS(pair1,param_4,param_3));
-  param_2 = param_2 + -1;
-  puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
-LAB_00100d10:
-  uVar22 = double_multiply(uVar22,MAKE_WORDS(pair1,param_4,param_3));
-  param_2 = param_2 + -1;
-  puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
-LAB_00100d2c:
-  uVar22 = double_multiply(uVar22,MAKE_WORDS(pair1,param_4,param_3));
-  param_2 = param_2 + -1;
-  puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
-LAB_00100d48:
-  uVar22 = double_multiply(uVar22,MAKE_WORDS(pair1,param_4,param_3));
-  param_2 = param_2 + -1;
-  puVar10 = (undefined4 *)(param_1 + param_2 * 8);
-  uVar22 = double_add(uVar22,MAKE_WORDS(pair1,puVar10[1],*puVar10));
-LAB_00100d64:
-  uVar23 = double_multiply(uVar22,MAKE_WORDS(pair1,param_4,param_3));
-  uVar8 = uVar23.high;
-  uVar3 = uVar23.low;
-  puVar11 = (float64 *)(param_1 + (param_2 + -1) * 8);
-  uVar12 = puVar11->low;
-  uVar14 = *(uint *)((int)puVar11 + 4);
-  if ((DOUBLE_EXPONENT_MASK_SHIFTED & ~(uVar8 << 1)) == 0 || (DOUBLE_EXPONENT_MASK_SHIFTED & ~(uVar14 << 1)) == 0) {
-    uVar15 = uVar8 * 2 + (uint)(uVar3 != 0);
-    uVar2 = uVar14 * 2 + (uint)(uVar12 != 0);
-    bVar21 = DOUBLE_EXPONENT_MASK_SHIFTED <= uVar15;
-    bVar20 = uVar15 == DOUBLE_EXPONENT_MASK_SHIFTED;
-    if (!bVar21 || bVar20) {
-      bVar21 = DOUBLE_EXPONENT_MASK_SHIFTED <= uVar2;
-      bVar20 = uVar2 == DOUBLE_EXPONENT_MASK_SHIFTED;
-    }
-    uVar15 = DOUBLE_ADD_NONFINITE_OPERAND_CODE;
-    if (bVar21 && !bVar20) {
-      uVar19 = uVar8 * 2 + 0x100000 + (uint)(uVar3 != 0);
-      uVar2 = uVar19;
-      if (uVar19 < 0xfff00001) {
-        uVar2 = uVar14 * 2 + 0x100000 + (uint)(uVar12 != 0);
-      }
-      if (0xfff00000 < uVar2) goto LAB_001260e4;
-      uVar2 = DOUBLE_ADD_NONFINITE_OPERAND_CODE;
-      if (0xfffff < uVar19) {
-        uVar23 = *puVar11;
-      }
-LAB_00126cb0:
-      uVar6 = uVar23.high;
-      if ((uVar2 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x00126cc4. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        if ((uVar2 & 0xf) != 8) {
-          return MAKE_WORDS(uVar22,uVar23.high,uVar23.low);
-        }
-        if ((uVar2 & 0x40) == 0) {
-          uVar9 = FLOAT_DEFAULT_NAN;
-          if ((uVar2 & 0x10) != 0) {
-            uVar9 = 0;
-            uVar6 = DOUBLE_DEFAULT_NAN_HIGH_WORD;
-          }
-          return MAKE_WORDS(uVar22,uVar6,uVar9);
-        }
-        if ((uVar2 & 0x10000) != 0) {
-          return MAKE_WORDS(uVar22,0,0);
-        }
-        if ((uVar2 & 0x20) == 0) {
-          if ((uVar2 & 0x10) == 0) {
-            uVar12 = 0x7fffffff;
-          }
-          else {
-            MAKE_WORDS(uVar23,0x7fffffff,uVar6);
-            uVar12 = 0xffffffff;
-          }
-          uVar14 = uVar23.high;
-          if ((uVar23.low & 0x80000000) != 0) {
-            uVar12 = ~uVar12;
-            uVar14 = ~uVar14;
-          }
-          return MAKE_WORDS(uVar22,uVar14,uVar12);
-        }
-        uVar6 = 0xffffffff;
-        uVar9 = 0xffffffff;
-        if ((uVar12 & 0x80000000) != 0) {
-          uVar6 = 0;
-          uVar9 = 0;
-        }
-        return MAKE_WORDS(uVar22,uVar9,uVar6);
-      }
-      MAKE_WORDS(uVar22,uVar23.high,8);
-      goto LAB_00126d6c;
-    }
-    iVar18 = uVar8 * 2 + (uint)(uVar3 != 0);
-    if (iVar18 != uVar14 * 2 + (uint)(uVar12 != 0)) {
-      if (iVar18 == -0x200000) {
-        return MAKE_WORDS(uVar22,uVar8,0);
-      }
-      return MAKE_WORDS(uVar22,uVar14,0);
-    }
-    uVar3 = 0;
-    if (-1 < (int)(uVar8 ^ uVar14)) {
-      return MAKE_WORDS(uVar22,uVar8,0);
-    }
-    uVar12 = 0;
-LAB_001260e4:
-    if ((uVar15 & 0x10) == 0) {
-      uVar12 = uVar8;
-    }
-    puVar5 = kh_GetFpStatusPtr();
-    uVar19 = *puVar5;
-    if ((uVar15 & ~(uVar19 << 0x12) & 0x30000000) != 0) {
-      uVar15 = uVar15 | 0x40000000;
-    }
-    uVar2 = uVar15 | uVar19 & 0x1c00000;
-    *puVar5 = uVar19 | (uVar15 & 0x7fffffff) >> 0x1a;
-    bVar20 = (uVar15 & 0xf) != 8;
-    if (bVar20) {
-      uVar15 = uVar15 & 0x70;
-      uVar2 = uVar2 | uVar15 << 3;
-    }
-    else {
-      uVar15 = 0x20000;
-    }
-    if (!bVar20 && (uVar15 & ~uVar2) == 0) {
-      uVar2 = uVar2 | 0xc00000;
-    }
-    if ((uVar2 & 0x20000000) == 0) {
-      if ((uVar2 & 0x10000000) == 0) {
-        if ((uVar2 & 0x40000000) != 0) {
-          uVar19 = uVar19 & 0x1000;
-          goto joined_r0x00126194;
-        }
-        if ((uVar2 & 0x8000000) == 0) {
-          if ((uVar19 & 0x100) == 0) {
-            uVar12 = uVar8;
-            if ((uVar2 & 0x80) == 0) {
-              uVar12 = uVar3;
-            }
-            uVar12 = uVar12 & 0x80000000;
-            if ((uVar2 & 0x10) == 0) {
-              MAKE_WORDS(uVar23,uVar8,FLOAT_DEFAULT_NAN | uVar12);
-            }
-            else {
-              MAKE_WORDS(uVar23,DOUBLE_DEFAULT_NAN_HIGH_WORD | uVar12,DOUBLE_DEFAULT_NAN_LOW_WORD);
-            }
-            goto LAB_00126cb0;
-          }
-        }
-        else if ((uVar19 & 0x200) == 0) {
-          if ((uVar2 & 0x10) == 0) {
-            uVar12 = uVar3 ^ uVar12;
-          }
-          else {
-            uVar12 = uVar8 ^ uVar14;
-          }
-          goto LAB_001261dc;
-        }
-      }
-      else if ((uVar19 & 0x400) == 0) {
-        if ((uVar2 & 0x80) == 0) {
-          uVar12 = uVar3 & 0x80000000;
-        }
-        else {
-          uVar12 = uVar8 & 0x80000000;
-        }
-LAB_001261dc:
-        if ((uVar2 & 0x10) == 0) {
-          return MAKE_WORDS(uVar22,uVar8,WORD_HEXADECIMAL_7F800000 | uVar12 & 0x80000000);
-        }
-        return MAKE_WORDS(uVar22,WORD_HEXADECIMAL_7FF00000 | uVar12 & 0x80000000,INTEGER_0);
-      }
-    }
-    else {
-      uVar19 = uVar19 & 0x800;
-joined_r0x00126194:
-      if (uVar19 == 0) {
-        return MAKE_WORDS(uVar22,uVar8,uVar3);
-      }
-    }
+  if (ix <= 0x3e3fffff && double_to_int(x) == 0)
+    return MAKE_WORDS(result,ONE_DOUBLE_HIGH_WORD,ONE_DOUBLE_LOW_WORD);
+  z = double_multiply(x,x);
+  r = math_polynomial((const float64 *)COS_KERNEL_TABLE,6,z);
+  r = double_multiply(r,z);
+  xy = double_multiply(x,y);
+  if ((int32)ix < THREE_TENTHS_HIGH_WORD) {
+    hz = double_multiply(z,HALF_DOUBLE);
+    w = double_multiply(z,r);
+    w = double_reverse_subtract(xy,w);    /* z * r - x * y */
+    w = double_reverse_subtract(w,hz);    /* z / 2 - (z * r - x * y) */
+    MAKE_WORDS(a,ONE_DOUBLE_HIGH_WORD,ONE_DOUBLE_LOW_WORD);
   }
   else {
-    if ((int)(uVar8 ^ uVar14) < 0) {
-      uVar14 = uVar14 ^ 0x80000000;
-      uVar15 = uVar3 - uVar12;
-      if (uVar8 <= uVar14 && (uint)(uVar12 <= uVar3) <= uVar8 - uVar14) {
-        uVar2 = uVar8 - (uVar14 + (uVar12 > uVar3)) ^ 0x80000000;
-        bVar20 = ADD_CARRIES(uVar12,uVar15);
-        uVar12 = uVar12 + uVar15;
-        uVar14 = uVar14 + uVar2 + (uint)bVar20;
-        MAKE_WORDS(uVar23,uVar8 - (uVar2 + (uVar3 < uVar15)),uVar3 - uVar15);
-      }
-      uVar15 = uVar23.high;
-      uVar3 = uVar23.low;
-      uVar8 = uVar15 >> 0x14;
-      uVar2 = uVar8 - (uVar14 >> 0x14);
-      if ((DOUBLE_EXPONENT_MASK_SHIFTED & uVar14 << 1) == 0) {
-        if (uVar12 == 0 && (uVar14 & 0xfffff) == 0) {
-          if (uVar3 == 0 && (uVar23.high & 0x7fffffff) == 0) {
-            return MAKE_WORDS(uVar22,0,uVar3);
-          }
-        }
-        else {
-          uVar19 = uVar15 & ~(uVar8 << 0x14);
-          if ((uVar8 & 0x7ff) != 0) {
-            uVar2 = uVar2 - 1;
-            iVar18 = -((uVar14 & 0x7fffffff) + (uint)(uVar12 != 0));
-            goto LAB_00124be4;
-          }
-          MAKE_WORDS(uVar23,uVar19 - (uVar14 + (uVar3 < uVar12)),uVar3 - uVar12);
-        }
-LAB_00124d7c:
-        uVar2 = 0x12;
-        goto LAB_00124d80;
-      }
-      uVar19 = uVar15 & ~(uVar8 << 0x14);
-      iVar18 = ((int)DOUBLE_EXPONENT_MASK_SHIFTED >> 1) -
-               ((uVar14 & ~((int)DOUBLE_EXPONENT_MASK_SHIFTED >> 1)) + (uint)(uVar12 != 0));
-LAB_00124be4:
-      uVar14 = -uVar12;
-      uVar17 = 0x20 - uVar2;
-      if (uVar2 < 0x21) {
-        uVar12 = SHIFT_RIGHT(uVar14,uVar2);
-        uVar4 = uVar3 + uVar12;
-        uVar3 = uVar19 + (SHIFT_RIGHT_SIGNED(iVar18,uVar2)) + (uint)ADD_CARRIES(uVar3,uVar12);
-        uVar12 = SHIFT_LEFT(iVar18,uVar17);
-        uVar2 = uVar4 + uVar12;
-        bVar20 = ADD_CARRIES(uVar3,(uint)ADD_CARRIES(uVar4,uVar12));
-        iVar18 = uVar3 + ADD_CARRIES(uVar4,uVar12);
-      }
-      else {
-        uVar14 = (uint)(uVar12 * -2 != 0) | (iVar18 * 2 + (uint)ADD_CARRIES(uVar14,uVar14)) * 2;
-        uVar2 = uVar2 - 0x20;
-        uVar17 = 0x1e - uVar2;
-        if (0x1e < uVar2 || uVar17 == 0) {
-          return MAKE_WORDS(uVar22,uVar19 + uVar8 * 0x100000,uVar3);
-        }
-        uVar12 = SHIFT_RIGHT_SIGNED(iVar18,uVar2);
-        uVar2 = uVar3 + uVar12;
-        bVar20 = uVar19 != 0 || uVar19 < ADD_CARRIES(uVar3,uVar12);
-        iVar18 = uVar19 - !ADD_CARRIES(uVar3,uVar12);
-      }
-      if (-1 < iVar18) {
-        iVar18 = iVar18 + uVar8 * 0x100000;
-        iVar13 = SHIFT_LEFT(uVar14,uVar17);
-        if (-1 < iVar13) {
-          return MAKE_WORDS(uVar22,iVar18,uVar2);
-        }
-        uVar2 = uVar2 + 1;
-        if (uVar2 != 0 && iVar13 != -0x80000000) {
-          return MAKE_WORDS(uVar22,iVar18,uVar2);
-        }
-        if (uVar2 == 0) {
-          iVar18 = iVar18 + 1;
-          uVar2 = 0;
-        }
-        else {
-          uVar2 = uVar2 & 0xfffffffe;
-        }
-        return MAKE_WORDS(uVar22,iVar18,uVar2);
-      }
-      uVar12 = uVar17 + 1 & 0xff;
-      bVar20 = uVar12 == 0 && bVar20 || uVar12 != 0 && (bool)((byte)(SHIFT_RIGHT(uVar14,0x20 - uVar12)) & 1);
-      uVar3 = uVar2 * 2 + (uint)bVar20;
-      iVar18 = iVar18 * 2 + (uint)(ADD_CARRIES(uVar2,uVar2) || ADD_CARRIES(uVar2 * 2,(uint)bVar20));
-      uVar2 = iVar18 + uVar8 * 0x200000;
-      bVar20 = (bool)((byte)(uVar2 >> 0x14) & 1);
-      if (bVar20 && uVar2 >> 0x15 != 0) {
-        iVar18 = iVar18 + uVar8 * 0x100000;
-        uVar8 = -((int)(SHIFT_LEFT(uVar14,uVar12)) >> 0x1f);
-        uVar15 = uVar3 + uVar8;
-        bVar20 = uVar15 == 0;
-        if (!ADD_CARRIES(uVar3,uVar8)) {
-          bVar20 = SHIFT_LEFT(uVar14,uVar12) == -0x80000000;
-        }
-        if (!bVar20) {
-          return MAKE_WORDS(uVar22,iVar18,uVar15);
-        }
-        if (uVar15 == 0) {
-          iVar18 = iVar18 + 1;
-          uVar15 = 0;
-        }
-        else {
-          uVar15 = uVar15 & 0xfffffffe;
-        }
-        return MAKE_WORDS(uVar22,iVar18,uVar15);
-      }
-      if (bVar20) {
-        MAKE_WORDS(uVar23,(iVar18 >> 1) + uVar8 * 0x100000,
-                          (uint)((byte)iVar18 & 1) << 0x1f | uVar3 >> 1);
-        goto LAB_00124d7c;
-      }
-      iVar18 = iVar18 + 0x200000;
-      if (iVar18 == 0 && uVar3 == 0) {
-        return MAKE_WORDS(uVar22,0,uVar3);
-      }
-      iVar13 = LEADING_ZEROS(iVar18);
-      if (iVar13 == 0x20) {
-        iVar13 = LEADING_ZEROS(uVar3) + 0x20;
-      }
-      uVar12 = iVar13 - 0xb;
-      iVar16 = ((uVar8 & 0xfffff7ff) - 2) - uVar12;
-      if (uVar12 < 0x20) {
-        uVar14 = SHIFT_LEFT(iVar18,uVar12) | SHIFT_RIGHT(uVar3,0x20 - uVar12);
-        uVar3 = SHIFT_LEFT(uVar3,uVar12);
-      }
-      else {
-        uVar14 = SHIFT_LEFT(uVar3,iVar13 - 0x2bU);
-        uVar3 = 0;
-      }
-                    /* WARNING: Could not recover jumptable at 0x00124d04. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if (0 < iVar16) {
-        return MAKE_WORDS(uVar22,uVar14 + (uVar15 & 0x80000000) + iVar16 * 0x100000,uVar3);
-      }
-      uVar8 = uVar14 + (uVar15 & 0x80000000) + iVar16 * 0x100000 + 0x60000000;
-      puVar5 = kh_GetFpStatusPtr();
-      uVar2 = 0x12;
-      uVar14 = *puVar5;
-      if ((uVar14 & 0x1000000) != 0) {
-        return MAKE_WORDS(uVar22,uVar8 & 0x80000000,0);
-      }
-      if ((uVar14 & 0x800) == 0) {
-        if ((int)uVar8 < 0) {
-          uVar2 = uVar2 | 0x10000;
-        }
-        uVar12 = uVar8 & ~((uVar8 >> 0x14) << 0x14);
-        iVar18 = -(uVar8 >> 0x14 & 0xfffff7ff);
-        uVar8 = iVar18 + 0x601;
-        uVar14 = uVar12 | 0x100000;
-        if (uVar8 < 0x36) {
-          if (uVar8 == 0x35) {
-            uVar24 = 0;
-            uVar8 = 0;
-            uVar15 = 0x80000000;
-            if (uVar3 != 0 || (uVar12 & 0xfffff) != 0) {
-              uVar15 = 0x80000001;
-            }
-          }
-          else if (uVar8 < 0x15) {
-            uVar24 = SHIFT_RIGHT(uVar14,uVar8);
-            uVar15 = SHIFT_LEFT(uVar3,0x20 - uVar8);
-            uVar8 = SHIFT_LEFT(uVar14,0x20 - uVar8) | SHIFT_RIGHT(uVar3,uVar8);
-          }
-          else {
-            uVar12 = iVar18 + 0x5e1;
-            uVar24 = 0;
-            if (uVar8 < 0x20 || uVar12 == 0) {
-              uVar8 = SHIFT_LEFT(uVar14,-uVar12) | SHIFT_RIGHT(uVar3,uVar8);
-              uVar15 = SHIFT_LEFT(uVar3,-uVar12);
-            }
-            else {
-              uVar8 = SHIFT_RIGHT(uVar14,uVar12);
-              uVar15 = SHIFT_LEFT(uVar14,0x20 - uVar12);
-              if (uVar3 != 0) {
-                uVar15 = uVar15 | 1;
-              }
-            }
-          }
-        }
-        else {
-          uVar15 = 1;
-          uVar24 = 0;
-          uVar8 = 0;
-        }
-        if ((uVar2 & 0x10000) != 0) {
-          uVar24 = uVar24 | 0x80000000;
-        }
-        if (uVar15 == 0) {
-          return MAKE_WORDS(uVar22,uVar24,uVar8);
-        }
-        if ((uint8)(uVar15 >> 0x1f)) {
-          if ((uVar15 & 0x7fffffff) == 0) {
-            uVar24 = uVar24 + (0xfffffffe < uVar8);
-            uVar8 = uVar8 + 1 & 0xfffffffe;
-          }
-          else {
-            uVar24 = uVar24 + (0xfffffffe < uVar8);
-            uVar8 = uVar8 + 1;
-          }
-        }
-        puVar5 = kh_GetFpStatusPtr();
-        *puVar5 = *puVar5 | 8;
-        return MAKE_WORDS(uVar22,uVar24,uVar8);
-      }
-    }
-    else {
-      uVar15 = uVar3 - uVar12;
-      iVar18 = uVar8 - (uVar14 + (uVar12 > uVar3));
-      if (uVar8 <= uVar14 && (uint)(uVar12 <= uVar3) <= uVar8 - uVar14) {
-        bVar20 = ADD_CARRIES(uVar12,uVar15);
-        uVar12 = uVar12 + uVar15;
-        uVar14 = uVar14 + iVar18 + (uint)bVar20;
-        MAKE_WORDS(uVar23,uVar8 - (iVar18 + (uint)(uVar3 < uVar15)),uVar3 - uVar15);
-      }
-      uVar8 = uVar23.high;
-      uVar2 = uVar23.low;
-      uVar3 = uVar8 >> 0x14;
-      uVar19 = uVar3 - (uVar14 >> 0x14);
-      if ((DOUBLE_EXPONENT_MASK_SHIFTED & uVar14 << 1) != 0) {
-        uVar8 = uVar8 & ~(uVar3 << 0x14);
-        uVar14 = uVar14 & ~DOUBLE_EXPONENT_MASK_SHIFTED | 0x100000;
-LAB_001249ac:
-        uVar17 = 0x20 - uVar19;
-        uVar15 = DOUBLE_ADD_FINITE_OPERANDS_CODE;
-        if (uVar19 < 0x21) {
-          uVar1 = SHIFT_RIGHT(uVar12,uVar19);
-          bVar20 = ADD_CARRIES(uVar2,uVar1);
-          uVar1 = uVar2 + uVar1;
-          uVar4 = SHIFT_LEFT(uVar14,uVar17);
-          uVar2 = uVar1 + uVar4;
-          uVar14 = uVar8 + (SHIFT_RIGHT(uVar14,uVar19)) + (uint)bVar20 + (uint)ADD_CARRIES(uVar1,uVar4);
-          if (uVar14 < 0x100000) {
-            uVar8 = uVar14 + uVar3 * 0x100000;
-            goto LAB_001249d0;
-          }
-LAB_00124a34:
-          uVar8 = (uVar14 + 0x100000 >> 1) + uVar3 * 0x100000;
-          uVar3 = (uint)((byte)(uVar14 + 0x100000) & 1) << 0x1f | uVar2 >> 1;
-          if (!(bool)((byte)uVar2 & 1)) {
-LAB_00124a6c:
-            uVar14 = uVar8 * 2;
-            if (uVar14 < 0xffe00000) {
-              return MAKE_WORDS(uVar22,uVar8,uVar3);
-            }
-            uVar8 = uVar8 + 0xa0000000;
-            goto LAB_001260e4;
-          }
-          bVar20 = uVar3 != 0xffffffff;
-          uVar3 = uVar3 + 1;
-          uVar14 = uVar3;
-          if (bVar20) {
-            uVar14 = SHIFT_LEFT(uVar12,uVar17);
-          }
-          if (uVar14 != 0) goto LAB_00124a6c;
-        }
-        else {
-          uVar12 = uVar14 * 2 + (uint)(uVar12 != 0);
-          uVar19 = uVar19 - 0x20;
-          bVar20 = uVar19 < 0x20;
-          uVar17 = 0x1f - uVar19;
-          if (bVar20) {
-            uVar14 = SHIFT_RIGHT(uVar14,uVar19);
-            bVar20 = ADD_CARRIES(uVar2,uVar14);
-            uVar2 = uVar2 + uVar14;
-          }
-          else {
-            uVar17 = 0;
-          }
-          uVar8 = uVar8 + uVar3 * 0x100000 + (uint)bVar20;
-          if (uVar3 != uVar8 >> 0x14) {
-            uVar14 = uVar8 + uVar3 * -0x100000;
-            goto LAB_00124a34;
-          }
-LAB_001249d0:
-          uVar12 = SHIFT_LEFT(uVar12,uVar17);
-          if (-1 < (int)uVar12) {
-            return MAKE_WORDS(uVar22,uVar8,uVar2);
-          }
-          uVar3 = uVar2 + 1;
-          uVar14 = uVar3;
-          if (uVar2 != 0xffffffff) {
-            uVar12 = uVar12 << 1;
-            uVar14 = uVar12;
-          }
-          if (uVar14 != 0) {
-            return MAKE_WORDS(uVar22,uVar8,uVar3);
-          }
-        }
-        if (uVar3 == 0) {
-          uVar8 = uVar8 + 1;
-          uVar3 = 0;
-        }
-        else {
-          uVar3 = uVar3 & 0xfffffffe;
-        }
-        uVar14 = uVar8 << 1;
-        if (uVar14 < 0xffe00000) {
-          return MAKE_WORDS(uVar22,uVar8,uVar3);
-        }
-        uVar8 = uVar8 + 0xa0000000;
-        goto LAB_001260e4;
-      }
-      if (uVar12 == 0 && (uVar14 & 0x7fffffff) == 0) {
-        if ((uVar3 & 0x7ff) != 0) {
-          return uVar23;
-        }
-        if (uVar2 == 0 && (uVar23.high & 0x7fffffff) == 0) {
-          return uVar23;
-        }
-        uVar2 = 0x11;
-      }
-      else {
-        uVar8 = uVar8 & ~(uVar3 << 0x14);
-        if ((uVar3 & 0x7ff) != 0) {
-          uVar14 = uVar14 & 0x7fffffff;
-          uVar19 = uVar19 - 1;
-          goto LAB_001249ac;
-        }
-        MAKE_WORDS(uVar23,uVar8 + uVar14 + (uint)ADD_CARRIES(uVar2,uVar12),uVar2 + uVar12);
-        uVar2 = 0x11;
-      }
-LAB_00124d80:
-      uVar8 = uVar23.high;
-      uVar14 = uVar23.low;
-      if (uVar8 << 1 == 0 && uVar14 == 0) {
-        return MAKE_WORDS(uVar22,0,uVar14);
-      }
-      if (0x1fffff < uVar8 << 1) {
-        return uVar23;
-      }
-      puVar5 = kh_GetFpStatusPtr();
-      if ((*puVar5 & 0x1000000) != 0) {
-        return MAKE_WORDS(uVar22,uVar8 & 0x80000000,0);
-      }
-      if ((*puVar5 & 0x800) == 0) {
-        return uVar23;
-      }
-      uVar15 = uVar8 >> 0x1f | 0x6000000;
-      uVar8 = uVar8 & 0x7fffffff;
-      if ((uVar23.high & 0x7fffffff) == 0 && uVar14 >> 0xc == 0) {
-        uVar14 = uVar14 << 0x14;
-        uVar15 = uVar15 - 0x140000;
-      }
-      if ((uVar23.high & 0x7fffffff) == 0) {
-        uVar8 = uVar14 >> 0xc;
-        uVar14 = uVar14 << 0x14;
-        uVar15 = uVar15 - 0x140000;
-      }
-      iVar18 = 0;
-      if (uVar8 >> 5 == 0) {
-        uVar8 = uVar8 << 0x10;
-        iVar18 = 0x10;
-      }
-      if (uVar8 >> 0xd == 0) {
-        uVar8 = uVar8 << 8;
-        iVar18 = iVar18 + 8;
-      }
-      if (uVar8 >> 0x11 == 0) {
-        uVar8 = uVar8 << 4;
-        iVar18 = iVar18 + 4;
-      }
-      if (uVar8 >> 0x13 == 0) {
-        uVar8 = uVar8 << 2;
-        iVar18 = iVar18 + 2;
-      }
-      if (uVar8 >> 0x14 == 0) {
-        uVar8 = uVar8 << 1;
-        iVar18 = iVar18 + 1;
-      }
-      uVar3 = uVar14 << iVar18;
-      uVar12 = 0x20 - iVar18;
-      uVar8 = ((uVar8 | SHIFT_RIGHT(uVar14,uVar12)) ^ uVar15 * -0x80000000) +
-              (uVar15 + iVar18 * -0x10000 & 0xfffffffe) * 0x10;
-      uVar14 = uVar3;
-    }
-    uVar2 = uVar2 | 0x20000000;
+    if (ix <= 0x3fe90000)
+      MAKE_WORDS(qx,ix - 0x200000,0);
+    else
+      MAKE_WORDS(qx,COS_KERNEL_QX_HIGH_WORD,COS_KERNEL_QX_LOW_WORD);
+    hz = double_multiply(z,HALF_DOUBLE);
+    hz = double_subtract(hz,qx);
+    a = double_reverse_subtract(qx,ONE_DOUBLE);   /* 1 - qx */
+    w = double_multiply(z,r);
+    w = double_reverse_subtract(xy,w);
+    w = double_reverse_subtract(w,hz);
   }
-                    /* 5th argument uVar2 (the control word) was missing in Ghidra's output: the
-                       call at 0x00126d50 passes it on the stack (`stmdb sp!, {r12, lr}` leaves r12,
-                       the control word, at [sp]); float_raise_exception reads it with `ldr r4, [sp,
-                       #0x28]` and raises SIGFPE with its exception bits (& 0x7c000000). */
-  uVar22 = float_raise_exception(uVar3,uVar8,uVar12,uVar14,uVar2);
-  if ((uVar2 & 0xf) != 9) {
-    return uVar22;
-  }
-LAB_00126d6c:
-  if ((uVar2 & 0x100000) == 0) {
-    uVar22.low = (uint)((uVar2 & uVar22.low << 0x10) != 0);
-    return uVar22;
-  }
-  if ((uVar2 & 0xf0000) == 0) {
-    uVar14 = uVar22.low << 0x1d;
-    if ((bool)((byte)(uVar22.low >> 3) & 1)) {
-      uVar14 = uVar14 | 0x30000000;
-    }
-    puVar5 = kh_GetFpStatusPtr();
-    *puVar5 = *puVar5 & 0xfffffff | uVar14;
-    uVar22.high = uVar14;
-    return uVar22;
-  }
-  if ((uVar22.low & 8) != 0) {
-    uVar22.high = uVar2 & 0xf0000;
-    return uVar22;
-  }
-  uVar22.low = 2 - uVar22.low;
-  return uVar22;
+  return double_reverse_subtract(w,a);
 }
 
-/* ==== 0x00100D88  (file offset 0x00D88)  FUN_00100d88 ================================================ */
-int FUN_00100d88(float64 x,float64 *param_3)
+
+/* ==== 0x00100C2C  (file offset 0x00C2C)  math_polynomial ============================================= */
+/* GUESS: name. The math library's polynomial: Horner's rule over a table of count doubles, the
+   highest-order coefficient last: table[count - 1] * x + table[count - 2], * x + ..., + table[0], each
+   step a double_multiply and a double_add (the last a tail jump, 0x00100d84). The binary unrolls the
+   loop eight times, entering it through a jump table (0x00100c50) and looping back while more than
+   eight steps remain; written here as the loop, the calls made the same and in the same order. Its
+   first entry, for count 1, still runs eight steps (0x00100c58 to the loop's end), reading the eight
+   doubles before the table, as does a count below 1; no caller passes those (acos 6 and 4, the cosine
+   kernel 6, the sine kernel 5). */
+float64 math_polynomial(const float64 *table,int32 count,float64 x)
 
 {
-  float64 pair1;   /* a double built from its two words, for a call */
-  float64 pair2;   /* a double built from its two words, for a call */
-  undefined4 param_1 = x.low;   /* the double's words, as Ghidra named the registers */
-  uint param_2 = x.high;
-  uint uVar1;
-  int iVar2;
-  int iVar3;
-  uint uVar4;
-  int iVar5;
-  undefined4 uVar6;
-  undefined4 uVar7;
-  undefined4 uVar8;
-  uint uVar9;
-  int iVar10;
-  undefined4 uVar11;
-  undefined4 uVar12;
-  undefined4 uVar13;
-  undefined4 *puVar14;
-  bool bVar15;
-  float64 uVar16;
-  float64 uVar17;
-  float64 uVar18;
-  float64 uVar19;
-  
-  uVar4 = ZERO_DOUBLE_HIGH_WORD;
-  uVar7 = ZERO_DOUBLE_LOW_WORD;
-  MAKE_WORDS(uVar16,param_2,param_1);
-  *(undefined4 *)(param_3 + 1) = ZERO_DOUBLE_LOW_WORD;
-  *(uint *)((int)param_3 + 0xc) = uVar4;
-  uVar1 = HALF_PI_DOUBLE_HIGH_WORD;
-  uVar9 = param_2 & 0x7fffffff;
-  if (QUARTER_PI_HIGH_WORD < (int)uVar9) {
-    if ((int)uVar9 < THREE_QUARTER_PI_HIGH_WORD) {
-                    /* Rewritten from the instructions (0x00100dec-0x00100e74): Ghidra's output
-                       lost the arguments of the calls fed from conditionally loaded registers and
-                       the assignment of the near-pi/2 step, so these calls did not compile.
-                       double_add(a, b) = a + b, double_subtract(a, b) = a - b (doubles as
-                       low:high word pairs). Only y[0] is computed; y[1] keeps the preset 0.0. */
-      if ((int)param_2 < 1) {
-                    /* x <= 0: z = x + pio2_1; y[0] = z + pio2_1t, or near pi/2
-                       z += pio2_2; y[0] = z + pio2_2t. Returns -1. */
-        uVar16 = double_add(x,HALF_PI_FIRST_33_BITS);
-        if (uVar9 == uVar1) {
-          uVar16 = double_add(uVar16,HALF_PI_SECOND_33_BITS);
-          uVar16 = double_add(uVar16,HALF_PI_SECOND_33_BITS_TAIL);
-        }
-        else {
-          uVar16 = double_add(uVar16,HALF_PI_FIRST_33_BITS_TAIL);
-        }
-        *param_3 = uVar16;
-        iVar2 = -1;
-      }
-      else {
-                    /* x > 0: z = x - pio2_1; y[0] = z - pio2_1t, or near pi/2
-                       z -= pio2_2; y[0] = z - pio2_2t. Returns 1. */
-        uVar16 = double_subtract(x,HALF_PI_FIRST_33_BITS);
-        if (uVar9 == uVar1) {
-          uVar16 = double_subtract(uVar16,HALF_PI_SECOND_33_BITS);
-          uVar16 = double_subtract(uVar16,HALF_PI_SECOND_33_BITS_TAIL);
-        }
-        else {
-          uVar16 = double_subtract(uVar16,HALF_PI_FIRST_33_BITS_TAIL);
-        }
-        *param_3 = uVar16;
-        iVar2 = 1;
-      }
-    }
-                    /* The three ways this function (GUESS: rem_pio2) reduces x, by |x|:
-                         |x| <= ~pi/4          no reduction (y[0] = x, returns 0)        - fdlibm
-                         |x| <  ~3pi/4         x -+ pio2_1 (-+ pio2_2), n = +-1 (above)   - fdlibm
-                         |x| <= ~2^20 * pi/2   medium: n = (int)(|x| * 2/pi + 0.5), the
-                                               else branch below                          - fdlibm
-                         larger                this branch - the ARM library's own; fdlibm
-                                               calls __kernel_rem_pio2 here instead
-                       What this branch does (from the code and the values):
-                         - |x| >= 2^106 (LARGE_ARGUMENT_EXPONENT_LIMIT): x is first multiplied by an
-                           entry of the table at 0x00128034 (LARGE_ARGUMENT_SCALE_TABLE),
-                           picked by rt_sdiv;
-                         - x is split into a high part (low word & 0xfc000000) and the rest;
-                         - both parts are multiplied by the two-part constant
-                           C = REDUCTION_CONSTANT_HIGH_PART + REDUCTION_CONSTANT_LOW_PART
-                           (C_hi = 0.426041901111602783203, C_lo = -1.73160824568086013642e-09) and
-                           the partial products are summed, keeping the bits a single product would
-                           round away;
-                         - the sum is reduced modulo REDUCTION_PERIOD K = 2.67690020242726545163
-                           (double_remainder);
-                         - the rest (lines below) uses 8.0 and 9.0 (EIGHT_DOUBLE, NINE_DOUBLE) to
-                           get the quadrant (double_to_int then >> 1), and K/4 and C again
-                           (REDUCTION_QUARTER_PERIOD, REDUCTION_CONSTANT) to scale the remainder into y[0].
-                       Checked: C_hi + C_lo = 0.426041899379994537522 = K / (2*pi) exactly, and the
-                       pool holds C itself (0x00101260) and K/4 (0x00101258).
-                       GUESS: what C stands for, and so the precise meaning of this reduction. */
-    else if (MEDIUM_ARGUMENT_LIMIT_HIGH_WORD < (int)uVar9) {
-      if (LARGE_ARGUMENT_EXPONENT_LIMIT <= (param_2 & 0x7fffffff) >> 0x14) {
-        iVar2 = rt_sdiv(0x36,(((int)LARGE_ARGUMENT_EXPONENT_LIMIT >> 0xb) -
-                              LARGE_ARGUMENT_EXPONENT_LIMIT) + ((param_2 & 0x7fffffff) >> 0x14)).low;
-        puVar14 = (undefined4 *)((int32)LARGE_ARGUMENT_SCALE_TABLE + iVar2 * 8);
-        uVar16 = double_multiply(x,MAKE_WORDS(pair2,puVar14[1],*puVar14));
-      }
-      uVar13 = uVar16.high;
-      uVar4 = uVar16.low & 0xfc000000;
-      uVar16 = double_subtract(MAKE_WORDS(pair1,uVar13,uVar16.low),MAKE_WORDS(pair2,uVar13,uVar4));
-      uVar7 = uVar16.high;
-      uVar17 = double_multiply(MAKE_WORDS(pair1,uVar13,uVar4),REDUCTION_CONSTANT_HIGH_PART);
-      uVar8 = uVar17.high;
-      uVar18 = double_multiply(MAKE_WORDS(pair1,uVar13,uVar4),REDUCTION_CONSTANT_LOW_PART);
-      uVar19 = double_multiply(MAKE_WORDS(pair1,uVar7,(int)uVar16.low),REDUCTION_CONSTANT_HIGH_PART);
-      uVar16 = double_multiply(MAKE_WORDS(pair1,uVar7,(int)uVar16.low),REDUCTION_CONSTANT_LOW_PART);
-      uVar18 = double_add(uVar18,uVar19);
-      uVar13 = uVar18.high;
-      uVar19 = double_add(MAKE_WORDS(pair1,uVar8,(int)uVar17.low),
-                          MAKE_WORDS(pair2,uVar13,(int)uVar18.low));
-      uVar11 = uVar19.high;
-      uVar7 = uVar19.low;
-      uVar17 = double_subtract(MAKE_WORDS(pair1,uVar11,uVar7),MAKE_WORDS(pair2,uVar8,(int)uVar17.low));
-      uVar17 = double_reverse_subtract(uVar17,MAKE_WORDS(pair1,uVar13,(int)uVar18.low));
-      uVar16 = double_add(uVar17,uVar16);
-      uVar17 = double_remainder(MAKE_WORDS(pair1,uVar11,uVar7),REDUCTION_PERIOD);
-      uVar17 = double_divide(uVar17,REDUCTION_PERIOD);
-      uVar17 = double_multiply(uVar17,EIGHT_DOUBLE);
-                    /* Ghidra dropped the data flow here: the sum stays in r0:r1 and is the
-                       argument of the double -> int conversion (0x001011ec bl add; 0x001011f0
-                       bl double_to_int). Written out explicitly. */
-      uVar17 = double_add(uVar17,NINE_DOUBLE);
-      iVar2 = double_to_int(uVar17);
-      iVar2 = iVar2 >> 1;
-      uVar17 = double_remainder(MAKE_WORDS(pair1,uVar11,uVar7),REDUCTION_QUARTER_PERIOD);
-      uVar16 = double_add(uVar17,uVar16);
-      uVar16 = double_remainder(uVar16,REDUCTION_QUARTER_PERIOD);
-      uVar16 = double_divide(uVar16,REDUCTION_CONSTANT);
-      *param_3 = uVar16;
-    }
-    else {
-      uVar16 = double_multiply(MAKE_WORDS(pair1,param_2 & 0x7fffffff,param_1),TWO_OVER_PI);
-                    /* fdlibm: n = (int)(t*invpio2 + half); fn = (double)n. Ghidra dropped the
-                       data flow: the sum in r0:r1 is the argument of the double -> int conversion
-                       and n (r0) that of the int -> double one (0x00100ea8 bl add; 0x00100eac
-                       bl double_to_int; 0x00100eb4 bl int_to_double). Written out explicitly. */
-      uVar16 = double_add(uVar16,HALF_DOUBLE);
-      iVar2 = double_to_int(uVar16);
-      uVar16 = int_to_double(iVar2);
-      uVar13 = uVar16.high;
-      uVar8 = uVar16.low;
-      uVar16 = double_multiply(MAKE_WORDS(pair1,uVar13,uVar8),HALF_PI_FIRST_33_BITS);
-      uVar16 = double_reverse_subtract(uVar16,MAKE_WORDS(pair1,param_2 & 0x7fffffff,param_1));
-      uVar17 = double_multiply(MAKE_WORDS(pair1,uVar13,uVar8),HALF_PI_FIRST_33_BITS_TAIL);
-      iVar10 = 1;
-      while( true ) {
-        uVar12 = uVar16.high;
-        uVar11 = uVar16.low;
-        uVar16 = double_subtract(MAKE_WORDS(pair1,uVar12,uVar11),uVar17);
-        *param_3 = uVar16;
-        bVar15 = SUBTRACT_OVERFLOWS(iVar10,3);
-        iVar5 = iVar10 + -3;
-        if (iVar10 != 3) {
-          iVar3 = (uVar9 >> 0x14) - ((uVar16.high & 0x7fffffff) >> 0x14);
-          iVar5 = iVar10 * 0x21 + -0x11;
-          bVar15 = SUBTRACT_OVERFLOWS(iVar5,iVar3);
-          iVar5 = iVar5 - iVar3;
-        }
-        if (iVar5 < 0 == bVar15) break;
-        puVar14 = (undefined4 *)((int32)HALF_PI_PIECES_TABLE + iVar10 * 0x10);
-        uVar17 = double_multiply(MAKE_WORDS(pair1,uVar13,uVar8),MAKE_WORDS(pair2,puVar14[1],*puVar14));
-        uVar6 = uVar17.high;
-        uVar16 = double_subtract(MAKE_WORDS(pair1,uVar12,uVar11),MAKE_WORDS(pair2,uVar6,(int)uVar17.low));
-        uVar18 = double_multiply(MAKE_WORDS(pair1,uVar13,uVar8),MAKE_WORDS(pair2,puVar14[3],puVar14[2]));
-        uVar19 = double_subtract(MAKE_WORDS(pair1,uVar12,uVar11),uVar16);
-        uVar17 = double_subtract(uVar19,MAKE_WORDS(pair1,uVar6,(int)uVar17.low));
-        uVar17 = double_reverse_subtract(uVar17,uVar18);
-        iVar10 = iVar10 + 1;
-      }
-      if ((int)param_2 < 0) {
-        *(undefined4 *)param_3 = *(undefined4 *)param_3;
-        *(uint *)((int)param_3 + 4) = *(uint *)((int)param_3 + 4) ^ 0x80000000;
-        *(undefined4 *)(param_3 + 1) = uVar7;
-        *(uint *)((int)param_3 + 0xc) = uVar4 ^ 0x80000000;
-        iVar2 = -iVar2;
-      }
-    }
+  int32 index = count - 1;
+  int32 steps = index > 0 ? index : 8;
+  float64 result = table[index];
+
+  while (steps > 0) {
+    steps--;
+    index--;
+    result = double_multiply(result,x);
+    result = double_add(result,table[index]);
   }
-  else {
-    *(undefined4 *)param_3 = param_1;
-    *(uint *)((int)param_3 + 4) = param_2;
-    iVar2 = 0;
-  }
-  return iVar2;
+  return result;
 }
 
-/* ==== 0x00101268  (file offset 0x01268)  FUN_00101268 ================================================ */
-float64
-FUN_00101268(float64 x,float64 y,int param_5)
+
+/* ==== 0x00100D88  (file offset 0x00D88)  math_rem_pio2 =============================================== */
+/* GUESS: name (the routine is the math library's rem_pio2, fdlibm's __ieee754_rem_pio2 but for its
+   largest arguments). Reduces x to y[0] + y[1] (y[1] is always 0.0, -0.0 for a negative medium x; the
+   tail is not computed) and returns n, the quadrant being n mod 4:
+     |x| <= pi/4 (QUARTER_PI_HIGH_WORD): y[0] = x, n = 0;
+     |x| < 3pi/4 (THREE_QUARTER_PI_HIGH_WORD): x -+ pio2_1 -+ pio2_1t (HALF_PI_FIRST_33_BITS and its
+       tail), or, with the high word that of pi/2, -+ pio2_2 -+ pio2_2t; n = -+1;
+     |x| up to 2^20 * pi/2 (MEDIUM_ARGUMENT_LIMIT_HIGH_WORD): n = (int)(|x| * 2/pi + 0.5), fn = n,
+       r = |x| - fn * pio2_1, w = fn * pio2_1t, y[0] = r - w, refined by the next pieces of pi/2
+       (HALF_PI_PIECES_TABLE) while the result lost more than 16, then 49, bits (i * 33 - 17, at most
+       three rounds); y and n negated for a negative x;
+     larger (the ARM library's own reduction): |x| >= 2^106 (LARGE_ARGUMENT_EXPONENT_LIMIT) is first
+       scaled by an entry of LARGE_ARGUMENT_SCALE_TABLE, picked by rt_sdiv; x is split into a high part
+       (its low word & 0xfc000000) and the rest, both multiplied by C = REDUCTION_CONSTANT_HIGH_PART +
+       REDUCTION_CONSTANT_LOW_PART (K / 2pi) and the partial products summed exactly; the sum taken
+       modulo K = REDUCTION_PERIOD gives the quadrant ((int)(rem / K * 8 + 9) >> 1) and, modulo K/4
+       (REDUCTION_QUARTER_PERIOD) with the low part added, divided by REDUCTION_CONSTANT, y[0].
+       GUESS: what C and K stand for. The sign of x is not used here.
+   Verified under emulation through math_cos and math_sin (research_notes/soft_float_test,
+   double_reference.py), large arguments included. */
+int32 math_rem_pio2(float64 x,float64 *y)
 
 {
-  float64 pair1;   /* a double built from its two words, for a call */
-  float64 pair2;   /* a double built from its two words, for a call */
-  undefined4 param_1 = x.low;   /* the double's words, as Ghidra named the registers */
-  uint param_2 = x.high;
-  undefined4 param_3 = y.low;
-  undefined4 param_4 = y.high;
-  int iVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  undefined4 uVar4;
-  undefined4 uVar5;
-  undefined4 uVar6;
-  float64 uVar7;
-  float64 uVar8;
-  
-  if ((0x3e3fffff < (param_2 & 0x7fffffff)) || (iVar1 = double_to_int(x), iVar1 != 0))
-  {
-    uVar7 = double_multiply(x,x);
-    uVar4 = uVar7.high;
-    uVar2 = uVar7.low;
-    uVar7 = double_multiply(MAKE_WORDS(pair1,uVar4,uVar2),x);
-    uVar5 = uVar7.high;
-    uVar3 = uVar7.low;
-    uVar7 = FUN_00100c2c((int32)SIN_KERNEL_TABLE,5,MAKE_WORDS(pair1,uVar4,uVar2));
-    uVar6 = uVar7.high;
-    if (param_5 == 0) {
-      uVar7 = double_multiply(MAKE_WORDS(pair1,uVar4,uVar2),MAKE_WORDS(pair2,uVar6,(int)uVar7.low));
-      uVar7 = double_add(uVar7,SIN_KERNEL_S1);
-      uVar7 = double_multiply(uVar7,MAKE_WORDS(pair1,uVar5,uVar3));
-      uVar7 = double_add(uVar7,x);
-    }
-    else {
-      uVar8 = double_multiply(y,HALF_DOUBLE);
-      uVar7 = double_multiply(MAKE_WORDS(pair1,uVar5,uVar3),MAKE_WORDS(pair2,uVar6,(int)uVar7.low));
-      uVar7 = double_reverse_subtract(uVar7,uVar8);
-      uVar7 = double_multiply(uVar7,MAKE_WORDS(pair1,uVar4,uVar2));
-      uVar7 = double_subtract(uVar7,y);
-      uVar8 = double_multiply(MAKE_WORDS(pair1,uVar5,uVar3),SIN_KERNEL_S1);
-      uVar7 = double_reverse_subtract(uVar8,uVar7);
-      uVar7 = double_reverse_subtract(uVar7,x);
-    }
-    return uVar7;
+  float64 absolute;         /* |x| */
+  float64 scaled;           /* x, scaled for the largest arguments */
+  float64 head;             /* the large path's high part of x, then its products with C */
+  float64 rest;
+  float64 headHigh;
+  float64 headLow;
+  float64 restHigh;
+  float64 restLow;
+  float64 middle;
+  float64 sum;
+  float64 fn;               /* the medium path's n as a double */
+  float64 r;
+  float64 w;
+  float64 previous;
+  float64 t;
+  float64 u;
+  const float64 *pieces;
+  uint32 ix = x.high & 0x7fffffff;
+  int32 n;
+  int32 round;
+  int32 index;
+
+  MAKE_WORDS(y[1],ZERO_DOUBLE_HIGH_WORD,ZERO_DOUBLE_LOW_WORD);
+  if ((int32)ix <= QUARTER_PI_HIGH_WORD) {   /* no reduction */
+    y[0] = x;
+    return 0;
   }
-  return MAKE_WORDS(uVar7,param_2,param_1);
+  if ((int32)ix < THREE_QUARTER_PI_HIGH_WORD) {
+    if ((int32)x.high <= 0) {             /* x <= 0: x + pi/2 */
+      r = double_add(x,HALF_PI_FIRST_33_BITS);
+      if (ix == HALF_PI_DOUBLE_HIGH_WORD) {
+        r = double_add(r,HALF_PI_SECOND_33_BITS);
+        r = double_add(r,HALF_PI_SECOND_33_BITS_TAIL);
+      }
+      else
+        r = double_add(r,HALF_PI_FIRST_33_BITS_TAIL);
+      y[0] = r;
+      return -1;
+    }
+    r = double_subtract(x,HALF_PI_FIRST_33_BITS);   /* x > 0: x - pi/2 */
+    if (ix == HALF_PI_DOUBLE_HIGH_WORD) {
+      r = double_subtract(r,HALF_PI_SECOND_33_BITS);
+      r = double_subtract(r,HALF_PI_SECOND_33_BITS_TAIL);
+    }
+    else
+      r = double_subtract(r,HALF_PI_FIRST_33_BITS_TAIL);
+    y[0] = r;
+    return 1;
+  }
+  if ((int32)ix > MEDIUM_ARGUMENT_LIMIT_HIGH_WORD) {   /* the largest arguments */
+    scaled = x;
+    if ((ix >> 20) >= LARGE_ARGUMENT_EXPONENT_LIMIT) {
+      index = (int32)rt_sdiv(0x36,(((int32)LARGE_ARGUMENT_EXPONENT_LIMIT >> 11) -
+                                   LARGE_ARGUMENT_EXPONENT_LIMIT) + (int32)(ix >> 20)).low;
+      scaled = double_multiply(x,((const float64 *)LARGE_ARGUMENT_SCALE_TABLE)[index]);
+    }
+    MAKE_WORDS(head,scaled.high,scaled.low & 0xfc000000);
+    rest = double_subtract(scaled,head);
+    headHigh = double_multiply(head,REDUCTION_CONSTANT_HIGH_PART);
+    headLow = double_multiply(head,REDUCTION_CONSTANT_LOW_PART);
+    restHigh = double_multiply(rest,REDUCTION_CONSTANT_HIGH_PART);
+    restLow = double_multiply(rest,REDUCTION_CONSTANT_LOW_PART);
+    middle = double_add(headLow,restHigh);
+    sum = double_add(headHigh,middle);
+    w = double_subtract(sum,headHigh);
+    w = double_reverse_subtract(w,middle);   /* the bits the sum rounded away */
+    w = double_add(w,restLow);
+    r = double_remainder(sum,REDUCTION_PERIOD);
+    r = double_divide(r,REDUCTION_PERIOD);
+    r = double_multiply(r,EIGHT_DOUBLE);
+    r = double_add(r,NINE_DOUBLE);
+    n = double_to_int(r) >> 1;
+    r = double_remainder(sum,REDUCTION_QUARTER_PERIOD);
+    r = double_add(r,w);
+    r = double_remainder(r,REDUCTION_QUARTER_PERIOD);
+    y[0] = double_divide(r,REDUCTION_CONSTANT);
+    return n;
+  }
+  MAKE_WORDS(absolute,ix,x.low);          /* medium arguments */
+  fn = double_multiply(absolute,TWO_OVER_PI);
+  fn = double_add(fn,HALF_DOUBLE);
+  n = double_to_int(fn);
+  fn = int_to_double(n);
+  r = double_multiply(fn,HALF_PI_FIRST_33_BITS);
+  r = double_reverse_subtract(r,absolute);   /* |x| - fn * pio2_1 */
+  w = double_multiply(fn,HALF_PI_FIRST_33_BITS_TAIL);
+  for (round = 1; ; round++) {
+    previous = r;
+    y[0] = double_subtract(previous,w);
+    if (round == 3 ||
+        round * 33 - 17 >= (int32)(ix >> 20) - (int32)((y[0].high & 0x7fffffff) >> 20))
+      break;                              /* not too many bits lost */
+    pieces = (const float64 *)HALF_PI_PIECES_TABLE + round * 2;
+    t = double_multiply(fn,pieces[0]);
+    r = double_subtract(previous,t);
+    w = double_multiply(fn,pieces[1]);
+    u = double_subtract(previous,r);
+    u = double_subtract(u,t);
+    w = double_reverse_subtract(u,w);     /* fn * the next tail - ((previous - r) - t) */
+  }
+  if ((int32)x.high < 0) {
+    y[0].high ^= 0x80000000;
+    y[1].high ^= 0x80000000;
+    n = -n;
+  }
+  return n;
 }
+
+
+/* ==== 0x00101268  (file offset 0x01268)  math_kernel_sin ============================================= */
+/* GUESS: name (the routine is certain: fdlibm's __kernel_sin). The sine of x + y for |x| <= pi/4, y
+   the tail of a reduced argument, used when tail is not 0. |x| < 2^-27 (0x3e400000) with (int)x 0: x.
+   Otherwise z = x * x, v = z * x, r = the 5-term polynomial in SIN_KERNEL_TABLE (S2 - S6), and
+   x + v * (S1 + z * r) without the tail, x - ((z * (y / 2 - v * r) - y) - v * S1) with it (S1 is
+   SIN_KERNEL_S1). Verified under emulation (research_notes/soft_float_test, double_reference.py, kind
+   dd). */
+float64 math_kernel_sin(float64 x,float64 y,int32 tail)
+
+{
+  float64 z;
+  float64 v;
+  float64 r;
+  float64 hy;
+  float64 w;
+  float64 vs;
+  uint32 ix = x.high & 0x7fffffff;
+
+  if (ix <= 0x3e3fffff && double_to_int(x) == 0)
+    return x;
+  z = double_multiply(x,x);
+  v = double_multiply(z,x);
+  r = math_polynomial((const float64 *)SIN_KERNEL_TABLE,5,z);
+  if (tail == 0) {
+    w = double_multiply(z,r);
+    w = double_add(w,SIN_KERNEL_S1);
+    w = double_multiply(w,v);
+    return double_add(w,x);
+  }
+  hy = double_multiply(y,HALF_DOUBLE);
+  w = double_multiply(v,r);
+  w = double_reverse_subtract(w,hy);      /* y / 2 - v * r */
+  w = double_multiply(w,z);
+  w = double_subtract(w,y);
+  vs = double_multiply(v,SIN_KERNEL_S1);
+  w = double_reverse_subtract(vs,w);      /* (z * (y / 2 - v * r) - y) - v * S1 */
+  return double_reverse_subtract(w,x);    /* x - that */
+}
+
 
 /* ==== 0x001013E0  (file offset 0x013E0)  float_raise_exception ======================================= */
 /* GUESS: name. The soft-float library's floating-point exception routine, reached from the special-case
@@ -10053,14 +9215,14 @@ void motion_entity_rotate_by_heading(MotionEntity *entity,uint32 *vector)
 
 /* ==== 0x0010ED40  (file offset 0x0ED40)  float_cos =================================================== */
 /* GUESS: name. cosf: the cosine of a float angle in radians, through the double routines: widens the
-   float (float_to_double), takes the double cosine (FUN_001007f4, GUESS: cos), and narrows the result
+   float (float_to_double), takes the double cosine (math_cos, GUESS: cos), and narrows the result
    (double_to_float, a tail jump at 0x0010ed50). Ghidra listed double_to_float's body here. */
 uint32 float_cos(uint32 angle)
 
 {
   float64 value = float_to_double(angle);
 
-  value = FUN_001007f4(value);
+  value = math_cos(value);
   return double_to_float(value);
 }
 
@@ -12675,7 +11837,7 @@ undefined8 FUN_00113374(undefined4 param_1,uint param_2,uint param_3,uint param_
     }
     dVar1 = float_to_double(uVar1);
     uVar1 = dVar1.low;
-    dVar1 = FUN_0010041c(dVar1);
+    dVar1 = math_acos(dVar1);
     uVar1 = dVar1.low;
     uVar1 = double_to_float(dVar1);
     uVar2 = float_multiply(uVar1,WORD_HEXADECIMAL_42652F1B);
@@ -16831,7 +15993,6 @@ void character_freeze_held_keys(Character *character)
 undefined8 FUN_0011abc4(int param_1,int param_2)
 
 {
-  float64 pair1;   /* a double built from its two words, for a call */
   float64 dVar1;   /* the double whose low word is uVar1 */
   float64 dVar5;   /* the double whose low word is uVar5 */
   uint uVar1;
@@ -16856,9 +16017,9 @@ undefined8 FUN_0011abc4(int param_1,int param_2)
     uVar1 = float_add(uVar1,FLOAT_90);
     dVar1 = float_to_double(uVar1);
     uVar1 = dVar1.low;
-    dVar1 = double_multiply(dVar1,MAKE_WORDS(pair1,FLOAT_1_POINT_14,WORD_HEXADECIMAL_1EB851EC));
+    dVar1 = double_multiply(dVar1,DOUBLE_0_POINT_0175);   /* to radians (GUESS: pi / 180 as 0.0175) */
     uVar1 = dVar1.low;
-    dVar5 = FUN_001007f4(dVar1);
+    dVar5 = math_cos(dVar1);
     uVar5 = dVar5.low;
     dVar5 = double_multiply(dVar5,TWO_DOUBLE);
     uVar5 = dVar5.low;
@@ -16866,7 +16027,7 @@ undefined8 FUN_0011abc4(int param_1,int param_2)
     uVar5 = dVar5.low;
     uVar5 = double_to_float(dVar5);
     *(uint *)(param_1 + 0xb4) = uVar5;
-    dVar1 = FUN_001008d0(dVar1);
+    dVar1 = math_sin(dVar1);
     uVar1 = dVar1.low;
     dVar1 = double_multiply(dVar1,TWO_DOUBLE);
     uVar1 = dVar1.low;
@@ -20728,20 +19889,20 @@ void camera_set_yaw(Camera *camera,uint32 angle)
 
 /* ==== 0x001202F4  (file offset 0x202F4)  float_sin =================================================== */
 /* GUESS: name. sinf: the sine of a float angle in radians: widens it (float_to_double), takes the double
-   sine (FUN_001008d0, GUESS: sin) and narrows the result (double_to_float, a tail jump at 0x00120304).
+   sine (math_sin, GUESS: sin) and narrows the result (double_to_float, a tail jump at 0x00120304).
    Ghidra listed double_to_float's body here. */
 uint32 float_sin(uint32 angle)
 
 {
   float64 value = float_to_double(angle);
 
-  value = FUN_001008d0(value);
+  value = math_sin(value);
   return double_to_float(value);
 }
 
 /* ==== 0x00120308  (file offset 0x20308)  float_sqrt ================================================== */
 /* GUESS: name. sqrtf: the square root of a float, through the double routines: widens it
-   (float_to_double), takes the double square root (FUN_001009b8, GUESS: sqrt) and narrows the result
+   (float_to_double), takes the double square root (math_sqrt, GUESS: sqrt) and narrows the result
    (double_to_float, a tail jump at 0x00120318). Ghidra listed double_to_float's body here and missed the
    argument in r0. */
 uint32 float_sqrt(uint32 value)
@@ -20749,7 +19910,7 @@ uint32 float_sqrt(uint32 value)
 {
   float64 root = float_to_double(value);
 
-  root = FUN_001009b8(root);
+  root = math_sqrt(root);
   return double_to_float(root);
 }
 
@@ -21615,7 +20776,7 @@ void FUN_00121780(int param_1,undefined4 *param_2,uint param_3)
   uVar1 = float_divide(uVar2,uVar1);
   dVar1 = float_to_double(uVar1);
   uVar1 = dVar1.low;
-  dVar1 = FUN_0010041c(dVar1);
+  dVar1 = math_acos(dVar1);
   uVar1 = dVar1.low;
   uVar1 = double_to_float(dVar1);
   uVar1 = float_multiply(uVar1,WORD_HEXADECIMAL_42652F1B);
@@ -22629,7 +21790,7 @@ void FUN_0012312c(int param_1,int param_2,int param_3)
       dVar2 = float_to_double(uVar2);
       uVar2 = dVar2.low;
       if (double_compare_less(dVar2,DOUBLE_0_POINT_01),
-          DOUBLE_LESS(dVar2,DOUBLE_0_POINT_01)) {     /* the two words are the double 0.01 */
+          DOUBLE_LESS(dVar2,DOUBLE_0_POINT_01)) {
         *(undefined4 *)(param_1 + 0x1b0) = 0;
       }
       uVar2 = *(uint *)(param_1 + 0x1b0);
@@ -26234,7 +25395,7 @@ float64 double_multiply(float64 a,float64 b)
 
 /* ==== 0x001259E8  (file offset 0x259E8)  double_remainder ============================================ */
 /* GUESS: name (the routine is certain: the soft-float library's IEEE remainder, C's remainder(a, b) /
-   drem; the math library's rem_pio2, FUN_00100d88, is its caller). Returns a - n * b, n the integer
+   drem; the math library's rem_pio2, math_rem_pio2, is its caller). Returns a - n * b, n the integer
    nearest a / b, ties to the even n, a, b and the result float64; the result is exact. Special
    operands (0x00125c70, 0x00125b54): a NaN takes the shared NaN choice (0x00124e18); Inf rem b and a
    rem 0 are invalid (WORD_HEXADECIMAL_04000015: invalid, double precision, operation 5); a rem Inf is
@@ -26578,7 +25739,7 @@ float64 double_remainder(float64 a,float64 b)
 
 /* ==== 0x00125CD0  (file offset 0x25CD0)  double_sqrt ================================================= */
 /* GUESS: name (the routine is certain: the soft-float library's IEEE double square root, called by the
-   C library's sqrt, FUN_001009b8, which sets errno first for a negative x). Returns the square root of
+   C library's sqrt, math_sqrt, which sets errno first for a negative x). Returns the square root of
    x, rounded to nearest, ties to even. +-0 is itself, +Inf itself; a negative x (but -0), -Inf and a
    signalling NaN are invalid (WORD_HEXADECIMAL_04000017: invalid, double precision, operation 7): the
    invalid flag, then the trap (status 0x100) or the default NaN with x's sign; a quiet NaN is itself.
@@ -26587,7 +25748,7 @@ float64 double_remainder(float64 a,float64 b)
    that build the root's high word (the hidden 1 at 30) and low word (to bit 9) by trial subtraction
    from the remainder; the remainder's last bits give the round bit and a sticky bit (0x00125db0). The
    binary's NaN choice (0x00124e18) also looks at r2:r3 as the caller leaves them, as a second operand;
-   only x is tested here (for a NaN x, FUN_001009b8 leaves r2 = 1 and r3 = low | -low, a signalling
+   only x is tested here (for a NaN x, math_sqrt leaves r2 = 1 and r3 = low | -low, a signalling
    NaN only when low's lowest set bit is bit 20, which would make a quiet x invalid too). The trap gets
    x and r2:r3 as the caller left them (callerR2, callerR3, never set). The listing's other
    kh_GetFpStatusPtr calls are the compare exit and code a square root never reaches (an overflow or
