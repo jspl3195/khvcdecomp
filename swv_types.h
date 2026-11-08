@@ -159,7 +159,7 @@ typedef struct IGraphics3DVtbl {
     /* 14 +0x38 */ int (*slot14)(IGraphics3D *po, ...);
     /* 15 +0x3c */ int (*slot15)(IGraphics3D *po, ...);
     /* 16 +0x40 */ int (*slot16)(IGraphics3D *po, ...);
-    /* 17 +0x44 */ int (*slot17)(IGraphics3D *po, ...);
+    /* 17 +0x44 */ int (*Render)(IGraphics3D *po, ...);
     /* 18 +0x48 */ int (*slot18)(IGraphics3D *po, ...);
     /* 19 +0x4c */ int (*slot19)(IGraphics3D *po, ...);
     /* 20 +0x50 */ int (*slot20)(IGraphics3D *po, ...);

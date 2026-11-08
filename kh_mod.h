@@ -462,7 +462,7 @@ int software_interrupt(int number);      /* Ghidra's name for the `svc` (swi) in
                                             the trap with the given number, its result as r0 leaves it */
 undefined4 FUN_00101ad8(int *param_1,int param_2);
 void FUN_001051d4(int param_1,int param_2);
-void FUN_00105224(int *param_1,int param_2);
+int32 ui_element_set_focus(UIElement *element,Screen *screen);   /* 0x00105224 GUESS: name, see kh_mod.c */
 int FUN_001052e0(int param_1,undefined4 param_2,int param_3,int param_4,int param_5,int param_6, undefined4 param_7,undefined4 param_8,int param_9);
 void FUN_001053a8(undefined4 param_1,undefined4 param_2,int param_3,int param_4,int param_5, int param_6,undefined4 param_7,int param_8,int param_9,int param_10,int param_11, int param_12,int param_13);
 int32 ui_element_add_child(UIElement *parent,UIElement *child,int32 id);   /* 0x001054D8 GUESS: name */
@@ -928,7 +928,8 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
                                    "Score" (language.m3g) */
 #define TEXT_RANK 0x04D4D70F   /* was DAT_00102b24 (word at 0x00102B24); the text id of
                                   "Rank" (language.m3g) */
-#define WORD_HEXADECIMAL_FFC9C4DA 0xFFC9C4DA   /* was DAT_00102b50, DAT_00104c2c, DAT_001077b8, DAT_00108728 (word at 0x00102B50); value 0xFFC9C4DA (-3554086) */
+#define COLOR_PALE_LILAC 0xFFC9C4DA   /* was DAT_00102b50, DAT_00104c2c, DAT_001077b8, DAT_00108728 (word
+                                                 at 0x00102B50); the colour 0xAARRGGBB (201, 196, 218) */
 #define TEXT_BACK 0x19408333   /* was DAT_00102b54, DAT_00104c08, DAT_00108e64 (word at 0x00102B54);
                                   the text id of
                                   "Back" (language.m3g) */
@@ -969,7 +970,9 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
                                         "Music High" (language.m3g) */
 #define TEXT_SELECT_AN_ITEM 0x133529B8   /* was DAT_00103c00 (word at 0x00103C00); the text id of
                                          "Select an item for details" (language.m3g) */
-#define WORD_HEXADECIMAL_FFEFEFEF 0xFFEFEFEF   /* was DAT_00103c04, DAT_001051a0, DAT_001052d0, DAT_00108724, DAT_0010bb20, DAT_0012465c (word at 0x00103C04); value 0xFFEFEFEF (-1052689) */
+#define COLOR_LIGHT_GREY 0xFFEFEFEF   /* was DAT_00103c04, DAT_001051a0, DAT_001052d0, DAT_00108724,
+                                                 DAT_0010bb20, DAT_0012465c (word at 0x00103C04); the
+                                                 colour 0xAARRGGBB (239, 239, 239) */
 #define TEXT_ITEM_HEADING 0x02AAF639   /* was DAT_00104bc4 (word at 0x00104BC4); the text id of
                                           "ITEM" (language.m3g) */
 #define TEXT_VALUE_HEADING 0x1A43CB02   /* was DAT_00104bc8 (word at 0x00104BC8); the text id of
@@ -1025,9 +1028,17 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 #define TEXT_END 0x14741FD6   /* was DAT_001051c8 (word at 0x001051C8); the text id of
                                  "End" (language.m3g) */
 #define WORD_HEXADECIMAL_1FEB4DB8 0x1FEB4DB8   /* was DAT_0010521c, DAT_0011e244 (word at 0x0010521C); value 0x1FEB4DB8 (535514552) */
-#define WORD_HEXADECIMAL_FF606060 0xFF606060   /* was DAT_001052cc (word at 0x001052CC); value 0xFF606060 (-10461088) */
-#define WORD_HEXADECIMAL_FFEBEBF7 0xFFEBEBF7   /* was DAT_001052d4, DAT_001077b4, DAT_0010871c, DAT_0010bb28, DAT_0010be10 (word at 0x001052D4); value 0xFFEBEBF7 (-1315849) */
-#define WORD_HEXADECIMAL_FF7E8194 0xFF7E8194   /* was DAT_001052d8, DAT_00106e40, DAT_001077bc (word at 0x001052D8); value 0xFF7E8194 (-8486508) */
+#define COLOR_DARK_GREY 0xFF606060   /* was DAT_001052cc (word at 0x001052CC); the colour 0xAARRGGBB
+                                                 (96, 96, 96): a focused type 5 element's background
+                                                 (ui_element_set_focus) */
+#define COLOR_PALE_LAVENDER 0xFFEBEBF7   /* was DAT_001052d4, DAT_001077b4, DAT_0010871c, DAT_0010bb28,
+                                                 DAT_0010be10 (word at 0x001052D4); the colour
+                                                 0xAARRGGBB (235, 235, 247): among others a focused
+                                                 element's primary colour (ui_element_set_focus) */
+#define COLOR_SLATE_GREY 0xFF7E8194   /* was DAT_001052d8, DAT_00106e40, DAT_001077bc (word at
+                                                 0x001052D8); the colour 0xAARRGGBB (126, 129, 148): among
+                                                 others a focused element's background
+                                                 (ui_element_set_focus) and focus frame (FUN_00106bd4) */
 #define FLOAT_500 0x43FA0000   /* was DAT_001055c0 (word at 0x001055C0); the float 500.0 */
 #define INTEGER_MINUS_22348 0xFFFFA8B4   /* was DAT_00105c0c (word at 0x00105C0C); integer -22348 */
 #define INTEGER_MINUS_22752 0xFFFFA720   /* was DAT_00105c34 (word at 0x00105C34); integer -22752 */
@@ -1035,20 +1046,29 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 #define AEECLSID_FILEMGR_VALUE 0x01001003   /* was DAT_00106320, DAT_001098d0, DAT_0010fb84, DAT_0011b174, DAT_0011e6b0 (word at 0x00106320); BREW class identifier AEECLSID_FILEMGR */
 #define WORD_HEXADECIMAL_00021B34 0x00021B34   /* was DAT_0010634c (word at 0x0010634C); value 0x00021B34 (138036) */
 #define WORD_HEXADECIMAL_00010002 0x00010002   /* was DAT_00106350, DAT_001082dc (word at 0x00106350); value 0x00010002 (65538) */
-#define WORD_HEXADECIMAL_FF4757DD 0xFF4757DD   /* was DAT_00106734 (word at 0x00106734); value 0xFF4757DD (-12101667) */
-#define WORD_HEXADECIMAL_FF82ECF3 0xFF82ECF3   /* was DAT_00106a88 (word at 0x00106A88); value 0xFF82ECF3 (-8196877) */
+#define COLOR_ROYAL_BLUE 0xFF4757DD   /* was DAT_00106734 (word at 0x00106734); the colour 0xAARRGGBB
+                                                 (71, 87, 221) */
+#define COLOR_LIGHT_CYAN 0xFF82ECF3   /* was DAT_00106a88 (word at 0x00106A88); the colour 0xAARRGGBB
+                                                 (130, 236, 243) */
 #define INTEGER_MINUS_19441 0xFFFFB40F   /* was DAT_00106a8c (word at 0x00106A8C); integer -19441 */
 #define INTEGER_MINUS_15954 0xFFFFC1AE   /* was DAT_00106a90 (word at 0x00106A90); integer -15954 */
-#define WORD_HEXADECIMAL_FF615A6D 0xFF615A6D   /* was DAT_00106fa0 (word at 0x00106FA0); value 0xFF615A6D (-10397075) */
-#define WORD_HEXADECIMAL_FF9795A5 0xFF9795A5   /* was DAT_00106fa4, DAT_001077b0 (word at 0x00106FA4); value 0xFF9795A5 (-6842971) */
-#define WORD_HEXADECIMAL_FF2F2533 0xFF2F2533   /* was DAT_001077a8, DAT_00108718 (word at 0x001077A8); value 0xFF2F2533 (-13687501) */
+#define COLOR_PURPLE_GREY 0xFF615A6D   /* was DAT_00106fa0 (word at 0x00106FA0); the colour 0xAARRGGBB
+                                                 (97, 90, 109) */
+#define COLOR_GREY_LILAC 0xFF9795A5   /* was DAT_00106fa4, DAT_001077b0 (word at 0x00106FA4); the colour
+                                                 0xAARRGGBB (151, 149, 165) */
+#define COLOR_DARK_PURPLE 0xFF2F2533   /* was DAT_001077a8, DAT_00108718 (word at 0x001077A8); the colour
+                                                 0xAARRGGBB (47, 37, 51) */
 #define WORD_HEXADECIMAL_00FF00FF 0x00FF00FF   /* was DAT_001077ac (word at 0x001077AC); value 0x00FF00FF (16711935) */
-#define WORD_HEXADECIMAL_FF47464C 0xFF47464C   /* was DAT_001077c0, DAT_00108714 (word at 0x001077C0); value 0xFF47464C (-12106164) */
-#define WORD_HEXADECIMAL_FFFF0000 0xFFFF0000   /* was DAT_001077c4, DAT_00107ad0 (word at 0x001077C4); value 0xFFFF0000 (-65536) */
+#define COLOR_CHARCOAL 0xFF47464C   /* was DAT_001077c0, DAT_00108714 (word at 0x001077C0); the colour
+                                                 0xAARRGGBB (71, 70, 76) */
+#define COLOR_RED 0xFFFF0000   /* was DAT_001077c4, DAT_00107ad0 (word at 0x001077C4); the colour
+                                                 0xAARRGGBB (255, 0, 0) */
 #define INTEGER_270 0x0000010E   /* was DAT_00107ac4 (word at 0x00107AC4); integer 270 */
-#define WORD_HEXADECIMAL_FF7FCB61 0xFF7FCB61   /* was DAT_00107acc (word at 0x00107ACC); value 0xFF7FCB61 (-8402079) */
+#define COLOR_GREEN 0xFF7FCB61   /* was DAT_00107acc (word at 0x00107ACC); the colour 0xAARRGGBB
+                                                 (127, 203, 97) */
 #define WORD_HEXADECIMAL_0001FE30 0x0001FE30   /* was DAT_00107d20 (word at 0x00107D20); value 0x0001FE30 (130608) */
-#define WORD_HEXADECIMAL_FFC0C000 0xFFC0C000   /* was DAT_00108720 (word at 0x00108720); value 0xFFC0C000 (-4145152) */
+#define COLOR_DARK_YELLOW 0xFFC0C000   /* was DAT_00108720 (word at 0x00108720); the colour 0xAARRGGBB
+                                                 (192, 192, 0) */
 #define INTEGER_57397 0x0000E035   /* was DAT_0010883c (word at 0x0010883C); integer 57397 */
 #define TEXT_NETWORK_UNAVAILABLE 0x1AB5DBD0   /* was DAT_00108e58 (word at 0x00108E58); the text id of
                                                  "The network is currently not available, please try ag..."
@@ -1096,16 +1116,24 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 #define FLOAT_10 0x41200000   /* was DAT_0010b474, DAT_0010db00, DAT_0010df5c, DAT_001118a8, DAT_00122f88 (word at 0x0010B474); the float 10.0 */
 #define INTEGER_1836 0x0000072C   /* was DAT_0010b5dc (word at 0x0010B5DC); integer 1836 */
 #define INTEGER_1820 0x0000071C   /* was DAT_0010b868 (word at 0x0010B868); integer 1820 */
-#define WORD_HEXADECIMAL_FFC5FAB9 0xFFC5FAB9   /* was DAT_0010bafc (word at 0x0010BAFC); value 0xFFC5FAB9 (-3802439) */
-#define WORD_HEXADECIMAL_FF004C78 0xFF004C78   /* was DAT_0010bb00 (word at 0x0010BB00); value 0xFF004C78 (-16757640) */
-#define WORD_HEXADECIMAL_FF0253A8 0xFF0253A8   /* was DAT_0010bb04 (word at 0x0010BB04); value 0xFF0253A8 (-16624728) */
+#define COLOR_PALE_GREEN 0xFFC5FAB9   /* was DAT_0010bafc (word at 0x0010BAFC); the colour 0xAARRGGBB
+                                                 (197, 250, 185) */
+#define COLOR_DARK_BLUE 0xFF004C78   /* was DAT_0010bb00 (word at 0x0010BB00); the colour 0xAARRGGBB
+                                                 (0, 76, 120) */
+#define COLOR_BLUE 0xFF0253A8   /* was DAT_0010bb04 (word at 0x0010BB04); the colour 0xAARRGGBB
+                                                 (2, 83, 168) */
 #define INTEGER_MINUS_28807 0xFFFF8F79   /* was DAT_0010bb08 (word at 0x0010BB08); integer -28807 */
-#define WORD_HEXADECIMAL_FF2C0621 0xFF2C0621   /* was DAT_0010bb0c (word at 0x0010BB0C); value 0xFF2C0621 (-13892063) */
-#define WORD_HEXADECIMAL_FF8D2B15 0xFF8D2B15   /* was DAT_0010bb10 (word at 0x0010BB10); value 0xFF8D2B15 (-7525611) */
+#define COLOR_DARK_PLUM 0xFF2C0621   /* was DAT_0010bb0c (word at 0x0010BB0C); the colour 0xAARRGGBB
+                                                 (44, 6, 33) */
+#define COLOR_RUST 0xFF8D2B15   /* was DAT_0010bb10 (word at 0x0010BB10); the colour 0xAARRGGBB
+                                                 (141, 43, 21) */
 #define INTEGER_MINUS_6560 0xFFFFE660   /* was DAT_0010bb14 (word at 0x0010BB14); integer -6560 */
-#define WORD_HEXADECIMAL_FF724307 0xFF724307   /* was DAT_0010bb18 (word at 0x0010BB18); value 0xFF724307 (-9288953) */
-#define WORD_HEXADECIMAL_FF8A4E00 0xFF8A4E00   /* was DAT_0010bb1c (word at 0x0010BB1C); value 0xFF8A4E00 (-7713280) */
-#define WORD_HEXADECIMAL_FFEFEFC0 0xFFEFEFC0   /* was DAT_0010bb24 (word at 0x0010BB24); value 0xFFEFEFC0 (-1052736) */
+#define COLOR_BROWN 0xFF724307   /* was DAT_0010bb18 (word at 0x0010BB18); the colour 0xAARRGGBB
+                                                 (114, 67, 7) */
+#define COLOR_OCHRE 0xFF8A4E00   /* was DAT_0010bb1c (word at 0x0010BB1C); the colour 0xAARRGGBB
+                                                 (138, 78, 0) */
+#define COLOR_CREAM 0xFFEFEFC0   /* was DAT_0010bb24 (word at 0x0010BB24); the colour 0xAARRGGBB
+                                                 (239, 239, 192) */
 #define CLASS_IDENTIFIER_HEXADECIMAL_01003009 0x01003009   /* was DAT_0010bd74 (word at 0x0010BD74); in the BREW class identifier range */
 #define INTEGER_57360 0x0000E010   /* was DAT_0010bd78 (word at 0x0010BD78); integer 57360 */
 #define INTEGER_MINUS_48896 0xFFFF4100   /* was DAT_0010c144 (word at 0x0010C144); integer -48896 */

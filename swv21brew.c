@@ -483,6 +483,8 @@ void FUN_01000388(int param_1,int param_2,int param_3,uint param_4)
   
   if (param_1 != param_2) {
     do {
+      /* the function passed in (its address with the low bits cleared): the element constructor or
+         destructor */
       (*(code *)(param_4 & 0xfffffffc))(param_1);
       param_1 = param_1 + param_3;
     } while (param_1 != param_2);
@@ -504,6 +506,8 @@ void FUN_010003cc(int param_1,int param_2,int param_3,uint param_4)
   
   if (param_1 != param_2) {
     do {
+      /* the function passed in (its address with the low bits cleared): the element constructor or
+         destructor */
       (*(code *)(param_4 & 0xfffffffc))(param_1,0);
       param_1 = param_1 + param_3;
     } while (param_1 != param_2);
@@ -536,6 +540,8 @@ int * FUN_01000414(int *param_1,int param_2,int param_3,int param_4,uint param_5
     }
     if (param_5 != 0 && param_2 != 0) {
       do {
+        /* the function passed in (its address with the low bits cleared): the element constructor or
+           destructor */
         (*(code *)(param_5 & 0xfffffffc))(unaff_r4);
         bVar2 = unaff_r6 != 0;
         unaff_r6 = unaff_r6 + -1;
@@ -564,12 +570,16 @@ longlong FUN_01000474(int param_1,uint param_2,uint param_3,uint param_4)
     param_1 = param_2 * iVar2 + param_1;
     while (bVar1 = iVar2 != 0, iVar2 = iVar2 + -1, bVar1) {
       param_1 = param_1 - param_2;
+      /* the function passed in (its address with the low bits cleared): the element constructor or
+         destructor */
       (*(code *)(param_3 & 0xfffffffc))(param_1,0);
     }
   }
   if (param_4 != 0) {
                     /* WARNING: Could not recover jumptable at 0x010004fc. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+    /* the function passed in (its address with the low bits cleared): the element constructor or
+       destructor */
     lVar3 = (*(code *)(param_4 & 0xfffffffc))();
     return lVar3;
   }
@@ -621,6 +631,8 @@ void FUN_01000524(int param_1,int param_2)
   }
                     /* WARNING: Could not recover jumptable at 0x0100054c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* the function passed in (its address with the low bits cleared): the element constructor or
+     destructor */
   (*(code *)(*(uint *)(param_1 + 0xc) & 0xfffffffc))(param_2);
   return;
 }
@@ -3129,10 +3141,12 @@ uint32 AEEMod_Release(IModule *po)
   po[1].pvt = pIVar1;
   if (pIVar1 == (IModuleVtbl *)0x0) {
     if (po[4].pvt != (IModuleVtbl *)0x0) {
+      /* pfnModFreeData (AEEMod +0x10; NULL in the SDK's generic module code) */
       (*(code *)po[4].pvt)();
     }
     if (po[2].pvt != (IModuleVtbl *)0x0) {
-      (**(code **)((po[2].pvt)->AddRef + 4))();
+      /* m_pIShell (+8); Ghidra had dropped it, r0 (0x0100294c) */
+      (*((IShell *)po[2].pvt)->pvt->Release)((IShell *)po[2].pvt);
       po[2].pvt = (IModuleVtbl *)0x0;
     }
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -3219,6 +3233,8 @@ void FUN_01002a58(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
   if (param_2 == 0) {
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
+  /* engine virtual call, slot +0x20: one of FUN_01003408, FUN_0100f71c, FUN_01012324, FUN_0101d01c,
+     FUN_010230f8 (by the object's class) */
   iVar1 = (*(code *)(*(int *)(*param_1 + 0x20) + *param_1))(param_1,*(undefined4 *)(param_2 + 0x24))
   ;
   if (iVar1 == 0) {
@@ -3263,6 +3279,8 @@ LAB_01002bd0:
           uVar5 = FUN_0102df78(*(int *)(iVar3 + 0x18) + 1);
           iVar9 = *(int *)(iVar3 + 0x10);
           pcVar8 = (code *)(*(int *)(iVar9 + 4) + iVar9);
+          /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by
+             the object's class) */
           (*pcVar8)((int *)(iVar3 + 0x10),uVar5,*(undefined4 *)(iVar3 + 0x18),pcVar8,iVar1,iVar6);
         }
         iVar6 = *(int *)(iVar3 + 0x18);
@@ -3329,6 +3347,8 @@ int FUN_01002c70(int param_1,int param_2)
       if (*(int *)(param_1 + 0xb8) == *(int *)(param_1 + 0xbc)) {
         uVar1 = FUN_0102df78(*(int *)(param_1 + 0xb8) + 1);
         iVar2 = *(int *)(param_1 + 0xb0);
+        /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+           object's class) */
         (*(code *)(*(int *)(iVar2 + 4) + iVar2))
                   ((int *)(param_1 + 0xb0),uVar1,*(undefined4 *)(param_1 + 0xb8));
       }
@@ -3357,6 +3377,8 @@ void FUN_01002d60(int param_1,int param_2)
   if (param_2 == 0) {
     FUN_0102f7e0(INTEGER_MINUS_1302);
   }
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   if ((((param_2 == param_1) ||
        (iVar1 = (*(code *)(*(int *)(*(int *)(param_2 + 4) + 4) + *(int *)(param_2 + 4)))
                           (param_2 + 4), iVar1 == 0x16)) || (*(int *)(param_2 + 0x30) != 0)) ||
@@ -3379,11 +3401,15 @@ void FUN_01002d60(int param_1,int param_2)
       iVar1 = param_2;
       param_2 = *(int *)(iVar1 + 0x30);
     } while (*(int *)(iVar1 + 0x30) != 0);
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     iVar3 = (*(code *)(*(int *)(*(int *)(iVar1 + 4) + 4) + *(int *)(iVar1 + 4)))(iVar1 + 4);
     if (iVar3 == 0x16) {
       if (*(int *)(iVar1 + 0x98) != 0) {
         if (*(int *)(iVar1 + 0x9c) < 0) {
           iVar3 = *(int *)(iVar1 + 0x90);
+          /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by
+             the object's class) */
           (*(code *)(*(int *)(iVar3 + 4) + iVar3))((int *)(iVar1 + 0x90),0);
         }
         *(undefined4 *)(iVar1 + 0x98) = 0;
@@ -3419,6 +3445,8 @@ undefined4 FUN_01002dfc(undefined1 *param_1,int param_2,int param_3)
   if (*(int *)(param_1 + 0xfc) == *(int *)(param_1 + 0x100)) {
     uVar1 = FUN_0102df78(*(int *)(param_1 + 0xfc) + 1);
     iVar2 = *(int *)(param_1 + 0xf4);
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(iVar2 + 4) + iVar2))(param_1 + 0xf4,uVar1,*(undefined4 *)(param_1 + 0xfc));
   }
   iVar2 = *(int *)(param_1 + 0xfc);
@@ -3436,6 +3464,8 @@ undefined4 FUN_01002dfc(undefined1 *param_1,int param_2,int param_3)
   if (*(int *)(param_1 + 0x10c) == *(int *)(param_1 + 0x110)) {
     uVar1 = FUN_0102df78(*(int *)(param_1 + 0x10c) + 1);
     iVar2 = *(int *)(param_1 + 0x104);
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(iVar2 + 4) + iVar2))(param_1 + 0x104,uVar1,*(undefined4 *)(param_1 + 0x10c))
     ;
   }
@@ -3585,6 +3615,8 @@ void FUN_010031a0(int param_1,int param_2)
       uVar1 = FUN_0102df78(*(int *)(param_1 + 0x10) + 1);
       iVar2 = *(int *)(param_1 + 8);
       pcVar4 = (code *)(*(int *)(iVar2 + 4) + iVar2);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*pcVar4)((int *)(param_1 + 8),uVar1,*(undefined4 *)(param_1 + 0x10),pcVar4,iVar3);
     }
     iVar3 = *(int *)(param_1 + 0x10);
@@ -3647,6 +3679,8 @@ LAB_010032b0:
   if (*(int *)(param_1 + 200) == *(int *)(param_1 + 0xcc)) {
     uVar3 = FUN_0102df78(*(int *)(param_1 + 200) + 1);
     iVar5 = *(int *)(param_1 + 0xc0);
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(iVar5 + 4) + iVar5))
               ((int *)(param_1 + 0xc0),uVar3,*(undefined4 *)(param_1 + 200));
   }
@@ -3845,6 +3879,121 @@ void FUN_01003604(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   return;
 }
 
+/* ==== 0x010036A0  (file offset 0x036A0)  FUN_010036a0 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EC0 +0xc;
+   written from its disassembly (0x010036a0 - 0x010036a8). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_010036a0(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 2,0);
+}
+
+/* ==== 0x010036AC  (file offset 0x036AC)  FUN_010036ac ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001ED4 +0xc;
+   written from its disassembly (0x010036ac - 0x010036b4). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_010036ac(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 2,0);
+}
+
+/* ==== 0x010036B8  (file offset 0x036B8)  FUN_010036b8 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EE8 +0xc;
+   written from its disassembly (0x010036b8 - 0x010036c0). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_010036b8(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 2,0);
+}
+
+/* ==== 0x010036C4  (file offset 0x036C4)  FUN_010036c4 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EFC +0xc;
+   written from its disassembly (0x010036c4 - 0x010036cc). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_010036c4(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 2,0);
+}
+
+/* ==== 0x010036D0  (file offset 0x036D0)  FUN_010036d0 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001FAC +0xc;
+   written from its disassembly (0x010036d0 - 0x010036d8). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_010036d0(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2,0);
+}
+
+/* ==== 0x010036DC  (file offset 0x036DC)  FUN_010036dc ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001FC0 +0xc;
+   written from its disassembly (0x010036dc - 0x010036e4). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_010036dc(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 1,0);
+}
+
+/* ==== 0x010036E8  (file offset 0x036E8)  FUN_010036e8 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002348 +0xc;
+   written from its disassembly (0x010036e8 - 0x010036f0). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_010036e8(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 3,0);
+}
+
+/* ==== 0x010036F4  (file offset 0x036F4)  FUN_010036f4 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023CC +0xc;
+   written from its disassembly (0x010036f4 - 0x010036fc). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_010036f4(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 2,0);
+}
+
+/* ==== 0x01003700  (file offset 0x03700)  FUN_01003700 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023E4 +0xc;
+   written from its disassembly (0x01003700 - 0x01003738). Allocates an array of param_2 0x44-byte
+   elements and constructs them (FUN_01000414 with the element constructor), as FUN_01003758 does.
+   param_1 (the object) is not read. */
+void FUN_01003700(undefined4 param_1,int param_2)
+
+{
+  undefined4 uVar1;
+
+  uVar1 = FUN_0102cb54(param_2 * 0x44 + 4,0);
+  FUN_01000414(uVar1,param_2,0x44,1,ADDRESS_OF_FUNCTION_01029850_OFFSET + 0x1003728);
+  return;
+}
+
+/* ==== 0x01003740  (file offset 0x03740)  FUN_01003740 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023F8 +0xc;
+   written from its disassembly (0x01003740 - 0x01003748). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_01003740(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 2,0);
+}
+
+/* ==== 0x0100374C  (file offset 0x0374C)  FUN_0100374c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010024C4 +0xc;
+   written from its disassembly (0x0100374c - 0x01003754). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_0100374c(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 2,0);
+}
+
 /* ==== 0x01003758  (file offset 0x03758)  FUN_01003758 ================================================ */
 void FUN_01003758(undefined4 param_1,int param_2)
 
@@ -3867,6 +4016,16 @@ void FUN_010037a0(undefined4 param_1,int param_2)
   return;
 }
 
+/* ==== 0x010037E4  (file offset 0x037E4)  FUN_010037e4 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002504 +0xc;
+   written from its disassembly (0x010037e4 - 0x010037ec). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_010037e4(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 2,0);
+}
+
 /* ==== 0x010037F0  (file offset 0x037F0)  FUN_010037f0 ================================================ */
 void FUN_010037f0(undefined4 param_1,int param_2)
 
@@ -3876,6 +4035,36 @@ void FUN_010037f0(undefined4 param_1,int param_2)
   uVar1 = FUN_0102cb54(param_2 * 0x44 + 4,0);
   FUN_01000414(uVar1,param_2,0x44,1,ADDRESS_OF_FUNCTION_01027e90_OFFSET + 0x100381c);
   return;
+}
+
+/* ==== 0x01003838  (file offset 0x03838)  FUN_01003838 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100252C +0xc;
+   written from its disassembly (0x01003838 - 0x01003840). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_01003838(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 2,0);
+}
+
+/* ==== 0x01003844  (file offset 0x03844)  FUN_01003844 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002540 +0xc;
+   written from its disassembly (0x01003844 - 0x0100384c). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_01003844(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 2,0);
+}
+
+/* ==== 0x01003850  (file offset 0x03850)  FUN_01003850 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100255C +0xc;
+   written from its disassembly (0x01003850 - 0x01003858). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_01003850(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 2,0);
 }
 
 /* ==== 0x0100385C  (file offset 0x0385C)  FUN_0100385c ================================================ */
@@ -3889,6 +4078,36 @@ void FUN_0100385c(undefined4 param_1,int param_2)
   return;
 }
 
+/* ==== 0x010038A4  (file offset 0x038A4)  FUN_010038a4 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002584 +0xc;
+   written from its disassembly (0x010038a4 - 0x010038ac). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_010038a4(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 2,0);
+}
+
+/* ==== 0x010038B0  (file offset 0x038B0)  FUN_010038b0 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002598 +0xc;
+   written from its disassembly (0x010038b0 - 0x010038b8). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_010038b0(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 2,0);
+}
+
+/* ==== 0x010038BC  (file offset 0x038BC)  FUN_010038bc ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010025AC +0xc;
+   written from its disassembly (0x010038bc - 0x010038c4). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_010038bc(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 2,0);
+}
+
 /* ==== 0x010038C8  (file offset 0x038C8)  FUN_010038c8 ================================================ */
 void FUN_010038c8(undefined4 param_1,int param_2)
 
@@ -3898,6 +4117,91 @@ void FUN_010038c8(undefined4 param_1,int param_2)
   uVar1 = FUN_0102cb54(param_2 * 0x90 + 4,0);
   FUN_01000414(uVar1,param_2,0x90,1,ADDRESS_OF_FUNCTION_01029110_OFFSET + 0x10038f4);
   return;
+}
+
+/* ==== 0x0100391C  (file offset 0x0391C)  FUN_0100391c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010025E8 +0xc;
+   written from its disassembly (0x0100391c - 0x01003954). Allocates an array of param_2 0x18-byte
+   elements and constructs them (FUN_01000414 with the element constructor), as FUN_01003758 does.
+   param_1 (the object) is not read. */
+void FUN_0100391c(undefined4 param_1,int param_2)
+
+{
+  undefined4 uVar1;
+
+  uVar1 = FUN_0102cb54(param_2 * 0x18 + 4,0);
+  FUN_01000414(uVar1,param_2,0x18,1,ADDRESS_OF_FUNCTION_01029878_OFFSET + 0x1003944);
+  return;
+}
+
+/* ==== 0x0100395C  (file offset 0x0395C)  FUN_0100395c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002600 +0xc;
+   written from its disassembly (0x0100395c - 0x01003968). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_0100395c(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 * 0xc,0);
+}
+
+/* ==== 0x0100396C  (file offset 0x0396C)  FUN_0100396c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002614 +0xc;
+   written from its disassembly (0x0100396c - 0x010039a4). Allocates an array of param_2 0x90-byte
+   elements and constructs them (FUN_01000414 with the element constructor), as FUN_01003758 does.
+   param_1 (the object) is not read. */
+void FUN_0100396c(undefined4 param_1,int param_2)
+
+{
+  undefined4 uVar1;
+
+  uVar1 = FUN_0102cb54(param_2 * 0x90 + 4,0);
+  FUN_01000414(uVar1,param_2,0x90,1,ADDRESS_OF_FUNCTION_010298b4_OFFSET + 0x1003994);
+  return;
+}
+
+/* ==== 0x010039AC  (file offset 0x039AC)  FUN_010039ac ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002628 +0xc;
+   written from its disassembly (0x010039ac - 0x010039b8). Allocates an array of param_2 elements
+   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_010039ac(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 * 0xc,0);
+}
+
+/* ==== 0x010039BC  (file offset 0x039BC)  FUN_010039bc ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100263C +0xc;
+   written from its disassembly (0x010039bc - 0x010039f8). Allocates an array of param_2 0x4c-byte
+   elements and constructs them (FUN_01000414 with the element constructor), as FUN_01003758 does.
+   param_1 (the object) is not read. */
+void FUN_010039bc(undefined4 param_1,int param_2)
+
+{
+  undefined4 uVar1;
+
+  uVar1 = FUN_0102cb54(param_2 * 0x4c + 4,0);
+  FUN_01000414(uVar1,param_2,0x4c,1,ADDRESS_OF_FUNCTION_010298e0_OFFSET + 0x10039e8);
+  return;
+}
+
+/* ==== 0x01003A00  (file offset 0x03A00)  FUN_01003a00 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtables at 0x01002438 +0x30,
+   0x01002650 +0xc; written from its disassembly (0x01003a00 - 0x01003a0c). Allocates an array of
+   param_2 elements (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_01003a00(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 * 0x14,0);
+}
+
+/* ==== 0x01003A10  (file offset 0x03A10)  FUN_01003a10 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtables at 0x010022E0 +0x20,
+   0x01002664 +0xc; written from its disassembly (0x01003a10 - 0x01003a18). Allocates an array of
+   param_2 elements (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+void * FUN_01003a10(int param_1,int param_2)
+
+{
+  return FUN_0102cb54(param_2 << 2,0);
 }
 
 /* ==== 0x01003B00  (file offset 0x03B00)  FUN_01003b00 ================================================ */
@@ -4061,6 +4365,8 @@ undefined4 FUN_01003c38(int *param_1,undefined4 param_2,int param_3)
             bVar1 = true;
             if (local_44 == 0x103) {
               if (iVar4 == 2) {
+                /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there
+                   (by the object's class) */
                 iVar4 = (*(code *)(*(int *)(*local_34 + 4) + *local_34))(local_34);
                 uVar11 = iVar4 == 0x12;
                 if ((bool)uVar11) {
@@ -4124,12 +4430,15 @@ undefined4 FUN_01003c38(int *param_1,undefined4 param_2,int param_3)
           iVar2 = iVar2 + 1;
         }
         if (bVar1) {
+          /* engine virtual call, slot +0x1c: one of FUN_0100486c, FUN_01011968, FUN_01021d50,
+             FUN_010224fc, FUN_01026168 (by the object's class) */
           (*(code *)(*(int *)(*param_1 + 0x1c) + *param_1))(param_1,local_44,iVar4,local_5c);
         }
       }
     }
                     /* WARNING: Could not recover jumptable at 0x01004000. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+    /* engine virtual call, slot +0x14: one of FUN_01005104, FUN_01010820 (by the object's class) */
     uVar5 = (*(code *)(*(int *)(*param_1 + 0x14) + *param_1))(param_1,param_2,local_38,local_28);
     return uVar5;
   }
@@ -4147,6 +4456,8 @@ void FUN_0100400c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
   if (param_1[2] == param_1[3]) {
     uVar1 = FUN_0102df78(param_1[2] + 1);
     pcVar3 = (code *)(*(int *)(*param_1 + 4) + *param_1);
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     (*pcVar3)(param_1,uVar1,param_1[2],pcVar3,param_4);
   }
   iVar2 = param_1[2];
@@ -4166,6 +4477,8 @@ void FUN_0100406c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
   if (param_1[2] == param_1[3]) {
     uVar1 = FUN_0102df78(param_1[2] + 1);
     pcVar3 = (code *)(*(int *)(*param_1 + 4) + *param_1);
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     (*pcVar3)(param_1,uVar1,param_1[2],pcVar3,param_4);
   }
   iVar2 = param_1[2];
@@ -4185,6 +4498,8 @@ void FUN_010040cc(int *param_1,undefined1 *param_2,undefined4 param_3,undefined4
   if (param_1[2] == param_1[3]) {
     uVar1 = FUN_0102df78(param_1[2] + 1);
     pcVar3 = (code *)(*(int *)(*param_1 + 4) + *param_1);
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     (*pcVar3)(param_1,uVar1,param_1[2],pcVar3,param_4);
   }
   iVar2 = param_1[2];
@@ -4204,6 +4519,8 @@ void FUN_0100412c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
   if (param_1[2] == param_1[3]) {
     uVar1 = FUN_0102df78(param_1[2] + 1);
     pcVar3 = (code *)(*(int *)(*param_1 + 4) + *param_1);
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     (*pcVar3)(param_1,uVar1,param_1[2],pcVar3,param_4);
   }
   iVar2 = param_1[2];
@@ -4221,6 +4538,8 @@ undefined4 * FUN_0100418c(int *param_1,undefined4 *param_2)
   
   if (param_1[2] == param_1[3]) {
     uVar1 = FUN_0102df78(param_1[2] + 1);
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*param_1 + 4) + *param_1))(param_1,uVar1,param_1[2]);
   }
   param_1[2] = param_1[2] + 1;
@@ -4250,7 +4569,8 @@ int FUN_01004200(void *param_1)
   *(int *)((int)param_1 + 4) = iVar1;
   if (iVar1 == 0) {
     if (*(int **)((int)param_1 + 8) != (int *)0x0) {
-      (**(code **)(**(int **)((int)param_1 + 8) + 4))();
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((IFile *)*(int **)((int)param_1 + 8))->pvt->Release)((IFile *)*(int **)((int)param_1 + 8));
     }
     if (*(void **)((int)param_1 + 0xc) != (void *)0x0) {
       helper_free(*(void **)((int)param_1 + 0xc));
@@ -4275,10 +4595,11 @@ void FUN_01004250(int param_1,undefined4 param_2,uint param_3,undefined4 param_4
   if (param_3 < uVar2) {
     uVar2 = param_3;
   }
-  (**(code **)(*piVar3 + 0x1c))
-            (piVar3,0,*(int *)(param_1 + 0x10) + *(int *)(param_1 + 0x18),*(code **)(*piVar3 + 0x1c)
-             ,param_4);
-  iVar1 = (**(code **)(*piVar3 + 0xc))(piVar3,param_2,uVar2);
+  (*((IFile *)piVar3)->pvt->Seek)
+      ((IFile *)piVar3,0,
+       *(int *)(param_1 + 0x10) + *(int *)(param_1 + 0x18)
+       /* not arguments, value leftovers: *(code **)(*piVar3 + 0x1c),param_4 */);
+  iVar1 = (*((IFile *)piVar3)->pvt->Read)((IFile *)piVar3,param_2,uVar2);
   *(int *)(param_1 + 0x18) = *(int *)(param_1 + 0x18) + iVar1;
   return;
 }
@@ -4353,17 +4674,18 @@ int FUN_01004380(int param_1,undefined4 param_2)
   
   if (*(int *)(param_1 + 8) == 0) {
     pvVar2 = helper_GetAppInstance();
-    iVar1 = (**(code **)(**(int **)((int)pvVar2 + 0xc) + 8))
-                      (*(int **)((int)pvVar2 + 0xc),AEECLSID_FILEMGR_VALUE,&local_28);
+    iVar1 = (*((IShell *)*(int **)((int)pvVar2 + 0xc))->pvt->CreateInstance)
+                ((IShell *)*(int **)((int)pvVar2 + 0xc),AEECLSID_FILEMGR_VALUE,&local_28);
     if (iVar1 == 0) {
-      piVar3 = (int *)(**(code **)(*local_28 + 8))(local_28,param_2,1);
+      piVar3 = (int *)(*((IFileMgr *)local_28)->pvt->OpenFile)((IFileMgr *)local_28,param_2,1);
       pvVar2 = (void *)0x0;
       if (piVar3 == (int *)0x0) {
-        iVar1 = (**(code **)(*local_28 + 0x24))();
+        /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+        iVar1 = (*((IFileMgr *)local_28)->pvt->GetLastError)((IFileMgr *)local_28);
       }
       else {
         pvVar2 = helper_malloc(0x400);
-        unaff_r6 = (**(code **)(*piVar3 + 0xc))(piVar3,pvVar2,0x400);
+        unaff_r6 = (*((IFile *)piVar3)->pvt->Read)((IFile *)piVar3,pvVar2,0x400);
         if (unaff_r6 < 0x26) {
           iVar1 = WORD_HEXADECIMAL_0001000B;
         }
@@ -4378,7 +4700,7 @@ int FUN_01004380(int param_1,undefined4 param_2)
           iVar1 = WORD_HEXADECIMAL_0001000B;
         }
         unaff_r7 = FUN_01038624((int)pvVar2 + 0xd);
-        (**(code **)(*piVar3 + 0x18))(piVar3,auStack_78);
+        (*((IFile *)piVar3)->pvt->GetInfo)((IFile *)piVar3,auStack_78);
         iVar4 = FUN_01038624((int)pvVar2 + 0x11);
         if (iVar4 != local_70) {
           iVar1 = WORD_HEXADECIMAL_0001000B;
@@ -4389,7 +4711,7 @@ int FUN_01004380(int param_1,undefined4 param_2)
       if (iVar1 == 0) {
         iVar4 = thunk_FUN_0102cc94(1,pvVar2);
         while ((iVar8 = iVar1, iVar1 = iVar8, unaff_r6 < unaff_r7 && (iVar8 == 0))) {
-          uVar5 = (**(code **)(*piVar3 + 0xc))(piVar3,pvVar2,0x400);
+          uVar5 = (*((IFile *)piVar3)->pvt->Read)((IFile *)piVar3,pvVar2,0x400);
           iVar1 = WORD_HEXADECIMAL_0001000B;
           if (uVar5 != 0) {
             uVar6 = unaff_r7 - unaff_r6;
@@ -4405,7 +4727,8 @@ int FUN_01004380(int param_1,undefined4 param_2)
           iVar1 = WORD_HEXADECIMAL_0001000B;
         }
       }
-      (**(code **)(*local_28 + 4))();
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((IFileMgr *)local_28)->pvt->Release)((IFileMgr *)local_28);
       if (pvVar2 != (void *)0x0) {
         (*g_pHelperFuncs->free)();
       }
@@ -4416,8 +4739,8 @@ int FUN_01004380(int param_1,undefined4 param_2)
           iVar1 = 2;
         }
         else {
-          iVar1 = (**(code **)(*piVar3 + 0x1c))(piVar3,0,0x21);
-          uVar7 = (**(code **)(*piVar3 + 0xc))(piVar3,pvVar2,size);
+          iVar1 = (*((IFile *)piVar3)->pvt->Seek)((IFile *)piVar3,0,0x21);
+          uVar7 = (*((IFile *)piVar3)->pvt->Read)((IFile *)piVar3,pvVar2,size);
           iVar4 = WORD_HEXADECIMAL_0001000B;
           if (uVar7 == size) {
             *(int **)(param_1 + 8) = piVar3;
@@ -4434,7 +4757,8 @@ int FUN_01004380(int param_1,undefined4 param_2)
         }
       }
       if (piVar3 != (int *)0x0) {
-        (**(code **)(*piVar3 + 4))();
+        /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+        (*((IFile *)piVar3)->pvt->Release)((IFile *)piVar3);
       }
     }
   }
@@ -4498,7 +4822,8 @@ int FUN_01004638(int param_1,undefined4 param_2,undefined4 *param_3,void **param
             return iVar3;
           }
           pvVar9 = *param_4;
-          (**(code **)**(undefined4 **)(param_1 + 8))();
+          /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+          (*((IFile *)*(undefined4 **)(param_1 + 8))->pvt->AddRef)((IFile *)*(undefined4 **)(param_1 + 8));
           *(undefined4 *)((int)pvVar9 + 8) = *(undefined4 *)(param_1 + 8);
           *(int *)((int)pvVar9 + 0x10) = iVar10;
           uVar5 = FUN_01038624(iVar7 + 8);
@@ -4619,6 +4944,8 @@ int FUN_010048e4(int param_1,int param_2,undefined4 param_3)
     if (param_1 == param_2) {
       return param_1;
     }
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     iVar1 = (*(code *)(*(int *)(*(int *)(param_2 + 4) + 4) + *(int *)(param_2 + 4)))(param_2 + 4);
     if (iVar1 != 0x16) {
       iVar3 = FUN_01010cc8(param_1);
@@ -4678,7 +5005,10 @@ void FUN_01004a68(int param_1,int *param_2,int *param_3,int *param_4,int *param_
   
   iVar6 = param_1;
   piVar9 = param_4;
+  /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
   iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x98) + 0x28) + **(int **)(param_1 + 0x98)))();
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   iVar2 = (*(code *)(*(int *)(**(int **)(param_1 + 0x98) + 0x24) + **(int **)(param_1 + 0x98)))();
   iVar3 = *(int *)(param_1 + 0x8c);
   iVar7 = *(int *)(param_1 + 0x90);
@@ -5039,6 +5369,8 @@ void FUN_010050ac(int param_1)
   while (*(int *)(param_1 + 0xc) != 0) {
     piVar1 = *(int **)(*(int *)(param_1 + 8) + (*(int *)(param_1 + 0xc) + -1) * 4);
     if (piVar1 != (int *)0x0) {
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
     }
     FUN_01023184(param_1 + 4,*(int *)(param_1 + 0xc) + -1);
@@ -5175,6 +5507,7 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
   else {
     iStack_70 = *(int *)(param_2 + 0x40);
     iStack_8c = *(int *)(param_2 + 0x3c);
+    /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
     if ((((iStack_28 == 0) || (*(int *)(param_1 + 0x104) != 0)) ||
         (*(int **)(param_2 + 0x20) == (int *)0x0)) ||
        (iVar9 = **(int **)(param_2 + 0x20), iVar9 = (*(code *)(*(int *)(iVar9 + 0x2c) + iVar9))(),
@@ -5195,6 +5528,9 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
     iStack_9c = *(int *)(*(int *)(param_1 + 4) + 0x3c);
     piVar7 = *(int **)(param_2 + 0x20);
     if (piVar7 != (int *)0x0) {
+      /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+      /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
+         (by the object's class) */
       if ((((piVar7[0xb] == -1) || (piVar7[8] + piVar7[0xb] == 0)) &&
           ((iVar12 = (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7), iVar12 == iVar11 &&
            ((iVar12 = (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7), iVar12 == iStack_9c
@@ -5203,9 +5539,12 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
          (iVar12 = FUN_01038644(*(undefined4 *)(param_2 + 0x30),0x80000000,0x7fffffff), iVar12 == 0)
          ) {
         iVar12 = FUN_01038644(*(undefined4 *)(param_2 + 0x34),0,0x7fffffff);
+        /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
+           FUN_0102da68 (by the object's class) */
         iVar9 = (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7);
         if (iVar12 == iVar9) {
           iVar9 = FUN_01038644(*(undefined4 *)(param_2 + 0x38),0,0x7fffffff);
+          /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
           iVar12 = (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7);
           bVar13 = iVar9 == iVar12;
           if (bVar13) {
@@ -5226,6 +5565,8 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
             }
             if (bVar14 && iVar8 == iStack_9c * 2) {
               if (iStack_8c != 0) {
+                /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's
+                   class) */
                 uVar2 = (*(code *)(*(int *)(*piVar7 + 0x30) + *piVar7))(piVar7);
                 thunk_FUN_01000100(iStack_6c,uVar2,iVar11 * iVar8);
               }
@@ -5249,8 +5590,11 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
       uStack_a8 = *(uint *)(param_2 + 0x30);
       uStack_ac = *(undefined4 *)(param_2 + 0x34);
       uStack_b0 = *(undefined4 *)(param_2 + 0x38);
+      /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
+         (by the object's class) */
       (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7);
       uStack_b4 = swv_fflt();
+      /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
       (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7);
       uStack_b8 = swv_fflt();
       iVar11 = iStack_74;
@@ -5382,18 +5726,27 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
         }
       }
       for (; iStack_c4 < 0; iStack_c4 = iStack_c4 + iVar9 * 0x10000) {
+        /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
+           FUN_0102da68 (by the object's class) */
         iVar9 = (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7);
       }
+      /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
+         (by the object's class) */
       while (iVar9 = (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7),
             iVar9 * 0x10000 <= iStack_c4) {
+        /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
+           FUN_0102da68 (by the object's class) */
         iVar9 = (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7);
         iStack_c4 = iStack_c4 + iVar9 * -0x10000;
       }
       for (; iStack_c8 < 0; iStack_c8 = iStack_c8 + iVar9 * 0x10000) {
+        /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
         iVar9 = (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7);
       }
+      /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
       while (iVar9 = (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7),
             iVar9 * 0x10000 <= iStack_c8) {
+        /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
         iVar9 = (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7);
         iStack_c8 = iStack_c8 + iVar9 * -0x10000;
       }
@@ -5443,7 +5796,10 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
           }
           FUN_0101d37c(iStack_cc,iStack_28);
           *(undefined4 *)(param_1 + 0x9bc) = *(undefined4 *)(iStack_cc + 0x4c);
+          /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
           uVar2 = (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7);
+          /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
+             FUN_0102da68 (by the object's class) */
           uStack_d8 = (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7);
           iStack_dc = iStack_9c;
           uStack_d4 = uVar2;
@@ -5528,6 +5884,8 @@ void FUN_01005f0c(int param_1)
   iVar1 = **(int **)(param_1 + 0xa8);
                     /* WARNING: Could not recover jumptable at 0x01005f20. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   (*(code *)(*(int *)(iVar1 + 4) + iVar1))();
   return;
 }
@@ -5586,6 +5944,7 @@ void FUN_01005f88(int param_1,int param_2)
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = **(int **)(param_1 + 0xa8);
+    /* engine virtual call, slot +0x14: one of FUN_01005104, FUN_01010820 (by the object's class) */
     (*(code *)(*(int *)(iVar1 + 0x14) + iVar1))(*(int **)(param_1 + 0xa8),param_2,0);
     swv_TryPop();
   }
@@ -5663,6 +6022,8 @@ void FUN_01006078(int param_1)
       }
       *(undefined4 *)(param_1 + 0xdc) = *(undefined4 *)(param_1 + 0x280);
     }
+    /* the object's span function at +0x2b8 (GUESS: one of FUN_0100ac0c, FUN_0100bb68, FUN_0100c7a0,
+       FUN_0100c92c, which are stored there) */
     (**(code **)(param_1 + 0x2b8))(param_1);
     FUN_01000188(param_1 + 4,auStack_164,0x154);
     return;
@@ -5785,6 +6146,8 @@ int FUN_01006438(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   *(undefined4 *)(param_1 + 0x38) = *(undefined4 *)(param_2 + 0x38);
   FUN_01023184(piVar1,*(undefined4 *)(param_2 + 0x24));
   if (0 < *(int *)(param_2 + 0x24)) {
+    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*piVar1 + 8) + *piVar1))
               (piVar1,*(undefined4 *)(param_2 + 0x20),*(undefined4 *)(param_1 + 0x20),
                *(int *)(param_2 + 0x24),param_4);
@@ -5805,6 +6168,8 @@ int FUN_010064c4(int param_1,int param_2)
   *(undefined4 *)(param_1 + 4) = *(undefined4 *)(param_2 + 4);
   FUN_01023184(piVar1,*(undefined4 *)(param_2 + 0x10));
   if (0 < *(int *)(param_2 + 0x10)) {
+    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*piVar1 + 8) + *piVar1))
               (piVar1,*(undefined4 *)(param_2 + 0xc),*(undefined4 *)(param_1 + 0xc));
   }
@@ -5988,6 +6353,8 @@ int FUN_01006810(int param_1,int param_2)
   uVar1 = 0;
   if (*(int **)(param_2 + 0x38) != (int *)0x0) {
     iVar2 = **(int **)(param_2 + 0x38);
+    /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+       object's class) */
     uVar1 = (*(code *)(*(int *)(iVar2 + 0x10) + iVar2))();
     FUN_010261f0();
   }
@@ -6032,6 +6399,8 @@ int FUN_01006918(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   piVar3 = (int *)(param_1 + 0xc4);
   FUN_01023184(piVar3,*(undefined4 *)(param_2 + 0xcc));
   if (0 < *(int *)(param_2 + 0xcc)) {
+    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*piVar3 + 8) + *piVar3))
               (piVar3,*(undefined4 *)(param_2 + 200),*(undefined4 *)(param_1 + 200),
                *(int *)(param_2 + 0xcc),param_4);
@@ -6048,6 +6417,8 @@ int FUN_01006918(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   piVar3 = (int *)(param_1 + 0xd4);
   FUN_01023184(piVar3,*(undefined4 *)(param_2 + 0xdc));
   if (0 < *(int *)(param_2 + 0xdc)) {
+    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*piVar3 + 8) + *piVar3))
               (piVar3,*(undefined4 *)(param_2 + 0xd8),*(undefined4 *)(param_1 + 0xd8));
   }
@@ -6203,6 +6574,8 @@ int FUN_01006c1c(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   piVar4 = (int *)(param_1 + 0x8c);
   FUN_01023184(piVar4,*(undefined4 *)(param_2 + 0x94));
   if (0 < *(int *)(param_2 + 0x94)) {
+    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*piVar4 + 8) + *piVar4))
               (piVar4,*(undefined4 *)(param_2 + 0x90),*(undefined4 *)(param_1 + 0x90),
                *(int *)(param_2 + 0x94),param_4);
@@ -6226,6 +6599,8 @@ int FUN_01006c1c(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   piVar4 = (int *)(param_1 + 0x9c);
   FUN_01023184(piVar4,*(undefined4 *)(param_2 + 0xa4));
   if (0 < *(int *)(param_2 + 0xa4)) {
+    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*piVar4 + 8) + *piVar4))(piVar4,*(undefined4 *)(param_2 + 0xa0));
   }
   iVar1 = 0;
@@ -6272,6 +6647,8 @@ undefined8 FUN_01006da4(int param_1,int param_2,int param_3,int param_4)
   *(undefined4 *)(param_1 + 0x34) = 0;
   piVar4 = *(int **)(param_2 + 0x38);
   if (piVar4 != (int *)0x0) {
+    /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+       object's class) */
     iVar1 = (*(code *)(*(int *)(*piVar4 + 0x10) + *piVar4))(piVar4);
     local_18 = iVar1;
     if (iVar1 != 0) {
@@ -6282,6 +6659,8 @@ undefined8 FUN_01006da4(int param_1,int param_2,int param_3,int param_4)
     piVar4 = (int *)piVar4[0xd];
     iVar1 = local_18;
     while (piVar4 != (int *)0x0) {
+      /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+         object's class) */
       iVar5 = (*(code *)(*(int *)(*piVar4 + 0x10) + *piVar4))(piVar4);
       local_1c = iVar5;
       if (iVar5 != 0) {
@@ -6446,6 +6825,8 @@ int FUN_010070c4(int param_1)
   piVar3 = (int *)(iVar1 + 0x48);
   FUN_01023184(piVar3,*(undefined4 *)(param_1 + 0x50));
   if (0 < *(int *)(param_1 + 0x50)) {
+    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*piVar3 + 8) + *piVar3))
               (piVar3,*(undefined4 *)(param_1 + 0x4c),*(undefined4 *)(iVar1 + 0x4c));
   }
@@ -6671,6 +7052,8 @@ int FUN_0100748c(int param_1)
   *(undefined4 *)(iVar1 + 0x24) = *(undefined4 *)(param_1 + 0x24);
   FUN_01023184(piVar3,*(undefined4 *)(param_1 + 0x30));
   if (0 < *(int *)(param_1 + 0x30)) {
+    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*piVar3 + 8) + *piVar3))
               (piVar3,*(undefined4 *)(param_1 + 0x2c),*(undefined4 *)(iVar1 + 0x2c));
   }
@@ -6842,6 +7225,8 @@ int FUN_01007780(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   *(undefined4 *)(iVar1 + 0x38) = *(undefined4 *)(param_1 + 0x38);
   FUN_01023184(piVar4,*(undefined4 *)(param_1 + 0x44));
   if (0 < *(int *)(param_1 + 0x44)) {
+    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*piVar4 + 8) + *piVar4))
               (piVar4,*(undefined4 *)(param_1 + 0x40),*(undefined4 *)(iVar1 + 0x40));
   }
@@ -7124,6 +7509,24 @@ int FUN_01007d04(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   return iVar3;
 }
 
+/* ==== 0x01007D60  (file offset 0x07D60)  FUN_01007d60 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022D4 +0x8;
+   written from its disassembly (0x01007d60 - 0x01007d64). Returns the object's word at +0x8. */
+int32 FUN_01007d60(int param_1)
+
+{
+  return *(int32 *)(param_1 + 0x8);
+}
+
+/* ==== 0x01007D68  (file offset 0x07D68)  FUN_01007d68 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022E0 +0x8;
+   written from its disassembly (0x01007d68 - 0x01007d6c). Returns the object's word at +0xc. */
+int32 FUN_01007d68(int param_1)
+
+{
+  return *(int32 *)(param_1 + 0xc);
+}
+
 /* ==== 0x01007D70  (file offset 0x07D70)  FUN_01007d70 ================================================ */
 void FUN_01007d70(int param_1,undefined4 param_2,uint param_3,uint param_4,int param_5,int param_6)
 
@@ -7312,11 +7715,16 @@ void thunk_FUN_01021abc(int param_1,int param_2)
     piVar2 = piVar2 + -1;
   }
   *(int **)(param_1 + 0x2c) = piVar2;
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))();
   iVar1 = FUN_01013af8();
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   if ((iVar1 != 0) &&
      (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x24) + **(int **)(param_1 + 0x2c)))
                         (), iVar1 < 0x401)) {
+    /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
     (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) + **(int **)(param_1 + 0x2c)))();
     iVar1 = FUN_01013af8();
     if ((iVar1 != 0) &&
@@ -7336,7 +7744,7 @@ void thunk_FUN_01021abc(int param_1,int param_2)
   pvVar3 = helper_GetAppInstance();
                     /* WARNING: Could not recover jumptable at 0x010398cc. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  (**(code **)(**(int **)((int)pvVar3 + 0xc) + 0x18))(uVar4,0);
+  (*((IShell *)*(int **)((int)pvVar3 + 0xc))->pvt->CloseApplet)((IShell *)uVar4,0);
   return;
 }
 
@@ -7469,6 +7877,7 @@ void FUN_010080e4(int param_1)
   if (in_stack_00000000 == (int *)0x0) {
     FUN_0102f7e0(INTEGER_MINUS_1302);
   }
+  /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
   iVar2 = (*(code *)(*(int *)(*in_stack_00000000 + 0x2c) + *in_stack_00000000))(in_stack_00000000);
   uVar1 = INTEGER_MINUS_1301;
   if (iVar2 != 9) {
@@ -7498,6 +7907,7 @@ void FUN_01008104(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   if (param_7 == (int *)0x0) {
     FUN_0102f7e0(INTEGER_MINUS_1302);
   }
+  /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
   iVar2 = (*(code *)(*(int *)(*param_7 + 0x2c) + *param_7))(param_7);
   uVar1 = INTEGER_MINUS_1301;
   if (iVar2 != 9) {
@@ -7629,7 +8039,7 @@ void FUN_010082f0(int param_1,int param_2,undefined4 param_3)
     pvVar3 = helper_GetAppInstance();
                     /* WARNING: Could not recover jumptable at 0x010398cc. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-    (**(code **)(**(int **)((int)pvVar3 + 0xc) + 0x18))(uVar5,0);
+    (*((IShell *)*(int **)((int)pvVar3 + 0xc))->pvt->CloseApplet)((IShell *)uVar5,0);
     return;
   }
   return;
@@ -7758,7 +8168,7 @@ void FUN_0100844c(int param_1,int param_2,int param_3,int param_4,int param_5)
   pvVar3 = helper_GetAppInstance();
                     /* WARNING: Could not recover jumptable at 0x010398cc. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  (**(code **)(**(int **)((int)pvVar3 + 0xc) + 0x18))(uVar5,0);
+  (*((IShell *)*(int **)((int)pvVar3 + 0xc))->pvt->CloseApplet)((IShell *)uVar5,0);
   return;
 }
 
@@ -7879,11 +8289,403 @@ void FUN_01008744(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
     if (*(int *)(param_1 + 0x14) < 0) {
       iVar1 = *(int *)(param_1 + 8);
       pcVar2 = (code *)(*(int *)(iVar1 + 4) + iVar1);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*pcVar2)((int *)(param_1 + 8),0,*(int *)(param_1 + 0x10),pcVar2,param_4);
     }
     *(undefined4 *)(param_1 + 0x10) = 0;
   }
   return;
+}
+
+/* ==== 0x01008754  (file offset 0x08754)  FUN_01008754 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EC0 +0x8;
+   written from its disassembly (0x01008754 - 0x010087a8). Moves `count` elements of 4 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_01008754(int param_1,uint32 *src,uint32 *dst,int32 count)
+
+{
+  uint32 *srcEnd = src + count;
+  uint32 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 4);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x010087AC  (file offset 0x087AC)  FUN_010087ac ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001ED4 +0x8;
+   written from its disassembly (0x010087ac - 0x01008800). Moves `count` elements of 4 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_010087ac(int param_1,uint32 *src,uint32 *dst,int32 count)
+
+{
+  uint32 *srcEnd = src + count;
+  uint32 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 4);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x01008804  (file offset 0x08804)  FUN_01008804 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EE8 +0x8;
+   written from its disassembly (0x01008804 - 0x01008858). Moves `count` elements of 4 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_01008804(int param_1,uint32 *src,uint32 *dst,int32 count)
+
+{
+  uint32 *srcEnd = src + count;
+  uint32 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 4);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x0100885C  (file offset 0x0885C)  FUN_0100885c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EFC +0x8;
+   written from its disassembly (0x0100885c - 0x010088c8). Moves `count` elements of 4 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_0100885c(int param_1,uint32 *src,uint32 *dst,int32 count)
+
+{
+  uint32 *srcEnd = src + count;
+  uint32 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 4);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x010088CC  (file offset 0x088CC)  FUN_010088cc ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001FAC +0x8;
+   written from its disassembly (0x010088cc - 0x01008938). Moves `count` elements of 1 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_010088cc(int param_1,uint8 *src,uint8 *dst,int32 count)
+
+{
+  uint8 *srcEnd = src + count;
+  uint8 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 1);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x0100893C  (file offset 0x0893C)  FUN_0100893c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001FC0 +0x8;
+   written from its disassembly (0x0100893c - 0x010089a8). Moves `count` elements of 2 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_0100893c(int param_1,uint16 *src,uint16 *dst,int32 count)
+
+{
+  uint16 *srcEnd = src + count;
+  uint16 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 2);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x010089AC  (file offset 0x089AC)  FUN_010089ac ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002348 +0x8;
+   written from its disassembly (0x010089ac - 0x01008a18). Moves `count` elements of 8 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise a word at a time, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_010089ac(int param_1,uint8 *src,uint8 *dst,int32 count)
+
+{
+  uint8 *srcEnd = src + count * 8;
+  uint8 *dstEnd = dst + count * 8;
+  int32 k;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 8);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 8;
+      dstEnd = dstEnd - 8;
+      for (k = 0; k < 2; k++)
+        ((uint32 *)dstEnd)[k] = ((uint32 *)srcEnd)[k];
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      for (k = 0; k < 2; k++)
+        ((uint32 *)dst)[k] = ((uint32 *)src)[k];
+      dst = dst + 8;
+      src = src + 8;
+    }
+  }
+}
+
+/* ==== 0x01008A1C  (file offset 0x08A1C)  FUN_01008a1c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023CC +0x8;
+   written from its disassembly (0x01008a1c - 0x01008a70). Moves `count` elements of 4 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_01008a1c(int param_1,uint32 *src,uint32 *dst,int32 count)
+
+{
+  uint32 *srcEnd = src + count;
+  uint32 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 4);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x01008A74  (file offset 0x08A74)  FUN_01008a74 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023E4 +0x8;
+   written from its disassembly (0x01008a74 - 0x01008af8). Moves `count` elements of 68 bytes from src
+   to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise through FUN_01027acc (dst, src) per element, back to
+   front when dst is above src. param_1 (the object) is not read. */
+void FUN_01008a74(int param_1,uint8 *src,uint8 *dst,int32 count)
+
+{
+  uint8 *srcEnd = src + count * 68;
+  uint8 *dstEnd = dst + count * 68;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 68);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 68;
+      dstEnd = dstEnd - 68;
+      FUN_01027acc(dstEnd,srcEnd);
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      FUN_01027acc(dst,src);
+      dst = dst + 68;
+      src = src + 68;
+    }
+  }
+}
+
+/* ==== 0x01008AFC  (file offset 0x08AFC)  FUN_01008afc ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023F8 +0x8;
+   written from its disassembly (0x01008afc - 0x01008b50). Moves `count` elements of 4 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_01008afc(int param_1,uint32 *src,uint32 *dst,int32 count)
+
+{
+  uint32 *srcEnd = src + count;
+  uint32 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 4);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x01008B54  (file offset 0x08B54)  FUN_01008b54 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010024C4 +0x8;
+   written from its disassembly (0x01008b54 - 0x01008ba8). Moves `count` elements of 4 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_01008b54(int param_1,uint32 *src,uint32 *dst,int32 count)
+
+{
+  uint32 *srcEnd = src + count;
+  uint32 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 4);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x01008BAC  (file offset 0x08BAC)  FUN_01008bac ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010024DC +0x8;
+   written from its disassembly (0x01008bac - 0x01008c50). Moves `count` elements of 12 bytes from src
+   to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise a word at a time, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_01008bac(int param_1,uint8 *src,uint8 *dst,int32 count)
+
+{
+  uint8 *srcEnd = src + count * 12;
+  uint8 *dstEnd = dst + count * 12;
+  int32 k;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 12);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 12;
+      dstEnd = dstEnd - 12;
+      for (k = 0; k < 3; k++)
+        ((uint32 *)dstEnd)[k] = ((uint32 *)srcEnd)[k];
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      for (k = 0; k < 3; k++)
+        ((uint32 *)dst)[k] = ((uint32 *)src)[k];
+      dst = dst + 12;
+      src = src + 12;
+    }
+  }
 }
 
 /* ==== 0x01008C54  (file offset 0x08C54)  FUN_01008c54 ================================================ */
@@ -7934,6 +8736,571 @@ uint FUN_01008c54(undefined4 param_1,uint param_2,uint param_3,int param_4)
     return param_3;
   }
   return param_3;
+}
+
+/* ==== 0x01008CEC  (file offset 0x08CEC)  FUN_01008cec ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002504 +0x8;
+   written from its disassembly (0x01008cec - 0x01008d40). Moves `count` elements of 4 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_01008cec(int param_1,uint32 *src,uint32 *dst,int32 count)
+
+{
+  uint32 *srcEnd = src + count;
+  uint32 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 4);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x01008D44  (file offset 0x08D44)  FUN_01008d44 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002518 +0x8;
+   written from its disassembly (0x01008d44 - 0x01008e40). Moves `count` elements of 68 bytes from src
+   to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise a word at a time, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_01008d44(int param_1,uint8 *src,uint8 *dst,int32 count)
+
+{
+  uint8 *srcEnd = src + count * 68;
+  uint8 *dstEnd = dst + count * 68;
+  int32 k;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 68);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 68;
+      dstEnd = dstEnd - 68;
+      for (k = 0; k < 17; k++)
+        ((uint32 *)dstEnd)[k] = ((uint32 *)srcEnd)[k];
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      for (k = 0; k < 17; k++)
+        ((uint32 *)dst)[k] = ((uint32 *)src)[k];
+      dst = dst + 68;
+      src = src + 68;
+    }
+  }
+}
+
+/* ==== 0x01008E44  (file offset 0x08E44)  FUN_01008e44 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100252C +0x8;
+   written from its disassembly (0x01008e44 - 0x01008e98). Moves `count` elements of 4 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_01008e44(int param_1,uint32 *src,uint32 *dst,int32 count)
+
+{
+  uint32 *srcEnd = src + count;
+  uint32 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 4);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x01008E9C  (file offset 0x08E9C)  FUN_01008e9c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002540 +0x8;
+   written from its disassembly (0x01008e9c - 0x01008ef0). Moves `count` elements of 4 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_01008e9c(int param_1,uint32 *src,uint32 *dst,int32 count)
+
+{
+  uint32 *srcEnd = src + count;
+  uint32 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 4);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x01008EF4  (file offset 0x08EF4)  FUN_01008ef4 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100255C +0x8;
+   written from its disassembly (0x01008ef4 - 0x01008f48). Moves `count` elements of 4 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_01008ef4(int param_1,uint32 *src,uint32 *dst,int32 count)
+
+{
+  uint32 *srcEnd = src + count;
+  uint32 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 4);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x01008F4C  (file offset 0x08F4C)  FUN_01008f4c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002570 +0x8;
+   written from its disassembly (0x01008f4c - 0x01008ff0). Moves `count` elements of 12 bytes from src
+   to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise a word at a time, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_01008f4c(int param_1,uint8 *src,uint8 *dst,int32 count)
+
+{
+  uint8 *srcEnd = src + count * 12;
+  uint8 *dstEnd = dst + count * 12;
+  int32 k;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 12);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 12;
+      dstEnd = dstEnd - 12;
+      for (k = 0; k < 3; k++)
+        ((uint32 *)dstEnd)[k] = ((uint32 *)srcEnd)[k];
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      for (k = 0; k < 3; k++)
+        ((uint32 *)dst)[k] = ((uint32 *)src)[k];
+      dst = dst + 12;
+      src = src + 12;
+    }
+  }
+}
+
+/* ==== 0x01008FF4  (file offset 0x08FF4)  FUN_01008ff4 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002584 +0x8;
+   written from its disassembly (0x01008ff4 - 0x01009048). Moves `count` elements of 4 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_01008ff4(int param_1,uint32 *src,uint32 *dst,int32 count)
+
+{
+  uint32 *srcEnd = src + count;
+  uint32 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 4);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x0100904C  (file offset 0x0904C)  FUN_0100904c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002598 +0x8;
+   written from its disassembly (0x0100904c - 0x010090a0). Moves `count` elements of 4 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_0100904c(int param_1,uint32 *src,uint32 *dst,int32 count)
+
+{
+  uint32 *srcEnd = src + count;
+  uint32 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 4);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x010090A4  (file offset 0x090A4)  FUN_010090a4 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010025AC +0x8;
+   written from its disassembly (0x010090a4 - 0x010090f8). Moves `count` elements of 4 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_010090a4(int param_1,uint32 *src,uint32 *dst,int32 count)
+
+{
+  uint32 *srcEnd = src + count;
+  uint32 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 4);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
+}
+
+/* ==== 0x010090FC  (file offset 0x090FC)  FUN_010090fc ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010025C0 +0x8;
+   written from its disassembly (0x010090fc - 0x01009248). Moves `count` elements of 0x90 bytes from src
+   to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src:
+   the first 0x40 bytes a word at a time, the other 0x50 with FUN_01000188. param_1 (the object) is not
+   read. */
+void FUN_010090fc(int param_1,uint8 *src,uint8 *dst,int32 count)
+
+{
+  uint8 *srcEnd = src + count * 0x90;
+  uint8 *dstEnd = dst + count * 0x90;
+  int32 k;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 0x90);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 0x90;
+      dstEnd = dstEnd - 0x90;
+      for (k = 0; k < 0x10; k++)
+        ((uint32 *)dstEnd)[k] = ((uint32 *)srcEnd)[k];
+      FUN_01000188(dstEnd + 0x40,srcEnd + 0x40,0x50);
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      for (k = 0; k < 0x10; k++)
+        ((uint32 *)dst)[k] = ((uint32 *)src)[k];
+      FUN_01000188(dst + 0x40,src + 0x40,0x50);
+      dst = dst + 0x90;
+      src = src + 0x90;
+    }
+  }
+}
+
+/* ==== 0x010092A4  (file offset 0x092A4)  FUN_010092a4 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010025E8 +0x8;
+   written from its disassembly (0x010092a4 - 0x01009328). Moves `count` elements of 24 bytes from src
+   to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise through FUN_01027ae4 (dst, src) per element, back to
+   front when dst is above src. param_1 (the object) is not read. */
+void FUN_010092a4(int param_1,uint8 *src,uint8 *dst,int32 count)
+
+{
+  uint8 *srcEnd = src + count * 24;
+  uint8 *dstEnd = dst + count * 24;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 24);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 24;
+      dstEnd = dstEnd - 24;
+      FUN_01027ae4(dstEnd,srcEnd);
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      FUN_01027ae4(dst,src);
+      dst = dst + 24;
+      src = src + 24;
+    }
+  }
+}
+
+/* ==== 0x0100932C  (file offset 0x0932C)  FUN_0100932c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002600 +0x8;
+   written from its disassembly (0x0100932c - 0x010093ac). Moves `count` elements of 12 bytes from src
+   to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise a word at a time, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_0100932c(int param_1,uint8 *src,uint8 *dst,int32 count)
+
+{
+  uint8 *srcEnd = src + count * 12;
+  uint8 *dstEnd = dst + count * 12;
+  int32 k;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 12);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 12;
+      dstEnd = dstEnd - 12;
+      for (k = 0; k < 3; k++)
+        ((uint32 *)dstEnd)[k] = ((uint32 *)srcEnd)[k];
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      for (k = 0; k < 3; k++)
+        ((uint32 *)dst)[k] = ((uint32 *)src)[k];
+      dst = dst + 12;
+      src = src + 12;
+    }
+  }
+}
+
+/* ==== 0x010093B0  (file offset 0x093B0)  FUN_010093b0 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002614 +0x8;
+   written from its disassembly (0x010093b0 - 0x01009434). Moves `count` elements of 144 bytes from src
+   to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise through FUN_01027b08 (dst, src) per element, back to
+   front when dst is above src. param_1 (the object) is not read. */
+void FUN_010093b0(int param_1,uint8 *src,uint8 *dst,int32 count)
+
+{
+  uint8 *srcEnd = src + count * 144;
+  uint8 *dstEnd = dst + count * 144;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 144);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 144;
+      dstEnd = dstEnd - 144;
+      FUN_01027b08(dstEnd,srcEnd);
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      FUN_01027b08(dst,src);
+      dst = dst + 144;
+      src = src + 144;
+    }
+  }
+}
+
+/* ==== 0x01009438  (file offset 0x09438)  FUN_01009438 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002628 +0x8;
+   written from its disassembly (0x01009438 - 0x010094b8). Moves `count` elements of 12 bytes from src
+   to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise a word at a time, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_01009438(int param_1,uint8 *src,uint8 *dst,int32 count)
+
+{
+  uint8 *srcEnd = src + count * 12;
+  uint8 *dstEnd = dst + count * 12;
+  int32 k;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 12);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 12;
+      dstEnd = dstEnd - 12;
+      for (k = 0; k < 3; k++)
+        ((uint32 *)dstEnd)[k] = ((uint32 *)srcEnd)[k];
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      for (k = 0; k < 3; k++)
+        ((uint32 *)dst)[k] = ((uint32 *)src)[k];
+      dst = dst + 12;
+      src = src + 12;
+    }
+  }
+}
+
+/* ==== 0x010094BC  (file offset 0x094BC)  FUN_010094bc ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100263C +0x8;
+   written from its disassembly (0x010094bc - 0x01009544). Moves `count` elements of 76 bytes from src
+   to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise through FUN_01027b40 (dst, src) per element, back to
+   front when dst is above src. param_1 (the object) is not read. */
+void FUN_010094bc(int param_1,uint8 *src,uint8 *dst,int32 count)
+
+{
+  uint8 *srcEnd = src + count * 76;
+  uint8 *dstEnd = dst + count * 76;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 76);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 76;
+      dstEnd = dstEnd - 76;
+      FUN_01027b40(dstEnd,srcEnd);
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      FUN_01027b40(dst,src);
+      dst = dst + 76;
+      src = src + 76;
+    }
+  }
+}
+
+/* ==== 0x01009548  (file offset 0x09548)  FUN_01009548 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002650 +0x8;
+   written from its disassembly (0x01009548 - 0x010095dc). Moves `count` elements of 20 bytes from src
+   to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise a word at a time, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_01009548(int param_1,uint8 *src,uint8 *dst,int32 count)
+
+{
+  uint8 *srcEnd = src + count * 20;
+  uint8 *dstEnd = dst + count * 20;
+  int32 k;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 20);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 20;
+      dstEnd = dstEnd - 20;
+      for (k = 0; k < 5; k++)
+        ((uint32 *)dstEnd)[k] = ((uint32 *)srcEnd)[k];
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      for (k = 0; k < 5; k++)
+        ((uint32 *)dst)[k] = ((uint32 *)src)[k];
+      dst = dst + 20;
+      src = src + 20;
+    }
+  }
+}
+
+/* ==== 0x010095E0  (file offset 0x095E0)  FUN_010095e0 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002664 +0x8;
+   written from its disassembly (0x010095e0 - 0x01009634). Moves `count` elements of 4 bytes from src to
+   dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
+   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   param_1 (the object) is not read. */
+void FUN_010095e0(int param_1,uint32 *src,uint32 *dst,int32 count)
+
+{
+  uint32 *srcEnd = src + count;
+  uint32 *dstEnd = dst + count;
+
+  if (dstEnd <= src || srcEnd <= dst) {
+    thunk_FUN_01000100(dst,src,count * 4);
+    return;
+  }
+  if (src < dst) {
+    while (srcEnd != src) {
+      srcEnd = srcEnd - 1;
+      dstEnd = dstEnd - 1;
+      *dstEnd = *srcEnd;
+    }
+  }
+  else if (src != dst) {
+    while (src != srcEnd) {
+      *dst = *src;
+      dst = dst + 1;
+      src = src + 1;
+    }
+  }
 }
 
 /* ==== 0x01009638  (file offset 0x09638)  FUN_01009638 ================================================ */
@@ -7995,6 +9362,8 @@ int FUN_01009638(int param_1,int param_2)
     if (iVar3 == param_2) {
       return iVar3;
     }
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     iVar6 = (*(code *)(*(int *)(*(int *)(param_2 + 4) + 4) + *(int *)(param_2 + 4)))(param_2 + 4);
     if (iVar6 != 0x16) {
       iVar5 = FUN_01010cc8(iVar3);
@@ -8100,6 +9469,7 @@ void FUN_01009860(int param_1)
   if (param_1 < 0x1d) {
                     /* WARNING: Could not recover jumptable at 0x01009888. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+    /* a jump through the table at FUN_0102ecec()'s global (not identified) */
     (**(code **)(*piVar1 + param_1 * 4 + 4))();
     return;
   }
@@ -8108,6 +9478,7 @@ void FUN_01009860(int param_1)
   }
                     /* WARNING: Could not recover jumptable at 0x0100989c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* a jump through the table at FUN_0102ecec()'s global (not identified) */
   (**(code **)(*piVar1 + 0x78))();
   return;
 }
@@ -8308,6 +9679,22 @@ int FUN_01009b80(void)
   return iVar1;
 }
 
+/* ==== 0x01009BA4  (file offset 0x09BA4)  FUN_01009ba4 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022D4 +0x4;
+   written from its disassembly (0x01009ba4 - 0x01009bb4). Passes the call on to the object at +4: its
+   virtual slot +0x18, with param_2 and param_3 (a tail jump; r3 then holds the target's address, a
+   leftover). */
+int FUN_01009ba4(int param_1,int param_2,int param_3)
+
+{
+  int iVar1;
+
+  iVar1 = *(int *)(param_1 + 4);
+  /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec (by
+     the object's class) */
+  return (*(code *)(*(int *)(*(int *)iVar1 + 0x18) + *(int *)iVar1))(iVar1,param_2,param_3);
+}
+
 /* ==== 0x01009BB8  (file offset 0x09BB8)  FUN_01009bb8 ================================================ */
 undefined4 FUN_01009bb8(int param_1,undefined4 param_2,undefined4 param_3)
 
@@ -8356,8 +9743,76 @@ void FUN_01009c48(void)
   if (piVar2 == (int *)0x0) {
     return;
   }
+  /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+     object's class); slot 0 is the destructor */
   (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
   *(undefined4 *)(iVar1 + 0x10) = 0;
+  return;
+}
+
+/* ==== 0x01009C80  (file offset 0x09C80)  FUN_01009c80 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EC0 +0x10;
+   written from its disassembly (0x01009c80 - 0x01009c84). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009c80(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009C88  (file offset 0x09C88)  FUN_01009c88 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001ED4 +0x10;
+   written from its disassembly (0x01009c88 - 0x01009c8c). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009c88(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009C90  (file offset 0x09C90)  FUN_01009c90 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EE8 +0x10;
+   written from its disassembly (0x01009c90 - 0x01009c94). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009c90(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009C98  (file offset 0x09C98)  FUN_01009c98 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EFC +0x10;
+   written from its disassembly (0x01009c98 - 0x01009c9c). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009c98(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009CA0  (file offset 0x09CA0)  FUN_01009ca0 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001FAC +0x10;
+   written from its disassembly (0x01009ca0 - 0x01009ca4). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009ca0(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009CA8  (file offset 0x09CA8)  FUN_01009ca8 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001FC0 +0x10;
+   written from its disassembly (0x01009ca8 - 0x01009cac). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009ca8(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
   return;
 }
 
@@ -8372,11 +9827,266 @@ void FUN_01009cb0(void)
   if (piVar1 != (int *)0x0) {
     piVar2 = (int *)*piVar1;
     if (piVar2 != (int *)0x0) {
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *piVar1 = 0;
     return;
   }
+  return;
+}
+
+/* ==== 0x01009CEC  (file offset 0x09CEC)  FUN_01009cec ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002348 +0x10;
+   written from its disassembly (0x01009cec - 0x01009cf0). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009cec(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009CF4  (file offset 0x09CF4)  FUN_01009cf4 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023CC +0x10;
+   written from its disassembly (0x01009cf4 - 0x01009cf8). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009cf4(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009CFC  (file offset 0x09CFC)  FUN_01009cfc ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023E4 +0x10;
+   written from its disassembly (0x01009cfc - 0x01009d10). Destroys the array param_2 of 0x44-byte
+   elements and frees it (FUN_01000474 with the element destructor, a tail jump). param_1 (the object)
+   is not read. */
+longlong FUN_01009cfc(int param_1,int param_2)
+
+{
+  return FUN_01000474(param_2,0x44,ADDRESS_OF_FUNCTION_0102c460_OFFSET + 0x1009d10,0);
+}
+
+/* ==== 0x01009D18  (file offset 0x09D18)  FUN_01009d18 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023F8 +0x10;
+   written from its disassembly (0x01009d18 - 0x01009d1c). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009d18(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009D20  (file offset 0x09D20)  FUN_01009d20 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010024C4 +0x10;
+   written from its disassembly (0x01009d20 - 0x01009d24). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009d20(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009D28  (file offset 0x09D28)  FUN_01009d28 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010024DC +0x10;
+   written from its disassembly (0x01009d28 - 0x01009d3c). Destroys the array param_2 of 0xc-byte
+   elements and frees it (FUN_01000474 with the element destructor, a tail jump). param_1 (the object)
+   is not read. */
+longlong FUN_01009d28(int param_1,int param_2)
+
+{
+  return FUN_01000474(param_2,0xc,ADDRESS_OF_FUNCTION_01029bf4_OFFSET_4 + 0x1009d3c,0);
+}
+
+/* ==== 0x01009D4C  (file offset 0x09D4C)  FUN_01009d4c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002504 +0x10;
+   written from its disassembly (0x01009d4c - 0x01009d50). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009d4c(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009D54  (file offset 0x09D54)  FUN_01009d54 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002518 +0x10;
+   written from its disassembly (0x01009d54 - 0x01009d68). Destroys the array param_2 of 0x44-byte
+   elements and frees it (FUN_01000474 with the element destructor, a tail jump). param_1 (the object)
+   is not read. */
+longlong FUN_01009d54(int param_1,int param_2)
+
+{
+  return FUN_01000474(param_2,0x44,ADDRESS_OF_FUNCTION_01029fbc_OFFSET + 0x1009d68,0);
+}
+
+/* ==== 0x01009D70  (file offset 0x09D70)  FUN_01009d70 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100252C +0x10;
+   written from its disassembly (0x01009d70 - 0x01009d74). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009d70(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009D78  (file offset 0x09D78)  FUN_01009d78 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002540 +0x10;
+   written from its disassembly (0x01009d78 - 0x01009d7c). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009d78(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009D80  (file offset 0x09D80)  FUN_01009d80 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100255C +0x10;
+   written from its disassembly (0x01009d80 - 0x01009d84). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009d80(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009D88  (file offset 0x09D88)  FUN_01009d88 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002570 +0x10;
+   written from its disassembly (0x01009d88 - 0x01009d9c). Destroys the array param_2 of 0xc-byte
+   elements and frees it (FUN_01000474 with the element destructor, a tail jump). param_1 (the object)
+   is not read. */
+longlong FUN_01009d88(int param_1,int param_2)
+
+{
+  return FUN_01000474(param_2,0xc,ADDRESS_OF_FUNCTION_0102a840_OFFSET + 0x1009d9c,0);
+}
+
+/* ==== 0x01009DA4  (file offset 0x09DA4)  FUN_01009da4 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002584 +0x10;
+   written from its disassembly (0x01009da4 - 0x01009da8). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009da4(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009DAC  (file offset 0x09DAC)  FUN_01009dac ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002598 +0x10;
+   written from its disassembly (0x01009dac - 0x01009db0). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009dac(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009DB4  (file offset 0x09DB4)  FUN_01009db4 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010025AC +0x10;
+   written from its disassembly (0x01009db4 - 0x01009db8). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009db4(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009DBC  (file offset 0x09DBC)  FUN_01009dbc ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010025C0 +0x10;
+   written from its disassembly (0x01009dbc - 0x01009dd0). Destroys the array param_2 of 0x90-byte
+   elements and frees it (FUN_01000474 with the element destructor, a tail jump). param_1 (the object)
+   is not read. */
+longlong FUN_01009dbc(int param_1,int param_2)
+
+{
+  return FUN_01000474(param_2,0x90,ADDRESS_OF_FUNCTION_0102b380_OFFSET + 0x1009dd0,0);
+}
+
+/* ==== 0x01009DE0  (file offset 0x09DE0)  FUN_01009de0 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010025E8 +0x10;
+   written from its disassembly (0x01009de0 - 0x01009df4). Destroys the array param_2 of 0x18-byte
+   elements and frees it (FUN_01000474 with the element destructor, a tail jump). param_1 (the object)
+   is not read. */
+longlong FUN_01009de0(int param_1,int param_2)
+
+{
+  return FUN_01000474(param_2,0x18,ADDRESS_OF_FUNCTION_0102c584_OFFSET + 0x1009df4,0);
+}
+
+/* ==== 0x01009DFC  (file offset 0x09DFC)  FUN_01009dfc ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002600 +0x10;
+   written from its disassembly (0x01009dfc - 0x01009e00). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009dfc(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009E04  (file offset 0x09E04)  FUN_01009e04 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002614 +0x10;
+   written from its disassembly (0x01009e04 - 0x01009e18). Destroys the array param_2 of 0x90-byte
+   elements and frees it (FUN_01000474 with the element destructor, a tail jump). param_1 (the object)
+   is not read. */
+longlong FUN_01009e04(int param_1,int param_2)
+
+{
+  return FUN_01000474(param_2,0x90,ADDRESS_OF_FUNCTION_0102c590_OFFSET + 0x1009e18,0);
+}
+
+/* ==== 0x01009E20  (file offset 0x09E20)  FUN_01009e20 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002628 +0x10;
+   written from its disassembly (0x01009e20 - 0x01009e24). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009e20(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009E28  (file offset 0x09E28)  FUN_01009e28 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100263C +0x10;
+   written from its disassembly (0x01009e28 - 0x01009e3c). Destroys the array param_2 of 0x4c-byte
+   elements and frees it (FUN_01000474 with the element destructor, a tail jump). param_1 (the object)
+   is not read. */
+longlong FUN_01009e28(int param_1,int param_2)
+
+{
+  return FUN_01000474(param_2,0x4c,ADDRESS_OF_FUNCTION_0102c59c_OFFSET + 0x1009e3c,0);
+}
+
+/* ==== 0x01009E44  (file offset 0x09E44)  FUN_01009e44 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002650 +0x10;
+   written from its disassembly (0x01009e44 - 0x01009e48). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009e44(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
+  return;
+}
+
+/* ==== 0x01009E4C  (file offset 0x09E4C)  FUN_01009e4c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002664 +0x10;
+   written from its disassembly (0x01009e4c - 0x01009e50). Frees the array param_2 (helper_free, a tail
+   jump). param_1 (the object) is not read. */
+void FUN_01009e4c(int param_1,void *param_2)
+
+{
+  helper_free(param_2);
   return;
 }
 
@@ -11063,6 +12773,8 @@ void FUN_0100cef4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
           }
         }
         else {
+          /* the object's span function at +0x2b8 (GUESS: one of FUN_0100ac0c, FUN_0100bb68,
+             FUN_0100c7a0, FUN_0100c92c, which are stored there) */
           (**(code **)(param_1 + 0x2b8))(param_1);
         }
       }
@@ -11658,6 +13370,8 @@ void FUN_0100cf00(int param_1)
           }
         }
         else {
+          /* the object's span function at +0x2b8 (GUESS: one of FUN_0100ac0c, FUN_0100bb68,
+             FUN_0100c7a0, FUN_0100c92c, which are stored there) */
           (**(code **)(param_1 + 0x2b8))(param_1);
         }
       }
@@ -12626,6 +14340,8 @@ int * FUN_0100eef0(int *param_1,int param_2)
   }
   piVar3 = (int *)0x0;
   iVar4 = 1;
+  /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec (by
+     the object's class) */
   iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,0);
   do {
     if (iVar1 == -1) {
@@ -12633,6 +14349,8 @@ int * FUN_0100eef0(int *param_1,int param_2)
     }
     if (iVar1 == -2) {
       iVar5 = iVar4 + 1;
+      /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec
+         (by the object's class) */
       iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,iVar4);
       iVar6 = *(int *)(iVar1 + 8);
       for (iVar4 = 0; (piVar3 == (int *)0x0 && (iVar4 < iVar6)); iVar4 = iVar4 + 1) {
@@ -12649,6 +14367,8 @@ int * FUN_0100eef0(int *param_1,int param_2)
       }
     }
     iVar4 = iVar5 + 1;
+    /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec
+       (by the object's class) */
     iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,iVar5);
   } while (piVar3 == (int *)0x0);
   return piVar3;
@@ -12916,6 +14636,16 @@ void FUN_0100f450(undefined4 param_1,int param_2,undefined4 param_3,undefined4 *
   FUN_0102c820(auStack_30,&uStack_3c,param_3);
   FUN_0102cc18(param_1,auStack_30,&local_24);
   return;
+}
+
+/* ==== 0x0100F4D4  (file offset 0x0F4D4)  FUN_0100f4d4 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002398 +0x2c;
+   written from its disassembly (0x0100f4d4 - 0x0100f4d8). Returns 2 (GUESS: the class's type number).
+   param_1 (the object) is not read. */
+int32 FUN_0100f4d4(int param_1)
+
+{
+  return 2;
 }
 
 /* ==== 0x0100F4DC  (file offset 0x0F4DC)  FUN_0100f4dc ================================================ */
@@ -13642,6 +15372,7 @@ void FUN_01010084(int *param_1)
 {
                     /* WARNING: Could not recover jumptable at 0x01010090. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
   (*(code *)(*(int *)(*param_1 + 0x30) + *param_1))();
   return;
 }
@@ -14162,10 +15893,14 @@ int FUN_010103d4(int *param_1,int param_2,int *param_3)
   
   iVar4 = 0;
   iVar6 = 1;
+  /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec (by
+     the object's class) */
   iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,0);
   while (iVar1 != -1) {
     if (iVar1 == -2) {
       iVar7 = iVar6 + 1;
+      /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec
+         (by the object's class) */
       iVar6 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,iVar6);
       iVar2 = *(int *)(iVar6 + 8);
       iVar1 = param_2 - iVar4;
@@ -14210,6 +15945,8 @@ int FUN_010103d4(int *param_1,int param_2,int *param_3)
       }
     }
     iVar6 = iVar7 + 1;
+    /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec
+       (by the object's class) */
     iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,iVar7);
   }
   return iVar4;
@@ -14345,6 +16082,15 @@ undefined4 FUN_01010818(int param_1)
 
 {
   return *(undefined4 *)(param_1 + 0x2c);
+}
+
+/* ==== 0x01010820  (file offset 0x10820)  FUN_01010820 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002410 +0x14;
+   written from its disassembly (0x01010820 - 0x01010824). Returns the object's word at +0x64. */
+int32 FUN_01010820(int param_1)
+
+{
+  return *(int32 *)(param_1 + 0x64);
 }
 
 /* ==== 0x01010828  (file offset 0x10828)  FUN_01010828 ================================================ */
@@ -15419,6 +17165,18 @@ int FUN_01011bb4(int param_1)
   return iVar1;
 }
 
+/* ==== 0x01011BCC  (file offset 0x11BCC)  FUN_01011bcc ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100203C +0x48;
+   written from its disassembly (0x01011bcc - 0x01011be0). Returns the address of the object's current
+   item, +0x20 + +0x30, or 0 when +0x30 is -1. */
+int FUN_01011bcc(int param_1)
+
+{
+  if (*(int *)(param_1 + 0x30) == -1)
+    return 0;
+  return *(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30);
+}
+
 /* ==== 0x01011BE4  (file offset 0x11BE4)  FUN_01011be4 ================================================ */
 int FUN_01011be4(int param_1)
 
@@ -15716,6 +17474,8 @@ int swvObj_QueryInterface(ISwerveObject *po,SwerveClassId cls,void **ppo)
     return (int)pIVar1;
   }
   *ppo = (void *)0x0;
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   uVar2 = (*(code *)(*(int *)(*(int *)po->pNative + 4) + *(int *)po->pNative))();
   switch(uVar2) {
   case 0:
@@ -15885,6 +17645,8 @@ uint32 swvObj_Release(ISwerveObject *po)
                     /* Shared slot 1 of every engine object interface: releases the native object
                        (swv_NativeRelease), drops the wrapper's refs (frees it at 0) and releases
                        the ISwerve object. */
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   iVar1 = (*(code *)(*(int *)(*(int *)po->pNative + 4) + *(int *)po->pNative))();
   if ((iVar1 == 0x1c) && (po[1].pvt != (ISwerveObjectVtbl *)0x0)) {
     swvObj_Release((ISwerveObject *)po[1].pvt);
@@ -16710,6 +18472,8 @@ void FUN_01013290(int *param_1,int param_2,undefined4 *param_3)
   if (iVar1 == param_2) {
     if (iVar1 == param_1[3]) {
       uVar2 = FUN_0102df78(iVar1 + 1);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(*param_1 + 4) + *param_1))(param_1,uVar2,param_1[2]);
     }
     iVar1 = param_1[2];
@@ -16719,9 +18483,13 @@ void FUN_01013290(int *param_1,int param_2,undefined4 *param_3)
   else {
     if (iVar1 == param_1[3]) {
       uVar2 = FUN_0102df78(iVar1 + 1);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(*param_1 + 4) + *param_1))(param_1,uVar2,param_1[2]);
     }
     iVar1 = param_1[1] + param_2 * 8;
+    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*param_1 + 8) + *param_1))(param_1,iVar1,iVar1 + 8,param_1[2] - param_2);
     param_1[2] = param_1[2] + 1;
     puVar3 = (undefined4 *)(param_1[1] + param_2 * 8);
@@ -16744,6 +18512,8 @@ void FUN_01013368(int *param_1,int param_2,undefined4 *param_3)
   if (iVar1 == param_2) {
     if (iVar1 == param_1[3]) {
       uVar2 = FUN_0102df78(iVar1 + 1);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(*param_1 + 4) + *param_1))(param_1,uVar2,param_1[2]);
     }
     iVar1 = param_1[2];
@@ -16753,9 +18523,13 @@ void FUN_01013368(int *param_1,int param_2,undefined4 *param_3)
   else {
     if (iVar1 == param_1[3]) {
       uVar2 = FUN_0102df78(iVar1 + 1);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(*param_1 + 4) + *param_1))(param_1,uVar2,param_1[2]);
     }
     iVar1 = param_1[1] + param_2 * 4;
+    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*param_1 + 8) + *param_1))(param_1,iVar1,iVar1 + 4,param_1[2] - param_2);
     param_1[2] = param_1[2] + 1;
     puVar3 = (undefined4 *)(param_1[1] + param_2 * 4);
@@ -17711,6 +19485,8 @@ void FUN_01014510(int param_1,int param_2)
     iVar2 = param_1;
     param_1 = *(int *)(iVar2 + 0x30);
   } while (*(int *)(iVar2 + 0x30) != 0);
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   iVar3 = (*(code *)(*(int *)(*(int *)(iVar2 + 4) + 4) + *(int *)(iVar2 + 4)))(iVar2 + 4);
   if (iVar3 != 0x16) {
     return;
@@ -17718,6 +19494,8 @@ void FUN_01014510(int param_1,int param_2)
   if (*(int *)(iVar2 + 0x98) != 0) {
     if (*(int *)(iVar2 + 0x9c) < 0) {
       iVar3 = *(int *)(iVar2 + 0x90);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(iVar3 + 4) + iVar3))((int *)(iVar2 + 0x90),0);
     }
     *(undefined4 *)(iVar2 + 0x98) = 0;
@@ -17747,6 +19525,8 @@ void FUN_0101456c(int param_1,int param_2)
     iVar2 = param_1;
     param_1 = *(int *)(iVar2 + 0x30);
   } while (*(int *)(iVar2 + 0x30) != 0);
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   iVar3 = (*(code *)(*(int *)(*(int *)(iVar2 + 4) + 4) + *(int *)(iVar2 + 4)))(iVar2 + 4);
   if (iVar3 != 0x16) {
     return;
@@ -17754,6 +19534,8 @@ void FUN_0101456c(int param_1,int param_2)
   if (*(int *)(iVar2 + 0x98) != 0) {
     if (*(int *)(iVar2 + 0x9c) < 0) {
       iVar3 = *(int *)(iVar2 + 0x90);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(iVar3 + 4) + iVar3))((int *)(iVar2 + 0x90),0);
     }
     *(undefined4 *)(iVar2 + 0x98) = 0;
@@ -18534,13 +20316,19 @@ undefined4 FUN_01015220(int *param_1)
   }
   param_1[0x19] = 3;
   uVar3 = 0xffffffff;
+  /* engine virtual call, slot +0x20: one of FUN_01003408, FUN_0100f71c, FUN_01012324, FUN_0101d01c,
+     FUN_010230f8 (by the object's class) */
   iVar1 = (*(code *)(*(int *)(*param_1 + 0x20) + *param_1))(param_1);
   if (iVar1 == 0) {
     uVar3 = 0xfffffff6;
+    /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*param_1 + 0x10) + *param_1))(param_1,0xfffffff6);
   }
   piVar2 = (int *)param_1[4];
   if (piVar2 != (int *)0x0) {
+    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+       object's class); slot 0 is the destructor */
     (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     param_1[4] = 0;
   }
@@ -18563,6 +20351,8 @@ undefined4 FUN_010152d8(int param_1,undefined4 param_2)
     *(undefined4 *)(param_1 + 100) = 1;
     piVar1 = *(int **)(param_1 + 0x10);
     if (piVar1 != (int *)0x0) {
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
       *(undefined4 *)(param_1 + 0x10) = 0;
     }
@@ -18571,6 +20361,303 @@ undefined4 FUN_010152d8(int param_1,undefined4 param_2)
     uVar2 = 0xfffffffb;
   }
   return uVar2;
+}
+
+/* ==== 0x01015348  (file offset 0x15348)  FUN_01015348 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002410 +0x8;
+   written from its disassembly (0x01015348 - 0x010157e0). Feeds param_5 bytes (param_3 + param_4; the
+   fifth argument is on the stack) to the M3G file reader (GUESS: the Loader's stream parser). +0x24 is
+   the state: 1 the file identifier, a byte at a time against one of the two expected strings (+0x48, or
+   +0x54 when +0x18 allows it; FUN_0101255c gives each byte); 2 a section's compression byte (0 or 1:
+   the decompressor FUN_01009944 / FUN_010099a4 at +0x10, after the virtual slot +0x1c agrees; the
+   Adler-32 at +0x3c starts); 3 to 6 and 7 to 10 two 32-bit lengths (+0x30, kept less 13 in +0x40, and
+   +0x34; FUN_010265fc checksums them); 11 the section data (checksummed by thunk_FUN_0102cc94 and fed
+   to the decompressor's virtual slot +4; at the end +0x34 must equal +0x44 and the decompressor is
+   deleted); 12 to 15 the section's checksum, which must match +0x3c, then the virtual slot +0x24 can
+   end the file. Errors: FUN_0102f7e0 (K0 when called in the wrong state, -0x4b1 for bad lengths) and
+   the results -7 to -11, handed to the virtual slot +0x10. Returns -1 while it needs more, the bytes
+   used when the file ended, or the error. */
+int FUN_01015348(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5)
+
+{
+  uint8 *p;
+  int left;
+  int status;
+  int done;
+  int state;
+  int next;
+  int n;
+  int *piVar1;
+
+  if (param_1[3] != -1)
+    FUN_0102f7e0(0xfffffbb1);
+  if (param_1[0x19] != 1 && param_1[0x19] != 2)
+    FUN_0102f7e0(0xfffffbb1);
+  param_1[0x19] = 2;
+  p = param_3 + param_4;
+  left = param_5;
+  status = -1;
+  done = 0;
+  while (left != 0 && status == -1) {
+    if (param_1[0xb] == param_1[7])
+      return -0xb;
+    state = param_1[9];
+    next = state;
+    switch (state) {
+    case 1:
+      if (param_1[0x18] == 0) {
+        if (FUN_0101255c(param_1 + 0x12,0) == *p) {
+          param_1[5] = 0;
+          param_1[0x18] = (int)(param_1 + 0x12);
+        }
+        else if (FUN_0101255c(param_1 + 0x15,0) == *p && param_1[6] != 0) {
+          param_1[5] = 1;
+          param_1[0x18] = (int)(param_1 + 0x15);
+        }
+        else
+          status = -7;
+      }
+      else if (FUN_0101255c(param_1[0x18],param_1[8]) != *p)
+        status = -7;
+      if (status != -7) {
+        param_1[8] = param_1[8] + 1;
+        if (*(int *)(param_1[0x18] + 8) == param_1[8])
+          next = 2;
+      }
+      break;
+    case 2:
+      /* engine virtual call, slot +0x1c: one of FUN_0100486c, FUN_01011968, FUN_01021d50, FUN_010224fc,
+         FUN_01026168 (by the object's class) */
+      if ((*(code *)(*(int *)(*param_1 + 0x1c) + *param_1))(param_1) == 0)
+        status = -10;
+      else {
+        param_1[10] = param_1[10] + 1;
+        param_1[0xf] = 1;
+        param_1[0xf] = thunk_FUN_0102cc94(1,p,1);
+        if (*p == 0)
+          param_1[4] = FUN_01009944(param_1);
+        else if (*p == 1)
+          param_1[4] = FUN_010099a4(param_1);
+        else
+          status = -8;
+      }
+      next = 3;
+      break;
+    case 3:
+      param_1[0xc] = *p;
+      next = 4;
+      break;
+    case 4:
+      param_1[0xc] = param_1[0xc] | (uint)*p << 8;
+      next = 5;
+      break;
+    case 5:
+      param_1[0xc] = param_1[0xc] | (uint)*p << 0x10;
+      next = 6;
+      break;
+    case 6:
+      param_1[0xc] = param_1[0xc] | (uint)*p << 0x18;
+      FUN_010265fc(param_1,p + -3,4);
+      param_1[0x10] = param_1[0xc];
+      if ((uint)param_1[0x10] < 0xd)
+        FUN_0102f7e0(-0x4b1);
+      param_1[0x10] = param_1[0x10] + -0xd;
+      next = 7;
+      break;
+    case 7:
+      param_1[0xd] = *p;
+      next = 8;
+      break;
+    case 8:
+      param_1[0xd] = param_1[0xd] | (uint)*p << 8;
+      next = 9;
+      break;
+    case 9:
+      param_1[0xd] = param_1[0xd] | (uint)*p << 0x10;
+      next = 10;
+      break;
+    case 10:
+      param_1[0xd] = param_1[0xd] | (uint)*p << 0x18;
+      param_1[0x11] = 0;
+      FUN_010265fc(param_1,p + -3,4);
+      next = 0xb;
+      break;
+    case 0xb:
+      n = (uint)left <= (uint)param_1[0x10] ? left : param_1[0x10];
+      if (n != 0) {
+        param_1[0xf] = thunk_FUN_0102cc94(param_1[0xf],p,n);
+        piVar1 = (int *)param_1[4];
+        /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+           object's class) */
+        if ((*(code *)(*(int *)(*piVar1 + 4) + *piVar1))(piVar1,p,n) == 0) {
+          status = -8;
+          break;
+        }
+      }
+      left = left - n;
+      param_1[0x10] = param_1[0x10] - n;
+      param_1[0xb] = param_1[0xb] + n;
+      p = p + n;
+      if (param_1[0x10] == 0) {
+        if (param_1[0xd] != param_1[0x11])
+          FUN_0102f7e0(-0x4b1);
+        next = 0xc;
+        piVar1 = (int *)param_1[4];
+        if (piVar1 != (int *)0x0)
+          /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by
+             the object's class); slot 0 is the destructor */
+          (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
+        param_1[4] = 0;
+      }
+      break;
+    case 0xc:
+      param_1[0xe] = *p;
+      next = 0xd;
+      break;
+    case 0xd:
+      param_1[0xe] = param_1[0xe] | (uint)*p << 8;
+      next = 0xe;
+      break;
+    case 0xe:
+      param_1[0xe] = param_1[0xe] | (uint)*p << 0x10;
+      next = 0xf;
+      break;
+    case 0xf:
+      param_1[0xe] = param_1[0xe] | (uint)*p << 0x18;
+      if (param_1[0xf] != param_1[0xe])
+        status = -9;
+      /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
+         (by the object's class) */
+      else if ((*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1) != 0)
+        done = 1;
+      next = 2;
+      break;
+    default:
+      status = -8;
+      break;
+    }
+    if (state != 0xb) {
+      param_1[0xb] = param_1[0xb] + 1;
+      left = left + -1;
+      p = p + 1;
+    }
+    param_1[9] = next;
+    if (done != 0)
+      break;
+  }
+  if (status != -1) {
+    /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+       object's class) */
+    (*(code *)(*(int *)(*param_1 + 0x10) + *param_1))(param_1,status);
+    return status;
+  }
+  if (done != 0)
+    status = param_5 - left;
+  return status;
+}
+
+/* ==== 0x010157E8  (file offset 0x157E8)  FUN_010157e8 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002410 +0x18;
+   written from its disassembly (0x010157e8 - 0x010159c8). Feeds param_3 bytes to a record reader
+   (GUESS): state +0x70 is 0 for the type byte (+0x78; the object at +0x10 is asked for its virtual slot
+   +8, kept at +0xe4), 1 to 4 for the 32-bit length (+0x74, least significant byte first; when it is
+   below +0x34, FUN_0101d8e8 prepares +0x7c), and 5 for the record itself (copied to +0x7c with
+   FUN_01026d30; a whole record is handled by FUN_01017b00, FUN_01017ccc or FUN_01017bc4 by mode +0x28,
+   then the state starts over). Returns 0 when a step fails (and stops), else 1, and then adds the bytes
+   to +0x44. */
+int FUN_010157e8(int param_1,uint8 *param_2,uint32 param_3)
+
+{
+  int ok;
+  uint32 left;
+  int state;
+  int iVar1;
+
+  ok = 1;
+  left = param_3;
+  while (left != 0) {
+    switch (*(int *)(param_1 + 0x70)) {
+    case 0:
+      iVar1 = *(int *)(param_1 + 0x10);
+      /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+         object's class) */
+      *(int *)(param_1 + 0xe4) = (*(code *)(*(int *)(*(int *)iVar1 + 8) + *(int *)iVar1))(iVar1);
+      *(uint *)(param_1 + 0x78) = *param_2;
+      state = 1;
+      param_2 = param_2 + 1;
+      left = left - 1;
+      *(int *)(param_1 + 0x70) = state;
+      break;
+    case 1:
+      *(uint *)(param_1 + 0x74) = *param_2;
+      param_2 = param_2 + 1;
+      left = left - 1;
+      *(int *)(param_1 + 0x70) = 2;
+      break;
+    case 2:
+      *(uint *)(param_1 + 0x74) = *(uint *)(param_1 + 0x74) | (uint)*param_2 << 8;
+      param_2 = param_2 + 1;
+      left = left - 1;
+      *(int *)(param_1 + 0x70) = 3;
+      break;
+    case 3:
+      *(uint *)(param_1 + 0x74) = *(uint *)(param_1 + 0x74) | (uint)*param_2 << 0x10;
+      param_2 = param_2 + 1;
+      left = left - 1;
+      *(int *)(param_1 + 0x70) = 4;
+      break;
+    case 4:
+      *(uint *)(param_1 + 0x74) = *(uint *)(param_1 + 0x74) | (uint)*param_2 << 0x18;
+      ok = *(uint *)(param_1 + 0x74) < *(uint *)(param_1 + 0x34);
+      if (ok != 0)
+        FUN_0101d8e8(param_1 + 0x7c,*(uint *)(param_1 + 0x74),param_1 + 0xa0,param_1 + 0xb0);
+      param_2 = param_2 + 1;
+      left = left - 1;
+      *(int *)(param_1 + 0x70) = 5;
+      break;
+    case 5:
+      if (*(uint *)(param_1 + 0x74) > left) {
+        FUN_01026d30(param_1 + 0x7c,param_2,left);
+        *(uint *)(param_1 + 0x74) = *(uint *)(param_1 + 0x74) - left;
+        left = 0;
+        break;
+      }
+      FUN_01026d30(param_1 + 0x7c,param_2,*(uint *)(param_1 + 0x74));
+      if (*(int *)(param_1 + 0x28) == 0)
+        ok = FUN_01017b00(param_1);
+      else if (*(int *)(*(int *)(param_1 + 0xe0) + 0xc) != 0 && *(int *)(param_1 + 0x28) == 1)
+        ok = FUN_01017ccc(param_1);
+      else
+        ok = FUN_01017bc4(param_1);
+      if (ok == 0)
+        return 0;
+      if (*(uint *)(param_1 + 0x90) < *(uint *)(param_1 + 0x88))
+        return 0;
+      *(int *)(param_1 + 0x70) = 0;
+      iVar1 = *(int *)(param_1 + 0x74);
+      *(int *)(param_1 + 0x74) = 0;
+      left = left - iVar1;
+      param_2 = param_2 + iVar1;
+      break;
+    }
+    if (ok == 0)
+      return 0;
+  }
+  *(int *)(param_1 + 0x44) = *(int *)(param_1 + 0x44) + (param_3 - left);
+  return ok;
+}
+
+/* ==== 0x010159CC  (file offset 0x159CC)  FUN_010159cc ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002410 +0x10;
+   written from its disassembly (0x010159cc - 0x010159e0). Sets +0x64 to 4 and, when +0xc is still -1,
+   stores param_2 there. */
+void FUN_010159cc(int param_1,int param_2)
+
+{
+  *(int *)(param_1 + 0x64) = 4;
+  if (*(int *)(param_1 + 0xc) == -1)
+    *(int *)(param_1 + 0xc) = param_2;
+  return;
 }
 
 /* ==== 0x010159E4  (file offset 0x159E4)  FUN_010159e4 ================================================ */
@@ -18776,12 +20863,14 @@ void FUN_01015ce8(undefined4 param_1,int param_2,int *param_3)
     local_30 = param_1;
     iStack_2c = param_2;
     local_28 = param_3;
+    /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
     iVar2 = (*(code *)(*(int *)(*param_3 + 0x30) + *param_3))();
     piVar3 = local_28;
     if (iVar2 != 0x10) {
       piVar3 = (int *)0x0;
     }
     if (piVar3 == (int *)0x0) {
+      /* engine virtual call, slot +0x34: no function of the decoded engine vtables is there */
       local_64 = (*(code *)(*(int *)(*local_28 + 0x34) + *local_28))();
     }
     else {
@@ -19103,6 +21192,8 @@ void FUN_010166a4(undefined4 param_1,int param_2,int param_3)
     if ((*(byte *)(param_3 + 0x3d) >> 1 & 1) == 0) {
       return;
     }
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     iVar3 = (*(code *)(*(int *)(*(int *)(param_3 + 4) + 4) + *(int *)(param_3 + 4)))(param_3 + 4);
     uVar6 = INTEGER_MINUS_1000;
     if (iVar3 != 0xf) {
@@ -19270,10 +21361,15 @@ LAB_01016740:
           piVar10 = *(int **)(param_3 + 0x98);
           iVar7 = piVar10[0x10];
           if ((iVar7 == 0x60 || iVar7 == 0x62) || iVar7 == 100) {
+            /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
+               FUN_0102da68 (by the object's class) */
             iVar7 = (*(code *)(*(int *)(*piVar10 + 0x24) + *piVar10))(piVar10);
+            /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
             iVar8 = (*(code *)(*(int *)(*piVar10 + 0x28) + *piVar10))(piVar10);
             uVar5 = (iVar8 * iVar4 >> 0x10) * iVar7 + (iVar7 * iVar3 >> 0x10);
             if ((piVar10[0xb] != -1) && (piVar10[8] + piVar10[0xb] != 0)) {
+              /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's
+                 class) */
               iVar7 = (*(code *)(*(int *)(*piVar10 + 0x30) + *piVar10))(piVar10);
               uVar5 = (uint)*(byte *)(iVar7 + uVar5);
             }
@@ -19469,6 +21565,8 @@ void FUN_01017120(undefined4 param_1,int param_2)
   if (*(int *)(param_2 + 0x10) != iVar1) {
     if (*(int *)(param_2 + 0x14) < iVar1) {
       iVar2 = *(int *)(param_2 + 8);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))((int *)(param_2 + 8),iVar1);
     }
     *(int *)(param_2 + 0x10) = iVar1;
@@ -19696,6 +21794,8 @@ void FUN_01017254(int *param_1,undefined4 param_2)
   FUN_01015128(param_1[8] + 0x18);
                     /* WARNING: Could not recover jumptable at 0x010172a4. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -19928,6 +22028,8 @@ void FUN_01017840(int *param_1,undefined4 param_2)
   FUN_01015128(param_1[8] + 0x18);
                     /* WARNING: Could not recover jumptable at 0x01017890. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -20097,6 +22199,8 @@ bool FUN_01017b00(int param_1)
       FUN_0100412c(param_1 + 0xa0,&local_9c);
       FUN_0100400c(param_1 + 0xb0,DATA_AT_01040134_OFFSET + 0x1017b88);
       iVar1 = **(int **)(param_1 + 0xe0);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(iVar1 + 4) + iVar1))(*(int **)(param_1 + 0xe0),param_1 + 0x7c);
       *(undefined4 *)(param_1 + 0x1c) = *(undefined4 *)(*(int *)(param_1 + 0xe0) + 0x10);
       swv_TryPop();
@@ -20150,6 +22254,8 @@ LAB_01017c08:
       FUN_0100412c(param_1 + 0xa0,&local_a0);
       piVar4 = (int *)FUN_01038760(&local_9c);
       FUN_0100400c(param_1 + 0xb0,DATA_AT_01040138_OFFSET_2 + 0x1017c90);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(*piVar4 + 4) + *piVar4))(piVar4,param_1 + 0x7c);
       FUN_0102bb44(&local_9c,0);
       swv_TryPop();
@@ -20190,6 +22296,8 @@ bool FUN_01017ccc(int param_1)
       FUN_0100412c(param_1 + 0xa0,&local_a0);
       piVar3 = (int *)FUN_01038760(&local_9c);
       FUN_0100400c(param_1 + 0xb0,DATA_AT_01040138_OFFSET_3 + 0x1017d70);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(*piVar3 + 4) + *piVar3))(piVar3,param_1 + 0x7c);
       local_a0 = *(int *)(param_1 + 0xa8) + -1;
       FUN_0100406c(param_1 + 0xd0,&local_a0);
@@ -20336,6 +22444,8 @@ int FUN_01018018(undefined4 param_1,int param_2)
   if (*(int *)(param_2 + 0x10) == *(int *)(param_2 + 0x14)) {
     uVar1 = FUN_0102df78(*(int *)(param_2 + 0x10) + 1);
     iVar2 = *(int *)(param_2 + 8);
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(iVar2 + 4) + iVar2))
               ((int *)(param_2 + 8),uVar1,*(undefined4 *)(param_2 + 0x10));
   }
@@ -20373,6 +22483,8 @@ void FUN_01018094(int param_1)
     if (*(int *)(param_1 + 0xc) == *(int *)(param_1 + 0x10)) {
       uVar1 = FUN_0102df78(*(int *)(param_1 + 0xc) + 1);
       iVar2 = *(int *)(param_1 + 4);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))((int *)(param_1 + 4),uVar1);
     }
     iVar2 = *(int *)(param_1 + 0xc);
@@ -21125,6 +23237,8 @@ LAB_010190c8:
         uVar5 = FUN_0100f8e8();
         FUN_0101715c(uVar5,piVar4);
         if (piVar4 != (int *)0x0) {
+          /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by
+             the object's class); slot 0 is the destructor */
           (*(code *)(*(int *)*piVar4 + *piVar4))(piVar4,1);
         }
       }
@@ -21428,6 +23542,8 @@ int FUN_010197c4(undefined4 param_1,int param_2)
   int iVar2;
   
   iVar1 = FUN_010198c8();
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   if (((iVar1 != 0) &&
       (iVar2 = (*(code *)(*(int *)(*(int *)(iVar1 + 4) + 4) + *(int *)(iVar1 + 4)))(iVar1 + 4),
       iVar2 != 10 && iVar2 != 0x17)) && ((param_2 == 0 || (iVar2 != 0x18)))) {
@@ -21444,6 +23560,8 @@ int FUN_0101981c(undefined4 param_1,int param_2)
   int iVar2;
   
   iVar1 = FUN_010198c8();
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   if ((((iVar1 != 0) &&
        (iVar2 = (*(code *)(*(int *)(*(int *)(iVar1 + 4) + 4) + *(int *)(iVar1 + 4)))(iVar1 + 4),
        iVar2 != 5 && iVar2 != 9)) && ((param_2 == 0 || (iVar2 != 0x16)))) &&
@@ -21461,6 +23579,8 @@ int FUN_01019888(undefined4 param_1,int param_2)
   int iVar2;
   
   iVar1 = FUN_010198c8();
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   if ((iVar1 != 0) &&
      (iVar2 = (*(code *)(*(int *)(*(int *)(iVar1 + 4) + 4) + *(int *)(iVar1 + 4)))(iVar1 + 4),
      iVar2 != param_2)) {
@@ -21695,12 +23815,16 @@ void FUN_01019c10(uint param_1,int param_2,undefined4 param_3)
     uVar1 = (uint)*(byte *)(param_2 + 0x3d);
   }
   if (param_2 != 0 && (uVar1 & 1) != 0) {
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     iVar2 = (*(code *)(*(int *)(*(int *)(param_2 + 4) + 4) + *(int *)(param_2 + 4)))(param_2 + 4);
     if (iVar2 == 0xc) {
       if (*(int *)(param_1 + 0x98) == *(int *)(param_1 + 0x9c)) {
         uVar3 = FUN_0102df78(*(int *)(param_1 + 0x98) + 1);
         iVar2 = *(int *)(param_1 + 0x90);
         pcVar4 = (code *)(*(int *)(iVar2 + 4) + iVar2);
+        /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+           object's class) */
         (*pcVar4)((int *)(param_1 + 0x90),uVar3,*(undefined4 *)(param_1 + 0x98),pcVar4,param_3);
       }
       iVar2 = *(int *)(param_1 + 0x98);
@@ -21815,6 +23939,8 @@ void FUN_01019ebc(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
     if (*(int *)(iVar1 + 0xc) == *(int *)(iVar1 + 0x10)) {
       uVar2 = FUN_0102df78(*(int *)(iVar1 + 0xc) + 1);
       iVar3 = *(int *)(iVar1 + 4);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(iVar3 + 4) + iVar3))
                 ((int *)(iVar1 + 4),uVar2,*(undefined4 *)(iVar1 + 0xc));
     }
@@ -21866,6 +23992,8 @@ void swv_NativeRelease(int *param_1)
   }
                     /* WARNING: Could not recover jumptable at 0x01019f4c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+     object's class); slot 0 is the destructor */
   (*(code *)(*(int *)*param_1 + *param_1))(param_1,1);
   return;
 }
@@ -21901,6 +24029,8 @@ void FUN_01019f54(undefined4 param_1)
         FUN_0101a2a4(iVar1 + 4,iVar6);
         iVar5 = extraout_r1_00;
         if (piVar7 != (int *)0x0) {
+          /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by
+             the object's class); slot 0 is the destructor */
           (*(code *)(*(int *)*piVar7 + *piVar7))();
           iVar5 = extraout_r1_01;
         }
@@ -21947,6 +24077,8 @@ void FUN_0101a010(int param_1,int param_2)
   piVar1[2] = iVar4;
   if (iVar5 < iVar4) {
     iVar2 = piVar1[1] + iVar5 * 4;
+    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*piVar1 + 8) + *piVar1))(piVar1,iVar2 + 4,iVar2,iVar4 - iVar5);
   }
   piVar3 = (int *)(piVar1[5] + iVar6 * 4);
@@ -21960,6 +24092,8 @@ void FUN_0101a010(int param_1,int param_2)
       iVar2 = piVar1[5] + iVar6 * 4;
                     /* WARNING: Could not recover jumptable at 0x0101a0f0. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+      /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(iVar5 + 8) + iVar5))(piVar1 + 4,iVar2 + 4,iVar2,iVar4 - iVar6);
       return;
     }
@@ -22039,6 +24173,8 @@ void FUN_0101a1b0(int param_1)
   }
                     /* WARNING: Could not recover jumptable at 0x0101a218. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+     object's class); slot 0 is the destructor */
   (*(code *)(*(int *)*piVar3 + *piVar3))(piVar3,1);
   return;
 }
@@ -22062,6 +24198,8 @@ void FUN_0101a230(int param_1)
     }
     if (iVar1 != 0) {
       piVar2 = (int *)**(int **)(param_1 + 0x14);
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
       (*(code *)(*piVar2 + (int)piVar2))(*(int **)(param_1 + 0x14),1);
     }
     *(undefined4 *)(param_1 + 0x14) = 0;
@@ -22092,6 +24230,8 @@ void FUN_0101a2c0(int param_1,int param_2,undefined4 param_3)
   if (*(int *)(param_1 + 0xac) == 0) {
     FUN_0102f7e0(INTEGER_MINUS_1300);
   }
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   iVar1 = (*(code *)(*(int *)(*(int *)(param_2 + 4) + 4) + *(int *)(param_2 + 4)))(param_2 + 4);
   if (((((iVar1 != 0xe && iVar1 != 0xf) && iVar1 != 0x10) && iVar1 != 9) && iVar1 != 0x12) &&
       iVar1 != 0x16) {
@@ -22103,6 +24243,8 @@ void FUN_0101a2c0(int param_1,int param_2,undefined4 param_3)
     swv_TryArm(auStack_9c);
     FUN_010242a4(param_1);
     iVar1 = **(int **)(param_1 + 0xa8);
+    /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
+       (by the object's class) */
     (*(code *)(*(int *)(iVar1 + 0x24) + iVar1))(*(int **)(param_1 + 0xa8),param_2,param_3);
     swv_TryPop();
   }
@@ -22166,6 +24308,8 @@ void FUN_0101a478(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
     swv_TryArm(auStack_a8);
     FUN_010242a4(param_1);
     iVar1 = **(int **)(param_1 + 0xa8);
+    /* engine virtual call, slot +0x20: one of FUN_01003408, FUN_0100f71c, FUN_01012324, FUN_0101d01c,
+       FUN_010230f8 (by the object's class) */
     (*(code *)(*(int *)(iVar1 + 0x20) + iVar1))
               (*(int **)(param_1 + 0xa8),param_2,param_3,param_4,param_5,param_6);
     swv_TryPop();
@@ -22205,6 +24349,8 @@ void FUN_0101a514(int param_1,int *param_2)
     uVar2 = swv_fmul(*(undefined4 *)(param_1 + 0xc),iVar9);
     *(undefined4 *)(param_1 + 0xc) = uVar2;
   }
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   iVar9 = (*(code *)(*(int *)(param_2[1] + 4) + param_2[1]))(param_2 + 1);
   if (iVar9 != 0xf) {
     if (iVar9 < 0x10) {
@@ -22238,6 +24384,7 @@ LAB_0101a5c0:
       }
     }
   }
+  /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
   if (((param_2[0xb] & *(uint *)(param_1 + 0x108)) != 0) &&
      (iVar9 = (*(code *)(*(int *)(*param_2 + 0x2c) + *param_2))(param_2), iVar9 != 0)) {
     iVar9 = param_2[0x25];
@@ -22349,6 +24496,8 @@ void FUN_0101a830(int param_1,int *param_2)
     uVar2 = swv_fmul(*(undefined4 *)(param_1 + 0xc),iVar9);
     *(undefined4 *)(param_1 + 0xc) = uVar2;
   }
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   iVar9 = (*(code *)(*(int *)(param_2[1] + 4) + param_2[1]))(param_2 + 1);
   if (iVar9 != 0xf) {
     if (iVar9 < 0x10) {
@@ -22382,6 +24531,7 @@ LAB_0101a5c0:
       }
     }
   }
+  /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
   if (((param_2[0xb] & *(uint *)(param_1 + 0x108)) != 0) &&
      (iVar9 = (*(code *)(*(int *)(*param_2 + 0x2c) + *param_2))(param_2), iVar9 != 0)) {
     iVar9 = param_2[0x25];
@@ -23296,8 +25446,11 @@ int FUN_0101bb58(int *param_1)
       iVar9 = param_1[5] + iVar2 * 0x14;
       param_1[3] = *(int *)(iVar9 + 0xc);
       piVar8 = *(int **)(iVar9 + 0x10);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       iVar7 = (*(code *)(*(int *)(piVar8[1] + 4) + piVar8[1]))(piVar8 + 1);
       if ((iVar7 == 0xe || iVar7 == 0xf) || iVar7 == 0x10) {
+        /* engine virtual call, slot +0x34: no function of the decoded engine vtables is there */
         iVar3 = (*(code *)(*(int *)(*piVar8 + 0x34) + *piVar8))(piVar8);
         param_1[0xdb] = iVar3;
         iVar3 = FUN_0100f734(piVar8,*(undefined4 *)(iVar9 + 8));
@@ -23327,6 +25480,7 @@ int FUN_0101bb58(int *param_1)
         param_1[0x1c8] = 0;
       }
       else if (iVar7 == 0x12) {
+        /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
         (*(code *)(*(int *)(*param_1 + 0x30) + *param_1))(param_1,piVar8);
       }
       iVar7 = param_1[5] + iVar2 * 0x14;
@@ -24229,6 +26383,7 @@ void FUN_0101d17c(int param_1,int param_2)
     swv_TryArm(auStack_98);
     FUN_01009638(param_1,param_2);
     iVar2 = **(int **)(param_1 + 0xa8);
+    /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
     (*(code *)(*(int *)(iVar2 + 0x28) + iVar2))(*(int **)(param_1 + 0xa8),param_2);
     swv_TryPop();
   }
@@ -24265,6 +26420,7 @@ int FUN_0101d21c(int *param_1,int param_2)
     return 0;
   }
   piVar7 = *(int **)(param_2 + 0x88);
+  /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
   if ((piVar7 == (int *)0x0) ||
      (iVar6 = (*(code *)(*(int *)(*piVar7 + 0x2c) + *piVar7))(piVar7), iVar6 != 5)) {
     FUN_0102f7e0(uVar8);
@@ -24297,12 +26453,17 @@ int FUN_0101d21c(int *param_1,int param_2)
       return iVar6;
     }
     param_1[0x270] = param_2;
+    /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec
+       (by the object's class) */
     (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,piVar7,0);
+    /* engine virtual call, slot +0x14: one of FUN_01005104, FUN_01010820 (by the object's class) */
     (*(code *)(*(int *)(*param_1 + 0x14) + *param_1))
               (param_1,*(undefined4 *)(param_2 + 0x8c),piVar7);
     iVar6 = FUN_01011a84(param_2);
     uVar8 = *(undefined4 *)(iVar6 + 4);
     iVar6 = FUN_01011a84(param_2);
+    /* engine virtual call, slot +0x1c: one of FUN_0100486c, FUN_01011968, FUN_01021d50, FUN_010224fc,
+       FUN_01026168 (by the object's class) */
     (*(code *)(*(int *)(*param_1 + 0x1c) + *param_1))(param_1,*(undefined4 *)(iVar6 + 8),uVar8,0);
     FUN_0101a830(param_1,param_2);
     FUN_01006020(param_1 + 0x102);
@@ -24324,8 +26485,11 @@ int FUN_0101d21c(int *param_1,int param_2)
         iVar10 = param_1[5] + iVar6 * 0x14;
         param_1[3] = *(int *)(iVar10 + 0xc);
         piVar9 = *(int **)(iVar10 + 0x10);
+        /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+           object's class) */
         iVar5 = (*(code *)(*(int *)(piVar9[1] + 4) + piVar9[1]))(piVar9 + 1);
         if ((iVar5 == 0xe || iVar5 == 0xf) || iVar5 == 0x10) {
+          /* engine virtual call, slot +0x34: no function of the decoded engine vtables is there */
           iVar1 = (*(code *)(*(int *)(*piVar9 + 0x34) + *piVar9))(piVar9);
           param_1[0xdb] = iVar1;
           iVar1 = FUN_0100f734(piVar9,*(undefined4 *)(iVar10 + 8));
@@ -24355,6 +26519,7 @@ int FUN_0101d21c(int *param_1,int param_2)
           param_1[0x1c8] = 0;
         }
         else if (iVar5 == 0x12) {
+          /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
           (*(code *)(*(int *)(*param_1 + 0x30) + *param_1))(param_1,piVar9);
         }
         iVar5 = param_1[5] + iVar6 * 0x14;
@@ -24458,6 +26623,8 @@ void FUN_0101d554(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
       iVar1 = param_2;
     }
     pcVar2 = (code *)(*(int *)(*param_1 + 4) + *param_1);
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     (*pcVar2)(param_1,param_2,iVar1,pcVar2,param_4);
     param_1[2] = iVar1;
   }
@@ -24508,6 +26675,8 @@ void FUN_0101d620(int param_1)
   if (*(int *)(param_1 + 0x10c) != 0) {
     if (*(int *)(param_1 + 0x110) < 0) {
       iVar2 = *(int *)(param_1 + 0x104);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))((int *)(param_1 + 0x104),0);
     }
     *(undefined4 *)(param_1 + 0x10c) = 0;
@@ -24684,6 +26853,8 @@ void FUN_0101d974(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
   *(undefined4 *)(iVar2 + 0x14) = uVar3;
                     /* WARNING: Could not recover jumptable at 0x0101da3c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -25153,13 +27324,17 @@ void FUN_0101e144(int param_1,undefined4 param_2)
   }
   *(int **)(param_1 + 0x2c) = piVar2;
   if (piVar2 != (int *)0x0) {
+    /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
+       (by the object's class) */
     (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))();
     iVar1 = FUN_01013af8();
     if ((iVar1 != 0) &&
        (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x24) + **(int **)(param_1 + 0x2c))
                 )(), iVar1 < 0x401)) {
+      /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
       (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) + **(int **)(param_1 + 0x2c)))();
       iVar1 = FUN_01013af8();
+      /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
       if ((iVar1 != 0) &&
          (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) +
                             **(int **)(param_1 + 0x2c)))(), iVar1 < 0x401)) goto LAB_0101e208;
@@ -25305,6 +27480,8 @@ void FUN_0101e3f4(int param_1,undefined4 param_2)
     iVar3 = piVar1[1] + -1;
     piVar1[1] = iVar3;
     if (iVar3 == 0) {
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
     }
   }
@@ -26078,6 +28255,8 @@ LAB_010190c8:
         uVar8 = FUN_0100f8e8();
         FUN_0101715c(uVar8,piVar4);
         if (piVar4 != (int *)0x0) {
+          /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by
+             the object's class); slot 0 is the destructor */
           (*(code *)(*(int *)*piVar4 + *piVar4))(piVar4,1);
         }
       }
@@ -26342,6 +28521,8 @@ void FUN_0101ee08(int *param_1,undefined4 param_2)
   }
                     /* WARNING: Could not recover jumptable at 0x0101ef38. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -26416,9 +28597,18 @@ LAB_0101efec:
     pvVar3 = helper_GetAppInstance();
                     /* WARNING: Could not recover jumptable at 0x010398cc. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-    (**(code **)(**(int **)((int)pvVar3 + 0xc) + 0x18))(uVar4,0);
+    (*((IShell *)*(int **)((int)pvVar3 + 0xc))->pvt->CloseApplet)((IShell *)uVar4,0);
     return;
   }
+  return;
+}
+
+/* ==== 0x0101F0B0  (file offset 0x1F0B0)  FUN_0101f0b0 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100235C +0x8;
+   written from its disassembly (0x0101f0b0 - 0x0101f0b0). Does nothing (bx lr). */
+void FUN_0101f0b0(int param_1)
+
+{
   return;
 }
 
@@ -26985,7 +29175,7 @@ LAB_0101fc38:
         pvVar7 = helper_GetAppInstance();
                     /* WARNING: Could not recover jumptable at 0x010398cc. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-        (**(code **)(**(int **)((int)pvVar7 + 0xc) + 0x18))(uVar9,0);
+        (*((IShell *)*(int **)((int)pvVar7 + 0xc))->pvt->CloseApplet)((IShell *)uVar9,0);
         return;
       }
     }
@@ -27279,6 +29469,8 @@ void FUN_0101ffbc(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
     if (*(int *)(param_1 + 0xc) == *(int *)(param_1 + 0x10)) {
       uVar3 = FUN_0102df78(*(int *)(param_1 + 0xc) + 1);
       iVar1 = *(int *)(param_1 + 4);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(iVar1 + 4) + iVar1))
                 ((int *)(param_1 + 4),uVar3,*(undefined4 *)(param_1 + 0xc));
     }
@@ -27471,7 +29663,10 @@ undefined8 FUN_0102035c(int param_1,int *param_2)
     if ((param_2[0x11] == 0) || (iVar1 != 99 && iVar1 != 100)) {
       FUN_0102f7e0(INTEGER_MINUS_1301);
     }
+    /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
+       (by the object's class) */
     uVar2 = (*(code *)(*(int *)(*param_2 + 0x24) + *param_2))(param_2);
+    /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
     uVar3 = (*(code *)(*(int *)(*param_2 + 0x28) + *param_2))(param_2);
     local_24 = (int *)0x0;
     *(undefined4 *)(param_1 + 0xc) = 0;
@@ -27488,6 +29683,7 @@ undefined8 FUN_0102035c(int param_1,int *param_2)
     uVar2 = FUN_01011bb4(param_2);
     *(undefined4 *)(param_1 + 0x8c) = uVar2;
     *(undefined4 *)(param_1 + 0x90) = 0;
+    /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
     iVar1 = (*(code *)(*(int *)(*param_2 + 0x2c) + *param_2))(param_2);
     if (iVar1 == 0x18) {
       *(int *)(param_1 + 0x90) = param_2[0x13];
@@ -28170,6 +30366,8 @@ void FUN_01020d0c(int *param_1,int param_2)
   }
                     /* WARNING: Could not recover jumptable at 0x01020d9c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -28681,6 +30879,8 @@ void FUN_01021a78(int param_1,undefined4 param_2,int param_3)
   iVar1 = **(int **)(param_1 + 0xa8);
                     /* WARNING: Could not recover jumptable at 0x01021aa8. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+     object's class) */
   (*(code *)(*(int *)(iVar1 + 8) + iVar1))(*(int **)(param_1 + 0xa8),param_1);
   return;
 }
@@ -28706,11 +30906,16 @@ void FUN_01021abc(int param_1,int param_2)
     piVar2 = piVar2 + -1;
   }
   *(int **)(param_1 + 0x2c) = piVar2;
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))();
   iVar1 = FUN_01013af8();
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   if ((iVar1 != 0) &&
      (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x24) + **(int **)(param_1 + 0x2c)))
                         (), iVar1 < 0x401)) {
+    /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
     (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) + **(int **)(param_1 + 0x2c)))();
     iVar1 = FUN_01013af8();
     if ((iVar1 != 0) &&
@@ -28730,7 +30935,7 @@ void FUN_01021abc(int param_1,int param_2)
   pvVar3 = helper_GetAppInstance();
                     /* WARNING: Could not recover jumptable at 0x010398cc. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  (**(code **)(**(int **)((int)pvVar3 + 0xc) + 0x18))(uVar4,0);
+  (*((IShell *)*(int **)((int)pvVar3 + 0xc))->pvt->CloseApplet)((IShell *)uVar4,0);
   return;
 }
 
@@ -28879,6 +31084,8 @@ void FUN_01021d10(int param_1)
     iVar1 = param_1;
     param_1 = *(int *)(iVar1 + 0x30);
   } while (*(int *)(iVar1 + 0x30) != 0);
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   iVar2 = (*(code *)(*(int *)(*(int *)(iVar1 + 4) + 4) + *(int *)(iVar1 + 4)))(iVar1 + 4);
   if (iVar2 != 0x16) {
     return;
@@ -28886,6 +31093,8 @@ void FUN_01021d10(int param_1)
   if (*(int *)(iVar1 + 0x98) != 0) {
     if (*(int *)(iVar1 + 0x9c) < 0) {
       iVar2 = *(int *)(iVar1 + 0x90);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))((int *)(iVar1 + 0x90),0);
     }
     *(undefined4 *)(iVar1 + 0x98) = 0;
@@ -29128,6 +31337,8 @@ void FUN_01022140(int *param_1,undefined4 param_2)
   FUN_01027a30(param_1[8] + 0x18,param_2);
                     /* WARNING: Could not recover jumptable at 0x01022198. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -29188,11 +31399,15 @@ void FUN_01022234(int *param_1,int param_2)
     return;
   }
   *(byte *)((int)param_1 + 0x3d) = *(byte *)((int)param_1 + 0x3d) | 2;
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   do {
     piVar1 = param_1;
     param_1 = (int *)piVar1[0xc];
   } while ((int *)piVar1[0xc] != (int *)0x0);
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   iVar2 = (*(code *)(*(int *)(piVar1[1] + 4) + piVar1[1]))(piVar1 + 1);
   if (iVar2 != 0x16) {
     return;
@@ -29200,6 +31415,8 @@ void FUN_01022234(int *param_1,int param_2)
   if (piVar1[0x26] != 0) {
     if (piVar1[0x27] < 0) {
       iVar2 = piVar1[0x24];
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))(piVar1 + 0x24,0);
     }
     piVar1[0x26] = 0;
@@ -29709,6 +31926,8 @@ void FUN_0102277c(int *param_1,uint param_2,undefined4 param_3,int *param_4)
             FUN_010279d0(param_1[8] + 0xc,param_4);
                     /* WARNING: Could not recover jumptable at 0x01022c54. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+            /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
+               FUN_0102da68 (by the object's class) */
             (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
             return;
           }
@@ -29725,6 +31944,8 @@ void FUN_0102277c(int *param_1,uint param_2,undefined4 param_3,int *param_4)
           FUN_010279d0(param_1[8],param_4);
                     /* WARNING: Could not recover jumptable at 0x010239f4. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+          /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
+             FUN_0102da68 (by the object's class) */
           (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
           return;
         }
@@ -29830,6 +32051,8 @@ void FUN_0102282c(int *param_1,uint param_2,undefined4 param_3,int *param_4)
                   FUN_010279d0(param_1[8] + 0xc,param_4);
                     /* WARNING: Could not recover jumptable at 0x01022c54. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+                  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
+                     FUN_0102da68 (by the object's class) */
                   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
                   return;
                 }
@@ -29850,6 +32073,8 @@ void FUN_0102282c(int *param_1,uint param_2,undefined4 param_3,int *param_4)
                 FUN_010279d0(param_1[8],param_4);
                     /* WARNING: Could not recover jumptable at 0x010239f4. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+                /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
+                   FUN_0102da68 (by the object's class) */
                 (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
                 return;
               }
@@ -29967,11 +32192,15 @@ void FUN_01022bb8(int *param_1,int param_2)
     return;
   }
   *(byte *)((int)param_1 + 0x3d) = *(byte *)((int)param_1 + 0x3d) | 1;
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   do {
     piVar1 = param_1;
     param_1 = (int *)piVar1[0xc];
   } while ((int *)piVar1[0xc] != (int *)0x0);
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   iVar2 = (*(code *)(*(int *)(piVar1[1] + 4) + piVar1[1]))(piVar1 + 1);
   if (iVar2 != 0x16) {
     return;
@@ -29979,6 +32208,8 @@ void FUN_01022bb8(int *param_1,int param_2)
   if (piVar1[0x26] != 0) {
     if (piVar1[0x27] < 0) {
       iVar2 = piVar1[0x24];
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))(piVar1 + 0x24,0);
     }
     piVar1[0x26] = 0;
@@ -30002,6 +32233,8 @@ void FUN_01022bfc(int *param_1,undefined4 param_2)
   FUN_010279d0(param_1[8] + 0xc,param_2);
                     /* WARNING: Could not recover jumptable at 0x01022c54. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -30214,6 +32447,17 @@ LAB_01022d6c:
   return local_3c;
 }
 
+/* ==== 0x010230F8  (file offset 0x230F8)  FUN_010230f8 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010027D8 +0x20;
+   written from its disassembly (0x010230f8 - 0x01023104). Stores param_2 at +0x2c and sets +0xa8. */
+void FUN_010230f8(int param_1,int param_2)
+
+{
+  *(int *)(param_1 + 0x2c) = param_2;
+  *(int *)(param_1 + 0xa8) = 1;
+  return;
+}
+
 /* ==== 0x01023108  (file offset 0x23108)  FUN_01023108 ================================================ */
 /* WARNING: Removing unreachable block (ram,0x01021eec) */
 /* WARNING: Removing unreachable block (ram,0x01021edc) */
@@ -30251,6 +32495,8 @@ void FUN_01023124(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
     if (param_1[3] < param_2) {
       uVar1 = FUN_0102df78(param_2);
       pcVar2 = (code *)(*(int *)(*param_1 + 4) + *param_1);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*pcVar2)(param_1,uVar1,param_1[2],pcVar2,param_4);
     }
     param_1[2] = param_2;
@@ -30313,6 +32559,8 @@ void FUN_01023184(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
   if (param_1[2] != param_2) {
     if (param_1[3] < param_2) {
       pcVar1 = (code *)(*(int *)(*param_1 + 4) + *param_1);
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*pcVar1)(param_1,param_2,param_1[2],pcVar1,param_4);
     }
     param_1[2] = param_2;
@@ -30330,6 +32578,7 @@ void FUN_010231c4(int param_1,int *param_2)
   if (param_2 == (int *)0x0) {
     FUN_0102f7e0(INTEGER_MINUS_1302);
   }
+  /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
   iVar2 = (*(code *)(*(int *)(*param_2 + 0x2c) + *param_2))(param_2);
   uVar1 = INTEGER_MINUS_1301;
   if (iVar2 != 9) {
@@ -30400,7 +32649,10 @@ void FUN_0102329c(int param_1,int *param_2)
     *(undefined4 *)(param_1 + 0x26c) = 0;
     *(uint *)(param_1 + 0x28c) = *(uint *)(param_1 + 0x28c) & 0xfffffffb;
   }
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   iVar1 = (*(code *)(*(int *)(*param_2 + 0x24) + *param_2))(param_2);
+  /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
   iVar2 = (*(code *)(*(int *)(*param_2 + 0x28) + *param_2))(param_2);
   *(int *)(param_1 + 0x174) = iVar1;
   *(undefined4 *)(param_1 + 0x16c) = 0;
@@ -30423,10 +32675,12 @@ void FUN_0102329c(int param_1,int *param_2)
   }
   if ((param_2[0xb] == -1) || (param_2[8] + param_2[0xb] == 0)) {
     *(undefined4 *)(param_1 + 0x188) = 0;
+    /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
     uVar3 = (*(code *)(*(int *)(*param_2 + 0x30) + *param_2))(param_2);
     *(undefined4 *)(param_1 + 0x180) = uVar3;
   }
   else {
+    /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
     uVar3 = (*(code *)(*(int *)(*param_2 + 0x30) + *param_2))(param_2);
     *(undefined4 *)(param_1 + 0x188) = uVar3;
     if (param_2[0xb] == -1) {
@@ -30463,10 +32717,14 @@ void FUN_01023420(int *param_1,int param_2,int param_3,undefined4 param_4)
     iVar4 = param_1[3];
     param_1[2] = -1;
     param_1[3] = iVar2;
+    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*param_1 + 8) + *param_1))(param_1,param_1[1],iVar2,param_3);
     param_1[2] = iVar3;
     param_1[3] = iVar4;
   }
+  /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+     object's class) */
   (*(code *)(*(int *)(*param_1 + 0x10) + *param_1))(param_1,param_1[1]);
   param_1[1] = iVar2;
   param_1[3] = param_2;
@@ -30671,7 +32929,10 @@ void FUN_010236c4(int param_1,int param_2,int param_3,int param_4)
       piVar7 = *(int **)(param_3 + 0x2c);
     }
     if (piVar7 != (int *)0x0) {
+      /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
+         (by the object's class) */
       iVar2 = (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7);
+      /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
       iVar3 = (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7);
       *(int *)(iVar1 + 0x174) = iVar2;
       *(undefined4 *)(iVar1 + 0x16c) = 0;
@@ -30694,10 +32955,12 @@ void FUN_010236c4(int param_1,int param_2,int param_3,int param_4)
       }
       if ((piVar7[0xb] == -1) || (piVar7[8] + piVar7[0xb] == 0)) {
         *(undefined4 *)(iVar1 + 0x188) = 0;
+        /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
         uVar4 = (*(code *)(*(int *)(*piVar7 + 0x30) + *piVar7))(piVar7);
         *(undefined4 *)(iVar1 + 0x180) = uVar4;
       }
       else {
+        /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
         uVar4 = (*(code *)(*(int *)(*piVar7 + 0x30) + *piVar7))(piVar7);
         *(undefined4 *)(iVar1 + 0x188) = uVar4;
         if (piVar7[0xb] == -1) {
@@ -30783,6 +33046,8 @@ void FUN_01023944(int *param_1,int param_2)
     iVar2 = *(int *)(iVar2 + 0x20);
   }
   else {
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     iVar1 = (*(code *)(*(int *)(param_1[1] + 4) + param_1[1]))(param_1 + 1);
     iVar2 = param_2 + 0xc;
     if ((iVar1 != 0x11) && ((*(uint *)(param_2 + 0x4c) & 2) == 0)) {
@@ -30808,6 +33073,8 @@ void FUN_01023944(int *param_1,int param_2)
   }
                     /* WARNING: Could not recover jumptable at 0x01020d9c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -30828,6 +33095,8 @@ void FUN_010239a4(int *param_1,undefined4 param_2)
   FUN_010279d0(param_1[8],param_2);
                     /* WARNING: Could not recover jumptable at 0x010239f4. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -31014,10 +33283,25 @@ undefined8 FUN_01023bc8(int param_1,undefined4 param_2,undefined4 param_3,int pa
   FUN_01026548(param_1);
   uVar1 = *(undefined4 *)(param_1 + 100);
   iVar2 = **(int **)(param_1 + 0xa8);
+  /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+     object's class) */
   (*(code *)(*(int *)(iVar2 + 0x10) + iVar2))
             (*(int **)(param_1 + 0xa8),*(undefined4 *)(param_1 + 0x58),
              *(undefined4 *)(param_1 + 0x5c),*(undefined4 *)(param_1 + 0x60));
   return CONCAT44(param_3,uVar1);
+}
+
+/* ==== 0x01023C60  (file offset 0x23C60)  FUN_01023c60 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002398 +0x10;
+   written from its disassembly (0x01023c60 - 0x01023c84). Stores param_4 and param_5 (the fifth
+   argument, on the stack), each sign-extended from 28 bits and shifted into the high half, at +0xf0 and
+   +0xf4. param_2 and param_3 are not read. */
+void FUN_01023c60(int param_1,int param_2,int param_3,int param_4,int param_5)
+
+{
+  *(int *)(param_1 + 0xf0) = ((param_4 << 4) >> 1) << 0x10;
+  *(int *)(param_1 + 0xf4) = ((param_5 << 4) >> 1) << 0x10;
+  return;
 }
 
 /* ==== 0x01023C88  (file offset 0x23C88)  FUN_01023c88 ================================================ */
@@ -31467,6 +33751,8 @@ void FUN_01023ff4(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   }
   if ((piVar1 != (int *)0x0) && (iVar2 = piVar1[1], piVar1[1] = iVar2 + -1, iVar2 + -1 == 0)) {
     pcVar3 = (code *)(*(int *)*piVar1 + *piVar1);
+    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+       object's class); slot 0 is the destructor */
     (*pcVar3)(piVar1,1,pcVar3,param_4,param_4);
   }
   if (param_2 != 0) {
@@ -31551,6 +33837,8 @@ void FUN_0102412c(int param_1,int *param_2)
     param_2[1] = param_2[1] + 1;
   }
   if ((piVar2 != (int *)0x0) && (iVar1 = piVar2[1], piVar2[1] = iVar1 + -1, iVar1 + -1 == 0)) {
+    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+       object's class); slot 0 is the destructor */
     (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
   }
   if (param_2 != (int *)0x0) {
@@ -31560,9 +33848,12 @@ void FUN_0102412c(int param_1,int *param_2)
   if (param_2 != (int *)0x0) {
     *(undefined4 *)(param_1 + 0x2c) = 0;
     *(undefined4 *)(param_1 + 0x30) = 0;
+    /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
+       (by the object's class) */
     (*(code *)(*(int *)(*param_2 + 0x24) + *param_2))();
     uVar3 = swv_fflt();
     *(undefined4 *)(param_1 + 0x34) = uVar3;
+    /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
     (*(code *)(*(int *)(**(int **)(param_1 + 0x20) + 0x28) + **(int **)(param_1 + 0x20)))();
     uVar3 = swv_fflt();
     *(undefined4 *)(param_1 + 0x38) = uVar3;
@@ -31590,7 +33881,10 @@ void FUN_010241f4(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     piVar2 = piVar2 + -1;
   }
   *(int **)(param_1 + 0x98) = piVar2;
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   iVar1 = (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))();
+  /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
   iVar3 = (*(code *)(*(int *)(**(int **)(param_1 + 0x98) + 0x28) + **(int **)(param_1 + 0x98)))();
   if (0x400 < iVar1) {
     iVar1 = 0x400;
@@ -31640,6 +33934,8 @@ void FUN_010242a4(int param_1)
   }
   if (iVar2 != 0 && iVar1 != 0) {
     iVar1 = **(int **)(param_1 + 0xa8);
+    /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec
+       (by the object's class) */
     (*(code *)(*(int *)(iVar1 + 0x18) + iVar1))(*(int **)(param_1 + 0xa8),iVar2,param_1 + 0xb0);
   }
   iVar1 = 0;
@@ -31658,6 +33954,8 @@ void FUN_010242a4(int param_1)
   iVar1 = **(int **)(param_1 + 0xa8);
                     /* WARNING: Could not recover jumptable at 0x01024334. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x1c: one of FUN_0100486c, FUN_01011968, FUN_01021d50, FUN_010224fc,
+     FUN_01026168 (by the object's class) */
   (*(code *)(*(int *)(iVar1 + 0x1c) + iVar1))
             (*(int **)(param_1 + 0xa8),*(int *)(param_1 + 0xfc),*(undefined4 *)(param_1 + 0xf8),
              *(undefined4 *)(param_1 + 0x108));
@@ -32977,6 +35275,8 @@ void FUN_01025c8c(int *param_1,uint *param_2)
     puVar2[2] = uVar1;
                     /* WARNING: Could not recover jumptable at 0x01025d28. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+    /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
+       (by the object's class) */
     (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
     return;
   }
@@ -33227,6 +35527,96 @@ FUN_01025ec8(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4
   return 0;
 }
 
+/* ==== 0x01026110  (file offset 0x26110)  FUN_01026110 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001E5C +0x4;
+   written from its disassembly (0x01026110 - 0x01026114). Returns 0 (GUESS: the class's type number).
+   param_1 (the object) is not read. */
+int32 FUN_01026110(int param_1)
+
+{
+  return 0;
+}
+
+/* ==== 0x01026118  (file offset 0x26118)  FUN_01026118 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100203C +0x5c;
+   written from its disassembly (0x01026118 - 0x0102611c). Returns 24 (GUESS: the class's type number).
+   param_1 (the object) is not read. */
+int32 FUN_01026118(int param_1)
+
+{
+  return 0x18;
+}
+
+/* ==== 0x01026120  (file offset 0x26120)  FUN_01026120 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtables at 0x01001E6C +0x24,
+   0x0100217C +0x78; written from its disassembly (0x01026120 - 0x01026124). Returns 17 (GUESS: the
+   class's type number). param_1 (the object) is not read. */
+int32 FUN_01026120(int param_1)
+
+{
+  return 0x11;
+}
+
+/* ==== 0x01026140  (file offset 0x26140)  FUN_01026140 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100201C +0x4;
+   written from its disassembly (0x01026140 - 0x01026144). Returns 25 (GUESS: the class's type number).
+   param_1 (the object) is not read. */
+int32 FUN_01026140(int param_1)
+
+{
+  return 0x19;
+}
+
+/* ==== 0x01026168  (file offset 0x26168)  FUN_01026168 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100217C +0x1c;
+   written from its disassembly (0x01026168 - 0x0102616c). Returns 15 (GUESS: the class's type number).
+   param_1 (the object) is not read. */
+int32 FUN_01026168(int param_1)
+
+{
+  return 0xf;
+}
+
+/* ==== 0x01026170  (file offset 0x26170)  FUN_01026170 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010027D8 +0xa4;
+   written from its disassembly (0x01026170 - 0x01026174). Returns 21 (GUESS: the class's type number).
+   param_1 (the object) is not read. */
+int32 FUN_01026170(int param_1)
+
+{
+  return 0x15;
+}
+
+/* ==== 0x010261A8  (file offset 0x261A8)  FUN_010261a8 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010027D8 +0x64;
+   written from its disassembly (0x010261a8 - 0x010261ac). Returns 1 (GUESS: the class's type number).
+   param_1 (the object) is not read. */
+int32 FUN_010261a8(int param_1)
+
+{
+  return 1;
+}
+
+/* ==== 0x010261C0  (file offset 0x261C0)  FUN_010261c0 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002438 +0x8;
+   written from its disassembly (0x010261c0 - 0x010261c4). Returns 255 (GUESS: the class's type number).
+   param_1 (the object) is not read. */
+int32 FUN_010261c0(int param_1)
+
+{
+  return 0xff;
+}
+
+/* ==== 0x010261E0  (file offset 0x261E0)  FUN_010261e0 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010027D8 +0x24;
+   written from its disassembly (0x010261e0 - 0x010261e4). Returns 5 (GUESS: the class's type number).
+   param_1 (the object) is not read. */
+int32 FUN_010261e0(int param_1)
+
+{
+  return 5;
+}
+
 /* ==== 0x010261F0  (file offset 0x261F0)  FUN_010261f0 ================================================ */
 void FUN_010261f0(int param_1)
 
@@ -33263,6 +35653,8 @@ void FUN_010261f0(int param_1)
     }
                     /* WARNING: Could not recover jumptable at 0x01026290. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+       object's class); slot 0 is the destructor */
     (*(code *)(*(int *)*piVar3 + *piVar3))(piVar3,1);
     return;
   }
@@ -33295,6 +35687,8 @@ void FUN_010262b0(void)
   if (uVar1 != 0) {
     piVar2 = *(int **)(uVar1 + 0x2c);
     if (piVar2 != (int *)0x0) {
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *(undefined4 *)(uVar1 + 0x2c) = 0;
@@ -33335,6 +35729,8 @@ void FUN_01026310(void)
   if (uVar1 != 0) {
     piVar2 = *(int **)(uVar1 + 0x30);
     if (piVar2 != (int *)0x0) {
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *(undefined4 *)(uVar1 + 0x30) = 0;
@@ -33356,6 +35752,8 @@ void FUN_01026348(void)
     piVar2 = *(int **)(uVar1 + 0x28);
   }
   if (uVar1 != 0 && piVar2 != (int *)0x0) {
+    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+       object's class); slot 0 is the destructor */
     (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     *(undefined4 *)(uVar1 + 0x28) = 0;
     return;
@@ -33511,6 +35909,18 @@ void FUN_01026614(int param_1,int param_2)
   for (iVar2 = *(int *)(param_1 + 0x38); iVar2 != 0; iVar2 = *(int *)(iVar2 + 0x34)) {
     FUN_01026614(iVar2,*(undefined1 *)(param_1 + 0x3c));
   }
+  return;
+}
+
+/* ==== 0x010266B0  (file offset 0x266B0)  FUN_010266b0 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002398 +0xc;
+   written from its disassembly (0x010266b0 - 0x010266bc). Calls FUN_01026540 (no Ghidra function
+   either) with the object's +8 and its +4 object's +0x44, and param_3 and param_4 as they came (a tail
+   jump). */
+void FUN_010266b0(int param_1,int param_2,int param_3,int param_4)
+
+{
+  FUN_01026540(*(int *)(param_1 + 8),*(int *)(*(int *)(param_1 + 4) + 0x44),param_3,param_4);
   return;
 }
 
@@ -34384,6 +36794,8 @@ int * FUN_010279ec(int *param_1,int param_2,undefined4 param_3,undefined4 param_
 {
   FUN_01023184(param_1,*(undefined4 *)(param_2 + 8),param_3,param_4,param_4);
   if (0 < *(int *)(param_2 + 8)) {
+    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*param_1 + 8) + *param_1))(param_1,*(undefined4 *)(param_2 + 4),param_1[1]);
   }
   return param_1;
@@ -36181,6 +38593,42 @@ void FUN_01029ac0(int *param_1,int param_2)
   return;
 }
 
+/* ==== 0x01029B58  (file offset 0x29B58)  FUN_01029b58 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001E5C +0x0;
+   written from its disassembly (0x01029b58 - 0x01029b6c). Destructor (GUESS): puts the base class's
+   vtable back and, when param_2 is set, frees the object (through helper_free's third entry,
+   0x01029910; a tail jump). */
+void FUN_01029b58(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_01001E5C_OFFSET_11 + 0x1029b64;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x01029B74  (file offset 0x29B74)  FUN_01029b74 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001E64 +0x0;
+   written from its disassembly (0x01029b74 - 0x01029be4). Destructor (GUESS): its class's vtables (+0,
+   and at +4 the second one, 8 bytes on), the member container at +0x48 (its buffers freed), then
+   FUN_01029914 and, when param_2 is set, frees the object (helper_free's second entry, 0x0102990c; a
+   tail jump). */
+void FUN_01029b74(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_01001E64_OFFSET_2 + 0x1029b8c;
+  param_1[1] = DATA_AT_01001E64_OFFSET_2 + 0x1029b8c + 8;
+  param_1[0x12] = DATA_AT_01001FC0_OFFSET_3 + 0x1029ba4;
+  helper_free((void *)param_1[0x13]);
+  if (param_1[0x14] == -1)
+    helper_free((void *)param_1[0x15]);
+  param_1[0x12] = DATA_AT_0100203C_OFFSET_41 + 0x1029bc8;
+  FUN_01029914(param_1,0);
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
 /* ==== 0x01029BF4  (file offset 0x29BF4)  FUN_01029bf4 ================================================ */
 void FUN_01029bf4(undefined4 param_1,int param_2)
 
@@ -36218,6 +38666,42 @@ void FUN_01029c14(int *param_1,int param_2)
                     /* WARNING: Could not recover jumptable at 0x010398e0. Too many branches */
                     /* WARNING: Treating indirect jump as call */
   (*g_pHelperFuncs->free)(param_1);
+  return;
+}
+
+/* ==== 0x01029C6C  (file offset 0x29C6C)  FUN_01029c6c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001ED4 +0x0;
+   written from its disassembly (0x01029c6c - 0x01029cb8). Destructor (GUESS): its class's vtable, frees
+   the buffer at +4 and, when +8 is -1, the one at +0xc; then the base class's vtable and, when param_2
+   is set, frees the object (through helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_01029c6c(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_01001ED4_OFFSET_3 + 0x1029c84;
+  helper_free((void *)param_1[1]);
+  if (param_1[2] == -1)
+    helper_free((void *)param_1[3]);
+  *param_1 = DATA_AT_0100203C_OFFSET_42 + 0x1029ca8;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x01029CC4  (file offset 0x29CC4)  FUN_01029cc4 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EE8 +0x0;
+   written from its disassembly (0x01029cc4 - 0x01029d10). Destructor (GUESS): its class's vtable, frees
+   the buffer at +4 and, when +8 is -1, the one at +0xc; then the base class's vtable and, when param_2
+   is set, frees the object (through helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_01029cc4(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_01001EE8_OFFSET_5 + 0x1029cdc;
+  helper_free((void *)param_1[1]);
+  if (param_1[2] == -1)
+    helper_free((void *)param_1[3]);
+  *param_1 = DATA_AT_0100203C_OFFSET_43 + 0x1029d00;
+  if (param_2 != 0)
+    helper_free(param_1);
   return;
 }
 
@@ -36319,6 +38803,35 @@ void FUN_01029eb8(int *param_1,int param_2)
   return;
 }
 
+/* ==== 0x01029F10  (file offset 0x29F10)  FUN_01029f10 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001FC0 +0x0;
+   written from its disassembly (0x01029f10 - 0x01029f5c). Destructor (GUESS): its class's vtable, frees
+   the buffer at +4 and, when +8 is -1, the one at +0xc; then the base class's vtable and, when param_2
+   is set, frees the object (through helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_01029f10(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_01001FC0_OFFSET_4 + 0x1029f28;
+  helper_free((void *)param_1[1]);
+  if (param_1[2] == -1)
+    helper_free((void *)param_1[3]);
+  *param_1 = DATA_AT_0100203C_OFFSET_44 + 0x1029f4c;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x01029FC8  (file offset 0x29FC8)  FUN_01029fc8 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100200C +0x0;
+   written from its disassembly (0x01029fc8 - 0x01029fd4). The base destructor (GUESS): puts the base
+   class's vtable back. param_2 (the free flag its callers pass, 0) is not read. */
+void FUN_01029fc8(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_0100203C_OFFSET_45 + 0x1029fd4;
+  return;
+}
+
 /* ==== 0x01029FDC  (file offset 0x29FDC)  FUN_01029fdc ================================================ */
 void FUN_01029fdc(int *param_1,int param_2)
 
@@ -36330,6 +38843,97 @@ void FUN_01029fdc(int *param_1,int param_2)
                     /* WARNING: Could not recover jumptable at 0x010398e0. Too many branches */
                     /* WARNING: Treating indirect jump as call */
   (*g_pHelperFuncs->free)();
+  return;
+}
+
+/* ==== 0x01029FF8  (file offset 0x29FF8)  FUN_01029ff8 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100201C +0x0;
+   written from its disassembly (0x01029ff8 - 0x0102a11c). Destructor (GUESS): its class's vtables (+0,
+   and at +4 the second one, 8 bytes on); the object at +0xa8 deleted and cleared; the native objects at
+   +0xac and in the array at +0xf8 (count +0xfc) released (swv_NativeRelease); the containers at +0x104
+   (0x44-byte elements, FUN_01000474) and +0xf4; then the base class's vtables and, when param_2 is set,
+   frees the object (helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_01029ff8(int *param_1,int param_2)
+
+{
+  int *piVar1;
+  int iVar2;
+
+  *param_1 = DATA_AT_0100201C_OFFSET_2 + 0x102a010;
+  param_1[1] = DATA_AT_0100201C_OFFSET_2 + 0x102a010 + 8;
+  piVar1 = (int *)param_1[0x2a];
+  if (piVar1 != (int *)0x0)
+    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+       object's class); slot 0 is the destructor */
+    (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
+  param_1[0x2a] = 0;
+  if (param_1[0x2b] != 0)
+    swv_NativeRelease((int *)(param_1[0x2b] + 4));
+  for (iVar2 = 0; iVar2 < param_1[0x3f]; iVar2 = iVar2 + 1) {
+    if (*(int *)(param_1[0x3e] + iVar2 * 4) != 0)
+      swv_NativeRelease((int *)(*(int *)(param_1[0x3e] + iVar2 * 4) + 4));
+  }
+  param_1[0x41] = DATA_AT_010023E4_OFFSET_2 + 0x102a08c;
+  FUN_01000474(param_1[0x42],0x44,ADDRESS_OF_FUNCTION_0102c460_OFFSET_2 + 0x102a09c,0);
+  if (param_1[0x43] == -1)
+    FUN_01000474(param_1[0x44],0x44,ADDRESS_OF_FUNCTION_0102c460_OFFSET_2 + 0x102a09c,0);
+  param_1[0x41] = DATA_AT_0100203C_OFFSET_46 + 0x102a0d0;
+  param_1[0x3d] = DATA_AT_010023F8_OFFSET_2 + 0x102a0e0;
+  helper_free((void *)param_1[0x3e]);
+  if (param_1[0x3f] == -1)
+    helper_free((void *)param_1[0x40]);
+  param_1[0x3d] = DATA_AT_0100203C_OFFSET_46 + 0x102a0d0;
+  param_1[1] = DATA_AT_01001E5C_OFFSET_12 + 0x102a104;
+  *param_1 = DATA_AT_0100203C_OFFSET_46 + 0x102a0d0;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102A138  (file offset 0x2A138)  FUN_0102a138 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100203C +0x0;
+   written from its disassembly (0x0102a138 - 0x0102a14c). Destructor (GUESS): puts the base class's
+   vtable back and, when param_2 is set, frees the object (through helper_free's second entry,
+   0x0102990c; a tail jump). */
+void FUN_0102a138(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_0100203C_OFFSET_47 + 0x102a144;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102A4CC  (file offset 0x2A4CC)  FUN_0102a4cc ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002174 +0x0;
+   written from its disassembly (0x0102a4cc - 0x0102a528). Destructor (GUESS): the member container at
+   +0x28 (its buffers freed), then FUN_01029a54 and, when param_2 is set, frees the object
+   (helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102a4cc(int *param_1,int param_2)
+
+{
+  param_1[0xa] = DATA_AT_01001FAC_OFFSET_6 + 0x102a4e8;
+  helper_free((void *)param_1[0xb]);
+  if (param_1[0xc] == -1)
+    helper_free((void *)param_1[0xd]);
+  param_1[0xa] = DATA_AT_0100203C_OFFSET_48 + 0x102a50c;
+  FUN_01029a54(param_1,0);
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102A6D8  (file offset 0x2A6D8)  FUN_0102a6d8 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100220C +0x0;
+   written from its disassembly (0x0102a6d8 - 0x0102a6ec). Destructor (GUESS): puts the base class's
+   vtable back and, when param_2 is set, frees the object (through helper_free's third entry,
+   0x01029910; a tail jump). */
+void FUN_0102a6d8(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_0100220C_OFFSET_2 + 0x102a6e4;
+  if (param_2 != 0)
+    helper_free(param_1);
   return;
 }
 
@@ -36345,6 +38949,41 @@ void FUN_0102a7c8(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
                     /* WARNING: Could not recover jumptable at 0x010398e0. Too many branches */
                     /* WARNING: Treating indirect jump as call */
   (*g_pHelperFuncs->free)(param_1);
+  return;
+}
+
+/* ==== 0x0102A804  (file offset 0x2A804)  FUN_0102a804 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002264 +0x0;
+   written from its disassembly (0x0102a804 - 0x0102a838). Destructor (GUESS): its class's vtable, then
+   FUN_01029fdc and, when param_2 is set, frees the object (helper_free's second entry, 0x0102990c; a
+   tail jump). */
+void FUN_0102a804(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_01002264_OFFSET_2 + 0x102a81c;
+  FUN_01029fdc(param_1,0);
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102A84C  (file offset 0x2A84C)  FUN_0102a84c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002268 +0x0;
+   written from its disassembly (0x0102a84c - 0x0102a88c). Destructor (GUESS): its class's vtable, the
+   29 words from +4 cleared, then the base class's vtable, +0x78 cleared and, when param_2 is set, frees
+   the object (helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102a84c(int *param_1,int param_2)
+
+{
+  int iVar1;
+
+  *param_1 = DATA_AT_01002268_OFFSET_2 + 0x102a858;
+  for (iVar1 = 0; iVar1 < 0x1d; iVar1 = iVar1 + 1)
+    param_1[iVar1 + 1] = 0;
+  *param_1 = DATA_AT_0100203C_OFFSET_49 + 0x102a880;
+  param_1[0x1e] = 0;
+  if (param_2 != 0)
+    helper_free(param_1);
   return;
 }
 
@@ -36398,6 +39037,272 @@ void FUN_0102a910(int *param_1,int param_2)
   return;
 }
 
+/* ==== 0x0102A974  (file offset 0x2A974)  FUN_0102a974 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022D4 +0x0;
+   written from its disassembly (0x0102a974 - 0x0102a9a8). Destructor (GUESS): its class's vtable, then
+   the base destructor FUN_01029fc8 and, when param_2 is set, frees the object (helper_free's second
+   entry, 0x0102990c; a tail jump). */
+void FUN_0102a974(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_010022D4_OFFSET_2 + 0x102a98c;
+  FUN_01029fc8(param_1,0);
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102A9B0  (file offset 0x2A9B0)  FUN_0102a9b0 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022E0 +0x0;
+   written from its disassembly (0x0102a9b0 - 0x0102a9fc). Destructor (GUESS): its class's vtable; the
+   member at +8 is torn down by thunk_FUN_01039670 when FUN_01039670 says 0; then the base destructor
+   FUN_01029fc8 and, when param_2 is set, frees the object (helper_free's second entry, 0x0102990c; a
+   tail jump). */
+void FUN_0102a9b0(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_010022E0_OFFSET_2 + 0x102a9c8;
+  if (FUN_01039670(param_1 + 2) == 0)
+    thunk_FUN_01039670(param_1 + 2);
+  FUN_01029fc8(param_1,0);
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102AA04  (file offset 0x2AA04)  FUN_0102aa04 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022E0 +0x44;
+   written from its disassembly (0x0102aa04 - 0x0102aa40). Destructor (GUESS): its class's vtables (+0,
+   and at +4 the second one, 8 bytes on), then FUN_01029a54 and, when param_2 is set, frees the object
+   (helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102aa04(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_010022EC_OFFSET + 0x102aa1c;
+  param_1[1] = DATA_AT_010022EC_OFFSET + 0x102aa1c + 8;
+  FUN_01029a54(param_1,0);
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102AAAC  (file offset 0x2AAAC)  FUN_0102aaac ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002348 +0x0;
+   written from its disassembly (0x0102aaac - 0x0102aaf8). Destructor (GUESS): its class's vtable, frees
+   the buffer at +4 and, when +8 is -1, the one at +0xc; then the base class's vtable and, when param_2
+   is set, frees the object (through helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102aaac(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_01002348_OFFSET_3 + 0x102aac4;
+  helper_free((void *)param_1[1]);
+  if (param_1[2] == -1)
+    helper_free((void *)param_1[3]);
+  *param_1 = DATA_AT_0100203C_OFFSET_50 + 0x102aae8;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102AB04  (file offset 0x2AB04)  FUN_0102ab04 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100235C +0x0;
+   written from its disassembly (0x0102ab04 - 0x0102ac6c). Destructor (GUESS): its class's vtable, then
+   six member containers from +0xe0 down to +0x90 (the last two hold 12-byte elements, destroyed with
+   FUN_01000474) and, when param_2 is set, frees the object (helper_free's third entry, 0x01029910; a
+   tail jump). */
+void FUN_0102ab04(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_0100235C_OFFSET_2 + 0x102ab1c;
+  param_1[0x38] = DATA_AT_010024F0_OFFSET + 0x102ab2c;
+  helper_free((void *)param_1[0x39]);
+  if (param_1[0x3a] == -1)
+    helper_free((void *)param_1[0x3b]);
+  param_1[0x38] = DATA_AT_0100203C_OFFSET_51 + 0x102ab50;
+  param_1[0x34] = DATA_AT_01001FAC_OFFSET_7 + 0x102ab60;
+  helper_free((void *)param_1[0x35]);
+  if (param_1[0x36] == -1)
+    helper_free((void *)param_1[0x37]);
+  param_1[0x34] = DATA_AT_0100203C_OFFSET_51 + 0x102ab50;
+  param_1[0x30] = DATA_AT_01001EFC_OFFSET_2 + 0x102ab8c;
+  helper_free((void *)param_1[0x31]);
+  if (param_1[0x32] == -1)
+    helper_free((void *)param_1[0x33]);
+  param_1[0x30] = DATA_AT_0100203C_OFFSET_51 + 0x102ab50;
+  param_1[0x2c] = DATA_AT_01001EFC_OFFSET_2 + 0x102ab8c;
+  helper_free((void *)param_1[0x2d]);
+  if (param_1[0x2e] == -1)
+    helper_free((void *)param_1[0x2f]);
+  param_1[0x2c] = DATA_AT_0100203C_OFFSET_51 + 0x102ab50;
+  param_1[0x28] = DATA_AT_01002570_OFFSET_2 + 0x102abdc;
+  FUN_01000474(param_1[0x29],0xc,ADDRESS_OF_FUNCTION_0102a840_OFFSET_2 + 0x102abec,0);
+  if (param_1[0x2a] == -1)
+    FUN_01000474(param_1[0x2b],0xc,ADDRESS_OF_FUNCTION_0102a840_OFFSET_2 + 0x102abec,0);
+  param_1[0x28] = DATA_AT_0100203C_OFFSET_51 + 0x102ab50;
+  param_1[0x24] = DATA_AT_01002570_OFFSET_2 + 0x102abdc;
+  FUN_01000474(param_1[0x25],0xc,ADDRESS_OF_FUNCTION_0102a840_OFFSET_2 + 0x102abec,0);
+  if (param_1[0x26] == -1)
+    FUN_01000474(param_1[0x27],0xc,ADDRESS_OF_FUNCTION_0102a840_OFFSET_2 + 0x102abec,0);
+  param_1[0x24] = DATA_AT_0100203C_OFFSET_51 + 0x102ab50;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102AD0C  (file offset 0x2AD0C)  FUN_0102ad0c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002398 +0x0;
+   written from its disassembly (0x0102ad0c - 0x0102af70). Destructor (GUESS): its class's vtable; the
+   objects at +8 and +0x9a8 deleted (their virtual slot 0 with 1); the three 0x5c-byte elements at
+   +0x968 destroyed (FUN_010003cc, from the end); the member containers at +0x9ac, +0x98c, +0x97c and
+   +0x96c; the 0x114-byte elements from +0x630 (FUN_010003cc) and FUN_0102ab04 on +0x630, +0x51c and
+   +0x408; the containers at +0x10c and +0x10; then the base class's vtable and, when param_2 is set,
+   frees the object (helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102ad0c(int *param_1,int param_2)
+
+{
+  int *piVar1;
+
+  *param_1 = DATA_AT_01002398_OFFSET_2 + 0x102ad24;
+  piVar1 = (int *)param_1[2];
+  if (piVar1 != (int *)0x0)
+    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+       object's class); slot 0 is the destructor */
+    (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
+  piVar1 = (int *)param_1[0x26a];
+  if (piVar1 != (int *)0x0)
+    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+       object's class); slot 0 is the destructor */
+    (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
+  FUN_010003cc((int)param_1 + 0xa7c,(int)param_1 + 0x968,-0x5c,
+               ADDRESS_OF_FUNCTION_01029e04_OFFSET + 0x102ad70);
+  param_1[0x26b] = DATA_AT_01001FC0_OFFSET_5 + 0x102ad98;
+  helper_free((void *)param_1[0x26c]);
+  if (param_1[0x26d] == -1)
+    helper_free((void *)param_1[0x26e]);
+  param_1[0x26b] = DATA_AT_0100203C_OFFSET_52 + 0x102adbc;
+  param_1[0x263] = DATA_AT_010025C0_OFFSET_2 + 0x102add0;
+  FUN_01000474(param_1[0x264],0x90,ADDRESS_OF_FUNCTION_0102b380_OFFSET_2 + 0x102ade0,0);
+  if (param_1[0x265] == -1)
+    FUN_01000474(param_1[0x266],0x90,ADDRESS_OF_FUNCTION_0102b380_OFFSET_2 + 0x102ade0,0);
+  param_1[0x263] = DATA_AT_0100203C_OFFSET_52 + 0x102adbc;
+  param_1[0x25f] = DATA_AT_010024DC_OFFSET_3 + 0x102ae24;
+  FUN_01000474(param_1[0x260],0xc,ADDRESS_OF_FUNCTION_01029bf4_OFFSET_5 + 0x102ae34,0);
+  if (param_1[0x261] == -1)
+    FUN_01000474(param_1[0x262],0xc,ADDRESS_OF_FUNCTION_01029bf4_OFFSET_5 + 0x102ae34,0);
+  param_1[0x25f] = DATA_AT_0100203C_OFFSET_52 + 0x102adbc;
+  param_1[0x25b] = DATA_AT_01001FAC_OFFSET_8 + 0x102ae78;
+  helper_free((void *)param_1[0x25c]);
+  if (param_1[0x25d] == -1)
+    helper_free((void *)param_1[0x25e]);
+  param_1[0x25b] = DATA_AT_0100203C_OFFSET_52 + 0x102adbc;
+  FUN_010003cc((int)param_1 + 0x858,(int)param_1 + 0x630,0xfffffeec,
+               ADDRESS_OF_FUNCTION_0102ab04_OFFSET + 0x102ae9c);
+  FUN_0102ab04(param_1 + 0x18c,0);
+  FUN_0102ab04(param_1 + 0x147,0);
+  FUN_0102ab04(param_1 + 0x102,0);
+  param_1[0x43] = DATA_AT_01002518_OFFSET_2 + 0x102aef0;
+  FUN_01000474(param_1[0x44],0x44,ADDRESS_OF_FUNCTION_01029fbc_OFFSET_2 + 0x102af00,0);
+  if (param_1[0x45] == -1)
+    FUN_01000474(param_1[0x46],0x44,ADDRESS_OF_FUNCTION_01029fbc_OFFSET_2 + 0x102af00,0);
+  param_1[0x43] = DATA_AT_0100203C_OFFSET_52 + 0x102adbc;
+  param_1[0x4] = DATA_AT_01002650_OFFSET_2 + 0x102af40;
+  helper_free((void *)param_1[0x5]);
+  if (param_1[0x6] == -1)
+    helper_free((void *)param_1[0x7]);
+  param_1[0x4] = DATA_AT_0100203C_OFFSET_52 + 0x102adbc;
+  *param_1 = DATA_AT_0100203C_OFFSET_52 + 0x102adbc;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102AFAC  (file offset 0x2AFAC)  FUN_0102afac ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023CC +0x0;
+   written from its disassembly (0x0102afac - 0x0102aff8). Destructor (GUESS): its class's vtable, frees
+   the buffer at +4 and, when +8 is -1, the one at +0xc; then the base class's vtable and, when param_2
+   is set, frees the object (through helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102afac(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_010023CC_OFFSET_3 + 0x102afc4;
+  helper_free((void *)param_1[1]);
+  if (param_1[2] == -1)
+    helper_free((void *)param_1[3]);
+  *param_1 = DATA_AT_0100203C_OFFSET_53 + 0x102afe8;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102B004  (file offset 0x2B004)  FUN_0102b004 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023E0 +0x0;
+   written from its disassembly (0x0102b004 - 0x0102b0b0). Destructor (GUESS): its class's vtable; each
+   object of the array at +8 (count +0xc) deleted (its virtual slot 0 with 1) and its entry cleared; the
+   member container at +4; then the base class's vtable and, when param_2 is set, frees the object
+   (helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102b004(int *param_1,int param_2)
+
+{
+  int iVar1;
+  int *piVar2;
+
+  *param_1 = DATA_AT_010023E0_OFFSET_2 + 0x102b01c;
+  for (iVar1 = 0; iVar1 < param_1[3]; iVar1 = iVar1 + 1) {
+    piVar2 = *(int **)(param_1[2] + iVar1 * 4);
+    if (piVar2 != (int *)0x0)
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
+      (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
+    *(int *)(param_1[2] + iVar1 * 4) = 0;
+  }
+  param_1[0x1] = DATA_AT_01002664_OFFSET_2 + 0x102b078;
+  helper_free((void *)param_1[0x2]);
+  if (param_1[0x3] == -1)
+    helper_free((void *)param_1[0x4]);
+  param_1[0x1] = DATA_AT_0100203C_OFFSET_54 + 0x102b09c;
+  *param_1 = DATA_AT_0100203C_OFFSET_54 + 0x102b09c;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102B0C0  (file offset 0x2B0C0)  FUN_0102b0c0 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023E4 +0x0;
+   written from its disassembly (0x0102b0c0 - 0x0102b12c). Destructor (GUESS): its class's vtable; its
+   0x44-byte elements destroyed (FUN_01000474 on the buffer at +4, and on +0xc when +8 is -1); then the
+   base class's vtable and, when param_2 is set, frees the object (helper_free's second entry,
+   0x0102990c; a tail jump). */
+void FUN_0102b0c0(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_010023E4_OFFSET_3 + 0x102b0d8;
+  FUN_01000474(param_1[1],0x44,ADDRESS_OF_FUNCTION_0102c460_OFFSET_3 + 0x102b0e8,0);
+  if (param_1[2] == -1)
+    FUN_01000474(param_1[3],0x44,ADDRESS_OF_FUNCTION_0102c460_OFFSET_3 + 0x102b0e8,0);
+  *param_1 = DATA_AT_0100203C_OFFSET_55 + 0x102b11c;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102B13C  (file offset 0x2B13C)  FUN_0102b13c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023F8 +0x0;
+   written from its disassembly (0x0102b13c - 0x0102b188). Destructor (GUESS): its class's vtable, frees
+   the buffer at +4 and, when +8 is -1, the one at +0xc; then the base class's vtable and, when param_2
+   is set, frees the object (through helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102b13c(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_010023F8_OFFSET_3 + 0x102b154;
+  helper_free((void *)param_1[1]);
+  if (param_1[2] == -1)
+    helper_free((void *)param_1[3]);
+  *param_1 = DATA_AT_0100203C_OFFSET_56 + 0x102b178;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
 /* ==== 0x0102B194  (file offset 0x2B194)  FUN_0102b194 ================================================ */
 void FUN_0102b194(int *param_1,int param_2)
 
@@ -36408,6 +39313,8 @@ void FUN_0102b194(int *param_1,int param_2)
     FUN_010171a0();
     piVar1 = (int *)*param_1;
     if (piVar1 != (int *)0x0) {
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
     }
     *param_1 = 0;
@@ -36418,6 +39325,63 @@ void FUN_0102b194(int *param_1,int param_2)
                     /* WARNING: Could not recover jumptable at 0x010398e0. Too many branches */
                     /* WARNING: Treating indirect jump as call */
   (*g_pHelperFuncs->free)(param_1);
+  return;
+}
+
+/* ==== 0x0102B1E8  (file offset 0x2B1E8)  FUN_0102b1e8 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100240C +0x0;
+   written from its disassembly (0x0102b1e8 - 0x0102b1fc). Destructor (GUESS): puts the base class's
+   vtable back and, when param_2 is set, frees the object (through helper_free's second entry,
+   0x0102990c; a tail jump). */
+void FUN_0102b1e8(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_0100203C_OFFSET_57 + 0x102b1f4;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102B204  (file offset 0x2B204)  FUN_0102b204 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002410 +0x0;
+   written from its disassembly (0x0102b204 - 0x0102b310). Destructor (GUESS): its class's vtables (+0,
+   and at +4 the second one, 0x28 bytes on); the object at +0xe0 deleted; each native object of the
+   array at +0xa4 (count +0xa8) released (swv_NativeRelease); FUN_01029cc4 on +0xd0 and +0xc0; the
+   containers at +0xb0 and +0xa0; FUN_0102b83c on +0x7c and FUN_0102a280 on the object; then, when
+   param_2 is set, frees the object (helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102b204(int *param_1,int param_2)
+
+{
+  int *piVar1;
+  int iVar2;
+
+  *param_1 = DATA_AT_01002410_OFFSET_2 + 0x102b21c;
+  param_1[1] = DATA_AT_01002410_OFFSET_2 + 0x102b21c + 0x28;
+  piVar1 = (int *)param_1[0x38];
+  if (piVar1 != (int *)0x0)
+    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+       object's class); slot 0 is the destructor */
+    (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
+  for (iVar2 = 0; iVar2 < param_1[0x2a]; iVar2 = iVar2 + 1) {
+    if (*(int *)(param_1[0x29] + iVar2 * 4) != 0)
+      swv_NativeRelease((int *)(*(int *)(param_1[0x29] + iVar2 * 4) + 4));
+  }
+  FUN_01029cc4(param_1 + 0x34,0);
+  FUN_01029cc4(param_1 + 0x30,0);
+  param_1[0x2c] = DATA_AT_01001EC0_OFFSET_3 + 0x102b298;
+  helper_free((void *)param_1[0x2d]);
+  if (param_1[0x2e] == -1)
+    helper_free((void *)param_1[0x2f]);
+  param_1[0x2c] = DATA_AT_0100203C_OFFSET_58 + 0x102b2bc;
+  param_1[0x28] = DATA_AT_01002598_OFFSET_2 + 0x102b2cc;
+  helper_free((void *)param_1[0x29]);
+  if (param_1[0x2a] == -1)
+    helper_free((void *)param_1[0x2b]);
+  param_1[0x28] = DATA_AT_0100203C_OFFSET_58 + 0x102b2bc;
+  FUN_0102b83c(param_1 + 0x1f,0);
+  FUN_0102a280(param_1,0);
+  if (param_2 != 0)
+    helper_free(param_1);
   return;
 }
 
@@ -36456,6 +39420,31 @@ void FUN_0102b3d0(int *param_1,int param_2)
                     /* WARNING: Could not recover jumptable at 0x010398e0. Too many branches */
                     /* WARNING: Treating indirect jump as call */
   (*g_pHelperFuncs->free)(param_1);
+  return;
+}
+
+/* ==== 0x0102B428  (file offset 0x2B428)  FUN_0102b428 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010024D8 +0x0;
+   written from its disassembly (0x0102b428 - 0x0102b4b4). Destructor (GUESS): its class's vtable;
+   FUN_0102b4c4 (with 1) on each object of the array at +8 (count +0xc); the member container at +4;
+   then, when param_2 is set, frees the object (helper_free's third entry, 0x01029910; a tail jump). */
+void FUN_0102b428(int *param_1,int param_2)
+
+{
+  int iVar1;
+
+  *param_1 = DATA_AT_010024D8_OFFSET_2 + 0x102b440;
+  for (iVar1 = 0; iVar1 < param_1[3]; iVar1 = iVar1 + 1) {
+    if (*(int *)(param_1[2] + iVar1 * 4) != 0)
+      FUN_0102b4c4(*(int **)(param_1[2] + iVar1 * 4),1);
+  }
+  param_1[0x1] = DATA_AT_010025D4_OFFSET + 0x102b480;
+  helper_free((void *)param_1[0x2]);
+  if (param_1[0x3] == -1)
+    helper_free((void *)param_1[0x4]);
+  param_1[0x1] = DATA_AT_0100203C_OFFSET_59 + 0x102b4a4;
+  if (param_2 != 0)
+    helper_free(param_1);
   return;
 }
 
@@ -36597,6 +39586,8 @@ void FUN_0102b784(int *param_1,int param_2)
     FUN_0101715c(uVar1,iVar3);
     piVar2 = (int *)*param_1;
     if (piVar2 != (int *)0x0) {
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *param_1 = 0;
@@ -36624,6 +39615,8 @@ void FUN_0102b7e0(int *param_1,int param_2)
     FUN_0101715c(uVar1,iVar3);
     piVar2 = (int *)*param_1;
     if (piVar2 != (int *)0x0) {
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *param_1 = 0;
@@ -36725,6 +39718,42 @@ void FUN_0102b964(int *param_1,int param_2)
   return;
 }
 
+/* ==== 0x0102B9E4  (file offset 0x2B9E4)  FUN_0102b9e4 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002584 +0x0;
+   written from its disassembly (0x0102b9e4 - 0x0102ba30). Destructor (GUESS): its class's vtable, frees
+   the buffer at +4 and, when +8 is -1, the one at +0xc; then the base class's vtable and, when param_2
+   is set, frees the object (through helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102b9e4(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_01002584_OFFSET_4 + 0x102b9fc;
+  helper_free((void *)param_1[1]);
+  if (param_1[2] == -1)
+    helper_free((void *)param_1[3]);
+  *param_1 = DATA_AT_0100203C_OFFSET_60 + 0x102ba20;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102BA3C  (file offset 0x2BA3C)  FUN_0102ba3c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002598 +0x0;
+   written from its disassembly (0x0102ba3c - 0x0102ba88). Destructor (GUESS): its class's vtable, frees
+   the buffer at +4 and, when +8 is -1, the one at +0xc; then the base class's vtable and, when param_2
+   is set, frees the object (through helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102ba3c(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_01002598_OFFSET_3 + 0x102ba54;
+  helper_free((void *)param_1[1]);
+  if (param_1[2] == -1)
+    helper_free((void *)param_1[3]);
+  *param_1 = DATA_AT_0100203C_OFFSET_61 + 0x102ba78;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
 /* ==== 0x0102BA94  (file offset 0x2BA94)  FUN_0102ba94 ================================================ */
 void FUN_0102ba94(int *param_1,int param_2)
 
@@ -36739,6 +39768,8 @@ void FUN_0102ba94(int *param_1,int param_2)
     FUN_0101715c(uVar1,iVar3);
     piVar2 = (int *)*param_1;
     if (piVar2 != (int *)0x0) {
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *param_1 = 0;
@@ -36762,6 +39793,8 @@ void FUN_0102baf0(int *param_1,int param_2)
     FUN_010171a0();
     piVar1 = (int *)*param_1;
     if (piVar1 != (int *)0x0) {
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
     }
     *param_1 = 0;
@@ -36789,6 +39822,8 @@ void FUN_0102bb44(int *param_1,int param_2)
     FUN_0101715c(uVar1,iVar3);
     piVar2 = (int *)*param_1;
     if (piVar2 != (int *)0x0) {
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *param_1 = 0;
@@ -36843,6 +39878,99 @@ void FUN_0102bbf8(int *param_1,int param_2)
   return;
 }
 
+/* ==== 0x0102BCD0  (file offset 0x2BCD0)  FUN_0102bcd0 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010025E8 +0x0;
+   written from its disassembly (0x0102bcd0 - 0x0102bd3c). Destructor (GUESS): its class's vtable; its
+   0x18-byte elements destroyed (FUN_01000474 with FUN_0102c584, on the buffer at +4, and on +0xc when
+   +8 is -1); then the base class's vtable and, when param_2 is set, frees the object (helper_free's
+   second entry, 0x0102990c; a tail jump). */
+void FUN_0102bcd0(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_010025E8_OFFSET_3 + 0x102bce8;
+  FUN_01000474(param_1[1],0x18,ADDRESS_OF_FUNCTION_0102c584_OFFSET_2 + 0x102bcf8,0);
+  if (param_1[2] == -1)
+    FUN_01000474(param_1[3],0x18,ADDRESS_OF_FUNCTION_0102c584_OFFSET_2 + 0x102bcf8,0);
+  *param_1 = DATA_AT_0100203C_OFFSET_62 + 0x102bd2c;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102BD4C  (file offset 0x2BD4C)  FUN_0102bd4c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010025FC +0x0;
+   written from its disassembly (0x0102bd4c - 0x0102bdc0). Destructor (GUESS): the member container at
+   +4 (0x18-byte elements, FUN_01000474 with FUN_0102c584), then the base class's vtable at +4 and +0
+   and, when param_2 is set, frees the object (helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102bd4c(int *param_1,int param_2)
+
+{
+  param_1[1] = DATA_AT_010025E8_OFFSET_4 + 0x102bd68;
+  FUN_01000474(param_1[2],0x18,ADDRESS_OF_FUNCTION_0102c584_OFFSET_3 + 0x102bd78,0);
+  if (param_1[3] == -1)
+    FUN_01000474(param_1[4],0x18,ADDRESS_OF_FUNCTION_0102c584_OFFSET_3 + 0x102bd78,0);
+  param_1[1] = DATA_AT_0100203C_OFFSET_63 + 0x102bdac;
+  *param_1 = DATA_AT_0100203C_OFFSET_63 + 0x102bdac;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102BDD0  (file offset 0x2BDD0)  FUN_0102bdd0 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002600 +0x0;
+   written from its disassembly (0x0102bdd0 - 0x0102be1c). Destructor (GUESS): its class's vtable; its
+   buffers freed (+4, and +0xc when +8 is -1); then FUN_01029c00 and, when param_2 is set, frees the
+   object (helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102bdd0(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_01002600_OFFSET_2 + 0x102bde8;
+  helper_free((void *)param_1[1]);
+  if (param_1[2] == -1)
+    helper_free((void *)param_1[3]);
+  FUN_01029c00(param_1,0);
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102BE24  (file offset 0x2BE24)  FUN_0102be24 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002614 +0x0;
+   written from its disassembly (0x0102be24 - 0x0102be90). Destructor (GUESS): its class's vtable; its
+   0x90-byte elements destroyed (FUN_01000474 with FUN_0102c590, on the buffer at +4, and on +0xc when
+   +8 is -1); then FUN_01029c00 and, when param_2 is set, frees the object (helper_free's second entry,
+   0x0102990c; a tail jump). */
+void FUN_0102be24(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_01002614_OFFSET_2 + 0x102be3c;
+  FUN_01000474(param_1[1],0x90,ADDRESS_OF_FUNCTION_0102c590_OFFSET_2 + 0x102be4c,0);
+  if (param_1[2] == -1)
+    FUN_01000474(param_1[3],0x90,ADDRESS_OF_FUNCTION_0102c590_OFFSET_2 + 0x102be4c,0);
+  FUN_01029c00(param_1,0);
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
+/* ==== 0x0102BE9C  (file offset 0x2BE9C)  FUN_0102be9c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002628 +0x0;
+   written from its disassembly (0x0102be9c - 0x0102bee8). Destructor (GUESS): its class's vtable, frees
+   the buffer at +4 and, when +8 is -1, the one at +0xc; then the base class's vtable and, when param_2
+   is set, frees the object (through helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102be9c(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_01002628_OFFSET_4 + 0x102beb4;
+  helper_free((void *)param_1[1]);
+  if (param_1[2] == -1)
+    helper_free((void *)param_1[3]);
+  *param_1 = DATA_AT_0100203C_OFFSET_64 + 0x102bed8;
+  if (param_2 != 0)
+    helper_free(param_1);
+  return;
+}
+
 /* ==== 0x0102BEF4  (file offset 0x2BEF4)  FUN_0102bef4 ================================================ */
 void FUN_0102bef4(int *param_1,int param_2)
 
@@ -36857,6 +39985,8 @@ void FUN_0102bef4(int *param_1,int param_2)
     FUN_0101715c(uVar1,iVar3);
     piVar2 = (int *)*param_1;
     if (piVar2 != (int *)0x0) {
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *param_1 = 0;
@@ -36908,6 +40038,24 @@ void FUN_0102bfc8(int *param_1,int param_2)
                     /* WARNING: Could not recover jumptable at 0x010398e0. Too many branches */
                     /* WARNING: Treating indirect jump as call */
   (*g_pHelperFuncs->free)(param_1);
+  return;
+}
+
+/* ==== 0x0102C020  (file offset 0x2C020)  FUN_0102c020 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002664 +0x0;
+   written from its disassembly (0x0102c020 - 0x0102c06c). Destructor (GUESS): its class's vtable, frees
+   the buffer at +4 and, when +8 is -1, the one at +0xc; then the base class's vtable and, when param_2
+   is set, frees the object (through helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102c020(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_01002664_OFFSET_3 + 0x102c038;
+  helper_free((void *)param_1[1]);
+  if (param_1[2] == -1)
+    helper_free((void *)param_1[3]);
+  *param_1 = DATA_AT_0100203C_OFFSET_65 + 0x102c05c;
+  if (param_2 != 0)
+    helper_free(param_1);
   return;
 }
 
@@ -37005,6 +40153,32 @@ void FUN_0102c338(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
                     /* WARNING: Could not recover jumptable at 0x010398e0. Too many branches */
                     /* WARNING: Treating indirect jump as call */
   (*g_pHelperFuncs->free)(param_1);
+  return;
+}
+
+/* ==== 0x0102C37C  (file offset 0x2C37C)  FUN_0102c37c ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010027D0 +0x0;
+   written from its disassembly (0x0102c37c - 0x0102c40c). Destructor (GUESS): its class's vtables (+0,
+   and at +4 the second one, 8 bytes on); the native objects at +0x88 and +0x8c released
+   (swv_NativeRelease); the member container at +0x90; then FUN_0102c2f4 and, when param_2 is set, frees
+   the object (helper_free's second entry, 0x0102990c; a tail jump). */
+void FUN_0102c37c(int *param_1,int param_2)
+
+{
+  *param_1 = DATA_AT_010027D0_OFFSET_2 + 0x102c394;
+  param_1[1] = DATA_AT_010027D0_OFFSET_2 + 0x102c394 + 8;
+  if (param_1[0x22] != 0)
+    swv_NativeRelease((int *)(param_1[0x22] + 4));
+  if (param_1[0x23] != 0)
+    swv_NativeRelease((int *)(param_1[0x23] + 4));
+  param_1[0x24] = DATA_AT_010024C4_OFFSET_3 + 0x102c3cc;
+  helper_free((void *)param_1[0x25]);
+  if (param_1[0x26] == -1)
+    helper_free((void *)param_1[0x27]);
+  param_1[0x24] = DATA_AT_0100203C_OFFSET_66 + 0x102c3f0;
+  FUN_0102c2f4(param_1,0);
+  if (param_2 != 0)
+    helper_free(param_1);
   return;
 }
 
@@ -38831,6 +42005,16 @@ void FUN_0102da44(int param_1)
   return;
 }
 
+/* ==== 0x0102DA68  (file offset 0x2DA68)  FUN_0102da68 ================================================ */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002410 +0x24;
+   written from its disassembly (0x0102da68 - 0x0102da78). Returns 1 when the word at +0xd8 is above 0,
+   else 0. */
+int FUN_0102da68(int param_1)
+
+{
+  return 0 < *(int *)(param_1 + 0xd8);
+}
+
 /* ==== 0x0102DA7C  (file offset 0x2DA7C)  swv_Create_Background ======================================= */
 int swv_Create_Background(void **ppObj)
 
@@ -39886,6 +43070,8 @@ bool FUN_0102e968(int *param_1,undefined4 param_2,undefined4 param_3)
   iVar1 = swv_setjmp();
   if (iVar1 == 0) {
     swv_TryArm(auStack_a0);
+    /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec
+       (by the object's class) */
     iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,param_3,param_2);
     bVar3 = iVar1 != 0;
     swv_TryPop();
@@ -41142,7 +44328,7 @@ void FUN_0102f7e0(undefined4 param_1)
   pvVar2 = helper_GetAppInstance();
                     /* WARNING: Could not recover jumptable at 0x010398cc. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  (**(code **)(**(int **)((int)pvVar2 + 0xc) + 0x18))(uVar3,0);
+  (*((IShell *)*(int **)((int)pvVar2 + 0xc))->pvt->CloseApplet)((IShell *)uVar3,0);
   return;
 }
 
@@ -41863,6 +45049,8 @@ void FUN_01030210(int param_1,int param_2)
   iVar2 = **(int **)(iVar1 + 0xa8);
                     /* WARNING: Could not recover jumptable at 0x0102653c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0xc: one of the 32 functions the engine vtables put there (by the
+     object's class) */
   (*(code *)(*(int *)(iVar2 + 0xc) + iVar2))(*(int **)(iVar1 + 0xa8),iVar1);
   return;
 }
@@ -42432,6 +45620,7 @@ void FUN_01030ae4(int param_1,undefined4 *param_2)
   if (piVar1 != (int *)0x0) {
     piVar1 = piVar1 + -1;
   }
+  /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
   uVar2 = (*(code *)(*(int *)(*piVar1 + 0x28) + *piVar1))();
   *param_2 = uVar2;
   return;
@@ -42484,6 +45673,8 @@ void FUN_01030b58(int param_1,undefined4 *param_2)
   if (piVar1 != (int *)0x0) {
     piVar1 = piVar1 + -1;
   }
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   uVar2 = (*(code *)(*(int *)(*piVar1 + 0x24) + *piVar1))();
   *param_2 = uVar2;
   return;
@@ -42787,6 +45978,8 @@ void FUN_01031034(int param_1,int param_2)
     if (*(int *)(iVar1 + 0x14) != 0) {
       FUN_01031ae4(*(int *)(iVar1 + 0x14),param_1);
     }
+    /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup
+       stores) */
     (**(code **)(param_1 + 0x24))(*(undefined4 *)(param_1 + 0x28),*(undefined4 *)(param_1 + 0x1c));
     *(undefined4 *)(param_1 + 0x1c) = 0;
     return;
@@ -42820,6 +46013,8 @@ undefined4 FUN_010311c4(int param_1,char *param_2,int param_3)
   if (*(int *)(param_1 + 0x24) == 0) {
     *(int *)(param_1 + 0x24) = ADDRESS_OF_FUNCTION_0103d3c0_OFFSET + 0x10310fc;
   }
+  /* zlib's zalloc (z_stream +0x20, opaque +0x28; GUESS: FUN_0103d3b8, which the inflater's setup
+     stores) */
   iVar1 = (**(code **)(param_1 + 0x20))(*(undefined4 *)(param_1 + 0x28),1,0x18);
   *(int *)(param_1 + 0x1c) = iVar1;
   if (iVar1 != 0) {
@@ -43086,6 +46281,8 @@ LAB_01031504:
       iVar4 = STRING_TOO_MANY_LENGTH_OR_DISTANCE_SYMBOLS_OFFSET + 0x10315dc;
       goto LAB_01031830;
     }
+    /* zlib's zalloc (z_stream +0x20, opaque +0x28; GUESS: FUN_0103d3b8, which the inflater's setup
+       stores) */
     iVar4 = (*(code *)param_2[8])(param_2[10],(uVar9 & 0x1f) + ((uVar9 & 0x3ff) >> 5) + 0x102,4);
     param_1[3] = iVar4;
     if (iVar4 != 0) {
@@ -43123,6 +46320,8 @@ LAB_01031624:
     param_3 = FUN_0103278c(param_1[3],local_28,local_2c,param_1[9],param_2);
     if (param_3 != 0) {
       if (param_3 == -3) {
+        /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup
+           stores) */
         (*(code *)param_2[9])(param_2[10],param_1[3]);
         *param_1 = 9;
       }
@@ -43177,6 +46376,8 @@ LAB_01031864:
         uVar9 = (uVar9 >> uVar5) >> (uVar3 & 0xff);
         if (local_30 < uVar1 + iVar4) {
 LAB_01031810:
+          /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup
+             stores) */
           (*(code *)param_2[9])(param_2[10],param_1[3]);
           *param_1 = 9;
           iVar4 = STRING_INVALID_BIT_LENGTH_REPEAT_OFFSET + 0x1031834;
@@ -43207,6 +46408,8 @@ LAB_01031810:
     if (local_34 != 0) {
       uVar1 = local_34;
       if (local_34 == 0xfffffffd) {
+        /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup
+           stores) */
         (*(code *)param_2[9])(param_2[10],param_1[3]);
         *param_1 = 9;
         uVar1 = local_34;
@@ -43228,6 +46431,8 @@ LAB_010313c4:
       goto LAB_01031918;
     }
     param_1[1] = iVar4;
+    /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup
+       stores) */
     (*(code *)param_2[9])(param_2[10],param_1[3]);
     *param_1 = 6;
 LAB_01031990:
@@ -43302,8 +46507,11 @@ undefined4 FUN_01031ae4(int param_1,int param_2,undefined4 param_3,undefined4 pa
 
 {
   FUN_01031c04(param_1,param_2,0,param_4,param_4);
+  /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup stores) */
   (**(code **)(param_2 + 0x24))(*(undefined4 *)(param_2 + 0x28),*(undefined4 *)(param_1 + 0x28));
+  /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup stores) */
   (**(code **)(param_2 + 0x24))(*(undefined4 *)(param_2 + 0x28),*(undefined4 *)(param_1 + 0x24));
+  /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup stores) */
   (**(code **)(param_2 + 0x24))(*(undefined4 *)(param_2 + 0x28),param_1);
   return 0;
 }
@@ -43316,15 +46524,23 @@ undefined4 * FUN_01031b30(int param_1,undefined4 param_2,int param_3,undefined4 
   int iVar2;
   
   puVar1 = (undefined4 *)
+           /* zlib's zalloc (z_stream +0x20, opaque +0x28; GUESS: FUN_0103d3b8, which the inflater's
+              setup stores) */
            (**(code **)(param_1 + 0x20))
                      (*(undefined4 *)(param_1 + 0x28),1,0x40,*(code **)(param_1 + 0x20),param_4);
   if (puVar1 != (undefined4 *)0x0) {
+    /* zlib's zalloc (z_stream +0x20, opaque +0x28; GUESS: FUN_0103d3b8, which the inflater's setup
+       stores) */
     iVar2 = (**(code **)(param_1 + 0x20))(*(undefined4 *)(param_1 + 0x28),8,0x5a0);
     puVar1[9] = iVar2;
     if (iVar2 == 0) {
+      /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup
+         stores) */
       (**(code **)(param_1 + 0x24))(*(undefined4 *)(param_1 + 0x28),puVar1);
     }
     else {
+      /* zlib's zalloc (z_stream +0x20, opaque +0x28; GUESS: FUN_0103d3b8, which the inflater's setup
+         stores) */
       iVar2 = (**(code **)(param_1 + 0x20))(*(undefined4 *)(param_1 + 0x28),1,param_3);
       puVar1[10] = iVar2;
       if (iVar2 != 0) {
@@ -43334,7 +46550,11 @@ undefined4 * FUN_01031b30(int param_1,undefined4 param_2,int param_3,undefined4 
         FUN_01031c04(puVar1,param_1,0);
         return puVar1;
       }
+      /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup
+         stores) */
       (**(code **)(param_1 + 0x24))(*(undefined4 *)(param_1 + 0x28),puVar1[9]);
+      /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup
+         stores) */
       (**(code **)(param_1 + 0x24))(*(undefined4 *)(param_1 + 0x28),puVar1);
     }
   }
@@ -43351,6 +46571,8 @@ void FUN_01031c04(int *param_1,int param_2,int *param_3,undefined4 param_4)
     *param_3 = param_1[0xf];
   }
   if (*param_1 == 4 || *param_1 == 5) {
+    /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup
+       stores) */
     (**(code **)(param_2 + 0x24))
               (*(undefined4 *)(param_2 + 0x28),param_1[3],*(code **)(param_2 + 0x24),param_4,param_4
               );
@@ -43364,6 +46586,7 @@ void FUN_01031c04(int *param_1,int param_2,int *param_3,undefined4 param_4)
   param_1[0xd] = param_1[10];
   param_1[0xc] = param_1[10];
   if ((code *)param_1[0xe] != (code *)0x0) {
+    /* the inflater's check function (+0x38, with +0x3c; GUESS: the Adler-32) */
     iVar1 = (*(code *)param_1[0xe])(0,0,0);
     param_1[0xf] = iVar1;
     *(int *)(param_2 + 0x30) = iVar1;
@@ -43706,6 +46929,7 @@ LAB_01031e60:
         param_2[4] = uVar16 - uVar15;
         param_2[5] = param_2[5] + uVar15;
         if (*(code **)(param_1 + 0x38) != (code *)0x0) {
+          /* the inflater's check function (+0x38, with +0x3c; GUESS: the Adler-32) */
           iVar3 = (**(code **)(param_1 + 0x38))(*(undefined4 *)(param_1 + 0x3c),iVar10,uVar15);
           *(int *)(param_1 + 0x3c) = iVar3;
           param_2[0xc] = iVar3;
@@ -43767,6 +46991,7 @@ void FUN_0103224c(undefined4 param_1,int param_2)
 {
                     /* WARNING: Could not recover jumptable at 0x0103225c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup stores) */
   (**(code **)(param_2 + 0x24))(*(undefined4 *)(param_2 + 0x28),param_1);
   return;
 }
@@ -43779,6 +47004,8 @@ void FUN_01032260(undefined1 param_1,undefined1 param_2,undefined4 param_3,undef
   undefined4 *puVar1;
   
   puVar1 = (undefined4 *)
+           /* zlib's zalloc (z_stream +0x20, opaque +0x28; GUESS: FUN_0103d3b8, which the inflater's
+              setup stores) */
            (**(code **)(param_5 + 0x20))
                      (*(undefined4 *)(param_5 + 0x28),1,0x1c,*(code **)(param_5 + 0x20),param_4);
   if (puVar1 != (undefined4 *)0x0) {
@@ -44045,6 +47272,7 @@ int FUN_01032658(int param_1,int param_2,int param_3,undefined4 param_4)
     *(uint *)(param_2 + 0x10) = uVar7 - uVar1;
     *(uint *)(param_2 + 0x14) = *(int *)(param_2 + 0x14) + uVar1;
     if (*(code **)(param_1 + 0x38) != (code *)0x0) {
+      /* the inflater's check function (+0x38, with +0x3c; GUESS: the Adler-32) */
       uVar3 = (**(code **)(param_1 + 0x38))(*(undefined4 *)(param_1 + 0x3c),iVar4,uVar1);
       *(undefined4 *)(param_1 + 0x3c) = uVar3;
       *(undefined4 *)(param_2 + 0x30) = uVar3;
@@ -44068,6 +47296,8 @@ int FUN_0103278c(undefined4 param_1,int *param_2,undefined4 param_3,undefined4 p
   undefined4 local_20;
   
   local_20 = 0;
+  /* zlib's zalloc (z_stream +0x20, opaque +0x28; GUESS: FUN_0103d3b8, which the inflater's setup
+     stores) */
   iVar1 = (**(code **)(param_5 + 0x20))(*(undefined4 *)(param_5 + 0x28),0x13,4);
   if (iVar1 == 0) {
     iVar2 = -4;
@@ -44087,6 +47317,8 @@ int FUN_0103278c(undefined4 param_1,int *param_2,undefined4 param_3,undefined4 p
         *(int *)(param_5 + 0x18) = STRING_INCOMPLETE_DYNAMIC_BIT_LENGTHS_TREE_OFFSET + 0x1032830;
       }
     }
+    /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup
+       stores) */
     (**(code **)(param_5 + 0x24))(*(undefined4 *)(param_5 + 0x28),iVar1);
   }
   return iVar2;
@@ -44112,6 +47344,8 @@ int FUN_01032858(uint param_1,undefined4 param_2,int param_3,int *param_4,int *p
   local_30 = param_2;
   iStack_2c = param_3;
   piStack_28 = param_4;
+  /* zlib's zalloc (z_stream +0x20, opaque +0x28; GUESS: FUN_0103d3b8, which the inflater's setup
+     stores) */
   iVar1 = (**(code **)(param_9 + 0x20))(*(undefined4 *)(param_9 + 0x28),0x120,4);
   if (iVar1 == 0) {
     return -4;
@@ -44125,6 +47359,8 @@ int FUN_01032858(uint param_1,undefined4 param_2,int param_3,int *param_4,int *p
       if (iVar2 == 0) {
         if (*param_5 != 0) {
 LAB_010329e8:
+          /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup
+             stores) */
           (**(code **)(param_9 + 0x24))(*(undefined4 *)(param_9 + 0x28),iVar1);
           return 0;
         }
@@ -44150,6 +47386,8 @@ LAB_010329bc:
       iVar2 = -3;
       *(int *)(param_9 + 0x18) = iVar3;
 LAB_010329cc:
+      /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup
+         stores) */
       (**(code **)(param_9 + 0x24))(*(undefined4 *)(param_9 + 0x28),iVar1);
       return iVar2;
     }
@@ -44164,6 +47402,7 @@ LAB_010329cc:
   iVar2 = -3;
   *(int *)(param_9 + 0x18) = STRING_INCOMPLETE_LITERAL_SLASH_LENGTH_TREE_OFFSET + 0x1032918;
 LAB_0103291c:
+  /* zlib's zfree (z_stream +0x24, opaque +0x28; GUESS: FUN_0103d3c0, which the inflater's setup stores) */
   (**(code **)(param_9 + 0x24))(*(undefined4 *)(param_9 + 0x28),iVar1);
   return iVar2;
 }
@@ -44872,6 +48111,8 @@ int FUN_01033474(int param_1,undefined1 param_2,undefined4 param_3)
     if (iVar5 != 1) {
       uVar4 = 0;
     }
+    /* the loader's read callback (+0x18): FUN_0103b0a4 for files or FUN_0103aff8 for Ext100 streams,
+       set by FUN_01039a28 / FUN_01039aac */
     iVar2 = (**(code **)(param_1 + 0x18))(param_1,uVar4,0x400,auStack_41c,&local_420);
     if (iVar2 != 0) break;
     if (((local_424 != -1) || (local_420 == 0)) ||
@@ -44887,6 +48128,8 @@ int FUN_01033474(int param_1,undefined1 param_2,undefined4 param_3)
   }
   bVar1 = true;
 LAB_01033580:
+  /* the loader's read callback (+0x18): FUN_0103b0a4 for files or FUN_0103aff8 for Ext100 streams, set
+     by FUN_01039a28 / FUN_01039aac */
   iVar3 = (**(code **)(param_1 + 0x18))(param_1,0,0,0,&local_420);
   if (iVar2 == 0) {
     iVar3 = local_424;
@@ -45043,6 +48286,8 @@ FUN_010337a8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     if (piVar2 != (int *)0x0) {
       piVar2 = piVar2 + -1;
     }
+    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+       object's class) */
     uVar3 = (*(code *)(*(int *)(*piVar2 + 8) + *piVar2))(piVar2,param_2,param_3,param_4,param_5);
     *param_6 = uVar3;
     swv_TryPop();
@@ -45072,6 +48317,8 @@ undefined4 FUN_01033834(int param_1,undefined4 *param_2)
     if (piVar2 != (int *)0x0) {
       piVar2 = piVar2 + -1;
     }
+    /* engine virtual call, slot +0xc: one of the 32 functions the engine vtables put there (by the
+       object's class) */
     uVar3 = (*(code *)(*(int *)(*piVar2 + 0xc) + *piVar2))();
     *param_2 = uVar3;
     swv_TryPop();
@@ -45101,6 +48348,8 @@ undefined4 FUN_010338a0(int param_1,int param_2,undefined4 *param_3)
     if (piVar2 != (int *)0x0) {
       piVar2 = piVar2 + -1;
     }
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     uVar3 = (*(code *)(*(int *)(*piVar2 + 4) + *piVar2))(piVar2,param_2 != 0);
     *param_3 = uVar3;
     swv_TryPop();
@@ -45129,6 +48378,8 @@ undefined4 FUN_01033918(int param_1,undefined4 param_2)
     if (piVar2 != (int *)0x0) {
       piVar2 = piVar2 + -1;
     }
+    /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+       object's class) */
     (*(code *)(*(int *)(*piVar2 + 0x10) + *piVar2))(piVar2,param_2);
     swv_TryPop();
   }
@@ -45499,6 +48750,7 @@ int FUN_01033dcc(int param_1,ISwerveObject **param_2)
     if (piVar2 != (int *)0x0) {
       piVar2 = piVar2 + -1;
     }
+    /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
     pNative = (void *)(*(code *)(*(int *)(*piVar2 + 0x2c) + *piVar2))();
     if (pNative != (void *)0x0) {
       pNative = (void *)((int)pNative + 4);
@@ -45622,6 +48874,8 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
       uVar3 = FUN_0100f8e8();
       FUN_0101715c(uVar3,piVar5);
       if (piVar5 != (int *)0x0) {
+        /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+           object's class); slot 0 is the destructor */
         (*(code *)(*(int *)*piVar5 + *piVar5))(piVar5,1);
       }
     }
@@ -45629,6 +48883,8 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
       uVar3 = FUN_0100f8e8();
       FUN_0101715c(uVar3,piVar2);
       if (piVar2 != (int *)0x0) {
+        /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+           object's class); slot 0 is the destructor */
         (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
       }
     }
@@ -45993,6 +49249,8 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
       uVar3 = FUN_0100f8e8();
       FUN_0101715c(uVar3,piVar5);
       if (piVar5 != (int *)0x0) {
+        /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+           object's class); slot 0 is the destructor */
         (*(code *)(*(int *)*piVar5 + *piVar5))(piVar5,1);
       }
     }
@@ -46000,6 +49258,8 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
       uVar3 = FUN_0100f8e8();
       FUN_0101715c(uVar3,piVar2);
       if (piVar2 != (int *)0x0) {
+        /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+           object's class); slot 0 is the destructor */
         (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
       }
     }
@@ -46434,11 +49694,15 @@ void FUN_01034cd8(int param_1,int param_2)
     return;
   }
   *(byte *)((int)piVar3 + 0x3d) = *(byte *)((int)piVar3 + 0x3d) | 2;
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   (*(code *)(*(int *)(*piVar3 + 0x24) + *piVar3))(piVar3);
   do {
     piVar1 = piVar3;
     piVar3 = (int *)piVar1[0xc];
   } while ((int *)piVar1[0xc] != (int *)0x0);
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   iVar2 = (*(code *)(*(int *)(piVar1[1] + 4) + piVar1[1]))(piVar1 + 1);
   if (iVar2 != 0x16) {
     return;
@@ -46446,6 +49710,8 @@ void FUN_01034cd8(int param_1,int param_2)
   if (piVar1[0x26] != 0) {
     if (piVar1[0x27] < 0) {
       iVar2 = piVar1[0x24];
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))(piVar1 + 0x24,0);
     }
     piVar1[0x26] = 0;
@@ -46470,11 +49736,15 @@ void FUN_01034cf0(int param_1,int param_2)
     return;
   }
   *(byte *)((int)piVar3 + 0x3d) = *(byte *)((int)piVar3 + 0x3d) | 1;
+  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
+     the object's class) */
   (*(code *)(*(int *)(*piVar3 + 0x24) + *piVar3))(piVar3);
   do {
     piVar1 = piVar3;
     piVar3 = (int *)piVar1[0xc];
   } while ((int *)piVar1[0xc] != (int *)0x0);
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   iVar2 = (*(code *)(*(int *)(piVar1[1] + 4) + piVar1[1]))(piVar1 + 1);
   if (iVar2 != 0x16) {
     return;
@@ -46482,6 +49752,8 @@ void FUN_01034cf0(int param_1,int param_2)
   if (piVar1[0x26] != 0) {
     if (piVar1[0x27] < 0) {
       iVar2 = piVar1[0x24];
+      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+         object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))(piVar1 + 0x24,0);
     }
     piVar1[0x26] = 0;
@@ -46501,6 +49773,7 @@ void FUN_01034d08(int param_1)
   }
                     /* WARNING: Could not recover jumptable at 0x01034d20. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
   (*(code *)(*(int *)(*piVar1 + 0x28) + *piVar1))();
   return;
 }
@@ -46587,6 +49860,8 @@ int FUN_01034e14(int param_1,ISwerveObject **param_2)
     if (piVar2 != (int *)0x0) {
       piVar2 = piVar2 + -1;
     }
+    /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+       object's class) */
     pNative = (void *)(*(code *)(*(int *)(*piVar2 + 0x10) + *piVar2))();
     if (pNative != (void *)0x0) {
       pNative = (void *)((int)pNative + 4);
@@ -46727,6 +50002,8 @@ int FUN_01034f94(int param_1,uint param_2,int param_3,uint *param_4)
       uVar4 = FUN_0100f8e8();
       FUN_0101715c(uVar4,piVar3);
       if (piVar3 != (int *)0x0) {
+        /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+           object's class); slot 0 is the destructor */
         (*(code *)(*(int *)*piVar3 + *piVar3))(piVar3,1);
       }
     }
@@ -46883,6 +50160,8 @@ void FUN_010352f4(int param_1)
     }
     if (iVar1 != 0) {
       piVar3 = (int *)**(int **)(iVar2 + 0x14);
+      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+         object's class); slot 0 is the destructor */
       (*(code *)(*piVar3 + (int)piVar3))(*(int **)(iVar2 + 0x14),1);
     }
     *(undefined4 *)(iVar2 + 0x14) = 0;
@@ -47554,6 +50833,7 @@ void FUN_01035e84(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   }
   if ((*(uint *)(param_1 + 0xa4) & 0x100000) != 0) {
     if (*(code **)(param_1 + 0x98) != (code *)0x0) {
+      /* a function pointer the object keeps at +0x98 (not identified) */
       (**(code **)(param_1 + 0x98))(param_1,iVar2);
     }
     bVar1 = *(char *)(param_1 + 0x13d) * *(char *)(param_1 + 0x13e);
@@ -47637,11 +50917,14 @@ void FUN_01036088(int param_1)
 
 {
   if (*(code **)(param_1 + 0x80) != (code *)0x0) {
+    /* a function pointer the object keeps at +0x80 (not identified) */
     (**(code **)(param_1 + 0x80))(param_1);
   }
   FUN_01000c24(*(undefined4 *)(param_1 + 0x20),*(undefined4 *)(param_1 + 0x24));
                     /* WARNING: Could not recover jumptable at 0x0100054c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* the function passed in (its address with the low bits cleared): the element constructor or
+     destructor */
   (*(code *)(*(uint *)(param_1 + 0xc) & 0xfffffffc))(1);
   return;
 }
@@ -48302,15 +51585,19 @@ void FUN_01036b2c(int param_1)
   if (*(code **)(param_1 + 0x90) != (code *)0x0) {
                     /* WARNING: Could not recover jumptable at 0x01036b40. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+    /* a function pointer the object keeps at +0x90 (not identified) */
     (**(code **)(param_1 + 0x90))();
     return;
   }
   if (*(code **)(param_1 + 0x80) != (code *)0x0) {
+    /* a function pointer the object keeps at +0x80 (not identified) */
     (**(code **)(param_1 + 0x80))(param_1);
   }
   FUN_01000c24(*(undefined4 *)(param_1 + 0x20),*(undefined4 *)(param_1 + 0x24));
                     /* WARNING: Could not recover jumptable at 0x0100054c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* the function passed in (its address with the low bits cleared): the element constructor or
+     destructor */
   (*(code *)(*(uint *)(param_1 + 0xc) & 0xfffffffc))(1);
   return;
 }
@@ -48870,6 +52157,7 @@ LAB_010377a4:
         }
                     /* WARNING: Could not recover jumptable at 0x010378e0. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+        /* a function pointer the object keeps at +0x174 (not identified) */
         (**(code **)(param_1 + 0x174))(param_1,*(undefined4 *)(param_1 + 0x118));
         return;
       }
@@ -49161,6 +52449,7 @@ void FUN_01037d48(int param_1,undefined4 param_2,undefined4 param_3)
   }
                     /* WARNING: Could not recover jumptable at 0x01037ee4. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* a function pointer the object keeps at +0x84 (not identified) */
   (**(code **)(param_1 + 0x84))(param_1,pcVar3 + iVar2);
   return;
 }
@@ -49255,6 +52544,7 @@ void FUN_01037eb0(int param_1,char *param_2)
   }
                     /* WARNING: Could not recover jumptable at 0x01037ee4. Too many branches */
                     /* WARNING: Treating indirect jump as call */
+  /* a function pointer the object keeps at +0x84 (not identified) */
   (**(code **)(param_1 + 0x84))(param_1,param_2 + iVar2);
   return;
 }
@@ -49574,6 +52864,8 @@ void FUN_01038280(int param_1,undefined4 *param_2,undefined4 param_3,undefined4 
     uVar1 = FUN_0102df78(*(int *)(param_1 + 0xc) + 1);
     iVar2 = *(int *)(param_1 + 4);
     pcVar3 = (code *)(*(int *)(iVar2 + 4) + iVar2);
+    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+       object's class) */
     (*pcVar3)((int *)(param_1 + 4),uVar1,*(undefined4 *)(param_1 + 0xc),pcVar3,param_4);
   }
   iVar2 = *(int *)(param_1 + 0xc);
@@ -50144,6 +53436,8 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
       uVar3 = FUN_0100f8e8();
       FUN_0101715c(uVar3,piVar5);
       if (piVar5 != (int *)0x0) {
+        /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+           object's class); slot 0 is the destructor */
         (*(code *)(*(int *)*piVar5 + *piVar5))(piVar5,1);
       }
     }
@@ -50151,6 +53445,8 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
       uVar3 = FUN_0100f8e8();
       FUN_0101715c(uVar3,piVar2);
       if (piVar2 != (int *)0x0) {
+        /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+           object's class); slot 0 is the destructor */
         (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
       }
     }
@@ -50489,6 +53785,8 @@ void FUN_01038f50(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   }
   if ((piVar1 != (int *)0x0) && (iVar3 = piVar1[1], piVar1[1] = iVar3 + -1, iVar3 + -1 == 0)) {
     pcVar5 = (code *)(*(int *)*piVar1 + *piVar1);
+    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+       object's class); slot 0 is the destructor */
     (*pcVar5)(piVar1,1,pcVar5,param_4,param_4);
   }
   if (iVar4 != 0) {
@@ -51301,7 +54599,7 @@ undefined4 FUN_010399c4(int param_1,undefined4 param_2,undefined4 *param_3)
     uVar2 = FUN_01033690(param_1,param_2,param_3);
   }
   else {
-    (**(code **)*puVar1)(puVar1);
+    (*((ISwerveObject *)puVar1)->pvt->AddRef)((ISwerveObject *)puVar1);
     *param_3 = *(undefined4 *)(param_1 + 0xc);
   }
   return uVar2;
@@ -51338,13 +54636,14 @@ int FUN_01039a28(int param_1,undefined4 param_2,undefined4 param_3,int *param_4)
   uVar4 = param_3;
   local_1c = param_4;
   pvVar1 = helper_GetAppInstance();
-  pcVar3 = *(code **)(**(int **)((int)pvVar1 + 0xc) + 8);
+  pcVar3 = (code *)((IShell *)*(int **)((int)pvVar1 + 0xc))->pvt->CreateInstance;
   iVar2 = (*pcVar3)(*(int **)((int)pvVar1 + 0xc),AEECLSID_FILEMGR_VALUE,&local_1c,pcVar3,uVar4);
   if (iVar2 == 0) {
     *(int **)(param_1 + 0x14) = local_1c;
     *(int *)(param_1 + 0x18) = ADDRESS_OF_FUNCTION_0103b0a4_OFFSET + 0x1039a74;
     iVar2 = FUN_01033338(param_1,1,param_2,param_3);
-    (**(code **)(*local_1c + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((IFileMgr *)local_1c)->pvt->Release)((IFileMgr *)local_1c);
   }
   return iVar2;
 }
@@ -51379,12 +54678,16 @@ int FUN_01039aac(int param_1,undefined4 param_2,undefined4 param_3,int *param_4)
       if (puVar4 != (undefined1 *)0x0) {
         *puVar4 = 0;
         swv_Create_Ext100(&local_20);
+        /* the Ext100 object's slot (GUESS: an engine-owned stream object, from swv_Create_Ext100; not
+           identified) */
         iVar2 = (**(code **)(*local_20 + 0x10))(local_20,iVar3 + 7);
         if (iVar2 == 0) {
           *(int **)(param_1 + 0x14) = local_20;
           *(int *)(param_1 + 0x18) = ADDRESS_OF_FUNCTION_0103aff8_OFFSET + 0x1039b6c;
           iVar2 = FUN_01033474(param_1,1,puVar4 + 1);
         }
+        /* the Ext100 object's slot (GUESS: an engine-owned stream object, from swv_Create_Ext100; not
+           identified) */
         (**(code **)(*local_20 + 4))();
       }
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -51393,13 +54696,14 @@ int FUN_01039aac(int param_1,undefined4 param_2,undefined4 param_3,int *param_4)
   }
   else {
     pvVar5 = helper_GetAppInstance();
-    iVar2 = (**(code **)(**(int **)((int)pvVar5 + 0xc) + 8))
-                      (*(int **)((int)pvVar5 + 0xc),AEECLSID_FILEMGR_VALUE,&local_20);
+    iVar2 = (*((IShell *)*(int **)((int)pvVar5 + 0xc))->pvt->CreateInstance)
+                ((IShell *)*(int **)((int)pvVar5 + 0xc),AEECLSID_FILEMGR_VALUE,&local_20);
     if (iVar2 == 0) {
       *(int **)(param_1 + 0x14) = local_20;
       *(int *)(param_1 + 0x18) = ADDRESS_OF_FUNCTION_0103b0a4_OFFSET_2 + 0x1039bdc;
       iVar2 = FUN_01033474(param_1,1,param_2);
-      (**(code **)(*local_20 + 4))();
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((IFileMgr *)local_20)->pvt->Release)((IFileMgr *)local_20);
     }
   }
   return iVar2;
@@ -51456,11 +54760,13 @@ LAB_01039cf0:
               iVar4 = FUN_010399c4(local_30,0,&local_34);
             }
           }
-          (**(code **)(*local_30 + 4))();
+          /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+          (*((ISwerveObject *)local_30)->pvt->Release)((ISwerveObject *)local_30);
           iVar2 = iVar5;
           if (local_34 != (int *)0x0) {
             FUN_01033984(param_1);
-            (**(code **)(*local_34 + 4))();
+            /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+            (*((ISwerveObject *)local_34)->pvt->Release)((ISwerveObject *)local_34);
             iVar2 = iVar4;
           }
         }
@@ -51636,6 +54942,8 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   }
   swv_TryArm(auStack_a4);
   ppvVar2 = swv_GetVtblCache();
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   uVar3 = (*(code *)(*(int *)(*(int *)pNative + 4) + *(int *)pNative))(pNative);
   iVar1 = WORD_HEXADECIMAL_0001000D;
   switch(uVar3) {
@@ -51946,6 +55254,8 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   pVtbl->AddRef = (_func_6 *)(ADDRESS_OF_swvObj_AddRef_OFFSET + 0x103a694);
   pVtbl->Release = (_func_7 *)(ADDRESS_OF_swvObj_Release_OFFSET + 0x103a6a0);
   pVtbl->QueryInterface = (_func_8 *)(ADDRESS_OF_swvObj_QueryInterface_OFFSET + 0x103a6ac);
+  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+     object's class) */
   iVar1 = (*(code *)(*(int *)(*(int *)pNative + 4) + *(int *)pNative))(pNative);
   if (iVar1 == 0x1c) {
     po = (ISwerveObject *)swv_New(0x20,0);
@@ -52229,9 +55539,11 @@ switchD_0103a908_default:
             }
           }
         }
+        /* Image2D slot +0x48: FUN_01030c54 (the object is an Image2D) */
         iVar15 = (**(code **)(*(int *)*local_28 + 0x48))(*local_28,iVar14,iVar3,iVar4,local_48,p);
       }
       else {
+        /* Image2D slot +0x4c: FUN_01030dbc (the object is an Image2D) */
         iVar15 = (**(code **)(*(int *)*local_28 + 0x4c))(*local_28,iVar14,iVar3,iVar4,local_48,p,0);
       }
     }
@@ -52269,6 +55581,8 @@ int FUN_0103ad28(int param_1,undefined4 param_2,undefined4 *param_3)
     if (iVar6 != 1) {
       uVar4 = 0;
     }
+    /* the loader's read callback (+0x18): FUN_0103b0a4 for files or FUN_0103aff8 for Ext100 streams,
+       set by FUN_01039a28 / FUN_01039aac */
     iVar1 = (**(code **)(param_1 + 0x18))(param_1,uVar4,0x400,auStack_424,&local_428);
     iVar3 = iVar1;
     if (((iVar1 != 0) || (local_428 == 0)) ||
@@ -52283,6 +55597,8 @@ int FUN_0103ad28(int param_1,undefined4 param_2,undefined4 *param_3)
     p = pvVar2;
     iVar3 = iVar1;
   } while (local_428 != 0);
+  /* the loader's read callback (+0x18): FUN_0103b0a4 for files or FUN_0103aff8 for Ext100 streams, set
+     by FUN_01039a28 / FUN_01039aac */
   (**(code **)(param_1 + 0x18))(param_1,0,0,0,&local_428);
   if (iVar3 == 0) {
     iVar3 = FUN_0103a77c(iVar5,p,param_3);
@@ -52365,6 +55681,7 @@ int FUN_0103aff8(int param_1,int param_2,undefined4 param_3,int param_4,undefine
   local_20 = param_4;
   if (param_2 != 0) {
     local_20 = 0;
+    /* the Ext100 stream object's slot (GUESS: the one FUN_01039aac stores at +0x14; not identified) */
     iVar1 = (**(code **)(**(int **)(param_1 + 0x14) + 0x14))
                       (*(int **)(param_1 + 0x14),param_2,0,&local_20);
     if (local_20 == 0) {
@@ -52379,11 +55696,13 @@ int FUN_0103aff8(int param_1,int param_2,undefined4 param_3,int param_4,undefine
   }
   if (param_4 == 0) {
     if (*(int **)(param_1 + 0x1c) != (int *)0x0) {
+      /* the Ext100 stream object's slot (GUESS: the one FUN_01039aac stores at +0x14; not identified) */
       (**(code **)(**(int **)(param_1 + 0x1c) + 4))();
       *(undefined4 *)(param_1 + 0x1c) = 0;
     }
   }
   else {
+    /* the Ext100 stream object's slot (GUESS: the one FUN_01039aac stores at +0x14; not identified) */
     uVar2 = (**(code **)(**(int **)(param_1 + 0x1c) + 8))(*(int **)(param_1 + 0x1c),param_4,param_3)
     ;
     *param_5 = uVar2;
@@ -52401,10 +55720,10 @@ int FUN_0103b0a4(int param_1,int param_2,undefined4 param_3,int param_4,undefine
   
   if (param_2 != 0) {
     piVar3 = *(int **)(param_1 + 0x14);
-    iVar1 = (**(code **)(*piVar3 + 8))(piVar3,param_2,1);
+    iVar1 = (*((IFileMgr *)piVar3)->pvt->OpenFile)((IFileMgr *)piVar3,param_2,1);
     if (iVar1 == 0) {
       *(undefined4 *)(param_1 + 0x1c) = 0;
-      iVar1 = (**(code **)(*piVar3 + 0x24))(piVar3);
+      iVar1 = (*((IFileMgr *)piVar3)->pvt->GetLastError)((IFileMgr *)piVar3);
       if (iVar1 != 0) {
         return iVar1;
       }
@@ -52415,13 +55734,14 @@ int FUN_0103b0a4(int param_1,int param_2,undefined4 param_3,int param_4,undefine
   }
   if (param_4 == 0) {
     if (*(int **)(param_1 + 0x1c) != (int *)0x0) {
-      (**(code **)(**(int **)(param_1 + 0x1c) + 4))();
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((IFile *)*(int **)(param_1 + 0x1c))->pvt->Release)((IFile *)*(int **)(param_1 + 0x1c));
       *(undefined4 *)(param_1 + 0x1c) = 0;
     }
   }
   else {
-    uVar2 = (**(code **)(**(int **)(param_1 + 0x1c) + 0xc))
-                      (*(int **)(param_1 + 0x1c),param_4,param_3);
+    uVar2 = (*((IFile *)*(int **)(param_1 + 0x1c))->pvt->Read)
+                ((IFile *)*(int **)(param_1 + 0x1c),param_4,param_3);
     *param_5 = uVar2;
   }
   return 0;

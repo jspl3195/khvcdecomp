@@ -37,7 +37,8 @@ typedef struct KHApp {
     struct ISwerve *pSwerve;         /* +0x64 ISHELL_CreateInstance(AEECLSID_SWERVE); released in kh_OnAppStop */
     ISwerveTarget *pSwerveTarget;    /* +0x68 Graphics3D: pSwerve->CreateObject(SWV_GRAPHICS3D, &...);
                                         released in kh_OnAppStop */
-    IBase         *pObj6c;           /* +0x6c GUESS: interface (released via vtbl[1] in kh_OnAppStop);
+    ISwerveObject *pObj6c;           /* +0x6c the scene's World (GUESS; its calls are World slots: Find,
+                                        Get/SetActiveCamera, Get/SetBackground); released in kh_OnAppStop;
                                         framebuffer binding is skipped when it is NULL */
     IDIB          *pScreenDIB;       /* +0x70 device bitmap QueryInterface(AEECLSID_DIB) */
     AEERect        rcView;           /* +0x74 {0, 0, devInfo.cxScreen, devInfo.cyScreen} */
@@ -184,8 +185,24 @@ typedef struct KeyOption {
     int32    keyCode;               /* +0x0C AVK_UNDEFINED, AVK_0..AVK_9, AVK_STAR or AVK_POUND */
 } KeyOption;                      /* 0x10 bytes; the Controls screen links 13 of them in a ring */
 
+/* The UI classes' vtable: VTABLE_0010165C (the game screen), VTABLE_001016A0 (TextBox), VTABLE_001016C0
+ * (TextLine), VTABLE_001016E0, VTABLE_00101700 (the plain screen) and VTABLE_00101724 (the base
+ * UIElement), in kh_mod.h (GUESS: names). In kh.mod each entry is the method's offset from the table;
+ * every method takes the object first (`self`, an element of the table's class). */
+typedef struct UIElementVtbl {
+    void   (*destroy)(void *self);                                       /* +0x00 slot 0 */
+    void   (*update)(void *self,int32 now,int32 elapsed);                 /* +0x04 slot 1 */
+    int32  (*handleKey)(void *self,int32 eventCode,int32 keyCode,int32 keyParameter); /* +0x08 slot 2 */
+    void   (*drawOverChildren)(void *self,IDisplay *display,IGraphics *graphics); /* +0x0c slot 3 */
+    void   (*draw)(void *self,IDisplay *display,IGraphics *graphics);     /* +0x10 slot 4 */
+    uint32 (*getPrimaryColor)(void *self);                                /* +0x14 slot 5 */
+    uint32 (*getSecondaryColor)(void *self);                              /* +0x18 slot 6 */
+    uint32 (*getBorderColor)(void *self);                                 /* +0x1c slot 7 */
+    void   (*resume)(void *self); /* +0x20 slot 8: the screens' only (VTABLE_0010165C, 00101700) */
+} UIElementVtbl;
+
 typedef struct UIElement {
-    int32    vtable;                /* +0x00 its class's vtable (VTABLE_00101724 for a plain element) */
+    const UIElementVtbl *vtable;  /* +0x00 its class's vtable (VTABLE_00101724 for a plain element) */
     uint8  visible;               /* +0x04 drawn only when set (FUN_00107d24); 1 from ui_element_create */
     uint8  unknown_05[0x03];
     AEERect *rect;                /* +0x08 its rectangle (allocated by ui_element_create) */
@@ -212,12 +229,14 @@ typedef struct UIElement {
     int32    index;                 /* +0x48 key picker: its row (0..6), passed to FUN_0010a498 on UP / DOWN */
     uint8  enabled;               /* +0x4c GUESS: meaning; a key picker with 0 is drawn all white */
     uint8  unknown_4d[0x03];
-    int32   *listener;              /* +0x50 an object (vtable at +0) that gets the keys the element
-                                     does not handle itself */
+    ITextCtl *listener;           /* +0x50 a BREW control (GUESS: an ITextCtl, class 0x01003009) that
+                                     gets the keys the element does not handle itself */
     uint8  unknown_54[0x08];
-    uint32 flags;                 /* +0x5c bit 1: keep the colours (no restyling) */
+    uint32 flags;                 /* +0x5c bit 1: it has the focus (ui_element_set_focus), so it keeps its
+                                     highlight colours (ui_element_handle_key) */
     UIList *keyMap;               /* +0x60 searched with the key code by list_find_entry */
-    int32    unknown_64;            /* +0x64 passed to FUN_00105224 with the element found there */
+    struct Screen *screen;        /* +0x64 the screen it has (or last had) the focus on
+                                     (ui_element_set_focus); its key map moves the focus there */
     int32    originalKeyCode;       /* +0x68 key picker: the setting's value when it was set up */
 } UIElement;
 
@@ -279,7 +298,7 @@ typedef struct TextBox {
  * the HUD (Hud) builds on one. */
 typedef struct Screen {
     uint8    element[0x30];       /* +0x00 the UI element */
-    UIElement *focus;             /* +0x30 the element with the focus (FUN_00105224 sets it) */
+    UIElement *focus;             /* +0x30 the element with the focus (ui_element_set_focus sets it) */
     UIElement **softKeys;         /* +0x34 its first and second soft key entries (8 bytes); their selectEvent
                                      is sent when the player's soft key is pressed */
     uint8    framed;              /* +0x38 screen_create's third argument; set: the draw method
@@ -671,56 +690,267 @@ typedef struct Game {
     struct KHApp *app;            /* +0x214 */
 } Game;
 
-/* The Swerve vtable slots game_create_objects calls, past the shared ISwerveObjectVtbl ones (GUESS:
- * names, from the JSR-184 methods they implement in swv21brew). */
-typedef struct SwerveGroupVtbl {
-    ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
-    void  *unknown_0c[0x28];
-    void (*GetChildCount)(ISwerveObject *po, int32 *pCount);               /* +0xac slot 43, 0x01030360 */
-    int32  (*GetChild)(ISwerveObject *po, int32 index, ISwerveObject **ppo); /* +0xb0 slot 44, 0x010302ec */
-} SwerveGroupVtbl;
-
-typedef struct SwerveSkinnedMeshVtbl {
-    ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
-    void  *unknown_0c[0x31];
-    int32  (*GetSkeleton)(ISwerveObject *po, ISwerveObject **ppo);         /* +0xd0 slot 52, 0x01038878 */
-} SwerveSkinnedMeshVtbl;
-
-/* The Swerve Object3D vtable slots kh.mod calls, shared by every object class (GUESS: names, from the
- * JSR-184 methods they implement in swv21brew, 0x0103517c fills them). */
+/* ---- The Swerve object classes' vtables (the ISwerveObject pvt of each class; slots 0-2, AddRef,
+ * Release and QueryInterface, are the shared ISwerveObjectVtbl). Each slot is listed with the swv21brew
+ * function its swv_InitVtbl_* puts there. Named slots: GUESS names, the JSR-184 methods they implement
+ * (from what the function does and how kh.mod calls it); slotN: not identified. */
+/* every object class (FUN_0103517c fills them) */
 typedef struct SwerveObject3DVtbl {
-    ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
-    void (*GetUserId)(ISwerveObject *po, int32 *pUserId);                  /* +0x0c slot 3, 0x010350fc */
-    void  *unknown_10;
-    void (*GetAnimationTrackCount)(ISwerveObject *po, int32 *pCount);      /* +0x14 slot 5, 0x01034f74 */
-    int32  (*GetAnimationTrack)(ISwerveObject *po, int32 index, ISwerveObject **ppo); /* +0x18 slot 6, 0x01034f00 */
-    void  *unknown_1c[0x02];
-    int32  (*Animate)(ISwerveObject *po, int32 worldTime, int32 *pResult);     /* +0x24 slot 9, 0x01034da8 */
-    int32  (*Find)(ISwerveObject *po, int32 userId, ISwerveObject **ppo);    /* +0x28 slot 10, 0x01034e8c */
+    ISwerveObjectVtbl object;                                              /* +0x00 slots 0-2 */
+    void (*GetUserId)(ISwerveObject *po,int32 *pUserId);                 /* +0x0c slot 3, 0x010350fc */
+    int32 (*SetUserId)(ISwerveObject *po,int32 userId);                  /* +0x10 slot 4, 0x01035304 */
+    void (*GetAnimationTrackCount)(ISwerveObject *po,int32 *pCount);     /* +0x14 slot 5, 0x01034f74 */
+    int32 (*GetAnimationTrack)(ISwerveObject *po,int32 index,ISwerveObject **ppo);
+                                                                         /* +0x18 slot 6, 0x01034f00 */
+    int32 (*AddAnimationTrack)(ISwerveObject *po,ISwerveObject *track);  /* +0x1c slot 7, 0x01034d24 */
+    int32 (*RemoveAnimationTrack)(ISwerveObject *po,ISwerveObject *track); /* +0x20 slot 8, 0x01035270 */
+    int32 (*Animate)(ISwerveObject *po,int32 worldTime,int32 *pResult);  /* +0x24 slot 9, 0x01034da8 */
+    int32 (*Find)(ISwerveObject *po,int32 userId,ISwerveObject **ppo);   /* +0x28 slot 10, 0x01034e8c */
+    int32 (*slot11)();                                                   /* +0x2c slot 11, 0x01034f94 */
+    int32 (*GetUserParameter)(ISwerveObject *po,int32 id,int32 size,void *buffer,int32 *pLength);
+                                                                         /* +0x30 slot 12, 0x01035114 */
+    int32 (*slot13)();                                                   /* +0x34 slot 13, 0x01035318 */
+    int32 (*slot14)();                                                   /* +0x38 slot 14, 0x010352f4 */
+    int32 (*slot15)();                                                   /* +0x3c slot 15, 0x01035134 */
+    int32 (*slot16)();                                                   /* +0x40 slot 16, 0x0103515c */
+    int32 (*Duplicate)(ISwerveObject *po,void *ppo);                     /* +0x44 slot 17, 0x01034e14 */
 } SwerveObject3DVtbl;
 
+/* Transformable: Node and Texture2D (FUN_0103c170) */
+typedef struct SwerveTransformableVtbl {
+    SwerveObject3DVtbl base;                                             /* +0x00 - +0x44 */
+    int32 (*GetTranslation)(ISwerveObject *po,void *xyz);                /* +0x48 slot 18, 0x0103c118 */
+    int32 (*SetTranslation)(ISwerveObject *po,void *xyz);                /* +0x4c slot 19, 0x0103c6ec */
+    int32 (*GetScale)(ISwerveObject *po,void *xyz);                      /* +0x50 slot 20, 0x0103c03c */
+    int32 (*SetScale)(ISwerveObject *po,void *xyz);                      /* +0x54 slot 21, 0x0103c5e8 */
+    int32 (*GetOrientation)(ISwerveObject *po,void *angleAxis);          /* +0x58 slot 22, 0x0103bfac */
+    int32 (*SetOrientation)(ISwerveObject *po,void *angleAxis);          /* +0x5c slot 23, 0x0103c4e8 */
+    int32 (*slot24)();                                                   /* +0x60 slot 24, 0x0103c784 */
+    int32 (*slot25)();                                                   /* +0x64 slot 25, 0x0103c450 */
+    int32 (*slot26)();                                                   /* +0x68 slot 26, 0x0103c350 */
+    int32 (*slot27)();                                                   /* +0x6c slot 27, 0x0103c250 */
+    int32 (*slot28)();                                                   /* +0x70 slot 28, 0x0103c094 */
+    int32 (*slot29)();                                                   /* +0x74 slot 29, 0x0103bf28 */
+    int32 (*slot30)();                                                   /* +0x78 slot 30, 0x0103c680 */
+} SwerveTransformableVtbl;
+
+/* Node: Group, World, Mesh, Camera, Light, Sprite3D (FUN_01034a6c) */
+typedef struct SwerveNodeVtbl {
+    SwerveTransformableVtbl base;                                        /* +0x00 - +0x78 */
+    int32 (*GetParent)(ISwerveObject *po,void *ppo);                     /* +0x7c slot 31, 0x01034934 */
+    int32 (*GetAlphaFactor)(ISwerveObject *po,void *pAlpha);             /* +0x80 slot 32, 0x0103491c */
+    int32 (*SetAlphaFactor)(ISwerveObject *po,uint32 alpha);             /* +0x84 slot 33, 0x01034c3c */
+    int32 (*IsRenderingEnabled)(ISwerveObject *po,void *pEnabled);       /* +0x88 slot 34, 0x01034b5c */
+    int32 (*SetRenderingEnable)(ISwerveObject *po,int32 enable);         /* +0x8c slot 35, 0x01034cf0 */
+    int32 (*IsPickingEnabled)(ISwerveObject *po,void *pEnabled);         /* +0x90 slot 36, 0x01034b3c */
+    int32 (*SetPickingEnable)(ISwerveObject *po,int32 enable);           /* +0x94 slot 37, 0x01034cd8 */
+    int32 (*slot38)();                                                   /* +0x98 slot 38, 0x010349a0 */
+    int32 (*slot39)();                                                   /* +0x9c slot 39, 0x01034d08 */
+    int32 (*GetTransformTo)(ISwerveObject *po,void *target,void *transform,void *pResult);
+                                                                         /* +0xa0 slot 40, 0x010349b8 */
+    int32 (*slot41)();                                                   /* +0xa4 slot 41, 0x01034b78 */
+    int32 (*Align)(ISwerveObject *po,void *reference);                   /* +0xa8 slot 42, 0x010348b0 */
+} SwerveNodeVtbl;
+
+/* Group and World */
+typedef struct SwerveGroupVtbl {
+    SwerveNodeVtbl base;                                                 /* +0x00 - +0xa8 */
+    void (*GetChildCount)(ISwerveObject *po,int32 *pCount);              /* +0xac slot 43, 0x01030360 */
+    int32 (*GetChild)(ISwerveObject *po,int32 index,ISwerveObject **ppo); /* +0xb0 slot 44, 0x010302ec */
+    int32 (*AddChild)(ISwerveObject *po,void *child);                    /* +0xb4 slot 45, 0x01030220 */
+    int32 (*RemoveChild)(ISwerveObject *po,void *child);                 /* +0xb8 slot 46, 0x010305b8 */
+    int32 (*Pick)(ISwerveObject *po,int32 scope,void *origin,void *direction,void *ray,void *pHit);
+                                                                         /* +0xbc slot 47, 0x010304c0 */
+    int32 (*slot48)();                                                   /* +0xc0 slot 48, 0x010303f0 */
+} SwerveGroupVtbl;
+
+/* World */
+typedef struct SwerveWorldVtbl {
+    SwerveGroupVtbl base;                                                /* +0x00 - +0xc0 */
+    int32 (*GetActiveCamera)(ISwerveObject *po,void *ppo);               /* +0xc4 slot 49, 0x0103d1ec */
+    int32 (*SetActiveCamera)(ISwerveObject *po,void *camera);            /* +0xc8 slot 50, 0x0103d314 */
+    int32 (*GetBackground)(ISwerveObject *po,void *ppo);                 /* +0xcc slot 51, 0x0103d258 */
+    int32 (*SetBackground)(ISwerveObject *po,void *background);          /* +0xd0 slot 52, 0x0103d398 */
+} SwerveWorldVtbl;
+
+/* Mesh, SkinnedMesh, MorphingMesh */
+typedef struct SwerveMeshVtbl {
+    SwerveNodeVtbl base;                                                 /* +0x00 - +0xa8 */
+    int32 (*slot43)();                                                   /* +0xac slot 43, 0x01033ec4 */
+    int32 (*slot44)();                                                   /* +0xb0 slot 44, 0x010340d0 */
+    int32 (*GetSubmeshCount)(ISwerveObject *po,void *pCount);            /* +0xb4 slot 45, 0x01033db4 */
+    int32 (*GetVertexBuffer)(ISwerveObject *po,void *ppo);               /* +0xb8 slot 46, 0x01033dcc */
+    int32 (*GetIndexBuffer)(ISwerveObject *po,int32 index,void *ppo);    /* +0xbc slot 47, 0x01033d40 */
+    int32 (*GetAppearance)(ISwerveObject *po,int32 index,void *ppo);     /* +0xc0 slot 48, 0x01033ccc */
+    int32 (*SetAppearance)(ISwerveObject *po,int32 index,void *appearance); /* +0xc4 slot 49, 0x0103418c */
+} SwerveMeshVtbl;
+
+/* SkinnedMesh */
+typedef struct SwerveSkinnedMeshVtbl {
+    SwerveMeshVtbl base;                                                 /* +0x00 - +0xc4 */
+    int32 (*slot50)();                                                   /* +0xc8 slot 50, 0x01038934 */
+    int32 (*slot51)();                                                   /* +0xcc slot 51, 0x01038b54 */
+    int32 (*GetSkeleton)(ISwerveObject *po,ISwerveObject **ppo);         /* +0xd0 slot 52, 0x01038878 */
+    int32 (*slot53)();                                                   /* +0xd4 slot 53, 0x01038794 */
+} SwerveSkinnedMeshVtbl;
+
+/* Camera */
+typedef struct SwerveCameraVtbl {
+    SwerveNodeVtbl base;                                                 /* +0x00 - +0xa8 */
+    int32 (*GetProjection)(ISwerveObject *po,int32 size,void *params,void *pType);
+                                                                         /* +0xac slot 43, 0x0102e06c */
+    int32 (*slot44)();                                                   /* +0xb0 slot 44, 0x0102e0dc */
+    int32 (*slot45)();                                                   /* +0xb4 slot 45, 0x0102e1b0 */
+    int32 (*slot46)();                                                   /* +0xb8 slot 46, 0x0102e234 */
+    int32 (*SetPerspective)(ISwerveObject *po,uint32 fovy,uint32 aspect,uint32 nearZ,uint32 farZ);
+                                                                         /* +0xbc slot 47, 0x0102e318 */
+} SwerveCameraVtbl;
+
+/* Background */
+typedef struct SwerveBackgroundVtbl {
+    SwerveObject3DVtbl base;                                             /* +0x00 - +0x44 */
+    int32 (*GetColor)(ISwerveObject *po,void *pColor);                   /* +0x48 slot 18, 0x0102dadc */
+    int32 (*SetColor)(ISwerveObject *po,uint32 argb);                    /* +0x4c slot 19, 0x0102dd80 */
+    int32 (*slot20)();                                                   /* +0x50 slot 20, 0x0102dba4 */
+    int32 (*slot21)();                                                   /* +0x54 slot 21, 0x0102de80 */
+    int32 (*slot22)();                                                   /* +0x58 slot 22, 0x0102dc10 */
+    int32 (*slot23)();                                                   /* +0x5c slot 23, 0x0102dc28 */
+    int32 (*slot24)();                                                   /* +0x60 slot 24, 0x0102db4c */
+    int32 (*slot25)();                                                   /* +0x64 slot 25, 0x0102db78 */
+    int32 (*slot26)();                                                   /* +0x68 slot 26, 0x0102db20 */
+    int32 (*slot27)();                                                   /* +0x6c slot 27, 0x0102daf4 */
+    int32 (*slot28)();                                                   /* +0x70 slot 28, 0x0102dd50 */
+    int32 (*slot29)();                                                   /* +0x74 slot 29, 0x0102dd94 */
+    int32 (*slot30)();                                                   /* +0x78 slot 30, 0x0102dd68 */
+    int32 (*slot31)();                                                   /* +0x7c slot 31, 0x0102de64 */
+    int32 (*slot32)();                                                   /* +0x80 slot 32, 0x0102deec */
+    int32 (*slot33)();                                                   /* +0x84 slot 33, 0x0102ddb0 */
+} SwerveBackgroundVtbl;
+
+/* Appearance */
+typedef struct SwerveAppearanceVtbl {
+    SwerveObject3DVtbl base;                                             /* +0x00 - +0x44 */
+    int32 (*slot18)();                                                   /* +0x48 slot 18, 0x0102d504 */
+    int32 (*slot19)();                                                   /* +0x4c slot 19, 0x0102d788 */
+    int32 (*GetMaterial)(ISwerveObject *po,void *ppo);                   /* +0x50 slot 20, 0x0102d51c */
+    int32 (*slot21)();                                                   /* +0x54 slot 21, 0x0102d7f8 */
+    int32 (*slot22)();                                                   /* +0x58 slot 22, 0x0102d498 */
+    int32 (*slot23)();                                                   /* +0x5c slot 23, 0x0102d768 */
+    int32 (*slot24)();                                                   /* +0x60 slot 24, 0x0102d42c */
+    int32 (*slot25)();                                                   /* +0x64 slot 25, 0x0102d748 */
+    int32 (*slot26)();                                                   /* +0x68 slot 26, 0x0102d588 */
+    int32 (*slot27)();                                                   /* +0x6c slot 27, 0x0102d818 */
+    int32 (*slot28)();                                                   /* +0x70 slot 28, 0x0102d5f4 */
+    int32 (*slot29)();                                                   /* +0x74 slot 29, 0x0102d838 */
+} SwerveAppearanceVtbl;
+
+/* Material (target: AMBIENT 0x400, DIFFUSE 0x800, EMISSIVE 0x1000, SPECULAR 0x2000) */
+typedef struct SwerveMaterialVtbl {
+    SwerveObject3DVtbl base;                                             /* +0x00 - +0x44 */
+    int32 (*slot18)();                                                   /* +0x48 slot 18, 0x01033aac */
+    int32 (*slot19)();                                                   /* +0x4c slot 19, 0x01033bb4 */
+    int32 (*slot20)();                                                   /* +0x50 slot 20, 0x01033b34 */
+    int32 (*slot21)();                                                   /* +0x54 slot 21, 0x01033c50 */
+    int32 (*GetColor)(ISwerveObject *po,int32 target,void *pColor);      /* +0x58 slot 22, 0x01033a24 */
+    int32 (*SetColor)(ISwerveObject *po,int32 target,uint32 argb);       /* +0x5c slot 23, 0x01033b4c */
+} SwerveMaterialVtbl;
+
+/* VertexBuffer */
+typedef struct SwerveVertexBufferVtbl {
+    SwerveObject3DVtbl base;                                             /* +0x00 - +0x44 */
+    int32 (*slot18)();                                                   /* +0x48 slot 18, 0x0103cd2c */
+    int32 (*slot19)();                                                   /* +0x4c slot 19, 0x0103cff0 */
+    int32 (*slot20)();                                                   /* +0x50 slot 20, 0x0103cca8 */
+    int32 (*slot21)();                                                   /* +0x54 slot 21, 0x0103cf70 */
+    int32 (*slot22)();                                                   /* +0x58 slot 22, 0x0103cd14 */
+    int32 (*slot23)();                                                   /* +0x5c slot 23, 0x0103cfdc */
+    int32 (*GetVertexCount)(ISwerveObject *po,void *pCount);             /* +0x60 slot 24, 0x0103ce98 */
+    int32 (*GetPositions)(ISwerveObject *po,int32 size,void *scaleBias,void *ppo);
+                                                                         /* +0x64 slot 25, 0x0103cd98 */
+    int32 (*slot26)();                                                   /* +0x68 slot 26, 0x0103d05c */
+    int32 (*slot27)();                                                   /* +0x6c slot 27, 0x0103ce14 */
+    int32 (*slot28)();                                                   /* +0x70 slot 28, 0x0103d0f0 */
+} SwerveVertexBufferVtbl;
+
+/* AnimationTrack */
 typedef struct SwerveAnimationTrackVtbl {
-    ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
-    void  *unknown_0c[0x10];                                             /* the Object3D slots and more */
-    int32  (*GetController)(ISwerveObject *po, ISwerveObject **ppo);       /* +0x4c slot 19, 0x0102d1c0 */
-    void  *unknown_50;
-    int32  (*GetKeyframeSequence)(ISwerveObject *po, ISwerveObject **ppo); /* +0x54 slot 21, 0x0102d22c */
+    SwerveObject3DVtbl base;                                             /* +0x00 - +0x44 */
+    int32 (*slot18)();                                                   /* +0x48 slot 18, 0x0102d310 */
+    int32 (*GetController)(ISwerveObject *po,ISwerveObject **ppo);       /* +0x4c slot 19, 0x0102d1c0 */
+    int32 (*slot20)();                                                   /* +0x50 slot 20, 0x0102d3ac */
+    int32 (*GetKeyframeSequence)(ISwerveObject *po,ISwerveObject **ppo); /* +0x54 slot 21, 0x0102d22c */
+    int32 (*slot22)();                                                   /* +0x58 slot 22, 0x0102d298 */
 } SwerveAnimationTrackVtbl;
 
+/* KeyframeSequence */
 typedef struct SwerveKeyframeSequenceVtbl {
-    ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
-    void  *unknown_0c[0x10];
-    void (*GetDuration)(ISwerveObject *po, int32 *pDuration);              /* +0x4c slot 19, 0x01032ac0 */
+    SwerveObject3DVtbl base;                                             /* +0x00 - +0x44 */
+    int32 (*slot18)();                                                   /* +0x48 slot 18, 0x01032b70 */
+    void (*GetDuration)(ISwerveObject *po,int32 *pDuration);             /* +0x4c slot 19, 0x01032ac0 */
+    int32 (*slot20)();                                                   /* +0x50 slot 20, 0x01032c10 */
+    int32 (*slot21)();                                                   /* +0x54 slot 21, 0x01032ad8 */
+    int32 (*slot22)();                                                   /* +0x58 slot 22, 0x01032d20 */
+    int32 (*slot23)();                                                   /* +0x5c slot 23, 0x01032c84 */
+    int32 (*slot24)();                                                   /* +0x60 slot 24, 0x01032d90 */
 } SwerveKeyframeSequenceVtbl;
 
+/* AnimationController (SetPosition's sequenceTime is a float) */
 typedef struct SwerveAnimationControllerVtbl {
-    ISwerveObjectVtbl object;                                            /* +0x00 slots 0-2 */
-    void  *unknown_0c[0x14];
-    int32  (*SetActiveInterval)(ISwerveObject *po, int32 start, int32 end);    /* +0x5c slot 23, 0x0102cf84 */
-    void  *unknown_60;
-    int32  (*SetPosition)(ISwerveObject *po, uint32 sequenceTime, int32 worldTime); /* +0x64 slot 25, 0x0102cfec;
-                                                                            sequenceTime is a float */
+    SwerveObject3DVtbl base;                                             /* +0x00 - +0x44 */
+    int32 (*slot18)();                                                   /* +0x48 slot 18, 0x0102cecc */
+    int32 (*slot19)();                                                   /* +0x4c slot 19, 0x0102d0d4 */
+    int32 (*slot20)();                                                   /* +0x50 slot 20, 0x0102ce74 */
+    int32 (*slot21)();                                                   /* +0x54 slot 21, 0x0102ce5c */
+    int32 (*slot22)();                                                   /* +0x58 slot 22, 0x0102ceac */
+    int32 (*SetActiveInterval)(ISwerveObject *po,int32 start,int32 end); /* +0x5c slot 23, 0x0102cf84 */
+    int32 (*slot24)();                                                   /* +0x60 slot 24, 0x0102ce8c */
+    int32 (*SetPosition)(ISwerveObject *po,uint32 sequenceTime,int32 worldTime);
+                                                                         /* +0x64 slot 25, 0x0102cfec */
+    int32 (*slot26)();                                                   /* +0x68 slot 26, 0x0102d060 */
 } SwerveAnimationControllerVtbl;
+
+/* Loader (not an Object3D) */
+typedef struct SwerveLoaderVtbl {
+    ISwerveObjectVtbl object;                                              /* +0x00 slots 0-2 */
+    int32 (*slot3)();                                                    /* +0x0c slot 3, 0x01039a28 */
+    int32 (*Load)(ISwerveObject *po,void *name);                         /* +0x10 slot 4, 0x01039aac */
+    int32 (*GetObjectCount)(ISwerveObject *po,void *pCount);             /* +0x14 slot 5, 0x01039a10 */
+    int32 (*GetObject)(ISwerveObject *po,int32 index,void *ppo);         /* +0x18 slot 6, 0x010399c4 */
+} SwerveLoaderVtbl;
+
+/* RayIntersection (not an Object3D) */
+typedef struct SwerveRayIntersectionVtbl {
+    ISwerveObjectVtbl object;                                              /* +0x00 slots 0-2 */
+    int32 (*GetDistance)(ISwerveObject *po,void *pDistance);             /* +0x0c slot 3, 0x01038340 */
+    int32 (*GetIntersected)(ISwerveObject *po,void *ppo);                /* +0x10 slot 4, 0x01038358 */
+    int32 (*slot5)();                                                    /* +0x14 slot 5, 0x01038488 */
+    int32 (*slot6)();                                                    /* +0x18 slot 6, 0x010383c4 */
+    int32 (*slot7)();                                                    /* +0x1c slot 7, 0x010383dc */
+    int32 (*slot8)();                                                    /* +0x20 slot 8, 0x010383f4 */
+    int32 (*slot9)();                                                    /* +0x24 slot 9, 0x010384a0 */
+    int32 (*slot10)();                                                   /* +0x28 slot 10, 0x01038518 */
+    int32 (*slot11)();                                                   /* +0x2c slot 11, 0x0103840c */
+} SwerveRayIntersectionVtbl;
+
+/* Transform (not an Object3D) */
+typedef struct SwerveTransformVtbl {
+    ISwerveObjectVtbl object;                                              /* +0x00 slots 0-2 */
+    int32 (*slot3)();                                                    /* +0x0c slot 3, 0x0103b84c */
+    int32 (*slot4)();                                                    /* +0x10 slot 4, 0x0103b6ec */
+    int32 (*slot5)();                                                    /* +0x14 slot 5, 0x0103bce8 */
+    int32 (*slot6)();                                                    /* +0x18 slot 6, 0x0103bd64 */
+    int32 (*slot7)();                                                    /* +0x1c slot 7, 0x0103bcd8 */
+    int32 (*slot8)();                                                    /* +0x20 slot 8, 0x0103b8cc */
+    int32 (*slot9)();                                                    /* +0x24 slot 9, 0x0103b924 */
+    int32 (*slot10)();                                                   /* +0x28 slot 10, 0x0103b9a8 */
+    int32 (*slot11)();                                                   /* +0x2c slot 11, 0x0103baa8 */
+    int32 (*slot12)();                                                   /* +0x30 slot 12, 0x0103bba8 */
+    int32 (*slot13)();                                                   /* +0x34 slot 13, 0x0103bc40 */
+    int32 (*TransformArray)(ISwerveObject *po,void *vertexArray,int32 count,void *out);
+                                                                         /* +0x38 slot 14, 0x0103bde8 */
+    int32 (*TransformVector)(ISwerveObject *po,int32 size,void *vector); /* +0x3c slot 15, 0x0103be9c */
+    int32 (*slot16)();                                                   /* +0x40 slot 16, 0x0103bf18 */
+} SwerveTransformVtbl;
 
 /* ---- The scene's animations (GUESS: names) -------------------------------------------------------
  * KHApp.animations (1820 bytes, animations_create). A table of up to 100 animations, one per animation
@@ -733,7 +963,7 @@ typedef struct Animations {
     ISwerveObject *world;         /* +0x004 GUESS: the scene's World; controllers are found in it (Find) */
     int32    elapsed;               /* +0x008 ms since the last update (animations_update) */
     int32    worldTime;             /* +0x00c the time the controllers are set at (animations_update) */
-    int32    userIds[100];          /* +0x010 the controllers' user ids (animations_find); -1 = free slot */
+    int32    userIds[100]; /* +0x010 the controllers' user ids (animations_find); -1 = free slot */
     int32    durations[100];        /* +0x1a0 the longest keyframe sequence of each controller
                                      (animations_get_duration) */
     uint8  states[100];           /* +0x330 0 free (animations_reset); 1 added, never played (stopped at the
@@ -789,9 +1019,22 @@ typedef struct ItemDrops {
     uint32 munnyPerPickup;        /* +0x60 a float (its bits): 1.0, or 2.0 when the region's field_120 >= 5 */
 } ItemDrops;                      /* 100 bytes */
 
+/* The enemy class's vtable (VTABLE_00101680 in kh_mod.h; GUESS: names). */
+typedef struct EnemyVtbl {
+    void   (*reset)(void *self);                    /* +0x00 slot 0, FUN_001174ac (run with enterMode2) */
+    void   (*update)(void *self,int32 now,int32 elapsed);                 /* +0x04 slot 1, enemy_update */
+    void   (*enterMode1)(void *self); /* +0x08 slot 2, enemy_enter_mode_1 */
+    void   (*enterMode2)(void *self); /* +0x0c slot 3, enemy_enter_mode_2 */
+    void   (*enterMode3)(void *self); /* +0x10 slot 4, enemy_enter_mode_3 */
+    int32  (*takeHit)(void *self,int32 part,uint32 damage,uint32 x,uint32 y,uint32 z,int32 playerState);
+                                                                          /* +0x14 slot 5, FUN_0010f2e8 */
+    uint32 (*getHealth)(void *self); /* +0x18 slot 6, enemy_get_health */
+    int32  (*isWaiting)(void *self); /* +0x1c slot 7, enemy_is_waiting */
+} EnemyVtbl;
+
 typedef struct Enemy {
-    int32    vtable;                /* +0x000 slots hold self-relative offsets; +4 is enemy_update, 0 and +0xc
-                                     run when the region's field_148 is set */
+    const EnemyVtbl *vtable;      /* +0x000 slots hold self-relative offsets; +4 is enemy_update, 0 and
+                                     +0xc run when the region's field_148 is set */
     uint32   playerPoint[3];      /* +0x004 GUESS: name; floats (their bits): the point near the player it
                                      aims at, set every update (enemy_get_player_point) */
     uint32   position[3];         /* +0x010 GUESS: name; floats (their bits): its model's (field_20)
@@ -902,8 +1145,16 @@ typedef struct CombatRegion {
  * health). */
 struct BossCombatRegion;
 
+/* The hitsphere class's vtable (VTABLE_00101650 in kh_mod.h; GUESS: names). */
+typedef struct HitsphereVtbl {
+    void   (*reset)(void *self); /* +0x00 slot 0, FUN_00114c00: reads its parameters from the node */
+    void   (*update)(void *self,int32 now,int32 elapsed);                 /* +0x04 slot 1, FUN_00121c6c */
+    void   (*takeHit)(void *self,uint32 damage,uint32 x,uint32 y,uint32 z,int32 playerState);
+                                                                          /* +0x08 slot 2, FUN_0010f4d0 */
+} HitsphereVtbl;
+
 typedef struct Hitsphere {
-    int32    vtable;                /* +0x00 0x00101650; slots hold self-relative offsets: +4 update,
+    const HitsphereVtbl *vtable;  /* +0x00 0x00101650; slots hold self-relative offsets: +4 update,
                                      +8 take a hit (damage, x, y, z, player state) */
     int32    entity;                /* +0x04 the scene entity it follows */
     uint32 radius;                /* +0x08 a float (its bits); not set by hitsphere_create */

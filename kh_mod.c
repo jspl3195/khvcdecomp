@@ -1097,7 +1097,8 @@ int AEEMod_CreateInstance(IModule *po,IShell *pIShell,AEECLSID ClsId,void **ppOb
   if (po[3].pvt != (IModuleVtbl *)0x0) {
                     /* WARNING: Could not recover jumptable at 0x001019c4. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-    iVar2 = (*(code *)(uint)po[3].pvt)();
+    /* the tail jump passes r0-r3 as ClsId, pIShell, po, ppObj (0x001019c4) */
+    iVar2 = (*((AEEMod *)po)->pfnModCrInst)(ClsId,pIShell,po,ppObj);
     return iVar2;
   }
   return AEEClsCreateInstance(ClsId,pIShell,po,ppObj);
@@ -1122,7 +1123,8 @@ uint32 AEEMod_Release(IModule *po)
   po[1].pvt = pIVar1;
   if (pIVar1 == (IModuleVtbl *)0x0) {
     if (po[4].pvt != (IModuleVtbl *)0x0) {
-      (*(code *)(uint32)po[4].pvt)();
+      /* po is still in r0 (0x001019f0) */
+      (*((AEEMod *)po)->pfnModFreeData)(po);
     }
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(po);
@@ -1430,7 +1432,7 @@ LAB_00103858:
           ui_element_add_child(iVar9,uVar10,0);
           local_38 = (void *)0x0;
           FUN_0011448c((undefined4)((KHApp *)*param_1)->context,piVar4,WORD_HEXADECIMAL_0AE069A1,&local_38);
-          (**(code **)(*piVar4 + 4))(piVar4);
+          (*((ISwerveObject *)piVar4)->pvt->Release)((ISwerveObject *)piVar4);
           if (local_38 != (void *)0x0) {
             iVar19 = text_style_create(0,6);
             *(undefined4 *)(iVar19 + 4) = 0x24;
@@ -1855,7 +1857,7 @@ LAB_00101fa8:
                                     *(int *)(iVar17 + 0x34) + 2,
                                 (int)*(short *)(*(int *)(iVar9 + 8) + 6),1,param_1);
           *(undefined1 *)(iVar17 + 0x1c) = 1;
-          *(undefined4 *)(iVar17 + 0x10) = WORD_HEXADECIMAL_FFC9C4DA;
+          *(undefined4 *)(iVar17 + 0x10) = COLOR_PALE_LILAC;
           ui_element_add_child(iVar9,iVar17,0);
           iVar19 = iVar19 + 1;
         }
@@ -1912,7 +1914,7 @@ LAB_00101db4:
       FUN_00109a10(iVar9,1,0,0);
       iVar7 = text_style_create(0,6);
       *(undefined4 *)(iVar7 + 4) = 9;
-      *(undefined4 *)(iVar7 + 0x18) = WORD_HEXADECIMAL_FFEFEFEF;
+      *(undefined4 *)(iVar7 + 0x18) = COLOR_LIGHT_GREY;
       uVar10 = screen_stack_scale((ScreenStack *)param_1,600,1).low;
       uVar11 = screen_stack_scale((ScreenStack *)param_1,800,2).low;
       uVar13 = screen_stack_scale((ScreenStack *)param_1,200,1).low;
@@ -2097,7 +2099,7 @@ LAB_0010489c:
         psVar18 = *(short **)(iVar19 + 8);
         iVar19 = text_style_create(0,5);
         *(undefined4 *)(iVar19 + 4) = 0x24;
-        *(undefined4 *)(iVar19 + 0x18) = WORD_HEXADECIMAL_FFEFEFEF;
+        *(undefined4 *)(iVar19 + 0x18) = COLOR_LIGHT_GREY;
         uVar10 = text_box_create(0,(int)*psVar18,(int)psVar18[1],(int)psVar18[2],(int)psVar18[3],
                               param_1,iVar19);
         text_box_set_text_id((TextBox *)uVar10,(int32)uVar11);
@@ -2319,7 +2321,7 @@ LAB_001042b8:
     iVar17 = screen_stack_scale((ScreenStack *)param_1,0x118,1).low;
     iVar12 = (int)*(short *)(*(int *)(iVar9 + 8) + 4) + iVar19 * -2;
     iVar7 = ui_element_create(0,iVar19,iVar17,iVar12,0,param_1);
-    *(undefined4 *)(iVar7 + 0x14) = WORD_HEXADECIMAL_FFEFEFEF;
+    *(undefined4 *)(iVar7 + 0x14) = COLOR_LIGHT_GREY;
     *(undefined4 *)(iVar7 + 0x10) = 0xff000000;
     *(undefined1 *)(iVar7 + 0x1c) = 1;
     iVar8 = screen_stack_scale((ScreenStack *)param_1,0x14,2).low;
@@ -2364,7 +2366,7 @@ LAB_001042b8:
       iVar17 = iVar17 + *(int *)(iVar20 + 0x34);
       *(short *)(*(int *)(iVar12 + 8) + 6) = (short)*(int *)(iVar20 + 0x34);
       if (iVar19 == 0) {
-        FUN_00105224(iVar12,iVar9);
+        ui_element_set_focus((UIElement *)iVar12,(Screen *)iVar9);
       }
       else {
         ui_element_set_key_target((UIElement *)iVar12,AVK_UP,(UIElement *)local_74[0]);
@@ -2448,7 +2450,7 @@ LAB_00104360:
       iVar19 = iVar20 + iVar17 + iVar19;
       iVar12 = ui_element_create(0,uVar10,iVar19,iVar7,1,param_1);
       *(undefined1 *)(iVar12 + 0x1c) = 1;
-      *(undefined4 *)(iVar12 + 0x10) = WORD_HEXADECIMAL_FFC9C4DA;
+      *(undefined4 *)(iVar12 + 0x10) = COLOR_PALE_LILAC;
       ui_element_add_child(iVar9,iVar12,0);
       iVar8 = iVar8 + 1;
       iVar19 = iVar19 + iVar17;
@@ -2492,7 +2494,7 @@ LAB_00104360:
       ((ScreenStack *)param_1)->keyPickers[iVar8] = (UIElement *)iVar12;
       iVar19 = *(short *)(*(int *)(iVar12 + 8) + 6) + iVar17 + iVar17 + iVar19;
       if (iVar8 == 0) {
-        FUN_00105224(iVar12,iVar9);
+        ui_element_set_focus((UIElement *)iVar12,(Screen *)iVar9);
       }
       else {
         ui_element_set_key_target((UIElement *)iVar12,AVK_UP,(UIElement *)iVar7);
@@ -2551,7 +2553,7 @@ LAB_001048a4:
     FUN_00109a10(iVar9,2,TEXT_BACK,0xffffffff);
     iVar19 = text_style_create(0,5);
     *(undefined4 *)(iVar19 + 4) = 0x24;
-    *(undefined4 *)(iVar19 + 0x18) = WORD_HEXADECIMAL_FFEFEFEF;
+    *(undefined4 *)(iVar19 + 0x18) = COLOR_LIGHT_GREY;
     local_38 = (void *)screen_stack_scale((ScreenStack *)param_1,600,1).low;
     uVar10 = screen_stack_scale((ScreenStack *)param_1,800,2).low;
     uVar13 = screen_stack_scale((ScreenStack *)param_1,200,1).low;
@@ -2613,48 +2615,44 @@ void FUN_001051d4(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x00105224  (file offset 0x05224)  FUN_00105224 ================================================ */
-void FUN_00105224(int *param_1,int param_2)
+/* ==== 0x00105224  (file offset 0x05224)  ui_element_set_focus ======================================== */
+/* GUESS: name. Gives `element` the keyboard focus on `screen`: the element keeps its screen (+0x64) and
+   the screen sends it the keys it does not handle itself (Screen.focus, screen_handle_key). The element is
+   marked focused (flags bit 1) and gets its highlight colours by type: types 3, 4, 7 and any other light
+   lavender on slate grey; 5 light yellow on dark grey; 6 light grey on black (its unfocused pair swapped);
+   types 2 and 8 (key picker) keep theirs, and 9 and 10 activate their text control instead (SetActive).
+   It is then redrawn. The element that had the focus is left as it is: ui_element_handle_key clears its
+   bit, deactivates its control and gives it the unfocused colours. Called by ui_element_handle_key when a
+   key moves the focus, and by FUN_00101ad8 and FUN_001053a8 for the first row of a new menu. Returns what
+   ui_element_draw returns (the binary's tail jump). */
+int32 ui_element_set_focus(UIElement *element,Screen *screen)
 
 {
-  int iVar4;
-  
-  param_1[0x19] = param_2;
-  *(int **)(param_2 + 0x30) = param_1;
-  param_1[0x17] = param_1[0x17] | 2;
-  switch(param_1[0xd]) {
+  element->screen = screen;
+  screen->focus = element;
+  element->flags |= 2;
+  switch(element->type) {
   case 2:
-    goto LAB_001052c0;
-  case 3:
-    break;
-  case 4:
+  case 8:
     break;
   case 5:
-    param_1[4] = -0xa0;
-    iVar4 = WORD_HEXADECIMAL_FF606060;
-    goto LAB_001052bc;
-  case 6:
-    param_1[4] = WORD_HEXADECIMAL_FFEFEFEF;
-    iVar4 = -0x1000000;
-    goto LAB_001052bc;
-  case 7:
+    element->primaryColor = 0xffffff60;           /* light yellow (mvn r0, #0x9f) */
+    element->secondaryColor = COLOR_DARK_GREY;
     break;
-  case 8:
-    goto LAB_001052c0;
+  case 6:
+    element->primaryColor = COLOR_LIGHT_GREY;
+    element->secondaryColor = 0xff000000;
+    break;
   case 9:
-    goto LAB_00105298;
   case 10:
-LAB_00105298:
-    (**(code **)(*(int *)param_1[0x14] + 0x10))((int *)param_1[0x14],1);
-    goto LAB_001052c0;
+    (*element->listener->pvt->SetActive)(element->listener,1);
+    break;
+  default:                                      /* 3, 4, 7 and any other type */
+    element->primaryColor = COLOR_PALE_LAVENDER;
+    element->secondaryColor = COLOR_SLATE_GREY;
+    break;
   }
-  param_1[4] = WORD_HEXADECIMAL_FFEBEBF7;
-  iVar4 = WORD_HEXADECIMAL_FF7E8194;
-LAB_001052bc:
-  param_1[5] = iVar4;
-LAB_001052c0:
-  ui_element_draw((UIElement *)param_1);         /* the binary's tail jump (0x001052c8) */
-  return;
+  return ui_element_draw(element);              /* the binary's tail jump (0x001052c8) */
 }
 
 
@@ -2735,7 +2733,7 @@ void FUN_001053a8(undefined4 param_1,undefined4 param_2,int param_3,int param_4,
                          *(undefined4 *)(param_5 + iVar5 * 4),1);
     text_line_set_text_id(*(undefined4 *)(iVar2 + 0x30),*(undefined4 *)(param_4 + iVar5 * 4));
     if (iVar5 == 0) {
-      FUN_00105224(iVar2,param_2);
+      ui_element_set_focus((UIElement *)iVar2,(Screen *)param_2);
     }
     else {
       ui_element_set_key_target((UIElement *)iVar2,previousKey,(UIElement *)iVar6);
@@ -2848,10 +2846,10 @@ int32 hud_show_loading(Hud *hud,uint32 color)
 /* ==== 0x001056EC  (file offset 0x056EC)  ui_element_set_key_target =================================== */
 /* GUESS: name. Links two UI elements for keyboard navigation: when `element` has the focus and the player
    presses `keyCode`, ui_element_handle_key finds `target` in the element's key map (+0x60) and moves the
-   focus to it (FUN_00105224). The binary is `ldr r0, [r0, #0x60]` and a tail jump to list_set_entry,
-   which adds the entry or replaces the one for that key; returns its result, the number of entries.
-   Callers link each new row (or button) of a menu with the previous one both ways: AVK_UP / AVK_DOWN in a
-   column, AVK_LEFT / AVK_RIGHT in a row (FUN_00101ad8, FUN_001053a8). */
+   focus to it (ui_element_set_focus). The binary is `ldr r0, [r0, #0x60]` and a tail jump to
+   list_set_entry, which adds the entry or replaces the one for that key; returns its result, the number of
+   entries. Callers link each new row (or button) of a menu with the previous one both ways: AVK_UP /
+   AVK_DOWN in a column, AVK_LEFT / AVK_RIGHT in a row (FUN_00101ad8, FUN_001053a8). */
 int32 ui_element_set_key_target(UIElement *element,int32 keyCode,UIElement *target)
 
 {
@@ -3008,10 +3006,12 @@ void FUN_00105c5c(int param_1)
 {
   
   if (*(int **)(param_1 + 0xd4) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0xd4) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((IImage *)*(int **)(param_1 + 0xd4))->pvt->Release)((IImage *)*(int **)(param_1 + 0xd4));
   }
   if (*(int **)(param_1 + 0xd8) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0xd8) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((IImage *)*(int **)(param_1 + 0xd8))->pvt->Release)((IImage *)*(int **)(param_1 + 0xd8));
   }
   FUN_00105dc8(param_1);
   return;
@@ -3029,11 +3029,11 @@ void text_box_destroy(TextBox *box)
   int32 i;
 
   for (i = 0; (line = (int32 *)list_get_entry(box->lines,i)) != (int32 *)0x0; i++) {
-    (*(code *)*(int32 *)*line)(line);             /* destroy: vtable slot 0 */
+    (*(*(const UIElementVtbl **)line)->destroy)(line);             /* destroy: vtable slot 0 */
     helper_free(line);
   }
   if (box->moreLine != (TextLine *)0x0) {
-    (*(code *)*(int32 *)*(int32 *)box->moreLine)(box->moreLine);
+    (*(*(const UIElementVtbl **)box->moreLine)->destroy)(box->moreLine);
     helper_free(box->moreLine);
     box->moreLine = (TextLine *)0x0;
   }
@@ -3071,14 +3071,16 @@ void FUN_00105d7c(int param_1)
     list_destroy(*(UIList **)(param_1 + 0x60),1);
   }
   if (*(int **)(param_1 + 0x50) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x50) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ITextCtl *)*(int **)(param_1 + 0x50))->pvt->Release)((ITextCtl *)*(int **)(param_1 + 0x50));
   }
   if (*(int **)(param_1 + 0x6c) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x6c) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((IImage *)*(int **)(param_1 + 0x6c))->pvt->Release)((IImage *)*(int **)(param_1 + 0x6c));
   }
   iVar1 = 0;
   while (p = (int *)list_get_entry(*(undefined4 *)(param_1 + 0x24),iVar1), p != (int *)0x0) {
-    (*(code *)(*(int *)*p))(p);
+    (*(*(const UIElementVtbl **)p)->destroy)(p);
     helper_free(p);
     iVar1 = iVar1 + 1;
   }
@@ -3099,7 +3101,7 @@ void FUN_00105dc8(int param_1)
   helper_free(*(void **)(param_1 + 0x34));
   iVar1 = 0;
   while (p = (int *)list_get_entry(*(undefined4 *)(param_1 + 0x24),iVar1), p != (int *)0x0) {
-    (*(code *)(*(int *)*p))(p);
+    (*(*(const UIElementVtbl **)p)->destroy)(p);
     helper_free(p);
     iVar1 = iVar1 + 1;
   }
@@ -3123,7 +3125,7 @@ void ui_element_destroy(UIElement *element)
   int32 i;
 
   for (i = 0; (child = (int32 *)list_get_entry(element->children,i)) != (int32 *)0x0; i++) {
-    (*(code *)*(int32 *)*child)(child);           /* destroy: vtable slot 0 */
+    (*(*(const UIElementVtbl **)child)->destroy)(child);           /* destroy: vtable slot 0 */
     helper_free(child);
   }
   if (element->children != (UIList *)0x0)
@@ -3338,8 +3340,8 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
     }
     if ((bool)uVar11) {
       if (*(char *)(param_1 + 0x48) != '\0') {
-        (**(code **)(*param_3 + 0x18))(param_3,1);
-        graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,WORD_HEXADECIMAL_FF4757DD,2);
+        (*((IGraphics *)param_3)->pvt->SetFillMode)((IGraphics *)param_3,1);
+        graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,COLOR_ROYAL_BLUE,2);
         graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,0xff000000,1);
         memcpy(&arc,(uint *)((int32)DATA_AT_00127A8E),10);
         arc.cx = *(int16 *)(*(int *)(param_1 + 8) + 4) - 0x19;
@@ -3351,7 +3353,7 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
             graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,0xff000000,2);
           }
           arc.startAngle = 0x87 - iVar2 * 0x2d;
-          (**(code **)(*param_3 + 0x60))(param_3,&arc);
+          (*((IGraphics *)param_3)->pvt->DrawArc)((IGraphics *)param_3,&arc);
           iVar2 = iVar2 + 1;
         } while (iVar2 < 5);
       }
@@ -3461,8 +3463,8 @@ void text_box_draw(TextBox *box,IDisplay *display,IGraphics *graphics)
   int16 lineY;
 
   if (box->style->type == 0) {
-    primary = (uint32)(*(code *)*(int32 *)(element->vtable + 0x14))(box);
-    secondary = (uint32)(*(code *)*(int32 *)(element->vtable + 0x18))(box);
+    primary = (uint32)(*element->vtable->getPrimaryColor)(box);
+    secondary = (uint32)(*element->vtable->getSecondaryColor)(box);
     (*graphics->pvt->SetFillMode)(graphics,1);
     graphics_set_color((int32)owner,graphics,secondary,2);
     graphics_set_color((int32)owner,graphics,primary,1);
@@ -3489,7 +3491,7 @@ void text_box_draw(TextBox *box,IDisplay *display,IGraphics *graphics)
   right = left + element->rect->dx - 0x2a;
   imageY = element->rect->y + element->rect->dy - 0xe;
   lineY = (int16)(element->rect->y + element->rect->dy - 3);
-  graphics_set_color((int32)owner,graphics,(uint32)(*(code *)*(int32 *)(element->vtable + 0x1c))(box),1);
+  graphics_set_color((int32)owner,graphics,(uint32)(*element->vtable->getBorderColor)(box),1);
   (*graphics->pvt->SetFillMode)(graphics,0);
   edge.sx = (int16)(left + 0x2a);
   edge.sy = lineY;
@@ -3502,7 +3504,7 @@ void text_box_draw(TextBox *box,IDisplay *display,IGraphics *graphics)
     if (box->style->type == 1) {
       (*owner->frameImages[0]->pvt->Draw)(owner->frameImages[0],left,imageY);
       (*owner->frameImages[1]->pvt->Draw)(owner->frameImages[1],right,imageY);
-      colour = WORD_HEXADECIMAL_FF82ECF3;
+      colour = COLOR_LIGHT_CYAN;
     }
     else if (box->style->type == 3) {
       (*owner->frameImages[2]->pvt->Draw)(owner->frameImages[2],left,imageY);
@@ -3545,9 +3547,9 @@ void text_line_draw(TextLine *line,IDisplay *display)
   else
     line->textY = rect->y + (rect->dy - line->height) / 2;
   display_set_color((int32)((UIElement *)line)->owner,display,1,
-                    (uint32)(*(code *)*(int32 *)(((UIElement *)line)->vtable + 0x14))(line));
+                    (uint32)(*((UIElement *)line)->vtable->getPrimaryColor)(line));
   display_set_color((int32)((UIElement *)line)->owner,display,2,
-                    (uint32)(*(code *)*(int32 *)(((UIElement *)line)->vtable + 0x18))(line));
+                    (uint32)(*((UIElement *)line)->vtable->getSecondaryColor)(line));
   (*display->pvt->DrawText)(display,line->font,line->text,-1,line->textX,line->textY,(AEERect *)0x0,0x8000);
 }
 
@@ -3567,15 +3569,16 @@ void FUN_00106bd4(int *param_1,int *param_2,int *param_3)
   undefined2 local_1c;
   undefined2 uStack_1a;
   
-  uVar1 = (*(code *)(*(int *)(*param_1 + 0x18)))();
+  /* Ghidra had dropped the element; r0 is param_1 (0x00106bf4) */
+  uVar1 = (*(*(const UIElementVtbl **)param_1)->getSecondaryColor)(param_1);
   switch(param_1[0xd]) {
   case 6:
     graphics_set_color(param_1[8],param_3,uVar1,2);
     graphics_set_color(param_1[8],param_3,uVar1,1);
-    (**(code **)(*param_3 + 0x18))(param_3,1);
+    (*((IGraphics *)param_3)->pvt->SetFillMode)((IGraphics *)param_3,1);
                     /* WARNING: Could not recover jumptable at 0x00106c80. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-    (**(code **)(*param_3 + 0x58))(param_3,param_1[2]);
+    (*((IGraphics *)param_3)->pvt->DrawRect)((IGraphics *)param_3,(const AEERect *)param_1[2]);
     return;
   case 7:
   default:
@@ -3589,7 +3592,7 @@ void FUN_00106bd4(int *param_1,int *param_2,int *param_3)
       }
       sVar5 = 4;
       if ((param_1[0x17] & 2U) != 0) {
-        FUN_00107adc((int)param_1,1,param_2,param_3,(short *)param_1[2],WORD_HEXADECIMAL_FF7E8194,WORD_HEXADECIMAL_FF7E8194,4)
+        FUN_00107adc((int)param_1,1,param_2,param_3,(short *)param_1[2],COLOR_SLATE_GREY,COLOR_SLATE_GREY,4)
         ;
         sVar5 = 2;
         *(short *)p = (short)*p + 3;
@@ -3597,7 +3600,7 @@ void FUN_00106bd4(int *param_1,int *param_2,int *param_3)
         *(short *)(p + 1) = (short)p[1] + -6;
         *(short *)((int)p + 6) = *(short *)((int)p + 6) + -6;
       }
-      uVar2 = (*(code *)(*(int *)(*param_1 + 0x18)))(param_1);
+      uVar2 = (*(*(const UIElementVtbl **)param_1)->getSecondaryColor)(param_1);
       FUN_00107adc((int)param_1,1,param_2,param_3,(short *)p,uVar2,uVar2,sVar5);
       helper_free(p);
     }
@@ -3611,13 +3614,13 @@ void FUN_00106bd4(int *param_1,int *param_2,int *param_3)
   case 0xc:
     uStack_20 = 0;
     *(undefined4 *)&local_1c = ((uint32)(uint16)(*(undefined2 *)(param_1[2] + 6)) << 16 | (uint16)(*(undefined2 *)(param_1[2] + 4)));
-    (**(code **)(*param_2 + 0x14))(param_2,&uStack_20,0xffffffff,0xffffff00,2);
+    (*((IDisplay *)param_2)->pvt->DrawRect)
+        ((IDisplay *)param_2,(const AEERect *)&uStack_20,0xffffffff,0xffffff00,2);
     piVar3 = (int *)param_1[0x1b];
     if (piVar3 != (int *)0x0) {
-      (**(code **)(*piVar3 + 0x10))(piVar3,&imageInfo);
+      (*((IImage *)piVar3)->pvt->GetInfo)((IImage *)piVar3,&imageInfo);
       psVar4 = (short *)param_1[2];
-      (**(code **)(*(int *)param_1[0x1b] + 8))
-                ((int *)param_1[0x1b],
+      (*((IImage *)param_1[0x1b])->pvt->Draw)((IImage *)param_1[0x1b],
                  (int)*psVar4 + ((int)psVar4[2] - (int)imageInfo.cx) / 2,
                  (int)psVar4[1] + ((int)psVar4[3] - (int)imageInfo.cy) / 2);
     }
@@ -3639,25 +3642,25 @@ void FUN_00106e44(int param_1,undefined4 param_2,int *param_3)
     if (psVar4 != (short *)0x0) {
       memcpy(psVar4,*(undefined4 *)(param_1 + 8),8);
     }
-    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,WORD_HEXADECIMAL_FF615A6D,3);
-    (**(code **)(*param_3 + 0x78))(param_3,psVar4);
+    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,COLOR_PURPLE_GREY,3);
+    (*((IGraphics *)param_3)->pvt->ClearRectBg)((IGraphics *)param_3,(const AEERect *)psVar4);
     sVar2 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x96,1).low;
     psVar4[3] = psVar4[3] - sVar2;
     sVar2 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x14,2).low;
     sVar3 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x14,2).low;
     *psVar4 = *psVar4 + sVar2;
-    uVar1 = WORD_HEXADECIMAL_FF9795A5;
+    uVar1 = COLOR_GREY_LILAC;
     psVar4[1] = psVar4[1] + sVar2;
     psVar4[2] = psVar4[2] + sVar2 * -2;
     psVar4[3] = psVar4[3] + sVar2 * -2;
     graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,uVar1,3);
-    (**(code **)(*param_3 + 0x78))(param_3,psVar4);
+    (*((IGraphics *)param_3)->pvt->ClearRectBg)((IGraphics *)param_3,(const AEERect *)psVar4);
     *psVar4 = *psVar4 + sVar3;
     psVar4[1] = psVar4[1] + sVar3;
     psVar4[2] = psVar4[2] + sVar3 * -2;
     psVar4[3] = psVar4[3] + sVar3 * -2;
     graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,*(undefined4 *)(param_1 + 0x40),3);
-    (**(code **)(*param_3 + 0x78))(param_3,psVar4);
+    (*((IGraphics *)param_3)->pvt->ClearRectBg)((IGraphics *)param_3,(const AEERect *)psVar4);
     helper_free(psVar4);
     return;
   }
@@ -3713,8 +3716,8 @@ void text_box_draw_scroll_bar(TextBox *box,IDisplay *display,IGraphics *graphics
 
   if (box->scrollable == 0)
     return;
-  primary = (uint32)(*(code *)*(int32 *)(element->vtable + 0x14))(box);
-  secondary = (uint32)(*(code *)*(int32 *)(element->vtable + 0x18))(box);
+  primary = (uint32)(*element->vtable->getPrimaryColor)(box);
+  secondary = (uint32)(*element->vtable->getSecondaryColor)(box);
   graphics_set_color((int32)element->owner,graphics,primary,1);
   graphics_set_color((int32)element->owner,graphics,secondary,2);
   (*graphics->pvt->SetFillMode)(graphics,1);
@@ -3777,7 +3780,7 @@ void FUN_00107230(int *param_1,undefined4 param_2,int *param_3)
   if (puVar1 != (uint *)0x0) {
     memcpy(puVar1,(uint *)param_1[2],8);
   }
-  uVar4 = WORD_HEXADECIMAL_FF2F2533;
+  uVar4 = COLOR_DARK_PURPLE;
   switch(param_1[0xd]) {
   case 0:
     break;
@@ -3787,20 +3790,20 @@ void FUN_00107230(int *param_1,undefined4 param_2,int *param_3)
     goto LAB_001072dc;
   case 3:
 LAB_001072dc:
-    uVar6 = WORD_HEXADECIMAL_FF2F2533;
-    uVar7 = WORD_HEXADECIMAL_FF9795A5;
+    uVar6 = COLOR_DARK_PURPLE;
+    uVar7 = COLOR_GREY_LILAC;
     if (param_1[0xd] != 2) {
       bVar8 = (param_1[0x17] & 2U) == 0;
       if (bVar8) {
-        uVar3 = WORD_HEXADECIMAL_FFEBEBF7;
+        uVar3 = COLOR_PALE_LAVENDER;
       }
       *(short *)puVar1 = (short)*puVar1 + 1;
       if (!bVar8) {
-        uVar3 = WORD_HEXADECIMAL_FFC9C4DA;
+        uVar3 = COLOR_PALE_LILAC;
       }
       *(short *)((int)puVar1 + 2) = *(short *)((int)puVar1 + 2) + 1;
       if (bVar8) {
-        uVar4 = WORD_HEXADECIMAL_FF7E8194;
+        uVar4 = COLOR_SLATE_GREY;
       }
       *(short *)(puVar1 + 1) = (short)puVar1[1] + -2;
       *(short *)((int)puVar1 + 6) = *(short *)((int)puVar1 + 6) + -2;
@@ -3816,7 +3819,7 @@ LAB_00107378:
   case 4:
     break;
   case 5:
-    uVar7 = (*(code *)(*(int *)(*param_1 + 0x14)))(param_1);
+    uVar7 = (*(*(const UIElementVtbl **)param_1)->getPrimaryColor)(param_1);
     iVar5 = 1;
     uVar3 = WORD_HEXADECIMAL_00FF00FF;
     goto LAB_00107378;
@@ -3834,37 +3837,37 @@ LAB_00107378:
       *(short *)((int)p + 2) = *(short *)((int)p + 2) + 1;
       *(short *)(p + 1) = (short)p[1] + -2;
       *(short *)((int)p + 6) = *(short *)((int)p + 6) + -2;
-      uVar3 = WORD_HEXADECIMAL_FFEBEBF7;
+      uVar3 = COLOR_PALE_LAVENDER;
       if ((param_1[0x17] & 2U) != 0) {
-        uVar3 = WORD_HEXADECIMAL_FFC9C4DA;
+        uVar3 = COLOR_PALE_LILAC;
       }
       FUN_00107adc((int)param_1,2,param_2,param_3,(short *)p,uVar3,0,4);
-      uVar3 = WORD_HEXADECIMAL_FF7E8194;
+      uVar3 = COLOR_SLATE_GREY;
       if ((param_1[0x17] & 2U) != 0) {
         uVar3 = uVar4;
       }
       FUN_00107adc((int)param_1,3,param_2,param_3,(short *)p,uVar3,0,4);
       helper_free(p);
     }
-    uVar2 = WORD_HEXADECIMAL_FF47464C;
+    uVar2 = COLOR_CHARCOAL;
     if (*(int *)param_1[0x11] == 0xe010) {
-      uVar2 = WORD_HEXADECIMAL_FFFF0000;
+      uVar2 = COLOR_RED;
     }
     *(undefined4 *)(param_1[0xc] + 0x10) = uVar2;
     uVar7 = param_1[0x17] & 2;
     left = *(int16 *)param_1[2] - 2;
     middle = ((int16 *)param_1[2])[1] + ((int16 *)param_1[2])[3] / 2;
     margin = uVar7 == 0;
-    local_28 = WORD_HEXADECIMAL_FFEBEBF7;
-    uVar3 = WORD_HEXADECIMAL_FFEBEBF7;
+    local_28 = COLOR_PALE_LAVENDER;
+    uVar3 = COLOR_PALE_LAVENDER;
     if (uVar7 != 0) {
-      local_28 = WORD_HEXADECIMAL_FF7E8194;
+      local_28 = COLOR_SLATE_GREY;
       uVar3 = uVar4;
     }
-    local_2c = WORD_HEXADECIMAL_FFC9C4DA;
+    local_2c = COLOR_PALE_LILAC;
     graphics_set_color(param_1[8],param_3,uVar3,1);
     graphics_set_color(param_1[8],param_3,local_28,2);
-    (**(code **)(*param_3 + 0x18))(param_3,1);
+    (*((IGraphics *)param_3)->pvt->SetFillMode)((IGraphics *)param_3,1);
     arrow.p0.x = left - 6 - margin;
     arrow.p0.y = middle;
     arrow.p1.x = left;
@@ -3875,23 +3878,23 @@ LAB_00107378:
     edge.sy = arrow.p0.y;
     edge.ex = arrow.p1.x;
     edge.ey = arrow.p1.y;
-    (**(code **)(*param_3 + 0x6c))(param_3,&arrow);
+    (*((IGraphics *)param_3)->pvt->DrawTriangle)((IGraphics *)param_3,&arrow);
     right = *(int16 *)param_1[2] + ((int16 *)param_1[2])[2] + 2;
     arrow.p0.x = right + margin + 6;
     arrow.p1.x = right;
     arrow.p2.x = right;
     if (uVar7 != 0) {
       graphics_set_color(param_1[8],param_3,local_2c,1);
-      (**(code **)(*param_3 + 0x54))(param_3,&edge);
+      (*((IGraphics *)param_3)->pvt->DrawLine)((IGraphics *)param_3,&edge);
     }
-    (**(code **)(*param_3 + 0x6c))(param_3,&arrow);
+    (*((IGraphics *)param_3)->pvt->DrawTriangle)((IGraphics *)param_3,&arrow);
     if (uVar7 != 0) {
       edge.sx = arrow.p0.x;
       edge.sy = arrow.p0.y;
       edge.ex = arrow.p2.x;
       edge.ey = arrow.p2.y;
       graphics_set_color(param_1[8],param_3,uVar3,1);
-      (**(code **)(*param_3 + 0x54))(param_3,&edge);
+      (*((IGraphics *)param_3)->pvt->DrawLine)((IGraphics *)param_3,&edge);
     }
     break;
   case 9:
@@ -3899,16 +3902,17 @@ LAB_00107378:
   case 10:
 LAB_00107384:
     if ((int *)param_1[0x14] != (int *)0x0) {
-      (**(code **)(*(int *)param_1[0x14] + 0xc))();
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((ITextCtl *)param_1[0x14])->pvt->Redraw)((ITextCtl *)param_1[0x14]);
     }
     break;
   case 0xb:
-    graphics_set_color(param_1[8],param_3,WORD_HEXADECIMAL_FF2F2533,1);
+    graphics_set_color(param_1[8],param_3,COLOR_DARK_PURPLE,1);
     local_2c = ((uint32)(uint16)(*(undefined2 *)(param_1[2] + 2)) << 16 | (uint16)(*(undefined2 *)param_1[2]));
     local_28 = ((uint32)(uint16)(*(undefined2 *)(param_1[2] + 6)) << 16 | (uint16)(*(undefined2 *)(param_1[2] + 4)));
-    (**(code **)(*param_3 + 0x58))(param_3,&local_2c);
-    (**(code **)(*param_3 + 0x18))(param_3,1);
-    graphics_set_color(param_1[8],param_3,WORD_HEXADECIMAL_FF7E8194,3);
+    (*((IGraphics *)param_3)->pvt->DrawRect)((IGraphics *)param_3,(const AEERect *)&local_2c);
+    (*((IGraphics *)param_3)->pvt->SetFillMode)((IGraphics *)param_3,1);
+    graphics_set_color(param_1[8],param_3,COLOR_SLATE_GREY,3);
     maximum = int_to_double(param_1[0x16]);
     value = int_to_double(param_1[0x15]);
                     /* helper[37] f_op (AEEHelperFuncs +0x94) - BREW floating-point arithmetic
@@ -3937,7 +3941,7 @@ LAB_00107384:
     bar.y = ((int16 *)param_1[2])[1] + 1;
     bar.dx = float_to_int(uVar3) - 2;
     bar.dy = ((int16 *)param_1[2])[3] - 2;
-    (**(code **)(*param_3 + 0x78))(param_3,&bar);
+    (*((IGraphics *)param_3)->pvt->ClearRectBg)((IGraphics *)param_3,&bar);
     break;
   case 0xc:
     break;
@@ -4011,7 +4015,7 @@ void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,u
   local_28 = param_4;
   iVar6 = rt_sdiv(param_6,param_5 * 0x50).low;
   iVar7 = rt_sdiv(param_6,local_28 * 0x50).low;
-  (**(code **)(*param_2 + 0x18))(param_2,1);
+  (*((IGraphics *)param_2)->pvt->SetFillMode)((IGraphics *)param_2,1);
   graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,1);
   graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,2);
   iVar10 = INTEGER_270;
@@ -4035,7 +4039,7 @@ void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,u
     uVar3 = -uVar3;
   }
   local_44 = (uint)uVar3;
-  (**(code **)(*param_2 + 0x60))(param_2,&local_4c);
+  (*((IGraphics *)param_2)->pvt->DrawArc)((IGraphics *)param_2,(const AEEArc *)&local_4c);
   sVar2 = (short)iVar11;
   if (0x34 < iVar6) {
     sVar1 = (short)iVar6 + -0x34;
@@ -4048,12 +4052,12 @@ void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,u
     }
     local_54 = ((uint32)(uint16)(sVar2 + 7) << 16 | (uint16)(sVar4));
     local_50 = ((uint32)(uint16)(*(undefined2 *)((undefined1 *)&local_50 + 2)) << 16 | (uint16)(sVar1));
-    (**(code **)(*param_2 + 0x58))(param_2,&local_54);
+    (*((IGraphics *)param_2)->pvt->DrawRect)((IGraphics *)param_2,(const AEERect *)&local_54);
   }
   if ((param_7 <= local_28) || (*(char *)(param_1 + 0xd1) != '\0')) {
-    uVar12 = WORD_HEXADECIMAL_FF7FCB61;
+    uVar12 = COLOR_GREEN;
     if (local_28 < param_7) {
-      uVar12 = WORD_HEXADECIMAL_FFFF0000;
+      uVar12 = COLOR_RED;
     }
     graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,uVar12,2);
     iVar10 = INTEGER_270;
@@ -4065,7 +4069,7 @@ void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,u
       sVar1 = (short)iVar10;
     }
     local_44 = ((uint32)(uint16)(*(undefined2 *)((undefined1 *)&local_44 + 2)) << 16 | (uint16)(sVar1));
-    (**(code **)(*param_2 + 0x60))(param_2,&local_4c);
+    (*((IGraphics *)param_2)->pvt->DrawArc)((IGraphics *)param_2,(const AEEArc *)&local_4c);
     if (0x34 < iVar7) {
       sVar1 = (short)iVar7 + -0x34;
       memcpy(&local_54,(int32)DATA_AT_00127A86,8);
@@ -4075,13 +4079,13 @@ void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,u
       local_54 = ((uint32)(uint16)(sVar2 + 8) << 16 | (uint16)(sVar5));
       local_50 = ((uint32)(uint16)(*(undefined2 *)((undefined1 *)&local_50 + 2)) << 16 | (uint16)(sVar1));
       graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,uVar12,1);
-      (**(code **)(*param_2 + 0x58))(param_2,&local_54);
+      (*((IGraphics *)param_2)->pvt->DrawRect)((IGraphics *)param_2,(const AEERect *)&local_54);
     }
     graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,1);
     graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,2);
     local_50 = *(undefined4 *)(((int32)DATA_AT_00127A78 + 0x4));
     local_54 = ((uint32)(uint16)((short)local_3c) << 16 | (uint16)((short)local_38));
-    (**(code **)(*param_2 + 0x5c))(param_2,&local_54);
+    (*((IGraphics *)param_2)->pvt->DrawCircle)((IGraphics *)param_2,(const AEECircle *)&local_54);
   }
   if (param_3 == 0) {
     piVar8 = *(int **)(param_1 + 0xd8);
@@ -4090,7 +4094,8 @@ void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,u
     piVar8 = *(int **)(param_1 + 0xd4);
   }
   if (piVar8 != (int *)0x0) {
-    (**(code **)(*piVar8 + 8))(piVar8,iVar14 + -7);
+    /* Ghidra had dropped arguments; restored from the disassembly (r2 = iVar11 - 7, 0x00107ab8) */
+    (*((IImage *)piVar8)->pvt->Draw)((IImage *)piVar8,iVar14 + -7,iVar11 + -7);
   }
   return;
 }
@@ -4159,23 +4164,23 @@ void FUN_00107adc(int param_1,int param_2,undefined4 param_3,int *param_4,short 
   psVar3[0xe] = local_44;
   psVar3[0xf] = sStack_42;
   if (param_2 == 1) {
-    (**(code **)(*param_4 + 0x18))(param_4,(param_7 & 0xff000000) != 0);
+    (*((IGraphics *)param_4)->pvt->SetFillMode)((IGraphics *)param_4,(param_7 & 0xff000000) != 0);
     graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_4,param_7,2);
     graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_4,param_7,1);
     local_4c = *(undefined4 *)((int32)DATA_AT_00127A68);
     local_48 = psVar3;
-    (**(code **)(*param_4 + 0x70))(param_4,&local_4c);
+    (*((IGraphics *)param_4)->pvt->DrawPolygon)((IGraphics *)param_4,(const AEEPolygon *)&local_4c);
   }
   else {
     if (param_2 != 2) {
       if (param_2 != 3) goto LAB_00107c9c;
       iVar4 = 4;
     }
-    (**(code **)(*param_4 + 0x18))(param_4,0);
+    (*((IGraphics *)param_4)->pvt->SetFillMode)((IGraphics *)param_4,0);
     graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_4,param_6,1);
     local_4c = *(undefined4 *)(iVar2 + 0x107c40);
     local_48 = psVar3 + iVar4 * 2;
-    (**(code **)(*param_4 + 0x74))(param_4,&local_4c);
+    (*((IGraphics *)param_4)->pvt->DrawPolyline)((IGraphics *)param_4,(const AEEPolyline *)&local_4c);
   }
 LAB_00107c9c:
                     /* WARNING: Could not recover jumptable at 0x00107cb0. Too many branches */
@@ -4205,15 +4210,15 @@ int32 ui_element_draw(UIElement *element)
   if (element->visible == 0)
     return 0;
   if (element->hasBackground != 0) {
-    graphics_set_color((int32)owner,owner->graphics,(*(code *)*(int32 *)(element->vtable + 0x1c))(element),1);
-    graphics_set_color((int32)owner,owner->graphics,(*(code *)*(int32 *)(element->vtable + 0x18))(element),2);
+    graphics_set_color((int32)owner,owner->graphics,(*element->vtable->getBorderColor)(element),1);
+    graphics_set_color((int32)owner,owner->graphics,(*element->vtable->getSecondaryColor)(element),2);
     (*owner->graphics->pvt->SetFillMode)(owner->graphics,1);
     (*owner->graphics->pvt->DrawRect)(owner->graphics,element->rect);
   }
-  (*(code *)*(int32 *)(element->vtable + 0x10))(element,owner->display,owner->graphics);
+  (*element->vtable->draw)(element,owner->display,owner->graphics);
   for (i = 0; (child = (UIElement *)list_get_entry(element->children,i)) != (UIElement *)0x0; i++)
     ui_element_draw(child);
-  (*(code *)*(int32 *)(element->vtable + 0xc))(element,owner->display,owner->graphics);
+  (*element->vtable->drawOverChildren)(element,owner->display,owner->graphics);
   return (*owner->graphics->pvt->Flush)(owner->graphics);
 }
 
@@ -4307,7 +4312,7 @@ uint32 ui_element_get_border_color(UIElement *element)
     return element->borderColor;
   if (element->parent == (UIElement *)0x0)
     return 0xff000000u;
-  return (uint32)(*(code *)*(int32 *)(element->parent->vtable + 0x1c))(element->parent);
+  return (uint32)(*element->parent->vtable->getBorderColor)(element->parent);
 }
 
 
@@ -4377,8 +4382,8 @@ uint32 ui_element_get_secondary_color(UIElement *element)
   if (element->secondaryColor != 0xffffffffu)
     return element->secondaryColor;
   if (element->parent == (UIElement *)0x0)
-    return WORD_HEXADECIMAL_FFEBEBF7;
-  return (uint32)(*(code *)*(int32 *)(element->parent->vtable + 0x18))(element->parent);
+    return COLOR_PALE_LAVENDER;
+  return (uint32)(*element->parent->vtable->getSecondaryColor)(element->parent);
 }
 
 
@@ -4395,7 +4400,7 @@ uint32 ui_element_get_primary_color(UIElement *element)
     return element->primaryColor;
   if (element->parent == (UIElement *)0x0)
     return 0xff000000u;
-  return (uint32)(*(code *)*(int32 *)(element->parent->vtable + 0x14))(element->parent);
+  return (uint32)(*element->parent->vtable->getPrimaryColor)(element->parent);
 }
 
 
@@ -4616,9 +4621,10 @@ int32 text_box_handle_key(TextBox *box,int32 eventCode,int32 keyCode)
    previous / next key of its ring, shown at once and written to the setting at once; UP / DOWN go to
    FUN_0010a498 with the picker's row, then on as for every element. SELECT sends the element's event
    to its owner (FUN_00101ad8). Any other key is looked up in the element's key map (list_find_entry);
-   without a match it goes to the element's listener (vtable +8), with one the found element gets the
-   focus (FUN_00105224). Finally the element's two colours are set from its type and state (unless flag
-   bit 1 is set), and it is redrawn (ui_element_draw) if anything changed. Returns 1 when the key was
+   without a match it goes to the element's listener (vtable +8), with one the element loses the focus
+   (flags bit 1 cleared, its control deactivated) and the found element gets it (ui_element_set_focus).
+   Finally the element's two colours are set from its type (its unfocused colours) unless it has the
+   focus, and it is redrawn (ui_element_draw) if anything changed. Returns 1 when the key was
    handled. The element constructor (FUN_0010bba0) calls it with AVK_UNDEFINED just to set the colours. */
 int32 ui_element_handle_key(UIElement *element,int32 eventCode,int32 keyCode,int32 keyParameter)
 
@@ -4642,44 +4648,44 @@ int32 ui_element_handle_key(UIElement *element,int32 eventCode,int32 keyCode,int
       handled = 1;
     }
     else if ((target = list_find_entry(element->keyMap,keyCode)) == 0) {
-      if (element->listener != (int32 *)0x0)
-        handled = (**(code **)(*element->listener + 8))(element->listener,eventCode,keyCode,keyParameter);
+      if (element->listener != (ITextCtl *)0x0)
+        handled = (*element->listener->pvt->HandleEvent)(element->listener,eventCode,keyCode,keyParameter);
     }
     else {
       element->flags &= ~2u;
-      if (element->listener != (int32 *)0x0)
-        (**(code **)(*element->listener + 0x10))(element->listener,0);
+      if (element->listener != (ITextCtl *)0x0)
+        (*element->listener->pvt->SetActive)(element->listener,0);
       redraw = 1;
-      FUN_00105224((int32 *)target,element->unknown_64);
+      ui_element_set_focus((UIElement *)target,element->screen);
       handled = 1;
     }
   }
   if ((element->flags & 2) == 0) {
     switch(element->type) {
     case 2:
-      element->primaryColor = WORD_HEXADECIMAL_FFEBEBF7;
-      element->secondaryColor = WORD_HEXADECIMAL_FF2F2533;
+      element->primaryColor = COLOR_PALE_LAVENDER;
+      element->secondaryColor = COLOR_DARK_PURPLE;
       break;
     case 5:
-      element->primaryColor = WORD_HEXADECIMAL_FFC0C000;
+      element->primaryColor = COLOR_DARK_YELLOW;
       element->secondaryColor = 0xff000000;
       break;
     case 6:
       element->primaryColor = 0xff000000;
-      element->secondaryColor = WORD_HEXADECIMAL_FFEFEFEF;
+      element->secondaryColor = COLOR_LIGHT_GREY;
       break;
     case 8:
-      element->primaryColor = element->enabled ? WORD_HEXADECIMAL_FF2F2533 : 0xffffffff;
-      element->secondaryColor = element->enabled ? WORD_HEXADECIMAL_FFC9C4DA : 0xffffffff;
+      element->primaryColor = element->enabled ? COLOR_DARK_PURPLE : 0xffffffff;
+      element->secondaryColor = element->enabled ? COLOR_PALE_LILAC : 0xffffffff;
       break;
     case 9:
     case 10:
-      element->primaryColor = WORD_HEXADECIMAL_FF47464C;
-      element->secondaryColor = WORD_HEXADECIMAL_FFEBEBF7;
+      element->primaryColor = COLOR_CHARCOAL;
+      element->secondaryColor = COLOR_PALE_LAVENDER;
       break;
     default:                                    /* 3, 4, 7 and any other type */
-      element->primaryColor = WORD_HEXADECIMAL_FF47464C;
-      element->secondaryColor = WORD_HEXADECIMAL_FFC9C4DA;
+      element->primaryColor = COLOR_CHARCOAL;
+      element->secondaryColor = COLOR_PALE_LILAC;
       break;
     }
   }
@@ -4726,7 +4732,7 @@ int32 screen_handle_key(Screen *screen,int32 eventCode,int32 keyCode,int32 keyPa
   int32 event;
   UIElement *softKey;
 
-  handled = (*(code *)*(int32 *)(((UIElement *)screen)->vtable + 8))(screen,eventCode,keyCode,keyParameter);
+  handled = (*((UIElement *)screen)->vtable->handleKey)(screen,eventCode,keyCode,keyParameter);
   if (handled != 0)
     return handled;
   if (screen->app->progress->softKeys[0] == keyCode) {
@@ -4735,7 +4741,7 @@ int32 screen_handle_key(Screen *screen,int32 eventCode,int32 keyCode,int32 keyPa
       return 0;
     if (softKey->selectEvent == -2) {
       if (screen->focus != (UIElement *)0x0)
-        (*(code *)*(int32 *)(screen->focus->vtable + 8))(screen->focus,eventCode,AVK_SELECT,keyParameter);
+        (*screen->focus->vtable->handleKey)(screen->focus,eventCode,AVK_SELECT,keyParameter);
       return 0;
     }
     event = softKey->selectEvent;
@@ -4749,7 +4755,7 @@ int32 screen_handle_key(Screen *screen,int32 eventCode,int32 keyCode,int32 keyPa
   else {
     if (screen->focus == (UIElement *)0x0)
       return 0;
-    return (*(code *)*(int32 *)(screen->focus->vtable + 8))(screen->focus,eventCode,keyCode,keyParameter);
+    return (*screen->focus->vtable->handleKey)(screen->focus,eventCode,keyCode,keyParameter);
   }
   FUN_00101ad8(((UIElement *)screen)->owner,event);
   return 1;
@@ -5004,12 +5010,14 @@ int FUN_00108f28(int param_1,int param_2)
   *(undefined4 *)(*(int *)(*(int *)(param_1 + 4) + param_2 * 4) + 8) =
        *(undefined4 *)(param_1 + 0x30);
   *(int *)(param_1 + 0x2c) = param_2;
-  (**(code **)(*(int *)**(undefined4 **)(*(int *)(param_1 + 4) + param_2 * 4) + 0x18))();
+  /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+  (*((IMedia *)**(undefined4 **)(*(int *)(param_1 + 4) + param_2 * 4))->pvt->Play)
+      ((IMedia *)**(undefined4 **)(*(int *)(param_1 + 4) + param_2 * 4));
   puVar2 = *(undefined4 **)(*(int *)(param_1 + 4) + param_2 * 4);
   piVar3 = (int *)*puVar2;
                     /* WARNING: Could not recover jumptable at 0x00108f98. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  return (**(code **)(*piVar3 + 0x10))(piVar3,4,puVar2[2],0);
+  return (*((IMedia *)piVar3)->pvt->SetMediaParm)((IMedia *)piVar3,4,puVar2[2],0);
 }
 
 /* ==== 0x00108FA0  (file offset 0x08FA0)  screen_stack_close_all ====================================== */
@@ -5039,7 +5047,7 @@ void screen_stack_close_top(ScreenStack *stack,int32 redraw)
     wasCurrent = (int32 *)app->field_d4 == screen;
     if (screen[0xf] == 2)
       FUN_00120450(app->context);
-    (*(code *)(*(int32 *)*screen))(screen);           /* destroy: vtable slot 0 */
+    (*(*(const UIElementVtbl **)screen)->destroy)(screen);           /* destroy: vtable slot 0 */
     helper_free(screen);
     if (wasCurrent)
       app->field_d4 = 0;
@@ -5047,7 +5055,7 @@ void screen_stack_close_top(ScreenStack *stack,int32 redraw)
     if (screen != (int32 *)0x0) {
       if ((int32 *)app->field_d4 == screen)
         FUN_00120450(app->context);
-      (*(code *)(*(int32 *)(*screen + 0x20)))(screen);   /* resume: vtable +0x20 */
+      (*(*(const UIElementVtbl **)screen)->resume)(screen);   /* resume: vtable +0x20 */
       if (redraw)
         ui_element_draw((UIElement *)screen);
     }
@@ -5066,7 +5074,7 @@ void screen_stack_open(ScreenStack *stack,int32 *screen)
   if (screen == (int32 *)0x0)
     return;
   stack->depth = list_set_entry(stack->screens,stack->depth,(int32)screen);
-  (*(code *)(*(int32 *)(*screen + 0x20)))(screen);   /* resume: vtable +0x20 */
+  (*(*(const UIElementVtbl **)screen)->resume)(screen);   /* resume: vtable +0x20 */
   ui_element_draw((UIElement *)screen);
 }
 
@@ -5180,7 +5188,7 @@ int32 ui_element_remove_child(UIElement *element,int32 id,int32 destroy)
   list_remove_entry(element->children,id);
   if (!destroy)
     return 0;
-  (*(code *)(*(int32 *)*child))(child);    /* destroy: vtable slot 0 */
+  (*(*(const UIElementVtbl **)child)->destroy)(child);    /* destroy: vtable slot 0 */
   helper_free(child);
   return 1;
 }
@@ -5253,9 +5261,11 @@ FUN_001093f8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
                     /* helper[3] char * strcat(char *dst, const char *src)  (AEEHelperFuncs +0xc,
                        via *(base-4)) */
   (*g_pHelperFuncs->strcat)(uVar4,param_3);
-  piVar5 = (int *)(**(code **)(**(int **)(param_1 + 0x50) + 8))(*(int **)(param_1 + 0x50),uVar4,2);
+  piVar5 = (int *)(*((IFileMgr *)*(int **)(param_1 + 0x50))->pvt->OpenFile)
+                      ((IFileMgr *)*(int **)(param_1 + 0x50),(const char *)uVar4,2);
   if (piVar5 == (int *)0x0) {
-    piVar5 = (int *)(**(code **)(**(int **)(param_1 + 0x50) + 8))(*(int **)(param_1 + 0x50),uVar4,4)
+    piVar5 = (int *)(*((IFileMgr *)*(int **)(param_1 + 0x50))->pvt->OpenFile)
+                        ((IFileMgr *)*(int **)(param_1 + 0x50),(const char *)uVar4,4)
     ;
     if (piVar5 == (int *)0x0) {
       uVar6 = 5;
@@ -5263,13 +5273,13 @@ FUN_001093f8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     }
   }
   else {
-    (**(code **)(*piVar5 + 0x20))(piVar5,0);
+    (*((IFile *)piVar5)->pvt->Truncate)((IFile *)piVar5,0);
   }
-  iVar2 = (**(code **)(*piVar5 + 0x14))(piVar5,param_5,param_4);
+  iVar2 = (*((IFile *)piVar5)->pvt->Write)((IFile *)piVar5,(const void *)param_5,param_4);
   if (iVar2 == 0) {
     uVar6 = 5;
   }
-  (**(code **)(*piVar5 + 4))(piVar5);
+  (*((IFile *)piVar5)->pvt->Release)((IFile *)piVar5);
 LAB_001094f8:
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
   (*g_pHelperFuncs->free)(uVar4);
@@ -5350,7 +5360,8 @@ void FUN_00109750(int param_1,undefined4 param_2)
   undefined4 uVar2;
   
   piVar1 = *(int **)(*(int *)(*(int *)(param_1 + 0x20) + 4) + 0xc);
-  uVar2 = (**(code **)(*piVar1 + 0x4c))(piVar1,param_2,0,0);
+  uVar2 = (undefined4)(*((IShell *)piVar1)->pvt->LoadResObject)
+                          ((IShell *)piVar1,(const char *)param_2,0,0);
   *(undefined4 *)(param_1 + 0x6c) = uVar2;
   return;
 }
@@ -5372,7 +5383,8 @@ int FUN_00109780(int *param_1,undefined4 param_2,int param_3)
   
   iVar6 = -1;
   local_28 = param_4;
-  (**(code **)(**(int **)(*param_1 + 0xc) + 8))(*(int **)(*param_1 + 0xc),AEECLSID_FILEMGR_VALUE,&local_28);
+  (*((IShell *)*(int **)(*param_1 + 0xc))->pvt->CreateInstance)
+      ((IShell *)*(int **)(*param_1 + 0xc),AEECLSID_FILEMGR_VALUE,(void **)&local_28);
   if (local_28 == (int *)0x0) {
     return -1;
   }
@@ -5381,21 +5393,22 @@ int FUN_00109780(int *param_1,undefined4 param_2,int param_3)
   iVar2 = (*g_pHelperFuncs->malloc)(0x4c);
   iVar7 = iVar6;
   if (iVar2 == 0) goto LAB_001098b8;
-  (**(code **)(*local_28 + 0xc))(local_28,param_2,iVar2);
+  (*((IFileMgr *)local_28)->pvt->GetInfo)((IFileMgr *)local_28,(const char *)param_2,(FileInfo *)iVar2);
   iVar5 = *(int *)(iVar2 + 8);
                     /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
                         */
   iVar3 = (*g_pHelperFuncs->malloc)(iVar5);
   *(int *)(param_1[2] + param_3 * 4) = iVar3;
   if (iVar3 != 0) {
-    piVar4 = (int *)(**(code **)(*local_28 + 8))(local_28,param_2,1);
+    piVar4 = (int *)(*((IFileMgr *)local_28)->pvt->OpenFile)((IFileMgr *)local_28,(const char *)param_2,1);
     if (piVar4 == (int *)0x0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
       (*g_pHelperFuncs->free)(*(undefined4 *)(param_1[2] + param_3 * 4));
     }
     else {
-      iVar3 = (**(code **)(*piVar4 + 0xc))(piVar4,*(undefined4 *)(param_1[2] + param_3 * 4),iVar5);
-      (**(code **)(*piVar4 + 4))(piVar4);
+      iVar3 = (*((IFile *)piVar4)->pvt->Read)
+                  ((IFile *)piVar4,(void *)(*(undefined4 *)(param_1[2] + param_3 * 4)),iVar5);
+      (*((IFile *)piVar4)->pvt->Release)((IFile *)piVar4);
       iVar7 = iVar5;
       if (iVar3 == iVar5) goto LAB_001098a8;
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -5408,7 +5421,8 @@ LAB_001098a8:
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
   (*g_pHelperFuncs->free)(iVar2);
 LAB_001098b8:
-  (**(code **)(*local_28 + 4))();
+  /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+  (*((IFileMgr *)local_28)->pvt->Release)((IFileMgr *)local_28);
   return iVar7;
 }
 
@@ -5543,7 +5557,7 @@ int32 text_box_set_text(TextBox *box,AECHAR *text,int32 narrow)
   int32 i;
 
   for (i = 0; (line = (TextLine *)list_get_entry(box->lines,i)) != (TextLine *)0x0; i++) {
-    (*(code *)*(int32 *)*(int32 *)line)(line);   /* destroy: vtable slot 0 */
+    (*(*(const UIElementVtbl **)line)->destroy)(line);   /* destroy: vtable slot 0 */
     helper_free(line);
   }
   box->lines->count = 0;
@@ -5679,7 +5693,7 @@ void FUN_0010a03c(int param_1,undefined4 param_2)
   piVar1 = (int *)**(undefined4 **)(*(int *)(param_1 + 4) + *(int *)(param_1 + 0x2c) * 4);
                     /* WARNING: Could not recover jumptable at 0x0010a07c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  (**(code **)(*piVar1 + 0x10))(piVar1,4,param_2,0);
+  (*((IMedia *)piVar1)->pvt->SetMediaParm)((IMedia *)piVar1,4,param_2,0);
   return;
 }
 
@@ -5694,11 +5708,12 @@ void FUN_0010a080(int param_1)
   int iVar2;
   
   iVar2 = (int32)FUN_001242b4;
-  pcVar1 = *(code **)(**(int **)(param_1 + 0xc) + 0x30);
+  pcVar1 = (code *)((IShell *)*(int **)(param_1 + 0xc))->pvt->CancelTimer;
   (*pcVar1)(*(int **)(param_1 + 0xc),iVar2,param_1,pcVar1,param_4);
                     /* WARNING: Could not recover jumptable at 0x0010a0c8. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  (**(code **)(**(int **)(param_1 + 0xc) + 0x2c))(*(int **)(param_1 + 0xc),0x28,iVar2,param_1);
+  (*((IShell *)*(int **)(param_1 + 0xc))->pvt->SetTimer)
+      ((IShell *)*(int **)(param_1 + 0xc),0x28,(PFNNOTIFY)iVar2,(void *)param_1);
   return;
 }
 
@@ -5710,7 +5725,9 @@ void FUN_0010a0d0(int param_1)
   
   for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0xc); iVar1 = iVar1 + 1) {
     *(undefined4 *)(*(int *)(*(int *)(param_1 + 4) + iVar1 * 4) + 4) = 0;
-    (**(code **)(*(int *)**(undefined4 **)(*(int *)(param_1 + 4) + iVar1 * 4) + 0x20))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((IMedia *)**(undefined4 **)(*(int *)(param_1 + 4) + iVar1 * 4))->pvt->Stop)
+        ((IMedia *)**(undefined4 **)(*(int *)(param_1 + 4) + iVar1 * 4));
   }
   *(undefined4 *)(param_1 + 0x2c) = 0xffffffff;
   return;
@@ -5792,7 +5809,7 @@ TextBox * text_box_layout(TextBox *box)
 
   if (box->moreLine != (TextLine *)0x0) {
     if (ui_element_remove_child(element,((UIElement *)box->moreLine)->id,1) == 0) {
-      (*(code *)*(int32 *)*(int32 *)box->moreLine)(box->moreLine);   /* destroy: vtable slot 0 */
+      (*(*(const UIElementVtbl **)box->moreLine)->destroy)(box->moreLine);   /* destroy: vtable slot 0 */
       helper_free(box->moreLine);
     }
     box->moreLine = (TextLine *)0x0;
@@ -5890,7 +5907,8 @@ void FUN_0010a498(int param_1,int param_2)
        (iVar4 = param_1 + iVar3 * 4,
        *(int *)(*(int *)(*(int *)(iVar4 + 0x44) + 0x40) + 0xc) == iVar5)) {
       while (piVar2 = *(int **)(iVar4 + 0x44), *(int *)piVar2[0x11] != 0xe010) {
-        (*(code *)(*(int *)(*piVar2 + 8)))(piVar2,0x7000,uVar1,0,param_4);
+        (*(*(const UIElementVtbl **)piVar2)->handleKey)
+            (piVar2,0x7000,uVar1,0 /* not arguments, value leftovers: param_4 */);
       }
     }
     iVar3 = iVar3 + 1;
@@ -5909,7 +5927,7 @@ Hitsphere * hitsphere_create(Hitsphere *hitsphere,int32 entity,BossCombatRegion 
 {
   if (hitsphere == (Hitsphere *)0x0 && (hitsphere = helper_malloc_2(0xd4)) == (Hitsphere *)0x0)
     return (Hitsphere *)0x0;
-  hitsphere->vtable = (int32)VTABLE_00101650;   /* the vtable at 0x00101650 */
+  hitsphere->vtable = (const HitsphereVtbl *)VTABLE_00101650;   /* the vtable at 0x00101650 */
   hitsphere->entity = entity;
   hitsphere->field_44 = 0;
   hitsphere->secondary = secondary;
@@ -5978,7 +5996,8 @@ int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3)
   }
   *param_1 = 0;
   if (iVar6 == 0) {
-    pcVar5 = *(code **)(**(int **)(param_1[0x85] + 0x6c) + 0x28);
+    pcVar5 = (code *)((const SwerveObject3DVtbl *)((ISwerveObject *)*(int **)(param_1[0x85] + 0x6c))->pvt)
+                      ->Find;
     (*pcVar5)(*(int **)(param_1[0x85] + 0x6c),WORD_HEXADECIMAL_1922F406,param_1,pcVar5,piVar3);
     if (*param_1 != 0) {
       iVar1 = FUN_0011ae04((undefined4)((KHApp *)param_1[0x85])->context,(int32)STRING_CHARACTER_GRP_001277DC,*param_1,0,
@@ -5990,23 +6009,30 @@ int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3)
         param_1[3] = iVar1;
         if (iVar1 != 0) {
           local_1c = (int *)0x0;
-          (**(code **)(*(int *)*param_1 + 0x28))((int *)*param_1,WORD_HEXADECIMAL_038AD7F2,&local_1c);
+          (*((const SwerveObject3DVtbl *)((ISwerveObject *)*param_1)->pvt)->Find)
+              ((ISwerveObject *)*param_1,WORD_HEXADECIMAL_038AD7F2,(ISwerveObject **)&local_1c);
           if (local_1c != (int *)0x0) {
             iVar1 = (int)camera_create((Camera *)0x0,(ISwerveObject *)local_1c,(char *)STRING_CAMERA);
             param_1[0x7c] = iVar1;
-            (**(code **)(*local_1c + 4))();
-            (**(code **)(*(int *)*param_1 + 0x28))((int *)*param_1,WORD_HEXADECIMAL_334C8936,param_1 + 0x8b);
+            /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+            (*((ISwerveObject *)local_1c)->pvt->Release)((ISwerveObject *)local_1c);
+            (*((const SwerveObject3DVtbl *)((ISwerveObject *)*param_1)->pvt)->Find)
+                ((ISwerveObject *)*param_1,WORD_HEXADECIMAL_334C8936,(ISwerveObject **)(param_1 + 0x8b));
             piVar3 = (int *)param_1[0x8b];
             if (piVar3 != (int *)0x0) {
-              (**(code **)(*piVar3 + 0x94))(piVar3,0);
-              (**(code **)(*(int *)param_1[0x8b] + 0x8c))((int *)param_1[0x8b],0);
+              (*((const SwerveNodeVtbl *)((ISwerveObject *)piVar3)->pvt)->SetPickingEnable)
+                  ((ISwerveObject *)piVar3,0);
+              (*((const SwerveNodeVtbl *)((ISwerveObject *)param_1[0x8b])->pvt)->SetRenderingEnable)
+                  ((ISwerveObject *)param_1[0x8b],0);
             }
             local_1c = (int *)0x0;
-            (**(code **)(*(int *)*param_1 + 0x28))((int *)*param_1,WORD_HEXADECIMAL_0AD65F3D,&local_1c);
+            (*((const SwerveObject3DVtbl *)((ISwerveObject *)*param_1)->pvt)->Find)
+                ((ISwerveObject *)*param_1,WORD_HEXADECIMAL_0AD65F3D,(ISwerveObject **)&local_1c);
             if (local_1c != (int *)0x0) {
               iVar1 = (int)character_create((Character *)0x0,(ISwerveObject *)local_1c,(char *)STRING_CHARACTER);
               param_1[0x7e] = iVar1;
-              (**(code **)(*local_1c + 4))();
+              /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+              (*((ISwerveObject *)local_1c)->pvt->Release)((ISwerveObject *)local_1c);
               iVar2 = FUN_0011ae04((undefined4)((KHApp *)param_1[0x85])->context,param_2,*param_1,0,0);
               param_1[1] = iVar2;
               iVar1 = INTEGER_501;
@@ -6093,18 +6119,22 @@ int * FUN_0010aa8c(int *param_1,int *param_2)
       iVar1 = iVar2;
     } while (iVar2 < 5);
     param_1[0x2f] = 0;
-    iVar1 = (**(code **)(**(int **)(*param_2 + 0xc) + 0x4c))
-                      (*(int **)(*param_2 + 0xc),(int32)STRING_KH_DOT_BAR_00127A98,INTEGER_5001,0);
+    iVar1 = (int)(*((IShell *)*(int **)(*param_2 + 0xc))->pvt->LoadResObject)
+                ((IShell *)*(int **)(*param_2 + 0xc),(const char *)STRING_KH_DOT_BAR_00127A98,
+                 INTEGER_5001,0);
     param_1[0x35] = iVar1;
-    iVar1 = (**(code **)(**(int **)(*param_2 + 0xc) + 0x4c))
-                      (*(int **)(*param_2 + 0xc),(int32)STRING_KH_DOT_BAR_00127A98,INTEGER_5002,0);
+    iVar1 = (int)(*((IShell *)*(int **)(*param_2 + 0xc))->pvt->LoadResObject)
+                ((IShell *)*(int **)(*param_2 + 0xc),(const char *)STRING_KH_DOT_BAR_00127A98,
+                 INTEGER_5002,0);
     param_1[0x36] = iVar1;
     if ((int *)param_1[0x35] != (int *)0x0) {
-      (**(code **)(*(int *)param_1[0x35] + 0x14))();
+      /* Ghidra had dropped arguments; restored from the disassembly (0x0010abbc) */
+      (*((IImage *)param_1[0x35])->pvt->SetParm)((IImage *)param_1[0x35],3,7,0);
     }
     piVar3 = (int *)param_1[0x36];
     if (piVar3 != (int *)0x0) {
-      (**(code **)(*piVar3 + 0x14))(piVar3,3);
+      /* Ghidra had dropped arguments; restored from the disassembly (0x0010abdc) */
+      (*((IImage *)piVar3)->pvt->SetParm)((IImage *)piVar3,3,7,0);
     }
     iVar1 = (int)text_line_create(0,(int)*(short *)(param_1[2] + 4) / 2,(int)*(short *)(param_1[2] + 6) / 2,0
                          ,0,*(undefined4 *)(param_1[0x11] + 0xd0),TEXT_LOADING,9);
@@ -6141,15 +6171,17 @@ int * FUN_0010ac6c(int *param_1,int param_2)
     param_1[0xe] = 0;
     puVar2 = *(undefined4 **)(param_1[1] + 0x14);
     param_1[3] = (int)puVar2;
-    (**(code **)*puVar2)();
-    (**(code **)(**(int **)(param_1[1] + 0xc) + 8))
-              (*(int **)(param_1[1] + 0xc),AEECLSID_GRAPHICS_VALUE,&local_1c);
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((IDisplay *)puVar2)->pvt->AddRef)((IDisplay *)puVar2);
+    (*((IShell *)*(int **)(param_1[1] + 0xc))->pvt->CreateInstance)
+        ((IShell *)*(int **)(param_1[1] + 0xc),AEECLSID_GRAPHICS_VALUE,(void **)&local_1c);
     iVar1 = INTEGER_MINUS_44296;
     param_1[4] = local_1c;
                     /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
                         */
     puVar3 = (undefined2 *)(*g_pHelperFuncs->malloc)(0x40);
-    (**(code **)(**(int **)(param_1[1] + 0xc) + 0x10))(*(int **)(param_1[1] + 0xc),puVar3);
+    (*((IShell *)*(int **)(param_1[1] + 0xc))->pvt->GetDeviceInfo)
+        ((IShell *)*(int **)(param_1[1] + 0xc),(AEEDeviceInfo *)puVar3);
     puVar4 = helper_malloc_2(8);
     param_1[5] = (int)puVar4;
     *puVar4 = 0;
@@ -6177,23 +6209,29 @@ int * FUN_0010ac6c(int *param_1,int param_2)
       list_set_entry(param_1[0x10],local_4c[iVar5],pvVar6);
       iVar5 = iVar5 + 1;
     } while (iVar5 < 0xc);
-    iVar1 = (**(code **)(**(int **)(*param_1 + 0xc) + 0x4c))
-                      (*(int **)(*param_1 + 0xc),(int32)STRING_KH_DOT_BAR_00127CC4,INTEGER_5003,0);
+    iVar1 = (int)(*((IShell *)*(int **)(*param_1 + 0xc))->pvt->LoadResObject)
+                ((IShell *)*(int **)(*param_1 + 0xc),(const char *)STRING_KH_DOT_BAR_00127CC4,
+                 INTEGER_5003,0);
     param_1[7] = iVar1;
-    iVar1 = (**(code **)(**(int **)(*param_1 + 0xc) + 0x4c))
-                      (*(int **)(*param_1 + 0xc),(int32)STRING_KH_DOT_BAR_00127CC4,INTEGER_5004,0);
+    iVar1 = (int)(*((IShell *)*(int **)(*param_1 + 0xc))->pvt->LoadResObject)
+                ((IShell *)*(int **)(*param_1 + 0xc),(const char *)STRING_KH_DOT_BAR_00127CC4,
+                 INTEGER_5004,0);
     param_1[8] = iVar1;
-    iVar1 = (**(code **)(**(int **)(*param_1 + 0xc) + 0x4c))
-                      (*(int **)(*param_1 + 0xc),(int32)STRING_KH_DOT_BAR_00127CC4,INTEGER_5005,0);
+    iVar1 = (int)(*((IShell *)*(int **)(*param_1 + 0xc))->pvt->LoadResObject)
+                ((IShell *)*(int **)(*param_1 + 0xc),(const char *)STRING_KH_DOT_BAR_00127CC4,
+                 INTEGER_5005,0);
     param_1[9] = iVar1;
-    iVar1 = (**(code **)(**(int **)(*param_1 + 0xc) + 0x4c))
-                      (*(int **)(*param_1 + 0xc),(int32)STRING_KH_DOT_BAR_00127CC4,INTEGER_5006,0);
+    iVar1 = (int)(*((IShell *)*(int **)(*param_1 + 0xc))->pvt->LoadResObject)
+                ((IShell *)*(int **)(*param_1 + 0xc),(const char *)STRING_KH_DOT_BAR_00127CC4,
+                 INTEGER_5006,0);
     param_1[10] = iVar1;
-    iVar1 = (**(code **)(**(int **)(*param_1 + 0xc) + 0x4c))
-                      (*(int **)(*param_1 + 0xc),(int32)STRING_KH_DOT_BAR_00127CC4,INTEGER_5007,0);
+    iVar1 = (int)(*((IShell *)*(int **)(*param_1 + 0xc))->pvt->LoadResObject)
+                ((IShell *)*(int **)(*param_1 + 0xc),(const char *)STRING_KH_DOT_BAR_00127CC4,
+                 INTEGER_5007,0);
     param_1[0xb] = iVar1;
-    iVar1 = (**(code **)(**(int **)(*param_1 + 0xc) + 0x4c))
-                      (*(int **)(*param_1 + 0xc),(int32)STRING_KH_DOT_BAR_00127CC4,INTEGER_5008,0);
+    iVar1 = (int)(*((IShell *)*(int **)(*param_1 + 0xc))->pvt->LoadResObject)
+                ((IShell *)*(int **)(*param_1 + 0xc),(const char *)STRING_KH_DOT_BAR_00127CC4,
+                 INTEGER_5008,0);
     param_1[0xc] = iVar1;
     ((ScreenStack *)param_1)->savedLevelName = (char *)0x0;
   }
@@ -6325,7 +6363,7 @@ Enemy * enemy_create(Enemy *enemy,int32 number,CombatRegion *region,int32 type)
 {
   if (enemy == (Enemy *)0x0 && (enemy = helper_malloc_2(0x280)) == (Enemy *)0x0)
     return (Enemy *)0x0;
-  enemy->vtable = (int32)VTABLE_00101680;
+  enemy->vtable = (const EnemyVtbl *)VTABLE_00101680;
   enemy->field_20 = 0;
   enemy->number = number;
   enemy->field_24 = 0;
@@ -6359,7 +6397,7 @@ TextBox * text_box_create(TextBox *box,int32 x,int32 y,int32 width,int32 height,
     return box;
   element = (UIElement *)box;
   ui_element_create(element,(int16)x,(int16)y,(int16)width,(int16)height,owner);
-  element->vtable = (int32)VTABLE_001016A0;
+  element->vtable = (const UIElementVtbl *)VTABLE_001016A0;
   box->style = style != (TextStyle *)0x0 ? style : text_style_create((TextStyle *)0x0,6);
   box->firstLine = 0;
   box->lines = list_create((UIList *)0x0,0x10,0x10);
@@ -6509,7 +6547,7 @@ TextLine * text_line_create(TextLine *line,int32 x,int32 y,int32 width,int32 hei
   if (line == (TextLine *)0x0 && (line = helper_malloc_2(0x4c)) == (TextLine *)0x0)
     return line;
   ui_element_create((UIElement *)line,(int16)x,(int16)y,(int16)width,(int16)height,owner);
-  ((UIElement *)line)->vtable = (int32)VTABLE_001016C0;
+  ((UIElement *)line)->vtable = (const UIElementVtbl *)VTABLE_001016C0;
   line->alignment = alignment;
   line->text = (AECHAR *)0x0;
   line->font = (int16)0x8000;
@@ -6667,7 +6705,7 @@ CollisionShape * collision_shape_create(CollisionShape *shape)
 TextStyle * text_style_create(TextStyle *style,int32 type)
 
 {
-  uint32 fill = WORD_HEXADECIMAL_FFEBEBF7;
+  uint32 fill = COLOR_PALE_LAVENDER;
 
   if (style == (TextStyle *)0x0 && (style = helper_malloc_2(0x28)) == (TextStyle *)0x0)
     return style;
@@ -6680,31 +6718,31 @@ TextStyle * text_style_create(TextStyle *style,int32 type)
   style->autoSize = 0;
   switch (type) {
   case 0:
-    fill = WORD_HEXADECIMAL_FFEFEFEF;
+    fill = COLOR_LIGHT_GREY;
     break;
   case 1:
-    style->fillColor = WORD_HEXADECIMAL_FFC5FAB9;
-    style->primaryColor = WORD_HEXADECIMAL_FF004C78;
-    style->borderColor = WORD_HEXADECIMAL_FF0253A8;
+    style->fillColor = COLOR_PALE_GREEN;
+    style->primaryColor = COLOR_DARK_BLUE;
+    style->borderColor = COLOR_BLUE;
     style->verticalMargin = 6;
     style->horizontalMargin = 0xf;
     return style;
   case 2:
     style->fillColor = INTEGER_MINUS_28807;
-    style->primaryColor = WORD_HEXADECIMAL_FF2C0621;
-    style->borderColor = WORD_HEXADECIMAL_FF8D2B15;
+    style->primaryColor = COLOR_DARK_PLUM;
+    style->borderColor = COLOR_RUST;
     style->verticalMargin = 6;
     style->horizontalMargin = 0xf;
     return style;
   case 3:
     style->fillColor = INTEGER_MINUS_6560;
-    style->primaryColor = WORD_HEXADECIMAL_FF724307;
-    style->borderColor = WORD_HEXADECIMAL_FF8A4E00;
+    style->primaryColor = COLOR_BROWN;
+    style->borderColor = COLOR_OCHRE;
     style->verticalMargin = 6;
     style->horizontalMargin = 0xf;
     return style;
   case 5:
-    fill = WORD_HEXADECIMAL_FFEFEFC0;
+    fill = COLOR_CREAM;
     break;
   }
   style->fillColor = fill;
@@ -6769,17 +6807,18 @@ int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
     }
     else if (param_7 == 9 || param_7 == 10) {
       piVar2 = *(int **)(*(int *)(param_6 + 4) + 0xc);
-      iVar4 = (**(code **)(*piVar2 + 8))(piVar2,CLASS_IDENTIFIER_HEXADECIMAL_01003009,param_1 + 0x14);
+      iVar4 = (*((IShell *)piVar2)->pvt->CreateInstance)
+                  ((IShell *)piVar2,CLASS_IDENTIFIER_HEXADECIMAL_01003009,(void **)(param_1 + 0x14));
       if (iVar4 == 0) {
         rect.x = (int16)param_2;
         rect.y = (int16)param_3;
         rect.dx = (int16)param_4;
         rect.dy = (int16)param_5;
-        (**(code **)(*(int *)param_1[0x14] + 0x18))((int *)param_1[0x14],&rect);
-        (**(code **)(*(int *)param_1[0x14] + 0x10))((int *)param_1[0x14],0);
-        (**(code **)(*(int *)param_1[0x14] + 0x20))((int *)param_1[0x14],0x10000);
+        (*((ITextCtl *)param_1[0x14])->pvt->SetRect)((ITextCtl *)param_1[0x14],&rect);
+        (*((ITextCtl *)param_1[0x14])->pvt->SetActive)((ITextCtl *)param_1[0x14],0);
+        (*((ITextCtl *)param_1[0x14])->pvt->SetProperties)((ITextCtl *)param_1[0x14],0x10000);
         if (param_7 == 10) {
-          (**(code **)(*(int *)param_1[0x14] + 0x48))((int *)param_1[0x14],5);
+          (*((ITextCtl *)param_1[0x14])->pvt->SetInputMode)((ITextCtl *)param_1[0x14],5);
         }
       }
     }
@@ -6818,7 +6857,7 @@ Screen * screen_create(Screen *screen,ScreenStack *stack,uint8 framed)
   screen->softKeys[0] = (UIElement *)0x0;
   screen->softKeys[1] = (UIElement *)0x0;
   screen->field_3c = 0;
-  screen->frameFillColor = WORD_HEXADECIMAL_FFEBEBF7;
+  screen->frameFillColor = COLOR_PALE_LAVENDER;
   return screen;
 }
 
@@ -6910,34 +6949,34 @@ undefined8 FUN_0010bec4(int *param_1,int param_2,int param_3,int param_4)
       *(undefined4 *)(param_1[1] + iVar2 * 4) = uVar3;
                     /* helper[63] boolean strends(const char *suffix, const char *s)
                        (AEEHelperFuncs +0xfc, via *(base-4)) */
-      iVar5 = (**(code **)(*(int *)((int32)&g_pHelperFuncs) + 0xfc))
-                        ((int32)STRING_MP3,*(undefined4 *)(param_2 + iVar2 * 4));
+      iVar5 = (*g_pHelperFuncs->strends)
+                  ((const char *)STRING_MP3,(const char *)(*(undefined4 *)(param_2 + iVar2 * 4)));
       iVar7 = AEECLSID_MEDIAMP3_VALUE;
                     /* helper[63] boolean strends(const char *suffix, const char *s)
                        (AEEHelperFuncs +0xfc, via *(base-4)) */
                     /* helper[63] boolean strends(const char *suffix, const char *s)
                        (AEEHelperFuncs +0xfc, via *(base-4)) */
       if ((iVar5 == 0) &&
-         ((iVar5 = (**(code **)(*(int *)((int32)&g_pHelperFuncs) + 0xfc))
-                             ((int32)STRING_MID,*(undefined4 *)(param_2 + iVar2 * 4)),
+         ((iVar5 = (*g_pHelperFuncs->strends)
+                       ((const char *)STRING_MID,(const char *)(*(undefined4 *)(param_2 + iVar2 * 4))),
           iVar7 = AEECLSID_MEDIAMIDI_VALUE, iVar5 == 0 &&
-          (iVar5 = (**(code **)(*(int *)((int32)&g_pHelperFuncs) + 0xfc))
-                             ((int32)STRING_QCP,*(undefined4 *)(param_2 + iVar2 * 4)),
+          (iVar5 = (*g_pHelperFuncs->strends)
+                       ((const char *)STRING_QCP,(const char *)(*(undefined4 *)(param_2 + iVar2 * 4))),
           iVar7 = iVar6, iVar5 != 0)))) {
                     /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
                         */
-        iVar6 = (**(code **)(*(int *)((int32)&g_pHelperFuncs) + 0x14))
-                          (*(undefined4 *)(param_2 + iVar2 * 4));
-        uVar3 = (**(code **)(*(int *)((int32)&g_pHelperFuncs) + 0x68))(iVar6 + 1);
-        (**(code **)(*(int *)((int32)&g_pHelperFuncs) + 200))
-                  (uVar3,*(undefined4 *)(param_2 + iVar2 * 4),iVar6 + -3);
-        (**(code **)(*(int *)((int32)&g_pHelperFuncs) + 0xc))(uVar3,(int32)STRING_PMD);
-        (**(code **)(*(int *)((int32)&g_pHelperFuncs) + 8))(*(undefined4 *)(param_2 + iVar2 * 4),uVar3);
-        (**(code **)(*(int *)((int32)&g_pHelperFuncs) + 0x6c))(uVar3);
+        iVar6 = (*g_pHelperFuncs->strlen)((const char *)(*(undefined4 *)(param_2 + iVar2 * 4)));
+        uVar3 = (undefined4)(*g_pHelperFuncs->malloc)(iVar6 + 1);
+        (*g_pHelperFuncs->strncpy)
+            ((char *)uVar3,(const char *)(*(undefined4 *)(param_2 + iVar2 * 4)),iVar6 + -3);
+        (*g_pHelperFuncs->strcat)((char *)uVar3,(const char *)STRING_PMD);
+        (*g_pHelperFuncs->strcpy)((char *)(*(undefined4 *)(param_2 + iVar2 * 4)),(const char *)uVar3);
+        (*g_pHelperFuncs->free)((void *)uVar3);
         iVar7 = AEECLSID_MEDIAPMD_VALUE;
       }
-      iVar5 = (**(code **)(**(int **)(*param_1 + 0xc) + 8))
-                        (*(int **)(*param_1 + 0xc),iVar7,*(undefined4 *)(param_1[1] + iVar2 * 4));
+      iVar5 = (*((IShell *)*(int **)(*param_1 + 0xc))->pvt->CreateInstance)
+                  ((IShell *)*(int **)(*param_1 + 0xc),iVar7,
+                   (void **)(*(undefined4 *)(param_1[1] + iVar2 * 4)));
       if (iVar5 == 0) {
         if (param_4 == 0) {
 LAB_0010c0cc:
@@ -6952,7 +6991,7 @@ LAB_0010c0cc:
           if (local_28 == -1) goto LAB_0010c0cc;
         }
         piVar4 = (int *)**(undefined4 **)(param_1[1] + iVar2 * 4);
-        iVar5 = (**(code **)(*piVar4 + 0x10))(piVar4,1,&local_30,0);
+        iVar5 = (*((IMedia *)piVar4)->pvt->SetMediaParm)((IMedia *)piVar4,1,(int32)&local_30,0);
       }
       *(undefined4 *)(*(int *)(param_1[1] + iVar2 * 4) + 4) = 0;
       iVar6 = iVar2 * 4;
@@ -6977,7 +7016,7 @@ UIElement * ui_element_create(UIElement *element,int16 x,int16 y,int16 width,int
 {
   if (element == (UIElement *)0x0 && (element = helper_malloc_2(0x30)) == (UIElement *)0x0)
     return element;
-  element->vtable = (int32)VTABLE_00101724;
+  element->vtable = (const UIElementVtbl *)VTABLE_00101724;
   element->owner = owner;
   element->rect = helper_malloc_2(8);
   element->rect->x = x;
@@ -7043,7 +7082,7 @@ void helper_free(void *p)
 void hitsphere_destroy(Hitsphere *hitsphere,int32 freeIt)
 
 {
-  hitsphere->vtable = (int32)VTABLE_00101650;
+  hitsphere->vtable = (const HitsphereVtbl *)VTABLE_00101650;
   if (freeIt != 0)
     helper_free(hitsphere);
 }
@@ -7076,7 +7115,8 @@ void FUN_0010c2c4(int *param_1,int param_2)
   } while (iVar1 < 5);
   FUN_0011df14(param_1);
   if ((int *)param_1[0x8b] != (int *)0x0) {
-    (**(code **)(*(int *)param_1[0x8b] + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)param_1[0x8b])->pvt->Release)((ISwerveObject *)param_1[0x8b]);
   }
   if (param_1[0x7e] != 0) {
     FUN_0010c92c(param_1[0x7e],1);
@@ -7091,10 +7131,13 @@ void FUN_0010c2c4(int *param_1,int param_2)
     FUN_00121584((undefined4)((KHApp *)param_1[0x85])->context,(int *)param_1[2],(int *)*param_1,1);
   }
   if ((int *)*param_1 != (int *)0x0) {
-    (**(code **)(*(int *)*param_1 + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)*param_1)->pvt->Release)((ISwerveObject *)*param_1);
   }
   if (*(int **)(param_1[0x85] + 0x6c) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1[0x85] + 0x6c) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)*(int **)(param_1[0x85] + 0x6c))->pvt->Release)
+        ((ISwerveObject *)*(int **)(param_1[0x85] + 0x6c));
     *(undefined4 *)(param_1[0x85] + 0x6c) = 0;
   }
   if (param_2 == 0) {
@@ -7151,25 +7194,33 @@ void FUN_0010c3f8(int param_1,int param_2)
     list_destroy(*(UIList **)(param_1 + 0x34),1);
   }
   helper_free(*(void **)(param_1 + 0x14));
-  (**(code **)(**(int **)(param_1 + 0x10) + 4))();
-  (**(code **)(**(int **)(param_1 + 0xc) + 4))();
+  /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+  (*((IGraphics *)*(int **)(param_1 + 0x10))->pvt->Release)((IGraphics *)*(int **)(param_1 + 0x10));
+  /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+  (*((IDisplay *)*(int **)(param_1 + 0xc))->pvt->Release)((IDisplay *)*(int **)(param_1 + 0xc));
   if (*(int **)(param_1 + 0x1c) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x1c) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((IImage *)*(int **)(param_1 + 0x1c))->pvt->Release)((IImage *)*(int **)(param_1 + 0x1c));
   }
   if (*(int **)(param_1 + 0x20) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x20) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((IImage *)*(int **)(param_1 + 0x20))->pvt->Release)((IImage *)*(int **)(param_1 + 0x20));
   }
   if (*(int **)(param_1 + 0x24) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x24) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((IImage *)*(int **)(param_1 + 0x24))->pvt->Release)((IImage *)*(int **)(param_1 + 0x24));
   }
   if (*(int **)(param_1 + 0x28) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x28) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((IImage *)*(int **)(param_1 + 0x28))->pvt->Release)((IImage *)*(int **)(param_1 + 0x28));
   }
   if (*(int **)(param_1 + 0x2c) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x2c) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((IImage *)*(int **)(param_1 + 0x2c))->pvt->Release)((IImage *)*(int **)(param_1 + 0x2c));
   }
   if (*(int **)(param_1 + 0x30) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x30) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((IImage *)*(int **)(param_1 + 0x30))->pvt->Release)((IImage *)*(int **)(param_1 + 0x30));
   }
   if (param_2 == 0) {
     return;
@@ -7262,7 +7313,7 @@ void script_sequence_destroy(ScriptSequence *sequence,int32 freeIt)
 void enemy_destroy(Enemy *enemy,int32 freeIt)
 
 {
-  enemy->vtable = (int32)VTABLE_00101680;
+  enemy->vtable = (const EnemyVtbl *)VTABLE_00101680;
   if (freeIt != 0)
     helper_free(enemy);
 }
@@ -7273,10 +7324,14 @@ void FUN_0010c73c(int param_1,int param_2)
 
 {
   if (*(int **)(param_1 + 0x1c8) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x1c8) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)*(int **)(param_1 + 0x1c8))->pvt->Release)
+        ((ISwerveObject *)*(int **)(param_1 + 0x1c8));
   }
   if (*(int **)(param_1 + 0x204) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x204) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)*(int **)(param_1 + 0x204))->pvt->Release)
+        ((ISwerveObject *)*(int **)(param_1 + 0x204));
   }
   FUN_0010c8b8(param_1,0);
   if (param_2 == 0) {
@@ -7356,7 +7411,9 @@ void FUN_0010c8b8(int param_1,int param_2)
     (*g_pHelperFuncs->free)(*(void **)(param_1 + 0x114));
   }
   if (*(int **)(param_1 + 0x158) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x158) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)*(int **)(param_1 + 0x158))->pvt->Release)
+        ((ISwerveObject *)*(int **)(param_1 + 0x158));
   }
   FUN_0010cab0(param_1,0);
   if (param_2 == 0) {
@@ -7378,19 +7435,29 @@ void FUN_0010c92c(int param_1,int param_2)
                  **(undefined4 **)(*(int *)(param_1 + 0x84) + 0xa4),0 /* not arguments, value leftovers: param_4 */);
   }
   if (*(int **)(param_1 + 0x1e0) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x1e0) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)*(int **)(param_1 + 0x1e0))->pvt->Release)
+        ((ISwerveObject *)*(int **)(param_1 + 0x1e0));
   }
   if (*(int **)(param_1 + 0x1e4) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x1e4) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)*(int **)(param_1 + 0x1e4))->pvt->Release)
+        ((ISwerveObject *)*(int **)(param_1 + 0x1e4));
   }
   if (*(int **)(param_1 + 0x1e8) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x1e8) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)*(int **)(param_1 + 0x1e8))->pvt->Release)
+        ((ISwerveObject *)*(int **)(param_1 + 0x1e8));
   }
   if (*(int **)(param_1 + 0x1ec) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x1ec) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)*(int **)(param_1 + 0x1ec))->pvt->Release)
+        ((ISwerveObject *)*(int **)(param_1 + 0x1ec));
   }
   if (*(int **)(param_1 + 0x1dc) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x1dc) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)*(int **)(param_1 + 0x1dc))->pvt->Release)
+        ((ISwerveObject *)*(int **)(param_1 + 0x1dc));
   }
   FUN_0010c8b8(param_1,0);
   if (param_2 == 0) {
@@ -7452,7 +7519,9 @@ void FUN_0010cab0(int param_1,int param_2)
   bool bVar3;
   
   if (*(int **)(param_1 + 0x10) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0x10) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)*(int **)(param_1 + 0x10))->pvt->Release)
+        ((ISwerveObject *)*(int **)(param_1 + 0x10));
   }
   bVar3 = *(int *)(param_1 + 0x1c) != 0;
   iVar1 = 0;
@@ -7468,7 +7537,8 @@ void FUN_0010cab0(int param_1,int param_2)
     *(undefined4 *)(param_1 + 0x14) = 0;
   }
   if (*(int **)(param_1 + 8) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 8) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)*(int **)(param_1 + 8))->pvt->Release)((ISwerveObject *)*(int **)(param_1 + 8));
   }
   if (((LevelObject *)param_1)->scripts[0] != (ScriptCommand **)0x0) {
     for (iVar1 = 0; iVar1 < ((LevelObject *)param_1)->scriptLengths[0]; iVar1 = iVar1 + 1) {
@@ -7536,7 +7606,8 @@ void FUN_0010cc9c(int param_1,int param_2)
     for (iVar2 = 0; iVar2 < *(int *)(param_1 + 0x3c); iVar2 = iVar2 + 1) {
       piVar1 = *(int **)(*(int *)(param_1 + 0x44) + iVar2 * 4);
       if (piVar1 != (int *)0x0) {
-        (**(code **)(*piVar1 + 4))();
+        /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+        (*((ISwerveObject *)piVar1)->pvt->Release)((ISwerveObject *)piVar1);
       }
     }
     helper_free(*(void **)(param_1 + 0x44));
@@ -7567,11 +7638,14 @@ void FUN_0010cd2c(int param_1,int param_2)
                  *(undefined4 *)(param_1 + 0xc),1 /* not arguments, value leftovers: param_4 */);
   }
   if (*(int **)(param_1 + 0xc) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 0xc) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)*(int **)(param_1 + 0xc))->pvt->Release)
+        ((ISwerveObject *)*(int **)(param_1 + 0xc));
   }
   piVar1 = *(int **)(*(int *)(param_1 + 4) + 0x6c);
   if (piVar1 != (int *)0x0) {
-    (**(code **)(*piVar1 + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)piVar1)->pvt->Release)((ISwerveObject *)piVar1);
     *(undefined4 *)(*(int *)(param_1 + 4) + 0x6c) = 0;
   }
   if (param_2 == 0) {
@@ -7586,7 +7660,8 @@ void FUN_0010cda4(int param_1,int param_2)
 
 {
   if (*(int **)(param_1 + 4) != (int *)0x0) {
-    (**(code **)(**(int **)(param_1 + 4) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)*(int **)(param_1 + 4))->pvt->Release)((ISwerveObject *)*(int **)(param_1 + 4));
   }
   if (param_2 == 0) {
     return;
@@ -7616,7 +7691,9 @@ void FUN_0010ce08(undefined4 *param_1,int param_2)
   undefined4 *puVar2;
   int iVar3;
   for (iVar3 = 0; iVar3 < (int)param_1[3]; iVar3 = iVar3 + 1) {
-    (**(code **)(*(int *)**(undefined4 **)(param_1[1] + iVar3 * 4) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((IMedia *)**(undefined4 **)(param_1[1] + iVar3 * 4))->pvt->Release)
+        ((IMedia *)**(undefined4 **)(param_1[1] + iVar3 * 4));
     if (param_1[2] != 0) {
       (*g_pHelperFuncs->free)(*(undefined4 *)(param_1[2] + iVar3 * 4));
     }
@@ -7658,7 +7735,7 @@ void app_context_destroy(AppContext *context,int32 freeIt)
 
 {
   if (context->transform != (ISwerveObject *)0x0)
-    (**(code **)(*(int32 *)context->transform + 4))(context->transform);
+    (*((ISwerveObject *)context->transform)->pvt->Release)((ISwerveObject *)context->transform);
   if (context->sounds[0] != 0) {
     FUN_0010ce08((undefined4 *)context->sounds[0],1);
     context->sounds[0] = 0;
@@ -7886,8 +7963,7 @@ int32 combat_region_all_enemies_defeated(CombatRegion *region)
   int32 i;
 
   for (i = 0; i < region->enemyCount; i++) {
-    health = (uint32)(*(code *)(*(int32 *)(region->enemies[i]->vtable + 0x18)))
-                       (region->enemies[i]);
+    health = (uint32)(*region->enemies[i]->vtable->getHealth)(region->enemies[i]);
     if (float_compare_greater(health,0), *(float *)&health > 0.0f)
       return 0;
   }
@@ -7908,7 +7984,8 @@ undefined4 FUN_0010d354(int param_1)
     }
     iVar1 = **(int **)(*(int *)(param_1 + 0x14c) + iVar2 * 4);
                     /* enemy_is_waiting(enemy); Ghidra had dropped the enemy, passed in r0 */
-    iVar1 = (*(code *)(*(int *)(iVar1 + 0x1c)))(*(int *)(*(int *)(param_1 + 0x14c) + iVar2 * 4));
+    iVar1 = (*((const EnemyVtbl *)iVar1)->isWaiting)
+                ((void *)(*(int *)(*(int *)(param_1 + 0x14c) + iVar2 * 4)));
     if (iVar1 == 0) break;
     iVar2 = iVar2 + 1;
   }
@@ -7936,22 +8013,22 @@ void FUN_0010d3a4(int param_1,undefined4 param_2)
                        +0x20, via *(base-4)) */
   (*g_pHelperFuncs->sprintf)(auStack_224,(int32)STRING_PRESS_ANY_KEY_TO_CONTINUE);
   uVar1 = *(ushort *)(param_1 + 0x26);
-  (**(code **)(**(int **)(param_1 + 0x14) + 0x14))
-            (*(int **)(param_1 + 0x14),0,0xffffffff,0xffffffff,2);
+  (*((IDisplay *)*(int **)(param_1 + 0x14))->pvt->DrawRect)
+      ((IDisplay *)*(int **)(param_1 + 0x14),0,0xffffffff,0xffffffff,2);
   iVar3 = 0;
   do {
     puVar4 = auStack_1fc + iVar3 * 0xa0;
                     /* helper[16] AECHAR * strtowstr(const char *src, AECHAR *dst, int nDstBytes)
                        (AEEHelperFuncs +0x40, via *(base-4)) */
     (*g_pHelperFuncs->strtowstr)(auStack_274 + iVar3 * 0x28,puVar4,0x50);
-    (**(code **)(**(int **)(param_1 + 0x14) + 0x10))
-              (*(int **)(param_1 + 0x14),0x8000,puVar4,0xffffffff,0,
+    (*((IDisplay *)*(int **)(param_1 + 0x14))->pvt->DrawText)
+        ((IDisplay *)*(int **)(param_1 + 0x14),0x8000,(const AECHAR *)puVar4,0xffffffff,0,
                ((uVar1 >> 1) - 0xf) + iVar3 * 10,0,0x20);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(puVar4);
     iVar3 = iVar3 + 1;
   } while (iVar3 < 3);
-  (**(code **)(**(int **)(param_1 + 0x14) + 0x1c))(*(int **)(param_1 + 0x14),1);
+  (*((IDisplay *)*(int **)(param_1 + 0x14))->pvt->Update)((IDisplay *)*(int **)(param_1 + 0x14),1);
   return;
 }
 
@@ -8402,7 +8479,8 @@ LAB_0010dde4:
     *(undefined4 *)(param_1 + 0x1c8) = 0xd;
                     /* WARNING: Could not recover jumptable at 0x0010e054. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-    (**(code **)(**(int **)(param_1 + 0x1f0) + 0x8c))(*(int **)(param_1 + 0x1f0),0);
+    (*((const SwerveNodeVtbl *)((ISwerveObject *)*(int **)(param_1 + 0x1f0))->pvt)->SetRenderingEnable)
+        ((ISwerveObject *)*(int **)(param_1 + 0x1f0),0);
     return;
   }
   character_stop_animations((Character *)param_1);
@@ -8442,7 +8520,8 @@ LAB_0010dde4:
   *(undefined4 *)(param_1 + 0x2a0) = 300;
 LAB_0010dcf8:
   *(undefined4 *)(param_1 + 0x1c8) = 0xd;
-  (**(code **)(**(int **)(param_1 + 0x1f0) + 0x8c))(*(int **)(param_1 + 0x1f0),0);
+  (*((const SwerveNodeVtbl *)((ISwerveObject *)*(int **)(param_1 + 0x1f0))->pvt)->SetRenderingEnable)
+      ((ISwerveObject *)*(int **)(param_1 + 0x1f0),0);
   if ((0 < ((KHApp *)*(int *)(param_1 + 0x84))->progress->soundVolume) &&
      (iVar3 = *(int *)(*(int *)(param_1 + 0x84) + 0xbc), iVar3 != 0)) {
     if (*(int *)(iVar3 + 0xc) < 4) {
@@ -8450,12 +8529,14 @@ LAB_0010dcf8:
     }
     *(undefined4 *)(*(int *)(*(int *)(iVar3 + 4) + 0xc) + 8) = *(undefined4 *)(iVar3 + 0x30);
     *(undefined4 *)(iVar3 + 0x2c) = 3;
-    (**(code **)(*(int *)**(undefined4 **)(*(int *)(iVar3 + 4) + 0xc) + 0x18))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((IMedia *)**(undefined4 **)(*(int *)(iVar3 + 4) + 0xc))->pvt->Play)
+        ((IMedia *)**(undefined4 **)(*(int *)(iVar3 + 4) + 0xc));
     puVar1 = *(undefined4 **)(*(int *)(iVar3 + 4) + 0xc);
     piVar2 = (int *)*puVar1;
                     /* WARNING: Could not recover jumptable at 0x00108f98. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-    (**(code **)(*piVar2 + 0x10))(piVar2,4,puVar1[2],0);
+    (*((IMedia *)piVar2)->pvt->SetMediaParm)((IMedia *)piVar2,4,puVar1[2],0);
     return;
   }
   return;
@@ -8616,10 +8697,10 @@ void camera_avoid_walls(Camera *camera,uint32 *from,uint32 *to)
   if (camera->field_204 == (ISwerveObject *)0x0)
     return;
   root = ((Game *)entity->app->pGame)->root;
-  (**(code **)((int32)root->pvt + 0xbc))(root,1,origin,direction,camera->field_204,hit);
+  (*((const SwerveGroupVtbl *)root->pvt)->Pick)(root,1,origin,direction,camera->field_204,hit);
   if (hit[0] == 0)
     return;
-  (**(code **)((int32)camera->field_204->pvt + 0xc))(camera->field_204,&distance);
+  (*((const SwerveRayIntersectionVtbl *)camera->field_204->pvt)->GetDistance)(camera->field_204,&distance);
   if (float_compare_less(distance,reach), *(float *)&distance < *(float *)&reach) {
     distance = float_subtract(distance,FLOAT_1_POINT_1);
     move[0] = float_multiply(direction[0],distance);
@@ -8898,25 +8979,33 @@ void thunk_animations_add_from_scene(int param_1,int *param_2)
   
   if (param_2 != (int *)0x0) {
     iStack_24 = 0;
-    (**(code **)(*param_2 + 0x14))(param_2,&iStack_24);
+    (*((const SwerveObject3DVtbl *)((ISwerveObject *)param_2)->pvt)->GetAnimationTrackCount)
+        ((ISwerveObject *)param_2,&iStack_24);
     if (0 < iStack_24) {
       for (iVar3 = 0; iVar3 < iStack_24; iVar3 = iVar3 + 1) {
         piStack_28 = (int *)0x0;
         iStack_2c = 0;
         piStack_30 = (int *)0x0;
-        iVar1 = (**(code **)(*param_2 + 0x18))(param_2,iVar3,&piStack_30);
+        iVar1 = (*((const SwerveObject3DVtbl *)((ISwerveObject *)param_2)->pvt)->GetAnimationTrack)
+                    ((ISwerveObject *)param_2,iVar3,(ISwerveObject **)&piStack_30);
         if (iVar1 == 0) {
           piStack_34 = (int *)0x0;
-          iVar1 = (**(code **)(*piStack_30 + 0x4c))(piStack_30,&piStack_34);
+          iVar1 = (*((const SwerveAnimationTrackVtbl *)((ISwerveObject *)piStack_30)->pvt)->GetController)
+                      ((ISwerveObject *)piStack_30,(ISwerveObject **)&piStack_34);
           if (iVar1 == 0) {
-            (**(code **)(*piStack_34 + 0xc))(piStack_34,&piStack_28);
-            (**(code **)(*piStack_34 + 4))();
+            (*((const SwerveObject3DVtbl *)((ISwerveObject *)piStack_34)->pvt)->GetUserId)
+                ((ISwerveObject *)piStack_34,(int32 *)&piStack_28);
+            /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+            (*((ISwerveObject *)piStack_34)->pvt->Release)((ISwerveObject *)piStack_34);
           }
           piStack_38 = (int *)0x0;
-          iVar1 = (**(code **)(*piStack_30 + 0x54))(piStack_30,&piStack_38);
+          iVar1 = (*((const SwerveAnimationTrackVtbl *)((ISwerveObject *)piStack_30)->pvt)
+                    ->GetKeyframeSequence)((ISwerveObject *)piStack_30,(ISwerveObject **)&piStack_38);
           if (iVar1 == 0) {
-            (**(code **)(*piStack_38 + 0x4c))(piStack_38,&iStack_2c);
-            (**(code **)(*piStack_38 + 4))();
+            (*((const SwerveKeyframeSequenceVtbl *)((ISwerveObject *)piStack_38)->pvt)->GetDuration)
+                ((ISwerveObject *)piStack_38,&iStack_2c);
+            /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+            (*((ISwerveObject *)piStack_38)->pvt->Release)((ISwerveObject *)piStack_38);
           }
           if (piStack_28 != (int *)0x0) {
             iVar1 = 0;
@@ -8942,68 +9031,91 @@ void thunk_animations_add_from_scene(int param_1,int *param_2)
             }
           }
 LAB_00120a28:
-          (**(code **)(*piStack_30 + 4))();
+          /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+          (*((ISwerveObject *)piStack_30)->pvt->Release)((ISwerveObject *)piStack_30);
         }
       }
     }
     piStack_28 = (int *)0x0;
-    iVar3 = (**(code **)(*param_2 + 8))(param_2,9,&piStack_28);
+    iVar3 = (*((ISwerveObject *)param_2)->pvt->QueryInterface)
+                ((ISwerveObject *)param_2,9,(void **)&piStack_28);
     if (iVar3 == 0) {
       iStack_2c = 0;
-      (**(code **)(*piStack_28 + 0xac))(piStack_28,&iStack_2c);
+      (*((const SwerveGroupVtbl *)((ISwerveObject *)piStack_28)->pvt)->GetChildCount)
+          ((ISwerveObject *)piStack_28,&iStack_2c);
       for (iVar3 = 0; iVar3 < iStack_2c; iVar3 = iVar3 + 1) {
         piStack_30 = (int *)0x0;
-        iVar1 = (**(code **)(*piStack_28 + 0xb0))(piStack_28,iVar3,&piStack_30);
+        iVar1 = (*((const SwerveGroupVtbl *)((ISwerveObject *)piStack_28)->pvt)->GetChild)
+                    ((ISwerveObject *)piStack_28,iVar3,(ISwerveObject **)&piStack_30);
         if (iVar1 == 0) {
           piStack_34 = (int *)0x0;
           piStack_38 = (int *)0x0;
           piStack_3c = (int *)0x0;
           piStack_40 = (int *)0x0;
-          iVar1 = (**(code **)(*piStack_30 + 8))(piStack_30,9,&piStack_34);
+          iVar1 = (*((ISwerveObject *)piStack_30)->pvt->QueryInterface)
+                      ((ISwerveObject *)piStack_30,9,(void **)&piStack_34);
           if (iVar1 == 0) {
             animations_add_from_scene((Animations *)param_1,(ISwerveObject *)piStack_34);
-            (**(code **)(*piStack_34 + 4))();
+            /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+            (*((ISwerveObject *)piStack_34)->pvt->Release)((ISwerveObject *)piStack_34);
           }
           else {
-            iVar1 = (**(code **)(*piStack_30 + 8))(piStack_30,0x16,&piStack_38);
+            iVar1 = (*((ISwerveObject *)piStack_30)->pvt->QueryInterface)
+                        ((ISwerveObject *)piStack_30,0x16,(void **)&piStack_38);
             if (iVar1 == 0) {
-              (**(code **)(*piStack_38 + 0xd0))(piStack_38,&piStack_40);
+              (*((const SwerveSkinnedMeshVtbl *)((ISwerveObject *)piStack_38)->pvt)->GetSkeleton)
+                  ((ISwerveObject *)piStack_38,(ISwerveObject **)&piStack_40);
               animations_add_from_scene((Animations *)param_1,(ISwerveObject *)piStack_40);
-              (**(code **)(*piStack_40 + 4))();
-              (**(code **)(*piStack_38 + 4))();
+              /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+              (*((ISwerveObject *)piStack_40)->pvt->Release)((ISwerveObject *)piStack_40);
+              /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+              (*((ISwerveObject *)piStack_38)->pvt->Release)((ISwerveObject *)piStack_38);
             }
             else {
-              iVar1 = (**(code **)(*piStack_30 + 8))(piStack_30,0x11,&piStack_3c);
+              iVar1 = (*((ISwerveObject *)piStack_30)->pvt->QueryInterface)
+                          ((ISwerveObject *)piStack_30,0x11,(void **)&piStack_3c);
               if (iVar1 == 0) {
                 animations_add_from_scene((Animations *)param_1,(ISwerveObject *)piStack_3c);
-                (**(code **)(*piStack_3c + 4))();
+                /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+                (*((ISwerveObject *)piStack_3c)->pvt->Release)((ISwerveObject *)piStack_3c);
               }
             }
           }
-          (**(code **)(*piStack_30 + 4))();
+          /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+          (*((ISwerveObject *)piStack_30)->pvt->Release)((ISwerveObject *)piStack_30);
         }
       }
-      (**(code **)(*piStack_28 + 4))();
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((ISwerveObject *)piStack_28)->pvt->Release)((ISwerveObject *)piStack_28);
     }
   }
   return;
 }
 
 /* ==== 0x0010E94C  (file offset 0x0E94C)  FUN_0010e94c ================================================ */
-/* WARNING: Removing unreachable block (ram,0x0010e9a0) */
 
 void FUN_0010e94c(int *param_1)
 
 {
   int iVar1;
+  int *local_18;   /* [sp]: Find's result (0 before the loop) */
   
+  local_18 = (int *)0x0;
   iVar1 = 0;
   do {
     if (param_1[iVar1 + 4] != -1) {
       if (*(int **)(*param_1 + 0x6c) != (int *)0x0) {
-        (**(code **)(**(int **)(*param_1 + 0x6c) + 0x28))();
+        /* Ghidra had dropped the arguments; restored from the disassembly (r1, r2 = sp, 0x0010e98c) */
+        (*((const SwerveObject3DVtbl *)((ISwerveObject *)*(int **)(*param_1 + 0x6c))->pvt)->Find)
+            ((ISwerveObject *)*(int **)(*param_1 + 0x6c),param_1[iVar1 + 4],(ISwerveObject **)&local_18);
       }
-      param_1[iVar1 + 4] = -1;
+      /* restored from the disassembly (0x0010e990 - 0x0010e9a8); Ghidra had removed it as unreachable */
+      if (local_18 == (int *)0x0) {
+        param_1[iVar1 + 4] = -1;
+      }
+      else {
+        (*((ISwerveObject *)local_18)->pvt->Release)((ISwerveObject *)local_18);
+      }
     }
     iVar1 = iVar1 + 1;
   } while (iVar1 < 100);
@@ -9047,7 +9159,7 @@ void FUN_0010ea00(int param_1)
   iVar2 = *(int *)(*(int *)(param_1 + 0x44) + 0xd0);
   graphics_set_color(iVar2,*(undefined4 *)(iVar2 + 0x10),0,3);
   piVar3 = *(int **)(*(int *)(*(int *)(param_1 + 0x44) + 0xd0) + 0x10);
-  (**(code **)(*piVar3 + 0x78))(piVar3,pvVar1);
+  (*((IGraphics *)piVar3)->pvt->ClearRectBg)((IGraphics *)piVar3,pvVar1);
   helper_free(pvVar1);
   return;
 }
@@ -9867,22 +9979,26 @@ int FUN_0010faa8(int param_1,undefined4 param_2)
   int *local_18;
   
   piVar2 = *(int **)(*(int *)(param_1 + 0xc) + 0xc);
-  iVar3 = (**(code **)(*piVar2 + 8))(piVar2,AEECLSID_FILEMGR_VALUE,&local_18);
+  iVar3 = (*((IShell *)piVar2)->pvt->CreateInstance)
+              ((IShell *)piVar2,AEECLSID_FILEMGR_VALUE,(void **)&local_18);
   if (iVar3 == 0) {
-    iVar3 = (**(code **)(*local_18 + 0x28))(local_18,(int32)DATA_AT_00127F78,0);
+    iVar3 = (*((IFileMgr *)local_18)->pvt->EnumInit)
+                ((IFileMgr *)local_18,(const char *)DATA_AT_00127F78,0);
     if (iVar3 == 0) {
-      while (iVar4 = (**(code **)(*local_18 + 0x2c))(local_18,auStack_64), iVar4 != 0) {
+      while (iVar4 = (*((IFileMgr *)local_18)->pvt->EnumNext)
+                         ((IFileMgr *)local_18,(FileInfo *)auStack_64), iVar4 != 0) {
                     /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
                         */
         /* helper[53] int strnicmp(const char *a, const char *b, uint32 n)
                        (AEEHelperFuncs +0xd4, via *(base-4)) */
         iVar4 = (*g_pHelperFuncs->strnicmp)(auStack_58,param_2,(*g_pHelperFuncs->strlen)(param_2));
         if (iVar4 == 0) {
-          (**(code **)(*local_18 + 0x10))(local_18,auStack_58);
+          (*((IFileMgr *)local_18)->pvt->Remove)((IFileMgr *)local_18,(const char *)auStack_58);
         }
       }
     }
-    (**(code **)(*local_18 + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((IFileMgr *)local_18)->pvt->Release)((IFileMgr *)local_18);
   }
   return iVar3;
 }
@@ -10819,37 +10935,44 @@ int32 script_command_run(ScriptCommand *command)
     element = (int32 *)0x0;
     destination = (int32 *)0x0;
     source = (int32 *)0x0;
-    (**(code **)(*(int32 *)app->pObj6c + 0x28))(app->pObj6c,command->number[0],&source);
-    (**(code **)(*(int32 *)command->object->node + 0x28))
-              (command->object->node,command->number[1],&destination);
+    (*((const SwerveObject3DVtbl *)app->pObj6c->pvt)->Find)
+        (app->pObj6c,command->number[0],(ISwerveObject **)&source);
+    (*((const SwerveObject3DVtbl *)command->object->node->pvt)->Find)
+        (command->object->node,command->number[1],(ISwerveObject **)&destination);
     if (source == (int32 *)0x0 || destination == (int32 *)0x0)
       break;
-    (**(code **)(*source + 0xb4))(source,&sourceCount);
-    (**(code **)(*destination + 0xb4))(destination,&destinationCount);
+    (*((const SwerveMeshVtbl *)((ISwerveObject *)source)->pvt)->GetSubmeshCount)
+        ((ISwerveObject *)source,&sourceCount);
+    (*((const SwerveMeshVtbl *)((ISwerveObject *)destination)->pvt)->GetSubmeshCount)
+        ((ISwerveObject *)destination,&destinationCount);
     if (sourceCount != destinationCount)
-      (**(code **)(*source + 0xc0))(source,0,&element);
+      (*((const SwerveMeshVtbl *)((ISwerveObject *)source)->pvt)->GetAppearance)
+          ((ISwerveObject *)source,0,&element);
     for (i = 0; i < destinationCount; i++) {
       if (sourceCount == destinationCount) {
         if (element != (int32 *)0x0) {
-          (**(code **)(*element + 4))(element);
+          (*((ISwerveObject *)element)->pvt->Release)((ISwerveObject *)element);
           element = (int32 *)0x0;
         }
-        (**(code **)(*source + 0xc0))(source,i,&element);
+        (*((const SwerveMeshVtbl *)((ISwerveObject *)source)->pvt)->GetAppearance)
+            ((ISwerveObject *)source,i,&element);
       }
-      (**(code **)(*destination + 0xc4))(destination,i,element);
+      (*((const SwerveMeshVtbl *)((ISwerveObject *)destination)->pvt)->SetAppearance)
+          ((ISwerveObject *)destination,i,element);
     }
     if (element != (int32 *)0x0)
-      (**(code **)(*element + 4))(element);
-    (**(code **)(*source + 4))(source);
-    (**(code **)(*destination + 4))(destination);
+      (*((ISwerveObject *)element)->pvt->Release)((ISwerveObject *)element);
+    (*((ISwerveObject *)source)->pvt->Release)((ISwerveObject *)source);
+    (*((ISwerveObject *)destination)->pvt->Release)((ISwerveObject *)destination);
     break;
   case 0x26:   /* setBackground: an image ("<name>.m3g"), or a colour */
     element = (int32 *)0x0;
     if (command->text == (char *)0x0) {
-      (**(code **)(*(int32 *)app->pObj6c + 0xcc))(app->pObj6c,&element);
+      (*((const SwerveWorldVtbl *)app->pObj6c->pvt)->GetBackground)(app->pObj6c,&element);
       if (element != (int32 *)0x0) {
-        (**(code **)(*element + 0x4c))(element,command->number[0]);
-        (**(code **)(*element + 4))(element);
+        (*((const SwerveBackgroundVtbl *)((ISwerveObject *)element)->pvt)->SetColor)
+            ((ISwerveObject *)element,command->number[0]);
+        (*((ISwerveObject *)element)->pvt->Release)((ISwerveObject *)element);
       }
     }
     else {
@@ -10861,12 +10984,13 @@ int32 script_command_run(ScriptCommand *command)
       source = (int32 *)FUN_0011b518(context,(int)name).low;
       (*g_pHelperFuncs->free)(name);
       if (source != (int32 *)0x0) {
-        (**(code **)(*source + 0xcc))(source,&element);
+        (*((const SwerveWorldVtbl *)((ISwerveObject *)source)->pvt)->GetBackground)
+            ((ISwerveObject *)source,&element);
         if (element != (int32 *)0x0) {
-          (**(code **)(*(int32 *)app->pObj6c + 0xd0))(app->pObj6c,element);
-          (**(code **)(*element + 4))(element);
+          (*((const SwerveWorldVtbl *)app->pObj6c->pvt)->SetBackground)(app->pObj6c,element);
+          (*((ISwerveObject *)element)->pvt->Release)((ISwerveObject *)element);
         }
-        (**(code **)(*source + 4))(source);
+        (*((ISwerveObject *)source)->pvt->Release)((ISwerveObject *)source);
       }
     }
     break;
@@ -10889,7 +11013,7 @@ int32 script_command_run(ScriptCommand *command)
       FUN_0011f8e0((int)player,3);
       player->swimNoClimb = command->flag[0];
       if (player->field_1e4 != (ISwerveObject *)0x0)
-        (**(code **)(*(int32 *)player->field_1e4 + 0x8c))(player->field_1e4,1);
+        (*((const SwerveNodeVtbl *)player->field_1e4->pvt)->SetRenderingEnable)(player->field_1e4,1);
       if (app->progress->soundVolume > 0 && app->field_bc != 0) {
         sound = app->field_bc;
         soundId = 8;
@@ -10898,7 +11022,7 @@ int32 script_command_run(ScriptCommand *command)
     case 3:   /* NOSWIM */
       FUN_0011f8e0((int)player,0xc);
       if (player->field_1e4 != (ISwerveObject *)0x0)
-        (**(code **)(*(int32 *)player->field_1e4 + 0x8c))(player->field_1e4,0);
+        (*((const SwerveNodeVtbl *)player->field_1e4->pvt)->SetRenderingEnable)(player->field_1e4,0);
       break;
     case 4:   /* CLIMB_TREE */
       if (command->object != (LevelObject *)0x0) {
@@ -11068,8 +11192,8 @@ int32 script_command_run(ScriptCommand *command)
     if (player->shadow != (ISwerveObject *)0x0) {
       value = command->number[0] != 0;
       player->hasShadow = value;
-      (**(code **)(*(int32 *)game->character->shadow + 0x8c))
-                (game->character->shadow,value);
+      (*((const SwerveNodeVtbl *)game->character->shadow->pvt)->SetRenderingEnable)
+          (game->character->shadow,value);
     }
     break;
   case 0x3c:   /* setSpellType */
@@ -11336,7 +11460,7 @@ void kh_OnAppStop(KHApp *pMe)
     }
     pMe->progress = (void *)0x0;
   }
-  po = pMe->pObj6c;
+  po = (IBase *)pMe->pObj6c;
   if (po != (IBase *)0x0) {
     (*po->pvt->Release)(po);
   }
@@ -11382,25 +11506,34 @@ FUN_0011295c(undefined4 *param_1,int *param_2,int *param_3,int *param_4,undefine
   uVar1 = float_reverse_divide(uVar2,uVar1);
   param_1[0x8e] = uVar1;
   local_1c = (int *)0x0;
-  (**(code **)(*(int *)*param_1 + 0x28))((int *)*param_1,WORD_HEXADECIMAL_2BAC0EE7,&local_1c);
+  (*((const SwerveObject3DVtbl *)((ISwerveObject *)*param_1)->pvt)->Find)
+      ((ISwerveObject *)*param_1,WORD_HEXADECIMAL_2BAC0EE7,(ISwerveObject **)&local_1c);
   if (local_1c != (int *)0x0) {
     local_20 = (int *)0x0;
-    (**(code **)(*local_1c + 0xc0))(local_1c,0,&local_20);
+    (*((const SwerveMeshVtbl *)((ISwerveObject *)local_1c)->pvt)->GetAppearance)
+        ((ISwerveObject *)local_1c,0,&local_20);
     if (local_20 != (int *)0x0) {
       local_24 = (int *)0x0;
-      (**(code **)(*local_20 + 0x50))(local_20,&local_24);
+      (*((const SwerveAppearanceVtbl *)((ISwerveObject *)local_20)->pvt)->GetMaterial)
+          ((ISwerveObject *)local_20,&local_24);
       if (local_24 != (int *)0x0) {
-        (**(code **)(*local_24 + 0x5c))(local_24,0x1000,param_4);
-        (**(code **)(*local_24 + 4))();
+        (*((const SwerveMaterialVtbl *)((ISwerveObject *)local_24)->pvt)->SetColor)
+            ((ISwerveObject *)local_24,0x1000,(uint32)param_4);
+        /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+        (*((ISwerveObject *)local_24)->pvt->Release)((ISwerveObject *)local_24);
       }
-      (**(code **)(*local_20 + 4))();
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((ISwerveObject *)local_20)->pvt->Release)((ISwerveObject *)local_20);
     }
-    (**(code **)(*local_1c + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)local_1c)->pvt->Release)((ISwerveObject *)local_1c);
   }
   piVar3 = (int *)param_1[0x8b];
   if (piVar3 != (int *)0x0) {
-    (**(code **)(*piVar3 + 0x8c))(piVar3,1);
-    (**(code **)(*(int *)param_1[0x8b] + 0x84))((int *)param_1[0x8b],param_2);
+    (*((const SwerveNodeVtbl *)((ISwerveObject *)piVar3)->pvt)->SetRenderingEnable)
+        ((ISwerveObject *)piVar3,1);
+    (*((const SwerveNodeVtbl *)((ISwerveObject *)param_1[0x8b])->pvt)->SetAlphaFactor)
+        ((ISwerveObject *)param_1[0x8b],(uint32)param_2);
   }
   return MAKE_WORDS(uVar4,local_24,param_1);
 }
@@ -11760,10 +11893,10 @@ void FUN_001132a8(int param_1)
   
   iVar4 = *(int *)(param_1 + 0xc);
   iVar1 = *(int *)(iVar4 + 0x70);
-  uVar2 = (**(code **)(**(int **)(iVar4 + 0x68) + 0x20))
-                    (*(int **)(iVar4 + 0x68),*(undefined2 *)(iVar1 + 0x14),
+  uVar2 = (*((IGraphics3D *)*(int **)(iVar4 + 0x68))->pvt->BindTarget)
+              ((IGraphics3D *)*(int **)(iVar4 + 0x68),*(undefined2 *)(iVar1 + 0x14),
                      *(undefined2 *)(iVar1 + 0x16),(int)*(short *)(iVar1 + 0x18),
-                     *(undefined4 *)(iVar1 + 8),(int)*(short *)(iVar4 + 0x74),
+                     (void *)*(undefined4 *)(iVar1 + 8),(int)*(short *)(iVar4 + 0x74),
                      (int)*(short *)(iVar4 + 0x76),(int)*(short *)(iVar4 + 0x78),
                      (int)*(short *)(iVar4 + 0x7a));
   *(undefined4 *)(*(int *)(param_1 + 0xc) + 0x90) = uVar2;
@@ -11785,7 +11918,8 @@ void FUN_00113340(int param_1)
   piVar1 = *(int **)(param_1 + 4);
   if (piVar1 != (int *)0x0) {
     local_8[0] = 0;
-    (**(code **)(*piVar1 + 0x24))(piVar1,*(undefined4 *)(param_1 + 0xc),local_8);
+    (*((const SwerveObject3DVtbl *)((ISwerveObject *)piVar1)->pvt)->Animate)
+        ((ISwerveObject *)piVar1,*(undefined4 *)(param_1 + 0xc),(int32 *)local_8);
   }
   return;
 }
@@ -12600,13 +12734,15 @@ FUN_00114240(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined
     direction[0] = 0;
     direction[1] = 0;
     direction[2] = param_5;
-    (**(code **)(*(int *)*param_1 + 0xbc))((int *)*param_1,1,origin,direction,ray,&hit);
+    (*((const SwerveGroupVtbl *)((ISwerveObject *)*param_1)->pvt)->Pick)
+        ((ISwerveObject *)*param_1,1,origin,direction,ray,&hit);
     if ((uint8)hit != 0) {
-      (**(code **)(*ray + 0xc))(ray,&distance);
+      (*((const SwerveRayIntersectionVtbl *)((ISwerveObject *)ray)->pvt)->GetDistance)
+          ((ISwerveObject *)ray,&distance);
       *param_6 = 1;
       height = float_add(float_multiply(param_5,distance),param_4);
     }
-    (**(code **)(*ray + 4))(ray);
+    (*((ISwerveObject *)ray)->pvt->Release)((ISwerveObject *)ray);
   }
   if (param_9 == 0) {
     return height;
@@ -12664,7 +12800,8 @@ int FUN_0011448c(undefined4 param_1,int *param_2,undefined4 param_3,undefined4 *
     return param_1;
   }
   local_14 = 0;
-  (**(code **)(*param_2 + 0x30))(param_2,param_3,0,0,&local_14);
+  (*((const SwerveObject3DVtbl *)((ISwerveObject *)param_2)->pvt)->GetUserParameter)
+      ((ISwerveObject *)param_2,param_3,0,0,&local_14);
   if (local_14 < 1) {
     return local_14;
   }
@@ -12672,7 +12809,8 @@ int FUN_0011448c(undefined4 param_1,int *param_2,undefined4 param_3,undefined4 *
                         */
   uVar1 = (*g_pHelperFuncs->malloc)(local_14 + 1);
   *param_4 = uVar1;
-  return (**(code **)(*param_2 + 0x30))(param_2,param_3,local_14,uVar1,&local_14);
+  return (*((const SwerveObject3DVtbl *)((ISwerveObject *)param_2)->pvt)->GetUserParameter)
+             ((ISwerveObject *)param_2,param_3,local_14,(void *)uVar1,&local_14);
 }
 
 /* ==== 0x00114520  (file offset 0x14520)  FUN_00114520 ================================================ */
@@ -12684,13 +12822,15 @@ void FUN_00114520(undefined4 param_1,int *param_2,undefined4 param_3,undefined4 
   
   if (param_2 != (int *)0x0) {
     local_14 = 0;
-    (**(code **)(*param_2 + 0x30))(param_2,param_3,0,0,&local_14);
+    (*((const SwerveObject3DVtbl *)((ISwerveObject *)param_2)->pvt)->GetUserParameter)
+        ((ISwerveObject *)param_2,param_3,0,0,&local_14);
     if (0 < local_14) {
                     /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
                         */
       uVar1 = (*g_pHelperFuncs->malloc)(local_14 + 1);
       *param_4 = uVar1;
-      (**(code **)(*param_2 + 0x30))(param_2,param_3,local_14,uVar1,&local_14);
+      (*((const SwerveObject3DVtbl *)((ISwerveObject *)param_2)->pvt)->GetUserParameter)
+          ((ISwerveObject *)param_2,param_3,local_14,(void *)uVar1,&local_14);
     }
   }
   return;
@@ -12780,7 +12920,8 @@ int32 * progress_find_variable(Progress *progress,const char *name)
 undefined4 FUN_00114750(int param_1)
 
 {
-  (**(code **)(**(int **)(param_1 + 8) + 0x88))(*(int **)(param_1 + 8),param_1 + 0x5c);
+  (*((const SwerveNodeVtbl *)((ISwerveObject *)*(int **)(param_1 + 8))->pvt)->IsRenderingEnabled)
+      ((ISwerveObject *)*(int **)(param_1 + 8),(void *)(param_1 + 0x5c));
   return *(undefined4 *)(param_1 + 0x5c);
 }
 
@@ -12825,9 +12966,11 @@ void FUN_001147ec(undefined4 *param_1,int param_2,int *param_3)
     iVar1 = *(int *)(param_2 + 0x10);
   }
   if (param_3 != (int *)0x0 && iVar1 != 0) {
-    (**(code **)(*param_3 + 0xa0))
-              (param_3,**(undefined4 **)(*(int *)(param_2 + 0xc) + 0xa4),iVar1,local_20);
-    (**(code **)(**(int **)(param_2 + 0x10) + 0x3c))(*(int **)(param_2 + 0x10),4,&local_1c);
+    (*((const SwerveNodeVtbl *)((ISwerveObject *)param_3)->pvt)->GetTransformTo)
+        ((ISwerveObject *)param_3,(void *)(**(undefined4 **)(*(int *)(param_2 + 0xc) + 0xa4)),
+         (void *)iVar1,local_20);
+    (*((const SwerveTransformVtbl *)((ISwerveObject *)*(int **)(param_2 + 0x10))->pvt)->TransformVector)
+        ((ISwerveObject *)*(int **)(param_2 + 0x10),4,&local_1c);
   }
   *param_1 = local_1c;
   param_1[1] = local_18;
@@ -12997,8 +13140,7 @@ int32 combat_region_hit_enemies(CombatRegion *region,int32 part,uint32 damage,ui
   int32 i;
 
   for (i = 0; i < region->enemyCount; i++)
-    (*(code *)(*(int32 *)(region->enemies[i]->vtable + 0x14)))
-              (region->enemies[i],part,damage,x,y,z,playerState);
+    (*region->enemies[i]->vtable->takeHit)(region->enemies[i],part,damage,x,y,z,playerState);
   if (!combat_region_all_enemies_defeated(region) || region->enemiesLeftInWave != 0)
     return 0;
   FUN_0011d040((int32)region->app->context,region->nameId,
@@ -13026,8 +13168,8 @@ int32 boss_combat_region_hit_target(BossCombatRegion *region,int32 part,uint32 d
     return 0;
   hitsphere = boss_combat_region_find_hitsphere(region,target);
   if (hitsphere != (Hitsphere *)0x0) {
-    (*(code *)(*(int32 *)(hitsphere->vtable + 8)))
-              (hitsphere,damage,x,y,z,playerState);              /* take a hit: vtable +8 */
+    (*hitsphere->vtable->takeHit)
+        (hitsphere,damage,x,y,z,playerState);              /* take a hit: vtable +8 */
     *(uint32 *)(region->app->field_d4 + 0x4c) = float_to_int(region->hitspheres[0]->field_14);
   }
   else if (region->extraEntity == target) {
@@ -14222,16 +14364,18 @@ void FUN_00117d30(int param_1,int *param_2)
 
   FUN_001180c4(param_1,param_2);
   piVar1 = *(int **)(*(int *)(param_1 + 0x84) + 100);
-  iVar2 = (**(code **)(*piVar1 + 0x10))(piVar1,0x15,param_1 + 0x204);
+  iVar2 = (*((ISwerve *)piVar1)->pvt->CreateObject)((ISwerve *)piVar1,0x15,(void **)(param_1 + 0x204));
   *param_2 = iVar2;
   if (iVar2 == 0) {
     local_10 = (int *)0x0;
     piVar1 = *(int **)(param_1 + 0x158);
     if (piVar1 != (int *)0x0) {
-      (**(code **)(*piVar1 + 0xb0))(piVar1,0,&local_10);
+      (*((const SwerveGroupVtbl *)((ISwerveObject *)piVar1)->pvt)->GetChild)
+          ((ISwerveObject *)piVar1,0,(ISwerveObject **)&local_10);
       if (local_10 != (int *)0x0) {
-        (**(code **)(*local_10 + 0xb0))(local_10,0,param_1 + 0x1c8);
-        (**(code **)(*local_10 + 4))(local_10);
+        (*((const SwerveGroupVtbl *)((ISwerveObject *)local_10)->pvt)->GetChild)
+            ((ISwerveObject *)local_10,0,(ISwerveObject **)(param_1 + 0x1c8));
+        (*((ISwerveObject *)local_10)->pvt->Release)((ISwerveObject *)local_10);
       }
     }
     motion_entity_set_pitch((MotionEntity *)param_1,*(uint32 *)(param_1 + 0x1e0));
@@ -14313,10 +14457,15 @@ undefined8 FUN_001180c4(int param_1,uint param_2)
   local_1c = (int *)0x0;
   iVar7 = param_1;
   local_24 = param_2;
-  (**(code **)(**(int **)(param_1 + 8) + 0xb0))(*(int **)(param_1 + 8),0);
+  /* Ghidra had dropped arguments; restored from the disassembly (r2 = &local_1c, 0x001180ec) */
+  (*((const SwerveGroupVtbl *)((ISwerveObject *)*(int **)(param_1 + 8))->pvt)->GetChild)
+      ((ISwerveObject *)*(int **)(param_1 + 8),0,(ISwerveObject **)&local_1c);
   if (local_1c != (int *)0x0) {
-    (**(code **)(*local_1c + 8))(local_1c,9);
-    (**(code **)(*local_1c + 4))();
+    /* Ghidra had dropped arguments; restored from the disassembly (r2 = param_1 + 0x158, 0x0011810c) */
+    (*((ISwerveObject *)local_1c)->pvt->QueryInterface)
+        ((ISwerveObject *)local_1c,9,(void **)(param_1 + 0x158));
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)local_1c)->pvt->Release)((ISwerveObject *)local_1c);
   }
   *(undefined4 *)(param_1 + 0x138) = 0;
   *(undefined4 *)(param_1 + 0x134) = 0x3f800000;
@@ -14328,9 +14477,11 @@ undefined8 FUN_001180c4(int param_1,uint param_2)
   *(undefined4 *)(param_1 + 0x140) = 0;
   piVar1 = *(int **)(param_1 + 0x158);
   if (piVar1 != (int *)0x0) {
-    (**(code **)(*piVar1 + 0x5c))(piVar1,param_1 + 0x130);
+    (*((const SwerveTransformableVtbl *)((ISwerveObject *)piVar1)->pvt)->SetOrientation)
+        ((ISwerveObject *)piVar1,(void *)(param_1 + 0x130));
   }
-  (**(code **)(**(int **)(param_1 + 8) + 0x5c))(*(int **)(param_1 + 8),param_1 + 0x140);
+  (*((const SwerveTransformableVtbl *)((ISwerveObject *)*(int **)(param_1 + 8))->pvt)->SetOrientation)
+      ((ISwerveObject *)*(int **)(param_1 + 8),(void *)(param_1 + 0x140));
   motion_entity_pitch_by((MotionEntity *)param_1,*(undefined4 *)(param_1 + 0x120));
   motion_entity_turn((MotionEntity *)param_1,*(undefined4 *)(param_1 + 0x124));
   FUN_00118910(param_1,param_2);
@@ -14374,7 +14525,8 @@ undefined8 FUN_001180c4(int param_1,uint param_2)
   *(uint *)(param_1 + 0x118) = uVar5;
   *(uint *)(param_1 + 0x11c) = uVar5;
   *(undefined4 *)(param_1 + 0x40) = 1;
-  (**(code **)(**(int **)(param_1 + 8) + 0x48))(*(int **)(param_1 + 8),param_1 + 0x15c);
+  (*((const SwerveTransformableVtbl *)((ISwerveObject *)*(int **)(param_1 + 8))->pvt)->GetTranslation)
+      ((ISwerveObject *)*(int **)(param_1 + 8),(void *)(param_1 + 0x15c));
   return MAKE_WORDS(uVar8,local_24,iVar7);
 }
 
@@ -14407,11 +14559,11 @@ void character_setup(Character *character,int32 *error)
   character->field_294 = float_divide(value,FLOAT_1000);
   FUN_001145b4((int32)character->app->context,character->node,WORD_HEXADECIMAL_1218EC09,(uint32 *)&character->field_288);
 
-  memcpy_word_aligned(userIds,(void *)((int32)DATA_AT_00126EA8),0x74);
+  memcpy_word_aligned(userIds,(void *)DATA_AT_00126EA8,0x74);
   for (i = 0; i < 29; i++)
     character->animations[i] = animations_find(animations,userIds[i]);
-  memcpy_word_aligned(slots,(void *)((int32)DATA_AT_00126F1C),0x40);
-  memcpy_word_aligned(priorities,(void *)((int32)DATA_AT_00126F5C),0x40);
+  memcpy_word_aligned(slots,(void *)DATA_AT_00126F1C,0x40);
+  memcpy_word_aligned(priorities,(void *)DATA_AT_00126F5C,0x40);
   for (i = 0; i < 16; i++)
     animations_set_priority(animations,character->animations[slots[i]],(uint8)priorities[i]);
   for (i = 9; i <= 12; i++)
@@ -14426,12 +14578,13 @@ void character_setup(Character *character,int32 *error)
   (*((const SwerveObject3DVtbl *)scene->pvt)->Find)(scene,WORD_HEXADECIMAL_314D49C5,&character->field_1e8);
   (*((const SwerveObject3DVtbl *)scene->pvt)->Find)(scene,WORD_HEXADECIMAL_0A893452,&character->field_1ec);
   if (character->field_1e4 != (ISwerveObject *)0x0)
-    (**(code **)((int32)character->field_1e4->pvt + 0x8c))(character->field_1e4,0);
-  (**(code **)((int32)character->field_1dc->pvt + 0x48))(character->field_1dc,&character->field_1f8);
+    (*((const SwerveNodeVtbl *)character->field_1e4->pvt)->SetRenderingEnable)(character->field_1e4,0);
+  (*((const SwerveTransformableVtbl *)character->field_1dc->pvt)->GetTranslation)
+      (character->field_1dc,&character->field_1f8);
   character->shadow =
        (ISwerveObject *)FUN_0011ae04((int32)character->app->context,(int32)STRING_CHARACTER_SHADOW,(int32 *)scene,0,0);
   if (character->shadow != (ISwerveObject *)0x0) {
-    (**(code **)((int32)character->shadow->pvt + 0x94))(character->shadow,0);
+    (*((const SwerveNodeVtbl *)character->shadow->pvt)->SetPickingEnable)(character->shadow,0);
     character->hasShadow = 1;
   }
   character->field_234 = game_find_object((Game *)character->app->pGame,WORD_HEXADECIMAL_2BB0C920);
@@ -14462,7 +14615,8 @@ void FUN_00118640(int param_1,int *param_2)
   
   animations_reset((Animations *)param_1);
   if (param_2 != (int *)0x0) {
-    (**(code **)(*param_2 + 8))(param_2,9);
+    /* Ghidra had dropped arguments; restored from the disassembly (r2 = param_1 + 4, 0x00118668) */
+    (*((ISwerveObject *)param_2)->pvt->QueryInterface)((ISwerveObject *)param_2,9,(void **)(param_1 + 4));
   }
   if (*(int *)(param_1 + 4) != 0) {
     FUN_0010e94c(param_1);
@@ -14470,25 +14624,34 @@ void FUN_00118640(int param_1,int *param_2)
   piVar2 = *(int **)(param_1 + 4);
   if (piVar2 != (int *)0x0) {
     aiStack_24[0] = 0;
-    (**(code **)(*piVar2 + 0x14))(piVar2,aiStack_24,*(code **)(*piVar2 + 0x14),param_4);
+    (*((const SwerveObject3DVtbl *)((ISwerveObject *)piVar2)->pvt)->GetAnimationTrackCount)
+        ((ISwerveObject *)piVar2,
+         aiStack_24 /* not arguments, value leftovers: *(code **)(*piVar2 + 0x14),param_4 */);
     if (0 < aiStack_24[0]) {
       for (iVar4 = 0; iVar4 < aiStack_24[0]; iVar4 = iVar4 + 1) {
         piStack_28 = (int *)0x0;
         iStack_2c = 0;
         piStack_30 = (int *)0x0;
-        iVar1 = (**(code **)(*piVar2 + 0x18))(piVar2,iVar4,&piStack_30);
+        iVar1 = (*((const SwerveObject3DVtbl *)((ISwerveObject *)piVar2)->pvt)->GetAnimationTrack)
+                    ((ISwerveObject *)piVar2,iVar4,(ISwerveObject **)&piStack_30);
         if (iVar1 == 0) {
           piStack_34 = (int *)0x0;
-          iVar1 = (**(code **)(*piStack_30 + 0x4c))(piStack_30,&piStack_34);
+          iVar1 = (*((const SwerveAnimationTrackVtbl *)((ISwerveObject *)piStack_30)->pvt)->GetController)
+                      ((ISwerveObject *)piStack_30,(ISwerveObject **)&piStack_34);
           if (iVar1 == 0) {
-            (**(code **)(*piStack_34 + 0xc))(piStack_34,&piStack_28);
-            (**(code **)(*piStack_34 + 4))();
+            (*((const SwerveObject3DVtbl *)((ISwerveObject *)piStack_34)->pvt)->GetUserId)
+                ((ISwerveObject *)piStack_34,(int32 *)&piStack_28);
+            /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+            (*((ISwerveObject *)piStack_34)->pvt->Release)((ISwerveObject *)piStack_34);
           }
           piStack_38 = (int *)0x0;
-          iVar1 = (**(code **)(*piStack_30 + 0x54))(piStack_30,&piStack_38);
+          iVar1 = (*((const SwerveAnimationTrackVtbl *)((ISwerveObject *)piStack_30)->pvt)
+                    ->GetKeyframeSequence)((ISwerveObject *)piStack_30,(ISwerveObject **)&piStack_38);
           if (iVar1 == 0) {
-            (**(code **)(*piStack_38 + 0x4c))(piStack_38,&iStack_2c);
-            (**(code **)(*piStack_38 + 4))();
+            (*((const SwerveKeyframeSequenceVtbl *)((ISwerveObject *)piStack_38)->pvt)->GetDuration)
+                ((ISwerveObject *)piStack_38,&iStack_2c);
+            /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+            (*((ISwerveObject *)piStack_38)->pvt->Release)((ISwerveObject *)piStack_38);
           }
           if (piStack_28 != (int *)0x0) {
             iVar1 = 0;
@@ -14514,48 +14677,62 @@ void FUN_00118640(int param_1,int *param_2)
             }
           }
 LAB_00120a28:
-          (**(code **)(*piStack_30 + 4))();
+          /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+          (*((ISwerveObject *)piStack_30)->pvt->Release)((ISwerveObject *)piStack_30);
         }
       }
     }
     piStack_28 = (int *)0x0;
-    iVar4 = (**(code **)(*piVar2 + 8))(piVar2,9,&piStack_28);
+    iVar4 = (*((ISwerveObject *)piVar2)->pvt->QueryInterface)
+                ((ISwerveObject *)piVar2,9,(void **)&piStack_28);
     if (iVar4 == 0) {
       iStack_2c = 0;
-      (**(code **)(*piStack_28 + 0xac))(piStack_28,&iStack_2c);
+      (*((const SwerveGroupVtbl *)((ISwerveObject *)piStack_28)->pvt)->GetChildCount)
+          ((ISwerveObject *)piStack_28,&iStack_2c);
       for (iVar4 = 0; iVar4 < iStack_2c; iVar4 = iVar4 + 1) {
         piStack_30 = (int *)0x0;
-        iVar1 = (**(code **)(*piStack_28 + 0xb0))(piStack_28,iVar4,&piStack_30);
+        iVar1 = (*((const SwerveGroupVtbl *)((ISwerveObject *)piStack_28)->pvt)->GetChild)
+                    ((ISwerveObject *)piStack_28,iVar4,(ISwerveObject **)&piStack_30);
         if (iVar1 == 0) {
           piStack_34 = (int *)0x0;
           piStack_38 = (int *)0x0;
           piStack_3c = (int *)0x0;
           piStack_40 = (int *)0x0;
-          iVar1 = (**(code **)(*piStack_30 + 8))(piStack_30,9,&piStack_34);
+          iVar1 = (*((ISwerveObject *)piStack_30)->pvt->QueryInterface)
+                      ((ISwerveObject *)piStack_30,9,(void **)&piStack_34);
           if (iVar1 == 0) {
             animations_add_from_scene((Animations *)param_1,(ISwerveObject *)piStack_34);
-            (**(code **)(*piStack_34 + 4))();
+            /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+            (*((ISwerveObject *)piStack_34)->pvt->Release)((ISwerveObject *)piStack_34);
           }
           else {
-            iVar1 = (**(code **)(*piStack_30 + 8))(piStack_30,0x16,&piStack_38);
+            iVar1 = (*((ISwerveObject *)piStack_30)->pvt->QueryInterface)
+                        ((ISwerveObject *)piStack_30,0x16,(void **)&piStack_38);
             if (iVar1 == 0) {
-              (**(code **)(*piStack_38 + 0xd0))(piStack_38,&piStack_40);
+              (*((const SwerveSkinnedMeshVtbl *)((ISwerveObject *)piStack_38)->pvt)->GetSkeleton)
+                  ((ISwerveObject *)piStack_38,(ISwerveObject **)&piStack_40);
               animations_add_from_scene((Animations *)param_1,(ISwerveObject *)piStack_40);
-              (**(code **)(*piStack_40 + 4))();
-              (**(code **)(*piStack_38 + 4))();
+              /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+              (*((ISwerveObject *)piStack_40)->pvt->Release)((ISwerveObject *)piStack_40);
+              /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+              (*((ISwerveObject *)piStack_38)->pvt->Release)((ISwerveObject *)piStack_38);
             }
             else {
-              iVar1 = (**(code **)(*piStack_30 + 8))(piStack_30,0x11,&piStack_3c);
+              iVar1 = (*((ISwerveObject *)piStack_30)->pvt->QueryInterface)
+                          ((ISwerveObject *)piStack_30,0x11,(void **)&piStack_3c);
               if (iVar1 == 0) {
                 animations_add_from_scene((Animations *)param_1,(ISwerveObject *)piStack_3c);
-                (**(code **)(*piStack_3c + 4))();
+                /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+                (*((ISwerveObject *)piStack_3c)->pvt->Release)((ISwerveObject *)piStack_3c);
               }
             }
           }
-          (**(code **)(*piStack_30 + 4))();
+          /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+          (*((ISwerveObject *)piStack_30)->pvt->Release)((ISwerveObject *)piStack_30);
         }
       }
-      (**(code **)(*piStack_28 + 4))();
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((ISwerveObject *)piStack_28)->pvt->Release)((ISwerveObject *)piStack_28);
     }
   }
   return;
@@ -14729,7 +14906,8 @@ void FUN_00118910(int param_1,undefined4 param_2)
   if (local_28 != 0) {
     uVar4 = string_hash((int32)((KHApp *)*(int *)(param_1 + 0x84))->context,(const char *)iVar7);
     piVar5 = *(int **)(*(int *)(param_1 + 0x84) + 0x6c);
-    (**(code **)(*piVar5 + 0x28))(piVar5,uVar4,param_1 + 0x10);
+    (*((const SwerveObject3DVtbl *)((ISwerveObject *)piVar5)->pvt)->Find)
+        ((ISwerveObject *)piVar5,uVar4,(ISwerveObject **)(param_1 + 0x10));
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(local_28);
     local_28 = 0;
@@ -14874,7 +15052,7 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
   words = helper_malloc(wordCount << 2);
   string_split((int32)shape->app->context,(int32)text,(int32)DATA_AT_00126FCC,(int32)words,wordCount);
   if (wordCount > 1) {
-    if ((*g_pHelperFuncs->strcmp)(words[1],(char *)((int32)STRING_USE_VERTS)) == 0)
+    if ((*g_pHelperFuncs->strcmp)(words[1],(char *)STRING_USE_VERTS) == 0)
       useVertices = 1;
     else
       size1 = string_to_float((int32)shape->app->context,(int32)words[1]);
@@ -14883,21 +15061,21 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
     size2 = string_to_float((int32)shape->app->context,(int32)words[2]);
   if (wordCount > 3)
     size3 = string_to_float((int32)shape->app->context,(int32)words[3]);
-  if ((*g_pHelperFuncs->strbegins)((char *)((int32)STRING_OUTER),words[0]) != 0)
+  if ((*g_pHelperFuncs->strbegins)((char *)STRING_OUTER,words[0]) != 0)
     shape->kind = 2;
-  else if ((*g_pHelperFuncs->strbegins)((char *)((int32)STRING_INNER),words[0]) != 0)
+  else if ((*g_pHelperFuncs->strbegins)((char *)STRING_INNER,words[0]) != 0)
     shape->kind = 1;
-  if ((*g_pHelperFuncs->strends)((char *)((int32)STRING_CIRCLE),words[0]) != 0)
+  if ((*g_pHelperFuncs->strends)((char *)STRING_CIRCLE,words[0]) != 0)
     shape->form = 3;
-  else if ((*g_pHelperFuncs->strends)((char *)((int32)STRING_CYLINDER),words[0]) != 0)
+  else if ((*g_pHelperFuncs->strends)((char *)STRING_CYLINDER,words[0]) != 0)
     shape->form = 4;
-  else if ((*g_pHelperFuncs->strends)((char *)((int32)STRING_CUBOID),words[0]) != 0)
+  else if ((*g_pHelperFuncs->strends)((char *)STRING_CUBOID,words[0]) != 0)
     shape->form = 5;
-  else if ((*g_pHelperFuncs->strends)((char *)((int32)STRING_RECT),words[0]) != 0)
+  else if ((*g_pHelperFuncs->strends)((char *)STRING_RECT,words[0]) != 0)
     shape->form = 6;
-  else if ((*g_pHelperFuncs->strends)((char *)((int32)STRING_POLY),words[0]) != 0)
+  else if ((*g_pHelperFuncs->strends)((char *)STRING_POLY,words[0]) != 0)
     shape->form = 8;
-  else if ((*g_pHelperFuncs->strends)((char *)((int32)STRING_SPHERE),words[0]) != 0)
+  else if ((*g_pHelperFuncs->strends)((char *)STRING_SPHERE,words[0]) != 0)
     shape->form = 7;
   for (i = 0; i < wordCount; i++)
     helper_free(words[i]);
@@ -14960,7 +15138,7 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
     shape->clockwise = (int32)FUN_00119b0c((int32)shape->app->context,(int32)node,(int32)STRING_CLOCKWISE).low;
     shape->vertexEntities = helper_malloc(shape->vertexCount << 2);
     for (i = 0; i < shape->vertexCount; i++) {
-      (*g_pHelperFuncs->sprintf)(name,(char *)((int32)STRING_PERCENT_DTRANSFORM),i + 1);
+      (*g_pHelperFuncs->sprintf)(name,(char *)STRING_PERCENT_DTRANSFORM,i + 1);
       shape->vertexEntities[i] = 0;
       (*((const SwerveObject3DVtbl *)node->pvt)->Find)
                 (node,string_hash((int32)shape->app->context,(const char *)name),(ISwerveObject **)&shape->vertexEntities[i]);
@@ -15043,7 +15221,7 @@ void kh_OnAppStart(KHApp *pMe)
   pMe->nErr = 0;
   pMe->pSwerve = (ISwerve *)0x0;
   pMe->pSwerveTarget = (ISwerveTarget *)0x0;
-  pMe->pObj6c = (IBase *)0x0;
+  pMe->pObj6c = (ISwerveObject *)0x0;
   pMe->pScreenDIB = (IDIB *)0x0;
   pMe->context = (void *)0x0;
   pMe->pObj98 = (void *)0x0;
@@ -15092,7 +15270,7 @@ void kh_OnAppStart(KHApp *pMe)
       iVar6 = INTEGER_263;
       if (pvVar4 != (void *)0x0) {
         if (pMe->nErr != 0) goto LAB_001199b0;
-        if (pMe->pObj6c != (IBase *)0x0) {
+        if (pMe->pObj6c != (ISwerveObject *)0x0) {
           local_18 = (IBitmap *)0x0;
           (pMe->rcView).x = 0;
           (pMe->rcView).y = 0;
@@ -15168,7 +15346,7 @@ LAB_001199b0:
   FUN_0010d3a4(pMe,pMe->nErr);
   if (pMe->nErr == 0) {
     uVar7 = INTEGER_258;
-    if (pMe->pObj6c != (IBase *)0x0) {
+    if (pMe->pObj6c != (ISwerveObject *)0x0) {
       uVar7 = INTEGER_257;
     }
     FUN_0010d3a4(pMe,uVar7);
@@ -15545,11 +15723,11 @@ void FUN_0011a2f4(int param_1,int param_2)
     *(int *)(param_1 + 0x150) = iVar3;
     iVar3 = **(int **)(*(int *)(param_1 + 0x14c) + iVar3 * 4);
                     /* enemy_enter_mode_3, then enemy_get_health: Ghidra had dropped the enemy, passed in r0 */
-    (*(code *)(*(int *)(iVar3 + 0x10)))
-              (*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4));
+    (*((const EnemyVtbl *)iVar3)->enterMode3)
+        ((void *)(*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4)));
     iVar3 = **(int **)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4);
-    uVar2 = (*(code *)(*(int *)(iVar3 + 0x18)))
-                      (*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4));
+    uVar2 = (*((const EnemyVtbl *)iVar3)->getHealth)
+                ((void *)(*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4)));
     uVar2 = float_to_int(uVar2);
     *(uint *)(param_1 + 0x140) = param_2 + uVar2 * 1000 + 5000;
     uVar1 = 2;
@@ -15560,8 +15738,8 @@ void FUN_0011a2f4(int param_1,int param_2)
     }
     if ((param_2 <= *(int *)(param_1 + 0x140)) &&
        (iVar3 = **(int **)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4),
-       iVar3 = (*(code *)(*(int *)(iVar3 + 0x1c)))   /* enemy_is_waiting; Ghidra had dropped the enemy */
-                 (*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4)),
+       iVar3 = (*((const EnemyVtbl *)iVar3)->isWaiting)
+                   ((void *)(*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4))),
        iVar3 == 0)) {
       return;
     }
@@ -16111,7 +16289,9 @@ undefined4 FUN_0011ae04(int param_1,undefined4 param_2,int *param_3,int param_4,
   (*g_pHelperFuncs->free)(uVar3);
   piVar5 = *(int **)(*(int *)(param_1 + 0xc) + 0x6c);
   if (piVar5 != (int *)0x0) {
-    (**(code **)(*piVar5 + 0x28))(piVar5,uVar4);
+    /* Ghidra had dropped arguments; restored from the disassembly (r2 = &local_28, 0x0011aecc) */
+    (*((const SwerveObject3DVtbl *)((ISwerveObject *)piVar5)->pvt)->Find)
+        ((ISwerveObject *)piVar5,uVar4,(ISwerveObject **)&local_28);
   }
   if (local_28 == (int *)0x0 || param_5 == 0) {
                     /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
@@ -16130,21 +16310,28 @@ undefined4 FUN_0011ae04(int param_1,undefined4 param_2,int *param_3,int param_4,
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
     (*g_pHelperFuncs->free)(uVar3);
     if (local_28 != (int *)0x0) {
-      (**(code **)(*local_28 + 4))();
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((ISwerveObject *)local_28)->pvt->Release)((ISwerveObject *)local_28);
     }
   }
   else {
-    (**(code **)(*local_28 + 0x44))(local_28,&local_2c);
-    (**(code **)(*local_28 + 4))();
+    (*((const SwerveObject3DVtbl *)((ISwerveObject *)local_28)->pvt)->Duplicate)
+        ((ISwerveObject *)local_28,&local_2c);
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)local_28)->pvt->Release)((ISwerveObject *)local_28);
   }
   if (local_2c != (int *)0x0) {
-    iVar2 = (**(code **)(*local_2c + 8))(local_2c,0x12,&local_30);
+    iVar2 = (*((ISwerveObject *)local_2c)->pvt->QueryInterface)
+                ((ISwerveObject *)local_2c,0x12,(void **)&local_30);
     if (iVar2 == 0) {
-      (**(code **)(*param_3 + 0xb4))(param_3,local_30);
-      (**(code **)(*local_30 + 4))();
+      (*((const SwerveGroupVtbl *)((ISwerveObject *)param_3)->pvt)->AddChild)
+          ((ISwerveObject *)param_3,local_30);
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((ISwerveObject *)local_30)->pvt->Release)((ISwerveObject *)local_30);
     }
-    (**(code **)(*local_2c + 8))(local_2c,9,&local_34);
-    (**(code **)(*local_2c + 4))();
+    (*((ISwerveObject *)local_2c)->pvt->QueryInterface)((ISwerveObject *)local_2c,9,(void **)&local_34);
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)local_2c)->pvt->Release)((ISwerveObject *)local_2c);
   }
   if (param_4 != 0) {
     thunk_animations_add_from_scene(*(undefined4 *)(*(int *)(param_1 + 0xc) + 0x9c),local_34);
@@ -16194,17 +16381,20 @@ bool FUN_0011b0cc(int param_1,undefined4 param_2,undefined4 param_3,int *param_4
   
   piVar1 = *(int **)(*(int *)(param_1 + 0x724) + 0xc);
   local_18 = param_4;
-  iVar2 = (**(code **)(*piVar1 + 8))(piVar1,AEECLSID_FILEMGR_VALUE,&local_18);
+  iVar2 = (*((IShell *)piVar1)->pvt->CreateInstance)
+              ((IShell *)piVar1,AEECLSID_FILEMGR_VALUE,(void **)&local_18);
   if ((iVar2 == 0) &&
-     (piVar1 = (int *)(**(code **)(*local_18 + 8))(local_18,param_2,1), piVar1 != (int *)0x0)) {
-    iVar2 = (**(code **)(*piVar1 + 0xc))(piVar1,param_3,param_4);
+     (piVar1 = (int *)(*((IFileMgr *)local_18)->pvt->OpenFile)
+                          ((IFileMgr *)local_18,(const char *)param_2,1), piVar1 != (int *)0x0)) {
+    iVar2 = (*((IFile *)piVar1)->pvt->Read)((IFile *)piVar1,(void *)param_3,(uint32)param_4);
     bVar3 = iVar2 != 0;
-    (**(code **)(*piVar1 + 4))(piVar1);
+    (*((IFile *)piVar1)->pvt->Release)((IFile *)piVar1);
   }
   else {
     bVar3 = false;
   }
-  (**(code **)(*local_18 + 4))();
+  /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+  (*((IFileMgr *)local_18)->pvt->Release)((IFileMgr *)local_18);
   return bVar3;
 }
 
@@ -16233,7 +16423,7 @@ undefined4 FUN_0011b178(int param_1,int param_2)
     }
                     /* helper[0] void * memmove(void *dst, const void *src, uint32 n)
                        (AEEHelperFuncs +0x0, via *(base-4)) */
-    (*(code *)g_pHelperFuncs->memmove)(iVar3,((Progress *)param_1)->saveCopy,0x800);
+    (*g_pHelperFuncs->memmove)((void *)iVar3,((Progress *)param_1)->saveCopy,0x800);
   }
   else {
     iVar6 = FUN_0011b0cc(param_1,param_2,iVar3,0x800 /* not arguments, value leftovers: param_3 */);
@@ -16351,23 +16541,28 @@ undefined8 FUN_0011b518(int param_1,int param_2)
   piVar1 = *(int **)(*(int *)(param_1 + 0xc) + 100);
   local_18 = param_2;
   local_10 = param_4;
-  iVar2 = (**(code **)(*piVar1 + 0x10))(piVar1,0xe,&local_10);
+  iVar2 = (*((ISwerve *)piVar1)->pvt->CreateObject)((ISwerve *)piVar1,0xe,(void **)&local_10);
   if (iVar2 == 0) {
-    iVar2 = (**(code **)(*local_10 + 0x10))(local_10,param_2);
+    iVar2 = (*((const SwerveLoaderVtbl *)((ISwerveObject *)local_10)->pvt)->Load)
+                ((ISwerveObject *)local_10,(void *)param_2);
     if (iVar2 == 0) {
-      (**(code **)(*local_10 + 0x14))(local_10,&local_18);
+      (*((const SwerveLoaderVtbl *)((ISwerveObject *)local_10)->pvt)->GetObjectCount)
+          ((ISwerveObject *)local_10,&local_18);
       iVar3 = 0;
       iVar2 = 0;
       while ((iVar3 < local_18 && (iVar2 == 0))) {
         if (local_14 != (int *)0x0) {
-          (**(code **)(*local_14 + 4))();
+          /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+          (*((ISwerveObject *)local_14)->pvt->Release)((ISwerveObject *)local_14);
           local_14 = (int *)0x0;
         }
-        iVar2 = (**(code **)(*local_10 + 0x18))(local_10,iVar3,&local_14);
+        iVar2 = (*((const SwerveLoaderVtbl *)((ISwerveObject *)local_10)->pvt)->GetObject)
+                    ((ISwerveObject *)local_10,iVar3,&local_14);
         iVar3 = iVar3 + 1;
       }
     }
-    (**(code **)(*local_10 + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)local_10)->pvt->Release)((ISwerveObject *)local_10);
   }
   return MAKE_WORDS(uVar4,local_18,local_14);
 }
@@ -16493,7 +16688,9 @@ void FUN_0011b890(int param_1,int *param_2)
   
   if (*(int *)(*(int *)(param_1 + 4) + 0x6c) != 0) {
     animations_reset((Animations *)*(undefined4 *)(*(int *)(param_1 + 4) + 0x9c));
-    (**(code **)(**(int **)(*(int *)(param_1 + 4) + 0x6c) + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)*(int **)(*(int *)(param_1 + 4) + 0x6c))->pvt->Release)
+        ((ISwerveObject *)*(int **)(*(int *)(param_1 + 4) + 0x6c));
     *(undefined4 *)(*(int *)(param_1 + 4) + 0x6c) = 0;
   }
   if (*(int *)(param_1 + 0x9c) == 0) {
@@ -16510,7 +16707,8 @@ void FUN_0011b890(int param_1,int *param_2)
         *param_2 = iVar3;
         return;
       }
-      (**(code **)(*piVar4 + 0x28))(piVar4,WORD_HEXADECIMAL_3E11FC00,param_1 + 0xc);
+      (*((const SwerveObject3DVtbl *)((ISwerveObject *)piVar4)->pvt)->Find)
+          ((ISwerveObject *)piVar4,WORD_HEXADECIMAL_3E11FC00,(ISwerveObject **)(param_1 + 0xc));
       if (*(int *)(param_1 + 0xc) != 0) {
         iVar6 = FUN_0011ae04((undefined4)((KHApp *)*(int *)(param_1 + 4))->context,(int32)STRING_CHARACTER_GRP_001279C0,*(int **)(param_1 + 0xc),0,0);
         *(int *)(param_1 + 8) = iVar6;
@@ -16518,10 +16716,13 @@ void FUN_0011b890(int param_1,int *param_2)
           *param_2 = iVar3;
         }
         object = (int *)0x0;
-        (**(code **)(**(int **)(param_1 + 0xc) + 0x28))(*(int **)(param_1 + 0xc),WORD_HEXADECIMAL_1DFBEC7F,&object);
+        (*((const SwerveObject3DVtbl *)((ISwerveObject *)*(int **)(param_1 + 0xc))->pvt)->Find)
+            ((ISwerveObject *)*(int **)(param_1 + 0xc),WORD_HEXADECIMAL_1DFBEC7F,
+             (ISwerveObject **)&object);
         if (object != (int *)0x0) {
-          (**(code **)(*object + 0x8c))(object,0);
-          (**(code **)(*object + 4))(object);
+          (*((const SwerveNodeVtbl *)((ISwerveObject *)object)->pvt)->SetRenderingEnable)
+              ((ISwerveObject *)object,0);
+          (*((ISwerveObject *)object)->pvt->Release)((ISwerveObject *)object);
         }
       }
       goto LAB_0011b9d0;
@@ -16551,23 +16752,29 @@ undefined4 FUN_0011ba0c(int param_1,undefined4 param_2)
   local_10 = (int *)0x0;
   local_14 = 0;
   piVar1 = *(int **)(*(int *)(param_1 + 0xc) + 100);
-  iVar2 = (**(code **)(*piVar1 + 0x10))(piVar1,0xe,&local_10);
+  iVar2 = (*((ISwerve *)piVar1)->pvt->CreateObject)((ISwerve *)piVar1,0xe,(void **)&local_10);
   if (iVar2 == 0) {
-    iVar2 = (**(code **)(*local_10 + 0x10))(local_10,param_2);
+    iVar2 = (*((const SwerveLoaderVtbl *)((ISwerveObject *)local_10)->pvt)->Load)
+                ((ISwerveObject *)local_10,(void *)param_2);
     if (iVar2 == 0) {
-      (**(code **)(*local_10 + 0x14))(local_10,&local_18);
+      (*((const SwerveLoaderVtbl *)((ISwerveObject *)local_10)->pvt)->GetObjectCount)
+          ((ISwerveObject *)local_10,&local_18);
       iVar3 = 0;
       iVar2 = 0;
       while ((iVar3 < local_18 && (iVar2 == 0))) {
-        iVar2 = (**(code **)(*local_10 + 0x18))(local_10,iVar3,&local_1c);
+        iVar2 = (*((const SwerveLoaderVtbl *)((ISwerveObject *)local_10)->pvt)->GetObject)
+                    ((ISwerveObject *)local_10,iVar3,&local_1c);
         if (iVar2 == 0) {
-          iVar2 = (**(code **)(*local_1c + 8))(local_1c,0x1f,&local_14);
-          (**(code **)(*local_1c + 4))();
+          iVar2 = (*((ISwerveObject *)local_1c)->pvt->QueryInterface)
+                      ((ISwerveObject *)local_1c,0x1f,(void **)&local_14);
+          /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+          (*((ISwerveObject *)local_1c)->pvt->Release)((ISwerveObject *)local_1c);
         }
         iVar3 = iVar3 + 1;
       }
     }
-    (**(code **)(*local_10 + 4))();
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)local_10)->pvt->Release)((ISwerveObject *)local_10);
   }
   return local_14;
 }
@@ -16586,10 +16793,11 @@ void FUN_0011bb00(undefined4 *param_1,int param_2)
   }
   if (bVar2 && iVar1 == 2) {
     if (param_1[1] != 0) {
-      (**(code **)(*(int *)*param_1 + 0x18))();
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((IMedia *)*param_1)->pvt->Play)((IMedia *)*param_1);
                     /* WARNING: Could not recover jumptable at 0x0011bb54. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-      (**(code **)(*(int *)*param_1 + 0x10))((int *)*param_1,4,param_1[2],0);
+      (*((IMedia *)*param_1)->pvt->SetMediaParm)((IMedia *)*param_1,4,param_1[2],0);
       return;
     }
     return;
@@ -16617,7 +16825,10 @@ void FUN_0011bb58(int param_1,int param_2)
     piVar1 = (int *)**(undefined4 **)(*(int *)(param_1 + 4) + param_2 * 4);
                     /* WARNING: Could not recover jumptable at 0x0011bb94. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-    (**(code **)(*piVar1 + 0xc))(piVar1,(int32)FUN_0011bb00);
+    /* Ghidra had dropped arguments; restored from the disassembly (r2 = the sound entry, 0x0011bb94) */
+    (*((IMedia *)piVar1)->pvt->RegisterNotify)
+        ((IMedia *)piVar1,(PFNMEDIANOTIFY)FUN_0011bb00,
+         (void *)*(int *)(*(int *)(param_1 + 4) + param_2 * 4));
     return;
   }
   return;
@@ -17325,7 +17536,8 @@ void FUN_0011ca8c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   *(undefined4 *)(param_1 + 0x70) = uVar1;
                     /* WARNING: Could not recover jumptable at 0x0011cb30. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  (**(code **)(**(int **)(param_1 + 8) + 0x4c))(*(int **)(param_1 + 8),param_1 + 0x68);
+  (*((const SwerveTransformableVtbl *)((ISwerveObject *)*(int **)(param_1 + 8))->pvt)->SetTranslation)
+      ((ISwerveObject *)*(int **)(param_1 + 8),(void *)(param_1 + 0x68));
   return;
 }
 
@@ -17673,7 +17885,7 @@ LAB_0011d2e8:
       if (iVar3 == 0) {
                     /* WARNING: Could not recover jumptable at 0x0011d3bc. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-        (**(code **)(param_1 + 0x19c))(param_1,param_2);
+        (*((Enemy *)param_1)->field_19c)((struct Enemy *)param_1,param_2);
         return;
       }
     }
@@ -18123,7 +18335,8 @@ void FUN_0011de04(int param_1,undefined4 *param_2)
   local_18 = param_2;
   local_14 = param_3;
   local_10 = param_4;
-  (**(code **)(**(int **)(param_1 + 0x1dc) + 0x48))(*(int **)(param_1 + 0x1dc),&local_18);
+  (*((const SwerveTransformableVtbl *)((ISwerveObject *)*(int **)(param_1 + 0x1dc))->pvt)->GetTranslation)
+      ((ISwerveObject *)*(int **)(param_1 + 0x1dc),&local_18);
   uVar1 = float_subtract(local_18,*(undefined4 *)(param_1 + 0x1f8));
   *param_2 = uVar1;
   uVar1 = float_subtract(local_14,*(undefined4 *)(param_1 + 0x1fc));
@@ -18462,7 +18675,8 @@ void motion_entity_pitch_by(MotionEntity *entity,uint32 angle)
     return;
   entity->pitch = float_add(entity->pitch,angle);
   wrap_angle((int32)entity->app->context,&entity->pitch);
-  (**(code **)((int32)entity->field_158->pvt + 0x5c))(entity->field_158,&entity->pitch);
+  (*((const SwerveTransformableVtbl *)entity->field_158->pvt)->SetOrientation)
+      (entity->field_158,&entity->pitch);
 }
 
 /* ==== 0x0011E3C0  (file offset 0x1E3C0)  motion_entity_turn ========================================== */
@@ -18506,10 +18720,10 @@ void motion_entity_turn(MotionEntity *entity,uint32 angle)
     entity->position[0] = float_reverse_subtract(float_multiply(distance,cosine),center[0]);
     level_object_get_position(center,entity->orbitCenter);
     entity->position[1] = float_add(float_multiply(distance,sine),center[1]);
-    (**(code **)((int32)entity->node->pvt + 0x4c))(entity->node,entity->position);
+    (*((const SwerveTransformableVtbl *)entity->node->pvt)->SetTranslation)(entity->node,entity->position);
   }
   wrap_angle((int32)entity->app->context,&entity->heading);
-  (**(code **)((int32)entity->node->pvt + 0x5c))(entity->node,&entity->heading);
+  (*((const SwerveTransformableVtbl *)entity->node->pvt)->SetOrientation)(entity->node,&entity->heading);
 }
 
 /* ==== 0x0011E530  (file offset 0x1E530)  motion_entity_start_turn ==================================== */
@@ -18542,37 +18756,40 @@ bool FUN_0011e574(int param_1,undefined4 param_2,undefined4 param_3,int *param_4
   piVar1 = *(int **)(*(int *)(param_1 + 0x724) + 0xc);
   bVar4 = true;
   local_20 = param_4;
-  iVar2 = (**(code **)(*piVar1 + 8))(piVar1,AEECLSID_FILEMGR_VALUE,&local_20);
+  iVar2 = (*((IShell *)piVar1)->pvt->CreateInstance)
+              ((IShell *)piVar1,AEECLSID_FILEMGR_VALUE,(void **)&local_20);
   if (iVar2 != 0) {
     return false;
   }
   iVar2 = (int32)STRING_TMP_DOT_DAT;
-  piVar1 = (int *)(**(code **)(*local_20 + 8))(local_20,iVar2,2);
+  piVar1 = (int *)(*((IFileMgr *)local_20)->pvt->OpenFile)((IFileMgr *)local_20,(const char *)iVar2,2);
   if (piVar1 == (int *)0x0) {
-    piVar1 = (int *)(**(code **)(*local_20 + 8))(local_20,iVar2,4);
+    piVar1 = (int *)(*((IFileMgr *)local_20)->pvt->OpenFile)((IFileMgr *)local_20,(const char *)iVar2,4);
     bVar4 = piVar1 != (int *)0x0;
     if (bVar4) goto LAB_0011e5fc;
   }
   else {
-    (**(code **)(*piVar1 + 0x20))(piVar1,0);
+    (*((IFile *)piVar1)->pvt->Truncate)((IFile *)piVar1,0);
 LAB_0011e5fc:
-    iVar3 = (**(code **)(*piVar1 + 0x14))(piVar1,param_3,param_4);
+    iVar3 = (*((IFile *)piVar1)->pvt->Write)((IFile *)piVar1,(const void *)param_3,(uint32)param_4);
     if (iVar3 == 0) {
       bVar4 = false;
     }
-    (**(code **)(*piVar1 + 4))(piVar1);
+    (*((IFile *)piVar1)->pvt->Release)((IFile *)piVar1);
     if (bVar4 != false) {
-      (**(code **)(*local_20 + 0x10))(local_20,param_2);
-      iVar2 = (**(code **)(*local_20 + 0x30))(local_20,iVar2,param_2);
+      (*((IFileMgr *)local_20)->pvt->Remove)((IFileMgr *)local_20,(const char *)param_2);
+      iVar2 = (*((IFileMgr *)local_20)->pvt->Rename)
+                  ((IFileMgr *)local_20,(const char *)iVar2,(const char *)param_2);
       if (iVar2 != 0) {
         bVar4 = false;
       }
       goto LAB_0011e698;
     }
   }
-  (**(code **)(*local_20 + 0x10))(local_20,iVar2);
+  (*((IFileMgr *)local_20)->pvt->Remove)((IFileMgr *)local_20,(const char *)iVar2);
 LAB_0011e698:
-  (**(code **)(*local_20 + 4))();
+  /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+  (*((IFileMgr *)local_20)->pvt->Release)((IFileMgr *)local_20);
   return bVar4;
 }
 
@@ -18687,7 +18904,7 @@ undefined4 FUN_0011e6b8(int param_1,int param_2)
   }
                     /* helper[0] void * memmove(void *dst, const void *src, uint32 n)
                        (AEEHelperFuncs +0x0, via *(base-4)) */
-  (*(code *)g_pHelperFuncs->memmove)(progress->saveCopy,uVar4,0x800);
+  (*g_pHelperFuncs->memmove)(progress->saveCopy,(const void *)uVar4,0x800);
   if (param_2 != 0) {
     uVar8 = FUN_0011e574(param_1,param_2,uVar4,local_24);
   }
@@ -18941,7 +19158,7 @@ void FUN_0011ed3c(int param_1,undefined4 *param_2)
         }
         else if (iVar3 == -1) {
           piVar4 = *(int **)(*(int *)(param_1 + 0xc) + 0xc);
-          (**(code **)(*piVar4 + 0x44))(piVar4,0,8,auStack_ec,0x40);
+          (*((IShell *)piVar4)->pvt->LoadResString)((IShell *)piVar4,0,8,(AECHAR *)auStack_ec,0x40);
                     /* helper[17] char * wstrtostr(const AECHAR *src, char *dst, int nDstBytes)
                        (AEEHelperFuncs +0x44, via *(base-4)) */
           (*g_pHelperFuncs->wstrtostr)(auStack_ec,auStack_10c,0x20);
@@ -19040,7 +19257,7 @@ void combat_region_enemies_enter_mode_2(CombatRegion *region)
   int32 i;
 
   for (i = 0; i < region->enemyCount; i++)
-    (*(code *)(*(int32 *)(region->enemies[i]->vtable + 0xc)))(region->enemies[i]);
+    (*region->enemies[i]->vtable->enterMode2)(region->enemies[i]);
 }
 
 
@@ -19060,15 +19277,19 @@ void FUN_0011f2bc(int param_1,int *param_2,int param_3)
   local_24[2] = *(undefined4 *)(((int32)DATA_AT_00126E14 + 0x8));
   iVar1 = 0;
   do {
-    (**(code **)(*param_2 + 0x28))(param_2,local_24[iVar1],&local_28);
+    (*((const SwerveObject3DVtbl *)((ISwerveObject *)param_2)->pvt)->Find)
+        ((ISwerveObject *)param_2,local_24[iVar1],(ISwerveObject **)&local_28);
     if (param_3 == iVar1 && param_3 == 2) {
       local_34 = *(undefined4 *)(param_1 + 0x60);
       local_30 = *(undefined4 *)(param_1 + 0x60);
       local_2c = *(undefined4 *)(param_1 + 0x60);
-      (**(code **)(*local_28 + 0x54))(local_28,&local_34);
+      (*((const SwerveTransformableVtbl *)((ISwerveObject *)local_28)->pvt)->SetScale)
+          ((ISwerveObject *)local_28,&local_34);
     }
-    (**(code **)(*local_28 + 0x8c))(local_28,param_3 == iVar1);
-    (**(code **)(*local_28 + 4))();
+    (*((const SwerveNodeVtbl *)((ISwerveObject *)local_28)->pvt)->SetRenderingEnable)
+        ((ISwerveObject *)local_28,param_3 == iVar1);
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)local_28)->pvt->Release)((ISwerveObject *)local_28);
     iVar1 = iVar1 + 1;
   } while (iVar1 < 3);
   return;
@@ -19110,13 +19331,15 @@ void FUN_0011f394(int param_1,char *param_2,undefined4 param_3,undefined4 param_
     uVar1 = float_multiply(uVar1,0x3f000000);
     uVar1 = float_add(uVar1,local_14);
     *(undefined4 *)(param_1 + 0x70) = uVar1;
-    (**(code **)(**(int **)(param_1 + 8) + 0x4c))(*(int **)(param_1 + 8),param_1 + 0x68);
+    (*((const SwerveTransformableVtbl *)((ISwerveObject *)*(int **)(param_1 + 8))->pvt)->SetTranslation)
+        ((ISwerveObject *)*(int **)(param_1 + 8),(void *)(param_1 + 0x68));
     local_1c = 0x3f800000;
     local_18 = 0;
     local_14 = 0;
     local_20 = 0;
     piVar2 = *(int **)(*(int *)(param_1 + 0x1cc) + 8);
-    (**(code **)(*piVar2 + 0x58))(piVar2,local_30);
+    (*((const SwerveTransformableVtbl *)((ISwerveObject *)piVar2)->pvt)->GetOrientation)
+        ((ISwerveObject *)piVar2,local_30);
     uVar4 = float_to_double(local_24);
     if (double_compare_less(uVar4,ZERO_DOUBLE),
         DOUBLE_LESS(uVar4,ZERO_DOUBLE)) {
@@ -19125,13 +19348,17 @@ void FUN_0011f394(int param_1,char *param_2,undefined4 param_3,undefined4 param_
     }
     local_34 = (int *)0x0;
     piVar2 = *(int **)(*(int *)(param_1 + 0x1cc) + 8);
-    (**(code **)(*piVar2 + 0xb0))(piVar2,0,&local_34);
+    (*((const SwerveGroupVtbl *)((ISwerveObject *)piVar2)->pvt)->GetChild)
+        ((ISwerveObject *)piVar2,0,(ISwerveObject **)&local_34);
     if (local_34 != (int *)0x0) {
       piVar2 = *(int **)(*(int *)(param_1 + 0x1cc) + 8);
-      (**(code **)(*piVar2 + 0x5c))(piVar2,&local_20);
-      (**(code **)(*local_34 + 0x58))(local_34,&local_20);
+      (*((const SwerveTransformableVtbl *)((ISwerveObject *)piVar2)->pvt)->SetOrientation)
+          ((ISwerveObject *)piVar2,&local_20);
+      (*((const SwerveTransformableVtbl *)((ISwerveObject *)local_34)->pvt)->GetOrientation)
+          ((ISwerveObject *)local_34,&local_20);
       piVar2 = *(int **)(*(int *)(param_1 + 0x1cc) + 8);
-      (**(code **)(*piVar2 + 0x5c))(piVar2,local_30);
+      (*((const SwerveTransformableVtbl *)((ISwerveObject *)piVar2)->pvt)->SetOrientation)
+          ((ISwerveObject *)piVar2,local_30);
     }
     motion_entity_set_heading((MotionEntity *)param_1,local_30[0]);
     if (local_34 != (int *)0x0) {
@@ -19159,11 +19386,13 @@ void FUN_0011f540(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   piVar2 = *(int **)(*(int *)(param_1 + 0xc) + 0x6c);
   if (piVar2 != (int *)0x0) {
     local_1c = (int *)0x0;
-    (**(code **)(*piVar2 + 0xc4))(piVar2,&local_1c);
+    (*((const SwerveWorldVtbl *)((ISwerveObject *)piVar2)->pvt)->GetActiveCamera)
+        ((ISwerveObject *)piVar2,&local_1c);
     uVar1 = FLOAT_MINUS_1;
     uVar3 = local_1c == (int *)0x0;
     if (!(bool)uVar3) {
-      (**(code **)(*local_1c + 0xac))(local_1c,4,&local_30,auStack_20);
+      (*((const SwerveCameraVtbl *)((ISwerveObject *)local_1c)->pvt)->GetProjection)
+          ((ISwerveObject *)local_1c,4,&local_30,auStack_20);
       float_compare_equal(param_2,uVar1);
       if (!(bool)uVar3) {
         local_30 = param_2;
@@ -19180,8 +19409,10 @@ void FUN_0011f540(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
       if (!(bool)uVar3) {
         local_24 = param_5;
       }
-      (**(code **)(*local_1c + 0xbc))(local_1c,local_30,local_2c,local_28,local_24);
-      (**(code **)(*local_1c + 4))();
+      (*((const SwerveCameraVtbl *)((ISwerveObject *)local_1c)->pvt)->SetPerspective)
+          ((ISwerveObject *)local_1c,local_30,local_2c,local_28,local_24);
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((ISwerveObject *)local_1c)->pvt->Release)((ISwerveObject *)local_1c);
     }
   }
   return;
@@ -19211,7 +19442,7 @@ void combat_region_enemies_enter_mode_1(CombatRegion *region)
   int32 i;
 
   for (i = 0; i < region->enemyCount; i++)
-    (*(code *)(*(int32 *)(region->enemies[i]->vtable + 0x8)))(region->enemies[i]);
+    (*region->enemies[i]->vtable->enterMode1)(region->enemies[i]);
 }
 
 
@@ -19318,7 +19549,8 @@ void FUN_0011f8ac(int param_1)
   int *piVar4;
   
   piVar4 = *(int **)(*(int *)(param_1 + 0x214) + 0x6c);
-  (**(code **)(*piVar4 + 200))(piVar4,*(undefined4 *)(*(int *)(param_1 + 0x1f0) + 0x1c8));
+  (*((const SwerveWorldVtbl *)((ISwerveObject *)piVar4)->pvt)->SetActiveCamera)
+      ((ISwerveObject *)piVar4,(void *)(*(undefined4 *)(*(int *)(param_1 + 0x1f0) + 0x1c8)));
   FUN_001132a8((int)((KHApp *)*(int *)(param_1 + 0x214))->context);
   return;
 }
@@ -19358,10 +19590,12 @@ void FUN_0011f8e0(int param_1,uint param_2)
     if (((((((((param_2 == 3 || param_2 == 4) || param_2 == 5) || param_2 == 6) || param_2 == 0xd)
            || param_2 == 0xe) || param_2 == 0xf) || param_2 == 0x11) || param_2 == 0x12) ||
         param_2 == 0x13) {
-      (**(code **)(*piVar1 + 0x8c))(piVar1,0);
+      (*((const SwerveNodeVtbl *)((ISwerveObject *)piVar1)->pvt)->SetRenderingEnable)
+          ((ISwerveObject *)piVar1,0);
     }
     else {
-      (**(code **)(*piVar1 + 0x8c))(piVar1,1);
+      (*((const SwerveNodeVtbl *)((ISwerveObject *)piVar1)->pvt)->SetRenderingEnable)
+          ((ISwerveObject *)piVar1,1);
     }
   }
   if (param_2 == 0xc) {
@@ -19502,7 +19736,8 @@ void FUN_0011fc80(int param_1,undefined4 param_2)
   int *piVar1;
   code *pcVar2;
   
-  pcVar2 = *(code **)(**(int **)(param_1 + 8) + 0x94);
+  pcVar2 = (code *)((const SwerveNodeVtbl *)((ISwerveObject *)*(int **)(param_1 + 8))->pvt)
+                    ->SetPickingEnable;
   (*pcVar2)(*(int **)(param_1 + 8),param_2,pcVar2,param_4,param_4);
   piVar1 = *(int **)(param_1 + 0x10);
   if (piVar1 == (int *)0x0) {
@@ -19510,7 +19745,8 @@ void FUN_0011fc80(int param_1,undefined4 param_2)
   }
                     /* WARNING: Could not recover jumptable at 0x0011fcbc. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  (**(code **)(*piVar1 + 0x94))(piVar1,param_2);
+  (*((const SwerveNodeVtbl *)((ISwerveObject *)piVar1)->pvt)->SetPickingEnable)
+      ((ISwerveObject *)piVar1,param_2);
   return;
 }
 
@@ -19564,7 +19800,8 @@ void FUN_0011fd90(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   *(undefined4 *)(param_1 + 0x70) = param_4;
                     /* WARNING: Could not recover jumptable at 0x0011fdb8. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  (**(code **)(*piVar1 + 0x4c))(piVar1,param_1 + 0x68);
+  (*((const SwerveTransformableVtbl *)((ISwerveObject *)piVar1)->pvt)->SetTranslation)
+      ((ISwerveObject *)piVar1,(void *)(param_1 + 0x68));
   return;
 }
 
@@ -19687,11 +19924,14 @@ void FUN_0011ffc0(undefined4 *param_1,undefined4 param_2)
   int *local_c;
   
   local_c = (int *)0x0;
-  pcVar1 = *(code **)(*(int *)*param_1 + 0x28);
+  pcVar1 = (code *)((const SwerveObject3DVtbl *)((ISwerveObject *)*param_1)->pvt)->Find;
   (*pcVar1)((int *)*param_1,param_2,&local_c,pcVar1,param_3);
   if (local_c != (int *)0x0) {
-    (**(code **)(**(int **)(param_1[0x85] + 0x6c) + 200))();
-    (**(code **)(*local_c + 4))();
+    /* Ghidra had dropped arguments; restored from the disassembly (r1 = local_c, 0x00120010) */
+    (*((const SwerveWorldVtbl *)((ISwerveObject *)*(int **)(param_1[0x85] + 0x6c))->pvt)->SetActiveCamera)
+        ((ISwerveObject *)*(int **)(param_1[0x85] + 0x6c),local_c);
+    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+    (*((ISwerveObject *)local_c)->pvt->Release)((ISwerveObject *)local_c);
   }
   FUN_001132a8((undefined4)((KHApp *)param_1[0x85])->context);
   return;
@@ -19786,11 +20026,13 @@ void FUN_001201cc(int param_1,undefined4 param_2)
   if ((*(int *)(param_1 + 0x50) != 0) || (uVar2 = param_2, *(int *)(param_1 + 0x4c) == 0)) {
     uVar4 = param_2;
   }
-  pcVar3 = *(code **)(**(int **)(param_1 + 8) + 0x8c);
+  pcVar3 = (code *)((const SwerveNodeVtbl *)((ISwerveObject *)*(int **)(param_1 + 8))->pvt)
+                    ->SetRenderingEnable;
   (*pcVar3)(*(int **)(param_1 + 8),uVar2,pcVar3,param_4,param_4);
   piVar1 = *(int **)(param_1 + 0x10);
   if (piVar1 != (int *)0x0) {
-    (**(code **)(*piVar1 + 0x8c))(piVar1,*(undefined4 *)(param_1 + 0x5c));
+    (*((const SwerveNodeVtbl *)((ISwerveObject *)piVar1)->pvt)->SetRenderingEnable)
+        ((ISwerveObject *)piVar1,*(undefined4 *)(param_1 + 0x5c));
   }
   FUN_0011fc80(param_1,uVar4);
   return;
@@ -19806,7 +20048,8 @@ void motion_entity_set_pitch(MotionEntity *entity,uint32 pitch)
     return;
   entity->pitch = pitch;
   wrap_angle((int32)entity->app->context,&entity->pitch);
-  (**(code **)((int32)entity->field_158->pvt + 0x5c))(entity->field_158,&entity->pitch);
+  (*((const SwerveTransformableVtbl *)entity->field_158->pvt)->SetOrientation)
+      (entity->field_158,&entity->pitch);
 }
 
 /* ==== 0x00120290  (file offset 0x20290)  motion_entity_set_heading =================================== */
@@ -19820,7 +20063,7 @@ void motion_entity_set_heading(MotionEntity *entity,uint32 heading)
 {
   entity->heading = heading;
   wrap_angle((int32)entity->app->context,&entity->heading);
-  (**(code **)((int32)entity->node->pvt + 0x5c))(entity->node,&entity->heading);
+  (*((const SwerveTransformableVtbl *)entity->node->pvt)->SetOrientation)(entity->node,&entity->heading);
 }
 
 
@@ -19985,7 +20228,9 @@ void FUN_0012056c(int param_1,int param_2)
   }
                     /* WARNING: Could not recover jumptable at 0x00120590. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  (**(code **)(**(int **)(param_1 + 0xc) + 0x30))(*(int **)(param_1 + 0xc),(int32)FUN_001242b4);
+  /* Ghidra had dropped an argument; restored from the disassembly (r2 = param_1, 0x00120590) */
+  (*((IShell *)*(int **)(param_1 + 0xc))->pvt->CancelTimer)
+      ((IShell *)*(int **)(param_1 + 0xc),(PFNNOTIFY)((int32)FUN_001242b4),(void *)param_1);
   return;
 }
 
@@ -20274,10 +20519,13 @@ void FUN_00120be8(undefined4 *param_1,int *param_2,uint *param_3,uint *param_4,u
   iVar1 = FUN_00119b0c((undefined4)((KHApp *)param_1[0x85])->context,param_2,(int32)STRING_DEADEND).low;
   if (iVar1 == 0) {
     local_28 = 0;
-    (**(code **)(*param_2 + 0xac))(param_2,&local_28);
+    (*((const SwerveGroupVtbl *)((ISwerveObject *)param_2)->pvt)->GetChildCount)
+        ((ISwerveObject *)param_2,&local_28);
     for (iVar1 = 0; iVar1 < local_28; iVar1 = iVar1 + 1) {
-      (**(code **)(*param_2 + 0xb0))(param_2,iVar1,&local_2c);
-      iVar2 = (**(code **)(*local_2c + 8))(local_2c,9,&local_30);
+      (*((const SwerveGroupVtbl *)((ISwerveObject *)param_2)->pvt)->GetChild)
+          ((ISwerveObject *)param_2,iVar1,(ISwerveObject **)&local_2c);
+      iVar2 = (*((ISwerveObject *)local_2c)->pvt->QueryInterface)
+                  ((ISwerveObject *)local_2c,9,(void **)&local_30);
       uVar7 = iVar2 == 0;
       uVar6 = 1;
       if ((bool)uVar7) {
@@ -20308,13 +20556,18 @@ void FUN_00120be8(undefined4 *param_1,int *param_2,uint *param_3,uint *param_4,u
         }
         local_68 = param_5;
         FUN_00120be8(param_1,local_30,param_3,param_4,param_5);
-        (**(code **)(*local_30 + 4))();
+        /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+        (*((ISwerveObject *)local_30)->pvt->Release)((ISwerveObject *)local_30);
       }
       else if ((param_5 != 0) &&
-              (iVar2 = (**(code **)(*local_2c + 8))(local_2c,0x10,&local_34), iVar2 == 0)) {
-        (**(code **)(*local_34 + 0xb8))(local_34,&local_38);
-        (**(code **)(*local_38 + 0x60))(local_38,&local_3c);
-        (**(code **)(*local_38 + 100))(local_38,4,&local_50,&local_40);
+              (iVar2 = (*((ISwerveObject *)local_2c)->pvt->QueryInterface)
+                           ((ISwerveObject *)local_2c,0x10,(void **)&local_34), iVar2 == 0)) {
+        (*((const SwerveMeshVtbl *)((ISwerveObject *)local_34)->pvt)->GetVertexBuffer)
+            ((ISwerveObject *)local_34,&local_38);
+        (*((const SwerveVertexBufferVtbl *)((ISwerveObject *)local_38)->pvt)->GetVertexCount)
+            ((ISwerveObject *)local_38,&local_3c);
+        (*((const SwerveVertexBufferVtbl *)((ISwerveObject *)local_38)->pvt)->GetPositions)
+            ((ISwerveObject *)local_38,4,&local_50,&local_40);
                     /* swv21brew: ISwerve_CreateObject (0x0102479c, ISwerve vtbl[4] +0x10) on
                        ((KHApp *)param_1[0x85])->pSwerve: creates a Transform (class 26 = 0x1a,
                        swv_Create_Transform 0x0103b68c) into local_54. GUESS: param_1[0x85] is the
@@ -20324,8 +20577,10 @@ void FUN_00120be8(undefined4 *param_1,int *param_2,uint *param_3,uint *param_4,u
         if (iVar2 == 0) {
           p = helper_malloc(local_3c << 4);
           local_68 = 1;
-          (**(code **)(*local_54 + 0x38))(local_54,local_40,local_3c << 2,p);
-          (**(code **)(*local_34 + 0xa0))(local_34,*param_1,local_54,auStack_58);
+          (*((const SwerveTransformVtbl *)((ISwerveObject *)local_54)->pvt)->TransformArray)
+              ((ISwerveObject *)local_54,local_40,local_3c << 2,p);
+          (*((const SwerveNodeVtbl *)((ISwerveObject *)local_34)->pvt)->GetTransformTo)
+              ((ISwerveObject *)local_34,(void *)*param_1,local_54,auStack_58);
           uVar5 = 0;
           while( true ) {
             uVar6 = local_3c <= uVar5;
@@ -20338,7 +20593,8 @@ void FUN_00120be8(undefined4 *param_1,int *param_2,uint *param_3,uint *param_4,u
             uVar3 = float_multiply(*(undefined4 *)((int)p + uVar5 * 0x10 + 8),local_50);
             local_60 = float_add(uVar3,local_44);
             local_5c = 0x3f800000;
-            (**(code **)(*local_54 + 0x3c))(local_54,4,&local_68);
+            (*((const SwerveTransformVtbl *)((ISwerveObject *)local_54)->pvt)->TransformVector)
+                ((ISwerveObject *)local_54,4,&local_68);
             float_compare_less(local_68,*param_3);
             if (!(bool)uVar6) {
               *param_3 = local_68;
@@ -20368,13 +20624,18 @@ void FUN_00120be8(undefined4 *param_1,int *param_2,uint *param_3,uint *param_4,u
             }
           }
           helper_free(p);
-          (**(code **)(*local_54 + 4))();
+          /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+          (*((ISwerveObject *)local_54)->pvt->Release)((ISwerveObject *)local_54);
         }
-        (**(code **)(*local_40 + 4))();
-        (**(code **)(*local_38 + 4))();
-        (**(code **)(*local_34 + 4))();
+        /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+        (*((ISwerveObject *)local_40)->pvt->Release)((ISwerveObject *)local_40);
+        /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+        (*((ISwerveObject *)local_38)->pvt->Release)((ISwerveObject *)local_38);
+        /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+        (*((ISwerveObject *)local_34)->pvt->Release)((ISwerveObject *)local_34);
       }
-      (**(code **)(*local_2c + 4))();
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((ISwerveObject *)local_2c)->pvt->Release)((ISwerveObject *)local_2c);
     }
   }
   return;
@@ -20394,7 +20655,8 @@ void FUN_00120f8c(int param_1,int *param_2,int param_3,int *param_4,int param_5)
   
   if (0 < param_5) {
     local_20 = 0;
-    (**(code **)(*param_2 + 0x30))(param_2,WORD_HEXADECIMAL_009660B3,0,0,&local_20);
+    (*((const SwerveObject3DVtbl *)((ISwerveObject *)param_2)->pvt)->GetUserParameter)
+        ((ISwerveObject *)param_2,WORD_HEXADECIMAL_009660B3,0,0,&local_20);
     if (0 < local_20) {
       return;
     }
@@ -20413,15 +20675,20 @@ void FUN_00120f8c(int param_1,int *param_2,int param_3,int *param_4,int param_5)
                        (int32)STRING_DEADEND).low;
   if (iVar2 == 0) {
     local_24 = 0;
-    (**(code **)(*param_2 + 0xac))(param_2,&local_24);
+    (*((const SwerveGroupVtbl *)((ISwerveObject *)param_2)->pvt)->GetChildCount)
+        ((ISwerveObject *)param_2,&local_24);
     for (iVar2 = 0; iVar2 < local_24; iVar2 = iVar2 + 1) {
-      (**(code **)(*param_2 + 0xb0))(param_2,iVar2,&local_28);
-      iVar3 = (**(code **)(*local_28 + 8))(local_28,9,&local_2c);
+      (*((const SwerveGroupVtbl *)((ISwerveObject *)param_2)->pvt)->GetChild)
+          ((ISwerveObject *)param_2,iVar2,(ISwerveObject **)&local_28);
+      iVar3 = (*((ISwerveObject *)local_28)->pvt->QueryInterface)
+                  ((ISwerveObject *)local_28,9,(void **)&local_2c);
       if (iVar3 == 0) {
         FUN_00120f8c(param_1,local_2c,param_3,param_4,param_5 + 1);
-        (**(code **)(*local_2c + 4))();
+        /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+        (*((ISwerveObject *)local_2c)->pvt->Release)((ISwerveObject *)local_2c);
       }
-      (**(code **)(*local_28 + 4))();
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((ISwerveObject *)local_28)->pvt->Release)((ISwerveObject *)local_28);
     }
   }
   return;
@@ -20582,12 +20849,15 @@ void FUN_00121584(int param_1,int *param_2,int *param_3,int param_4)
     iVar1 = animations_release_controllers((Animations *)iVar1);
   }
   if (param_2 != (int *)0x0) {
-    iVar1 = (**(code **)(*param_2 + 8))(param_2,0x12,&local_18);
+    iVar1 = (*((ISwerveObject *)param_2)->pvt->QueryInterface)
+                ((ISwerveObject *)param_2,0x12,(void **)&local_18);
     if (iVar1 == 0) {
-      (**(code **)(*param_3 + 0xb8))(param_3,local_18);
-      (**(code **)(*local_18 + 4))();
+      (*((const SwerveGroupVtbl *)((ISwerveObject *)param_3)->pvt)->RemoveChild)
+          ((ISwerveObject *)param_3,local_18);
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((ISwerveObject *)local_18)->pvt->Release)((ISwerveObject *)local_18);
     }
-    iVar1 = (**(code **)(*param_2 + 4))(param_2);
+    iVar1 = (*((ISwerveObject *)param_2)->pvt->Release)((ISwerveObject *)param_2);
   }
   if (param_4 != 0) {
     iVar1 = *(int *)(*(int *)(param_1 + 0xc) + 0x9c);
@@ -21218,11 +21488,13 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
        DOUBLE_LESS(ZERO_DOUBLE,dVar4)) && *(int *)(param_1 + 0x22c) != 0) {
     local_24 = (int *)0x0;
     piVar5 = *(int **)(*(int *)(param_1 + 0x214) + 0x6c);
-    (**(code **)(*piVar5 + 0xc4))(piVar5,&local_24);
+    (*((const SwerveWorldVtbl *)((ISwerveObject *)piVar5)->pvt)->GetActiveCamera)
+        ((ISwerveObject *)piVar5,&local_24);
     if (local_24 != (int *)0x0) {
       FUN_001147ec((undefined4 *)vector,(int)((KHApp *)*(int *)(param_1 + 0x214))->context,local_24);
-      (**(code **)(**(int **)(param_1 + 0x22c) + 0x4c))(*(int **)(param_1 + 0x22c),vector);
-      (**(code **)(*local_24 + 4))(local_24);
+      (*((const SwerveTransformableVtbl *)((ISwerveObject *)*(int **)(param_1 + 0x22c))->pvt)
+        ->SetTranslation)((ISwerveObject *)*(int **)(param_1 + 0x22c),vector);
+      (*((ISwerveObject *)local_24)->pvt->Release)((ISwerveObject *)local_24);
     }
   }
   if (0 < *(int *)(param_1 + 0x230)) {
@@ -21239,13 +21511,15 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
       float_compare_equal(*(uint *)(param_1 + 0x234),0);
     }
     if ((bool)uVar12) {
-      (**(code **)(**(int **)(param_1 + 0x22c) + 0x8c))(*(int **)(param_1 + 0x22c),0);
+      (*((const SwerveNodeVtbl *)((ISwerveObject *)*(int **)(param_1 + 0x22c))->pvt)->SetRenderingEnable)
+          ((ISwerveObject *)*(int **)(param_1 + 0x22c),0);
     }
     piVar5 = *(int **)(param_1 + 0x22c);
     if (piVar5 != (int *)0x0) {
                     /* WARNING: Could not recover jumptable at 0x001226d4. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-      (**(code **)(*piVar5 + 0x84))(piVar5,*(undefined4 *)(param_1 + 0x210));
+      (*((const SwerveNodeVtbl *)((ISwerveObject *)piVar5)->pvt)->SetAlphaFactor)
+          ((ISwerveObject *)piVar5,*(undefined4 *)(param_1 + 0x210));
       return;
     }
   }
@@ -21556,8 +21830,8 @@ void combat_region_update(CombatRegion *region,int32 now,int32 elapsed)
   FUN_0012407c((int32)region,now,elapsed);
   if (region->field_148 != 0) {
     for (i = 0; i < region->enemyCount; i++) {
-      (*(code *)(*(int32 *)region->enemies[i]->vtable))(region->enemies[i]);
-      (*(code *)(*(int32 *)(region->enemies[i]->vtable + 0xc)))(region->enemies[i]);
+      (*region->enemies[i]->vtable->reset)(region->enemies[i]);
+      (*region->enemies[i]->vtable->enterMode2)(region->enemies[i]);
     }
     region->field_148 = 0;
   }
@@ -21592,8 +21866,7 @@ void combat_region_update(CombatRegion *region,int32 now,int32 elapsed)
     break;
   }
   for (i = 0; i < region->enemyCount; i++)
-    (*(code *)(*(int32 *)(region->enemies[i]->vtable + 4)))
-              (region->enemies[i],now,elapsed);   /* vtable +4: enemy_update */
+    (*region->enemies[i]->vtable->update)(region->enemies[i],now,elapsed);   /* vtable +4: enemy_update */
   FUN_001226e8(region->itemDrops,now,elapsed);
 }
 
@@ -21893,14 +22166,15 @@ void FUN_00123588(int param_1,int param_2,int param_3)
     iVar9 = *(int *)(param_1 + 500);
   }
   if (piVar3 != (int *)0x0 && iVar9 != 0) {
-    pcVar7 = *(code **)(*piVar3 + 0x4c);
-    (*pcVar7)();
+    pcVar7 = (code *)((const SwerveTransformableVtbl *)((ISwerveObject *)piVar3)->pvt)->SetTranslation;
+    /* Ghidra had dropped the arguments; restored from the disassembly (r1 = &local_34, 0x0012376c) */
+    (*pcVar7)(piVar3,&local_34);
   }
   if (((Character *)param_1)->carried != (LevelObject *)0x0) {
     FUN_001147ec(&local_40,(int)((KHApp *)*(int *)(param_1 + 0x84))->context,*(int **)(param_1 + 0x1e0));
     thunk_FUN_0011fd90((int)((Character *)param_1)->carried,local_40,local_3c,local_38);
     piVar3 = (int *)((Character *)param_1)->carried->node;
-    pcVar7 = *(code **)(*piVar3 + 0x5c);
+    pcVar7 = (code *)((const SwerveTransformableVtbl *)((ISwerveObject *)piVar3)->pvt)->SetOrientation;
     (*pcVar7)(piVar3,param_1 + 0x140);
   }
   iVar9 = *(int *)(param_1 + 0x250);
@@ -22151,7 +22425,8 @@ void FUN_00123d7c(int param_1,undefined4 param_2,int param_3)
   if (*(int *)(param_1 + 0x130) != 0) {
     for (iVar7 = 0; iVar7 < *(int *)(param_1 + 0x128); iVar7 = iVar7 + 1) {
       piVar2 = (int *)**(int **)(*(int *)(param_1 + 0x120) + iVar7 * 4);
-      (*(code *)(*piVar2))();
+      /* Ghidra had dropped the hitsphere; r0 is piVar2 (0x00123dbc) */
+      (*(*(const HitsphereVtbl **)piVar2)->reset)(piVar2);
     }
     *(undefined1 *)(*(int *)(*(int *)(param_1 + 0x84) + 0xd4) + 0x4a) = 1;
     uVar1 = float_to_int(*(uint *)(**(int **)(param_1 + 0x120) + 0x14));
@@ -22166,7 +22441,7 @@ void FUN_00123d7c(int param_1,undefined4 param_2,int param_3)
       if (iVar6 != 0) {
         piVar2 = *(int **)(*(int *)(param_1 + 0x120) + iVar7 * 4);
         iVar6 = *piVar2;
-        (*(code *)(*(int *)(iVar6 + 4)))(piVar2,param_2,param_3);
+        (*((const HitsphereVtbl *)iVar6)->update)(piVar2,param_2,param_3);
       }
     }
     level_object_get_position((uint32 *)&local_30,(LevelObject *)*(int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa4) + 0x1f8));
@@ -22276,10 +22551,14 @@ void FUN_0012407c(int param_1,undefined4 param_2,undefined4 param_3)
   if (*(int *)(param_1 + 0x44) != 0) {
     local_1c = (int *)0x0;
     piVar2 = *(int **)(*(int *)(param_1 + 0x84) + 0x6c);
-    (**(code **)(*piVar2 + 0xc4))(piVar2,&local_1c);
+    (*((const SwerveWorldVtbl *)((ISwerveObject *)piVar2)->pvt)->GetActiveCamera)
+        ((ISwerveObject *)piVar2,&local_1c);
     if (local_1c != (int *)0x0) {
-      (**(code **)(**(int **)(param_1 + 8) + 0xa8))();
-      (**(code **)(*local_1c + 4))();
+      /* Ghidra had dropped arguments; restored from the disassembly (r1 = local_1c, 0x00124198) */
+      (*((const SwerveNodeVtbl *)((ISwerveObject *)*(int **)(param_1 + 8))->pvt)->Align)
+          ((ISwerveObject *)*(int **)(param_1 + 8),local_1c);
+      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
+      (*((ISwerveObject *)local_1c)->pvt->Release)((ISwerveObject *)local_1c);
     }
   }
   *(undefined4 *)(param_1 + 0x88) = param_2;
@@ -22417,7 +22696,7 @@ LAB_001244d4:
   case 0xd:
                     /* WARNING: Could not recover jumptable at 0x0012464c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-    (**(code **)(**(int **)(param_1 + 0xc) + 0x18))(*(int **)(param_1 + 0xc),0);
+    (*((IShell *)*(int **)(param_1 + 0xc))->pvt->CloseApplet)((IShell *)*(int **)(param_1 + 0xc),0);
     return;
   case 0xe:
     goto LAB_001243b0;
@@ -22434,7 +22713,7 @@ LAB_001243b0:
                                                  *(short *)(piVar5[2] + 6) + -10,0,0,*(int32 **)(param_1 + 0xd0),
                                                  TEXT_LOADING,9),0);
       if (*(int *)(param_1 + 0xcc) == 0x10) {
-        piVar5[4] = WORD_HEXADECIMAL_FFEFEFEF;
+        piVar5[4] = COLOR_LIGHT_GREY;
       }
       ui_element_draw((UIElement *)piVar5);
     }
@@ -22466,9 +22745,10 @@ LAB_001244f0:
   piVar5 = (int *)screen_stack_top(*(int *)(param_1 + 0xd0));
   if (piVar5 == (int *)0x0) {
 LAB_00124540:
-    (**(code **)(**(int **)(param_1 + 0x68) + 0x44))
-              (*(int **)(param_1 + 0x68),*(undefined4 *)(param_1 + 0x6c));
-    (**(code **)(**(int **)(param_1 + 0x70) + 0x24))(*(int **)(param_1 + 0x70),param_1 + 0x74,0,7);
+    (*((IGraphics3D *)*(int **)(param_1 + 0x68))->pvt->Render)
+        ((IGraphics3D *)*(int **)(param_1 + 0x68),*(undefined4 *)(param_1 + 0x6c));
+    (*((IBitmap *)*(int **)(param_1 + 0x70))->pvt->FillRect)
+        ((IBitmap *)*(int **)(param_1 + 0x70),(const AEERect *)(param_1 + 0x74),0,7);
     if (piVar5 == (int *)0x0) goto LAB_00124580;
   }
   else if ((char)piVar5[0xe] == '\0') {
@@ -22487,18 +22767,18 @@ LAB_00124540:
 LAB_00124580:
   iVar6 = (*g_pHelperFuncs->aee_GetUpTimeMS)();
   if (0xfa < iVar6 - *(int *)(param_1 + 0xac)) {
-    (**(code **)(**(int **)(param_1 + 0x14) + 0x24))(*(int **)(param_1 + 0x14),1);
+    (*((IDisplay *)*(int **)(param_1 + 0x14))->pvt->Backlight)((IDisplay *)*(int **)(param_1 + 0x14),1);
     *(int *)(param_1 + 0xac) = iVar6;
   }
   iVar6 = 0x28 - (iVar6 - iVar1);
   if (iVar6 < *(int *)(param_1 + 0x8c)) {
     iVar6 = *(int *)(param_1 + 0x8c);
   }
-  (**(code **)(**(int **)(param_1 + 0xc) + 0x2c))
-            (*(int **)(param_1 + 0xc),iVar6,(int32)FUN_001242b4,param_1);
+  (*((IShell *)*(int **)(param_1 + 0xc))->pvt->SetTimer)
+      ((IShell *)*(int **)(param_1 + 0xc),iVar6,(PFNNOTIFY)((int32)FUN_001242b4),(void *)param_1);
                     /* WARNING: Could not recover jumptable at 0x00124600. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  (**(code **)(**(int **)(param_1 + 0x14) + 0x1c))(*(int **)(param_1 + 0x14),1);
+  (*((IDisplay *)*(int **)(param_1 + 0x14))->pvt->Update)((IDisplay *)*(int **)(param_1 + 0x14),1);
   return;
 }
 

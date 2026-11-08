@@ -113,6 +113,7 @@ typedef struct IImage IImage;
 typedef struct IFileMgr IFileMgr;
 typedef struct IFile IFile;
 typedef struct IMedia IMedia;
+typedef struct ITextCtl ITextCtl;
 typedef struct IWeb IWeb;
 typedef struct IWebResp IWebResp;
 typedef struct ISource ISource;
@@ -477,7 +478,7 @@ typedef struct IDisplayVtbl {
     /*  4 +0x10 */ int (*DrawText)(IDisplay *po, AEEFont nFont, const AECHAR *pcText, int nChars, int x, int y, const AEERect *prcBackground, uint32 dwFlags);
     /*  5 +0x14 */ int (*DrawRect)(IDisplay *po, const AEERect *prc, RGBVAL clrFrame, RGBVAL clrFill, uint32 dwFlags);
     /*  6 +0x18 */ int (*BitBlt)(IDisplay *po, int xDest, int yDest, int cxDest, int cyDest, IBitmap *pSrc, int xSrc, int ySrc, AEERasterOp rop);
-    /*  7 +0x1c */ void (*Update)(IDisplay *po);
+    /*  7 +0x1c */ void (*Update)(IDisplay *po, boolean bDefer);   /* BREW's UpdateEx */
     /*  8 +0x20 */ int (*SetAnnunciators)(IDisplay *po, ...);   /* signature unknown */
     /*  9 +0x24 */ int (*Backlight)(IDisplay *po, ...);   /* signature unknown */
     /* 10 +0x28 */ RGBVAL (*SetColor)(IDisplay *po, int clrItem, RGBVAL clr);
@@ -653,6 +654,32 @@ typedef struct IFileVtbl {
     /* 11 +0x2c */ int (*Map)(IFile *po, ...);   /* signature unknown */
 } IFileVtbl;
 struct IFile { const IFileVtbl *pvt; };
+
+/* ITextCtl (GUESS: the class kh.mod creates as 0x01003009 for a UI element's key listener, FUN_0010bba0;
+ * khvcemu does not create it, so CreateInstance fails there). The slot order is BREW's IControl followed
+ * by ITextCtl's own, matched to the slots kh.mod calls (+0x08, +0x0c, +0x10, +0x18, +0x20, +0x48). */
+typedef struct ITextCtlVtbl {
+    /*  0 +0x00 */ uint32 (*AddRef)(ITextCtl *po);
+    /*  1 +0x04 */ uint32 (*Release)(ITextCtl *po);
+    /*  2 +0x08 */ boolean (*HandleEvent)(ITextCtl *po, AEEEvent evt, uint16 wp, uint32 dwp);
+    /*  3 +0x0c */ boolean (*Redraw)(ITextCtl *po);
+    /*  4 +0x10 */ void (*SetActive)(ITextCtl *po, boolean active);
+    /*  5 +0x14 */ boolean (*IsActive)(ITextCtl *po);
+    /*  6 +0x18 */ void (*SetRect)(ITextCtl *po, const AEERect *prc);
+    /*  7 +0x1c */ void (*GetRect)(ITextCtl *po, AEERect *prc);
+    /*  8 +0x20 */ void (*SetProperties)(ITextCtl *po, uint32 props);
+    /*  9 +0x24 */ uint32 (*GetProperties)(ITextCtl *po);
+    /* 10 +0x28 */ void (*Reset)(ITextCtl *po);
+    /* 11 +0x2c */ boolean (*SetTitle)(ITextCtl *po, const char *resFile, uint16 resId, void *title);
+    /* 12 +0x30 */ boolean (*SetText)(ITextCtl *po, const void *text, int length);
+    /* 13 +0x34 */ boolean (*GetText)(ITextCtl *po, void *buffer, int maxChars);
+    /* 14 +0x38 */ void *(*GetTextPtr)(ITextCtl *po);
+    /* 15 +0x3c */ void (*EnableCommand)(ITextCtl *po, boolean enable, uint16 command);
+    /* 16 +0x40 */ void (*SetMaxSize)(ITextCtl *po, uint16 maxSize);
+    /* 17 +0x44 */ void (*SetSoftKeyMenu)(ITextCtl *po, void *menu);
+    /* 18 +0x48 */ int (*SetInputMode)(ITextCtl *po, int mode);
+} ITextCtlVtbl;
+struct ITextCtl { const ITextCtlVtbl *pvt; };
 
 /* IMedia: 14 slots, order from khvcemu/media.py class Media. */
 typedef struct IMediaVtbl {

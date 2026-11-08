@@ -42,6 +42,146 @@ typedef int            code();  /* Ghidra: function of unknown signature (a call
 extern AEEHelperFuncs *g_pHelperFuncs;   /* 0x00FFFFFC */
 
 /* ---- prototypes, address order ---------------------------------------------------- */
+void * FUN_010036a0(int param_1,int param_2);   /* 0x010036A0, no Ghidra function */
+void * FUN_010036ac(int param_1,int param_2);   /* 0x010036AC, no Ghidra function */
+void * FUN_010036b8(int param_1,int param_2);   /* 0x010036B8, no Ghidra function */
+void * FUN_010036c4(int param_1,int param_2);   /* 0x010036C4, no Ghidra function */
+void * FUN_010036d0(int param_1,int param_2);   /* 0x010036D0, no Ghidra function */
+void * FUN_010036dc(int param_1,int param_2);   /* 0x010036DC, no Ghidra function */
+void * FUN_010036e8(int param_1,int param_2);   /* 0x010036E8, no Ghidra function */
+void * FUN_010036f4(int param_1,int param_2);   /* 0x010036F4, no Ghidra function */
+void FUN_01003700(undefined4 param_1,int param_2);   /* 0x01003700, no Ghidra function */
+void * FUN_01003740(int param_1,int param_2);   /* 0x01003740, no Ghidra function */
+void * FUN_0100374c(int param_1,int param_2);   /* 0x0100374C, no Ghidra function */
+void * FUN_010037e4(int param_1,int param_2);   /* 0x010037E4, no Ghidra function */
+void * FUN_01003838(int param_1,int param_2);   /* 0x01003838, no Ghidra function */
+void * FUN_01003844(int param_1,int param_2);   /* 0x01003844, no Ghidra function */
+void * FUN_01003850(int param_1,int param_2);   /* 0x01003850, no Ghidra function */
+void * FUN_010038a4(int param_1,int param_2);   /* 0x010038A4, no Ghidra function */
+void * FUN_010038b0(int param_1,int param_2);   /* 0x010038B0, no Ghidra function */
+void * FUN_010038bc(int param_1,int param_2);   /* 0x010038BC, no Ghidra function */
+void FUN_0100391c(undefined4 param_1,int param_2);   /* 0x0100391C, no Ghidra function */
+void * FUN_0100395c(int param_1,int param_2);   /* 0x0100395C, no Ghidra function */
+void FUN_0100396c(undefined4 param_1,int param_2);   /* 0x0100396C, no Ghidra function */
+void * FUN_010039ac(int param_1,int param_2);   /* 0x010039AC, no Ghidra function */
+void FUN_010039bc(undefined4 param_1,int param_2);   /* 0x010039BC, no Ghidra function */
+void * FUN_01003a00(int param_1,int param_2);   /* 0x01003A00, no Ghidra function */
+void * FUN_01003a10(int param_1,int param_2);   /* 0x01003A10, no Ghidra function */
+int32 FUN_01007d60(int param_1);   /* 0x01007D60, no Ghidra function */
+int32 FUN_01007d68(int param_1);   /* 0x01007D68, no Ghidra function */
+void FUN_01008754(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008754, no Ghidra function */
+void FUN_010087ac(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x010087AC, no Ghidra function */
+void FUN_01008804(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008804, no Ghidra function */
+void FUN_0100885c(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x0100885C, no Ghidra function */
+void FUN_010088cc(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x010088CC, no Ghidra function */
+void FUN_0100893c(int param_1,uint16 *src,uint16 *dst,int32 count);   /* 0x0100893C, no Ghidra function */
+void FUN_010089ac(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x010089AC, no Ghidra function */
+void FUN_01008a1c(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008A1C, no Ghidra function */
+void FUN_01008a74(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x01008A74, no Ghidra function */
+void FUN_01008afc(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008AFC, no Ghidra function */
+void FUN_01008b54(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008B54, no Ghidra function */
+void FUN_01008bac(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x01008BAC, no Ghidra function */
+void FUN_01008cec(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008CEC, no Ghidra function */
+void FUN_01008d44(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x01008D44, no Ghidra function */
+void FUN_01008e44(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008E44, no Ghidra function */
+void FUN_01008e9c(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008E9C, no Ghidra function */
+void FUN_01008ef4(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008EF4, no Ghidra function */
+void FUN_01008f4c(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x01008F4C, no Ghidra function */
+void FUN_01008ff4(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008FF4, no Ghidra function */
+void FUN_0100904c(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x0100904C, no Ghidra function */
+void FUN_010090a4(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x010090A4, no Ghidra function */
+void FUN_010090fc(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x010090FC, no Ghidra function */
+void FUN_010092a4(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x010092A4, no Ghidra function */
+void FUN_0100932c(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x0100932C, no Ghidra function */
+void FUN_010093b0(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x010093B0, no Ghidra function */
+void FUN_01009438(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x01009438, no Ghidra function */
+void FUN_010094bc(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x010094BC, no Ghidra function */
+void FUN_01009548(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x01009548, no Ghidra function */
+void FUN_010095e0(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x010095E0, no Ghidra function */
+int FUN_01009ba4(int param_1,int param_2,int param_3);   /* 0x01009BA4, no Ghidra function */
+void FUN_01009c80(int param_1,void *param_2);   /* 0x01009C80, no Ghidra function */
+void FUN_01009c88(int param_1,void *param_2);   /* 0x01009C88, no Ghidra function */
+void FUN_01009c90(int param_1,void *param_2);   /* 0x01009C90, no Ghidra function */
+void FUN_01009c98(int param_1,void *param_2);   /* 0x01009C98, no Ghidra function */
+void FUN_01009ca0(int param_1,void *param_2);   /* 0x01009CA0, no Ghidra function */
+void FUN_01009ca8(int param_1,void *param_2);   /* 0x01009CA8, no Ghidra function */
+void FUN_01009cec(int param_1,void *param_2);   /* 0x01009CEC, no Ghidra function */
+void FUN_01009cf4(int param_1,void *param_2);   /* 0x01009CF4, no Ghidra function */
+longlong FUN_01009cfc(int param_1,int param_2);   /* 0x01009CFC, no Ghidra function */
+void FUN_01009d18(int param_1,void *param_2);   /* 0x01009D18, no Ghidra function */
+void FUN_01009d20(int param_1,void *param_2);   /* 0x01009D20, no Ghidra function */
+longlong FUN_01009d28(int param_1,int param_2);   /* 0x01009D28, no Ghidra function */
+void FUN_01009d4c(int param_1,void *param_2);   /* 0x01009D4C, no Ghidra function */
+longlong FUN_01009d54(int param_1,int param_2);   /* 0x01009D54, no Ghidra function */
+void FUN_01009d70(int param_1,void *param_2);   /* 0x01009D70, no Ghidra function */
+void FUN_01009d78(int param_1,void *param_2);   /* 0x01009D78, no Ghidra function */
+void FUN_01009d80(int param_1,void *param_2);   /* 0x01009D80, no Ghidra function */
+longlong FUN_01009d88(int param_1,int param_2);   /* 0x01009D88, no Ghidra function */
+void FUN_01009da4(int param_1,void *param_2);   /* 0x01009DA4, no Ghidra function */
+void FUN_01009dac(int param_1,void *param_2);   /* 0x01009DAC, no Ghidra function */
+void FUN_01009db4(int param_1,void *param_2);   /* 0x01009DB4, no Ghidra function */
+longlong FUN_01009dbc(int param_1,int param_2);   /* 0x01009DBC, no Ghidra function */
+longlong FUN_01009de0(int param_1,int param_2);   /* 0x01009DE0, no Ghidra function */
+void FUN_01009dfc(int param_1,void *param_2);   /* 0x01009DFC, no Ghidra function */
+longlong FUN_01009e04(int param_1,int param_2);   /* 0x01009E04, no Ghidra function */
+void FUN_01009e20(int param_1,void *param_2);   /* 0x01009E20, no Ghidra function */
+longlong FUN_01009e28(int param_1,int param_2);   /* 0x01009E28, no Ghidra function */
+void FUN_01009e44(int param_1,void *param_2);   /* 0x01009E44, no Ghidra function */
+void FUN_01009e4c(int param_1,void *param_2);   /* 0x01009E4C, no Ghidra function */
+int32 FUN_0100f4d4(int param_1);   /* 0x0100F4D4, no Ghidra function */
+int32 FUN_01010820(int param_1);   /* 0x01010820, no Ghidra function */
+int FUN_01011bcc(int param_1);   /* 0x01011BCC, no Ghidra function */
+int FUN_01015348(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5);   /* 0x01015348 */
+int FUN_010157e8(int param_1,uint8 *param_2,uint32 param_3);   /* 0x010157E8, no Ghidra function */
+void FUN_010159cc(int param_1,int param_2);   /* 0x010159CC, no Ghidra function */
+void FUN_0101f0b0(int param_1);   /* 0x0101F0B0, no Ghidra function */
+void FUN_010230f8(int param_1,int param_2);   /* 0x010230F8, no Ghidra function */
+void FUN_01023c60(int param_1,int param_2,int param_3,int param_4,int param_5);   /* 0x01023C60 */
+int32 FUN_01026110(int param_1);   /* 0x01026110, no Ghidra function */
+int32 FUN_01026118(int param_1);   /* 0x01026118, no Ghidra function */
+int32 FUN_01026120(int param_1);   /* 0x01026120, no Ghidra function */
+int32 FUN_01026140(int param_1);   /* 0x01026140, no Ghidra function */
+int32 FUN_01026168(int param_1);   /* 0x01026168, no Ghidra function */
+int32 FUN_01026170(int param_1);   /* 0x01026170, no Ghidra function */
+int32 FUN_010261a8(int param_1);   /* 0x010261A8, no Ghidra function */
+int32 FUN_010261c0(int param_1);   /* 0x010261C0, no Ghidra function */
+int32 FUN_010261e0(int param_1);   /* 0x010261E0, no Ghidra function */
+void FUN_010266b0(int param_1,int param_2,int param_3,int param_4);   /* 0x010266B0, no Ghidra function */
+void FUN_01029b58(int *param_1,int param_2);   /* 0x01029B58, no Ghidra function */
+void FUN_01029b74(int *param_1,int param_2);   /* 0x01029B74, no Ghidra function */
+void FUN_01029c6c(int *param_1,int param_2);   /* 0x01029C6C, no Ghidra function */
+void FUN_01029cc4(int *param_1,int param_2);   /* 0x01029CC4, no Ghidra function */
+void FUN_01029f10(int *param_1,int param_2);   /* 0x01029F10, no Ghidra function */
+void FUN_01029fc8(int *param_1,int param_2);   /* 0x01029FC8, no Ghidra function */
+void FUN_01029ff8(int *param_1,int param_2);   /* 0x01029FF8, no Ghidra function */
+void FUN_0102a138(int *param_1,int param_2);   /* 0x0102A138, no Ghidra function */
+void FUN_0102a4cc(int *param_1,int param_2);   /* 0x0102A4CC, no Ghidra function */
+void FUN_0102a6d8(int *param_1,int param_2);   /* 0x0102A6D8, no Ghidra function */
+void FUN_0102a804(int *param_1,int param_2);   /* 0x0102A804, no Ghidra function */
+void FUN_0102a84c(int *param_1,int param_2);   /* 0x0102A84C, no Ghidra function */
+void FUN_0102a974(int *param_1,int param_2);   /* 0x0102A974, no Ghidra function */
+void FUN_0102a9b0(int *param_1,int param_2);   /* 0x0102A9B0, no Ghidra function */
+void FUN_0102aa04(int *param_1,int param_2);   /* 0x0102AA04, no Ghidra function */
+void FUN_0102aaac(int *param_1,int param_2);   /* 0x0102AAAC, no Ghidra function */
+void FUN_0102ab04(int *param_1,int param_2);   /* 0x0102AB04, no Ghidra function */
+void FUN_0102ad0c(int *param_1,int param_2);   /* 0x0102AD0C, no Ghidra function */
+void FUN_0102afac(int *param_1,int param_2);   /* 0x0102AFAC, no Ghidra function */
+void FUN_0102b004(int *param_1,int param_2);   /* 0x0102B004, no Ghidra function */
+void FUN_0102b0c0(int *param_1,int param_2);   /* 0x0102B0C0, no Ghidra function */
+void FUN_0102b13c(int *param_1,int param_2);   /* 0x0102B13C, no Ghidra function */
+void FUN_0102b1e8(int *param_1,int param_2);   /* 0x0102B1E8, no Ghidra function */
+void FUN_0102b204(int *param_1,int param_2);   /* 0x0102B204, no Ghidra function */
+void FUN_0102b428(int *param_1,int param_2);   /* 0x0102B428, no Ghidra function */
+void FUN_0102b9e4(int *param_1,int param_2);   /* 0x0102B9E4, no Ghidra function */
+void FUN_0102ba3c(int *param_1,int param_2);   /* 0x0102BA3C, no Ghidra function */
+void FUN_0102bcd0(int *param_1,int param_2);   /* 0x0102BCD0, no Ghidra function */
+void FUN_0102bd4c(int *param_1,int param_2);   /* 0x0102BD4C, no Ghidra function */
+void FUN_0102bdd0(int *param_1,int param_2);   /* 0x0102BDD0, no Ghidra function */
+void FUN_0102be24(int *param_1,int param_2);   /* 0x0102BE24, no Ghidra function */
+void FUN_0102be9c(int *param_1,int param_2);   /* 0x0102BE9C, no Ghidra function */
+void FUN_0102c020(int *param_1,int param_2);   /* 0x0102C020, no Ghidra function */
+void FUN_0102c37c(int *param_1,int param_2);   /* 0x0102C37C, no Ghidra function */
+int FUN_0102da68(int param_1);   /* 0x0102DA68, no Ghidra function */
 
 /* Named functions (entry points, SDK glue, helper wrappers, identified game code). */
 int AEEMod_Load(IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod);   /* 0x01000000 */
@@ -2256,6 +2396,107 @@ extern undefined4 STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET;   /* was DAT_0
 #define SIX_AS_BYTE_POINTER ((byte *)6)               /* was &DAT_00000006: not an object, the constant 6
                                                         (the starting bit shift of a 2-bit pixel unpacking
                                                         loop) in a register Ghidra typed as byte * */
+
+/* The literal words of the routines written from their disassembly (no Ghidra function). */
+#define ADDRESS_OF_FUNCTION_01029850_OFFSET 0x00026128   /* was DAT_0100373c (word at 0x0100373C); PC-relative offset: + 0x1003728 (the pc) = 0x01029850 */
+#define ADDRESS_OF_FUNCTION_01029878_OFFSET 0x00025F34   /* was DAT_01003958 (word at 0x01003958); PC-relative offset: + 0x1003944 (the pc) = 0x01029878 */
+#define ADDRESS_OF_FUNCTION_010298b4_OFFSET 0x00025F20   /* was DAT_010039a8 (word at 0x010039A8); PC-relative offset: + 0x1003994 (the pc) = 0x010298B4 */
+#define ADDRESS_OF_FUNCTION_010298e0_OFFSET 0x00025EF8   /* was DAT_010039fc (word at 0x010039FC); PC-relative offset: + 0x10039e8 (the pc) = 0x010298E0 */
+#define ADDRESS_OF_FUNCTION_0102c460_OFFSET 0x00022750   /* was DAT_01009d14 (word at 0x01009D14); PC-relative offset: + 0x1009d10 (the pc) = 0x0102C460 */
+#define ADDRESS_OF_FUNCTION_01029bf4_OFFSET_4 0x0001FEB8   /* was DAT_01009d40 (word at 0x01009D40); PC-relative offset: + 0x1009d3c (the pc) = 0x01029BF4 */
+#define ADDRESS_OF_FUNCTION_01029fbc_OFFSET 0x00020254   /* was DAT_01009d6c (word at 0x01009D6C); PC-relative offset: + 0x1009d68 (the pc) = 0x01029FBC */
+#define ADDRESS_OF_FUNCTION_0102a840_OFFSET 0x00020AA4   /* was DAT_01009da0 (word at 0x01009DA0); PC-relative offset: + 0x1009d9c (the pc) = 0x0102A840 */
+#define ADDRESS_OF_FUNCTION_0102b380_OFFSET 0x000215B0   /* was DAT_01009dd4 (word at 0x01009DD4); PC-relative offset: + 0x1009dd0 (the pc) = 0x0102B380 */
+#define ADDRESS_OF_FUNCTION_0102c584_OFFSET 0x00022790   /* was DAT_01009df8 (word at 0x01009DF8); PC-relative offset: + 0x1009df4 (the pc) = 0x0102C584 */
+#define ADDRESS_OF_FUNCTION_0102c590_OFFSET 0x00022778   /* was DAT_01009e1c (word at 0x01009E1C); PC-relative offset: + 0x1009e18 (the pc) = 0x0102C590 */
+#define ADDRESS_OF_FUNCTION_0102c59c_OFFSET 0x00022760   /* was DAT_01009e40 (word at 0x01009E40); PC-relative offset: + 0x1009e3c (the pc) = 0x0102C59C */
+#define DATA_AT_01001E5C_OFFSET_11 0xFFFD82F8   /* was DAT_01029b70 (word at 0x01029B70); PC-relative offset: + 0x1029b64 (the pc) = 0x01001E5C */
+#define DATA_AT_01001E64_OFFSET_2 0xFFFD82D8   /* was DAT_01029be8 (word at 0x01029BE8); PC-relative offset: + 0x1029b8c (the pc) = 0x01001E64 */
+#define DATA_AT_01001FC0_OFFSET_3 0xFFFD841C   /* was DAT_01029bec (word at 0x01029BEC); PC-relative offset: + 0x1029ba4 (the pc) = 0x01001FC0 */
+#define DATA_AT_0100203C_OFFSET_41 0xFFFD8474   /* was DAT_01029bf0 (word at 0x01029BF0); PC-relative offset: + 0x1029bc8 (the pc) = 0x0100203C */
+#define DATA_AT_01001ED4_OFFSET_3 0xFFFD8250   /* was DAT_01029cbc (word at 0x01029CBC); PC-relative offset: + 0x1029c84 (the pc) = 0x01001ED4 */
+#define DATA_AT_0100203C_OFFSET_42 0xFFFD8394   /* was DAT_01029cc0 (word at 0x01029CC0); PC-relative offset: + 0x1029ca8 (the pc) = 0x0100203C */
+#define DATA_AT_01001EE8_OFFSET_5 0xFFFD820C   /* was DAT_01029d14 (word at 0x01029D14); PC-relative offset: + 0x1029cdc (the pc) = 0x01001EE8 */
+#define DATA_AT_0100203C_OFFSET_43 0xFFFD833C   /* was DAT_01029d18 (word at 0x01029D18); PC-relative offset: + 0x1029d00 (the pc) = 0x0100203C */
+#define DATA_AT_01001FC0_OFFSET_4 0xFFFD8098   /* was DAT_01029f60 (word at 0x01029F60); PC-relative offset: + 0x1029f28 (the pc) = 0x01001FC0 */
+#define DATA_AT_0100203C_OFFSET_44 0xFFFD80F0   /* was DAT_01029f64 (word at 0x01029F64); PC-relative offset: + 0x1029f4c (the pc) = 0x0100203C */
+#define DATA_AT_0100203C_OFFSET_45 0xFFFD8068   /* was DAT_01029fd8 (word at 0x01029FD8); PC-relative offset: + 0x1029fd4 (the pc) = 0x0100203C */
+#define DATA_AT_0100201C_OFFSET_2 0xFFFD800C   /* was DAT_0102a120 (word at 0x0102A120); PC-relative offset: + 0x102a010 (the pc) = 0x0100201C */
+#define DATA_AT_010023E4_OFFSET_2 0xFFFD8358   /* was DAT_0102a124 (word at 0x0102A124); PC-relative offset: + 0x102a08c (the pc) = 0x010023E4 */
+#define ADDRESS_OF_FUNCTION_0102c460_OFFSET_2 0x000023C4   /* was DAT_0102a128 (word at 0x0102A128); PC-relative offset: + 0x102a09c (the pc) = 0x0102C460 */
+#define DATA_AT_0100203C_OFFSET_46 0xFFFD7F6C   /* was DAT_0102a12c (word at 0x0102A12C); PC-relative offset: + 0x102a0d0 (the pc) = 0x0100203C */
+#define DATA_AT_010023F8_OFFSET_2 0xFFFD8318   /* was DAT_0102a130 (word at 0x0102A130); PC-relative offset: + 0x102a0e0 (the pc) = 0x010023F8 */
+#define DATA_AT_01001E5C_OFFSET_12 0xFFFD7D58   /* was DAT_0102a134 (word at 0x0102A134); PC-relative offset: + 0x102a104 (the pc) = 0x01001E5C */
+#define DATA_AT_0100203C_OFFSET_47 0xFFFD7EF8   /* was DAT_0102a150 (word at 0x0102A150); PC-relative offset: + 0x102a144 (the pc) = 0x0100203C */
+#define DATA_AT_01001FAC_OFFSET_6 0xFFFD7AC4   /* was DAT_0102a52c (word at 0x0102A52C); PC-relative offset: + 0x102a4e8 (the pc) = 0x01001FAC */
+#define DATA_AT_0100203C_OFFSET_48 0xFFFD7B30   /* was DAT_0102a530 (word at 0x0102A530); PC-relative offset: + 0x102a50c (the pc) = 0x0100203C */
+#define DATA_AT_0100220C_OFFSET_2 0xFFFD7B28   /* was DAT_0102a6f0 (word at 0x0102A6F0); PC-relative offset: + 0x102a6e4 (the pc) = 0x0100220C */
+#define DATA_AT_01002264_OFFSET_2 0xFFFD7A48   /* was DAT_0102a83c (word at 0x0102A83C); PC-relative offset: + 0x102a81c (the pc) = 0x01002264 */
+#define DATA_AT_01002268_OFFSET_2 0xFFFD7A10   /* was DAT_0102a890 (word at 0x0102A890); PC-relative offset: + 0x102a858 (the pc) = 0x01002268 */
+#define DATA_AT_0100203C_OFFSET_49 0xFFFD77BC   /* was DAT_0102a894 (word at 0x0102A894); PC-relative offset: + 0x102a880 (the pc) = 0x0100203C */
+#define DATA_AT_010022D4_OFFSET_2 0xFFFD7948   /* was DAT_0102a9ac (word at 0x0102A9AC); PC-relative offset: + 0x102a98c (the pc) = 0x010022D4 */
+#define DATA_AT_010022E0_OFFSET_2 0xFFFD7918   /* was DAT_0102aa00 (word at 0x0102AA00); PC-relative offset: + 0x102a9c8 (the pc) = 0x010022E0 */
+#define DATA_AT_010022EC_OFFSET 0xFFFD78D0   /* was DAT_0102aa44 (word at 0x0102AA44); PC-relative offset: + 0x102aa1c (the pc) = 0x010022EC */
+#define DATA_AT_01002348_OFFSET_3 0xFFFD7884   /* was DAT_0102aafc (word at 0x0102AAFC); PC-relative offset: + 0x102aac4 (the pc) = 0x01002348 */
+#define DATA_AT_0100203C_OFFSET_50 0xFFFD7554   /* was DAT_0102ab00 (word at 0x0102AB00); PC-relative offset: + 0x102aae8 (the pc) = 0x0100203C */
+#define DATA_AT_0100235C_OFFSET_2 0xFFFD7840   /* was DAT_0102ac70 (word at 0x0102AC70); PC-relative offset: + 0x102ab1c (the pc) = 0x0100235C */
+#define DATA_AT_010024F0_OFFSET 0xFFFD79C4   /* was DAT_0102ac74 (word at 0x0102AC74); PC-relative offset: + 0x102ab2c (the pc) = 0x010024F0 */
+#define DATA_AT_0100203C_OFFSET_51 0xFFFD74EC   /* was DAT_0102ac78 (word at 0x0102AC78); PC-relative offset: + 0x102ab50 (the pc) = 0x0100203C */
+#define DATA_AT_01001FAC_OFFSET_7 0xFFFD744C   /* was DAT_0102ac7c (word at 0x0102AC7C); PC-relative offset: + 0x102ab60 (the pc) = 0x01001FAC */
+#define DATA_AT_01001EFC_OFFSET_2 0xFFFD7370   /* was DAT_0102ac80 (word at 0x0102AC80); PC-relative offset: + 0x102ab8c (the pc) = 0x01001EFC */
+#define DATA_AT_01002570_OFFSET_2 0xFFFD7994   /* was DAT_0102ac84 (word at 0x0102AC84); PC-relative offset: + 0x102abdc (the pc) = 0x01002570 */
+#define ADDRESS_OF_FUNCTION_0102a840_OFFSET_2 0xFFFFFC54   /* was DAT_0102ac88 (word at 0x0102AC88); PC-relative offset: + 0x102abec (the pc) = 0x0102A840 */
+#define DATA_AT_01002398_OFFSET_2 0xFFFD7674   /* was DAT_0102af74 (word at 0x0102AF74); PC-relative offset: + 0x102ad24 (the pc) = 0x01002398 */
+#define ADDRESS_OF_FUNCTION_01029e04_OFFSET 0xFFFFF094   /* was DAT_0102af78 (word at 0x0102AF78); PC-relative offset: + 0x102ad70 (the pc) = 0x01029E04 */
+#define DATA_AT_01001FC0_OFFSET_5 0xFFFD7228   /* was DAT_0102af7c (word at 0x0102AF7C); PC-relative offset: + 0x102ad98 (the pc) = 0x01001FC0 */
+#define DATA_AT_0100203C_OFFSET_52 0xFFFD7280   /* was DAT_0102af80 (word at 0x0102AF80); PC-relative offset: + 0x102adbc (the pc) = 0x0100203C */
+#define DATA_AT_010025C0_OFFSET_2 0xFFFD77F0   /* was DAT_0102af84 (word at 0x0102AF84); PC-relative offset: + 0x102add0 (the pc) = 0x010025C0 */
+#define ADDRESS_OF_FUNCTION_0102b380_OFFSET_2 0x000005A0   /* was DAT_0102af88 (word at 0x0102AF88); PC-relative offset: + 0x102ade0 (the pc) = 0x0102B380 */
+#define DATA_AT_010024DC_OFFSET_3 0xFFFD76B8   /* was DAT_0102af8c (word at 0x0102AF8C); PC-relative offset: + 0x102ae24 (the pc) = 0x010024DC */
+#define ADDRESS_OF_FUNCTION_01029bf4_OFFSET_5 0xFFFFEDC0   /* was DAT_0102af90 (word at 0x0102AF90); PC-relative offset: + 0x102ae34 (the pc) = 0x01029BF4 */
+#define DATA_AT_01001FAC_OFFSET_8 0xFFFD7134   /* was DAT_0102af94 (word at 0x0102AF94); PC-relative offset: + 0x102ae78 (the pc) = 0x01001FAC */
+#define ADDRESS_OF_FUNCTION_0102ab04_OFFSET 0xFFFFFC68   /* was DAT_0102af98 (word at 0x0102AF98); PC-relative offset: + 0x102ae9c (the pc) = 0x0102AB04 */
+#define DATA_AT_01002518_OFFSET_2 0xFFFD7628   /* was DAT_0102afa0 (word at 0x0102AFA0); PC-relative offset: + 0x102aef0 (the pc) = 0x01002518 */
+#define ADDRESS_OF_FUNCTION_01029fbc_OFFSET_2 0xFFFFF0BC   /* was DAT_0102afa4 (word at 0x0102AFA4); PC-relative offset: + 0x102af00 (the pc) = 0x01029FBC */
+#define DATA_AT_01002650_OFFSET_2 0xFFFD7710   /* was DAT_0102afa8 (word at 0x0102AFA8); PC-relative offset: + 0x102af40 (the pc) = 0x01002650 */
+#define DATA_AT_010023CC_OFFSET_3 0xFFFD7408   /* was DAT_0102affc (word at 0x0102AFFC); PC-relative offset: + 0x102afc4 (the pc) = 0x010023CC */
+#define DATA_AT_0100203C_OFFSET_53 0xFFFD7054   /* was DAT_0102b000 (word at 0x0102B000); PC-relative offset: + 0x102afe8 (the pc) = 0x0100203C */
+#define DATA_AT_010023E0_OFFSET_2 0xFFFD73C4   /* was DAT_0102b0b4 (word at 0x0102B0B4); PC-relative offset: + 0x102b01c (the pc) = 0x010023E0 */
+#define DATA_AT_01002664_OFFSET_2 0xFFFD75EC   /* was DAT_0102b0b8 (word at 0x0102B0B8); PC-relative offset: + 0x102b078 (the pc) = 0x01002664 */
+#define DATA_AT_0100203C_OFFSET_54 0xFFFD6FA0   /* was DAT_0102b0bc (word at 0x0102B0BC); PC-relative offset: + 0x102b09c (the pc) = 0x0100203C */
+#define DATA_AT_010023E4_OFFSET_3 0xFFFD730C   /* was DAT_0102b130 (word at 0x0102B130); PC-relative offset: + 0x102b0d8 (the pc) = 0x010023E4 */
+#define ADDRESS_OF_FUNCTION_0102c460_OFFSET_3 0x00001378   /* was DAT_0102b134 (word at 0x0102B134); PC-relative offset: + 0x102b0e8 (the pc) = 0x0102C460 */
+#define DATA_AT_0100203C_OFFSET_55 0xFFFD6F20   /* was DAT_0102b138 (word at 0x0102B138); PC-relative offset: + 0x102b11c (the pc) = 0x0100203C */
+#define DATA_AT_010023F8_OFFSET_3 0xFFFD72A4   /* was DAT_0102b18c (word at 0x0102B18C); PC-relative offset: + 0x102b154 (the pc) = 0x010023F8 */
+#define DATA_AT_0100203C_OFFSET_56 0xFFFD6EC4   /* was DAT_0102b190 (word at 0x0102B190); PC-relative offset: + 0x102b178 (the pc) = 0x0100203C */
+#define DATA_AT_0100203C_OFFSET_57 0xFFFD6E48   /* was DAT_0102b200 (word at 0x0102B200); PC-relative offset: + 0x102b1f4 (the pc) = 0x0100203C */
+#define DATA_AT_01002410_OFFSET_2 0xFFFD71F4   /* was DAT_0102b314 (word at 0x0102B314); PC-relative offset: + 0x102b21c (the pc) = 0x01002410 */
+#define DATA_AT_01001EC0_OFFSET_3 0xFFFD6C28   /* was DAT_0102b318 (word at 0x0102B318); PC-relative offset: + 0x102b298 (the pc) = 0x01001EC0 */
+#define DATA_AT_0100203C_OFFSET_58 0xFFFD6D80   /* was DAT_0102b31c (word at 0x0102B31C); PC-relative offset: + 0x102b2bc (the pc) = 0x0100203C */
+#define DATA_AT_01002598_OFFSET_2 0xFFFD72CC   /* was DAT_0102b320 (word at 0x0102B320); PC-relative offset: + 0x102b2cc (the pc) = 0x01002598 */
+#define DATA_AT_010024D8_OFFSET_2 0xFFFD7098   /* was DAT_0102b4b8 (word at 0x0102B4B8); PC-relative offset: + 0x102b440 (the pc) = 0x010024D8 */
+#define DATA_AT_010025D4_OFFSET 0xFFFD7154   /* was DAT_0102b4bc (word at 0x0102B4BC); PC-relative offset: + 0x102b480 (the pc) = 0x010025D4 */
+#define DATA_AT_0100203C_OFFSET_59 0xFFFD6B98   /* was DAT_0102b4c0 (word at 0x0102B4C0); PC-relative offset: + 0x102b4a4 (the pc) = 0x0100203C */
+#define DATA_AT_01002584_OFFSET_4 0xFFFD6B88   /* was DAT_0102ba34 (word at 0x0102BA34); PC-relative offset: + 0x102b9fc (the pc) = 0x01002584 */
+#define DATA_AT_0100203C_OFFSET_60 0xFFFD661C   /* was DAT_0102ba38 (word at 0x0102BA38); PC-relative offset: + 0x102ba20 (the pc) = 0x0100203C */
+#define DATA_AT_01002598_OFFSET_3 0xFFFD6B44   /* was DAT_0102ba8c (word at 0x0102BA8C); PC-relative offset: + 0x102ba54 (the pc) = 0x01002598 */
+#define DATA_AT_0100203C_OFFSET_61 0xFFFD65C4   /* was DAT_0102ba90 (word at 0x0102BA90); PC-relative offset: + 0x102ba78 (the pc) = 0x0100203C */
+#define DATA_AT_010025E8_OFFSET_3 0xFFFD6900   /* was DAT_0102bd40 (word at 0x0102BD40); PC-relative offset: + 0x102bce8 (the pc) = 0x010025E8 */
+#define ADDRESS_OF_FUNCTION_0102c584_OFFSET_2 0x0000088C   /* was DAT_0102bd44 (word at 0x0102BD44); PC-relative offset: + 0x102bcf8 (the pc) = 0x0102C584 */
+#define DATA_AT_0100203C_OFFSET_62 0xFFFD6310   /* was DAT_0102bd48 (word at 0x0102BD48); PC-relative offset: + 0x102bd2c (the pc) = 0x0100203C */
+#define DATA_AT_010025E8_OFFSET_4 0xFFFD6880   /* was DAT_0102bdc4 (word at 0x0102BDC4); PC-relative offset: + 0x102bd68 (the pc) = 0x010025E8 */
+#define ADDRESS_OF_FUNCTION_0102c584_OFFSET_3 0x0000080C   /* was DAT_0102bdc8 (word at 0x0102BDC8); PC-relative offset: + 0x102bd78 (the pc) = 0x0102C584 */
+#define DATA_AT_0100203C_OFFSET_63 0xFFFD6290   /* was DAT_0102bdcc (word at 0x0102BDCC); PC-relative offset: + 0x102bdac (the pc) = 0x0100203C */
+#define DATA_AT_01002600_OFFSET_2 0xFFFD6818   /* was DAT_0102be20 (word at 0x0102BE20); PC-relative offset: + 0x102bde8 (the pc) = 0x01002600 */
+#define DATA_AT_01002614_OFFSET_2 0xFFFD67D8   /* was DAT_0102be94 (word at 0x0102BE94); PC-relative offset: + 0x102be3c (the pc) = 0x01002614 */
+#define ADDRESS_OF_FUNCTION_0102c590_OFFSET_2 0x00000744   /* was DAT_0102be98 (word at 0x0102BE98); PC-relative offset: + 0x102be4c (the pc) = 0x0102C590 */
+#define DATA_AT_01002628_OFFSET_4 0xFFFD6774   /* was DAT_0102beec (word at 0x0102BEEC); PC-relative offset: + 0x102beb4 (the pc) = 0x01002628 */
+#define DATA_AT_0100203C_OFFSET_64 0xFFFD6164   /* was DAT_0102bef0 (word at 0x0102BEF0); PC-relative offset: + 0x102bed8 (the pc) = 0x0100203C */
+#define DATA_AT_01002664_OFFSET_3 0xFFFD662C   /* was DAT_0102c070 (word at 0x0102C070); PC-relative offset: + 0x102c038 (the pc) = 0x01002664 */
+#define DATA_AT_0100203C_OFFSET_65 0xFFFD5FE0   /* was DAT_0102c074 (word at 0x0102C074); PC-relative offset: + 0x102c05c (the pc) = 0x0100203C */
+#define DATA_AT_010027D0_OFFSET_2 0xFFFD643C   /* was DAT_0102c410 (word at 0x0102C410); PC-relative offset: + 0x102c394 (the pc) = 0x010027D0 */
+#define DATA_AT_010024C4_OFFSET_3 0xFFFD60F8   /* was DAT_0102c414 (word at 0x0102C414); PC-relative offset: + 0x102c3cc (the pc) = 0x010024C4 */
+#define DATA_AT_0100203C_OFFSET_66 0xFFFD5C4C   /* was DAT_0102c418 (word at 0x0102C418); PC-relative offset: + 0x102c3f0 (the pc) = 0x0100203C */
 
 /* ---- Double-precision literal pairs (low word, high word), named by value ----------------
    The first naming pass missed these pairs and named each word on its own. */
