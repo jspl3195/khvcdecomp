@@ -63,7 +63,7 @@ typedef struct KHApp {
     uint32         field_ac;         /* +0xac */
     uint32         dwStartTimeMS;    /* +0xb0 aee_GetTimeMS() at EVT_APP_START */
     uint32         bStarted;         /* +0xb4 GUESS: set to 1 at EVT_APP_START; the settings loader
-                                        (FUN_0011b6f0) counts a launch (Progress launchCount) and
+                                        (settings_load) counts a launch (Progress launchCount) and
                                         clears it */
     uint32         bSuspended;       /* +0xb8 GUESS: set to 1 at EVT_APP_SUSPEND */
     struct SoundSet *effects;        /* +0xbc GUESS: name; the game's 13 sound effects (FUN_0010a5d8): 0
@@ -487,7 +487,7 @@ typedef struct Progress {
                                      sent as the time (t=) of the ranking and download requests; saved
                                      with the settings */
     int32    launchCount;           /* +0x5c8 GUESS: name; 1 at creation; +1 when the settings are loaded
-                                     with app->bStarted set (FUN_0011b6f0, which clears it), so once per
+                                     with app->bStarted set (settings_load, which clears it), so once per
                                      launch; sent as the ranking's u1= value; saved with the settings */
     int32    controls[7];           /* +0x5cc the Controls key bindings (BREW key codes): Forwards, Backwards,
                                      Left, Right, Action, Status, Magic */
@@ -503,7 +503,7 @@ typedef struct Progress {
                                      0 after a reset and a finished download (FUN_0010888c); saved */
     struct KHApp *app;            /* +0x724 the app it belongs to */
     uint8   *saveCopy;             /* +0x728 GUESS: name; the last saved game, 0x800 bytes (progress_save
-                                     copies it there), which the loader FUN_0011b178 reads with no file
+                                     copies it there), which the loader progress_load reads with no file
                                      name */
 } Progress;                       /* 0x72c bytes (INTEGER_1836, FUN_0010b4e4) */
 

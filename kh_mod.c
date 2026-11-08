@@ -1544,7 +1544,7 @@ LAB_00103858:
       uVar10 = 0x7c;
       goto LAB_00104de4;
     case 0x76:
-      iVar9 = FUN_00112a98(*(undefined4 *)(*param_1 + 0xa8),*(undefined4 *)(*param_1 + 200),1);
+      iVar9 = progress_file_exists(*(undefined4 *)(*param_1 + 0xa8),*(undefined4 *)(*param_1 + 200),1);
       if (iVar9 == 0) {
         uVar10 = 0x6f;
         goto LAB_00104de4;
@@ -2132,7 +2132,7 @@ LAB_0010489c:
         goto LAB_0010423c;
       }
       if (param_2 == 0x3e) {
-        iVar9 = FUN_0011b178(*(undefined4 *)(*param_1 + 0xa8),(int32)STRING_SAVEGAME_DOT_DAT_00127CF4);
+        iVar9 = progress_load(*(undefined4 *)(*param_1 + 0xa8),(int32)STRING_SAVEGAME_DOT_DAT_00127CF4);
         if (iVar9 == 0) {
           string_replace(((KHApp *)*param_1)->context,STRING_TRAINING_00127D10,
                          &((KHApp *)*param_1)->pBufc4);
@@ -2143,7 +2143,7 @@ LAB_00102910:
         }
         iVar9 = *(int *)(*param_1 + 0xa8);
         if (((Progress *)iVar9)->summaryPending == 0) {
-          iVar9 = FUN_00112a98(iVar9,*(undefined4 *)(*param_1 + 0xc4),1);
+          iVar9 = progress_file_exists(iVar9,*(undefined4 *)(*param_1 + 0xc4),1);
           if (iVar9 == 0) {
             if (*(int *)(*param_1 + 200) != 0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -2169,7 +2169,7 @@ LAB_00101f10:
           goto LAB_00101fa8;
         }
         screen_stack_close_top(param_1,1);
-        FUN_0011b178(*(undefined4 *)(*param_1 + 0xa8),(int32)STRING_REPLAYGAME_DOT_DAT);
+        progress_load(*(undefined4 *)(*param_1 + 0xa8),(int32)STRING_REPLAYGAME_DOT_DAT);
 LAB_00101f40:
         uVar10 = 0x6b;
         goto LAB_00104de4;
@@ -6348,7 +6348,7 @@ CombatRegion * combat_region_create(CombatRegion *region,ISwerveObject *node,cha
    `skipSetup` is set (kh_OnAppStart passes 0), empty status, variable and record tables, no user id (one
    already there is freed), both volumes (soundVolume, musicVolume) 40, launchCount 1, playTime 0, the new
    game's values (progress_new_game, progress_reset, progress_set_default_controls), and the saved
-   settings and records loaded (FUN_0011b6f0 with "settings.dat", FUN_0011b5f0). progress_destroy is its
+   settings and records loaded (settings_load with "settings.dat", FUN_0011b5f0). progress_destroy is its
    destructor. */
 Progress * progress_create(Progress *progress,int32 skipSetup)
 
@@ -6384,7 +6384,7 @@ Progress * progress_create(Progress *progress,int32 skipSetup)
   progress_new_game(progress);
   progress_reset(progress);
   progress_set_default_controls(progress);
-  FUN_0011b6f0((int)progress,(int32)STRING_SETTINGS_DOT_DAT_001278D8);
+  settings_load((int)progress,(int32)STRING_SETTINGS_DOT_DAT_001278D8);
   FUN_0011b5f0((int)progress);
   return progress;
 }
@@ -11307,8 +11307,12 @@ FUN_0011295c(undefined4 *param_1,int *param_2,int *param_3,int *param_4,undefine
   return MAKE_WORDS(uVar4,local_24,param_1);
 }
 
-/* ==== 0x00112A98  (file offset 0x12A98)  FUN_00112a98 ================================================ */
-bool FUN_00112a98(int param_1,undefined4 param_2,int param_3)
+/* ==== 0x00112A98  (file offset 0x12A98)  progress_file_exists ======================================== */
+/* GUESS: name (not yet rewritten). Whether a level's file is installed: copies the name into a strlen + 5
+   byte allocation (not checked), adds ".m3g" when `param_3` is 1, and asks progress_read_file with no
+   buffer, which is true when BREW's Read(NULL) reports bytes left in the file (khvcemu's File.Read does
+   the same); its count is a leftover. Called with the level names (KHApp pBufc4 / pBufc8). */
+bool progress_file_exists(int param_1,undefined4 param_2,int param_3)
 
 {
   undefined4 param_4;
@@ -11328,7 +11332,8 @@ bool FUN_00112a98(int param_1,undefined4 param_2,int param_3)
   if (param_3 == 1) {
     (*g_pHelperFuncs->strcat)(iVar2,(int32)STRING_DOT_M3G_00127910);
   }
-  iVar3 = FUN_0011b0cc(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xa8),iVar2,0,0 /* not arguments, value leftovers: param_4 */);
+  iVar3 = progress_read_file(((KHApp *)*(int *)(param_1 + 0x724))->progress,(const char *)iVar2,
+                             (void *)0x0,0 /* not arguments, value leftovers: param_4 */);
   if (iVar2 != 0) {
     (*g_pHelperFuncs->free)(iVar2);
   }
@@ -16058,36 +16063,39 @@ void FUN_0011b044(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
   return;
 }
 
-/* ==== 0x0011B0CC  (file offset 0x1B0CC)  FUN_0011b0cc ================================================ */
-bool FUN_0011b0cc(int param_1,undefined4 param_2,undefined4 param_3,int *param_4)
+/* ==== 0x0011B0CC  (file offset 0x1B0CC)  progress_read_file ========================================== */
+/* GUESS: names. Reads up to `size` bytes of the file `name` into `buffer`: an IFileMgr from the app's
+   IShell (the progress's app), the file opened for reading, read and released; returns 1 when the read
+   gave any bytes (a short read counts), else 0. With no buffer, BREW's Read gives the bytes left, which
+   progress_file_exists uses as its test. The file manager's word on the stack is where `size` (r3) was
+   pushed at entry (Ghidra's local_18 = param_4), and it is released even when CreateInstance failed
+   (0x0011b15c): a Release through `size` or 0 (GAME_BUGS.md). */
+int32 progress_read_file(Progress *progress,const char *name,void *buffer,uint32 size)
 
 {
-  int *piVar1;
-  int iVar2;
-  bool bVar3;
-  int *local_18;
-  
-  piVar1 = *(int **)(*(int *)(param_1 + 0x724) + 0xc);
-  local_18 = param_4;
-  iVar2 = (*((IShell *)piVar1)->pvt->CreateInstance)
-              ((IShell *)piVar1,AEECLSID_FILEMGR_VALUE,(void **)&local_18);
-  if ((iVar2 == 0) &&
-     (piVar1 = (int *)(*((IFileMgr *)local_18)->pvt->OpenFile)
-                          ((IFileMgr *)local_18,(const char *)param_2,1), piVar1 != (int *)0x0)) {
-    iVar2 = (*((IFile *)piVar1)->pvt->Read)((IFile *)piVar1,(void *)param_3,(uint32)param_4);
-    bVar3 = iVar2 != 0;
-    (*((IFile *)piVar1)->pvt->Release)((IFile *)piVar1);
+  IFileMgr *fileMgr = (IFileMgr *)size;   /* [sp]: r3 pushed at entry, until CreateInstance writes it */
+  IFile *file;
+  int32 result;
+
+  if ((*progress->app->a.m_pIShell->pvt->CreateInstance)
+          (progress->app->a.m_pIShell,AEECLSID_FILEMGR_VALUE,(void **)&fileMgr) == 0 &&
+      (file = (*fileMgr->pvt->OpenFile)(fileMgr,name,1)) != (IFile *)0x0) {
+    result = (*file->pvt->Read)(file,buffer,size) != 0;
+    (*file->pvt->Release)(file);
   }
-  else {
-    bVar3 = false;
-  }
-  /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-  (*((IFileMgr *)local_18)->pvt->Release)((IFileMgr *)local_18);
-  return bVar3;
+  else
+    result = 0;
+  (*fileMgr->pvt->Release)(fileMgr);
+  return result;
 }
 
-/* ==== 0x0011B178  (file offset 0x1B178)  FUN_0011b178 ================================================ */
-undefined4 FUN_0011b178(int param_1,int param_2)
+
+/* ==== 0x0011B178  (file offset 0x1B178)  progress_load =============================================== */
+/* GUESS: name (not yet rewritten). Loads the player's progress in progress_save's format: from the file
+   `param_2` ("savegame.dat", "replaygame.dat"; progress_read_file, 0x800 bytes), or with no name from
+   saveCopy; clears the states (progress_clear_states) and reads the record back (save_read_*). Returns 0
+   when there is nothing to load; with no name and no saveCopy, its 0x800-byte buffer is not freed. */
+undefined4 progress_load(int param_1,int param_2)
 
 {
   undefined4 param_3;
@@ -16114,7 +16122,7 @@ undefined4 FUN_0011b178(int param_1,int param_2)
     (*g_pHelperFuncs->memmove)((void *)iVar3,((Progress *)param_1)->saveCopy,0x800);
   }
   else {
-    iVar6 = FUN_0011b0cc(param_1,param_2,iVar3,0x800 /* not arguments, value leftovers: param_3 */);
+    iVar6 = progress_read_file((Progress *)param_1,(const char *)param_2,(void *)iVar3,0x800);
     if (iVar6 == 0) {
       if (iVar3 == 0) {
         return 0;
@@ -16271,7 +16279,7 @@ undefined4 FUN_0011b5f0(int param_1)
                     /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
                         */
   iVar2 = (*g_pHelperFuncs->malloc)(0x800);
-  iVar3 = FUN_0011b0cc(param_1,(int32)STRING_SCOREDATA_DOT_DAT,iVar2,0x800);
+  iVar3 = progress_read_file((Progress *)param_1,STRING_SCOREDATA_DOT_DAT,(void *)iVar2,0x800);
   if (iVar3 == 0) {
     if (iVar2 != 0) {
       (*g_pHelperFuncs->free)(iVar2);
@@ -16305,8 +16313,11 @@ undefined4 FUN_0011b5f0(int param_1)
   return uVar4;
 }
 
-/* ==== 0x0011B6F0  (file offset 0x1B6F0)  FUN_0011b6f0 ================================================ */
-void FUN_0011b6f0(int param_1,undefined4 param_2)
+/* ==== 0x0011B6F0  (file offset 0x1B6F0)  settings_load =============================================== */
+/* GUESS: name (not yet rewritten). Loads the settings file (`param_2`, "settings.dat"; progress_read_file,
+   0x40 bytes) into the progress (save_read_*) and counts a launch when the app has just started
+   (KHApp.bStarted, which it clears). */
+void settings_load(int param_1,undefined4 param_2)
 
 {
   undefined4 param_4;
@@ -16320,7 +16331,7 @@ void FUN_0011b6f0(int param_1,undefined4 param_2)
                     /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
                         */
   uVar2 = (*g_pHelperFuncs->malloc)(0x40);
-  iVar3 = FUN_0011b0cc(param_1,param_2,uVar2,0x40);
+  iVar3 = progress_read_file((Progress *)param_1,(const char *)param_2,(void *)uVar2,0x40);
   if (iVar3 != 0) {
     uStack_18 = 0;
     uVar4 = save_read_int((Progress *)param_1,(const uint8 *)uVar2,(int32 *)&uStack_18);
@@ -17935,7 +17946,7 @@ int FUN_0011daac(int param_1,int param_2,undefined4 param_3,uint param_4)
 /* ==== 0x0011DC9C  (file offset 0x1DC9C)  save_read_byte ============================================== */
 /* GUESS: names. The next byte of the saved game (`data` at *position, which it advances): a flag saved as
    the character '0' or '1', or a status flag. The byte is set to '0' first and then always copied over (by
-   memmove, one byte). `progress` (what the loader FUN_0011b178 fills) is not read. Ghidra had five
+   memmove, one byte). `progress` (what the loader progress_load fills) is not read. Ghidra had five
    arguments for the memmove (r3 only held its address) and built the byte from an unset register. */
 uint32 save_read_byte(Progress *progress,const uint8 *data,int32 *position)
 
@@ -18141,7 +18152,7 @@ void FUN_0011df14(undefined4 *param_1)
 /* GUESS: name. Clears all the player's named states: the 100 status texts and the 100 script variables
    (their names freed, their values 0). The status flag bytes are left as they are (out of reach without
    their texts, and set again when a slot is reused). Used by the script's setState ALL 0, the menu's
-   restart, the saved-game loader (FUN_0011b178) and Progress's reset and destructor (progress_new_game,
+   restart, the saved-game loader (progress_load) and Progress's reset and destructor (progress_new_game,
    progress_destroy). */
 void progress_clear_states(Progress *progress)
 
@@ -19658,7 +19669,7 @@ void enemy_set_target(Enemy *enemy,int32 how)
 /* ==== 0x001200AC  (file offset 0x200AC)  progress_set_user_id ======================================== */
 /* GUESS: name. Stores a copy of the online user id a server reply gave (web_request_parse_reply, for a
    download's and a ranking's reply), unless the player has one already (not 0, not ""): it is the uid= of
-   the web requests (FUN_00101ad8) and is saved with the game (FUN_0011ead4, FUN_0011b6f0). A stored ""
+   the web requests (FUN_00101ad8) and is saved with the game (FUN_0011ead4, settings_load). A stored ""
    is overwritten without being freed, and the malloc is not checked (research_notes/decomp/GAME_BUGS.md).
    Returns nothing: r0 is strcmp's result on the early exit, strcpy's after the tail jump, and no caller
    reads it. */
@@ -22380,7 +22391,7 @@ LAB_0012462c:
     break;
   case 7:
     screen_stack_close_all(*(undefined4 *)(param_1 + 0xd0));
-    FUN_0011b178(*(int *)(param_1 + 0xa8),0);
+    progress_load(*(int *)(param_1 + 0xa8),0);
 LAB_001244d4:
     FUN_0010edec(param_1);
     break;

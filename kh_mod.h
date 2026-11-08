@@ -661,7 +661,7 @@ int32 level_object_run_script(LevelObject *object,int32 which);   /* 0x00110860 
 int32 script_run(int32 context,int32 count,ScriptCommand **commands);   /* 0x001108AC GUESS: name, see kh_mod.c */
 int32 script_command_run(ScriptCommand *command);   /* 0x00110924 GUESS: name, see kh_mod.c */
 undefined8 FUN_0011295c(undefined4 *param_1,int *param_2,int *param_3,int *param_4,undefined4 param_5);
-bool FUN_00112a98(int param_1,undefined4 param_2,int param_3);
+bool progress_file_exists(int param_1,undefined4 param_2,int param_3);   /* 0x00112A98 GUESS: name, see kh_mod.c */
 void intro_find_animations(Intro *intro);   /* 0x00112B4C GUESS: name, see kh_mod.c */
 int32 item_drops_find_free_slot(ItemDrops *drops);   /* 0x00112C18 GUESS: name */
 void item_drops_find_balls(ItemDrops *drops);   /* 0x00112C44 GUESS: name, see kh_mod.c */
@@ -749,11 +749,11 @@ undefined8 FUN_0011abc4(int param_1,int param_2);
 int32 character_lift(Character *character,LevelObject *object);   /* 0x0011ADD0 GUESS: name, see kh_mod.c */
 undefined4 FUN_0011ae04(int param_1,undefined4 param_2,int *param_3,int param_4,int param_5);
 void FUN_0011b044(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5, undefined4 *param_6);
-bool FUN_0011b0cc(int param_1,undefined4 param_2,undefined4 param_3,int *param_4);
-undefined4 FUN_0011b178(int param_1,int param_2);
+int32 progress_read_file(Progress *progress,const char *name,void *buffer,uint32 size);   /* 0x0011B0CC GUESS: name, see kh_mod.c */
+undefined4 progress_load(int param_1,int param_2);   /* 0x0011B178 GUESS: name, see kh_mod.c */
 undefined8 FUN_0011b518(int param_1,int param_2);
 undefined4 FUN_0011b5f0(int param_1);
-void FUN_0011b6f0(int param_1,undefined4 param_2);
+void settings_load(int param_1,undefined4 param_2);   /* 0x0011B6F0 GUESS: name, see kh_mod.c */
 void FUN_0011b890(int param_1,int *param_2);
 undefined4 FUN_0011ba0c(int param_1,undefined4 param_2);
 void FUN_0011bb00(undefined4 *param_1,int param_2);
