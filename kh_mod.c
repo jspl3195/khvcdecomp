@@ -1503,7 +1503,7 @@ LAB_00103858:
         ui_element_add_child(uVar10,iVar19,0);
         iVar19 = (int)text_line_create(0,uVar11,iVar7,uVar13,0,param_1,0,0x22);
         pvVar16 = helper_malloc(0x40);
-        local_a8[9] = FUN_00107ecc(param_1,local_74[iVar9 + 9]);
+        local_a8[9] = (int)integer_to_wide((int32)param_1,local_74[iVar9 + 9]);
                     /* helper[10] AECHAR * wstrcat(AECHAR *dst, const AECHAR *src)  (AEEHelperFuncs
                        +0x28, via *(base-4)) */
         (*g_pHelperFuncs->wstrcat)(pvVar16,local_a8[9]);
@@ -1637,7 +1637,7 @@ LAB_001050b0:
         ui_element_add_child(iVar9,iVar17,0);
         iVar17 = (int)text_line_create(0,uVar10,iVar7,uVar11,0,param_1,0,0x22);
         pvVar16 = helper_malloc(0x40);
-        local_a8[5] = FUN_00107ecc(param_1,local_74[iVar19 + 7]);
+        local_a8[5] = (int)integer_to_wide((int32)param_1,local_74[iVar19 + 7]);
                     /* helper[10] AECHAR * wstrcat(AECHAR *dst, const AECHAR *src)  (AEEHelperFuncs
                        +0x28, via *(base-4)) */
         (*g_pHelperFuncs->wstrcat)(pvVar16,local_a8[5]);
@@ -2018,7 +2018,7 @@ LAB_0010489c:
                 ui_element_add_child(iVar9,iVar7,0);
                 iVar7 = (int)text_line_create(0,uVar10,iVar19,uVar11,0,param_1,0,0x22);
                 pvVar16 = helper_malloc(0x40);
-                local_a8[9] = FUN_00107ecc(param_1,local_74[iVar17 + 4]);
+                local_a8[9] = (int)integer_to_wide((int32)param_1,local_74[iVar17 + 4]);
                     /* helper[10] AECHAR * wstrcat(AECHAR *dst, const AECHAR *src)  (AEEHelperFuncs
                        +0x28, via *(base-4)) */
                 (*g_pHelperFuncs->wstrcat)(pvVar16,local_a8[9]);
@@ -2029,8 +2029,8 @@ LAB_0010489c:
                   (*g_pHelperFuncs->wstrcat)(pvVar16,local_a8[8]);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
                   (*g_pHelperFuncs->free)(local_a8[8]);
-                  local_a8[8] = FUN_00107ecc(param_1,*(undefined4 *)
-                                                      (*(int *)(*param_1 + 0xa8) + 0x5c0));
+                  local_a8[8] = (int)integer_to_wide((int32)param_1,
+                                                     *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x5c0));
                     /* helper[10] AECHAR * wstrcat(AECHAR *dst, const AECHAR *src)  (AEEHelperFuncs
                        +0x28, via *(base-4)) */
                   (*g_pHelperFuncs->wstrcat)(pvVar16,local_a8[8]);
@@ -2227,7 +2227,7 @@ LAB_001042b8:
       ui_element_add_child(iVar9,iVar17,0);
       iVar17 = (int)text_line_create(0,uVar10,iVar7,uVar11,0,param_1,0,0x22);
       pvVar16 = helper_malloc(0x40);
-      local_a8[7] = FUN_00107ecc(param_1,local_74[iVar19 + 9]);
+      local_a8[7] = (int)integer_to_wide((int32)param_1,local_74[iVar19 + 9]);
                     /* helper[10] AECHAR * wstrcat(AECHAR *dst, const AECHAR *src)  (AEEHelperFuncs
                        +0x28, via *(base-4)) */
       (*g_pHelperFuncs->wstrcat)(pvVar16,local_a8[7]);
@@ -2246,7 +2246,7 @@ LAB_001042b8:
         else {
           uVar13 = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x528);
         }
-        local_a8[6] = FUN_00107ecc(param_1,uVar13);
+        local_a8[6] = (int)integer_to_wide((int32)param_1,uVar13);
                     /* helper[10] AECHAR * wstrcat(AECHAR *dst, const AECHAR *src)  (AEEHelperFuncs
                        +0x28, via *(base-4)) */
         (*g_pHelperFuncs->wstrcat)(pvVar16,local_a8[6]);
@@ -2357,7 +2357,7 @@ LAB_001042b8:
       psVar18 = *(short **)(*(int *)(iVar12 + 0x30) + 8);
       *psVar18 = *psVar18 + (short)iVar8;
       iVar20 = (int)text_line_create(0,local_38,iVar17,local_30,0,param_1,0,0x22);
-      local_78 = (void *)FUN_00107ecc(param_1,local_74[iVar19 + 5]);
+      local_78 = integer_to_wide((int32)param_1,local_74[iVar19 + 5]);
       text_line_set_text(iVar20,local_78);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
       (*g_pHelperFuncs->free)(local_78);
@@ -4196,35 +4196,29 @@ int32 ui_element_find_child(UIElement *element,int32 id)
   return list_find_entry(element->children,id);
 }
 
-/* ==== 0x00107ECC  (file offset 0x07ECC)  FUN_00107ecc ================================================ */
-void * FUN_00107ecc(undefined4 param_1,undefined4 param_2)
+/* ==== 0x00107ECC  (file offset 0x07ECC)  integer_to_wide ============================================= */
+/* GUESS: names. `value` as a decimal wide string, in a block the caller frees: sprintf "%d" into a 16-byte
+   narrow buffer, then strtowstr into a block of (strlen + 1) * 2 bytes; the narrow buffer is freed. The
+   menu handler FUN_00101ad8 appends the numbers of its pages to their labels with it (wstrcat), or shows
+   one on its own. `owner` (the screen stack the callers pass) is not read. Neither allocation is checked
+   (GAME_BUGS.md). Ghidra's listing gave sprintf two more arguments: r3 holds sprintf's own address at the
+   call (0x00107f00), and the format takes one. */
+AECHAR * integer_to_wide(int32 owner,int32 value)
 
 {
-  undefined4 param_4;
-  /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
+  char *text;
   uint32 size;
-  void *p;
-  int iVar2;
-  void *pvVar3;
-  code *pcVar4;
-  
-  p = helper_malloc(0x10);
-  pcVar4 = (code *)g_pHelperFuncs->sprintf;
-                    /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
-                       +0x20, via *(base-4)) */
-  (*pcVar4)(p,(int32)STRING_PERCENT_D,param_2,pcVar4,param_4);
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-  iVar2 = (*g_pHelperFuncs->strlen)(p);
-  size = (iVar2 + 1) * 2;
-  pvVar3 = helper_malloc(size);
-                    /* helper[16] AECHAR * strtowstr(const char *src, AECHAR *dst, int nDstBytes)
-                       (AEEHelperFuncs +0x40, via *(base-4)) */
-  (*g_pHelperFuncs->strtowstr)(p,pvVar3,size);
-  helper_free(p);
-  return pvVar3;
+  AECHAR *wide;
+
+  text = helper_malloc(0x10);
+  (*g_pHelperFuncs->sprintf)(text,STRING_PERCENT_D,value);   /* helper[8] (AEEHelperFuncs +0x20) */
+  size = ((*g_pHelperFuncs->strlen)(text) + 1) * 2;          /* helper[5] (+0x14) */
+  wide = helper_malloc(size);
+  (*g_pHelperFuncs->strtowstr)(text,wide,size);              /* helper[16] (+0x40) */
+  helper_free(text);
+  return wide;
 }
+
 
 /* ==== 0x00107F58  (file offset 0x07F58)  ui_element_get_border_color ================================= */
 /* GUESS: name. Vtable slot 7 (+0x1c) of every UI class: the element's border colour (+0x18, the outline of its background in ui_element_draw), its own
