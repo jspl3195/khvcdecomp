@@ -520,7 +520,7 @@ int32 ui_element_remove_child(UIElement *element,int32 id,int32 destroy);   /* 0
 void hud_hide_loading(Hud *hud);   /* 0x00109368 GUESS: name, see kh_mod.c */
 void list_remove_entry(UIList *list,int32 id);   /* 0x00109380 GUESS: name */
 void thunk_FUN_0011e154(int param_1);
-undefined4 FUN_001093f8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 );
+int32 download_write_file(WebRequest *caller,WebRequest *request,const char *name,uint32 size, const void *data);   /* 0x001093F8 GUESS: name, see kh_mod.c */
 void web_request_notify(WebRequest *request,int32 event,int32 value,int32 detail,int32 extra);   /* 0x00109534 GUESS: name, see kh_mod.c */
 void text_box_set_tail(TextBox *box,int32 x,int32 y);   /* 0x0010955C GUESS: name, see kh_mod.c */
 void FUN_00109750(int param_1,undefined4 param_2);
@@ -536,7 +536,7 @@ int32 sound_set_set_volume(SoundSet *set,int32 volume);   /* 0x0010A03C GUESS: n
 void FUN_0010a080(int param_1);
 int32 sound_set_stop(SoundSet *set);   /* 0x0010A0D0 GUESS: name, see kh_mod.c */
 void game_pause(KHApp *app);   /* 0x0010A124 GUESS: name, see kh_mod.c */
-int FUN_0010a12c(int param_1,undefined4 param_2,byte *param_3);
+int32 download_save_files(WebRequest *caller,WebRequest *request,const uint8 *bundle);   /* 0x0010A12C GUESS: name, see kh_mod.c */
 TextBox * text_box_layout(TextBox *box);   /* 0x0010A214 GUESS: name, see kh_mod.c */
 uint32 graphics_set_color(int32 owner,IGraphics *graphics,uint32 color,int32 which);   /* 0x0010A3E8 GUESS: name, see kh_mod.c */
 uint32 display_set_color(int32 owner,IDisplay *display,int32 which,uint32 color);   /* 0x0010A46C GUESS: name, see kh_mod.c */

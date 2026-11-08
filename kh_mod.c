@@ -2876,15 +2876,15 @@ void key_picker_restore_original(UIElement *picker)
 
 /* ==== 0x00105734  (file offset 0x05734)  web_request_parse_reply ===================================== */
 /* GUESS: names. Parses the server's reply (request->data), once web_request_read has read it to its end,
-   and tells the listener; then the request is cancelled and its buffers freed. `caller` and `request`
-   are the same request: the binary reads the data through r1 and, for a download, notifies and cancels
-   with r0.
+   and tells the listener; then the request is cancelled and its buffers freed. `caller` and `request` are
+   the same request: the binary reads the data through r1 and, for a download, notifies and cancels with
+   r0.
    A download's reply (state 3) is "<kind>|<id>|<rest>", a leading space skipped. Unless what follows the
-   first "|" is "invalidentry", the id is stored (progress_set_user_id, in the player's progress) and
-   the kind says what the rest is: "*d" data - notify 9, then FUN_0010a12c handles it and its result is the
-   event (value 1); "*t" text - event 2, value 2, with a copy of the rest; anything else, event 5. The
-   event is sent with value 2 for event 5, and the copy (or 0) as the last argument. The copy of the
-   kind gets no terminator of its own: BREW's MALLOC zeroes the memory.
+   first "|" is "invalidentry", the id is stored (progress_set_user_id, in the player's progress) and the
+   kind says what the rest is: "*d" data - notify 9, then download_save_files saves its files and its
+   result is the event (value 1); "*t" text - event 2, value 2, with a copy of the rest; anything else,
+   event 5. The event is sent with value 2 for event 5, and the copy (or 0) as the last argument. The copy
+   of the kind gets no terminator of its own: BREW's MALLOC zeroes the memory.
    A ranking's reply (any other state) is "|"-separated fields, a leading space skipped: "*r", not
    "invalidentry", an id up to "~" (stored by progress_set_user_id), ...; with state 4 (rankex) event 7
    with the number of fields from the fourth on and those fields; otherwise event 6 with the number after
@@ -2926,7 +2926,7 @@ void web_request_parse_reply(WebRequest *caller,WebRequest *request)
       rest = end + 1;
       if ((*g_pHelperFuncs->strcmp)(kind,STRING_STAR_D) == 0) {
         web_request_notify(caller,9,0,0,0);
-        event = FUN_0010a12c((int32)caller,(int32)request,(byte *)rest);
+        event = download_save_files(caller,request,(const uint8 *)rest);
         value = 1;
       }
       else if ((*g_pHelperFuncs->strcmp)(kind,STRING_STAR_T) == 0) {
@@ -5145,57 +5145,44 @@ void thunk_FUN_0011e154(int param_1)
   return;
 }
 
-/* ==== 0x001093F8  (file offset 0x093F8)  FUN_001093f8 ================================================ */
-undefined4
-FUN_001093f8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5
-            )
+/* ==== 0x001093F8  (file offset 0x093F8)  download_write_file ========================================= */
+/* GUESS: names. Saves one file of a downloaded bundle (download_save_files): the path is "" (an empty
+   prefix; GUESS: a directory left empty) followed by `name`; an existing file is opened (IFileMgr
+   OpenFile, _OFM_READWRITE) and emptied (IFile Truncate 0), else it is created (_OFM_CREATE); `size` bytes
+   of `data` are written (IFile Write) and the file released. Returns the web event: 2 done, or 5 when the
+   file cannot be opened or nothing was written. Only a write of 0 bytes counts as failed: a short write
+   passes, and an empty file fails; the path's allocation is not checked (GAME_BUGS.md). `caller` and
+   `request` are the same request (web_request_parse_reply); the file manager is the caller's, `request` is
+   not read. */
+int32 download_write_file(WebRequest *caller,WebRequest *request,const char *name,uint32 size,
+                          const void *data)
 
 {
-  int iVar2;
-  int iVar3;
-  undefined4 uVar4;
-  int *piVar5;
-  undefined4 uVar6;
-  uVar6 = 2;
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-  iVar2 = (*g_pHelperFuncs->strlen)((int32)STRING_EMPTY);
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-  iVar3 = (*g_pHelperFuncs->strlen)(param_3);
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-  uVar4 = (*g_pHelperFuncs->malloc)(iVar2 + iVar3 + 1);
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-  (*g_pHelperFuncs->strcpy)(uVar4,(int32)STRING_EMPTY);
-                    /* helper[3] char * strcat(char *dst, const char *src)  (AEEHelperFuncs +0xc,
-                       via *(base-4)) */
-  (*g_pHelperFuncs->strcat)(uVar4,param_3);
-  piVar5 = (int *)(*((IFileMgr *)*(int **)(param_1 + 0x50))->pvt->OpenFile)
-                      ((IFileMgr *)*(int **)(param_1 + 0x50),(const char *)uVar4,2);
-  if (piVar5 == (int *)0x0) {
-    piVar5 = (int *)(*((IFileMgr *)*(int **)(param_1 + 0x50))->pvt->OpenFile)
-                        ((IFileMgr *)*(int **)(param_1 + 0x50),(const char *)uVar4,4)
-    ;
-    if (piVar5 == (int *)0x0) {
-      uVar6 = 5;
-      goto LAB_001094f8;
-    }
-  }
+  int32 event = 2;
+  uint32 prefixLength;
+  char *path;
+  IFile *file;
+
+  prefixLength = (*g_pHelperFuncs->strlen)(STRING_EMPTY);
+  path = (*g_pHelperFuncs->malloc)(prefixLength + (*g_pHelperFuncs->strlen)(name) + 1);
+  (*g_pHelperFuncs->strcpy)(path,STRING_EMPTY);
+  (*g_pHelperFuncs->strcat)(path,name);
+  file = (*caller->fileMgr->pvt->OpenFile)(caller->fileMgr,path,2);   /* _OFM_READWRITE */
+  if (file != (IFile *)0x0)
+    (*file->pvt->Truncate)(file,0);
+  else
+    file = (*caller->fileMgr->pvt->OpenFile)(caller->fileMgr,path,4);   /* _OFM_CREATE */
+  if (file == (IFile *)0x0)
+    event = 5;
   else {
-    (*((IFile *)piVar5)->pvt->Truncate)((IFile *)piVar5,0);
+    if ((*file->pvt->Write)(file,data,size) == 0)
+      event = 5;
+    (*file->pvt->Release)(file);
   }
-  iVar2 = (*((IFile *)piVar5)->pvt->Write)((IFile *)piVar5,(const void *)param_5,param_4);
-  if (iVar2 == 0) {
-    uVar6 = 5;
-  }
-  (*((IFile *)piVar5)->pvt->Release)((IFile *)piVar5);
-LAB_001094f8:
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-  (*g_pHelperFuncs->free)(uVar4);
-  return uVar6;
+  (*g_pHelperFuncs->free)(path);
+  return event;
 }
+
 
 /* ==== 0x00109534  (file offset 0x09534)  web_request_notify ========================================== */
 /* GUESS: name. Tells the request's listener (FUN_0010888c) about an event, with its context: progress (1,
@@ -5660,47 +5647,42 @@ void game_pause(KHApp *app)
   FUN_0012056c((int32)app,0);
 }
 
-/* ==== 0x0010A12C  (file offset 0x0A12C)  FUN_0010a12c ================================================ */
-int FUN_0010a12c(int param_1,undefined4 param_2,byte *param_3)
+/* ==== 0x0010A12C  (file offset 0x0A12C)  download_save_files ========================================= */
+/* GUESS: names. Saves the files of a downloaded bundle, the rest of a "*d" reply
+   (web_request_parse_reply): a count byte, then for each file a name length byte, the name, 4 bytes that
+   are skipped, the size as a big-endian word and the data. Each name is copied into a block of its own
+   (malloc, strncpy, a terminator; not checked) and the file written with download_write_file; the first
+   event other than 2 (done) stops the loop. Returns the last file's event, which becomes the reply's; with
+   no files r9 is returned as the caller left it (GAME_BUGS.md). */
+int32 download_save_files(WebRequest *caller,WebRequest *request,const uint8 *bundle)
 
 {
-  byte bVar1;
-  int iVar3;
-  int iVar4;
-  int iVar5;
-  int iVar6;
-  int iVar7;
-  uint uVar8;
-  int iVar9;          /* r9: never set when the count is 0, the binary then returns r9 as the caller
-                         left it */
-  iVar6 = 0;
-  iVar7 = 1;
-  bVar1 = *param_3;
-  while( true ) {
-    if ((int)(uint)bVar1 <= iVar6) {
-      return iVar9;
-    }
-    uVar8 = (uint)param_3[iVar7];
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-    iVar3 = (*g_pHelperFuncs->malloc)(uVar8 + 1);
-                    /* helper[50] char * strncpy(char *dst, const char *src, uint32 n)
-                       (AEEHelperFuncs +0xc8, via *(base-4)) */
-    (*g_pHelperFuncs->strncpy)(iVar3,param_3 + iVar7 + 1,uVar8);
-    iVar5 = iVar7 + 1 + uVar8;
-    *(undefined1 *)(iVar3 + uVar8) = 0;
-    iVar7 = (uint)param_3[iVar5 + 4] * 0x1000000 + (uint)param_3[iVar5 + 5] * 0x10000 +
-            (uint)param_3[iVar5 + 6] * 0x100 + (uint)param_3[iVar5 + 7];
-    iVar4 = FUN_001093f8(param_1,param_2,iVar3,iVar7,param_3 + iVar5 + 8);
-    iVar7 = iVar5 + 8 + iVar7;
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(iVar3);
-    if (iVar4 != 2) break;
-    iVar6 = iVar6 + 1;
-    iVar9 = 2;
+  int32 count = bundle[0];
+  int32 position = 1;
+  int32 i;
+  int32 nameLength;
+  int32 size;
+  char *name;
+  int32 event;   /* r9: never set when the count is 0, the binary then returns r9 as the caller left it */
+
+  for (i = 0; i < count; i++) {
+    nameLength = bundle[position];
+    name = (*g_pHelperFuncs->malloc)(nameLength + 1);
+    (*g_pHelperFuncs->strncpy)(name,(const char *)bundle + position + 1,nameLength);
+    name[nameLength] = 0;
+    position += 1 + nameLength;                 /* then 4 bytes not read */
+    size = (int32)((uint32)bundle[position + 4] << 24 | (uint32)bundle[position + 5] << 16 |
+                   (uint32)bundle[position + 6] << 8 | (uint32)bundle[position + 7]);
+    position += 8;
+    event = download_write_file(caller,request,name,(uint32)size,bundle + position);
+    position += size;
+    (*g_pHelperFuncs->free)(name);
+    if (event != 2)
+      break;
   }
-  return iVar4;
+  return event;
 }
+
 
 /* ==== 0x0010A214  (file offset 0x0A214)  text_box_layout ============================================= */
 /* GUESS: name. Lays a text box out: removes its "more" line, then makes the lines from firstLine its
