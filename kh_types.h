@@ -38,7 +38,8 @@ typedef struct KHApp {
     ISwerveTarget *pSwerveTarget;    /* +0x68 Graphics3D: pSwerve->CreateObject(SWV_GRAPHICS3D, &...);
                                         released in kh_OnAppStop */
     ISwerveObject *pObj6c;           /* +0x6c the scene's World (GUESS; its calls are World slots: Find,
-                                        Get/SetActiveCamera, Get/SetBackground); released in kh_OnAppStop;
+                                        Get/SetActiveCamera, Get/SetBackground; animations_drop_missing
+                                        looks the animations' user ids up in it); released in kh_OnAppStop;
                                         framebuffer binding is skipped when it is NULL */
     IDIB          *pScreenDIB;       /* +0x70 device bitmap QueryInterface(AEECLSID_DIB) */
     AEERect        rcView;           /* +0x74 {0, 0, devInfo.cxScreen, devInfo.cyScreen} */
@@ -1028,7 +1029,8 @@ typedef struct SwerveTransformVtbl {
  * user id in the world the first time). */
 typedef struct Animations {
     struct KHApp *app;            /* +0x000 GetAppInstance() at creation */
-    ISwerveObject *world;         /* +0x004 GUESS: the scene's World; controllers are found in it (Find) */
+    ISwerveObject *world;         /* +0x004 GUESS: the scene's World; controllers are found in it (Find);
+                                     animations_drop_missing uses KHApp.pObj6c instead */
     int32    elapsed;               /* +0x008 ms since the last update (animations_update) */
     int32    worldTime;             /* +0x00c the time the controllers are set at (animations_update) */
     int32    userIds[100]; /* +0x010 the controllers' user ids (animations_find); -1 = free slot */

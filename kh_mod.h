@@ -625,7 +625,7 @@ AECHAR * string_to_wide(int32 context,char **text,AECHAR **wide);   /* 0x0010E21
 void camera_avoid_walls(Camera *camera,uint32 *from,uint32 *to);   /* 0x0010E280 GUESS: names */
 undefined4 FUN_0010e448(int param_1,undefined4 *param_2);
 void thunk_animations_add_from_scene(int param_1,int *param_2);
-void FUN_0010e94c(int *param_1);
+void animations_drop_missing(Animations *animations);   /* 0x0010E94C GUESS: name, see kh_mod.c */
 int32 animations_release_controllers(Animations *animations);   /* 0x0010E9BC GUESS: name */
 void FUN_0010ea00(int param_1);
 void FUN_0010ea64(int param_1);
@@ -842,7 +842,7 @@ void FUN_00120be8(undefined4 *param_1,int *param_2,uint *param_3,uint *param_4,u
 void FUN_00120f8c(int param_1,int *param_2,int param_3,int *param_4,int param_5);
 void game_create_objects(Game *game,ISwerveObject *node,LevelObject *parent);   /* 0x00121134 GUESS: name */
 undefined8 FUN_001213fc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 ,undefined4 param_6,undefined4 param_7);
-void FUN_00121584(int param_1,int *param_2,int *param_3,int param_4);
+void app_context_remove_object(int param_1,int *param_2,int *param_3,int param_4);   /* 0x00121584 GUESS: name, see kh_mod.c */
 void FUN_0012164c(int param_1,undefined4 param_2,int param_3);
 void progress_add_play_time(Progress *progress);   /* 0x001216C4 GUESS: name, see kh_mod.c */
 void FUN_0012171c(int32 object,int32 now,int32 elapsed);   /* 0x0012171C (no Ghidra function) */

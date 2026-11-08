@@ -6991,10 +6991,11 @@ void FUN_0010c2c4(int *param_1,int param_2)
     FUN_0010c73c(param_1[0x7c],1);
   }
   if (param_1[3] != 0) {
-    FUN_00121584((int)((KHApp *)param_1[0x85])->context,(int *)param_1[3],(int *)*param_1,1);
+    app_context_remove_object((int)((KHApp *)param_1[0x85])->context,(int *)param_1[3],(int *)*param_1,1);
   }
   if (param_1[2] != 0) {
-    FUN_00121584((undefined4)((KHApp *)param_1[0x85])->context,(int *)param_1[2],(int *)*param_1,1);
+    app_context_remove_object((undefined4)((KHApp *)param_1[0x85])->context,
+                              (int *)param_1[2],(int *)*param_1,1);
   }
   if ((int *)*param_1 != (int *)0x0) {
     /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
@@ -7269,8 +7270,9 @@ void FUN_0010c92c(int param_1,int param_2)
   /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
      leftover (no caller sets it); Ghidra listed it as input */
   if (*(int *)(param_1 + 0x1f0) != 0) {
-    FUN_00121584((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(int *)(param_1 + 0x1f0),
-                 **(undefined4 **)(*(int *)(param_1 + 0x84) + 0xa4),0 /* not arguments, value leftovers: param_4 */);
+    app_context_remove_object((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
+                              *(int *)(param_1 + 0x1f0),**(undefined4 **)(*(int *)(param_1 + 0x84) + 0xa4),
+                              0 /* not arguments, value leftovers: param_4 */);
   }
   if (*(int **)(param_1 + 0x1e0) != (int *)0x0) {
     /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
@@ -7471,7 +7473,7 @@ void FUN_0010cd2c(int param_1,int param_2)
   int *piVar1;
   
   if (*(int *)(param_1 + 8) != 0) {
-    FUN_00121584((undefined4)((KHApp *)*(int *)(param_1 + 4))->context,*(int *)(param_1 + 8),
+    app_context_remove_object((undefined4)((KHApp *)*(int *)(param_1 + 4))->context,*(int *)(param_1 + 8),
                  *(undefined4 *)(param_1 + 0xc),1 /* not arguments, value leftovers: param_4 */);
   }
   if (*(int **)(param_1 + 0xc) != (int *)0x0) {
@@ -8910,42 +8912,44 @@ LAB_00120a28:
   return;
 }
 
-/* ==== 0x0010E94C  (file offset 0x0E94C)  FUN_0010e94c ================================================ */
-
-void FUN_0010e94c(int *param_1)
+/* ==== 0x0010E94C  (file offset 0x0E94C)  animations_drop_missing ===================================== */
+/* GUESS: name. Frees every animation whose controller is no longer in the scene: each used slot's user id
+   is looked up in the app's World (KHApp.pObj6c, not the table's own `world`; World Find, slot 10) and the
+   slot is freed (user id -1) when nothing is found, else the found controller is released again at once.
+   Called after the old scene leaves the World (script_command_run's loadScene) and after an object is
+   removed from its group (app_context_remove_object); FUN_00118640 calls it right after animations_reset,
+   when every slot is already free. The result is cleared only once, before the loop (0x0010e95c): when the
+   engine fails inside Find before writing it, the previous slot's controller, already released, is
+   released again and the slot kept (GAME_BUGS.md). r0 is left as 0 or the last Release's result, read by
+   no caller. */
+void animations_drop_missing(Animations *animations)
 
 {
-  int iVar1;
-  int *local_18;   /* [sp]: Find's result (0 before the loop) */
-  
-  local_18 = (int *)0x0;
-  iVar1 = 0;
-  do {
-    if (param_1[iVar1 + 4] != -1) {
-      if (*(int **)(*param_1 + 0x6c) != (int *)0x0) {
-        /* Ghidra had dropped the arguments; restored from the disassembly (r1, r2 = sp, 0x0010e98c) */
-        (*((const SwerveObject3DVtbl *)((ISwerveObject *)*(int **)(*param_1 + 0x6c))->pvt)->Find)
-            ((ISwerveObject *)*(int **)(*param_1 + 0x6c),param_1[iVar1 + 4],(ISwerveObject **)&local_18);
-      }
-      /* restored from the disassembly (0x0010e990 - 0x0010e9a8); Ghidra had removed it as unreachable */
-      if (local_18 == (int *)0x0) {
-        param_1[iVar1 + 4] = -1;
-      }
-      else {
-        (*((ISwerveObject *)local_18)->pvt->Release)((ISwerveObject *)local_18);
-      }
+  ISwerveObject *controller = (ISwerveObject *)0x0;   /* [sp]: written by Find only */
+  int32 i;
+
+  for (i = 0; i < 100; i++) {
+    if (animations->userIds[i] != -1) {
+      if (animations->app->pObj6c != (ISwerveObject *)0x0)
+        (*((const SwerveObject3DVtbl *)animations->app->pObj6c->pvt)->Find)
+            (animations->app->pObj6c,animations->userIds[i],&controller);
+      if (controller == (ISwerveObject *)0x0)
+        animations->userIds[i] = -1;
+      else
+        (*controller->pvt->Release)(controller);
     }
-    iVar1 = iVar1 + 1;
-  } while (iVar1 < 100);
+  }
   return;
 }
+
 
 /* ==== 0x0010E9BC  (file offset 0x0E9BC)  animations_release_controllers ============================== */
 /* GUESS: name. Releases every cached animation controller (Release, vtable slot 1) and empties its slot;
    they are found again by user id the next time they are played (animations_set_position). Called by
-   animations_reset and before a scene is replaced (script_command_run, FUN_00121584). Returns r0 as kh.mod
-   leaves it after the last pass: the controller table's address when the last slot held a controller,
-   else 0 (FUN_00121584 stores it in a variable it overwrites before reading it). */
+   animations_reset and before a scene is replaced (script_command_run, app_context_remove_object). Returns
+   r0 as kh.mod leaves it after the last pass: the controller table's address when the last slot held a
+   controller, else 0 (app_context_remove_object stores it in a variable it overwrites before reading
+   it). */
 int32 animations_release_controllers(Animations *animations)
 
 {
@@ -10627,7 +10631,7 @@ int32 script_command_run(ScriptCommand *command)
     if (command->text != (char *)0x0) {
       animations_release_controllers(app->animations);
       FUN_0011df14((undefined4 *)app->pGame);
-      FUN_0010e94c((int *)app->animations);
+      animations_drop_missing(app->animations);
       object = (LevelObject *)FUN_0011ae04(context,(undefined4)command->text,(int *)game->root,1,0);
       game->field_04 = (ISwerveObject *)object;
       game_create_objects((Game *)app->pGame,(ISwerveObject *)object,(LevelObject *)0x0);
@@ -14437,7 +14441,7 @@ void FUN_00118640(int param_1,int *param_2)
     (*((ISwerveObject *)param_2)->pvt->QueryInterface)((ISwerveObject *)param_2,9,(void **)(param_1 + 4));
   }
   if (*(int *)(param_1 + 4) != 0) {
-    FUN_0010e94c(param_1);
+    animations_drop_missing((Animations *)param_1);   /* every slot is free here (animations_reset) */
   }
   piVar2 = *(int **)(param_1 + 4);
   if (piVar2 != (int *)0x0) {
@@ -18244,7 +18248,8 @@ void FUN_0011df14(undefined4 *param_1)
     iVar4 = iVar4 + 1;
   } while (iVar4 < 0x78);
   if (param_1[1] != 0) {
-    FUN_00121584((undefined4)((KHApp *)param_1[0x85])->context,param_1[1],*param_1,1 /* not arguments, value leftovers: param_4 */);
+    app_context_remove_object((undefined4)((KHApp *)param_1[0x85])->context,
+                              param_1[1],*param_1,1 /* not arguments, value leftovers: param_4 */);
     param_1[1] = 0;
   }
   if (param_1[0x7e] != 0) {
@@ -20650,8 +20655,14 @@ LAB_001214d4:
   return MAKE_WORDS(uVar7,uVar2,iVar6);
 }
 
-/* ==== 0x00121584  (file offset 0x21584)  FUN_00121584 ================================================ */
-void FUN_00121584(int param_1,int *param_2,int *param_3,int param_4)
+/* ==== 0x00121584  (file offset 0x21584)  app_context_remove_object =================================== */
+/* GUESS: names. Removes an object's scene node from its group: when `param_4` is set, the animation
+   controllers are released first (animations_release_controllers); `param_2`'s node (QueryInterface 0x12)
+   is removed from the group `param_3` (Group RemoveChild) and released, and `param_2` itself released;
+   then, when `param_4` is set, the animations whose controllers left the World are freed
+   (animations_drop_missing). Last, the app's +0x7c and +0x80 are set to aee_GetUpTimeMS(). `param_1` is
+   the AppContext (+0x0c its app). */
+void app_context_remove_object(int param_1,int *param_2,int *param_3,int param_4)
 
 {
   int iVar1;
@@ -20681,7 +20692,7 @@ void FUN_00121584(int param_1,int *param_2,int *param_3,int param_4)
     iVar1 = *(int *)(*(int *)(param_1 + 0xc) + 0x9c);
   }
   if (param_4 != 0 && iVar1 != 0) {
-    FUN_0010e94c(iVar1);
+    animations_drop_missing((Animations *)iVar1);
   }
                     /* helper[44] uint32 aee_GetUpTimeMS(void)  (AEEHelperFuncs +0xb0, via
                        *(base-4)) */
@@ -20699,8 +20710,8 @@ void FUN_0012164c(int param_1,undefined4 param_2,int param_3)
     if (param_3 != 0) {
       FUN_0012070c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0xa4),param_1);
     }
-    FUN_00121584((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 0x18),
-                 *(undefined4 *)(param_1 + 8),param_2);
+    app_context_remove_object((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
+                              *(undefined4 *)(param_1 + 0x18),*(undefined4 *)(param_1 + 8),param_2);
     *(undefined4 *)(param_1 + 0x18) = 0;
   }
   if (*(int *)(param_1 + 0x14) != 0) {
