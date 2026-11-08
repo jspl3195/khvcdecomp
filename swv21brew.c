@@ -89,15 +89,17 @@ undefined4 swv_memset(undefined4 param_1,uint param_2,undefined4 param_3)
 {
   uint uVar1;
   
-                    /* memset(dst, c, n): replicates the byte to a word and fills via 0x01000c54.
-                       Part of the engine's own C library (it does not use helper memset). */
+                    /* memset(dst, c, n): replicates the byte to a word and fills with rt_memset.
+                       Part of the engine's own C library (it does not use helper memset). Most of
+                       the engine calls it through thunk_swv_memset (0x01039df0). */
   uVar1 = param_2 & 0xff | (param_2 & 0xff) << 8;
-  FUN_01000c54(param_1,param_3,uVar1 | uVar1 << 0x10);
+  rt_memset(param_1,param_3,uVar1 | uVar1 << 0x10);
   return param_1;
 }
 
-/* ==== 0x01000130  (file offset 0x00130)  swv_memzero ================================================= */
-undefined4 * swv_memzero(undefined4 *param_1,uint param_2)
+/* ==== 0x01000130  (file offset 0x00130)  rt_memclr_w ================================================= */
+/* GUESS: name (not yet rewritten); see the comment below. */
+undefined4 * rt_memclr_w(undefined4 *param_1,uint param_2)
 
 {
   uint uVar1;
@@ -106,8 +108,11 @@ undefined4 * swv_memzero(undefined4 *param_1,uint param_2)
   undefined4 *puVar4;
   bool bVar5;
   
-                    /* Zeroes n bytes at dst (32-byte unrolled). Part of the engine's own C library.
-                        */
+                    /* memset(dst, 0, n) for a word-aligned dst: the ARM C library's __rt_memclr_w
+                       (__aeabi_memclr4 in later ABIs), kh.mod's memset (0x00100110) again: r2 = 0,
+                       then the fill at 0x01000134 that rt_memset also branches to (32 bytes at a
+                       time, then the bits of the count). Returns the address past the last byte.
+                       Part of the engine's own C library. */
   bVar5 = 0x1f < param_2;
   param_2 = param_2 - 0x20;
   do {
@@ -1112,98 +1117,65 @@ undefined4 FUN_01000c30(undefined4 param_1,undefined4 param_2,undefined4 param_3
   return 0;
 }
 
-/* ==== 0x01000C54  (file offset 0x00C54)  FUN_01000c54 ================================================ */
-undefined4 * FUN_01000c54(undefined4 *param_1,uint param_2,undefined4 param_3)
+/* ==== 0x01000C54  (file offset 0x00C54)  rt_memset =================================================== */
+/* GUESS: name (GUESS: the ARM C library's __rt_memset; __aeabi_memset in later ABIs takes the byte
+   instead). Fills byteCount bytes at destination with pattern, the fill byte already copied into all
+   four bytes of the word (swv_memset does that). Evidence (0x01000c54 - 0x01000c90): under 4 bytes,
+   one store per bit of the count (2, then 1 byte); otherwise 1-3 bytes up to a word boundary (strb,
+   strbge, strbgt), then a branch to 0x01000134 in rt_memclr_w, the fill rt_memclr_w also uses (r2
+   is the pattern there): 32 bytes at a time (stmia of r2, r3, ip, lr), then the bits of the count (16,
+   8, 4, 2, 1 bytes). Ghidra copied that fill in, and so does the C. Returns the address just past the
+   last byte (r0). Only swv_memset calls it. */
+void * rt_memset(void *destination,uint32 byteCount,uint32 pattern)
 
 {
-  uint uVar1;
-  undefined1 uVar2;
-  undefined1 *puVar3;
-  undefined4 *puVar4;
-  undefined4 *puVar5;
-  int iVar6;
-  bool bVar7;
-  
-  uVar2 = (undefined1)param_3;
-  if (param_2 < 4) {
-    if ((bool)((byte)(param_2 >> 1) & 1)) {
-      puVar3 = (undefined1 *)((int)param_1 + 1);
-      *(undefined1 *)param_1 = uVar2;
-      param_1 = (undefined4 *)((int)param_1 + 2);
-      *puVar3 = uVar2;
+  uint8 *bytes = (uint8 *)destination;
+  uint32 *words;
+  uint32 head;
+
+  if (byteCount < 4) {
+    if (byteCount & 2) {
+      *bytes++ = (uint8)pattern;
+      *bytes++ = (uint8)pattern;
     }
-    puVar5 = param_1;
-    if ((int)(param_2 << 0x1f) < 0) {
-      puVar5 = (undefined4 *)((int)param_1 + 1);
-      *(undefined1 *)param_1 = uVar2;
-    }
-    return puVar5;
+    if (byteCount & 1)
+      *bytes++ = (uint8)pattern;
+    return bytes;
   }
-  if (((uint)param_1 & 3) != 0) {
-    iVar6 = 4 - ((uint)param_1 & 3);
-    *(undefined1 *)param_1 = uVar2;
-    puVar5 = (undefined4 *)((int)param_1 + 1);
-    if (1 < iVar6) {
-      puVar5 = (undefined4 *)((int)param_1 + 2);
-      *(undefined1 *)((int)param_1 + 1) = uVar2;
-    }
-    param_1 = puVar5;
-    if (2 < iVar6) {
-      param_1 = (undefined4 *)((int)puVar5 + 1);
-      *(undefined1 *)puVar5 = uVar2;
-    }
-    param_2 = param_2 - iVar6;
+  head = (uint32)bytes & 3;
+  if (head != 0) {                  /* up to the word boundary */
+    head = 4 - head;
+    *bytes++ = (uint8)pattern;
+    if (head >= 2)
+      *bytes++ = (uint8)pattern;
+    if (head > 2)
+      *bytes++ = (uint8)pattern;
+    byteCount -= head;
   }
-  bVar7 = 0x1f < param_2;
-  param_2 = param_2 - 0x20;
-  do {
-    if (bVar7) {
-      *param_1 = param_3;
-      param_1[1] = param_3;
-      param_1[2] = param_3;
-      param_1[3] = param_3;
-      param_1[4] = param_3;
-      param_1[5] = param_3;
-      param_1[6] = param_3;
-      param_1[7] = param_3;
-      param_1 = param_1 + 8;
-      bVar7 = 0x1f < param_2;
-      param_2 = param_2 - 0x20;
-    }
-  } while (bVar7);
-  if ((bool)((byte)(param_2 >> 4) & 1)) {
-    *param_1 = param_3;
-    param_1[1] = param_3;
-    param_1[2] = param_3;
-    param_1[3] = param_3;
-    param_1 = param_1 + 4;
+  /* rt_memclr_w's fill (0x01000134) */
+  words = (uint32 *)bytes;
+  for (; byteCount >= 0x20; byteCount -= 0x20, words += 8) {
+    words[0] = words[1] = words[2] = words[3] = pattern;
+    words[4] = words[5] = words[6] = words[7] = pattern;
   }
-  if ((int)(param_2 << 0x1c) < 0) {
-    *param_1 = param_3;
-    param_1[1] = param_3;
-    param_1 = param_1 + 2;
+  if (byteCount & 0x10) {
+    words[0] = words[1] = words[2] = words[3] = pattern;
+    words += 4;
   }
-  uVar1 = param_2 << 0x1e;
-  puVar5 = param_1;
-  if ((bool)((byte)((param_2 << 0x1c) >> 0x1e) & 1)) {
-    puVar5 = param_1 + 1;
-    *param_1 = param_3;
+  if (byteCount & 8) {
+    words[0] = words[1] = pattern;
+    words += 2;
   }
-  if (uVar1 != 0) {
-    if ((int)uVar1 < 0) {
-      puVar3 = (undefined1 *)((int)puVar5 + 1);
-      *(undefined1 *)puVar5 = uVar2;
-      puVar5 = (undefined4 *)((int)puVar5 + 2);
-      *puVar3 = uVar2;
-    }
-    puVar4 = puVar5;
-    if ((uVar1 & 0x40000000) != 0) {
-      puVar4 = (undefined4 *)((int)puVar5 + 1);
-      *(undefined1 *)puVar5 = uVar2;
-    }
-    return puVar4;
+  if (byteCount & 4)
+    *words++ = pattern;
+  bytes = (uint8 *)words;
+  if (byteCount & 2) {
+    *bytes++ = (uint8)pattern;
+    *bytes++ = (uint8)pattern;
   }
-  return puVar5;
+  if (byteCount & 1)
+    *bytes++ = (uint8)pattern;
+  return bytes;                     /* destination + byteCount */
 }
 
 /* ==== 0x01000C94  (file offset 0x00C94)  rt_memcpy =================================================== */
@@ -3771,9 +3743,9 @@ void FUN_0100350c(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     else {
       iVar2 = *(int *)(param_1 + 0x2c);
     }
-    swv_memset(*(int *)(param_1 + 0x20) + iVar2,0xff,param_2 << 1);
+    thunk_swv_memset(*(int *)(param_1 + 0x20) + iVar2,0xff,param_2 << 1);
     if (*(int *)(param_1 + 0x44) != 0 && unaff_r7 != 0) {
-      swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x3c),0xff,iVar4);
+      thunk_swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x3c),0xff,iVar4);
     }
   }
   return;
@@ -4292,7 +4264,7 @@ undefined4 FUN_01003c38(int *param_1,undefined4 param_2,int param_3)
              (iVar3 = FUN_01013a80(*(int *)(iVar6 + 0x20),param_2), iVar3 != 0)) {
             iVar4 = *(int *)(*(int *)(iVar6 + 0x1c) + 0x34);
             if (!bVar1) {
-              swv_memset(local_5c,0);
+              thunk_swv_memset(local_5c,0);
             }
             bVar1 = true;
             if (local_44 == 0x103) {
@@ -4638,7 +4610,7 @@ int FUN_01004380(int param_1,undefined4 param_2)
           iVar1 = WORD_HEXADECIMAL_0001000B;
         }
         local_2c = FUN_01038624((int)pvVar2 + 0x1d);
-        swv_memset((int)pvVar2 + 0x1d,0,4);
+        thunk_swv_memset((int)pvVar2 + 0x1d,0,4);
       }
       if (iVar1 == 0) {
         iVar4 = thunk_FUN_0102cc94(1,pvVar2);
@@ -5417,7 +5389,7 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
       iStack_68 = iStack_88 - iVar10;
       iVar5 = iStack_84 - iVar6;
       do {
-        swv_memset(iVar9,0,iVar5 * 2);
+        thunk_swv_memset(iVar9,0,iVar5 * 2);
         iVar11 = iVar11 + 1;
         iVar9 = iVar9 + iVar8;
       } while (iVar11 < iStack_68);
@@ -5429,7 +5401,7 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
       if (0 < iVar10) {
         iVar6 = iStack_84 - iVar6;
         do {
-          swv_memset(iVar12,0,iVar6);
+          thunk_swv_memset(iVar12,0,iVar6);
           iVar8 = iVar8 + 1;
           iVar12 = *(int *)(*(int *)(param_1 + 4) + 0x88) + iVar12;
         } while (iVar8 < iVar10);
@@ -5740,7 +5712,7 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
         }
         iVar6 = *(int *)(*(int *)(param_1 + 4) + 0x40) * *(int *)(*(int *)(param_1 + 4) + 0x3c);
         uVar2 = FUN_01035388(param_1,iVar6,iVar6 * 2);
-        swv_memset(uVar2,0xff);
+        thunk_swv_memset(uVar2,0xff);
       }
       goto swv_memset;
     }
@@ -5768,7 +5740,7 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
         if (iVar10 < iStack_88) {
           iVar8 = iStack_84 - iVar6;
           do {
-            swv_memset(iVar12 + iVar6,uVar4 >> 0x18,iVar8);
+            thunk_swv_memset(iVar12 + iVar6,uVar4 >> 0x18,iVar8);
             iVar10 = iVar10 + 1;
             iVar12 = *(int *)(*(int *)(param_1 + 4) + 0x88) + iVar12;
           } while (iVar10 < iStack_88);
@@ -5783,7 +5755,8 @@ swv_memset:
   iVar8 = *(int *)(*(int *)(param_1 + 4) + 0x40) * *(int *)(*(int *)(param_1 + 4) + 0x3c);
   iVar6 = iVar8 * 2;
   uVar2 = FUN_01035388(param_1,iVar8,iVar6);
-  FUN_01000c54(uVar2,iVar6,0xffffffff);
+  /* the binary: a tail jump to the thunk (Ghidra had merged it and swv_memset) */
+  thunk_swv_memset(uVar2,0xff,iVar6);
   return uVar2;
 }
 
@@ -5836,7 +5809,7 @@ void FUN_01005f28(int param_1,int param_2,int param_3,int param_4,int param_5)
     return;
   }
   do {
-    swv_memset(iVar1,0xff,param_4 << 1);
+    thunk_swv_memset(iVar1,0xff,param_4 << 1);
     iVar2 = iVar2 + 1;
     iVar1 = iVar1 + *(int *)(*(int *)(param_1 + 4) + 0x3c) * 2;
   } while (iVar2 < param_5);
@@ -7582,9 +7555,9 @@ void FUN_01007f40(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
   }
   FUN_01023184(param_1 + 0x1c,iVar1);
   if (((*(int *)(param_1 + 0x44) != 0) || (*(int *)(param_1 + 0x40) == 0x60)) &&
-     (swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30),0xff,iVar3 * 2),
+     (thunk_swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30),0xff,iVar3 * 2),
      *(int *)(param_1 + 0x44) != 0 && unaff_r7 != 0)) {
-    swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x3c),0xff,iVar3);
+    thunk_swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x3c),0xff,iVar3);
   }
   return;
 }
@@ -7615,14 +7588,14 @@ undefined4 FUN_0100800c(int param_1,undefined4 param_2,undefined4 param_3)
   int iVar1;
   int iVar2;
   undefined4 uVar3;
-  undefined4 in_lr;
   
   FUN_01007f40(param_1,99,param_2,param_3,0);
   iVar1 = FUN_01011960(param_1);
   iVar2 = FUN_0100f714(param_1);
   FUN_01023184(param_1 + 0x48,iVar2 * iVar1);
   uVar3 = *(undefined4 *)(param_1 + 0x4c);
-  FUN_01000c54(uVar3,iVar2 * iVar1 * 2,0xffffffff,0xff,uVar3,in_lr);
+  /* the binary: a tail jump to the thunk (Ghidra had merged it and swv_memset) */
+  thunk_swv_memset(uVar3,0xff,iVar2 * iVar1 * 2);
   return uVar3;
 }
 
@@ -7866,7 +7839,7 @@ void FUN_01008144(int param_1,int param_2,int param_3,int param_4)
   *(int *)(param_1 + 0x24) = param_4;
   FUN_01023184(param_1 + 0x28,param_4 * param_3 * param_2);
   if (0 < *(int *)(param_1 + 0x30)) {
-    swv_memset(*(undefined4 *)(param_1 + 0x2c),0);
+    thunk_swv_memset(*(undefined4 *)(param_1 + 0x2c),0);
   }
   *(undefined4 *)(param_1 + 0x38) = 1;
   return;
@@ -7907,7 +7880,7 @@ void FUN_010081ec(int param_1,undefined4 param_2,int param_3,int param_4,undefin
   }
   FUN_01008624(param_1,param_2,param_5,param_6,param_7,param_8,iVar3);
   FUN_01023184(param_1 + 0xc4,param_3);
-  swv_memset(*(undefined4 *)(param_1 + 200),0,param_3 << 2);
+  thunk_swv_memset(*(undefined4 *)(param_1 + 200),0,param_3 << 2);
   FUN_01023184(param_1 + 0xd4,param_3);
   uVar1 = INTEGER_MINUS_1302;
   for (iVar3 = 0; iVar3 < param_3; iVar3 = iVar3 + 1) {
@@ -8035,7 +8008,7 @@ void FUN_01008398(int param_1,int param_2,int param_3,int param_4)
   }
   FUN_01023184(param_1 + 0x3c,iVar1 * param_2);
   if (0 < iVar1 * param_2) {
-    swv_memset(*(undefined4 *)(param_1 + 0x40),0);
+    thunk_swv_memset(*(undefined4 *)(param_1 + 0x40),0);
   }
   *(undefined4 *)(param_1 + 0x4c) = 0;
   return;
@@ -8177,11 +8150,11 @@ void FUN_01008624(int param_1,int param_2,int param_3,int param_4,int param_5,in
   *(int *)(param_2 + 8) = *(int *)(param_2 + 8) + 1;
   FUN_01023184(param_1 + 0x8c,param_3);
   if (0 < param_3) {
-    swv_memset(*(undefined4 *)(param_1 + 0x90),0);
+    thunk_swv_memset(*(undefined4 *)(param_1 + 0x90),0);
   }
   FUN_01023184(param_1 + 0x9c,param_3);
   if (0 < param_3) {
-    swv_memset(*(undefined4 *)(param_1 + 0xa0),0);
+    thunk_swv_memset(*(undefined4 *)(param_1 + 0xa0),0);
   }
   uVar1 = INTEGER_MINUS_1302;
   for (iVar3 = 0; iVar3 < param_3; iVar3 = iVar3 + 1) {
@@ -9255,7 +9228,7 @@ int FUN_01009638(int param_1,int param_2)
   iVar6 = *(int *)(iVar3 + 8);
   if (iVar6 != 0) {
     FUN_01023184(param_1 + 0xf4,iVar6);
-    swv_memset(*(undefined4 *)(param_1 + 0xf8),0,iVar6 << 2);
+    thunk_swv_memset(*(undefined4 *)(param_1 + 0xf8),0,iVar6 << 2);
     FUN_01023184(param_1 + 0x104,iVar6);
     for (iVar5 = 0; iVar5 < iVar6; iVar5 = iVar5 + 1) {
       iVar2 = *(int *)(*(int *)(param_1 + 0xf8) + iVar5 * 4);
@@ -10326,7 +10299,7 @@ uint FUN_0100a470(int param_1,undefined4 param_2,undefined4 param_3)
   FUN_01023184(param_1 + 0xa0,0);
   FUN_01023184(param_1 + 0xd0,iVar3);
   if (iVar3 != 0) {
-    swv_memset(*(undefined4 *)(param_1 + 0xd4),0,iVar3);
+    thunk_swv_memset(*(undefined4 *)(param_1 + 0xd4),0,iVar3);
   }
   local_28 = 0x20;
   uVar1 = swv_fmul(*(undefined4 *)(param_1 + 0xf4),WORD_HEXADECIMAL_47800000);
@@ -15114,7 +15087,7 @@ int FUN_0100fb34(int param_1,int param_2)
           (iVar3 = FUN_01010f60(**(undefined4 **)(param_1 + 200),param_2), iVar3 != 0)) {
     local_28 = *(int *)(iVar1 + 0x20) * *(int *)(iVar1 + 0x1c);
     FUN_01023184(param_1 + 0xb4,local_28);
-    swv_memset(*(undefined4 *)(param_1 + 0xb8),0,local_28 << 2);
+    thunk_swv_memset(*(undefined4 *)(param_1 + 0xb8),0,local_28 << 2);
     iVar3 = *(int *)(iVar1 + 0x24);
     if (param_2 == 1) {
       local_2c = 0;
@@ -17167,7 +17140,7 @@ undefined4 FUN_01011c4c(int param_1,int param_2)
   undefined4 local_14;
   undefined4 local_10;
   
-  swv_memzero(local_24,0x18);
+  rt_memclr_w(local_24,0x18);
   local_24[0] = *(undefined4 *)(param_1 + 0x20);
   local_24[1] = *(undefined4 *)(param_1 + 0x24);
   local_24[2] = *(undefined4 *)(param_1 + 0x28);
@@ -17255,7 +17228,7 @@ undefined4 FUN_01011de0(int param_1,int param_2)
   undefined4 local_20 [4];
   undefined4 local_10;
   
-  swv_memzero(local_20,0x14);
+  rt_memclr_w(local_20,0x14);
   local_20[0] = *(undefined4 *)(param_1 + 0x24);
   local_20[1] = *(undefined4 *)(param_1 + 0x28);
   local_20[2] = *(undefined4 *)(param_1 + 0x2c);
@@ -22059,7 +22032,7 @@ void FUN_0101790c(int param_1,undefined4 param_2,int param_3)
       FUN_01012568(local_28);
       FUN_0100418c(param_1 + 0xd0,&local_78);
       FUN_01023184(param_1 + 0xe0,iVar7);
-      swv_memset(*(undefined4 *)(param_1 + 0xe4),0,*(int *)(param_1 + 0xe8) << 1);
+      thunk_swv_memset(*(undefined4 *)(param_1 + 0xe4),0,*(int *)(param_1 + 0xe8) << 1);
       local_2c = auStack_c8;
       for (uVar9 = 0; (int)uVar9 < iVar7; uVar9 = uVar9 + 1) {
         local_80[0] = 0;
@@ -27014,9 +26987,9 @@ void FUN_0101dbf8(int param_1,undefined4 param_2,undefined4 param_3,undefined2 *
     }
     FUN_01023184(param_1 + 0x1c,iVar6);
     if (((*(int *)(param_1 + 0x44) != 0) || (*(int *)(param_1 + 0x40) == 0x60)) &&
-       (swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30),0xff,iVar9 * 2),
+       (thunk_swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30),0xff,iVar9 * 2),
        *(int *)(param_1 + 0x44) != 0 && unaff_r7 != 0)) {
-      swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x3c),0xff,iVar9);
+      thunk_swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x3c),0xff,iVar9);
     }
     return;
   }
@@ -27228,7 +27201,8 @@ undefined4 FUN_0101e0b0(int param_1,undefined4 param_2)
     return uVar1;
   }
   uVar1 = *(undefined4 *)(param_1 + 0x4c);
-  FUN_01000c54(uVar1,iVar3 * 2,0xffffffff);
+  /* the binary: a tail jump to the thunk (Ghidra had merged it and swv_memset) */
+  thunk_swv_memset(uVar1,0xff,iVar3 * 2);
   return uVar1;
 }
 
@@ -28838,9 +28812,9 @@ void FUN_0101f760(int param_1,undefined4 param_2)
   iVar2 = FUN_01019698(param_2,8);
   if (0 < iVar2) {
     FUN_01023184(param_1 + 0x8c,iVar2);
-    swv_memset(*(undefined4 *)(param_1 + 0x90),0,iVar2 << 2);
+    thunk_swv_memset(*(undefined4 *)(param_1 + 0x90),0,iVar2 << 2);
     FUN_01023184(param_1 + 0x9c,iVar2);
-    swv_memset(*(undefined4 *)(param_1 + 0xa0),0,iVar2 << 2);
+    thunk_swv_memset(*(undefined4 *)(param_1 + 0xa0),0,iVar2 << 2);
   }
   for (iVar4 = 0; iVar4 < iVar2; iVar4 = iVar4 + 1) {
     iVar5 = *(int *)(*(int *)(param_1 + 0x90) + iVar4 * 4);
@@ -31057,7 +31031,7 @@ void FUN_01021d50(int param_1,int param_2,undefined4 param_3,int param_4)
   uStack_2c = param_3;
   iStack_28 = param_4;
   if (0 < *(int *)(param_1 + 0x994)) {
-    swv_memset(*(undefined4 *)(param_1 + 0x990),0,*(int *)(param_1 + 0x994) * 0x90);
+    thunk_swv_memset(*(undefined4 *)(param_1 + 0x990),0,*(int *)(param_1 + 0x994) * 0x90);
   }
   iVar1 = param_1 + 0x98c;
   FUN_01023184(iVar1,0);
@@ -32475,9 +32449,9 @@ void FUN_01023174(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   }
   FUN_01023184(param_1 + 0x1c,iVar1,iVar2,param_4,param_4);
   if (((*(int *)(param_1 + 0x44) != 0) || (*(int *)(param_1 + 0x40) == 0x60)) &&
-     (swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30),0xff,iVar3 * 2),
+     (thunk_swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30),0xff,iVar3 * 2),
      *(int *)(param_1 + 0x44) != 0 && unaff_r7 != 0)) {
-    swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x3c),0xff,iVar3);
+    thunk_swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x3c),0xff,iVar3);
   }
   return;
 }
@@ -37863,9 +37837,9 @@ int * FUN_01028f54(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
   param_1[0xab] = 0;
   param_1[0xac] = 0;
   param_1[0xad] = 0;
-  swv_memset(param_1 + 1,0,0x154,param_4,param_4);
-  swv_memset(param_1 + 0x56,0,0x68);
-  swv_memset(param_1 + 0x70,0,0x98);
+  thunk_swv_memset(param_1 + 1,0,0x154,param_4,param_4);
+  thunk_swv_memset(param_1 + 0x56,0,0x68);
+  thunk_swv_memset(param_1 + 0x70,0,0x98);
   param_1[0xa7] = 0;
   param_1[0xa6] = 0;
   param_1[0xa5] = 0;
@@ -41878,7 +41852,7 @@ int swv_Create_Ext100(void **ppObj)
   }
   po = swv_GetSwerveObject();
   ISwerve_AddRef(po);
-  swv_memset(puVar2,0,0x18);
+  thunk_swv_memset(puVar2,0,0x18);
   *puVar2 = piVar3;
   puVar2[1] = puVar2[1] + 1;
   *ppObj = puVar2;
@@ -41919,7 +41893,7 @@ int swv_Create_Ext101(void **ppObj)
   }
   po = swv_GetSwerveObject();
   ISwerve_AddRef(po);
-  swv_memset(puVar2,0,0x1c);
+  thunk_swv_memset(puVar2,0,0x1c);
   *puVar2 = piVar3;
   puVar2[1] = puVar2[1] + 1;
   *ppObj = puVar2;
@@ -50490,7 +50464,7 @@ LAB_01035968:
   else if ((cVar2 == '0') && ((byte)param_1[2] < 0x39)) goto LAB_01035968;
 LAB_01035978:
   *(undefined4 *)(iVar3 + 0xe4) = 0x2000;
-  uVar6 = FUN_01036ad0(iVar3);
+  uVar6 = png_malloc(iVar3);
   *(undefined4 *)(iVar3 + 0xe0) = uVar6;
   *(int *)(iVar3 + 200) = ADDRESS_OF_FUNCTION_01037eec_OFFSET + 0x1035998;
   *(int *)(iVar3 + 0xcc) = DATA_AT_01037F3C_OFFSET + 0x10359a4;
@@ -50533,7 +50507,7 @@ void * FUN_01035a40(int param_1)
   }
   pvVar1 = helper_malloc(size);
   if (pvVar1 != (void *)0x0) {
-    swv_memset(pvVar1,0);
+    thunk_swv_memset(pvVar1,0);
   }
   return pvVar1;
 }
@@ -51447,7 +51421,6 @@ undefined4 FUN_01036a98(undefined4 *param_1,uint param_2)
 
 {
   undefined4 uVar1;
-  undefined4 in_lr;
   
   uVar1 = *param_1;
   if (param_2 < 0x40) {
@@ -51455,7 +51428,8 @@ undefined4 FUN_01036a98(undefined4 *param_1,uint param_2)
     uVar1 = FUN_01035a40(2);
     *param_1 = uVar1;
   }
-  FUN_01000c54(uVar1,0x40,0,0,uVar1,in_lr);
+  /* the binary: a tail jump to the thunk (Ghidra had merged it and swv_memset) */
+  thunk_swv_memset(uVar1,0,0x40);
   return uVar1;
 }
 
@@ -51466,8 +51440,11 @@ void FUN_01036acc(void)
   return;
 }
 
-/* ==== 0x01036AD0  (file offset 0x36AD0)  FUN_01036ad0 ================================================ */
-void * FUN_01036ad0(int param_1,uint32 param_2)
+/* ==== 0x01036AD0  (file offset 0x36AD0)  png_malloc ================================================== */
+/* libpng 1.2.0's png_malloc(png_ptr, size) (not yet rewritten): 0 when png_ptr or size is 0, else
+   helper malloc, with png_error(png_ptr, "Out of Memory") when that fails (a build without user memory
+   functions). */
+void * png_malloc(int param_1,uint32 param_2)
 
 {
   void *pvVar1;
@@ -51484,23 +51461,24 @@ void * FUN_01036ad0(int param_1,uint32 param_2)
   return pvVar1;
 }
 
-/* ==== 0x01036B0C  (file offset 0x36B0C)  FUN_01036b0c ================================================ */
-undefined4 FUN_01036b0c(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+/* ==== 0x01036B0C  (file offset 0x36B0C)  png_memcpy_check ============================================ */
+/* libpng 1.2.0's png_memcpy_check(png_ptr, s1, s2, size) (not yet rewritten): memcpy(s1, s2, size),
+   returning s1; the size check of libpng's source compiles away on a 32-bit target. */
+undefined4 png_memcpy_check(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
   rt_memcpy(param_2,param_3,param_4);
   return param_2;
 }
 
-/* ==== 0x01036B1C  (file offset 0x36B1C)  FUN_01036b1c ================================================ */
-undefined4 FUN_01036b1c(undefined4 param_1,undefined4 param_2,uint param_3,undefined4 param_4)
+/* ==== 0x01036B1C  (file offset 0x36B1C)  png_memset_check ============================================ */
+/* libpng 1.2.0's png_memset_check(png_ptr, s1, value, size): memset(s1, value, size) (the binary: its
+   arguments moved down a register and a tail jump to thunk_swv_memset; Ghidra had merged the thunk and
+   swv_memset). The size check of libpng's source compiles away on a 32-bit target. */
+undefined4 png_memset_check(undefined4 param_1,undefined4 param_2,uint param_3,undefined4 param_4)
 
 {
-  uint uVar1;
-  
-  uVar1 = param_3 & 0xff | (param_3 & 0xff) << 8;
-  FUN_01000c54(param_2,param_4,uVar1 | uVar1 << 0x10);
-  return param_2;
+  return thunk_swv_memset(param_2,param_3,param_4);
 }
 
 /* ==== 0x01036B2C  (file offset 0x36B2C)  png_read_data =============================================== */
@@ -51575,7 +51553,7 @@ void FUN_01036b48(int param_1,int param_2,int param_3)
   uVar2 = *(undefined4 *)(param_1 + 0x80);
   uVar3 = *(undefined4 *)(param_1 + 0x84);
   uVar4 = *(undefined4 *)(param_1 + 0x88);
-  swv_memset(param_1,0,0x184);
+  thunk_swv_memset(param_1,0,0x184);
   *(undefined4 *)(param_1 + 0x80) = uVar2;
   *(undefined4 *)(param_1 + 0x84) = uVar3;
   *(undefined4 *)(param_1 + 0x88) = uVar4;
@@ -51779,7 +51757,7 @@ void FUN_01036f6c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   uStack_28 = param_4;
   if (*(char *)(param_1 + 0x157) != '\0') {
     *(undefined4 *)(param_1 + 0x118) = 0;
-    FUN_01036b1c(param_1,*(undefined4 *)(param_1 + 0x11c),0,*(int *)(param_1 + 0x10c) + 1,param_2);
+    png_memset_check(param_1,*(undefined4 *)(param_1 + 0x11c),0,*(int *)(param_1 + 0x10c) + 1,param_2);
     iVar6 = DATA_AT_0103FEFC_OFFSET + 0x1036fc8;
     iVar7 = DATA_AT_0103FF18_OFFSET_2 + 0x1036fd0;
     iVar8 = DATA_AT_0103FF34_OFFSET + 0x1036fd8;
@@ -52063,7 +52041,7 @@ LAB_010377a4:
           FUN_01036db4(param_1,param_1 + 0x134,*(byte **)(param_1 + 0x120) + 1,
                        *(int *)(param_1 + 0x11c) + 1);
         }
-        FUN_01036b0c(param_1,*(undefined4 *)(param_1 + 0x11c),*(undefined4 *)(param_1 + 0x120),
+        png_memcpy_check(param_1,*(undefined4 *)(param_1 + 0x11c),*(undefined4 *)(param_1 + 0x120),
                      *(int *)(param_1 + 0x10c) + 1);
         if (*(int *)(param_1 + 0xa4) != 0) {
           FUN_01035e84(param_1);
@@ -52198,13 +52176,13 @@ void FUN_01037904(int param_1)
   if (bVar5 && bVar1 < 8) {
     uVar2 = 8;
   }
-  iVar4 = FUN_01036ad0(param_1,(uVar2 * (*(int *)(param_1 + 0xfc) + 7U & 0xfffffff8) + 7 >> 3) +
+  iVar4 = png_malloc(param_1,(uVar2 * (*(int *)(param_1 + 0xfc) + 7U & 0xfffffff8) + 7 >> 3) +
                                ((int)(uVar2 + 7) >> 3) + 0x41);
   *(int *)(param_1 + 0x180) = iVar4;
   *(int *)(param_1 + 0x120) = iVar4 + 0x20;
-  uVar3 = FUN_01036ad0(param_1,*(int *)(param_1 + 0x10c) + 1);
+  uVar3 = png_malloc(param_1,*(int *)(param_1 + 0x10c) + 1);
   *(undefined4 *)(param_1 + 0x11c) = uVar3;
-  FUN_01036b1c(param_1,uVar3,0,*(int *)(param_1 + 0x10c) + 1);
+  png_memset_check(param_1,uVar3,0,*(int *)(param_1 + 0x10c) + 1);
   *(uint *)(param_1 + 0xa0) = *(uint *)(param_1 + 0xa0) | 0x40;
   return;
 }
@@ -52413,7 +52391,7 @@ void FUN_01037da8(int param_1,int param_2,int param_3,int param_4,int param_5)
   }
   if (param_3 != 0) {
     FUN_0103619c(param_1,param_2,0x2000,0);
-    uVar1 = FUN_01036ad0(param_1,param_4);
+    uVar1 = png_malloc(param_1,param_4);
     *(undefined4 *)(param_2 + 0x28) = uVar1;
     *(undefined4 *)(param_1 + 0x164) = uVar1;
     thunk_swv_memcpy(*(undefined4 *)(param_2 + 0x28),param_3,param_4);
@@ -52496,13 +52474,13 @@ int FUN_01037eec(undefined4 param_1,int param_2,int param_3,undefined4 param_4)
   int iVar1;
   int iVar2;
   
-  iVar1 = FUN_01036ad0(param_1,param_3 * param_2,param_3,param_4,param_4);
+  iVar1 = png_malloc(param_1,param_3 * param_2,param_3,param_4,param_4);
   iVar2 = iVar1;
   if (0x8000 < (uint)(param_3 * param_2)) {
-    swv_memset(iVar1,0,0x8000);
+    thunk_swv_memset(iVar1,0,0x8000);
     iVar2 = iVar1 + 0x8000;
   }
-  swv_memset(iVar2,0);
+  thunk_swv_memset(iVar2,0);
   return iVar1;
 }
 
@@ -54317,7 +54295,7 @@ undefined4 FUN_010396cc(int param_1,int param_2,undefined4 *param_3)
     *param_3 = piVar1;
     *piVar1 = iVar3;
     piVar1[1] = param_2;
-    swv_memset(piVar1 + 3,0,0x400);
+    thunk_swv_memset(piVar1 + 3,0,0x400);
     puVar2 = helper_malloc(0x38);
     piVar1[2] = (int)puVar2;
     if (puVar2 != (undefined4 *)0x0) {
@@ -54745,15 +54723,13 @@ undefined4 thunk_swv_memcpy(undefined4 param_1)
   return param_1;
 }
 
-/* ==== 0x01039DF0  (file offset 0x39DF0)  swv_memset ================================================== */
-undefined4 swv_memset(undefined4 param_1,uint param_2,undefined4 param_3)
+/* ==== 0x01039DF0  (file offset 0x39DF0)  thunk_swv_memset ============================================ */
+/* A branch to swv_memset (0x0100010c), the address most of the engine calls for memset(dst, c, n)
+   (Ghidra had shown swv_memset's body here). */
+undefined4 thunk_swv_memset(undefined4 param_1,uint param_2,undefined4 param_3)
 
 {
-  uint uVar1;
-  
-  uVar1 = param_2 & 0xff | (param_2 & 0xff) << 8;
-  FUN_01000c54(param_1,param_3,uVar1 | uVar1 << 0x10);
-  return param_1;
+  return swv_memset(param_1,param_2,param_3);
 }
 
 /* ==== 0x01039DF4  (file offset 0x39DF4)  swv_NewSwerve =============================================== */
@@ -54895,7 +54871,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x6c,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x6c);
+        rt_memclr_w(pVtbl,0x6c);
       }
       swv_InitVtbl_AnimationController((void **)pVtbl);
       *ppvVar2 = pVtbl;
@@ -54906,7 +54882,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x5c,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x5c);
+        rt_memclr_w(pVtbl,0x5c);
       }
       swv_InitVtbl_AnimationTrack((void **)pVtbl);
       ppvVar2[1] = pVtbl;
@@ -54917,7 +54893,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x78,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x78);
+        rt_memclr_w(pVtbl,0x78);
       }
       swv_InitVtbl_Appearance((void **)pVtbl);
       ppvVar2[2] = pVtbl;
@@ -54928,7 +54904,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x88,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x88);
+        rt_memclr_w(pVtbl,0x88);
       }
       swv_InitVtbl_Background((void **)pVtbl);
       ppvVar2[3] = pVtbl;
@@ -54939,7 +54915,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0xc0,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0xc0);
+        rt_memclr_w(pVtbl,0xc0);
       }
       swv_InitVtbl_Camera((void **)pVtbl);
       ppvVar2[4] = pVtbl;
@@ -54950,7 +54926,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x84,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x84);
+        rt_memclr_w(pVtbl,0x84);
       }
       swv_InitVtbl_CompositingMode((void **)pVtbl);
       ppvVar2[5] = pVtbl;
@@ -54961,7 +54937,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x6c,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x6c);
+        rt_memclr_w(pVtbl,0x6c);
       }
       swv_InitVtbl_Fog((void **)pVtbl);
       ppvVar2[6] = pVtbl;
@@ -54972,7 +54948,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x70,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x70);
+        rt_memclr_w(pVtbl,0x70);
       }
       swv_InitVtbl_PolygonMode((void **)pVtbl);
       ppvVar2[0x10] = pVtbl;
@@ -54983,7 +54959,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0xc4,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0xc4);
+        rt_memclr_w(pVtbl,0xc4);
       }
       swv_InitVtbl_Group((void **)pVtbl);
       ppvVar2[8] = pVtbl;
@@ -54994,7 +54970,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x78,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x78);
+        rt_memclr_w(pVtbl,0x78);
       }
       swv_InitVtbl_Image2D((void **)pVtbl);
       ppvVar2[9] = pVtbl;
@@ -55005,7 +54981,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x50,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x50);
+        rt_memclr_w(pVtbl,0x50);
       }
       swv_InitVtbl_TriangleStripArray((void **)pVtbl);
       ppvVar2[0x17] = pVtbl;
@@ -55016,7 +54992,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0xe4,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0xe4);
+        rt_memclr_w(pVtbl,0xe4);
       }
       swv_InitVtbl_Light((void **)pVtbl);
       ppvVar2[0xb] = pVtbl;
@@ -55027,7 +55003,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x60,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x60);
+        rt_memclr_w(pVtbl,0x60);
       }
       swv_InitVtbl_Material((void **)pVtbl);
       ppvVar2[0xd] = pVtbl;
@@ -55038,7 +55014,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(200,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,200);
+        rt_memclr_w(pVtbl,200);
       }
       swv_InitVtbl_Mesh((void **)pVtbl);
       ppvVar2[0xe] = pVtbl;
@@ -55049,7 +55025,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0xe0,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0xe0);
+        rt_memclr_w(pVtbl,0xe0);
       }
       swv_InitVtbl_MorphingMesh((void **)pVtbl);
       ppvVar2[0xf] = pVtbl;
@@ -55060,7 +55036,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0xd8,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0xd8);
+        rt_memclr_w(pVtbl,0xd8);
       }
       swv_InitVtbl_SkinnedMesh((void **)pVtbl);
       ppvVar2[0x12] = pVtbl;
@@ -55071,7 +55047,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0xa8,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0xa8);
+        rt_memclr_w(pVtbl,0xa8);
       }
       swv_InitVtbl_Texture2D((void **)pVtbl);
       ppvVar2[0x15] = pVtbl;
@@ -55082,7 +55058,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0xd8,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0xd8);
+        rt_memclr_w(pVtbl,0xd8);
       }
       swv_InitVtbl_Sprite3D((void **)pVtbl);
       ppvVar2[0x13] = pVtbl;
@@ -55093,7 +55069,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(100,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,100);
+        rt_memclr_w(pVtbl,100);
       }
       swv_InitVtbl_KeyframeSequence((void **)pVtbl);
       ppvVar2[10] = pVtbl;
@@ -55104,7 +55080,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x54,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x54);
+        rt_memclr_w(pVtbl,0x54);
       }
       swv_InitVtbl_VertexArray((void **)pVtbl);
       ppvVar2[0x18] = pVtbl;
@@ -55115,7 +55091,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x74,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x74);
+        rt_memclr_w(pVtbl,0x74);
       }
       swv_InitVtbl_VertexBuffer((void **)pVtbl);
       ppvVar2[0x19] = pVtbl;
@@ -55126,7 +55102,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0xd4,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0xd4);
+        rt_memclr_w(pVtbl,0xd4);
       }
       swv_InitVtbl_World((void **)pVtbl);
       ppvVar2[0x1a] = pVtbl;
@@ -55139,7 +55115,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x90,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x90);
+        rt_memclr_w(pVtbl,0x90);
       }
       swv_InitVtbl_Class24((void **)pVtbl);
       ppvVar2[0x14] = pVtbl;
@@ -55150,7 +55126,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x5c,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x5c);
+        rt_memclr_w(pVtbl,0x5c);
       }
       swv_InitVtbl_Graphics3D((void **)pVtbl);
       ppvVar2[7] = pVtbl;
@@ -55161,7 +55137,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x30,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x30);
+        rt_memclr_w(pVtbl,0x30);
       }
       swv_InitVtbl_RayIntersection((void **)pVtbl);
       ppvVar2[0x11] = pVtbl;
@@ -55172,7 +55148,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x44,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x44);
+        rt_memclr_w(pVtbl,0x44);
       }
       swv_InitVtbl_Transform((void **)pVtbl);
       ppvVar2[0x16] = pVtbl;
@@ -55183,7 +55159,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
       pVtbl = (ISwerveObjectVtbl *)swv_New(0x1c,0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        swv_memzero(pVtbl,0x1c);
+        rt_memclr_w(pVtbl,0x1c);
       }
       swv_InitVtbl_Loader((void **)pVtbl);
       ppvVar2[0xc] = pVtbl;
@@ -55201,7 +55177,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   if (iVar1 == 0x1c) {
     po = (ISwerveObject *)swv_New(0x20,0);
     if (po != (ISwerveObject *)0x0) {
-      swv_memzero(po,0x20);
+      rt_memclr_w(po,0x20);
     }
     swv_memset(po,0,0x20);
   }

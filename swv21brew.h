@@ -173,7 +173,7 @@ int FUN_0102da68(int param_1);   /* 0x0102DA68, no Ghidra function */
 /* Named functions (entry points, SDK glue, helper wrappers, identified game code). */
 int AEEMod_Load(IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod);   /* 0x01000000 */
 undefined4 swv_memset(undefined4 param_1,uint param_2,undefined4 param_3);   /* 0x0100010C */
-undefined4 * swv_memzero(undefined4 *param_1,uint param_2);   /* 0x01000130 */
+undefined4 * rt_memclr_w(undefined4 *param_1,uint param_2);   /* 0x01000130 GUESS: name */
 longlong swv_setjmp(undefined4 *param_1);   /* 0x01000500 */
 uint32 AEEMod_AddRef(IModule *po);   /* 0x010028C8 */
 int AEEMod_CreateInstance(IModule *po,IShell *pIShell,AEECLSID ClsId,void **ppObj);   /* 0x010028DC */
@@ -258,7 +258,7 @@ ISwerve * swv_GetSwerveObject(void);   /* 0x01039938 */
 void * helper_GetAppInstance(void);   /* 0x01039960 */
 SwerveGlobals * swv_GetGlobals(void);   /* 0x01039978 */
 void ** swv_GetVtblCache(void);   /* 0x0103999C */
-undefined4 swv_memset(undefined4 param_1,uint param_2,undefined4 param_3);   /* 0x01039DF0 */
+undefined4 thunk_swv_memset(undefined4 param_1,uint param_2,undefined4 param_3);   /* 0x01039DF0 */
 int swv_NewSwerve(int16 nSize,IShell *pIShell,IModule *pIModule,ISwerve **ppObj);   /* 0x01039DF4 */
 int swv_WrapObject(void *pNative,ISwerveObject **ppOut);   /* 0x01039FB4 */
 void swv_SetGlobal00(uint32 value);   /* 0x0103AF88 */
@@ -315,7 +315,7 @@ void FUN_01000938(undefined4 param_1);
 ulonglong FUN_01000964(uint param_1,uint param_2,uint param_3,uint param_4);
 void rt_stack_postlongjmp(uint32 stackLimit,uint32 stackPointer);   /* 0x01000C24 GUESS: name, see swv21brew.c */
 undefined4 FUN_01000c30(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-undefined4 * FUN_01000c54(undefined4 *param_1,uint param_2,undefined4 param_3);
+void * rt_memset(void *destination,uint32 byteCount,uint32 pattern);   /* 0x01000C54 GUESS: name, see swv21brew.c */
 undefined8 rt_memcpy(uint *param_1,uint *param_2,uint param_3,uint param_4);   /* 0x01000C94 GUESS: name, see swv21brew.c */
 undefined4 FUN_01000d48(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01000f1c(int param_1,uint param_2,int *param_3);
@@ -1312,9 +1312,11 @@ undefined4 FUN_010369f4(int param_1,undefined4 param_2,uint param_3,undefined4 p
 void FUN_01036a70(undefined4 param_1,undefined4 param_2);
 undefined4 FUN_01036a98(undefined4 *param_1,uint param_2);
 void FUN_01036acc(void);
-void * FUN_01036ad0(int param_1,uint32 param_2);
-undefined4 FUN_01036b0c(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-undefined4 FUN_01036b1c(undefined4 param_1,undefined4 param_2,uint param_3,undefined4 param_4);
+void * png_malloc(int param_1,uint32 param_2);   /* 0x01036AD0 libpng */
+/* 0x01036B0C libpng */
+undefined4 png_memcpy_check(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
+/* 0x01036B1C libpng */
+undefined4 png_memset_check(undefined4 param_1,undefined4 param_2,uint param_3,undefined4 param_4);
 void png_read_data(int param_1);   /* 0x01036B2C libpng */
 void FUN_01036b48(int param_1,int param_2,int param_3);
 void FUN_01036c24(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
