@@ -647,7 +647,7 @@ void progress_reset(Progress *progress);   /* 0x0010F880 GUESS: name */
 void progress_set_default_controls(Progress *progress);   /* 0x0010F8E8 GUESS: name, see kh_mod.c */
 void progress_new_game(Progress *progress);   /* 0x0010F9A4 GUESS: name, see kh_mod.c */
 int32 enemy_wait(Enemy *enemy,int32 now,int32 duration);   /* 0x0010FA50 GUESS: name */
-int FUN_0010faa8(int param_1,undefined4 param_2);
+int32 files_remove_by_prefix(AppContext *context,const char *prefix);   /* 0x0010FAA8 GUESS: name, see kh_mod.c */
 void FUN_0010fb90(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0010fbf4(int *param_1,uint param_2,uint param_3,uint param_4,uint param_5,int param_6,
                  int param_7,uint param_8,uint param_9,uint param_10);
@@ -797,7 +797,7 @@ void motion_entity_pitch_by(MotionEntity *entity,uint32 angle);   /* 0x0011E36C 
 void motion_entity_turn(MotionEntity *entity,uint32 angle);   /* 0x0011E3C0 GUESS: names */
 void motion_entity_start_turn(MotionEntity *entity,uint32 angle,uint32 speed);   /* 0x0011E530 GUESS: name */
 bool FUN_0011e574(int param_1,undefined4 param_2,undefined4 param_3,int *param_4);
-undefined4 FUN_0011e6b8(int param_1,int param_2);
+undefined4 progress_save(int param_1,int param_2);   /* 0x0011E6B8 GUESS: name, see kh_mod.c */
 undefined4 FUN_0011ea18(int param_1);
 undefined4 FUN_0011ead4(int param_1,undefined4 param_2);
 undefined4 FUN_0011ec28(int param_1,int param_2);
@@ -1945,9 +1945,7 @@ static const char STRING_CASTLE[] = "castle";   /* 0x00127CD0 */
 static const char STRING_AGRABAH[] = "agrabah";   /* 0x00127CD8 */
 static const char STRING_WONDERLAND[] = "wonderland";   /* 0x00127CE0 */
 static const char STRING_ISLAND[] = "island";   /* 0x00127CEC */
-static const uint32 DATA_AT_00127CF4[4] = {   /* 0x00127CF4 */
-  0x65766173,0x656D6167,0x7461642E,0x00000000
-};
+static const char STRING_SAVEGAME_DOT_DAT_00127CF4[] = "savegame.dat";   /* 0x00127CF4 */
 static const char STRING_PERCENT_S_PERCENT_D_SLASH_PERCENT[] = "%s %d/%d";   /* 0x00127D04 */
 static const char STRING_TRAINING_00127D10[] = "training";   /* 0x00127D10 */
 static const char STRING_REPLAYGAME_DOT_DAT[] = "replaygame.dat";   /* 0x00127D1C */
@@ -2042,9 +2040,7 @@ static const uint32 DATA_AT_00127F70[1] = {   /* 0x00127F70 */
 static const uint32 DATA_AT_00127F74[1] = {   /* 0x00127F74 */
   0x00000023
 };
-static const uint32 DATA_AT_00127F78[1] = {   /* 0x00127F78 */
-  0x00000000
-};
+static const char STRING_EMPTY_00127F78[] = "";   /* 0x00127F78; the root (files_remove_by_prefix) */
 static const char STRING_TRAINING_DOT_MID[] = "training.mid";   /* 0x00127F7C */
 static const char STRING_TRAINING_00127F8C[] = "training";   /* 0x00127F8C */
 static const char STRING_PERCENT_S_PERCENT_S[] = "%s%s";   /* 0x00127F98 */

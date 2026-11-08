@@ -501,7 +501,7 @@ typedef struct Progress {
     int32    levelLoaded;           /* +0x720 GUESS: name; 1 once the level file is loaded (FUN_0010a5d8),
                                      0 after a reset and a finished download (FUN_0010888c); saved */
     struct KHApp *app;            /* +0x724 the app it belongs to */
-    uint8   *saveCopy;             /* +0x728 GUESS: name; the last saved game, 0x800 bytes (FUN_0011e6b8
+    uint8   *saveCopy;             /* +0x728 GUESS: name; the last saved game, 0x800 bytes (progress_save
                                      copies it there), which the loader FUN_0011b178 reads with no file
                                      name */
 } Progress;                       /* 0x72c bytes (INTEGER_1836, FUN_0010b4e4) */

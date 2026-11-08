@@ -1334,12 +1334,12 @@ LAB_00104fa4:
                    *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x528);
               progress_clear_states(((KHApp *)*param_1)->progress);
               progress_set_status(((KHApp *)*param_1)->progress,STRING_OUT_OF_MAGIC_00127D78,0);
-                    /* 0x105180 bl FUN_0011e6b8: only r0 (object) and r1 (file name) are set.
+                    /* 0x105180 bl progress_save: only r0 (object) and r1 (file name) are set.
                        Ghidra's param_3/param_4 are register spills: param_4 goes into local_24,
                        which is set to 0 before it is read, and param_3 is passed only as an
                        extra fifth argument to the four-parameter save_write_float. r2/r3 are
                        leftovers from progress_set_status. */
-              FUN_0011e6b8(*(undefined4 *)(*param_1 + 0xa8),(int32)STRING_REPLAYGAME_DOT_DAT);
+              progress_save(*(undefined4 *)(*param_1 + 0xa8),(int32)STRING_REPLAYGAME_DOT_DAT);
               goto LAB_0010423c;
             }
             uVar10 = 0x74;
@@ -1467,7 +1467,7 @@ LAB_00103858:
       iVar9 = *(int *)(*param_1 + 0xa8);
       if ((((Progress *)iVar9)->summaryPending == 0) && (*(int *)(*param_1 + 200) != 0)) {
         ((Progress *)iVar9)->summaryPending = 1;
-        FUN_0011e6b8(*(undefined4 *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
+        progress_save(*(undefined4 *)(*param_1 + 0xa8),(int32)STRING_SAVEGAME_DOT_DAT_00127CF4);
       }
       ((KHApp *)*param_1)->progress->summaryPending = 0;
       uVar10 = (int32)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
@@ -1475,7 +1475,7 @@ LAB_00103858:
       if ((*(int *)(*param_1 + 200) == 0) ||
          (iVar7 = (*g_pHelperFuncs->strlen)(*(undefined4 *)(*param_1 + 200)), iVar7 == 0)) {
         ((KHApp *)*param_1)->progress->summaryPending = 1;
-        FUN_0011e6b8(*(undefined4 *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
+        progress_save(*(undefined4 *)(*param_1 + 0xa8),(int32)STRING_SAVEGAME_DOT_DAT_00127CF4);
         uVar24 = 6;
         uVar23 = uVar15;
       }
@@ -1555,7 +1555,7 @@ LAB_00103858:
       *(undefined4 *)(*param_1 + 200) = 0;
       iVar7 = WORD_HEXADECIMAL_000253E4;
       ((KHApp *)*param_1)->progress->levelLoaded = 0;
-      FUN_0011e6b8(*(undefined4 *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
+      progress_save(*(undefined4 *)(*param_1 + 0xa8),(int32)STRING_SAVEGAME_DOT_DAT_00127CF4);
       goto LAB_00102910;
     case 0x77:
       return 0;
@@ -1605,7 +1605,7 @@ LAB_001050b0:
       if ((*(int *)(*param_1 + 200) == 0) ||
          (iVar7 = (*g_pHelperFuncs->strlen)(*(undefined4 *)(*param_1 + 200)), iVar7 == 0)) {
         ((KHApp *)*param_1)->progress->summaryPending = 1;
-        FUN_0011e6b8(*(undefined4 *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
+        progress_save(*(undefined4 *)(*param_1 + 0xa8),(int32)STRING_SAVEGAME_DOT_DAT_00127CF4);
         uVar24 = 6;
         uVar23 = uVar15;
       }
@@ -2132,7 +2132,7 @@ LAB_0010489c:
         goto LAB_0010423c;
       }
       if (param_2 == 0x3e) {
-        iVar9 = FUN_0011b178(*(undefined4 *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
+        iVar9 = FUN_0011b178(*(undefined4 *)(*param_1 + 0xa8),(int32)STRING_SAVEGAME_DOT_DAT_00127CF4);
         if (iVar9 == 0) {
           string_replace(((KHApp *)*param_1)->context,STRING_TRAINING_00127D10,
                          &((KHApp *)*param_1)->pBufc4);
@@ -4863,11 +4863,13 @@ LAB_00108d50:
     text_box_set_text_id((TextBox *)iVar5,(int32)TEXT_SAVING);
     iVar5 = WORD_HEXADECIMAL_0001F14C;
     ((KHApp *)*param_1)->progress->levelLoaded = 0;
-    FUN_0011e6b8(*(int *)(*param_1 + 0xa8),(int32)DATA_AT_00127CF4);
-    FUN_0010faa8((int)((KHApp *)*param_1)->context,(int32)STRING_ISLAND);
-    FUN_0010faa8((int)((KHApp *)*param_1)->context,(int32)STRING_WONDERLAND);
-    FUN_0010faa8((int)((KHApp *)*param_1)->context,(int32)STRING_AGRABAH);
-    FUN_0010faa8((int)((KHApp *)*param_1)->context,(int32)STRING_CASTLE);
+    /* GUESS: the downloaded worlds are deleted: the game is saved, then every file of the four worlds is
+       removed */
+    progress_save(*(int *)(*param_1 + 0xa8),(int32)STRING_SAVEGAME_DOT_DAT_00127CF4);
+    files_remove_by_prefix(((KHApp *)*param_1)->context,STRING_ISLAND);
+    files_remove_by_prefix(((KHApp *)*param_1)->context,STRING_WONDERLAND);
+    files_remove_by_prefix(((KHApp *)*param_1)->context,STRING_AGRABAH);
+    files_remove_by_prefix(((KHApp *)*param_1)->context,STRING_CASTLE);
     if (((ScreenStack *)param_1)->savedLevelName != (char *)0x0) {
       (*g_pHelperFuncs->free)(((ScreenStack *)param_1)->savedLevelName);
       ((ScreenStack *)param_1)->savedLevelName = (char *)0x0;
@@ -9735,41 +9737,34 @@ int32 enemy_wait(Enemy *enemy,int32 now,int32 duration)
   return 0;
 }
 
-/* ==== 0x0010FAA8  (file offset 0x0FAA8)  FUN_0010faa8 ================================================ */
-int FUN_0010faa8(int param_1,undefined4 param_2)
+/* ==== 0x0010FAA8  (file offset 0x0FAA8)  files_remove_by_prefix ====================================== */
+/* GUESS: names. Removes every file of the module's folder whose name starts with `prefix` (case-
+   insensitive, strnicmp over strlen(prefix)): an IFileMgr from the app's IShell, files only enumerated
+   from the root (""), each match removed (IFileMgr Remove) while the enumeration goes on (GAME_BUGS.md).
+   Returns CreateInstance's error, else EnumInit's result (0 on success). Its only caller, the menus' event
+   9 (FUN_0010888c), removes the downloaded worlds ("island", "wonderland", "agrabah", "castle"). */
+int32 files_remove_by_prefix(AppContext *context,const char *prefix)
 
 {
-  int *piVar2;
-  int iVar3;
-  int iVar4;
-  undefined1 auStack_64 [12];
-  undefined1 auStack_58 [64];
-  int *local_18;
-  
-  piVar2 = *(int **)(*(int *)(param_1 + 0xc) + 0xc);
-  iVar3 = (*((IShell *)piVar2)->pvt->CreateInstance)
-              ((IShell *)piVar2,AEECLSID_FILEMGR_VALUE,(void **)&local_18);
-  if (iVar3 == 0) {
-    iVar3 = (*((IFileMgr *)local_18)->pvt->EnumInit)
-                ((IFileMgr *)local_18,(const char *)DATA_AT_00127F78,0);
-    if (iVar3 == 0) {
-      while (iVar4 = (*((IFileMgr *)local_18)->pvt->EnumNext)
-                         ((IFileMgr *)local_18,(FileInfo *)auStack_64), iVar4 != 0) {
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-        /* helper[53] int strnicmp(const char *a, const char *b, uint32 n)
-                       (AEEHelperFuncs +0xd4, via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->strnicmp)(auStack_58,param_2,(*g_pHelperFuncs->strlen)(param_2));
-        if (iVar4 == 0) {
-          (*((IFileMgr *)local_18)->pvt->Remove)((IFileMgr *)local_18,(const char *)auStack_58);
-        }
+  int32 result;
+  IFileMgr *fileMgr;            /* sp+0x50 */
+  FileInfo info;                /* sp+0x04 */
+  IShell *shell = context->app->a.m_pIShell;
+
+  result = (*shell->pvt->CreateInstance)(shell,AEECLSID_FILEMGR_VALUE,(void **)&fileMgr);
+  if (result == 0) {
+    result = (*fileMgr->pvt->EnumInit)(fileMgr,STRING_EMPTY_00127F78,0);
+    if (result == 0) {
+      while ((*fileMgr->pvt->EnumNext)(fileMgr,&info) != 0) {
+        if ((*g_pHelperFuncs->strnicmp)(info.szName,prefix,(*g_pHelperFuncs->strlen)(prefix)) == 0)
+          (*fileMgr->pvt->Remove)(fileMgr,info.szName);
       }
     }
-    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-    (*((IFileMgr *)local_18)->pvt->Release)((IFileMgr *)local_18);
+    (*fileMgr->pvt->Release)(fileMgr);
   }
-  return iVar3;
+  return result;
 }
+
 
 /* ==== 0x0010FB90  (file offset 0x0FB90)  FUN_0010fb90 ================================================ */
 void FUN_0010fb90(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
@@ -10679,7 +10674,7 @@ int32 script_command_run(ScriptCommand *command)
       character_freeze_held_keys(player);
     break;
   case 0x22:   /* saveGame: to "savegame.dat", or (TEMP) not to a file */
-    FUN_0011e6b8((int)app->progress,command->flag[0] == 0 ? (int)DATA_AT_001276FC : 0);
+    progress_save((int)app->progress,command->flag[0] == 0 ? (int)DATA_AT_001276FC : 0);
     break;
   case 0x23:   /* setAnimSpeed */
     index = animations_find(app->animations,command->number[0]);
@@ -18566,8 +18561,13 @@ LAB_0011e698:
   return bVar4;
 }
 
-/* ==== 0x0011E6B8  (file offset 0x1E6B8)  FUN_0011e6b8 ================================================ */
-undefined4 FUN_0011e6b8(int param_1,int param_2)
+/* ==== 0x0011E6B8  (file offset 0x1E6B8)  progress_save =============================================== */
+/* GUESS: name (not yet rewritten). Saves the player's progress: writes the record (health, MP, munny,
+   experience, level, spells, the level's names, the status flags and texts, the script variables;
+   save_write_*) into a 0x800-byte buffer, copies it to saveCopy (allocated the first time) and, when
+   `param_2` names a file ("savegame.dat", "replaygame.dat"), writes it there (FUN_0011e574), returning
+   that result; else returns 1. The buffer is not checked. */
+undefined4 progress_save(int param_1,int param_2)
 
 {
   undefined4 param_3;
@@ -22434,14 +22434,14 @@ void FUN_001242b4(int param_1)
     progress_new_game(((KHApp *)param_1)->progress);
     goto LAB_001244d4;
   case 3:
-    FUN_0011e6b8(*(int *)(param_1 + 0xa8),0);
+    progress_save(*(int *)(param_1 + 0xa8),0);
     FUN_0010edec(param_1);
     if (((KHApp *)param_1)->progress->summaryPending != 0) {
       FUN_00101ad8(*(int **)(param_1 + 0xd0),0x75);
     }
     break;
   case 4:
-    iVar7 = FUN_0011e6b8(*(int *)(param_1 + 0xa8),(int32)STRING_SAVEGAME_DOT_DAT);
+    iVar7 = progress_save(*(int *)(param_1 + 0xa8),(int32)STRING_SAVEGAME_DOT_DAT);
     if (iVar7 == 0) {
       pvVar10 = WORD_HEXADECIMAL_38618576;
     }
@@ -22564,7 +22564,7 @@ LAB_00124580:
 /* ==== 0x00124674  (file offset 0x24674)  save_write_byte ============================================= */
 /* GUESS: name. Appends one byte to the saved game being written (`data` at *position, which it advances):
    a flag as the character '0' or '1', or a status flag. The byte is copied by memmove from the argument's
-   stack slot (the binary spills r0 - r3 for it). `progress` (what the writer FUN_0011e6b8 saves) is not
+   stack slot (the binary spills r0 - r3 for it). `progress` (what the writer progress_save saves) is not
    read. Returns nothing: r0 is only reloaded from that spill (Ghidra's undefined8), and no caller reads
    it. */
 void save_write_byte(Progress *progress,uint8 byte,uint8 *data,int32 *position)
