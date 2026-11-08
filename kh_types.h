@@ -104,8 +104,9 @@ typedef struct SoundEntry {
 typedef struct SoundSet {
     struct KHApp *app;            /* +0x00 GetAppInstance() at creation */
     SoundEntry **entries;         /* +0x04 `count` entries */
-    void   **data;                /* +0x08 GUESS: the files' contents when loaded into memory
-                                     (FUN_00109780, sound_set_create's last argument); 0 otherwise */
+    void   **data;                /* +0x08 with sound_set_create's last argument set: each file's
+                                     contents (sound_set_load_file), played from memory (MMD_BUFFER), or 0
+                                     where the load failed (played from the file); 0 otherwise */
     int32    count;               /* +0x0c */
     uint8    unknown_10[0x1c];
     int32    current;             /* +0x2c the sound last started (sound_set_play); -1 at creation and

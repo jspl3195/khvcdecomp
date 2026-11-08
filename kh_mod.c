@@ -5270,65 +5270,52 @@ IImage * ui_element_load_image(UIElement *element,const char *fileName)
 }
 
 
-/* ==== 0x00109780  (file offset 0x09780)  FUN_00109780 ================================================ */
-int FUN_00109780(int *param_1,undefined4 param_2,int param_3)
+/* ==== 0x00109780  (file offset 0x09780)  sound_set_load_file ========================================= */
+/* GUESS: names. Loads a sound file whole into memory for entry `index` of a set (sound_set_create, for a
+   set made with its last argument set): a file manager (IShell CreateInstance AEECLSID_FILEMGR), the
+   file's size (IFileMgr GetInfo into a 0x4c-byte FileInfo), a block of that size in set->data[index], and
+   the file read into it (OpenFile _OFM_READ, IFile Read). Returns the size when all of it was read;
+   otherwise the block is freed, data[index] is 0 and it returns -1, and sound_set_create gives the IMedia
+   the file name instead of the buffer. A missing file has size 0 in the zeroed FileInfo (BREW's MALLOC)
+   and ends at -1 the same way. */
+int32 sound_set_load_file(SoundSet *set,const char *fileName,int32 index)
 
 {
-  int *param_4;
-  /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  int iVar2;
-  int iVar3;
-  int *piVar4;
-  int iVar5;
-  int iVar6;
-  int iVar7;
-  int *local_28;
-  
-  iVar6 = -1;
-  local_28 = param_4;
-  (*((IShell *)*(int **)(*param_1 + 0xc))->pvt->CreateInstance)
-      ((IShell *)*(int **)(*param_1 + 0xc),AEECLSID_FILEMGR_VALUE,(void **)&local_28);
-  if (local_28 == (int *)0x0) {
+  IShell *shell = set->app->a.m_pIShell;
+  int32 result = -1;
+  IFileMgr *fileMgr;   /* [sp]: the caller's r3 until CreateInstance writes it (0x00109790) */
+  FileInfo *info;
+  uint32 size;
+  IFile *file;
+  int32 read;
+
+  (*shell->pvt->CreateInstance)(shell,AEECLSID_FILEMGR_VALUE,(void **)&fileMgr);
+  if (fileMgr == (IFileMgr *)0x0)
     return -1;
-  }
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-  iVar2 = (*g_pHelperFuncs->malloc)(0x4c);
-  iVar7 = iVar6;
-  if (iVar2 == 0) goto LAB_001098b8;
-  (*((IFileMgr *)local_28)->pvt->GetInfo)((IFileMgr *)local_28,(const char *)param_2,(FileInfo *)iVar2);
-  iVar5 = *(int *)(iVar2 + 8);
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-  iVar3 = (*g_pHelperFuncs->malloc)(iVar5);
-  *(int *)(param_1[2] + param_3 * 4) = iVar3;
-  if (iVar3 != 0) {
-    piVar4 = (int *)(*((IFileMgr *)local_28)->pvt->OpenFile)((IFileMgr *)local_28,(const char *)param_2,1);
-    if (piVar4 == (int *)0x0) {
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-      (*g_pHelperFuncs->free)(*(undefined4 *)(param_1[2] + param_3 * 4));
+  info = (*g_pHelperFuncs->malloc)(0x4c);
+  if (info != (FileInfo *)0x0) {
+    (*fileMgr->pvt->GetInfo)(fileMgr,fileName,info);
+    size = info->dwSize;
+    set->data[index] = (*g_pHelperFuncs->malloc)(size);
+    if (set->data[index] != (void *)0x0) {
+      file = (*fileMgr->pvt->OpenFile)(fileMgr,fileName,1);   /* _OFM_READ */
+      if (file != (IFile *)0x0) {
+        read = (*file->pvt->Read)(file,set->data[index],size);
+        (*file->pvt->Release)(file);
+      }
+      if (file != (IFile *)0x0 && (uint32)read == size)
+        result = (int32)size;
+      else {
+        (*g_pHelperFuncs->free)(set->data[index]);
+        set->data[index] = (void *)0x0;
+      }
     }
-    else {
-      iVar3 = (*((IFile *)piVar4)->pvt->Read)
-                  ((IFile *)piVar4,(void *)(*(undefined4 *)(param_1[2] + param_3 * 4)),iVar5);
-      (*((IFile *)piVar4)->pvt->Release)((IFile *)piVar4);
-      iVar7 = iVar5;
-      if (iVar3 == iVar5) goto LAB_001098a8;
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-      (*g_pHelperFuncs->free)(*(undefined4 *)(param_1[2] + param_3 * 4));
-    }
-    *(undefined4 *)(param_1[2] + param_3 * 4) = 0;
-    iVar7 = iVar6;
+    (*g_pHelperFuncs->free)(info);
   }
-LAB_001098a8:
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-  (*g_pHelperFuncs->free)(iVar2);
-LAB_001098b8:
-  /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-  (*((IFileMgr *)local_28)->pvt->Release)((IFileMgr *)local_28);
-  return iVar7;
+  (*fileMgr->pvt->Release)(fileMgr);
+  return result;
 }
+
 
 /* ==== 0x001098D8  (file offset 0x098D8)  key_picker_setup ============================================ */
 /* GUESS: name. Connects a key picker (a type 8 UI element) to its ring of options and to the setting it
@@ -6888,7 +6875,7 @@ LAB_0010c0cc:
           local_28 = 0;
         }
         else {
-          local_28 = FUN_00109780(param_1,*(undefined4 *)(param_2 + iVar2 * 4),iVar2);
+          local_28 = sound_set_load_file((SoundSet *)param_1,*(const char **)(param_2 + iVar2 * 4),iVar2);
           local_30 = 1;
           local_2c = *(int *)(param_1[2] + iVar2 * 4);
           if (local_28 == -1) goto LAB_0010c0cc;
