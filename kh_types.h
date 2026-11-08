@@ -372,7 +372,14 @@ typedef struct Hud {
     int32    targetMaximumHealth; /* +0x50 its gauge is drawn only when above 0 */
     int32    targetLowHealth;     /* +0x54 below it the target's gauge blinks red; Progress.lowHealth at
                                      creation */
-    uint8    unknown_58[0x74];
+    struct TextBox *texts[5];     /* +0x58 GUESS: names; the script's texts by slot (hud_show_text; slot
+                                     0 a speech bubble), removed by hud_remove_text */
+    int32    scrolling[5];        /* +0x6c set by hud_show_scrolling_text */
+    int32    field_80[5];         /* +0x80 cleared when a scrolling text has left the top */
+    uint32   scrollSpeeds[5];     /* +0x94 floats (their bits): content height / 500.0 */
+    uint32   scrollPositions[5];  /* +0xa8 floats (their bits): the box's top */
+    int32    messageTime;         /* +0xbc GUESS: name; ms a status message stays (2000) */
+    uint8    unknown_c0[0x0c];
     int32    blinkTime;           /* +0xcc GUESS: name; aee_GetUpTimeMS at creation, +350 at each flip of
                                      blinkOn */
     uint8    unknown_d0;          /* +0xd0 0 at creation */

@@ -2673,44 +2673,36 @@ void screen_resume_nothing(int32 screen)
 }
 
 
-/* ==== 0x001052E0  (file offset 0x052E0)  FUN_001052e0 ================================================ */
-int FUN_001052e0(int param_1,undefined4 param_2,int param_3,int param_4,int param_5,int param_6,
-                undefined4 param_7,undefined4 param_8,int param_9)
+/* ==== 0x001052E0  (file offset 0x052E0)  hud_show_text =============================================== */
+/* GUESS: names. Shows a script text on the HUD in text slot `slot` (0 - 4): the slot is emptied first
+   (hud_remove_text), and slots 0 and 1 also empty each other; a text box (text_box_create) of the
+   rectangle left, top, right, bottom in the style whose type is the slot (text_style_create; sized to
+   its text when top == bottom, style not checked) holds `text` (wide), and slot 0's gets a speech
+   bubble's tail pointing at (tailX, tailY) (text_box_set_tail). Returns the box's id as a child of the
+   HUD, 0x2c + slot (ui_element_add_child, the binary's tail jump at 0x001053a4). Called by the script's
+   addUIInfo / addUIText (script_command_run) and by hud_show_scrolling_text. */
+int32 hud_show_text(Hud *hud,AECHAR *text,int32 left,int32 top,int32 right,int32 bottom,int32 tailX,
+                    int32 tailY,int32 slot)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  int iVar3;
-  int iVar4;
-  int iVar5;
-  
-  iVar4 = param_1;
-  iVar3 = param_3;
-  iVar5 = param_4;
-  hud_remove_text(param_1,param_9);
-  if (param_9 == 0) {
-    uVar2 = 1;
-  }
-  else {
-    if (param_9 != 1) goto LAB_0010532c;
-    uVar2 = 0;
-  }
-  hud_remove_text(param_1,uVar2);
-LAB_0010532c:
-  iVar1 = text_style_create(0,param_9);
-  if (param_4 == param_6) {
-    *(undefined1 *)(iVar1 + 0x24) = 1;
-  }
-  uVar2 = text_box_create(0,param_3,param_4,param_5 - param_3,param_6 - param_4,
-                       *(undefined4 *)(param_1 + 0x20),iVar1 /* not arguments, value leftovers: iVar4,param_2,iVar3,iVar5 */);
-  iVar4 = param_1 + param_9 * 4;
-  *(undefined4 *)(iVar4 + 0x58) = uVar2;
-  text_box_set_text(uVar2,param_2,0);
-  if (param_9 == 0) {
-    text_box_set_tail(*(TextBox **)(param_1 + 0x58),param_7,param_8);
-  }
-  return ui_element_add_child((UIElement *)param_1,*(UIElement **)(iVar4 + 0x58),param_9 + 0x2c);
+  TextStyle *style;
+
+  hud_remove_text(hud,slot);
+  if (slot == 0)
+    hud_remove_text(hud,1);
+  else if (slot == 1)
+    hud_remove_text(hud,0);
+  style = text_style_create((TextStyle *)0x0,slot);
+  if (top == bottom)
+    style->autoSize = 1;
+  hud->texts[slot] = text_box_create((TextBox *)0x0,left,top,right - left,bottom - top,
+                                     ((UIElement *)hud)->owner,style);
+  text_box_set_text(hud->texts[slot],text,0);
+  if (slot == 0)
+    text_box_set_tail(hud->texts[0],tailX,tailY);
+  return ui_element_add_child((UIElement *)hud,(UIElement *)hud->texts[slot],slot + 0x2c);
 }
+
 
 /* ==== 0x001053A8  (file offset 0x053A8)  FUN_001053a8 ================================================ */
 void FUN_001053a8(undefined4 param_1,undefined4 param_2,int param_3,int param_4,int param_5,
@@ -2777,13 +2769,19 @@ int32 ui_element_add_child(UIElement *parent,UIElement *child,int32 id)
   return id;
 }
 
-/* ==== 0x00105538  (file offset 0x05538)  FUN_00105538 ================================================ */
-void FUN_00105538(int param_1,undefined4 param_2,int param_3)
+/* ==== 0x00105538  (file offset 0x05538)  hud_show_scrolling_text ===================================== */
+/* GUESS: names (not yet rewritten). Shows a text across the whole width, as tall as its text
+   (hud_show_text with 0, 0, devInfo.cxScreen, 0), in slot `param_3`, and makes it scroll: its scrolling
+   flag set, its speed its content height / 500.0 and its position its box's top (floats). Used by the
+   script's addUIText with a top of -2 (slot 0 or 1), by another script command for a place name text
+   (slot 2) and by progress_add_munny (slot 3, for 2 s: messageTime). */
+void hud_show_scrolling_text(int param_1,undefined4 param_2,int param_3)
 
 {
   undefined4 uVar1;
   
-  FUN_001052e0(param_1,param_2,0,0,*(undefined2 *)(*(int *)(param_1 + 0x44) + 0x24),0,0,0,param_3);
+  hud_show_text((Hud *)param_1,(AECHAR *)param_2,0,0,((Hud *)param_1)->screen.app->devInfo.cxScreen,0,0,0,
+                param_3);
   param_1 = param_1 + param_3 * 4;
   *(undefined4 *)(param_1 + 0x6c) = 1;
   
@@ -3420,7 +3418,7 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
             iVar7 = *(int *)(*(int *)(iVar8 + 0x58) + 8);
             if ((int)*(short *)(iVar7 + 6) - (int)*(short *)(iVar7 + 2) < 0) {
               *(undefined4 *)(iVar8 + 0x80) = 0;
-              hud_remove_text(param_1,iVar2);
+              hud_remove_text((Hud *)param_1,iVar2);
             }
           }
         }
@@ -4509,7 +4507,7 @@ LAB_001084dc:
           if (iVar2 != 0) {
             return 1;
           }
-          hud_remove_text(param_1,0);
+          hud_remove_text((Hud *)param_1,0);
           return 1;
         }
       }
@@ -5073,28 +5071,23 @@ void web_request_retry(WebRequest *request)
 
 
 /* ==== 0x001092C0  (file offset 0x092C0)  hud_remove_text ============================================= */
-/* GUESS: name. Removes the HUD's script text `param_2` (0 - 4): when its element is there (+0x58, one word
-   per text), it is removed from the HUD's children and destroyed (ui_element_remove_child), its four per-
-   text words (+0x58, +0x6c, +0x80, +0x94) cleared, and the HUD cleared (screen_clear). */
-void hud_remove_text(int param_1,int param_2)
+/* GUESS: names. Removes the HUD's text in slot `slot` (0 - 4): when there is one, it is removed from
+   the HUD's children and destroyed (ui_element_remove_child), the slot's text, scrolling flag, field_80
+   and scroll speed cleared (not its scroll position) and the HUD cleared (screen_clear). Ghidra had
+   listed r3 as an input. */
+void hud_remove_text(Hud *hud,int32 slot)
 
 {
-  undefined4 param_4;
-  /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  int iVar1;
-  
-  iVar1 = param_1 + param_2 * 4;
-  if (*(int *)(iVar1 + 0x58) != 0) {
-    ui_element_remove_child(param_1,*(undefined4 *)(*(int *)(iVar1 + 0x58) + 0xc),1 /* not arguments, register leftovers: param_4,param_4 */);
-    *(undefined4 *)(iVar1 + 0x58) = 0;
-    *(undefined4 *)(iVar1 + 0x6c) = 0;
-    *(undefined4 *)(iVar1 + 0x80) = 0;
-    *(undefined4 *)(iVar1 + 0x94) = 0;
-    screen_clear((Screen *)param_1);
-  }
-  return;
+  if (hud->texts[slot] == (TextBox *)0x0)
+    return;
+  ui_element_remove_child((UIElement *)hud,((UIElement *)hud->texts[slot])->id,1);
+  hud->texts[slot] = (TextBox *)0x0;
+  hud->scrolling[slot] = 0;
+  hud->field_80[slot] = 0;
+  hud->scrollSpeeds[slot] = 0;
+  screen_clear((Screen *)hud);
 }
+
 
 /* ==== 0x00109308  (file offset 0x09308)  ui_element_remove_child ===================================== */
 /* GUESS: name. Removes the child with id `id` from a UI element; with `destroy` set, also destroys it
@@ -5212,7 +5205,7 @@ void web_request_notify(WebRequest *request,int32 event,int32 value,int32 detail
    (the top, the bottom, the left or the right; past a corner, the side it is further outside), placed at
    the point but at least 7 pixels from the start of the side and 17 from its end. A point inside the box
    gives no tail - but the old tail has been freed by then and box->tail still points at it (a bug in
-   the game, kept here as the binary has it: research_notes/decomp/GAME_BUGS.md). Called by FUN_001052e0
+   the game, kept here as the binary has it: research_notes/decomp/GAME_BUGS.md). Called by hud_show_text
    for a screen's first text-box row, with a point from the level's script (script_command_run, two floats of
    the command). Written from its disassembly (0x0010955c - 0x00109740). */
 void text_box_set_tail(TextBox *box,int32 x,int32 y)
@@ -7732,10 +7725,10 @@ LAB_0010d124:
   float_compare_less(*(undefined4 *)(param_1 + 0x514),0);
   if (!(bool)in_CY || (bool)in_ZR) {
     *(undefined4 *)(param_1 + 0x514) = 0;
-    hud_remove_text(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xd4),1);
-    hud_remove_text(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xd4),2);
-    hud_remove_text(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xd4),3);
-    hud_remove_text(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xd4),0);
+    hud_remove_text(((KHApp *)*(int *)(param_1 + 0x724))->hud,1);
+    hud_remove_text(((KHApp *)*(int *)(param_1 + 0x724))->hud,2);
+    hud_remove_text(((KHApp *)*(int *)(param_1 + 0x724))->hud,3);
+    hud_remove_text(((KHApp *)*(int *)(param_1 + 0x724))->hud,0);
     FUN_0010f1fc(*(int *)(*(int *)(*(int *)(param_1 + 0x724) + 0xa4) + 0x1f8));
     return;
   }
@@ -7762,7 +7755,7 @@ void progress_add_magic_points(Progress *progress,int32 amount)
 /* ==== 0x0010D1E0  (file offset 0x0D1E0)  progress_add_munny ========================================== */
 /* GUESS: name. Adds `amount` munny (it never goes below 0) and shows the new total as "<label>=<munny>":
    the label is the text 0x16A5390B (text_table_get_text, GUESS: "Munny"), turned into a wide string
-   (string_to_wide) and shown on the app's HUD (KHApp.hud) for 2000 ms (FUN_00105538). */
+   (string_to_wide) and shown on the app's HUD (KHApp.hud) for 2000 ms (hud_show_scrolling_text). */
 void progress_add_munny(Progress *progress,int32 amount)
 
 {
@@ -7784,8 +7777,8 @@ void progress_add_munny(Progress *progress,int32 amount)
   string_to_wide((int32)app->context,(char **)&text,(AECHAR **)&wideText);
   helper_free(text);
   if (wideText != (void *)0x0) {
-    FUN_00105538((int)app->hud,wideText,3);
-    *(int32 *)((int32)app->hud + 0xbc) = 2000;
+    hud_show_scrolling_text((int)app->hud,wideText,3);
+    app->hud->messageTime = 2000;
     (*g_pHelperFuncs->free)(wideText);
   }
 }
@@ -10450,7 +10443,7 @@ int32 script_command_run(ScriptCommand *command)
         wideText = (AECHAR *)0x0;
         text_table_get_wide_text(app->texts,textId,&wideText);
         if (wideText != (AECHAR *)0x0) {
-          FUN_00105538((int)hud,(undefined4)wideText,2);
+          hud_show_scrolling_text((int)hud,(undefined4)wideText,2);
           (*g_pHelperFuncs->free)(wideText);
         }
       }
@@ -10469,12 +10462,12 @@ int32 script_command_run(ScriptCommand *command)
     if (wideText != (AECHAR *)0x0) {
       value = command->flag[3] == 0;
       if (command->number[1] == -2)
-        FUN_00105538((int)hud,(undefined4)wideText,value);
+        hud_show_scrolling_text((int)hud,(undefined4)wideText,value);
       else {
         height = float_to_int(command->value[1]);
         width = float_to_int(command->value[0]);
-        FUN_001052e0((int)hud,(undefined4)wideText,command->number[0],command->number[1],
-                     command->number[2],command->number[3],width,height,value);
+        hud_show_text((Hud *)hud,wideText,command->number[0],command->number[1],command->number[2],
+                      command->number[3],width,height,value);
       }
       (*g_pHelperFuncs->free)(wideText);
       if (command->flag[1] != 0)
@@ -10657,7 +10650,7 @@ int32 script_command_run(ScriptCommand *command)
         *(int32 *)(hud + 0x88) = 1;
       }
       else
-        hud_remove_text((int)hud,2);
+        hud_remove_text((Hud *)hud,2);
     }
     game->actionObject = (LevelObject *)0x0;
     break;
@@ -10673,7 +10666,7 @@ int32 script_command_run(ScriptCommand *command)
       }
       value = 1;
     }
-    hud_remove_text((int)hud,value);
+    hud_remove_text((Hud *)hud,value);
     break;
   case 0x1f:   /* resetKeys: the player's held keys */
     if (command->object != (LevelObject *)0x0 && command->object->nameId == WORD_HEXADECIMAL_10C617E4)
@@ -19973,7 +19966,7 @@ void FUN_0012070c(int param_1,int param_2)
           }
           if (iVar4 != 0 && iVar3 != 0) {
             if (*(int *)(iVar4 + 0x74) == 0) {
-              hud_remove_text(iVar4,2);
+              hud_remove_text((Hud *)iVar4,2);
             }
             else {
               *(undefined4 *)(iVar4 + 0x74) = 0;
