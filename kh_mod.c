@@ -1240,10 +1240,10 @@ undefined4 FUN_00101ad8(int *param_1,int param_2)
   }
   if (0x41 < param_2) {
     if (param_2 == 0x73) {
-      if (param_1[6] != 0) {
-        web_request_destroy(param_1[6],1);
+      if (((ScreenStack *)param_1)->webRequest != (WebRequest *)0x0) {
+        web_request_destroy(((ScreenStack *)param_1)->webRequest,1);
       }
-      param_1[6] = 0;
+      ((ScreenStack *)param_1)->webRequest = (WebRequest *)0x0;
 LAB_00104380:
       FUN_00120450((undefined4)((KHApp *)*param_1)->context);
 LAB_0010438c:
@@ -1587,17 +1587,17 @@ LAB_001050b0:
       ui_element_add_child(iVar9,uVar10,500);
       FUN_00109a10(iVar9,1,0,0);
       FUN_00109a10(iVar9,2,TEXT_CANCEL,0x56);
-      if (param_1[6] != 0) {
-        web_request_destroy(param_1[6],1);
+      if (((ScreenStack *)param_1)->webRequest != (WebRequest *)0x0) {
+        web_request_destroy(((ScreenStack *)param_1)->webRequest,1);
       }
       iVar7 = (int)web_request_create((WebRequest *)0x0,(int32)param_1,(WebRequestListener)FUN_0010888c);
-      param_1[6] = iVar7;
+      ((ScreenStack *)param_1)->webRequest = (WebRequest *)iVar7;
       uVar10 = progress_score(*(undefined4 *)(*param_1 + 0xa8));
       progress_add_play_time((Progress *)*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
-      web_request_post_rank(param_1[6],2,((Progress *)iVar7)->userId,uVar10,
-                   *(undefined4 *)(*param_1 + 0xc4),((Progress *)iVar7)->playTime,
-                   ((Progress *)iVar7)->launchCount,0);
+      web_request_post_rank(((ScreenStack *)param_1)->webRequest,2,((Progress *)iVar7)->userId,uVar10,
+                            *(undefined4 *)(*param_1 + 0xc4),((Progress *)iVar7)->playTime,
+                            ((Progress *)iVar7)->launchCount,0);
       goto LAB_00104dcc;
     case 0x7e:
       iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
@@ -1708,15 +1708,15 @@ LAB_00104a24:
       else {
         ((ScreenStack *)param_1)->field_60 = 1;
       }
-      if (param_1[6] != 0) {
-        web_request_destroy(param_1[6],1);
+      if (((ScreenStack *)param_1)->webRequest != (WebRequest *)0x0) {
+        web_request_destroy(((ScreenStack *)param_1)->webRequest,1);
       }
       iVar7 = (int)web_request_create((WebRequest *)0x0,(int32)param_1,(WebRequestListener)FUN_0010888c);
-      param_1[6] = iVar7;
+      ((ScreenStack *)param_1)->webRequest = (WebRequest *)iVar7;
       progress_add_play_time((Progress *)*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
-      web_request_download(param_1[6],*(undefined4 *)(*param_1 + 0xc4),0,((Progress *)iVar7)->userId,
-                   ((Progress *)iVar7)->playTime);
+      web_request_download(((ScreenStack *)param_1)->webRequest,*(undefined4 *)(*param_1 + 0xc4),0,
+                           ((Progress *)iVar7)->userId,((Progress *)iVar7)->playTime);
       return local_34;
     case 0x82:
       iVar9 = screen_stack_top(param_1);
@@ -1757,15 +1757,15 @@ LAB_00104a24:
       } while (iVar19 < 0x19);
       FUN_00109a10(iVar9,1,0,0);
       FUN_00109a10(iVar9,2,TEXT_CANCEL,0x56);
-      if (param_1[6] != 0) {
-        web_request_destroy(param_1[6],1);
+      if (((ScreenStack *)param_1)->webRequest != (WebRequest *)0x0) {
+        web_request_destroy(((ScreenStack *)param_1)->webRequest,1);
       }
       iVar7 = (int)web_request_create((WebRequest *)0x0,(int32)param_1,(WebRequestListener)FUN_0010888c);
-      param_1[6] = iVar7;
+      ((ScreenStack *)param_1)->webRequest = (WebRequest *)iVar7;
       progress_add_play_time((Progress *)*(undefined4 *)(*param_1 + 0xa8));
       iVar7 = *(int *)(*param_1 + 0xa8);
-      web_request_post_rank_ex(param_1[6],((Progress *)iVar7)->userId,pvVar16,pvVar5,
-                   ((Progress *)iVar7)->playTime,((Progress *)iVar7)->launchCount);
+      web_request_post_rank_ex(((ScreenStack *)param_1)->webRequest,((Progress *)iVar7)->userId,pvVar16,
+                               pvVar5,((Progress *)iVar7)->playTime,((Progress *)iVar7)->launchCount);
       helper_free(pvVar16);
       helper_free(pvVar5);
 LAB_00104dcc:
@@ -1899,10 +1899,10 @@ LAB_00104de4:
         **(undefined4 **)(*param_1 + 0xa0) = 1;
       }
 LAB_00102874:
-      if (param_1[6] != 0) {
-        web_request_destroy(param_1[6],1);
+      if (((ScreenStack *)param_1)->webRequest != (WebRequest *)0x0) {
+        web_request_destroy(((ScreenStack *)param_1)->webRequest,1);
       }
-      param_1[6] = 0;
+      ((ScreenStack *)param_1)->webRequest = (WebRequest *)0x0;
 LAB_00101db4:
       screen_stack_close_top(param_1,1);
       return local_34;
@@ -2863,10 +2863,11 @@ int32 ui_element_set_key_target(UIElement *element,int32 keyCode,UIElement *targ
 
 /* ==== 0x001056F4  (file offset 0x056F4)  key_picker_restore_original ================================= */
 /* GUESS: name. Undoes a key picker's changes: selects again the option whose key code is the value the
-   setting had when key_picker_setup ran (+0x68) and writes it back to the setting. The left / right keys
-   change the setting at once (ui_element_handle_key), so this is what leaving the Controls screen
-   without confirming does: FUN_00101ad8 (event 0x48) and FUN_0010c3f8 call it for the 7 pickers, ids
-   400-406. The value must be in the ring: the search has no end test. The label is not redrawn. */
+   setting had when key_picker_setup ran (+0x68) and writes it back to the setting. The left / right
+   keys change the setting at once (ui_element_handle_key), so this is what leaving the Controls screen
+   without confirming does: FUN_00101ad8 (event 0x48) and screen_stack_destroy call it for the 7
+   pickers, ids 400-406. The value must be in the ring: the search has no end test. The label is not
+   redrawn. */
 void key_picker_restore_original(UIElement *picker)
 
 {
@@ -6080,7 +6081,7 @@ ScreenStack * screen_stack_create(ScreenStack *stack,KHApp *app)
   stack->rect->dy = info->cyScreen;
   (*g_pHelperFuncs->free)(info);
   stack->app = app;
-  stack->field_18 = 0;
+  stack->webRequest = (WebRequest *)0x0;
   stack->keyOptions = (struct KeyOption *)0x0;
   stack->keyTexts = list_create((UIList *)0x0,0x10,0x10);
   memcpy_word_aligned(ids,(void *)DATA_AT_00127AA0,0x30);   /* the ids -1000 - -1011 */
@@ -7012,87 +7013,59 @@ void FUN_0010c2c4(int *param_1,int param_2)
   return;
 }
 
-/* ==== 0x0010C3F8  (file offset 0x0C3F8)  FUN_0010c3f8 ================================================ */
-void FUN_0010c3f8(int param_1,int param_2)
+/* ==== 0x0010C3F8  (file offset 0x0C3F8)  screen_stack_destroy ======================================== */
+/* GUESS: names. The screen stack's destructor (kh_OnAppStop): with a screen open, the key pickers of the
+   top screen (ids 400 - 406) get their original keys back (key_picker_restore_original), so a Controls
+   screen left open does not keep half-edited keys; the key glyphs are freed and their list destroyed; the
+   current web request is destroyed; the Controls screen's key options and the saved level name are freed;
+   every screen is closed (screen_stack_close_all) and the list of screens destroyed; the rectangle is
+   freed, the IGraphics and IDisplay released (not checked), and the six frame images released; the stack
+   itself is freed when `freeIt` is set (the binary's tail jump to helper_free at 0x0010c58c). The glyph
+   list's count is read before the list is checked (0x0010c454, then 0x0010c460): GAME_BUGS.md. */
+void screen_stack_destroy(ScreenStack *stack,int32 freeIt)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  int iVar3;
-  void *p;
-  int *piVar4;
-  
-  iVar1 = screen_stack_top(param_1);
-  if (iVar1 != 0) {
-    iVar1 = 0;
-    do {
-      uVar2 = screen_stack_top(param_1);
-      iVar3 = ui_element_find_child(uVar2,iVar1 + 400);
-      if (iVar3 != 0) {
-        key_picker_restore_original(iVar3);
-      }
-      iVar1 = iVar1 + 1;
-    } while (iVar1 < 7);
+  int32 i;
+  UIElement *picker;
+
+  if (screen_stack_top(stack) != 0) {
+    for (i = 0; i < 7; i++) {
+      picker = (UIElement *)ui_element_find_child((UIElement *)screen_stack_top(stack),i + 400);
+      if (picker != (UIElement *)0x0)
+        key_picker_restore_original(picker);
+    }
   }
-  for (iVar1 = 0; piVar4 = *(int **)(param_1 + 0x40), iVar1 < *piVar4; iVar1 = iVar1 + 1) {
-    p = (void *)list_get_entry(piVar4,iVar1);
-    helper_free(p);
+  for (i = 0; i < stack->keyTexts->count; i++)
+    helper_free((void *)list_get_entry(stack->keyTexts,i));
+  if (stack->keyTexts != (UIList *)0x0)
+    list_destroy(stack->keyTexts,1);
+  if (stack->webRequest != (WebRequest *)0x0) {
+    web_request_destroy(stack->webRequest,1);
+    stack->webRequest = (WebRequest *)0x0;
   }
-  if (piVar4 != (int *)0x0) {
-    list_destroy(*(UIList **)(param_1 + 0x40),1);
+  if (stack->keyOptions != (struct KeyOption *)0x0) {
+    helper_free(stack->keyOptions);
+    stack->keyOptions = (struct KeyOption *)0x0;
   }
-  if (*(int *)(param_1 + 0x18) != 0) {
-    web_request_destroy(*(int *)(param_1 + 0x18),1);
-    *(undefined4 *)(param_1 + 0x18) = 0;
+  if (stack->savedLevelName != (char *)0x0) {
+    (*g_pHelperFuncs->free)(stack->savedLevelName);   /* helper[27] (AEEHelperFuncs +0x6c) */
+    stack->savedLevelName = (char *)0x0;
   }
-  if (*(void **)(param_1 + 0x3c) != (void *)0x0) {
-    helper_free(*(void **)(param_1 + 0x3c));
-    *(undefined4 *)(param_1 + 0x3c) = 0;
+  screen_stack_close_all(stack);
+  if (stack->screens != (UIList *)0x0)
+    list_destroy(stack->screens,1);
+  helper_free(stack->rect);
+  (*stack->graphics->pvt->Release)(stack->graphics);
+  (*stack->display->pvt->Release)(stack->display);
+  for (i = 0; i < 6; i++) {
+    if (stack->frameImages[i] != (IImage *)0x0)
+      (*stack->frameImages[i]->pvt->Release)(stack->frameImages[i]);
   }
-  if (*(int *)(param_1 + 100) != 0) {
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 100));
-    *(undefined4 *)(param_1 + 100) = 0;
-  }
-  screen_stack_close_all(param_1);
-  if (*(int *)(param_1 + 0x34) != 0) {
-    list_destroy(*(UIList **)(param_1 + 0x34),1);
-  }
-  helper_free(*(void **)(param_1 + 0x14));
-  /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-  (*((IGraphics *)*(int **)(param_1 + 0x10))->pvt->Release)((IGraphics *)*(int **)(param_1 + 0x10));
-  /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-  (*((IDisplay *)*(int **)(param_1 + 0xc))->pvt->Release)((IDisplay *)*(int **)(param_1 + 0xc));
-  if (*(int **)(param_1 + 0x1c) != (int *)0x0) {
-    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-    (*((IImage *)*(int **)(param_1 + 0x1c))->pvt->Release)((IImage *)*(int **)(param_1 + 0x1c));
-  }
-  if (*(int **)(param_1 + 0x20) != (int *)0x0) {
-    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-    (*((IImage *)*(int **)(param_1 + 0x20))->pvt->Release)((IImage *)*(int **)(param_1 + 0x20));
-  }
-  if (*(int **)(param_1 + 0x24) != (int *)0x0) {
-    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-    (*((IImage *)*(int **)(param_1 + 0x24))->pvt->Release)((IImage *)*(int **)(param_1 + 0x24));
-  }
-  if (*(int **)(param_1 + 0x28) != (int *)0x0) {
-    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-    (*((IImage *)*(int **)(param_1 + 0x28))->pvt->Release)((IImage *)*(int **)(param_1 + 0x28));
-  }
-  if (*(int **)(param_1 + 0x2c) != (int *)0x0) {
-    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-    (*((IImage *)*(int **)(param_1 + 0x2c))->pvt->Release)((IImage *)*(int **)(param_1 + 0x2c));
-  }
-  if (*(int **)(param_1 + 0x30) != (int *)0x0) {
-    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-    (*((IImage *)*(int **)(param_1 + 0x30))->pvt->Release)((IImage *)*(int **)(param_1 + 0x30));
-  }
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
+  if (freeIt != 0)
+    helper_free(stack);
   return;
 }
+
 
 /* ==== 0x0010C598  (file offset 0x0C598)  web_request_destroy ========================================= */
 /* GUESS: name. A web request's destructor: cancels it (web_request_cancel), frees its buffers, cancels the
@@ -11283,7 +11256,7 @@ void kh_OnAppStop(KHApp *pMe)
                        +0xa4, +0x98, +0x94, +0xa8 and releases +0x6c, +0x68, +0x70, +0x64 (Swerve).
                         */
   if (pMe->screens != (void *)0x0) {
-    FUN_0010c3f8(pMe->screens,1);
+    screen_stack_destroy(pMe->screens,1);
     pMe->screens = (void *)0x0;
   }
   FUN_0012056c(pMe,1);

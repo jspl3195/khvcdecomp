@@ -572,7 +572,7 @@ UIElement * ui_element_create(UIElement *element,int16 x,int16 y,int16 width,int
 AppContext * app_context_create(AppContext *context,int32 *error);   /* 0x0010C218 GUESS: name, see kh_mod.c */
 void hitsphere_destroy(Hitsphere *hitsphere,int32 freeIt);   /* 0x0010C2A8 GUESS: name, see kh_mod.c */
 void FUN_0010c2c4(int *param_1,int param_2);
-void FUN_0010c3f8(int param_1,int param_2);
+void screen_stack_destroy(ScreenStack *stack,int32 freeIt);   /* 0x0010C3F8 GUESS: name, see kh_mod.c */
 void web_request_destroy(WebRequest *request,int32 freeIt);   /* 0x0010C598 GUESS: name, see kh_mod.c */
 void script_command_destroy(ScriptCommand *command,int32 freeIt);   /* 0x0010C620 GUESS: name, see kh_mod.c */
 void item_drops_destroy(ItemDrops *drops,int32 freeSelf);   /* 0x0010C66C GUESS: name, see kh_mod.c */

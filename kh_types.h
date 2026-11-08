@@ -76,7 +76,8 @@ typedef struct KHApp {
                                         script summary's level name, copied to pBufc4 */
     uint32         field_cc;         /* +0xcc */
     struct ScreenStack *screens;     /* +0xd0 the open screens (menus); created by screen_stack_create(0,
-                                        pMe), destroyed by 0x10c3f8. FUN_00101ad8 handles its events */
+                                        pMe), destroyed by screen_stack_destroy. FUN_00101ad8 handles
+                                        its events */
     uint32         field_d4;         /* +0xd4 */
     uint32         fpStatus;         /* +0xd8 GUESS: soft-float status word (what a compiler fplib keeps in a
                                         static). Address returned by kh_GetFpStatusPtr; read by
@@ -176,7 +177,10 @@ typedef struct ScreenStack {
     IGraphics *graphics;          /* +0x10 what the elements draw with (ui_element_draw, graphics_set_color) */
     AEERect *rect;                /* +0x14 GUESS: name; the display's rectangle: every screen's size
                                      (screen_create) */
-    int32    field_18;              /* +0x18 0 at creation */
+    struct WebRequest *webRequest; /* +0x18 the current ranking or download request: the menu handler
+                                     (FUN_00101ad8) destroys the previous one and creates it, with
+                                     FUN_0010888c as its listener; 0 at creation, destroyed by
+                                     screen_stack_destroy */
     IImage *frameImages[6];       /* +0x1c the corners of the framed text boxes (text_box_draw): left and
                                      right for style 1, 3 and 2 */
     UIList *screens;              /* +0x34 the open screens, by position */
