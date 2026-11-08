@@ -831,7 +831,7 @@ void camera_set_yaw(Camera *camera,uint32 angle);   /* 0x001202CC GUESS: name, s
 uint32 float_sin(uint32 angle);   /* 0x001202F4 GUESS: name, see kh_mod.c */
 uint32 float_sqrt(uint32 value);   /* 0x00120308 GUESS: name, see kh_mod.c */
 void app_context_set_music(int *param_1,int param_2);   /* 0x0012031C GUESS: name, see kh_mod.c */
-void FUN_00120450(undefined4 *param_1);
+void app_context_stop_music(AppContext *context);   /* 0x00120450 GUESS: name, see kh_mod.c */
 void animations_stop(Animations *animations,int32 index,int32 immediately);   /* 0x001204B0 GUESS: name */
 char * string_replace(AppContext *context,const char *text,char **slot);   /* 0x001204F0 GUESS: name, see kh_mod.c */
 void FUN_0012056c(int param_1,int param_2);
@@ -928,6 +928,12 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
                                    "Score" (language.m3g) */
 #define TEXT_RANK 0x04D4D70F   /* was DAT_00102b24 (word at 0x00102B24); the text id of
                                   "Rank" (language.m3g) */
+/* The music playing (AppContext.music; app_context_set_music, app_context_stop_music; GUESS: names). */
+#define MUSIC_TRAINING          0      /* "training.mid": the title and the training level */
+#define MUSIC_LEVEL             1      /* the level's own "<level>.mid" */
+#define MUSIC_DEATH             2      /* "death.mid" */
+#define MUSIC_NONE              3      /* none (app_context_create, app_context_stop_music) */
+
 /* The menu items' types (UIElement.type, menu_item_create; GUESS: names). 1, 4 and 7 have no
    name yet. */
 #define MENU_ITEM_SOFT_KEY      2      /* a screen's soft key (screen_set_soft_key) */

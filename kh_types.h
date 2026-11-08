@@ -121,8 +121,9 @@ typedef struct SoundSet {
 } SoundSet;                       /* 0x34 bytes */
 
 typedef struct AppContext {
-    int32    music;                 /* +0x00 GUESS: name; the music playing (app_context_set_music): 0
-                                     "training.mid", 1 the level's, 2 death; 3 at creation */
+    int32    music;                 /* +0x00 GUESS: name; the music playing, MUSIC_*
+                                     (app_context_set_music, app_context_stop_music); MUSIC_NONE at
+                                     creation */
     struct SoundSet *sounds[2];      /* +0x04 two sound sets (sound_set_create's kind, destroyed by
                                      sound_set_destroy); the Options screen sets their volume
                                      (sound_set_set_volume, Progress +0x598) */

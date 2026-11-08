@@ -1246,7 +1246,7 @@ undefined4 FUN_00101ad8(int *param_1,int param_2)
       }
       ((ScreenStack *)param_1)->webRequest = (WebRequest *)0x0;
 LAB_00104380:
-      FUN_00120450((undefined4)((KHApp *)*param_1)->context);
+      app_context_stop_music(((KHApp *)*param_1)->context);
 LAB_0010438c:
       if (*(int *)(*param_1 + 0xd4) != 0) {
         hud_set_cinematic(*(int *)(*param_1 + 0xd4),0);
@@ -1325,7 +1325,7 @@ LAB_00104fa4:
                        stack local that is never read: a register spill). r2 here is still the word
                        loaded at 0x10508c for the 0x6f branch (screen_set_soft_key at 0x1050a4); r3 is
                        whatever ui_element_add_child left in it. */
-            app_context_set_music((undefined4)((KHApp *)*param_1)->context,1);
+            app_context_set_music((int *)((KHApp *)*param_1)->context,MUSIC_LEVEL);
             screen_set_soft_key((Screen *)iVar9,2,0,0);
             if (param_2 != 0x70) {
               screen_set_soft_key((Screen *)iVar9,1,uVar14,0x71);
@@ -2313,7 +2313,7 @@ LAB_001042b8:
                        as stores into local_dc[0..3] (the outgoing argument area) instead of passing them */
     menu_add_buttons((ScreenStack *)param_1,(Screen *)iVar9,5,local_74 + 0xb,local_74 + 6,local_74 + 1,3,
                      uVar10,uVar11,local_dc[0],local_dc[1],local_dc[2],local_dc[3]);
-    app_context_set_music((undefined4)((KHApp *)*param_1)->context,0);
+    app_context_set_music((int *)((KHApp *)*param_1)->context,MUSIC_TRAINING);
     break;
   case 4:
     game_pause(*param_1);
@@ -2412,7 +2412,7 @@ LAB_00104da0:
     uVar10 = 0x10;
     goto LAB_00104360;
   case 6:
-    FUN_00120450((undefined4)((KHApp *)*param_1)->context);
+    app_context_stop_music(((KHApp *)*param_1)->context);
     uVar10 = screen_stack_top(param_1);
     iVar7 = ui_element_find_child(uVar10,0x2d);
     if (iVar7 != 0) {
@@ -4875,7 +4875,7 @@ void screen_stack_close_top(ScreenStack *stack,int32 redraw)
     stack->depth--;
     wasCurrent = (int32 *)app->hud == screen;
     if (screen[0xf] == 2)
-      FUN_00120450(app->context);
+      app_context_stop_music(app->context);
     (*(*(const UIElementVtbl **)screen)->destroy)(screen);           /* destroy: vtable slot 0 */
     helper_free(screen);
     if (wasCurrent)
@@ -4883,7 +4883,7 @@ void screen_stack_close_top(ScreenStack *stack,int32 redraw)
     screen = (int32 *)screen_stack_top(stack);                  /* the screen below is the top now */
     if (screen != (int32 *)0x0) {
       if ((int32 *)app->hud == screen)
-        FUN_00120450(app->context);
+        app_context_stop_music(app->context);
       (*(*(const UIElementVtbl **)screen)->resume)(screen);   /* resume: vtable +0x20 */
       if (redraw)
         ui_element_draw((UIElement *)screen);
@@ -6842,7 +6842,7 @@ AppContext * app_context_create(AppContext *context,int32 *error)
                        swv_Create_Transform 0x0103b68c) into context->transform. */
   *error = (*app->pSwerve->pvt->CreateObject)(app->pSwerve,SWV_TRANSFORM,(void **)&context->transform);
   context->sounds[0] = (struct SoundSet *)0x0;
-  context->music = 3;
+  context->music = MUSIC_NONE;
   context->sounds[1] = (struct SoundSet *)0x0;
   return context;
 }
@@ -8316,9 +8316,9 @@ boolean kh_HandleEvent(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
       return '\x01';
     }
     if (eCode == 2) {
-      uVar5 = *(undefined4 *)pMe->context;
-      FUN_00120450(pMe->context);
-      *(undefined4 *)pMe->context = uVar5;
+      uVar5 = pMe->context->music;           /* kept for EVT_APP_RESUME */
+      app_context_stop_music(pMe->context);
+      pMe->context->music = uVar5;
       engine_memory_set_caching(pMe->pSwerve,1);
       pMe->bSuspended = 1;
       FUN_0012056c(pMe,1);
@@ -9147,7 +9147,7 @@ LAB_0010ee88:
       *(undefined4 *)(param_1 + 0x90) = 0x100;
       *(undefined4 *)(param_1 + 0xa4) = 0;
     }
-    FUN_00120450((undefined4 *)((KHApp *)param_1)->context);
+    app_context_stop_music(((KHApp *)param_1)->context);
   }
   if (*(int *)(param_1 + 0x90) != 0) {
     return;
@@ -9382,7 +9382,7 @@ void FUN_0010f1fc(int32 character)
   int32 object = (int32)game_find_object((Game *)((KHApp *)*(int32 *)(character + 0x84))->pGame,WORD_HEXADECIMAL_21BF9442);
 
   FUN_0010ed54(*(int32 *)(*(int32 *)(character + 0x84) + 0xa4),*(int32 *)(object + 8),WORD_HEXADECIMAL_0493FC17);
-  app_context_set_music((int *)((KHApp *)*(int32 *)(character + 0x84))->context,2);
+  app_context_set_music((int *)((KHApp *)*(int32 *)(character + 0x84))->context,MUSIC_DEATH);
 }
 
 /* ==== 0x0010F4D0  (file offset 0x0F4D0)  FUN_0010f4d0 ================================================ */
@@ -14823,7 +14823,7 @@ void intro_start(Intro *intro)
     animations_play(intro->app->animations,intro->animation,0);
   }
   else if (intro->stage == 2) {
-    app_context_set_music((int32 *)intro->app->context,0);
+    app_context_set_music((int32 *)intro->app->context,MUSIC_TRAINING);
     intro->running = 1;
     intro_find_animations(intro);
   }
@@ -19683,27 +19683,30 @@ void app_context_set_music(int *param_1,int param_2)
   return;
 }
 
-/* ==== 0x00120450  (file offset 0x20450)  FUN_00120450 ================================================ */
-void FUN_00120450(undefined4 *param_1)
+/* ==== 0x00120450  (file offset 0x20450)  app_context_stop_music ====================================== */
+/* GUESS: names. Stops the music: no music (MUSIC_NONE) and each of the app context's two music sets
+   stopped (sound_set_stop), destroyed (sound_set_destroy) and cleared. EVT_APP_SUSPEND (kh_HandleEvent)
+   keeps `music` across it, so that EVT_APP_RESUME starts the same music again (app_context_set_music).
+   Also called by the menus (FUN_00101ad8), when a screen closes (screen_stack_close_top) and on a state
+   change (FUN_0010edec). */
+void app_context_stop_music(AppContext *context)
 
 {
-  *param_1 = 3;
-  if (param_1[1] != 0) {
-    sound_set_stop((SoundSet *)param_1[1]);
-    if (param_1[1] != 0) {
-      sound_set_destroy((SoundSet *)param_1[1],1);
-    }
-    param_1[1] = 0;
+  context->music = MUSIC_NONE;
+  if (context->sounds[0] != (struct SoundSet *)0x0) {
+    sound_set_stop(context->sounds[0]);
+    if (context->sounds[0] != (struct SoundSet *)0x0)
+      sound_set_destroy(context->sounds[0],1);
+    context->sounds[0] = (struct SoundSet *)0x0;
   }
-  if (param_1[2] != 0) {
-    sound_set_stop((SoundSet *)param_1[2]);
-    if (param_1[2] != 0) {
-      sound_set_destroy((SoundSet *)param_1[2],1);
-    }
-    param_1[2] = 0;
+  if (context->sounds[1] != (struct SoundSet *)0x0) {
+    sound_set_stop(context->sounds[1]);
+    if (context->sounds[1] != (struct SoundSet *)0x0)
+      sound_set_destroy(context->sounds[1],1);
+    context->sounds[1] = (struct SoundSet *)0x0;
   }
-  return;
 }
+
 
 /* ==== 0x001204B0  (file offset 0x204B0)  animations_stop ============================================= */
 /* GUESS: name. Stops animation `index`: with `immediately` set, at once (animations_set_position with -1)
