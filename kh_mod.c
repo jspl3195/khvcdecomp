@@ -3373,7 +3373,7 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
         uVar4 = float_to_int(*(uint *)(iVar2 + 0x520));
         uVar5 = float_to_int(*(uint *)(iVar2 + 0x51c));
         uVar6 = float_to_int(*(uint *)(iVar2 + 0x518));
-        FUN_001077d0(param_1,param_3,1,uVar3,uVar6,uVar5,uVar4);
+        hud_draw_gauge((Hud *)param_1,(IGraphics *)param_3,1,uVar3,uVar6,uVar5,uVar4);
       }
       iVar2 = *(int *)(*(int *)(*(int *)(param_1 + 0x44) + 0xa4) + 0x1f8);
       iVar8 = *(int *)(iVar2 + 0x23c);
@@ -3386,8 +3386,8 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
           iVar8 = *(int *)(param_1 + 0x50);
         }
         if (bVar10 && 0 < iVar8) {
-          FUN_001077d0(param_1,param_3,0,*(int *)(param_1 + 0x4c),iVar8,iVar8,
-                       *(int *)(param_1 + 0x54));
+          hud_draw_gauge((Hud *)param_1,(IGraphics *)param_3,0,((Hud *)param_1)->targetHealth,iVar8,
+                         iVar8,((Hud *)param_1)->targetLowHealth);
         }
       }
     }
@@ -3969,142 +3969,84 @@ void ui_element_draw_over_children_nothing(int32 element,int32 display,int32 gra
 }
 
 
-/* ==== 0x001077D0  (file offset 0x077D0)  FUN_001077d0 ================================================ */
-void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,undefined4 param_6,
-                 int param_7)
+/* ==== 0x001077D0  (file offset 0x077D0)  hud_draw_gauge ============================================== */
+/* GUESS: names. Draws one of the HUD's two health gauges, 25 pixels in from the HUD's bottom-left corner
+   (`side` 0, the target's) or bottom-right corner (1, the player's): a ring of radius 13 around a round
+   icon that goes on as a bar. Lengths are in units, 80 for `fullScale`: the first 52 are the ring (270
+   degrees; from 180 degrees clockwise on the right, from 0 counter-clockwise on the left, so the two
+   mirror each other), the rest the bar, away from the ring. The track (`maximum` long) is drawn black; the
+   value on it in green, or in red when it is below `lowThreshold`, and then only while the HUD's blink is
+   on (blinkOn, flipped every 350 ms by FUN_00106398), with a black hub of radius 7 (DATA_AT_00127A78) that
+   leaves a ring. Last the icon is drawn in the hub: the heart (playerIcon) or the Heartless face
+   (targetIcon). Called by the HUD's draw method FUN_00106398 for the player (Progress health,
+   maximumHealth, gaugeFullHealth, lowHealth) and for the target (the Hud's target fields). */
+void hud_draw_gauge(Hud *hud,IGraphics *graphics,int32 side,int32 value,int32 maximum,int32 fullScale,
+                    int32 lowThreshold)
 
 {
-  short sVar1;
-  short sVar2;
-  ushort uVar3;
-  short sVar4;
-  short sVar5;
-  int iVar6;
-  int iVar7;
-  int *piVar8;
-  undefined2 uVar9;
-  int iVar10;
-  int iVar14;
-  int iVar11;
-  undefined4 uVar12;
-  bool bVar13;
-  undefined4 local_54;
-  undefined4 local_50;
-  undefined4 local_4c;
-  undefined2 local_48;
-  undefined2 local_46;
-  uint local_44;
-  undefined4 local_40;
-  int local_3c;
-  int local_38;
-  int iStack_34;
-  int *piStack_30;
-  int iStack_2c;
-  int local_28;
-  
-  bVar13 = param_3 == 0;
-  if (bVar13) {
-    iVar14 = 0x19;
+  UIElement *element = (UIElement *)hud;
+  int32 owner = (int32)element->owner;
+  int16 cx = side == 0 ? 25 : element->rect->dx - 25;
+  int16 cy = element->rect->dy - 25;
+  int32 trackLength;
+  int32 valueLength;
+  int32 sweep;
+  uint32 colour;
+  AEEArc ring;
+  AEERect bar;
+  AEECircle hub;
+  IImage *icon;
+
+  trackLength = (int32)rt_sdiv(fullScale,maximum * 80).low;
+  valueLength = (int32)rt_sdiv(fullScale,value * 80).low;
+  (*graphics->pvt->SetFillMode)(graphics,1);
+  graphics_set_color(owner,graphics,0xff000000,1);
+  graphics_set_color(owner,graphics,0xff000000,2);
+  sweep = INTEGER_270;
+  if (trackLength <= 52)
+    sweep = (int32)rt_sdiv(52,INTEGER_270 * trackLength).low;
+  ring.cx = cx;
+  ring.cy = cy;
+  ring.r = 13;
+  ring.startAngle = side != 0 ? 180 : 0;
+  ring.arcAngle = (int16)(side != 0 ? -sweep : sweep);
+  (*graphics->pvt->DrawArc)(graphics,&ring);
+  if (trackLength > 52) {                       /* the track's bar */
+    memcpy(&bar,(void *)DATA_AT_00127A7E,8);    /* {0, 0, 0, 7} */
+    bar.x = side == 0 ? cx + 1 : cx - (trackLength - 52);
+    bar.y = cy + 7;
+    bar.dx = (int16)(trackLength - 52);
+    (*graphics->pvt->DrawRect)(graphics,&bar);
   }
-  iVar10 = 0;
-  if (!bVar13) {
-    iVar10 = (int)*(short *)(*(int *)(param_1 + 8) + 4);
-  }
-  if (!bVar13) {
-    iVar14 = iVar10 + -0x19;
-  }
-  iVar11 = *(short *)(*(int *)(param_1 + 8) + 6) + -0x19;
-  local_40 = 0x34;
-  iStack_34 = param_1;
-  piStack_30 = param_2;
-  iStack_2c = param_3;
-  local_28 = param_4;
-  iVar6 = rt_sdiv(param_6,param_5 * 0x50).low;
-  iVar7 = rt_sdiv(param_6,local_28 * 0x50).low;
-  (*((IGraphics *)param_2)->pvt->SetFillMode)((IGraphics *)param_2,1);
-  graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,1);
-  graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,2);
-  iVar10 = INTEGER_270;
-  if (iVar6 < 0x35) {
-    iVar10 = rt_sdiv(local_40,INTEGER_270 * iVar6).low;
-  }
-  uVar3 = (ushort)iVar10;
-  sVar5 = (short)iVar14;
-  local_38 = (int)sVar5;
-  iVar10 = iVar11 * 0x10000;
-  local_3c = iVar10 >> 0x10;
-  local_4c = ((uint32)(uint16)((short)((uint)iVar10 >> 0x10)) << 16 | (uint16)(sVar5));
-  if (param_3 != 0) {
-    uVar9 = 0xb4;
-  }
-  else {
-    uVar9 = 0;
-  }
-  *(undefined4 *)&local_48 = ((uint32)(uint16)(uVar9) << 16 | (uint16)(0xd));
-  if (param_3 != 0) {
-    uVar3 = -uVar3;
-  }
-  local_44 = (uint)uVar3;
-  (*((IGraphics *)param_2)->pvt->DrawArc)((IGraphics *)param_2,(const AEEArc *)&local_4c);
-  sVar2 = (short)iVar11;
-  if (0x34 < iVar6) {
-    sVar1 = (short)iVar6 + -0x34;
-    memcpy(&local_54,(int32)DATA_AT_00127A7E,8);
-    if (param_3 == 0) {
-      sVar4 = sVar5 + 1;
+  if (value >= lowThreshold || hud->blinkOn != 0) {
+    colour = value >= lowThreshold ? COLOR_GREEN : COLOR_RED;
+    graphics_set_color(owner,graphics,colour,2);
+    sweep = INTEGER_270;
+    if (valueLength <= 52)
+      sweep = (int32)rt_sdiv(52,INTEGER_270 * valueLength).low;
+    ring.arcAngle = (int16)(side != 0 ? -sweep : sweep);
+    (*graphics->pvt->DrawArc)(graphics,&ring);
+    if (valueLength > 52) {                     /* the value's bar, inside the track's */
+      memcpy(&bar,(void *)DATA_AT_00127A86,8);  /* {0, 0, 0, 5} */
+      bar.x = side == 0 ? cx : cx - (valueLength - 52) + 1;
+      bar.y = cy + 8;
+      bar.dx = (int16)(valueLength - 52);
+      graphics_set_color(owner,graphics,colour,1);
+      (*graphics->pvt->DrawRect)(graphics,&bar);
     }
-    else {
-      sVar4 = sVar5 - sVar1;
-    }
-    local_54 = ((uint32)(uint16)(sVar2 + 7) << 16 | (uint16)(sVar4));
-    local_50 = ((uint32)(uint16)(*(undefined2 *)((undefined1 *)&local_50 + 2)) << 16 | (uint16)(sVar1));
-    (*((IGraphics *)param_2)->pvt->DrawRect)((IGraphics *)param_2,(const AEERect *)&local_54);
+    graphics_set_color(owner,graphics,0xff000000,1);
+    graphics_set_color(owner,graphics,0xff000000,2);
+    hub = *(const AEECircle *)DATA_AT_00127A78; /* {0, 0, 7} */
+    hub.cx = cx;
+    hub.cy = cy;
+    (*graphics->pvt->DrawCircle)(graphics,&hub);
   }
-  if ((param_7 <= local_28) || (*(char *)(param_1 + 0xd1) != '\0')) {
-    uVar12 = COLOR_GREEN;
-    if (local_28 < param_7) {
-      uVar12 = COLOR_RED;
-    }
-    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,uVar12,2);
-    iVar10 = INTEGER_270;
-    if (iVar7 < 0x35) {
-      iVar10 = rt_sdiv(local_40,INTEGER_270 * iVar7).low;
-    }
-    sVar1 = -(short)iVar10;
-    if (param_3 == 0) {
-      sVar1 = (short)iVar10;
-    }
-    local_44 = ((uint32)(uint16)(*(undefined2 *)((undefined1 *)&local_44 + 2)) << 16 | (uint16)(sVar1));
-    (*((IGraphics *)param_2)->pvt->DrawArc)((IGraphics *)param_2,(const AEEArc *)&local_4c);
-    if (0x34 < iVar7) {
-      sVar1 = (short)iVar7 + -0x34;
-      memcpy(&local_54,(int32)DATA_AT_00127A86,8);
-      if (param_3 != 0) {
-        sVar5 = (sVar5 - sVar1) + 1;
-      }
-      local_54 = ((uint32)(uint16)(sVar2 + 8) << 16 | (uint16)(sVar5));
-      local_50 = ((uint32)(uint16)(*(undefined2 *)((undefined1 *)&local_50 + 2)) << 16 | (uint16)(sVar1));
-      graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,uVar12,1);
-      (*((IGraphics *)param_2)->pvt->DrawRect)((IGraphics *)param_2,(const AEERect *)&local_54);
-    }
-    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,1);
-    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_2,0xff000000,2);
-    local_50 = *(undefined4 *)(((int32)DATA_AT_00127A78 + 0x4));
-    local_54 = ((uint32)(uint16)((short)local_3c) << 16 | (uint16)((short)local_38));
-    (*((IGraphics *)param_2)->pvt->DrawCircle)((IGraphics *)param_2,(const AEECircle *)&local_54);
-  }
-  if (param_3 == 0) {
-    piVar8 = *(int **)(param_1 + 0xd8);
-  }
-  else {
-    piVar8 = *(int **)(param_1 + 0xd4);
-  }
-  if (piVar8 != (int *)0x0) {
-    /* Ghidra had dropped arguments; restored from the disassembly (r2 = iVar11 - 7, 0x00107ab8) */
-    (*((IImage *)piVar8)->pvt->Draw)((IImage *)piVar8,iVar14 + -7,iVar11 + -7);
-  }
+  icon = side == 0 ? hud->targetIcon : hud->playerIcon;
+  if (icon != (IImage *)0x0)
+    (*icon->pvt->Draw)(icon,cx - 7,cy - 7);
   return;
 }
+
 
 /* ==== 0x00107ADC  (file offset 0x07ADC)  FUN_00107adc ================================================ */
 void FUN_00107adc(int param_1,int param_2,undefined4 param_3,int *param_4,short *param_5,
@@ -9868,8 +9810,8 @@ void progress_reset(Progress *progress)
 
 {
   progress->health = progress->maximumHealth = FLOAT_5;
-  progress->field_51c = FLOAT_5 + 0x700000;      /* 9.0f */
-  progress->field_520 = 0x40000000;              /* 2.0f */
+  progress->gaugeFullHealth = FLOAT_5 + 0x700000; /* 9.0f */
+  progress->lowHealth = 0x40000000;              /* 2.0f */
   progress->magicPoints = progress->maximumMagicPoints = 5;
   progress->munny = 0;
   progress->levelRewardTwoCount = 1;

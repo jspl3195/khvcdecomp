@@ -316,7 +316,29 @@ typedef struct Screen {
  * named so far; the script code (script_command_run) still reads the rest through offsets. */
 typedef struct Hud {
     Screen   screen;              /* +0x00 the plain screen it builds on (screen_create, framed 0) */
-    uint8    unknown_48[0x94];
+    uint8    showMagicPoints;     /* +0x48 GUESS: name; 1 at creation: FUN_00106398 draws the MP as five
+                                     pips */
+    uint8    showPlayerGauge;     /* +0x49 1 at creation: the player's health gauge (hud_draw_gauge,
+                                     right) */
+    uint8    showTargetGauge;     /* +0x4a 0 at creation: the target's health gauge (hud_draw_gauge,
+                                     left) */
+    uint8    unknown_4b;
+    int32    targetHealth;        /* +0x4c the target's health (an enemy's or a boss hitsphere's), set when
+                                     it is hit */
+    int32    targetMaximumHealth; /* +0x50 its gauge is drawn only when above 0 */
+    int32    targetLowHealth;     /* +0x54 below it the target's gauge blinks red; Progress.lowHealth at
+                                     creation */
+    uint8    unknown_58[0x74];
+    int32    blinkTime;           /* +0xcc GUESS: name; aee_GetUpTimeMS at creation, +350 at each flip of
+                                     blinkOn */
+    uint8    unknown_d0;          /* +0xd0 0 at creation */
+    uint8    blinkOn;             /* +0xd1 GUESS: name; 1 at creation, flipped every 350 ms (FUN_00106398):
+                                     a gauge below its low threshold is drawn only while set */
+    uint8    unknown_d2[0x02];
+    IImage  *playerIcon;          /* +0xd4 kh.bar 5001: a 14x14 silver disc with a white heart, in the
+                                     player's gauge */
+    IImage  *targetIcon;          /* +0xd8 kh.bar 5002: a 14x14 black disc with yellow eyes (a Heartless),
+                                     in the target's gauge */
     UIElement *loadingText;       /* +0xdc GUESS: name; child 900 (text 0x254DA109), hidden until
                                      hud_show_loading */
     uint32   savedColor;          /* +0xe0 the primary colour from before hud_show_loading */
@@ -375,8 +397,10 @@ typedef struct Progress {
     char    *variableNames[100];    /* +0x384 and their names; 0 = free slot */
     uint32 health;                /* +0x514 GUESS: a float (its bits); refilled from maximumHealth */
     uint32 maximumHealth;         /* +0x518 GUESS: a float (its bits); +1.0f by a level reward of type 1 */
-    uint32 field_51c;             /* +0x51c a float (its bits), 9.0 at the start; drawn with the health */
-    uint32 field_520;             /* +0x520 a float (its bits), 2.0 at the start; drawn with the health */
+    uint32 gaugeFullHealth;       /* +0x51c GUESS: name; a float (its bits), 9.0 at the start: the maximum
+                                     health that fills the whole gauge (hud_draw_gauge) */
+    uint32 lowHealth;             /* +0x520 GUESS: name; a float (its bits), 2.0 at the start: below it the
+                                     player's gauge blinks red (hud_draw_gauge) */
     int32    magicPoints;           /* +0x524 MP: progress_add_magic_points, 0..maximumMagicPoints */
     int32    maximumMagicPoints;    /* +0x528 */
     int32    munny;                 /* +0x52c the currency: progress_add_munny; spent in shops */

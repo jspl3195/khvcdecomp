@@ -486,7 +486,7 @@ void FUN_00106bd4(int *param_1,int *param_2,int *param_3);
 void screen_draw(Screen *screen,IDisplay *display,IGraphics *graphics);   /* 0x00106E44 GUESS: name, see kh_mod.c */
 void text_box_draw_scroll_bar(TextBox *box,IDisplay *display,IGraphics *graphics);   /* 0x00106FB0 GUESS: name, see kh_mod.c */
 void FUN_00107230(int *param_1,undefined4 param_2,int *param_3);
-void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,undefined4 param_6, int param_7);
+void hud_draw_gauge(Hud *hud,IGraphics *graphics,int32 side,int32 value,int32 maximum,int32 fullScale, int32 lowThreshold);   /* 0x001077D0 GUESS: name, see kh_mod.c */
 void FUN_00107adc(int param_1,int param_2,undefined4 param_3,int *param_4,short *param_5, undefined4 param_6,uint param_7,short param_8);
 int32 ui_element_draw(UIElement *element);   /* 0x00107D24 GUESS: name, see kh_mod.c */
 void web_request_free_buffers(WebRequest *caller,WebRequest *request);   /* 0x00107E48 GUESS: name, see kh_mod.c */
