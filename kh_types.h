@@ -530,7 +530,10 @@ typedef struct CollisionShape {
     uint32 radius;                /* +0x2c a float (its bits) */
     uint32 height;                /* +0x30 a float (its bits); level_object_get_height */
     struct KHApp *app;            /* +0x34 GetAppInstance() at creation */
-    uint32 *vertices;             /* +0x38 floats, 3 per vertex (a "poly", or the 4 corners of a "rect") */
+    uint32 *vertices;             /* +0x38 floats, 3 per vertex (a "poly", or the 4 corners of a cuboid or
+                                     "rect": minimum x and y, maximum x minimum y, maximum x and y, minimum
+                                     x maximum y, counter-clockwise, so `clockwise` stays 0); its edges are
+                                     what collision_shape_turn_direction tests */
     int32    vertexCount;           /* +0x3c */
     int32    clockwise;             /* +0x40 a "poly": the entity's "Clockwise" tag */
     ISwerveObject **vertexEntities; /* +0x44 a "poly": the entities named "%dtransform", one per vertex;

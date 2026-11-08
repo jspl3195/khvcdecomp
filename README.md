@@ -57,6 +57,16 @@ This must give no errors and no `-Wpedantic`, `-Wlong-long`, `-Woverflow` or shi
 - **Rewritten functions.** Functions that have been cleaned up have named, typed parameters, no `goto`, and the same calls as the binary, with none added or removed.
 - **Ghidra names.** Names such as `FUN_<address>`, `uVar3` and `param_1` are Ghidra's and have not been reviewed yet.
 
+## Known code
+
+Some routines are known code, recognised from their structure. Their comments name the source:
+
+| Routine | Source |
+|---|---|
+| `collision_shape_turn_direction` (0x00113da4) | Franklin Antonio's segment intersection test, "Faster Line Segment Intersection", *Graphics Gems III* (1992) |
+| the double-precision `acos`, `sin`, `cos` and their kernels | fdlibm: `__ieee754_acos`, `__ieee754_rem_pio2`, `__kernel_sin`, `__kernel_cos`, `sin`, `cos` |
+| `rt_div0`, the word `memcpy` / `memclr` | the ARM C library: `__rt_div0`, `__rt_memcpy_w`, `__rt_memclr_w` |
+
 ## Status
 
 Many of kh.mod's functions are still Ghidra's output with renamed constants and comments. The rest have been rewritten.

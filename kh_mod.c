@@ -8540,8 +8540,13 @@ void camera_avoid_walls(Camera *camera,uint32 *from,uint32 *to)
 }
 
 
-/* ==== 0x0010E448  (file offset 0x0E448)  FUN_0010e448 ================================================ */
-undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
+/* ==== 0x0010E448  (file offset 0x0E448)  motion_entity_block_move ==================================== */
+/* GUESS: name (not yet rewritten). Stops a MotionEntity's move (`param_2`, x, y, z floats) at the game's
+   blocking shapes, in the states its +0x1c8 / +0x1cc switch lists: the X move, then the Y move, then both,
+   each tried at its height and at its height plus the move's z (game_find_blocking_shape); a blocked part
+   of the move is zeroed, and the entity turns by 5 degrees the way collision_shape_turn_direction gives
+   (motion_entity_turn), once per call, so it slides along the wall. */
+undefined4 motion_entity_block_move(int param_1,undefined4 *param_2)
 
 {
   float64 dVar2;   /* the double whose low word is uVar2 */
@@ -8610,8 +8615,8 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
           uVar7 = motion_entity_get_heading((MotionEntity *)param_1);
           uVar8 = *(uint *)(param_1 + 0x68);
           uVar2 = float_add(uVar8,*param_2);
-          uVar2 = FUN_00113da4(local_30,uVar8,*(int *)(param_1 + 0x6c),uVar2,
-                               *(int *)(param_1 + 0x6c),uVar7);
+          uVar2 = collision_shape_turn_direction((CollisionShape *)local_30,uVar8,*(int *)(param_1 + 0x6c),
+                                                 uVar2,*(int *)(param_1 + 0x6c),uVar7);
           bVar11 = uVar2 == 0;
           uVar18 = bVar11;
           if (!bVar11) {
@@ -8644,8 +8649,8 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
             uVar7 = motion_entity_get_heading((MotionEntity *)param_1);
             uVar8 = *(uint *)(param_1 + 0x6c);
             uVar2 = float_add(uVar8,param_2[1]);
-            uVar2 = FUN_00113da4(local_30,*(int *)(param_1 + 0x68),uVar8,*(int *)(param_1 + 0x68),
-                                 uVar2,uVar7);
+            uVar2 = collision_shape_turn_direction((CollisionShape *)local_30,*(int *)(param_1 + 0x68),
+                                                   uVar8,*(int *)(param_1 + 0x68),uVar2,uVar7);
             if (uVar2 != 0) {
               uVar2 = int_to_float(uVar2);
               uVar2 = float_multiply(uVar2,uVar4);
@@ -8679,7 +8684,8 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2)
             uVar2 = float_add(uVar3,param_2[1]);
             uVar9 = *(uint *)(param_1 + 0x68);
             uVar8 = float_add(uVar9,*param_2);
-            uVar2 = FUN_00113da4(local_30,uVar9,uVar3,uVar8,uVar2,uVar7);
+            uVar2 = collision_shape_turn_direction((CollisionShape *)local_30,uVar9,uVar3,uVar8,uVar2,
+                                                   uVar7);
             if (uVar2 != 0) {
               uVar2 = int_to_float(uVar2);
               uVar4 = float_multiply(uVar2,uVar4);
@@ -12196,189 +12202,128 @@ uint32 * random_floats(int32 context,int32 count)
 }
 
 
-/* ==== 0x00113DA4  (file offset 0x13DA4)  FUN_00113da4 ================================================ */
-int FUN_00113da4(int *param_1,int param_2,int param_3,int param_4,int param_5,uint param_6)
+/* ==== 0x00113DA4  (file offset 0x13DA4)  collision_shape_turn_direction ============================== */
+/* GUESS: names (the algorithm is certain: Franklin Antonio's segment intersection test, "Faster Line
+   Segment Intersection", Graphics Gems III, 1992, run against each edge of the shape). Which way a mover
+   blocked by `shape` turns to slide along it (motion_entity_block_move, which turns by 5 degrees times the
+   result): the move from (x1, y1) to (x2, y2) is tested against the shape's edges in vertex order (vertex
+   i to i + 1, the last to the first); for the first one it crosses, the edge's normal (its direction_to
+   minus 90, wrapped) is compared with the mover's heading: 1 when the normal minus the heading is not
+   above 0, -1 when it is, both negated for a clockwise poly and again for an "outer" shape; 0 when no edge
+   is crossed. A cuboid's test starts at the shape's position instead (GUESS: so the side the target lies
+   beyond is found). Each edge is rejected first by the two segments' X and then Y bounding boxes, then by
+   the edge's parameter d / f and the move's e / f (each between 0 and f), then when f is 0 (parallel). The
+   first crossed edge, not the nearest, is taken (GAME_BUGS.md). Ghidra had lost the soft-float compares'
+   results; written from the disassembly (0x00113da4 - 0x00114118). */
+int32 collision_shape_turn_direction(CollisionShape *shape,uint32 x1,uint32 y1,uint32 x2,uint32 y2,
+                                     uint32 heading)
 
 {
-  int iVar1;
-  uint uVar2;
-  uint uVar3;
-  uint uVar4;
-  uint uVar5;
-  uint uVar6;
-  uint uVar7;
-  int iVar8;
-  uint uVar9;
-  undefined1 uVar10;
-  undefined1 uVar11;
-  undefined1 uVar12;
-  uint32 uVar13;
-  uint local_64;
-  uint local_60;
-  int local_5c;
-  uint local_58;
-  uint local_54;
-  uint local_50;
-  uint local_4c;
-  uint local_48;
-  uint local_44;
-  uint local_40;
-  uint local_3c;
-  uint local_38;
-  int *piStack_34;
-  uint local_30;
-  uint local_2c;
-  uint local_28;
-  
-  uVar6 = 0;
-  iVar8 = 0;
-  local_5c = 1;
-  if (param_1[0x10] != 0) {
-    local_5c = -1;
+  int32 sign = 1;                 /* sp+0x0c */
+  int32 i;
+  int32 next = 0;
+  uint32 x3, y3, x4, y4;          /* the edge, from vertex i to vertex next */
+  uint32 ax, ay, bx, by, cx, cy;  /* Antonio's A = move end - start, B = edge start - end, C = move start -
+                                     edge start */
+  uint32 d, e, f;                 /* f the denominator; d / f along the edge, e / f along the move */
+  uint32 lo, hi;
+  uint32 product;
+  uint32 normal;                  /* sp+0x08 */
+  uint32 turn;                    /* sp+0x04 */
+
+  if (shape->clockwise != 0)
+    sign = -1;
+  if (shape->kind == 2)
+    sign = -sign;
+  if (shape->form == 5) {
+    x1 = shape->position[0];
+    y1 = shape->position[1];
   }
-  if (*param_1 == 2) {
-    local_5c = -local_5c;
-  }
-  local_2c = param_3;
-  local_30 = param_2;
-  if (param_1[1] == 5) {
-    local_30 = param_1[2];
-    local_2c = param_1[3];
-  }
-  piStack_34 = param_1;
-  local_28 = param_4;
-  local_38 = float_subtract(param_4,local_30);
-  local_3c = float_subtract(param_5,local_2c);
-  do {
-    uVar5 = param_1[0xf];
-    if ((int)uVar5 <= iVar8) {
-      return 0;
-    }
-    uVar6 = uVar6 + 1;
-    uVar12 = uVar6 <= uVar5;
-    uVar11 = uVar5 == uVar6;
-    iVar1 = param_1[0xe];
-    uVar5 = *(uint *)(iVar1 + iVar8 * 0xc);
-    uVar7 = *(uint *)(iVar1 + iVar8 * 0xc + 4);
-    if ((bool)uVar11) {
-      uVar6 = 0;
-    }
-    local_58 = *(uint *)(iVar1 + uVar6 * 0xc);
-    uVar9 = *(uint *)(iVar1 + uVar6 * 0xc + 4);
-    local_40 = local_38;
-    local_44 = float_subtract(uVar5,local_58);
-    float_compare_less(local_40,0);
-    uVar3 = local_28;
-    uVar2 = local_30;
-    if (!(bool)uVar12) {
-      uVar3 = local_30;
-      uVar2 = local_28;
-    }
-    float_compare_greater(local_44,0);
-    if (!(bool)uVar12 || (bool)uVar11) {
-      float_compare_less(uVar3,uVar5);
-      if ((bool)uVar12) {
-        float_compare_less(local_58,uVar2);
-      }
-      if ((bool)uVar12) goto LAB_00113ed4;
+  ax = float_subtract(x2,x1);
+  ay = float_subtract(y2,y1);
+  for (i = 0; i < shape->vertexCount; i++) {
+    next++;
+    if (next == shape->vertexCount)
+      next = 0;
+    x3 = shape->vertices[i * 3];
+    y3 = shape->vertices[i * 3 + 1];
+    x4 = shape->vertices[next * 3];
+    y4 = shape->vertices[next * 3 + 1];
+    /* the X bounding boxes */
+    bx = float_subtract(x3,x4);
+    if (float_compare_less(ax,0), *(float *)&ax < 0.0f) {
+      lo = x2;
+      hi = x1;
     }
     else {
-      float_compare_less(uVar3,local_58);
-      if ((bool)uVar12) {
-        float_compare_less(uVar5,uVar2);
-      }
-      if ((bool)uVar12) {
-LAB_00113ed4:
-        uVar12 = 1;
-        local_4c = local_3c;
-        local_50 = float_subtract(uVar7,uVar9);
-        float_compare_less(local_4c,0);
-        uVar3 = param_5;
-        uVar2 = local_2c;
-        if (!(bool)uVar12) {
-          uVar3 = local_2c;
-          uVar2 = param_5;
-        }
-        float_compare_greater(local_50,0);
-        if (!(bool)uVar12 || (bool)uVar11) {
-          float_compare_less(uVar3,uVar7);
-          if ((bool)uVar12) {
-            float_compare_less(uVar9,uVar2);
-          }
-          if ((bool)uVar12) goto LAB_00113f54;
-        }
-        else {
-          float_compare_less(uVar3,uVar9);
-          if ((bool)uVar12) {
-            float_compare_less(uVar7,uVar2);
-          }
-          if ((bool)uVar12) {
-LAB_00113f54:
-            uVar12 = 1;
-            local_48 = float_subtract(local_30,uVar5);
-            local_54 = float_subtract(local_2c,uVar7);
-            uVar2 = float_multiply(local_50,local_48);
-            uVar3 = float_multiply(local_44,local_54);
-            uVar2 = float_reverse_subtract(uVar3,uVar2);
-            uVar3 = float_multiply(local_4c,local_44);
-            uVar4 = float_multiply(local_40,local_50);
-            uVar3 = float_reverse_subtract(uVar4,uVar3);
-            float_compare_greater(uVar3,0);
-            if (!(bool)uVar12 || (bool)uVar11) {
-              float_compare_greater(uVar2,0);
-              if (!(bool)uVar12 || (bool)uVar11) {
-                float_compare_less(uVar2,uVar3);
-                uVar10 = 1;
-                if ((bool)uVar12) goto LAB_0011400c;
-              }
-            }
-            else {
-              float_compare_less(uVar2,0);
-              if (((bool)uVar12) &&
-                 (float_compare_greater(uVar2,uVar3), uVar10 = uVar12, !(bool)uVar12 || (bool)uVar11)) {
-LAB_0011400c:
-                uVar2 = float_multiply(local_40,local_54);
-                uVar4 = float_multiply(local_4c,local_48);
-                uVar2 = float_reverse_subtract(uVar4,uVar2);
-                float_compare_greater(uVar3,0);
-                if (!(bool)uVar10 || (bool)uVar11) {
-                  float_compare_greater(uVar2,0);
-                  if (!(bool)uVar10 || (bool)uVar11) {
-                    float_compare_less(uVar2,uVar3);
-                    uVar12 = 1;
-                    if ((bool)uVar10) goto LAB_00114080;
-                  }
-                }
-                else {
-                  float_compare_less(uVar2,0);
-                  if (((bool)uVar10) &&
-                     (float_compare_greater(uVar2,uVar3), uVar12 = uVar10, !(bool)uVar10 || (bool)uVar11)) {
-LAB_00114080:
-                    float_compare_equal(uVar3,0);
-                    if (!(bool)uVar11) {
-                      uVar13 = direction_to(((KHApp *)param_1[0xd])->context,uVar5,uVar7,
-                                            local_58,uVar9);
-                      local_60 = float_subtract(uVar13,FLOAT_90);
-                      wrap_angle((undefined4)((KHApp *)param_1[0xd])->context,(uint32 *)&local_60);
-                      local_64 = float_subtract(local_60,param_6);
-                      wrap_angle((undefined4)((KHApp *)param_1[0xd])->context,(uint32 *)&local_64);
-                      float_compare_greater(local_64,0);
-                      if (!(bool)uVar12 || (bool)uVar11) {
-                        return local_5c;
-                      }
-                      return -local_5c;
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+      lo = x1;
+      hi = x2;
     }
-    iVar8 = iVar8 + 1;
-  } while( true );
+    if (float_compare_greater(bx,0), *(float *)&bx > 0.0f) {
+      if ((float_compare_less(hi,x4), *(float *)&hi < *(float *)&x4) ||
+          (float_compare_less(x3,lo), *(float *)&x3 < *(float *)&lo))
+        continue;
+    }
+    else if ((float_compare_less(hi,x3), *(float *)&hi < *(float *)&x3) ||
+             (float_compare_less(x4,lo), *(float *)&x4 < *(float *)&lo))
+      continue;
+    /* the Y bounding boxes */
+    by = float_subtract(y3,y4);
+    if (float_compare_less(ay,0), *(float *)&ay < 0.0f) {
+      lo = y2;
+      hi = y1;
+    }
+    else {
+      lo = y1;
+      hi = y2;
+    }
+    if (float_compare_greater(by,0), *(float *)&by > 0.0f) {
+      if ((float_compare_less(hi,y4), *(float *)&hi < *(float *)&y4) ||
+          (float_compare_less(y3,lo), *(float *)&y3 < *(float *)&lo))
+        continue;
+    }
+    else if ((float_compare_less(hi,y3), *(float *)&hi < *(float *)&y3) ||
+             (float_compare_less(y4,lo), *(float *)&y4 < *(float *)&lo))
+      continue;
+    /* the edge's parameter: 0 <= d <= f (f > 0) or f <= d <= 0 */
+    cx = float_subtract(x1,x3);
+    cy = float_subtract(y1,y3);
+    product = float_multiply(by,cx);
+    d = float_reverse_subtract(float_multiply(bx,cy),product);   /* by * cx - bx * cy */
+    product = float_multiply(ay,bx);
+    f = float_reverse_subtract(float_multiply(ax,by),product);   /* ay * bx - ax * by */
+    if (float_compare_greater(f,0), *(float *)&f > 0.0f) {
+      if ((float_compare_less(d,0), *(float *)&d < 0.0f) ||
+          (float_compare_greater(d,f), *(float *)&d > *(float *)&f))
+        continue;
+    }
+    else if ((float_compare_greater(d,0), *(float *)&d > 0.0f) ||
+             (float_compare_less(d,f), *(float *)&d < *(float *)&f))
+      continue;
+    /* the move's parameter, the same way */
+    product = float_multiply(ax,cy);
+    e = float_reverse_subtract(float_multiply(ay,cx),product);   /* ax * cy - ay * cx */
+    if (float_compare_greater(f,0), *(float *)&f > 0.0f) {
+      if ((float_compare_less(e,0), *(float *)&e < 0.0f) ||
+          (float_compare_greater(e,f), *(float *)&e > *(float *)&f))
+        continue;
+    }
+    else if ((float_compare_greater(e,0), *(float *)&e > 0.0f) ||
+             (float_compare_less(e,f), *(float *)&e < *(float *)&f))
+      continue;
+    if (float_compare_equal(f,0), *(float *)&f == 0.0f)   /* parallel */
+      continue;
+    normal = float_subtract(direction_to(shape->app->context,x3,y3,x4,y4),FLOAT_90);
+    wrap_angle((int32)shape->app->context,&normal);
+    turn = float_subtract(normal,heading);
+    wrap_angle((int32)shape->app->context,&turn);
+    if (float_compare_greater(turn,0), *(float *)&turn > 0.0f)
+      return -sign;
+    return sign;
+  }
+  return 0;
 }
+
 
 /* ==== 0x00114120  (file offset 0x14120)  progress_find_record ======================================== */
 /* GUESS: names (and that the first value is a best score). The saved record with the name `name` (a
@@ -15243,7 +15188,7 @@ int32 level_object_allows(LevelObject *object,uint32 x,uint32 y,uint32 z,uint32 
    for each of the game's 120 objects that has field_48 and field_38 set (GUESS: active and solid), the
    first of its scene shapes that does not allow the character there, with the character's radius and
    height (level_object_find_blocking_shape); 0 when nothing blocks. Ghidra's high word was r1 reloaded.
-   The character's movement FUN_0010e448 tries its steps with it. */
+   The character's movement motion_entity_block_move tries its steps with it. */
 CollisionShape * game_find_blocking_shape(Game *game,uint32 x,uint32 y,uint32 z)
 
 {
@@ -21887,7 +21832,7 @@ void FUN_00123588(int param_1,int param_2,int param_3)
       local_20 = float_subtract(*(uint *)(param_1 + 0x70),*(uint *)(param_1 + 0x334));
       thunk_FUN_0011fd90(param_1,*(undefined4 *)(param_1 + 0x32c),*(undefined4 *)(param_1 + 0x330),
                          *(undefined4 *)(param_1 + 0x334));
-      FUN_0010e448(param_1,&local_28);
+      motion_entity_block_move(param_1,&local_28);
       FUN_0011ca70(param_1,local_28,local_24,local_20,0);
       local_28 = 0;
       local_24 = (code *)0x0;
@@ -21900,7 +21845,7 @@ void FUN_00123588(int param_1,int param_2,int param_3)
   if (iVar9 != -1) {
     *(int *)(param_1 + 0x1cc) = iVar9;
   }
-  iVar9 = FUN_0010e448(param_1,&local_28);
+  iVar9 = motion_entity_block_move(param_1,&local_28);
   uVar13 = iVar9 == 0;
   uVar12 = true;
   if (!(bool)uVar13) {
@@ -21920,7 +21865,7 @@ void FUN_00123588(int param_1,int param_2,int param_3)
     float_compare_equal((uint)pcVar7,(uint)local_24);
   }
   if (!(bool)uVar13) {
-    FUN_0010e448(param_1,&local_28);
+    motion_entity_block_move(param_1,&local_28);
   }
   pcVar7 = local_24;
   FUN_0011ca70(param_1,local_28,local_24,local_20,0);

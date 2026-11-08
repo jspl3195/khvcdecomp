@@ -623,7 +623,7 @@ void FUN_0010db04(int param_1,undefined4 param_2);
 int32 progress_score(Progress *progress);   /* 0x0010E1F8 GUESS: name */
 AECHAR * string_to_wide(int32 context,char **text,AECHAR **wide);   /* 0x0010E210 GUESS: name, see kh_mod.c */
 void camera_avoid_walls(Camera *camera,uint32 *from,uint32 *to);   /* 0x0010E280 GUESS: names */
-undefined4 FUN_0010e448(int param_1,undefined4 *param_2);
+undefined4 motion_entity_block_move(int param_1,undefined4 *param_2);   /* 0x0010E448 GUESS: name, see kh_mod.c */
 void thunk_animations_add_from_scene(int param_1,int *param_2);
 void animations_drop_missing(Animations *animations);   /* 0x0010E94C GUESS: name, see kh_mod.c */
 int32 animations_release_controllers(Animations *animations);   /* 0x0010E9BC GUESS: name */
@@ -693,7 +693,7 @@ void FUN_0011386c(uint param_1,int param_2);
 void level_object_get_position(uint32 *position,LevelObject *object);   /* 0x00113CC4 GUESS: name */
 uint8 animations_get_priority(Animations *animations,int32 index);   /* 0x00113CD4 GUESS: name */
 uint32 * random_floats(int32 context,int32 count);   /* 0x00113CFC GUESS: name, see kh_mod.c */
-int FUN_00113da4(int *param_1,int param_2,int param_3,int param_4,int param_5,uint param_6);
+int32 collision_shape_turn_direction(CollisionShape *shape,uint32 x1,uint32 y1,uint32 x2,uint32 y2,uint32 heading);   /* 0x00113DA4 GUESS: name, see kh_mod.c */
 int32 progress_find_record(Progress *progress,const char *name,int32 *best,int32 *second);   /* 0x00114120 GUESS: name, see kh_mod.c */
 uint8 progress_get_status(Progress *progress,const char *name);   /* 0x00114198 GUESS: name, see kh_mod.c */
 uint8 animations_get_state(Animations *animations,int32 index);   /* 0x001141F4 GUESS: name */
