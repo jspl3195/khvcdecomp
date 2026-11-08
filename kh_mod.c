@@ -3582,7 +3582,8 @@ void FUN_00106bd4(int *param_1,int *param_2,int *param_3)
     return;
   case 7:
   default:
-    FUN_00107adc((int)param_1,1,param_2,param_3,(short *)param_1[2],uVar1,uVar1,4);
+    ui_element_draw_box((UIElement *)param_1,1,(IDisplay *)param_2,(IGraphics *)param_3,
+                        (AEERect *)param_1[2],uVar1,uVar1,4);
     break;
   case 8:
     if ((char)param_1[0x13] != '\0') {
@@ -3592,8 +3593,8 @@ void FUN_00106bd4(int *param_1,int *param_2,int *param_3)
       }
       sVar5 = 4;
       if ((param_1[0x17] & 2U) != 0) {
-        FUN_00107adc((int)param_1,1,param_2,param_3,(short *)param_1[2],COLOR_SLATE_GREY,COLOR_SLATE_GREY,4)
-        ;
+        ui_element_draw_box((UIElement *)param_1,1,(IDisplay *)param_2,(IGraphics *)param_3,
+                            (AEERect *)param_1[2],COLOR_SLATE_GREY,COLOR_SLATE_GREY,4);
         sVar5 = 2;
         *(short *)p = (short)*p + 3;
         *(short *)((int)p + 2) = *(short *)((int)p + 2) + 3;
@@ -3601,7 +3602,8 @@ void FUN_00106bd4(int *param_1,int *param_2,int *param_3)
         *(short *)((int)p + 6) = *(short *)((int)p + 6) + -6;
       }
       uVar2 = (*(*(const UIElementVtbl **)param_1)->getSecondaryColor)(param_1);
-      FUN_00107adc((int)param_1,1,param_2,param_3,(short *)p,uVar2,uVar2,sVar5);
+      ui_element_draw_box((UIElement *)param_1,1,(IDisplay *)param_2,(IGraphics *)param_3,
+                          (AEERect *)p,uVar2,uVar2,sVar5);
       helper_free(p);
     }
     break;
@@ -3816,11 +3818,13 @@ LAB_001072dc:
       uVar6 = uVar3;
       uVar7 = uVar4;
     }
-    FUN_00107adc((int)param_1,2,param_2,param_3,(short *)puVar1,uVar6,0,4);
+    ui_element_draw_box((UIElement *)param_1,2,(IDisplay *)param_2,(IGraphics *)param_3,
+                        (AEERect *)puVar1,uVar6,0,4);
     uVar3 = 0;
     iVar5 = 3;
 LAB_00107378:
-    FUN_00107adc((int)param_1,iVar5,param_2,param_3,(short *)puVar1,uVar7,uVar3,4);
+    ui_element_draw_box((UIElement *)param_1,iVar5,(IDisplay *)param_2,(IGraphics *)param_3,
+                        (AEERect *)puVar1,uVar7,uVar3,4);
     break;
   case 4:
     break;
@@ -3847,12 +3851,14 @@ LAB_00107378:
       if ((param_1[0x17] & 2U) != 0) {
         uVar3 = COLOR_PALE_LILAC;
       }
-      FUN_00107adc((int)param_1,2,param_2,param_3,(short *)p,uVar3,0,4);
+      ui_element_draw_box((UIElement *)param_1,2,(IDisplay *)param_2,(IGraphics *)param_3,
+                          (AEERect *)p,uVar3,0,4);
       uVar3 = COLOR_SLATE_GREY;
       if ((param_1[0x17] & 2U) != 0) {
         uVar3 = uVar4;
       }
-      FUN_00107adc((int)param_1,3,param_2,param_3,(short *)p,uVar3,0,4);
+      ui_element_draw_box((UIElement *)param_1,3,(IDisplay *)param_2,(IGraphics *)param_3,
+                          (AEERect *)p,uVar3,0,4);
       helper_free(p);
     }
     uVar2 = COLOR_CHARCOAL;
@@ -4048,96 +4054,69 @@ void hud_draw_gauge(Hud *hud,IGraphics *graphics,int32 side,int32 value,int32 ma
 }
 
 
-/* ==== 0x00107ADC  (file offset 0x07ADC)  FUN_00107adc ================================================ */
-void FUN_00107adc(int param_1,int param_2,undefined4 param_3,int *param_4,short *param_5,
-                 undefined4 param_6,uint param_7,short param_8)
+/* ==== 0x00107ADC  (file offset 0x07ADC)  ui_element_draw_box ========================================= */
+/* GUESS: names. Draws a box with its corners cut `cut` pixels back (an octagon in `rect`), or half of its
+   outline, for the menu items (VTABLE_001016E0: FUN_00106bd4, FUN_00107230). Its 8 points, in a 32-byte
+   block from malloc, run clockwise from the lower end of the left side. Mode 1: the whole box
+   (DrawPolygon, 8 points, the count from DATA_AT_00127A68), filled with `fillColour` when that colour's
+   alpha byte is not 0, outlined in `lineColour` when its alpha byte is not 0, else in `fillColour`. Mode
+   2: the light half of a bevel, up the left side, round the top-left corner and along the top
+   (DrawPolyline, 4 points, unfilled, in `lineColour`); mode 3: the dark half, down the right side, round
+   the bottom-right corner and along the bottom; the two leave out the top-right and bottom-left corners.
+   Any other mode draws nothing. `display` is not read. The block is not checked before the points are
+   written into it (GAME_BUGS.md). Written from its disassembly (0x00107adc - 0x00107d18): Ghidra's listing
+   outlined mode 1 in `fillColour` always. */
+void ui_element_draw_box(UIElement *element,int32 mode,IDisplay *display,IGraphics *graphics,AEERect *rect,
+                         uint32 lineColour,uint32 fillColour,int16 cut)
 
 {
-  int iVar2;
-  short *psVar3;
-  int iVar4;
-  undefined4 local_4c;
-  short *local_48;
-  short local_44;
-  short sStack_42;
-  short local_40;
-  short sStack_3e;
-  short local_3c;
-  short sStack_3a;
-  short local_38;
-  short sStack_36;
-  short local_34;
-  short sStack_32;
-  short local_30;
-  short sStack_2e;
-  short local_2c;
-  short sStack_2a;
-  short local_28;
-  short sStack_26;
-  local_28 = *param_5;
-  sStack_2e = param_5[1];
-  sStack_2a = sStack_2e + param_8;
-  sStack_3e = sStack_2e + param_5[3];
-  sStack_26 = sStack_3e - param_8;
-  local_30 = local_28 + param_8;
-  local_38 = local_28 + param_5[2];
-  local_34 = local_38 - param_8;
-  local_2c = local_28;
-  sStack_32 = sStack_2e;
-  sStack_36 = sStack_2a;
-  local_3c = local_38;
-  sStack_3a = sStack_26;
-  local_40 = local_34;
-  local_44 = local_30;
-  sStack_42 = sStack_3e;
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-  psVar3 = (short *)(*g_pHelperFuncs->malloc)(0x20);
-  *psVar3 = local_28;
-  iVar4 = 0;
-  psVar3[1] = sStack_26;
-  psVar3[2] = local_2c;
-  psVar3[3] = sStack_2a;
-  psVar3[4] = local_30;
-  psVar3[5] = sStack_2e;
-  psVar3[6] = local_34;
-  iVar2 = WORD_HEXADECIMAL_0001FE30;
-  psVar3[7] = sStack_32;
-  psVar3[8] = local_38;
-  psVar3[9] = sStack_36;
-  psVar3[10] = local_3c;
-  psVar3[0xb] = sStack_3a;
-  psVar3[0xc] = local_40;
-  psVar3[0xd] = sStack_3e;
-  psVar3[0xe] = local_44;
-  psVar3[0xf] = sStack_42;
-  if (param_2 == 1) {
-    (*((IGraphics *)param_4)->pvt->SetFillMode)((IGraphics *)param_4,(param_7 & 0xff000000) != 0);
-    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_4,param_7,2);
-    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_4,param_7,1);
-    local_4c = *(undefined4 *)((int32)DATA_AT_00127A68);
-    local_48 = psVar3;
-    (*((IGraphics *)param_4)->pvt->DrawPolygon)((IGraphics *)param_4,(const AEEPolygon *)&local_4c);
+  int16 right = rect->x + rect->dx;
+  int16 bottom = rect->y + rect->dy;
+  int32 first = 0;
+  AEEPoint *points;
+  AEEPolygon outline;
+
+  points = (*g_pHelperFuncs->malloc)(0x20);     /* helper[26] (AEEHelperFuncs +0x68) */
+  points[0].x = rect->x;                        /* the left side's lower end */
+  points[0].y = bottom - cut;
+  points[1].x = rect->x;
+  points[1].y = rect->y + cut;
+  points[2].x = rect->x + cut;                  /* the top */
+  points[2].y = rect->y;
+  points[3].x = right - cut;
+  points[3].y = rect->y;
+  points[4].x = right;                          /* the right side */
+  points[4].y = rect->y + cut;
+  points[5].x = right;
+  points[5].y = bottom - cut;
+  points[6].x = right - cut;                    /* the bottom */
+  points[6].y = bottom;
+  points[7].x = rect->x + cut;
+  points[7].y = bottom;
+  if (mode == 1) {
+    (*graphics->pvt->SetFillMode)(graphics,(fillColour & 0xff000000) != 0);
+    graphics_set_color((int32)element->owner,graphics,fillColour,2);
+    graphics_set_color((int32)element->owner,graphics,
+                       (lineColour & 0xff000000) != 0 ? lineColour : fillColour,1);
+    outline.len = (int16)DATA_AT_00127A68[0];   /* 8 points */
+    outline.pad = 0;
+    outline.points = points;
+    (*graphics->pvt->DrawPolygon)(graphics,&outline);
   }
-  else {
-    if (param_2 != 2) {
-      if (param_2 != 3) goto LAB_00107c9c;
-      iVar4 = 4;
-    }
-    (*((IGraphics *)param_4)->pvt->SetFillMode)((IGraphics *)param_4,0);
-    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_4,param_6,1);
-    local_4c = *(undefined4 *)(iVar2 + 0x107c40);
-    local_48 = psVar3 + iVar4 * 2;
-    (*((IGraphics *)param_4)->pvt->DrawPolyline)((IGraphics *)param_4,(const AEEPolyline *)&local_4c);
+  else if (mode == 2 || mode == 3) {
+    if (mode == 3)
+      first = 4;
+    (*graphics->pvt->SetFillMode)(graphics,0);
+    graphics_set_color((int32)element->owner,graphics,lineColour,1);
+    outline.len = (int16)DATA_AT_00127A68[2];   /* 4 points (the word at 0x00127A70) */
+    outline.pad = 0;
+    outline.points = points + first;
+    (*graphics->pvt->DrawPolyline)(graphics,&outline);
   }
-LAB_00107c9c:
-                    /* WARNING: Could not recover jumptable at 0x00107cb0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) - tail
-                       call */
-  (*g_pHelperFuncs->free)(psVar3);
+  (*g_pHelperFuncs->free)(points);              /* helper[27]; the binary's tail jump (0x00107cb0) */
   return;
 }
+
 
 /* ==== 0x00107D24  (file offset 0x07D24)  ui_element_draw ============================================= */
 /* GUESS: name. Draws a UI element and everything in it, when it is visible: its background when it has
