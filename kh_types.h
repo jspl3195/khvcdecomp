@@ -529,7 +529,8 @@ typedef struct CollisionShape {
     uint32 *vertices;             /* +0x38 floats, 3 per vertex (a "poly", or the 4 corners of a "rect") */
     int32    vertexCount;           /* +0x3c */
     int32    clockwise;             /* +0x40 a "poly": the entity's "Clockwise" tag */
-    int32   *vertexEntities;        /* +0x44 a "poly": the entities named "%dtransform", one per vertex */
+    ISwerveObject **vertexEntities; /* +0x44 a "poly": the entities named "%dtransform", one per vertex;
+                                     released by collision_shape_destroy */
 } CollisionShape;                 /* 0x48 bytes */
 
 typedef struct LevelObject {

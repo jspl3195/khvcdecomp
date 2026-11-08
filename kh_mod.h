@@ -585,8 +585,8 @@ void FUN_0010c8b8(int param_1,int param_2);
 void FUN_0010c92c(int param_1,int param_2);
 void animations_destroy(Animations *animations,int32 freeIt);   /* 0x0010C9DC GUESS: name, see kh_mod.c */
 void FUN_0010ca1c(int param_1,int param_2);
-void FUN_0010cab0(int param_1,int param_2);
-void FUN_0010cc9c(int param_1,int param_2);
+void level_object_destroy(int param_1,int param_2);   /* 0x0010CAB0 GUESS: name: a LevelObject's destructor (see kh_types.h) */
+void collision_shape_destroy(CollisionShape *shape,int32 freeIt);   /* 0x0010CC9C GUESS: name, see kh_mod.c */
 void FUN_0010cd2c(int param_1,int param_2);
 void FUN_0010cda4(int param_1,int param_2);
 void list_destroy(UIList *list,int32 freeIt);   /* 0x0010CDD8 GUESS: name, see kh_mod.c */

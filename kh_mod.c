@@ -6564,7 +6564,7 @@ CollisionShape * collision_shape_create(CollisionShape *shape)
   shape->vertices = (uint32 *)0x0;
   shape->vertexCount = 0;
   shape->clockwise = 0;
-  shape->vertexEntities = (int32 *)0x0;
+  shape->vertexEntities = (ISwerveObject **)0x0;
   return shape;
 }
 
@@ -7196,7 +7196,7 @@ void FUN_0010c790(int param_1,int param_2)
   if (*(int *)(param_1 + 0x114) != 0) {
     item_drops_destroy(*(ItemDrops **)(param_1 + 0x114),1);
   }
-  FUN_0010cab0(param_1,0);
+  level_object_destroy(param_1,0);
   if (param_2 == 0) {
     return;
   }
@@ -7253,7 +7253,7 @@ void FUN_0010c8b8(int param_1,int param_2)
     (*((ISwerveObject *)*(int **)(param_1 + 0x158))->pvt->Release)
         ((ISwerveObject *)*(int **)(param_1 + 0x158));
   }
-  FUN_0010cab0(param_1,0);
+  level_object_destroy(param_1,0);
   if (param_2 == 0) {
     return;
   }
@@ -7340,7 +7340,7 @@ void FUN_0010ca1c(int param_1,int param_2)
   }
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
   (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x138));
-  FUN_0010cab0(param_1,0);
+  level_object_destroy(param_1,0);
   if (param_2 == 0) {
     return;
   }
@@ -7348,8 +7348,8 @@ void FUN_0010ca1c(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x0010CAB0  (file offset 0x0CAB0)  FUN_0010cab0 ================================================ */
-void FUN_0010cab0(int param_1,int param_2)
+/* ==== 0x0010CAB0  (file offset 0x0CAB0)  level_object_destroy ======================================== */
+void level_object_destroy(int param_1,int param_2)
 
 {
   int iVar1;
@@ -7417,13 +7417,13 @@ void FUN_0010cab0(int param_1,int param_2)
   for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0xe0); iVar1 = iVar1 + 1) {
     iVar2 = *(int *)(param_1 + iVar1 * 4 + 0x90);
     if (iVar2 != 0) {
-      FUN_0010cc9c(iVar2,1);
+      collision_shape_destroy((CollisionShape *)iVar2,1);
     }
   }
   for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0xec); iVar1 = iVar1 + 1) {
     iVar2 = *(int *)(param_1 + iVar1 * 4 + 0xe4);
     if (iVar2 != 0) {
-      FUN_0010cc9c(iVar2,1);
+      collision_shape_destroy((CollisionShape *)iVar2,1);
     }
   }
   if (param_2 == 0) {
@@ -7433,34 +7433,33 @@ void FUN_0010cab0(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x0010CC9C  (file offset 0x0CC9C)  FUN_0010cc9c ================================================ */
-void FUN_0010cc9c(int param_1,int param_2)
+/* ==== 0x0010CC9C  (file offset 0x0CC9C)  collision_shape_destroy ===================================== */
+/* GUESS: names. A collision shape's destructor (level_object_destroy, for each of a level object's
+   shapes): a "poly" shape's vertex entities (the scene's "%dtransform" entities, one per vertex) are
+   released and their array freed (helper_free; the pointer is not cleared), the vertices are freed (the
+   helper table's free) and cleared, and the shape itself is freed when `freeIt` is set (the binary's tail
+   jump to helper_free at 0x0010cd20). */
+void collision_shape_destroy(CollisionShape *shape,int32 freeIt)
 
 {
-  int *piVar1;
-  int iVar2;
-  
-  if (*(int *)(param_1 + 0x44) != 0) {
-    for (iVar2 = 0; iVar2 < *(int *)(param_1 + 0x3c); iVar2 = iVar2 + 1) {
-      piVar1 = *(int **)(*(int *)(param_1 + 0x44) + iVar2 * 4);
-      if (piVar1 != (int *)0x0) {
-        /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-        (*((ISwerveObject *)piVar1)->pvt->Release)((ISwerveObject *)piVar1);
-      }
+  int32 i;
+
+  if (shape->vertexEntities != (ISwerveObject **)0x0) {
+    for (i = 0; i < shape->vertexCount; i++) {
+      if (shape->vertexEntities[i] != (ISwerveObject *)0x0)
+        (*shape->vertexEntities[i]->pvt->Release)(shape->vertexEntities[i]);
     }
-    helper_free(*(void **)(param_1 + 0x44));
+    helper_free(shape->vertexEntities);
   }
-  if (*(int *)(param_1 + 0x38) != 0) {
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x38));
-    *(undefined4 *)(param_1 + 0x38) = 0;
+  if (shape->vertices != (uint32 *)0x0) {
+    (*g_pHelperFuncs->free)(shape->vertices);   /* helper[27] (AEEHelperFuncs +0x6c) */
+    shape->vertices = (uint32 *)0x0;
   }
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
+  if (freeIt != 0)
+    helper_free(shape);
   return;
 }
+
 
 /* ==== 0x0010CD2C  (file offset 0x0CD2C)  FUN_0010cd2c ================================================ */
 void FUN_0010cd2c(int param_1,int param_2)
@@ -14977,9 +14976,9 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
     shape->vertexEntities = helper_malloc(shape->vertexCount << 2);
     for (i = 0; i < shape->vertexCount; i++) {
       (*g_pHelperFuncs->sprintf)(name,(char *)STRING_PERCENT_DTRANSFORM,i + 1);
-      shape->vertexEntities[i] = 0;
+      shape->vertexEntities[i] = (ISwerveObject *)0x0;
       (*((const SwerveObject3DVtbl *)node->pvt)->Find)
-                (node,string_hash((int32)shape->app->context,(const char *)name),(ISwerveObject **)&shape->vertexEntities[i]);
+                (node,string_hash((int32)shape->app->context,(const char *)name),&shape->vertexEntities[i]);
     }
     FUN_00121ab0((int32)shape);
     shape->height = size1;
@@ -18248,7 +18247,7 @@ void FUN_0011df14(undefined4 *param_1)
     if (pcVar2 != (char *)0x0) {
       cVar1 = *pcVar2;
       if (cVar1 == '\0') {
-        FUN_0010cab0(pcVar2,1);
+        level_object_destroy(pcVar2,1);
       }
       else if (cVar1 == '\x01') {
         FUN_0010c8b8(pcVar2,1);
@@ -20212,7 +20211,7 @@ void FUN_0012070c(int param_1,int param_2)
         cVar1 = *pcVar2;
         if (cVar1 == '\0') {
           if (pcVar2 != (char *)0x0) {
-            FUN_0010cab0((int)pcVar2,1);
+            level_object_destroy((int)pcVar2,1);
           }
         }
         else if (cVar1 == '\x01') {
