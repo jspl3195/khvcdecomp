@@ -515,7 +515,7 @@ void screen_stack_close_top(ScreenStack *stack,int32 redraw);   /* 0x00108FCC GU
 void screen_stack_open(ScreenStack *stack,int32 *screen);   /* 0x001090B8 GUESS: name */
 int32 list_set_entry(UIList *list,int32 id,int32 entry);   /* 0x001090FC GUESS: name */
 void web_request_retry(WebRequest *request);   /* 0x001091FC GUESS: name, see kh_mod.c */
-void FUN_001092c0(int param_1,int param_2);
+void hud_remove_text(int param_1,int param_2);   /* 0x001092C0 GUESS: name, see kh_mod.c */
 int32 ui_element_remove_child(UIElement *element,int32 id,int32 destroy);   /* 0x00109308 GUESS: name */
 void hud_hide_loading(Hud *hud);   /* 0x00109368 GUESS: name, see kh_mod.c */
 void list_remove_entry(UIList *list,int32 id);   /* 0x00109380 GUESS: name */
@@ -627,7 +627,7 @@ undefined4 FUN_0010e448(int param_1,undefined4 *param_2);
 void thunk_animations_add_from_scene(int param_1,int *param_2);
 void animations_drop_missing(Animations *animations);   /* 0x0010E94C GUESS: name, see kh_mod.c */
 int32 animations_release_controllers(Animations *animations);   /* 0x0010E9BC GUESS: name */
-void FUN_0010ea00(int param_1);
+void screen_clear(Screen *screen);   /* 0x0010EA00 GUESS: name, see kh_mod.c */
 void FUN_0010ea64(int param_1);
 undefined4 FUN_0010eb74(int param_1);
 void motion_entity_rotate_by_heading(MotionEntity *entity,uint32 *vector);   /* 0x0010ECB8 GUESS: name, see kh_mod.c */

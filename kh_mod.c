@@ -2687,7 +2687,7 @@ int FUN_001052e0(int param_1,undefined4 param_2,int param_3,int param_4,int para
   iVar4 = param_1;
   iVar3 = param_3;
   iVar5 = param_4;
-  FUN_001092c0(param_1,param_9);
+  hud_remove_text(param_1,param_9);
   if (param_9 == 0) {
     uVar2 = 1;
   }
@@ -2695,7 +2695,7 @@ int FUN_001052e0(int param_1,undefined4 param_2,int param_3,int param_4,int para
     if (param_9 != 1) goto LAB_0010532c;
     uVar2 = 0;
   }
-  FUN_001092c0(param_1,uVar2);
+  hud_remove_text(param_1,uVar2);
 LAB_0010532c:
   iVar1 = text_style_create(0,param_9);
   if (param_4 == param_6) {
@@ -2833,7 +2833,7 @@ void screen_add_heading(ScreenStack *stack,UIElement *screen,uint32 color,int32 
 
 
 /* ==== 0x001056D0  (file offset 0x056D0)  hud_show_loading ============================================ */
-/* GUESS: names. The HUD (KHApp.field_d4) shows its "loading" text (the hidden child 900 its constructor
+/* GUESS: names. The HUD (KHApp.hud) shows its "loading" text (the hidden child 900 its constructor
    FUN_0010aa8c makes, text 0x254DA109) and takes `color` (0xRRGGBB) as its primary colour, the old one
    kept in savedColor; then it is drawn (the binary's tail jump to ui_element_draw, 0x001056e8), whose
    result it returns. The level script's "LOADING r g b"; hud_hide_loading ("!LOADING") undoes it. */
@@ -3420,7 +3420,7 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
             iVar7 = *(int *)(*(int *)(iVar8 + 0x58) + 8);
             if ((int)*(short *)(iVar7 + 6) - (int)*(short *)(iVar7 + 2) < 0) {
               *(undefined4 *)(iVar8 + 0x80) = 0;
-              FUN_001092c0(param_1,iVar2);
+              hud_remove_text(param_1,iVar2);
             }
           }
         }
@@ -4509,7 +4509,7 @@ LAB_001084dc:
           if (iVar2 != 0) {
             return 1;
           }
-          FUN_001092c0(param_1,0);
+          hud_remove_text(param_1,0);
           return 1;
         }
       }
@@ -4947,7 +4947,7 @@ void screen_stack_close_all(ScreenStack *stack)
 
 /* ==== 0x00108FCC  (file offset 0x08FCC)  screen_stack_close_top ====================================== */
 /* GUESS: name. Closes the top screen: removes it from the stack, destroys and frees it, and resumes the
-   screen below (redrawn when `redraw` is set). When the new top screen is the app's field_d4 screen, the
+   screen below (redrawn when `redraw` is set). When the new top screen is the app's HUD (KHApp.hud), the
    binary then tail-jumps (0x001090b0) to thunk_FUN_0011e154 (0x001093f4 -> 0x0011e154) with the app,
    which ends a status message state (field_cc 5) and restarts the app's 0x28 ms timer (FUN_001242b4). */
 void screen_stack_close_top(ScreenStack *stack,int32 redraw)
@@ -4960,23 +4960,23 @@ void screen_stack_close_top(ScreenStack *stack,int32 redraw)
   if (screen != (int32 *)0x0) {
     list_remove_entry(stack->screens,stack->depth - 1);     /* take it off the list */
     stack->depth--;
-    wasCurrent = (int32 *)app->field_d4 == screen;
+    wasCurrent = (int32 *)app->hud == screen;
     if (screen[0xf] == 2)
       FUN_00120450(app->context);
     (*(*(const UIElementVtbl **)screen)->destroy)(screen);           /* destroy: vtable slot 0 */
     helper_free(screen);
     if (wasCurrent)
-      app->field_d4 = 0;
+      app->hud = (struct Hud *)0x0;
     screen = (int32 *)screen_stack_top(stack);                  /* the screen below is the top now */
     if (screen != (int32 *)0x0) {
-      if ((int32 *)app->field_d4 == screen)
+      if ((int32 *)app->hud == screen)
         FUN_00120450(app->context);
       (*(*(const UIElementVtbl **)screen)->resume)(screen);   /* resume: vtable +0x20 */
       if (redraw)
         ui_element_draw((UIElement *)screen);
     }
   }
-  if (app->field_d4 == (uint32)screen_stack_top(stack))
+  if ((uint32)app->hud == (uint32)screen_stack_top(stack))
     thunk_FUN_0011e154((int32)app);
 }
 
@@ -5070,8 +5070,11 @@ void web_request_retry(WebRequest *request)
 }
 
 
-/* ==== 0x001092C0  (file offset 0x092C0)  FUN_001092c0 ================================================ */
-void FUN_001092c0(int param_1,int param_2)
+/* ==== 0x001092C0  (file offset 0x092C0)  hud_remove_text ============================================= */
+/* GUESS: name. Removes the HUD's script text `param_2` (0 - 4): when its element is there (+0x58, one word
+   per text), it is removed from the HUD's children and destroyed (ui_element_remove_child), its four per-
+   text words (+0x58, +0x6c, +0x80, +0x94) cleared, and the HUD cleared (screen_clear). */
+void hud_remove_text(int param_1,int param_2)
 
 {
   undefined4 param_4;
@@ -5086,7 +5089,7 @@ void FUN_001092c0(int param_1,int param_2)
     *(undefined4 *)(iVar1 + 0x6c) = 0;
     *(undefined4 *)(iVar1 + 0x80) = 0;
     *(undefined4 *)(iVar1 + 0x94) = 0;
-    FUN_0010ea00(param_1);
+    screen_clear((Screen *)param_1);
   }
   return;
 }
@@ -5111,14 +5114,14 @@ int32 ui_element_remove_child(UIElement *element,int32 id,int32 destroy)
 
 /* ==== 0x00109368  (file offset 0x09368)  hud_hide_loading ============================================ */
 /* GUESS: names. Undoes hud_show_loading: hides the HUD's "loading" text, puts its primary colour back and
-   redraws its rectangle (FUN_0010ea00, the binary's tail jump at 0x0010937c). The level script's
+   clears its rectangle (screen_clear, the binary's tail jump at 0x0010937c). The level script's
    "!LOADING". */
 void hud_hide_loading(Hud *hud)
 
 {
   hud->loadingText->visible = 0;
   ((UIElement *)hud)->primaryColor = hud->savedColor;
-  FUN_0010ea00((int)hud);               /* the binary's tail jump (0x0010937c) */
+  screen_clear((Screen *)hud);          /* the binary's tail jump (0x0010937c) */
 }
 
 
@@ -5374,7 +5377,7 @@ void FUN_00109940(int param_1,int param_2)
          (short)((int)((uint)*(ushort *)(*(int *)(iVar5 + 0x70) + 0x16) -
                       (int)*(short *)(iVar5 + 0x7a)) / 2);
   }
-  FUN_0010ea00(param_1);
+  screen_clear((Screen *)param_1);
   FUN_001132a8((int)((KHApp *)*(int *)(param_1 + 0x44))->context);
   return;
 }
@@ -7727,10 +7730,10 @@ LAB_0010d124:
   float_compare_less(*(undefined4 *)(param_1 + 0x514),0);
   if (!(bool)in_CY || (bool)in_ZR) {
     *(undefined4 *)(param_1 + 0x514) = 0;
-    FUN_001092c0(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xd4),1);
-    FUN_001092c0(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xd4),2);
-    FUN_001092c0(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xd4),3);
-    FUN_001092c0(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xd4),0);
+    hud_remove_text(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xd4),1);
+    hud_remove_text(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xd4),2);
+    hud_remove_text(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xd4),3);
+    hud_remove_text(*(undefined4 *)(*(int *)(param_1 + 0x724) + 0xd4),0);
     FUN_0010f1fc(*(int *)(*(int *)(*(int *)(param_1 + 0x724) + 0xa4) + 0x1f8));
     return;
   }
@@ -7757,7 +7760,7 @@ void progress_add_magic_points(Progress *progress,int32 amount)
 /* ==== 0x0010D1E0  (file offset 0x0D1E0)  progress_add_munny ========================================== */
 /* GUESS: name. Adds `amount` munny (it never goes below 0) and shows the new total as "<label>=<munny>":
    the label is the text 0x16A5390B (text_table_get_text, GUESS: "Munny"), turned into a wide string
-   (string_to_wide) and shown on the app's field_d4 screen for 2000 ms (FUN_00105538). */
+   (string_to_wide) and shown on the app's HUD (KHApp.hud) for 2000 ms (FUN_00105538). */
 void progress_add_munny(Progress *progress,int32 amount)
 
 {
@@ -7779,8 +7782,8 @@ void progress_add_munny(Progress *progress,int32 amount)
   string_to_wide((int32)app->context,(char **)&text,(AECHAR **)&wideText);
   helper_free(text);
   if (wideText != (void *)0x0) {
-    FUN_00105538(app->field_d4,wideText,3);
-    *(int32 *)(app->field_d4 + 0xbc) = 2000;
+    FUN_00105538((int)app->hud,wideText,3);
+    *(int32 *)((int32)app->hud + 0xbc) = 2000;
     (*g_pHelperFuncs->free)(wideText);
   }
 }
@@ -8966,25 +8969,26 @@ int32 animations_release_controllers(Animations *animations)
   return released ? (int32)animations->controllers : 0;
 }
 
-/* ==== 0x0010EA00  (file offset 0x0EA00)  FUN_0010ea00 ================================================ */
-void FUN_0010ea00(int param_1)
+/* ==== 0x0010EA00  (file offset 0x0EA00)  screen_clear ================================================ */
+/* GUESS: name. Clears a screen's rectangle to black: copies the rectangle (8 bytes, helper_malloc_2 and
+   memcpy), sets the screen stack's IGraphics background to 0 (graphics_set_color, which 3) and fills the
+   copy with it (IGraphics ClearRectBg), then frees the copy (the binary's tail jump to helper_free at
+   0x0010ea60). The screens are the display's size, so the HUD's covers the whole view; every caller passes
+   the HUD (KHApp.hud). The copy is not checked: when the allocation fails, ClearRectBg gets no rectangle
+   (GAME_BUGS.md). */
+void screen_clear(Screen *screen)
 
 {
-  void *pvVar1;
-  int iVar2;
-  int *piVar3;
-  
-  pvVar1 = helper_malloc_2(8);
-  if (pvVar1 != (void *)0x0) {
-    memcpy(pvVar1,*(undefined4 *)(param_1 + 8),8);
-  }
-  iVar2 = *(int *)(*(int *)(param_1 + 0x44) + 0xd0);
-  graphics_set_color(iVar2,*(undefined4 *)(iVar2 + 0x10),0,3);
-  piVar3 = *(int **)(*(int *)(*(int *)(param_1 + 0x44) + 0xd0) + 0x10);
-  (*((IGraphics *)piVar3)->pvt->ClearRectBg)((IGraphics *)piVar3,pvVar1);
-  helper_free(pvVar1);
+  AEERect *rect = (AEERect *)helper_malloc_2(8);
+
+  if (rect != (AEERect *)0x0)
+    memcpy(rect,((UIElement *)screen)->rect,8);
+  graphics_set_color((int32)screen->app->screens,screen->app->screens->graphics,0,3);
+  (*screen->app->screens->graphics->pvt->ClearRectBg)(screen->app->screens->graphics,rect);
+  helper_free(rect);
   return;
 }
+
 
 /* ==== 0x0010EA64  (file offset 0x0EA64)  FUN_0010ea64 ================================================ */
 void FUN_0010ea64(int param_1)
@@ -10391,7 +10395,7 @@ int32 script_run(int32 context,int32 count,ScriptCommand **commands)
    The binary's cases share some calls (FUN_00109a10 at 0x00111948, sound_set_play at 0x00111df8,
    thunk_FUN_0011fd90 at 0x001121cc, FUN_0011f8e0 at 0x00111f68 and helper_free at 0x001116c8): each is
    made once, after the switch (or the inner one), from what the case left in the locals softKey ...
-   words. The UI the commands drive (KHApp.field_d4, `hud`; its struct Hud has only the "loading" text so
+   words. The UI the commands drive (KHApp.hud, `hud`; its struct Hud has only the "loading" text so
    far) is mostly read through offsets. */
 int32 script_command_run(ScriptCommand *command)
 
@@ -10441,7 +10445,7 @@ int32 script_command_run(ScriptCommand *command)
   app = (KHApp *)(*g_pHelperFuncs->GetAppInstance)();
   game = (Game *)app->pGame;
   player = game->character;
-  hud = (uint8 *)app->field_d4;
+  hud = (uint8 *)app->hud;
   context = (int32)app->context;
                     /* helper[4] int strcmp(const char *a, const char *b), helper[27] void free(void *p)
                        (AEEHelperFuncs +0x10, +0x6c, via *(base-4)) */
@@ -10710,7 +10714,7 @@ int32 script_command_run(ScriptCommand *command)
         *(int32 *)(hud + 0x88) = 1;
       }
       else
-        FUN_001092c0((int)hud,2);
+        hud_remove_text((int)hud,2);
     }
     game->actionObject = (LevelObject *)0x0;
     break;
@@ -10726,7 +10730,7 @@ int32 script_command_run(ScriptCommand *command)
       }
       value = 1;
     }
-    FUN_001092c0((int)hud,value);
+    hud_remove_text((int)hud,value);
     break;
   case 0x1f:   /* resetKeys: the player's held keys */
     if (command->object != (LevelObject *)0x0 && command->object->nameId == WORD_HEXADECIMAL_10C617E4)
@@ -12975,9 +12979,9 @@ int32 combat_region_hit_enemies(CombatRegion *region,int32 part,uint32 damage,ui
 /* GUESS: names (the hitsphere reading too). A player attack against a boss combat region, from the player's
    attack state 7 (FUN_00123588), with `damage` (a float: the player's Progress +0x530 as a float), the
    attack's position and the player's state (+0x228). It hits the game's current target
-   (pGame->character->[0x20c], set by FUN_00123d7c): a hitsphere takes the hit (vtable +8) and the HUD value
-   (field_d4 +0x4c) is refreshed from the first hitsphere's field_14 (float_to_int, float to integer);
-   the extra entity is hidden (FUN_001201cc) and made untargetable instead. `part` (r1; as
+   (pGame->character->[0x20c], set by FUN_00123d7c): a hitsphere takes the hit (vtable +8) and the HUD's
+   targetHealth is refreshed from the first hitsphere's field_14 (float_to_int, float to integer); the
+   extra entity is hidden (FUN_001201cc) and made untargetable instead. `part` (r1; as
    combat_region_hit_enemies gets it) is never read. Always returns 0. combat_region_hit_enemies is the combat region's counterpart. */
 int32 boss_combat_region_hit_target(BossCombatRegion *region,int32 part,uint32 damage,uint32 x,uint32 y,uint32 z,
                                int32 playerState)
@@ -12992,7 +12996,7 @@ int32 boss_combat_region_hit_target(BossCombatRegion *region,int32 part,uint32 d
   if (hitsphere != (Hitsphere *)0x0) {
     (*hitsphere->vtable->takeHit)
         (hitsphere,damage,x,y,z,playerState);              /* take a hit: vtable +8 */
-    *(uint32 *)(region->app->field_d4 + 0x4c) = float_to_int(region->hitspheres[0]->field_14);
+    region->app->hud->targetHealth = (int32)float_to_int(region->hitspheres[0]->field_14);
   }
   else if (region->extraEntity == target) {
     FUN_001201cc(region->extraEntity,0);
@@ -15808,8 +15812,8 @@ void kh_OnKey(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
       pMe->field_cc = 0xd;
       return;
     }
-    bVar15 = uVar2 <= pMe->field_d4;
-    bVar13 = pMe->field_d4 == uVar2;
+    bVar15 = uVar2 <= (uint32)pMe->hud;
+    bVar13 = (uint32)pMe->hud == uVar2;
     if ((!bVar13) || (float_compare_greater(*(undefined4 *)((int)pMe->progress + 0x514),0), !bVar15 || bVar13))
     {
       if (*(int *)(*(int *)(uVar2 + 0x34) + 4) != 0) {
@@ -15874,7 +15878,7 @@ LAB_0011a990:
   if (pvVar4 == (void *)0x0) {
     return;
   }
-  uVar7 = pMe->field_d4;
+  uVar7 = (uint32)pMe->hud;
   bVar13 = *(int *)(uVar7 + 0x58) != 0;
   if (!bVar13) {
     uVar7 = *(uint32 *)(uVar7 + 0x5c);
@@ -15890,7 +15894,7 @@ LAB_0011a990:
     return;
   }
   uVar7 = screen_stack_top(pMe->screens);
-  if (uVar7 != pMe->field_d4) {
+  if (uVar7 != (uint32)pMe->hud) {
     return;
   }
   FUN_0011e154(pMe);
@@ -18349,8 +18353,8 @@ void animations_reset(Animations *animations)
 }
 
 /* ==== 0x0011E154  (file offset 0x1E154)  FUN_0011e154 ================================================ */
-/* GUESS: what it does. Ends a status message state (field_cc 5): when the game and the app's field_d4
-   screen are there, redraws that screen (FUN_0010ea00), freezes the held keys and shows one of two
+/* GUESS: what it does. Ends a status message state (field_cc 5): when the game and the app's HUD
+   are there, clears that screen (screen_clear), freezes the held keys and shows one of two
    messages (FUN_0011d040), keeping state 5 when the app was suspended and the player's health is above
    0; then restarts the app's 0x28 ms timer (FUN_001242b4). Reached by tail jumps: from
    thunk_FUN_0011e154 (screen_stack_close_top), FUN_0010edec and kh_OnKey. */
@@ -18360,8 +18364,8 @@ void FUN_0011e154(KHApp *app)
   int32 state = 0;
   PFNNOTIFY timer;
 
-  if (app->field_cc == 5 && app->pGame != (void *)0x0 && app->field_d4 != 0) {
-    FUN_0010ea00(app->field_d4);
+  if (app->field_cc == 5 && app->pGame != (void *)0x0 && app->hud != (struct Hud *)0x0) {
+    screen_clear((Screen *)app->hud);
     character_freeze_held_keys(*(Character **)((int32)app->pGame + 0x1f8));
     /* float_compare_greater compares two floats and leaves the result in the condition flags; the binary
        branches on it (`bls` at 0x0011e1b0), which is the test written after the comma */
@@ -20184,7 +20188,7 @@ void FUN_0012070c(int param_1,int param_2)
           }
           if (iVar4 != 0 && iVar3 != 0) {
             if (*(int *)(iVar4 + 0x74) == 0) {
-              FUN_001092c0(iVar4,2);
+              hud_remove_text(iVar4,2);
             }
             else {
               *(undefined4 *)(iVar4 + 0x74) = 0;
@@ -21471,7 +21475,7 @@ void enemy_update(Enemy *enemy,int32 now,int32 elapsed)
   if (enemy->mode == 1) {
     /* ---- the code at 0x0011db34 */
     if (enemy->field_90 == 0x1b59) {              /* 7001 */
-      *(uint8 *)(enemy->app->field_d4 + 0x4a) = 0;
+      enemy->app->hud->showTargetGauge = 0;
       enemy_set_target(enemy,4);
       if (FUN_0010eb74((int32)enemy /* not arguments, register leftovers: now */) == 0)
         return;
@@ -21509,9 +21513,9 @@ void enemy_update(Enemy *enemy,int32 now,int32 elapsed)
       enemy_reset_states(enemy);
       enemy->state = INTEGER_1002;
       if (enemy->type == 2 || enemy->field_108 != 0) {   /* show its health bar */
-        *(uint8 *)(enemy->app->field_d4 + 0x4a) = 1;
-        *(uint32 *)(enemy->app->field_d4 + 0x4c) = float_to_int(enemy->health);
-        *(uint32 *)(enemy->app->field_d4 + 0x50) = float_to_int(enemy->region->enemyMaximumHealth);
+        enemy->app->hud->showTargetGauge = 1;
+        enemy->app->hud->targetHealth = (int32)float_to_int(enemy->health);
+        enemy->app->hud->targetMaximumHealth = (int32)float_to_int(enemy->region->enemyMaximumHealth);
       }
     }
     break;
@@ -21529,7 +21533,7 @@ void enemy_update(Enemy *enemy,int32 now,int32 elapsed)
     break;
   case 1003:                                      /* dying */
     if (FUN_0010f058((int32)enemy,now) != 0) {
-      *(uint8 *)(enemy->app->field_d4 + 0x4a) = 0;
+      enemy->app->hud->showTargetGauge = 0;
       enemy->state = 0x3ec;
       FUN_001201cc(enemy->field_28,0);
       *(int32 *)(enemy->field_28 + 0x34) = 0;
@@ -22588,7 +22592,7 @@ LAB_00124540:
       iVar7 = *(int *)(iVar4 + 0xc0);
     }
     if (bVar9 && iVar7 == 1) {
-      FUN_0010ea00(iVar4);
+      screen_clear((Screen *)iVar4);
     }
     goto LAB_00124540;
   }

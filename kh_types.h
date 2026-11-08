@@ -79,7 +79,8 @@ typedef struct KHApp {
     struct ScreenStack *screens;     /* +0xd0 the open screens (menus); created by screen_stack_create(0,
                                         pMe), destroyed by screen_stack_destroy. FUN_00101ad8 handles
                                         its events */
-    uint32         field_d4;         /* +0xd4 */
+    struct Hud    *hud;              /* +0xd4 the in-game HUD (FUN_0010aa8c); cleared when its screen is
+                                        closed (screen_stack_close_top) */
     uint32         fpStatus;         /* +0xd8 GUESS: soft-float status word (what a compiler fplib keeps in a
                                         static). Address returned by kh_GetFpStatusPtr; read by
                                         kh.mod's double->float at 0x12479c (tests bit 0x800). */
@@ -353,7 +354,7 @@ typedef struct Screen {
     struct KHApp *app;            /* +0x44 the stack's app */
 } Screen;                         /* 0x48 bytes (screen_create) */
 
-/* The in-game HUD screen (KHApp.field_d4; FUN_0010aa8c, vtable VTABLE_0010165C): a screen element with
+/* The in-game HUD screen (KHApp.hud; FUN_0010aa8c, vtable VTABLE_0010165C): a screen element with
  * the player's bars and the level script's texts. Only what hud_show_loading / hud_hide_loading use is
  * named so far; the script code (script_command_run) still reads the rest through offsets. */
 typedef struct Hud {
@@ -1230,7 +1231,7 @@ typedef struct Hitsphere {
     uint32 radius;                /* +0x08 a float (its bits); not set by hitsphere_create */
     uint8  unknown_0c[0x08];
     uint32 field_14;              /* +0x14 a float (its bits); the first hitsphere's is shown in the HUD
-                                     (field_d4 +0x4c, +0x50) */
+                                     (KHApp.hud targetHealth, targetMaximumHealth) */
     uint8  unknown_18[0x08];
     struct KHApp *app;            /* +0x20 GetAppInstance() at creation */
     struct BossCombatRegion *owner; /* +0x24 */
