@@ -752,7 +752,7 @@ void FUN_0011b044(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
 int32 progress_read_file(Progress *progress,const char *name,void *buffer,uint32 size);   /* 0x0011B0CC GUESS: name, see kh_mod.c */
 undefined4 progress_load(int param_1,int param_2);   /* 0x0011B178 GUESS: name, see kh_mod.c */
 undefined8 FUN_0011b518(int param_1,int param_2);
-undefined4 FUN_0011b5f0(int param_1);
+undefined4 records_load(int param_1);   /* 0x0011B5F0 GUESS: name, see kh_mod.c */
 void settings_load(int param_1,undefined4 param_2);   /* 0x0011B6F0 GUESS: name, see kh_mod.c */
 void FUN_0011b890(int param_1,int *param_2);
 undefined4 FUN_0011ba0c(int param_1,undefined4 param_2);
@@ -796,10 +796,10 @@ undefined4 FUN_0011e300(int param_1);
 void motion_entity_pitch_by(MotionEntity *entity,uint32 angle);   /* 0x0011E36C GUESS: name */
 void motion_entity_turn(MotionEntity *entity,uint32 angle);   /* 0x0011E3C0 GUESS: names */
 void motion_entity_start_turn(MotionEntity *entity,uint32 angle,uint32 speed);   /* 0x0011E530 GUESS: name */
-bool FUN_0011e574(int param_1,undefined4 param_2,undefined4 param_3,int *param_4);
+int32 progress_write_file(Progress *progress,const char *name,const void *data,uint32 size);   /* 0x0011E574 GUESS: name, see kh_mod.c */
 undefined4 progress_save(int param_1,int param_2);   /* 0x0011E6B8 GUESS: name, see kh_mod.c */
-undefined4 FUN_0011ea18(int param_1);
-undefined4 FUN_0011ead4(int param_1,undefined4 param_2);
+undefined4 records_save(int param_1);   /* 0x0011EA18 GUESS: name, see kh_mod.c */
+undefined4 settings_save(int param_1,undefined4 param_2);   /* 0x0011EAD4 GUESS: name, see kh_mod.c */
 undefined4 FUN_0011ec28(int param_1,int param_2);
 void FUN_0011ed3c(int param_1,undefined4 *param_2);
 void combat_region_enemies_enter_mode_2(CombatRegion *region);   /* 0x0011F280 GUESS: name, see kh_mod.c */

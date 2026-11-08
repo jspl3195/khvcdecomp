@@ -1525,7 +1525,7 @@ LAB_00103858:
         iVar7 = iVar17 + *(short *)(*(int *)(iVar19 + 8) + 6) + iVar7;
       } while (iVar9 < 6);
       screen_stack_open(param_1,uVar10);
-      FUN_0011ea18(*(undefined4 *)(*param_1 + 0xa8));
+      records_save(*(undefined4 *)(*param_1 + 0xa8));
                     /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
                        via *(base-4)) */
       iVar7 = (*g_pHelperFuncs->strcmp)
@@ -4850,7 +4850,7 @@ LAB_00108a4c:
       FUN_0011fddc(*(int *)(*param_1 + 0xa8),pvVar3,-1,uVar4);
       helper_free(pvVar3);
     }
-    FUN_0011ea18(*(int *)(*param_1 + 0xa8));
+    records_save(*(int *)(*param_1 + 0xa8));
     screen_stack_close_top(param_1,1);
     iVar8 = 0x83;
 LAB_00108d50:
@@ -6348,7 +6348,7 @@ CombatRegion * combat_region_create(CombatRegion *region,ISwerveObject *node,cha
    `skipSetup` is set (kh_OnAppStart passes 0), empty status, variable and record tables, no user id (one
    already there is freed), both volumes (soundVolume, musicVolume) 40, launchCount 1, playTime 0, the new
    game's values (progress_new_game, progress_reset, progress_set_default_controls), and the saved
-   settings and records loaded (settings_load with "settings.dat", FUN_0011b5f0). progress_destroy is its
+   settings and records loaded (settings_load with "settings.dat", records_load). progress_destroy is its
    destructor. */
 Progress * progress_create(Progress *progress,int32 skipSetup)
 
@@ -6385,7 +6385,7 @@ Progress * progress_create(Progress *progress,int32 skipSetup)
   progress_reset(progress);
   progress_set_default_controls(progress);
   settings_load((int)progress,(int32)STRING_SETTINGS_DOT_DAT_001278D8);
-  FUN_0011b5f0((int)progress);
+  records_load((int)progress);
   return progress;
 }
 
@@ -11223,7 +11223,7 @@ void kh_OnAppStop(KHApp *pMe)
   }
   if (pMe->progress != (void *)0x0) {
     progress_add_play_time(pMe->progress);
-    FUN_0011ead4(pMe->progress,(int32)STRING_SETTINGS_DOT_DAT_00127A58);
+    settings_save(pMe->progress,(int32)STRING_SETTINGS_DOT_DAT_00127A58);
     if (pMe->progress != (void *)0x0) {
       progress_destroy(pMe->progress,1);
     }
@@ -16263,8 +16263,10 @@ undefined8 FUN_0011b518(int param_1,int param_2)
   return MAKE_WORDS(uVar4,local_18,local_14);
 }
 
-/* ==== 0x0011B5F0  (file offset 0x1B5F0)  FUN_0011b5f0 ================================================ */
-undefined4 FUN_0011b5f0(int param_1)
+/* ==== 0x0011B5F0  (file offset 0x1B5F0)  records_load ================================================ */
+/* GUESS: name (not yet rewritten). Loads the records from "scoredata.dat" (progress_read_file, 0x800
+   bytes; save_read_*), as records_save wrote them. */
+undefined4 records_load(int param_1)
 
 {
   undefined4 param_4;
@@ -18430,62 +18432,55 @@ void motion_entity_start_turn(MotionEntity *entity,uint32 angle,uint32 speed)
   entity->turnAngle ^= 0x80000000;
 }
 
-/* ==== 0x0011E574  (file offset 0x1E574)  FUN_0011e574 ================================================ */
-bool FUN_0011e574(int param_1,undefined4 param_2,undefined4 param_3,int *param_4)
+/* ==== 0x0011E574  (file offset 0x1E574)  progress_write_file ========================================= */
+/* GUESS: names. Writes `size` bytes of `data` to the file `name` through "tmp.dat": an IFileMgr from
+   the app's IShell (none: returns 0), "tmp.dat" opened for reading and writing and emptied (Truncate 0)
+   or else created, the data written and the file released; on success the old `name` is removed and
+   "tmp.dat" renamed to it, otherwise "tmp.dat" is removed. Returns 1, or 0 when the file could not be
+   opened, no byte was written or the rename failed. A short write counts as written, and the old file
+   is removed before the rename, so a full disk or a failed rename can lose the save (GAME_BUGS.md). The
+   savers: progress_save, records_save, settings_save. */
+int32 progress_write_file(Progress *progress,const char *name,const void *data,uint32 size)
 
 {
-  int *piVar1;
-  int iVar2;
-  int iVar3;
-  bool bVar4;
-  int *local_20;
-  
-  piVar1 = *(int **)(*(int *)(param_1 + 0x724) + 0xc);
-  bVar4 = true;
-  local_20 = param_4;
-  iVar2 = (*((IShell *)piVar1)->pvt->CreateInstance)
-              ((IShell *)piVar1,AEECLSID_FILEMGR_VALUE,(void **)&local_20);
-  if (iVar2 != 0) {
-    return false;
-  }
-  iVar2 = (int32)STRING_TMP_DOT_DAT;
-  piVar1 = (int *)(*((IFileMgr *)local_20)->pvt->OpenFile)((IFileMgr *)local_20,(const char *)iVar2,2);
-  if (piVar1 == (int *)0x0) {
-    piVar1 = (int *)(*((IFileMgr *)local_20)->pvt->OpenFile)((IFileMgr *)local_20,(const char *)iVar2,4);
-    bVar4 = piVar1 != (int *)0x0;
-    if (bVar4) goto LAB_0011e5fc;
-  }
+  IFileMgr *fileMgr;              /* [sp] */
+  IFile *file;
+  int32 result = 1;
+
+  if ((*progress->app->a.m_pIShell->pvt->CreateInstance)
+          (progress->app->a.m_pIShell,AEECLSID_FILEMGR_VALUE,(void **)&fileMgr) != 0)
+    return 0;
+  file = (*fileMgr->pvt->OpenFile)(fileMgr,STRING_TMP_DOT_DAT,2);
+  if (file != (IFile *)0x0)
+    (*file->pvt->Truncate)(file,0);
   else {
-    (*((IFile *)piVar1)->pvt->Truncate)((IFile *)piVar1,0);
-LAB_0011e5fc:
-    iVar3 = (*((IFile *)piVar1)->pvt->Write)((IFile *)piVar1,(const void *)param_3,(uint32)param_4);
-    if (iVar3 == 0) {
-      bVar4 = false;
-    }
-    (*((IFile *)piVar1)->pvt->Release)((IFile *)piVar1);
-    if (bVar4 != false) {
-      (*((IFileMgr *)local_20)->pvt->Remove)((IFileMgr *)local_20,(const char *)param_2);
-      iVar2 = (*((IFileMgr *)local_20)->pvt->Rename)
-                  ((IFileMgr *)local_20,(const char *)iVar2,(const char *)param_2);
-      if (iVar2 != 0) {
-        bVar4 = false;
-      }
-      goto LAB_0011e698;
-    }
+    file = (*fileMgr->pvt->OpenFile)(fileMgr,STRING_TMP_DOT_DAT,4);
+    if (file == (IFile *)0x0)
+      result = 0;
   }
-  (*((IFileMgr *)local_20)->pvt->Remove)((IFileMgr *)local_20,(const char *)iVar2);
-LAB_0011e698:
-  /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-  (*((IFileMgr *)local_20)->pvt->Release)((IFileMgr *)local_20);
-  return bVar4;
+  if (file != (IFile *)0x0) {
+    if ((*file->pvt->Write)(file,data,size) == 0)
+      result = 0;
+    (*file->pvt->Release)(file);
+  }
+  if (result != 0) {
+    (*fileMgr->pvt->Remove)(fileMgr,name);
+    if ((*fileMgr->pvt->Rename)(fileMgr,STRING_TMP_DOT_DAT,name) != 0)
+      result = 0;
+  }
+  else
+    (*fileMgr->pvt->Remove)(fileMgr,STRING_TMP_DOT_DAT);
+  (*fileMgr->pvt->Release)(fileMgr);
+  return result;
 }
+
 
 /* ==== 0x0011E6B8  (file offset 0x1E6B8)  progress_save =============================================== */
 /* GUESS: name (not yet rewritten). Saves the player's progress: writes the record (health, MP, munny,
    experience, level, spells, the level's names, the status flags and texts, the script variables;
    save_write_*) into a 0x800-byte buffer, copies it to saveCopy (allocated the first time) and, when
-   `param_2` names a file ("savegame.dat", "replaygame.dat"), writes it there (FUN_0011e574), returning
-   that result; else returns 1. The buffer is not checked. */
+   `param_2` names a file ("savegame.dat", "replaygame.dat"), writes it there (progress_write_file),
+   returning that result; else returns 1. The buffer is not checked. */
 undefined4 progress_save(int param_1,int param_2)
 
 {
@@ -18598,15 +18593,17 @@ undefined4 progress_save(int param_1,int param_2)
                        (AEEHelperFuncs +0x0, via *(base-4)) */
   (*g_pHelperFuncs->memmove)(progress->saveCopy,(const void *)uVar4,0x800);
   if (param_2 != 0) {
-    uVar8 = FUN_0011e574(param_1,param_2,uVar4,local_24);
+    uVar8 = progress_write_file((Progress *)param_1,(const char *)param_2,(const void *)uVar4,local_24);
   }
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
   (*g_pHelperFuncs->free)(uVar4);
   return uVar8;
 }
 
-/* ==== 0x0011EA18  (file offset 0x1EA18)  FUN_0011ea18 ================================================ */
-undefined4 FUN_0011ea18(int param_1)
+/* ==== 0x0011EA18  (file offset 0x1EA18)  records_save ================================================ */
+/* GUESS: name (not yet rewritten). Saves the records (each one's name, best and field_04; save_write_*)
+   to "scoredata.dat" (progress_write_file); records_load reads them back. */
+undefined4 records_save(int param_1)
 
 {
   undefined4 param_3;
@@ -18632,14 +18629,17 @@ undefined4 FUN_0011ea18(int param_1)
                    (int32 *)&local_1c);
     iVar4 = iVar4 + 1;
   } while (iVar4 < 0x19);
-  uVar3 = FUN_0011e574(param_1,(int32)STRING_SCOREDATA_DOT_DAT,uVar2,local_1c);
+  uVar3 = progress_write_file((Progress *)param_1,STRING_SCOREDATA_DOT_DAT,(const void *)uVar2,local_1c);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
   (*g_pHelperFuncs->free)(uVar2);
   return uVar3;
 }
 
-/* ==== 0x0011EAD4  (file offset 0x1EAD4)  FUN_0011ead4 ================================================ */
-undefined4 FUN_0011ead4(int param_1,undefined4 param_2)
+/* ==== 0x0011EAD4  (file offset 0x1EAD4)  settings_save =============================================== */
+/* GUESS: name (not yet rewritten). Saves the settings (the 7 controls, the sound and music volumes, the
+   user id, the time played and the launch count; save_write_*) to the file `param_2`, "settings.dat"
+   (progress_write_file); settings_load reads them back. */
+undefined4 settings_save(int param_1,undefined4 param_2)
 
 {
   undefined4 param_4;
@@ -18665,7 +18665,7 @@ undefined4 FUN_0011ead4(int param_1,undefined4 param_2)
   save_write_string((Progress *)param_1,((Progress *)param_1)->userId,(uint8 *)uVar2,(int32 *)&local_18);
   save_write_int((Progress *)param_1,((Progress *)param_1)->playTime,(uint8 *)uVar2,(int32 *)&local_18);
   save_write_int((Progress *)param_1,((Progress *)param_1)->launchCount,(uint8 *)uVar2,(int32 *)&local_18);
-  uVar3 = FUN_0011e574(param_1,param_2,uVar2,local_18);
+  uVar3 = progress_write_file((Progress *)param_1,(const char *)param_2,(const void *)uVar2,local_18);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
   (*g_pHelperFuncs->free)(uVar2);
   return uVar3;
@@ -19549,7 +19549,7 @@ undefined4 FUN_0011fddc(int param_1,undefined4 param_2,int param_3,undefined4 pa
         string_replace(progress->app->context,(const char *)param_2,&progress->recordNames[iVar6]);
         progress->records[iVar6].best = param_3;
         progress->records[iVar6].field_04 = param_4;
-        FUN_0011ea18(param_1);
+        records_save(param_1);
 LAB_0011fec8:
         uVar3 = 1;
       }
@@ -19656,7 +19656,7 @@ void enemy_set_target(Enemy *enemy,int32 how)
 /* ==== 0x001200AC  (file offset 0x200AC)  progress_set_user_id ======================================== */
 /* GUESS: name. Stores a copy of the online user id a server reply gave (web_request_parse_reply, for a
    download's and a ranking's reply), unless the player has one already (not 0, not ""): it is the uid= of
-   the web requests (FUN_00101ad8) and is saved with the game (FUN_0011ead4, settings_load). A stored ""
+   the web requests (FUN_00101ad8) and is saved with the game (settings_save, settings_load). A stored ""
    is overwritten without being freed, and the malloc is not checked (research_notes/decomp/GAME_BUGS.md).
    Returns nothing: r0 is strcmp's result on the early exit, strcpy's after the tail jump, and no caller
    reads it. */
