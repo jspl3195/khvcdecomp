@@ -12,6 +12,7 @@ This work was possible thanks to [khvcemu](https://github.com/khrecast/khvcemu).
 |---|---|
 | `kh_mod.c`, `kh_mod.h` | kh.mod, the game applet: 455 functions, with globals and prototypes |
 | `kh_types.h` | the game's structures (application, characters, enemies, levels, ...) |
+| `common.h` | the types and macros both modules' headers share: Ghidra's type names, the 64-bit word types and their macros |
 | `swv21brew.c`, `swv21brew.h` | swv21brew.mod, the Swerve 3D engine 2.1 the game loads: 1307 functions |
 | `swv_types.h` | Swerve types and class IDs |
 | `brew_types.h` | the BREW interfaces both modules use (IShell, IDisplay, the helper table, ...) |
@@ -66,6 +67,7 @@ Some routines are known code, recognised from their structure. Their comments na
 | `collision_shape_turn_direction` (0x00113da4) | Franklin Antonio's segment intersection test, "Faster Line Segment Intersection", *Graphics Gems III* (1992) |
 | the double-precision `acos`, `sin`, `cos` and their kernels | fdlibm: `__ieee754_acos`, `__ieee754_rem_pio2`, `__kernel_sin`, `__kernel_cos`, `sin`, `cos` |
 | `rt_div0`, the word `memcpy` / `memclr` | the ARM C library: `__rt_div0`, `__rt_memcpy_w`, `__rt_memclr_w` |
+| swv21brew's `ll_mul` (0x0100094c) and `ll_mul_int` (0x01000028) | the ARM C library's 64-bit multiply, `_ll_mul` (`__aeabi_lmul` in later ABIs) |
 
 ## Status
 

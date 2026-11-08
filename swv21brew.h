@@ -16,27 +16,14 @@
 #define SWV21BREW_H
 
 #include "brew_types.h"
+#include "common.h"
 #include "swv_types.h"
 
-/* Ghidra type names used by the decompiler output (not BREW types). */
-typedef unsigned char  undefined;
-typedef unsigned char  undefined1;
-typedef unsigned short undefined2;
-typedef unsigned int   undefined4;
+/* Ghidra's type names and the 64-bit word types (uint64, int64) and macros: common.h. The rest of the
+   listing is still Ghidra's raw output, with its 64-bit types as C99 integers: */
 typedef unsigned long long undefined8;
-typedef unsigned int   uint;
-typedef unsigned short ushort;
-typedef unsigned char  uchar;
 typedef unsigned long long ulonglong;
 typedef long long longlong;
-typedef unsigned char  byte;
-typedef unsigned char  bool;    /* Ghidra's boolean: 0 or 1 (C89 has no bool) */
-#define true  1                 /* Ghidra's boolean constants (keywords only in C++ and C23) */
-#define false 0
-#ifndef NULL
-#define NULL  ((void *)0)        /* used by the hand-written functions; no standard header is included */
-#endif
-typedef int            code();  /* Ghidra: function of unknown signature (a call through (code *) is valid C) */
 
 /* AEEHelperFuncs pointer stored by khvcemu (and the real BREW loader) at module base - 4. */
 extern AEEHelperFuncs *g_pHelperFuncs;   /* 0x00FFFFFC */
@@ -307,7 +294,8 @@ int AEEClsCreateInstance(AEECLSID ClsId, IShell *pIShell, IModule *po, void **pp
 void AEEMod_FreeResources(IModule *po, IHeap *ph, IFileMgr *pfm);
 
 /* Not yet identified (auto-named by Ghidra). */
-undefined8 FUN_01000028(uint param_1,int param_2,uint param_3);
+int64 ll_mul_int(uint32 aLow,int32 aHigh,int32 b);   /* 0x01000028 GUESS: name, see swv21brew.c */
+int64 ll_mul(uint32 aLow,int32 aHigh,uint32 bLow,int32 bHigh);   /* 0x0100094C, no Ghidra function; ARM's _ll_mul */
 int FUN_01000080(byte *param_1,byte *param_2,uint param_3);
 undefined4 FUN_01000100(undefined4 param_1);
 undefined8 FUN_01000188(byte *param_1,byte *param_2,uint param_3,undefined4 param_4);

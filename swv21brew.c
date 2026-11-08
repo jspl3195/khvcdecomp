@@ -34,13 +34,16 @@ int AEEMod_Load(IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod)
   return iVar1;
 }
 
-/* ==== 0x01000028  (file offset 0x00028)  FUN_01000028 ================================================ */
-undefined8 FUN_01000028(uint param_1,int param_2,uint param_3)
+/* ==== 0x01000028  (file offset 0x00028)  ll_mul_int ================================================== */
+/* GUESS: name (the routine is certain: the ARM C library's 64-bit multiply, _ll_mul, with a 32-bit
+   signed second operand). a (aLow, aHigh in r0:r1) times b (r2) sign-extended to 64 bits (mov r3, r2,
+   asr #32), the low 64 bits of the product (the binary's tail jump to ll_mul at 0x0100002c). The
+   callers (FUN_01018460, FUN_0101e534) use it for 16.16 fixed-point products, x * K >> 16, taking the
+   result's middle word. */
+int64 ll_mul_int(uint32 aLow,int32 aHigh,int32 b)
 
 {
-  return CONCAT44(((int)param_3 >> 0x20) * param_1 +
-                  param_3 * param_2 + (int)((ulonglong)param_1 * (ulonglong)param_3 >> 0x20),
-                  (int)((ulonglong)param_1 * (ulonglong)param_3));
+  return ll_mul(aLow,aHigh,(uint32)b,b < 0 ? -1 : 0);
 }
 
 /* ==== 0x01000080  (file offset 0x00080)  FUN_01000080 ================================================ */
@@ -880,6 +883,24 @@ void FUN_01000938(undefined4 param_1)
   puVar1 = (undefined4 *)FUN_0102cc60();
   *puVar1 = param_1;
   return;
+}
+
+/* ==== 0x0100094C  (file offset 0x0094C)  ll_mul ====================================================== */
+/* GUESS: name (the routine is certain: the ARM C library's _ll_mul, __aeabi_lmul in later ABIs). Ghidra
+   has no function here (only reached by ll_mul_int's tail jump); written from its disassembly
+   (0x0100094c - 0x01000960): the low 64 bits of a * b, a in r0:r1 and b in r2:r3: umull of the low
+   words, then the two cross products added to the high word (mla, mla). */
+int64 ll_mul(uint32 aLow,int32 aHigh,uint32 bLow,int32 bHigh)
+
+{
+  int64 result;
+  uint64 product;
+
+  MULTIPLY_WORDS(product,bLow,aLow);                       /* umull r0, r12, r2, lr */
+  result.low = product.low;
+  result.high = (int32)(bLow * (uint32)aHigh + product.high);   /* mla r1, r2, r1, r12 */
+  result.high = (int32)((uint32)bHigh * aLow + (uint32)result.high);   /* mla r1, r3, lr, r1 */
+  return result;
 }
 
 /* ==== 0x01000964  (file offset 0x00964)  FUN_01000964 ================================================ */
@@ -22665,7 +22686,7 @@ void FUN_01018460(int param_1)
   uint uVar16;
   uint uVar17;
   bool bVar18;
-  undefined8 uVar19;
+  int64 uVar19;   /* ll_mul_int's results: x * K, the middle word is x * K >> 16 */
   int local_164;
   undefined4 uStack_160;
   uint local_15c;
@@ -22824,8 +22845,8 @@ void FUN_01018460(int param_1)
             iVar15 = FUN_010181b4(local_30);
             iVar8 = FUN_010181b4(local_30);
             iVar7 = FUN_010181b4(local_30);
-            uVar19 = FUN_01000028(INTEGER_21845,INTEGER_0,iVar15 + iVar8 + iVar7);
-            uVar9 = (uint)uVar19 >> 0x10 | (int)((ulonglong)uVar19 >> 0x20) << 0x10;
+            uVar19 = ll_mul_int(INTEGER_21845,INTEGER_0,iVar15 + iVar8 + iVar7);
+            uVar9 = (uVar19.low >> 16 | (uint32)uVar19.high << 16);
             iVar15 = iVar15 - uVar9;
             iVar8 = iVar8 - uVar9;
             iVar7 = iVar7 - uVar9;
@@ -23023,9 +23044,9 @@ LAB_01018ec8:
                 }
               }
               local_108[6] = local_124 * (uVar9 - local_14c);
-              uVar19 = FUN_01000028(INTEGER_3449,INTEGER_0,
+              uVar19 = ll_mul_int(INTEGER_3449,INTEGER_0,
                                     local_128 * (uVar14 - iVar8) * 0x10 + 0x30000);
-              local_108[7] = (uint)uVar19 >> 0x10 | (int)((ulonglong)uVar19 >> 0x20) << 0x10;
+              local_108[7] = (uVar19.low >> 16 | (uint32)uVar19.high << 16);
               iVar15 = local_124 * (uVar9 - (local_14c + iVar10));
               local_150 = iVar8 + (local_74 >> 4);
               iVar8 = local_128 * (uVar14 - local_150);
@@ -23043,8 +23064,8 @@ LAB_01018ec8:
                 local_108[9] = iVar15 << 1;
               }
               else {
-                uVar19 = FUN_01000028(INTEGER_5958,INTEGER_0,iVar8 * 0x10 + iVar15 * 0xc);
-                local_108[9] = (uint)uVar19 >> 0x10 | (int)((ulonglong)uVar19 >> 0x20) << 0x10;
+                uVar19 = ll_mul_int(INTEGER_5958,INTEGER_0,iVar8 * 0x10 + iVar15 * 0xc);
+                local_108[9] = (uVar19.low >> 16 | (uint32)uVar19.high << 16);
               }
               goto LAB_01018f98;
             case 5:
@@ -23069,8 +23090,8 @@ LAB_01018ec8:
                              ((uint)((longlong)local_128 * (longlong)(int)local_15c) >> 0x10 |
                              (int)((ulonglong)((longlong)local_128 * (longlong)(int)local_15c) >>
                                   0x20) << 0x10);
-              uVar19 = FUN_01000028(WORD_HEXADECIMAL_0002D3F8,INTEGER_0,local_15c);
-              uVar14 = (uint)uVar19 >> 0x10 | (int)((ulonglong)uVar19 >> 0x20) << 0x10;
+              uVar19 = ll_mul_int(WORD_HEXADECIMAL_0002D3F8,INTEGER_0,local_15c);
+              uVar14 = (uVar19.low >> 16 | (uint32)uVar19.high << 16);
               lVar1 = (longlong)(int)uVar14 * (longlong)local_154;
               uVar9 = (uint)lVar1 >> 0x10 | (int)((ulonglong)lVar1 >> 0x20) << 0x10;
               lVar1 = (longlong)(int)uVar14 * (longlong)local_158;
@@ -23134,14 +23155,14 @@ LAB_010190c8:
                                    (int)((ulonglong)((longlong)(int)uVar9 * (longlong)(int)uVar9) >>
                                         0x20) << 0x10) + (int)lVar1,(int)((ulonglong)lVar1 >> 0x20))
               ;
-              uVar19 = FUN_01000028(INTEGER_46341,INTEGER_0,uVar5);
-              local_108[8] = (uint)uVar19 >> 0x10 | (int)((ulonglong)uVar19 >> 0x20) << 0x10;
+              uVar19 = ll_mul_int(INTEGER_46341,INTEGER_0,uVar5);
+              local_108[8] = (uVar19.low >> 16 | (uint32)uVar19.high << 16);
             }
             if ((uVar16 & 0x400) != 0) {
               uVar5 = FUN_0102edc0(uVar9,uVar14);
-              uVar19 = FUN_01000028(INTEGER_10430,INTEGER_0,uVar5);
+              uVar19 = ll_mul_int(INTEGER_10430,INTEGER_0,uVar5);
               local_108[10] =
-                   ((uint)uVar19 >> 0x10 | (int)((ulonglong)uVar19 >> 0x20) << 0x10) + 0x8000;
+                   ((uVar19.low >> 16 | (uint32)uVar19.high << 16)) + 0x8000;
             }
           }
           if ((uVar16 & 0x8000) != 0) {
@@ -27593,7 +27614,7 @@ void FUN_0101e534(int param_1,undefined4 param_2)
   int iVar18;
   uint uVar19;
   bool bVar20;
-  undefined8 uVar21;
+  int64 uVar21;   /* ll_mul_int's results: x * K, the middle word is x * K >> 16 */
   int iStack_164;
   undefined4 uStack_160;
   uint uStack_15c;
@@ -27836,8 +27857,8 @@ void FUN_0101e534(int param_1,undefined4 param_2)
             iVar18 = FUN_010181b4(iStack_30);
             iVar7 = FUN_010181b4(iStack_30);
             iVar6 = FUN_010181b4(iStack_30);
-            uVar21 = FUN_01000028(INTEGER_21845,INTEGER_0,iVar18 + iVar7 + iVar6);
-            uVar16 = (uint)uVar21 >> 0x10 | (int)((ulonglong)uVar21 >> 0x20) << 0x10;
+            uVar21 = ll_mul_int(INTEGER_21845,INTEGER_0,iVar18 + iVar7 + iVar6);
+            uVar16 = (uVar21.low >> 16 | (uint32)uVar21.high << 16);
             iVar18 = iVar18 - uVar16;
             iVar7 = iVar7 - uVar16;
             iVar6 = iVar6 - uVar16;
@@ -28036,9 +28057,9 @@ LAB_01018ec8:
                 }
               }
               aiStack_108[6] = iStack_124 * (uVar16 - uStack_14c);
-              uVar21 = FUN_01000028(INTEGER_3449,INTEGER_0,
+              uVar21 = ll_mul_int(INTEGER_3449,INTEGER_0,
                                     iStack_128 * (uVar17 - iVar7) * 0x10 + 0x30000);
-              aiStack_108[7] = (uint)uVar21 >> 0x10 | (int)((ulonglong)uVar21 >> 0x20) << 0x10;
+              aiStack_108[7] = (uVar21.low >> 16 | (uint32)uVar21.high << 16);
               iVar18 = iStack_124 * (uVar16 - (uStack_14c + iVar12));
               uStack_150 = iVar7 + (iStack_74 >> 4);
               iVar7 = iStack_128 * (uVar17 - uStack_150);
@@ -28056,8 +28077,8 @@ LAB_01018ec8:
                 aiStack_108[9] = iVar18 << 1;
               }
               else {
-                uVar21 = FUN_01000028(INTEGER_5958,INTEGER_0,iVar7 * 0x10 + iVar18 * 0xc);
-                aiStack_108[9] = (uint)uVar21 >> 0x10 | (int)((ulonglong)uVar21 >> 0x20) << 0x10;
+                uVar21 = ll_mul_int(INTEGER_5958,INTEGER_0,iVar7 * 0x10 + iVar18 * 0xc);
+                aiStack_108[9] = (uVar21.low >> 16 | (uint32)uVar21.high << 16);
               }
               goto LAB_01018f98;
             case 5:
@@ -28084,8 +28105,8 @@ LAB_01018ec8:
                    ((uint)((longlong)iStack_128 * (longlong)(int)uStack_15c) >> 0x10 |
                    (int)((ulonglong)((longlong)iStack_128 * (longlong)(int)uStack_15c) >> 0x20) <<
                    0x10);
-              uVar21 = FUN_01000028(WORD_HEXADECIMAL_0002D3F8,INTEGER_0,uStack_15c);
-              uVar17 = (uint)uVar21 >> 0x10 | (int)((ulonglong)uVar21 >> 0x20) << 0x10;
+              uVar21 = ll_mul_int(WORD_HEXADECIMAL_0002D3F8,INTEGER_0,uStack_15c);
+              uVar17 = (uVar21.low >> 16 | (uint32)uVar21.high << 16);
               lVar1 = (longlong)(int)uVar17 * (longlong)iStack_154;
               uVar16 = (uint)lVar1 >> 0x10 | (int)((ulonglong)lVar1 >> 0x20) << 0x10;
               lVar1 = (longlong)(int)uVar17 * (longlong)iStack_158;
@@ -28149,14 +28170,14 @@ LAB_010190c8:
                                    (int)((ulonglong)((longlong)(int)uVar16 * (longlong)(int)uVar16)
                                         >> 0x20) << 0x10) + (int)lVar1,
                                    (int)((ulonglong)lVar1 >> 0x20));
-              uVar21 = FUN_01000028(INTEGER_46341,INTEGER_0,uVar8);
-              aiStack_108[8] = (uint)uVar21 >> 0x10 | (int)((ulonglong)uVar21 >> 0x20) << 0x10;
+              uVar21 = ll_mul_int(INTEGER_46341,INTEGER_0,uVar8);
+              aiStack_108[8] = (uVar21.low >> 16 | (uint32)uVar21.high << 16);
             }
             if ((uVar11 & 0x400) != 0) {
               uVar8 = FUN_0102edc0(uVar16,uVar17);
-              uVar21 = FUN_01000028(INTEGER_10430,INTEGER_0,uVar8);
+              uVar21 = ll_mul_int(INTEGER_10430,INTEGER_0,uVar8);
               aiStack_108[10] =
-                   ((uint)uVar21 >> 0x10 | (int)((ulonglong)uVar21 >> 0x20) << 0x10) + 0x8000;
+                   ((uVar21.low >> 16 | (uint32)uVar21.high << 16)) + 0x8000;
             }
           }
           if ((uVar11 & 0x8000) != 0) {
