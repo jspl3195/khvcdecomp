@@ -527,7 +527,7 @@ IImage * ui_element_load_image(UIElement *element,const char *fileName);   /* 0x
 int32 sound_set_load_file(SoundSet *set,const char *fileName,int32 index);   /* 0x00109780 GUESS: name, see kh_mod.c */
 void key_picker_setup(UIElement *picker,KeyOption *options,int32 *setting,int32 index);   /* 0x001098D8 GUESS: name */
 void hud_set_cinematic(int param_1,int param_2);   /* 0x00109940 GUESS: name, see kh_mod.c */
-void FUN_00109a10(int param_1,int param_2,int param_3,undefined4 param_4);
+void screen_set_soft_key(Screen *screen,int32 slot,int32 textId,int32 selectEvent);   /* 0x00109A10 GUESS: name, see kh_mod.c */
 int32 text_box_set_text(TextBox *box,AECHAR *text,int32 narrow);   /* 0x00109B4C GUESS: name, see kh_mod.c */
 void text_box_set_text_id(TextBox *box,int32 textId);   /* 0x00109F00 GUESS: name, see kh_mod.c */
 void text_line_set_text(TextLine *line,AECHAR *text);   /* 0x00109F48 GUESS: name, see kh_mod.c */
@@ -930,7 +930,7 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
                                   "Rank" (language.m3g) */
 /* The menu items' types (UIElement.type, menu_item_create; GUESS: names). 1, 4 and 7 have no
    name yet. */
-#define MENU_ITEM_SOFT_KEY      2      /* a screen's soft key (FUN_00109a10) */
+#define MENU_ITEM_SOFT_KEY      2      /* a screen's soft key (screen_set_soft_key) */
 #define MENU_ITEM_BUTTON        3      /* a button of a menu's column (menu_add_buttons) */
 #define MENU_ITEM_TITLE_BUTTON  5      /* a button of the title menu's column (menu_add_buttons) */
 #define MENU_ITEM_ROW           6      /* a list row; its label in text style 0x24 */

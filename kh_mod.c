@@ -1209,7 +1209,8 @@ undefined4 FUN_00101ad8(int *param_1,int param_2)
   int iVar20;
   bool bVar21;
   bool bVar22;
-  undefined4 uVar23;                /* r2 / r3 of the FUN_00109a10(x, 1, r2, r3) calls: restored from */
+  undefined4 uVar23;                /* r2 / r3 of the screen_set_soft_key(x, 1, r2, r3) calls: restored
+                                       from */
   undefined4 uVar24;                /* Ghidra's decompile with the corrected prototype */
   undefined4 local_dc [13];
   int local_a8 [12];
@@ -1322,12 +1323,12 @@ LAB_00104fa4:
                     /* 0x1050e0 bl app_context_set_music: the function only uses r0/r1 (Ghidra's prototype
                        had 4 parameters: it never reads param_3, and only copies param_4 into a
                        stack local that is never read: a register spill). r2 here is still the word
-                       loaded at 0x10508c for the 0x6f branch (FUN_00109a10 at 0x1050a4); r3 is
+                       loaded at 0x10508c for the 0x6f branch (screen_set_soft_key at 0x1050a4); r3 is
                        whatever ui_element_add_child left in it. */
             app_context_set_music((undefined4)((KHApp *)*param_1)->context,1);
-            FUN_00109a10(iVar9,2,0,0);
+            screen_set_soft_key((Screen *)iVar9,2,0,0);
             if (param_2 != 0x70) {
-              FUN_00109a10(iVar9,1,uVar14,0x71);
+              screen_set_soft_key((Screen *)iVar9,1,uVar14,0x71);
               *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x514) =
                    *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x518);
               *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x524) =
@@ -1345,7 +1346,7 @@ LAB_00104fa4:
             uVar10 = 0x74;
             goto LAB_00105108;
           }
-          FUN_00109a10(iVar9,1,TEXT_DOWNLOAD,100);
+          screen_set_soft_key((Screen *)iVar9,1,TEXT_DOWNLOAD,100);
           uVar10 = 0x72;
           uVar14 = TEXT_END;
           goto LAB_001050b0;
@@ -1484,8 +1485,8 @@ LAB_00103858:
         uVar24 = 0x76;
         uVar23 = uVar14;
       }
-      FUN_00109a10(uVar10,1,uVar23,uVar24);
-      FUN_00109a10(uVar10,2,uVar2,0x3f);
+      screen_set_soft_key((Screen *)uVar10,1,uVar23,uVar24);
+      screen_set_soft_key((Screen *)uVar10,2,uVar2,0x3f);
       local_38 = (void *)progress_score(*(undefined4 *)(*param_1 + 0xa8));
       memset(local_74 + 9,0x18);
       local_74[9] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x52c);
@@ -1571,7 +1572,7 @@ LAB_00103858:
     case 0x7c:
       iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
       screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,TEXT_HIGH_SCORE,TEXT_NEW_HIGH_SCORE);
-      FUN_00109a10(iVar9,1,TEXT_YES,0x7d);
+      screen_set_soft_key((Screen *)iVar9,1,TEXT_YES,0x7d);
       uVar10 = 0xffffffff;
       uVar14 = TEXT_NO;
 LAB_001050b0:
@@ -1586,8 +1587,8 @@ LAB_001050b0:
                             (int)*(short *)(*(int *)(iVar9 + 8) + 6),param_1,iVar7);
       text_box_set_text_id((TextBox *)uVar10,(int32)TEXT_SENDING);
       ui_element_add_child(iVar9,uVar10,500);
-      FUN_00109a10(iVar9,1,0,0);
-      FUN_00109a10(iVar9,2,TEXT_CANCEL,0x56);
+      screen_set_soft_key((Screen *)iVar9,1,0,0);
+      screen_set_soft_key((Screen *)iVar9,2,TEXT_CANCEL,0x56);
       if (((ScreenStack *)param_1)->webRequest != (WebRequest *)0x0) {
         web_request_destroy(((ScreenStack *)param_1)->webRequest,1);
       }
@@ -1614,8 +1615,8 @@ LAB_001050b0:
         uVar24 = 0x76;
         uVar23 = uVar14;
       }
-      FUN_00109a10(iVar9,1,uVar23,uVar24);
-      FUN_00109a10(iVar9,2,uVar2,0x3f);
+      screen_set_soft_key((Screen *)iVar9,1,uVar23,uVar24);
+      screen_set_soft_key((Screen *)iVar9,2,uVar2,0x3f);
       local_38 = (void *)0x0;
       local_3c = (void *)0x0;
       progress_find_record(((KHApp *)*param_1)->progress,((KHApp *)*param_1)->pBufc4,
@@ -1672,8 +1673,8 @@ LAB_001050b0:
     case 0x81:
 LAB_00104a24:
       iVar9 = screen_stack_top(param_1);
-      FUN_00109a10(iVar9,2,TEXT_CANCEL,0x73);
-      FUN_00109a10(iVar9,1,0,0);
+      screen_set_soft_key((Screen *)iVar9,2,TEXT_CANCEL,0x73);
+      screen_set_soft_key((Screen *)iVar9,1,0,0);
       uVar10 = screen_stack_scale((ScreenStack *)param_1,100,1).low;
       iVar19 = screen_stack_scale((ScreenStack *)param_1,100,2).low;
       sVar1 = *(short *)(*(int *)(iVar9 + 8) + 4);
@@ -1756,8 +1757,8 @@ LAB_00104a24:
         }
         iVar19 = iVar19 + 1;
       } while (iVar19 < 0x19);
-      FUN_00109a10(iVar9,1,0,0);
-      FUN_00109a10(iVar9,2,TEXT_CANCEL,0x56);
+      screen_set_soft_key((Screen *)iVar9,1,0,0);
+      screen_set_soft_key((Screen *)iVar9,2,TEXT_CANCEL,0x56);
       if (((ScreenStack *)param_1)->webRequest != (WebRequest *)0x0) {
         web_request_destroy(((ScreenStack *)param_1)->webRequest,1);
       }
@@ -1877,12 +1878,12 @@ LAB_00101fa8:
           uVar23 = TEXT_UPDATE;
         }
 LAB_001024bc:
-        FUN_00109a10(iVar9,1,uVar23,uVar24);
+        screen_set_soft_key((Screen *)iVar9,1,uVar23,uVar24);
         uVar10 = 0xffffffff;
         uVar14 = TEXT_BACK;
         goto LAB_001050b0;
       }
-      FUN_00109a10(iVar9,2,TEXT_BACK,0xffffffff);
+      screen_set_soft_key((Screen *)iVar9,2,TEXT_BACK,0xffffffff);
       uVar10 = 0;
       uVar14 = 0;
 LAB_00105108:
@@ -1914,8 +1915,8 @@ LAB_00101db4:
     case 0x88:
       screen_stack_close_top(param_1,1);
       iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
-      FUN_00109a10(iVar9,2,TEXT_CANCEL,0x73);
-      FUN_00109a10(iVar9,1,0,0);
+      screen_set_soft_key((Screen *)iVar9,2,TEXT_CANCEL,0x73);
+      screen_set_soft_key((Screen *)iVar9,1,0,0);
       iVar7 = text_style_create(0,6);
       *(undefined4 *)(iVar7 + 4) = 9;
       *(undefined4 *)(iVar7 + 0x18) = COLOR_LIGHT_GREY;
@@ -1930,7 +1931,7 @@ LAB_00101db4:
     default:
       return 0;
     }
-    FUN_00109a10(iVar9,uVar11,uVar14,uVar10);
+    screen_set_soft_key((Screen *)iVar9,uVar11,uVar14,uVar10);
     goto LAB_0010423c;
   }
   if (param_2 == 0x11) {
@@ -1981,7 +1982,7 @@ LAB_0010489c:
             if (param_2 == 0x15) {
               iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
               screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,TEXT_ITEMS,0);
-              FUN_00109a10(iVar9,2,TEXT_BACK,0x1f);
+              screen_set_soft_key((Screen *)iVar9,2,TEXT_BACK,0x1f);
               memcpy_word_aligned(local_74 + 10,(int32)DATA_AT_00127BA4,0x18);
               puVar6 = (undefined4 *)progress_find_variable(((KHApp *)*param_1)->progress,STRING_COLLECTABLES);
               local_74[9] = 0;
@@ -2094,9 +2095,9 @@ LAB_0010489c:
         }
         iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
         screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,uVar10,0);
-        FUN_00109a10(iVar9,2,TEXT_BACK,0x84);
+        screen_set_soft_key((Screen *)iVar9,2,TEXT_BACK,0x84);
         if (iVar19 <= *(int *)(*(int *)(*param_1 + 0xa8) + 0x52c)) {
-          FUN_00109a10(iVar9,1,TEXT_BUY,uVar24);
+          screen_set_soft_key((Screen *)iVar9,1,TEXT_BUY,uVar24);
         }
         uVar10 = screen_stack_top(param_1);
         iVar19 = ui_element_find_child(uVar10,300);
@@ -2207,8 +2208,8 @@ LAB_001042b8:
     game_pause(*param_1);
     iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
     screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,TEXT_STATUS,0);
-    FUN_00109a10(iVar9,1,TEXT_NEXT,0x15);
-    FUN_00109a10(iVar9,2,TEXT_BACK,0xffffffff);
+    screen_set_soft_key((Screen *)iVar9,1,TEXT_NEXT,0x15);
+    screen_set_soft_key((Screen *)iVar9,2,TEXT_BACK,0xffffffff);
     memset(local_74 + 9,0x1c);
     local_74[9] = float_to_int(*(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x514));
     local_74[10] = *(undefined4 *)(*(int *)(*param_1 + 0xa8) + 0x524);
@@ -2284,8 +2285,8 @@ LAB_001042b8:
     }
     iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
     screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,TEXT_OPTIONS,0);
-    FUN_00109a10(iVar9,1,uVar11,0xfffffffe);
-    FUN_00109a10(iVar9,2,TEXT_BACK,0xffffffff);
+    screen_set_soft_key((Screen *)iVar9,1,uVar11,0xfffffffe);
+    screen_set_soft_key((Screen *)iVar9,2,TEXT_BACK,0xffffffff);
     memcpy_word_aligned(local_74 + 0xb,(int32)DATA_AT_00127BD4,0x14);
     memcpy_word_aligned(local_74 + 6,(int32)DATA_AT_00127BE8,0x14);
     memcpy_word_aligned(local_74 + 1,(int32)DATA_AT_00127BFC,0x14);
@@ -2319,8 +2320,8 @@ LAB_001042b8:
     game_pause(*param_1);
     iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
     screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,uVar10,TEXT_SELECT_AN_ITEM);
-    FUN_00109a10(iVar9,1,uVar11,0xfffffffe);
-    FUN_00109a10(iVar9,2,TEXT_BACK,0x10);
+    screen_set_soft_key((Screen *)iVar9,1,uVar11,0xfffffffe);
+    screen_set_soft_key((Screen *)iVar9,2,TEXT_BACK,0x10);
     iVar19 = screen_stack_scale((ScreenStack *)param_1,100,2).low;
     iVar17 = screen_stack_scale((ScreenStack *)param_1,0x118,1).low;
     iVar12 = (int)*(short *)(*(int *)(iVar9 + 8) + 4) + iVar19 * -2;
@@ -2417,7 +2418,7 @@ LAB_00104da0:
     iVar7 = ui_element_find_child(uVar10,0x2d);
     if (iVar7 != 0) {
       text_box_set_text_id((TextBox *)iVar7,(int32)TEXT_CONFIRM_END_GAME);
-      FUN_00109a10(uVar10,2,TEXT_BACK,8);
+      screen_set_soft_key((Screen *)uVar10,2,TEXT_BACK,8);
       uVar13 = 7;
       uVar11 = 1;
       uVar15 = TEXT_YES;
@@ -2440,8 +2441,8 @@ LAB_00104360:
   case 0xb:
     iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
     screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,TEXT_CONTROLS,0);
-    FUN_00109a10(iVar9,1,uVar13,0x46);
-    FUN_00109a10(iVar9,2,TEXT_BACK,0x48);
+    screen_set_soft_key((Screen *)iVar9,1,uVar13,0x46);
+    screen_set_soft_key((Screen *)iVar9,2,TEXT_BACK,0x48);
     memcpy_word_aligned(local_74 + 9,(int32)DATA_AT_00127C40,0x1c);
     uVar10 = screen_stack_scale((ScreenStack *)param_1,0x50,2).low;
     iVar19 = screen_stack_scale((ScreenStack *)param_1,0xa0,1).low;
@@ -2555,7 +2556,7 @@ LAB_001048a4:
     }
     iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
     screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,uVar10,0);
-    FUN_00109a10(iVar9,2,TEXT_BACK,0xffffffff);
+    screen_set_soft_key((Screen *)iVar9,2,TEXT_BACK,0xffffffff);
     iVar19 = text_style_create(0,5);
     *(undefined4 *)(iVar19 + 4) = 0x24;
     *(undefined4 *)(iVar19 + 0x18) = COLOR_LIGHT_GREY;
@@ -2580,13 +2581,13 @@ LAB_001048a4:
     break;
   case 0x10:
     screen_stack_close_top(param_1,1);
-    FUN_00109a10(*(undefined4 *)(*param_1 + 0xd4),1,uVar13,2);
+    screen_set_soft_key((Screen *)((KHApp *)*param_1)->hud,1,uVar13,2);
     uVar13 = 4;
     uVar11 = 2;
     uVar10 = *(undefined4 *)(*param_1 + 0xd4);
     uVar15 = TEXT_SHOP;
 LAB_001043c4:
-    FUN_00109a10(uVar10,uVar11,uVar15,uVar13);
+    screen_set_soft_key((Screen *)uVar10,uVar11,uVar15,uVar13);
     return local_34;
   case -1:
     goto LAB_00101db4;
@@ -4657,8 +4658,8 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
       ui_element_remove_child(iVar5,700,1);
       ui_element_remove_child(iVar5,500,1);
       if (((ScreenStack *)param_1)->field_60 == 0) {
-        FUN_00109a10(iVar5,2,TEXT_BACK,0x80);
-        FUN_00109a10(iVar5,1,TEXT_MENU,0x73);
+        screen_set_soft_key((Screen *)iVar5,2,TEXT_BACK,0x80);
+        screen_set_soft_key((Screen *)iVar5,1,TEXT_MENU,0x73);
       }
       puVar6 = text_style_create((undefined4 *)0x0,6);
       puVar6[1] = 0x21;
@@ -4723,8 +4724,8 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
           uVar11 = screen_stack_scale((ScreenStack *)param_1,0x96,1);
           *psVar9 = *psVar9 - (short)uVar11.low;
           text_box_set_text_id((TextBox *)iVar8,(int32)uVar4);
-          FUN_00109a10((int)piVar1,1,0,0);
-          FUN_00109a10((int)piVar1,2,TEXT_BACK,0xffffffff);
+          screen_set_soft_key((Screen *)piVar1,1,0,0);
+          screen_set_soft_key((Screen *)piVar1,2,TEXT_BACK,0xffffffff);
           goto LAB_00108a4c;
         }
         if (piVar1[0xf] == 2 || piVar1[0xf] == 3) {
@@ -5294,47 +5295,51 @@ void hud_set_cinematic(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x00109A10  (file offset 0x09A10)  FUN_00109a10 ================================================ */
-void FUN_00109a10(int param_1,int param_2,int param_3,undefined4 param_4)
+/* ==== 0x00109A10  (file offset 0x09A10)  screen_set_soft_key ========================================= */
+/* GUESS: names. Sets a screen's soft key `slot` (1 or 2, Screen.softKeys[slot - 1]): the old one is
+   removed and destroyed (ui_element_remove_child); with a `textId`, a new one (menu_item_create,
+   MENU_ITEM_SOFT_KEY, enabled, not checked) captioned `textId` and sending `selectEvent` (-1: none) is
+   added: 330 x 90 (scaled to the display, screen_stack_scale) at the bottom, 20 in from the edges, slot
+   1 on the left and 2 on the right, or the other way round when the player's first soft key is
+   AVK_SOFT2 (Progress.softKeys). The menus (FUN_00101ad8) set theirs with it, the script's addSoftkey /
+   removeSoftkey the HUD's. r0 is left as ui_element_add_child or the remove leaves it; no caller reads
+   it. */
+void screen_set_soft_key(Screen *screen,int32 slot,int32 textId,int32 selectEvent)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  int iVar5;
-  int iVar6;
-  int iVar7;
-  
-  iVar7 = param_2 + -1;
-  iVar1 = *(int *)(*(int *)(param_1 + 0x34) + iVar7 * 4);
-  if (iVar1 != 0) {
-    ui_element_remove_child(param_1,*(undefined4 *)(iVar1 + 0xc),1);
-    *(undefined4 *)(*(int *)(param_1 + 0x34) + iVar7 * 4) = 0;
+  ScreenStack *stack = (ScreenStack *)((UIElement *)screen)->owner;
+  UIElement *key;
+  int32 width;
+  int32 height;
+  int32 marginX;
+  int32 marginY;
+  int32 left;
+  int32 right;
+
+  if (screen->softKeys[slot - 1] != (UIElement *)0x0) {
+    ui_element_remove_child((UIElement *)screen,screen->softKeys[slot - 1]->id,1);
+    screen->softKeys[slot - 1] = (UIElement *)0x0;
   }
-  if (param_3 != 0) {
-    iVar2 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x14a,2).low;
-    iVar3 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x5a,1).low;
-    iVar1 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x14,2).low;
-    iVar4 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x14,1).low;
-    iVar5 = (*(short *)(*(int *)(param_1 + 8) + 4) - iVar1) - iVar2;
-    iVar6 = iVar5;
-    if (*(int *)(*(int *)(*(int *)(param_1 + 0x44) + 0xa8) + 0x5e8) == 0xe037) {
-      iVar6 = iVar1;
-      iVar1 = iVar5;
-    }
-    if (param_2 == 1) {
-      iVar6 = iVar1;
-    }
-    iVar1 = menu_item_create((UIElement *)0x0,iVar6,
-                             (*(short *)(*(int *)(param_1 + 8) + 6) - iVar4) - iVar3,iVar2,iVar3
-                             ,*(undefined4 *)(param_1 + 0x20),2,param_4,1);
-    *(int *)(*(int *)(param_1 + 0x34) + iVar7 * 4) = iVar1;
-    text_line_set_text_id(*(undefined4 *)(iVar1 + 0x30),param_3);
-    ui_element_add_child(param_1,*(undefined4 *)(*(int *)(param_1 + 0x34) + iVar7 * 4),0);
+  if (textId == 0)
+    return;
+  width = (int32)screen_stack_scale(stack,330,2).low;
+  height = (int32)screen_stack_scale(stack,90,1).low;
+  marginX = (int32)screen_stack_scale(stack,20,2).low;
+  marginY = (int32)screen_stack_scale(stack,20,1).low;
+  left = marginX;
+  right = ((UIElement *)screen)->rect->dx - marginX - width;
+  if (screen->app->progress->softKeys[0] == AVK_SOFT2) {   /* the soft keys swapped */
+    left = right;
+    right = marginX;
   }
-  return;
+  key = menu_item_create((UIElement *)0x0,slot == 1 ? left : right,
+                         ((UIElement *)screen)->rect->dy - marginY - height,width,height,
+                         ((UIElement *)screen)->owner,MENU_ITEM_SOFT_KEY,selectEvent,1);
+  screen->softKeys[slot - 1] = key;
+  text_line_set_text_id(key->label,textId);
+  ui_element_add_child((UIElement *)screen,screen->softKeys[slot - 1],0);
 }
+
 
 /* ==== 0x00109B4C  (file offset 0x09B4C)  text_box_set_text =========================================== */
 /* GUESS: names. Sets a text box's text (a wide string; 0 for none): destroys its lines, then wraps the
@@ -10246,7 +10251,7 @@ int32 script_run(int32 context,int32 count,ScriptCommand **commands)
 /* GUESS: names. Runs a script command (made by script_command_parse), by its type. Returns 1, except
    for an If (0x10: the progress flags of its condition, "!" negating one, joined by "||" and "&&" from
    left to right) and an IfVar (0x50: two variables or numbers compared), which return whether it holds.
-   The binary's cases share some calls (FUN_00109a10 at 0x00111948, sound_set_play at 0x00111df8,
+   The binary's cases share some calls (screen_set_soft_key at 0x00111948, sound_set_play at 0x00111df8,
    thunk_FUN_0011fd90 at 0x001121cc, FUN_0011f8e0 at 0x00111f68 and helper_free at 0x001116c8): each is
    made once, after the switch (or the inner one), from what the case left in the locals softKey ...
    words. The UI the commands drive (KHApp.hud, `hud`; its struct Hud has only the "loading" text so
@@ -10268,7 +10273,7 @@ int32 script_command_run(ScriptCommand *command)
   int32 index;
   int32 found;
   int32 textId;
-  int32 slot = 0;
+  int32 selectEvent = 0;
   int32 softKey = 0;
   SoundSet *sound = (SoundSet *)0x0;
   int32 soundId;
@@ -10304,31 +10309,31 @@ int32 script_command_run(ScriptCommand *command)
                     /* helper[4] int strcmp(const char *a, const char *b), helper[27] void free(void *p)
                        (AEEHelperFuncs +0x10, +0x6c, via *(base-4)) */
   switch (command->type) {
-  case 3:   /* addSoftkey: a soft key with its label and the screen it opens */
+  case 3:   /* addSoftkey: the HUD's soft key number[0], its label and the event (screen) it opens */
     if (app->texts == (TextTable *)0x0)
       break;
     if ((*g_pHelperFuncs->strcmp)(command->text,STRING_SAVE) == 0) {
-      slot = 2;
+      selectEvent = 2;
       textId = TEXT_SAVE;
     }
     else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_SHOP) == 0) {
-      slot = 4;
+      selectEvent = 4;
       textId = TEXT_SHOP;
     }
     else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_OPTIONS) == 0) {
-      slot = 3;
+      selectEvent = 3;
       textId = TEXT_OPTIONS_ENTRY;
     }
     else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_MAIN_MENU) == 0) {
-      slot = 6;
+      selectEvent = 6;
       textId = TEXT_END;
     }
     else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_RESTART_GAME) == 0) {
-      slot = 5;
+      selectEvent = 5;
       textId = TEXT_CONTINUE;
     }
     else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_UNPAUSE) == 0) {
-      slot = 9;
+      selectEvent = 9;
       textId = TEXT_CONTINUE;
     }
     else
@@ -11073,7 +11078,7 @@ int32 script_command_run(ScriptCommand *command)
     break;
   }
   if (softKey != 0)   /* 0x00111948 */
-    FUN_00109a10((int)hud,command->number[0],textId,slot);
+    screen_set_soft_key((Screen *)hud,command->number[0],textId,selectEvent);
   if (sound != (SoundSet *)0x0)   /* 0x00111df8 */
     sound_set_play(sound,soundId);
   if (moveObject != 0)   /* 0x001121cc */
@@ -22217,8 +22222,8 @@ LAB_001244d4:
 LAB_001243b0:
     piVar5 = (int *)screen_stack_top(*(int *)(param_1 + 0xd0));
     if (piVar5 != (int *)0x0) {
-      FUN_00109a10((int)piVar5,1,0,0);
-      FUN_00109a10((int)piVar5,2,0,0);
+      screen_set_soft_key((Screen *)piVar5,1,0,0);
+      screen_set_soft_key((Screen *)piVar5,2,0,0);
       ui_element_add_child((int)piVar5,
                            (int)text_line_create((TextLine *)0x0,(int)*(short *)(piVar5[2] + 4) / 2,
                                                  *(short *)(piVar5[2] + 6) + -10,0,0,*(int32 **)(param_1 + 0xd0),
