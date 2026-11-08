@@ -7819,45 +7819,36 @@ int32 combat_region_all_enemies_waiting(CombatRegion *region)
 }
 
 
-/* ==== 0x0010D3A4  (file offset 0x0D3A4)  FUN_0010d3a4 ================================================ */
-void FUN_0010d3a4(int param_1,undefined4 param_2)
+/* ==== 0x0010D3A4  (file offset 0x0D3A4)  kh_show_error =============================================== */
+/* GUESS: names. The fatal error screen: the display filled white (IDisplay DrawRect with no rectangle) and
+   three lines centred around the middle of the screen, 10 pixels apart: "The application has failed", "and
+   will close (Error %x)" with `error` in hex, "Press any key to continue"; then IDisplay Update.
+   kh_OnAppStart shows it when the start fails, and the app's timer tick (FUN_001242b4) on every tick while
+   KHApp.nErr is set. Each line's wide copy is in a stack buffer, which is then passed to the helper
+   table's free (0x0010d4a0): a free of stack memory, three per draw (GAME_BUGS.md). */
+void kh_show_error(KHApp *app,int32 error)
 
 {
-  ushort uVar1;
-  int iVar3;
-  undefined1 *puVar4;
-  undefined1 auStack_274 [40];
-  undefined1 auStack_24c [40];
-  undefined1 auStack_224 [40];
-  undefined1 auStack_1fc [480];
-                    /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
-                       +0x20, via *(base-4)) */
-  (*g_pHelperFuncs->sprintf)(auStack_274,(int32)STRING_THE_APPLICATION_HAS_FAILED);
-                    /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
-                       +0x20, via *(base-4)) */
-  (*g_pHelperFuncs->sprintf)(auStack_24c,(int32)STRING_AND_WILL_CLOSE_ERROR_PERCENT_X,param_2);
-                    /* helper[8] int sprintf(char *dst, const char *fmt, ...)  (AEEHelperFuncs
-                       +0x20, via *(base-4)) */
-  (*g_pHelperFuncs->sprintf)(auStack_224,(int32)STRING_PRESS_ANY_KEY_TO_CONTINUE);
-  uVar1 = *(ushort *)(param_1 + 0x26);
-  (*((IDisplay *)*(int **)(param_1 + 0x14))->pvt->DrawRect)
-      ((IDisplay *)*(int **)(param_1 + 0x14),0,0xffffffff,0xffffffff,2);
-  iVar3 = 0;
-  do {
-    puVar4 = auStack_1fc + iVar3 * 0xa0;
-                    /* helper[16] AECHAR * strtowstr(const char *src, AECHAR *dst, int nDstBytes)
-                       (AEEHelperFuncs +0x40, via *(base-4)) */
-    (*g_pHelperFuncs->strtowstr)(auStack_274 + iVar3 * 0x28,puVar4,0x50);
-    (*((IDisplay *)*(int **)(param_1 + 0x14))->pvt->DrawText)
-        ((IDisplay *)*(int **)(param_1 + 0x14),0x8000,(const AECHAR *)puVar4,0xffffffff,0,
-               ((uVar1 >> 1) - 0xf) + iVar3 * 10,0,0x20);
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(puVar4);
-    iVar3 = iVar3 + 1;
-  } while (iVar3 < 3);
-  (*((IDisplay *)*(int **)(param_1 + 0x14))->pvt->Update)((IDisplay *)*(int **)(param_1 + 0x14),1);
+  char lines[3][40];          /* sp+0x14, +0x3c, +0x64 */
+  AECHAR wide[3][80];         /* sp+0x8c, 0xa0 bytes each */
+  int32 top;
+  int32 i;
+
+  (*g_pHelperFuncs->sprintf)(lines[0],STRING_THE_APPLICATION_HAS_FAILED);
+  (*g_pHelperFuncs->sprintf)(lines[1],STRING_AND_WILL_CLOSE_ERROR_PERCENT_X,error);
+  (*g_pHelperFuncs->sprintf)(lines[2],STRING_PRESS_ANY_KEY_TO_CONTINUE);
+  top = (app->devInfo.cyScreen >> 1) - 15;
+  (*app->a.m_pIDisplay->pvt->DrawRect)(app->a.m_pIDisplay,(const AEERect *)0x0,0xffffffff,0xffffffff,2);
+  for (i = 0; i < 3; i++) {
+    (*g_pHelperFuncs->strtowstr)(lines[i],wide[i],0x50);
+    (*app->a.m_pIDisplay->pvt->DrawText)
+        (app->a.m_pIDisplay,0x8000,wide[i],-1,0,top + i * 10,(const AEERect *)0x0,0x20);
+    (*g_pHelperFuncs->free)(wide[i]);           /* a stack buffer: the binary frees it (0x0010d4a0) */
+  }
+  (*app->a.m_pIDisplay->pvt->Update)(app->a.m_pIDisplay,1);
   return;
 }
+
 
 /* ==== 0x0010D4DC  (file offset 0x0D4DC)  string_to_float ============================================= */
 /* GUESS: names. The number written in `text` (the narrow text widened, then BREW's wstrtofloat), as a
@@ -15170,17 +15161,17 @@ void kh_OnAppStart(KHApp *pMe)
   }
   pMe->nErr = iVar6;
 LAB_001199b0:
-  FUN_0010d3a4(pMe,pMe->nErr);
+  kh_show_error(pMe,pMe->nErr);
   if (pMe->nErr == 0) {
     uVar7 = INTEGER_258;
     if (pMe->pObj6c != (ISwerveObject *)0x0) {
       uVar7 = INTEGER_257;
     }
-    FUN_0010d3a4(pMe,uVar7);
+    kh_show_error(pMe,uVar7);
     pMe->nErr = -1;
   }
   else {
-    FUN_0010d3a4(pMe,pMe->nErr);
+    kh_show_error(pMe,pMe->nErr);
   }
   return;
 }
@@ -22566,7 +22557,7 @@ LAB_001244f0:
   iVar7 = INTEGER_MINUS_54208;
   iVar4 = *(int *)(param_1 + 0x90);
   if (iVar4 != 0) {
-    FUN_0010d3a4(param_1,iVar4);
+    kh_show_error((KHApp *)param_1,iVar4);
     return;
   }
   piVar5 = (int *)screen_stack_top(*(int *)(param_1 + 0xd0));
