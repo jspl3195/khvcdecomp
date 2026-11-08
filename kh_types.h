@@ -51,7 +51,7 @@ typedef struct KHApp {
                                         once it is non-zero, and key releases are ignored */
     struct AppContext *context;      /* +0x94 GUESS: name; the object most functions take first
                                         (app_context_create, app_context_destroy) */
-    void          *pObj98;           /* +0x98 created by 0x10be14, destroyed by 0x10cda4 */
+    struct TextTable *texts;         /* +0x98 the game's texts (text_table_create, text_table_destroy) */
     struct Animations *animations;   /* +0x9c the scene's animations; created by animations_create,
                                         destroyed by animations_destroy */
     struct Intro  *intro;            /* +0xa0 the opening sequence (intro_create), destroyed by 0x10cd2c */
@@ -171,7 +171,7 @@ typedef struct ScreenStack {
     struct KHApp *app;            /* +0x00 */
     struct KHApp *applet;         /* +0x04 GUESS: name; the app as well: the constructor's second argument,
                                      stored first (+0x00 later); read for its IShell and IDisplay */
-    struct TextTable *texts;      /* +0x08 the app's text table (KHApp.pObj98; screen_stack_get_text) */
+    struct TextTable *texts;      /* +0x08 the app's text table (KHApp.texts; screen_stack_get_text) */
     IDisplay *display;            /* +0x0c passed to the elements' draw methods (ui_element_draw); GUESS: the
                                      IDisplay */
     IGraphics *graphics;          /* +0x10 what the elements draw with (ui_element_draw, graphics_set_color) */
@@ -198,12 +198,13 @@ typedef struct ScreenStack {
 } ScreenStack;                    /* 0x68 bytes (screen_stack_create); only the fields named so far */
 
 /* ---- The text table (GUESS: names) -------------------------------------------------------------------
- * KHApp.pObj98 (FUN_0010be14, 8 bytes): the game's texts by id, read from `source` (FUN_0011448c:
+ * KHApp.texts (text_table_create, 8 bytes): the game's texts by id, read from `source` (FUN_0011448c:
  * its vtable +0x30 copies the text with an id), narrow (text_table_get_text) or wide
  * (text_table_get_wide_text). */
 typedef struct TextTable {
     struct KHApp *app;            /* +0x00 */
-    int     *source;              /* +0x04 */
+    ISwerveObject *source;        /* +0x04 the last object of "language.m3g" (FUN_0011b518), released by
+                                     text_table_destroy */
 } TextTable;
 
 /* ---- The game's UI elements (GUESS: names) ------------------------------------------------------

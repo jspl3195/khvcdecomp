@@ -6064,7 +6064,7 @@ ScreenStack * screen_stack_create(ScreenStack *stack,KHApp *app)
   if (stack == (ScreenStack *)0x0 && (stack = helper_malloc_2(0x68)) == (ScreenStack *)0x0)
     return stack;
   stack->applet = app;
-  stack->texts = (struct TextTable *)app->pObj98;
+  stack->texts = app->texts;
   stack->screens = list_create((UIList *)0x0,0x10,0x10);
   stack->depth = 0;
   stack->display = stack->applet->a.m_pIDisplay;
@@ -6727,22 +6727,22 @@ Screen * screen_create(Screen *screen,ScreenStack *stack,uint8 framed)
 }
 
 
-/* ==== 0x0010BE14  (file offset 0x0BE14)  FUN_0010be14 ================================================ */
-int * FUN_0010be14(int *param_1)
+/* ==== 0x0010BE14  (file offset 0x0BE14)  text_table_create =========================================== */
+/* GUESS: names. The text table's constructor (KHApp.texts, made by kh_OnAppStart): allocates its 8 bytes
+   when `table` is 0 (returns 0 when out of memory), keeps the app and loads the game's texts from
+   "language.m3g" (FUN_0011b518, the Swerve Loader: its last object is kept as the source the texts are
+   looked up in). */
+TextTable * text_table_create(TextTable *table)
 
 {
-  int iVar1;
-  
-  if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(8), param_1 != (int *)0x0)) {
-                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
-                        */
-    iVar1 = (*g_pHelperFuncs->GetAppInstance)();
-    *param_1 = iVar1;
-    iVar1 = FUN_0011b518((undefined4)((KHApp *)iVar1)->context,(int32)STRING_LANGUAGE_DOT_M3G).low;
-    param_1[1] = iVar1;
-  }
-  return param_1;
+  if (table == (TextTable *)0x0 && (table = helper_malloc_2(8)) == (TextTable *)0x0)
+    return table;
+  table->app = (*g_pHelperFuncs->GetAppInstance)();
+  table->source =
+       (ISwerveObject *)FUN_0011b518((int)table->app->context,(int32)STRING_LANGUAGE_DOT_M3G).low;
+  return table;
 }
+
 
 /* ==== 0x0010BE6C  (file offset 0x0BE6C)  list_create ================================================= */
 /* GUESS: name. A list's constructor: allocates its 0x14 bytes when `list` is 0 (returns 0 when out of
@@ -7492,20 +7492,20 @@ void FUN_0010cd2c(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x0010CDA4  (file offset 0x0CDA4)  FUN_0010cda4 ================================================ */
-void FUN_0010cda4(int param_1,int param_2)
+/* ==== 0x0010CDA4  (file offset 0x0CDA4)  text_table_destroy ========================================== */
+/* GUESS: names. The text table's destructor (kh_OnAppStop): releases the texts' source (the object loaded
+   from "language.m3g") and frees the table when `freeIt` is set (the binary's tail jump to helper_free at
+   0x0010cdd0). */
+void text_table_destroy(TextTable *table,int32 freeIt)
 
 {
-  if (*(int **)(param_1 + 4) != (int *)0x0) {
-    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-    (*((ISwerveObject *)*(int **)(param_1 + 4))->pvt->Release)((ISwerveObject *)*(int **)(param_1 + 4));
-  }
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
+  if (table->source != (ISwerveObject *)0x0)
+    (*table->source->pvt->Release)(table->source);
+  if (freeIt != 0)
+    helper_free(table);
   return;
 }
+
 
 /* ==== 0x0010CDD8  (file offset 0x0CDD8)  list_destroy ================================================ */
 /* GUESS: name. A list's destructor (list_create's counterpart): frees its two arrays, not what the entries
@@ -7773,7 +7773,7 @@ void progress_add_munny(Progress *progress,int32 amount)
   app->progress->munny += amount;
   if (app->progress->munny < 1)
     app->progress->munny = 0;
-  text_table_get_text(app->pObj98,TEXT_MUNNY,&label);
+  text_table_get_text(app->texts,TEXT_MUNNY,&label);
   if (label == (void *)0x0 || (text = helper_malloc(0x20)) == (void *)0x0)
     return;
   (*g_pHelperFuncs->sprintf)(text,(int32)STRING_PERCENT_S_EQUALS_PERCENT_D,label,app->progress->munny);
@@ -9720,7 +9720,7 @@ void progress_reset(Progress *progress)
 void progress_set_default_controls(Progress *progress)
 
 {
-  TextTable *texts = (TextTable *)progress->app->pObj98;
+  TextTable *texts = progress->app->texts;
   char *text;
 
   progress->controls[0] = AVK_2;
@@ -10462,7 +10462,7 @@ int32 script_command_run(ScriptCommand *command)
                        (AEEHelperFuncs +0x10, +0x6c, via *(base-4)) */
   switch (command->type) {
   case 3:   /* addSoftkey: a soft key with its label and the screen it opens */
-    if (app->pObj98 == (void *)0x0)
+    if (app->texts == (TextTable *)0x0)
       break;
     if ((*g_pHelperFuncs->strcmp)(command->text,STRING_SAVE) == 0) {
       slot = 2;
@@ -10493,7 +10493,7 @@ int32 script_command_run(ScriptCommand *command)
     softKey = 1;
     break;
   case 4:   /* addUIAction: shows the action's name; the action key then acts on the object */
-    if (hud != (uint8 *)0x0 && app->pObj98 != (void *)0x0) {
+    if (hud != (uint8 *)0x0 && app->texts != (TextTable *)0x0) {
       if ((*g_pHelperFuncs->strcmp)(command->text,STRING_ACTIVATE) == 0)
         textId = TEXT_ACTIVATE;
       else if ((*g_pHelperFuncs->strcmp)(command->text,STRING_ATTACK) == 0)
@@ -10516,7 +10516,7 @@ int32 script_command_run(ScriptCommand *command)
         textId = 0;
       if (textId != 0) {
         wideText = (AECHAR *)0x0;
-        text_table_get_wide_text((TextTable *)app->pObj98,textId,&wideText);
+        text_table_get_wide_text(app->texts,textId,&wideText);
         if (wideText != (AECHAR *)0x0) {
           FUN_00105538((int)hud,(undefined4)wideText,2);
           (*g_pHelperFuncs->free)(wideText);
@@ -11281,9 +11281,9 @@ void kh_OnAppStop(KHApp *pMe)
     FUN_0010c2c4(pMe->pGame,1);
     pMe->pGame = (void *)0x0;
   }
-  if (pMe->pObj98 != (void *)0x0) {
-    FUN_0010cda4(pMe->pObj98,1);
-    pMe->pObj98 = (void *)0x0;
+  if (pMe->texts != (TextTable *)0x0) {
+    text_table_destroy(pMe->texts,1);
+    pMe->texts = (TextTable *)0x0;
   }
   if (pMe->context != (void *)0x0) {
     app_context_destroy(pMe->context,1);
@@ -12524,7 +12524,7 @@ int32 text_table_get_text(TextTable *table,int32 textId,char **text)
 {
   if (table->source == (int *)0x0)
     return (int32)table;
-  return FUN_0011448c((undefined4)table->app->context,table->source,textId,(undefined4 *)text);
+  return FUN_0011448c((undefined4)table->app->context,(int *)table->source,textId,(undefined4 *)text);
 }
 
 
@@ -12774,7 +12774,7 @@ void text_table_get_wide_text(TextTable *table,int32 textId,AECHAR **text)
   if (table->source == (int *)0x0)
     return;
   narrow = (char *)0x0;
-  FUN_0011448c((undefined4)table->app->context,table->source,textId,(undefined4 *)&narrow);
+  FUN_0011448c((undefined4)table->app->context,(int *)table->source,textId,(undefined4 *)&narrow);
   if (narrow != (char *)0x0) {
     string_to_wide((int32)table->app->context,&narrow,text);
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -15061,7 +15061,7 @@ void kh_OnAppStart(KHApp *pMe)
   pMe->pObj6c = (ISwerveObject *)0x0;
   pMe->pScreenDIB = (IDIB *)0x0;
   pMe->context = (void *)0x0;
-  pMe->pObj98 = (void *)0x0;
+  pMe->texts = (TextTable *)0x0;
   pMe->animations = (void *)0x0;
   pMe->intro = (void *)0x0;
   pMe->pGame = (void *)0x0;
@@ -15137,8 +15137,8 @@ void kh_OnAppStart(KHApp *pMe)
           pMe->nErr = iVar2;
           if (iVar2 != 0) goto LAB_001199b0;
         }
-        pvVar4 = (void *)FUN_0010be14(0);
-        pMe->pObj98 = pvVar4;
+        pvVar4 = text_table_create((TextTable *)0x0);
+        pMe->texts = pvVar4;
         if (pvVar4 == (void *)0x0) {
           iVar6 = 0x108;
         }
@@ -15158,7 +15158,7 @@ void kh_OnAppStart(KHApp *pMe)
               if (((pMe->nErr == 0) && (FUN_00118640(pMe->animations,pMe->pObj6c), pMe->nErr == 0)) &&
                  (intro_start(pMe->intro), pMe->nErr == 0)) {
                 local_18 = (IBitmap *)0x0;
-                text_table_get_text(pMe->pObj98,TEXT_30,&local_18);
+                text_table_get_text(pMe->texts,TEXT_30,&local_18);
                 if (local_18 == (IBitmap *)0x0) {
                   pMe->field_8c = 0x1e;
                 }

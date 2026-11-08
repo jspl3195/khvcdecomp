@@ -565,7 +565,7 @@ TextStyle * text_style_create(TextStyle *style,int32 type);   /* 0x0010BA08 GUES
 Intro * intro_create(Intro *intro,int32 atTitle,int32 *error);   /* 0x0010BB2C GUESS: names */
 UIElement * menu_item_create(UIElement *item,int32 x,int32 y,int32 width,int32 height,int32 *owner, int32 type,int32 selectEvent,uint8 enabled);   /* 0x0010BBA0 GUESS: name, see kh_mod.c */
 Screen * screen_create(Screen *screen,ScreenStack *stack,uint8 framed);   /* 0x0010BD7C GUESS: name, see kh_mod.c */
-int * FUN_0010be14(int *param_1);
+TextTable * text_table_create(TextTable *table);   /* 0x0010BE14 GUESS: name, see kh_mod.c */
 UIList * list_create(UIList *list,int32 capacity,int32 growBy);   /* 0x0010BE6C GUESS: name, see kh_mod.c */
 undefined8 sound_set_create(int *param_1,int param_2,int param_3,int param_4);   /* 0x0010BEC4 GUESS: name: a SoundSet (see kh_types.h) */
 UIElement * ui_element_create(UIElement *element,int16 x,int16 y,int16 width,int16 height,int32 *owner);   /* 0x0010C168 GUESS: name, see kh_mod.c */
@@ -588,7 +588,7 @@ void FUN_0010ca1c(int param_1,int param_2);
 void level_object_destroy(int param_1,int param_2);   /* 0x0010CAB0 GUESS: name: a LevelObject's destructor (see kh_types.h) */
 void collision_shape_destroy(CollisionShape *shape,int32 freeIt);   /* 0x0010CC9C GUESS: name, see kh_mod.c */
 void FUN_0010cd2c(int param_1,int param_2);
-void FUN_0010cda4(int param_1,int param_2);
+void text_table_destroy(TextTable *table,int32 freeIt);   /* 0x0010CDA4 GUESS: name, see kh_mod.c */
 void list_destroy(UIList *list,int32 freeIt);   /* 0x0010CDD8 GUESS: name, see kh_mod.c */
 void screen_resume_nothing(int32 screen);   /* 0x001052DC (no Ghidra function; a virtual method) */
 void text_box_destroy(TextBox *box);   /* 0x00105C98 GUESS: name, see kh_mod.c */
