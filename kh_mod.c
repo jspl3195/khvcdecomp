@@ -1367,14 +1367,15 @@ LAB_00104fa4:
           local_dc[3] = 1;
           local_dc[0] = uVar13;
           local_dc[1] = uVar14;
-                    /* 0x101e98 bl FUN_001053a8, 13 arguments: r0-r3 = param_1, iVar9, 5,
+                    /* 0x101e98 bl menu_add_buttons, 13 arguments: r0-r3 = param_1, iVar9, 5,
                        sp+0xa8 (local_74 + 0xb); on the stack: [sp] = sp+0x94 (local_74 + 6),
                        stmib sp,{r0,r1,r6,r7,r8,r9} puts 0, 5, uVar10, uVar11, uVar13, uVar14 at
                        [sp+4..sp+0x18], then [sp+0x1c] = the last screen_stack_scale result and
                        [sp+0x20] = 1. Ghidra kept the last four as stores into local_dc[0..3]
                        (sp+0x14..sp+0x20, the outgoing argument area) instead of passing them. */
-          FUN_001053a8(param_1,iVar9,5,local_74 + 0xb,local_74 + 6,0,5,uVar10,uVar11,local_dc[0],
-                       local_dc[1],local_dc[2],local_dc[3]);
+          menu_add_buttons((ScreenStack *)param_1,(Screen *)iVar9,5,local_74 + 0xb,local_74 + 6,
+                           (const int32 *)0x0,5,uVar10,uVar11,local_dc[0],local_dc[1],local_dc[2],
+                           local_dc[3]);
           goto LAB_0010423c;
         }
         if (param_2 < 0x5b) {
@@ -2308,10 +2309,10 @@ LAB_001042b8:
     local_dc[3] = 1;
     local_dc[0] = uVar13;
     local_dc[1] = uVar14;
-                    /* FUN_001053a8 takes 13 arguments; as at the first call, Ghidra kept the last four
+                    /* menu_add_buttons takes 13 arguments; as at the first call, Ghidra kept the last four
                        as stores into local_dc[0..3] (the outgoing argument area) instead of passing them */
-    FUN_001053a8(param_1,iVar9,5,local_74 + 0xb,local_74 + 6,local_74 + 1,3,uVar10,uVar11,local_dc[0],
-                 local_dc[1],local_dc[2],local_dc[3]);
+    menu_add_buttons((ScreenStack *)param_1,(Screen *)iVar9,5,local_74 + 0xb,local_74 + 6,local_74 + 1,3,
+                     uVar10,uVar11,local_dc[0],local_dc[1],local_dc[2],local_dc[3]);
     app_context_set_music((undefined4)((KHApp *)*param_1)->context,0);
     break;
   case 4:
@@ -2621,14 +2622,14 @@ void FUN_001051d4(int param_1,int param_2)
 
 /* ==== 0x00105224  (file offset 0x05224)  ui_element_set_focus ======================================== */
 /* GUESS: name. Gives `element` the keyboard focus on `screen`: the element keeps its screen (+0x64) and
-   the screen sends it the keys it does not handle itself (Screen.focus, screen_handle_key). The element is
-   marked focused (flags bit 1) and gets its highlight colours by type: types 3, 4, 7 and any other light
-   lavender on slate grey; 5 light yellow on dark grey; 6 light grey on black (its unfocused pair swapped);
-   types 2 and 8 (key picker) keep theirs, and 9 and 10 activate their text control instead (SetActive).
-   It is then redrawn. The element that had the focus is left as it is: ui_element_handle_key clears its
-   bit, deactivates its control and gives it the unfocused colours. Called by ui_element_handle_key when a
-   key moves the focus, and by FUN_00101ad8 and FUN_001053a8 for the first row of a new menu. Returns what
-   ui_element_draw returns (the binary's tail jump). */
+   the screen sends it the keys it does not handle itself (Screen.focus, screen_handle_key). The element
+   is marked focused (flags bit 1) and gets its highlight colours by type: types 3, 4, 7 and any other
+   light lavender on slate grey; 5 light yellow on dark grey; 6 light grey on black (its unfocused pair
+   swapped); types 2 and 8 (key picker) keep theirs, and 9 and 10 activate their text control instead
+   (SetActive). It is then redrawn. The element that had the focus is left as it is:
+   ui_element_handle_key clears its bit, deactivates its control and gives it the unfocused colours.
+   Called by ui_element_handle_key when a key moves the focus, and by FUN_00101ad8 and menu_add_buttons
+   for the first row of a new menu. Returns what ui_element_draw returns (the binary's tail jump). */
 int32 ui_element_set_focus(UIElement *element,Screen *screen)
 
 {
@@ -2704,52 +2705,51 @@ int32 hud_show_text(Hud *hud,AECHAR *text,int32 left,int32 top,int32 right,int32
 }
 
 
-/* ==== 0x001053A8  (file offset 0x053A8)  FUN_001053a8 ================================================ */
-void FUN_001053a8(undefined4 param_1,undefined4 param_2,int param_3,int param_4,int param_5,
-                 int param_6,undefined4 param_7,int param_8,int param_9,int param_10,int param_11,
-                 int param_12,int param_13)
+/* ==== 0x001053A8  (file offset 0x053A8)  menu_add_buttons ============================================ */
+/* GUESS: names. Adds `count` menu buttons to a screen, in a column (`vertical` 1) or a row: each a menu
+   item (menu_item_create, enabled) of `width` x `height` at (x, y), of `type`, sending selectEvents[i]
+   when chosen, captioned textIds[i] (text_line_set_text_id on its label), added to the screen with
+   ids[i] (or an automatic id when `ids` is 0; ui_element_add_child); the next one `gap` pixels below or
+   to the right. The first takes the focus (ui_element_set_focus), and each other is linked both ways
+   with the one before it (ui_element_set_key_target: AVK_UP / AVK_DOWN in a column, AVK_LEFT /
+   AVK_RIGHT in a row, the binary's AVK_UP / AVK_DOWN plus 2); the last is not linked back to the first.
+   The items are not checked. Returns r0 as kh.mod leaves it: `count`, reloaded for the loop's last
+   compare (0x001054bc); no caller reads it. Used by the menus (FUN_00101ad8) for their 5-button
+   columns. */
+int32 menu_add_buttons(ScreenStack *stack,Screen *screen,int32 count,const int32 *textIds,
+                       const int32 *selectEvents,const int32 *ids,int32 type,int32 x,int32 y,int32 width,
+                       int32 height,int32 gap,int32 vertical)
 
 {
-  int32 previousKey;   /* the key that moves to the previous button */
-  int iVar2;
-  int32 nextKey;       /* the key that moves to the next one */
-  undefined4 uVar4;
-  int iVar5;
-  int iVar6;
-  
-  iVar5 = 0;
-  nextKey = AVK_DOWN;                             /* a column */
-  previousKey = AVK_UP;
-  if (param_13 != 1) {                            /* a row */
+  int32 nextKey = AVK_DOWN;       /* a column */
+  int32 previousKey = AVK_UP;
+  UIElement *item;
+  UIElement *before = (UIElement *)0x0;
+  int32 i;
+
+  if (vertical != 1) {            /* a row */
     nextKey = AVK_RIGHT;
     previousKey = AVK_LEFT;
   }
-  for (; iVar5 < param_3; iVar5 = iVar5 + 1) {
-    iVar2 = menu_item_create((UIElement *)0x0,param_8,param_9,param_10,param_11,param_1,param_7,
-                             *(undefined4 *)(param_5 + iVar5 * 4),1);
-    text_line_set_text_id(*(undefined4 *)(iVar2 + 0x30),*(undefined4 *)(param_4 + iVar5 * 4));
-    if (iVar5 == 0) {
-      ui_element_set_focus((UIElement *)iVar2,(Screen *)param_2);
-    }
+  for (i = 0; i < count; i++) {
+    item = menu_item_create((UIElement *)0x0,x,y,width,height,(int32 *)stack,type,selectEvents[i],1);
+    text_line_set_text_id(item->label,textIds[i]);
+    if (i == 0)
+      ui_element_set_focus(item,screen);
     else {
-      ui_element_set_key_target((UIElement *)iVar2,previousKey,(UIElement *)iVar6);
-      ui_element_set_key_target((UIElement *)iVar6,nextKey,(UIElement *)iVar2);
+      ui_element_set_key_target(item,previousKey,before);
+      ui_element_set_key_target(before,nextKey,item);
     }
-    if (param_13 == 1) {
-      param_9 = param_11 + param_12 + param_9;
-    }
-    else {
-      param_8 = param_10 + param_12 + param_8;
-    }
-    uVar4 = 0;
-    if (param_6 != 0) {
-      uVar4 = *(undefined4 *)(param_6 + iVar5 * 4);
-    }
-    ui_element_add_child(param_2,iVar2,uVar4);
-    iVar6 = iVar2;
+    if (vertical == 1)
+      y += height + gap;
+    else
+      x += width + gap;
+    ui_element_add_child((UIElement *)screen,item,ids != (const int32 *)0x0 ? ids[i] : 0);
+    before = item;
   }
-  return;
+  return count;
 }
+
 
 /* ==== 0x001054D8  (file offset 0x054D8)  ui_element_add_child ======================================== */
 /* GUESS: name. Adds `child` to `parent` under the id `id`. When id is 0 or already in use, the child
@@ -2851,7 +2851,7 @@ int32 hud_show_loading(Hud *hud,uint32 color)
    focus to it (ui_element_set_focus). The binary is `ldr r0, [r0, #0x60]` and a tail jump to
    list_set_entry, which adds the entry or replaces the one for that key; returns its result, the number of
    entries. Callers link each new row (or button) of a menu with the previous one both ways: AVK_UP /
-   AVK_DOWN in a column, AVK_LEFT / AVK_RIGHT in a row (FUN_00101ad8, FUN_001053a8). */
+   AVK_DOWN in a column, AVK_LEFT / AVK_RIGHT in a row (FUN_00101ad8, menu_add_buttons). */
 int32 ui_element_set_key_target(UIElement *element,int32 keyCode,UIElement *target)
 
 {
@@ -6644,14 +6644,15 @@ Intro * intro_create(Intro *intro,int32 atTitle,int32 *error)
 
 /* ==== 0x0010BBA0  (file offset 0x0BBA0)  menu_item_create ============================================ */
 /* GUESS: names. The menu item's constructor (VTABLE_001016E0; 0x70 bytes, allocated when `item` is 0;
-   returns 0 when out of memory): a plain element (ui_element_create) of the given type and select event,
-   with a label covering it (a text line in style 0x24 for type 6, else 9, added as its child), no text
-   control and no image. Type 8 (key picker) starts with no selected option; types 9 and 10 (text entry)
-   get a text control (IShell CreateInstance 0x01003009; GUESS: an ITextCtl) set to the item's rectangle,
-   inactive, with properties 0x10000, and type 10 input mode 5; type 0xb (the download progress bar) starts
-   at 0 of 0. Then `enabled`, a key map (list_create, not checked: GAME_BUGS.md), flags 1 (bit 0; meaning
-   unknown, the focus bit 1 clear), and its unfocused colours (ui_element_handle_key with the undefined key
-   0xE010). The menus make every row, button, picture and field with it (FUN_00101ad8, FUN_001053a8). */
+   returns 0 when out of memory): a plain element (ui_element_create) of the given type and select
+   event, with a label covering it (a text line in style 0x24 for type 6, else 9, added as its child),
+   no text control and no image. Type 8 (key picker) starts with no selected option; types 9 and 10
+   (text entry) get a text control (IShell CreateInstance 0x01003009; GUESS: an ITextCtl) set to the
+   item's rectangle, inactive, with properties 0x10000, and type 10 input mode 5; type 0xb (the download
+   progress bar) starts at 0 of 0. Then `enabled`, a key map (list_create, not checked: GAME_BUGS.md),
+   flags 1 (bit 0; meaning unknown, the focus bit 1 clear), and its unfocused colours
+   (ui_element_handle_key with the undefined key 0xE010). The menus make every row, button, picture and
+   field with it (FUN_00101ad8, menu_add_buttons). */
 UIElement * menu_item_create(UIElement *item,int32 x,int32 y,int32 width,int32 height,int32 *owner,
                              int32 type,int32 selectEvent,uint8 enabled)
 
@@ -6667,7 +6668,7 @@ UIElement * menu_item_create(UIElement *item,int32 x,int32 y,int32 width,int32 h
   item->selectEvent = selectEvent;
   item->listener = (ITextCtl *)0x0;
   item->image = (IImage *)0x0;
-  item->label = (int32)text_line_create((TextLine *)0x0,item->rect->x,item->rect->y,item->rect->dx,
+  item->label = text_line_create((TextLine *)0x0,item->rect->x,item->rect->y,item->rect->dx,
                                         item->rect->dy,owner,0,type == 6 ? 0x24 : 9);
   if (type == 8)
     item->selectedOption = (KeyOption *)0x0;

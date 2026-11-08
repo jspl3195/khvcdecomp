@@ -259,7 +259,8 @@ typedef struct UIElement {
     int32    nextAutomaticId;       /* +0x28 counts down from 0: the ids -1, -2, ... given to children
                                      added without an id (or with one already in use) */
     struct UIElement *parent;     /* +0x2c the element it was added to */
-    int32    label;                 /* +0x30 the text element that shows the current value */
+    struct TextLine *label;        /* +0x30 the text element that shows its caption or current value
+                                     (menu_item_create, menu_add_buttons) */
     int32    type;                  /* +0x34 2..10; 8 = key picker */
     int32    selectEvent;           /* +0x38 the event sent to the owner when SELECT is pressed */
     KeyOption *options;           /* +0x3c key picker: the ring of options */

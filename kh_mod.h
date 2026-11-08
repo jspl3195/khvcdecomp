@@ -464,7 +464,7 @@ undefined4 FUN_00101ad8(int *param_1,int param_2);
 void FUN_001051d4(int param_1,int param_2);
 int32 ui_element_set_focus(UIElement *element,Screen *screen);   /* 0x00105224 GUESS: name, see kh_mod.c */
 int32 hud_show_text(Hud *hud,AECHAR *text,int32 left,int32 top,int32 right,int32 bottom,int32 tailX,int32 tailY,int32 slot);   /* 0x001052E0 GUESS: name, see kh_mod.c */
-void FUN_001053a8(undefined4 param_1,undefined4 param_2,int param_3,int param_4,int param_5, int param_6,undefined4 param_7,int param_8,int param_9,int param_10,int param_11, int param_12,int param_13);
+int32 menu_add_buttons(ScreenStack *stack,Screen *screen,int32 count,const int32 *textIds,const int32 *selectEvents,const int32 *ids,int32 type,int32 x,int32 y,int32 width,int32 height,int32 gap,int32 vertical);   /* 0x001053A8 GUESS: name, see kh_mod.c */
 int32 ui_element_add_child(UIElement *parent,UIElement *child,int32 id);   /* 0x001054D8 GUESS: name */
 void hud_show_scrolling_text(int param_1,undefined4 param_2,int param_3);   /* 0x00105538 GUESS: name, see kh_mod.c */
 void screen_add_heading(ScreenStack *stack,UIElement *screen,uint32 color,int32 titleId,int32 bodyId);   /* 0x001055C4 GUESS: name, see kh_mod.c */
