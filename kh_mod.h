@@ -483,7 +483,7 @@ void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4);
 void text_box_draw(TextBox *box,IDisplay *display,IGraphics *graphics);   /* 0x0010673C GUESS: name, see kh_mod.c */
 void text_line_draw(TextLine *line,IDisplay *display);   /* 0x00106A94 GUESS: name, see kh_mod.c */
 void FUN_00106bd4(int *param_1,int *param_2,int *param_3);
-void FUN_00106e44(int param_1,undefined4 param_2,int *param_3);
+void screen_draw(Screen *screen,IDisplay *display,IGraphics *graphics);   /* 0x00106E44 GUESS: name, see kh_mod.c */
 void text_box_draw_scroll_bar(TextBox *box,IDisplay *display,IGraphics *graphics);   /* 0x00106FB0 GUESS: name, see kh_mod.c */
 void FUN_00107230(int *param_1,undefined4 param_2,int *param_3);
 void FUN_001077d0(int param_1,int *param_2,int param_3,int param_4,int param_5,undefined4 param_6, int param_7);
@@ -2162,7 +2162,7 @@ static code *const VTABLE_00101700[9] = {   /* 0x00101700; in kh.mod each entry 
   (code *)ui_element_update_nothing,
   (code *)screen_handle_key_nothing,
   (code *)ui_element_draw_over_children_nothing,
-  (code *)FUN_00106e44,
+  (code *)screen_draw,
   (code *)ui_element_get_primary_color,
   (code *)ui_element_get_secondary_color,
   (code *)ui_element_get_border_color,

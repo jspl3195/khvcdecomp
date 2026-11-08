@@ -302,11 +302,12 @@ typedef struct Screen {
     UIElement **softKeys;         /* +0x34 its first and second soft key entries (8 bytes); their selectEvent
                                      is sent when the player's soft key is pressed */
     uint8    framed;              /* +0x38 screen_create's third argument; set: the draw method
-                                     FUN_00106e44 paints a window frame (dark 0xFF615A6D, light
-                                     0xFF9795A5, then frameFillColor inside) */
+                                     screen_draw paints a window frame (COLOR_PURPLE_GREY, then
+                                     COLOR_GREY_LILAC, then frameFillColor inside) */
     uint8    unknown_39[0x03];
     int32    field_3c;            /* +0x3c 0 */
-    uint32   frameFillColor;      /* +0x40 GUESS: name; 0xFFEBEBF7 at creation */
+    uint32   frameFillColor;      /* +0x40 GUESS: name; the window's colour (screen_draw),
+                                     COLOR_PALE_LAVENDER at creation */
     struct KHApp *app;            /* +0x44 the stack's app */
 } Screen;                         /* 0x48 bytes (screen_create) */
 

@@ -3628,44 +3628,50 @@ void FUN_00106bd4(int *param_1,int *param_2,int *param_3)
   return;
 }
 
-/* ==== 0x00106E44  (file offset 0x06E44)  FUN_00106e44 ================================================ */
-void FUN_00106e44(int param_1,undefined4 param_2,int *param_3)
+/* ==== 0x00106E44  (file offset 0x06E44)  screen_draw ================================================= */
+/* GUESS: name. The plain screen's draw method (VTABLE_00101700 slot 4): a framed screen (screen_create's
+   `framed`, the menus' dialogs) paints a window behind its elements, three rectangles cleared with
+   IGraphics' background colour (ClearRectBg): the whole screen in purple grey, then, above the bottom 15%
+   of the display height, a grey lilac border 2% of the display width in from the screen's sides and top,
+   and 2% further in the window itself in frameFillColor (pale lavender from screen_create). An unframed
+   screen draws nothing. The rectangle is a heap copy of the screen's; its allocation is only checked
+   before the copy (GAME_BUGS.md). `display` is not read. Ends in a tail jump to helper_free (0x00106f9c).
+   */
+void screen_draw(Screen *screen,IDisplay *display,IGraphics *graphics)
 
 {
-  undefined4 uVar1;
-  short sVar2;
-  short sVar3;
-  short *psVar4;
-  
-  if (*(char *)(param_1 + 0x38) != '\0') {
-    psVar4 = helper_malloc_2(8);
-    if (psVar4 != (short *)0x0) {
-      memcpy(psVar4,*(undefined4 *)(param_1 + 8),8);
-    }
-    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,COLOR_PURPLE_GREY,3);
-    (*((IGraphics *)param_3)->pvt->ClearRectBg)((IGraphics *)param_3,(const AEERect *)psVar4);
-    sVar2 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x96,1).low;
-    psVar4[3] = psVar4[3] - sVar2;
-    sVar2 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x14,2).low;
-    sVar3 = screen_stack_scale((ScreenStack *)((UIElement *)param_1)->owner,0x14,2).low;
-    *psVar4 = *psVar4 + sVar2;
-    uVar1 = COLOR_GREY_LILAC;
-    psVar4[1] = psVar4[1] + sVar2;
-    psVar4[2] = psVar4[2] + sVar2 * -2;
-    psVar4[3] = psVar4[3] + sVar2 * -2;
-    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,uVar1,3);
-    (*((IGraphics *)param_3)->pvt->ClearRectBg)((IGraphics *)param_3,(const AEERect *)psVar4);
-    *psVar4 = *psVar4 + sVar3;
-    psVar4[1] = psVar4[1] + sVar3;
-    psVar4[2] = psVar4[2] + sVar3 * -2;
-    psVar4[3] = psVar4[3] + sVar3 * -2;
-    graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,*(undefined4 *)(param_1 + 0x40),3);
-    (*((IGraphics *)param_3)->pvt->ClearRectBg)((IGraphics *)param_3,(const AEERect *)psVar4);
-    helper_free(psVar4);
+  UIElement *element = (UIElement *)screen;
+  ScreenStack *stack = (ScreenStack *)element->owner;
+  AEERect *frame;
+  int16 border;
+  int16 window;
+
+  if (screen->framed == 0)
     return;
-  }
+  frame = helper_malloc_2(8);
+  if (frame != (AEERect *)0x0)
+    memcpy(frame,element->rect,8);
+  graphics_set_color((int32)stack,graphics,COLOR_PURPLE_GREY,3);
+  (*graphics->pvt->ClearRectBg)(graphics,frame);
+  frame->dy -= (int16)screen_stack_scale(stack,150,1).low;    /* the bottom 15% of the display */
+  border = (int16)screen_stack_scale(stack,20,2).low;         /* 2% of the display width */
+  window = (int16)screen_stack_scale(stack,20,2).low;
+  frame->x += border;
+  frame->y += border;
+  frame->dx -= border * 2;
+  frame->dy -= border * 2;
+  graphics_set_color((int32)stack,graphics,COLOR_GREY_LILAC,3);
+  (*graphics->pvt->ClearRectBg)(graphics,frame);
+  frame->x += window;
+  frame->y += window;
+  frame->dx -= window * 2;
+  frame->dy -= window * 2;
+  graphics_set_color((int32)stack,graphics,screen->frameFillColor,3);
+  (*graphics->pvt->ClearRectBg)(graphics,frame);
+  helper_free(frame);                           /* the binary's tail jump (0x00106f9c) */
   return;
 }
+
 
 /* ==== 0x00106FA8  (file offset 0x06FA8)  ui_element_draw_nothing ===================================== */
 /* GUESS: name. The draw method (vtable slot 4, +0x10) of the base UI element (VTABLE_00101724): a plain
@@ -6840,8 +6846,8 @@ int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
 /* GUESS: names. The plain screen's constructor (VTABLE_00101700; 0x48 bytes, allocated when `screen` is
    0; returns 0 when out of memory): a UI element covering the display (ScreenStack.rect's size), owned by
    the stack, with the app, no focus, two empty soft key entries (their 8-byte block's malloc is not
-   checked) and, when `framed` is set, a window frame drawn by FUN_00106e44 with frameFillColor
-   (0xFFEBEBF7) inside. The menu handler FUN_00101ad8 makes its pages (0) and dialogs (1) with it; the
+   checked) and, when `framed` is set, a window frame drawn by screen_draw with frameFillColor
+   (COLOR_PALE_LAVENDER) inside. The menu handler FUN_00101ad8 makes its pages (0) and dialogs (1) with it; the
    HUD's constructor FUN_0010aa8c builds on it. */
 Screen * screen_create(Screen *screen,ScreenStack *stack,uint8 framed)
 
