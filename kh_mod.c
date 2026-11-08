@@ -1541,8 +1541,7 @@ LAB_00103858:
       if ((int)local_38 <= local_a8[9]) {
         return local_34;
       }
-      FUN_0011fddc(*(undefined4 *)(*param_1 + 0xa8),*(undefined4 *)(*param_1 + 0xc4),local_38,
-                   0xffffffff);
+      progress_set_record(((KHApp *)*param_1)->progress,((KHApp *)*param_1)->pBufc4,(int32)local_38,-1);
       uVar10 = 0x7c;
       goto LAB_00104de4;
     case 0x76:
@@ -4745,21 +4744,21 @@ void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *pa
 LAB_00108a4c:
     ui_element_draw((UIElement *)piVar1);
     break;
-  case 0x6:
+  case 0x6:   /* GUESS: the ranking's reply for this level: the score and the value sent back */
     iVar8 = progress_score(*(int *)(*param_1 + 0xa8));
-    FUN_0011fddc(*(int *)(*param_1 + 0xa8),*(undefined4 *)(*param_1 + 0xc4),iVar8,param_3);
+    progress_set_record(((KHApp *)*param_1)->progress,((KHApp *)*param_1)->pBufc4,iVar8,(int32)param_3);
     screen_stack_close_top(param_1,1);
     screen_stack_close_top(param_1,1);
     iVar8 = 0x7e;
     goto LAB_00108d50;
-  case 0x7:
+  case 0x7:   /* GUESS: the downloaded ranking list: name~value pairs, stored and saved */
     for (iVar5 = 0; iVar5 < (int)param_3; iVar5 = iVar5 + 1) {
       iVar10 = *(int *)((int)param_5 + iVar5 * 4);
       iVar2 = (*g_pHelperFuncs->strchrend)(iVar10,0x7e);
       pvVar3 = helper_malloc((iVar2 - iVar10) + 1);
       (*g_pHelperFuncs->strncpy)(pvVar3,iVar10,iVar2 - iVar10);
       uVar4 = (*g_pHelperFuncs->atoi)(iVar2 + 1);
-      FUN_0011fddc(*(int *)(*param_1 + 0xa8),pvVar3,-1,uVar4);
+      progress_set_record(((KHApp *)*param_1)->progress,(const char *)pvVar3,-1,(int32)uVar4);
       helper_free(pvVar3);
     }
     records_save(*(int *)(*param_1 + 0xa8));
@@ -6286,7 +6285,7 @@ Progress * progress_create(Progress *progress,int32 skipSetup)
   for (i = 0; i < 25; i++) {
     progress->recordNames[i] = (char *)0x0;
     progress->records[i].best = 0;
-    progress->records[i].field_04 = 0;
+    progress->records[i].downloaded = 0;
   }
   if (progress->userId != (char *)0x0)
     helper_free(progress->userId);
@@ -8373,7 +8372,7 @@ boolean kh_HandleEvent(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
 
 /* ==== 0x0010E1F8  (file offset 0x0E1F8)  progress_score ============================================== */
 /* GUESS: name. munny + 100 * experience (0x0010e1f8: experience * 25, shifted left by 2, plus munny).
-   Used for a ranking entry (FUN_0011fddc, with the player's name pBufc4), a results screen
+   Used for a ranking entry (progress_set_record, with the player's name pBufc4), a results screen
    (web_request_post_rank) and a status screen (FUN_00101ad8). */
 int32 progress_score(Progress *progress)
 
@@ -12246,7 +12245,7 @@ int32 collision_shape_turn_direction(CollisionShape *shape,uint32 x1,uint32 y1,u
 /* GUESS: names (and that the first value is a best score). The saved record with the name `name` (a
    level's, e.g. KHApp.pBufc4): its two values in *best and *second and 1; 0 when there is none, the outputs
    left as they are (the callers clear them first). The menu code (FUN_00101ad8) reads it after a level, to
-   store a better score with FUN_0011fddc, and to list the records. */
+   store a better score with progress_set_record, and to list the records. */
 int32 progress_find_record(Progress *progress,const char *name,int32 *best,int32 *second)
 
 {
@@ -12258,7 +12257,7 @@ int32 progress_find_record(Progress *progress,const char *name,int32 *best,int32
     if (progress->recordNames[i] != (char *)0x0 &&
         (*g_pHelperFuncs->strcmp)(name,progress->recordNames[i]) == 0) {
       *best = progress->records[i].best;
-      *second = progress->records[i].field_04;
+      *second = progress->records[i].downloaded;
       return 1;
     }
   return 0;
@@ -18532,7 +18531,7 @@ undefined4 progress_save(int param_1,int param_2)
 }
 
 /* ==== 0x0011EA18  (file offset 0x1EA18)  records_save ================================================ */
-/* GUESS: name (not yet rewritten). Saves the records (each one's name, best and field_04; save_write_*)
+/* GUESS: name (not yet rewritten). Saves the records (each one's name, best and downloaded; save_write_*)
    to "scoredata.dat" (progress_write_file); records_load reads them back. */
 undefined4 records_save(int param_1)
 
@@ -18556,7 +18555,7 @@ undefined4 records_save(int param_1)
                       (int32 *)&local_1c);
     save_write_int((Progress *)param_1,((Progress *)param_1)->records[iVar4].best,(uint8 *)uVar2,
                    (int32 *)&local_1c);
-    save_write_int((Progress *)param_1,((Progress *)param_1)->records[iVar4].field_04,(uint8 *)uVar2,
+    save_write_int((Progress *)param_1,((Progress *)param_1)->records[iVar4].downloaded,(uint8 *)uVar2,
                    (int32 *)&local_1c);
     iVar4 = iVar4 + 1;
   } while (iVar4 < 0x19);
@@ -19353,60 +19352,44 @@ void animations_set_priority(Animations *animations,int32 index,uint8 priority)
     animations->priorities[index] = priority;
 }
 
-/* ==== 0x0011FDDC  (file offset 0x1FDDC)  FUN_0011fddc ================================================ */
-undefined4 FUN_0011fddc(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
+/* ==== 0x0011FDDC  (file offset 0x1FDDC)  progress_set_record ========================================= */
+/* GUESS: names. Stores the record of the level `name`: a record with that name (strcmp) gets `best`
+   (unless it is -1) and `downloaded`, and 1 is returned, without saving; otherwise the last free slot
+   (name 0 or "") gets the name (string_replace), `best` (even -1) and `downloaded`, the records are
+   saved (records_save) and 1 is returned; 0 when all 25 slots are taken. Used after a level for a
+   better score (FUN_00101ad8's level summary, which saved the records just before: an improvement of a
+   known level is written only by a later save, GAME_BUGS.md), by the ranking's reply (FUN_0010888c,
+   cases 6 and 7: the downloaded list's name~value pairs). */
+int32 progress_set_record(Progress *progress,const char *name,int32 best,int32 downloaded)
 
 {
-  int iVar1;
-  undefined4 uVar3;
-  int iVar4;
-  int iVar5;
-  int iVar6;
-  Progress *progress = (Progress *)param_1;
-  
-  iVar4 = 0;
-  iVar5 = -1;
-  while( true ) {
-    iVar1 = (int)progress->recordNames[iVar4];
-    iVar6 = iVar4;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-    if (((iVar1 != 0) &&
-        (iVar1 = (*g_pHelperFuncs->strcmp)(iVar1,(int32)STRING_EMPTY_001278E8),
-        iVar1 != 0)) &&
-       (iVar1 = (*g_pHelperFuncs->strcmp)
-                          (param_2,progress->recordNames[iVar4]), iVar6 = iVar5, iVar1 == 0))
-    break;
-    iVar4 = iVar4 + 1;
-    iVar5 = iVar6;
-    if (0x18 < iVar4) {
-      if (iVar6 == -1) {
-        uVar3 = 0;
-      }
-      else {
-        if (progress->recordNames[iVar6] != (char *)0x0) {
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-          (*g_pHelperFuncs->free)(progress->recordNames[iVar6]);
-          progress->recordNames[iVar6] = (char *)0x0;
-        }
-        string_replace(progress->app->context,(const char *)param_2,&progress->recordNames[iVar6]);
-        progress->records[iVar6].best = param_3;
-        progress->records[iVar6].field_04 = param_4;
-        records_save(param_1);
-LAB_0011fec8:
-        uVar3 = 1;
-      }
-      return uVar3;
+  int32 freeSlot = -1;
+  int32 i;
+
+  for (i = 0; i < 25; i++) {
+    if (progress->recordNames[i] == (char *)0x0 ||
+        (*g_pHelperFuncs->strcmp)(progress->recordNames[i],STRING_EMPTY_001278E8) == 0)
+      freeSlot = i;
+    else if ((*g_pHelperFuncs->strcmp)(name,progress->recordNames[i]) == 0) {
+      if (best != -1)
+        progress->records[i].best = best;
+      progress->records[i].downloaded = downloaded;
+      return 1;
     }
   }
-  if (param_3 != -1) {
-    progress->records[iVar4].best = param_3;
+  if (freeSlot == -1)
+    return 0;
+  if (progress->recordNames[freeSlot] != (char *)0x0) {
+    (*g_pHelperFuncs->free)(progress->recordNames[freeSlot]);
+    progress->recordNames[freeSlot] = (char *)0x0;
   }
-  progress->records[iVar4].field_04 = param_4;
-  goto LAB_0011fec8;
+  string_replace(progress->app->context,name,&progress->recordNames[freeSlot]);
+  progress->records[freeSlot].best = best;
+  progress->records[freeSlot].downloaded = downloaded;
+  records_save((int)progress);
+  return 1;
 }
+
 
 /* ==== 0x0011FED8  (file offset 0x1FED8)  animations_set_speed ======================================== */
 /* GUESS: name. Sets the speed (a float, its bits) of animation `index`; nothing for a negative index or

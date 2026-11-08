@@ -446,7 +446,8 @@ typedef struct ProgressLevel {
 
 typedef struct ProgressRecord {
     int32    best;                  /* +0x00 GUESS: a best score; replaced only by a higher one after a level */
-    int32    field_04;              /* +0x04 GUESS: meaning unknown; -1 from the setter call after a level */
+    int32    downloaded;            /* +0x04 GUESS: name; the value the ranking sent back for the level
+                                     (progress_set_record, from a name~value list); -1 after a level */
 } ProgressRecord;                 /* GUESS: names; Progress.records */
 typedef struct Progress {
     uint8  statusFlags[100];      /* +0x000 one byte per status text (GUESS: names) */
@@ -511,7 +512,7 @@ typedef struct Progress {
     int32    softKeys[2];           /* +0x5e8 the keys that act as the left and the right soft key (screen_handle_key):
                                      AVK_SOFT1 and AVK_SOFT2, swapped when the text 0x052F918F exists */
     char    *recordNames[25];       /* +0x5f0 GUESS: names; the saved records' names (a level's, KHApp.pBufc4);
-                                     0 or "" when free (progress_find_record, FUN_0011fddc) */
+                                     0 or "" when free (progress_find_record, progress_set_record) */
     ProgressRecord records[25];   /* +0x654 their values */
     int32    summaryPending;        /* +0x71c GUESS: name; set when the level's summary (event 0x75) saves
                                      the game, so that after a suspend (FUN_001242b4) the summary opens

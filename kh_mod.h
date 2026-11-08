@@ -817,7 +817,7 @@ int32 animations_set_position(Animations *animations,int32 index,int32 position)
 void thunk_FUN_0011fd90(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0011fd90(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void animations_set_priority(Animations *animations,int32 index,uint8 priority);   /* 0x0011FDBC GUESS: name */
-undefined4 FUN_0011fddc(int param_1,undefined4 param_2,int param_3,undefined4 param_4);
+int32 progress_set_record(Progress *progress,const char *name,int32 best,int32 downloaded);   /* 0x0011FDDC GUESS: name, see kh_mod.c */
 void animations_set_speed(Animations *animations,int32 index,uint32 speed);   /* 0x0011FED8 GUESS: name */
 void progress_set_status(Progress *progress,const char *name,int32 flag);   /* 0x0011FEF4 GUESS: name, see kh_mod.c */
 void FUN_0011ffc0(undefined4 *param_1,undefined4 param_2);
