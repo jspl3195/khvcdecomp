@@ -801,7 +801,7 @@ undefined4 progress_save(int param_1,int param_2);   /* 0x0011E6B8 GUESS: name, 
 undefined4 records_save(int param_1);   /* 0x0011EA18 GUESS: name, see kh_mod.c */
 undefined4 settings_save(int param_1,undefined4 param_2);   /* 0x0011EAD4 GUESS: name, see kh_mod.c */
 undefined4 FUN_0011ec28(int param_1,int param_2);
-void FUN_0011ed3c(int param_1,undefined4 *param_2);
+void text_expand_key_names(AppContext *context,char **text);   /* 0x0011ED3C GUESS: name, see kh_mod.c */
 void combat_region_enemies_enter_mode_2(CombatRegion *region);   /* 0x0011F280 GUESS: name, see kh_mod.c */
 void FUN_0011f2bc(int param_1,int *param_2,int param_3);
 void FUN_0011f394(int param_1,char *param_2,undefined4 param_3,undefined4 param_4,int param_5);
@@ -1990,7 +1990,8 @@ static const char STRING_PMD[] = "pmd";   /* 0x00127EBC */
 static const uint32 DATA_AT_00127EC4[4] = {   /* 0x00127EC4 */
   0x00000000,0x00000000,0x00000000,0x3F800000
 };
-static const uint32 DATA_AT_00127ED4[8] = {   /* 0x00127ED4 */
+static const uint32 KEY_NAME_CODES[8] = {   /* 0x00127ED4; GUESS: name; text_expand_key_names' codes before
+                                               the controls fill the first 7 (-1: "#VER") */
   0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0xFFFFFFFF
 };
 static const char STRING_TRANSFORM[] = "Transform";   /* 0x00127EF4 */
@@ -2004,42 +2005,18 @@ static const char STRING_HASH_RIGHT[] = "#RIGHT";   /* 0x00127F2C */
 static const char STRING_HASH_LEFT[] = "#LEFT";   /* 0x00127F34 */
 static const char STRING_HASH_DOWN[] = "#DOWN";   /* 0x00127F3C */
 static const char STRING_HASH_UP[] = "#UP";   /* 0x00127F44 */
-static const uint32 DATA_AT_00127F48[1] = {   /* 0x00127F48 */
-  0x00000030
-};
-static const uint32 DATA_AT_00127F4C[1] = {   /* 0x00127F4C */
-  0x00000031
-};
-static const uint32 DATA_AT_00127F50[1] = {   /* 0x00127F50 */
-  0x00000032
-};
-static const uint32 DATA_AT_00127F54[1] = {   /* 0x00127F54 */
-  0x00000033
-};
-static const uint32 DATA_AT_00127F58[1] = {   /* 0x00127F58 */
-  0x00000034
-};
-static const uint32 DATA_AT_00127F5C[1] = {   /* 0x00127F5C */
-  0x00000035
-};
-static const uint32 DATA_AT_00127F60[1] = {   /* 0x00127F60 */
-  0x00000036
-};
-static const uint32 DATA_AT_00127F64[1] = {   /* 0x00127F64 */
-  0x00000037
-};
-static const uint32 DATA_AT_00127F68[1] = {   /* 0x00127F68 */
-  0x00000038
-};
-static const uint32 DATA_AT_00127F6C[1] = {   /* 0x00127F6C */
-  0x00000039
-};
-static const uint32 DATA_AT_00127F70[1] = {   /* 0x00127F70 */
-  0x0000002A
-};
-static const uint32 DATA_AT_00127F74[1] = {   /* 0x00127F74 */
-  0x00000023
-};
+static const char STRING_0_00127F48[] = "0";   /* 0x00127F48 */
+static const char STRING_1_00127F4C[] = "1";   /* 0x00127F4C */
+static const char STRING_2_00127F50[] = "2";   /* 0x00127F50 */
+static const char STRING_3_00127F54[] = "3";   /* 0x00127F54 */
+static const char STRING_4_00127F58[] = "4";   /* 0x00127F58 */
+static const char STRING_5_00127F5C[] = "5";   /* 0x00127F5C */
+static const char STRING_6_00127F60[] = "6";   /* 0x00127F60 */
+static const char STRING_7_00127F64[] = "7";   /* 0x00127F64 */
+static const char STRING_8_00127F68[] = "8";   /* 0x00127F68 */
+static const char STRING_9_00127F6C[] = "9";   /* 0x00127F6C */
+static const char STRING_STAR_00127F70[] = "*";   /* 0x00127F70 */
+static const char STRING_HASH_00127F74[] = "#";   /* 0x00127F74 */
 static const char STRING_EMPTY_00127F78[] = "";   /* 0x00127F78; the root (files_remove_by_prefix) */
 static const char STRING_TRAINING_DOT_MID[] = "training.mid";   /* 0x00127F7C */
 static const char STRING_TRAINING_00127F8C[] = "training";   /* 0x00127F8C */

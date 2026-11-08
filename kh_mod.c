@@ -2565,7 +2565,7 @@ LAB_001048a4:
     uVar10 = text_box_create(0,uVar14,uVar13,uVar10,local_38,param_1,iVar19);
     if (param_2 == 0xe || param_2 == 0xf) {
       text_table_get_text(*(undefined4 *)(*param_1 + 0x98),uVar11,&local_38);
-      FUN_0011ed3c((undefined4)((KHApp *)*param_1)->context,&local_38);
+      text_expand_key_names(((KHApp *)*param_1)->context,(char **)&local_38);
       string_to_wide((int32)((KHApp *)*param_1)->context,(char **)&local_38,(AECHAR **)&local_3c);
       text_box_set_text(uVar10,local_3c,0);
       (*g_pHelperFuncs->free)(local_38);
@@ -10463,7 +10463,7 @@ int32 script_command_run(ScriptCommand *command)
     FUN_00114520(context,(int *)command->object->node,command->hash,(undefined4 *)&command->text);
     if (command->text == (char *)0x0)
       break;
-    FUN_0011ed3c(context,(undefined4 *)&command->text);
+    text_expand_key_names((AppContext *)context,&command->text);
     wideText = (AECHAR *)0x0;
     string_to_wide(context,&command->text,&wideText);
     if (wideText != (AECHAR *)0x0) {
@@ -18719,198 +18719,112 @@ undefined4 FUN_0011ec28(int param_1,int param_2)
   return 1;
 }
 
-/* ==== 0x0011ED3C  (file offset 0x1ED3C)  FUN_0011ed3c ================================================ */
-void FUN_0011ed3c(int param_1,undefined4 *param_2)
+/* ==== 0x0011ED3C  (file offset 0x1ED3C)  text_expand_key_names ======================================= */
+/* GUESS: names. Puts the player's keys into a text (`*text`, a heap string, replaced): every "#UP",
+   "#DOWN", "#LEFT", "#RIGHT", "#ACTION", "#INV" and "#MAGIC" (found with stristr, so in any case)
+   becomes the label of the key bound to that control (Progress.controls[0..6]: "0".."9", "*" or "#" for
+   AVK_0..AVK_9, AVK_STAR and AVK_POUND), and "#VER" (code -1, KEY_NAME_CODES) the string resource 8 of
+   no file (IShell LoadResString with NULL): BREW then reads the applet's MIF, whose string 8 is the
+   version, "1.1.1" (11839.mif). Another key code copies no label, so the previous one (or the
+   uninitialised buffer, the first time) is used (GAME_BUGS.md). Each match rebuilds the text: the part
+   before it (strncpy, which writes no terminator: BREW's MALLOC zeroes the block), the label and the
+   rest, then frees the old text and copies the new one into a second allocation of the same size; none
+   is checked. Used for the help screens (FUN_00101ad8, 0xe / 0xf) and the script's addUIInfo /
+   addUIText. The binary picks the label by a binary search over the key codes (0x0011eec4 -
+   0x0011ef74). */
+void text_expand_key_names(AppContext *context,char **text)
 
 {
-  int iVar2;
-  int iVar3;
-  int *piVar4;
-  int iVar5;
-  undefined4 uVar6;
-  undefined4 uVar7;
-  int iVar8;
-  int iVar9;
-  int iVar10;
-  bool bVar11;
-  bool bVar12;
-  undefined1 auStack_10c [32];
-  undefined1 auStack_ec [64];
-  undefined1 auStack_ac [32];
-  int local_8c [8];
-  undefined1 auStack_6c [8];
-  undefined1 auStack_64 [8];
-  undefined1 auStack_5c [8];
-  undefined1 auStack_54 [8];
-  undefined1 auStack_4c [8];
-  undefined1 auStack_44 [8];
-  undefined1 auStack_3c [8];
-  undefined1 auStack_34 [8];
-  int local_2c;
-  undefined1 *local_28;
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-  (*g_pHelperFuncs->strcpy)(auStack_6c,(int32)STRING_HASH_UP);
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-  (*g_pHelperFuncs->strcpy)(auStack_64,(int32)STRING_HASH_DOWN);
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-  (*g_pHelperFuncs->strcpy)(auStack_5c,(int32)STRING_HASH_LEFT);
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-  (*g_pHelperFuncs->strcpy)(auStack_54,(int32)STRING_HASH_RIGHT);
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-  (*g_pHelperFuncs->strcpy)(auStack_4c,(int32)STRING_HASH_ACTION);
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-  (*g_pHelperFuncs->strcpy)(auStack_44,(int32)STRING_HASH_INV);
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-  (*g_pHelperFuncs->strcpy)(auStack_3c,(int32)STRING_HASH_MAGIC);
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-  (*g_pHelperFuncs->strcpy)(auStack_34,(int32)STRING_HASH_VER);
-  memcpy_word_aligned(local_8c,(int32)DATA_AT_00127ED4,0x20);
-  iVar8 = 0;
-  local_8c[0] = *(int *)(*(int *)(*(int *)(param_1 + 0xc) + 0xa8) + 0x5cc);
-  local_8c[1] = *(undefined4 *)(*(int *)(*(int *)(param_1 + 0xc) + 0xa8) + 0x5d0);
-  local_8c[2] = *(undefined4 *)(*(int *)(*(int *)(param_1 + 0xc) + 0xa8) + 0x5d4);
-  local_8c[3] = *(undefined4 *)(*(int *)(*(int *)(param_1 + 0xc) + 0xa8) + 0x5d8);
-  local_8c[4] = *(undefined4 *)(*(int *)(*(int *)(param_1 + 0xc) + 0xa8) + 0x5dc);
-  local_8c[5] = *(undefined4 *)(*(int *)(*(int *)(param_1 + 0xc) + 0xa8) + 0x5e0);
-  local_8c[6] = *(undefined4 *)(*(int *)(*(int *)(param_1 + 0xc) + 0xa8) + 0x5e4);
-  do {
-    local_28 = auStack_6c + iVar8 * 8;
-                    /* helper[58] char * stristr(const char *haystack, const char *needle)
-                       (AEEHelperFuncs +0xe8, via *(base-4)) */
-    iVar2 = (*g_pHelperFuncs->stristr)(*param_2,local_28);
-    while (iVar2 != 0) {
-      iVar3 = local_8c[iVar8];
-      bVar12 = SUBTRACT_OVERFLOWS(iVar3,0xe000);
-      iVar9 = iVar3 + -0xe000;
-      bVar11 = iVar9 == 0;
-      iVar10 = iVar9;
-      if (0xdfff < iVar3) {
-        bVar12 = SUBTRACT_OVERFLOWS(iVar9,0x26);
-        iVar10 = iVar3 + -0xe026;
-        bVar11 = iVar9 == 0x26;
+  char tags[8][8];                /* sp+0xa4 */
+  int32 codes[8];                 /* sp+0x84 */
+  char label[32];                 /* sp+0x64 */
+  AECHAR wide[32];                /* sp+0x24 */
+  char narrow[32];                /* sp+0x04 */
+  char *tag;                      /* sp+0xe8 */
+  char *found;
+  char *expanded;
+  uint32 foundLength;
+  uint32 prefixLength;
+  uint32 tagLength;
+  int32 size;                     /* sp+0xe4 */
+  int32 i;
+
+  (*g_pHelperFuncs->strcpy)(tags[0],STRING_HASH_UP);
+  (*g_pHelperFuncs->strcpy)(tags[1],STRING_HASH_DOWN);
+  (*g_pHelperFuncs->strcpy)(tags[2],STRING_HASH_LEFT);
+  (*g_pHelperFuncs->strcpy)(tags[3],STRING_HASH_RIGHT);
+  (*g_pHelperFuncs->strcpy)(tags[4],STRING_HASH_ACTION);
+  (*g_pHelperFuncs->strcpy)(tags[5],STRING_HASH_INV);
+  (*g_pHelperFuncs->strcpy)(tags[6],STRING_HASH_MAGIC);
+  (*g_pHelperFuncs->strcpy)(tags[7],STRING_HASH_VER);
+  memcpy_word_aligned(codes,(void *)KEY_NAME_CODES,0x20);
+  for (i = 0; i < 7; i++)
+    codes[i] = context->app->progress->controls[i];
+  for (i = 0; i < 8; i++) {
+    tag = tags[i];
+    for (found = (*g_pHelperFuncs->stristr)(*text,tag); found != (char *)0x0;
+         found = (*g_pHelperFuncs->stristr)(*text,tag)) {
+      switch (codes[i]) {
+      case AVK_0:
+        (*g_pHelperFuncs->strcpy)(label,STRING_0_00127F48);
+        break;
+      case AVK_1:
+        (*g_pHelperFuncs->strcpy)(label,STRING_1_00127F4C);
+        break;
+      case AVK_2:
+        (*g_pHelperFuncs->strcpy)(label,STRING_2_00127F50);
+        break;
+      case AVK_3:
+        (*g_pHelperFuncs->strcpy)(label,STRING_3_00127F54);
+        break;
+      case AVK_4:
+        (*g_pHelperFuncs->strcpy)(label,STRING_4_00127F58);
+        break;
+      case AVK_5:
+        (*g_pHelperFuncs->strcpy)(label,STRING_5_00127F5C);
+        break;
+      case AVK_6:
+        (*g_pHelperFuncs->strcpy)(label,STRING_6_00127F60);
+        break;
+      case AVK_7:
+        (*g_pHelperFuncs->strcpy)(label,STRING_7_00127F64);
+        break;
+      case AVK_8:
+        (*g_pHelperFuncs->strcpy)(label,STRING_8_00127F68);
+        break;
+      case AVK_9:
+        (*g_pHelperFuncs->strcpy)(label,STRING_9_00127F6C);
+        break;
+      case AVK_STAR:
+        (*g_pHelperFuncs->strcpy)(label,STRING_STAR_00127F70);
+        break;
+      case AVK_POUND:
+        (*g_pHelperFuncs->strcpy)(label,STRING_HASH_00127F74);
+        break;
+      case -1:
+        (*context->app->a.m_pIShell->pvt->LoadResString)
+            (context->app->a.m_pIShell,(const char *)0x0,8,wide,0x40);   /* no file: the applet's MIF */
+        (*g_pHelperFuncs->wstrtostr)(wide,narrow,0x20);
+        (*g_pHelperFuncs->strcpy)(label,narrow);
+        break;
       }
-      if (bVar11) {
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-        (*g_pHelperFuncs->strcpy)(auStack_ac,(int32)DATA_AT_00127F5C);
-      }
-      else if (iVar10 < 0 == bVar12) {
-        switch(iVar3) {
-        case 0xe027:
-          (*g_pHelperFuncs->strcpy)(auStack_ac,(int32)DATA_AT_00127F60);
-          break;
-        case 0xe028:
-          (*g_pHelperFuncs->strcpy)(auStack_ac,(int32)DATA_AT_00127F64);
-          break;
-        case 0xe029:
-          (*g_pHelperFuncs->strcpy)(auStack_ac,(int32)DATA_AT_00127F68);
-          break;
-        case 0xe02a:
-          (*g_pHelperFuncs->strcpy)(auStack_ac,(int32)DATA_AT_00127F6C);
-          break;
-        case 0xe02b:
-          (*g_pHelperFuncs->strcpy)(auStack_ac,(int32)DATA_AT_00127F70);
-          break;
-        case 0xe02c:
-          (*g_pHelperFuncs->strcpy)(auStack_ac,(int32)DATA_AT_00127F74);
-        }
-      }
-      else {
-        bVar12 = SUBTRACT_OVERFLOWS(iVar3,0xe000);
-        iVar9 = iVar3 + -0xe000;
-        bVar11 = iVar9 == 0;
-        iVar10 = iVar9;
-        if (0xdfff < iVar3) {
-          bVar12 = SUBTRACT_OVERFLOWS(iVar9,0x23);
-          iVar10 = iVar3 + -0xe023;
-          bVar11 = iVar9 == 0x23;
-        }
-        if (bVar11) {
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-          (*g_pHelperFuncs->strcpy)(auStack_ac,(int32)DATA_AT_00127F50);
-        }
-        else if (iVar10 < 0 == bVar12) {
-          if (iVar3 == 0xe024) {
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-            (*g_pHelperFuncs->strcpy)(auStack_ac,(int32)DATA_AT_00127F54);
-          }
-          else if (iVar3 == 0xe025) {
-            (*g_pHelperFuncs->strcpy)(auStack_ac,(int32)DATA_AT_00127F58);
-          }
-        }
-        else if (iVar3 == -1) {
-          piVar4 = *(int **)(*(int *)(param_1 + 0xc) + 0xc);
-          (*((IShell *)piVar4)->pvt->LoadResString)((IShell *)piVar4,0,8,(AECHAR *)auStack_ec,0x40);
-                    /* helper[17] char * wstrtostr(const AECHAR *src, char *dst, int nDstBytes)
-                       (AEEHelperFuncs +0x44, via *(base-4)) */
-          (*g_pHelperFuncs->wstrtostr)(auStack_ec,auStack_10c,0x20);
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-          (*g_pHelperFuncs->strcpy)(auStack_ac,auStack_10c);
-        }
-        else if (iVar3 == 0xe021) {
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-          (*g_pHelperFuncs->strcpy)(auStack_ac,(int32)DATA_AT_00127F48);
-        }
-        else if (iVar3 == 0xe022) {
-          (*g_pHelperFuncs->strcpy)(auStack_ac,(int32)DATA_AT_00127F4C);
-        }
-      }
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-      iVar10 = (*g_pHelperFuncs->strlen)(iVar2);
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-      iVar3 = (*g_pHelperFuncs->strlen)(*param_2);
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-      iVar9 = (*g_pHelperFuncs->strlen)(local_28);
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-      iVar5 = (*g_pHelperFuncs->strlen)(auStack_ac);
-      local_2c = (((iVar3 - iVar10) + iVar10) - iVar9) + iVar5 + 1;
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-      uVar6 = (*g_pHelperFuncs->malloc)(local_2c);
-                    /* helper[50] char * strncpy(char *dst, const char *src, uint32 n)
-                       (AEEHelperFuncs +0xc8, via *(base-4)) */
-      (*g_pHelperFuncs->strncpy)(uVar6,*param_2,iVar3 - iVar10);
-                    /* helper[3] char * strcat(char *dst, const char *src)  (AEEHelperFuncs +0xc,
-                       via *(base-4)) */
-      (*g_pHelperFuncs->strcat)(uVar6,auStack_ac);
-                    /* helper[3] char * strcat(char *dst, const char *src)  (AEEHelperFuncs +0xc,
-                       via *(base-4)) */
-      (*g_pHelperFuncs->strcat)(uVar6,iVar2 + iVar9);
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-      (*g_pHelperFuncs->free)(*param_2);
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-      uVar7 = (*g_pHelperFuncs->malloc)(local_2c);
-      *param_2 = uVar7;
-                    /* helper[2] char * strcpy(char *dst, const char *src)  (AEEHelperFuncs +0x8,
-                       via *(base-4)) */
-      (*g_pHelperFuncs->strcpy)(uVar7,uVar6);
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-      (*g_pHelperFuncs->free)(uVar6);
-                    /* helper[58] char * stristr(const char *haystack, const char *needle)
-                       (AEEHelperFuncs +0xe8, via *(base-4)) */
-      iVar2 = (*g_pHelperFuncs->stristr)(*param_2,local_28);
+      foundLength = (*g_pHelperFuncs->strlen)(found);
+      prefixLength = (*g_pHelperFuncs->strlen)(*text) - foundLength;
+      tagLength = (*g_pHelperFuncs->strlen)(tag);
+      size = (int32)(prefixLength + foundLength - tagLength + (*g_pHelperFuncs->strlen)(label) + 1);
+      expanded = (*g_pHelperFuncs->malloc)(size);
+      (*g_pHelperFuncs->strncpy)(expanded,*text,prefixLength);
+      (*g_pHelperFuncs->strcat)(expanded,label);
+      (*g_pHelperFuncs->strcat)(expanded,found + tagLength);
+      (*g_pHelperFuncs->free)(*text);
+      *text = (*g_pHelperFuncs->malloc)(size);
+      (*g_pHelperFuncs->strcpy)(*text,expanded);
+      (*g_pHelperFuncs->free)(expanded);
     }
-    iVar8 = iVar8 + 1;
-  } while (iVar8 < 8);
+  }
   return;
 }
+
 
 /* ==== 0x0011F260  (file offset 0x1F260)  enemy_enter_mode_3 ========================================== */
 /* GUESS: name. The enemy class's slot 4 (+0x10 of VTABLE_00101680): mode 3 (an alive enemy then runs its

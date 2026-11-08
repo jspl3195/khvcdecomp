@@ -491,7 +491,8 @@ typedef struct Progress {
                                      with app->bStarted set (settings_load, which clears it), so once per
                                      launch; sent as the ranking's u1= value; saved with the settings */
     int32    controls[7];           /* +0x5cc the Controls key bindings (BREW key codes): Forwards, Backwards,
-                                     Left, Right, Action, Status, Magic */
+                                     Left, Right, Action, Status, Magic; a text's "#UP", "#DOWN", "#LEFT",
+                                     "#RIGHT", "#ACTION", "#INV", "#MAGIC" (text_expand_key_names) */
     int32    softKeys[2];           /* +0x5e8 the keys that act as the left and the right soft key (screen_handle_key):
                                      AVK_SOFT1 and AVK_SOFT2, swapped when the text 0x052F918F exists */
     char    *recordNames[25];       /* +0x5f0 GUESS: names; the saved records' names (a level's, KHApp.pBufc4);
