@@ -64,7 +64,7 @@ The code shows it was built against these libraries:
 
 | Library | Module | Evidence |
 |---|---|---|
-| libpng 1.2.0 | swv21brew.mod (the PNG decoder) | the version string `"1.2.0"` (0x0103FAA4) passed to the read struct's constructor (FUN_0103586c, GUESS: `png_create_read_struct`), its "Incompatible libpng version in application and library" check, and routines that match libpng 1.2.0's source (`png_sig_cmp`, `png_warning`) |
+| libpng 1.2.0 | swv21brew.mod (the PNG decoder) | the version string `"1.2.0"` (0x0103FAA4) passed to the read struct's constructor (FUN_0103586c, GUESS: `png_create_read_struct`), its "Incompatible libpng version in application and library" check, and routines that match libpng 1.2.0's source (`png_sig_cmp`, `png_warning`, `png_error`, `png_read_data`) |
 | zlib (version not yet identified) | swv21brew.mod (libpng's inflate) | libpng's "zlib version error" / "zlib memory error" messages |
 
 ## Known code
@@ -78,7 +78,8 @@ Some routines are known code, recognised from their structure. Their comments na
 | `rt_div0`, the word `memcpy` / `memclr`; swv21brew's `swv_memcpy_word_aligned` (0x01000188) and `rt_memcpy` (0x01000c94) | the ARM C library: `__rt_div0`, `__rt_memcpy_w`, `__rt_memclr_w`; `__rt_memcpy_w`, `__rt_memcpy` |
 | swv21brew's `ll_mul` (0x0100094c) and `ll_mul_int` (0x01000028) | the ARM C library's 64-bit multiply, `_ll_mul` (`__aeabi_lmul` in later ABIs) |
 | swv21brew's `swv_memcmp` (0x01000080) | `memcmp` (GUESS: the ARM C library's, from its shape) |
-| swv21brew's PNG decoder: `png_sig_cmp` (0x01037e48), `png_warning` (0x01037eb0), ... | libpng 1.2.0 (its version string); its inflate is zlib |
+| swv21brew's `swv_setjmp` (0x01000500), `swv_longjmp` (0x01000524), `rt_stack_postlongjmp` (0x01000c24) | GUESS: the ARM C library's `setjmp`, `longjmp`, `__rt_stack_postlongjmp` |
+| swv21brew's PNG decoder: `png_sig_cmp` (0x01037e48), `png_warning` (0x01037eb0), `png_error` (0x01036088), `png_read_data` (0x01036b2c), ... | libpng 1.2.0 (its version string); its inflate is zlib |
 
 ## Status
 

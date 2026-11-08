@@ -503,10 +503,12 @@ longlong swv_setjmp(undefined4 *param_1)
   undefined4 unaff_r11;
   undefined4 in_lr;
   
-                    /* setjmp: stores r8, r9, r11, lr, r4-r7, r10, sp into the buffer and returns 0.
-                       Used with swv_TryPush / swv_TryArm / swv_TryPop as the engine's error
-                       handling (each API entry runs inside such a frame). GUESS: exact
-                       setjmp/longjmp pairing. */
+                    /* setjmp (GUESS: the ARM C library's): stores r8, r9, fp (r11), lr, then r4-r7,
+                       then sl (r10), sp into the buffer (env[0..9]), and env[10] the r0 left by a `bl`
+                       to the next instruction (an absent weak routine, so env + 10 itself), and
+                       returns 0; swv_longjmp (0x01000524) makes it return again with its value. Used
+                       with swv_TryPush / swv_TryArm / swv_TryPop as the engine's error handling (each
+                       API entry runs inside such a frame), and by libpng (png_error). */
   *param_1 = unaff_r8;
   param_1[1] = unaff_r9;
   param_1[2] = unaff_r11;
@@ -521,20 +523,23 @@ longlong swv_setjmp(undefined4 *param_1)
   return ZEXT48(param_1 + 0xb) << 0x20;
 }
 
-/* ==== 0x01000524  (file offset 0x00524)  FUN_01000524 ================================================ */
-void FUN_01000524(int param_1,int param_2)
+/* ==== 0x01000524  (file offset 0x00524)  swv_longjmp ================================================= */
+/* GUESS: name (the routine is certain: longjmp; GUESS: the ARM C library's). Jumps back to the
+   swv_setjmp that filled env, which then returns val (1 when val is 0). Evidence (0x01000524 -
+   0x0100054c), from the end of env: env[10] is passed to a `bl` to the next instruction (how the ARM
+   linker leaves a call to a weak routine that is not linked in, as in swv_setjmp), env[8] and env[9]
+   become the stack limit and stack pointer (rt_stack_postlongjmp), r0 = val or 1, r4-r7 come back from
+   env[4..7] and r8, r9, fp, lr from env[0..3], and `mov pc, lr` returns a second time from the call to
+   swv_setjmp (Ghidra: the call through env[3]). Used by the engine's error throw (FUN_01013bcc) and by
+   libpng's png_error (png_struct's jmpbuf at +0). */
+void swv_longjmp(uint32 *env,int32 val)
 
 {
-  FUN_01000c24(*(undefined4 *)(param_1 + 0x20),*(undefined4 *)(param_1 + 0x24));
-  if (param_2 == 0) {
-    param_2 = 1;
-  }
-                    /* WARNING: Could not recover jumptable at 0x0100054c. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  /* the function passed in (its address with the low bits cleared): the element constructor or
-     destructor */
-  (*(code *)(*(uint *)(param_1 + 0xc) & 0xfffffffc))(param_2);
-  return;
+  rt_stack_postlongjmp(env[8],env[9]);
+  if (val == 0)
+    val = 1;
+  /* r4-r9 and fp restored from env; returns again from swv_setjmp's call (env[3], lr) with val */
+  (*(code *)(env[3] & ~3u))(val);
 }
 
 /* ==== 0x01000550  (file offset 0x00550)  FUN_01000550 ================================================ */
@@ -1087,11 +1092,16 @@ switchD_01000a40_caseD_1:
                   (iVar4 + (uint)bVar10 << (uVar8 & 0xff)),uVar6 * 2 + (uint)bVar11);
 }
 
-/* ==== 0x01000C24  (file offset 0x00C24)  FUN_01000c24 ================================================ */
-void FUN_01000c24(void)
+/* ==== 0x01000C24  (file offset 0x00C24)  rt_stack_postlongjmp ======================================== */
+/* GUESS: name (GUESS: the ARM C library's __rt_stack_postlongjmp, which longjmp calls to reset the stack;
+   with one stack, not chunks, it is only this). The binary (0x01000c24 - 0x01000c2c): `stmdb sp!, {r0,
+   r1}` / `ldmia sp, {r10, sp}` / `mov pc, lr`: the stack limit (r10, sl) becomes stackLimit and the
+   stack pointer stackPointer, which C cannot say, so the body is empty. Only swv_longjmp calls it (also
+   through png_error and png_read_data, where Ghidra merged swv_longjmp in). */
+void rt_stack_postlongjmp(uint32 stackLimit,uint32 stackPointer)
 
 {
-  return;
+  /* r10 = stackLimit; sp = stackPointer */
 }
 
 /* ==== 0x01000C30  (file offset 0x00C30)  FUN_01000c30 ================================================ */
@@ -19011,7 +19021,7 @@ void FUN_01013bcc(int param_1,undefined4 param_2)
       FUN_0100f8e8();
       FUN_01017174();
     }
-    FUN_01000524(param_1,param_2);
+    swv_longjmp((uint32 *)param_1,param_2);
   }
   return;
 }
@@ -20590,7 +20600,7 @@ void FUN_010159e4(int param_1,undefined4 param_2,int param_3)
   
   piVar1 = *(int **)(param_1 + 0x94);
   if ((piVar1 == (int *)0x0) || ((uint)piVar1[1] < (uint)(*piVar1 + param_3))) {
-    FUN_01036088(param_1,STRING_READ_ERROR_OFFSET + 0x1015a1c);
+    png_error(param_1,STRING_READ_ERROR_OFFSET + 0x1015a1c);
   }
   thunk_swv_memcpy(param_2,*piVar1,param_3);
   *piVar1 = *piVar1 + param_3;
@@ -50189,7 +50199,7 @@ void FUN_01035404(undefined4 param_1,byte *param_2)
     }
   }
   FUN_010360b0(param_1,auStack_5c,(int)&STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET + STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET);
-  FUN_01036088(param_1,auStack_5c);
+  png_error(param_1,auStack_5c);
   return;
 }
 
@@ -50200,7 +50210,7 @@ void FUN_01035488(undefined4 param_1,undefined4 param_2)
   undefined1 auStack_5c [84];
   
   FUN_010360b0(param_1,auStack_5c,param_2);
-  FUN_01036088(param_1,auStack_5c);
+  png_error(param_1,auStack_5c);
   return;
 }
 
@@ -50348,7 +50358,7 @@ undefined4 FUN_01035704(int param_1,undefined4 param_2,undefined4 param_3,undefi
   bVar1 = false;
 LAB_0103573c:
   uStack_10 = param_4;
-  FUN_01036b2c(param_1,&uStack_10,4);
+  png_read_data(param_1,&uStack_10,4);
   if ((bVar1) && (iVar2 = FUN_01036438(&uStack_10), *(int *)(param_1 + 0x144) != iVar2)) {
     uVar3 = 1;
   }
@@ -50398,7 +50408,7 @@ void FUN_01035814(int param_1,undefined4 param_2,undefined4 param_3)
   undefined4 unaff_r4;
   undefined4 in_lr;
   
-  FUN_01036b2c();
+  png_read_data();
   bVar1 = true;
   uVar3 = *(uint *)(param_1 + 0xa0);
   if ((*(byte *)(param_1 + 0x150) & 0x20) == 0) {
@@ -50472,7 +50482,7 @@ int FUN_0103586c(char *param_1,undefined4 param_2,undefined4 param_3,undefined4 
   if ((*(uint *)(iVar3 + 0xa0) & 0x20000) == 0) goto LAB_01035978;
   if ((param_1 == (char *)0x0) || (cVar2 = *param_1, cVar2 != *pcVar7)) {
 LAB_01035968:
-    FUN_01036088(iVar3,STRING_INCOMPATIBLE_LIBPNG_VERSION_IN_APPLICATION_AND_OFFSET + 0x1035974);
+    png_error(iVar3,STRING_INCOMPATIBLE_LIBPNG_VERSION_IN_APPLICATION_AND_OFFSET + 0x1035974);
   }
   else if (cVar2 == '1') {
     if (param_1[2] != *(char *)(iVar4 + 0x10358ee)) goto LAB_01035968;
@@ -50497,7 +50507,7 @@ LAB_01035978:
     if (iVar4 == 0) goto LAB_010359f8;
     iVar4 = STRING_UNKNOWN_ZLIB_ERROR_OFFSET + 0x10359f4;
   }
-  FUN_01036088(iVar3,iVar4);
+  png_error(iVar3,iVar4);
 LAB_010359f8:
   *(undefined4 *)(iVar3 + 0xb4) = *(undefined4 *)(iVar3 + 0xe0);
   *(undefined4 *)(iVar3 + 0xb8) = *(undefined4 *)(iVar3 + 0xe4);
@@ -50744,7 +50754,7 @@ void FUN_01035e84(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   int iVar2;
   
   if (*(int *)(param_1 + 0x120) == 0) {
-    FUN_01036088(param_1,STRING_NULL_ROW_BUFFER_OFFSET + 0x1035ea0,param_3,param_4,param_4);
+    png_error(param_1,STRING_NULL_ROW_BUFFER_OFFSET + 0x1035ea0,param_3,param_4,param_4);
   }
   iVar2 = param_1 + 0x134;
   if ((*(uint *)(param_1 + 0xa4) & 0x400) != 0) {
@@ -50832,17 +50842,21 @@ void FUN_01035f30(uint *param_1,int param_2)
   return;
 }
 
-/* ==== 0x01036088  (file offset 0x36088)  FUN_01036088 ================================================ */
+/* ==== 0x01036088  (file offset 0x36088)  png_error =================================================== */
+/* libpng 1.2.0's png_error(png_ptr, message) (not yet rewritten): calls the png_struct's error_fn
+   (+0x80) with png_ptr and the message (r1, passed through: Ghidra dropped it), then swv_longjmp
+   (png_ptr->jmpbuf at +0, 1), a tail jump that Ghidra merged in (from rt_stack_postlongjmp on). No
+   default error handler in this build. */
 /* WARNING: Removing unreachable block (ram,0x01000540) */
 
-void FUN_01036088(int param_1)
+void png_error(int param_1)
 
 {
   if (*(code **)(param_1 + 0x80) != (code *)0x0) {
     /* a function pointer the object keeps at +0x80 (not identified) */
     (**(code **)(param_1 + 0x80))(param_1);
   }
-  FUN_01000c24(*(undefined4 *)(param_1 + 0x20),*(undefined4 *)(param_1 + 0x24));
+  rt_stack_postlongjmp(*(undefined4 *)(param_1 + 0x20),*(undefined4 *)(param_1 + 0x24));
                     /* WARNING: Could not recover jumptable at 0x0100054c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
   /* the function passed in (its address with the low bits cleared): the element constructor or
@@ -51099,7 +51113,7 @@ undefined4 FUN_01036474(int param_1,int param_2,uint param_3,undefined4 param_4)
   uint uVar2;
   
   if ((*(uint *)(param_1 + 0x9c) & 1) == 0 || (*(uint *)(param_1 + 0x9c) & 4) == 0) {
-    FUN_01036088(param_1,STRING_NO_IMAGE_IN_FILE_OFFSET + 0x1036498,param_3,param_4,param_4);
+    png_error(param_1,STRING_NO_IMAGE_IN_FILE_OFFSET + 0x1036498,param_3,param_4,param_4);
     param_2 = extraout_r1;
   }
   if (param_3 != 0) {
@@ -51149,10 +51163,10 @@ void FUN_010364d4(int param_1,undefined4 param_2,int param_3)
   undefined1 local_1c;
   
   if ((*(uint *)(param_1 + 0x9c) & 1) != 0) {
-    FUN_01036088(param_1,STRING_OUT_OF_PLACE_IHDR_OFFSET + 0x10364fc);
+    png_error(param_1,STRING_OUT_OF_PLACE_IHDR_OFFSET + 0x10364fc);
   }
   if (param_3 != 0xd) {
-    FUN_01036088(param_1,STRING_INVALID_IHDR_CHUNK_OFFSET + 0x1036510);
+    png_error(param_1,STRING_INVALID_IHDR_CHUNK_OFFSET + 0x1036510);
   }
   *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 1;
   FUN_01035814(param_1,auStack_28,0xd);
@@ -51214,13 +51228,13 @@ void FUN_01036610(int param_1,int param_2,uint param_3)
   if ((uVar1 & 1) == 0) {
     iVar3 = STRING_MISSING_IHDR_BEFORE_PLTE_OFFSET + 0x1036638;
 LAB_01036658:
-    FUN_01036088(param_1,iVar3);
+    png_error(param_1,iVar3);
 LAB_01036660:
     *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 2;
     if ((*(byte *)(param_1 + 0x15a) & 2) != 0) {
       if (*(byte *)(param_1 + 0x15a) == 3) {
         if ((0x300 < param_3) || (FUN_010002c8(3,param_3), extraout_r1 != 0)) {
-          FUN_01036088(param_1,STRING_INVALID_PALETTE_CHUNK_OFFSET + 0x10366d0);
+          png_error(param_1,STRING_INVALID_PALETTE_CHUNK_OFFSET + 0x10366d0);
         }
         uVar1 = FUN_010001f4(3,param_3);
         puVar4 = local_318;
@@ -51306,7 +51320,7 @@ void FUN_01036838(int param_1,int param_2,uint param_3)
   
   uVar3 = *(uint *)(param_1 + 0x9c);
   if ((uVar3 & 1) == 0) {
-    FUN_01036088(param_1,STRING_MISSING_IHDR_BEFORE_TRNS_OFFSET + 0x1036864);
+    png_error(param_1,STRING_MISSING_IHDR_BEFORE_TRNS_OFFSET + 0x1036864);
   }
   else {
     if ((uVar3 & 4) != 0) {
@@ -51464,7 +51478,7 @@ void * FUN_01036ad0(int param_1,uint32 param_2)
   else {
     pvVar1 = helper_malloc(param_2);
     if (pvVar1 == (void *)0x0) {
-      FUN_01036088(param_1,STRING_OUT_OF_MEMORY_OFFSET + 0x1036afc);
+      png_error(param_1,STRING_OUT_OF_MEMORY_OFFSET + 0x1036afc);
     }
   }
   return pvVar1;
@@ -51489,7 +51503,11 @@ undefined4 FUN_01036b1c(undefined4 param_1,undefined4 param_2,uint param_3,undef
   return param_2;
 }
 
-/* ==== 0x01036B2C  (file offset 0x36B2C)  FUN_01036b2c ================================================ */
+/* ==== 0x01036B2C  (file offset 0x36B2C)  png_read_data =============================================== */
+/* libpng 1.2.0's png_read_data(png_ptr, data, length) (not yet rewritten): a tail jump to the
+   png_struct's read_data_fn (+0x90) when set, else png_error(png_ptr, "Call to NULL read function")
+   (the message at 0x0103FFA4, pc + 0x9464 from the literal at 0x01036b44: Ghidra dropped it and
+   merged png_error in). */
 /* WARNING: Removing unreachable block (ram,0x01000540) */
 /* WARNING: Removing unreachable block (ram,0x01036b44) */
 /* WARNING: Removing unreachable block (ram,0x01036b54) */
@@ -51501,7 +51519,7 @@ undefined4 FUN_01036b1c(undefined4 param_1,undefined4 param_2,uint param_3,undef
 /* WARNING: Removing unreachable block (ram,0x01036bbc) */
 /* WARNING: Removing unreachable block (ram,0x01036bc8) */
 
-void FUN_01036b2c(int param_1)
+void png_read_data(int param_1)
 
 {
   if (*(code **)(param_1 + 0x90) != (code *)0x0) {
@@ -51515,7 +51533,7 @@ void FUN_01036b2c(int param_1)
     /* a function pointer the object keeps at +0x80 (not identified) */
     (**(code **)(param_1 + 0x80))(param_1);
   }
-  FUN_01000c24(*(undefined4 *)(param_1 + 0x20),*(undefined4 *)(param_1 + 0x24));
+  rt_stack_postlongjmp(*(undefined4 *)(param_1 + 0x20),*(undefined4 *)(param_1 + 0x24));
                     /* WARNING: Could not recover jumptable at 0x0100054c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
   /* the function passed in (its address with the low bits cleared): the element constructor or
@@ -51587,7 +51605,7 @@ void FUN_01036c24(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   iVar7 = STRING_TRNS_OFFSET + 0x1036c5c;
   iVar4 = param_1 + 0x150;
   do {
-    FUN_01036b2c(param_1,&uStack_28,4);
+    png_read_data(param_1,&uStack_28,4);
     iVar1 = FUN_01036438(&uStack_28);
     FUN_01037a70(param_1);
     FUN_01035814(param_1,iVar4,4);
@@ -51608,7 +51626,7 @@ void FUN_01036c24(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
             uVar3 = *(uint *)(param_1 + 0x9c);
           }
           if (iVar1 != 0 || (uVar3 & 8) != 0) {
-            FUN_01036088(param_1,iVar8);
+            png_error(param_1,iVar8);
           }
           FUN_01035774(param_1,iVar1);
         }
@@ -51799,14 +51817,14 @@ void FUN_01036f6c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
     if (*(int *)(param_1 + 0xac) == 0) {
       while (*(int *)(param_1 + 0x140) == 0) {
         FUN_01035774(param_1,0);
-        FUN_01036b2c(param_1,&uStack_2c);
+        png_read_data(param_1,&uStack_2c);
         uVar5 = FUN_01036438(&uStack_2c);
         *(undefined4 *)(param_1 + 0x140) = uVar5;
         FUN_01037a70(param_1);
         FUN_01035814(param_1,param_1 + 0x150,4);
         iVar3 = swv_memcmp(param_1 + 0x150,iVar6,4);
         if (iVar3 != 0) {
-          FUN_01036088(param_1,iVar7);
+          png_error(param_1,iVar7);
         }
       }
       *(uint *)(param_1 + 0xac) = *(uint *)(param_1 + 0xe4);
@@ -51824,15 +51842,15 @@ void FUN_01036f6c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
       if (*(int *)(param_1 + 0xc0) == 0) {
         iVar3 = iVar9;
       }
-      FUN_01036088(param_1,iVar3);
+      png_error(param_1,iVar3);
     }
     if (*(int *)(param_1 + 0xb8) == 0) {
-      FUN_01036088(param_1,iVar8);
+      png_error(param_1,iVar8);
     }
   }
   if (*(int *)(param_1 + 0xb8) == 0) {
 LAB_0103718c:
-    FUN_01036088(param_1,iVar8);
+    png_error(param_1,iVar8);
   }
   else {
     iVar6 = *(int *)(param_1 + 0xac);
@@ -51852,7 +51870,7 @@ LAB_010371b8:
     iVar6 = *(int *)(param_1 + 0xac);
   }
   if (!bVar10 || iVar6 != 0) {
-    FUN_01036088(param_1,STRING_EXTRA_COMPRESSION_DATA_OFFSET + 0x10371d4);
+    png_error(param_1,STRING_EXTRA_COMPRESSION_DATA_OFFSET + 0x10371d4);
   }
   FUN_010311d4(param_1 + 0xa8);
   *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 8;
@@ -51900,7 +51918,7 @@ void FUN_010372a8(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   uStack_28 = param_4;
   if (uVar3 < 8) {
     iVar4 = -uVar3 + 8;
-    FUN_01036b2c(param_1,param_2 + uVar3 + 0x20,iVar4);
+    png_read_data(param_1,param_2 + uVar3 + 0x20,iVar4);
     *(undefined1 *)(param_1 + 0x160) = 8;
     iVar4 = png_sig_cmp(param_2 + 0x20,uVar3,iVar4);
     if (iVar4 != 0) {
@@ -51910,7 +51928,7 @@ void FUN_010372a8(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
       else {
         iVar4 = STRING_PNG_FILE_CORRUPTED_BY_ASCII_CONVERSION_OFFSET + 0x1037330;
       }
-      FUN_01036088(param_1,iVar4);
+      png_error(param_1,iVar4);
     }
     if (uVar3 < 3) {
       *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 0x1000;
@@ -51925,7 +51943,7 @@ void FUN_010372a8(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     while( true ) {
       while( true ) {
         while( true ) {
-          FUN_01036b2c(param_1,&uStack_28,4);
+          png_read_data(param_1,&uStack_28,4);
           uVar1 = FUN_01036438(&uStack_28);
           FUN_01037a70(param_1);
           FUN_01035814(param_1,iVar4,4);
@@ -51959,7 +51977,7 @@ void FUN_010372a8(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     goto LAB_01037470;
     iVar4 = STRING_MISSING_PLTE_BEFORE_IDAT_OFFSET + 0x103746c;
   }
-  FUN_01036088(param_1,iVar4);
+  png_error(param_1,iVar4);
 LAB_01037470:
   *(undefined4 *)(param_1 + 0x140) = uVar1;
   *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 4;
@@ -51993,7 +52011,7 @@ void FUN_010374dc(int param_1,int param_2,int param_3,uint param_4)
   if (!bVar7 || (uVar5 & 2) == 0) {
 switchD_01037524_default:
     if ((*(uint *)(param_1 + 0x9c) & 4) == 0) {
-      FUN_01036088(param_1,STRING_INVALID_ATTEMPT_TO_READ_ROW_DATA_OFFSET + 0x1037640);
+      png_error(param_1,STRING_INVALID_ATTEMPT_TO_READ_ROW_DATA_OFFSET + 0x1037640);
     }
     iVar4 = INTEGER_34955;
     *(undefined4 *)(param_1 + 0xb4) = *(undefined4 *)(param_1 + 0x120);
@@ -52003,14 +52021,14 @@ switchD_01037524_default:
       if (*(int *)(param_1 + 0xac) == 0) {
         while (*(int *)(param_1 + 0x140) == 0) {
           FUN_01035774(param_1,0);
-          FUN_01036b2c(param_1,&local_28,4);
+          png_read_data(param_1,&local_28,4);
           uVar2 = FUN_01036438(&local_28);
           *(undefined4 *)(param_1 + 0x140) = uVar2;
           FUN_01037a70(param_1);
           FUN_01035814(param_1,param_1 + 0x150,4);
           iVar3 = swv_memcmp(param_1 + 0x150,iVar4 + 0x103765c,4);
           if (iVar3 != 0) {
-            FUN_01036088(param_1,iVar6);
+            png_error(param_1,iVar6);
           }
         }
         *(uint *)(param_1 + 0xac) = *(uint *)(param_1 + 0xe4);
@@ -52028,7 +52046,7 @@ switchD_01037524_default:
         if (iVar3 == 0) {
           iVar3 = STRING_DECOMPRESSION_ERROR_OFFSET_2 + 0x1037794;
         }
-        FUN_01036088(param_1,iVar3);
+        png_error(param_1,iVar3);
       }
       if (*(int *)(param_1 + 0xb8) == 0) {
 LAB_010377a4:
@@ -52094,7 +52112,7 @@ LAB_010377a4:
       bVar8 = *(int *)(param_1 + 0x140) == 0;
     }
     if (!bVar8) {
-      FUN_01036088(param_1,STRING_EXTRA_COMPRESSED_DATA_OFFSET_2 + 0x1037758);
+      png_error(param_1,STRING_EXTRA_COMPRESSED_DATA_OFFSET_2 + 0x1037758);
     }
     *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 8;
     *(uint *)(param_1 + 0xa0) = *(uint *)(param_1 + 0xa0) | 0x20;
@@ -52214,36 +52232,36 @@ void FUN_01037a90(int param_1,uint *param_2,uint param_3,uint param_4,uint param
     return;
   }
   if (param_3 == 0 || param_4 == 0) {
-    FUN_01036088(param_1,STRING_IMAGE_WIDTH_OR_HEIGHT_IS_ZERO_OFFSET + 0x1037ad0,param_3,param_4,param_4);
+    png_error(param_1,STRING_IMAGE_WIDTH_OR_HEIGHT_IS_ZERO_OFFSET + 0x1037ad0,param_3,param_4,param_4);
   }
   uVar1 = param_3;
   if (param_3 < 0x80000000) {
     uVar1 = param_4;
   }
   if (0x7fffffff < uVar1) {
-    FUN_01036088(param_1,STRING_INVALID_IMAGE_SIZE_IN_IHDR_OFFSET + 0x1037ae8);
+    png_error(param_1,STRING_INVALID_IMAGE_SIZE_IN_IHDR_OFFSET + 0x1037ae8);
   }
   if ((((param_5 != 1 && param_5 != 2) && param_5 != 4) && param_5 != 8) && param_5 != 0x10) {
-    FUN_01036088(param_1,STRING_INVALID_BIT_DEPTH_IN_IHDR_OFFSET + 0x1037b0c);
+    png_error(param_1,STRING_INVALID_BIT_DEPTH_IN_IHDR_OFFSET + 0x1037b0c);
   }
   if ((((int)param_6 < 0) || (param_6 == 1 || param_6 == 5)) || (6 < (int)param_6)) {
-    FUN_01036088(param_1,STRING_INVALID_COLOR_TYPE_IN_IHDR_OFFSET + 0x1037b38);
+    png_error(param_1,STRING_INVALID_COLOR_TYPE_IN_IHDR_OFFSET + 0x1037b38);
   }
   if (param_6 == 3) {
     if ((int)param_5 < 9) goto LAB_01037b78;
   }
   else if (((param_6 != 2 && param_6 != 4) && param_6 != 6) || (7 < (int)param_5))
   goto LAB_01037b78;
-  FUN_01036088(param_1,STRING_INVALID_COLOR_TYPE_SLASH_BIT_DEPTH_OFFSET + 0x1037b74);
+  png_error(param_1,STRING_INVALID_COLOR_TYPE_SLASH_BIT_DEPTH_OFFSET + 0x1037b74);
 LAB_01037b78:
   if (1 < param_7) {
-    FUN_01036088(param_1,STRING_UNKNOWN_INTERLACE_METHOD_IN_IHDR_OFFSET + 0x1037b8c);
+    png_error(param_1,STRING_UNKNOWN_INTERLACE_METHOD_IN_IHDR_OFFSET + 0x1037b8c);
   }
   if (param_8 != 0) {
-    FUN_01036088(param_1,STRING_UNKNOWN_COMPRESSION_METHOD_IN_IHDR_OFFSET + 0x1037ba0);
+    png_error(param_1,STRING_UNKNOWN_COMPRESSION_METHOD_IN_IHDR_OFFSET + 0x1037ba0);
   }
   if (param_9 != 0) {
-    FUN_01036088(param_1,STRING_UNKNOWN_FILTER_METHOD_IN_IHDR_OFFSET + 0x1037bb4);
+    png_error(param_1,STRING_UNKNOWN_FILTER_METHOD_IN_IHDR_OFFSET + 0x1037bb4);
   }
   *param_2 = param_3;
   param_2[1] = param_4;
@@ -52437,7 +52455,8 @@ int32 png_sig_cmp(const uint8 *sig,uint32 start,uint32 numToCheck)
 /* ==== 0x01037EB0  (file offset 0x37EB0)  png_warning ================================================= */
 /* libpng 1.2.0's png_warning (not yet rewritten): skips a "#nnn" error-number prefix (up to the space,
    at most 14 characters) and passes the message to the png_struct's warning_fn (+0x84); with none set
-   it returns (no default handler in this build). */
+   it returns (no default handler in this build). The png_struct's other handlers: error_fn (+0x80,
+   png_error), read_data_fn (+0x90, png_read_data). */
 void png_warning(int param_1,char *param_2)
 
 {

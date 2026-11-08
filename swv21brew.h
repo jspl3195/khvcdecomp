@@ -305,7 +305,7 @@ void FUN_01000388(int param_1,int param_2,int param_3,uint param_4);
 void FUN_010003cc(int param_1,int param_2,int param_3,uint param_4);
 int * FUN_01000414(int *param_1,int param_2,int param_3,int param_4,uint param_5);
 longlong FUN_01000474(int param_1,uint param_2,uint param_3,uint param_4);
-void FUN_01000524(int param_1,int param_2);
+void swv_longjmp(uint32 *env,int32 val);   /* 0x01000524 GUESS: name, see swv21brew.c */
 undefined4 FUN_01000550(int param_1,uint param_2);
 undefined4 FUN_0100062c(undefined4 param_1,undefined4 param_2,undefined4 param_3,uint param_4);
 undefined4 FUN_01000728(int param_1,uint param_2);
@@ -313,7 +313,7 @@ undefined4 FUN_01000810(uint param_1,uint param_2,undefined4 param_3,undefined4 
 undefined4 FUN_01000880(int param_1,uint param_2);
 void FUN_01000938(undefined4 param_1);
 ulonglong FUN_01000964(uint param_1,uint param_2,uint param_3,uint param_4);
-void FUN_01000c24(void);
+void rt_stack_postlongjmp(uint32 stackLimit,uint32 stackPointer);   /* 0x01000C24 GUESS: name, see swv21brew.c */
 undefined4 FUN_01000c30(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 undefined4 * FUN_01000c54(undefined4 *param_1,uint param_2,undefined4 param_3);
 undefined8 rt_memcpy(uint *param_1,uint *param_2,uint param_3,uint param_4);   /* 0x01000C94 GUESS: name, see swv21brew.c */
@@ -1294,7 +1294,7 @@ void FUN_01035b14(int *param_1,undefined1 *param_2);
 void FUN_01035b70(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01035e84(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01035f30(uint *param_1,int param_2);
-void FUN_01036088(int param_1);
+void png_error(int param_1);   /* 0x01036088 libpng */
 void FUN_010360b0(int param_1,int param_2,int param_3);
 void FUN_01036188(int param_1,int param_2);
 void FUN_0103619c(int param_1,uint param_2,uint param_3,int param_4);
@@ -1315,7 +1315,7 @@ void FUN_01036acc(void);
 void * FUN_01036ad0(int param_1,uint32 param_2);
 undefined4 FUN_01036b0c(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 undefined4 FUN_01036b1c(undefined4 param_1,undefined4 param_2,uint param_3,undefined4 param_4);
-void FUN_01036b2c(int param_1);
+void png_read_data(int param_1);   /* 0x01036B2C libpng */
 void FUN_01036b48(int param_1,int param_2,int param_3);
 void FUN_01036c24(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01036db4(undefined4 param_1,int param_2,byte *param_3,byte *param_4,undefined4 param_5);
