@@ -544,7 +544,7 @@ void FUN_0010a498(int param_1,int param_2);
 Hitsphere * hitsphere_create(Hitsphere *hitsphere,int32 entity,BossCombatRegion *owner,int32 secondary);   /* 0x0010A528 GUESS: name */
 int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3);
 int * FUN_0010aa8c(int *param_1,int *param_2);
-int * FUN_0010ac6c(int *param_1,int param_2);
+ScreenStack * screen_stack_create(ScreenStack *stack,KHApp *app);   /* 0x0010AC6C GUESS: name, see kh_mod.c */
 WebRequest * web_request_create(WebRequest *request,int32 context,WebRequestListener listener);   /* 0x0010AF3C GUESS: name, see kh_mod.c */
 ScriptCommand * script_command_create(ScriptCommand *command);   /* 0x0010AFC4 GUESS: name, see kh_mod.c */
 ItemDrops * item_drops_create(ItemDrops *drops,uint32 munnyPerPickup);   /* 0x0010B014 GUESS: name, see kh_mod.c */

@@ -4275,8 +4275,8 @@ uint64 screen_stack_scale(ScreenStack *stack,int32 amount,int32 axis)
 /* ==== 0x00107FEC  (file offset 0x07FEC)  screen_stack_get_text ======================================= */
 /* GUESS: names. A copy of the text with the id `textId` (a wide string the caller frees): one of the key
    glyphs the screen stack keeps (keyTexts: the ids -1000 - -1011 give "0" - "9", "*", "#",
-   FUN_0010ac6c), else the text table's (text_table_get_wide_text); 0 when there is none. Used for the
-   labels (text_line_set_text_id) and the Controls screen's keys. */
+   screen_stack_create), else the text table's (text_table_get_wide_text); 0 when there is none. Used
+   for the labels (text_line_set_text_id) and the Controls screen's keys. */
 AECHAR * screen_stack_get_text(ScreenStack *stack,int32 textId)
 
 {
@@ -6036,97 +6036,75 @@ int * FUN_0010aa8c(int *param_1,int *param_2)
   return param_1;
 }
 
-/* ==== 0x0010AC6C  (file offset 0x0AC6C)  FUN_0010ac6c ================================================ */
-int * FUN_0010ac6c(int *param_1,int param_2)
+/* ==== 0x0010AC6C  (file offset 0x0AC6C)  screen_stack_create ========================================= */
+/* GUESS: names. The screen stack's constructor (KHApp.screens, made by kh_OnAppStart with the app):
+   allocates its 0x68 bytes when `stack` is 0 (returns 0 when out of memory); keeps the app (at +0x04
+   first, at +0x00 later) and its text table; an empty list of screens; the applet's IDisplay (AddRef'd)
+   and a new IGraphics (IShell CreateInstance AEECLSID_GRAPHICS); the display's rectangle {0, 0, cxScreen,
+   cyScreen} from IShell GetDeviceInfo (into a temporary 0x40-byte block, freed); the key glyphs "0" - "9",
+   "*", "#" as one-character wide strings (strtowstr limited to 4 bytes) in a list by the ids -1000 - -1011
+   (DATA_AT_00127AA0, DATA_AT_00127AD0); and the six corner images of the framed text boxes (kh.bar 5003 -
+   5008). keyPickers and field_60 are not written: 0 only because BREW's MALLOC zeroes the block. None of
+   the allocations after the first is checked, nor CreateInstance; the device info's wStructSize is left 0
+   (GAME_BUGS.md). */
+ScreenStack * screen_stack_create(ScreenStack *stack,KHApp *app)
 
 {
-  int iVar1;
-  undefined4 *puVar2;
-  undefined2 *puVar3;
-  undefined2 *puVar4;
-  int iVar5;
-  void *pvVar6;
-  int iVar7;
-  undefined4 local_58;
-  undefined4 uStack_54;
-  undefined4 uStack_50;
-  undefined4 local_4c [12];
-  int local_1c;
-  
-  if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(0x68), param_1 != (int *)0x0)) {
-    param_1[1] = param_2;
-    param_1[2] = *(int *)(param_2 + 0x98);
-    iVar1 = (int)list_create((UIList *)0x0,0x10,0x10);
-    param_1[0xd] = iVar1;
-    param_1[0xe] = 0;
-    puVar2 = *(undefined4 **)(param_1[1] + 0x14);
-    param_1[3] = (int)puVar2;
-    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-    (*((IDisplay *)puVar2)->pvt->AddRef)((IDisplay *)puVar2);
-    (*((IShell *)*(int **)(param_1[1] + 0xc))->pvt->CreateInstance)
-        ((IShell *)*(int **)(param_1[1] + 0xc),AEECLSID_GRAPHICS_VALUE,(void **)&local_1c);
-    iVar1 = INTEGER_MINUS_44296;
-    param_1[4] = local_1c;
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-    puVar3 = (undefined2 *)(*g_pHelperFuncs->malloc)(0x40);
-    (*((IShell *)*(int **)(param_1[1] + 0xc))->pvt->GetDeviceInfo)
-        ((IShell *)*(int **)(param_1[1] + 0xc),(AEEDeviceInfo *)puVar3);
-    puVar4 = helper_malloc_2(8);
-    param_1[5] = (int)puVar4;
-    *puVar4 = 0;
-    *(undefined2 *)(param_1[5] + 2) = 0;
-    *(undefined2 *)(param_1[5] + 4) = *puVar3;
-    *(undefined2 *)(param_1[5] + 6) = puVar3[1];
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(puVar3);
-    *param_1 = param_2;
-    param_1[6] = 0;
-    param_1[0xf] = 0;
-    iVar5 = (int)list_create((UIList *)0x0,0x10,0x10);
-    iVar7 = (int32)DATA_AT_00127AA0;
-    param_1[0x10] = iVar5;
-    memcpy_word_aligned(local_4c,iVar7,0x30);
-    local_58 = *(undefined4 *)((int32)DATA_AT_00127AD0);
-    uStack_54 = *(undefined4 *)(((int32)DATA_AT_00127AD0 + 0x4));
-    uStack_50 = *(undefined4 *)(((int32)DATA_AT_00127AD0 + 0x8));
-    iVar5 = 0;
-    do {
-      pvVar6 = helper_malloc(4);
-                    /* helper[16] AECHAR * strtowstr(const char *src, AECHAR *dst, int nDstBytes)
-                       (AEEHelperFuncs +0x40, via *(base-4)) */
-      (*g_pHelperFuncs->strtowstr)((int)&local_58 + iVar5,pvVar6,4);
-      list_set_entry(param_1[0x10],local_4c[iVar5],pvVar6);
-      iVar5 = iVar5 + 1;
-    } while (iVar5 < 0xc);
-    iVar1 = (int)(*((IShell *)*(int **)(*param_1 + 0xc))->pvt->LoadResObject)
-                ((IShell *)*(int **)(*param_1 + 0xc),(const char *)STRING_KH_DOT_BAR_00127CC4,
-                 INTEGER_5003,0);
-    param_1[7] = iVar1;
-    iVar1 = (int)(*((IShell *)*(int **)(*param_1 + 0xc))->pvt->LoadResObject)
-                ((IShell *)*(int **)(*param_1 + 0xc),(const char *)STRING_KH_DOT_BAR_00127CC4,
-                 INTEGER_5004,0);
-    param_1[8] = iVar1;
-    iVar1 = (int)(*((IShell *)*(int **)(*param_1 + 0xc))->pvt->LoadResObject)
-                ((IShell *)*(int **)(*param_1 + 0xc),(const char *)STRING_KH_DOT_BAR_00127CC4,
-                 INTEGER_5005,0);
-    param_1[9] = iVar1;
-    iVar1 = (int)(*((IShell *)*(int **)(*param_1 + 0xc))->pvt->LoadResObject)
-                ((IShell *)*(int **)(*param_1 + 0xc),(const char *)STRING_KH_DOT_BAR_00127CC4,
-                 INTEGER_5006,0);
-    param_1[10] = iVar1;
-    iVar1 = (int)(*((IShell *)*(int **)(*param_1 + 0xc))->pvt->LoadResObject)
-                ((IShell *)*(int **)(*param_1 + 0xc),(const char *)STRING_KH_DOT_BAR_00127CC4,
-                 INTEGER_5007,0);
-    param_1[0xb] = iVar1;
-    iVar1 = (int)(*((IShell *)*(int **)(*param_1 + 0xc))->pvt->LoadResObject)
-                ((IShell *)*(int **)(*param_1 + 0xc),(const char *)STRING_KH_DOT_BAR_00127CC4,
-                 INTEGER_5008,0);
-    param_1[0xc] = iVar1;
-    ((ScreenStack *)param_1)->savedLevelName = (char *)0x0;
+  IGraphics *graphics;        /* [sp+0x3c]: CreateInstance's result */
+  AEEDeviceInfo *info;
+  uint32 ids[12];
+  uint32 keys[3];
+  AECHAR *glyph;
+  int32 i;
+
+  if (stack == (ScreenStack *)0x0 && (stack = helper_malloc_2(0x68)) == (ScreenStack *)0x0)
+    return stack;
+  stack->applet = app;
+  stack->texts = (struct TextTable *)app->pObj98;
+  stack->screens = list_create((UIList *)0x0,0x10,0x10);
+  stack->depth = 0;
+  stack->display = stack->applet->a.m_pIDisplay;
+  (*stack->display->pvt->AddRef)(stack->display);
+  (*stack->applet->a.m_pIShell->pvt->CreateInstance)
+      (stack->applet->a.m_pIShell,AEECLSID_GRAPHICS_VALUE,(void **)&graphics);
+  stack->graphics = graphics;
+  info = (*g_pHelperFuncs->malloc)(0x40);
+  (*stack->applet->a.m_pIShell->pvt->GetDeviceInfo)(stack->applet->a.m_pIShell,info);
+  stack->rect = helper_malloc_2(8);
+  stack->rect->x = 0;
+  stack->rect->y = 0;
+  stack->rect->dx = info->cxScreen;
+  stack->rect->dy = info->cyScreen;
+  (*g_pHelperFuncs->free)(info);
+  stack->app = app;
+  stack->field_18 = 0;
+  stack->keyOptions = (struct KeyOption *)0x0;
+  stack->keyTexts = list_create((UIList *)0x0,0x10,0x10);
+  memcpy_word_aligned(ids,(void *)DATA_AT_00127AA0,0x30);   /* the ids -1000 - -1011 */
+  keys[0] = DATA_AT_00127AD0[0];                            /* "0123456789*#" */
+  keys[1] = DATA_AT_00127AD0[1];
+  keys[2] = DATA_AT_00127AD0[2];
+  for (i = 0; i < 12; i++) {
+    glyph = helper_malloc(4);
+    (*g_pHelperFuncs->strtowstr)((const char *)keys + i,glyph,4);
+    list_set_entry(stack->keyTexts,(int32)ids[i],(int32)glyph);
   }
-  return param_1;
+  stack->frameImages[0] = (IImage *)(*stack->app->a.m_pIShell->pvt->LoadResObject)
+                             (stack->app->a.m_pIShell,STRING_KH_DOT_BAR_00127CC4,INTEGER_5003,0);
+  stack->frameImages[1] = (IImage *)(*stack->app->a.m_pIShell->pvt->LoadResObject)
+                             (stack->app->a.m_pIShell,STRING_KH_DOT_BAR_00127CC4,INTEGER_5004,0);
+  stack->frameImages[2] = (IImage *)(*stack->app->a.m_pIShell->pvt->LoadResObject)
+                             (stack->app->a.m_pIShell,STRING_KH_DOT_BAR_00127CC4,INTEGER_5005,0);
+  stack->frameImages[3] = (IImage *)(*stack->app->a.m_pIShell->pvt->LoadResObject)
+                             (stack->app->a.m_pIShell,STRING_KH_DOT_BAR_00127CC4,INTEGER_5006,0);
+  stack->frameImages[4] = (IImage *)(*stack->app->a.m_pIShell->pvt->LoadResObject)
+                             (stack->app->a.m_pIShell,STRING_KH_DOT_BAR_00127CC4,INTEGER_5007,0);
+  stack->frameImages[5] = (IImage *)(*stack->app->a.m_pIShell->pvt->LoadResObject)
+                             (stack->app->a.m_pIShell,STRING_KH_DOT_BAR_00127CC4,INTEGER_5008,0);
+  stack->savedLevelName = (char *)0x0;
+  return stack;
 }
+
 
 /* ==== 0x0010AF3C  (file offset 0x0AF3C)  web_request_create ========================================== */
 /* GUESS: names. A web request's constructor: allocates its 0x5c bytes when `request` is 0 (returns 0 when
@@ -6773,8 +6751,9 @@ int * FUN_0010be14(int *param_1)
 /* GUESS: name. A list's constructor: allocates its 0x14 bytes when `list` is 0 (returns 0 when out of
    memory), then two arrays of `capacity` words (the ids and the entries), and starts it empty; it grows by
    `growBy` entries when full (list_set_entry). Every UI element's child list is list_create(0, 16, 16)
-   (ui_element_create); the others make the screen stack's list (+0x34, FUN_0010ac6c), a UI element's key
-   map (+0x60, FUN_0010bba0) and lists at +0x30 (text_box_create) and +0x34 / a local in FUN_0010ac6c. */
+   (ui_element_create); the others make the screen stack's two (its screens at +0x34 and its key glyphs at
+   +0x40, screen_stack_create), a UI element's key map (+0x60, FUN_0010bba0) and the list at +0x30
+   (text_box_create). */
 UIList * list_create(UIList *list,int32 capacity,int32 growBy)
 
 {
@@ -15204,7 +15183,7 @@ void kh_OnAppStart(KHApp *pMe)
           }
           else {
             if (pMe->nErr != 0) goto LAB_001199b0;
-            pvVar4 = (void *)FUN_0010ac6c(0,pMe);
+            pvVar4 = screen_stack_create((ScreenStack *)0x0,pMe);
             pMe->screens = pvVar4;
             iVar6 = INTEGER_265;
             if (pvVar4 != (void *)0x0) {

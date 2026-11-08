@@ -75,8 +75,8 @@ typedef struct KHApp {
     char          *pBufc8;           /* +0xc8 a heap string (string_replace; freed in kh_OnAppStop): the
                                         script summary's level name, copied to pBufc4 */
     uint32         field_cc;         /* +0xcc */
-    struct ScreenStack *screens;     /* +0xd0 the open screens (menus); created by 0x10ac6c(0, pMe),
-                                        destroyed by 0x10c3f8. FUN_00101ad8 handles its events */
+    struct ScreenStack *screens;     /* +0xd0 the open screens (menus); created by screen_stack_create(0,
+                                        pMe), destroyed by 0x10c3f8. FUN_00101ad8 handles its events */
     uint32         field_d4;         /* +0xd4 */
     uint32         fpStatus;         /* +0xd8 GUESS: soft-float status word (what a compiler fplib keeps in a
                                         static). Address returned by kh_GetFpStatusPtr; read by
@@ -176,7 +176,7 @@ typedef struct ScreenStack {
     IGraphics *graphics;          /* +0x10 what the elements draw with (ui_element_draw, graphics_set_color) */
     AEERect *rect;                /* +0x14 GUESS: name; the display's rectangle: every screen's size
                                      (screen_create) */
-    uint8  unknown_18[0x04];
+    int32    field_18;              /* +0x18 0 at creation */
     IImage *frameImages[6];       /* +0x1c the corners of the framed text boxes (text_box_draw): left and
                                      right for style 1, 3 and 2 */
     UIList *screens;              /* +0x34 the open screens, by position */
@@ -184,14 +184,14 @@ typedef struct ScreenStack {
     struct KeyOption *keyOptions; /* +0x3c GUESS: name; the Controls screen's ring of key options
                                      (key_picker_setup), freed when the screen closes */
     UIList  *keyTexts;              /* +0x40 the key glyphs "0" - "9", "*", "#" (wide), by the ids -1000 -
-                                     -1011 (FUN_0010ac6c; screen_stack_get_text) */
+                                     -1011 (screen_stack_create; screen_stack_get_text) */
     struct UIElement *keyPickers[7]; /* +0x44 GUESS: name; the Controls screen's key pickers (ids 400 -
                                      406), one per Progress.controls[] entry (screen_stack_all_keys_bound) */
     int32    field_60;              /* +0x60 0 when FUN_00101ad8 starts a download for event 100, else 1;
                                      the web reply handler (FUN_0010888c) reads it */
     char    *savedLevelName;        /* +0x64 GUESS: name; a copy of KHApp.pBufc4 made (string_replace)
                                      before pBufc8 replaces it for a download; 0 at creation */
-} ScreenStack;                    /* 0x68 bytes (FUN_0010ac6c); only the fields named so far */
+} ScreenStack;                    /* 0x68 bytes (screen_stack_create); only the fields named so far */
 
 /* ---- The text table (GUESS: names) -------------------------------------------------------------------
  * KHApp.pObj98 (FUN_0010be14, 8 bytes): the game's texts by id, read from `source` (FUN_0011448c:
