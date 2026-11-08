@@ -587,7 +587,7 @@ void animations_destroy(Animations *animations,int32 freeIt);   /* 0x0010C9DC GU
 void boss_combat_region_destroy(BossCombatRegion *region,int32 freeIt);   /* 0x0010CA1C GUESS: name, see kh_mod.c */
 void level_object_destroy(int param_1,int param_2);   /* 0x0010CAB0 GUESS: name: a LevelObject's destructor (see kh_types.h) */
 void collision_shape_destroy(CollisionShape *shape,int32 freeIt);   /* 0x0010CC9C GUESS: name, see kh_mod.c */
-void FUN_0010cd2c(int param_1,int param_2);
+void intro_destroy(Intro *intro,int32 freeIt);   /* 0x0010CD2C GUESS: name, see kh_mod.c */
 void text_table_destroy(TextTable *table,int32 freeIt);   /* 0x0010CDA4 GUESS: name, see kh_mod.c */
 void list_destroy(UIList *list,int32 freeIt);   /* 0x0010CDD8 GUESS: name, see kh_mod.c */
 void screen_resume_nothing(int32 screen);   /* 0x001052DC (no Ghidra function; a virtual method) */
@@ -754,7 +754,7 @@ undefined4 progress_load(int param_1,int param_2);   /* 0x0011B178 GUESS: name, 
 undefined8 FUN_0011b518(int param_1,int param_2);
 undefined4 records_load(int param_1);   /* 0x0011B5F0 GUESS: name, see kh_mod.c */
 void settings_load(int param_1,undefined4 param_2);   /* 0x0011B6F0 GUESS: name, see kh_mod.c */
-void FUN_0011b890(int param_1,int *param_2);
+void intro_load_scene(int param_1,int *param_2);   /* 0x0011B890 GUESS: name, see kh_mod.c */
 undefined4 FUN_0011ba0c(int param_1,undefined4 param_2);
 int32 sound_entry_on_notify(SoundEntry *entry,AEEMediaCmdNotify *notify);   /* 0x0011BB00 GUESS: name, see kh_mod.c */
 int32 sound_set_loop(SoundSet *set,int32 index);   /* 0x0011BB58 GUESS: name, see kh_mod.c */

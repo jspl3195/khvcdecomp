@@ -57,7 +57,8 @@ typedef struct KHApp {
     struct TextTable *texts;         /* +0x98 the game's texts (text_table_create, text_table_destroy) */
     struct Animations *animations;   /* +0x9c the scene's animations; created by animations_create,
                                         destroyed by animations_destroy */
-    struct Intro  *intro;            /* +0xa0 the opening sequence (intro_create), destroyed by 0x10cd2c */
+    struct Intro  *intro;            /* +0xa0 the opening sequence (intro_create), destroyed by
+                                        intro_destroy */
     void          *pGame;            /* +0xa4 GUESS: game state; receives key releases (kh_OnKeyRelease);
                                         destroyed by 0x10c2c4 */
     struct Progress *progress;       /* +0xa8 the player's progress (munny, experience, level, controls);
@@ -1085,13 +1086,15 @@ typedef struct Animations {
  * KHApp.intro (0xa4 bytes, intro_create): stage 0 waits 2 s, stage 1 plays one animation of its scene
  * to the end, stage 2 runs the title scene's timeline (11 animations, each shown between its start and
  * end time), opens the title menu (screen 0x5a, GUESS) at 4.2 s and loops 4467..13802 ms behind it.
- * Each stage change loads the stage's scene (FUN_0011b890). The select key skips to the menu (intro_on_key).
+ * Each stage change loads the stage's scene (intro_load_scene). The select key skips to the menu
+ * (intro_on_key).
  * A return to the title creates it at stage 2. */
 typedef struct Intro {
     int32    running;               /* +0x00 0 at creation; intro_update does nothing until it is set */
     struct KHApp *app;            /* +0x04 GetAppInstance() at creation */
-    int32    field_08;              /* +0x08 0 at creation */
-    int32    field_0c;              /* +0x0c 0 at creation */
+    ISwerveObject *character;     /* +0x08 GUESS: name; the title's character ("character.grp", loaded into
+                                     characterGroup by intro_load_scene); 0 at creation */
+    ISwerveObject *characterGroup; /* +0x0c the group 0x3E11FC00 of "intro.m3g" it stands in */
     int32    animation;             /* +0x10 stage 1's animation (an Animations index) */
     int32    timelineAnimations[11];   /* +0x14 stage 2's animations */
     int32    starts[11];            /* +0x40 when each of them starts (ms into stage 2) */

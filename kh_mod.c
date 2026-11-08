@@ -6547,7 +6547,7 @@ TextStyle * text_style_create(TextStyle *style,int32 type)
 
 /* ==== 0x0010BB2C  (file offset 0x0BB2C)  intro_create ================================================ */
 /* GUESS: names. Sets up the opening sequence (allocating its 0xa4 bytes when `intro` is 0), at stage 2
-   (the title) when `atTitle` is set, else 0, and loads its scene (FUN_0011b890, which sets *error);
+   (the title) when `atTitle` is set, else 0, and loads its scene (intro_load_scene, which sets *error);
    returns it, or 0 when out of memory. Created at start-up (stage 0) and on a return to the title
    (FUN_001242b4, stage 2). */
 Intro * intro_create(Intro *intro,int32 atTitle,int32 *error)
@@ -6556,10 +6556,10 @@ Intro * intro_create(Intro *intro,int32 atTitle,int32 *error)
   if (intro == (Intro *)0x0 && (intro = helper_malloc_2(0xa4)) == (Intro *)0x0)
     return (Intro *)0x0;
   intro->app = (*g_pHelperFuncs->GetAppInstance)();
-  intro->field_08 = 0;
-  intro->field_0c = 0;
+  intro->character = (ISwerveObject *)0x0;
+  intro->characterGroup = (ISwerveObject *)0x0;
   intro->stage = atTitle ? 2 : 0;
-  FUN_0011b890((int32)intro,(int32 *)error);
+  intro_load_scene((int32)intro,(int32 *)error);
   intro->menuOpened = 0;
   intro->running = 0;
   return intro;
@@ -7387,36 +7387,29 @@ void collision_shape_destroy(CollisionShape *shape,int32 freeIt)
 }
 
 
-/* ==== 0x0010CD2C  (file offset 0x0CD2C)  FUN_0010cd2c ================================================ */
-void FUN_0010cd2c(int param_1,int param_2)
+/* ==== 0x0010CD2C  (file offset 0x0CD2C)  intro_destroy =============================================== */
+/* GUESS: names. The opening sequence's destructor (kh_OnAppStop, FUN_0010edec, and the timer tick's
+   return to the title, which creates a new one at once): takes the title's character out of its group
+   (app_context_remove_object, dropping the animations whose controllers left the World), releases the
+   group and the app's World (the intro's scene, intro_load_scene), and frees the intro when `freeIt` is
+   set (the binary's tail jump to helper_free at 0x0010cd9c). Ghidra had taken the 1 passed to
+   app_context_remove_object (mov r3, #1 at 0x0010cd4c) for a leftover. */
+void intro_destroy(Intro *intro,int32 freeIt)
 
 {
-  undefined4 param_4;
-  /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  int *piVar1;
-  
-  if (*(int *)(param_1 + 8) != 0) {
-    app_context_remove_object((undefined4)((KHApp *)*(int *)(param_1 + 4))->context,*(int *)(param_1 + 8),
-                 *(undefined4 *)(param_1 + 0xc),1 /* not arguments, value leftovers: param_4 */);
+  if (intro->character != (ISwerveObject *)0x0)
+    app_context_remove_object((int)intro->app->context,(int *)intro->character,
+                              (int *)intro->characterGroup,1);
+  if (intro->characterGroup != (ISwerveObject *)0x0)
+    (*intro->characterGroup->pvt->Release)(intro->characterGroup);
+  if (intro->app->pObj6c != (ISwerveObject *)0x0) {
+    (*intro->app->pObj6c->pvt->Release)(intro->app->pObj6c);
+    intro->app->pObj6c = (ISwerveObject *)0x0;
   }
-  if (*(int **)(param_1 + 0xc) != (int *)0x0) {
-    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-    (*((ISwerveObject *)*(int **)(param_1 + 0xc))->pvt->Release)
-        ((ISwerveObject *)*(int **)(param_1 + 0xc));
-  }
-  piVar1 = *(int **)(*(int *)(param_1 + 4) + 0x6c);
-  if (piVar1 != (int *)0x0) {
-    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-    (*((ISwerveObject *)piVar1)->pvt->Release)((ISwerveObject *)piVar1);
-    *(undefined4 *)(*(int *)(param_1 + 4) + 0x6c) = 0;
-  }
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
-  return;
+  if (freeIt != 0)
+    helper_free(intro);
 }
+
 
 /* ==== 0x0010CDA4  (file offset 0x0CDA4)  text_table_destroy ========================================== */
 /* GUESS: names. The text table's destructor (kh_OnAppStop): releases the texts' source (the object loaded
@@ -9132,7 +9125,7 @@ void FUN_0010edec(int param_1)
       *(undefined4 *)(param_1 + 0xa4) = 0;
     }
     if (*(int *)(param_1 + 0xa0) != 0) {
-      FUN_0010cd2c(*(int *)(param_1 + 0xa0),1);
+      intro_destroy(((KHApp *)param_1)->intro,1);
       *(undefined4 *)(param_1 + 0xa0) = 0;
     }
     piVar1 = FUN_0010a5d8((int *)0x0,*(undefined4 *)(param_1 + 0xc4),(int *)(param_1 + 0x90));
@@ -11115,7 +11108,7 @@ void kh_OnAppStop(KHApp *pMe)
     pMe->animations = (void *)0x0;
   }
   if (pMe->intro != (void *)0x0) {
-    FUN_0010cd2c(pMe->intro,1);
+    intro_destroy(pMe->intro,1);
     pMe->intro = (void *)0x0;
   }
   if (pMe->pBufc4 != (char *)0x0) {
@@ -16309,8 +16302,14 @@ void settings_load(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x0011B890  (file offset 0x1B890)  FUN_0011b890 ================================================ */
-void FUN_0011b890(int param_1,int *param_2)
+/* ==== 0x0011B890  (file offset 0x1B890)  intro_load_scene ============================================ */
+/* GUESS: name (not yet rewritten). Loads the opening sequence's scene for its stage into the app's
+   World (KHApp.pObj6c), after resetting the animations and releasing the old World: stage 0
+   "disney.m3g", 1 "swerve.m3g", else "intro.m3g", in which it also finds the group 0x3E11FC00
+   (Intro.characterGroup), loads "character.grp" into it (FUN_0011ae04; Intro.character) and hides the
+   object 0x1DFBEC7F; error 263 when the scene does not load. Then, without an error, adds the scene's
+   animations (FUN_00118640). Called by intro_create and intro_start. */
+void intro_load_scene(int param_1,int *param_2)
 
 {
   undefined4 uVar1;
@@ -22101,13 +22100,12 @@ void FUN_0012407c(int param_1,undefined4 param_2,undefined4 param_3)
 }
 
 /* ==== 0x001241A8  (file offset 0x241A8)  intro_update ================================================ */
-/* GUESS: names. Advances the opening sequence by `elapsed` ms (called every frame from FUN_0010ea64, with
-   `worldTime`, which it never reads): stage 0 ends after 2000 ms, stage 1 when its animation has
-   finished (state 4); a stage change loads the next stage's scene (FUN_0011b890 with `error`) and starts
-   it, by a tail jump to intro_start (0x0012422c). In stage
-   2, each timeline animation inside its window is shown at time - start; at 4200 ms the title menu
-   opens once (FUN_00101ad8(app->screens, 0x5a); GUESS: the menu), and from 13802 ms the timeline goes
-   back to 4467 ms. */
+/* GUESS: names. Advances the opening sequence by `elapsed` ms (called every frame from FUN_0010ea64,
+   with `worldTime`, which it never reads): stage 0 ends after 2000 ms, stage 1 when its animation has
+   finished (state 4); a stage change loads the next stage's scene (intro_load_scene with `error`) and
+   starts it, by a tail jump to intro_start (0x0012422c). In stage 2, each timeline animation inside its
+   window is shown at time - start; at 4200 ms the title menu opens once (FUN_00101ad8(app->screens,
+   0x5a); GUESS: the menu), and from 13802 ms the timeline goes back to 4467 ms. */
 void intro_update(Intro *intro,int32 worldTime,int32 elapsed,int32 *error)
 
 {
@@ -22138,7 +22136,7 @@ void intro_update(Intro *intro,int32 worldTime,int32 elapsed,int32 *error)
       intro->time = INTEGER_4467;
     return;
   }
-  FUN_0011b890((int32)intro,(int32 *)error);
+  intro_load_scene((int32)intro,(int32 *)error);
   intro_start(intro);
 }
 
@@ -22171,7 +22169,7 @@ void FUN_001242b4(int param_1)
       *(undefined4 *)(param_1 + 0xa4) = 0;
     }
     if (*(int *)(param_1 + 0xa0) != 0) {
-      FUN_0010cd2c(*(int *)(param_1 + 0xa0),1);
+      intro_destroy(((KHApp *)param_1)->intro,1);
     }
     puVar2 = (undefined4 *)intro_create((Intro *)0x0,1,(int32 *)(param_1 + 0x90));
     *(undefined4 **)(param_1 + 0xa0) = puVar2;
