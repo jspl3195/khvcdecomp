@@ -1953,7 +1953,7 @@ LAB_00101db4:
     text_line_set_text_id(*(undefined4 *)(iVar7 + 0x30),pvVar16);
     iVar7 = ((KHApp *)*param_1)->context->sounds[0];
     if (iVar7 != 0) {
-      FUN_0010a03c(iVar7,((KHApp *)*param_1)->progress->musicVolume);
+      sound_set_set_volume((SoundSet *)iVar7,((KHApp *)*param_1)->progress->musicVolume);
     }
     iVar7 = ((KHApp *)*param_1)->context->sounds[1];
     if (iVar7 == 0) {
@@ -1961,7 +1961,7 @@ LAB_00101db4:
     }
     uVar10 = ((KHApp *)*param_1)->progress->musicVolume;
 LAB_0010489c:
-    FUN_0010a03c(iVar7,uVar10);
+    sound_set_set_volume((SoundSet *)iVar7,uVar10);
     return local_34;
   }
   if (0x11 < param_2) {
@@ -2273,10 +2273,10 @@ LAB_001042b8:
     goto LAB_00104360;
   case 3:
     if (*(int *)(*param_1 + 0xbc) != 0) {
-      FUN_0010a0d0(*(int *)(*param_1 + 0xbc));
+      sound_set_stop(((KHApp *)*param_1)->effects);
     }
     if (*(int *)(*param_1 + 0xc0) != 0) {
-      FUN_0010a0d0(*(int *)(*param_1 + 0xc0));
+      sound_set_stop(((KHApp *)*param_1)->levelSounds);
     }
     iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,1);
     screen_add_heading((ScreenStack *)param_1,(UIElement *)iVar9,0,TEXT_OPTIONS,0);
@@ -2528,7 +2528,7 @@ LAB_00104360:
     text_line_set_text_id(*(undefined4 *)(iVar7 + 0x30),pvVar16);
     iVar7 = *(int *)(*param_1 + 0xbc);
     if (iVar7 != 0) {
-      FUN_0010a03c(iVar7,((KHApp *)*param_1)->progress->soundVolume);
+      sound_set_set_volume((SoundSet *)iVar7,((KHApp *)*param_1)->progress->soundVolume);
     }
     iVar7 = *(int *)(*param_1 + 0xc0);
     if (iVar7 == 0) {
@@ -4908,38 +4908,28 @@ int32 text_box_scroll_up(TextBox *box)
 }
 
 
-/* ==== 0x00108F28  (file offset 0x08F28)  FUN_00108f28 ================================================ */
-/* returns r0 as kh.mod leaves it (iVar1 on the early exit, else the tail-called method's result);
-   Ghidra had declared it void */
-int FUN_00108f28(int param_1,int param_2)
+/* ==== 0x00108F28  (file offset 0x08F28)  sound_set_play ============================================== */
+/* GUESS: names. Starts sound `index` of the set: the entry takes the set's volume, becomes the set's
+   current sound, and is played (IMedia Play) and then set to that volume (SetMediaParm MM_PARM_VOLUME, 4;
+   the binary's tail jump at 0x00108f98). An index out of range does nothing. Most callers play the app's
+   effects (KHApp.effects) while Progress.soundVolume is above 0. Returns r0 as kh.mod leaves it:
+   SetMediaParm's result, or, for an index out of range, the set (index below 0) or the count. */
+int32 sound_set_play(SoundSet *set,int32 index)
 
 {
-  int iVar1;
-  undefined4 *puVar2;
-  int *piVar3;
-  bool bVar4;
-  
-  bVar4 = param_2 == 0;
-  iVar1 = param_1;
-  if (-1 < param_2) {
-    iVar1 = *(int *)(param_1 + 0xc);
-    bVar4 = iVar1 == param_2;
-  }
-  if (bVar4 || (-1 >= param_2 || iVar1 < param_2)) {
-    return iVar1;
-  }
-  *(undefined4 *)(*(int *)(*(int *)(param_1 + 4) + param_2 * 4) + 8) =
-       *(undefined4 *)(param_1 + 0x30);
-  *(int *)(param_1 + 0x2c) = param_2;
-  /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-  (*((IMedia *)**(undefined4 **)(*(int *)(param_1 + 4) + param_2 * 4))->pvt->Play)
-      ((IMedia *)**(undefined4 **)(*(int *)(param_1 + 4) + param_2 * 4));
-  puVar2 = *(undefined4 **)(*(int *)(param_1 + 4) + param_2 * 4);
-  piVar3 = (int *)*puVar2;
-                    /* WARNING: Could not recover jumptable at 0x00108f98. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  return (*((IMedia *)piVar3)->pvt->SetMediaParm)((IMedia *)piVar3,4,puVar2[2],0);
+  SoundEntry *entry;
+
+  if (index < 0)
+    return (int32)set;
+  if (set->count <= index)
+    return set->count;
+  set->entries[index]->volume = set->volume;
+  set->current = index;
+  (*set->entries[index]->media->pvt->Play)(set->entries[index]->media);
+  entry = set->entries[index];
+  return (*entry->media->pvt->SetMediaParm)(entry->media,4,entry->volume,0);
 }
+
 
 /* ==== 0x00108FA0  (file offset 0x08FA0)  screen_stack_close_all ====================================== */
 /* GUESS: name. Closes every open screen, top first, without redrawing. */
@@ -5600,23 +5590,25 @@ void text_line_set_text_id(TextLine *line,int32 textId)
 }
 
 
-/* ==== 0x0010A03C  (file offset 0x0A03C)  FUN_0010a03c ================================================ */
-void FUN_0010a03c(int param_1,undefined4 param_2)
+/* ==== 0x0010A03C  (file offset 0x0A03C)  sound_set_set_volume ======================================== */
+/* GUESS: names. Sets the set's volume (MM_PARM_VOLUME, 4) for the sounds it starts from now on, and for
+   its current sound (the last started) at once: that entry takes it and its IMedia is set to it (the
+   binary's tail jump at 0x0010a07c). The menu calls it with Progress.soundVolume or musicVolume. Returns
+   r0 as kh.mod leaves it: SetMediaParm's result, or the set when there is no current sound; Ghidra had
+   declared it void. */
+int32 sound_set_set_volume(SoundSet *set,int32 volume)
 
 {
-  int *piVar1;
-  
-  *(undefined4 *)(param_1 + 0x30) = param_2;
-  if (*(int *)(param_1 + 0x2c) == -1) {
-    return;
-  }
-  *(undefined4 *)(*(int *)(*(int *)(param_1 + 4) + *(int *)(param_1 + 0x2c) * 4) + 8) = param_2;
-  piVar1 = (int *)**(undefined4 **)(*(int *)(param_1 + 4) + *(int *)(param_1 + 0x2c) * 4);
-                    /* WARNING: Could not recover jumptable at 0x0010a07c. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (*((IMedia *)piVar1)->pvt->SetMediaParm)((IMedia *)piVar1,4,param_2,0);
-  return;
+  SoundEntry *entry;
+
+  set->volume = volume;
+  if (set->current == -1)
+    return (int32)set;
+  entry = set->entries[set->current];
+  entry->volume = volume;
+  return (*entry->media->pvt->SetMediaParm)(entry->media,4,volume,0);
 }
+
 
 /* ==== 0x0010A080  (file offset 0x0A080)  FUN_0010a080 ================================================ */
 void FUN_0010a080(int param_1)
@@ -5638,21 +5630,23 @@ void FUN_0010a080(int param_1)
   return;
 }
 
-/* ==== 0x0010A0D0  (file offset 0x0A0D0)  FUN_0010a0d0 ================================================ */
-void FUN_0010a0d0(int param_1)
+/* ==== 0x0010A0D0  (file offset 0x0A0D0)  sound_set_stop ============================================== */
+/* GUESS: names. Stops every sound of the set (IMedia Stop), clears their looping flags (so the notify
+   callback FUN_0011bb00 does not start them again) and leaves the set with no current sound. Returns r0 as
+   kh.mod leaves it: -1, the value stored last (0x0010a118); Ghidra had declared it void. */
+int32 sound_set_stop(SoundSet *set)
 
 {
-  int iVar1;
-  
-  for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0xc); iVar1 = iVar1 + 1) {
-    *(undefined4 *)(*(int *)(*(int *)(param_1 + 4) + iVar1 * 4) + 4) = 0;
-    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-    (*((IMedia *)**(undefined4 **)(*(int *)(param_1 + 4) + iVar1 * 4))->pvt->Stop)
-        ((IMedia *)**(undefined4 **)(*(int *)(param_1 + 4) + iVar1 * 4));
+  int32 i;
+
+  for (i = 0; i < set->count; i++) {
+    set->entries[i]->looping = 0;
+    (*set->entries[i]->media->pvt->Stop)(set->entries[i]->media);
   }
-  *(undefined4 *)(param_1 + 0x2c) = 0xffffffff;
-  return;
+  set->current = -1;
+  return -1;
 }
+
 
 /* ==== 0x0010A124  (file offset 0x0A124)  game_pause ================================================== */
 /* GUESS: name. Pauses the game: the binary is `mov r1, #0; b 0x0012056c`, FUN_0012056c(app, 0), which sets
@@ -5994,9 +5988,9 @@ LAB_0010a894:
   string_replace(((KHApp *)param_1[0x85])->context,STRING_TRANSITION_DOT_QCP,&p[10]);
   string_replace(((KHApp *)param_1[0x85])->context,STRING_MAGIC_ALERT_DOT_MID,&p[11]);
   string_replace(((KHApp *)param_1[0x85])->context,STRING_MAGIC_CAST_DOT_QCP,&p[12]);
-  uVar4 = FUN_0010bec4(0,(int)p,0xd,1).low;
-  *(undefined4 *)(param_1[0x85] + 0xbc) = uVar4;
-  FUN_0010a03c(uVar4,((KHApp *)param_1[0x85])->progress->soundVolume);
+  uVar4 = sound_set_create(0,(int)p,0xd,1).low;
+  ((KHApp *)param_1[0x85])->effects = (SoundSet *)uVar4;
+  sound_set_set_volume((SoundSet *)uVar4,((KHApp *)param_1[0x85])->progress->soundVolume);
   iVar1 = 0;
   do {
     helper_free(p[iVar1]);
@@ -6820,8 +6814,8 @@ UIList * list_create(UIList *list,int32 capacity,int32 growBy)
 }
 
 
-/* ==== 0x0010BEC4  (file offset 0x0BEC4)  FUN_0010bec4 ================================================ */
-undefined8 FUN_0010bec4(int *param_1,int param_2,int param_3,int param_4)
+/* ==== 0x0010BEC4  (file offset 0x0BEC4)  sound_set_create ============================================ */
+undefined8 sound_set_create(int *param_1,int param_2,int param_3,int param_4)
 
 {
   int iVar1;
@@ -7020,11 +7014,11 @@ void FUN_0010c2c4(int *param_1,int param_2)
   int iVar1;
   
   if (*(int *)(param_1[0x85] + 0xbc) != 0) {
-    FUN_0010ce08(*(int *)(param_1[0x85] + 0xbc),1 /* not arguments, register leftovers: param_3,param_4,param_4 */);
+    sound_set_destroy(*(int *)(param_1[0x85] + 0xbc),1 /* not arguments, register leftovers: param_3,param_4,param_4 */);
     *(undefined4 *)(param_1[0x85] + 0xbc) = 0;
   }
   if (*(int *)(param_1[0x85] + 0xc0) != 0) {
-    FUN_0010ce08(*(int *)(param_1[0x85] + 0xc0),1);
+    sound_set_destroy(*(int *)(param_1[0x85] + 0xc0),1);
     *(undefined4 *)(param_1[0x85] + 0xc0) = 0;
   }
   iVar1 = 0;
@@ -7605,8 +7599,8 @@ void list_destroy(UIList *list,int32 freeIt)
 }
 
 
-/* ==== 0x0010CE08  (file offset 0x0CE08)  FUN_0010ce08 ================================================ */
-void FUN_0010ce08(undefined4 *param_1,int param_2)
+/* ==== 0x0010CE08  (file offset 0x0CE08)  sound_set_destroy =========================================== */
+void sound_set_destroy(undefined4 *param_1,int param_2)
 
 {
   undefined4 *puVar2;
@@ -7650,19 +7644,19 @@ void FUN_0010ce08(undefined4 *param_1,int param_2)
 
 /* ==== 0x0010CEE4  (file offset 0x0CEE4)  app_context_destroy ========================================= */
 /* GUESS: names. The app's context's destructor: releases its Transform, destroys its sound sets
-   (FUN_0010ce08) and frees it when `freeIt` is set (the binary's tail jump to helper_free at 0x0010cf44).
-   Called by kh_OnAppStop. */
+   (sound_set_destroy) and frees it when `freeIt` is set (the binary's tail jump to helper_free at
+   0x0010cf44). Called by kh_OnAppStop. */
 void app_context_destroy(AppContext *context,int32 freeIt)
 
 {
   if (context->transform != (ISwerveObject *)0x0)
     (*((ISwerveObject *)context->transform)->pvt->Release)((ISwerveObject *)context->transform);
   if (context->sounds[0] != 0) {
-    FUN_0010ce08((undefined4 *)context->sounds[0],1);
+    sound_set_destroy((undefined4 *)context->sounds[0],1);
     context->sounds[0] = 0;
   }
   if (context->sounds[1] != 0) {
-    FUN_0010ce08((undefined4 *)context->sounds[1],1);
+    sound_set_destroy((undefined4 *)context->sounds[1],1);
     context->sounds[1] = 0;
   }
   if (freeIt != 0)
@@ -8375,7 +8369,7 @@ LAB_0010dde4:
     }
     if ((0 < ((KHApp *)*(int *)(param_1 + 0x84))->progress->soundVolume) &&
        (iVar3 = *(int *)(*(int *)(param_1 + 0x84) + 0xbc), iVar3 != 0)) {
-      FUN_00108f28(iVar3,0xc);
+      sound_set_play((SoundSet *)iVar3,0xc);
     }
     piVar2 = (int *)(*(int *)(*(int *)(param_1 + 0x84) + 0xa8) + 0x524);
     *piVar2 = *piVar2 + -1;
@@ -9419,7 +9413,7 @@ int FUN_0010f058(int param_1,int param_2)
     if (*(int *)(param_1 + 0x20) != *(int *)(param_1 + 0x28)) {
       if ((0 < ((KHApp *)*(int *)(param_1 + 0x74))->progress->soundVolume) &&
          (iVar1 = *(int *)(*(int *)(param_1 + 0x74) + 0xbc), iVar1 != 0)) {
-        FUN_00108f28(iVar1,2);
+        sound_set_play((SoundSet *)iVar1,2);
       }
       level_object_get_position((uint32 *)&iStack_24,(LevelObject *)*(undefined4 *)(param_1 + 0x134));
       local_1c = float_add(local_1c,*(undefined4 *)(param_1 + 0x27c));
@@ -10487,7 +10481,7 @@ int32 script_run(int32 context,int32 count,ScriptCommand **commands)
 /* GUESS: names. Runs a script command (made by script_command_parse), by its type. Returns 1, except
    for an If (0x10: the progress flags of its condition, "!" negating one, joined by "||" and "&&" from
    left to right) and an IfVar (0x50: two variables or numbers compared), which return whether it holds.
-   The binary's cases share some calls (FUN_00109a10 at 0x00111948, FUN_00108f28 at 0x00111df8,
+   The binary's cases share some calls (FUN_00109a10 at 0x00111948, sound_set_play at 0x00111df8,
    thunk_FUN_0011fd90 at 0x001121cc, FUN_0011f8e0 at 0x00111f68 and helper_free at 0x001116c8): each is
    made once, after the switch (or the inner one), from what the case left in the locals softKey ...
    words. The UI the commands drive (KHApp.field_d4, `hud`; its struct Hud has only the "loading" text so
@@ -10511,7 +10505,7 @@ int32 script_command_run(ScriptCommand *command)
   int32 textId;
   int32 slot = 0;
   int32 softKey = 0;
-  int32 sound = 0;
+  SoundSet *sound = (SoundSet *)0x0;
   int32 soundId;
   int32 moveObject = 0;
   int32 state = 0;
@@ -10737,10 +10731,10 @@ int32 script_command_run(ScriptCommand *command)
       FUN_00119a28((int)app->pGame,(int *)&app->nErr);
     }
     break;
-  case 0x16:   /* loadSounds: the level's sounds (KHApp.field_c0) */
-    if (app->field_c0 != 0) {
-      FUN_0010ce08((undefined4 *)app->field_c0,1);
-      app->field_c0 = 0;
+  case 0x16:   /* loadSounds: the level's sounds (KHApp.levelSounds) */
+    if (app->levelSounds != (SoundSet *)0x0) {
+      sound_set_destroy((undefined4 *)app->levelSounds,1);
+      app->levelSounds = (SoundSet *)0x0;
     }
     if (command->text == (char *)0x0)
       break;
@@ -10748,9 +10742,9 @@ int32 script_command_run(ScriptCommand *command)
     words = helper_malloc(count << 2);
     string_split(context,command->text,(char *)DATA_AT_0012710C,words,count);
     if (count > 0) {
-      created = FUN_0010bec4((int *)0x0,(int)words,count,1);
-      app->field_c0 = created.low;
-      FUN_0010a03c((int)created.low,app->progress->soundVolume);
+      created = sound_set_create((int *)0x0,(int)words,count,1);
+      app->levelSounds = (SoundSet *)created.low;
+      sound_set_set_volume(app->levelSounds,app->progress->soundVolume);
     }
     for (i = 0; i < count; i++)
       helper_free(words[i]);
@@ -10787,13 +10781,13 @@ int32 script_command_run(ScriptCommand *command)
     if (command->object != (LevelObject *)0x0)
       FUN_0010ed54((int)game,(int)command->object->node,command->number[0]);
     break;
-  case 0x1b:   /* playSound: a game sound (flag 0, KHApp.field_bc) or a level one (field_c0) */
+  case 0x1b:   /* playSound: a game sound (flag 0, KHApp.effects) or a level one (levelSounds) */
     if (command->flag[0] != 0) {
-      if (app->progress->soundVolume > 0 && app->field_bc != 0)
-        sound = app->field_bc;
+      if (app->progress->soundVolume > 0 && app->effects != (SoundSet *)0x0)
+        sound = app->effects;
     }
-    else if (app->progress->soundVolume > 0 && app->field_c0 != 0)
-      sound = app->field_c0;
+    else if (app->progress->soundVolume > 0 && app->levelSounds != (SoundSet *)0x0)
+      sound = app->levelSounds;
     soundId = command->number[0];
     break;
   case 0x1c:   /* removeSoftkey */
@@ -10935,8 +10929,8 @@ int32 script_command_run(ScriptCommand *command)
       player->swimNoClimb = command->flag[0];
       if (player->field_1e4 != (ISwerveObject *)0x0)
         (*((const SwerveNodeVtbl *)player->field_1e4->pvt)->SetRenderingEnable)(player->field_1e4,1);
-      if (app->progress->soundVolume > 0 && app->field_bc != 0) {
-        sound = app->field_bc;
+      if (app->progress->soundVolume > 0 && app->effects != (SoundSet *)0x0) {
+        sound = app->effects;
         soundId = 8;
       }
       break;
@@ -11315,8 +11309,8 @@ int32 script_command_run(ScriptCommand *command)
   }
   if (softKey != 0)   /* 0x00111948 */
     FUN_00109a10((int)hud,command->number[0],textId,slot);
-  if (sound != 0)   /* 0x00111df8 */
-    FUN_00108f28(sound,soundId);
+  if (sound != (SoundSet *)0x0)   /* 0x00111df8 */
+    sound_set_play(sound,soundId);
   if (moveObject != 0)   /* 0x001121cc */
     thunk_FUN_0011fd90((int)command->object,position[0],position[1],position[2]);
   if (words != (char **)0x0)   /* 0x001116c8 */
@@ -12994,7 +12988,7 @@ void FUN_0011498c(int param_1,uint param_2)
   character_play_animation((Character *)param_1,*(undefined4 *)(param_1 + 0x310),0,0);
   if ((0 < ((KHApp *)*(int *)(param_1 + 0x84))->progress->soundVolume) &&
      (iVar1 = *(int *)(*(int *)(param_1 + 0x84) + 0xbc), iVar1 != 0)) {
-    FUN_00108f28(iVar1,1);
+    sound_set_play((SoundSet *)iVar1,1);
   }
   iVar1 = *(int *)(*(int *)(param_1 + 0x84) + 0xa8);
   uVar2 = int_to_float(*(int32 *)(iVar1 + 0x534));
@@ -13032,7 +13026,7 @@ void FUN_00114a1c(int param_1,undefined4 param_2)
       character_play_animation((Character *)iVar3,*(undefined4 *)(iVar3 + 0x310),0,0);
       if ((0 < ((KHApp *)*(int *)(iVar3 + 0x84))->progress->soundVolume) &&
          (iVar1 = *(int *)(*(int *)(iVar3 + 0x84) + 0xbc), iVar1 != 0)) {
-        FUN_00108f28(iVar1,1);
+        sound_set_play((SoundSet *)iVar1,1);
       }
       iVar1 = *(int *)(*(int *)(iVar3 + 0x84) + 0xa8);
       uVar2 = int_to_float(*(int32 *)(iVar1 + 0x534));
@@ -15749,14 +15743,14 @@ void FUN_0011a3ec(int param_1,int param_2,undefined4 param_3)
      action: sets its flag; in states 4, 5, 6, 0x11 and 0x12 starts an attack (state 0, field_1cc 0xb,
        motion_entity_rotate_by_heading and FUN_0011ca70 with an offset of 0, the radius, half the height); else, unless the
        state is 3, 0x10 or 0x13 or field_1cc is 0xb, sets field_1cc to 8 and, while Progress.soundVolume is
-       above 0, plays sound 0 of the app's effects (field_bc, FUN_00108f28; the binary tail-jumps,
+       above 0, plays sound 0 of the app's effects (KHApp.effects, sound_set_play; the binary tail-jumps,
        0x0011a6a4).
    The Magic binding (controls[6]) uses magic: with no MP left, one item of field_5b8 refills all of it,
    else one of field_5b4 half of it ((maximum + 1) / 2), and "Out of magic" is cleared (progress_set_status);
    with MP, the selected spell is cast when the player has it (FUN_0010db04; the binary tail-jumps,
    0x0011a770), and the "random" choice 8 casts one of the player's spells: the (field_88 / 1000) % count
    th (rt_sdiv divides: quotient in the low word, remainder in the high word). The rest of Ghidra's
-   listing was its copy of FUN_0010db04 and of FUN_00108f28, which the binary jumps to. */
+   listing was its copy of FUN_0010db04 and of sound_set_play, which the binary jumps to. */
 void character_on_key(Character *character,int32 key)
 
 {
@@ -15810,8 +15804,8 @@ void character_on_key(Character *character,int32 key)
         character->field_1cc == 0xb)
       return;
     character->field_1cc = 8;
-    if (progress->soundVolume > 0 && character->app->field_bc != 0)
-      FUN_00108f28((int32)character->app->field_bc,0);
+    if (progress->soundVolume > 0 && character->app->effects != (SoundSet *)0x0)
+      sound_set_play(character->app->effects,0);
     return;
   }
   if (key != progress->controls[6])
@@ -17491,8 +17485,8 @@ void wrap_angle(int32 context,uint32 *angle)
 }
 
 /* ==== 0x0011CBC4  (file offset 0x1CBC4)  hitsphere_play_animation ==================================== */
-/* GUESS: names. Plays animation `index` (`loop` set: looping) on the boss hitsphere: nothing when that one already
-   loops; else its current one is stopped at once (animations_stop) and the new one started
+/* GUESS: names. Plays animation `index` (`loop` set: looping) on the boss hitsphere: nothing when that one
+   already loops; else its current one is stopped at once (animations_stop) and the new one started
    (animations_play) and remembered. The same code as enemy_play_animation, for a hitsphere. */
 void hitsphere_play_animation(Hitsphere *hitsphere,int32 index,int32 loop)
 
@@ -17637,8 +17631,8 @@ undefined8 FUN_0011ceac(int param_1)
 }
 
 /* ==== 0x0011CFDC  (file offset 0x1CFDC)  FUN_0011cfdc ================================================ */
-/* returns r0 as kh.mod leaves it (the result of the final FUN_00108f28 call); Ghidra had declared it void, but callers use r0 after the
-   call */
+/* returns r0 as kh.mod leaves it (the result of the final sound_set_play call); Ghidra had declared it
+   void, but callers use r0 after the call */
 undefined4 FUN_0011cfdc(int param_1,undefined4 param_2,int param_3)
 
 {
@@ -17652,15 +17646,15 @@ undefined4 FUN_0011cfdc(int param_1,undefined4 param_2,int param_3)
   uStack_14 = param_2;
   iStack_10 = param_3;
   if (*(int *)(param_1 + 8) != 0) {
-    FUN_0010ce08(*(int *)(param_1 + 8),1 /* not arguments, register leftovers: param_3,param_4,param_1 */);
+    sound_set_destroy(*(int *)(param_1 + 8),1 /* not arguments, register leftovers: param_3,param_4,param_1 */);
   }
-  uVar1 = FUN_0010bec4(0,&uStack_14,1,1).low;
+  uVar1 = sound_set_create(0,&uStack_14,1,1).low;
   *(undefined4 *)(param_1 + 8) = uVar1;
-  FUN_0010a03c(uVar1,((KHApp *)*(int *)(param_1 + 0xc))->progress->musicVolume);
+  sound_set_set_volume((SoundSet *)uVar1,((KHApp *)*(int *)(param_1 + 0xc))->progress->musicVolume);
   if (param_3 != 0) {
     FUN_0011bb58(*(undefined4 *)(param_1 + 8),0);
   }
-  uVar1 = FUN_00108f28(*(undefined4 *)(param_1 + 8),0);
+  uVar1 = sound_set_play((SoundSet *)*(undefined4 *)(param_1 + 8),0);
   return uVar1;
 }
 
@@ -20044,11 +20038,11 @@ void FUN_0012031c(int *param_1,int param_2)
   if (param_2 == 0) {
     if (param_1[1] == 0) {
       local_18 = (int32)STRING_TRAINING_DOT_MID;
-      iVar1 = FUN_0010bec4(0,&local_18,1,1).low;
+      iVar1 = sound_set_create(0,&local_18,1,1).low;
       param_1[1] = iVar1;
-      FUN_0010a03c(iVar1,((KHApp *)param_1[3])->progress->musicVolume);
+      sound_set_set_volume((SoundSet *)iVar1,((KHApp *)param_1[3])->progress->musicVolume);
       FUN_0011bb58(param_1[1],0);
-      FUN_00108f28(param_1[1],0);
+      sound_set_play((SoundSet *)param_1[1],0);
     }
   }
   else {
@@ -20084,16 +20078,16 @@ void FUN_00120450(undefined4 *param_1)
 {
   *param_1 = 3;
   if (param_1[1] != 0) {
-    FUN_0010a0d0(param_1[1]);
+    sound_set_stop((SoundSet *)param_1[1]);
     if (param_1[1] != 0) {
-      FUN_0010ce08(param_1[1],1);
+      sound_set_destroy(param_1[1],1);
     }
     param_1[1] = 0;
   }
   if (param_1[2] != 0) {
-    FUN_0010a0d0(param_1[2]);
+    sound_set_stop((SoundSet *)param_1[2]);
     if (param_1[2] != 0) {
-      FUN_0010ce08(param_1[2],1);
+      sound_set_destroy(param_1[2],1);
     }
     param_1[2] = 0;
   }
@@ -20195,7 +20189,7 @@ bool FUN_0012059c(int param_1,int param_2)
     }
     if ((0 < ((KHApp *)*(int *)(param_1 + 0x74))->progress->soundVolume) &&
        (iVar1 = *(int *)(*(int *)(param_1 + 0x74) + 0xbc), iVar1 != 0)) {
-      FUN_00108f28(iVar1,2);
+      sound_set_play((SoundSet *)iVar1,2);
     }
     local_14 = float_add(local_14,*(undefined4 *)(param_1 + 0x27c));
     thunk_FUN_0011fd90(*(undefined4 *)(param_1 + 0x6c),iStack_1c,uStack_18,local_14);
@@ -21448,12 +21442,12 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
 }
 
 /* ==== 0x001226E8  (file offset 0x226E8)  FUN_001226e8 ================================================ */
-/* GUESS: what it does. Updates the item drops (combat_region_update tail-jumps here with
-   region->itemDrops at 0x00123124; `now` is not read): each item's time runs down and it disappears at 0;
-   one within 1.0 of the player (|dx| + |dy|, a double compare: `bcs` at 0x001227b8, written after the
-   comma) is picked up: health + 1.0, MP + 1 or munny, by its kind, and sound 5 of the app's effects
-   plays (while soundVolume is above 0, FUN_00108f28); in its last 5000 ms an item blinks (shown while time
-   % 200 >= 100; rt_sdiv divides, the remainder in the high word). Written from its disassembly. */
+/* GUESS: what it does. Updates the item drops (combat_region_update tail-jumps here with region->itemDrops
+   at 0x00123124; `now` is not read): each item's time runs down and it disappears at 0; one within 1.0
+   of the player (|dx| + |dy|, a double compare: `bcs` at 0x001227b8, written after the comma) is picked
+   up: health + 1.0, MP + 1 or munny, by its kind, and sound 5 of the app's effects plays (while
+   soundVolume is above 0, sound_set_play); in its last 5000 ms an item blinks (shown while time % 200
+   >= 100; rt_sdiv divides, the remainder in the high word). Written from its disassembly. */
 void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed)
 
 {
@@ -21489,8 +21483,8 @@ void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed)
       if (value = float_to_double(distance),
           double_compare_less(value,ONE_DOUBLE),
           DOUBLE_LESS(value,ONE_DOUBLE)) {       /* within 1.0 of the player: picked up */
-        if (drops->app->progress->soundVolume > 0 && drops->app->field_bc != 0)
-          FUN_00108f28((int32)drops->app->field_bc,5);
+        if (drops->app->progress->soundVolume > 0 && drops->app->effects != (SoundSet *)0x0)
+          sound_set_play(drops->app->effects,5);
         if (drops->kinds[i] == 0)
           FUN_0010d074((int32)drops->app->progress,0x3f800000);   /* health + 1.0 */
         else if (drops->kinds[i] == 1)

@@ -65,8 +65,11 @@ typedef struct KHApp {
                                         (FUN_0011b6f0) counts a launch (Progress launchCount) and
                                         clears it */
     uint32         bSuspended;       /* +0xb8 GUESS: set to 1 at EVT_APP_SUSPEND */
-    uint32         field_bc;         /* +0xbc */
-    uint32         field_c0;         /* +0xc0 */
+    struct SoundSet *effects;        /* +0xbc GUESS: name; the game's 13 sound effects (FUN_0010a5d8): 0
+                                        sora_jump, 1 sora_hit, 2 enemy_hit, 3 sora_swipe, 4 bad, 5 good, 6
+                                        keyblade, 7 explode, 8 water, 9 thud, 10 transition, 11
+                                        magic_alert, 12 magic_cast (sound_set_play) */
+    struct SoundSet *levelSounds;    /* +0xc0 GUESS: name; the level's sounds (the script's loadSounds) */
     char          *pBufc4;           /* +0xc4 a heap string (string_replace; freed in kh_OnAppStop): the
                                         level's name ("training", a progress record's name) */
     char          *pBufc8;           /* +0xc8 a heap string (string_replace; freed in kh_OnAppStop): the
@@ -85,10 +88,36 @@ typedef struct KHApp {
 /* ---- The app's context (GUESS: names) ----------------------------------------------------------------
  * KHApp.context (app_context_create, 0x14 bytes): passed first to most of the game's functions
  * (string_split, string_to_float, the scene loaders, ...), which mostly do not read it. */
+/* ---- A sound set (GUESS: names) -----------------------------------------------------------------------
+ * Sounds played through BREW IMedia (sound_set_create, 0x34 bytes): one entry per file, its media class
+ * from the file's extension (.mp3, .mid; .qcp is renamed and played as .pmd). KHApp keeps the game's
+ * effects and the level's sounds in two; the app context and the music players keep others. */
+typedef struct SoundEntry {
+    IMedia  *media;               /* +0x00 */
+    int32    looping;             /* +0x04 GUESS: name; set by FUN_0011bb58, which registers FUN_0011bb00
+                                     to play it again each time it ends; 0 at creation and after
+                                     sound_set_stop */
+    int32    volume;              /* +0x08 the MM_PARM_VOLUME it plays at: the set's when started; 50 at
+                                     creation */
+} SoundEntry;                     /* 0x0c bytes */
+
+typedef struct SoundSet {
+    struct KHApp *app;            /* +0x00 GetAppInstance() at creation */
+    SoundEntry **entries;         /* +0x04 `count` entries */
+    void   **data;                /* +0x08 GUESS: the files' contents when loaded into memory
+                                     (FUN_00109780, sound_set_create's last argument); 0 otherwise */
+    int32    count;               /* +0x0c */
+    uint8    unknown_10[0x1c];
+    int32    current;             /* +0x2c the sound last started (sound_set_play); -1 at creation and
+                                     after sound_set_stop */
+    int32    volume;              /* +0x30 the sounds' volume (sound_set_set_volume); 50 at creation */
+} SoundSet;                       /* 0x34 bytes */
+
 typedef struct AppContext {
     int32    type;                  /* +0x00 3 */
-    int32    sounds[2];             /* +0x04 two sound sets (FUN_0010bec4's kind, destroyed by FUN_0010ce08);
-                                     the Options screen sets their volume (FUN_0010a03c, Progress +0x598) */
+    int32    sounds[2];             /* +0x04 two sound sets (sound_set_create's kind, destroyed by
+                                     sound_set_destroy); the Options screen sets their volume
+                                     (sound_set_set_volume, Progress +0x598) */
     struct KHApp *app;            /* +0x0c */
     ISwerveObject *transform;     /* +0x10 a Swerve Transform (ISwerve::CreateObject) */
 } AppContext;                     /* 0x14 bytes */
@@ -420,11 +449,12 @@ typedef struct Progress {
                                      uid=), set once by progress_set_user_id */
     int32    soundVolume;           /* +0x594 GUESS: name; the sound effects' volume: 40 at creation, the
                                      menu (FUN_00101ad8) cycles it through 20, 40, 60 and 0; set on the
-                                     app's effects (field_bc) with FUN_0010a03c, and an effect plays
-                                     (FUN_00108f28) only while it is above 0; saved with the settings */
+                                     app's effects (KHApp.effects) with sound_set_set_volume, and an
+                                     effect plays (sound_set_play) only while it is above 0; saved with
+                                     the settings */
     int32    musicVolume;           /* +0x598 GUESS: name; the music's volume: 40 at creation, cycled the
-                                     same way; set with FUN_0010a03c on the context's two sound sets, a
-                                     level's and the training's music; saved with the settings */
+                                     same way; set with sound_set_set_volume on the context's two sound
+                                     sets, a level's and the training's music; saved with the settings */
     int32    spells[3];             /* +0x59c 0 at the start; set for each spell the player has (GUESS: names);
                                      character_on_key casts only those */
     int32    showEnemyHealth;       /* +0x5a8 GUESS: name (a fourth ability after the spells, a "scan"); 1

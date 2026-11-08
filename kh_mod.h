@@ -509,7 +509,7 @@ void ui_element_move_by(UIElement *element,int16 dy);   /* 0x00108840 GUESS: nam
 void FUN_0010888c(int *param_1,void *param_2,int *param_3,void *param_4,void *param_5);
 int32 text_box_scroll_down(TextBox *box);   /* 0x00108E8C GUESS: name, see kh_mod.c */
 int32 text_box_scroll_up(TextBox *box);   /* 0x00108ED8 GUESS: name, see kh_mod.c */
-int FUN_00108f28(int param_1,int param_2);
+int32 sound_set_play(SoundSet *set,int32 index);   /* 0x00108F28 GUESS: name, see kh_mod.c */
 void screen_stack_close_all(ScreenStack *stack);   /* 0x00108FA0 GUESS: name */
 void screen_stack_close_top(ScreenStack *stack,int32 redraw);   /* 0x00108FCC GUESS: name */
 void screen_stack_open(ScreenStack *stack,int32 *screen);   /* 0x001090B8 GUESS: name */
@@ -532,9 +532,9 @@ int32 text_box_set_text(TextBox *box,AECHAR *text,int32 narrow);   /* 0x00109B4C
 void text_box_set_text_id(TextBox *box,int32 textId);   /* 0x00109F00 GUESS: name, see kh_mod.c */
 void text_line_set_text(TextLine *line,AECHAR *text);   /* 0x00109F48 GUESS: name, see kh_mod.c */
 void text_line_set_text_id(TextLine *line,int32 textId);   /* 0x00109FF8 GUESS: name, see kh_mod.c */
-void FUN_0010a03c(int param_1,undefined4 param_2);
+int32 sound_set_set_volume(SoundSet *set,int32 volume);   /* 0x0010A03C GUESS: name, see kh_mod.c */
 void FUN_0010a080(int param_1);
-void FUN_0010a0d0(int param_1);
+int32 sound_set_stop(SoundSet *set);   /* 0x0010A0D0 GUESS: name, see kh_mod.c */
 void game_pause(KHApp *app);   /* 0x0010A124 GUESS: name, see kh_mod.c */
 int FUN_0010a12c(int param_1,undefined4 param_2,byte *param_3);
 TextBox * text_box_layout(TextBox *box);   /* 0x0010A214 GUESS: name, see kh_mod.c */
@@ -567,7 +567,7 @@ int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
 Screen * screen_create(Screen *screen,ScreenStack *stack,uint8 framed);   /* 0x0010BD7C GUESS: name, see kh_mod.c */
 int * FUN_0010be14(int *param_1);
 UIList * list_create(UIList *list,int32 capacity,int32 growBy);   /* 0x0010BE6C GUESS: name, see kh_mod.c */
-undefined8 FUN_0010bec4(int *param_1,int param_2,int param_3,int param_4);
+undefined8 sound_set_create(int *param_1,int param_2,int param_3,int param_4);   /* 0x0010BEC4 GUESS: name: a SoundSet (see kh_types.h) */
 UIElement * ui_element_create(UIElement *element,int16 x,int16 y,int16 width,int16 height,int32 *owner);   /* 0x0010C168 GUESS: name, see kh_mod.c */
 AppContext * app_context_create(AppContext *context,int32 *error);   /* 0x0010C218 GUESS: name, see kh_mod.c */
 void hitsphere_destroy(Hitsphere *hitsphere,int32 freeIt);   /* 0x0010C2A8 GUESS: name, see kh_mod.c */
@@ -606,7 +606,7 @@ int32 enemy_is_waiting(Enemy *enemy);   /* 0x00119AF4 (no Ghidra function; a vir
 void enemy_enter_mode_3(Enemy *enemy);   /* 0x0011F260 (no Ghidra function; a virtual method) */
 void enemy_enter_mode_2(Enemy *enemy);   /* 0x0011F26C (no Ghidra function; a virtual method) */
 void enemy_enter_mode_1(Enemy *enemy);   /* 0x0011F624 (no Ghidra function; a virtual method) */
-void FUN_0010ce08(undefined4 *param_1,int param_2);
+void sound_set_destroy(undefined4 *param_1,int param_2);   /* 0x0010CE08 GUESS: name: a SoundSet (see kh_types.h) */
 void app_context_destroy(AppContext *context,int32 freeIt);   /* 0x0010CEE4 GUESS: name, see kh_mod.c */
 void progress_add_experience(Progress *progress,int32 amount);   /* 0x0010CFC4 GUESS: name */
 void FUN_0010d074(int param_1,undefined4 param_2);
