@@ -756,8 +756,8 @@ undefined4 FUN_0011b5f0(int param_1);
 void settings_load(int param_1,undefined4 param_2);   /* 0x0011B6F0 GUESS: name, see kh_mod.c */
 void FUN_0011b890(int param_1,int *param_2);
 undefined4 FUN_0011ba0c(int param_1,undefined4 param_2);
-void FUN_0011bb00(undefined4 *param_1,int param_2);
-void FUN_0011bb58(int param_1,int param_2);
+int32 sound_entry_on_notify(SoundEntry *entry,AEEMediaCmdNotify *notify);   /* 0x0011BB00 GUESS: name, see kh_mod.c */
+int32 sound_set_loop(SoundSet *set,int32 index);   /* 0x0011BB58 GUESS: name, see kh_mod.c */
 int FUN_0011bb9c(int param_1,undefined4 *param_2);
 uint64 enemy_roam(Enemy *enemy,int32 now,uint32 walkRange);   /* 0x0011C330 GUESS: name, see kh_mod.c */
 void FUN_0011c708(int param_1,int param_2,int param_3);
@@ -769,7 +769,7 @@ void hitsphere_play_animation(Hitsphere *hitsphere,int32 index,int32 loop);   /*
 void enemy_play_animation(Enemy *enemy,int32 index,int32 loop);   /* 0x0011CC14 GUESS: name, see kh_mod.c */
 int32 character_play_animation(Character *character,int32 index,int32 channel,int32 loop);   /* 0x0011CC64 GUESS: names */
 undefined8 FUN_0011ceac(int param_1);
-undefined4 FUN_0011cfdc(int param_1,undefined4 param_2,int param_3);
+undefined4 app_context_play_music(int param_1,undefined4 param_2,int param_3);   /* 0x0011CFDC GUESS: name, see kh_mod.c */
 void FUN_0011d040(int param_1,undefined4 param_2,void *param_3);
 int32 animations_play(Animations *animations,int32 index,int32 loop);   /* 0x0011D104 GUESS: names */
 int32 collision_shape_poly_contains(CollisionShape *shape,uint32 x,uint32 y);   /* 0x0011D168 GUESS: name, see kh_mod.c */
@@ -830,7 +830,7 @@ void motion_entity_set_heading(MotionEntity *entity,uint32 heading);   /* 0x0012
 void camera_set_yaw(Camera *camera,uint32 angle);   /* 0x001202CC GUESS: name, see kh_mod.c */
 uint32 float_sin(uint32 angle);   /* 0x001202F4 GUESS: name, see kh_mod.c */
 uint32 float_sqrt(uint32 value);   /* 0x00120308 GUESS: name, see kh_mod.c */
-void FUN_0012031c(int *param_1,int param_2);
+void app_context_set_music(int *param_1,int param_2);   /* 0x0012031C GUESS: name, see kh_mod.c */
 void FUN_00120450(undefined4 *param_1);
 void animations_stop(Animations *animations,int32 index,int32 immediately);   /* 0x001204B0 GUESS: name */
 char * string_replace(AppContext *context,const char *text,char **slot);   /* 0x001204F0 GUESS: name, see kh_mod.c */

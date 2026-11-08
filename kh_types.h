@@ -97,9 +97,9 @@ typedef struct KHApp {
  * effects and the level's sounds in two; the app context and the music players keep others. */
 typedef struct SoundEntry {
     IMedia  *media;               /* +0x00 */
-    int32    looping;             /* +0x04 GUESS: name; set by FUN_0011bb58, which registers FUN_0011bb00
-                                     to play it again each time it ends; 0 at creation and after
-                                     sound_set_stop */
+    int32    looping;             /* +0x04 GUESS: name; set by sound_set_loop, which registers
+                                     sound_entry_on_notify to play it again each time it ends; 0 at
+                                     creation and after sound_set_stop */
     int32    volume;              /* +0x08 the MM_PARM_VOLUME it plays at: the set's when started; 50 at
                                      creation */
 } SoundEntry;                     /* 0x0c bytes */
@@ -118,8 +118,9 @@ typedef struct SoundSet {
 } SoundSet;                       /* 0x34 bytes */
 
 typedef struct AppContext {
-    int32    type;                  /* +0x00 3 */
-    int32    sounds[2];             /* +0x04 two sound sets (sound_set_create's kind, destroyed by
+    int32    music;                 /* +0x00 GUESS: name; the music playing (app_context_set_music): 0
+                                     "training.mid", 1 the level's, 2 death; 3 at creation */
+    struct SoundSet *sounds[2];      /* +0x04 two sound sets (sound_set_create's kind, destroyed by
                                      sound_set_destroy); the Options screen sets their volume
                                      (sound_set_set_volume, Progress +0x598) */
     struct KHApp *app;            /* +0x0c */

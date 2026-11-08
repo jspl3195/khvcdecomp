@@ -1319,12 +1319,12 @@ LAB_00104fa4:
               uVar23 = TEXT_DOWNLOAD;
               goto LAB_001024bc;
             }
-                    /* 0x1050e0 bl FUN_0012031c: the function only uses r0/r1 (Ghidra's prototype
+                    /* 0x1050e0 bl app_context_set_music: the function only uses r0/r1 (Ghidra's prototype
                        had 4 parameters: it never reads param_3, and only copies param_4 into a
                        stack local that is never read: a register spill). r2 here is still the word
                        loaded at 0x10508c for the 0x6f branch (FUN_00109a10 at 0x1050a4); r3 is
                        whatever ui_element_add_child left in it. */
-            FUN_0012031c((undefined4)((KHApp *)*param_1)->context,1);
+            app_context_set_music((undefined4)((KHApp *)*param_1)->context,1);
             FUN_00109a10(iVar9,2,0,0);
             if (param_2 != 0x70) {
               FUN_00109a10(iVar9,1,uVar14,0x71);
@@ -1954,11 +1954,11 @@ LAB_00101db4:
     uVar10 = screen_stack_top(param_1);
     iVar7 = ui_element_find_child(uVar10,0xc9);
     text_line_set_text_id(*(undefined4 *)(iVar7 + 0x30),pvVar16);
-    iVar7 = ((KHApp *)*param_1)->context->sounds[0];
+    iVar7 = (int)((KHApp *)*param_1)->context->sounds[0];
     if (iVar7 != 0) {
       sound_set_set_volume((SoundSet *)iVar7,((KHApp *)*param_1)->progress->musicVolume);
     }
-    iVar7 = ((KHApp *)*param_1)->context->sounds[1];
+    iVar7 = (int)((KHApp *)*param_1)->context->sounds[1];
     if (iVar7 == 0) {
       return local_34;
     }
@@ -2312,7 +2312,7 @@ LAB_001042b8:
                        as stores into local_dc[0..3] (the outgoing argument area) instead of passing them */
     FUN_001053a8(param_1,iVar9,5,local_74 + 0xb,local_74 + 6,local_74 + 1,3,uVar10,uVar11,local_dc[0],
                  local_dc[1],local_dc[2],local_dc[3]);
-    FUN_0012031c((undefined4)((KHApp *)*param_1)->context,0);
+    app_context_set_music((undefined4)((KHApp *)*param_1)->context,0);
     break;
   case 4:
     game_pause(*param_1);
@@ -5621,8 +5621,8 @@ void FUN_0010a080(int param_1)
 
 /* ==== 0x0010A0D0  (file offset 0x0A0D0)  sound_set_stop ============================================== */
 /* GUESS: names. Stops every sound of the set (IMedia Stop), clears their looping flags (so the notify
-   callback FUN_0011bb00 does not start them again) and leaves the set with no current sound. Returns r0 as
-   kh.mod leaves it: -1, the value stored last (0x0010a118); Ghidra had declared it void. */
+   callback sound_entry_on_notify does not start them again) and leaves the set with no current sound.
+   Returns r0 as kh.mod leaves it: -1, the value stored last (0x0010a118); Ghidra had declared it void. */
 int32 sound_set_stop(SoundSet *set)
 
 {
@@ -6925,9 +6925,9 @@ AppContext * app_context_create(AppContext *context,int32 *error)
                        GetAppInstance()->pSwerve (KHApp+0x64): creates a Transform (class 26 = 0x1a,
                        swv_Create_Transform 0x0103b68c) into context->transform. */
   *error = (*app->pSwerve->pvt->CreateObject)(app->pSwerve,SWV_TRANSFORM,(void **)&context->transform);
-  context->sounds[0] = 0;
-  context->type = 3;
-  context->sounds[1] = 0;
+  context->sounds[0] = (struct SoundSet *)0x0;
+  context->music = 3;
+  context->sounds[1] = (struct SoundSet *)0x0;
   return context;
 }
 
@@ -7574,13 +7574,13 @@ void app_context_destroy(AppContext *context,int32 freeIt)
 {
   if (context->transform != (ISwerveObject *)0x0)
     (*((ISwerveObject *)context->transform)->pvt->Release)((ISwerveObject *)context->transform);
-  if (context->sounds[0] != 0) {
-    sound_set_destroy((SoundSet *)context->sounds[0],1);
-    context->sounds[0] = 0;
+  if (context->sounds[0] != (struct SoundSet *)0x0) {
+    sound_set_destroy(context->sounds[0],1);
+    context->sounds[0] = (struct SoundSet *)0x0;
   }
-  if (context->sounds[1] != 0) {
-    sound_set_destroy((SoundSet *)context->sounds[1],1);
-    context->sounds[1] = 0;
+  if (context->sounds[1] != (struct SoundSet *)0x0) {
+    sound_set_destroy(context->sounds[1],1);
+    context->sounds[1] = (struct SoundSet *)0x0;
   }
   if (freeIt != 0)
     helper_free(context);
@@ -8415,7 +8415,7 @@ boolean kh_HandleEvent(KHApp *pMe,AEEEvent eCode,uint16 wParam,uint32 dwParam)
     }
     if (eCode == 3) {
       FUN_0011e154(pMe);
-      FUN_0012031c(pMe->context,*(undefined4 *)pMe->context);
+      app_context_set_music((int *)pMe->context,pMe->context->music);
       engine_memory_set_caching(pMe->pSwerve,1);
       return '\x01';
     }
@@ -9461,9 +9461,9 @@ uint32 enemy_take_hit(Enemy *enemy,int32 targetNumber,uint32 damage,uint32 x,uin
 
 /* ==== 0x0010F1FC  (file offset 0x0F1FC)  FUN_0010f1fc ================================================ */
 /* A routine Ghidra has no function for (only reached by tail jumps, from FUN_0010d074 at 0x0010d188 and
-   FUN_0011bb9c at 0x0011c310, so Ghidra pasted its code there): written from its disassembly
-   (0x0010f1fc - 0x0010f238). With the character (the game's +0x1f8): FUN_0010ed54 with the object
-   0x21BF9442 names and 0x0493FC17, then the tail jump to FUN_0012031c(+0x94, 2) (GUESS: the death music,
+   FUN_0011bb9c at 0x0011c310, so Ghidra pasted its code there): written from its disassembly (0x0010f1fc -
+   0x0010f238). With the character (the game's +0x1f8): FUN_0010ed54 with the object 0x21BF9442 names and
+   0x0493FC17, then the tail jump to app_context_set_music(+0x94, 2) (GUESS: the death music,
    "death.mid"). */
 void FUN_0010f1fc(int32 character)
 
@@ -9471,7 +9471,7 @@ void FUN_0010f1fc(int32 character)
   int32 object = (int32)game_find_object((Game *)((KHApp *)*(int32 *)(character + 0x84))->pGame,WORD_HEXADECIMAL_21BF9442);
 
   FUN_0010ed54(*(int32 *)(*(int32 *)(character + 0x84) + 0xa4),*(int32 *)(object + 8),WORD_HEXADECIMAL_0493FC17);
-  FUN_0012031c((int *)((KHApp *)*(int32 *)(character + 0x84))->context,2);
+  app_context_set_music((int *)((KHApp *)*(int32 *)(character + 0x84))->context,2);
 }
 
 /* ==== 0x0010F4D0  (file offset 0x0F4D0)  FUN_0010f4d0 ================================================ */
@@ -14884,8 +14884,8 @@ void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text)
 }
 
 /* ==== 0x001195F8  (file offset 0x195F8)  intro_start ================================================= */
-/* GUESS: name. Starts the current stage: time 0; stage 0 just runs; stage 1 plays its animation
-   (after intro_find_animations and FUN_001132a8); stage 2 runs after FUN_0012031c(app->context, 0) and
+/* GUESS: name. Starts the current stage: time 0; stage 0 just runs; stage 1 plays its animation (after
+   intro_find_animations and FUN_001132a8); stage 2 runs after app_context_set_music(app->context, 0) and
    intro_find_animations. */
 void intro_start(Intro *intro)
 
@@ -14899,7 +14899,7 @@ void intro_start(Intro *intro)
     animations_play(intro->app->animations,intro->animation,0);
   }
   else if (intro->stage == 2) {
-    FUN_0012031c((int32 *)intro->app->context,0);
+    app_context_set_music((int32 *)intro->app->context,0);
     intro->running = 1;
     intro_find_animations(intro);
   }
@@ -16478,60 +16478,43 @@ undefined4 FUN_0011ba0c(int param_1,undefined4 param_2)
   return local_14;
 }
 
-/* ==== 0x0011BB00  (file offset 0x1BB00)  FUN_0011bb00 ================================================ */
-void FUN_0011bb00(undefined4 *param_1,int param_2)
+/* ==== 0x0011BB00  (file offset 0x1BB00)  sound_entry_on_notify ======================================= */
+/* GUESS: names. A looping sound's IMedia notify callback (registered by sound_set_loop with the entry as
+   its user data): when the media reports its play done (nCmd 4 MM_CMD_PLAY, nStatus 2 MM_STATUS_DONE) and
+   the entry is still looping (sound_set_stop clears it), plays it again (IMedia Play) and sets its volume
+   (SetMediaParm MM_PARM_VOLUME, 4; the binary's tail jump at 0x0011bb54). This is how the music loops.
+   Returns r0 as kh.mod leaves it: the command, or the status, when it is not a finished play, 0 when not
+   looping, else SetMediaParm's result; BREW does not read it. */
+int32 sound_entry_on_notify(SoundEntry *entry,AEEMediaCmdNotify *notify)
 
 {
-  int iVar1;
-  bool bVar2;
-  
-  iVar1 = *(int *)(param_2 + 8);
-  bVar2 = iVar1 == 4;
-  if (bVar2) {
-    iVar1 = *(int *)(param_2 + 0x10);
-  }
-  if (bVar2 && iVar1 == 2) {
-    if (param_1[1] != 0) {
-      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-      (*((IMedia *)*param_1)->pvt->Play)((IMedia *)*param_1);
-                    /* WARNING: Could not recover jumptable at 0x0011bb54. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      (*((IMedia *)*param_1)->pvt->SetMediaParm)((IMedia *)*param_1,4,param_1[2],0);
-      return;
-    }
-    return;
-  }
-  return;
+  if (notify->nCmd != 4)
+    return notify->nCmd;
+  if (notify->nStatus != 2)
+    return notify->nStatus;
+  if (entry->looping == 0)
+    return 0;
+  (*entry->media->pvt->Play)(entry->media);
+  return (*entry->media->pvt->SetMediaParm)(entry->media,4,entry->volume,0);
 }
 
-/* ==== 0x0011BB58  (file offset 0x1BB58)  FUN_0011bb58 ================================================ */
-void FUN_0011bb58(int param_1,int param_2)
+
+/* ==== 0x0011BB58  (file offset 0x1BB58)  sound_set_loop ============================================== */
+/* GUESS: names. Makes sound `index` of the set loop: for 0 <= index < count, sets its entry's looping flag
+   and registers sound_entry_on_notify on its IMedia, with the entry as user data (the binary's tail jump
+   to RegisterNotify at 0x0011bb94), returning RegisterNotify's result; otherwise returns `set` as r0 holds
+   it. The music players (app_context_play_music, app_context_set_music) call it for their one-file sets.
+   Ghidra had listed r2, which holds the count, as an input. */
+int32 sound_set_loop(SoundSet *set,int32 index)
 
 {
-  int param_3;
-  /* not parameters: param_3. kh.mod reads r2 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  int *piVar1;
-  bool bVar2;
-  
-  bVar2 = param_2 == 0;
-  if (-1 < param_2) {
-    param_3 = *(int *)(param_1 + 0xc);
-    bVar2 = param_3 == param_2;
-  }
-  if (!bVar2 && (-1 < param_2 && param_2 <= param_3)) {
-    *(undefined4 *)(*(int *)(*(int *)(param_1 + 4) + param_2 * 4) + 4) = 1;
-    piVar1 = (int *)**(undefined4 **)(*(int *)(param_1 + 4) + param_2 * 4);
-                    /* WARNING: Could not recover jumptable at 0x0011bb94. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-    /* Ghidra had dropped arguments; restored from the disassembly (r2 = the sound entry, 0x0011bb94) */
-    (*((IMedia *)piVar1)->pvt->RegisterNotify)
-        ((IMedia *)piVar1,(PFNMEDIANOTIFY)FUN_0011bb00,
-         (void *)*(int *)(*(int *)(param_1 + 4) + param_2 * 4));
-    return;
-  }
-  return;
+  if (index < 0 || set->count <= index)
+    return (int32)set;
+  set->entries[index]->looping = 1;
+  return (*set->entries[index]->media->pvt->RegisterNotify)
+             (set->entries[index]->media,(PFNMEDIANOTIFY)sound_entry_on_notify,set->entries[index]);
 }
+
 
 /* ==== 0x0011BB9C  (file offset 0x1BB9C)  FUN_0011bb9c ================================================ */
 /* WARNING: Removing unreachable block (ram,0x001203ac) */
@@ -16545,7 +16528,7 @@ int FUN_0011bb9c(int param_1,undefined4 *param_2)
 
 {
   int deathResult;    /* never set: after the tail jump to FUN_0010f1fc (0x0011c310) the binary returns
-                         r0 as FUN_0012031c leaves it */
+                         r0 as app_context_set_music leaves it */
   undefined4 param_3;
   undefined4 param_4;
   /* not parameters: param_3, param_4. kh.mod reads r2 / r3 only on paths where it was already written, or as a
@@ -17414,10 +17397,14 @@ undefined8 FUN_0011ceac(int param_1)
   return MAKE_WORDS(uVar7,auStack_1c[0],param_1);
 }
 
-/* ==== 0x0011CFDC  (file offset 0x1CFDC)  FUN_0011cfdc ================================================ */
-/* returns r0 as kh.mod leaves it (the result of the final sound_set_play call); Ghidra had declared it
-   void, but callers use r0 after the call */
-undefined4 FUN_0011cfdc(int param_1,undefined4 param_2,int param_3)
+/* ==== 0x0011CFDC  (file offset 0x1CFDC)  app_context_play_music ====================================== */
+/* GUESS: names (not yet rewritten). Plays a music file (`param_2`) in the app context's second sound set
+   (sounds[1]): the old set is destroyed, a one-file set created (sound_set_create) at the music volume
+   (Progress musicVolume), made to loop when `param_3` is set (sound_set_loop) and started
+   (sound_set_play). Returns r0 as kh.mod leaves it (the result of the final sound_set_play call); Ghidra
+   had declared it void, but callers use r0 after the call. Called by app_context_set_music for the level's
+   music and the death music. */
+undefined4 app_context_play_music(int param_1,undefined4 param_2,int param_3)
 
 {
   undefined4 param_4;
@@ -17436,7 +17423,7 @@ undefined4 FUN_0011cfdc(int param_1,undefined4 param_2,int param_3)
   *(undefined4 *)(param_1 + 8) = uVar1;
   sound_set_set_volume((SoundSet *)uVar1,((KHApp *)*(int *)(param_1 + 0xc))->progress->musicVolume);
   if (param_3 != 0) {
-    FUN_0011bb58(*(undefined4 *)(param_1 + 8),0);
+    sound_set_loop((SoundSet *)*(undefined4 *)(param_1 + 8),0);
   }
   uVar1 = sound_set_play((SoundSet *)*(undefined4 *)(param_1 + 8),0);
   return uVar1;
@@ -19813,8 +19800,13 @@ uint32 float_sqrt(uint32 value)
   return double_to_float(root);
 }
 
-/* ==== 0x0012031C  (file offset 0x2031C)  FUN_0012031c ================================================ */
-void FUN_0012031c(int *param_1,int param_2)
+/* ==== 0x0012031C  (file offset 0x2031C)  app_context_set_music ======================================= */
+/* GUESS: names (not yet rewritten). Switches the music and keeps which one plays in AppContext.music
+   (`param_2`): 0 "training.mid" in sounds[0] (created once, looping; the title and the training level), 1
+   the level's music ("<level>.mid", KHApp pBufc4, unless coming from 0 into the training level, which
+   keeps it), 2 "death.mid"; 1 and 2 through app_context_play_music, in sounds[1]. kh_HandleEvent replays
+   the current one on resume. */
+void app_context_set_music(int *param_1,int param_2)
 
 {
   int param_4;
@@ -19832,7 +19824,7 @@ void FUN_0012031c(int *param_1,int param_2)
       iVar1 = sound_set_create(0,&local_18,1,1).low;
       param_1[1] = iVar1;
       sound_set_set_volume((SoundSet *)iVar1,((KHApp *)param_1[3])->progress->musicVolume);
-      FUN_0011bb58(param_1[1],0);
+      sound_set_loop((SoundSet *)param_1[1],0);
       sound_set_play((SoundSet *)param_1[1],0);
     }
   }
@@ -19851,12 +19843,12 @@ void FUN_0012031c(int *param_1,int param_2)
         (*g_pHelperFuncs->sprintf)
                   (p,(int32)STRING_PERCENT_S_PERCENT_S,*(undefined4 *)(param_1[3] + 0xc4),
                    (int32)STRING_DOT_MID);
-        FUN_0011cfdc(param_1,p,1);
+        app_context_play_music(param_1,p,1);
         helper_free(p);
       }
     }
     else if (param_2 == 2) {
-      FUN_0011cfdc(param_1,(int32)STRING_DEATH_DOT_MID,1);
+      app_context_play_music(param_1,(int32)STRING_DEATH_DOT_MID,1);
     }
   }
   *param_1 = param_2;
