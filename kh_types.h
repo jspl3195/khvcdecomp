@@ -622,8 +622,10 @@ typedef struct MotionEntity {
     uint8  unknown_074[0x10];
     struct KHApp *app;            /* +0x084 LevelObject.app */
     uint8  unknown_088[0x88];
-    int32    field_110;             /* +0x110 0 at creation */
-    int32    field_114;             /* +0x114 0 at creation */
+    uint32  *speeds;              /* +0x110 GUESS: name; floats (their bits) per ms, one per movement mode
+                                     (the node's user parameter 0x3488ACED / 1000, motion_entity_setup);
+                                     0 at creation */
+    uint32  *speedsCopy;          /* +0x114 GUESS: name; the same values, kept apart; only freed */
     uint8  unknown_118[0x08];
     int32    field_120;             /* +0x120 0 at creation (character_create) */
     int32    field_124;             /* +0x124 0 at creation (character_create) */
@@ -638,8 +640,10 @@ typedef struct MotionEntity {
     uint8  unknown_144[0x10];
     int32    turning;               /* +0x154 0 at creation; 1 while a turn started by motion_entity_start_turn
                                      runs */
-    ISwerveObject *field_158;     /* +0x158 0 at creation; a Swerve object that is handed &pitch through its
-                                     slot +0x5c whenever the pitch changes (GUESS: a tilting child node) */
+    ISwerveObject *pitchNode;     /* +0x158 GUESS: name; 0 at creation; its node's first child as a
+                                     Transformable (motion_entity_setup), handed &pitch (SetOrientation,
+                                     slot +0x5c) whenever the pitch changes; released by
+                                     motion_entity_destroy */
     uint8  unknown_15c[0x64];
     uint32 turnAngle;             /* +0x1c0 a float (its bits): the angle left to turn, positive */
     uint32 turnSpeed;             /* +0x1c4 a float (its bits): the turn speed, its sign the direction */

@@ -578,11 +578,11 @@ void script_command_destroy(ScriptCommand *command,int32 freeIt);   /* 0x0010C62
 void item_drops_destroy(ItemDrops *drops,int32 freeSelf);   /* 0x0010C66C GUESS: name, see kh_mod.c */
 void script_sequence_destroy(ScriptSequence *sequence,int32 freeIt);   /* 0x0010C6B4 GUESS: name, see kh_mod.c */
 void enemy_destroy(Enemy *enemy,int32 freeIt);   /* 0x0010C720 GUESS: name, see kh_mod.c */
-void FUN_0010c73c(int param_1,int param_2);
+void camera_destroy(int param_1,int param_2);   /* 0x0010C73C GUESS: name, see kh_mod.c */
 void combat_region_destroy(CombatRegion *region,int32 freeIt);   /* 0x0010C790 GUESS: name, see kh_mod.c */
 void progress_destroy(Progress *progress,int32 freeSelf);   /* 0x0010C800 GUESS: name, see kh_mod.c */
 void motion_entity_destroy(MotionEntity *entity,int32 freeIt);   /* 0x0010C8B8 GUESS: name, see kh_mod.c */
-void FUN_0010c92c(int param_1,int param_2);
+void character_destroy(int param_1,int param_2);   /* 0x0010C92C GUESS: name, see kh_mod.c */
 void animations_destroy(Animations *animations,int32 freeIt);   /* 0x0010C9DC GUESS: name, see kh_mod.c */
 void boss_combat_region_destroy(BossCombatRegion *region,int32 freeIt);   /* 0x0010CA1C GUESS: name, see kh_mod.c */
 void level_object_destroy(int param_1,int param_2);   /* 0x0010CAB0 GUESS: name: a LevelObject's destructor (see kh_types.h) */
@@ -725,7 +725,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text);   /* 0
 void enemy_setup_type(int param_1,undefined4 param_2);   /* 0x001174AC GUESS: name, see kh_mod.c */
 void FUN_00117d30(int param_1,int *param_2);
 void combat_region_setup(CombatRegion *region,int32 context);   /* 0x00117DD8 GUESS: name */
-undefined8 FUN_001180c4(int param_1,uint param_2);
+undefined8 motion_entity_setup(int param_1,uint param_2);   /* 0x001180C4 GUESS: name, see kh_mod.c */
 void character_setup(Character *character,int32 *error);   /* 0x00118318 GUESS: name */
 void FUN_00118640(int param_1,int *param_2);
 void FUN_0011868c(int param_1,undefined4 param_2);

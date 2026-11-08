@@ -6317,8 +6317,9 @@ MotionEntity * motion_entity_create(MotionEntity *entity,ISwerveObject *node,cha
   entity->kind = 1;
   entity->orbitCenter = (LevelObject *)0x0;
   entity->field_12c = 0;
-  entity->field_158 = (ISwerveObject *)0x0;
-  entity->field_110 = entity->field_114 = entity->turning = 0;
+  entity->pitchNode = (ISwerveObject *)0x0;
+  entity->turning = 0;
+  entity->speeds = entity->speedsCopy = (uint32 *)0x0;
   entity->turnAngle = entity->turnSpeed = 0;
   return entity;
 }
@@ -6907,10 +6908,10 @@ void FUN_0010c2c4(int *param_1,int param_2)
     (*((ISwerveObject *)param_1[0x8b])->pvt->Release)((ISwerveObject *)param_1[0x8b]);
   }
   if (param_1[0x7e] != 0) {
-    FUN_0010c92c(param_1[0x7e],1);
+    character_destroy(param_1[0x7e],1);
   }
   if (param_1[0x7c] != 0) {
-    FUN_0010c73c(param_1[0x7c],1);
+    camera_destroy(param_1[0x7c],1);
   }
   if (param_1[3] != 0) {
     app_context_remove_object((int)((KHApp *)param_1[0x85])->context,(int *)param_1[3],(int *)*param_1,1);
@@ -7080,8 +7081,12 @@ void enemy_destroy(Enemy *enemy,int32 freeIt)
 }
 
 
-/* ==== 0x0010C73C  (file offset 0x0C73C)  FUN_0010c73c ================================================ */
-void FUN_0010c73c(int param_1,int param_2)
+/* ==== 0x0010C73C  (file offset 0x0C73C)  camera_destroy ============================================== */
+/* GUESS: name (not yet rewritten). The camera's destructor (kind 3; the game's teardown, for
+   Game.camera): releases its two Swerve objects (+0x1c8, the pitch node's grandchild, and +0x204, the
+   Swerve object of class 0x15 its set-up creates), then the MotionEntity part (motion_entity_destroy
+   with 0) and the camera itself when `param_2` is set. */
+void camera_destroy(int param_1,int param_2)
 
 {
   if (*(int **)(param_1 + 0x1c8) != (int *)0x0) {
@@ -7161,26 +7166,30 @@ void progress_destroy(Progress *progress,int32 freeSelf)
 
 /* ==== 0x0010C8B8  (file offset 0x0C8B8)  motion_entity_destroy ======================================= */
 /* GUESS: names. The MotionEntity's destructor (kind 1, and the base of the character's and the camera's
-   destructors, which call it with 0): frees field_110 and field_114 (the helper table's free) when set,
-   releases field_158 (an ISwerveObject), then the LevelObject part (level_object_destroy), and the
+   destructors, which call it with 0): frees its speeds and their copy (the helper table's free) when
+   set, releases its pitchNode, then the LevelObject part (level_object_destroy), and the
    entity itself when `freeIt` is set (the binary's tail jump to helper_free at 0x0010c920). */
 void motion_entity_destroy(MotionEntity *entity,int32 freeIt)
 
 {
-  if (entity->field_110 != 0)
-    (*g_pHelperFuncs->free)((void *)entity->field_110);
-  if (entity->field_114 != 0)
-    (*g_pHelperFuncs->free)((void *)entity->field_114);
-  if (entity->field_158 != (ISwerveObject *)0x0)
-    (*entity->field_158->pvt->Release)(entity->field_158);
+  if (entity->speeds != (uint32 *)0x0)
+    (*g_pHelperFuncs->free)(entity->speeds);
+  if (entity->speedsCopy != (uint32 *)0x0)
+    (*g_pHelperFuncs->free)(entity->speedsCopy);
+  if (entity->pitchNode != (ISwerveObject *)0x0)
+    (*entity->pitchNode->pvt->Release)(entity->pitchNode);
   level_object_destroy((int)entity,0);
   if (freeIt != 0)
     helper_free(entity);
 }
 
 
-/* ==== 0x0010C92C  (file offset 0x0C92C)  FUN_0010c92c ================================================ */
-void FUN_0010c92c(int param_1,int param_2)
+/* ==== 0x0010C92C  (file offset 0x0C92C)  character_destroy =========================================== */
+/* GUESS: name (not yet rewritten). The player character's destructor (kind 2; the game's teardown, for
+   Game.character): takes its +0x1f0 object out of the scene (app_context_remove_object), releases its
+   Swerve objects (+0x1e0, +0x1e4, ..., field_1ec, field_1dc), then the MotionEntity part
+   (motion_entity_destroy with 0) and the character itself when `param_2` is set. */
+void character_destroy(int param_1,int param_2)
 
 {
   undefined4 param_4;
@@ -13979,7 +13988,7 @@ void FUN_00117d30(int param_1,int *param_2)
   int iVar2;
   int *local_10;
 
-  FUN_001180c4(param_1,param_2);
+  motion_entity_setup(param_1,param_2);
   piVar1 = *(int **)(*(int *)(param_1 + 0x84) + 100);
   iVar2 = (*((ISwerve *)piVar1)->pvt->CreateObject)((ISwerve *)piVar1,0x15,(void **)(param_1 + 0x204));
   *param_2 = iVar2;
@@ -14054,8 +14063,14 @@ void combat_region_setup(CombatRegion *region,int32 context)
   region->itemDrops = item_drops_create((ItemDrops *)0x0,region->field_120 < 5 ? 0x3f800000 : 0x40000000);
 }
 
-/* ==== 0x001180C4  (file offset 0x180C4)  FUN_001180c4 ================================================ */
-undefined8 FUN_001180c4(int param_1,uint param_2)
+/* ==== 0x001180C4  (file offset 0x180C4)  motion_entity_setup ========================================= */
+/* GUESS: name (not yet rewritten). The MotionEntity's set-up from its scene node (kind 1, and the start
+   of the character's and the camera's): pitchNode is its node's first child as a Transformable
+   (QueryInterface 9), the orientations cleared, the stored pitch and heading applied
+   (motion_entity_pitch_by, motion_entity_turn), the LevelObject set-up (FUN_00118910), then its speeds
+   from its node's user parameter 0x3488ACED (one value per line, divided by 1000: per ms), kept twice
+   (speeds and speedsCopy), and more level data (0x1DED5D32 into +0x118 / +0x11c, divided by 1000). */
+undefined8 motion_entity_setup(int param_1,uint param_2)
 
 {
   uint32 size;
@@ -14149,7 +14164,7 @@ undefined8 FUN_001180c4(int param_1,uint param_2)
 
 /* ==== 0x00118318  (file offset 0x18318)  character_setup ============================================= */
 /* GUESS: name. Sets up the player's character (called with game->character by FUN_001150d0; `error`
-   is passed on to the MotionEntity set-up, FUN_001180c4):
+   is passed on to the MotionEntity set-up, motion_entity_setup):
      - three parameters from its level data (FUN_001145b4): field_28c, field_288, and field_294 from
        float_divide of a value and 1000.0;
      - the indexes of its 29 animations by user id (the table at 0x00126EA8), the priorities of 16 of
@@ -14170,7 +14185,7 @@ void character_setup(Character *character,int32 *error)
   uint32 value;
   int32 i;
 
-  FUN_001180c4((int32)character,(uint32)error);
+  motion_entity_setup((int32)character,(uint32)error);
   FUN_001145b4((int32)character->app->context,character->node,WORD_HEXADECIMAL_2073D363,(uint32 *)&character->field_28c);
   FUN_001145b4((int32)character->app->context,character->node,WORD_HEXADECIMAL_1932DEDD,(uint32 *)&value);
   character->field_294 = float_divide(value,FLOAT_1000);
@@ -14992,7 +15007,7 @@ void FUN_00119a28(int param_1,int *param_2)
         FUN_00118910(pcVar2,param_2);
       }
       else if (cVar1 == '\x01') {
-        FUN_001180c4(pcVar2,param_2);
+        motion_entity_setup(pcVar2,param_2);
       }
       else if (cVar1 == '\x04') {
         combat_region_setup(pcVar2,param_2);
@@ -18265,17 +18280,17 @@ switchD_0001e310_default:
 
 /* ==== 0x0011E36C  (file offset 0x1E36C)  motion_entity_pitch_by ====================================== */
 /* GUESS: name. Tilts by `angle` degrees (a float, its bits; float_add adds): the pitch wrapped into
-   -180..180 is handed to field_158 (slot +0x5c; the binary tail-jumps to it, 0x0011e3b8). Nothing
-   without field_158. The camera (camera_update) tilts with it to look at its target's middle. */
+   -180..180 is handed to pitchNode (slot +0x5c; the binary tail-jumps to it, 0x0011e3b8). Nothing
+   without a pitchNode. The camera (camera_update) tilts with it to look at its target's middle. */
 void motion_entity_pitch_by(MotionEntity *entity,uint32 angle)
 
 {
-  if (entity->field_158 == (ISwerveObject *)0x0)
+  if (entity->pitchNode == (ISwerveObject *)0x0)
     return;
   entity->pitch = float_add(entity->pitch,angle);
   wrap_angle((int32)entity->app->context,&entity->pitch);
-  (*((const SwerveTransformableVtbl *)entity->field_158->pvt)->SetOrientation)
-      (entity->field_158,&entity->pitch);
+  (*((const SwerveTransformableVtbl *)entity->pitchNode->pvt)->SetOrientation)
+      (entity->pitchNode,&entity->pitch);
 }
 
 /* ==== 0x0011E3C0  (file offset 0x1E3C0)  motion_entity_turn ========================================== */
@@ -18995,7 +19010,7 @@ void camera_move_focus(Camera *camera,uint32 x,uint32 y,uint32 z,int32 elapsed)
   sum = float_add(float_multiply(dz,dz),sum);
   step = float_divide(float_sqrt(sum),FLOAT_0_POINT_85);
   step = float_multiply(int_to_float(elapsed),step);
-  step = float_multiply(step,*(uint32 *)((MotionEntity *)camera)->field_110);
+  step = float_multiply(step,((MotionEntity *)camera)->speeds[0]);
   minusStep = step ^ 0x80000000;
   if (float_compare_greater(dx,step), *(float *)&dx > *(float *)&step)
     dx = step;
@@ -19557,16 +19572,16 @@ void FUN_001201cc(int param_1,undefined4 param_2)
 
 /* ==== 0x00120244  (file offset 0x20244)  motion_entity_set_pitch ===================================== */
 /* GUESS: name. Sets the pitch (a float, its bits, in degrees), wrapped into -180..180, and hands it to
-   field_158 (slot +0x5c; the binary tail-jumps to it, 0x00120288). Nothing without field_158. */
+   pitchNode (slot +0x5c; the binary tail-jumps to it, 0x00120288). Nothing without a pitchNode. */
 void motion_entity_set_pitch(MotionEntity *entity,uint32 pitch)
 
 {
-  if (entity->field_158 == (ISwerveObject *)0x0)
+  if (entity->pitchNode == (ISwerveObject *)0x0)
     return;
   entity->pitch = pitch;
   wrap_angle((int32)entity->app->context,&entity->pitch);
-  (*((const SwerveTransformableVtbl *)entity->field_158->pvt)->SetOrientation)
-      (entity->field_158,&entity->pitch);
+  (*((const SwerveTransformableVtbl *)entity->pitchNode->pvt)->SetOrientation)
+      (entity->pitchNode,&entity->pitch);
 }
 
 /* ==== 0x00120290  (file offset 0x20290)  motion_entity_set_heading =================================== */
@@ -21286,7 +21301,7 @@ void camera_update(Camera *camera,int32 now,int32 elapsed)
     camera_recenter_yaw(camera,elapsed);
   value = float_reverse_subtract(camera->distance,0x40600000);   /* 3.5 - distance */
   value = float_multiply(int_to_float(elapsed),value);
-  value = float_multiply(value,*(uint32 *)entity->field_110);
+  value = float_multiply(value,entity->speeds[0]);
   camera->distance = float_add(camera->distance,value);
   if (float_compare_greater(camera->distance,0x40600000), *(float *)&camera->distance > 3.5f)
     camera->distance = 0x40600000;
