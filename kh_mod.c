@@ -5733,9 +5733,9 @@ void FUN_0010a498(int param_1,int param_2)
 /* ==== 0x0010A528  (file offset 0x0A528)  hitsphere_create ============================================ */
 /* GUESS: names (the hitsphere reading too). Sets up a hitsphere (allocating its 0xd4 bytes when
    `hitsphere` is 0) for the scene entity `entity`, owned by `owner`; returns it, or 0 when out of
-   memory. Called by the boss combat region's setup (FUN_0011868c) for each entity of its list, with
-   `secondary` set for all but the first. The radius is not set here. Ghidra's INTEGER_MINUS_42416 was
-   the PC-relative offset of the helper table, read for GetAppInstance. */
+   memory. Called by the boss combat region's setup (boss_combat_region_setup) for each entity of its
+   list, with `secondary` set for all but the first. The radius is not set here. Ghidra's
+   INTEGER_MINUS_42416 was the PC-relative offset of the helper table, read for GetAppInstance. */
 Hitsphere * hitsphere_create(Hitsphere *hitsphere,int32 entity,BossCombatRegion *owner,int32 secondary)
 
 {
@@ -6084,7 +6084,7 @@ ScriptCommand * script_command_create(ScriptCommand *command)
 /* GUESS: name. The item drops' constructor (100 bytes, allocated when `drops` is 0; returns 0 when out of
    memory): the app (GetAppInstance), the munny a pickup gives (a float, its bits: 1.0 or 2.0, by the
    combat region's field_120), the ten balls (item_drops_find_balls) and all ten slots free. Made by
-   combat_region_create and FUN_0011868c; item_drops_destroy is its destructor. */
+   combat_region_create and boss_combat_region_setup; item_drops_destroy is its destructor. */
 ItemDrops * item_drops_create(ItemDrops *drops,uint32 munnyPerPickup)
 
 {
@@ -7250,8 +7250,8 @@ void animations_destroy(Animations *animations,int32 freeIt)
 
 /* ==== 0x0010CA1C  (file offset 0x0CA1C)  boss_combat_region_destroy ================================== */
 /* GUESS: names. The boss combat region's destructor (kind 5): each of its hitspheres
-   (hitsphere_destroy), the hitspheres' array and field_118 (helper_free), its item drops
-   (item_drops_destroy), the word array at +0x138 (the helper table's free), then the LevelObject part
+   (hitsphere_destroy), the hitspheres' array and the markers' (helper_free), its item drops
+   (item_drops_destroy), visibleMarkers (the helper table's free), then the LevelObject part
    (level_object_destroy), and the region itself when `freeIt` is set (the binary's tail jump to
    helper_free at 0x0010caa4). */
 void boss_combat_region_destroy(BossCombatRegion *region,int32 freeIt)
@@ -7264,10 +7264,10 @@ void boss_combat_region_destroy(BossCombatRegion *region,int32 freeIt)
       hitsphere_destroy(region->hitspheres[i],1);
   }
   helper_free(region->hitspheres);
-  helper_free(region->field_118);
+  helper_free(region->markers);
   if (region->itemDrops != (ItemDrops *)0x0)
     item_drops_destroy(region->itemDrops,1);
-  (*g_pHelperFuncs->free)(*(void **)((int32)region + 0x138));   /* +0x138: a word array (unnamed) */
+  (*g_pHelperFuncs->free)(region->visibleMarkers);
   level_object_destroy((int)region,0);
   if (freeIt != 0)
     helper_free(region);
@@ -12490,34 +12490,35 @@ void FUN_00114610(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *
   return;
 }
 
-/* ==== 0x00114638  (file offset 0x14638)  FUN_00114638 ================================================ */
-undefined4 FUN_00114638(int param_1)
+/* ==== 0x00114638  (file offset 0x14638)  boss_combat_region_pick_marker ============================== */
+/* GUESS: names. Picks one of the boss region's markers at random among the visible ones: lists the
+   indexes of the visible markers (level_object_is_visible) in visibleMarkers (each entry first set to
+   -1), takes one random float (random_floats, freed with the helper table's free) times 1000 as a whole
+   number, made positive, and returns the visible marker at that number % their count (rt_sdiv). The
+   boss's hitspheres aim at the marker it returns (FUN_00114c00 and FUN_00121c6c, which set their
+   +0x80). With no visible marker the count is 0 and rt_sdiv divides by 0 (rt_div0_raise: the app stops;
+   GAME_BUGS.md). */
+int32 boss_combat_region_pick_marker(BossCombatRegion *region)
 
 {
-  int iVar1;
-  undefined4 *puVar2;
-  int iVar3;
-  int iVar4;
-  
-  iVar3 = 0;
-  for (iVar4 = 0; iVar4 < *(int *)(param_1 + 300); iVar4 = iVar4 + 1) {
-    *(undefined4 *)(*(int *)(param_1 + 0x138) + iVar4 * 4) = 0xffffffff;
-    iVar1 = FUN_00114750(*(undefined4 *)(*(int *)(param_1 + 0x118) + iVar4 * 4));
-    if (iVar1 != 0) {
-      *(int *)(*(int *)(param_1 + 0x138) + iVar3 * 4) = iVar4;
-      iVar3 = iVar3 + 1;
-    }
+  int32 count = 0;
+  int32 i;
+  uint32 *random;
+  int32 number;
+
+  for (i = 0; i < region->markerCount; i++) {
+    region->visibleMarkers[i] = -1;
+    if (level_object_is_visible(region->markers[i]) != 0)
+      region->visibleMarkers[count++] = i;
   }
-  puVar2 = random_floats((int32)((KHApp *)*(int *)(param_1 + 0x84))->context,1);
-  
-  iVar4 = float_to_int(float_multiply(*puVar2,FLOAT_1000));
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-  (*g_pHelperFuncs->free)(puVar2);
-  if (iVar4 < 0) {
-    iVar4 = -iVar4;
-  }
-  return *(undefined4 *)(*(int *)(param_1 + 0x138) + (int)rt_sdiv(iVar3,iVar4).high * 4);   /* % iVar3 */
+  random = random_floats((int32)region->app->context,1);
+  number = (int32)float_to_int(float_multiply(*random,FLOAT_1000));
+  (*g_pHelperFuncs->free)(random);
+  if (number < 0)
+    number = -number;
+  return region->visibleMarkers[(int32)rt_sdiv(count,number).high];   /* number % count */
 }
+
 
 /* ==== 0x001146F0  (file offset 0x146F0)  progress_find_variable ====================================== */
 /* GUESS: names. The value of the level script's variable `name` (a pointer into
@@ -12538,14 +12539,16 @@ int32 * progress_find_variable(Progress *progress,const char *name)
 }
 
 
-/* ==== 0x00114750  (file offset 0x14750)  FUN_00114750 ================================================ */
-undefined4 FUN_00114750(int param_1)
+/* ==== 0x00114750  (file offset 0x14750)  level_object_is_visible ===================================== */
+/* GUESS: names. Whether a level object is drawn: asks its scene node (Node IsRenderingEnabled, slot 34)
+   into `visible` and returns it. Used by boss_combat_region_pick_marker. */
+int32 level_object_is_visible(LevelObject *object)
 
 {
-  (*((const SwerveNodeVtbl *)((ISwerveObject *)*(int **)(param_1 + 8))->pvt)->IsRenderingEnabled)
-      ((ISwerveObject *)*(int **)(param_1 + 8),(void *)(param_1 + 0x5c));
-  return *(undefined4 *)(param_1 + 0x5c);
+  (*((const SwerveNodeVtbl *)object->node->pvt)->IsRenderingEnabled)(object->node,&object->visible);
+  return object->visible;
 }
+
 
 /* ==== 0x00114774  (file offset 0x14774)  text_table_get_wide_text ==================================== */
 /* GUESS: names. The text with the id `textId` from the text table, as a new wide string in *text (left
@@ -12917,7 +12920,7 @@ void FUN_00114c00(int param_1,undefined4 param_2,undefined4 param_3,int param_4)
   }
   *(undefined4 *)(param_1 + 0xb4) = 0;
   if (*(int *)(param_1 + 0x48) == 0) {
-    uVar1 = FUN_00114638(*(undefined4 *)(param_1 + 0x24));
+    uVar1 = boss_combat_region_pick_marker((BossCombatRegion *)*(int *)(param_1 + 0x24));
     *(undefined4 *)(param_1 + 0x80) = uVar1;
     *(undefined4 *)(param_1 + 0x44) = 0;
     *(undefined4 *)(param_1 + 0x88) = *(undefined4 *)(param_1 + 0x84);
@@ -14370,8 +14373,12 @@ LAB_00120a28:
   return;
 }
 
-/* ==== 0x0011868C  (file offset 0x1868C)  FUN_0011868c ================================================ */
-void FUN_0011868c(int param_1,undefined4 param_2)
+/* ==== 0x0011868C  (file offset 0x1868C)  boss_combat_region_setup ==================================== */
+/* GUESS: name (not yet rewritten). The boss combat region's set-up from its scene node: its hitspheres,
+   its markers (the level objects named in its level data, one per line, by name hash; markerCount of
+   them) and their work list visibleMarkers (the helper table's malloc, not checked), its extra entity
+   (0x2E583064) and its item drops (item_drops_create). */
+void boss_combat_region_setup(int param_1,undefined4 param_2)
 
 {
   undefined4 param_3;
@@ -14643,7 +14650,7 @@ void FUN_00118910(int param_1,undefined4 param_2)
   uVar4 = FUN_00119b0c((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8)
                        ,(int32)STRING_TERRAINONLY).low;
   *(undefined4 *)(param_1 + 0x50) = uVar4;
-  FUN_00114750(param_1);
+  level_object_is_visible((LevelObject *)param_1);
   FUN_001201cc(param_1,*(undefined4 *)(param_1 + 0x5c));
   level_object_run_script((LevelObject *)param_1,0);
   return;
@@ -15013,7 +15020,7 @@ void FUN_00119a28(int param_1,int *param_2)
         combat_region_setup(pcVar2,param_2);
       }
       else if (cVar1 == '\x05') {
-        FUN_0011868c(pcVar2,param_2);
+        boss_combat_region_setup(pcVar2,param_2);
       }
     }
     if (*param_2 != 0) break;
@@ -20676,7 +20683,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
           }
         }
       }
-      iVar4 = FUN_00114750(*(int *)(*(int *)(*(int *)(param_1 + 0x24) + 0x118) +
+      iVar4 = level_object_is_visible((LevelObject *)*(int *)(*(int *)(*(int *)(param_1 + 0x24) + 0x118) +
                                    *(int *)(param_1 + 0x80) * 4));
       if (iVar4 == 0) {
         *(undefined4 *)(param_1 + 0x90) = 0;
@@ -20709,7 +20716,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
       iVar4 = *(int *)(param_1 + 0x84);
       goto LAB_001222f0;
     }
-    iVar4 = FUN_00114638(*(int *)(param_1 + 0x24));
+    iVar4 = boss_combat_region_pick_marker((BossCombatRegion *)*(int *)(param_1 + 0x24));
     *(int *)(param_1 + 0x80) = iVar4;
     level_object_get_position((uint32 *)&local_2c,(LevelObject *)*(int *)(*(int *)(*(int *)(param_1 + 0x24) + 0x118) + iVar4 * 4));
     uVar3 = local_28;
@@ -20759,7 +20766,7 @@ undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3)
     iVar8 = *(int *)(param_1 + 4);
     iVar4 = *(int *)(*(int *)(*(int *)(param_1 + 0x24) + 0x118) + *(int *)(param_1 + 0x80) * 4);
     if (*(int *)(iVar8 + 0x150) != 0) {
-      iVar4 = FUN_00114750(iVar4);
+      iVar4 = level_object_is_visible((LevelObject *)iVar4);
       if (iVar4 == 0) {
         *(undefined4 *)(param_1 + 0x44) = 1;
       }
@@ -21962,7 +21969,8 @@ void FUN_00123d7c(int param_1,undefined4 param_2,int param_3)
   }
   if (*(int *)(param_1 + 0x110) != 0) {
     for (iVar7 = 0; uVar1 = FLOAT_MINUS_1, iVar7 < *(int *)(param_1 + 0x128); iVar7 = iVar7 + 1) {
-      iVar6 = FUN_00114750(*(int *)(*(int *)(*(int *)(param_1 + 0x120) + iVar7 * 4) + 4));
+      iVar6 = level_object_is_visible
+                ((LevelObject *)*(int *)(*(int *)(*(int *)(param_1 + 0x120) + iVar7 * 4) + 4));
       if (iVar6 != 0) {
         piVar2 = *(int **)(*(int *)(param_1 + 0x120) + iVar7 * 4);
         iVar6 = *piVar2;
@@ -21979,7 +21987,8 @@ void FUN_00123d7c(int param_1,undefined4 param_2,int param_3)
         uVar4 = float_subtract(local_2c,local_38);
         uVar5 = float_subtract(local_30,local_3c);
         uVar3 = vector_length3((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,uVar5,uVar4,uVar3);
-        iVar6 = FUN_00114750(*(int *)(*(int *)(*(int *)(param_1 + 0x120) + iVar7 * 4) + 4));
+        iVar6 = level_object_is_visible
+                ((LevelObject *)*(int *)(*(int *)(*(int *)(param_1 + 0x120) + iVar7 * 4) + 4));
         uVar10 = iVar6 == 0;
         uVar9 = 1;
         if ((!(bool)uVar10) &&
@@ -21999,7 +22008,7 @@ void FUN_00123d7c(int param_1,undefined4 param_2,int param_3)
       uVar4 = float_subtract(local_2c,local_38);
       uVar5 = float_subtract(local_30,local_3c);
       uVar3 = vector_length3((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,uVar5,uVar4,uVar3);
-      iVar7 = FUN_00114750(*(int *)(param_1 + 0x11c));
+      iVar7 = level_object_is_visible((LevelObject *)*(int *)(param_1 + 0x11c));
       uVar10 = iVar7 == 0;
       uVar9 = 1;
       if (((!(bool)uVar10) &&

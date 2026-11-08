@@ -704,9 +704,9 @@ int FUN_0011448c(undefined4 param_1,int *param_2,undefined4 param_3,undefined4 *
 void FUN_00114520(undefined4 param_1,int *param_2,undefined4 param_3,undefined4 *param_4);
 void FUN_001145b4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param_4);
 void FUN_00114610(int param_1,undefined4 param_2,undefined4 param_3,undefined4 *param_4);
-undefined4 FUN_00114638(int param_1);
+int32 boss_combat_region_pick_marker(BossCombatRegion *region);   /* 0x00114638 GUESS: name, see kh_mod.c */
 int32 * progress_find_variable(Progress *progress,const char *name);   /* 0x001146F0 GUESS: name, see kh_mod.c */
-undefined4 FUN_00114750(int param_1);
+int32 level_object_is_visible(LevelObject *object);   /* 0x00114750 GUESS: name, see kh_mod.c */
 void text_table_get_wide_text(TextTable *table,int32 textId,AECHAR **text);   /* 0x00114774 GUESS: name, see kh_mod.c */
 void FUN_001147ec(undefined4 *param_1,int param_2,int *param_3);
 uint32 motion_entity_get_pitch(MotionEntity *entity);   /* 0x00114898 GUESS: name */
@@ -728,7 +728,7 @@ void combat_region_setup(CombatRegion *region,int32 context);   /* 0x00117DD8 GU
 undefined8 motion_entity_setup(int param_1,uint param_2);   /* 0x001180C4 GUESS: name, see kh_mod.c */
 void character_setup(Character *character,int32 *error);   /* 0x00118318 GUESS: name */
 void FUN_00118640(int param_1,int *param_2);
-void FUN_0011868c(int param_1,undefined4 param_2);
+void boss_combat_region_setup(int param_1,undefined4 param_2);   /* 0x0011868C GUESS: name, see kh_mod.c */
 void FUN_00118910(int param_1,undefined4 param_2);
 void collision_shape_setup(CollisionShape *shape,ISwerveObject *node,char *text);   /* 0x00118ED8 GUESS: name */
 void intro_start(Intro *intro);   /* 0x001195F8 GUESS: name */

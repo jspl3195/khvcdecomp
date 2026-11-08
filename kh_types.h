@@ -587,7 +587,8 @@ typedef struct LevelObject {
                                      onExit script (FUN_00118910): game_update_objects runs its trigger */
     int32    playerInside;          /* +0x058 GUESS: name; 0 at creation; the player has entered it
                                      (level_object_update_trigger) */
-    uint8  unknown_05c[0x04];
+    int32    visible;               /* +0x05c GUESS: name; its node's rendering flag, as last asked
+                                     (level_object_is_visible) */
     int32    needsFacing;           /* +0x060 GUESS: name; 0 at creation; set with facingAngle by its
                                      node's user parameter 0x32CA0CC6 (FUN_00118910) */
     uint32   facingAngle;           /* +0x064 a float (its bits), degrees: the player enters only facing it
@@ -1251,12 +1252,12 @@ typedef struct CombatRegion {
 } CombatRegion;                   /* 0x158 bytes */
 
 /* ---- Boss combat regions (GUESS: the hitsphere reading and the function names) ---------------------
- * A "BossCombatRegion" level object (kind 5; setup FUN_0011868c starts with the base setup FUN_00118910,
- * as combat_region_setup does), whose boss is a set of hitspheres: scene entities named in the level
- * data, each with a radius. Every frame (FUN_00123d7c) the nearest hitsphere whose radius holds the
- * player (a 3D distance, FUN_00113820) becomes the game's current target, and a player attack hits it
- * (boss_combat_region_hit_target). The first hitsphere's field_14 is shown in the HUD (GUESS: the boss's
- * health). */
+ * A "BossCombatRegion" level object (kind 5; boss_combat_region_setup starts with the base setup
+ * FUN_00118910, as combat_region_setup does), whose boss is a set of hitspheres: scene entities named in
+ * the level data, each with a radius. Every frame (FUN_00123d7c) the nearest hitsphere whose radius
+ * holds the player (a 3D distance, FUN_00113820) becomes the game's current target, and a player attack
+ * hits it (boss_combat_region_hit_target). The first hitsphere's field_14 is shown in the HUD (GUESS:
+ * the boss's health). */
 struct BossCombatRegion;
 
 /* The hitsphere class's vtable (VTABLE_00101650 in kh_mod.h; GUESS: names). */
@@ -1314,16 +1315,20 @@ typedef struct BossCombatRegion {
     uint8  unknown_88[0x88];
     int32    active;                /* +0x110 0 at creation; GUESS: the player is in its area (FUN_00123d7c) */
     ItemDrops *itemDrops;         /* +0x114 its item drops (updated by FUN_001226e8) */
-    int32   *field_118;             /* +0x118 more scene entities named in the level data (field_12c of them) */
+    struct LevelObject **markers; /* +0x118 GUESS: name; the level objects named in its level data (one per
+                                     line; markerCount of them): the boss aims at a visible one
+                                     (boss_combat_region_pick_marker) */
     int32    extraEntity;           /* +0x11c one more scene entity (id 0x2E583064): it can be targeted within
                                      3.0, and a hit hides it and clears its +0x34 (targetable) */
     Hitsphere **hitspheres;       /* +0x120 */
     uint32 field_124;             /* +0x124 a float (its bits), 1.0 at creation */
     int32    hitsphereCount;        /* +0x128 */
-    int32    field_12c;             /* +0x12c how many field_118 holds */
+    int32    markerCount;           /* +0x12c how many markers it has */
     int32    field_130;             /* +0x130 1 at creation; when set, FUN_00123d7c runs each hitsphere's
                                      vtable slot 0 and fills the HUD from the first one, then clears it */
-    uint8  unknown_134[0x08];
+    uint8  unknown_134[0x04];
+    int32   *visibleMarkers;        /* +0x138 GUESS: name; markerCount words: the indexes of the visible
+                                     markers (boss_combat_region_pick_marker) */
 } BossCombatRegion;               /* 0x13c bytes */
 
 #endif /* KH_TYPES_H */
