@@ -841,7 +841,7 @@ void animations_add_from_scene(Animations *animations,ISwerveObject *object);   
 void FUN_00120be8(undefined4 *param_1,int *param_2,uint *param_3,uint *param_4,uint param_5);
 void FUN_00120f8c(int param_1,int *param_2,int param_3,int *param_4,int param_5);
 void game_create_objects(Game *game,ISwerveObject *node,LevelObject *parent);   /* 0x00121134 GUESS: name */
-undefined8 FUN_001213fc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 ,undefined4 param_6,undefined4 param_7);
+LevelObject * level_object_update_trigger(LevelObject *object,uint32 x,uint32 y,uint32 z,uint32 radius,uint32 height,uint32 heading);   /* 0x001213FC GUESS: name, see kh_mod.c */
 void app_context_remove_object(int param_1,int *param_2,int *param_3,int param_4);   /* 0x00121584 GUESS: name, see kh_mod.c */
 void FUN_0012164c(int param_1,undefined4 param_2,int param_3);
 void progress_add_play_time(Progress *progress);   /* 0x001216C4 GUESS: name, see kh_mod.c */
@@ -850,7 +850,7 @@ void camera_pitch_over_ground(Camera *camera,uint32 *point,int32 elapsed);   /* 
 void FUN_00121ab0(int param_1);
 void camera_recenter_yaw(Camera *camera,int32 elapsed);   /* 0x00121B98 GUESS: name, see kh_mod.c */
 undefined8 FUN_00121c6c(int param_1,undefined4 param_2,int param_3);
-void FUN_00122450(int param_1,byte *param_2,int param_3);
+void game_update_objects(int param_1,byte *param_2,int param_3);   /* 0x00122450 GUESS: name, see kh_mod.c */
 void FUN_001226e8(ItemDrops *drops,int32 now,int32 elapsed);
 int32 script_sequence_update(ScriptSequence *sequence,int32 now,int32 elapsed);   /* 0x0012289C GUESS: name, see kh_mod.c */
 void enemy_update(Enemy *enemy,int32 now,int32 elapsed);   /* 0x00122954 GUESS: name */

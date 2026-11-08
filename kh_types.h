@@ -559,7 +559,9 @@ typedef struct LevelObject {
     int32    field_1c;              /* +0x01c 0 at creation */
     uint8  unknown_020[0x10];
     int32    field_30;              /* +0x030 0 at creation */
-    int32    field_34;              /* +0x034 1 at creation */
+    int32    scriptsEnabled;        /* +0x034 GUESS: name; 1 at creation; its trigger runs its onEntry /
+                                     onExit scripts only while set (setScriptOn / setScriptOff,
+                                     character_lift) */
     int32    field_38;              /* +0x038 1 at creation */
     int32    field_3c;              /* +0x03c 1 at creation */
     int32    field_40;              /* +0x040 0 at creation */
@@ -567,11 +569,15 @@ typedef struct LevelObject {
     int32    field_48;              /* +0x048 0 at creation */
     int32    field_4c;              /* +0x04c 0 at creation */
     int32    field_50;              /* +0x050 0 at creation */
-    int32    field_54;              /* +0x054 0 at creation */
-    int32    field_58;              /* +0x058 0 at creation */
+    int32    hasTriggerScripts;     /* +0x054 GUESS: name; 0 at creation; set when it has an onEntry or
+                                     onExit script (FUN_00118910): game_update_objects runs its trigger */
+    int32    playerInside;          /* +0x058 GUESS: name; 0 at creation; the player has entered it
+                                     (level_object_update_trigger) */
     uint8  unknown_05c[0x04];
-    int32    field_60;              /* +0x060 0 at creation */
-    uint8  unknown_064[0x04];
+    int32    needsFacing;           /* +0x060 GUESS: name; 0 at creation; set with facingAngle by its
+                                     node's user parameter 0x32CA0CC6 (FUN_00118910) */
+    uint32   facingAngle;           /* +0x064 a float (its bits), degrees: the player enters only facing it
+                                     within +-facingAngle, and leaves when turning beyond it */
     uint32 position[3];           /* +0x068 floats (their bits): x, y, z (level_object_get_position); z is
                                      the bottom (callers add half the height for the middle) */
     uint8  unknown_074[0x0c];

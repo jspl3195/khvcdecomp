@@ -6540,11 +6540,11 @@ LevelObject * level_object_create(LevelObject *object,ISwerveObject *node,char *
   object->nameId = string_hash((int32)object->app->context,(const char *)name);
   object->parent = (LevelObject *)0x0;
   object->field_10 = 0;
-  object->field_34 = 1;
+  object->scriptsEnabled = 1;
   object->field_30 = 0;
   object->field_38 = object->field_3c = 1;
   object->field_40 = object->field_44 = object->field_48 = object->field_4c = 0;
-  object->field_50 = object->field_54 = object->field_58 = object->field_60 = 0;
+  object->field_50 = object->hasTriggerScripts = object->playerInside = object->needsFacing = 0;
   object->field_18 = 0;
   object->clipart = (char *)0x0;
   object->field_1c = 0;
@@ -9026,7 +9026,7 @@ void FUN_0010ea64(int param_1)
     return;
   }
   if ((*(int *)(param_1 + 0xa4) != 0) &&
-     (FUN_00122450(*(int *)(param_1 + 0xa4),*(byte **)(param_1 + 0x84),*(int *)(param_1 + 0x88)),
+     (game_update_objects(*(int *)(param_1 + 0xa4),*(byte **)(param_1 + 0x84),*(int *)(param_1 + 0x88)),
      *(int *)(param_1 + 0x90) != 0)) {
     return;
   }
@@ -10287,10 +10287,10 @@ int32 script_run_if_block(int32 context,int32 *index,int32 holds,ScriptCommand *
 /* ==== 0x00110860  (file offset 0x10860)  level_object_run_script ===================================== */
 /* GUESS: name. Runs one of a level object's event scripts (script_run, the binary's tail jump, whose
    result it returns): 0 onInit (FUN_00118910, once they are loaded), 1 onEntry and 2 onExit (the
-   collision handler FUN_001213fc; FUN_00123588), 3 onUIAction (the key handler FUN_0011a3ec, for
-   Game.actionObject on the Action key or SELECT). The names are the scene node's user parameters the
-   scripts are read from (their string_hash). Another `which` runs `which` commands from address 0: no
-   caller passes one. */
+   collision handler level_object_update_trigger; FUN_00123588), 3 onUIAction (the key handler
+   FUN_0011a3ec, for Game.actionObject on the Action key or SELECT). The names are the scene node's user
+   parameters the scripts are read from (their string_hash). Another `which` runs `which` commands from
+   address 0: no caller passes one. */
 int32 level_object_run_script(LevelObject *object,int32 which)
 
 {
@@ -10951,11 +10951,11 @@ int32 script_command_run(ScriptCommand *command)
     break;
   case 0x39:   /* setScriptOn */
     if (command->object != (LevelObject *)0x0)
-      command->object->field_34 = 1;
+      command->object->scriptsEnabled = 1;
     break;
   case 0x3a:   /* setScriptOff */
     if (command->object != (LevelObject *)0x0)
-      command->object->field_34 = 0;
+      command->object->scriptsEnabled = 0;
     break;
   case 0x3b:   /* setShadowVis */
     if (player->shadow != (ISwerveObject *)0x0) {
@@ -15933,7 +15933,7 @@ LAB_0011adac:
 /* ==== 0x0011ADD0  (file offset 0x1ADD0)  character_lift ============================================== */
 /* GUESS: names. The script's setCharacterMode LIFT: when the character is free to act (field_1cc 10, GUESS)
    it picks `object` up: state 0x10, `carried` the object, the object's script and collision switched off
-   (field_34 and field_38, as setScriptOff / setCollisionOff do), and the lifting animation
+   (scriptsEnabled and field_38, as setScriptOff / setCollisionOff do), and the lifting animation
    (animations[25]) played on channel 0, once; returns what character_play_animation returns (the binary's
    tail jump at 0x0011ae00), or r0 as kh.mod leaves it, the character. character_drop puts it down. */
 int32 character_lift(Character *character,LevelObject *object)
@@ -15943,7 +15943,7 @@ int32 character_lift(Character *character,LevelObject *object)
     return (int32)character;
   character->state = 0x10;
   character->carried = object;
-  object->field_34 = 0;
+  object->scriptsEnabled = 0;
   character->carried->field_38 = 0;
   return character_play_animation(character,character->animations[25],0,0);
 }
@@ -20369,80 +20369,56 @@ void game_create_objects(Game *game,ISwerveObject *node,LevelObject *parent)
   }
 }
 
-/* ==== 0x001213FC  (file offset 0x213FC)  FUN_001213fc ================================================ */
-undefined8
-FUN_001213fc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5
-            ,undefined4 param_6,undefined4 param_7)
+/* ==== 0x001213FC  (file offset 0x213FC)  level_object_update_trigger ================================= */
+/* GUESS: names. A level object's trigger, for the player (game_update_objects, for each object with
+   hasTriggerScripts; the player character's position, radius, height and heading): while the player is
+   outside, entering its first shape (collision_shape_allows, the player as a point: radius 0, `radius`
+   is not read) and, with needsFacing, facing it (the direction from the player to the object minus
+   `heading` within +-facingAngle) runs its onEntry script (level_object_run_script 1, while
+   scriptsEnabled) and marks the player inside; while inside, facing away (with needsFacing) or entering
+   its second shape runs onExit (2) and marks the player outside. The angle difference is not wrapped to
+   +-180 degrees (GAME_BUGS.md). Returns r0 as kh.mod leaves it: the binary pops the r0 it pushed,
+   `object`; Ghidra had built a 64-bit value. Written from the disassembly (0x001213fc - 0x00121580). */
+LevelObject * level_object_update_trigger(LevelObject *object,uint32 x,uint32 y,uint32 z,uint32 radius,
+                                           uint32 height,uint32 heading)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  undefined1 uVar4;
-  undefined1 uVar5;
-  int iVar6;
-  undefined8 uVar7;
-  
-  iVar6 = param_1;
-  uVar2 = param_2;
-  if (*(int *)(param_1 + 0x58) == 0) {
-    if (0 < *(int *)(param_1 + 0xec)) {
-      iVar6 = 0;
-      iVar1 = collision_shape_allows(*(CollisionShape **)(param_1 + 0xe4),param_2,param_3,param_4,0,
-                                    param_6);
-      uVar2 = param_6;
-      if (iVar1 != 0) {
-        uVar5 = *(int *)(param_1 + 0x60) == 0;
-        uVar4 = 1;
-        if (!(bool)uVar5) {
-          iVar6 = *(int *)(param_1 + 0x6c);
-          uVar2 = direction_to(((KHApp *)*(int *)(param_1 + 0x84))->context,param_2,param_3,
-                               *(undefined4 *)(param_1 + 0x68),iVar6);
-          uVar2 = float_subtract(uVar2,param_7);
-          float_compare_greater(*(uint *)(param_1 + 100) ^ 0x80000000,uVar2);
-          if (!(bool)uVar4 || (bool)uVar5) {
-            float_compare_greater(uVar2,*(undefined4 *)(param_1 + 100));
-          }
-          uVar2 = param_6;
-          if ((bool)uVar4 && !(bool)uVar5) goto LAB_001214d4;
-        }
-        if (*(int *)(param_1 + 0x34) != 0) {
-          level_object_run_script((LevelObject *)param_1,1);
-        }
-        *(undefined4 *)(param_1 + 0x58) = 1;
-      }
+  uint32 angle;
+  uint32 limit;   /* facingAngle, read again for each compare by the binary */
+
+  if (object->playerInside == 0) {
+    if (object->shapeCount <= 0 || collision_shape_allows(object->shapes[0],x,y,z,0,height) == 0)
+      return object;
+    if (object->needsFacing != 0) {
+      angle = float_subtract(direction_to(object->app->context,x,y,object->position[0],
+                                          object->position[1]),heading);
+      limit = object->facingAngle;
+      if ((float_compare_greater(limit ^ 0x80000000,angle), -*(float *)&limit > *(float *)&angle) ||
+          (float_compare_greater(angle,limit), *(float *)&angle > *(float *)&limit))
+        return object;
     }
-    goto LAB_001214d4;
+    if (object->scriptsEnabled != 0)
+      level_object_run_script(object,1);
+    object->playerInside = 1;
+    return object;
   }
-  uVar5 = *(int *)(param_1 + 0x60) == 0;
-  uVar4 = 1;
-  if ((bool)uVar5) {
-LAB_00121530:
-    if (*(int *)(param_1 + 0xec) < 2) goto LAB_001214d4;
-    iVar6 = 0;
-    iVar1 = collision_shape_allows(*(CollisionShape **)(param_1 + 0xe8),param_2,param_3,param_4,0,param_6);
-    uVar2 = param_6;
-    if (iVar1 == 0) goto LAB_001214d4;
+  if (object->needsFacing != 0) {
+    angle = float_subtract(direction_to(object->app->context,x,y,object->position[0],object->position[1]),
+                           heading);
+    limit = object->facingAngle;
+    if (!((float_compare_greater(limit ^ 0x80000000,angle), -*(float *)&limit > *(float *)&angle) ||
+          (float_compare_greater(angle,limit), *(float *)&angle > *(float *)&limit)) &&
+        (object->shapeCount <= 1 || collision_shape_allows(object->shapes[1],x,y,z,0,height) == 0))
+      return object;
   }
-  else {
-    iVar6 = *(int *)(param_1 + 0x6c);
-    uVar3 = direction_to(((KHApp *)*(int *)(param_1 + 0x84))->context,param_2,param_3,
-                         *(undefined4 *)(param_1 + 0x68),iVar6
-                         /* not arguments, value leftovers: param_2,param_3,param_4 */);
-    uVar3 = float_subtract(uVar3,param_7);
-    float_compare_greater(*(uint *)(param_1 + 100) ^ 0x80000000,uVar3);
-    if (!(bool)uVar4 || (bool)uVar5) {
-      float_compare_greater(uVar3,*(undefined4 *)(param_1 + 100));
-    }
-    if (!(bool)uVar4 || (bool)uVar5) goto LAB_00121530;
-  }
-  if (*(int *)(param_1 + 0x34) != 0) {
-    level_object_run_script((LevelObject *)param_1,2);
-  }
-  *(undefined4 *)(param_1 + 0x58) = 0;
-LAB_001214d4:
-  return MAKE_WORDS(uVar7,uVar2,iVar6);
+  else if (object->shapeCount <= 1 || collision_shape_allows(object->shapes[1],x,y,z,0,height) == 0)
+    return object;
+  if (object->scriptsEnabled != 0)
+    level_object_run_script(object,2);
+  object->playerInside = 0;
+  return object;
 }
+
 
 /* ==== 0x00121584  (file offset 0x21584)  app_context_remove_object =================================== */
 /* GUESS: names. Removes an object's scene node from its group: when `param_4` is set, the animation
@@ -21024,8 +21000,13 @@ switchD_00021cbc_default:
   return MAKE_WORDS(uVar13,local_2c,uVar3);
 }
 
-/* ==== 0x00122450  (file offset 0x22450)  FUN_00122450 ================================================ */
-void FUN_00122450(int param_1,byte *param_2,int param_3)
+/* ==== 0x00122450  (file offset 0x22450)  game_update_objects ========================================= */
+/* GUESS: name (not yet rewritten). The game's update (`param_1` the Game): runs its 5 script sequences
+   (script_sequence_update, destroying each that ends) unless +0x20c is set, then each of its 120
+   objects that is active (+0x3c) and not the one the player carries: its update by kind (0
+   FUN_0012407c, 1 FUN_0012312c, 4 combat_region_update, 5 FUN_00123d7c) and, with hasTriggerScripts,
+   its trigger for the player (level_object_update_trigger); then the player character and the rest. */
+void game_update_objects(int param_1,byte *param_2,int param_3)
 
 {
   float64 dVar4;   /* the double whose low word is uVar4 */
@@ -21080,7 +21061,8 @@ void FUN_00122450(int param_1,byte *param_2,int param_3)
       if (*(int *)(*(int *)(iVar8 + 0x10) + 0x54) != 0) {
         uVar3 = level_object_get_height((LevelObject *)*(int *)(param_1 + 0x1f8));
         level_object_get_position(position,(LevelObject *)*(int *)(param_1 + 0x1f8));
-        FUN_001213fc(*(int *)(iVar8 + 0x10),position[0],position[1],position[2],
+        level_object_update_trigger((LevelObject *)*(int *)(iVar8 + 0x10),position[0],position[1],
+                                    position[2],
                      *(undefined4 *)(*(int *)(param_1 + 0x1f8) + 0x80),uVar3,
                      *(undefined4 *)(*(int *)(param_1 + 0x1f8) + 0x140));
       }
