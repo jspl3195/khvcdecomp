@@ -296,7 +296,7 @@ void AEEMod_FreeResources(IModule *po, IHeap *ph, IFileMgr *pfm);
 /* Not yet identified (auto-named by Ghidra). */
 int64 ll_mul_int(uint32 aLow,int32 aHigh,int32 b);   /* 0x01000028 GUESS: name, see swv21brew.c */
 int64 ll_mul(uint32 aLow,int32 aHigh,uint32 bLow,int32 bHigh);   /* 0x0100094C, no Ghidra function; ARM's _ll_mul */
-int FUN_01000080(byte *param_1,byte *param_2,uint param_3);
+int32 swv_memcmp(const uint8 *a,const uint8 *b,uint32 n);   /* 0x01000080 GUESS: name, see swv21brew.c */
 undefined4 FUN_01000100(undefined4 param_1);
 undefined8 FUN_01000188(byte *param_1,byte *param_2,uint param_3,undefined4 param_4);
 ulonglong FUN_010001f4(uint param_1,uint param_2);
@@ -1333,8 +1333,8 @@ void FUN_01037d28(int param_1);
 void FUN_01037d48(int param_1,undefined4 param_2,undefined4 param_3);
 void FUN_01037d98(int param_1);
 void FUN_01037da8(int param_1,int param_2,int param_3,int param_4,int param_5);
-undefined8 FUN_01037e48(int param_1,uint param_2,uint param_3);
-void FUN_01037eb0(int param_1,char *param_2);
+int32 png_sig_cmp(const uint8 *sig,uint32 start,uint32 numToCheck);   /* 0x01037E48 libpng */
+void png_warning(int param_1,char *param_2);   /* 0x01037EB0 libpng */
 int FUN_01037eec(undefined4 param_1,int param_2,int param_3,undefined4 param_4);
 void thunk_FUN_01036188(int param_1,int param_2);
 void FUN_01037fa0(int param_1,undefined4 *param_2);
@@ -2215,7 +2215,7 @@ extern undefined4 STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET;   /* was DAT_0
 #define STRING_WIDTH_TOO_LARGE_TO_PROCESS_IMAGE_OFFSET 0x0000AAE4   /* was DAT_01037c74 (word at 0x01037C74); PC-relative offset: + 0x1037c44 (the pc) = 0x01042728 */
 #define STRING_IT_S_AN_ERROR_TO_SET_OFFSET 0x00008280   /* was DAT_01037d90 (word at 0x01037D90); PC-relative offset: + 0x1037d74 (the pc) = 0x0103FFF4 */
 #define STRING_SAME_STRUCTURE_DOT_RESETTING_WRITE_DATA_OFFSET 0x00008238   /* was DAT_01037d94 (word at 0x01037D94); PC-relative offset: + 0x1037d88 (the pc) = 0x0103FFC0 */
-#define INTEGER_32536 0x00007F18   /* was DAT_01037eac (word at 0x01037EAC); integer 32536 */
+#define PNG_SIGNATURE_OFFSET 0x00007F18   /* was DAT_01037eac (word at 0x01037EAC); PC-relative offset: + 0x1037e58 (the pc) = 0x0103FD70, libpng's png_signature (89 50 4E 47 0D 0A 1A 0A) */
 #define ADDRESS_OF_FUNCTION_01037fa0_OFFSET 0xFFFFFF88   /* was DAT_01038088 (word at 0x01038088); PC-relative offset: + 0x1038018 (the pc) = 0x01037FA0 */
 #define ADDRESS_OF_FUNCTION_010380d0_OFFSET 0x000000AC   /* was DAT_0103808c (word at 0x0103808C); PC-relative offset: + 0x1038024 (the pc) = 0x010380D0 */
 #define ADDRESS_OF_FUNCTION_01037fc0_OFFSET 0xFFFFFF90   /* was DAT_01038090 (word at 0x01038090); PC-relative offset: + 0x1038030 (the pc) = 0x01037FC0 */

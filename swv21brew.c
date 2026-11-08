@@ -46,57 +46,30 @@ int64 ll_mul_int(uint32 aLow,int32 aHigh,int32 b)
   return ll_mul(aLow,aHigh,(uint32)b,b < 0 ? -1 : 0);
 }
 
-/* ==== 0x01000080  (file offset 0x00080)  FUN_01000080 ================================================ */
-int FUN_01000080(byte *param_1,byte *param_2,uint param_3)
+/* ==== 0x01000080  (file offset 0x00080)  swv_memcmp ================================================== */
+/* GUESS: name (the routine is certain: memcmp; GUESS: the ARM C library's, from its shape). Compares
+   the n bytes at a and b: a word at a time while n >= 4 when both are word-aligned (at the first word
+   that differs it goes back to it), then byte by byte; the difference of the first differing bytes
+   (unsigned), 0 when all n match. Part of the engine's own C library (it does not use helper memcmp);
+   used by its libpng for the chunk names and png_sig_cmp. The binary does the byte loop two bytes per
+   pass. */
+int32 swv_memcmp(const uint8 *a,const uint8 *b,uint32 n)
 
 {
-  byte *pbVar1;
-  byte *pbVar2;
-  uint uVar3;
-  uint uVar4;
-  bool bVar5;
-  
-  bVar5 = param_3 == 4;
-  if (3 < param_3) {
-    bVar5 = (((uint)param_1 | (uint)param_2) & 3) == 0;
-  }
-  if (bVar5) {
-    do {
-      pbVar2 = param_2;
-      pbVar1 = param_1;
-      param_1 = pbVar1 + 4;
-      param_2 = pbVar2 + 4;
-      if (*(int *)pbVar1 != *(int *)pbVar2) break;
-      param_3 = param_3 - 4;
-    } while (3 < param_3);
-    if (*(int *)pbVar1 != *(int *)pbVar2) {
-      param_1 = pbVar1;
-      param_2 = pbVar2;
+  if (n >= 4 && (((uint32)a | (uint32)b) & 3) == 0) {
+    while (n >= 4 && *(const uint32 *)a == *(const uint32 *)b) {
+      a += 4;
+      b += 4;
+      n -= 4;
     }
   }
-  if (param_3 == 0) {
-    return 0;
+  for (; n != 0; n--) {
+    if (*a != *b)
+      return (int32)*a - (int32)*b;
+    a++;
+    b++;
   }
-  if ((param_3 & 1) != 0) {
-    param_3 = param_3 + 1;
-    pbVar1 = param_1;
-    pbVar2 = param_2;
-    goto LAB_010000e0;
-  }
-  while( true ) {
-    pbVar1 = param_1 + 1;
-    uVar3 = (uint)*param_1;
-    pbVar2 = param_2 + 1;
-    uVar4 = (uint)*param_2;
-    if (uVar3 != uVar4) break;
-LAB_010000e0:
-    param_1 = pbVar1 + 1;
-    uVar3 = (uint)*pbVar1;
-    param_2 = pbVar2 + 1;
-    uVar4 = (uint)*pbVar2;
-    if ((uVar3 != uVar4) || (param_3 = param_3 - 2, param_3 == 0)) break;
-  }
-  return uVar3 - uVar4;
+  return 0;
 }
 
 /* ==== 0x01000100  (file offset 0x00100)  FUN_01000100 ================================================ */
@@ -50310,7 +50283,7 @@ void FUN_010354b4(undefined4 param_1,undefined4 param_2)
   undefined1 auStack_5c [84];
   
   FUN_010360b0(param_1,auStack_5c,param_2);
-  FUN_01037eb0(param_1,auStack_5c);
+  png_warning(param_1,auStack_5c);
   return;
 }
 
@@ -51097,7 +51070,7 @@ uint * FUN_010362a0(int param_1,uint *param_2,uint *param_3,uint *param_4,uint *
     }
     uVar3 = FUN_010002c8((int)(iVar1 * *param_5 + 7) >> 3,0x7fffffff,uVar2,uVar3,param_4);
     if (uVar3 < *param_3) {
-      FUN_01037eb0(param_1,STRING_WIDTH_TOO_LARGE_FOR_LIBPNG_TO_OFFSET + 0x1036360);
+      png_warning(param_1,STRING_WIDTH_TOO_LARGE_FOR_LIBPNG_TO_OFFSET + 0x1036360);
     }
     param_5 = (uint *)0x1;
   }
@@ -51206,7 +51179,7 @@ undefined4 FUN_01036474(int param_1,int param_2,uint param_3,undefined4 param_4)
   }
   *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 0x18;
   if (param_3 != 0) {
-    FUN_01037eb0(param_1,param_2 + 0x10364b8);
+    png_warning(param_1,param_2 + 0x10364b8);
   }
   uVar2 = *(uint *)(param_1 + 0xe4);
   for (; uVar2 < param_3; param_3 = param_3 - uVar2) {
@@ -51361,13 +51334,13 @@ LAB_01036660:
           return;
         }
         if ((uVar1 & 0xffff) < (uint)*(ushort *)(param_1 + 0x14e)) {
-          FUN_01037eb0(param_1,STRING_TRUNCATING_INCORRECT_TRNS_CHUNK_LENGTH_OFFSET + 0x10367ec);
+          png_warning(param_1,STRING_TRUNCATING_INCORRECT_TRNS_CHUNK_LENGTH_OFFSET + 0x10367ec);
           *(short *)(param_1 + 0x14e) = (short)uVar1;
         }
         if ((uint)*(ushort *)(param_2 + 0x16) <= (uVar1 & 0xffff)) {
           return;
         }
-        FUN_01037eb0(param_1,STRING_TRUNCATING_INCORRECT_INFO_TRNS_CHUNK_LENGTH_OFFSET + 0x103680c);
+        png_warning(param_1,STRING_TRUNCATING_INCORRECT_INFO_TRNS_CHUNK_LENGTH_OFFSET + 0x103680c);
         *(short *)(param_2 + 0x16) = (short)uVar1;
         return;
       }
@@ -51385,7 +51358,7 @@ LAB_01036660:
     }
     iVar3 = STRING_INVALID_PLTE_AFTER_IDAT_OFFSET + 0x1036648;
   }
-  FUN_01037eb0(param_1,iVar3);
+  png_warning(param_1,iVar3);
 LAB_01036694:
   FUN_01035774(param_1,param_3);
   return;
@@ -51424,7 +51397,7 @@ void FUN_01036838(int param_1,int param_2,uint param_3)
   iVar4 = STRING_INCORRECT_TRNS_CHUNK_LENGTH_OFFSET + 0x10368a4;
   if (cVar1 == '\x03') {
     if ((*(uint *)(param_1 + 0x9c) & 2) == 0) {
-      FUN_01037eb0(param_1,STRING_MISSING_PLTE_BEFORE_TRNS_OFFSET + 0x10368c4);
+      png_warning(param_1,STRING_MISSING_PLTE_BEFORE_TRNS_OFFSET + 0x10368c4);
     }
     else if (*(ushort *)(param_1 + 0x14c) < param_3) goto LAB_01036968;
     if (param_3 != 0) {
@@ -51467,7 +51440,7 @@ LAB_010369a4:
     iVar4 = STRING_TRNS_CHUNK_NOT_ALLOWED_WITH_ALPHA_OFFSET + 0x1036960;
   }
 LAB_01036968:
-  FUN_01037eb0(param_1,iVar4);
+  png_warning(param_1,iVar4);
   FUN_01035774(param_1,param_3);
   return;
 }
@@ -51484,7 +51457,7 @@ undefined4 FUN_010369f4(int param_1,undefined4 param_2,uint param_3,undefined4 p
   undefined4 in_lr;
   
   if (((*(uint *)(param_1 + 0x9c) & 4) != 0) &&
-     (iVar1 = FUN_01000080(param_1 + 0x150,STRING_IDAT_OFFSET + 0x1036a20,4), iVar1 != 0)) {
+     (iVar1 = swv_memcmp(param_1 + 0x150,STRING_IDAT_OFFSET + 0x1036a20,4), iVar1 != 0)) {
     *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 8;
   }
   FUN_01035404(param_1,param_1 + 0x150);
@@ -51690,17 +51663,17 @@ void FUN_01036c24(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
     iVar1 = FUN_01036438(&uStack_28);
     FUN_01037a70(param_1);
     FUN_01035814(param_1,iVar4,4);
-    iVar2 = FUN_01000080(iVar4,STRING_IHDR_OFFSET + 0x1036ca0,4);
+    iVar2 = swv_memcmp(iVar4,STRING_IHDR_OFFSET + 0x1036ca0,4);
     if (iVar2 == 0) {
       FUN_010364d4(param_1,param_2,iVar1);
     }
     else {
-      iVar2 = FUN_01000080(iVar4,STRING_IEND_OFFSET + 0x1036cd0,4);
+      iVar2 = swv_memcmp(iVar4,STRING_IEND_OFFSET + 0x1036cd0,4);
       if (iVar2 == 0) {
         FUN_01036474(param_1,param_2,iVar1);
       }
       else {
-        iVar2 = FUN_01000080(iVar4,iVar5,4);
+        iVar2 = swv_memcmp(iVar4,iVar5,4);
         if (iVar2 == 0) {
           uVar3 = 0;
           if (iVar1 == 0) {
@@ -51712,12 +51685,12 @@ void FUN_01036c24(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
           FUN_01035774(param_1,iVar1);
         }
         else {
-          iVar2 = FUN_01000080(iVar4,iVar6,4);
+          iVar2 = swv_memcmp(iVar4,iVar6,4);
           if (iVar2 == 0) {
             FUN_01036610(param_1,param_2,iVar1);
           }
           else {
-            iVar2 = FUN_01000080(iVar4,iVar7,4);
+            iVar2 = swv_memcmp(iVar4,iVar7,4);
             if (iVar2 == 0) {
               FUN_01036838();
             }
@@ -51797,7 +51770,7 @@ void FUN_01036db4(undefined4 param_1,int param_2,byte *param_3,byte *param_4,und
     }
     break;
   default:
-    FUN_01037eb0(param_1,STRING_IGNORING_BAD_ADAPTIVE_FILTER_TYPE_OFFSET + 0x1036f5c);
+    png_warning(param_1,STRING_IGNORING_BAD_ADAPTIVE_FILTER_TYPE_OFFSET + 0x1036f5c);
     *param_3 = 0;
     return;
   }
@@ -51903,7 +51876,7 @@ void FUN_01036f6c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
         *(undefined4 *)(param_1 + 0x140) = uVar5;
         FUN_01037a70(param_1);
         FUN_01035814(param_1,param_1 + 0x150,4);
-        iVar3 = FUN_01000080(param_1 + 0x150,iVar6,4);
+        iVar3 = swv_memcmp(param_1 + 0x150,iVar6,4);
         if (iVar3 != 0) {
           FUN_01036088(param_1,iVar7);
         }
@@ -52001,9 +51974,9 @@ void FUN_010372a8(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     iVar4 = -uVar3 + 8;
     FUN_01036b2c(param_1,param_2 + uVar3 + 0x20,iVar4);
     *(undefined1 *)(param_1 + 0x160) = 8;
-    iVar4 = FUN_01037e48(param_2 + 0x20,uVar3,iVar4);
+    iVar4 = png_sig_cmp(param_2 + 0x20,uVar3,iVar4);
     if (iVar4 != 0) {
-      if ((uVar3 < 4) && (iVar4 = FUN_01037e48(param_2 + 0x20,uVar3,-uVar3 + 4), iVar4 != 0)) {
+      if ((uVar3 < 4) && (iVar4 = png_sig_cmp(param_2 + 0x20,uVar3,-uVar3 + 4), iVar4 != 0)) {
         iVar4 = STRING_NOT_A_PNG_FILE_OFFSET + 0x1037324;
       }
       else {
@@ -52028,21 +52001,21 @@ void FUN_010372a8(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
           uVar1 = FUN_01036438(&uStack_28);
           FUN_01037a70(param_1);
           FUN_01035814(param_1,iVar4,4);
-          iVar2 = FUN_01000080(iVar4,STRING_IHDR_OFFSET_2 + 0x10373ac,4);
+          iVar2 = swv_memcmp(iVar4,STRING_IHDR_OFFSET_2 + 0x10373ac,4);
           if (iVar2 != 0) break;
           FUN_010364d4(param_1,param_2,uVar1);
         }
-        iVar2 = FUN_01000080(iVar4,iVar5,4);
+        iVar2 = swv_memcmp(iVar4,iVar5,4);
         if (iVar2 != 0) break;
         FUN_01036474(param_1,param_2,uVar1);
       }
-      iVar2 = FUN_01000080(iVar4,iVar6,4);
+      iVar2 = swv_memcmp(iVar4,iVar6,4);
       if (iVar2 != 0) break;
       FUN_01036610(param_1,param_2,uVar1);
     }
-    iVar2 = FUN_01000080(iVar4,iVar7,4);
+    iVar2 = swv_memcmp(iVar4,iVar7,4);
     if (iVar2 == 0) break;
-    iVar2 = FUN_01000080(iVar4,iVar8,4);
+    iVar2 = swv_memcmp(iVar4,iVar8,4);
     if (iVar2 == 0) {
       FUN_01036838();
     }
@@ -52107,7 +52080,7 @@ switchD_01037524_default:
           *(undefined4 *)(param_1 + 0x140) = uVar2;
           FUN_01037a70(param_1);
           FUN_01035814(param_1,param_1 + 0x150,4);
-          iVar3 = FUN_01000080(param_1 + 0x150,iVar4 + 0x103765c,4);
+          iVar3 = swv_memcmp(param_1 + 0x150,iVar4 + 0x103765c,4);
           if (iVar3 != 0) {
             FUN_01036088(param_1,iVar6);
           }
@@ -52365,7 +52338,7 @@ LAB_01037b78:
   *(char *)((int)param_2 + 0x1e) = (char)uVar1;
   uVar1 = FUN_010002c8(uVar2 + 7 >> 3,0x7fffffff);
   if (uVar1 < param_3) {
-    FUN_01037eb0(param_1,STRING_WIDTH_TOO_LARGE_TO_PROCESS_IMAGE_OFFSET + 0x1037c44);
+    png_warning(param_1,STRING_WIDTH_TOO_LARGE_TO_PROCESS_IMAGE_OFFSET + 0x1037c44);
     uVar1 = 0;
   }
   else {
@@ -52449,7 +52422,7 @@ void FUN_01037d48(int param_1,undefined4 param_2,undefined4 param_3)
   }
   iVar2 = STRING_IT_S_AN_ERROR_TO_SET_OFFSET + 0x1037d74;
   *(undefined4 *)(param_1 + 0x8c) = 0;
-  FUN_01037eb0(param_1,iVar2);
+  png_warning(param_1,iVar2);
   pcVar3 = (char *)(STRING_SAME_STRUCTURE_DOT_RESETTING_WRITE_DATA_OFFSET + 0x1037d88);
   iVar2 = 0;
   if (*pcVar3 == '#') {
@@ -52508,37 +52481,36 @@ void FUN_01037da8(int param_1,int param_2,int param_3,int param_4,int param_5)
   return;
 }
 
-/* ==== 0x01037E48  (file offset 0x37E48)  FUN_01037e48 ================================================ */
-undefined8 FUN_01037e48(int param_1,uint param_2,uint param_3)
+/* ==== 0x01037E48  (file offset 0x37E48)  png_sig_cmp ================================================= */
+/* libpng 1.2.0's png_sig_cmp (the routine is certain; the engine's PNG decoder is libpng 1.2.0, from
+   its version string). Compares numToCheck bytes of sig, from start, with the PNG signature (89 50 4E 47
+   0D 0A 1A 0A, copied from its literal pool at 0x0103FD70): numToCheck is capped at 8 and clipped to
+   8 - start; 0 when it is 0 or start > 7, else swv_memcmp's result. */
+int32 png_sig_cmp(const uint8 *sig,uint32 start,uint32 numToCheck)
 
 {
-  undefined4 uVar1;
-  undefined4 local_c;
-  undefined4 local_8;
-  
-  local_c = *(undefined4 *)(INTEGER_32536 + 0x1037e58);
-  local_8 = *(undefined4 *)(INTEGER_32536 + 0x1037e5c);
-  if (param_3 < 9) {
-    if (param_3 != 0) goto LAB_01037e78;
-  }
-  else {
-    param_3 = 8;
-LAB_01037e78:
-    if (param_2 < 8) {
-      if (8 < param_2 + param_3) {
-        param_3 = 8 - param_2;
-      }
-      uVar1 = FUN_01000080(param_1 + param_2,(int)&local_c + param_2,param_3);
-      goto LAB_01037e84;
-    }
-  }
-  uVar1 = 0;
-LAB_01037e84:
-  return CONCAT44(param_2,uVar1);
+  const uint32 *pool;
+  uint32 signature[2];
+
+  pool = (const uint32 *)(PNG_SIGNATURE_OFFSET + 0x1037e58);
+  signature[0] = pool[0];
+  signature[1] = pool[1];
+  if (numToCheck > 8)
+    numToCheck = 8;
+  else if (numToCheck < 1)
+    return 0;
+  if (start > 7)
+    return 0;
+  if (start + numToCheck > 8)
+    numToCheck = 8 - start;
+  return swv_memcmp(sig + start,(const uint8 *)signature + start,numToCheck);
 }
 
-/* ==== 0x01037EB0  (file offset 0x37EB0)  FUN_01037eb0 ================================================ */
-void FUN_01037eb0(int param_1,char *param_2)
+/* ==== 0x01037EB0  (file offset 0x37EB0)  png_warning ================================================= */
+/* libpng 1.2.0's png_warning (not yet rewritten): skips a "#nnn" error-number prefix (up to the space,
+   at most 14 characters) and passes the message to the png_struct's warning_fn (+0x84); with none set
+   it returns (no default handler in this build). */
+void png_warning(int param_1,char *param_2)
 
 {
   int iVar1;
@@ -55367,7 +55339,7 @@ int FUN_0103a77c(int param_1,int param_2,void **param_3)
   iStack_30 = param_1;
   iStack_2c = param_2;
   local_28 = param_3;
-  iVar4 = FUN_01037e48(param_2,0,8);
+  iVar4 = png_sig_cmp(param_2,0,8);
   if (iVar4 != 0) {
     return 0;
   }

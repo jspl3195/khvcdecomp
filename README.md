@@ -58,6 +58,15 @@ This must give no errors and no `-Wpedantic`, `-Wlong-long`, `-Woverflow` or shi
 - **Rewritten functions.** Functions that have been cleaned up have named, typed parameters, no `goto`, and the same calls as the binary, with none added or removed.
 - **Ghidra names.** Names such as `FUN_<address>`, `uVar3` and `param_1` are Ghidra's and have not been reviewed yet.
 
+## Dependencies
+
+The code shows it was built against these libraries:
+
+| Library | Module | Evidence |
+|---|---|---|
+| libpng 1.2.0 | swv21brew.mod (the PNG decoder) | the version string `"1.2.0"` (0x0103FAA4) passed to the read struct's constructor (FUN_0103586c, GUESS: `png_create_read_struct`), its "Incompatible libpng version in application and library" check, and routines that match libpng 1.2.0's source (`png_sig_cmp`, `png_warning`) |
+| zlib (version not yet identified) | swv21brew.mod (libpng's inflate) | libpng's "zlib version error" / "zlib memory error" messages |
+
 ## Known code
 
 Some routines are known code, recognised from their structure. Their comments name the source:
@@ -68,6 +77,8 @@ Some routines are known code, recognised from their structure. Their comments na
 | the double-precision `acos`, `sin`, `cos` and their kernels | fdlibm: `__ieee754_acos`, `__ieee754_rem_pio2`, `__kernel_sin`, `__kernel_cos`, `sin`, `cos` |
 | `rt_div0`, the word `memcpy` / `memclr` | the ARM C library: `__rt_div0`, `__rt_memcpy_w`, `__rt_memclr_w` |
 | swv21brew's `ll_mul` (0x0100094c) and `ll_mul_int` (0x01000028) | the ARM C library's 64-bit multiply, `_ll_mul` (`__aeabi_lmul` in later ABIs) |
+| swv21brew's `swv_memcmp` (0x01000080) | `memcmp` (GUESS: the ARM C library's, from its shape) |
+| swv21brew's PNG decoder: `png_sig_cmp` (0x01037e48), `png_warning` (0x01037eb0), ... | libpng 1.2.0 (its version string); its inflate is zlib |
 
 ## Status
 
