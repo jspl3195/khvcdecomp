@@ -148,8 +148,8 @@ int32 engine_memory_set_caching(ISwerve *swerve,int32 mode)
 /* GUESS: name, ARM's __rt_div0. The integer divides' divide-by-zero check: returns the divisor when it is
    not 0 (cmp r0, #0; movne pc, lr), else raises SIGFPE / divide by zero (rt_div0_raise: the binary's tail
    jump to 0x00100a4c) and returns its result. Ghidra had followed that jump and the next two
-   (raise_signal_and_exit, semihosting_exit) and shown their code as this function's. FUN_0010f2e8 calls it
-   twice with 360 (GUESS: the leftover check of two `% 360` whose results the compiler dropped). */
+   (raise_signal_and_exit, semihosting_exit) and shown their code as this function's. enemy_take_hit calls
+   it twice with 360 (GUESS: the leftover check of two `% 360` whose results the compiler dropped). */
 int32 rt_div0(int32 divisor)
 
 {
@@ -9402,112 +9402,54 @@ int32 combat_region_take_one(CombatRegion *region)
   return 1;
 }
 
-/* ==== 0x0010F2E8  (file offset 0x0F2E8)  FUN_0010f2e8 ================================================ */
-undefined8
-FUN_0010f2e8(int param_1,uint param_2,undefined4 param_3,uint param_4,undefined4 param_5,
-            undefined4 param_6,uint param_7)
+/* ==== 0x0010F2E8  (file offset 0x0F2E8)  enemy_take_hit ============================================== */
+/* GUESS: names. The enemy's take-hit method (EnemyVtbl slot 5; combat_region_hit_enemies, for every enemy
+   of the region). A hit is ignored in player state 7 by an enemy with ignoresState7 (type 9), out of range
+   (the planar squared distance from the attack's point not below 1.0; `z` is stored for
+   planar_distance_squared_2 at sp+8 but not read) and while hitCooldownLeft runs. A full hit (type 2, an
+   ordinary swing, targetNumber 0, while field_88 is 2005 - 2008, or any hit on an enemy with alwaysHurt)
+   takes `damage` off its health (not below 0), shows its health in the HUD's target gauge, resets its
+   states (enemy_reset_states), puts field_88 in 2004 (the recoil) and starts the cool-down (hitCooldown
+   ms). Otherwise a targeted strike on this enemy (targetNumber == number) only takes the damage off. The
+   direction from the enemy to the player's point, the player's heading and two `% 360` (rt_div0) are
+   computed first and never used (GAME_BUGS.md). The binary has the full hit twice (0x0010f3d8, 0x0010f464
+   for type 2), the last two stores swapped. Returns the health (a float's bits) on every path; Ghidra's
+   64-bit return was a leftover r1. */
+uint32 enemy_take_hit(Enemy *enemy,int32 targetNumber,uint32 damage,uint32 x,uint32 y,uint32 z,
+                      int32 playerState)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  uint uVar3;
-  uint uVar4;
-  bool bVar5;
-  bool bVar6;
-  bool bVar7;
-  undefined1 uVar8;
-  uint uVar9;
-  undefined8 uVar10;
-  
-  uVar8 = 6 < param_7;
-  if ((param_7 == 7) && (uVar8 = true, uVar9 = param_2, *(int *)(param_1 + 0x110) != 0))
-  goto LAB_0010f4c0;
-  direction_to(((KHApp *)*(int *)(param_1 + 0x74))->context,((Enemy *)param_1)->playerPoint[0],
-               ((Enemy *)param_1)->playerPoint[1],((Enemy *)param_1)->position[0],
-               ((Enemy *)param_1)->position[1] /* not arguments, value leftovers: param_3,param_4 */);
-  motion_entity_get_heading((MotionEntity *)*(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xa4) + 0x1f8));
-  rt_div0(0x168);
-  rt_div0(0x168);
-  uVar2 = planar_distance_squared_2(param_1,((Enemy *)param_1)->position[0],
-                                    ((Enemy *)param_1)->position[1],((Enemy *)param_1)->position[2],
-                                    param_4,param_5 /* not arguments, value leftovers: param_6 */);
-  float_compare_less(uVar2,0x3f800000);
-  iVar1 = INTEGER_2004;
-  uVar9 = param_4;
-  if (((bool)uVar8) || (0 < *(int *)(param_1 + 0x128))) goto LAB_0010f4c0;
-  uVar8 = 1 < *(uint *)(param_1 + 0x104);
-  if (*(uint *)(param_1 + 0x104) == 2) {
-    uVar2 = float_subtract(*(undefined4 *)(param_1 + 0x3c),param_3);
-    *(undefined4 *)(param_1 + 0x3c) = uVar2;
-    float_compare_less(uVar2,0);
-    if (!(bool)uVar8) {
-      *(undefined4 *)(param_1 + 0x3c) = 0;
-    }
-    uVar2 = float_to_int(*(undefined4 *)(param_1 + 0x3c));
-    *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x4c) = uVar2;
-    uVar2 = float_to_int(*(undefined4 *)(*(int *)(param_1 + 0x40) + 0x118));
-    *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x50) = uVar2;
-    enemy_reset_states((Enemy *)param_1);
-    *(undefined4 *)(param_1 + 0x128) = *(undefined4 *)(param_1 + 0x124);
-    *(int *)(param_1 + 0x88) = iVar1;
-    uVar9 = param_4;
-    goto LAB_0010f4c0;
+  uint32 distance;
+
+  if (playerState == 7 && enemy->ignoresState7 != 0)
+    return enemy->health;
+  direction_to(enemy->app->context,enemy->playerPoint[0],enemy->playerPoint[1],enemy->position[0],
+               enemy->position[1]);
+  motion_entity_get_heading((MotionEntity *)((Game *)enemy->app->pGame)->character);
+  rt_div0(360);
+  rt_div0(360);
+  distance = planar_distance_squared_2(enemy,enemy->position[0],enemy->position[1],enemy->position[2],x,y);
+  if (!(float_compare_less(distance,0x3f800000), *(float *)&distance < 1.0f) || enemy->hitCooldownLeft > 0)
+    return enemy->health;
+  if (enemy->type == 2 || (targetNumber == 0 && enemy->field_88 >= 2005 && enemy->field_88 <= 2008) ||
+      enemy->alwaysHurt != 0) {
+    enemy->health = float_subtract(enemy->health,damage);
+    if (float_compare_less(enemy->health,0), *(float *)&enemy->health < 0.0f)
+      enemy->health = 0;
+    enemy->app->hud->targetHealth = (int32)float_to_int(enemy->health);
+    enemy->app->hud->targetMaximumHealth = (int32)float_to_int(enemy->region->enemyMaximumHealth);
+    enemy_reset_states(enemy);
+    enemy->field_88 = INTEGER_2004;
+    enemy->hitCooldownLeft = enemy->hitCooldown;
   }
-  if (param_2 == 0) {
-    uVar3 = *(uint *)(param_1 + 0x88);
-    uVar8 = 0xd4 < uVar3 - 0x700;
-    bVar5 = uVar3 != 0x7d5;
-    uVar4 = 0;
-    if (bVar5) {
-      uVar4 = INTEGER_2004 + 2;
-      uVar8 = uVar4 <= uVar3;
-    }
-    bVar6 = uVar3 != uVar4;
-    if (bVar5 && bVar6) {
-      uVar8 = INTEGER_2007 <= uVar3;
-      uVar4 = INTEGER_2007;
-    }
-    bVar7 = uVar3 != uVar4;
-    if ((bVar5 && bVar6) && bVar7) {
-      uVar4 = uVar3 - 0x400;
-      uVar8 = 0x3d7 < uVar4;
-    }
-    if (((bVar5 && bVar6) && bVar7) && uVar4 != 0x3d8) goto LAB_0010f3cc;
+  else if (enemy->number == targetNumber) {
+    enemy->health = float_subtract(enemy->health,damage);
+    if (float_compare_less(enemy->health,0), *(float *)&enemy->health < 0.0f)
+      enemy->health = 0;
   }
-  else {
-LAB_0010f3cc:
-    uVar8 = true;
-    if (*(int *)(param_1 + 0x10c) == 0) {
-      uVar8 = param_2 <= *(uint *)(param_1 + 0x1c);
-      if (*(uint *)(param_1 + 0x1c) == param_2) {
-        uVar2 = float_subtract(*(undefined4 *)(param_1 + 0x3c),param_3);
-        *(undefined4 *)(param_1 + 0x3c) = uVar2;
-        float_compare_less(uVar2,0);
-        uVar9 = param_4;
-        if (!(bool)uVar8) {
-          *(undefined4 *)(param_1 + 0x3c) = 0;
-        }
-      }
-      goto LAB_0010f4c0;
-    }
-  }
-  uVar2 = float_subtract(*(undefined4 *)(param_1 + 0x3c),param_3);
-  *(undefined4 *)(param_1 + 0x3c) = uVar2;
-  float_compare_less(uVar2,0);
-  if (!(bool)uVar8) {
-    *(undefined4 *)(param_1 + 0x3c) = 0;
-  }
-  uVar2 = float_to_int(*(undefined4 *)(param_1 + 0x3c));
-  *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x4c) = uVar2;
-  uVar2 = float_to_int(*(undefined4 *)(*(int *)(param_1 + 0x40) + 0x118));
-  *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x74) + 0xd4) + 0x50) = uVar2;
-  enemy_reset_states((Enemy *)param_1);
-  *(int *)(param_1 + 0x88) = iVar1;
-  *(undefined4 *)(param_1 + 0x128) = *(undefined4 *)(param_1 + 0x124);
-  uVar9 = param_4;
-LAB_0010f4c0:
-  return MAKE_WORDS(uVar10,uVar9,*(undefined4 *)(param_1 + 0x3c));
+  return enemy->health;
 }
+
 
 /* ==== 0x0010F1FC  (file offset 0x0F1FC)  FUN_0010f1fc ================================================ */
 /* A routine Ghidra has no function for (only reached by tail jumps, from FUN_0010d074 at 0x0010d188 and
@@ -12952,21 +12894,21 @@ void FUN_00114a1c(int param_1,undefined4 param_2)
 
 /* ==== 0x00114A94  (file offset 0x14A94)  combat_region_hit_enemies =================================== */
 /* GUESS: names. A player attack (FUN_00123588) against a combat region: every enemy takes the hit
-   (vtable slot +0x14, with `part`, the damage, the attack's position and the player's state; GUESS:
-   `part`, 0-2, which part of the attack). When that leaves every enemy defeated and none left to come in
-   the wave, the region shows its message (FUN_0011d040 with its nameId: 0x11E3EE3E while waves remain,
-   as combat_region_update does when a wave starts; GUESS: 0x14F1CDC1 when it is cleared), goes back to
-   waiting (state 1) and 1 is returned; else 0. Ghidra had built a 64-bit return from a leftover r1
-   (the restored `part`); the callers read only the low word. boss_combat_region_hit_target is the boss
-   region's counterpart. */
-int32 combat_region_hit_enemies(CombatRegion *region,int32 part,uint32 damage,uint32 x,uint32 y,uint32 z,
-                              int32 playerState)
+   (enemy_take_hit, vtable slot +0x14, with `targetNumber`, the damage, the attack's position and the
+   player's state; GUESS: `targetNumber` is 0 for an ordinary swing, else the locked target's number). When
+   that leaves every enemy defeated and none left to come in the wave, the region shows its message
+   (FUN_0011d040 with its nameId: 0x11E3EE3E while waves remain, as combat_region_update does when a wave
+   starts; GUESS: 0x14F1CDC1 when it is cleared), goes back to waiting (state 1) and 1 is returned; else 0.
+   Ghidra had built a 64-bit return from a leftover r1 (the restored `targetNumber`); the callers read only
+   the low word. boss_combat_region_hit_target is the boss region's counterpart. */
+int32 combat_region_hit_enemies(CombatRegion *region,int32 targetNumber,uint32 damage,uint32 x,uint32 y,
+                                uint32 z,int32 playerState)
 
 {
   int32 i;
 
   for (i = 0; i < region->enemyCount; i++)
-    (*region->enemies[i]->vtable->takeHit)(region->enemies[i],part,damage,x,y,z,playerState);
+    (*region->enemies[i]->vtable->takeHit)(region->enemies[i],targetNumber,damage,x,y,z,playerState);
   if (!combat_region_all_enemies_defeated(region) || region->enemiesLeftInWave != 0)
     return 0;
   FUN_0011d040((int32)region->app->context,region->nameId,
@@ -12981,10 +12923,10 @@ int32 combat_region_hit_enemies(CombatRegion *region,int32 part,uint32 damage,ui
    attack's position and the player's state (+0x228). It hits the game's current target
    (pGame->character->[0x20c], set by FUN_00123d7c): a hitsphere takes the hit (vtable +8) and the HUD's
    targetHealth is refreshed from the first hitsphere's field_14 (float_to_int, float to integer); the
-   extra entity is hidden (FUN_001201cc) and made untargetable instead. `part` (r1; as
+   extra entity is hidden (FUN_001201cc) and made untargetable instead. `targetNumber` (r1; as
    combat_region_hit_enemies gets it) is never read. Always returns 0. combat_region_hit_enemies is the combat region's counterpart. */
-int32 boss_combat_region_hit_target(BossCombatRegion *region,int32 part,uint32 damage,uint32 x,uint32 y,uint32 z,
-                               int32 playerState)
+int32 boss_combat_region_hit_target(BossCombatRegion *region,int32 targetNumber,uint32 damage,uint32 x,
+                                    uint32 y,uint32 z,int32 playerState)
 
 {
   int32 target = *(int32 *)(*(int32 *)((int32)region->app->pGame + 0x1f8) + 0x20c);
@@ -13817,8 +13759,12 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
 }
 
 
-/* ==== 0x001174AC  (file offset 0x174AC)  FUN_001174ac ================================================ */
-void FUN_001174ac(int param_1,undefined4 param_2)
+/* ==== 0x001174AC  (file offset 0x174AC)  enemy_setup_type ============================================ */
+/* GUESS: name (not yet rewritten). The enemy's set-up by type (EnemyVtbl slot 0, `reset`): its alive
+   behaviours (field_19c FUN_0011daac, field_1a0 FUN_0011d3ec), walk pace and range and the hit fields, by
+   default hitCooldown 2500 ms and alwaysHurt and ignoresState7 clear; then a switch on its type (+0x104)
+   sets alwaysHurt for types 2 - 9, hitCooldown 1500 ms for type 5 and ignoresState7 for type 9. */
+void enemy_setup_type(int param_1,undefined4 param_2)
 
 {
   undefined4 uVar1;
@@ -18186,7 +18132,7 @@ void combat_region_release_attack_token(CombatRegion *region)
    its own thousand: field_88 2001, field_84 3001, field_9c 4001, waitState 5001, field_8c 6001,
    field_90 7001; `state`, 1001-1004, is left alone), every action sequence at its first step (0x65), and
    clears field_120. Called when it is created and when it comes in (enemy_update), by its type's set-up
-   (FUN_001174ac) and by FUN_0010f2e8. */
+   (enemy_setup_type) and by enemy_take_hit. */
 void enemy_reset_states(Enemy *enemy)
 
 {
@@ -21548,8 +21494,8 @@ void enemy_update(Enemy *enemy,int32 now,int32 elapsed)
       enemy->state = INTEGER_1001;
     break;
   }
-  if (enemy->field_128 > 0 && (enemy->field_128 -= elapsed) <= 0)
-    enemy->field_128 = 0;
+  if (enemy->hitCooldownLeft > 0 && (enemy->hitCooldownLeft -= elapsed) <= 0)
+    enemy->hitCooldownLeft = 0;
   if (enemy->field_12c > 0 && (enemy->field_12c -= elapsed) <= 0)
     enemy->field_12c = 0;
 }

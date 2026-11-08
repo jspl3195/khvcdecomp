@@ -640,7 +640,7 @@ int32 string_remove_prefix(int32 context,const char *prefix,char *text,char *out
 int FUN_0010f058(int param_1,int param_2);
 void item_drops_get_chances(ItemDrops *drops,uint32 *chances);   /* 0x0010F244 GUESS: name, see kh_mod.c */
 int32 combat_region_take_one(CombatRegion *region);   /* 0x0010F2CC GUESS: name */
-undefined8 FUN_0010f2e8(int param_1,uint param_2,undefined4 param_3,uint param_4,undefined4 param_5, undefined4 param_6,uint param_7);
+uint32 enemy_take_hit(Enemy *enemy,int32 targetNumber,uint32 damage,uint32 x,uint32 y,uint32 z,int32 playerState);   /* 0x0010F2E8 GUESS: name, see kh_mod.c */
 void FUN_0010f4d0(int param_1,uint param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5,
                  uint param_6);
 void progress_reset(Progress *progress);   /* 0x0010F880 GUESS: name */
@@ -717,12 +717,12 @@ int32 combat_region_take_attack_token(CombatRegion *region);   /* 0x00114910 GUE
 void character_stop_animations(Character *character);   /* 0x0011492C GUESS: name, see kh_mod.c */
 void FUN_0011498c(int param_1,uint param_2);
 void FUN_00114a1c(int param_1,undefined4 param_2);
-int32 combat_region_hit_enemies(CombatRegion *region,int32 part,uint32 damage,uint32 x,uint32 y,uint32 z,int32 playerState);   /* 0x00114A94 GUESS: names */
-int32 boss_combat_region_hit_target(BossCombatRegion *region,int32 part,uint32 damage,uint32 x,uint32 y,uint32 z,int32 playerState);   /* 0x00114B48 GUESS: name */
+int32 combat_region_hit_enemies(CombatRegion *region,int32 targetNumber,uint32 damage,uint32 x,uint32 y,uint32 z,int32 playerState);   /* 0x00114A94 GUESS: names */
+int32 boss_combat_region_hit_target(BossCombatRegion *region,int32 targetNumber,uint32 damage,uint32 x,uint32 y,uint32 z,int32 playerState);   /* 0x00114B48 GUESS: name */
 void FUN_00114c00(int param_1,undefined4 param_2,undefined4 param_3,int param_4);
 void FUN_001150d0(int param_1,int *param_2);
 void script_command_parse(ScriptCommand *command,int32 owner,char *text);   /* 0x00115118 GUESS: name, see kh_mod.c */
-void FUN_001174ac(int param_1,undefined4 param_2);
+void enemy_setup_type(int param_1,undefined4 param_2);   /* 0x001174AC GUESS: name, see kh_mod.c */
 void FUN_00117d30(int param_1,int *param_2);
 void combat_region_setup(CombatRegion *region,int32 context);   /* 0x00117DD8 GUESS: name */
 undefined8 FUN_001180c4(int param_1,uint param_2);
@@ -2114,12 +2114,12 @@ static code *const VTABLE_0010165C[9] = {   /* 0x0010165C; in kh.mod each entry 
 };
 static code *const VTABLE_00101680[8] = {   /* 0x00101680; in kh.mod each entry is the method's offset from
                                                 the table */
-  (code *)FUN_001174ac,
+  (code *)enemy_setup_type,
   (code *)enemy_update,
   (code *)enemy_enter_mode_1,
   (code *)enemy_enter_mode_2,
   (code *)enemy_enter_mode_3,
-  (code *)FUN_0010f2e8,
+  (code *)enemy_take_hit,
   (code *)enemy_get_health,
   (code *)enemy_is_waiting
 };

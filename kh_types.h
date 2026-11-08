@@ -1092,13 +1092,13 @@ typedef struct ItemDrops {
 
 /* The enemy class's vtable (VTABLE_00101680 in kh_mod.h; GUESS: names). */
 typedef struct EnemyVtbl {
-    void   (*reset)(void *self);                    /* +0x00 slot 0, FUN_001174ac (run with enterMode2) */
+    void   (*reset)(void *self);              /* +0x00 slot 0, enemy_setup_type (run with enterMode2) */
     void   (*update)(void *self,int32 now,int32 elapsed);                 /* +0x04 slot 1, enemy_update */
     void   (*enterMode1)(void *self); /* +0x08 slot 2, enemy_enter_mode_1 */
     void   (*enterMode2)(void *self); /* +0x0c slot 3, enemy_enter_mode_2 */
     void   (*enterMode3)(void *self); /* +0x10 slot 4, enemy_enter_mode_3 */
-    int32  (*takeHit)(void *self,int32 part,uint32 damage,uint32 x,uint32 y,uint32 z,int32 playerState);
-                                                                          /* +0x14 slot 5, FUN_0010f2e8 */
+    uint32 (*takeHit)(void *self,int32 targetNumber,uint32 damage,uint32 x,uint32 y,uint32 z,
+                      int32 playerState);                                /* +0x14 slot 5, enemy_take_hit */
     uint32 (*getHealth)(void *self); /* +0x18 slot 6, enemy_get_health */
     int32  (*isWaiting)(void *self); /* +0x1c slot 7, enemy_is_waiting */
 } EnemyVtbl;
@@ -1127,7 +1127,8 @@ typedef struct Enemy {
     int32    mode;                  /* +0x080 1: the code at 0x0011db34 runs instead of the states (field_90) */
     int32    field_84;              /* +0x084 a state machine: 3001 first (enemy_reset_states) */
     int32    field_88;              /* +0x088 a state machine: 2001 first; 2004: the alive behaviour runs even
-                                     at 0 health */
+                                     at 0 health, and the recoil after a full hit (enemy_take_hit); in
+                                     2005 - 2008 an ordinary swing hurts it */
     int32    field_8c;              /* +0x08c a state machine: 6001 first */
     int32    field_90;              /* +0x090 the state while mode is 1: 7001, 7002, 7003 */
     uint8  unknown_94[0x08];
@@ -1153,14 +1154,19 @@ typedef struct Enemy {
                                      none */
     int32    type;                  /* +0x104 1-11, from the region's enemy name (combat_region_setup) */
     int32    field_108;             /* +0x108 when set (or for type 2) its health bar is shown */
-    uint8  unknown_10c[0x08];
+    int32    alwaysHurt;            /* +0x10c GUESS: name; set for types 2 - 9 (enemy_setup_type): every
+                                     hit in range is a full hit (enemy_take_hit) */
+    int32    ignoresState7;         /* +0x110 GUESS: name; set for type 9: hits in player state 7 are
+                                     ignored */
     uint32   walkRange;           /* +0x114 GUESS: name. A float (its bits): the squared distance below
                                      which enemy_roam walks away from the player */
     int32    walkPace;              /* +0x118 the ms a walk takes per unit */
     uint8  unknown_11c[0x04];
     int32    field_120;             /* +0x120 cleared by enemy_reset_states */
-    uint8  unknown_124[0x04];
-    int32    field_128;             /* +0x128 a countdown (enemy_update subtracts the elapsed time) */
+    int32    hitCooldown;           /* +0x124 GUESS: name; ms a full hit keeps it from being hit again:
+                                     2500, 1500 for type 5 (enemy_setup_type) */
+    int32    hitCooldownLeft;       /* +0x128 the cool-down left (enemy_update subtracts the elapsed time);
+                                     no hit lands while above 0 */
     int32    field_12c;             /* +0x12c another countdown */
     int32    field_130;             /* +0x130 */
     uint8  unknown_134[0x04];
