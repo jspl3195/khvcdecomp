@@ -606,7 +606,7 @@ int32 enemy_is_waiting(Enemy *enemy);   /* 0x00119AF4 (no Ghidra function; a vir
 void enemy_enter_mode_3(Enemy *enemy);   /* 0x0011F260 (no Ghidra function; a virtual method) */
 void enemy_enter_mode_2(Enemy *enemy);   /* 0x0011F26C (no Ghidra function; a virtual method) */
 void enemy_enter_mode_1(Enemy *enemy);   /* 0x0011F624 (no Ghidra function; a virtual method) */
-void sound_set_destroy(undefined4 *param_1,int param_2);   /* 0x0010CE08 GUESS: name: a SoundSet (see kh_types.h) */
+void sound_set_destroy(SoundSet *set,int32 freeIt);   /* 0x0010CE08 GUESS: name, see kh_mod.c */
 void app_context_destroy(AppContext *context,int32 freeIt);   /* 0x0010CEE4 GUESS: name, see kh_mod.c */
 void progress_add_experience(Progress *progress,int32 amount);   /* 0x0010CFC4 GUESS: name */
 void FUN_0010d074(int param_1,undefined4 param_2);

@@ -6965,11 +6965,11 @@ void FUN_0010c2c4(int *param_1,int param_2)
   int iVar1;
   
   if (*(int *)(param_1[0x85] + 0xbc) != 0) {
-    sound_set_destroy(*(int *)(param_1[0x85] + 0xbc),1 /* not arguments, register leftovers: param_3,param_4,param_4 */);
+    sound_set_destroy(((KHApp *)param_1[0x85])->effects,1 /* not arguments, register leftovers: param_3,param_4,param_4 */);
     *(undefined4 *)(param_1[0x85] + 0xbc) = 0;
   }
   if (*(int *)(param_1[0x85] + 0xc0) != 0) {
-    sound_set_destroy(*(int *)(param_1[0x85] + 0xc0),1);
+    sound_set_destroy(((KHApp *)param_1[0x85])->levelSounds,1);
     *(undefined4 *)(param_1[0x85] + 0xc0) = 0;
   }
   iVar1 = 0;
@@ -7522,47 +7522,41 @@ void list_destroy(UIList *list,int32 freeIt)
 
 
 /* ==== 0x0010CE08  (file offset 0x0CE08)  sound_set_destroy =========================================== */
-void sound_set_destroy(undefined4 *param_1,int param_2)
+/* GUESS: names. The sound set's destructor: for each entry its IMedia is released, its loaded data freed
+   (when the set keeps data) and the entry freed and cleared; then the count is 0, the entries and data
+   arrays are freed and cleared, the app forgotten, and the set freed when `freeIt` is set (the binary's
+   tail jump to helper_free at 0x0010ced8; every other free goes through the helper table). An entry's
+   media is released before the entry is tested and is never tested itself (0x0010ce28 - 0x0010ce60):
+   GAME_BUGS.md. */
+void sound_set_destroy(SoundSet *set,int32 freeIt)
 
 {
-  undefined4 *puVar2;
-  int iVar3;
-  for (iVar3 = 0; iVar3 < (int)param_1[3]; iVar3 = iVar3 + 1) {
-    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-    (*((IMedia *)**(undefined4 **)(param_1[1] + iVar3 * 4))->pvt->Release)
-        ((IMedia *)**(undefined4 **)(param_1[1] + iVar3 * 4));
-    if (param_1[2] != 0) {
-      (*g_pHelperFuncs->free)(*(undefined4 *)(param_1[2] + iVar3 * 4));
-    }
-    if (*(int *)(param_1[1] + iVar3 * 4) != 0) {
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-      (*g_pHelperFuncs->free)(*(undefined4 *)(param_1[1] + iVar3 * 4));
-      *(undefined4 *)(param_1[1] + iVar3 * 4) = 0;
+  int32 i;
+
+  for (i = 0; i < set->count; i++) {
+    (*set->entries[i]->media->pvt->Release)(set->entries[i]->media);
+    if (set->data != (void **)0x0)
+      (*g_pHelperFuncs->free)(set->data[i]);
+    if (set->entries[i] != (SoundEntry *)0x0) {
+      (*g_pHelperFuncs->free)(set->entries[i]);
+      set->entries[i] = (SoundEntry *)0x0;
     }
   }
-  param_1[3] = 0;
-  if (param_1[1] != 0) {
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)(param_1[1]);
-    param_1[1] = 0;
+  set->count = 0;
+  if (set->entries != (SoundEntry **)0x0) {
+    (*g_pHelperFuncs->free)(set->entries);
+    set->entries = (SoundEntry **)0x0;
   }
-  puVar2 = (undefined4 *)0x0;
-  if (param_1[2] != 0) {
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-    (*g_pHelperFuncs->free)((void *)param_1[2]);   /* Ghidra: puVar2 = r0 after free; unused (puVar2
-                                                       is set to param_1 below before any use) */
-    param_1[2] = 0;
+  if (set->data != (void **)0x0) {
+    (*g_pHelperFuncs->free)(set->data);
+    set->data = (void **)0x0;
   }
-  if (param_2 != 0) {
-    puVar2 = param_1;
-  }
-  *param_1 = 0;
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(puVar2);
+  set->app = (struct KHApp *)0x0;
+  if (freeIt != 0)
+    helper_free(set);
   return;
 }
+
 
 /* ==== 0x0010CEE4  (file offset 0x0CEE4)  app_context_destroy ========================================= */
 /* GUESS: names. The app's context's destructor: releases its Transform, destroys its sound sets
@@ -7574,11 +7568,11 @@ void app_context_destroy(AppContext *context,int32 freeIt)
   if (context->transform != (ISwerveObject *)0x0)
     (*((ISwerveObject *)context->transform)->pvt->Release)((ISwerveObject *)context->transform);
   if (context->sounds[0] != 0) {
-    sound_set_destroy((undefined4 *)context->sounds[0],1);
+    sound_set_destroy((SoundSet *)context->sounds[0],1);
     context->sounds[0] = 0;
   }
   if (context->sounds[1] != 0) {
-    sound_set_destroy((undefined4 *)context->sounds[1],1);
+    sound_set_destroy((SoundSet *)context->sounds[1],1);
     context->sounds[1] = 0;
   }
   if (freeIt != 0)
@@ -10655,7 +10649,7 @@ int32 script_command_run(ScriptCommand *command)
     break;
   case 0x16:   /* loadSounds: the level's sounds (KHApp.levelSounds) */
     if (app->levelSounds != (SoundSet *)0x0) {
-      sound_set_destroy((undefined4 *)app->levelSounds,1);
+      sound_set_destroy(app->levelSounds,1);
       app->levelSounds = (SoundSet *)0x0;
     }
     if (command->text == (char *)0x0)
@@ -17568,7 +17562,7 @@ undefined4 FUN_0011cfdc(int param_1,undefined4 param_2,int param_3)
   uStack_14 = param_2;
   iStack_10 = param_3;
   if (*(int *)(param_1 + 8) != 0) {
-    sound_set_destroy(*(int *)(param_1 + 8),1 /* not arguments, register leftovers: param_3,param_4,param_1 */);
+    sound_set_destroy((SoundSet *)*(int *)(param_1 + 8),1 /* not arguments, register leftovers: param_3,param_4,param_1 */);
   }
   uVar1 = sound_set_create(0,&uStack_14,1,1).low;
   *(undefined4 *)(param_1 + 8) = uVar1;
@@ -20002,14 +19996,14 @@ void FUN_00120450(undefined4 *param_1)
   if (param_1[1] != 0) {
     sound_set_stop((SoundSet *)param_1[1]);
     if (param_1[1] != 0) {
-      sound_set_destroy(param_1[1],1);
+      sound_set_destroy((SoundSet *)param_1[1],1);
     }
     param_1[1] = 0;
   }
   if (param_1[2] != 0) {
     sound_set_stop((SoundSet *)param_1[2]);
     if (param_1[2] != 0) {
-      sound_set_destroy(param_1[2],1);
+      sound_set_destroy((SoundSet *)param_1[2],1);
     }
     param_1[2] = 0;
   }
