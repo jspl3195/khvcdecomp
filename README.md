@@ -75,7 +75,7 @@ Some routines are known code, recognised from their structure. Their comments na
 |---|---|
 | `collision_shape_turn_direction` (0x00113da4) | Franklin Antonio's segment intersection test, "Faster Line Segment Intersection", *Graphics Gems III* (1992) |
 | the double-precision `acos`, `sin`, `cos` and their kernels | fdlibm: `__ieee754_acos`, `__ieee754_rem_pio2`, `__kernel_sin`, `__kernel_cos`, `sin`, `cos` |
-| `rt_div0`, the word `memcpy` / `memclr` | the ARM C library: `__rt_div0`, `__rt_memcpy_w`, `__rt_memclr_w` |
+| `rt_div0`, the word `memcpy` / `memclr`; swv21brew's `swv_memcpy_word_aligned` (0x01000188) and `rt_memcpy` (0x01000c94) | the ARM C library: `__rt_div0`, `__rt_memcpy_w`, `__rt_memclr_w`; `__rt_memcpy_w`, `__rt_memcpy` |
 | swv21brew's `ll_mul` (0x0100094c) and `ll_mul_int` (0x01000028) | the ARM C library's 64-bit multiply, `_ll_mul` (`__aeabi_lmul` in later ABIs) |
 | swv21brew's `swv_memcmp` (0x01000080) | `memcmp` (GUESS: the ARM C library's, from its shape) |
 | swv21brew's PNG decoder: `png_sig_cmp` (0x01037e48), `png_warning` (0x01037eb0), ... | libpng 1.2.0 (its version string); its inflate is zlib |

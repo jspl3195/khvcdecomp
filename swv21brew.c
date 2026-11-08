@@ -72,11 +72,14 @@ int32 swv_memcmp(const uint8 *a,const uint8 *b,uint32 n)
   return 0;
 }
 
-/* ==== 0x01000100  (file offset 0x00100)  FUN_01000100 ================================================ */
-undefined4 FUN_01000100(undefined4 param_1)
+/* ==== 0x01000100  (file offset 0x00100)  swv_memcpy ================================================== */
+/* GUESS: name (not yet rewritten). memcpy(destination, source, byteCount): the general copy
+   rt_memcpy, returning the destination (it keeps r0 across the call). Reached mostly through its
+   thunk, thunk_swv_memcpy (0x01039dec, a branch here). */
+undefined4 swv_memcpy(undefined4 param_1)
 
 {
-  FUN_01000c94();
+  rt_memcpy();
   return param_1;
 }
 
@@ -157,107 +160,28 @@ undefined4 * swv_memzero(undefined4 *param_1,uint param_2)
   return puVar3;
 }
 
-/* ==== 0x01000188  (file offset 0x00188)  FUN_01000188 ================================================ */
-undefined8 FUN_01000188(byte *param_1,byte *param_2,uint param_3,undefined4 param_4)
+/* ==== 0x01000188  (file offset 0x00188)  swv_memcpy_word_aligned ===================================== */
+/* GUESS: name. memcpy(destination, source, byteCount) for word-aligned destination and source: the ARM
+   C library's __rt_memcpy_w (ADS / RVCT; __aeabi_memcpy4 in later ABIs), the engine's own copy of kh.mod's
+   memcpy_word_aligned (0x0010021c). Evidence (0x01000188-0x010001f0): while at least 32 bytes remain,
+   two `ldmcs r1!, {r3, r4, r12, lr}` / `stmcs r0!, {...}` pairs copy 32 bytes; the rest of the count is
+   copied by its bits (16, 8, 4 bytes with ldm/stm and ldr/str, then 1 and 2 single bytes); alignment is
+   never checked. Ghidra's 4th parameter is r3, only a scratch register. Returns the end pointers, as the
+   binary leaves them: r0 the destination's, r1 the source's (FUN_01008c54, moving 0x50-byte elements,
+   returns r0). Callers copy constant tables and structures (0x14-0x154 bytes, multiples of 4). */
+uint64 swv_memcpy_word_aligned(void *destination,void *source,uint32 byteCount)
 
 {
-  byte bVar1;
-  byte *pbVar2;
-  byte *pbVar3;
-  byte *pbVar4;
-  undefined4 uVar5;
-  undefined4 uVar6;
-  uint uVar7;
-  undefined4 uVar8;
-  bool bVar9;
-  bool bVar10;
-  
-  bVar9 = 0x1f < param_3;
-  param_3 = param_3 - 0x20;
-  if (bVar9) {
-    do {
-      if (bVar9) {
-        uVar5 = *(undefined4 *)(param_2 + 4);
-        uVar6 = *(undefined4 *)(param_2 + 8);
-        uVar8 = *(undefined4 *)(param_2 + 0xc);
-        *(undefined4 *)param_1 = *(undefined4 *)param_2;
-        *(undefined4 *)(param_1 + 4) = uVar5;
-        *(undefined4 *)(param_1 + 8) = uVar6;
-        *(undefined4 *)(param_1 + 0xc) = uVar8;
-        param_4 = *(undefined4 *)(param_2 + 0x10);
-        uVar5 = *(undefined4 *)(param_2 + 0x14);
-        uVar6 = *(undefined4 *)(param_2 + 0x18);
-        uVar8 = *(undefined4 *)(param_2 + 0x1c);
-        param_2 = param_2 + 0x20;
-        *(undefined4 *)(param_1 + 0x10) = param_4;
-        *(undefined4 *)(param_1 + 0x14) = uVar5;
-        *(undefined4 *)(param_1 + 0x18) = uVar6;
-        *(undefined4 *)(param_1 + 0x1c) = uVar8;
-        param_1 = param_1 + 0x20;
-        bVar9 = 0x1f < param_3;
-        param_3 = param_3 - 0x20;
-      }
-    } while (bVar9);
-  }
-  if ((bool)((byte)(param_3 >> 4) & 1)) {
-    param_4 = *(undefined4 *)param_2;
-    uVar5 = *(undefined4 *)(param_2 + 4);
-    uVar6 = *(undefined4 *)(param_2 + 8);
-    uVar8 = *(undefined4 *)(param_2 + 0xc);
-    param_2 = param_2 + 0x10;
-    *(undefined4 *)param_1 = param_4;
-    *(undefined4 *)(param_1 + 4) = uVar5;
-    *(undefined4 *)(param_1 + 8) = uVar6;
-    *(undefined4 *)(param_1 + 0xc) = uVar8;
-    param_1 = param_1 + 0x10;
-  }
-  if ((int)(param_3 << 0x1c) < 0) {
-    param_4 = *(undefined4 *)param_2;
-    uVar5 = *(undefined4 *)(param_2 + 4);
-    param_2 = param_2 + 8;
-    *(undefined4 *)param_1 = param_4;
-    *(undefined4 *)(param_1 + 4) = uVar5;
-    param_1 = param_1 + 8;
-  }
-  uVar7 = param_3 << 0x1e;
-  pbVar2 = param_1;
-  pbVar3 = param_2;
-  if ((bool)((byte)(param_3 >> 2) & 1)) {
-    pbVar3 = param_2 + 4;
-    param_4 = *(undefined4 *)param_2;
-    pbVar2 = param_1 + 4;
-    *(undefined4 *)param_1 = param_4;
-  }
-  bVar1 = (byte)param_4;
-  if (uVar7 != 0) {
-    bVar10 = (bool)((byte)(param_3 >> 1) & 1);
-    param_3 = param_3 << 0x1f;
-    bVar9 = (int)param_3 < 0;
-    pbVar4 = pbVar3;
-    if (bVar9) {
-      pbVar4 = pbVar3 + 1;
-      param_3 = (uint)*pbVar3;
-    }
-    if (bVar10) {
-      pbVar3 = pbVar4 + 1;
-      bVar1 = *pbVar4;
-      pbVar4 = pbVar4 + 2;
-      uVar7 = (uint)*pbVar3;
-    }
-    pbVar3 = pbVar2;
-    if (bVar9) {
-      pbVar3 = pbVar2 + 1;
-      *pbVar2 = (byte)param_3;
-    }
-    if (bVar10) {
-      pbVar2 = pbVar3 + 1;
-      *pbVar3 = bVar1;
-      pbVar3 = pbVar3 + 2;
-      *pbVar2 = (byte)uVar7;
-    }
-    return CONCAT44(pbVar4,pbVar3);
-  }
-  return CONCAT44(pbVar3,pbVar2);
+  uint8 *to = (uint8 *)destination;
+  uint8 *from = (uint8 *)source;
+  uint64 ends;
+
+  /* whole words (the binary: blocks of 32, 16, 8 and 4 bytes) */
+  for (; byteCount >= 4; byteCount -= 4, to += 4, from += 4)
+    *(uint32 *)to = *(uint32 *)from;
+  while (byteCount-- != 0)                        /* the last 0-3 bytes */
+    *to++ = *from++;
+  return MAKE_WORDS(ends,(uint32)from,(uint32)to);
 }
 
 /* ==== 0x010001F4  (file offset 0x001F4)  FUN_010001f4 ================================================ */
@@ -1272,8 +1196,12 @@ undefined4 * FUN_01000c54(undefined4 *param_1,uint param_2,undefined4 param_3)
   return puVar5;
 }
 
-/* ==== 0x01000C94  (file offset 0x00C94)  FUN_01000c94 ================================================ */
-undefined8 FUN_01000c94(uint *param_1,uint *param_2,uint param_3,uint param_4)
+/* ==== 0x01000C94  (file offset 0x00C94)  rt_memcpy =================================================== */
+/* GUESS: name (not yet rewritten). The ARM C library's __rt_memcpy (ADS / RVCT; __aeabi_memcpy in
+   later ABIs): copies byteCount bytes of any alignment, the destination aligned first, then words
+   (blocks of 32 like swv_memcpy_word_aligned) or shifted words when the source is unaligned; returns
+   no meaningful value (swv_memcpy returns the destination). */
+undefined8 rt_memcpy(uint *param_1,uint *param_2,uint param_3,uint param_4)
 
 {
   uint *puVar1;
@@ -3680,7 +3608,7 @@ LAB_010032b0:
   }
   iVar5 = *(int *)(param_1 + 200);
   *(int *)(param_1 + 200) = iVar5 + 1;
-  FUN_01000188(*(int *)(param_1 + 0xc4) + iVar5 * 0xc,&local_2c,10);
+  swv_memcpy_word_aligned(*(int *)(param_1 + 0xc4) + iVar5 * 0xc,&local_2c,10);
   iVar5 = *(int *)(param_1 + 0xb4) + uVar2 * 0x90;
   FUN_010048e4(param_1,param_2,iVar5 + 4);
   *(undefined4 *)(iVar5 + 0x30) = 0;
@@ -5562,7 +5490,7 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
                 /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's
                    class) */
                 uVar2 = (*(code *)(*(int *)(*piVar7 + 0x30) + *piVar7))(piVar7);
-                thunk_FUN_01000100(iStack_6c,uVar2,iVar11 * iVar8);
+                thunk_swv_memcpy(iStack_6c,uVar2,iVar11 * iVar8);
               }
               if (iStack_70 == 0) {
                 return 0;
@@ -5572,7 +5500,7 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
                 FUN_0101d37c(iVar6,iStack_28);
                 *(undefined4 *)(param_1 + 0x9bc) = *(undefined4 *)(iVar6 + 0x4c);
                 uVar2 = FUN_01035388(param_1,iStack_9c,iVar11 * iStack_9c * 2);
-                FUN_01000c94(uVar2,*(undefined4 *)(param_1 + 0x9bc));
+                rt_memcpy(uVar2,*(undefined4 *)(param_1 + 0x9bc));
                 return uVar2;
               }
               goto swv_memset;
@@ -5820,7 +5748,7 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
         iStack_64 = (iStack_84 - iVar6) * 2;
         do {
           iVar11 = iVar11 + iVar8;
-          thunk_FUN_01000100(iVar11 + iVar6 * 2,iStack_60,iStack_64);
+          thunk_swv_memcpy(iVar11 + iVar6 * 2,iStack_60,iStack_64);
           iVar9 = iVar9 + 1;
         } while (iVar9 < iStack_5c);
       }
@@ -5974,7 +5902,7 @@ void FUN_01006078(int param_1)
   int iVar4;
   undefined1 auStack_164 [340];
   
-  FUN_01000188(auStack_164,param_1 + 4,0x154);
+  swv_memcpy_word_aligned(auStack_164,param_1 + 4,0x154);
   iVar1 = *(int *)(param_1 + 0x10);
   if (*(int *)(param_1 + 0x280) <= iVar1) {
     return;
@@ -6019,7 +5947,7 @@ void FUN_01006078(int param_1)
     /* the object's span function at +0x2b8 (GUESS: one of FUN_0100ac0c, FUN_0100bb68, FUN_0100c7a0,
        FUN_0100c92c, which are stored there) */
     (**(code **)(param_1 + 0x2b8))(param_1);
-    FUN_01000188(param_1 + 4,auStack_164,0x154);
+    swv_memcpy_word_aligned(param_1 + 4,auStack_164,0x154);
     return;
   }
   return;
@@ -6219,7 +6147,7 @@ int FUN_01006518(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
       else {
         uVar3 = FUN_0102cb54(iVar1,0);
         puVar5[1] = uVar3;
-        thunk_FUN_01000100(uVar3,puVar7[1],iVar1);
+        thunk_swv_memcpy(uVar3,puVar7[1],iVar1);
       }
       puVar5[2] = iVar1;
     }
@@ -6327,9 +6255,9 @@ int FUN_01006750(int param_1,int param_2)
   FUN_010064c4(param_1 + 0x88,param_2 + 0x88);
   FUN_010064c4(param_1 + 0xa0,param_2 + 0xa0);
   FUN_010064c4(param_1 + 0xb8,param_2 + 0xb8);
-  thunk_FUN_01000100(param_1 + 0xe0,param_2 + 0xe0,0x40);
-  thunk_FUN_01000100(param_1 + 0x120,param_2 + 0x120,0x40);
-  thunk_FUN_01000100(param_1 + 0x160,param_2 + 0x160,0x30);
+  thunk_swv_memcpy(param_1 + 0xe0,param_2 + 0xe0,0x40);
+  thunk_swv_memcpy(param_1 + 0x120,param_2 + 0x120,0x40);
+  thunk_swv_memcpy(param_1 + 0x160,param_2 + 0x160,0x30);
   *(undefined4 *)(param_1 + 400) = 0;
   *(undefined4 *)(param_1 + 0x194) = 1;
   return param_1;
@@ -7587,7 +7515,7 @@ void FUN_01007e30(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
     iVar2 = 0x100;
   }
   FUN_0100350c(param_1,iVar2);
-  thunk_FUN_01000100(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30),param_6,param_4 * param_3);
+  thunk_swv_memcpy(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30),param_6,param_4 * param_3);
   iVar3 = FUN_0100ffe4(param_1);
   iVar4 = FUN_01011bb4(param_1);
   while (0 < iVar2) {
@@ -7666,7 +7594,7 @@ undefined4 FUN_01007f8c(int param_1,int param_2,int param_3,int param_4,int para
   }
   FUN_01023184(param_1 + 0x48,param_3);
   uVar2 = *(undefined4 *)(param_1 + 0x4c);
-  FUN_01000c94(uVar2,iVar1 * param_3 + param_5,param_3 * 2);
+  rt_memcpy(uVar2,iVar1 * param_3 + param_5,param_3 * 2);
   return uVar2;
 }
 
@@ -8296,7 +8224,7 @@ void FUN_01008744(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EC0 +0x8;
    written from its disassembly (0x01008754 - 0x010087a8). Moves `count` elements of 4 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_01008754(int param_1,uint32 *src,uint32 *dst,int32 count)
 
@@ -8305,7 +8233,7 @@ void FUN_01008754(int param_1,uint32 *src,uint32 *dst,int32 count)
   uint32 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 4);
+    thunk_swv_memcpy(dst,src,count * 4);
     return;
   }
   if (src < dst) {
@@ -8328,7 +8256,7 @@ void FUN_01008754(int param_1,uint32 *src,uint32 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001ED4 +0x8;
    written from its disassembly (0x010087ac - 0x01008800). Moves `count` elements of 4 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_010087ac(int param_1,uint32 *src,uint32 *dst,int32 count)
 
@@ -8337,7 +8265,7 @@ void FUN_010087ac(int param_1,uint32 *src,uint32 *dst,int32 count)
   uint32 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 4);
+    thunk_swv_memcpy(dst,src,count * 4);
     return;
   }
   if (src < dst) {
@@ -8360,7 +8288,7 @@ void FUN_010087ac(int param_1,uint32 *src,uint32 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EE8 +0x8;
    written from its disassembly (0x01008804 - 0x01008858). Moves `count` elements of 4 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_01008804(int param_1,uint32 *src,uint32 *dst,int32 count)
 
@@ -8369,7 +8297,7 @@ void FUN_01008804(int param_1,uint32 *src,uint32 *dst,int32 count)
   uint32 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 4);
+    thunk_swv_memcpy(dst,src,count * 4);
     return;
   }
   if (src < dst) {
@@ -8392,7 +8320,7 @@ void FUN_01008804(int param_1,uint32 *src,uint32 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EFC +0x8;
    written from its disassembly (0x0100885c - 0x010088c8). Moves `count` elements of 4 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_0100885c(int param_1,uint32 *src,uint32 *dst,int32 count)
 
@@ -8401,7 +8329,7 @@ void FUN_0100885c(int param_1,uint32 *src,uint32 *dst,int32 count)
   uint32 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 4);
+    thunk_swv_memcpy(dst,src,count * 4);
     return;
   }
   if (src < dst) {
@@ -8424,7 +8352,7 @@ void FUN_0100885c(int param_1,uint32 *src,uint32 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001FAC +0x8;
    written from its disassembly (0x010088cc - 0x01008938). Moves `count` elements of 1 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_010088cc(int param_1,uint8 *src,uint8 *dst,int32 count)
 
@@ -8433,7 +8361,7 @@ void FUN_010088cc(int param_1,uint8 *src,uint8 *dst,int32 count)
   uint8 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 1);
+    thunk_swv_memcpy(dst,src,count * 1);
     return;
   }
   if (src < dst) {
@@ -8456,7 +8384,7 @@ void FUN_010088cc(int param_1,uint8 *src,uint8 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001FC0 +0x8;
    written from its disassembly (0x0100893c - 0x010089a8). Moves `count` elements of 2 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_0100893c(int param_1,uint16 *src,uint16 *dst,int32 count)
 
@@ -8465,7 +8393,7 @@ void FUN_0100893c(int param_1,uint16 *src,uint16 *dst,int32 count)
   uint16 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 2);
+    thunk_swv_memcpy(dst,src,count * 2);
     return;
   }
   if (src < dst) {
@@ -8488,7 +8416,7 @@ void FUN_0100893c(int param_1,uint16 *src,uint16 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002348 +0x8;
    written from its disassembly (0x010089ac - 0x01008a18). Moves `count` elements of 8 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise a word at a time, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise a word at a time, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_010089ac(int param_1,uint8 *src,uint8 *dst,int32 count)
 
@@ -8498,7 +8426,7 @@ void FUN_010089ac(int param_1,uint8 *src,uint8 *dst,int32 count)
   int32 k;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 8);
+    thunk_swv_memcpy(dst,src,count * 8);
     return;
   }
   if (src < dst) {
@@ -8523,7 +8451,7 @@ void FUN_010089ac(int param_1,uint8 *src,uint8 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023CC +0x8;
    written from its disassembly (0x01008a1c - 0x01008a70). Moves `count` elements of 4 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_01008a1c(int param_1,uint32 *src,uint32 *dst,int32 count)
 
@@ -8532,7 +8460,7 @@ void FUN_01008a1c(int param_1,uint32 *src,uint32 *dst,int32 count)
   uint32 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 4);
+    thunk_swv_memcpy(dst,src,count * 4);
     return;
   }
   if (src < dst) {
@@ -8555,7 +8483,7 @@ void FUN_01008a1c(int param_1,uint32 *src,uint32 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023E4 +0x8;
    written from its disassembly (0x01008a74 - 0x01008af8). Moves `count` elements of 68 bytes from src
    to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise through FUN_01027acc (dst, src) per element, back to
+   (thunk_swv_memcpy, a tail jump), otherwise through FUN_01027acc (dst, src) per element, back to
    front when dst is above src. param_1 (the object) is not read. */
 void FUN_01008a74(int param_1,uint8 *src,uint8 *dst,int32 count)
 
@@ -8564,7 +8492,7 @@ void FUN_01008a74(int param_1,uint8 *src,uint8 *dst,int32 count)
   uint8 *dstEnd = dst + count * 68;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 68);
+    thunk_swv_memcpy(dst,src,count * 68);
     return;
   }
   if (src < dst) {
@@ -8587,7 +8515,7 @@ void FUN_01008a74(int param_1,uint8 *src,uint8 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023F8 +0x8;
    written from its disassembly (0x01008afc - 0x01008b50). Moves `count` elements of 4 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_01008afc(int param_1,uint32 *src,uint32 *dst,int32 count)
 
@@ -8596,7 +8524,7 @@ void FUN_01008afc(int param_1,uint32 *src,uint32 *dst,int32 count)
   uint32 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 4);
+    thunk_swv_memcpy(dst,src,count * 4);
     return;
   }
   if (src < dst) {
@@ -8619,7 +8547,7 @@ void FUN_01008afc(int param_1,uint32 *src,uint32 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010024C4 +0x8;
    written from its disassembly (0x01008b54 - 0x01008ba8). Moves `count` elements of 4 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_01008b54(int param_1,uint32 *src,uint32 *dst,int32 count)
 
@@ -8628,7 +8556,7 @@ void FUN_01008b54(int param_1,uint32 *src,uint32 *dst,int32 count)
   uint32 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 4);
+    thunk_swv_memcpy(dst,src,count * 4);
     return;
   }
   if (src < dst) {
@@ -8651,7 +8579,7 @@ void FUN_01008b54(int param_1,uint32 *src,uint32 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010024DC +0x8;
    written from its disassembly (0x01008bac - 0x01008c50). Moves `count` elements of 12 bytes from src
    to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise a word at a time, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise a word at a time, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_01008bac(int param_1,uint8 *src,uint8 *dst,int32 count)
 
@@ -8661,7 +8589,7 @@ void FUN_01008bac(int param_1,uint8 *src,uint8 *dst,int32 count)
   int32 k;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 12);
+    thunk_swv_memcpy(dst,src,count * 12);
     return;
   }
   if (src < dst) {
@@ -8703,7 +8631,7 @@ uint FUN_01008c54(undefined4 param_1,uint param_2,uint param_3,int param_4)
     bVar3 = unaff_r4 == param_3;
   }
   if (!bVar4 || bVar3) {
-    FUN_01000c94(param_3,param_2,param_4 * 0x50,param_4);
+    rt_memcpy(param_3,param_2,param_4 * 0x50,param_4);
     return param_3;
   }
   if (param_2 < param_3) {
@@ -8711,7 +8639,7 @@ uint FUN_01008c54(undefined4 param_1,uint param_2,uint param_3,int param_4)
       do {
         unaff_r4 = unaff_r4 - 0x50;
         uVar2 = uVar2 - 0x50;
-        uVar1 = FUN_01000188(uVar2,unaff_r4,0x50);
+        uVar1 = swv_memcpy_word_aligned(uVar2,unaff_r4,0x50).low;   /* r0: the destination's end */
       } while (unaff_r4 != param_2);
       return uVar1;
     }
@@ -8721,7 +8649,7 @@ uint FUN_01008c54(undefined4 param_1,uint param_2,uint param_3,int param_4)
     if (param_2 != unaff_r4) {
       do {
         uVar1 = param_2 + 0x50;
-        uVar2 = FUN_01000188(param_3,param_2,0x50);
+        uVar2 = swv_memcpy_word_aligned(param_3,param_2,0x50).low;   /* r0: the destination's end */
         param_2 = uVar1;
         param_3 = param_3 + 0x50;
       } while (uVar1 != unaff_r4);
@@ -8736,7 +8664,7 @@ uint FUN_01008c54(undefined4 param_1,uint param_2,uint param_3,int param_4)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002504 +0x8;
    written from its disassembly (0x01008cec - 0x01008d40). Moves `count` elements of 4 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_01008cec(int param_1,uint32 *src,uint32 *dst,int32 count)
 
@@ -8745,7 +8673,7 @@ void FUN_01008cec(int param_1,uint32 *src,uint32 *dst,int32 count)
   uint32 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 4);
+    thunk_swv_memcpy(dst,src,count * 4);
     return;
   }
   if (src < dst) {
@@ -8768,7 +8696,7 @@ void FUN_01008cec(int param_1,uint32 *src,uint32 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002518 +0x8;
    written from its disassembly (0x01008d44 - 0x01008e40). Moves `count` elements of 68 bytes from src
    to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise a word at a time, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise a word at a time, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_01008d44(int param_1,uint8 *src,uint8 *dst,int32 count)
 
@@ -8778,7 +8706,7 @@ void FUN_01008d44(int param_1,uint8 *src,uint8 *dst,int32 count)
   int32 k;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 68);
+    thunk_swv_memcpy(dst,src,count * 68);
     return;
   }
   if (src < dst) {
@@ -8803,7 +8731,7 @@ void FUN_01008d44(int param_1,uint8 *src,uint8 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100252C +0x8;
    written from its disassembly (0x01008e44 - 0x01008e98). Moves `count` elements of 4 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_01008e44(int param_1,uint32 *src,uint32 *dst,int32 count)
 
@@ -8812,7 +8740,7 @@ void FUN_01008e44(int param_1,uint32 *src,uint32 *dst,int32 count)
   uint32 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 4);
+    thunk_swv_memcpy(dst,src,count * 4);
     return;
   }
   if (src < dst) {
@@ -8835,7 +8763,7 @@ void FUN_01008e44(int param_1,uint32 *src,uint32 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002540 +0x8;
    written from its disassembly (0x01008e9c - 0x01008ef0). Moves `count` elements of 4 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_01008e9c(int param_1,uint32 *src,uint32 *dst,int32 count)
 
@@ -8844,7 +8772,7 @@ void FUN_01008e9c(int param_1,uint32 *src,uint32 *dst,int32 count)
   uint32 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 4);
+    thunk_swv_memcpy(dst,src,count * 4);
     return;
   }
   if (src < dst) {
@@ -8867,7 +8795,7 @@ void FUN_01008e9c(int param_1,uint32 *src,uint32 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100255C +0x8;
    written from its disassembly (0x01008ef4 - 0x01008f48). Moves `count` elements of 4 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_01008ef4(int param_1,uint32 *src,uint32 *dst,int32 count)
 
@@ -8876,7 +8804,7 @@ void FUN_01008ef4(int param_1,uint32 *src,uint32 *dst,int32 count)
   uint32 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 4);
+    thunk_swv_memcpy(dst,src,count * 4);
     return;
   }
   if (src < dst) {
@@ -8899,7 +8827,7 @@ void FUN_01008ef4(int param_1,uint32 *src,uint32 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002570 +0x8;
    written from its disassembly (0x01008f4c - 0x01008ff0). Moves `count` elements of 12 bytes from src
    to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise a word at a time, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise a word at a time, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_01008f4c(int param_1,uint8 *src,uint8 *dst,int32 count)
 
@@ -8909,7 +8837,7 @@ void FUN_01008f4c(int param_1,uint8 *src,uint8 *dst,int32 count)
   int32 k;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 12);
+    thunk_swv_memcpy(dst,src,count * 12);
     return;
   }
   if (src < dst) {
@@ -8934,7 +8862,7 @@ void FUN_01008f4c(int param_1,uint8 *src,uint8 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002584 +0x8;
    written from its disassembly (0x01008ff4 - 0x01009048). Moves `count` elements of 4 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_01008ff4(int param_1,uint32 *src,uint32 *dst,int32 count)
 
@@ -8943,7 +8871,7 @@ void FUN_01008ff4(int param_1,uint32 *src,uint32 *dst,int32 count)
   uint32 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 4);
+    thunk_swv_memcpy(dst,src,count * 4);
     return;
   }
   if (src < dst) {
@@ -8966,7 +8894,7 @@ void FUN_01008ff4(int param_1,uint32 *src,uint32 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002598 +0x8;
    written from its disassembly (0x0100904c - 0x010090a0). Moves `count` elements of 4 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_0100904c(int param_1,uint32 *src,uint32 *dst,int32 count)
 
@@ -8975,7 +8903,7 @@ void FUN_0100904c(int param_1,uint32 *src,uint32 *dst,int32 count)
   uint32 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 4);
+    thunk_swv_memcpy(dst,src,count * 4);
     return;
   }
   if (src < dst) {
@@ -8998,7 +8926,7 @@ void FUN_0100904c(int param_1,uint32 *src,uint32 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010025AC +0x8;
    written from its disassembly (0x010090a4 - 0x010090f8). Moves `count` elements of 4 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_010090a4(int param_1,uint32 *src,uint32 *dst,int32 count)
 
@@ -9007,7 +8935,7 @@ void FUN_010090a4(int param_1,uint32 *src,uint32 *dst,int32 count)
   uint32 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 4);
+    thunk_swv_memcpy(dst,src,count * 4);
     return;
   }
   if (src < dst) {
@@ -9030,9 +8958,9 @@ void FUN_010090a4(int param_1,uint32 *src,uint32 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010025C0 +0x8;
    written from its disassembly (0x010090fc - 0x01009248). Moves `count` elements of 0x90 bytes from src
    to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src:
-   the first 0x40 bytes a word at a time, the other 0x50 with FUN_01000188. param_1 (the object) is not
-   read. */
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src:
+   the first 0x40 bytes a word at a time, the other 0x50 with swv_memcpy_word_aligned. param_1 (the
+   object) is not read. */
 void FUN_010090fc(int param_1,uint8 *src,uint8 *dst,int32 count)
 
 {
@@ -9041,7 +8969,7 @@ void FUN_010090fc(int param_1,uint8 *src,uint8 *dst,int32 count)
   int32 k;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 0x90);
+    thunk_swv_memcpy(dst,src,count * 0x90);
     return;
   }
   if (src < dst) {
@@ -9050,14 +8978,14 @@ void FUN_010090fc(int param_1,uint8 *src,uint8 *dst,int32 count)
       dstEnd = dstEnd - 0x90;
       for (k = 0; k < 0x10; k++)
         ((uint32 *)dstEnd)[k] = ((uint32 *)srcEnd)[k];
-      FUN_01000188(dstEnd + 0x40,srcEnd + 0x40,0x50);
+      swv_memcpy_word_aligned(dstEnd + 0x40,srcEnd + 0x40,0x50);
     }
   }
   else if (src != dst) {
     while (src != srcEnd) {
       for (k = 0; k < 0x10; k++)
         ((uint32 *)dst)[k] = ((uint32 *)src)[k];
-      FUN_01000188(dst + 0x40,src + 0x40,0x50);
+      swv_memcpy_word_aligned(dst + 0x40,src + 0x40,0x50);
       dst = dst + 0x90;
       src = src + 0x90;
     }
@@ -9068,7 +8996,7 @@ void FUN_010090fc(int param_1,uint8 *src,uint8 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010025E8 +0x8;
    written from its disassembly (0x010092a4 - 0x01009328). Moves `count` elements of 24 bytes from src
    to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise through FUN_01027ae4 (dst, src) per element, back to
+   (thunk_swv_memcpy, a tail jump), otherwise through FUN_01027ae4 (dst, src) per element, back to
    front when dst is above src. param_1 (the object) is not read. */
 void FUN_010092a4(int param_1,uint8 *src,uint8 *dst,int32 count)
 
@@ -9077,7 +9005,7 @@ void FUN_010092a4(int param_1,uint8 *src,uint8 *dst,int32 count)
   uint8 *dstEnd = dst + count * 24;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 24);
+    thunk_swv_memcpy(dst,src,count * 24);
     return;
   }
   if (src < dst) {
@@ -9100,7 +9028,7 @@ void FUN_010092a4(int param_1,uint8 *src,uint8 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002600 +0x8;
    written from its disassembly (0x0100932c - 0x010093ac). Moves `count` elements of 12 bytes from src
    to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise a word at a time, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise a word at a time, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_0100932c(int param_1,uint8 *src,uint8 *dst,int32 count)
 
@@ -9110,7 +9038,7 @@ void FUN_0100932c(int param_1,uint8 *src,uint8 *dst,int32 count)
   int32 k;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 12);
+    thunk_swv_memcpy(dst,src,count * 12);
     return;
   }
   if (src < dst) {
@@ -9135,7 +9063,7 @@ void FUN_0100932c(int param_1,uint8 *src,uint8 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002614 +0x8;
    written from its disassembly (0x010093b0 - 0x01009434). Moves `count` elements of 144 bytes from src
    to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise through FUN_01027b08 (dst, src) per element, back to
+   (thunk_swv_memcpy, a tail jump), otherwise through FUN_01027b08 (dst, src) per element, back to
    front when dst is above src. param_1 (the object) is not read. */
 void FUN_010093b0(int param_1,uint8 *src,uint8 *dst,int32 count)
 
@@ -9144,7 +9072,7 @@ void FUN_010093b0(int param_1,uint8 *src,uint8 *dst,int32 count)
   uint8 *dstEnd = dst + count * 144;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 144);
+    thunk_swv_memcpy(dst,src,count * 144);
     return;
   }
   if (src < dst) {
@@ -9167,7 +9095,7 @@ void FUN_010093b0(int param_1,uint8 *src,uint8 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002628 +0x8;
    written from its disassembly (0x01009438 - 0x010094b8). Moves `count` elements of 12 bytes from src
    to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise a word at a time, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise a word at a time, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_01009438(int param_1,uint8 *src,uint8 *dst,int32 count)
 
@@ -9177,7 +9105,7 @@ void FUN_01009438(int param_1,uint8 *src,uint8 *dst,int32 count)
   int32 k;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 12);
+    thunk_swv_memcpy(dst,src,count * 12);
     return;
   }
   if (src < dst) {
@@ -9202,7 +9130,7 @@ void FUN_01009438(int param_1,uint8 *src,uint8 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100263C +0x8;
    written from its disassembly (0x010094bc - 0x01009544). Moves `count` elements of 76 bytes from src
    to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise through FUN_01027b40 (dst, src) per element, back to
+   (thunk_swv_memcpy, a tail jump), otherwise through FUN_01027b40 (dst, src) per element, back to
    front when dst is above src. param_1 (the object) is not read. */
 void FUN_010094bc(int param_1,uint8 *src,uint8 *dst,int32 count)
 
@@ -9211,7 +9139,7 @@ void FUN_010094bc(int param_1,uint8 *src,uint8 *dst,int32 count)
   uint8 *dstEnd = dst + count * 76;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 76);
+    thunk_swv_memcpy(dst,src,count * 76);
     return;
   }
   if (src < dst) {
@@ -9234,7 +9162,7 @@ void FUN_010094bc(int param_1,uint8 *src,uint8 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002650 +0x8;
    written from its disassembly (0x01009548 - 0x010095dc). Moves `count` elements of 20 bytes from src
    to dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise a word at a time, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise a word at a time, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_01009548(int param_1,uint8 *src,uint8 *dst,int32 count)
 
@@ -9244,7 +9172,7 @@ void FUN_01009548(int param_1,uint8 *src,uint8 *dst,int32 count)
   int32 k;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 20);
+    thunk_swv_memcpy(dst,src,count * 20);
     return;
   }
   if (src < dst) {
@@ -9269,7 +9197,7 @@ void FUN_01009548(int param_1,uint8 *src,uint8 *dst,int32 count)
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002664 +0x8;
    written from its disassembly (0x010095e0 - 0x01009634). Moves `count` elements of 4 bytes from src to
    dst (GUESS: an array traits method): when the two ranges do not overlap with one memory copy
-   (thunk_FUN_01000100, a tail jump), otherwise element by element, back to front when dst is above src.
+   (thunk_swv_memcpy, a tail jump), otherwise element by element, back to front when dst is above src.
    param_1 (the object) is not read. */
 void FUN_010095e0(int param_1,uint32 *src,uint32 *dst,int32 count)
 
@@ -9278,7 +9206,7 @@ void FUN_010095e0(int param_1,uint32 *src,uint32 *dst,int32 count)
   uint32 *dstEnd = dst + count;
 
   if (dstEnd <= src || srcEnd <= dst) {
-    thunk_FUN_01000100(dst,src,count * 4);
+    thunk_swv_memcpy(dst,src,count * 4);
     return;
   }
   if (src < dst) {
@@ -9425,7 +9353,7 @@ void FUN_0100973c(int param_1,int param_2,int param_3,int param_4,int param_5,in
   iVar3 = param_11 * 0x10000 >> 0x10;
   do {
     if (param_8 == 0x10000) {
-      thunk_FUN_01000100(puVar6,*(int *)(param_1 + 0x9bc) + iVar3 * (param_7 >> 0x10) * 2 +
+      thunk_swv_memcpy(puVar6,*(int *)(param_1 + 0x9bc) + iVar3 * (param_7 >> 0x10) * 2 +
                                 (param_6 >> 0x10) * 2,param_4 << 1);
       puVar6 = puVar6 + param_10;
     }
@@ -16135,7 +16063,7 @@ bool FUN_010108d4(undefined4 param_1,undefined4 param_2,int param_3)
 int FUN_01010924(int param_1,int param_2)
 
 {
-  thunk_FUN_01000100(param_2 + 0xc,*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x28),0x44);
+  thunk_swv_memcpy(param_2 + 0xc,*(undefined4 *)(*(int *)(param_1 + 0x20) + 0x28),0x44);
   return param_2 + 0xc;
 }
 
@@ -16318,7 +16246,7 @@ int FUN_01010cf4(int param_1,int param_2,undefined4 param_3,int param_4)
       iVar3 = iVar2;
     }
     if ((param_4 != 0 && iVar3 != 0) && -1 < iVar2) {
-      thunk_FUN_01000100(param_4,*(undefined4 *)(iVar4 + 4));
+      thunk_swv_memcpy(param_4,*(undefined4 *)(iVar4 + 4));
     }
     return *(int *)(iVar4 + 8);
   }
@@ -16344,7 +16272,7 @@ int FUN_01010d40(int param_1,int param_2,undefined4 param_3,int param_4)
           iVar1 = iVar2;
         }
         if ((param_4 != 0 && iVar1 != 0) && -1 < iVar2) {
-          thunk_FUN_01000100(param_4,piVar3[1]);
+          thunk_swv_memcpy(param_4,piVar3[1]);
         }
         return piVar3[2];
       }
@@ -16360,7 +16288,7 @@ undefined4 FUN_01010dac(undefined4 param_1,int param_2)
   undefined4 auStack_45c [255];
   undefined1 auStack_60 [88];
   
-  FUN_01000188(auStack_60,DATA_AT_0104013C_OFFSET + 0x1010dc8,0x58);
+  swv_memcpy_word_aligned(auStack_60,DATA_AT_0104013C_OFFSET + 0x1010dc8,0x58);
   return auStack_45c[param_2];
 }
 
@@ -16960,7 +16888,7 @@ int FUN_010119a8(int param_1,int param_2,int param_3)
     }
     iVar3 = *(int *)(iVar2 + 0x14);
     if (((param_3 != 0 && param_2 != 0) && -1 < iVar1) && (iVar3 <= param_2)) {
-      thunk_FUN_01000100(param_3,*(undefined4 *)(iVar2 + 0x10),iVar3);
+      thunk_swv_memcpy(param_3,*(undefined4 *)(iVar2 + 0x10),iVar3);
     }
     return iVar3;
   }
@@ -17267,7 +17195,7 @@ int FUN_01011ce8(int param_1,int param_2)
     iVar1 = *(int *)(param_1 + 0x38);
   }
   else {
-    FUN_01000188(local_20,DATA_AT_01042B10_OFFSET + 0x1011d14,0x14);
+    swv_memcpy_word_aligned(local_20,DATA_AT_01042B10_OFFSET + 0x1011d14,0x14);
     local_20[0] = *(int *)(param_1 + 0x88);
     local_20[2] = param_1 + 0x8c;
     local_10 = param_1 + 0x9c;
@@ -17295,7 +17223,7 @@ int FUN_01011d54(int param_1,int param_2)
     iVar1 = local_14[param_2];
   }
   else {
-    FUN_01000188(local_28,DATA_AT_01042B10_OFFSET_2 + 0x1011d9c,0x14);
+    swv_memcpy_word_aligned(local_28,DATA_AT_01042B10_OFFSET_2 + 0x1011d9c,0x14);
     local_28[0] = *(int *)(param_1 + 0x88);
     local_28[2] = param_1 + 0x8c;
     local_28[4] = param_1 + 0x9c;
@@ -17360,7 +17288,7 @@ int FUN_01011e84(int param_1,int param_2)
   int local_20 [4];
   int local_10;
   
-  FUN_01000188(local_20,DATA_AT_01042B10_OFFSET_3 + 0x1011ea4,0x14);
+  swv_memcpy_word_aligned(local_20,DATA_AT_01042B10_OFFSET_3 + 0x1011ea4,0x14);
   local_20[0] = *(int *)(param_1 + 0x88);
   local_20[2] = param_1 + 0x8c;
   local_10 = param_1 + 0x9c;
@@ -18825,7 +18753,7 @@ undefined4 swv_Matrix4Invert(int param_1)
   uVar13 = bVar12 || uVar2 == 0x3f;
   if (!bVar12 && uVar2 != 0x3f) {
     local_28 = param_1;
-    thunk_FUN_01000100(local_74,param_1);
+    thunk_swv_memcpy(local_74,param_1);
     local_78 = 0x20;
     FUN_01012568(local_b8);
     uVar2 = 0;
@@ -18944,7 +18872,7 @@ undefined4 swv_Matrix4Invert(int param_1)
       uVar2 = local_2c;
     } while ((int)local_2c < 4);
     local_78 = *(undefined4 *)(local_28 + 0x40);
-    thunk_FUN_01000100(local_28,local_b8,0x44);
+    thunk_swv_memcpy(local_28,local_b8,0x44);
   }
   return 1;
 }
@@ -20664,7 +20592,7 @@ void FUN_010159e4(int param_1,undefined4 param_2,int param_3)
   if ((piVar1 == (int *)0x0) || ((uint)piVar1[1] < (uint)(*piVar1 + param_3))) {
     FUN_01036088(param_1,STRING_READ_ERROR_OFFSET + 0x1015a1c);
   }
-  thunk_FUN_01000100(param_2,*piVar1,param_3);
+  thunk_swv_memcpy(param_2,*piVar1,param_3);
   *piVar1 = *piVar1 + param_3;
   return;
 }
@@ -21645,7 +21573,7 @@ undefined4 * FUN_010171ec(int param_1,int param_2)
     uVar8 = uVar7 & uVar8;
     *(uint *)(param_1 + 0x4c) = uVar8;
     if ((uVar8 & 0xfffffffe) == 0) {
-      thunk_FUN_01000100(auStack_68,puVar1,0x44);
+      thunk_swv_memcpy(auStack_68,puVar1,0x44);
       if ((*(uint *)(param_2 + 0x4c) & 2) == 0) {
         FUN_01014f98(puVar1,puVar1,auStack_68,puVar6);
       }
@@ -21655,7 +21583,7 @@ undefined4 * FUN_010171ec(int param_1,int param_2)
     }
     else if ((uVar2 & 0x10) == 0) {
       if ((uVar2 & 8) == 0) {
-        thunk_FUN_01000100(auStack_68,puVar1,0x44);
+        thunk_swv_memcpy(auStack_68,puVar1,0x44);
         FUN_01014b3c(puVar1,puVar1,auStack_68,puVar6,(int)uVar8 >> 2 & 1);
       }
       else if ((uVar8 & 8) == 0) {
@@ -21750,7 +21678,7 @@ undefined4 * FUN_010171ec(int param_1,int param_2)
     }
   }
   else if ((uVar8 & 0x20) == 0) {
-    thunk_FUN_01000100(puVar1,puVar6,0x44);
+    thunk_swv_memcpy(puVar1,puVar6,0x44);
   }
   return puVar1;
 }
@@ -21891,7 +21819,7 @@ undefined4 * FUN_0101749c(undefined4 *param_1,undefined4 *param_2)
   puVar1 = (undefined4 *)(uVar6 | uVar5);
   if (((uint)puVar1 & 0x20) != 0) {
     if ((uVar5 & 0x20) == 0) {
-      FUN_01000c94(param_1,param_2,0x44);
+      rt_memcpy(param_1,param_2,0x44);
       return param_1;
     }
     return puVar1;
@@ -21899,7 +21827,7 @@ undefined4 * FUN_0101749c(undefined4 *param_1,undefined4 *param_2)
   uVar5 = uVar6 & uVar5;
   param_1[0x10] = uVar5;
   if ((uVar5 & 0xfffffffe) == 0) {
-    thunk_FUN_01000100(auStack_68,param_1,0x44);
+    thunk_swv_memcpy(auStack_68,param_1,0x44);
     if ((uVar6 & 2) == 0) {
       puVar1 = (undefined4 *)FUN_01014f98(param_1,param_1,param_2,auStack_68);
       return puVar1;
@@ -21909,7 +21837,7 @@ undefined4 * FUN_0101749c(undefined4 *param_1,undefined4 *param_2)
   }
   if (((uint)puVar1 & 0x10) == 0) {
     if (((uint)puVar1 & 8) == 0) {
-      thunk_FUN_01000100(auStack_68,param_1,0x44);
+      thunk_swv_memcpy(auStack_68,param_1,0x44);
       puVar1 = (undefined4 *)FUN_01014b3c(param_1,param_1,param_2,auStack_68,(int)uVar5 >> 2 & 1);
       return puVar1;
     }
@@ -21973,7 +21901,7 @@ undefined4 * FUN_0101749c(undefined4 *param_1,undefined4 *param_2)
     local_28 = param_1[0xc];
     uVar10 = param_1[0xd];
     uVar11 = param_1[0xe];
-    thunk_FUN_01000100(param_1,param_2,0x44);
+    thunk_swv_memcpy(param_1,param_2,0x44);
     uVar2 = swv_fmul(*param_1,local_28);
     uVar4 = swv_fmul(param_1[4],uVar10);
     uVar2 = swv_fadd(uVar4,uVar2);
@@ -29350,7 +29278,7 @@ void FUN_0101fdc4(int param_1,int param_2,int param_3,int param_4,undefined4 par
   if ((bVar2 || (param_2 < 0 || iVar1 < param_2)) || (iVar1 < param_2 + param_3)) {
     FUN_0102f7e0(INTEGER_MINUS_1101);
   }
-  thunk_FUN_01000100(*(int *)(param_1 + 0x2c) + param_2 * *(int *)(param_1 + 0x20) * 2,param_5,
+  thunk_swv_memcpy(*(int *)(param_1 + 0x2c) + param_2 * *(int *)(param_1 + 0x20) * 2,param_5,
                      param_3 * *(int *)(param_1 + 0x20) * 2);
   *(undefined4 *)(param_1 + 0x38) = 1;
   return;
@@ -29410,7 +29338,7 @@ void FUN_0101fefc(int param_1,int param_2,int param_3,int param_4,undefined4 par
   if ((bVar2 || (param_2 < 0 || iVar1 < param_2)) || (iVar1 < param_2 + param_3)) {
     FUN_0102f7e0(INTEGER_MINUS_1101);
   }
-  thunk_FUN_01000100(*(int *)(param_1 + 0x2c) + param_2 * *(int *)(param_1 + 0x20),param_5,
+  thunk_swv_memcpy(*(int *)(param_1 + 0x2c) + param_2 * *(int *)(param_1 + 0x20),param_5,
                      param_3 * *(int *)(param_1 + 0x20));
   *(undefined4 *)(param_1 + 0x38) = 1;
   return;
@@ -29807,7 +29735,7 @@ undefined4 * FUN_010204ec(undefined4 *param_1,int param_2,int param_3)
       uVar8 = uVar7 & uVar8;
       param_1[0x2a] = uVar8;
       if ((uVar8 & 0xfffffffe) == 0) {
-        thunk_FUN_01000100(auStack_68,puVar3,0x44);
+        thunk_swv_memcpy(auStack_68,puVar3,0x44);
         if ((param_1[0x19] & 2) == 0) {
           FUN_01014f98(puVar3,puVar3,auStack_68,puVar10);
         }
@@ -29817,7 +29745,7 @@ undefined4 * FUN_010204ec(undefined4 *param_1,int param_2,int param_3)
       }
       else if ((uVar4 & 0x10) == 0) {
         if ((uVar4 & 8) == 0) {
-          thunk_FUN_01000100(auStack_68,puVar3,0x44);
+          thunk_swv_memcpy(auStack_68,puVar3,0x44);
           FUN_01014b3c(puVar3,puVar3,auStack_68,puVar10);
         }
         else if ((uVar8 & 8) == 0) {
@@ -29912,7 +29840,7 @@ undefined4 * FUN_010204ec(undefined4 *param_1,int param_2,int param_3)
       }
     }
     else if ((uVar8 & 0x20) == 0) {
-      thunk_FUN_01000100(puVar3,puVar10,0x44);
+      thunk_swv_memcpy(puVar3,puVar10,0x44);
     }
     return puVar3;
   }
@@ -31063,7 +30991,7 @@ int FUN_01021c7c(int param_1,int param_2,int param_3,int param_4)
     return iVar1;
   }
   iVar1 = *(int *)(param_1 + 0x108) + param_2 * 0x44;
-  thunk_FUN_01000100(iVar1,param_4 + 0xc,0x44);
+  thunk_swv_memcpy(iVar1,param_4 + 0xc,0x44);
   return iVar1;
 }
 
@@ -33141,7 +33069,7 @@ LAB_01023a9c:
   if ((!bVar5 && param_3 != 0) && iVar4 >= 0) {
     iVar4 = FUN_0102cb54(param_3,0);
     piVar1[1] = iVar4;
-    thunk_FUN_01000100(iVar4,param_4,param_3);
+    thunk_swv_memcpy(iVar4,param_4,param_3);
     piVar1[2] = param_3;
   }
   return;
@@ -33452,7 +33380,7 @@ FUN_01023e44(int param_1,int param_2,int param_3,int param_4,int param_5,int par
   param_7 = param_5 * param_4 * iVar1 + param_7;
   if ((param_2 == 0 && param_3 == 0) && (iVar1 = FUN_01011960(param_1), iVar1 == param_4)) {
     uVar2 = *(undefined4 *)(param_1 + 0x4c);
-    FUN_01000c94(uVar2,param_7);
+    rt_memcpy(uVar2,param_7);
     return CONCAT44(extraout_r1,uVar2);
   }
   iVar6 = param_3 + param_5;
@@ -33461,7 +33389,7 @@ FUN_01023e44(int param_1,int param_2,int param_3,int param_4,int param_5,int par
   iVar5 = *(int *)(param_1 + 0x4c) + (iVar3 * param_3 + param_2) * 2;
   iVar4 = param_4 << 1;
   for (; param_3 < iVar6; param_3 = param_3 + 1) {
-    param_4 = thunk_FUN_01000100(iVar5,param_7,iVar4);
+    param_4 = thunk_swv_memcpy(iVar5,param_7,iVar4);
     iVar5 = iVar5 + iVar3 * 2;
     param_7 = param_7 + iVar1;
   }
@@ -36212,7 +36140,7 @@ void FUN_01026d30(int param_1,undefined4 param_2,int param_3)
   if (*(uint *)(param_1 + 0xc) < (uint)(*(int *)(param_1 + 0x18) + param_3)) {
     FUN_0102f7e0(INTEGER_MINUS_1200);
   }
-  thunk_FUN_01000100(*(int *)(param_1 + 8) + *(int *)(param_1 + 0x18),param_2,param_3);
+  thunk_swv_memcpy(*(int *)(param_1 + 8) + *(int *)(param_1 + 0x18),param_2,param_3);
   *(int *)(param_1 + 0x18) = *(int *)(param_1 + 0x18) + param_3;
   return;
 }
@@ -36628,7 +36556,7 @@ undefined4 * FUN_010275fc(undefined4 *param_1,undefined4 *param_2)
     uVar6 = uVar5 & uVar6;
     param_1[0x10] = uVar6;
     if ((uVar6 & 0xfffffffe) == 0) {
-      thunk_FUN_01000100(auStack_68,param_1,0x44);
+      thunk_swv_memcpy(auStack_68,param_1,0x44);
       if ((param_2[0x10] & 2) == 0) {
         FUN_01014f98(param_1,param_1,auStack_68,param_2);
       }
@@ -36638,7 +36566,7 @@ undefined4 * FUN_010275fc(undefined4 *param_1,undefined4 *param_2)
     }
     else if ((uVar1 & 0x10) == 0) {
       if ((uVar1 & 8) == 0) {
-        thunk_FUN_01000100(auStack_68,param_1,0x44);
+        thunk_swv_memcpy(auStack_68,param_1,0x44);
         FUN_01014b3c(param_1,param_1,auStack_68,param_2,(int)uVar6 >> 2 & 1);
       }
       else if ((uVar6 & 8) == 0) {
@@ -36733,7 +36661,7 @@ undefined4 * FUN_010275fc(undefined4 *param_1,undefined4 *param_2)
     }
   }
   else if ((uVar6 & 0x20) == 0) {
-    thunk_FUN_01000100(param_1,param_2,0x44);
+    thunk_swv_memcpy(param_1,param_2,0x44);
   }
   return param_1;
 }
@@ -36835,7 +36763,7 @@ int FUN_01027a54(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 undefined4 FUN_01027acc(undefined4 param_1,undefined4 param_2)
 
 {
-  thunk_FUN_01000100(param_1,param_2,0x44);
+  thunk_swv_memcpy(param_1,param_2,0x44);
   return param_1;
 }
 
@@ -38316,7 +38244,7 @@ void * FUN_010296e8(void *param_1,undefined4 param_2)
   if ((param_1 == (void *)0x0) && (param_1 = helper_malloc(0x44), param_1 == (void *)0x0)) {
     return (void *)0x0;
   }
-  thunk_FUN_01000100(param_1,param_2,0x44);
+  thunk_swv_memcpy(param_1,param_2,0x44);
   return param_1;
 }
 
@@ -46249,7 +46177,7 @@ LAB_01031504:
     if (local_38 < local_34) {
       local_34 = local_38;
     }
-    thunk_FUN_01000100(uVar1,pbVar11);
+    thunk_swv_memcpy(uVar1,pbVar11);
     pbVar11 = pbVar11 + local_34;
     local_38 = local_38 - local_34;
     uVar10 = uVar10 - local_34;
@@ -46904,7 +46832,7 @@ LAB_01031e60:
         *(int *)(param_1 + 0x3c) = iVar10;
         param_2[0xc] = iVar10;
       }
-      thunk_FUN_01000100(iVar17,uVar16,uVar14);
+      thunk_swv_memcpy(iVar17,uVar16,uVar14);
       iVar10 = uVar16 + uVar14;
       iVar17 = iVar17 + uVar14;
       if (*(int *)(param_1 + 0x2c) == iVar10) {
@@ -46928,7 +46856,7 @@ LAB_01031e60:
           *(int *)(param_1 + 0x3c) = iVar3;
           param_2[0xc] = iVar3;
         }
-        thunk_FUN_01000100(iVar17,iVar10,uVar15);
+        thunk_swv_memcpy(iVar17,iVar10,uVar15);
         iVar17 = iVar17 + uVar15;
         iVar10 = iVar10 + uVar15;
       }
@@ -47247,7 +47175,7 @@ int FUN_01032658(int param_1,int param_2,int param_3,undefined4 param_4)
     *(undefined4 *)(param_1 + 0x3c) = uVar3;
     *(undefined4 *)(param_2 + 0x30) = uVar3;
   }
-  thunk_FUN_01000100(iVar8,uVar7,uVar6);
+  thunk_swv_memcpy(iVar8,uVar7,uVar6);
   iVar4 = uVar7 + uVar6;
   iVar8 = iVar8 + uVar6;
   if (*(int *)(param_1 + 0x2c) == iVar4) {
@@ -47271,7 +47199,7 @@ int FUN_01032658(int param_1,int param_2,int param_3,undefined4 param_4)
       *(undefined4 *)(param_1 + 0x3c) = uVar3;
       *(undefined4 *)(param_2 + 0x30) = uVar3;
     }
-    thunk_FUN_01000100(iVar8,iVar4,uVar1);
+    thunk_swv_memcpy(iVar8,iVar4,uVar1);
     iVar8 = iVar8 + uVar1;
     iVar4 = iVar4 + uVar1;
   }
@@ -50308,7 +50236,7 @@ byte * FUN_010354e0(int param_1,byte *param_2,uint param_3)
   bVar1 = *(byte *)(param_1 + 0x13f);
   pbVar3 = (byte *)(*(int *)(param_1 + 0x120) + 1);
   if (param_3 == 0xff) {
-    FUN_01000c94();
+    rt_memcpy();
     return param_2;
   }
   if (bVar1 == 1) {
@@ -50388,7 +50316,7 @@ byte * FUN_010354e0(int param_1,byte *param_2,uint param_3)
     pbVar4 = param_2;
     for (uVar7 = 0; pbVar2 = param_2, uVar7 < uVar6; uVar7 = uVar7 + 1) {
       if ((uVar5 & param_3) != 0) {
-        param_2 = (byte *)thunk_FUN_01000100(pbVar4,pbVar3);
+        param_2 = (byte *)thunk_swv_memcpy(pbVar4,pbVar3);
       }
       if (uVar5 == 1) {
         uVar5 = 0x80;
@@ -50794,9 +50722,9 @@ void FUN_01035b70(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
       local_2c = param_3;
       local_28 = param_4;
       for (uVar11 = 0; uVar11 < *puVar7; uVar11 = uVar11 + 1) {
-        thunk_FUN_01000100(&local_2c,iVar12,uVar6);
+        thunk_swv_memcpy(&local_2c,iVar12,uVar6);
         for (iVar10 = 0; iVar10 < iVar13; iVar10 = iVar10 + 1) {
-          thunk_FUN_01000100(iVar4,&local_2c,uVar6);
+          thunk_swv_memcpy(iVar4,&local_2c,uVar6);
           iVar4 = iVar4 - uVar6;
         }
         iVar12 = iVar12 - uVar6;
@@ -50956,7 +50884,7 @@ void FUN_010360b0(int param_1,int param_2,int param_3)
     *(undefined1 *)(param_2 + iVar3) = 0x3a;
     *(undefined1 *)(param_2 + iVar3 + 1) = 0x20;
     param_2 = param_2 + iVar3 + 2;
-    thunk_FUN_01000100(param_2,param_3,0x40);
+    thunk_swv_memcpy(param_2,param_3,0x40);
     *(undefined1 *)(param_2 + 0x3f) = 0;
     return;
   }
@@ -51546,7 +51474,7 @@ void * FUN_01036ad0(int param_1,uint32 param_2)
 undefined4 FUN_01036b0c(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
-  FUN_01000c94(param_2,param_3,param_4);
+  rt_memcpy(param_2,param_3,param_4);
   return param_2;
 }
 
@@ -51625,7 +51553,7 @@ void FUN_01036b48(int param_1,int param_2,int param_3)
   }
   *(uint *)(param_1 + 0x17c) = *(uint *)(param_1 + 0x17c) & 0xffffdfff;
   FUN_01031034(param_1 + 0xa8);
-  thunk_FUN_01000100(auStack_94,param_1,0x80);
+  thunk_swv_memcpy(auStack_94,param_1,0x80);
   uVar2 = *(undefined4 *)(param_1 + 0x80);
   uVar3 = *(undefined4 *)(param_1 + 0x84);
   uVar4 = *(undefined4 *)(param_1 + 0x88);
@@ -51633,7 +51561,7 @@ void FUN_01036b48(int param_1,int param_2,int param_3)
   *(undefined4 *)(param_1 + 0x80) = uVar2;
   *(undefined4 *)(param_1 + 0x84) = uVar3;
   *(undefined4 *)(param_1 + 0x88) = uVar4;
-  thunk_FUN_01000100(param_1,auStack_94,0x80);
+  thunk_swv_memcpy(param_1,auStack_94,0x80);
   return;
 }
 
@@ -52358,7 +52286,7 @@ void FUN_01037c78(int param_1,int param_2,undefined4 param_3,int param_4)
     FUN_0103619c(param_1,param_2,0x1000,0,param_4);
     uVar1 = FUN_01037eec(param_1,param_4,3);
     *(undefined4 *)(param_1 + 0x148) = uVar1;
-    thunk_FUN_01000100(uVar1,param_3,param_4 * 3);
+    thunk_swv_memcpy(uVar1,param_3,param_4 * 3);
     *(undefined4 *)(param_2 + 0x10) = *(undefined4 *)(param_1 + 0x148);
     *(short *)(param_1 + 0x14c) = (short)param_4;
     *(short *)(param_2 + 0x14) = (short)param_4;
@@ -52470,10 +52398,10 @@ void FUN_01037da8(int param_1,int param_2,int param_3,int param_4,int param_5)
     uVar1 = FUN_01036ad0(param_1,param_4);
     *(undefined4 *)(param_2 + 0x28) = uVar1;
     *(undefined4 *)(param_1 + 0x164) = uVar1;
-    thunk_FUN_01000100(*(undefined4 *)(param_2 + 0x28),param_3,param_4);
+    thunk_swv_memcpy(*(undefined4 *)(param_2 + 0x28),param_3,param_4);
     *(uint *)(param_2 + 0x38) = *(uint *)(param_2 + 0x38) | 0x2000;
   }
-  if ((param_5 != 0) && (thunk_FUN_01000100(param_2 + 0x2c,param_5,10), param_4 == 0)) {
+  if ((param_5 != 0) && (thunk_swv_memcpy(param_2 + 0x2c,param_5,10), param_4 == 0)) {
     param_4 = 1;
   }
   *(short *)(param_2 + 0x16) = (short)param_4;
@@ -54789,11 +54717,12 @@ LAB_01039cf0:
   } while( true );
 }
 
-/* ==== 0x01039DEC  (file offset 0x39DEC)  thunk_FUN_01000100 ========================================== */
-undefined4 thunk_FUN_01000100(undefined4 param_1)
+/* ==== 0x01039DEC  (file offset 0x39DEC)  thunk_swv_memcpy ============================================ */
+/* A branch to swv_memcpy (0x01000100). */
+undefined4 thunk_swv_memcpy(undefined4 param_1)
 
 {
-  FUN_01000c94();
+  rt_memcpy();
   return param_1;
 }
 
@@ -55349,7 +55278,7 @@ int FUN_0103a77c(int param_1,int param_2,void **param_3)
   iVar14 = -1;
   p = (char *)0x0;
   local_4c = (undefined1 *)0x0;
-  FUN_01000188(auStack_70,DATA_AT_0103FA74_OFFSET + 0x103a810,0x24);
+  swv_memcpy_word_aligned(auStack_70,DATA_AT_0103FA74_OFFSET + 0x103a810,0x24);
   local_74 = 8;
   p_00 = (void *)0x0;
   local_78 = 0;
@@ -55582,9 +55511,9 @@ int FUN_0103ad28(int param_1,undefined4 param_2,undefined4 *param_3)
        (pvVar2 = helper_malloc(local_428 + iVar5), iVar3 = WORD_HEXADECIMAL_00010001, pvVar2 == (void *)0x0))
     break;
     if (p != (void *)0x0) {
-      thunk_FUN_01000100(pvVar2,p);
+      thunk_swv_memcpy(pvVar2,p);
     }
-    thunk_FUN_01000100((int)pvVar2 + iVar5,auStack_424,local_428);
+    thunk_swv_memcpy((int)pvVar2 + iVar5,auStack_424,local_428);
     helper_free(p);
     iVar5 = iVar5 + local_428;
     p = pvVar2;
@@ -55763,10 +55692,10 @@ int FUN_0103b154(int param_1,undefined4 param_2,int param_3)
   }
   if (param_3 != 0) {
     if (iVar2 != 0) {
-      thunk_FUN_01000100(param_3,param_1,iVar2);
+      thunk_swv_memcpy(param_3,param_1,iVar2);
       param_3 = param_3 + iVar2;
     }
-    thunk_FUN_01000100(param_3,param_2);
+    thunk_swv_memcpy(param_3,param_2);
   }
   return iVar2 + uVar3 + 1;
 }
