@@ -1295,8 +1295,8 @@ LAB_00104dac:
 LAB_00104fa4:
           iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,0);
           *(undefined4 *)(iVar9 + 0x3c) = 2;
-          uVar10 = FUN_0010bba0(0,0,0,(int)*(short *)(param_1[5] + 4),
-                                (int)*(short *)(param_1[5] + 6),param_1,0xc,0,1);
+          uVar10 = menu_item_create((UIElement *)0x0,0,0,(int)*(short *)(param_1[5] + 4),
+                                    (int)*(short *)(param_1[5] + 6),param_1,0xc,0,1);
           pvVar16 = helper_malloc(0x20);
           if (param_2 == 0x6f) {
             /* Ghidra had dropped the last argument; restored from the disassembly (stored on the
@@ -1426,10 +1426,10 @@ LAB_00103858:
         if (piVar4 != (int *)0x0) {
           game_pause(*param_1);
           iVar9 = (int)screen_create((Screen *)0x0,(ScreenStack *)param_1,0);
-          uVar10 = FUN_0010bba0(0,0,0,(int)*(short *)(param_1[5] + 4),
-                                (int)*(short *)(param_1[5] + 6),param_1,0xc,0,1);
+          uVar10 = menu_item_create((UIElement *)0x0,0,0,(int)*(short *)(param_1[5] + 4),
+                                    (int)*(short *)(param_1[5] + 6),param_1,0xc,0,1);
           ui_element_add_child(iVar9,uVar10,0);
-          uVar10 = FUN_0010bba0(0,0,0,0x1e,0x33,param_1,0xc,0,1);
+          uVar10 = menu_item_create((UIElement *)0x0,0,0,0x1e,0x33,param_1,0xc,0,1);
           ui_element_load_image((UIElement *)uVar10,STRING_JIMINY_ICON_DOT_PNG);
           ui_element_add_child(iVar9,uVar10,0);
           local_38 = (void *)0x0;
@@ -1678,7 +1678,8 @@ LAB_00104a24:
       sVar1 = *(short *)(*(int *)(iVar9 + 8) + 4);
       uVar11 = screen_stack_scale((ScreenStack *)param_1,INTEGER_790,1).low;
       uVar13 = screen_stack_scale((ScreenStack *)param_1,100,2).low;
-      uVar10 = FUN_0010bba0(0,uVar13,uVar11,(int)sVar1 + iVar19 * -2,uVar10,param_1,0xb,0,1);
+      uVar10 = menu_item_create((UIElement *)0x0,uVar13,uVar11,(int)sVar1 + iVar19 * -2,uVar10,param_1,
+                                0xb,0,1);
       ui_element_add_child(iVar9,uVar10,700);
       iVar19 = text_style_create(0,6);
       *(undefined4 *)(iVar19 + 4) = 0x21;
@@ -2354,7 +2355,8 @@ LAB_001042b8:
     iVar19 = 0;
     local_30 = (int)local_3c - iVar8;
     do {
-      iVar12 = FUN_0010bba0(0,local_38,iVar17,local_3c,0,param_1,6,local_74[iVar19 + 1],1);
+      iVar12 = menu_item_create((UIElement *)0x0,local_38,iVar17,local_3c,0,param_1,6,
+                                local_74[iVar19 + 1],1);
       text_line_set_text_id(*(undefined4 *)(iVar12 + 0x30),local_74[iVar19 + 9]);
       psVar18 = *(short **)(*(int *)(iVar12 + 0x30) + 8);
       *psVar18 = *psVar18 + (short)iVar8;
@@ -2490,7 +2492,7 @@ LAB_00104360:
     local_74[7] = screen_stack_scale((ScreenStack *)param_1,0x140,2).low;
     iVar8 = 0;
     do {
-      iVar12 = FUN_0010bba0(0,local_74[8],iVar19,local_74[7],iVar20,param_1,8,0,0);
+      iVar12 = menu_item_create((UIElement *)0x0,local_74[8],iVar19,local_74[7],iVar20,param_1,8,0,0);
       key_picker_setup(iVar12,((ScreenStack *)param_1)->keyOptions,local_74[iVar8],iVar8);
       ui_element_add_child(iVar9,iVar12,iVar8 + 400);
       ((ScreenStack *)param_1)->keyPickers[iVar8] = (UIElement *)iVar12;
@@ -2731,8 +2733,8 @@ void FUN_001053a8(undefined4 param_1,undefined4 param_2,int param_3,int param_4,
     previousKey = AVK_LEFT;
   }
   for (; iVar5 < param_3; iVar5 = iVar5 + 1) {
-    iVar2 = FUN_0010bba0(0,param_8,param_9,param_10,param_11,param_1,param_7,
-                         *(undefined4 *)(param_5 + iVar5 * 4),1);
+    iVar2 = menu_item_create((UIElement *)0x0,param_8,param_9,param_10,param_11,param_1,param_7,
+                             *(undefined4 *)(param_5 + iVar5 * 4),1);
     text_line_set_text_id(*(undefined4 *)(iVar2 + 0x30),*(undefined4 *)(param_4 + iVar5 * 4));
     if (iVar5 == 0) {
       ui_element_set_focus((UIElement *)iVar2,(Screen *)param_2);
@@ -4542,13 +4544,13 @@ int32 text_box_handle_key(TextBox *box,int32 eventCode,int32 keyCode)
 /* ==== 0x00108524  (file offset 0x08524)  ui_element_handle_key ======================================= */
 /* GUESS: name. Key handler of every UI element. A key picker (type 8) takes LEFT / RIGHT itself: the
    previous / next key of its ring, shown at once and written to the setting at once; UP / DOWN go to
-   FUN_0010a498 with the picker's row, then on as for every element. SELECT sends the element's event
-   to its owner (FUN_00101ad8). Any other key is looked up in the element's key map (list_find_entry);
+   FUN_0010a498 with the picker's row, then on as for every element. SELECT sends the element's event to
+   its owner (FUN_00101ad8). Any other key is looked up in the element's key map (list_find_entry);
    without a match it goes to the element's listener (vtable +8), with one the element loses the focus
    (flags bit 1 cleared, its control deactivated) and the found element gets it (ui_element_set_focus).
    Finally the element's two colours are set from its type (its unfocused colours) unless it has the
-   focus, and it is redrawn (ui_element_draw) if anything changed. Returns 1 when the key was
-   handled. The element constructor (FUN_0010bba0) calls it with AVK_UNDEFINED just to set the colours. */
+   focus, and it is redrawn (ui_element_draw) if anything changed. Returns 1 when the key was handled.
+   The element constructor (menu_item_create) calls it with AVK_UNDEFINED just to set the colours. */
 int32 ui_element_handle_key(UIElement *element,int32 eventCode,int32 keyCode,int32 keyParameter)
 
 {
@@ -5253,7 +5255,7 @@ void text_box_set_tail(TextBox *box,int32 x,int32 y)
 
 
 /* ==== 0x00109750  (file offset 0x09750)  ui_element_load_image ======================================= */
-/* GUESS: names. Loads an image file for a picture item (a menu item of type 0xc, FUN_0010bba0): IShell
+/* GUESS: names. Loads an image file for a picture item (a menu item of type 0xc, menu_item_create): IShell
    LoadResObject with resource 0 and class 0, how ISHELL_LoadImage(pIShell, "file.png") reaches the shell
    (the whole file is the image), with the applet's IShell (the element's screen stack's applet). The image
    is kept at +0x6c; the item's draw method FUN_00106bd4 draws it centred in the item and its destructor
@@ -5408,8 +5410,9 @@ void FUN_00109a10(int param_1,int param_2,int param_3,undefined4 param_4)
     if (param_2 == 1) {
       iVar6 = iVar1;
     }
-    iVar1 = FUN_0010bba0(0,iVar6,(*(short *)(*(int *)(param_1 + 8) + 6) - iVar4) - iVar3,iVar2,iVar3
-                         ,*(undefined4 *)(param_1 + 0x20),2,param_4,1);
+    iVar1 = menu_item_create((UIElement *)0x0,iVar6,
+                             (*(short *)(*(int *)(param_1 + 8) + 6) - iVar4) - iVar3,iVar2,iVar3
+                             ,*(undefined4 *)(param_1 + 0x20),2,param_4,1);
     *(int *)(*(int *)(param_1 + 0x34) + iVar7 * 4) = iVar1;
     text_line_set_text_id(*(undefined4 *)(iVar1 + 0x30),param_3);
     ui_element_add_child(param_1,*(undefined4 *)(*(int *)(param_1 + 0x34) + iVar7 * 4),0);
@@ -6640,69 +6643,62 @@ Intro * intro_create(Intro *intro,int32 atTitle,int32 *error)
   return intro;
 }
 
-/* ==== 0x0010BBA0  (file offset 0x0BBA0)  FUN_0010bba0 ================================================ */
-int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
-                  undefined4 param_5,int param_6,int param_7,int param_8,undefined1 param_9)
+/* ==== 0x0010BBA0  (file offset 0x0BBA0)  menu_item_create ============================================ */
+/* GUESS: names. The menu item's constructor (VTABLE_001016E0; 0x70 bytes, allocated when `item` is 0;
+   returns 0 when out of memory): a plain element (ui_element_create) of the given type and select event,
+   with a label covering it (a text line in style 0x24 for type 6, else 9, added as its child), no text
+   control and no image. Type 8 (key picker) starts with no selected option; types 9 and 10 (text entry)
+   get a text control (IShell CreateInstance 0x01003009; GUESS: an ITextCtl) set to the item's rectangle,
+   inactive, with properties 0x10000, and type 10 input mode 5; type 0xb (the download progress bar) starts
+   at 0 of 0. Then `enabled`, a key map (list_create, not checked: GAME_BUGS.md), flags 1 (bit 0; meaning
+   unknown, the focus bit 1 clear), and its unfocused colours (ui_element_handle_key with the undefined key
+   0xE010). The menus make every row, button, picture and field with it (FUN_00101ad8, FUN_001053a8). */
+UIElement * menu_item_create(UIElement *item,int32 x,int32 y,int32 width,int32 height,int32 *owner,
+                             int32 type,int32 selectEvent,uint8 enabled)
 
 {
   AEERect rect;
-  short sVar1;
-  int *piVar2;
-  undefined4 *puVar3;
-  int iVar4;
-  short *psVar5;
-  
-  if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(0x70), param_1 != (int *)0x0)) {
-    ui_element_create(param_1,(undefined2)param_2,(undefined2)param_3,(undefined2)param_4,
-                 (undefined2)param_5,param_6);
-    *param_1 = (int32)VTABLE_001016E0;
-    param_1[0xd] = param_7;
-    param_1[0xe] = param_8;
-    psVar5 = (short *)param_1[2];
-    sVar1 = psVar5[1];
-    param_1[0x14] = 0;
-    param_1[0x1b] = 0;
-    if (param_7 == 6) {
-      iVar4 = 0x24;
+  IShell *shell;
+
+  if (item == (UIElement *)0x0 && (item = helper_malloc_2(0x70)) == (UIElement *)0x0)
+    return item;
+  ui_element_create(item,(int16)x,(int16)y,(int16)width,(int16)height,owner);
+  item->vtable = (const UIElementVtbl *)VTABLE_001016E0;
+  item->type = type;
+  item->selectEvent = selectEvent;
+  item->listener = (ITextCtl *)0x0;
+  item->image = (IImage *)0x0;
+  item->label = (int32)text_line_create((TextLine *)0x0,item->rect->x,item->rect->y,item->rect->dx,
+                                        item->rect->dy,owner,0,type == 6 ? 0x24 : 9);
+  if (type == 8)
+    item->selectedOption = (KeyOption *)0x0;
+  else if (type == 9 || type == 10) {
+    shell = ((ScreenStack *)owner)->applet->a.m_pIShell;
+    if ((*shell->pvt->CreateInstance)(shell,CLASS_IDENTIFIER_HEXADECIMAL_01003009,(void **)&item->listener)
+        == 0) {
+      rect.x = (int16)x;
+      rect.y = (int16)y;
+      rect.dx = (int16)width;
+      rect.dy = (int16)height;
+      (*item->listener->pvt->SetRect)(item->listener,&rect);
+      (*item->listener->pvt->SetActive)(item->listener,0);
+      (*item->listener->pvt->SetProperties)(item->listener,0x10000);
+      if (type == 10)
+        (*item->listener->pvt->SetInputMode)(item->listener,5);
     }
-    else {
-      iVar4 = 9;
-    }
-    param_1[0xc] = (int)text_line_create((TextLine *)0x0,(int)*psVar5,(int)sVar1,(int)psVar5[2],(int)psVar5[3],
-                                         (int32 *)param_6,0,iVar4);
-    if (param_7 == 8) {
-      param_1[0x10] = 0;
-    }
-    else if (param_7 == 9 || param_7 == 10) {
-      piVar2 = *(int **)(*(int *)(param_6 + 4) + 0xc);
-      iVar4 = (*((IShell *)piVar2)->pvt->CreateInstance)
-                  ((IShell *)piVar2,CLASS_IDENTIFIER_HEXADECIMAL_01003009,(void **)(param_1 + 0x14));
-      if (iVar4 == 0) {
-        rect.x = (int16)param_2;
-        rect.y = (int16)param_3;
-        rect.dx = (int16)param_4;
-        rect.dy = (int16)param_5;
-        (*((ITextCtl *)param_1[0x14])->pvt->SetRect)((ITextCtl *)param_1[0x14],&rect);
-        (*((ITextCtl *)param_1[0x14])->pvt->SetActive)((ITextCtl *)param_1[0x14],0);
-        (*((ITextCtl *)param_1[0x14])->pvt->SetProperties)((ITextCtl *)param_1[0x14],0x10000);
-        if (param_7 == 10) {
-          (*((ITextCtl *)param_1[0x14])->pvt->SetInputMode)((ITextCtl *)param_1[0x14],5);
-        }
-      }
-    }
-    else if (param_7 == 0xb) {
-      param_1[0x15] = 0;
-      param_1[0x16] = 0;
-    }
-    *(undefined1 *)(param_1 + 0x13) = param_9;
-    ui_element_add_child((int)param_1,param_1[0xc],0);
-    puVar3 = (undefined4 *)list_create((UIList *)0x0,0x10,0x10);
-    param_1[0x18] = (int)puVar3;
-    param_1[0x17] = 1;
-    ui_element_handle_key((int)param_1,0x7000,INTEGER_57360,0);
   }
-  return param_1;
+  else if (type == 0xb) {
+    item->progressValue = 0;
+    item->progressMaximum = 0;
+  }
+  item->enabled = enabled;
+  ui_element_add_child(item,(UIElement *)item->label,0);
+  item->keyMap = list_create((UIList *)0x0,0x10,0x10);
+  item->flags = 1;
+  ui_element_handle_key(item,0x7000,INTEGER_57360,0);
+  return item;
 }
+
 
 /* ==== 0x0010BD7C  (file offset 0x0BD7C)  screen_create =============================================== */
 /* GUESS: names. The plain screen's constructor (VTABLE_00101700; 0x48 bytes, allocated when `screen` is
@@ -6752,7 +6748,7 @@ int * FUN_0010be14(int *param_1)
    memory), then two arrays of `capacity` words (the ids and the entries), and starts it empty; it grows by
    `growBy` entries when full (list_set_entry). Every UI element's child list is list_create(0, 16, 16)
    (ui_element_create); the others make the screen stack's two (its screens at +0x34 and its key glyphs at
-   +0x40, screen_stack_create), a UI element's key map (+0x60, FUN_0010bba0) and the list at +0x30
+   +0x40, screen_stack_create), a UI element's key map (+0x60, menu_item_create) and the list at +0x30
    (text_box_create). */
 UIList * list_create(UIList *list,int32 capacity,int32 growBy)
 
@@ -6875,11 +6871,11 @@ LAB_0010c0cc:
 
 /* ==== 0x0010C168  (file offset 0x0C168)  ui_element_create =========================================== */
 /* GUESS: name. The base UI element's constructor: allocates the 0x30 bytes of a plain element when
-   `element` is 0 (returns 0 when out of memory), installs VTABLE_00101724 and sets the owner screen, the
-   rectangle (x, y, width, height), an empty child list (16 entries, growing by 16), the three colours to
-   -1 ("not set": the parent's), no parent, no background, visible. Every other UI class's constructor
-   calls it first and then installs its own vtable (FUN_0010bba0, screen_create, ...); FUN_00101ad8 makes
-   plain elements with it as containers. */
+   `element` is 0 (returns 0 when out of memory), installs VTABLE_00101724 and sets the owner screen,
+   the rectangle (x, y, width, height), an empty child list (16 entries, growing by 16), the three
+   colours to -1 ("not set": the parent's), no parent, no background, visible. Every other UI class's
+   constructor calls it first and then installs its own vtable (menu_item_create, screen_create, ...);
+   FUN_00101ad8 makes plain elements with it as containers. */
 UIElement * ui_element_create(UIElement *element,int16 x,int16 y,int16 width,int16 height,int32 *owner)
 
 {

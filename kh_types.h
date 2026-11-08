@@ -203,7 +203,7 @@ typedef struct TextTable {
 } TextTable;
 
 /* ---- The game's UI elements (GUESS: names) ------------------------------------------------------
- * A UIElement is a screen, menu entry or widget, created by FUN_0010bba0 with its type in +0x34.
+ * A UIElement is a screen, menu entry or widget, created by menu_item_create with its type in +0x34.
  * Elements form a tree: each has an id and a parent, and keeps its children in a UIList
  * (ui_element_add_child / ui_element_find_child). Only the fields used by the functions named so far
  * are named; the rest is padding.
@@ -262,7 +262,9 @@ typedef struct UIElement {
     uint8  unknown_4d[0x03];
     ITextCtl *listener;           /* +0x50 a BREW control (GUESS: an ITextCtl, class 0x01003009) that
                                      gets the keys the element does not handle itself */
-    uint8  unknown_54[0x08];
+    int32    progressValue;         /* +0x54 the download progress bar (type 0xb): how far it is; 0 at
+                                     creation; drawn as width * value / maximum (FUN_00107230) */
+    int32    progressMaximum;       /* +0x58 the progress bar's maximum; 0 at creation */
     uint32 flags;                 /* +0x5c bit 1: it has the focus (ui_element_set_focus), so it keeps its
                                      highlight colours (ui_element_handle_key) */
     UIList *keyMap;               /* +0x60 searched with the key code by list_find_entry */
@@ -271,7 +273,7 @@ typedef struct UIElement {
     int32    originalKeyCode;       /* +0x68 key picker: the setting's value when it was set up */
     IImage  *image;               /* +0x6c picture item (type 0xc): its image (ui_element_load_image),
                                      drawn centred (FUN_00106bd4), released by FUN_00105d7c; the menu
-                                     items are 0x70 bytes (FUN_0010bba0) */
+                                     items are 0x70 bytes (menu_item_create) */
 } UIElement;
 
 

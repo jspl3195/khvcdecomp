@@ -563,7 +563,7 @@ LevelObject * level_object_create(LevelObject *object,ISwerveObject *node,char *
 CollisionShape * collision_shape_create(CollisionShape *shape);   /* 0x0010B9B4 GUESS: name */
 TextStyle * text_style_create(TextStyle *style,int32 type);   /* 0x0010BA08 GUESS: name, see kh_mod.c */
 Intro * intro_create(Intro *intro,int32 atTitle,int32 *error);   /* 0x0010BB2C GUESS: names */
-int * FUN_0010bba0(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,int param_6,int param_7,int param_8,undefined1 param_9);
+UIElement * menu_item_create(UIElement *item,int32 x,int32 y,int32 width,int32 height,int32 *owner, int32 type,int32 selectEvent,uint8 enabled);   /* 0x0010BBA0 GUESS: name, see kh_mod.c */
 Screen * screen_create(Screen *screen,ScreenStack *stack,uint8 framed);   /* 0x0010BD7C GUESS: name, see kh_mod.c */
 int * FUN_0010be14(int *param_1);
 UIList * list_create(UIList *list,int32 capacity,int32 growBy);   /* 0x0010BE6C GUESS: name, see kh_mod.c */
