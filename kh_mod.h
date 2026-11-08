@@ -748,7 +748,7 @@ void character_freeze_held_keys(Character *character);   /* 0x0011AB60 GUESS: na
 undefined8 FUN_0011abc4(int param_1,int param_2);
 int32 character_lift(Character *character,LevelObject *object);   /* 0x0011ADD0 GUESS: name, see kh_mod.c */
 undefined4 FUN_0011ae04(int param_1,undefined4 param_2,int *param_3,int param_4,int param_5);
-void FUN_0011b044(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5, undefined4 *param_6);
+void level_object_load_clipart(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5, undefined4 *param_6);   /* 0x0011B044 GUESS: name, see kh_mod.c */
 int32 progress_read_file(Progress *progress,const char *name,void *buffer,uint32 size);   /* 0x0011B0CC GUESS: name, see kh_mod.c */
 undefined4 progress_load(int param_1,int param_2);   /* 0x0011B178 GUESS: name, see kh_mod.c */
 undefined8 FUN_0011b518(int param_1,int param_2);
@@ -836,14 +836,14 @@ void animations_stop(Animations *animations,int32 index,int32 immediately);   /*
 char * string_replace(AppContext *context,const char *text,char **slot);   /* 0x001204F0 GUESS: name, see kh_mod.c */
 void FUN_0012056c(int param_1,int param_2);
 bool FUN_0012059c(int param_1,int param_2);
-void FUN_0012070c(int param_1,int param_2);
+void game_destroy_children(Game *game,LevelObject *parent);   /* 0x0012070C GUESS: name, see kh_mod.c */
 void animations_add_from_scene(Animations *animations,ISwerveObject *object);   /* 0x0012088C GUESS: name */
 void FUN_00120be8(undefined4 *param_1,int *param_2,uint *param_3,uint *param_4,uint param_5);
 void FUN_00120f8c(int param_1,int *param_2,int param_3,int *param_4,int param_5);
 void game_create_objects(Game *game,ISwerveObject *node,LevelObject *parent);   /* 0x00121134 GUESS: name */
 LevelObject * level_object_update_trigger(LevelObject *object,uint32 x,uint32 y,uint32 z,uint32 radius,uint32 height,uint32 heading);   /* 0x001213FC GUESS: name, see kh_mod.c */
 void app_context_remove_object(int param_1,int *param_2,int *param_3,int param_4);   /* 0x00121584 GUESS: name, see kh_mod.c */
-void FUN_0012164c(int param_1,undefined4 param_2,int param_3);
+void level_object_unload_clipart(int param_1,undefined4 param_2,int param_3);   /* 0x0012164C GUESS: name, see kh_mod.c */
 void progress_add_play_time(Progress *progress);   /* 0x001216C4 GUESS: name, see kh_mod.c */
 void FUN_0012171c(int32 object,int32 now,int32 elapsed);   /* 0x0012171C (no Ghidra function) */
 void camera_pitch_over_ground(Camera *camera,uint32 *point,int32 elapsed);   /* 0x00121780 GUESS: names */

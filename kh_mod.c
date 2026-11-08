@@ -6452,7 +6452,7 @@ LevelObject * level_object_create(LevelObject *object,ISwerveObject *node,char *
   object->field_38 = object->field_3c = 1;
   object->field_40 = object->field_44 = object->field_48 = object->field_4c = 0;
   object->field_50 = object->hasTriggerScripts = object->playerInside = object->needsFacing = 0;
-  object->field_18 = 0;
+  object->clipartNode = (ISwerveObject *)0x0;
   object->clipart = (char *)0x0;
   object->field_1c = 0;
   object->sceneShapeCount = 0;
@@ -7099,7 +7099,7 @@ void camera_destroy(int param_1,int param_2)
 }
 
 /* ==== 0x0010C790  (file offset 0x0C790)  combat_region_destroy ======================================= */
-/* GUESS: names. The combat region's destructor (kind 4; FUN_0011df14 and FUN_0012070c pick it by
+/* GUESS: names. The combat region's destructor (kind 4; FUN_0011df14 and game_destroy_children pick it by
    LevelObject.kind): each of its enemies (enemy_destroy), the enemies' array (not cleared), its item
    drops (item_drops_destroy), then the LevelObject part (level_object_destroy), and the region itself
    when `freeIt` is set (the binary's tail jump to helper_free at 0x0010c7f8). */
@@ -7284,7 +7284,7 @@ void level_object_destroy(int param_1,int param_2)
     iVar1 = *(int *)(param_1 + 0x18);
   }
   if (bVar3 && iVar1 != 0) {
-    FUN_0012164c(param_1,*(undefined4 *)(param_1 + 0x20),*(int *)(param_1 + 0x24));
+    level_object_unload_clipart(param_1,*(undefined4 *)(param_1 + 0x20),*(int *)(param_1 + 0x24));
   }
   if (*(int *)(param_1 + 0x14) != 0) {
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
@@ -10473,7 +10473,7 @@ int32 script_command_run(ScriptCommand *command)
   case 0x14:   /* loadClipart: loads the object's clipart once */
     if (command->object != (LevelObject *)0x0 && command->object->clipart == (char *)0x0) {
       string_replace((AppContext *)context,command->text,&command->object->clipart);
-      FUN_0011b044((int)command->object,command->flag[0],command->flag[1],command->flag[2],
+      level_object_load_clipart((int)command->object,command->flag[0],command->flag[1],command->flag[2],
                    command->flag[3],(undefined4 *)&app->nErr);
     }
     break;
@@ -11002,8 +11002,8 @@ int32 script_command_run(ScriptCommand *command)
     break;
   case 0x4b:   /* unloadClipart */
     if (command->object != (LevelObject *)0x0 && command->object->field_1c != 0 &&
-        command->object->field_18 != 0)
-      FUN_0012164c((int)command->object,command->flag[0],command->flag[1]);
+        command->object->clipartNode != (ISwerveObject *)0x0)
+      level_object_unload_clipart((int)command->object,command->flag[0],command->flag[1]);
     break;
   case 0x4d:   /* setVar */
     if (command->text != (char *)0x0)
@@ -14619,7 +14619,7 @@ void FUN_00118910(int param_1,undefined4 param_2)
     *(undefined4 *)(param_1 + 0x80) = *(undefined4 *)(*(int *)(param_1 + 0x90) + 0x2c);
   }
   if (*(int *)(param_1 + 0x14) != 0) {
-    FUN_0011b044(param_1,*(undefined4 *)(param_1 + 0x20),*(undefined4 *)(param_1 + 0x24),
+    level_object_load_clipart(param_1,*(undefined4 *)(param_1 + 0x20),*(undefined4 *)(param_1 + 0x24),
                  *(undefined4 *)(param_1 + 0x28),*(undefined4 *)(param_1 + 0x2c),param_2);
   }
   uVar4 = FUN_00119b0c((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,*(undefined4 *)(param_1 + 8)
@@ -15953,8 +15953,11 @@ undefined4 FUN_0011ae04(int param_1,undefined4 param_2,int *param_3,int param_4,
   return local_34;
 }
 
-/* ==== 0x0011B044  (file offset 0x1B044)  FUN_0011b044 ================================================ */
-void FUN_0011b044(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5,
+/* ==== 0x0011B044  (file offset 0x1B044)  level_object_load_clipart =================================== */
+/* GUESS: name (not yet rewritten). Loads a level object's clipart (its `clipart` name, FUN_0011ae04)
+   into its scene node as its clipartNode (the script's loadClipart, and the LevelObject set-up
+   FUN_00118910), then creates its level objects (FUN_00119a28). */
+void level_object_load_clipart(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5,
                  undefined4 *param_6)
 
 {
@@ -19830,94 +19833,77 @@ bool FUN_0012059c(int param_1,int param_2)
   return bVar3;
 }
 
-/* ==== 0x0012070C  (file offset 0x2070C)  FUN_0012070c ================================================ */
-void FUN_0012070c(int param_1,int param_2)
+/* ==== 0x0012070C  (file offset 0x2070C)  game_destroy_children ======================================= */
+/* GUESS: names. Destroys the game's level objects whose parent is `parent`, each one's own children
+   first (itself, recursively): the first of the player character's references to it (its combat region,
+   boss combat region, carried object, mirror object, else any of its targets) is cleared, and when it
+   is the action object, the HUD's action text (slot 2) scrolls out (or is removed) and the action
+   object is cleared; then it is destroyed by its kind (level_object_destroy, motion_entity_destroy,
+   combat_region_destroy, boss_combat_region_destroy; a character or a camera is only dropped) and its
+   slot cleared. Used when an object's clipart is unloaded (level_object_unload_clipart). */
+void game_destroy_children(Game *game,LevelObject *parent)
 
 {
-  char cVar1;
-  char *pcVar2;
-  int iVar3;
-  int iVar4;
-  int iVar5;
-  int iVar6;
-  
-  if (param_2 != 0) {
-    iVar6 = 0;
-    do {
-      iVar5 = param_1 + iVar6 * 4;
-      iVar3 = *(int *)(iVar5 + 0x10);
-      if ((iVar3 != 0) && (*(int *)(iVar3 + 4) == param_2)) {
-        FUN_0012070c(param_1,iVar3);
-        iVar3 = *(int *)(param_1 + 0x1f8);
-        if (iVar3 != 0) {
-          iVar4 = *(int *)(iVar5 + 0x10);
-          if (iVar4 == *(int *)(iVar3 + 0x23c)) {
-            *(undefined4 *)(iVar3 + 0x23c) = 0;
-          }
-          else if (iVar4 == *(int *)(iVar3 + 0x240)) {
-            *(undefined4 *)(iVar3 + 0x240) = 0;
-          }
-          else if (iVar4 == (int)((Character *)iVar3)->carried) {
-            ((Character *)iVar3)->carried = (LevelObject *)0x0;
-          }
-          else if (iVar4 == *(int *)(iVar3 + 0x250)) {
-            *(undefined4 *)(iVar3 + 0x250) = 0;
-          }
-          else {
-            iVar3 = 0;
-            do {
-              iVar4 = *(int *)(param_1 + 0x1f8) + iVar3 * 4;
-              iVar3 = iVar3 + 1;
-              if (*(int *)(iVar4 + 0x20c) == *(int *)(iVar5 + 0x10)) {
-                *(undefined4 *)(iVar4 + 0x20c) = 0;
-              }
-            } while (iVar3 < 3);
-          }
+  Character *player;
+  Hud *hud;
+  LevelObject *object;
+  int32 i;
+  int32 j;
+
+  if (parent == (LevelObject *)0x0)
+    return;
+  for (i = 0; i < 120; i++) {
+    if (game->objects[i] == (LevelObject *)0x0 || game->objects[i]->parent != parent)
+      continue;
+    game_destroy_children(game,game->objects[i]);
+    player = game->character;
+    if (player != (Character *)0x0) {
+      if (game->objects[i] == (LevelObject *)player->combatRegion)
+        player->combatRegion = (struct CombatRegion *)0x0;
+      else if (game->objects[i] == (LevelObject *)player->bossCombatRegion)
+        player->bossCombatRegion = (struct BossCombatRegion *)0x0;
+      else if (game->objects[i] == player->carried)
+        player->carried = (LevelObject *)0x0;
+      else if (game->objects[i] == player->mirrorObject)
+        player->mirrorObject = (LevelObject *)0x0;
+      else {
+        for (j = 0; j < 3; j++) {
+          if (game->character->targets[j] == (int32)game->objects[i])
+            game->character->targets[j] = 0;
         }
-        iVar3 = *(int *)(param_1 + 0x1fc);
-        if (*(int *)(iVar5 + 0x10) == iVar3) {
-          iVar4 = *(int *)(*(int *)(param_1 + 0x214) + 0xd4);
-          if (iVar4 != 0) {
-            iVar3 = *(int *)(iVar4 + 0x60);
-          }
-          if (iVar4 != 0 && iVar3 != 0) {
-            if (*(int *)(iVar4 + 0x74) == 0) {
-              hud_remove_text((Hud *)iVar4,2);
-            }
-            else {
-              *(undefined4 *)(iVar4 + 0x74) = 0;
-              *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x214) + 0xd4) + 0x88) = 1;
-            }
-          }
-          *(undefined4 *)(param_1 + 0x1fc) = 0;
-        }
-        pcVar2 = *(char **)(iVar5 + 0x10);
-        cVar1 = *pcVar2;
-        if (cVar1 == '\0') {
-          if (pcVar2 != (char *)0x0) {
-            level_object_destroy((int)pcVar2,1);
-          }
-        }
-        else if (cVar1 == '\x01') {
-          if (pcVar2 != (char *)0x0) {
-            motion_entity_destroy((MotionEntity *)pcVar2,1);
-          }
-        }
-        else if (cVar1 == '\x04') {
-          if (pcVar2 != (char *)0x0) {
-            combat_region_destroy((CombatRegion *)pcVar2,1);
-          }
-        }
-        else if ((cVar1 == '\x05') && (pcVar2 != (char *)0x0)) {
-          boss_combat_region_destroy((BossCombatRegion *)pcVar2,1);
-        }
-        *(undefined4 *)(iVar5 + 0x10) = 0;
       }
-      iVar6 = iVar6 + 1;
-    } while (iVar6 < 0x78);
+    }
+    if (game->objects[i] == game->actionObject) {
+      hud = game->app->hud;
+      if (hud != (Hud *)0x0 && hud->texts[2] != (struct TextBox *)0x0) {
+        if (hud->scrolling[2] != 0) {   /* scrolling in: send it out */
+          hud->scrolling[2] = 0;
+          game->app->hud->leaving[2] = 1;
+        }
+        else
+          hud_remove_text(hud,2);
+      }
+      game->actionObject = (LevelObject *)0x0;
+    }
+    object = game->objects[i];
+    switch (object->kind) {
+    case 0:
+      level_object_destroy((int)object,1);
+      break;
+    case 1:
+      motion_entity_destroy((MotionEntity *)object,1);
+      break;
+    case 4:
+      combat_region_destroy((CombatRegion *)object,1);
+      break;
+    case 5:
+      boss_combat_region_destroy((BossCombatRegion *)object,1);
+      break;
+    }
+    game->objects[i] = (LevelObject *)0x0;
   }
-  return;
 }
+
 
 /* ==== 0x0012088C  (file offset 0x2088C)  animations_add_from_scene =================================== */
 /* GUESS: name. Adds the animations of a scene, from `object` down: for each animation track of the
@@ -20223,7 +20209,7 @@ void FUN_00120f8c(int param_1,int *param_2,int param_3,int *param_4,int param_5)
    walked too (the node is a Group: GetChildCount / GetChild), with the new object, if any, as their
    parent: a child Group directly, a child SkinnedMesh through its skeleton (GetSkeleton). Called by
    FUN_0010a5d8 (the game's root scene), script_command_run (after a scene is loaded, FUN_0011ae04) and
-   FUN_0011b044 (a level object's own scene, with that object as the parent). */
+   level_object_load_clipart (a level object's own scene, with that object as the parent). */
 void game_create_objects(Game *game,ISwerveObject *node,LevelObject *parent)
 
 {
@@ -20376,13 +20362,17 @@ void app_context_remove_object(int param_1,int *param_2,int *param_3,int param_4
   return;
 }
 
-/* ==== 0x0012164C  (file offset 0x2164C)  FUN_0012164c ================================================ */
-void FUN_0012164c(int param_1,undefined4 param_2,int param_3)
+/* ==== 0x0012164C  (file offset 0x2164C)  level_object_unload_clipart ================================= */
+/* GUESS: name (not yet rewritten). Unloads a level object's clipart (the script's unloadClipart, and
+   level_object_destroy): with `param_3` its children are destroyed first (game_destroy_children), then
+   its clipartNode is taken out of its scene (app_context_remove_object; `param_2` drops the animations
+   whose controllers left the World) and cleared, and the clipart's name freed. */
+void level_object_unload_clipart(int param_1,undefined4 param_2,int param_3)
 
 {
   if (*(int *)(param_1 + 0x18) != 0) {
     if (param_3 != 0) {
-      FUN_0012070c(*(undefined4 *)(*(int *)(param_1 + 0x84) + 0xa4),param_1);
+      game_destroy_children((Game *)((KHApp *)*(int *)(param_1 + 0x84))->pGame,(LevelObject *)param_1);
     }
     app_context_remove_object((undefined4)((KHApp *)*(int *)(param_1 + 0x84))->context,
                               *(undefined4 *)(param_1 + 0x18),*(undefined4 *)(param_1 + 8),param_2);

@@ -574,8 +574,9 @@ typedef struct LevelObject {
     int32    field_10;              /* +0x010 0 at creation */
     char    *clipart;               /* +0x014 GUESS: name; 0 at creation; the name of its clipart (script
                                      loadClipart, or the first word of its node's user data, FUN_00118910),
-                                     loaded by FUN_0011b044 */
-    int32    field_18;              /* +0x018 0 at creation */
+                                     loaded by level_object_load_clipart */
+    ISwerveObject *clipartNode;   /* +0x018 GUESS: name; its clipart's scene (level_object_load_clipart),
+                                     unloaded by level_object_unload_clipart; 0 at creation */
     int32    field_1c;              /* +0x01c 0 at creation */
     uint8  unknown_020[0x10];
     int32    field_30;              /* +0x030 0 at creation */
