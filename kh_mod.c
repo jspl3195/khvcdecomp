@@ -2635,7 +2635,7 @@ int32 ui_element_set_focus(UIElement *element,Screen *screen)
 {
   element->screen = screen;
   screen->focus = element;
-  element->flags |= 2;
+  element->flags |= UI_ELEMENT_FOCUSED;
   switch(element->type) {
   case 2:
   case 8:
@@ -3559,7 +3559,7 @@ void menu_item_draw(UIElement *item,IDisplay *display,IGraphics *graphics)
     if (inset != (AEERect *)0x0)
       memcpy(inset,item->rect,8);
     cut = 4;
-    if ((item->flags & 2) != 0) {
+    if ((item->flags & UI_ELEMENT_FOCUSED) != 0) {
       ui_element_draw_box(item,1,display,graphics,item->rect,COLOR_SLATE_GREY,COLOR_SLATE_GREY,4);
       cut = 2;
       inset->x += 3;
@@ -3724,212 +3724,159 @@ void text_box_draw_scroll_bar(TextBox *box,IDisplay *display,IGraphics *graphics
 
 
 /* ==== 0x00107230  (file offset 0x07230)  menu_item_draw_over_children ================================ */
-/* GUESS: name (not yet rewritten). The menu item's drawOverChildren method (slot 3 of VTABLE_001016E0),
-   drawn over its label: by type, the frames and arrows of the buttons and soft keys (types 1 - 3, their
-   focus colours), the key picker's frame, the progress bar's filled width (width * progressValue /
-   progressMaximum) and the focus frame. */
-void menu_item_draw_over_children(int *param_1,undefined4 param_2,int *param_3)
+/* GUESS: names. The menu item's drawOverChildren method (slot 3 of VTABLE_001016E0), drawn over its
+   label, on a copy of its rectangle (helper_malloc_2, not checked; freed by the binary's tail jump to
+   helper_free at 0x001077a4). Buttons and soft keys: an inner and an outer frame (ui_element_draw_box
+   modes 2 and 3), a soft key's in fixed colours, a button's inset by 1 pixel and coloured by its focus.
+   A title-menu button: a box in its primary colour with no fill (0x00FF00FF, alpha 0). An enabled key
+   picker: the same frames on a second copy; its label red while its setting is AVK_UNDEFINED, else
+   charcoal; and an arrow each side (IGraphics DrawTriangle; 1 pixel larger when it has no focus), with
+   a highlight edge on each when it has the focus (DrawLine). A text entry: its text control's Redraw.
+   The progress bar: a frame (IGraphics DrawRect) and, inside it, progressValue / progressMaximum of its
+   width (helper f_op FO_DIV on doubles; 0 / 0 while the size is not known, GAME_BUGS.md) filled with
+   the background colour (ClearRectBg). The copies are written to when the allocation failed
+   (GAME_BUGS.md). khvcemu does not implement f_op, so there the bar is always empty. */
+void menu_item_draw_over_children(UIElement *item,IDisplay *display,IGraphics *graphics)
 
 {
-  AEELine edge;
-  AEETriangle arrow;
-  AEERect bar;
+  AEERect *copy;
+  AEERect *pickerCopy;
+  AEETriangle arrow;              /* sp+0x08 */
+  AEELine edge;                   /* [sp] */
+  AEERect frame;                  /* sp+0x14 */
+  AEERect bar;                    /* sp+0x0c */
+  uint32 inner;
+  uint32 outer = COLOR_DARK_PURPLE;
+  uint32 fill;
+  uint32 highlight;
+  uint32 width;
+  int32 focused;
+  int32 margin;
   int32 left;
   int32 right;
   int32 middle;
-  int32 margin;
-  uint *puVar1;
-  uint *p;
-  undefined4 uVar2;
-  uint uVar3;
-  uint uVar4;
-  int iVar5;
-  uint uVar6;
-  uint uVar7;
-  bool bVar8;
-  float64 maximum;   /* obj->+0x58 as a double */
-  float64 value;     /* obj->+0x54 as a double */
-  float64 ratio;     /* value / maximum */
-  undefined4 local_2c;
-  undefined4 local_28;
-  
-  puVar1 = helper_malloc_2(8);
-  if (puVar1 != (uint *)0x0) {
-    memcpy(puVar1,(uint *)param_1[2],8);
-  }
-  uVar4 = COLOR_DARK_PURPLE;
-  switch(param_1[0xd]) {
-  case 0:
-    break;
+  float64 maximum;
+  float64 value;
+  float64 ratio;
+
+  copy = helper_malloc_2(8);
+  if (copy != (AEERect *)0x0)
+    memcpy(copy,item->rect,8);
+  switch (item->type) {
   case 1:
-    goto LAB_001072dc;
-  case 2:
-    goto LAB_001072dc;
-  case 3:
-LAB_001072dc:
-    uVar6 = COLOR_DARK_PURPLE;
-    uVar7 = COLOR_GREY_LILAC;
-    if (param_1[0xd] != 2) {
-      bVar8 = (param_1[0x17] & 2U) == 0;
-      if (bVar8) {
-        uVar3 = COLOR_PALE_LAVENDER;
-      }
-      *(short *)puVar1 = (short)*puVar1 + 1;
-      if (!bVar8) {
-        uVar3 = COLOR_PALE_LILAC;
-      }
-      *(short *)((int)puVar1 + 2) = *(short *)((int)puVar1 + 2) + 1;
-      if (bVar8) {
-        uVar4 = COLOR_SLATE_GREY;
-      }
-      *(short *)(puVar1 + 1) = (short)puVar1[1] + -2;
-      *(short *)((int)puVar1 + 6) = *(short *)((int)puVar1 + 6) + -2;
-      uVar6 = uVar3;
-      uVar7 = uVar4;
+  case MENU_ITEM_SOFT_KEY:
+  case MENU_ITEM_BUTTON:
+    if (item->type == MENU_ITEM_SOFT_KEY) {
+      inner = outer;
+      outer = COLOR_GREY_LILAC;
     }
-    ui_element_draw_box((UIElement *)param_1,2,(IDisplay *)param_2,(IGraphics *)param_3,
-                        (AEERect *)puVar1,uVar6,0,4);
-    uVar3 = 0;
-    iVar5 = 3;
-LAB_00107378:
-    ui_element_draw_box((UIElement *)param_1,iVar5,(IDisplay *)param_2,(IGraphics *)param_3,
-                        (AEERect *)puVar1,uVar7,uVar3,4);
-    break;
-  case 4:
-    break;
-  case 5:
-    uVar7 = (*(*(const UIElementVtbl **)param_1)->getPrimaryColor)(param_1);
-    iVar5 = 1;
-    uVar3 = WORD_HEXADECIMAL_00FF00FF;
-    goto LAB_00107378;
-  case 6:
-    break;
-  case 7:
-    break;
-  case 8:
-    if ((char)param_1[0x13] != '\0') {
-      p = helper_malloc_2(8);
-      if (p != (uint *)0x0) {
-        memcpy(p,(uint *)param_1[2],8);
-      }
-      *(short *)p = (short)*p + 1;
-      *(short *)((int)p + 2) = *(short *)((int)p + 2) + 1;
-      *(short *)(p + 1) = (short)p[1] + -2;
-      *(short *)((int)p + 6) = *(short *)((int)p + 6) + -2;
-      uVar3 = COLOR_PALE_LAVENDER;
-      if ((param_1[0x17] & 2U) != 0) {
-        uVar3 = COLOR_PALE_LILAC;
-      }
-      ui_element_draw_box((UIElement *)param_1,2,(IDisplay *)param_2,(IGraphics *)param_3,
-                          (AEERect *)p,uVar3,0,4);
-      uVar3 = COLOR_SLATE_GREY;
-      if ((param_1[0x17] & 2U) != 0) {
-        uVar3 = uVar4;
-      }
-      ui_element_draw_box((UIElement *)param_1,3,(IDisplay *)param_2,(IGraphics *)param_3,
-                          (AEERect *)p,uVar3,0,4);
-      helper_free(p);
+    else {
+      focused = (item->flags & UI_ELEMENT_FOCUSED) != 0;
+      inner = focused ? COLOR_PALE_LILAC : COLOR_PALE_LAVENDER;
+      copy->x += 1;
+      copy->y += 1;
+      if (!focused)
+        outer = COLOR_SLATE_GREY;
+      copy->dx -= 2;
+      copy->dy -= 2;
     }
-    uVar2 = COLOR_CHARCOAL;
-    if (*(int *)param_1[0x11] == 0xe010) {
-      uVar2 = COLOR_RED;
+    ui_element_draw_box(item,2,display,graphics,copy,inner,0,4);
+    ui_element_draw_box(item,3,display,graphics,copy,outer,0,4);
+    break;
+  case MENU_ITEM_TITLE_BUTTON:
+    ui_element_draw_box(item,1,display,graphics,copy,(*item->vtable->getPrimaryColor)(item),
+                        WORD_HEXADECIMAL_00FF00FF,4);
+    break;
+  case MENU_ITEM_KEY_PICKER:
+    if (item->enabled != 0) {
+      pickerCopy = helper_malloc_2(8);
+      if (pickerCopy != (AEERect *)0x0)
+        memcpy(pickerCopy,item->rect,8);
+      pickerCopy->x += 1;
+      pickerCopy->y += 1;
+      pickerCopy->dx -= 2;
+      pickerCopy->dy -= 2;
+      inner = (item->flags & UI_ELEMENT_FOCUSED) == 0 ? COLOR_PALE_LAVENDER : COLOR_PALE_LILAC;
+      ui_element_draw_box(item,2,display,graphics,pickerCopy,inner,0,4);
+      ui_element_draw_box(item,3,display,graphics,pickerCopy,
+                          (item->flags & UI_ELEMENT_FOCUSED) == 0 ? COLOR_SLATE_GREY : outer,0,4);
+      helper_free(pickerCopy);
     }
-    *(undefined4 *)(param_1[0xc] + 0x10) = uVar2;
-    uVar7 = param_1[0x17] & 2;
-    left = *(int16 *)param_1[2] - 2;
-    middle = ((int16 *)param_1[2])[1] + ((int16 *)param_1[2])[3] / 2;
-    margin = uVar7 == 0;
-    local_28 = COLOR_PALE_LAVENDER;
-    uVar3 = COLOR_PALE_LAVENDER;
-    if (uVar7 != 0) {
-      local_28 = COLOR_SLATE_GREY;
-      uVar3 = uVar4;
-    }
-    local_2c = COLOR_PALE_LILAC;
-    graphics_set_color(param_1[8],param_3,uVar3,1);
-    graphics_set_color(param_1[8],param_3,local_28,2);
-    (*((IGraphics *)param_3)->pvt->SetFillMode)((IGraphics *)param_3,1);
-    arrow.p0.x = left - 6 - margin;
-    arrow.p0.y = middle;
-    arrow.p1.x = left;
-    arrow.p1.y = middle - 4 - margin;
-    arrow.p2.x = left;
-    arrow.p2.y = middle + margin + 4;
+    ((UIElement *)item->label)->primaryColor =
+        *item->setting == AVK_UNDEFINED ? COLOR_RED : COLOR_CHARCOAL;   /* an unbound key in red */
+    focused = item->flags & UI_ELEMENT_FOCUSED;
+    left = item->rect->x - 2;
+    middle = item->rect->y + item->rect->dy / 2;
+    if (focused == 0)
+      outer = COLOR_PALE_LAVENDER;
+    fill = focused != 0 ? COLOR_SLATE_GREY : COLOR_PALE_LAVENDER;
+    margin = focused == 0;        /* the arrows are 1 pixel larger without the focus */
+    highlight = COLOR_PALE_LILAC;
+    graphics_set_color((int32)item->owner,graphics,outer,1);
+    graphics_set_color((int32)item->owner,graphics,fill,2);
+    (*graphics->pvt->SetFillMode)(graphics,1);
+    arrow.p0.x = (int16)(left - 6 - margin);   /* the left arrow */
+    arrow.p0.y = (int16)middle;
+    arrow.p1.x = (int16)left;
+    arrow.p1.y = (int16)(middle - 4 - margin);
+    arrow.p2.x = (int16)left;
+    arrow.p2.y = (int16)(middle + margin + 4);
     edge.sx = arrow.p0.x;
     edge.sy = arrow.p0.y;
     edge.ex = arrow.p1.x;
     edge.ey = arrow.p1.y;
-    (*((IGraphics *)param_3)->pvt->DrawTriangle)((IGraphics *)param_3,&arrow);
-    right = *(int16 *)param_1[2] + ((int16 *)param_1[2])[2] + 2;
-    arrow.p0.x = right + margin + 6;
-    arrow.p1.x = right;
-    arrow.p2.x = right;
-    if (uVar7 != 0) {
-      graphics_set_color(param_1[8],param_3,local_2c,1);
-      (*((IGraphics *)param_3)->pvt->DrawLine)((IGraphics *)param_3,&edge);
+    (*graphics->pvt->DrawTriangle)(graphics,&arrow);
+    right = (uint16)item->rect->x + (uint16)item->rect->dx + 2;
+    arrow.p0.x = (int16)(right + margin + 6);   /* the right arrow */
+    arrow.p1.x = (int16)right;
+    arrow.p2.x = (int16)right;
+    if (focused != 0) {
+      graphics_set_color((int32)item->owner,graphics,highlight,1);
+      (*graphics->pvt->DrawLine)(graphics,&edge);
     }
-    (*((IGraphics *)param_3)->pvt->DrawTriangle)((IGraphics *)param_3,&arrow);
-    if (uVar7 != 0) {
+    (*graphics->pvt->DrawTriangle)(graphics,&arrow);
+    if (focused != 0) {
       edge.sx = arrow.p0.x;
       edge.sy = arrow.p0.y;
       edge.ex = arrow.p2.x;
       edge.ey = arrow.p2.y;
-      graphics_set_color(param_1[8],param_3,uVar3,1);
-      (*((IGraphics *)param_3)->pvt->DrawLine)((IGraphics *)param_3,&edge);
+      graphics_set_color((int32)item->owner,graphics,outer,1);
+      (*graphics->pvt->DrawLine)(graphics,&edge);
     }
     break;
-  case 9:
-    goto LAB_00107384;
-  case 10:
-LAB_00107384:
-    if ((int *)param_1[0x14] != (int *)0x0) {
-      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-      (*((ITextCtl *)param_1[0x14])->pvt->Redraw)((ITextCtl *)param_1[0x14]);
-    }
+  case MENU_ITEM_TEXT_ENTRY:
+  case MENU_ITEM_NUMBER_ENTRY:
+    if (item->listener != (ITextCtl *)0x0)
+      (*item->listener->pvt->Redraw)(item->listener);
     break;
-  case 0xb:
-    graphics_set_color(param_1[8],param_3,COLOR_DARK_PURPLE,1);
-    local_2c = ((uint32)(uint16)(*(undefined2 *)(param_1[2] + 2)) << 16 | (uint16)(*(undefined2 *)param_1[2]));
-    local_28 = ((uint32)(uint16)(*(undefined2 *)(param_1[2] + 6)) << 16 | (uint16)(*(undefined2 *)(param_1[2] + 4)));
-    (*((IGraphics *)param_3)->pvt->DrawRect)((IGraphics *)param_3,(const AEERect *)&local_2c);
-    (*((IGraphics *)param_3)->pvt->SetFillMode)((IGraphics *)param_3,1);
-    graphics_set_color(param_1[8],param_3,COLOR_SLATE_GREY,3);
-    maximum = int_to_double(param_1[0x16]);
-    value = int_to_double(param_1[0x15]);
-                    /* helper[37] f_op (AEEHelperFuncs +0x94) - BREW floating-point arithmetic
-                       helper: double f_op(double v1, double v2, FloatOperationType nType).
-                       Registers (AAPCS soft-float, little-endian): v1 in r0:r1 (r0 = low word, r1 =
-                       sign/exponent word; order confirmed by kh.mod's int->double at 0x125604), v2
-                       in r2:r3, nType as the 5th argument word at [sp]; result double in r0:r1.
-                       Here: v1 = (double)obj->+0x54 (0x1076ec/0x1076f4), v2 = (double)obj->+0x58
-                       (0x1076e0/0x1076e4), nType = 3 (0x1076fc/0x107704).
-                       Ops: 0 add, 1 sub, 2 mul, 3 div - GUESS: conventional FADD/FSUB/FMUL/FDIV
-                       order, not confirmed from an SDK header; 3 = divide is what makes sense here:
-                       the result goes to double->float (0x12479c) and is combined with
-                       (float)rect.dx (0x1268c8, 0x1269cc), i.e. width * value/max (GUESS: a
-                       gauge/progress bar).
-                       Expected behaviour: IEEE-754 binary64, round-to-nearest; x/0 -> +-inf, 0/0 ->
-                       NaN, no trap; unknown op -> 0.0. NOTE: khvcemu does not implement f_op (logs
-                       [unimpl], returns 0), so this bar draws as empty. Full description:
-                       research_notes/decomp/brew_types.h, AEEHelperFuncs slot 37. */
-                    /* the two doubles travel as bit patterns in r0:r1 and r2:r3, the operation
-                       code on the stack: `mov r3, #3; str r3, [sp]` at 0x1076fc = FO_DIV */
+  case MENU_ITEM_PROGRESS_BAR:
+    graphics_set_color((int32)item->owner,graphics,outer,1);
+    frame.x = item->rect->x;
+    frame.y = item->rect->y;
+    frame.dx = item->rect->dx;
+    frame.dy = item->rect->dy;
+    (*graphics->pvt->DrawRect)(graphics,&frame);
+    (*graphics->pvt->SetFillMode)(graphics,1);
+    graphics_set_color((int32)item->owner,graphics,COLOR_SLATE_GREY,3);
+    maximum = int_to_double(item->progressMaximum);
+    value = int_to_double(item->progressValue);
+    /* helper[37] f_op (AEEHelperFuncs +0x94): v1 in r0:r1, v2 in r2:r3, the operation at [sp]
+       (`mov r3, #3; str r3, [sp]` at 0x001076fc, FO_DIV); see brew_types.h. khvcemu does not
+       implement it (it returns 0), so there the bar is always empty. */
     *(double *)&ratio = (*g_pHelperFuncs->f_op)(*(double *)&value,*(double *)&maximum,FO_DIV);
-    uVar3 = double_to_float(ratio);
-    uVar4 = int_to_float(*(int16 *)(param_1[2] + 4));
-    uVar3 = float_multiply(uVar4,uVar3);
-    bar.x = *(int16 *)param_1[2] + 1;
-    bar.y = ((int16 *)param_1[2])[1] + 1;
-    bar.dx = float_to_int(uVar3) - 2;
-    bar.dy = ((int16 *)param_1[2])[3] - 2;
-    (*((IGraphics *)param_3)->pvt->ClearRectBg)((IGraphics *)param_3,&bar);
-    break;
-  case 0xc:
+    width = double_to_float(ratio);
+    width = float_multiply(int_to_float(item->rect->dx),width);
+    bar.x = item->rect->x + 1;
+    bar.y = item->rect->y + 1;
+    bar.dx = (int16)(float_to_int(width) - 2);
+    bar.dy = item->rect->dy - 2;
+    (*graphics->pvt->ClearRectBg)(graphics,&bar);
     break;
   }
-  helper_free(puVar1);
+  helper_free(copy);
   return;
 }
+
 
 /* ==== 0x001077CC  (file offset 0x077CC)  ui_element_draw_over_children_nothing ======================= */
 /* GUESS: name. The "draw over the children" method (vtable slot 3, +0x0c) of the UI classes that draw
@@ -4542,7 +4489,7 @@ int32 ui_element_handle_key(UIElement *element,int32 eventCode,int32 keyCode,int
         handled = (*element->listener->pvt->HandleEvent)(element->listener,eventCode,keyCode,keyParameter);
     }
     else {
-      element->flags &= ~2u;
+      element->flags &= ~UI_ELEMENT_FOCUSED;
       if (element->listener != (ITextCtl *)0x0)
         (*element->listener->pvt->SetActive)(element->listener,0);
       redraw = 1;
@@ -4550,7 +4497,7 @@ int32 ui_element_handle_key(UIElement *element,int32 eventCode,int32 keyCode,int
       handled = 1;
     }
   }
-  if ((element->flags & 2) == 0) {
+  if ((element->flags & UI_ELEMENT_FOCUSED) == 0) {
     switch(element->type) {
     case 2:
       element->primaryColor = COLOR_PALE_LAVENDER;

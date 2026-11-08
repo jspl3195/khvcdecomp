@@ -485,7 +485,7 @@ void text_line_draw(TextLine *line,IDisplay *display);   /* 0x00106A94 GUESS: na
 void menu_item_draw(UIElement *item,IDisplay *display,IGraphics *graphics);   /* 0x00106BD4 GUESS: name, see kh_mod.c */
 void screen_draw(Screen *screen,IDisplay *display,IGraphics *graphics);   /* 0x00106E44 GUESS: name, see kh_mod.c */
 void text_box_draw_scroll_bar(TextBox *box,IDisplay *display,IGraphics *graphics);   /* 0x00106FB0 GUESS: name, see kh_mod.c */
-void menu_item_draw_over_children(int *param_1,undefined4 param_2,int *param_3);   /* 0x00107230 GUESS: name, see kh_mod.c */
+void menu_item_draw_over_children(UIElement *item,IDisplay *display,IGraphics *graphics);   /* 0x00107230 GUESS: name, see kh_mod.c */
 void hud_draw_gauge(Hud *hud,IGraphics *graphics,int32 side,int32 value,int32 maximum,int32 fullScale, int32 lowThreshold);   /* 0x001077D0 GUESS: name, see kh_mod.c */
 void ui_element_draw_box(UIElement *element,int32 mode,IDisplay *display,IGraphics *graphics,AEERect *rect, uint32 lineColour,uint32 fillColour,int16 cut);   /* 0x00107ADC GUESS: name, see kh_mod.c */
 int32 ui_element_draw(UIElement *element);   /* 0x00107D24 GUESS: name, see kh_mod.c */
@@ -929,14 +929,17 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 #define TEXT_RANK 0x04D4D70F   /* was DAT_00102b24 (word at 0x00102B24); the text id of
                                   "Rank" (language.m3g) */
 /* The menu items' types (UIElement.type, menu_item_create; GUESS: names). 1, 4 and 7 have no
-   name yet; 3 and 5 are the menus' button columns (menu_add_buttons). */
+   name yet. */
 #define MENU_ITEM_SOFT_KEY      2      /* a screen's soft key (FUN_00109a10) */
+#define MENU_ITEM_BUTTON        3      /* a button of a menu's column (menu_add_buttons) */
+#define MENU_ITEM_TITLE_BUTTON  5      /* a button of the title menu's column (menu_add_buttons) */
 #define MENU_ITEM_ROW           6      /* a list row; its label in text style 0x24 */
 #define MENU_ITEM_KEY_PICKER    8      /* the Controls screen's key pickers */
 #define MENU_ITEM_TEXT_ENTRY    9      /* a text field: an ITextCtl (class 0x01003009) */
 #define MENU_ITEM_NUMBER_ENTRY  10     /* the same, in input mode 5 (GUESS: AEE_TM_NUMBERS) */
 #define MENU_ITEM_PROGRESS_BAR  0xb    /* the download progress bar */
 #define MENU_ITEM_PICTURE       0xc    /* an image (ui_element_load_image), drawn centred */
+#define UI_ELEMENT_FOCUSED      0x2    /* UIElement.flags: it has the focus (ui_element_set_focus) */
 
 #define COLOR_PALE_LILAC 0xFFC9C4DA   /* was DAT_00102b50, DAT_00104c2c, DAT_001077b8, DAT_00108728 (word
                                                  at 0x00102B50); the colour 0xAARRGGBB (201, 196, 218) */
