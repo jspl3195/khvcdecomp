@@ -167,7 +167,8 @@ typedef struct UIList {
  * when it becomes the top again (screen_stack_close_top). */
 typedef struct ScreenStack {
     struct KHApp *app;            /* +0x00 */
-    uint8  unknown_04[0x04];
+    struct KHApp *applet;         /* +0x04 GUESS: name; the app as well: the constructor's second argument,
+                                     stored first (+0x00 later); read for its IShell and IDisplay */
     struct TextTable *texts;      /* +0x08 the app's text table (KHApp.pObj98; screen_stack_get_text) */
     IDisplay *display;            /* +0x0c passed to the elements' draw methods (ui_element_draw); GUESS: the
                                      IDisplay */
@@ -267,6 +268,9 @@ typedef struct UIElement {
     struct Screen *screen;        /* +0x64 the screen it has (or last had) the focus on
                                      (ui_element_set_focus); its key map moves the focus there */
     int32    originalKeyCode;       /* +0x68 key picker: the setting's value when it was set up */
+    IImage  *image;               /* +0x6c picture item (type 0xc): its image (ui_element_load_image),
+                                     drawn centred (FUN_00106bd4), released by FUN_00105d7c; the menu
+                                     items are 0x70 bytes (FUN_0010bba0) */
 } UIElement;
 
 

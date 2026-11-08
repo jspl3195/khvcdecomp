@@ -523,7 +523,7 @@ void thunk_FUN_0011e154(int param_1);
 int32 download_write_file(WebRequest *caller,WebRequest *request,const char *name,uint32 size, const void *data);   /* 0x001093F8 GUESS: name, see kh_mod.c */
 void web_request_notify(WebRequest *request,int32 event,int32 value,int32 detail,int32 extra);   /* 0x00109534 GUESS: name, see kh_mod.c */
 void text_box_set_tail(TextBox *box,int32 x,int32 y);   /* 0x0010955C GUESS: name, see kh_mod.c */
-void FUN_00109750(int param_1,undefined4 param_2);
+IImage * ui_element_load_image(UIElement *element,const char *fileName);   /* 0x00109750 GUESS: name, see kh_mod.c */
 int FUN_00109780(int *param_1,undefined4 param_2,int param_3);
 void key_picker_setup(UIElement *picker,KeyOption *options,int32 *setting,int32 index);   /* 0x001098D8 GUESS: name */
 void FUN_00109940(int param_1,int param_2);

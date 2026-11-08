@@ -1299,16 +1299,18 @@ LAB_00104fa4:
                                 (int)*(short *)(param_1[5] + 6),param_1,0xc,0,1);
           pvVar16 = helper_malloc(0x20);
           if (param_2 == 0x6f) {
+            /* Ghidra had dropped the last argument; restored from the disassembly (stored on the
+               stack before the branch, 0x0010500c) */
             (*g_pHelperFuncs->sprintf)
                       (pvVar16,(int32)STRING_PERCENT_S_PERCENT_S_PERCENT_S_00127D44,(int32)STRING_RO,
-                       *(undefined4 *)(*param_1 + 200));
+                       *(undefined4 *)(*param_1 + 200),(int32)STRING_SPLASH_DOT_PNG);
           }
           else {
             (*g_pHelperFuncs->sprintf)
                       (pvVar16,(int32)STRING_PERCENT_S_PERCENT_S_PERCENT_S_00127D44,(int32)STRING_RO,
                        *(undefined4 *)(*param_1 + 0xc4),(int32)STRING_SPLASH_DOT_PNG);
           }
-          FUN_00109750(uVar10,pvVar16);
+          ui_element_load_image((UIElement *)uVar10,(const char *)pvVar16);
           helper_free(pvVar16);
           ui_element_add_child(iVar9,uVar10,0);
           if (param_2 != 0x6f) {
@@ -1428,7 +1430,7 @@ LAB_00103858:
                                 (int)*(short *)(param_1[5] + 6),param_1,0xc,0,1);
           ui_element_add_child(iVar9,uVar10,0);
           uVar10 = FUN_0010bba0(0,0,0,0x1e,0x33,param_1,0xc,0,1);
-          FUN_00109750(uVar10,(int32)STRING_JIMINY_ICON_DOT_PNG);
+          ui_element_load_image((UIElement *)uVar10,STRING_JIMINY_ICON_DOT_PNG);
           ui_element_add_child(iVar9,uVar10,0);
           local_38 = (void *)0x0;
           FUN_0011448c((undefined4)((KHApp *)*param_1)->context,piVar4,WORD_HEXADECIMAL_0AE069A1,&local_38);
@@ -5250,19 +5252,23 @@ void text_box_set_tail(TextBox *box,int32 x,int32 y)
 }
 
 
-/* ==== 0x00109750  (file offset 0x09750)  FUN_00109750 ================================================ */
-void FUN_00109750(int param_1,undefined4 param_2)
+/* ==== 0x00109750  (file offset 0x09750)  ui_element_load_image ======================================= */
+/* GUESS: names. Loads an image file for a picture item (a menu item of type 0xc, FUN_0010bba0): IShell
+   LoadResObject with resource 0 and class 0, how ISHELL_LoadImage(pIShell, "file.png") reaches the shell
+   (the whole file is the image), with the applet's IShell (the element's screen stack's applet). The image
+   is kept at +0x6c; the item's draw method FUN_00106bd4 draws it centred in the item and its destructor
+   FUN_00105d7c releases it. A missing file leaves 0. Used by the menu handler FUN_00101ad8 for a level's
+   splash picture ("ro_<name>_splash.png") and the Jiminy icon. Returns the image (r0 as kh.mod leaves it);
+   Ghidra had declared it void. */
+IImage * ui_element_load_image(UIElement *element,const char *fileName)
 
 {
-  int *piVar1;
-  undefined4 uVar2;
-  
-  piVar1 = *(int **)(*(int *)(*(int *)(param_1 + 0x20) + 4) + 0xc);
-  uVar2 = (undefined4)(*((IShell *)piVar1)->pvt->LoadResObject)
-                          ((IShell *)piVar1,(const char *)param_2,0,0);
-  *(undefined4 *)(param_1 + 0x6c) = uVar2;
-  return;
+  IShell *shell = ((ScreenStack *)element->owner)->applet->a.m_pIShell;
+
+  element->image = (IImage *)(*shell->pvt->LoadResObject)(shell,fileName,0,0);
+  return element->image;
 }
+
 
 /* ==== 0x00109780  (file offset 0x09780)  FUN_00109780 ================================================ */
 int FUN_00109780(int *param_1,undefined4 param_2,int param_3)
