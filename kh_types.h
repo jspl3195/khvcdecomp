@@ -43,10 +43,12 @@ typedef struct KHApp {
                                         framebuffer binding is skipped when it is NULL */
     IDIB          *pScreenDIB;       /* +0x70 device bitmap QueryInterface(AEECLSID_DIB) */
     AEERect        rcView;           /* +0x74 {0, 0, devInfo.cxScreen, devInfo.cyScreen} */
-    uint32         field_7c;         /* +0x7c */
-    uint32         field_80;         /* +0x80 */
-    uint32         field_84;         /* +0x84 */
-    uint32         field_88;         /* +0x88 */
+    uint32         lastFrameTime;    /* +0x7c GUESS: names; aee_GetUpTimeMS at the previous frame
+                                        (FUN_0010ea64) */
+    uint32         frameTime;        /* +0x80 aee_GetUpTimeMS at this frame */
+    uint32         gameTime;         /* +0x84 GUESS: the sum of the frames' elapsed times */
+    uint32         elapsed;          /* +0x88 ms since the previous frame, at most 200 (hud_draw, the
+                                        game's update) */
     int32          field_8c;         /* +0x8c set to 0x1e or a computed value at the end of kh_OnAppStart */
     int32          nErr;             /* +0x90 GUESS: start-up error code; every init step is skipped
                                         once it is non-zero, and key releases are ignored */
@@ -361,7 +363,7 @@ typedef struct Screen {
  * named so far; the script code (script_command_run) still reads the rest through offsets. */
 typedef struct Hud {
     Screen   screen;              /* +0x00 the plain screen it builds on (screen_create, framed 0) */
-    uint8    showMagicPoints;     /* +0x48 GUESS: name; 1 at creation: FUN_00106398 draws the MP as five
+    uint8    showMagicPoints;     /* +0x48 GUESS: name; 1 at creation: hud_draw draws the MP as five
                                      pips */
     uint8    showPlayerGauge;     /* +0x49 1 at creation: the player's health gauge (hud_draw_gauge,
                                      right) */
@@ -376,15 +378,18 @@ typedef struct Hud {
     struct TextBox *texts[5];     /* +0x58 GUESS: names; the script's texts by slot (hud_show_text; slot
                                      0 a speech bubble), removed by hud_remove_text */
     int32    scrolling[5];        /* +0x6c set by hud_show_scrolling_text */
-    int32    field_80[5];         /* +0x80 cleared when a scrolling text has left the top */
+    int32    leaving[5];          /* +0x80 GUESS: name; 1 while the text scrolls out (slot 3 when its
+                                     messageTime runs out; hud_draw) */
     uint32   scrollSpeeds[5];     /* +0x94 floats (their bits): content height / 500.0 */
     uint32   scrollPositions[5];  /* +0xa8 floats (their bits): the box's top */
     int32    messageTime;         /* +0xbc GUESS: name; ms a status message stays (2000) */
-    uint8    unknown_c0[0x0c];
+    int32    cinematic;           /* +0xc0 GUESS: name; the script's setScreenMode (hud_set_cinematic): no
+                                     gauges while set (hud_draw); the timer tick tests it for 1 */
+    uint8    unknown_c4[0x08];
     int32    blinkTime;           /* +0xcc GUESS: name; aee_GetUpTimeMS at creation, +350 at each flip of
                                      blinkOn */
     uint8    unknown_d0;          /* +0xd0 0 at creation */
-    uint8    blinkOn;             /* +0xd1 GUESS: name; 1 at creation, flipped every 350 ms (FUN_00106398):
+    uint8    blinkOn;             /* +0xd1 GUESS: name; 1 at creation, flipped every 350 ms (hud_draw):
                                      a gauge below its low threshold is drawn only while set */
     uint8    unknown_d2[0x02];
     IImage  *playerIcon;          /* +0xd4 kh.bar 5001: a 14x14 silver disc with a white heart, in the

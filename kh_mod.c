@@ -1248,7 +1248,7 @@ LAB_00104380:
       FUN_00120450((undefined4)((KHApp *)*param_1)->context);
 LAB_0010438c:
       if (*(int *)(*param_1 + 0xd4) != 0) {
-        FUN_00109940(*(int *)(*param_1 + 0xd4),0);
+        hud_set_cinematic(*(int *)(*param_1 + 0xd4),0);
       }
 LAB_00104338:
       screen_stack_close_all(param_1);
@@ -3303,146 +3303,114 @@ void web_request_cancel(WebRequest *request,WebRequest *pending)
 }
 
 
-/* ==== 0x00106398  (file offset 0x06398)  FUN_00106398 ================================================ */
-void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4)
+/* ==== 0x00106398  (file offset 0x06398)  hud_draw ==================================================== */
+/* GUESS: names. The HUD's draw method (slot 4 of VTABLE_0010165C), only while a game runs. Every 350 ms
+   (aee_GetUpTimeMS against blinkTime, which moves on by 350 a frame, so it catches up a frame at a time
+   after a pause) blinkOn flips. Unless the HUD is cinematic (hud_set_cinematic) or the game's float
+   +0x210 is not 0, it draws: the MP as five 45 degree slices of a disc of radius 19, 25 pixels in from
+   the HUD's far corner (HUD_MAGIC_ARC; start angles 135, 90, 45, 0 and -45), blue for the points left
+   and black from progress magicPoints on; the player's gauge (hud_draw_gauge, right; a health between 0
+   and 1 shows as 1); and, in a combat or boss region, the target's gauge (left). Then it moves the
+   texts that scroll (hud_show_scrolling_text) by the frame's elapsed time times their speed: in while
+   above the top, out once `leaving` is set (slot 3, the munny message, when its messageTime runs out).
+   A text that has scrolled out is meant to be removed, but the test is the box's height minus its y
+   below 0, which never holds for a box moving up (GAME_BUGS.md). Written from the disassembly
+   (0x00106398 - 0x0010672c). */
+void hud_draw(Hud *hud,IDisplay *display,IGraphics *graphics)
 
 {
-  AEEArc arc;
-  char cVar1;
-  int iVar2;
-  uint uVar3;
-  uint uVar4;
-  uint uVar5;
-  uint uVar6;
-  int iVar7;
-  int iVar8;
-  bool bVar9;
-  bool bVar10;
-  undefined1 uVar11;
-  
-  if (*(int *)(*(int *)(param_1 + 0x44) + 0xa4) != 0) {
-                    /* helper[44] uint32 aee_GetUpTimeMS(void)  (AEEHelperFuncs +0xb0, via
-                       *(base-4)) */
-    iVar2 = (*g_pHelperFuncs->aee_GetUpTimeMS)();
-    uVar3 = iVar2 - *(int *)(param_1 + 0xcc);
-    bVar10 = uVar3 == 0x100;
-    if (0xff < uVar3) {
-      bVar10 = uVar3 - 0x100 == 0x5e;
-    }
-    if ((0xff < uVar3 && 0x5d < uVar3 - 0x100) && !bVar10) {
-      cVar1 = '\x01' - *(byte *)(param_1 + 0xd1);
-      if (1 < *(byte *)(param_1 + 0xd1)) {
-        cVar1 = '\0';
-      }
-      *(char *)(param_1 + 0xd1) = cVar1;
-      *(int *)(param_1 + 0xcc) = *(int *)(param_1 + 0xcc) + 0x15e;
-    }
-    uVar11 = *(int *)(param_1 + 0xc0) == 0;
-    if ((bool)uVar11) {
-      float_compare_equal(*(uint *)(*(int *)(*(int *)(param_1 + 0x44) + 0xa4) + 0x210),0);
-    }
-    if ((bool)uVar11) {
-      if (*(char *)(param_1 + 0x48) != '\0') {
-        (*((IGraphics *)param_3)->pvt->SetFillMode)((IGraphics *)param_3,1);
-        graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,COLOR_ROYAL_BLUE,2);
-        graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,0xff000000,1);
-        memcpy(&arc,(uint *)((int32)DATA_AT_00127A8E),10);
-        arc.cx = *(int16 *)(*(int *)(param_1 + 8) + 4) - 0x19;
-        arc.cy = *(int16 *)(*(int *)(param_1 + 8) + 6) - 0x19;
-        arc.r = 0x13;
-        iVar2 = 0;
-        do {
-          if (*(int *)(*(int *)(*(int *)(param_1 + 0x44) + 0xa8) + 0x524) == iVar2) {
-            graphics_set_color(*(undefined4 *)(param_1 + 0x20),param_3,0xff000000,2);
-          }
-          arc.startAngle = 0x87 - iVar2 * 0x2d;
-          (*((IGraphics *)param_3)->pvt->DrawArc)((IGraphics *)param_3,&arc);
-          iVar2 = iVar2 + 1;
-        } while (iVar2 < 5);
-      }
-      bVar10 = *(char *)(param_1 + 0x49) == '\0';
-      bVar9 = true;
-      if (!bVar10) {
-        float_compare_greater(*(uint *)(*(int *)(*(int *)(param_1 + 0x44) + 0xa8) + 0x514),0);
-        if ((!bVar9 || bVar10) ||
-           (float_compare_less(*(uint *)(*(int *)(*(int *)(param_1 + 0x44) + 0xa8) + 0x514),0x3f800000),
-           bVar9)) {
-          uVar3 = float_to_int(*(uint *)(*(int *)(*(int *)(param_1 + 0x44) + 0xa8) + 0x514));
-        }
-        else {
-          uVar3 = 1;
-        }
-        iVar2 = *(int *)(*(int *)(param_1 + 0x44) + 0xa8);
-        uVar4 = float_to_int(*(uint *)(iVar2 + 0x520));
-        uVar5 = float_to_int(*(uint *)(iVar2 + 0x51c));
-        uVar6 = float_to_int(*(uint *)(iVar2 + 0x518));
-        hud_draw_gauge((Hud *)param_1,(IGraphics *)param_3,1,uVar3,uVar6,uVar5,uVar4);
-      }
-      iVar2 = *(int *)(*(int *)(*(int *)(param_1 + 0x44) + 0xa4) + 0x1f8);
-      iVar8 = *(int *)(iVar2 + 0x23c);
-      if (iVar8 == 0) {
-        iVar2 = *(int *)(iVar2 + 0x240);
-      }
-      if (iVar8 != 0 || iVar2 != 0) {
-        bVar10 = *(char *)(param_1 + 0x4a) != '\0';
-        if (bVar10) {
-          iVar8 = *(int *)(param_1 + 0x50);
-        }
-        if (bVar10 && 0 < iVar8) {
-          hud_draw_gauge((Hud *)param_1,(IGraphics *)param_3,0,((Hud *)param_1)->targetHealth,iVar8,
-                         iVar8,((Hud *)param_1)->targetLowHealth);
-        }
+  AEEArc arc;                     /* [sp] */
+  Progress *progress;
+  Character *player;
+  TextBox *box;
+  int32 health;
+  uint32 maximum;
+  uint32 fullScale;
+  uint32 low;
+  uint32 step;
+  int16 y;
+  int32 dy;
+  int32 i;
+
+  if (hud->screen.app->pGame == (void *)0x0)
+    return;
+  if ((*g_pHelperFuncs->aee_GetUpTimeMS)() - (uint32)hud->blinkTime > 350) {
+    hud->blinkOn = hud->blinkOn > 1 ? 0 : (uint8)(1 - hud->blinkOn);
+    hud->blinkTime += 350;
+  }
+  if (hud->cinematic == 0 &&
+      (float_compare_equal(*(uint32 *)((int32)hud->screen.app->pGame + 0x210),0),
+       *(float *)((int32)hud->screen.app->pGame + 0x210) == 0.0f)) {
+    if (hud->showMagicPoints != 0) {
+      (*graphics->pvt->SetFillMode)(graphics,1);
+      graphics_set_color((int32)((UIElement *)hud)->owner,graphics,COLOR_ROYAL_BLUE,2);
+      graphics_set_color((int32)((UIElement *)hud)->owner,graphics,0xff000000,1);
+      memcpy(&arc,(void *)HUD_MAGIC_ARC,10);
+      arc.cx = ((UIElement *)hud)->rect->dx - 25;
+      arc.cy = ((UIElement *)hud)->rect->dy - 25;
+      arc.r = 19;
+      for (i = 0; i < 5; i++) {
+        if (hud->screen.app->progress->magicPoints == i)
+          graphics_set_color((int32)((UIElement *)hud)->owner,graphics,0xff000000,2);
+        arc.startAngle = (int16)(135 - i * 45);
+        (*graphics->pvt->DrawArc)(graphics,&arc);
       }
     }
-    iVar2 = 0;
-    do {
-      iVar8 = param_1 + iVar2 * 4;
-      if (*(int *)(iVar8 + 0x58) != 0) {
-        if (((iVar2 == 3) && (0 < *(int *)(param_1 + 0xbc))) &&
-           (iVar7 = *(int *)(param_1 + 0xbc) - *(int *)(*(int *)(param_1 + 0x44) + 0x88),
-           *(int *)(param_1 + 0xbc) = iVar7, iVar7 < 1)) {
-          *(undefined4 *)(param_1 + 0x78) = 0;
-          *(undefined4 *)(param_1 + 0x8c) = 1;
-        }
-        uVar3 = int_to_float(*(int32 *)(*(int *)(param_1 + 0x44) + 0x88));
-        uVar3 = float_multiply(uVar3,*(uint *)(iVar8 + 0x94));
-        if (*(int *)(iVar8 + 0x6c) == 0) {
-          if (*(int *)(iVar8 + 0x80) == 1) {
-            uVar3 = float_subtract(*(uint *)(iVar8 + 0xa8),uVar3);
-            *(uint *)(iVar8 + 0xa8) = uVar3;
-            iVar7 = *(int *)(iVar8 + 0x58);
-            uVar4 = int_to_float(*(int16 *)(*(int *)(iVar7 + 8) + 2));
-            uVar3 = float_reverse_subtract(uVar4,uVar3);
-            uVar3 = float_to_int(uVar3);
-            ui_element_move_by((UIElement *)iVar7,(short)uVar3);
-            iVar7 = *(int *)(*(int *)(iVar8 + 0x58) + 8);
-            if ((int)*(short *)(iVar7 + 6) - (int)*(short *)(iVar7 + 2) < 0) {
-              *(undefined4 *)(iVar8 + 0x80) = 0;
-              hud_remove_text((Hud *)param_1,iVar2);
-            }
-          }
-        }
-        else {
-          iVar7 = *(int *)(iVar8 + 0x58);
-          if (*(short *)(*(int *)(iVar7 + 8) + 2) < 0) {
-            uVar3 = float_add(*(uint *)(iVar8 + 0xa8),uVar3);
-            *(uint *)(iVar8 + 0xa8) = uVar3;
-            uVar5 = (uint)*(short *)(*(int *)(iVar7 + 8) + 2);
-            uVar4 = int_to_float(uVar5);
-            uVar3 = float_reverse_subtract(uVar4,uVar3);
-            uVar3 = float_to_int(uVar3);
-            if (0 < (int)(uVar5 + uVar3)) {
-              uVar3 = -uVar5;
-            }
-            ui_element_move_by((UIElement *)iVar7,(short)uVar3);
-          }
-        }
+    if (hud->showPlayerGauge != 0) {
+      progress = hud->screen.app->progress;
+      if ((float_compare_greater(progress->health,0), *(float *)&progress->health > 0.0f) &&
+          (float_compare_less(progress->health,0x3f800000), *(float *)&progress->health < 1.0f))
+        health = 1;
+      else
+        health = (int32)float_to_int(progress->health);
+      progress = hud->screen.app->progress;
+      low = float_to_int(progress->lowHealth);
+      fullScale = float_to_int(progress->gaugeFullHealth);
+      maximum = float_to_int(progress->maximumHealth);
+      hud_draw_gauge(hud,graphics,1,health,(int32)maximum,(int32)fullScale,(int32)low);
+    }
+    player = ((Game *)hud->screen.app->pGame)->character;
+    if ((player->combatRegion != (struct CombatRegion *)0x0 ||
+         player->bossCombatRegion != (struct BossCombatRegion *)0x0) &&
+        hud->showTargetGauge != 0 && hud->targetMaximumHealth > 0)
+      hud_draw_gauge(hud,graphics,0,hud->targetHealth,hud->targetMaximumHealth,hud->targetMaximumHealth,
+                     hud->targetLowHealth);
+  }
+  for (i = 0; i < 5; i++) {
+    if (hud->texts[i] == (TextBox *)0x0)
+      continue;
+    if (i == 3 && hud->messageTime > 0 &&
+        (hud->messageTime -= (int32)hud->screen.app->elapsed) <= 0) {
+      hud->scrolling[3] = 0;
+      hud->leaving[3] = 1;
+    }
+    step = float_multiply(int_to_float((int32)hud->screen.app->elapsed),hud->scrollSpeeds[i]);
+    if (hud->scrolling[i] != 0) {
+      box = hud->texts[i];
+      if (((UIElement *)box)->rect->y < 0) {
+        hud->scrollPositions[i] = float_add(hud->scrollPositions[i],step);
+        y = ((UIElement *)box)->rect->y;
+        dy = (int32)float_to_int(float_reverse_subtract(int_to_float(y),hud->scrollPositions[i]));
+        if (y + dy > 0)           /* not past the top */
+          dy = -y;
+        ui_element_move_by((UIElement *)box,(int16)dy);
       }
-      iVar2 = iVar2 + 1;
-    } while (iVar2 < 5);
+    }
+    else if (hud->leaving[i] == 1) {
+      hud->scrollPositions[i] = float_subtract(hud->scrollPositions[i],step);
+      box = hud->texts[i];
+      dy = (int32)float_to_int(float_reverse_subtract(int_to_float(((UIElement *)box)->rect->y),
+                                                      hud->scrollPositions[i]));
+      ui_element_move_by((UIElement *)box,(int16)dy);
+      if (((UIElement *)hud->texts[i])->rect->dy - ((UIElement *)hud->texts[i])->rect->y < 0) {
+        hud->leaving[i] = 0;
+        hud_remove_text(hud,i);
+      }
+    }
   }
   return;
 }
+
 
 /* ==== 0x0010673C  (file offset 0x0673C)  text_box_draw =============================================== */
 /* GUESS: names. The text box's draw method (vtable slot 4; the lines are its children, drawn after it):
@@ -3985,9 +3953,9 @@ void ui_element_draw_over_children_nothing(int32 element,int32 display,int32 gra
    degrees; from 180 degrees clockwise on the right, from 0 counter-clockwise on the left, so the two
    mirror each other), the rest the bar, away from the ring. The track (`maximum` long) is drawn black; the
    value on it in green, or in red when it is below `lowThreshold`, and then only while the HUD's blink is
-   on (blinkOn, flipped every 350 ms by FUN_00106398), with a black hub of radius 7 (DATA_AT_00127A78) that
+   on (blinkOn, flipped every 350 ms by hud_draw), with a black hub of radius 7 (DATA_AT_00127A78) that
    leaves a ring. Last the icon is drawn in the hub: the heart (playerIcon) or the Heartless face
-   (targetIcon). Called by the HUD's draw method FUN_00106398 for the player (Progress health,
+   (targetIcon). Called by the HUD's draw method hud_draw for the player (Progress health,
    maximumHealth, gaugeFullHealth, lowHealth) and for the target (the Hud's target fields). */
 void hud_draw_gauge(Hud *hud,IGraphics *graphics,int32 side,int32 value,int32 maximum,int32 fullScale,
                     int32 lowThreshold)
@@ -4689,7 +4657,7 @@ int32 screen_handle_key(Screen *screen,int32 eventCode,int32 keyCode,int32 keyPa
 /* ==== 0x00108840  (file offset 0x08840)  ui_element_move_by ========================================== */
 /* GUESS: name. Moves a UI element `dy` pixels down (up when negative): its rectangle's y and the y of each
    of its direct children's rectangles; grandchildren stay where they are, which is enough for a text box
-   and its lines. Used by FUN_00106398 to slide the game screen's message panels in and out. */
+   and its lines. Used by hud_draw to slide the game screen's message panels in and out. */
 void ui_element_move_by(UIElement *element,int16 dy)
 
 {
@@ -5072,7 +5040,7 @@ void web_request_retry(WebRequest *request)
 
 /* ==== 0x001092C0  (file offset 0x092C0)  hud_remove_text ============================================= */
 /* GUESS: names. Removes the HUD's text in slot `slot` (0 - 4): when there is one, it is removed from
-   the HUD's children and destroyed (ui_element_remove_child), the slot's text, scrolling flag, field_80
+   the HUD's children and destroyed (ui_element_remove_child), the slot's text, scrolling and leaving flags
    and scroll speed cleared (not its scroll position) and the HUD cleared (screen_clear). Ghidra had
    listed r3 as an input. */
 void hud_remove_text(Hud *hud,int32 slot)
@@ -5083,7 +5051,7 @@ void hud_remove_text(Hud *hud,int32 slot)
   ui_element_remove_child((UIElement *)hud,((UIElement *)hud->texts[slot])->id,1);
   hud->texts[slot] = (TextBox *)0x0;
   hud->scrolling[slot] = 0;
-  hud->field_80[slot] = 0;
+  hud->leaving[slot] = 0;
   hud->scrollSpeeds[slot] = 0;
   screen_clear((Screen *)hud);
 }
@@ -5339,8 +5307,12 @@ void key_picker_setup(UIElement *picker,KeyOption *options,int32 *setting,int32 
   picker->originalKeyCode = picker->selectedOption->keyCode;
 }
 
-/* ==== 0x00109940  (file offset 0x09940)  FUN_00109940 ================================================ */
-void FUN_00109940(int param_1,int param_2)
+/* ==== 0x00109940  (file offset 0x09940)  hud_set_cinematic =========================================== */
+/* GUESS: name (not yet rewritten). Sets the HUD's screen mode (`param_2`, Hud.cinematic: the script's
+   setScreenMode, CINEMATIC or not; 0 when the menus or a level reset it) and lays the view out for it:
+   0 the whole screen (the app's view at +0x74), else a letterboxed one; hud_draw draws no gauges while
+   it is set. */
+void hud_set_cinematic(int param_1,int param_2)
 
 {
   float64 dVar1;   /* the double whose low word is uVar1 */
@@ -6033,7 +6005,7 @@ int * FUN_0010aa8c(int *param_1,int *param_2)
     param_1[0x37] = iVar1;
     ui_element_add_child(param_1,iVar1,900);
     *(undefined1 *)(param_1[0x37] + 4) = 0;
-    FUN_00109940(param_1,0);
+    hud_set_cinematic(param_1,0);
   }
   return param_1;
 }
@@ -10941,7 +10913,7 @@ int32 script_command_run(ScriptCommand *command)
     moveObject = 1;
     break;
   case 0x38:   /* setScreenMode: CINEMATIC or not */
-    FUN_00109940((int)hud,command->number[0]);
+    hud_set_cinematic((int)hud,command->number[0]);
     break;
   case 0x39:   /* setScriptOn */
     if (command->object != (LevelObject *)0x0)
@@ -11077,7 +11049,7 @@ int32 script_command_run(ScriptCommand *command)
     animations_stop(app->animations,index,command->flag[0]);
     break;
   case 0x49:   /* summary: the level's summary screen (event 0x75), its name in KHApp.pBufc8 */
-    FUN_00109940((int)hud,0);
+    hud_set_cinematic((int)hud,0);
     if (command->text != (char *)0x0) {
       if (app->pBufc8 != (char *)0x0) {
         (*g_pHelperFuncs->free)(app->pBufc8);
@@ -18235,7 +18207,7 @@ void FUN_0011e154(KHApp *app)
       FUN_0011d040((int32)app->context,WORD_HEXADECIMAL_21BF9442,(void *)WORD_HEXADECIMAL_1FEB4DB8);
   }
   app->field_cc = state;
-  app->field_80 = app->field_7c = (*g_pHelperFuncs->aee_GetUpTimeMS)();
+  app->frameTime = app->lastFrameTime = (*g_pHelperFuncs->aee_GetUpTimeMS)();
   timer = (PFNNOTIFY)((int32)FUN_001242b4);   /* FUN_001242b4 */
   (*app->a.m_pIShell->pvt->CancelTimer)(app->a.m_pIShell,timer,app);
   (*app->a.m_pIShell->pvt->SetTimer)(app->a.m_pIShell,0x28,timer,app);

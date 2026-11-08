@@ -479,7 +479,7 @@ void FUN_00105dc8(int param_1);
 void web_request_read(WebRequest *request);   /* 0x00105E44 GUESS: name, see kh_mod.c */
 void web_request_download(WebRequest *request,char *fileName,int32 position,char *userId,int32 time);   /* 0x00106130 GUESS: name, see kh_mod.c */
 void web_request_cancel(WebRequest *request,WebRequest *pending);   /* 0x00106354 GUESS: name, see kh_mod.c */
-void FUN_00106398(int param_1,int *param_2,int *param_3,undefined4 param_4);
+void hud_draw(Hud *hud,IDisplay *display,IGraphics *graphics);   /* 0x00106398 GUESS: name, see kh_mod.c */
 void text_box_draw(TextBox *box,IDisplay *display,IGraphics *graphics);   /* 0x0010673C GUESS: name, see kh_mod.c */
 void text_line_draw(TextLine *line,IDisplay *display);   /* 0x00106A94 GUESS: name, see kh_mod.c */
 void FUN_00106bd4(int *param_1,int *param_2,int *param_3);
@@ -526,7 +526,7 @@ void text_box_set_tail(TextBox *box,int32 x,int32 y);   /* 0x0010955C GUESS: nam
 IImage * ui_element_load_image(UIElement *element,const char *fileName);   /* 0x00109750 GUESS: name, see kh_mod.c */
 int32 sound_set_load_file(SoundSet *set,const char *fileName,int32 index);   /* 0x00109780 GUESS: name, see kh_mod.c */
 void key_picker_setup(UIElement *picker,KeyOption *options,int32 *setting,int32 index);   /* 0x001098D8 GUESS: name */
-void FUN_00109940(int param_1,int param_2);
+void hud_set_cinematic(int param_1,int param_2);   /* 0x00109940 GUESS: name, see kh_mod.c */
 void FUN_00109a10(int param_1,int param_2,int param_3,undefined4 param_4);
 int32 text_box_set_text(TextBox *box,AECHAR *text,int32 narrow);   /* 0x00109B4C GUESS: name, see kh_mod.c */
 void text_box_set_text_id(TextBox *box,int32 textId);   /* 0x00109F00 GUESS: name, see kh_mod.c */
@@ -1866,7 +1866,8 @@ static const uint8 DATA_AT_00127A7E[8] = {   /* 0x00127A7E */
 static const uint8 DATA_AT_00127A86[8] = {   /* 0x00127A86 */
   0x00,0x00,0x00,0x00,0x00,0x00,0x05,0x00
 };
-static const uint8 DATA_AT_00127A8E[10] = {   /* 0x00127A8E */
+static const uint8 HUD_MAGIC_ARC[10] = {   /* 0x00127A8E; GUESS: name; the AEEArc hud_draw starts from:
+                                             its arcAngle 45 */
   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x2D,0x00
 };
 static const char STRING_KH_DOT_BAR_00127A98[] = "kh.bar";   /* 0x00127A98 */
@@ -2079,7 +2080,7 @@ static code *const VTABLE_0010165C[9] = {   /* 0x0010165C; in kh.mod each entry 
   (code *)ui_element_update_nothing,
   (code *)FUN_00108414,
   (code *)ui_element_draw_over_children_nothing,
-  (code *)FUN_00106398,
+  (code *)hud_draw,
   (code *)ui_element_get_primary_color,
   (code *)ui_element_get_secondary_color,
   (code *)ui_element_get_border_color,
