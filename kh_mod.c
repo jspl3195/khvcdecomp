@@ -3525,81 +3525,75 @@ void text_line_draw(TextLine *line,IDisplay *display)
 }
 
 
-/* ==== 0x00106BD4  (file offset 0x06BD4)  FUN_00106bd4 ================================================ */
-void FUN_00106bd4(int *param_1,int *param_2,int *param_3)
+/* ==== 0x00106BD4  (file offset 0x06BD4)  menu_item_draw ============================================== */
+/* GUESS: names. The menu item's draw method (slot 4 of VTABLE_001016E0): its background, in its
+   secondary colour (getSecondaryColor), by type. A row (MENU_ITEM_ROW): a filled IGraphics rectangle
+   (the binary's tail jump to DrawRect at 0x00106c80). An enabled key picker: a box on a copy of its
+   rectangle (helper_malloc_2, not checked: GAME_BUGS.md), with a COLOR_SLATE_GREY frame and the box
+   inset by 3 pixels when it has the focus (ui_element_draw_box). The text entries and the progress bar:
+   nothing here (their text control draws itself, the bar is menu_item_draw_over_children's). A picture:
+   a white backdrop of its size, at the screen's origin rather than at the item (the game's pictures are
+   all at 0, 0), and its image centred on the item. Any other type: the usual cut-corner box
+   (ui_element_draw_box, cut 4). */
+void menu_item_draw(UIElement *item,IDisplay *display,IGraphics *graphics)
 
 {
-  AEEImageInfo imageInfo;
-  uint uVar1;
-  uint *p;
-  undefined4 uVar2;
-  int *piVar3;
-  short *psVar4;
-  short sVar5;
-  undefined4 uStack_20;
-  undefined2 local_1c;
-  undefined2 uStack_1a;
-  
-  /* Ghidra had dropped the element; r0 is param_1 (0x00106bf4) */
-  uVar1 = (*(*(const UIElementVtbl **)param_1)->getSecondaryColor)(param_1);
-  switch(param_1[0xd]) {
-  case 6:
-    graphics_set_color(param_1[8],param_3,uVar1,2);
-    graphics_set_color(param_1[8],param_3,uVar1,1);
-    (*((IGraphics *)param_3)->pvt->SetFillMode)((IGraphics *)param_3,1);
-                    /* WARNING: Could not recover jumptable at 0x00106c80. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-    (*((IGraphics *)param_3)->pvt->DrawRect)((IGraphics *)param_3,(const AEERect *)param_1[2]);
+  uint32 colour = (*item->vtable->getSecondaryColor)(item);
+  uint32 fill;
+  AEERect *inset;
+  AEERect backdrop;               /* sp+0x10 */
+  AEEImageInfo info;              /* sp+0x04 */
+  int16 cut;
+
+  switch (item->type) {
+  case MENU_ITEM_ROW:
+    graphics_set_color((int32)item->owner,graphics,colour,2);
+    graphics_set_color((int32)item->owner,graphics,colour,1);
+    (*graphics->pvt->SetFillMode)(graphics,1);
+    (*graphics->pvt->DrawRect)(graphics,item->rect);
     return;
-  case 7:
+  case MENU_ITEM_KEY_PICKER:
+    if (item->enabled == 0)
+      break;
+    inset = helper_malloc_2(8);
+    if (inset != (AEERect *)0x0)
+      memcpy(inset,item->rect,8);
+    cut = 4;
+    if ((item->flags & 2) != 0) {
+      ui_element_draw_box(item,1,display,graphics,item->rect,COLOR_SLATE_GREY,COLOR_SLATE_GREY,4);
+      cut = 2;
+      inset->x += 3;
+      inset->y += 3;
+      inset->dx -= 6;
+      inset->dy -= 6;
+    }
+    fill = (*item->vtable->getSecondaryColor)(item);
+    ui_element_draw_box(item,1,display,graphics,inset,fill,fill,cut);
+    helper_free(inset);
+    break;
+  case MENU_ITEM_TEXT_ENTRY:
+  case MENU_ITEM_NUMBER_ENTRY:
+  case MENU_ITEM_PROGRESS_BAR:
+    break;
+  case MENU_ITEM_PICTURE:
+    backdrop.x = 0;
+    backdrop.y = 0;
+    backdrop.dx = item->rect->dx;
+    backdrop.dy = item->rect->dy;
+    (*display->pvt->DrawRect)(display,&backdrop,0xffffffff,0xffffff00,2);   /* white, IDF_RECT_FILL */
+    if (item->image != (IImage *)0x0) {
+      (*item->image->pvt->GetInfo)(item->image,&info);
+      (*item->image->pvt->Draw)(item->image,item->rect->x + (item->rect->dx - (int32)info.cx) / 2,
+                                item->rect->y + (item->rect->dy - (int32)info.cy) / 2);
+    }
+    break;
   default:
-    ui_element_draw_box((UIElement *)param_1,1,(IDisplay *)param_2,(IGraphics *)param_3,
-                        (AEERect *)param_1[2],uVar1,uVar1,4);
+    ui_element_draw_box(item,1,display,graphics,item->rect,colour,colour,4);
     break;
-  case 8:
-    if ((char)param_1[0x13] != '\0') {
-      p = helper_malloc_2(8);
-      if (p != (uint *)0x0) {
-        memcpy(p,(uint *)param_1[2],8);
-      }
-      sVar5 = 4;
-      if ((param_1[0x17] & 2U) != 0) {
-        ui_element_draw_box((UIElement *)param_1,1,(IDisplay *)param_2,(IGraphics *)param_3,
-                            (AEERect *)param_1[2],COLOR_SLATE_GREY,COLOR_SLATE_GREY,4);
-        sVar5 = 2;
-        *(short *)p = (short)*p + 3;
-        *(short *)((int)p + 2) = *(short *)((int)p + 2) + 3;
-        *(short *)(p + 1) = (short)p[1] + -6;
-        *(short *)((int)p + 6) = *(short *)((int)p + 6) + -6;
-      }
-      uVar2 = (*(*(const UIElementVtbl **)param_1)->getSecondaryColor)(param_1);
-      ui_element_draw_box((UIElement *)param_1,1,(IDisplay *)param_2,(IGraphics *)param_3,
-                          (AEERect *)p,uVar2,uVar2,sVar5);
-      helper_free(p);
-    }
-    break;
-  case 9:
-    break;
-  case 10:
-    break;
-  case 0xb:
-    break;
-  case 0xc:
-    uStack_20 = 0;
-    *(undefined4 *)&local_1c = ((uint32)(uint16)(*(undefined2 *)(param_1[2] + 6)) << 16 | (uint16)(*(undefined2 *)(param_1[2] + 4)));
-    (*((IDisplay *)param_2)->pvt->DrawRect)
-        ((IDisplay *)param_2,(const AEERect *)&uStack_20,0xffffffff,0xffffff00,2);
-    piVar3 = (int *)param_1[0x1b];
-    if (piVar3 != (int *)0x0) {
-      (*((IImage *)piVar3)->pvt->GetInfo)((IImage *)piVar3,&imageInfo);
-      psVar4 = (short *)param_1[2];
-      (*((IImage *)param_1[0x1b])->pvt->Draw)((IImage *)param_1[0x1b],
-                 (int)*psVar4 + ((int)psVar4[2] - (int)imageInfo.cx) / 2,
-                 (int)psVar4[1] + ((int)psVar4[3] - (int)imageInfo.cy) / 2);
-    }
   }
   return;
 }
+
 
 /* ==== 0x00106E44  (file offset 0x06E44)  screen_draw ================================================= */
 /* GUESS: name. The plain screen's draw method (VTABLE_00101700 slot 4): a framed screen (screen_create's
@@ -3729,8 +3723,12 @@ void text_box_draw_scroll_bar(TextBox *box,IDisplay *display,IGraphics *graphics
 }
 
 
-/* ==== 0x00107230  (file offset 0x07230)  FUN_00107230 ================================================ */
-void FUN_00107230(int *param_1,undefined4 param_2,int *param_3)
+/* ==== 0x00107230  (file offset 0x07230)  menu_item_draw_over_children ================================ */
+/* GUESS: name (not yet rewritten). The menu item's drawOverChildren method (slot 3 of VTABLE_001016E0),
+   drawn over its label: by type, the frames and arrows of the buttons and soft keys (types 1 - 3, their
+   focus colours), the key picker's frame, the progress bar's filled width (width * progressValue /
+   progressMaximum) and the focus frame. */
+void menu_item_draw_over_children(int *param_1,undefined4 param_2,int *param_3)
 
 {
   AEELine edge;
@@ -4026,17 +4024,17 @@ void hud_draw_gauge(Hud *hud,IGraphics *graphics,int32 side,int32 value,int32 ma
 
 
 /* ==== 0x00107ADC  (file offset 0x07ADC)  ui_element_draw_box ========================================= */
-/* GUESS: names. Draws a box with its corners cut `cut` pixels back (an octagon in `rect`), or half of its
-   outline, for the menu items (VTABLE_001016E0: FUN_00106bd4, FUN_00107230). Its 8 points, in a 32-byte
-   block from malloc, run clockwise from the lower end of the left side. Mode 1: the whole box
-   (DrawPolygon, 8 points, the count from DATA_AT_00127A68), filled with `fillColour` when that colour's
-   alpha byte is not 0, outlined in `lineColour` when its alpha byte is not 0, else in `fillColour`. Mode
-   2: the light half of a bevel, up the left side, round the top-left corner and along the top
-   (DrawPolyline, 4 points, unfilled, in `lineColour`); mode 3: the dark half, down the right side, round
-   the bottom-right corner and along the bottom; the two leave out the top-right and bottom-left corners.
-   Any other mode draws nothing. `display` is not read. The block is not checked before the points are
-   written into it (GAME_BUGS.md). Written from its disassembly (0x00107adc - 0x00107d18): Ghidra's listing
-   outlined mode 1 in `fillColour` always. */
+/* GUESS: names. Draws a box with its corners cut `cut` pixels back (an octagon in `rect`), or half of
+   its outline, for the menu items (VTABLE_001016E0: menu_item_draw, menu_item_draw_over_children). Its
+   8 points, in a 32-byte block from malloc, run clockwise from the lower end of the left side. Mode 1:
+   the whole box (DrawPolygon, 8 points, the count from DATA_AT_00127A68), filled with `fillColour` when
+   that colour's alpha byte is not 0, outlined in `lineColour` when its alpha byte is not 0, else in
+   `fillColour`. Mode 2: the light half of a bevel, up the left side, round the top-left corner and
+   along the top (DrawPolyline, 4 points, unfilled, in `lineColour`); mode 3: the dark half, down the
+   right side, round the bottom-right corner and along the bottom; the two leave out the top-right and
+   bottom-left corners. Any other mode draws nothing. `display` is not read. The block is not checked
+   before the points are written into it (GAME_BUGS.md). Written from its disassembly (0x00107adc -
+   0x00107d18): Ghidra's listing outlined mode 1 in `fillColour` always. */
 void ui_element_draw_box(UIElement *element,int32 mode,IDisplay *display,IGraphics *graphics,AEERect *rect,
                          uint32 lineColour,uint32 fillColour,int16 cut)
 
@@ -5225,7 +5223,7 @@ void text_box_set_tail(TextBox *box,int32 x,int32 y)
 /* GUESS: names. Loads an image file for a picture item (a menu item of type 0xc, menu_item_create): IShell
    LoadResObject with resource 0 and class 0, how ISHELL_LoadImage(pIShell, "file.png") reaches the shell
    (the whole file is the image), with the applet's IShell (the element's screen stack's applet). The image
-   is kept at +0x6c; the item's draw method FUN_00106bd4 draws it centred in the item and its destructor
+   is kept at +0x6c; the item's draw method menu_item_draw draws it centred in the item and its destructor
    FUN_00105d7c releases it. A missing file leaves 0. Used by the menu handler FUN_00101ad8 for a level's
    splash picture ("ro_<name>_splash.png") and the Jiminy icon. Returns the image (r0 as kh.mod leaves it);
    Ghidra had declared it void. */
@@ -6641,10 +6639,10 @@ UIElement * menu_item_create(UIElement *item,int32 x,int32 y,int32 width,int32 h
   item->listener = (ITextCtl *)0x0;
   item->image = (IImage *)0x0;
   item->label = text_line_create((TextLine *)0x0,item->rect->x,item->rect->y,item->rect->dx,
-                                        item->rect->dy,owner,0,type == 6 ? 0x24 : 9);
-  if (type == 8)
+                                        item->rect->dy,owner,0,type == MENU_ITEM_ROW ? 0x24 : 9);
+  if (type == MENU_ITEM_KEY_PICKER)
     item->selectedOption = (KeyOption *)0x0;
-  else if (type == 9 || type == 10) {
+  else if (type == MENU_ITEM_TEXT_ENTRY || type == MENU_ITEM_NUMBER_ENTRY) {
     shell = ((ScreenStack *)owner)->applet->a.m_pIShell;
     if ((*shell->pvt->CreateInstance)(shell,CLASS_IDENTIFIER_HEXADECIMAL_01003009,(void **)&item->listener)
         == 0) {
@@ -6655,11 +6653,11 @@ UIElement * menu_item_create(UIElement *item,int32 x,int32 y,int32 width,int32 h
       (*item->listener->pvt->SetRect)(item->listener,&rect);
       (*item->listener->pvt->SetActive)(item->listener,0);
       (*item->listener->pvt->SetProperties)(item->listener,0x10000);
-      if (type == 10)
+      if (type == MENU_ITEM_NUMBER_ENTRY)
         (*item->listener->pvt->SetInputMode)(item->listener,5);
     }
   }
-  else if (type == 0xb) {
+  else if (type == MENU_ITEM_PROGRESS_BAR) {
     item->progressValue = 0;
     item->progressMaximum = 0;
   }

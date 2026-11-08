@@ -263,7 +263,7 @@ typedef struct UIElement {
     struct UIElement *parent;     /* +0x2c the element it was added to */
     struct TextLine *label;        /* +0x30 the text element that shows its caption or current value
                                      (menu_item_create, menu_add_buttons) */
-    int32    type;                  /* +0x34 2..10; 8 = key picker */
+    int32    type;                  /* +0x34 MENU_ITEM_* (kh_mod.h): 2..0xc; 8 = key picker */
     int32    selectEvent;           /* +0x38 the event sent to the owner when SELECT is pressed */
     KeyOption *options;           /* +0x3c key picker: the ring of options */
     KeyOption *selectedOption;    /* +0x40 key picker: the option shown */
@@ -274,7 +274,8 @@ typedef struct UIElement {
     ITextCtl *listener;           /* +0x50 a BREW control (GUESS: an ITextCtl, class 0x01003009) that
                                      gets the keys the element does not handle itself */
     int32    progressValue;         /* +0x54 the download progress bar (type 0xb): how far it is; 0 at
-                                     creation; drawn as width * value / maximum (FUN_00107230) */
+                                     creation; drawn as width * value / maximum
+                                     (menu_item_draw_over_children) */
     int32    progressMaximum;       /* +0x58 the progress bar's maximum; 0 at creation */
     uint32 flags;                 /* +0x5c bit 1: it has the focus (ui_element_set_focus), so it keeps its
                                      highlight colours (ui_element_handle_key) */
@@ -283,7 +284,7 @@ typedef struct UIElement {
                                      (ui_element_set_focus); its key map moves the focus there */
     int32    originalKeyCode;       /* +0x68 key picker: the setting's value when it was set up */
     IImage  *image;               /* +0x6c picture item (type 0xc): its image (ui_element_load_image),
-                                     drawn centred (FUN_00106bd4), released by FUN_00105d7c; the menu
+                                     drawn centred (menu_item_draw), released by FUN_00105d7c; the menu
                                      items are 0x70 bytes (menu_item_create) */
 } UIElement;
 

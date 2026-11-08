@@ -482,10 +482,10 @@ void web_request_cancel(WebRequest *request,WebRequest *pending);   /* 0x0010635
 void hud_draw(Hud *hud,IDisplay *display,IGraphics *graphics);   /* 0x00106398 GUESS: name, see kh_mod.c */
 void text_box_draw(TextBox *box,IDisplay *display,IGraphics *graphics);   /* 0x0010673C GUESS: name, see kh_mod.c */
 void text_line_draw(TextLine *line,IDisplay *display);   /* 0x00106A94 GUESS: name, see kh_mod.c */
-void FUN_00106bd4(int *param_1,int *param_2,int *param_3);
+void menu_item_draw(UIElement *item,IDisplay *display,IGraphics *graphics);   /* 0x00106BD4 GUESS: name, see kh_mod.c */
 void screen_draw(Screen *screen,IDisplay *display,IGraphics *graphics);   /* 0x00106E44 GUESS: name, see kh_mod.c */
 void text_box_draw_scroll_bar(TextBox *box,IDisplay *display,IGraphics *graphics);   /* 0x00106FB0 GUESS: name, see kh_mod.c */
-void FUN_00107230(int *param_1,undefined4 param_2,int *param_3);
+void menu_item_draw_over_children(int *param_1,undefined4 param_2,int *param_3);   /* 0x00107230 GUESS: name, see kh_mod.c */
 void hud_draw_gauge(Hud *hud,IGraphics *graphics,int32 side,int32 value,int32 maximum,int32 fullScale, int32 lowThreshold);   /* 0x001077D0 GUESS: name, see kh_mod.c */
 void ui_element_draw_box(UIElement *element,int32 mode,IDisplay *display,IGraphics *graphics,AEERect *rect, uint32 lineColour,uint32 fillColour,int16 cut);   /* 0x00107ADC GUESS: name, see kh_mod.c */
 int32 ui_element_draw(UIElement *element);   /* 0x00107D24 GUESS: name, see kh_mod.c */
@@ -928,6 +928,16 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
                                    "Score" (language.m3g) */
 #define TEXT_RANK 0x04D4D70F   /* was DAT_00102b24 (word at 0x00102B24); the text id of
                                   "Rank" (language.m3g) */
+/* The menu items' types (UIElement.type, menu_item_create; GUESS: names). 1, 4 and 7 have no
+   name yet; 3 and 5 are the menus' button columns (menu_add_buttons). */
+#define MENU_ITEM_SOFT_KEY      2      /* a screen's soft key (FUN_00109a10) */
+#define MENU_ITEM_ROW           6      /* a list row; its label in text style 0x24 */
+#define MENU_ITEM_KEY_PICKER    8      /* the Controls screen's key pickers */
+#define MENU_ITEM_TEXT_ENTRY    9      /* a text field: an ITextCtl (class 0x01003009) */
+#define MENU_ITEM_NUMBER_ENTRY  10     /* the same, in input mode 5 (GUESS: AEE_TM_NUMBERS) */
+#define MENU_ITEM_PROGRESS_BAR  0xb    /* the download progress bar */
+#define MENU_ITEM_PICTURE       0xc    /* an image (ui_element_load_image), drawn centred */
+
 #define COLOR_PALE_LILAC 0xFFC9C4DA   /* was DAT_00102b50, DAT_00104c2c, DAT_001077b8, DAT_00108728 (word
                                                  at 0x00102B50); the colour 0xAARRGGBB (201, 196, 218) */
 #define TEXT_BACK 0x19408333   /* was DAT_00102b54, DAT_00104c08, DAT_00108e64 (word at 0x00102B54);
@@ -1038,7 +1048,7 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
 #define COLOR_SLATE_GREY 0xFF7E8194   /* was DAT_001052d8, DAT_00106e40, DAT_001077bc (word at
                                                  0x001052D8); the colour 0xAARRGGBB (126, 129, 148): among
                                                  others a focused element's background
-                                                 (ui_element_set_focus) and focus frame (FUN_00106bd4) */
+                                                 (ui_element_set_focus) and focus frame (menu_item_draw) */
 #define FLOAT_500 0x43FA0000   /* was DAT_001055c0 (word at 0x001055C0); the float 500.0 */
 #define INTEGER_MINUS_22348 0xFFFFA8B4   /* was DAT_00105c0c (word at 0x00105C0C); integer -22348 */
 #define INTEGER_MINUS_22752 0xFFFFA720   /* was DAT_00105c34 (word at 0x00105C34); integer -22752 */
@@ -2124,8 +2134,8 @@ static code *const VTABLE_001016E0[8] = {   /* 0x001016E0; in kh.mod each entry 
   (code *)FUN_00105d7c,
   (code *)ui_element_update_nothing,
   (code *)ui_element_handle_key,
-  (code *)FUN_00107230,
-  (code *)FUN_00106bd4,
+  (code *)menu_item_draw_over_children,
+  (code *)menu_item_draw,
   (code *)ui_element_get_primary_color,
   (code *)ui_element_get_secondary_color,
   (code *)ui_element_get_border_color
