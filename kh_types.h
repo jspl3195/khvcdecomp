@@ -1128,7 +1128,9 @@ typedef struct Enemy {
     uint8  unknown_6c[0x08];
     struct KHApp *app;            /* +0x074 GetAppInstance() at creation */
     uint8  unknown_78[0x08];
-    int32    mode;                  /* +0x080 1: the code at 0x0011db34 runs instead of the states (field_90) */
+    int32    mode;                  /* +0x080 1: the code at 0x0011db34 runs instead of the states
+                                     (field_90); 3 the enemy whose turn it is, 2 the others
+                                     (combat_region_update_turns) */
     int32    field_84;              /* +0x084 a state machine: 3001 first (enemy_reset_states) */
     int32    field_88;              /* +0x088 a state machine: 2001 first; 2004: the alive behaviour runs even
                                      at 0 health, and the recoil after a full hit (enemy_take_hit); in
@@ -1177,8 +1179,10 @@ typedef struct Enemy {
     int32    actionSteps[8];        /* +0x138 the step of each of its action sequences: 0x65 first, 0x66 next
                                      (+0x138 used by FUN_0010eb74, +0x13c by FUN_0011ec28); GUESS: names */
     uint8  unknown_158[0x44];
-    int32  (*field_19c)(struct Enemy *enemy, int32 now);   /* +0x19c alive, mode 2 and field_130 == 0 */
-    int32  (*field_1a0)(struct Enemy *enemy, int32 now);   /* +0x1a0 alive, otherwise */
+    int32  (*field_19c)(struct Enemy *enemy, int32 now);   /* +0x19c alive, mode 2 and field_130 == 0:
+                                     between its turns (GUESS: the waiting behaviour) */
+    int32  (*field_1a0)(struct Enemy *enemy, int32 now);   /* +0x1a0 alive, otherwise: during its turn
+                                     (mode 3; GUESS: the attacking behaviour) */
     uint8  unknown_1a4[0xcc];
     int32    field_270;             /* +0x270 1 at creation */
     uint8  unknown_274[0x0c];
@@ -1206,13 +1210,16 @@ typedef struct CombatRegion {
     int32    state;                 /* +0x130 1 at creation; 1 waiting, 2 fighting, 3 the player left during a wave (GUESS) */
     int32    wavesLeft;             /* +0x134 */
     int32    enemiesLeftInWave;     /* +0x138 combat_region_take_one takes them one by one */
-    int32    field_13c;             /* +0x13c 1 at creation; set to 1 when state 2 ends */
-    int32    field_140;             /* +0x140 0 at creation */
+    int32    turnPhase;             /* +0x13c GUESS: name; 1 between its enemies' turns (at creation, and
+                                     when state 2 ends), 2 during one (combat_region_update_turns) */
+    int32    turnTime;              /* +0x140 GUESS: name; when the phase ends (ms): a turn lasts 5 s + 1 s
+                                     per health point; 0 at creation */
     uint8  unknown_144[0x04];
     int32    field_148;             /* +0x148 1 at creation; when set, each enemy's vtable slots 0 and +0xc
                                      run once */
     Enemy **enemies;              /* +0x14c enemyCount of them */
-    int32    field_150;             /* +0x150 0 at creation */
+    int32    turnEnemy;             /* +0x150 GUESS: name; the index of the enemy whose turn it is; 0 at
+                                     creation */
     int32    attackToken;           /* +0x154 0 at creation; 1 while one of its enemies holds it
                                      (combat_region_take_attack_token / _release_attack_token) */
 } CombatRegion;                   /* 0x158 bytes */

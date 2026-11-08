@@ -739,7 +739,7 @@ int32 level_object_allows(LevelObject *object,uint32 x,uint32 y,uint32 z,uint32 
 CollisionShape * game_find_blocking_shape(Game *game,uint32 x,uint32 y,uint32 z);   /* 0x00119C60 GUESS: name, see kh_mod.c */
 CollisionShape * level_object_find_blocking_shape(LevelObject *object,uint32 x,uint32 y,uint32 z,uint32 radius,uint32 height);   /* 0x00119CE0 GUESS: name, see kh_mod.c */
 uint32 collision_shape_allows(CollisionShape *shape,uint32 x,uint32 y,uint32 z,uint32 radius,uint32 height);   /* 0x00119D58 GUESS: name, see kh_mod.c */
-void FUN_0011a2f4(int param_1,int param_2);
+void combat_region_update_turns(CombatRegion *region,int32 now);   /* 0x0011A2F4 GUESS: name, see kh_mod.c */
 void FUN_0011a3ec(int param_1,int param_2,undefined4 param_3);
 void character_on_key(Character *character,int32 key);   /* 0x0011A4D8 GUESS: name */
 void intro_on_key(Intro *intro,int32 key);   /* 0x0011A7DC GUESS: name */

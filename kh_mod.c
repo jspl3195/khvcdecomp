@@ -6333,11 +6333,11 @@ CombatRegion * combat_region_create(CombatRegion *region,ISwerveObject *node,cha
   level_object_create((LevelObject *)region,node,name);
   region->active = 0;
   region->state = 1;
-  region->field_140 = 0;
-  region->field_13c = 1;
+  region->turnTime = 0;
+  region->turnPhase = 1;
   region->enemies = (Enemy **)0x0;
   region->field_148 = 1;
-  region->field_150 = region->attackToken = 0;
+  region->turnEnemy = region->attackToken = 0;
   region->kind = 4;
   return region;
 }
@@ -15116,8 +15116,8 @@ int32 screen_stack_all_keys_bound(ScreenStack *stack)
 /* ==== 0x00119AF4  (file offset 0x19AF4)  enemy_is_waiting ============================================ */
 /* GUESS: name. The enemy class's slot 7 (+0x1c of VTABLE_00101680): 1 while the enemy is waiting to appear
    (state 1001, as enemy_create leaves it), else 0. Read by combat_region_all_enemies_waiting and
-   FUN_0011a2f4. Ghidra has no function here (only reached through the vtable); written from its
-   disassembly (the compare with 0x3E9 in two steps, sub #0x300 then subs #0xe9). */
+   combat_region_update_turns. Ghidra has no function here (only reached through the vtable); written from
+   its disassembly (the compare with 0x3E9 in two steps, sub #0x300 then subs #0xe9). */
 int32 enemy_is_waiting(Enemy *enemy)
 
 {
@@ -15407,55 +15407,41 @@ uint32 collision_shape_allows(CollisionShape *shape,uint32 x,uint32 y,uint32 z,u
 }
 
 
-/* ==== 0x0011A2F4  (file offset 0x1A2F4)  FUN_0011a2f4 ================================================ */
-void FUN_0011a2f4(int param_1,int param_2)
+/* ==== 0x0011A2F4  (file offset 0x1A2F4)  combat_region_update_turns ================================== */
+/* GUESS: names. Gives a fighting region's enemies their turns, one at a time (combat_region_update, state
+   2, every tick while the region is active). Between turns (turnPhase 1), once `now` is past turnTime, the
+   next enemy (turnEnemy + 1, % enemyCount, rt_sdiv) gets its turn: mode 3 (enemy_enter_mode_3), and the
+   turn lasts 5 s plus 1 s per point of its health then (enemy_get_health, float_to_int). During a turn
+   (turnPhase 2) it ends when the time is up or the enemy is waiting to appear (enemy_is_waiting, asked
+   only before the time is up), unless the enemy's field_130 is set; then every enemy goes back to mode 2
+   (combat_region_enemies_enter_mode_2) and the next turn starts on a later tick. The binary reloads
+   enemies[turnEnemy] for each call; r0 is left as those calls leave it, read by no caller. */
+void combat_region_update_turns(CombatRegion *region,int32 now)
 
 {
-  undefined4 uVar1;
-  uint uVar2;
-  int iVar3;
-  uint64 uVar4;
-  
-  if (*(int *)(param_1 + 0x13c) == 1) {
-    if (param_2 <= *(int *)(param_1 + 0x140)) {
+  if (region->turnPhase == 1) {
+    if (region->turnTime >= now)
       return;
-    }
-    uVar4 = rt_sdiv(*(uint *)(param_1 + 300),*(int *)(param_1 + 0x150) + 1);
-    iVar3 = (int)uVar4.high;
-    *(int *)(param_1 + 0x150) = iVar3;
-    iVar3 = **(int **)(*(int *)(param_1 + 0x14c) + iVar3 * 4);
-                    /* enemy_enter_mode_3, then enemy_get_health: Ghidra had dropped the enemy, passed in r0 */
-    (*((const EnemyVtbl *)iVar3)->enterMode3)
-        ((void *)(*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4)));
-    iVar3 = **(int **)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4);
-    uVar2 = (*((const EnemyVtbl *)iVar3)->getHealth)
-                ((void *)(*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4)));
-    uVar2 = float_to_int(uVar2);
-    *(uint *)(param_1 + 0x140) = param_2 + uVar2 * 1000 + 5000;
-    uVar1 = 2;
+    region->turnEnemy = (int32)rt_sdiv(region->enemyCount,region->turnEnemy + 1).high;   /* % enemyCount */
+    (*region->enemies[region->turnEnemy]->vtable->enterMode3)(region->enemies[region->turnEnemy]);
+    region->turnTime = now +
+        (int32)float_to_int((*region->enemies[region->turnEnemy]->vtable->getHealth)
+                                (region->enemies[region->turnEnemy])) * 1000 + 5000;
+    region->turnPhase = 2;
   }
-  else {
-    if (*(int *)(param_1 + 0x13c) != 2) {
+  else if (region->turnPhase == 2) {
+    if (region->turnTime >= now &&
+        (*region->enemies[region->turnEnemy]->vtable->isWaiting)(region->enemies[region->turnEnemy]) == 0)
       return;
-    }
-    if ((param_2 <= *(int *)(param_1 + 0x140)) &&
-       (iVar3 = **(int **)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4),
-       iVar3 = (*((const EnemyVtbl *)iVar3)->isWaiting)
-                   ((void *)(*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4))),
-       iVar3 == 0)) {
+    if (region->enemies[region->turnEnemy]->field_130 != 0)
       return;
-    }
-    if (*(int *)(*(int *)(*(int *)(param_1 + 0x14c) + *(int *)(param_1 + 0x150) * 4) + 0x130) != 0)
-    {
-      return;
-    }
-    combat_region_enemies_enter_mode_2((CombatRegion *)param_1);
-    uVar1 = 1;
-    *(int *)(param_1 + 0x140) = param_2;
+    combat_region_enemies_enter_mode_2(region);
+    region->turnTime = now;
+    region->turnPhase = 1;
   }
-  *(undefined4 *)(param_1 + 0x13c) = uVar1;
   return;
 }
+
 
 /* ==== 0x0011A3EC  (file offset 0x1A3EC)  FUN_0011a3ec ================================================ */
 
@@ -18931,8 +18917,8 @@ void FUN_0011ed3c(int param_1,undefined4 *param_2)
 /* ==== 0x0011F260  (file offset 0x1F260)  enemy_enter_mode_3 ========================================== */
 /* GUESS: name. The enemy class's slot 4 (+0x10 of VTABLE_00101680): mode 3 (an alive enemy then runs its
    field_1a0 behaviour, enemy_update) and all its state machines back at their first states. Called by the
-   combat region's turn (FUN_0011a2f4) on the enemy whose turn it is. Ghidra has no function here (only
-   reached through the vtable); written from its disassembly. */
+   combat region's turn (combat_region_update_turns) on the enemy whose turn it is. Ghidra has no function
+   here (only reached through the vtable); written from its disassembly. */
 void enemy_enter_mode_3(Enemy *enemy)
 
 {
@@ -18957,8 +18943,9 @@ void enemy_enter_mode_2(Enemy *enemy)
 
 /* ==== 0x0011F280  (file offset 0x1F280)  combat_region_enemies_enter_mode_2 ========================== */
 /* GUESS: name. Puts every enemy of the region in mode 2 (their slot 3, enemy_enter_mode_2). Called by
-   combat_region_update (state 3, before fighting again) and by the region's turn (FUN_0011a2f4). Ghidra
-   had dropped the enemy passed to the slot (r0, ldr r0, [r0, r4, lsl #2] at 0x0011f294). */
+   combat_region_update (state 3, before fighting again) and by the region's turn
+   (combat_region_update_turns). Ghidra had dropped the enemy passed to the slot (r0, ldr r0, [r0, r4, lsl
+   #2] at 0x0011f294). */
 void combat_region_enemies_enter_mode_2(CombatRegion *region)
 
 {
@@ -21561,10 +21548,10 @@ void combat_region_update(CombatRegion *region,int32 now,int32 elapsed)
     if (region->active == 0) {
       region->state = 3;
       combat_region_enemies_enter_mode_1(region);
-      region->field_13c = 1;
+      region->turnPhase = 1;
     }
     else
-      FUN_0011a2f4((int32)region,now);
+      combat_region_update_turns(region,now);
     break;
   case 3:
     if (region->active == 0)
