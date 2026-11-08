@@ -6865,7 +6865,8 @@ void helper_free(void *p)
 /* ==== 0x0010C2A8  (file offset 0x0C2A8)  hitsphere_destroy =========================================== */
 /* GUESS: name. A hitsphere's destructor: puts back its class's vtable (0x00101650, as hitsphere_create
    does; it owns nothing to release) and frees it when `freeIt` is set (the binary's tail jump to
-   helper_free at 0x0010c2b8). Called for each of a boss combat region's hitspheres (FUN_0010ca1c). */
+   helper_free at 0x0010c2b8). Called for each of a boss combat region's hitspheres
+   (boss_combat_region_destroy). */
 void hitsphere_destroy(Hitsphere *hitsphere,int32 freeIt)
 
 {
@@ -7030,7 +7031,7 @@ void script_command_destroy(ScriptCommand *command,int32 freeIt)
 /* GUESS: name. The item drops' destructor: finds the ten balls again (item_drops_find_balls) and hides
    each one there is (FUN_001201cc with 0, as the script's setVis), then, when `freeSelf` is set, frees
    the object (the binary's conditional tail jump to helper_free, 0x0010c6ac). Called with 1 by the
-   combat regions' destructors FUN_0010c790 and FUN_0010ca1c. */
+   combat regions' destructors combat_region_destroy and boss_combat_region_destroy. */
 void item_drops_destroy(ItemDrops *drops,int32 freeSelf)
 
 {
@@ -7069,7 +7070,7 @@ void script_sequence_destroy(ScriptSequence *sequence,int32 freeIt)
 /* ==== 0x0010C720  (file offset 0x0C720)  enemy_destroy =============================================== */
 /* GUESS: name. An enemy's destructor: puts back its class's vtable (0x00101680, as enemy_create does; it
    owns nothing to release) and frees it when `freeIt` is set (the binary's tail jump to helper_free at
-   0x0010c730). Called for each of a combat region's enemies (FUN_0010c790). */
+   0x0010c730). Called for each of a combat region's enemies (combat_region_destroy). */
 void enemy_destroy(Enemy *enemy,int32 freeIt)
 
 {
@@ -7093,7 +7094,7 @@ void FUN_0010c73c(int param_1,int param_2)
     (*((ISwerveObject *)*(int **)(param_1 + 0x204))->pvt->Release)
         ((ISwerveObject *)*(int **)(param_1 + 0x204));
   }
-  FUN_0010c8b8(param_1,0);
+  motion_entity_destroy((MotionEntity *)param_1,0);
   if (param_2 == 0) {
     return;
   }
@@ -7101,30 +7102,28 @@ void FUN_0010c73c(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x0010C790  (file offset 0x0C790)  FUN_0010c790 ================================================ */
-void FUN_0010c790(int param_1,int param_2)
+/* ==== 0x0010C790  (file offset 0x0C790)  combat_region_destroy ======================================= */
+/* GUESS: names. The combat region's destructor (kind 4; FUN_0011df14 and FUN_0012070c pick it by
+   LevelObject.kind): each of its enemies (enemy_destroy), the enemies' array (not cleared), its item
+   drops (item_drops_destroy), then the LevelObject part (level_object_destroy), and the region itself
+   when `freeIt` is set (the binary's tail jump to helper_free at 0x0010c7f8). */
+void combat_region_destroy(CombatRegion *region,int32 freeIt)
 
 {
-  int iVar1;
-  int iVar2;
-  
-  for (iVar2 = 0; iVar2 < *(int *)(param_1 + 300); iVar2 = iVar2 + 1) {
-    iVar1 = *(int *)(*(int *)(param_1 + 0x14c) + iVar2 * 4);
-    if (iVar1 != 0) {
-      enemy_destroy((Enemy *)iVar1,1);
-    }
+  int32 i;
+
+  for (i = 0; i < region->enemyCount; i++) {
+    if (region->enemies[i] != (Enemy *)0x0)
+      enemy_destroy(region->enemies[i],1);
   }
-  helper_free(*(void **)(param_1 + 0x14c));
-  if (*(int *)(param_1 + 0x114) != 0) {
-    item_drops_destroy(*(ItemDrops **)(param_1 + 0x114),1);
-  }
-  level_object_destroy(param_1,0);
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
-  return;
+  helper_free(region->enemies);
+  if (region->itemDrops != (ItemDrops *)0x0)
+    item_drops_destroy(region->itemDrops,1);
+  level_object_destroy((int)region,0);
+  if (freeIt != 0)
+    helper_free(region);
 }
+
 
 /* ==== 0x0010C800  (file offset 0x0C800)  progress_destroy ============================================ */
 /* GUESS: name. Progress's destructor: clears the named states (progress_clear_states), frees the user id,
@@ -7160,28 +7159,25 @@ void progress_destroy(Progress *progress,int32 freeSelf)
 }
 
 
-/* ==== 0x0010C8B8  (file offset 0x0C8B8)  FUN_0010c8b8 ================================================ */
-void FUN_0010c8b8(int param_1,int param_2)
+/* ==== 0x0010C8B8  (file offset 0x0C8B8)  motion_entity_destroy ======================================= */
+/* GUESS: names. The MotionEntity's destructor (kind 1, and the base of the character's and the camera's
+   destructors, which call it with 0): frees field_110 and field_114 (the helper table's free) when set,
+   releases field_158 (an ISwerveObject), then the LevelObject part (level_object_destroy), and the
+   entity itself when `freeIt` is set (the binary's tail jump to helper_free at 0x0010c920). */
+void motion_entity_destroy(MotionEntity *entity,int32 freeIt)
 
 {
-  if (*(int *)(param_1 + 0x110) != 0) {
-    (*g_pHelperFuncs->free)(*(void **)(param_1 + 0x110));
-  }
-  if (*(int *)(param_1 + 0x114) != 0) {
-    (*g_pHelperFuncs->free)(*(void **)(param_1 + 0x114));
-  }
-  if (*(int **)(param_1 + 0x158) != (int *)0x0) {
-    /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-    (*((ISwerveObject *)*(int **)(param_1 + 0x158))->pvt->Release)
-        ((ISwerveObject *)*(int **)(param_1 + 0x158));
-  }
-  level_object_destroy(param_1,0);
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
-  return;
+  if (entity->field_110 != 0)
+    (*g_pHelperFuncs->free)((void *)entity->field_110);
+  if (entity->field_114 != 0)
+    (*g_pHelperFuncs->free)((void *)entity->field_114);
+  if (entity->field_158 != (ISwerveObject *)0x0)
+    (*entity->field_158->pvt->Release)(entity->field_158);
+  level_object_destroy((int)entity,0);
+  if (freeIt != 0)
+    helper_free(entity);
 }
+
 
 /* ==== 0x0010C92C  (file offset 0x0C92C)  FUN_0010c92c ================================================ */
 void FUN_0010c92c(int param_1,int param_2)
@@ -7220,7 +7216,7 @@ void FUN_0010c92c(int param_1,int param_2)
     (*((ISwerveObject *)*(int **)(param_1 + 0x1dc))->pvt->Release)
         ((ISwerveObject *)*(int **)(param_1 + 0x1dc));
   }
-  FUN_0010c8b8(param_1,0);
+  motion_entity_destroy((MotionEntity *)param_1,0);
   if (param_2 == 0) {
     return;
   }
@@ -7243,33 +7239,31 @@ void animations_destroy(Animations *animations,int32 freeIt)
 }
 
 
-/* ==== 0x0010CA1C  (file offset 0x0CA1C)  FUN_0010ca1c ================================================ */
-void FUN_0010ca1c(int param_1,int param_2)
+/* ==== 0x0010CA1C  (file offset 0x0CA1C)  boss_combat_region_destroy ================================== */
+/* GUESS: names. The boss combat region's destructor (kind 5): each of its hitspheres
+   (hitsphere_destroy), the hitspheres' array and field_118 (helper_free), its item drops
+   (item_drops_destroy), the word array at +0x138 (the helper table's free), then the LevelObject part
+   (level_object_destroy), and the region itself when `freeIt` is set (the binary's tail jump to
+   helper_free at 0x0010caa4). */
+void boss_combat_region_destroy(BossCombatRegion *region,int32 freeIt)
 
 {
-  int iVar1;
-  int iVar2;
-  
-  for (iVar2 = 0; iVar2 < *(int *)(param_1 + 0x128); iVar2 = iVar2 + 1) {
-    iVar1 = *(int *)(*(int *)(param_1 + 0x120) + iVar2 * 4);
-    if (iVar1 != 0) {
-      hitsphere_destroy((Hitsphere *)iVar1,1);
-    }
+  int32 i;
+
+  for (i = 0; i < region->hitsphereCount; i++) {
+    if (region->hitspheres[i] != (Hitsphere *)0x0)
+      hitsphere_destroy(region->hitspheres[i],1);
   }
-  helper_free(*(void **)(param_1 + 0x120));
-  helper_free(*(void **)(param_1 + 0x118));
-  if (*(int *)(param_1 + 0x114) != 0) {
-    item_drops_destroy(*(ItemDrops **)(param_1 + 0x114),1);
-  }
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-  (*g_pHelperFuncs->free)(*(undefined4 *)(param_1 + 0x138));
-  level_object_destroy(param_1,0);
-  if (param_2 == 0) {
-    return;
-  }
-  helper_free(param_1);
-  return;
+  helper_free(region->hitspheres);
+  helper_free(region->field_118);
+  if (region->itemDrops != (ItemDrops *)0x0)
+    item_drops_destroy(region->itemDrops,1);
+  (*g_pHelperFuncs->free)(*(void **)((int32)region + 0x138));   /* +0x138: a word array (unnamed) */
+  level_object_destroy((int)region,0);
+  if (freeIt != 0)
+    helper_free(region);
 }
+
 
 /* ==== 0x0010CAB0  (file offset 0x0CAB0)  level_object_destroy ======================================== */
 void level_object_destroy(int param_1,int param_2)
@@ -18017,13 +18011,13 @@ void FUN_0011df14(undefined4 *param_1)
         level_object_destroy(pcVar2,1);
       }
       else if (cVar1 == '\x01') {
-        FUN_0010c8b8(pcVar2,1);
+        motion_entity_destroy((MotionEntity *)pcVar2,1);
       }
       else if (cVar1 == '\x04') {
-        FUN_0010c790(pcVar2,1);
+        combat_region_destroy((CombatRegion *)pcVar2,1);
       }
       else if (cVar1 == '\x05') {
-        FUN_0010ca1c(pcVar2,1);
+        boss_combat_region_destroy((BossCombatRegion *)pcVar2,1);
       }
       param_1[iVar4 + 4] = 0;
     }
@@ -19907,16 +19901,16 @@ void FUN_0012070c(int param_1,int param_2)
         }
         else if (cVar1 == '\x01') {
           if (pcVar2 != (char *)0x0) {
-            FUN_0010c8b8((int)pcVar2,1);
+            motion_entity_destroy((MotionEntity *)pcVar2,1);
           }
         }
         else if (cVar1 == '\x04') {
           if (pcVar2 != (char *)0x0) {
-            FUN_0010c790((int)pcVar2,1);
+            combat_region_destroy((CombatRegion *)pcVar2,1);
           }
         }
         else if ((cVar1 == '\x05') && (pcVar2 != (char *)0x0)) {
-          FUN_0010ca1c((int)pcVar2,1);
+          boss_combat_region_destroy((BossCombatRegion *)pcVar2,1);
         }
         *(undefined4 *)(iVar5 + 0x10) = 0;
       }

@@ -579,12 +579,12 @@ void item_drops_destroy(ItemDrops *drops,int32 freeSelf);   /* 0x0010C66C GUESS:
 void script_sequence_destroy(ScriptSequence *sequence,int32 freeIt);   /* 0x0010C6B4 GUESS: name, see kh_mod.c */
 void enemy_destroy(Enemy *enemy,int32 freeIt);   /* 0x0010C720 GUESS: name, see kh_mod.c */
 void FUN_0010c73c(int param_1,int param_2);
-void FUN_0010c790(int param_1,int param_2);
+void combat_region_destroy(CombatRegion *region,int32 freeIt);   /* 0x0010C790 GUESS: name, see kh_mod.c */
 void progress_destroy(Progress *progress,int32 freeSelf);   /* 0x0010C800 GUESS: name, see kh_mod.c */
-void FUN_0010c8b8(int param_1,int param_2);
+void motion_entity_destroy(MotionEntity *entity,int32 freeIt);   /* 0x0010C8B8 GUESS: name, see kh_mod.c */
 void FUN_0010c92c(int param_1,int param_2);
 void animations_destroy(Animations *animations,int32 freeIt);   /* 0x0010C9DC GUESS: name, see kh_mod.c */
-void FUN_0010ca1c(int param_1,int param_2);
+void boss_combat_region_destroy(BossCombatRegion *region,int32 freeIt);   /* 0x0010CA1C GUESS: name, see kh_mod.c */
 void level_object_destroy(int param_1,int param_2);   /* 0x0010CAB0 GUESS: name: a LevelObject's destructor (see kh_types.h) */
 void collision_shape_destroy(CollisionShape *shape,int32 freeIt);   /* 0x0010CC9C GUESS: name, see kh_mod.c */
 void FUN_0010cd2c(int param_1,int param_2);
