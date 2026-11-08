@@ -613,7 +613,7 @@ void FUN_0010d074(int param_1,undefined4 param_2);
 void progress_add_magic_points(Progress *progress,int32 amount);   /* 0x0010D18C GUESS: name */
 void progress_add_munny(Progress *progress,int32 amount);   /* 0x0010D1E0 GUESS: name */
 int32 combat_region_all_enemies_defeated(CombatRegion *region);   /* 0x0010D2FC GUESS: names */
-undefined4 FUN_0010d354(int param_1);
+int32 combat_region_all_enemies_waiting(CombatRegion *region);   /* 0x0010D354 GUESS: name, see kh_mod.c */
 void FUN_0010d3a4(int param_1,undefined4 param_2);
 uint32 string_to_float(int32 context,char *text);   /* 0x0010D4DC GUESS: name, see kh_mod.c */
 undefined4 FUN_0010d56c(int param_1,int param_2);

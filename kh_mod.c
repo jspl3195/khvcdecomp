@@ -7801,27 +7801,23 @@ int32 combat_region_all_enemies_defeated(CombatRegion *region)
   return 1;
 }
 
-/* ==== 0x0010D354  (file offset 0x0D354)  FUN_0010d354 ================================================ */
-undefined4 FUN_0010d354(int param_1)
+/* ==== 0x0010D354  (file offset 0x0D354)  combat_region_all_enemies_waiting =========================== */
+/* GUESS: names. 1 when every enemy of the region is waiting to appear again (its class's slot 7,
+   isWaiting: enemy_is_waiting for a plain enemy), or the region has none; 0 at the first one that is not.
+   combat_region_update calls it in state 3 (the pause after the region stopped being active): with no
+   enemies left in the wave and all of them waiting, the region goes back to state 1 for the next wave. */
+int32 combat_region_all_enemies_waiting(CombatRegion *region)
 
 {
-  int iVar1;
-  int iVar2;
-  
-  iVar2 = 0;
-  while( true ) {
-    if (*(int *)(param_1 + 300) <= iVar2) {
-      return 1;
-    }
-    iVar1 = **(int **)(*(int *)(param_1 + 0x14c) + iVar2 * 4);
-                    /* enemy_is_waiting(enemy); Ghidra had dropped the enemy, passed in r0 */
-    iVar1 = (*((const EnemyVtbl *)iVar1)->isWaiting)
-                ((void *)(*(int *)(*(int *)(param_1 + 0x14c) + iVar2 * 4)));
-    if (iVar1 == 0) break;
-    iVar2 = iVar2 + 1;
+  int32 i;
+
+  for (i = 0; i < region->enemyCount; i++) {
+    if ((*region->enemies[i]->vtable->isWaiting)(region->enemies[i]) == 0)
+      return 0;
   }
-  return 0;
+  return 1;
 }
+
 
 /* ==== 0x0010D3A4  (file offset 0x0D3A4)  FUN_0010d3a4 ================================================ */
 void FUN_0010d3a4(int param_1,undefined4 param_2)
@@ -15244,9 +15240,9 @@ int32 screen_stack_all_keys_bound(ScreenStack *stack)
 
 /* ==== 0x00119AF4  (file offset 0x19AF4)  enemy_is_waiting ============================================ */
 /* GUESS: name. The enemy class's slot 7 (+0x1c of VTABLE_00101680): 1 while the enemy is waiting to appear
-   (state 1001, as enemy_create leaves it), else 0. Read by FUN_0010d354 and FUN_0011a2f4. Ghidra has no
-   function here (only reached through the vtable); written from its disassembly (the compare with 0x3E9
-   in two steps, sub #0x300 then subs #0xe9). */
+   (state 1001, as enemy_create leaves it), else 0. Read by combat_region_all_enemies_waiting and
+   FUN_0011a2f4. Ghidra has no function here (only reached through the vtable); written from its
+   disassembly (the compare with 0x3E9 in two steps, sub #0x300 then subs #0xe9). */
 int32 enemy_is_waiting(Enemy *enemy)
 
 {
@@ -21686,7 +21682,7 @@ void combat_region_update(CombatRegion *region,int32 now,int32 elapsed)
   case 3:
     if (region->active == 0)
       break;
-    if (region->enemiesLeftInWave == 0 && FUN_0010d354((int32)region) != 0) {
+    if (region->enemiesLeftInWave == 0 && combat_region_all_enemies_waiting(region) != 0) {
       region->state = 1;
       FUN_0011d040((int32)region->app->context,region->nameId,(void *)WORD_HEXADECIMAL_11E3EE3E);
     }
