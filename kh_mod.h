@@ -543,7 +543,7 @@ uint32 display_set_color(int32 owner,IDisplay *display,int32 which,uint32 color)
 void FUN_0010a498(int param_1,int param_2);
 Hitsphere * hitsphere_create(Hitsphere *hitsphere,int32 entity,BossCombatRegion *owner,int32 secondary);   /* 0x0010A528 GUESS: name */
 int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3);
-int * FUN_0010aa8c(int *param_1,int *param_2);
+Hud * hud_create(Hud *hud,ScreenStack *stack);   /* 0x0010AA8C GUESS: name, see kh_mod.c */
 ScreenStack * screen_stack_create(ScreenStack *stack,KHApp *app);   /* 0x0010AC6C GUESS: name, see kh_mod.c */
 WebRequest * web_request_create(WebRequest *request,int32 context,WebRequestListener listener);   /* 0x0010AF3C GUESS: name, see kh_mod.c */
 ScriptCommand * script_command_create(ScriptCommand *command);   /* 0x0010AFC4 GUESS: name, see kh_mod.c */
@@ -928,6 +928,13 @@ uint32 float_multiply(uint32 a,uint32 b);   /* 0x001269CC GUESS: name, see kh_mo
                                    "Score" (language.m3g) */
 #define TEXT_RANK 0x04D4D70F   /* was DAT_00102b24 (word at 0x00102B24); the text id of
                                   "Rank" (language.m3g) */
+/* The screens' kinds (Screen.kind; GUESS: names), set by the menus (FUN_00101ad8) and hud_create. */
+#define SCREEN_PLAIN            0      /* screen_create's */
+#define SCREEN_TITLE            1      /* the title menu (event 0x5a) */
+#define SCREEN_PICTURE          2      /* a picture (event 0x6f); closing it stops the music */
+#define SCREEN_HIGH_SCORES      3      /* the high-score list (event 0x83) */
+#define SCREEN_HUD              4      /* the in-game HUD (hud_create) */
+
 /* The music playing (AppContext.music; app_context_set_music, app_context_stop_music; GUESS: names). */
 #define MUSIC_TRAINING          0      /* "training.mid": the title and the training level */
 #define MUSIC_LEVEL             1      /* the level's own "<level>.mid" */

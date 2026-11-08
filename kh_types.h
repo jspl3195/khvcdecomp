@@ -82,7 +82,7 @@ typedef struct KHApp {
     struct ScreenStack *screens;     /* +0xd0 the open screens (menus); created by screen_stack_create(0,
                                         pMe), destroyed by screen_stack_destroy. FUN_00101ad8 handles
                                         its events */
-    struct Hud    *hud;              /* +0xd4 the in-game HUD (FUN_0010aa8c); cleared when its screen is
+    struct Hud    *hud;              /* +0xd4 the in-game HUD (hud_create); cleared when its screen is
                                         closed (screen_stack_close_top) */
     uint32         fpStatus;         /* +0xd8 GUESS: soft-float status word (what a compiler fplib keeps in a
                                         static). Address returned by kh_GetFpStatusPtr; read by
@@ -355,13 +355,14 @@ typedef struct Screen {
                                      screen_draw paints a window frame (COLOR_PURPLE_GREY, then
                                      COLOR_GREY_LILAC, then frameFillColor inside) */
     uint8    unknown_39[0x03];
-    int32    field_3c;            /* +0x3c 0 */
+    int32    kind;                /* +0x3c GUESS: name; SCREEN_* (kh_mod.h): SCREEN_PLAIN from
+                                     screen_create, set by the menus and hud_create */
     uint32   frameFillColor;      /* +0x40 GUESS: name; the window's colour (screen_draw),
                                      COLOR_PALE_LAVENDER at creation */
     struct KHApp *app;            /* +0x44 the stack's app */
 } Screen;                         /* 0x48 bytes (screen_create) */
 
-/* The in-game HUD screen (KHApp.hud; FUN_0010aa8c, vtable VTABLE_0010165C): a screen element with
+/* The in-game HUD screen (KHApp.hud; hud_create, vtable VTABLE_0010165C): a screen element with
  * the player's bars and the level script's texts. Only what hud_show_loading / hud_hide_loading use is
  * named so far; the script code (script_command_run) still reads the rest through offsets. */
 typedef struct Hud {
@@ -391,7 +392,9 @@ typedef struct Hud {
     uint8    unknown_c4[0x08];
     int32    blinkTime;           /* +0xcc GUESS: name; aee_GetUpTimeMS at creation, +350 at each flip of
                                      blinkOn */
-    uint8    unknown_d0;          /* +0xd0 0 at creation */
+    uint8    keyPressed;          /* +0xd0 GUESS: name; 0 at creation, 1 once its key handler
+                                     (FUN_00108414) has run; while 0, its resume method (FUN_001051d4)
+                                     ends the status message state (KHApp.field_cc 5) */
     uint8    blinkOn;             /* +0xd1 GUESS: name; 1 at creation, flipped every 350 ms (hud_draw):
                                      a gauge below its low threshold is drawn only while set */
     uint8    unknown_d2[0x02];
@@ -402,7 +405,7 @@ typedef struct Hud {
     UIElement *loadingText;       /* +0xdc GUESS: name; child 900 (text 0x254DA109), hidden until
                                      hud_show_loading */
     uint32   savedColor;          /* +0xe0 the primary colour from before hud_show_loading */
-} Hud;                           /* 0xe4 bytes (FUN_0010aa8c) */
+} Hud;                           /* 0xe4 bytes (hud_create) */
 
 /* ---- Level scripts (GUESS: names) ------------------------------------------------------------------
  * The levels and screens are driven by scripts: lines of text, one command each ("AddSoftKey ...",

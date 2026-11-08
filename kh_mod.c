@@ -2832,7 +2832,7 @@ void screen_add_heading(ScreenStack *stack,UIElement *screen,uint32 color,int32 
 
 /* ==== 0x001056D0  (file offset 0x056D0)  hud_show_loading ============================================ */
 /* GUESS: names. The HUD (KHApp.hud) shows its "loading" text (the hidden child 900 its constructor
-   FUN_0010aa8c makes, text 0x254DA109) and takes `color` (0xRRGGBB) as its primary colour, the old one
+   hud_create makes, text 0x254DA109) and takes `color` (0xRRGGBB) as its primary colour, the old one
    kept in savedColor; then it is drawn (the binary's tail jump to ui_element_draw, 0x001056e8), whose
    result it returns. The level script's "LOADING r g b"; hud_hide_loading ("!LOADING") undoes it. */
 int32 hud_show_loading(Hud *hud,uint32 color)
@@ -4874,7 +4874,7 @@ void screen_stack_close_top(ScreenStack *stack,int32 redraw)
     list_remove_entry(stack->screens,stack->depth - 1);     /* take it off the list */
     stack->depth--;
     wasCurrent = (int32 *)app->hud == screen;
-    if (screen[0xf] == 2)
+    if (screen[0xf] == SCREEN_PICTURE)   /* Screen.kind */
       app_context_stop_music(app->context);
     (*(*(const UIElementVtbl **)screen)->destroy)(screen);           /* destroy: vtable slot 0 */
     helper_free(screen);
@@ -5866,7 +5866,7 @@ int * FUN_0010a5d8(int *param_1,undefined4 param_2,int *param_3)
     if (iVar6 != 0x1f5) goto LAB_0010a894;
 LAB_0010a85c:
     game_create_objects((Game *)param_1,(ISwerveObject *)*param_1,(LevelObject *)0x0);
-    uVar4 = FUN_0010aa8c(0,*(undefined4 *)(param_1[0x85] + 0xd0));
+    uVar4 = (int32)hud_create((Hud *)0x0,((KHApp *)param_1[0x85])->screens);
     *(undefined4 *)(param_1[0x85] + 0xd4) = uVar4;
     screen_stack_open(*(undefined4 *)(param_1[0x85] + 0xd0),uVar4);
     iVar6 = iVar1;
@@ -5899,65 +5899,57 @@ LAB_0010a894:
   return param_1;
 }
 
-/* ==== 0x0010AA8C  (file offset 0x0AA8C)  FUN_0010aa8c ================================================ */
-int * FUN_0010aa8c(int *param_1,int *param_2)
+/* ==== 0x0010AA8C  (file offset 0x0AA8C)  hud_create ================================================== */
+/* GUESS: names. The HUD's constructor (its 0xe4 bytes allocated when `hud` is 0; 0 when out of memory):
+   a plain unframed screen (screen_create) of kind SCREEN_HUD with the HUD's vtable (VTABLE_0010165C:
+   hud_draw), its blink clock started, no key pressed yet, the target's low-health threshold from the
+   progress, the MP and the player's gauge shown, the target's hidden, its five text slots empty (their
+   scroll speeds are not cleared: BREW's MALLOC zeroes them), the two gauge icons "kh.bar" 5001 and 5002
+   (IShell LoadResObject; IImage SetParm 3, 7: GUESS: IPARM_ROP, AEE_RO_TRANSPARENT), its hidden
+   "loading" text in the middle (text_line_create, child 900; not checked) and the full view
+   (hud_set_cinematic 0). Made for each level by FUN_0010a5d8 (KHApp.hud). */
+Hud * hud_create(Hud *hud,ScreenStack *stack)
 
 {
-  int iVar1;
-  int iVar2;
-  int *piVar3;
-  
-  if ((param_1 != (int *)0x0) || (param_1 = helper_malloc_2(0xe4), param_1 != (int *)0x0)) {
-    screen_create((Screen *)param_1,(ScreenStack *)param_2,0);
-    *param_1 = (int32)VTABLE_0010165C;
-                    /* helper[44] uint32 aee_GetUpTimeMS(void)  (AEEHelperFuncs +0xb0, via
-                       *(base-4)) */
-    iVar1 = (*g_pHelperFuncs->aee_GetUpTimeMS)();
-    param_1[0x33] = iVar1;
-    *(undefined1 *)(param_1 + 0x34) = 0;
-    *(undefined1 *)((int)param_1 + 0xd1) = 1;
-    param_1[0xf] = 4;
-    iVar1 = float_to_int(*(undefined4 *)(*(int *)(param_1[0x11] + 0xa8) + 0x520));
-    param_1[0x15] = iVar1;
-    *(undefined1 *)(param_1 + 0x12) = 1;
-    *(undefined1 *)((int)param_1 + 0x49) = 1;
-    *(undefined1 *)((int)param_1 + 0x4a) = 0;
-    iVar1 = 0;
-    do {
-      param_1[iVar1 + 0x16] = 0;
-      param_1[iVar1 + 0x1b] = 0;
-      param_1[iVar1 + 0x20] = 0;
-      iVar2 = iVar1 + 1;
-      param_1[iVar1 + 0x2a] = 0;
-      iVar1 = iVar2;
-    } while (iVar2 < 5);
-    param_1[0x2f] = 0;
-    iVar1 = (int)(*((IShell *)*(int **)(*param_2 + 0xc))->pvt->LoadResObject)
-                ((IShell *)*(int **)(*param_2 + 0xc),(const char *)STRING_KH_DOT_BAR_00127A98,
-                 INTEGER_5001,0);
-    param_1[0x35] = iVar1;
-    iVar1 = (int)(*((IShell *)*(int **)(*param_2 + 0xc))->pvt->LoadResObject)
-                ((IShell *)*(int **)(*param_2 + 0xc),(const char *)STRING_KH_DOT_BAR_00127A98,
-                 INTEGER_5002,0);
-    param_1[0x36] = iVar1;
-    if ((int *)param_1[0x35] != (int *)0x0) {
-      /* Ghidra had dropped arguments; restored from the disassembly (0x0010abbc) */
-      (*((IImage *)param_1[0x35])->pvt->SetParm)((IImage *)param_1[0x35],3,7,0);
-    }
-    piVar3 = (int *)param_1[0x36];
-    if (piVar3 != (int *)0x0) {
-      /* Ghidra had dropped arguments; restored from the disassembly (0x0010abdc) */
-      (*((IImage *)piVar3)->pvt->SetParm)((IImage *)piVar3,3,7,0);
-    }
-    iVar1 = (int)text_line_create(0,(int)*(short *)(param_1[2] + 4) / 2,(int)*(short *)(param_1[2] + 6) / 2,0
-                         ,0,*(undefined4 *)(param_1[0x11] + 0xd0),TEXT_LOADING,9);
-    param_1[0x37] = iVar1;
-    ui_element_add_child(param_1,iVar1,900);
-    *(undefined1 *)(param_1[0x37] + 4) = 0;
-    hud_set_cinematic(param_1,0);
+  int32 i;
+
+  if (hud == (Hud *)0x0 && (hud = helper_malloc_2(0xe4)) == (Hud *)0x0)
+    return hud;
+  screen_create((Screen *)hud,stack,0);
+  ((UIElement *)hud)->vtable = (const UIElementVtbl *)VTABLE_0010165C;
+  hud->blinkTime = (int32)(*g_pHelperFuncs->aee_GetUpTimeMS)();
+  hud->keyPressed = 0;
+  hud->blinkOn = 1;
+  hud->screen.kind = SCREEN_HUD;
+  hud->targetLowHealth = (int32)float_to_int(hud->screen.app->progress->lowHealth);
+  hud->showMagicPoints = 1;
+  hud->showPlayerGauge = 1;
+  hud->showTargetGauge = 0;
+  for (i = 0; i < 5; i++) {
+    hud->texts[i] = (struct TextBox *)0x0;
+    hud->scrolling[i] = 0;
+    hud->leaving[i] = 0;
+    hud->scrollPositions[i] = 0;
   }
-  return param_1;
+  hud->messageTime = 0;
+  hud->playerIcon = (IImage *)(*stack->app->a.m_pIShell->pvt->LoadResObject)
+                        (stack->app->a.m_pIShell,STRING_KH_DOT_BAR_00127A98,(uint16)INTEGER_5001,0);
+  hud->targetIcon = (IImage *)(*stack->app->a.m_pIShell->pvt->LoadResObject)
+                        (stack->app->a.m_pIShell,STRING_KH_DOT_BAR_00127A98,(uint16)INTEGER_5002,0);
+  if (hud->playerIcon != (IImage *)0x0)
+    (*hud->playerIcon->pvt->SetParm)(hud->playerIcon,3,7,0);
+  if (hud->targetIcon != (IImage *)0x0)
+    (*hud->targetIcon->pvt->SetParm)(hud->targetIcon,3,7,0);
+  hud->loadingText = (UIElement *)text_line_create((TextLine *)0x0,((UIElement *)hud)->rect->dx / 2,
+                                                   ((UIElement *)hud)->rect->dy / 2,0,0,
+                                                   (int32 *)hud->screen.app->screens,(int32)TEXT_LOADING,
+                                                   9);
+  ui_element_add_child((UIElement *)hud,hud->loadingText,900);
+  hud->loadingText->visible = 0;
+  hud_set_cinematic((int)hud,0);
+  return hud;
 }
+
 
 /* ==== 0x0010AC6C  (file offset 0x0AC6C)  screen_stack_create ========================================= */
 /* GUESS: names. The screen stack's constructor (KHApp.screens, made by kh_OnAppStart with the app):
@@ -6628,7 +6620,7 @@ UIElement * menu_item_create(UIElement *item,int32 x,int32 y,int32 width,int32 h
    the stack, with the app, no focus, two empty soft key entries (their 8-byte block's malloc is not
    checked) and, when `framed` is set, a window frame drawn by screen_draw with frameFillColor
    (COLOR_PALE_LAVENDER) inside. The menu handler FUN_00101ad8 makes its pages (0) and dialogs (1) with it; the
-   HUD's constructor FUN_0010aa8c builds on it. */
+   HUD's constructor hud_create builds on it. */
 Screen * screen_create(Screen *screen,ScreenStack *stack,uint8 framed)
 
 {
@@ -6642,7 +6634,7 @@ Screen * screen_create(Screen *screen,ScreenStack *stack,uint8 framed)
   screen->softKeys = helper_malloc(8);
   screen->softKeys[0] = (UIElement *)0x0;
   screen->softKeys[1] = (UIElement *)0x0;
-  screen->field_3c = 0;
+  screen->kind = SCREEN_PLAIN;
   screen->frameFillColor = COLOR_PALE_LAVENDER;
   return screen;
 }
