@@ -671,7 +671,7 @@ int32 game_find_free_object_slot(Game *game);   /* 0x00112CFC GUESS: name */
 int32 animations_find_free_slot(Animations *animations);   /* 0x00112D28 GUESS: name */
 int32 progress_find_free_status(Progress *progress);   /* 0x00112D54 GUESS: name, see kh_mod.c */
 LevelObject * game_find_object(Game *game,uint32 nameId);   /* 0x00112DBC GUESS: name, see kh_mod.c */
-undefined4 FUN_00112e20(int param_1,undefined4 param_2);
+LevelObject * script_command_find_object(ScriptCommand *command,const char *name);   /* 0x00112E20 GUESS: name, see kh_mod.c */
 int32 enemy_fit_walk(Enemy *enemy);   /* 0x00112E84 GUESS: name, see kh_mod.c */
 void FUN_00113030(int param_1,undefined4 param_2,uint param_3,uint param_4,undefined4 param_5);
 void FUN_0011316c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5,undefined4 param_6,undefined4 param_7,undefined4 param_8,int param_9,undefined4 param_10,undefined4 param_11);

@@ -396,8 +396,9 @@ typedef struct ScriptCommand {
     int32    type;                  /* +0x00 by the command's name (script_command_parse, script_command_run);
                                      0x4c none */
     struct KHApp *app;            /* +0x04 */
-    int32    owner;                 /* +0x08 the object or screen whose script it is (0 for a sequence's) */
-    struct LevelObject *object;   /* +0x0c the object it acts on, by name (FUN_00112e20) */
+    int32    owner;                 /* +0x08 the object or screen whose script it is (0 for a sequence's);
+                                     what a script's "ME" names (script_command_find_object) */
+    struct LevelObject *object;   /* +0x0c the object it acts on, by name (script_command_find_object) */
     struct LevelObject *target;   /* +0x10 a second object */
     uint32   value[2];              /* +0x14 floats (their bits): a speed, an angle, an amount, ... */
     int32    number[4];             /* +0x1c integers: a mode, a sound, an animation's user id (a hash),

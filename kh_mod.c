@@ -10852,7 +10852,7 @@ int32 script_command_run(ScriptCommand *command)
     break;
   case 0x2c:   /* setCollectables: the collectables' name (an object's text) and number */
     if (command->flag[0] != 0 && command->text != (char *)0x0) {
-      command->object = (LevelObject *)FUN_00112e20((int)command,(undefined4)command->text);
+      command->object = script_command_find_object(command,command->text);
       if (command->object != (LevelObject *)0x0)
         FUN_00114520(context,(int *)command->object->node,command->number[1],(undefined4 *)&command->text);
       else {
@@ -11483,30 +11483,20 @@ LevelObject * game_find_object(Game *game,uint32 nameId)
 }
 
 
-/* ==== 0x00112E20  (file offset 0x12E20)  FUN_00112e20 ================================================ */
-undefined4 FUN_00112e20(int param_1,undefined4 param_2)
+/* ==== 0x00112E20  (file offset 0x12E20)  script_command_find_object ================================== */
+/* GUESS: names. Finds the object a level script names: "ME" (strcmp, case-sensitive) is the command's
+   owner, the object or screen whose script it is (0 in a sequence); any other name is looked up by its
+   hash in the game's objects (string_hash, game_find_object), 0 when there is none. Used by
+   script_command_parse for a command's object and target, and by setCollectables (script_command_run) when
+   it runs. Ghidra had passed strcmp three more arguments and listed r3 as an input. */
+LevelObject * script_command_find_object(ScriptCommand *command,const char *name)
 
 {
-  undefined4 param_4;
-  /* not parameters: param_4. kh.mod reads r3 only on paths where it was already written, or as a
-     leftover (no caller sets it); Ghidra listed it as input */
-  int iVar1;
-  undefined4 uVar2;
-  code *pcVar3;
-  
-  pcVar3 = (code *)g_pHelperFuncs->strcmp;
-                    /* helper[4] int strcmp(const char *a, const char *b)  (AEEHelperFuncs +0x10,
-                       via *(base-4)) */
-  iVar1 = (*pcVar3)(param_2,(int32)STRING_ME,pcVar3,param_4,param_4);
-  if (iVar1 == 0) {
-    uVar2 = *(undefined4 *)(param_1 + 8);
-  }
-  else {
-    uVar2 = string_hash((int32)((KHApp *)*(int *)(param_1 + 4))->context,(const char *)param_2);
-    uVar2 = (int32)game_find_object((Game *)((KHApp *)*(int *)(param_1 + 4))->pGame,uVar2);
-  }
-  return uVar2;
+  if ((*g_pHelperFuncs->strcmp)(name,STRING_ME) == 0)
+    return (LevelObject *)command->owner;
+  return game_find_object((Game *)command->app->pGame,string_hash((int32)command->app->context,name));
 }
+
 
 /* ==== 0x00112E84  (file offset 0x12E84)  enemy_fit_walk ============================================== */
 /* GUESS: names. Fits the enemy's walk (walk, from walkStart) to what its region allows, by halving:
@@ -13084,13 +13074,13 @@ void FUN_001150d0(int param_1,int *param_2)
 /* ==== 0x00115118  (file offset 0x15118)  script_command_parse ======================================== */
 /* GUESS: names. Parses one line of a script into `command`: the words (split at " "), the first one the
    command's name, which gives its type; the others its arguments, by command (objects by name,
-   FUN_00112e20; names hashed, string_hash; numbers, string_to_float, made integers by float_to_int; texts
-   copied, string_replace). A command needs its number of words, else only its type is set; an unknown
-   name gives type 0x4c, which does nothing. `owner` is the object or screen whose script it is (0 for a
-   sequence's). The binary's branches share their last steps (jumps to 0x00115800, 0x00116828, 0x00116654,
-   0x00116e68, 0x00116e74, 0x00116f14, 0x0011705c, 0x001171a0 and 0x00117258): each is done once, at the
-   end, from what the branch left in the locals objectName ... copyName. Its words are freed at the end
-   (the binary's tail jump to helper_free at 0x001173c4). */
+   script_command_find_object; names hashed, string_hash; numbers, string_to_float, made integers by
+   float_to_int; texts copied, string_replace). A command needs its number of words, else only its type is
+   set; an unknown name gives type 0x4c, which does nothing. `owner` is the object or screen whose script
+   it is (0 for a sequence's). The binary's branches share their last steps (jumps to 0x00115800,
+   0x00116828, 0x00116654, 0x00116e68, 0x00116e74, 0x00116f14, 0x0011705c, 0x001171a0 and 0x00117258): each
+   is done once, at the end, from what the branch left in the locals objectName ... copyName. Its words are
+   freed at the end (the binary's tail jump to helper_free at 0x001173c4). */
 void script_command_parse(ScriptCommand *command,int32 owner,char *text)
 
 {
@@ -13149,7 +13139,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
     command->type = 5;
     if (count >= 3) {
       command->number[1] = -2;
-      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      command->object = script_command_find_object(command,words[1]);
       command->hash = string_hash(context,words[2]);
     }
   }
@@ -13166,7 +13156,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
       command->number[3] = float_to_int(float_multiply(height,string_to_float(context,words[4])));
       if (command->number[1] == command->number[3])
         command->flag[0] = 1;
-      command->object = FUN_00112e20((int)command,(undefined4)words[5]);
+      command->object = script_command_find_object(command,words[5]);
       command->hash = string_hash(context,words[6]);
       if (count >= 8) {
         if ((*g_pHelperFuncs->strcmp)(words[7],one) == 0)
@@ -13206,13 +13196,13 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_FIREPROJECTILE) == 0) {
     command->type = 0xf;
     if (count == 4) {
-      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
-      command->target = FUN_00112e20((int)command,(undefined4)words[2]);
+      command->object = script_command_find_object(command,words[1]);
+      command->target = script_command_find_object(command,words[2]);
       command->number[0] = float_to_int(string_to_float(context,words[3]));
       command->flag[0] = 1;
     }
     else if (count == 6) {
-      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      command->object = script_command_find_object(command,words[1]);
       command->vector[0] = string_to_float(context,words[2]);
       command->vector[1] = string_to_float(context,words[3]);
       command->vector[2] = string_to_float(context,words[4]);
@@ -13250,14 +13240,14 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_LINK) == 0) {
     command->type = 0x13;
     if (count >= 3) {
-      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
-      command->target = FUN_00112e20((int)command,(undefined4)words[2]);
+      command->object = script_command_find_object(command,words[1]);
+      command->target = script_command_find_object(command,words[2]);
     }
   }
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_LOADCLIPART) == 0) {
     command->type = 0x14;
     if (count >= 5) {
-      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      command->object = script_command_find_object(command,words[1]);
       string_replace((AppContext *)context,words[2],&command->text);
       if ((*g_pHelperFuncs->strcmp)(words[3],one) == 0)
         command->flag[0] = 1;
@@ -13289,8 +13279,8 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_MATCHPOSITION) == 0) {
     command->type = 0x17;
     if (count >= 3) {
-      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
-      command->target = FUN_00112e20((int)command,(undefined4)words[2]);
+      command->object = script_command_find_object(command,words[1]);
+      command->target = script_command_find_object(command,words[2]);
       if (count >= 4 && (*g_pHelperFuncs->strcmp)(words[3],STRING_TERRAIN) == 0)
         command->flag[0] = 1;
     }
@@ -13306,7 +13296,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_PLAYSEQUENCE) == 0) {
     command->type = 0x1a;
     if (count >= 3) {
-      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      command->object = script_command_find_object(command,words[1]);
       hashWord = words[2];
     }
   }
@@ -13381,7 +13371,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
     command->type = 0x25;
     if (count >= 4) {
       command->number[0] = string_hash(context,words[1]);
-      command->object = FUN_00112e20((int)command,(undefined4)words[2]);
+      command->object = script_command_find_object(command,words[2]);
       command->number[1] = string_hash(context,words[3]);
     }
   }
@@ -13427,7 +13417,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
       }
     }
     else if (count >= 3) {   /* an object */
-      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      command->object = script_command_find_object(command,words[1]);
       if ((*g_pHelperFuncs->strcmp)(words[2],one) == 0)
         command->flag[1] = 1;
       if (count >= 4) {
@@ -13466,7 +13456,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
       else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_HANG) == 0) {
         command->number[0] = 0xb;
         if (count >= 4)
-          command->target = FUN_00112e20((int)command,(undefined4)words[3]);
+          command->target = script_command_find_object(command,words[3]);
       }
       else if ((*g_pHelperFuncs->strcmp)(words[1],STRING_STATIC_HANG) == 0)
         command->number[0] = 0xc;
@@ -13532,7 +13522,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
     command->type = 0x33;
     if (count >= 2) {
       if ((*g_pHelperFuncs->strcmp)(words[1],STRING_NULL) != 0)
-        command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+        command->object = script_command_find_object(command,words[1]);
       if (count >= 10) {
         if ((*g_pHelperFuncs->strcmp)(words[2],STRING_DASH_X) == 0)
           command->flag[0] = 1;
@@ -13554,7 +13544,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETPOSITION) == 0) {
     command->type = 0x36;
     if (count >= 5) {   /* x y z, each NULL to keep it (z also TERRAIN: on the ground; number 0) */
-      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      command->object = script_command_find_object(command,words[1]);
       if ((*g_pHelperFuncs->strcmp)(words[2],STRING_NULL) == 0)
         command->flag[0] = 1;
       else
@@ -13672,7 +13662,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_SETVIS) == 0) {
     command->type = 0x44;
     if (count >= 3) {
-      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      command->object = script_command_find_object(command,words[1]);
       if ((*g_pHelperFuncs->strcmp)(words[2],one) == 0)
         command->flag[0] = 1;
     }
@@ -13681,7 +13671,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
            (*g_pHelperFuncs->strcmp)(words[0],STRING_SETYROT) == 0) {
     command->type = isXRotation != 0 ? 0x46 : 0x47;
     if (count >= 3) {
-      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      command->object = script_command_find_object(command,words[1]);
       valueWord = words[2];
     }
   }
@@ -13706,7 +13696,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
   else if ((*g_pHelperFuncs->strcmp)(words[0],STRING_UNLOADCLIPART) == 0) {
     command->type = 0x4b;
     if (count >= 4) {
-      command->object = FUN_00112e20((int)command,(undefined4)words[1]);
+      command->object = script_command_find_object(command,words[1]);
       if ((*g_pHelperFuncs->strcmp)(words[2],one) == 0)
         command->flag[0] = 1;
       if ((*g_pHelperFuncs->strcmp)(words[3],one) == 0)
@@ -13747,7 +13737,7 @@ void script_command_parse(ScriptCommand *command,int32 owner,char *text)
     command->text[textEnd] = 0;
   }
   if (objectName != (char *)0x0)   /* 0x00115800 */
-    command->object = FUN_00112e20((int)command,(undefined4)objectName);
+    command->object = script_command_find_object(command,objectName);
   for (i = 0; i < count; i++)
     helper_free(words[i]);
   helper_free(words);
