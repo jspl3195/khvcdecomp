@@ -3019,7 +3019,7 @@ void FUN_01002a58(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
     FUN_0102f7e0(uVar5);
   }
   if (param_1[4] == 0) {
-    piVar2 = (int *)swv_New(0x20,0);
+    piVar2 = (int *)swv_New(0x20);
     if (piVar2 != (int *)0x0) {
       FUN_01027cb4(piVar2);
       *piVar2 = DATA_AT_010025AC_OFFSET + 0x1002ac8;
@@ -3268,9 +3268,7 @@ void FUN_01002ef8(int param_1,int param_2,int param_3,undefined4 param_4,int par
   
   iVar8 = *(int *)(param_1 + 0xb8);
   uVar3 = swv_fflt(param_5 << 8);
-  swv_fmul(uVar3,param_4);
-  swv_ffix();
-  uVar3 = swv_fflt();
+  uVar3 = swv_fflt(swv_ffix(swv_fmul(uVar3,param_4)));   /* Ghidra had dropped the arguments */
   iVar4 = *(int *)(param_2 + 0x2c);
   iVar7 = 0;
   if (param_6 == 1) {
@@ -3278,12 +3276,9 @@ void FUN_01002ef8(int param_1,int param_2,int param_3,undefined4 param_4,int par
       bVar1 = *(byte *)(iVar4 + iVar7);
       uVar5 = swv_fflt(*(undefined4 *)(iVar8 + iVar7 * 4));
       uVar6 = swv_fflt(((uint)bVar1 + param_5 & 0xff) << 8);
-      swv_fmul(uVar6,param_4);
-      swv_ffix();
-      uVar6 = swv_fflt();
+      uVar6 = swv_fflt(swv_ffix(swv_fmul(uVar6,param_4)));   /* Ghidra had dropped the arguments */
       uVar6 = swv_fsub(uVar6,uVar3);
-      swv_fadd(uVar6,uVar5);
-      uVar5 = swv_ffix();
+      uVar5 = swv_ffix(swv_fadd(uVar6,uVar5));   /* Ghidra had dropped the arguments */
       *(undefined4 *)(iVar8 + iVar7 * 4) = uVar5;
     }
   }
@@ -3292,12 +3287,9 @@ void FUN_01002ef8(int param_1,int param_2,int param_3,undefined4 param_4,int par
       sVar2 = *(short *)(iVar4 + iVar7 * 2);
       uVar5 = swv_fflt(*(undefined4 *)(iVar8 + iVar7 * 4));
       uVar6 = swv_fflt((sVar2 + param_5 & 0xff00ffffU) << 8);
-      swv_fmul(uVar6,param_4);
-      swv_ffix();
-      uVar6 = swv_fflt();
+      uVar6 = swv_fflt(swv_ffix(swv_fmul(uVar6,param_4)));   /* Ghidra had dropped the arguments */
       uVar6 = swv_fsub(uVar6,uVar3);
-      swv_fadd(uVar6,uVar5);
-      uVar5 = swv_ffix();
+      uVar5 = swv_ffix(swv_fadd(uVar6,uVar5));   /* Ghidra had dropped the arguments */
       *(undefined4 *)(iVar8 + iVar7 * 4) = uVar5;
     }
   }
@@ -3639,7 +3631,7 @@ void FUN_01003604(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   undefined4 uVar2;
   
   uVar2 = *(undefined4 *)(*(int *)(param_1 + 0x20) + 0x28);
-  puVar1 = (undefined4 *)swv_New(0x70,0,param_3,param_4,param_4);
+  puVar1 = (undefined4 *)swv_New(0x70);
   if (puVar1 != (undefined4 *)0x0) {
     *puVar1 = 0;
     puVar1[1] = 0;
@@ -3670,7 +3662,7 @@ void FUN_01003604(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 void * FUN_010036a0(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2);
 }
 
 /* ==== 0x010036AC  (file offset 0x036AC)  FUN_010036ac ================================================ */
@@ -3680,7 +3672,7 @@ void * FUN_010036a0(int param_1,int param_2)
 void * FUN_010036ac(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2);
 }
 
 /* ==== 0x010036B8  (file offset 0x036B8)  FUN_010036b8 ================================================ */
@@ -3690,7 +3682,7 @@ void * FUN_010036ac(int param_1,int param_2)
 void * FUN_010036b8(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2);
 }
 
 /* ==== 0x010036C4  (file offset 0x036C4)  FUN_010036c4 ================================================ */
@@ -3700,7 +3692,7 @@ void * FUN_010036b8(int param_1,int param_2)
 void * FUN_010036c4(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2);
 }
 
 /* ==== 0x010036D0  (file offset 0x036D0)  FUN_010036d0 ================================================ */
@@ -3710,7 +3702,7 @@ void * FUN_010036c4(int param_1,int param_2)
 void * FUN_010036d0(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2,0);
+  return swv_NewArray(param_2);
 }
 
 /* ==== 0x010036DC  (file offset 0x036DC)  FUN_010036dc ================================================ */
@@ -3720,7 +3712,7 @@ void * FUN_010036d0(int param_1,int param_2)
 void * FUN_010036dc(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 1,0);
+  return swv_NewArray(param_2 << 1);
 }
 
 /* ==== 0x010036E8  (file offset 0x036E8)  FUN_010036e8 ================================================ */
@@ -3730,7 +3722,7 @@ void * FUN_010036dc(int param_1,int param_2)
 void * FUN_010036e8(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 3,0);
+  return swv_NewArray(param_2 << 3);
 }
 
 /* ==== 0x010036F4  (file offset 0x036F4)  FUN_010036f4 ================================================ */
@@ -3740,7 +3732,7 @@ void * FUN_010036e8(int param_1,int param_2)
 void * FUN_010036f4(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2);
 }
 
 /* ==== 0x01003700  (file offset 0x03700)  FUN_01003700 ================================================ */
@@ -3753,7 +3745,7 @@ void FUN_01003700(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
 
-  uVar1 = swv_NewArray(param_2 * 0x44 + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0x44 + 4);
   FUN_01000414(uVar1,param_2,0x44,1,ADDRESS_OF_FUNCTION_01029850_OFFSET + 0x1003728);
   return;
 }
@@ -3765,7 +3757,7 @@ void FUN_01003700(undefined4 param_1,int param_2)
 void * FUN_01003740(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2);
 }
 
 /* ==== 0x0100374C  (file offset 0x0374C)  FUN_0100374c ================================================ */
@@ -3775,7 +3767,7 @@ void * FUN_01003740(int param_1,int param_2)
 void * FUN_0100374c(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2);
 }
 
 /* ==== 0x01003758  (file offset 0x03758)  FUN_01003758 ================================================ */
@@ -3784,7 +3776,7 @@ void FUN_01003758(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
   
-  uVar1 = swv_NewArray(param_2 * 0xc + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0xc + 4);
   FUN_01000414(uVar1,param_2,0xc,1,ADDRESS_OF_FUNCTION_01027c84_OFFSET + 0x1003784);
   return;
 }
@@ -3795,7 +3787,7 @@ void FUN_010037a0(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
   
-  uVar1 = swv_NewArray(param_2 * 0x50,0);
+  uVar1 = swv_NewArray(param_2 * 0x50);
   FUN_01000414(uVar1,param_2,0x50,0,ADDRESS_OF_FUNCTION_01027cfc_OFFSET + 0x10037c8);
   return;
 }
@@ -3807,7 +3799,7 @@ void FUN_010037a0(undefined4 param_1,int param_2)
 void * FUN_010037e4(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2);
 }
 
 /* ==== 0x010037F0  (file offset 0x037F0)  FUN_010037f0 ================================================ */
@@ -3816,7 +3808,7 @@ void FUN_010037f0(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
   
-  uVar1 = swv_NewArray(param_2 * 0x44 + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0x44 + 4);
   FUN_01000414(uVar1,param_2,0x44,1,ADDRESS_OF_FUNCTION_01027e90_OFFSET + 0x100381c);
   return;
 }
@@ -3828,7 +3820,7 @@ void FUN_010037f0(undefined4 param_1,int param_2)
 void * FUN_01003838(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2);
 }
 
 /* ==== 0x01003844  (file offset 0x03844)  FUN_01003844 ================================================ */
@@ -3838,7 +3830,7 @@ void * FUN_01003838(int param_1,int param_2)
 void * FUN_01003844(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2);
 }
 
 /* ==== 0x01003850  (file offset 0x03850)  FUN_01003850 ================================================ */
@@ -3848,7 +3840,7 @@ void * FUN_01003844(int param_1,int param_2)
 void * FUN_01003850(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2);
 }
 
 /* ==== 0x0100385C  (file offset 0x0385C)  FUN_0100385c ================================================ */
@@ -3857,7 +3849,7 @@ void FUN_0100385c(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
   
-  uVar1 = swv_NewArray(param_2 * 0xc + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0xc + 4);
   FUN_01000414(uVar1,param_2,0xc,1,ADDRESS_OF_FUNCTION_01028a3c_OFFSET + 0x1003888);
   return;
 }
@@ -3869,7 +3861,7 @@ void FUN_0100385c(undefined4 param_1,int param_2)
 void * FUN_010038a4(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2);
 }
 
 /* ==== 0x010038B0  (file offset 0x038B0)  FUN_010038b0 ================================================ */
@@ -3879,7 +3871,7 @@ void * FUN_010038a4(int param_1,int param_2)
 void * FUN_010038b0(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2);
 }
 
 /* ==== 0x010038BC  (file offset 0x038BC)  FUN_010038bc ================================================ */
@@ -3889,7 +3881,7 @@ void * FUN_010038b0(int param_1,int param_2)
 void * FUN_010038bc(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2);
 }
 
 /* ==== 0x010038C8  (file offset 0x038C8)  FUN_010038c8 ================================================ */
@@ -3898,7 +3890,7 @@ void FUN_010038c8(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
   
-  uVar1 = swv_NewArray(param_2 * 0x90 + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0x90 + 4);
   FUN_01000414(uVar1,param_2,0x90,1,ADDRESS_OF_FUNCTION_01029110_OFFSET + 0x10038f4);
   return;
 }
@@ -3913,7 +3905,7 @@ void FUN_0100391c(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
 
-  uVar1 = swv_NewArray(param_2 * 0x18 + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0x18 + 4);
   FUN_01000414(uVar1,param_2,0x18,1,ADDRESS_OF_FUNCTION_01029878_OFFSET + 0x1003944);
   return;
 }
@@ -3925,7 +3917,7 @@ void FUN_0100391c(undefined4 param_1,int param_2)
 void * FUN_0100395c(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 * 0xc,0);
+  return swv_NewArray(param_2 * 0xc);
 }
 
 /* ==== 0x0100396C  (file offset 0x0396C)  FUN_0100396c ================================================ */
@@ -3938,7 +3930,7 @@ void FUN_0100396c(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
 
-  uVar1 = swv_NewArray(param_2 * 0x90 + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0x90 + 4);
   FUN_01000414(uVar1,param_2,0x90,1,ADDRESS_OF_FUNCTION_010298b4_OFFSET + 0x1003994);
   return;
 }
@@ -3950,7 +3942,7 @@ void FUN_0100396c(undefined4 param_1,int param_2)
 void * FUN_010039ac(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 * 0xc,0);
+  return swv_NewArray(param_2 * 0xc);
 }
 
 /* ==== 0x010039BC  (file offset 0x039BC)  FUN_010039bc ================================================ */
@@ -3963,7 +3955,7 @@ void FUN_010039bc(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
 
-  uVar1 = swv_NewArray(param_2 * 0x4c + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0x4c + 4);
   FUN_01000414(uVar1,param_2,0x4c,1,ADDRESS_OF_FUNCTION_010298e0_OFFSET + 0x10039e8);
   return;
 }
@@ -3975,7 +3967,7 @@ void FUN_010039bc(undefined4 param_1,int param_2)
 void * FUN_01003a00(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 * 0x14,0);
+  return swv_NewArray(param_2 * 0x14);
 }
 
 /* ==== 0x01003A10  (file offset 0x03A10)  FUN_01003a10 ================================================ */
@@ -3985,7 +3977,7 @@ void * FUN_01003a00(int param_1,int param_2)
 void * FUN_01003a10(int param_1,int param_2)
 
 {
-  return swv_NewArray(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2);
 }
 
 /* ==== 0x01003B00  (file offset 0x03B00)  FUN_01003b00 ================================================ */
@@ -4968,8 +4960,7 @@ void swvKeyframeSequence_BuildTangents(int param_1,int param_2)
   local_28 = param_2;
   iVar2 = swvKeyframeSequence_KeyframeWords((SwvKeyframeSequence *)param_1);   /* Ghidra had dropped it */
   iVar3 = swvKeyframeSequence_ValidCount((SwvKeyframeSequence *)param_1);
-  swv_fadd(*(undefined4 *)(param_1 + 0x24),0x3f000000);
-  local_3c = swv_ffix();
+  local_3c = swv_ffix(swv_fadd(*(undefined4 *)(param_1 + 0x24),0x3f000000));   /* Ghidra had dropped it */
   iVar10 = *(int *)(param_1 + 0x2c);
   local_40 = iVar10 + iVar3 + -1;
   do {
@@ -5388,22 +5379,20 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
       uStack_b0 = *(undefined4 *)(param_2 + 0x38);
       /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
          (by the object's class) */
-      (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7);
-      uStack_b4 = swv_fflt();
+      /* Ghidra had dropped it */
+      uStack_b4 = swv_fflt((*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7));
       /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
-      (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7);
-      uStack_b8 = swv_fflt();
+      /* Ghidra had dropped it */
+      uStack_b8 = swv_fflt((*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7));
       iVar11 = iStack_74;
       iVar12 = iStack_78;
       iVar8 = iStack_80;
       iStack_a0 = iStack_7c;
       uVar2 = swv_fmul(uStack_ac,WORD_HEXADECIMAL_47800000);
-      swv_fadd(uVar2,0x3f000000);
-      uVar2 = swv_ffix();
+      uVar2 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
       iStack_bc = FUN_010001f4(iStack_a0,uVar2);
       uVar2 = swv_fmul(uStack_b0,WORD_HEXADECIMAL_47800000);
-      swv_fadd(uVar2,0x3f000000);
-      uVar2 = swv_ffix();
+      uVar2 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
       iStack_c0 = FUN_010001f4(iVar8,uVar2);
       uVar16 = 0x1f < uStack_94;
       uVar15 = uStack_94 == 0x20;
@@ -5421,8 +5410,7 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
             uStack_34 = swv_fflt(iStack_a0);
             uStack_38 = uStack_a4 ^ 0x80000000;
             uVar2 = swv_fdiv(uStack_38,uStack_ac);
-            swv_fmul(uVar2,uStack_34);
-            iStack_c4 = swv_ffix();
+            iStack_c4 = swv_ffix(swv_fmul(uVar2,uStack_34));   /* Ghidra had dropped it */
             uStack_ac = swv_frsb(uStack_38,uStack_ac);
             uStack_a4 = 0;
             iVar11 = iVar11 + iStack_c4;
@@ -5435,8 +5423,7 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
             uStack_40 = swv_fflt(iStack_a0);
             uVar2 = swv_fdiv(iStack_c4,uStack_ac);
             uVar2 = swv_fmul(uVar2,uStack_40);
-            swv_frsb(uVar2,uStack_40);
-            iStack_a0 = swv_ffix();
+            iStack_a0 = swv_ffix(swv_frsb(uVar2,uStack_40));   /* Ghidra had dropped it */
           }
         }
       }
@@ -5456,8 +5443,7 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
             uStack_44 = swv_fflt(iVar8);
             uStack_48 = uStack_a8 ^ 0x80000000;
             uVar2 = swv_fdiv(uStack_48,uStack_b0);
-            swv_fmul(uVar2,uStack_44);
-            iStack_c4 = swv_ffix();
+            iStack_c4 = swv_ffix(swv_fmul(uVar2,uStack_44));   /* Ghidra had dropped it */
             uStack_b0 = swv_frsb(uStack_48,uStack_b0);
             uStack_a8 = 0;
             iVar8 = iVar8 - iStack_c4;
@@ -5470,8 +5456,7 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
             uVar2 = swv_fflt(iVar8);
             uVar3 = swv_fdiv(iStack_c4,uStack_b0);
             uVar3 = swv_fmul(uVar3,uVar2);
-            swv_frsb(uVar3,uVar2);
-            iVar8 = swv_ffix();
+            iVar8 = swv_ffix(swv_frsb(uVar3,uVar2));   /* Ghidra had dropped it */
           }
         }
       }
@@ -5492,11 +5477,9 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
         uStack_a8 = DOUBLE_MINUS_1_POINT_038205979_TIMES_TEN_TO_THE_34_HIGH_WORD;
       }
       uVar2 = swv_fmul(uStack_a4,WORD_HEXADECIMAL_47800000);
-      swv_fadd(uVar2,0x3f000000);
-      iStack_c4 = swv_ffix();
+      iStack_c4 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
       uVar2 = swv_fmul(uStack_a8,WORD_HEXADECIMAL_47800000);
-      swv_fadd(uVar2,0x3f000000);
-      iStack_c8 = swv_ffix();
+      iStack_c8 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
       iStack_cc = *(int *)(param_1 + 4);
       if (*(int *)(iStack_cc + 0x7c) != 0) {
         FUN_01026548(iStack_cc);
@@ -5736,8 +5719,7 @@ void FUN_01005f88(int param_1,int param_2)
   if ((bVar3 && bVar4) && iVar2 != iVar1) {
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = **(int **)(param_1 + 0xa8);
@@ -6005,7 +5987,7 @@ int FUN_01006518(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     unaff_r10 = *(uint *)(iVar1 + 8);
   }
   if (iVar1 != 0 && unaff_r10 != 0) {
-    piVar2 = (int *)swv_New_2(0x10,0);
+    piVar2 = (int *)swv_New_2(0x10);
     if (piVar2 != (int *)0x0) {
       FUN_01027cb4(piVar2);
       *piVar2 = DATA_AT_01002628_OFFSET + 0x10065cc;
@@ -6021,7 +6003,7 @@ int FUN_01006518(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
         puVar5[1] = 0;
       }
       else {
-        uVar3 = swv_NewArray(iVar1,0);
+        uVar3 = swv_NewArray(iVar1);
         puVar5[1] = uVar3;
         thunk_swv_memcpy(uVar3,puVar7[1],iVar1);
       }
@@ -6324,7 +6306,7 @@ int FUN_01006b38(int param_1,int param_2)
       helper_free(p);
     }
     if ((*(byte *)(param_2 + 0x1c) & 4) == 0) {
-      iVar1 = swv_New(0x44,0);
+      iVar1 = swv_New(0x44);
       if (iVar1 != 0) {
         swv_Matrix4Copy(iVar1,*(undefined4 *)(*(int *)(param_2 + 0x20) + 0x28));
       }
@@ -6538,7 +6520,7 @@ int FUN_01006f8c(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(0x48,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x48);
   if (iVar1 != 0) {
     FUN_01027b6c(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6590,7 +6572,7 @@ int FUN_01007064(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(0x1c,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x1c);
   if (iVar1 != 0) {
     FUN_01027c34(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6647,7 +6629,7 @@ int FUN_01007164(int param_1)
   int iVar3;
   int iVar4;
   
-  iVar1 = swv_New_2(0x40,0);
+  iVar1 = swv_New_2(0x40);
   if (iVar1 != 0) {
     FUN_01027d0c(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6687,7 +6669,7 @@ int FUN_01007210(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(0x38,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x38);
   if (iVar1 != 0) {
     FUN_01027e10(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6758,7 +6740,7 @@ undefined8 FUN_0100732c(undefined4 param_1,undefined4 param_2,int param_3,int pa
   
   local_14 = param_3;
   local_10 = param_4;
-  iVar1 = swv_New_2(0x198,0);
+  iVar1 = swv_New_2(0x198);
   if (iVar1 != 0) {
     FUN_01028464(iVar1);
     local_14 = iVar1;
@@ -6789,7 +6771,7 @@ int FUN_010073c8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(0x20,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x20);
   if (iVar1 != 0) {
     FUN_010285fc(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6837,7 +6819,7 @@ int FUN_0100748c(int param_1)
   undefined4 uVar2;
   int *piVar3;
   
-  iVar1 = swv_New_2(0x58,0);
+  iVar1 = swv_New_2(0x58);
   if (iVar1 != 0) {
     FUN_010286dc(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6873,7 +6855,7 @@ int FUN_01007554(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(0xe4,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0xe4);
   if (iVar1 != 0) {
     FUN_010287cc(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6897,7 +6879,7 @@ int FUN_010075c4(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(0x78,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x78);
   if (iVar1 != 0) {
     FUN_01028898(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6922,7 +6904,7 @@ int FUN_01007624(int param_1)
   int iVar3;
   int iVar4;
   
-  iVar1 = swv_New_2(0x28,0);
+  iVar1 = swv_New_2(0x28);
   if (iVar1 != 0) {
     FUN_01028abc(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6972,7 +6954,7 @@ int FUN_010076e0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(0x3c,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x3c);
   if (iVar1 != 0) {
     FUN_01028b58(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7005,7 +6987,7 @@ int FUN_01007780(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   int iVar3;
   int *piVar4;
   
-  iVar1 = swv_New_2(0x50,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x50);
   if (iVar1 != 0) {
     FUN_01028cc8(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7046,7 +7028,7 @@ int FUN_01007864(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(0x48,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x48);
   if (iVar1 != 0) {
     FUN_010290c4(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7075,7 +7057,7 @@ int FUN_010078f4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(0x34,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x34);
   if (iVar1 != 0) {
     FUN_010291bc(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7105,7 +7087,7 @@ int FUN_01007984(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(0x30,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x30);
   if (iVar1 != 0) {
     FUN_010292b8(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7134,7 +7116,7 @@ int FUN_01007a0c(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(0xac,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0xac);
   if (iVar1 != 0) {
     FUN_01029304(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7158,7 +7140,7 @@ int FUN_01007a7c(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(0x88,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x88);
   if (iVar1 != 0) {
     FUN_0102950c(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7219,7 +7201,7 @@ int FUN_01007b94(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   int iVar3;
   int iVar4;
   
-  iVar1 = swv_New_2(0xa0,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0xa0);
   if (iVar1 != 0) {
     FUN_01029540(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7260,7 +7242,7 @@ int FUN_01007c50(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(0xec,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0xec);
   if (iVar1 != 0) {
     FUN_010295ac(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7560,7 +7542,6 @@ void thunk_FUN_01023f30(int param_1,int param_2,undefined4 param_3,undefined4 pa
   bool bVar3;
   uint uVar4;
   undefined4 uVar5;
-  undefined4 unaff_r4;
   undefined1 in_ZR;
   undefined1 uVar6;
   undefined1 in_CY;
@@ -7568,18 +7549,18 @@ void thunk_FUN_01023f30(int param_1,int param_2,undefined4 param_3,undefined4 pa
   
   FUN_01027acc((undefined4 *)(param_1 + 0xc),param_2 + 0xc);
   uVar5 = WORD_HEXADECIMAL_377BA882;
-  swv_fcmp_c(*(uint *)(param_1 + 0x18) & 0x7fffffff,WORD_HEXADECIMAL_377BA882,param_3,param_4,unaff_r4);
+  swv_fcmp_c(*(uint *)(param_1 + 0x18) & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
   if ((((bool)in_CY && !(bool)in_ZR) ||
-      (swv_fcmp_c(*(uint *)(param_1 + 0x28) & 0x7fffffff,uVar5,param_3,param_4,unaff_r4),
+      (swv_fcmp_c(*(uint *)(param_1 + 0x28) & 0x7fffffff,uVar5),
       (bool)in_CY && !(bool)in_ZR)) ||
-     (swv_fcmp_c(*(uint *)(param_1 + 0x38) & 0x7fffffff,uVar5,param_3,param_4,unaff_r4),
+     (swv_fcmp_c(*(uint *)(param_1 + 0x38) & 0x7fffffff,uVar5),
      (bool)in_CY && !(bool)in_ZR)) {
 LAB_0101d6e0:
     bVar1 = false;
   }
   else {
     uVar4 = swv_fsub(*(undefined4 *)(param_1 + 0x48),0x3f800000);
-    swv_fcmp_c(uVar4 & 0x7fffffff,uVar5,param_3,param_4,unaff_r4);
+    swv_fcmp_c(uVar4 & 0x7fffffff,uVar5);
     if ((bool)in_CY && !(bool)in_ZR) goto LAB_0101d6e0;
     bVar1 = true;
   }
@@ -9300,7 +9281,7 @@ int swv_Graphics3D_New(void)
   
                     /* Creates the native Graphics3D object; swv_Create_Graphics3D wraps it (+4 is
                        the interface sub-object). GUESS: name. */
-  iVar1 = swv_New_2(0x114,0);
+  iVar1 = swv_New_2(0x114);
   if (iVar1 != 0) {
     FUN_01027eec(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -9327,7 +9308,7 @@ int * FUN_010098fc(void)
   undefined4 in_lr;
   
   piVar1 = (int *)FUN_0102ecec();
-  piVar2 = (int *)swv_New_2(0x7c,0);
+  piVar2 = (int *)swv_New_2(0x7c);
   if (piVar2 != (int *)0x0) {
     *piVar2 = DATA_AT_0100203C_OFFSET + 0x1009924;
     *piVar2 = DATA_AT_01002268_OFFSET + 0x1009930;
@@ -9359,7 +9340,7 @@ int swvSection_CreateStored(undefined4 param_1,undefined4 param_2,undefined4 par
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(0xc,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0xc);
   if (iVar1 != 0) {
     swvSectionStored_Construct(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -9387,7 +9368,7 @@ int swvSection_CreateZlib(undefined4 param_1,undefined4 param_2,undefined4 param
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(0x10,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x10);
   if (iVar1 != 0) {
     swvSectionZlib_Construct(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -9411,7 +9392,7 @@ void FUN_01009a04(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
   int iVar2;
   int iVar3;
   
-  piVar1 = (int *)swv_New_2(0x4c,0,param_3,param_4,param_4);
+  piVar1 = (int *)swv_New_2(0x4c);
   if (piVar1 != (int *)0x0) {
     iVar3 = DATA_AT_01001E5C_OFFSET + 0x1009a30;
     *piVar1 = DATA_AT_0100203C_OFFSET_2 + 0x1009a28;
@@ -9455,18 +9436,18 @@ int FUN_01009ad0(void)
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(INTEGER_2788,0);
+  iVar1 = swv_New_2(INTEGER_2788);
   if (iVar1 != 0) {
     FUN_01028d2c(iVar1);
     uVar2 = FUN_0100f8e8();
     FUN_0101807c(uVar2,iVar1);
   }
-  iVar3 = swv_New_2(700,0);
+  iVar3 = swv_New_2(700);
   if (iVar3 != 0) {
     FUN_01028f54(iVar3);
   }
   *(int *)(iVar1 + 8) = iVar3;
-  iVar3 = swv_New_2(0x3c,0);
+  iVar3 = swv_New_2(0x3c);
   if (iVar3 != 0) {
     FUN_01028b58(iVar3);
   }
@@ -9489,7 +9470,7 @@ int FUN_01009b80(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0xe8,0);
+  iVar1 = swv_New_2(0xe8);
   if (iVar1 != 0) {
     FUN_01029010(iVar1);
   }
@@ -12860,22 +12841,26 @@ void swv_SpanFillTextured(int param_1)
   return;
 }
 
-/* ==== 0x0100E490  (file offset 0x0E490)  FUN_0100e490 ================================================ */
-int FUN_0100e490(int param_1,int param_2,int param_3)
+/* ==== 0x0100E490  (file offset 0x0E490)  swvVertexArray_GetComponent ================================= */
+/* GUESS: name. Reads one component of one vertex of a native VertexArray (class 29), sign-extended:
+   the element vertex * components + component of its values, a signed byte when the component size
+   is 1, a signed 16-bit word otherwise (JSR-184 VertexArray components are 1 or 2 bytes). The array:
+   +0x1c the vertex count, +0x20 the components per vertex, +0x24 the component size, +0x2c the
+   values. Evidence: 0x0100e490 - 0x0100e4b4 (mla, mul, ldrsbeq / ldrshne; Ghidra's (char) cast is
+   that signed byte, wrong where char is unsigned). Every caller (FUN_01010938, FUN_01015ce8,
+   FUN_01025a50) converts the result straight to float (swv_fflt), as x, y and z. */
+int32 swvVertexArray_GetComponent(uint8 *array,int32 vertex,int32 component)
 
 {
-  short *psVar1;
-  int iVar2;
-  
-  psVar1 = (short *)(*(int *)(param_1 + 0x2c) +
-                    *(int *)(param_1 + 0x24) * (*(int *)(param_1 + 0x20) * param_2 + param_3));
-  if (*(int *)(param_1 + 0x24) == 1) {
-    iVar2 = (int)(char)*psVar1;
-  }
-  else {
-    iVar2 = (int)*psVar1;
-  }
-  return iVar2;
+  int32 size = *(int32 *)(array + 0x24);
+  uint8 *element = *(uint8 **)(array + 0x2c) + size * (*(int32 *)(array + 0x20) * vertex + component);
+  int32 value;
+
+  if (size == 1)
+    value = *(int8 *)element;
+  else
+    value = *(int16 *)element;
+  return value;
 }
 
 /* ==== 0x0100E4E8  (file offset 0x0E4E8)  FUN_0100e4e8 ================================================ */
@@ -12922,7 +12907,7 @@ int FUN_0100e5b0(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0x48,0);
+  iVar1 = swv_New_2(0x48);
   if (iVar1 != 0) {
     FUN_01027b6c(iVar1);
   }
@@ -12937,7 +12922,7 @@ int * FUN_0100e5d4(void)
   uint uVar2;
   int *piVar3;
   
-  piVar3 = (int *)swv_New_2(0x34,0);
+  piVar3 = (int *)swv_New_2(0x34);
   if (piVar3 != (int *)0x0) {
     FUN_01027c34(piVar3);
     iVar1 = INTEGER_MINUS_51212;
@@ -12961,7 +12946,7 @@ int * FUN_0100e63c(void)
   int iVar1;
   int *piVar2;
   
-  piVar2 = (int *)swv_New_2(100,0);
+  piVar2 = (int *)swv_New_2(100);
   if (piVar2 != (int *)0x0) {
     FUN_01027b6c(piVar2);
     *piVar2 = DATA_AT_01001E64_OFFSET + 0x100e668;
@@ -12984,7 +12969,7 @@ int FUN_0100e6b8(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0x40,0);
+  iVar1 = swv_New_2(0x40);
   if (iVar1 != 0) {
     FUN_01027d0c(iVar1);
   }
@@ -12997,7 +12982,7 @@ int FUN_0100e6dc(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0x50,0);
+  iVar1 = swv_New_2(0x50);
   if (iVar1 != 0) {
     FUN_01027d68(iVar1);
   }
@@ -13010,7 +12995,7 @@ int FUN_0100e700(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0x38,0);
+  iVar1 = swv_New_2(0x38);
   if (iVar1 != 0) {
     FUN_01027e10(iVar1);
   }
@@ -13024,7 +13009,7 @@ int * FUN_0100e724(void)
   int iVar1;
   int *piVar2;
   
-  piVar2 = (int *)swv_New_2(0x44,0);
+  piVar2 = (int *)swv_New_2(0x44);
   if (piVar2 != (int *)0x0) {
     FUN_01027c34(piVar2);
     iVar1 = INTEGER_MINUS_51068;
@@ -13051,7 +13036,7 @@ int FUN_0100e798(void)
   int iVar1;
   undefined4 uVar2;
   
-  iVar1 = swv_New_2(0x198,0);
+  iVar1 = swv_New_2(0x198);
   if (iVar1 != 0) {
     FUN_01028464(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -13071,7 +13056,7 @@ int FUN_0100e7ec(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0x20,0);
+  iVar1 = swv_New_2(0x20);
   if (iVar1 != 0) {
     FUN_010285fc(iVar1);
   }
@@ -13085,7 +13070,7 @@ int * FUN_0100e810(undefined4 param_1,undefined4 param_2,undefined4 param_3,unde
   int iVar1;
   int *piVar2;
   
-  piVar2 = (int *)swv_New_2(0x114,0,param_3,param_4,param_4);
+  piVar2 = (int *)swv_New_2(0x114);
   if (piVar2 != (int *)0x0) {
     FUN_01029304(piVar2);
     iVar1 = INTEGER_MINUS_50960;
@@ -13116,7 +13101,7 @@ int FUN_0100e900(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0x58,0);
+  iVar1 = swv_New_2(0x58);
   if (iVar1 != 0) {
     FUN_010286dc(iVar1);
   }
@@ -13129,7 +13114,7 @@ int FUN_0100e924(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0xe4,0);
+  iVar1 = swv_New_2(0xe4);
   if (iVar1 != 0) {
     FUN_010287cc(iVar1);
   }
@@ -13142,7 +13127,7 @@ int FUN_0100e948(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0x78,0);
+  iVar1 = swv_New_2(0x78);
   if (iVar1 != 0) {
     FUN_01028898(iVar1);
   }
@@ -13155,7 +13140,7 @@ int FUN_0100e96c(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0x28,0);
+  iVar1 = swv_New_2(0x28);
   if (iVar1 != 0) {
     FUN_01028abc(iVar1);
   }
@@ -13168,7 +13153,7 @@ int FUN_0100e990(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0x3c,0);
+  iVar1 = swv_New_2(0x3c);
   if (iVar1 != 0) {
     FUN_01028b58(iVar1);
   }
@@ -13183,7 +13168,7 @@ void FUN_0100e9b4(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
   int iVar2;
   int iVar3;
   
-  piVar1 = (int *)swv_New_2(0x4c,0,param_3,param_4,param_4);
+  piVar1 = (int *)swv_New_2(0x4c);
   if (piVar1 != (int *)0x0) {
     iVar3 = DATA_AT_01001E5C_OFFSET_2 + 0x100e9e0;
     *piVar1 = DATA_AT_0100203C_OFFSET_3 + 0x100e9d8;
@@ -13225,7 +13210,7 @@ int FUN_0100ea80(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0x50,0);
+  iVar1 = swv_New_2(0x50);
   if (iVar1 != 0) {
     FUN_01028cc8(iVar1);
   }
@@ -13238,7 +13223,7 @@ int FUN_0100eaa4(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0x48,0);
+  iVar1 = swv_New_2(0x48);
   if (iVar1 != 0) {
     FUN_010290c4(iVar1);
   }
@@ -13251,7 +13236,7 @@ int FUN_0100eac8(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0x34,0);
+  iVar1 = swv_New_2(0x34);
   if (iVar1 != 0) {
     FUN_010291bc(iVar1);
   }
@@ -13264,7 +13249,7 @@ int FUN_0100eaec(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0x30,0);
+  iVar1 = swv_New_2(0x30);
   if (iVar1 != 0) {
     FUN_010292b8(iVar1);
   }
@@ -13277,7 +13262,7 @@ int FUN_0100eb10(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0xac,0);
+  iVar1 = swv_New_2(0xac);
   if (iVar1 != 0) {
     FUN_01029304(iVar1);
   }
@@ -13290,7 +13275,7 @@ int FUN_0100eb34(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0x24,0);
+  iVar1 = swv_New_2(0x24);
   if (iVar1 != 0) {
     FUN_010293e4(iVar1);
   }
@@ -13303,7 +13288,7 @@ int FUN_0100eb58(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0x88,0);
+  iVar1 = swv_New_2(0x88);
   if (iVar1 != 0) {
     FUN_0102950c(iVar1);
   }
@@ -13317,7 +13302,7 @@ int * FUN_0100eb7c(void)
   int iVar1;
   int *piVar2;
   
-  piVar2 = (int *)swv_New_2(0xac,0);
+  piVar2 = (int *)swv_New_2(0xac);
   if (piVar2 != (int *)0x0) {
     FUN_01029370(piVar2);
     iVar1 = INTEGER_MINUS_50200;
@@ -13342,7 +13327,7 @@ int FUN_0100ebf8(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0xa0,0);
+  iVar1 = swv_New_2(0xa0);
   if (iVar1 != 0) {
     FUN_01029540(iVar1);
   }
@@ -13355,7 +13340,7 @@ int FUN_0100ec1c(void)
 {
   int iVar1;
   
-  iVar1 = swv_New_2(0xec,0);
+  iVar1 = swv_New_2(0xec);
   if (iVar1 != 0) {
     FUN_010295ac(iVar1);
   }
@@ -13369,7 +13354,7 @@ int * FUN_0100ec40(void)
   int iVar1;
   int *piVar2;
   
-  piVar2 = (int *)swv_New_2(0xa4,0);
+  piVar2 = (int *)swv_New_2(0xa4);
   if (piVar2 != (int *)0x0) {
     FUN_01029370(piVar2);
     iVar1 = INTEGER_MINUS_50204;
@@ -13757,7 +13742,7 @@ void FUN_0100f1fc(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3,un
   undefined1 in_ZR;
   undefined1 in_CY;
   
-  uVar1 = swv_fmul(*param_1,*param_1,param_3,param_4,param_1,param_2);
+  uVar1 = swv_fmul(*param_1,*param_1);
   uVar2 = swv_fmul(param_1[1],param_1[1]);
   uVar1 = swv_fadd(uVar2,uVar1);
   uVar2 = swv_fmul(param_1[2],param_1[2]);
@@ -13767,13 +13752,10 @@ void FUN_0100f1fc(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3,un
   uVar3 = FUN_0103d3d4();
   uVar1 = WORD_HEXADECIMAL_47800000;
   uVar2 = swv_fmul(param_1[3],WORD_HEXADECIMAL_47800000);
-  swv_fadd(uVar2,0x3f000000);
-  uVar2 = swv_ffix();
+  uVar2 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
   uVar1 = swv_fmul(uVar3,uVar1);
-  swv_fadd(uVar1,0x3f000000);
-  uVar1 = swv_ffix();
-  FUN_0102edc0(uVar1,uVar2);
-  uVar1 = swv_fflt();
+  uVar1 = swv_ffix(swv_fadd(uVar1,0x3f000000));   /* Ghidra had dropped it */
+  uVar1 = swv_fflt(FUN_0102edc0(uVar1,uVar2));   /* Ghidra had dropped it */
   uVar1 = swv_fmul(uVar1,0x37800000);
   uVar1 = swv_fmul(uVar1,0x40000000);
   *param_3 = uVar1;
@@ -14228,7 +14210,7 @@ undefined4 FUN_0100f810(void)
   
   iVar1 = FUN_0102ecec();
   if (*(int *)(iVar1 + 0x28) == 0) {
-    piVar2 = (int *)swv_New_2(0x14,0);
+    piVar2 = (int *)swv_New_2(0x14);
     if (piVar2 != (int *)0x0) {
       *piVar2 = DATA_AT_0100203C_OFFSET_4 + 0x100f844;
       *piVar2 = DATA_AT_010023E0_OFFSET + 0x100f850;
@@ -14473,7 +14455,7 @@ int FUN_0100fb34(int param_1,int param_2)
     }
     iVar3 = FUN_01010f60(*(undefined4 *)(param_1 + 0xb0),param_2);
     if (iVar3 == 0) {
-      iVar3 = swv_New_2(0x58,0);
+      iVar3 = swv_New_2(0x58);
       local_30 = iVar3;
       if (iVar3 != 0) {
         FUN_010286dc(iVar3);
@@ -15072,8 +15054,7 @@ undefined4 FUN_010102c8(int param_1,int param_2,undefined4 param_3,undefined4 pa
   undefined1 in_ZR;
   undefined1 in_CY;
   
-  uVar1 = swv_fsub(*(undefined4 *)(param_1 + 0xe8),*(undefined4 *)(param_1 + 0xe4),param_3,param_4,
-                   param_4);
+  uVar1 = swv_fsub(*(undefined4 *)(param_1 + 0xe8),*(undefined4 *)(param_1 + 0xe4));
   swv_fcmp_b(uVar1 & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
   if (!(bool)in_CY || (bool)in_ZR) {
     FUN_0102f7e0(INTEGER_MINUS_1000);
@@ -15222,7 +15203,7 @@ undefined4 FUN_010104f0(int param_1)
       FUN_0102f7e0(INTEGER_MINUS_1300);
     }
     if (*(int *)(param_1 + 0xb0) == 0) {
-      iVar2 = swv_New_2(0x78,0);
+      iVar2 = swv_New_2(0x78);
       if (iVar2 != 0) {
         FUN_01028898(iVar2);
       }
@@ -15434,13 +15415,13 @@ undefined4 FUN_01010938(int param_1)
       FUN_0102f7e0(INTEGER_MINUS_1300);
     }
     if (*(int *)(param_1 + 0x100) == 0) {
-      iVar3 = swv_New_2(0x78,0);
+      iVar3 = swv_New_2(0x78);
       if (iVar3 != 0) {
         FUN_01028898(iVar3);
       }
       *(int *)(param_1 + 0x100) = iVar3;
       *(int *)(iVar3 + 8) = *(int *)(iVar3 + 8) + 1;
-      iVar3 = swv_New_2(0x58,0);
+      iVar3 = swv_New_2(0x58);
       if (iVar3 != 0) {
         FUN_010286dc(iVar3);
         uVar4 = FUN_0100f8e8();
@@ -15478,12 +15459,10 @@ undefined4 FUN_01010938(int param_1)
         uVar14 = uVar5;
       }
       iVar13 = *(int *)(param_1 + 0x108) + iVar2 * 0xc;
-      FUN_0100e490(iVar12,iVar2,0);
-      uVar4 = swv_fflt();
-      FUN_0100e490(iVar12,iVar2,1);
-      uVar7 = swv_fflt();
-      FUN_0100e490(iVar12,iVar2,2);
-      local_b4 = swv_fflt();
+      /* Ghidra had dropped swv_fflt's argument, the component just read */
+      uVar4 = swv_fflt(swvVertexArray_GetComponent((uint8 *)iVar12,iVar2,0));
+      uVar7 = swv_fflt(swvVertexArray_GetComponent((uint8 *)iVar12,iVar2,1));
+      local_b4 = swv_fflt(swvVertexArray_GetComponent((uint8 *)iVar12,iVar2,2));
       local_bc = uVar4;
       local_b8 = uVar7;
       FUN_0102c8bc(auStack_c8,auStack_6c,&local_bc);
@@ -15812,9 +15791,7 @@ swvKeyframeSequence_Sample(int param_1,undefined4 param_2,int param_3,undefined4
   uVar19 = *(uint *)(param_1 + 0x20) == 0xc1;
   if ((bool)uVar19) {
     uVar16 = *(undefined4 *)(param_1 + 0x24);
-    swv_fdiv(param_2,uVar16);
-    swv_ffix();
-    uVar3 = swv_fflt();
+    uVar3 = swv_fflt(swv_ffix(swv_fdiv(param_2,uVar16)));   /* Ghidra had dropped the arguments */
     uVar3 = swv_fmul(uVar3,uVar16);
     param_2 = swv_frsb(uVar3,param_2);
     swv_fcmp_c(param_2,0);
@@ -17188,7 +17165,7 @@ void FUN_010126d0(void)
   int *piVar1;
   int iVar2;
   
-  piVar1 = (int *)swv_New_2(0x3c,0);
+  piVar1 = (int *)swv_New_2(0x3c);
   if (piVar1 != (int *)0x0) {
     *piVar1 = DATA_AT_0100203C_OFFSET_5 + 0x10126f4;
     iVar2 = DATA_AT_010025FC_OFFSET + 0x1012708;
@@ -17278,7 +17255,7 @@ void FUN_010127fc(int param_1,uint param_2,undefined4 param_3,undefined4 param_4
     uVar4 = bVar6 && uVar1 == 0;
     uVar5 = bVar6 || bVar7;
     if (bVar6 && uVar1 == 0) {
-      uVar1 = swv_frsb(*param_5,*(undefined4 *)(param_1 + 0xf8),param_3,param_4,param_4);
+      uVar1 = swv_frsb(*param_5,*(undefined4 *)(param_1 + 0xf8));
       swv_fcmp_c(uVar1 & 0x7fffffff,unaff_r11);
       if (!(bool)uVar5 || (bool)uVar4) {
         uVar1 = swv_frsb(param_5[1],*(undefined4 *)(param_1 + 0xfc));
@@ -17532,12 +17509,10 @@ int FUN_01012908(int *param_1,int param_2,int param_3)
           uVar3 = FUN_0103d3d4();
           uVar2 = WORD_HEXADECIMAL_47800000;
           uVar3 = swv_fmul(uVar3,WORD_HEXADECIMAL_47800000);
-          swv_fadd(uVar3,0x3f000000);
-          iVar1 = swv_ffix();
+          iVar1 = swv_ffix(swv_fadd(uVar3,0x3f000000));   /* Ghidra had dropped it */
           param_1[0x15] = iVar1;
           uVar2 = swv_fmul(*(undefined4 *)(param_2 + 0xa0),uVar2);
-          swv_fadd(uVar2,0x3f000000);
-          iVar1 = swv_ffix();
+          iVar1 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
           param_1[0x16] = iVar1;
           *param_1 = ADDRESS_OF_FUNCTION_0101420c_OFFSET + 0x1012d10;
           param_1[3] = 0;
@@ -17571,8 +17546,7 @@ int FUN_01012908(int *param_1,int param_2,int param_3)
       uVar3 = swv_frdiv(param_1[0x11],0x3f800000);
       uVar2 = WORD_HEXADECIMAL_47800000;
       uVar4 = swv_fmul(*(undefined4 *)(param_2 + 0x88),WORD_HEXADECIMAL_47800000);
-      swv_fadd(uVar4,0x3f000000);
-      iVar1 = swv_ffix();
+      iVar1 = swv_ffix(swv_fadd(uVar4,0x3f000000));   /* Ghidra had dropped it */
       param_1[0x17] = iVar1;
       iVar7 = swv_fmul(param_1[0x1b],uVar3);
       iVar1 = WORD_HEXADECIMAL_46FFFE00;
@@ -17582,8 +17556,7 @@ int FUN_01012908(int *param_1,int param_2,int param_3)
         iVar7 = iVar1;
       }
       uVar4 = swv_fmul(iVar7,uVar2);
-      swv_fadd(uVar4,0x3f000000);
-      iVar7 = swv_ffix();
+      iVar7 = swv_ffix(swv_fadd(uVar4,0x3f000000));   /* Ghidra had dropped it */
       param_1[0x18] = iVar7;
       iVar7 = swv_fmul(param_1[0x1c],uVar3);
       param_1[0x1c] = iVar7;
@@ -17592,8 +17565,7 @@ int FUN_01012908(int *param_1,int param_2,int param_3)
         iVar7 = iVar1;
       }
       uVar2 = swv_fmul(iVar7,uVar2);
-      swv_fadd(uVar2,0x3f000000);
-      iVar1 = swv_ffix();
+      iVar1 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
       param_1[0x19] = iVar1;
     }
     return param_1[0x1e];
@@ -17658,17 +17630,16 @@ undefined4 FUN_010130ac(void)
     swv_SetGlobal00((uint32)puVar1);
     iVar2 = FUN_010127a4();
     if (iVar2 != 0) {
-      swv_TryPush(auStack_98);
-      iVar2 = swv_setjmp();
+      iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
       if (iVar2 == 0) {
         swv_TryArm(auStack_98);
-        iVar2 = swv_New(0x44,0);
+        iVar2 = swv_New(0x44);
         if (iVar2 != 0) {
           FUN_01029620(iVar2,0x3f);
         }
         iVar3 = FUN_0102ecec();
         *(int *)(iVar3 + 0x20) = iVar2;
-        puVar1 = (undefined4 *)swv_New(0x70,0);
+        puVar1 = (undefined4 *)swv_New(0x70);
         if (puVar1 != (undefined4 *)0x0) {
           *puVar1 = 0;
           puVar1[1] = 0;
@@ -17716,12 +17687,10 @@ void FUN_01013214(int param_1,int param_2,undefined4 param_3,undefined4 param_4,
   uVar2 = WORD_HEXADECIMAL_47800000;
   local_24 = param_3;
   local_20 = param_4;
-  uVar1 = swv_fmul(param_4,WORD_HEXADECIMAL_47800000,param_3,param_4,param_2);
-  swv_fadd(uVar1,0x3f000000);
-  local_24 = swv_ffix();
+  uVar1 = swv_fmul(param_4,WORD_HEXADECIMAL_47800000);
+  local_24 = swv_ffix(swv_fadd(uVar1,0x3f000000));   /* Ghidra had dropped it */
   uVar2 = swv_fmul(param_5,uVar2);
-  swv_fadd(uVar2,0x3f000000);
-  local_20 = swv_ffix();
+  local_20 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
   FUN_01013290(*(int *)(param_1 + param_2 * 4 + 0xd0) + 8,param_3,&local_24);
   *(undefined4 *)(param_1 + 0x194) = 1;
   return;
@@ -17967,7 +17936,6 @@ void FUN_01013744(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   int iVar4;
   uint uVar5;
   undefined4 uVar6;
-  undefined4 unaff_r4;
   undefined1 uVar7;
   undefined1 uVar8;
   
@@ -17978,18 +17946,18 @@ void FUN_01013744(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
     FUN_0102f7e0(0xffffffd7);
   }
   uVar6 = WORD_HEXADECIMAL_377BA882;
-  swv_fcmp_c(*(uint *)(param_1 + 0x18) & 0x7fffffff,WORD_HEXADECIMAL_377BA882,param_3,param_4,unaff_r4);
+  swv_fcmp_c(*(uint *)(param_1 + 0x18) & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
   if ((((bool)uVar7 && !(bool)uVar8) ||
-      (swv_fcmp_c(*(uint *)(param_1 + 0x28) & 0x7fffffff,uVar6,param_3,param_4,unaff_r4),
+      (swv_fcmp_c(*(uint *)(param_1 + 0x28) & 0x7fffffff,uVar6),
       (bool)uVar7 && !(bool)uVar8)) ||
-     (swv_fcmp_c(*(uint *)(param_1 + 0x38) & 0x7fffffff,uVar6,param_3,param_4,unaff_r4),
+     (swv_fcmp_c(*(uint *)(param_1 + 0x38) & 0x7fffffff,uVar6),
      (bool)uVar7 && !(bool)uVar8)) {
 LAB_0101d6e0:
     bVar1 = false;
   }
   else {
     uVar5 = swv_fsub(*(undefined4 *)(param_1 + 0x48),0x3f800000);
-    swv_fcmp_c(uVar5 & 0x7fffffff,uVar6,param_3,param_4,unaff_r4);
+    swv_fcmp_c(uVar5 & 0x7fffffff,uVar6);
     if ((bool)uVar7 && !(bool)uVar8) goto LAB_0101d6e0;
     bVar1 = true;
   }
@@ -18840,7 +18808,7 @@ uint FUN_010146c8(undefined4 *param_1,undefined4 param_2,undefined4 param_3,unde
   ulonglong uVar12;
   uint uVar13;
   
-  uVar1 = swv_fmul(*param_1,*param_1,param_3,param_4,param_4);
+  uVar1 = swv_fmul(*param_1,*param_1);
   uVar2 = swv_fmul(param_1[1],param_1[1]);
   uVar1 = swv_fadd(uVar2,uVar1);
   uVar2 = swv_fmul(param_1[2],param_1[2]);
@@ -19527,7 +19495,7 @@ void FUN_01015128(undefined4 *param_1,undefined4 param_2,undefined4 param_3,unde
   undefined1 in_ZR;
   undefined1 in_CY;
   
-  uVar1 = swv_fmul(param_1[3],param_1[3],param_3,param_4,param_4);
+  uVar1 = swv_fmul(param_1[3],param_1[3]);
   uVar2 = swv_fmul(*param_1,*param_1);
   uVar1 = swv_fadd(uVar2,uVar1);
   uVar2 = swv_fmul(param_1[1],param_1[1]);
@@ -20228,12 +20196,10 @@ void FUN_01015ce8(undefined4 param_1,int param_2,int *param_3)
               iVar2 = 2 - local_104[3];
               for (uVar4 = local_104[3]; (int)uVar4 < 3; uVar4 = iVar2 + uVar4) {
                 uVar9 = local_104[uVar4];
-                FUN_0100e490(local_6c,uVar9,0);
-                uVar8 = swv_fflt();
-                FUN_0100e490(local_6c,uVar9,1);
-                uVar12 = swv_fflt();
-                FUN_0100e490(local_6c,uVar9,2);
-                local_12c = swv_fflt();
+                /* Ghidra had dropped swv_fflt's argument, the component just read */
+                uVar8 = swv_fflt(swvVertexArray_GetComponent((uint8 *)local_6c,uVar9,0));
+                uVar12 = swv_fflt(swvVertexArray_GetComponent((uint8 *)local_6c,uVar9,1));
+                local_12c = swv_fflt(swvVertexArray_GetComponent((uint8 *)local_6c,uVar9,2));
                 local_134 = uVar8;
                 local_130 = uVar12;
                 FUN_010279d0(auStack_128 + uVar4 * 0xc,&local_134);
@@ -20248,12 +20214,10 @@ void FUN_01015ce8(undefined4 param_1,int param_2,int *param_3)
 LAB_0101610c:
                   FUN_010279d0(auStack_128 + uVar4 * 0xc,local_60);
                   uVar4 = local_104[2];
-                  FUN_0100e490(local_6c,local_104[2],0);
-                  uVar8 = swv_fflt();
-                  FUN_0100e490(local_6c,uVar4,1);
-                  uVar5 = swv_fflt();
-                  FUN_0100e490(local_6c,uVar4,2);
-                  local_134 = swv_fflt();
+                  /* Ghidra had dropped swv_fflt's argument, the component just read */
+                  uVar8 = swv_fflt(swvVertexArray_GetComponent((uint8 *)local_6c,local_104[2],0));
+                  uVar5 = swv_fflt(swvVertexArray_GetComponent((uint8 *)local_6c,uVar4,1));
+                  local_134 = swv_fflt(swvVertexArray_GetComponent((uint8 *)local_6c,uVar4,2));
                   local_13c = uVar8;
                   local_138 = uVar5;
                   FUN_010279d0(local_60,&local_13c);
@@ -20299,16 +20263,15 @@ LAB_0101610c:
                         iVar2 = 0;
                         do {
                           uVar12 = local_104[iVar2];
-                          FUN_0100e490(iVar7,uVar12,0);
-                          uVar8 = swv_fflt();
-                          FUN_0100e490(iVar7,uVar12,1);
-                          uVar5 = swv_fflt();
+                          /* Ghidra had dropped swv_fflt's argument, the component just read */
+                          uVar8 = swv_fflt(swvVertexArray_GetComponent((uint8 *)iVar7,uVar12,0));
+                          uVar5 = swv_fflt(swvVertexArray_GetComponent((uint8 *)iVar7,uVar12,1));
                           if (*(int *)(iVar7 + 0x20) < 3) {
                             local_1b4 = 0;
                           }
                           else {
-                            FUN_0100e490(iVar7,uVar12,2);
-                            local_1b4 = swv_fflt();
+                            /* Ghidra had dropped swv_fflt's argument, the component just read */
+                            local_1b4 = swv_fflt(swvVertexArray_GetComponent((uint8 *)iVar7,uVar12,2));
                           }
                           puVar6 = auStack_1a4 + iVar2 * 0xc;
                           local_1bc = uVar8;
@@ -20356,12 +20319,10 @@ LAB_0101610c:
                       iVar10 = 0;
                       do {
                         uVar4 = local_104[iVar10];
-                        FUN_0100e490(iVar2,uVar4,0);
-                        uVar8 = swv_fflt();
-                        FUN_0100e490(iVar2,uVar4,1);
-                        uVar5 = swv_fflt();
-                        FUN_0100e490(iVar2,uVar4,2);
-                        local_170 = swv_fflt();
+                        /* Ghidra had dropped swv_fflt's argument, the component just read */
+                        uVar8 = swv_fflt(swvVertexArray_GetComponent((uint8 *)iVar2,uVar4,0));
+                        uVar5 = swv_fflt(swvVertexArray_GetComponent((uint8 *)iVar2,uVar4,1));
+                        local_170 = swv_fflt(swvVertexArray_GetComponent((uint8 *)iVar2,uVar4,2));
                         local_178 = uVar8;
                         local_174 = uVar5;
                         FUN_010279d0(auStack_16c + iVar10 * 0xc,&local_178);
@@ -20558,7 +20519,7 @@ LAB_01016740:
         if (!(bool)uVar13 || (bool)uVar19) {
           return;
         }
-        iVar3 = swv_New_2(0x50,0);
+        iVar3 = swv_New_2(0x50);
         if (iVar3 != 0) {
           FUN_01027d68(iVar3);
         }
@@ -20615,14 +20576,12 @@ LAB_01016740:
         uVar9 = swv_fsub(local_88,local_bc[2]);
         uVar11 = swv_frdiv(uVar9,uVar11);
         uVar11 = swv_fmul(uVar11,WORD_HEXADECIMAL_47800000);
-        swv_fadd(uVar11,0x3f000000);
-        iVar3 = swv_ffix();
+        iVar3 = swv_ffix(swv_fadd(uVar11,0x3f000000));   /* Ghidra had dropped it */
         uVar11 = swv_fsub(uVar12,local_b0[0]);
         uVar9 = swv_fsub(local_8c,local_b0[0]);
         uVar11 = swv_frdiv(uVar9,uVar11);
         uVar11 = swv_fmul(uVar11,0x47800000);
-        swv_fadd(uVar11,0x3f000000);
-        iVar4 = swv_ffix();
+        iVar4 = swv_ffix(swv_fadd(uVar11,0x3f000000));   /* Ghidra had dropped it */
         lVar2 = (longlong)(int)(local_cc - local_c4) * (longlong)iVar3;
         iVar3 = ((uint)lVar2 >> 0x10 | (int)((ulonglong)lVar2 >> 0x20) << 0x10) + local_c4;
         iVar4 = (int)((longlong)(int)(local_d0 - local_c8) * (longlong)iVar4 >> 0x10) + local_c8;
@@ -20651,8 +20610,8 @@ LAB_01016740:
             }
             iVar7 = FUN_01011bb4(piVar10);
             bVar1 = *(byte *)(iVar7 + uVar5);
-            swv_fmul(*(undefined4 *)(*(int *)(unaff_r8 + 0x20) + 0x30),FLOAT_255);
-            iVar7 = swv_ffix();
+            /* Ghidra had dropped it */
+            iVar7 = swv_ffix(swv_fmul(*(undefined4 *)(*(int *)(unaff_r8 + 0x20) + 0x30),FLOAT_255));
             if ((int)(uint)bVar1 < iVar7) goto LAB_01016d6c;
           }
         }
@@ -20712,7 +20671,7 @@ bool FUN_01016d8c(int param_1,undefined4 param_2,undefined4 *param_3,uint *param
   uStack_2c = param_2;
   puStack_28 = param_3;
   local_24 = param_4;
-  swv_fcmp_b(*param_4 & 0x7fffffff,WORD_HEXADECIMAL_377BA882,param_3,param_4,param_1);
+  swv_fcmp_b(*param_4 & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
   if (!(bool)in_CY || (bool)in_ZR) {
     swv_fcmp_b(param_4[1] & 0x7fffffff,uVar2);
   }
@@ -21470,11 +21429,10 @@ bool FUN_01017b00(int param_1)
   }
   bVar2 = bVar2 && iVar1 == 0;
   if (bVar2) {
-    swv_TryPush(auStack_98);
-    iVar1 = swv_setjmp();
+    iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
     if (iVar1 == 0) {
       swv_TryArm(auStack_98);
-      iVar1 = swv_New_2(0x28,0);
+      iVar1 = swv_New_2(0x28);
       if (iVar1 != 0) {
         FUN_01028758(iVar1);
       }
@@ -21523,8 +21481,7 @@ int FUN_01017bc4(int param_1)
   iVar1 = 0;
 LAB_01017c08:
   if (iVar1 != 0) {
-    swv_TryPush(auStack_98);
-    iVar2 = swv_setjmp();
+    iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
     if (iVar2 == 0) {
       swv_TryArm(auStack_98);
       iVar2 = FUN_01009860(*(undefined4 *)(param_1 + 0x78));
@@ -21565,8 +21522,7 @@ bool FUN_01017ccc(int param_1)
   
   bVar4 = *(int *)(param_1 + 0x78) == 0xff;
   if (bVar4) {
-    swv_TryPush(auStack_98);
-    iVar1 = swv_setjmp();
+    iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
     if (iVar1 == 0) {
       swv_TryArm(auStack_98);
       iVar1 = FUN_01009860(0xff);
@@ -21774,7 +21730,7 @@ void FUN_01018094(int param_1)
     iVar2 = *(int *)(param_1 + 0xc);
     *(int *)(param_1 + 0xc) = iVar2 + 1;
     *(undefined4 *)(*(int *)(param_1 + 8) + iVar2 * 4) = 0;
-    iVar2 = swv_New(0x18,0);
+    iVar2 = swv_New(0x18);
     if (iVar2 != 0) {
       FUN_01029208(iVar2);
     }
@@ -21875,8 +21831,7 @@ void FUN_010181e4(int param_1,int param_2)
         uVar2 = uVar1;
       }
       uVar2 = swv_fmul(uVar2,uVar6);
-      swv_fadd(uVar2,0x3f000000);
-      uVar2 = swv_ffix();
+      uVar2 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
       *(undefined4 *)(param_1 + 0x60) = uVar2;
       uVar5 = swv_fmul(*(undefined4 *)(param_1 + 0x70),uVar5);
       *(undefined4 *)(param_1 + 0x70) = uVar5;
@@ -21885,8 +21840,7 @@ void FUN_010181e4(int param_1,int param_2)
         uVar5 = uVar1;
       }
       uVar6 = swv_fmul(uVar5,uVar6);
-      swv_fadd(uVar6,0x3f000000);
-      uVar6 = swv_ffix();
+      uVar6 = swv_ffix(swv_fadd(uVar6,0x3f000000));   /* Ghidra had dropped it */
       *(undefined4 *)(param_1 + 100) = uVar6;
     }
   }
@@ -22028,7 +21982,7 @@ void FUN_01018460(int param_1)
     }
     if (0 < iVar3) {
       local_94 = 1 << (iVar10 + iVar6 & 0xffU);
-      piVar4 = (int *)swv_New_2(0x10,0);
+      piVar4 = (int *)swv_New_2(0x10);
       if (piVar4 != (int *)0x0) {
         *piVar4 = DATA_AT_0100203C_OFFSET_6 + 0x10184c8;
         *piVar4 = DATA_AT_01001EAC_OFFSET_3 + 0x10184d4;
@@ -22715,13 +22669,9 @@ void FUN_0101977c(undefined4 param_1,undefined4 *param_2,undefined4 param_3,unde
   bool bVar2;
   bool bVar3;
   undefined4 uVar4;
-  undefined4 unaff_r4;
   int iVar5;
   int iVar6;
-  undefined4 unaff_r5;
   uint uVar7;
-  undefined4 unaff_r6;
-  undefined4 unaff_r7;
   undefined1 uVar8;
   undefined1 uVar9;
   
@@ -22739,8 +22689,7 @@ void FUN_0101977c(undefined4 param_1,undefined4 *param_2,undefined4 param_3,unde
     uVar9 = 3 < uVar7;
     uVar8 = uVar7 == 4;
   } while ((int)uVar7 < 4);
-  swv_fcmp_c(param_2[3] & 0x7fffffff,WORD_HEXADECIMAL_377BA882,param_3,param_4,unaff_r4,unaff_r5,unaff_r6,
-             unaff_r7);
+  swv_fcmp_c(param_2[3] & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
   if ((((bool)uVar9 && !(bool)uVar8) ||
       (swv_fcmp_c(param_2[7] & 0x7fffffff,uVar4), (bool)uVar9 && !(bool)uVar8)) ||
      (swv_fcmp_c(param_2[0xb] & 0x7fffffff,uVar4), (bool)uVar9 && !(bool)uVar8)) {
@@ -23207,7 +23156,7 @@ void FUN_01019ebc(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
         return;
       }
     }
-    piVar5 = (int *)swv_New_2(0x18,0);
+    piVar5 = (int *)swv_New_2(0x18);
     if (piVar5 != (int *)0x0) {
       *piVar5 = DATA_AT_0100203C_OFFSET_7 + 0x102003c;
       *piVar5 = DATA_AT_01002890_OFFSET + 0x1020048;
@@ -23521,8 +23470,7 @@ void FUN_0101a2c0(int param_1,int param_2,undefined4 param_3)
       iVar1 != 0x16) {
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     FUN_010242a4(param_1);
@@ -23586,8 +23534,7 @@ void FUN_0101a478(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   if (*(int *)(param_1 + 0xac) == 0) {
     FUN_0102f7e0(INTEGER_MINUS_1300);
   }
-  swv_TryPush(auStack_a8);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a8);
     FUN_010242a4(param_1);
@@ -23968,14 +23915,11 @@ void FUN_0101a89c(int param_1,int param_2)
   swv_fcmp_a(puVar22[0x36],0x3f800000);
   if ((bool)uVar27) {
     uVar14 = swv_fmul(puVar22[0x33],uVar5);
-    swv_fadd(uVar14,0x3f000000);
-    uVar14 = swv_ffix();
+    uVar14 = swv_ffix(swv_fadd(uVar14,0x3f000000));   /* Ghidra had dropped it */
     uVar3 = swv_fmul(puVar22[0x34],0x47800000);
-    swv_fadd(uVar3,0x3f000000);
-    uVar3 = swv_ffix();
+    uVar3 = swv_ffix(swv_fadd(uVar3,0x3f000000));   /* Ghidra had dropped it */
     uVar4 = swv_fmul(puVar22[0x35],0x47800000);
-    swv_fadd(uVar4,0x3f000000);
-    uVar4 = swv_ffix();
+    uVar4 = swv_ffix(swv_fadd(uVar4,0x3f000000));   /* Ghidra had dropped it */
     puVar22[0x23] = uVar4;
     puVar22[0x21] = uVar14;
     puVar22[0x22] = uVar3;
@@ -23987,16 +23931,13 @@ void FUN_0101a89c(int param_1,int param_2)
     uVar14 = swv_frdiv(puVar22[0x36],0x3f800000);
     uVar3 = swv_fmul(puVar22[0x33],uVar14);
     uVar3 = swv_fmul(uVar3,uVar5);
-    swv_fadd(uVar3,0x3f000000);
-    uVar3 = swv_ffix();
+    uVar3 = swv_ffix(swv_fadd(uVar3,0x3f000000));   /* Ghidra had dropped it */
     uVar4 = swv_fmul(puVar22[0x34],uVar14);
     uVar4 = swv_fmul(uVar4,uVar5);
-    swv_fadd(uVar4,0x3f000000);
-    uVar4 = swv_ffix();
+    uVar4 = swv_ffix(swv_fadd(uVar4,0x3f000000));   /* Ghidra had dropped it */
     uVar14 = swv_fmul(puVar22[0x35],uVar14);
     uVar14 = swv_fmul(uVar14,uVar5);
-    swv_fadd(uVar14,0x3f000000);
-    uVar14 = swv_ffix();
+    uVar14 = swv_ffix(swv_fadd(uVar14,0x3f000000));   /* Ghidra had dropped it */
     puVar22[0x23] = uVar14;
     puVar22[0x21] = uVar3;
     puVar22[0x22] = uVar4;
@@ -24277,42 +24218,33 @@ void FUN_0101a89c(int param_1,int param_2)
       puVar22[0xc] = puVar22[9];
     }
     uVar14 = swv_fmul(puVar22[0x10],uVar5);
-    swv_fadd(uVar14,0x3f000000);
-    uVar14 = swv_ffix();
+    uVar14 = swv_ffix(swv_fadd(uVar14,0x3f000000));   /* Ghidra had dropped it */
     puVar22[7] = uVar14;
     uVar14 = swv_fmul(puVar22[0x11],uVar5);
-    swv_fadd(uVar14,0x3f000000);
-    uVar14 = swv_ffix();
+    uVar14 = swv_ffix(swv_fadd(uVar14,0x3f000000));   /* Ghidra had dropped it */
     puVar22[8] = uVar14;
     uVar14 = swv_fmul(puVar22[0x12],uVar5);
-    swv_fadd(uVar14,0x3f000000);
-    uVar14 = swv_ffix();
+    uVar14 = swv_ffix(swv_fadd(uVar14,0x3f000000));   /* Ghidra had dropped it */
     puVar22[9] = uVar14;
     FUN_01017dc4(param_1,puVar22[0x3c],puVar22 + 7);
     uVar14 = swv_fmul(puVar22[10],uVar5);
-    swv_fadd(uVar14,0x3f000000);
-    uVar14 = swv_ffix();
+    uVar14 = swv_ffix(swv_fadd(uVar14,0x3f000000));   /* Ghidra had dropped it */
     puVar22[4] = uVar14;
     uVar14 = swv_fmul(puVar22[0xb],uVar5);
-    swv_fadd(uVar14,0x3f000000);
-    uVar14 = swv_ffix();
+    uVar14 = swv_ffix(swv_fadd(uVar14,0x3f000000));   /* Ghidra had dropped it */
     puVar22[5] = uVar14;
     uVar14 = swv_fmul(puVar22[0xc],uVar5);
-    swv_fadd(uVar14,0x3f000000);
-    uVar14 = swv_ffix();
+    uVar14 = swv_ffix(swv_fadd(uVar14,0x3f000000));   /* Ghidra had dropped it */
     puVar22[6] = uVar14;
     FUN_01017dc4(param_1,puVar22[0x39],puVar22 + 4);
     uVar14 = swv_fmul(puVar22[0xd],uVar5);
-    swv_fadd(uVar14,0x3f000000);
-    uVar14 = swv_ffix();
+    uVar14 = swv_ffix(swv_fadd(uVar14,0x3f000000));   /* Ghidra had dropped it */
     puVar22[1] = uVar14;
     uVar14 = swv_fmul(puVar22[0xe],uVar5);
-    swv_fadd(uVar14,0x3f000000);
-    uVar14 = swv_ffix();
+    uVar14 = swv_ffix(swv_fadd(uVar14,0x3f000000));   /* Ghidra had dropped it */
     puVar22[2] = uVar14;
     uVar14 = swv_fmul(puVar22[0xf],uVar5);
-    swv_fadd(uVar14,0x3f000000);
-    uVar14 = swv_ffix();
+    uVar14 = swv_ffix(swv_fadd(uVar14,0x3f000000));   /* Ghidra had dropped it */
     puVar22[3] = uVar14;
     FUN_01017dc4(param_1,puVar22[0x3a],puVar22 + 1);
     iVar2 = *(int *)(param_1 + 0x198) - *(int *)(param_1 + 0x120);
@@ -24324,23 +24256,22 @@ void FUN_0101a89c(int param_1,int param_2)
       swv_fadd(uVar5,uVar14);
       swv_f2d();
       FUN_01000810();
-      FUN_0103d3d4();
-      iVar2 = swv_ffix();
+      iVar2 = swv_ffix(FUN_0103d3d4());   /* Ghidra had dropped it */
       *(int *)(param_1 + 0x194) = *(int *)(param_1 + 0x11c) + iVar2;
       *(undefined4 *)(param_1 + 0x198) = *(undefined4 *)(param_1 + 0x120);
     }
     iVar2 = *(int *)(param_1 + 0x15c);
     iVar7 = *(int *)(param_1 + 0x120);
     if (*(int *)(param_1 + 0x158) != *(int *)(param_1 + 0x11c)) {
-      uVar14 = swv_fflt();
+      /* Ghidra had dropped it */
+      uVar14 = swv_fflt(*(int *)(param_1 + 0x158) - *(int *)(param_1 + 0x11c));
       uVar14 = swv_fmul(uVar14,uVar14);
       uVar5 = swv_fflt(iVar2 - iVar7);
       uVar5 = swv_fmul(uVar5,uVar5);
       swv_fadd(uVar5,uVar14);
       swv_f2d();
       FUN_01000810();
-      FUN_0103d3d4();
-      iVar2 = swv_ffix();
+      iVar2 = swv_ffix(FUN_0103d3d4());   /* Ghidra had dropped it */
       *(undefined4 *)(param_1 + 0x158) = *(undefined4 *)(param_1 + 0x11c);
       *(int *)(param_1 + 0x15c) = *(int *)(param_1 + 0x120) + iVar2;
     }
@@ -24437,8 +24368,7 @@ void FUN_0101a89c(int param_1,int param_2)
           uVar14 = swv_fdiv(puVar22[0x11],uVar14);
           puVar22[0x11] = uVar14;
         }
-        swv_fmul(puVar22[0x11] ^ 0x80000000,uVar5);
-        uVar14 = FUN_0102f264();
+        uVar14 = FUN_0102f264(swv_fmul(puVar22[0x11] ^ 0x80000000,uVar5));   /* Ghidra had dropped it */
         uVar14 = swv_frsb(uVar14,0x3f800000);
       }
       else {
@@ -24492,8 +24422,7 @@ void FUN_0101a89c(int param_1,int param_2)
           uVar14 = 0;
         }
       }
-      swv_fmul(uVar14,FLOAT_255);
-      iVar6 = swv_ffix();
+      iVar6 = swv_ffix(swv_fmul(uVar14,FLOAT_255));   /* Ghidra had dropped it */
       if (0xff < iVar6) {
         iVar6 = 0xff;
       }
@@ -24717,11 +24646,10 @@ int FUN_0101bb58(int *param_1)
   piVar10 = (int *)0x0;
   uVar1 = swv_frsb(*(undefined4 *)(iVar7 + 0x94),*(undefined4 *)(iVar7 + 0x98));
   uVar1 = swv_fmul(uVar1,WORD_HEXADECIMAL_47800000);
-  swv_fadd(uVar1,0x3f000000);
-  iVar2 = swv_ffix();
+  iVar2 = swv_ffix(swv_fadd(uVar1,0x3f000000));   /* Ghidra had dropped it */
   param_1[0x3f] = iVar2;
-  swv_fmul(*(undefined4 *)(iVar7 + 0x94),WORD_HEXADECIMAL_4D7FF000);
-  iVar2 = swv_ffix();
+  /* Ghidra had dropped it */
+  iVar2 = swv_ffix(swv_fmul(*(undefined4 *)(iVar7 + 0x94),WORD_HEXADECIMAL_4D7FF000));
   param_1[0x40] = iVar2;
   uVar1 = INTEGER_MINUS_1300;
   iVar2 = *(int *)(param_1[5] + 4);
@@ -24887,12 +24815,10 @@ void FUN_0101bd48(int param_1,int param_2,int param_3,int param_4,undefined4 par
     *(undefined4 *)(param_1 + 0x378) = *(undefined4 *)(iVar2 + 0x20);
     uVar13 = *(undefined4 *)(param_1 + 0xc);
     uVar3 = swv_fmul(uVar13,uVar3);
-    swv_fadd(uVar3,0x3f000000);
-    local_80 = swv_ffix();
+    local_80 = swv_ffix(swv_fadd(uVar3,0x3f000000));   /* Ghidra had dropped it */
     local_80 = local_80 & 0xff;
     uVar3 = swv_fmul(uVar13,0x43800000);
-    swv_fadd(uVar3,0x3f000000);
-    local_84 = swv_ffix();
+    local_84 = swv_ffix(swv_fadd(uVar3,0x3f000000));   /* Ghidra had dropped it */
   }
   iVar9 = *(int *)(local_28 + 0x24);
   local_38 = param_1 + 0x99c;
@@ -25080,7 +25006,7 @@ void FUN_0101bd48(int param_1,int param_2,int param_3,int param_4,undefined4 par
   puStack_68 = auStack_164 + 0x60;
   iStack_60 = param_1 + 0xa7c;
   piStack_64 = aiStack_1ac;
-  uStack_6c = swv_ffltu();
+  uStack_6c = swv_ffltu(local_7c >> 0x18);   /* Ghidra had dropped it */
   iStack_70 = param_1 + 0x408;
   do {
     auStack_c8[3] = (uint)*(ushort *)(*(int *)(local_a8[0] + 4) + local_b8 * 2);
@@ -25274,8 +25200,8 @@ LAB_0101c710:
                   if (local_94 == 0) {
                     if (*(int *)(param_1 + 0x344) == 0) {
                       FUN_010221a0(iVar18 + 0x9c4,local_7c);
-                      swv_fmul(uStack_6c,*(undefined4 *)(param_1 + 0xc));
-                      uVar14 = swv_ffix();
+                      /* Ghidra had dropped it */
+                      uVar14 = swv_ffix(swv_fmul(uStack_6c,*(undefined4 *)(param_1 + 0xc)));
                       *(char *)(iVar18 + 0xa0c) = (char)uVar14;
                     }
                     else {
@@ -25301,16 +25227,16 @@ LAB_0101c710:
                     FUN_010221a0(iVar18 + 0x9dc,uVar3);
                     if (*(int *)(local_94 + 0x2c) == 0) {
                       FUN_010221a0(iVar18 + 0x9d0,local_7c);
-                      swv_fmul(uStack_6c,*(undefined4 *)(param_1 + 0xc));
-                      uVar19 = swv_ffix();
+                      /* Ghidra had dropped it */
+                      uVar19 = swv_ffix(swv_fmul(uStack_6c,*(undefined4 *)(param_1 + 0xc)));
                       *(undefined1 *)(iVar18 + 0xa0c) = uVar19;
                       swv_ColourAdd(iVar5,&local_90);
                     }
                     else {
                       if (*(int *)(param_1 + 0x344) == 0) {
                         FUN_010221a0(iVar18 + 0x9d0,local_7c);
-                        swv_fmul(uStack_6c,*(undefined4 *)(param_1 + 0xc));
-                        uVar19 = swv_ffix();
+                        /* Ghidra had dropped it */
+                        uVar19 = swv_ffix(swv_fmul(uStack_6c,*(undefined4 *)(param_1 + 0xc)));
                         *(undefined1 *)(iVar18 + 0xa0c) = uVar19;
                       }
                       else {
@@ -25375,8 +25301,8 @@ LAB_0101c710:
                     if (puStack_190 == (undefined4 *)0x50) {
                       uVar13 = *(undefined4 *)(iVar9 + 0x20);
                       uVar14 = swv_fdiv(uVar3,aiStack_198[1]);
-                      swv_fmul(uVar14 ^ 0x80000000,uVar13);
-                      uVar3 = FUN_0102f264();
+                      /* Ghidra had dropped it */
+                      uVar3 = FUN_0102f264(swv_fmul(uVar14 ^ 0x80000000,uVar13));
                       uVar3 = swv_frsb(uVar3,0x3f800000);
                     }
                     else {
@@ -25452,8 +25378,9 @@ LAB_0101c710:
                       FUN_010272c0(puStack_78,piVar11);
                     }
                     else {
-                      swv_fmul(uVar3,HIGH_WORD_OF_DOUBLE_1_POINT_396115884_TIMES_TEN_TO_THE_17);
-                      iVar5 = swv_ffix();
+                      /* Ghidra had dropped it */
+                      iVar5 = swv_ffix(swv_fmul(uVar3,
+                          HIGH_WORD_OF_DOUBLE_1_POINT_396115884_TIMES_TEN_TO_THE_17));
                       if (0xff < iVar5) {
                         iVar5 = 0xff;
                       }
@@ -25625,11 +25552,10 @@ void FUN_0101d01c(int param_1,int param_2,int param_3,int param_4,int param_5)
   iVar2 = *(int *)(param_1 + 4);
   uVar1 = swv_frsb(*(undefined4 *)(iVar2 + 0x94),*(undefined4 *)(iVar2 + 0x98));
   uVar1 = swv_fmul(uVar1,WORD_HEXADECIMAL_47800000);
-  swv_fadd(uVar1,0x3f000000);
-  uVar1 = swv_ffix();
+  uVar1 = swv_ffix(swv_fadd(uVar1,0x3f000000));   /* Ghidra had dropped it */
   *(undefined4 *)(param_1 + 0xfc) = uVar1;
-  swv_fmul(*(undefined4 *)(iVar2 + 0x94),WORD_HEXADECIMAL_4D7FF000);
-  uVar1 = swv_ffix();
+  /* Ghidra had dropped it */
+  uVar1 = swv_ffix(swv_fmul(*(undefined4 *)(iVar2 + 0x94),WORD_HEXADECIMAL_4D7FF000));
   *(undefined4 *)(param_1 + 0x100) = uVar1;
   *(undefined4 *)(param_1 + 0xc) = 0x3f800000;
   FUN_01029620(auStack_64,0x3f);
@@ -25661,8 +25587,7 @@ void FUN_0101d17c(int param_1,int param_2)
   if (iVar2 != 1) {
     FUN_0102f7e0(uVar1);
   }
-  swv_TryPush(auStack_98);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_98);
     FUN_01009638(param_1,param_2);
@@ -25756,11 +25681,10 @@ int FUN_0101d21c(int *param_1,int param_2)
     piVar7 = (int *)0x0;
     uVar8 = swv_frsb(*(undefined4 *)(iVar5 + 0x94),*(undefined4 *)(iVar5 + 0x98));
     uVar8 = swv_fmul(uVar8,WORD_HEXADECIMAL_47800000);
-    swv_fadd(uVar8,0x3f000000);
-    iVar6 = swv_ffix();
+    iVar6 = swv_ffix(swv_fadd(uVar8,0x3f000000));   /* Ghidra had dropped it */
     param_1[0x3f] = iVar6;
-    swv_fmul(*(undefined4 *)(iVar5 + 0x94),WORD_HEXADECIMAL_4D7FF000);
-    iVar6 = swv_ffix();
+    /* Ghidra had dropped it */
+    iVar6 = swv_ffix(swv_fmul(*(undefined4 *)(iVar5 + 0x94),WORD_HEXADECIMAL_4D7FF000));
     param_1[0x40] = iVar6;
     uVar8 = INTEGER_MINUS_1300;
     iVar6 = *(int *)(param_1[5] + 4);
@@ -25836,7 +25760,7 @@ void FUN_0101d37c(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     uVar5 = *(undefined4 *)(param_2 + 0xe8);
     uVar6 = *(undefined4 *)(param_2 + 0xe4);
     iVar8 = *(int *)(param_2 + 0x88);
-    uVar2 = swv_fsub(uVar5,uVar6,param_3,param_4,param_4);
+    uVar2 = swv_fsub(uVar5,uVar6);
     uVar1 = WORD_HEXADECIMAL_47800000;
     if (iVar8 == 0x31) {
       uVar3 = swv_frdiv(uVar2,uVar3);
@@ -25845,7 +25769,8 @@ void FUN_0101d37c(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
         uVar9 = 1;
         uVar2 = uVar5;
         if (!(bool)uVar10) {
-          uVar2 = swv_fflt();
+          /* Ghidra had dropped it */
+          uVar2 = swv_fflt((uint)*(ushort *)(*(int *)(param_1 + 0x4c) + iVar8 * 2));
           uVar2 = swv_fmul(uVar2,*(undefined4 *)(param_1 + 0x58));
           uVar2 = swv_fadd(uVar2,*(undefined4 *)(param_1 + 0x5c));
         }
@@ -25857,8 +25782,7 @@ void FUN_0101d37c(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
         }
         uVar2 = swv_fsub(uVar7,uVar6);
         uVar2 = swv_fmul(uVar2,uVar3);
-        swv_fmul(uVar2,uVar1);
-        iVar4 = swv_ffix();
+        iVar4 = swv_ffix(swv_fmul(uVar2,uVar1));   /* Ghidra had dropped it */
         *(short *)(*(int *)(param_1 + 0x4c) + iVar8 * 2) = (short)(iVar4 >> 0xc);
       }
     }
@@ -25870,7 +25794,8 @@ void FUN_0101d37c(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
         uVar9 = 1;
         uVar2 = uVar5;
         if (!(bool)uVar10) {
-          uVar2 = swv_fflt();
+          /* Ghidra had dropped it */
+          uVar2 = swv_fflt((uint)*(ushort *)(*(int *)(param_1 + 0x4c) + iVar8 * 2));
           uVar2 = swv_fmul(uVar2,*(undefined4 *)(param_1 + 0x58));
           uVar2 = swv_fadd(uVar2,*(undefined4 *)(param_1 + 0x5c));
         }
@@ -25884,8 +25809,7 @@ void FUN_0101d37c(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
         uVar2 = swv_fmul(uVar6,uVar2);
         uVar2 = swv_frsb(uVar2,0x3f800000);
         uVar2 = swv_fmul(uVar2,uVar3);
-        swv_fmul(uVar2,uVar1);
-        iVar4 = swv_ffix();
+        iVar4 = swv_ffix(swv_fmul(uVar2,uVar1));   /* Ghidra had dropped it */
         *(short *)(*(int *)(param_1 + 0x4c) + iVar8 * 2) = (short)(iVar4 >> 0xc);
       }
     }
@@ -26112,7 +26036,7 @@ void FUN_0101d974(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
   undefined1 in_CY;
   
   uVar3 = WORD_HEXADECIMAL_377BA882;
-  uVar1 = swv_fsub(*param_2,0x3f800000,param_3,param_4,param_4);
+  uVar1 = swv_fsub(*param_2,0x3f800000);
   swv_fcmp_b(uVar1 & 0x7fffffff,uVar3);
   if (!(bool)in_CY || (bool)in_ZR) {
     uVar1 = swv_fsub(param_2[1],0x3f800000);
@@ -26149,21 +26073,19 @@ void FUN_0101da48(undefined4 *param_1,undefined4 param_2,undefined4 param_3,unde
 {
   uint uVar1;
   undefined4 uVar2;
-  undefined4 unaff_r4;
-  undefined4 unaff_r5;
   undefined4 *puVar3;
   int iVar4;
   int iVar5;
   undefined1 in_ZR;
   undefined1 in_CY;
   
-  uVar1 = swv_fsub(param_2,0x3f800000,param_3,param_4,param_4);
+  uVar1 = swv_fsub(param_2,0x3f800000);
   swv_fcmp_c(uVar1 & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
   uVar2 = WORD_HEXADECIMAL_377BA882;
   if (!(bool)in_CY || (bool)in_ZR) {
     return;
   }
-  uVar1 = swv_fsub(param_2,0x3f800000,param_2,param_2,param_2,unaff_r4,unaff_r5);
+  uVar1 = swv_fsub(param_2,0x3f800000);
   swv_fcmp_b(uVar1 & 0x7fffffff,uVar2);
   if (!(bool)in_CY || (bool)in_ZR) {
     uVar1 = swv_fsub(param_2,0x3f800000);
@@ -26232,7 +26154,7 @@ void FUN_0101da90(undefined4 *param_1,undefined4 param_2,undefined4 param_3,unde
   undefined1 in_CY;
   
   uVar2 = WORD_HEXADECIMAL_377BA882;
-  uVar1 = swv_fsub(param_2,0x3f800000,param_3,param_4,param_4);
+  uVar1 = swv_fsub(param_2,0x3f800000);
   swv_fcmp_b(uVar1 & 0x7fffffff,uVar2);
   if (!(bool)in_CY || (bool)in_ZR) {
     uVar1 = swv_fsub(param_3,0x3f800000);
@@ -26465,13 +26387,11 @@ void FUN_0101de2c(int param_1,undefined4 param_2)
   for (iVar3 = 0; iVar3 < iVar2; iVar3 = iVar3 + 1) {
     uVar1 = FUN_01019a0c(param_2);
     uVar1 = swv_fmul(uVar1,0x47800000);
-    swv_fadd(uVar1,0x3f000000);
-    uVar1 = swv_ffix();
+    uVar1 = swv_ffix(swv_fadd(uVar1,0x3f000000));   /* Ghidra had dropped it */
     *(undefined4 *)(*(int *)(param_1 + 0xc) + iVar3 * 8) = uVar1;
     uVar1 = FUN_01019a0c(param_2);
     uVar1 = swv_fmul(uVar1,0x47800000);
-    swv_fadd(uVar1,0x3f000000);
-    uVar1 = swv_ffix();
+    uVar1 = swv_ffix(swv_fadd(uVar1,0x3f000000));   /* Ghidra had dropped it */
     *(undefined4 *)(*(int *)(param_1 + 0xc) + iVar3 * 8 + 4) = uVar1;
   }
   return;
@@ -26523,7 +26443,7 @@ void FUN_0101df64(int param_1,undefined4 param_2)
   }
   uVar3 = FUN_01019698(param_2,8);
   if (uVar3 != 0) {
-    piVar4 = (int *)swv_New_2(0x10,0);
+    piVar4 = (int *)swv_New_2(0x10);
     if (piVar4 != (int *)0x0) {
       FUN_01027cb4(piVar4);
       *piVar4 = DATA_AT_01002628_OFFSET_2 + 0x101dff4;
@@ -26540,7 +26460,7 @@ void FUN_0101df64(int param_1,undefined4 param_2)
       iVar5 = FUN_01019698(param_2,1);
       puVar7[2] = iVar5;
       if (0 < iVar5) {
-        uVar2 = swv_NewArray(iVar5,0);
+        uVar2 = swv_NewArray(iVar5);
         puVar7[1] = uVar2;
         for (iVar5 = 0; iVar5 < (int)puVar7[2]; iVar5 = iVar5 + 1) {
           uVar1 = FUN_01019640(param_2);
@@ -26778,17 +26698,13 @@ void FUN_0101e3f4(int param_1,undefined4 param_2)
   *(undefined4 *)(param_1 + 0x24) = uVar4;
   uVar4 = FUN_010196cc(param_2,0x1f,0x22);
   *(undefined4 *)(param_1 + 0x28) = uVar4;
-  thunk_FUN_01019abc(param_2);
-  uVar4 = swv_fflt();
+  uVar4 = swv_fflt(thunk_FUN_01019abc(param_2));   /* Ghidra had dropped it */
   *(undefined4 *)(param_1 + 0x2c) = uVar4;
-  thunk_FUN_01019abc(param_2);
-  uVar4 = swv_fflt();
+  uVar4 = swv_fflt(thunk_FUN_01019abc(param_2));   /* Ghidra had dropped it */
   *(undefined4 *)(param_1 + 0x30) = uVar4;
-  thunk_FUN_01019abc(param_2);
-  uVar4 = swv_fflt();
+  uVar4 = swv_fflt(thunk_FUN_01019abc(param_2));   /* Ghidra had dropped it */
   *(undefined4 *)(param_1 + 0x34) = uVar4;
-  thunk_FUN_01019abc(param_2);
-  uVar4 = swv_fflt();
+  uVar4 = swv_fflt(thunk_FUN_01019abc(param_2));   /* Ghidra had dropped it */
   *(undefined4 *)(param_1 + 0x38) = uVar4;
   swv_fcmp_b(*(undefined4 *)(param_1 + 0x34),0);
   if ((bool)uVar5) {
@@ -26825,7 +26741,7 @@ void thunk_FUN_0101df64(int param_1,undefined4 param_2)
   }
   uVar3 = FUN_01019698(param_2,8);
   if (uVar3 != 0) {
-    piVar4 = (int *)swv_New_2(0x10,0);
+    piVar4 = (int *)swv_New_2(0x10);
     if (piVar4 != (int *)0x0) {
       FUN_01027cb4(piVar4);
       *piVar4 = DATA_AT_01002628_OFFSET_2 + 0x101dff4;
@@ -26842,7 +26758,7 @@ void thunk_FUN_0101df64(int param_1,undefined4 param_2)
       iVar5 = FUN_01019698(param_2,1);
       puVar7[2] = iVar5;
       if (0 < iVar5) {
-        uVar2 = swv_NewArray(iVar5,0);
+        uVar2 = swv_NewArray(iVar5);
         puVar7[1] = uVar2;
         for (iVar5 = 0; iVar5 < (int)puVar7[2]; iVar5 = iVar5 + 1) {
           uVar1 = FUN_01019640(param_2);
@@ -26969,8 +26885,7 @@ void FUN_0101e534(int param_1,undefined4 param_2)
   uVar10 = FUN_01019a0c(param_2);
   uVar2 = WORD_HEXADECIMAL_47800000;
   uVar10 = swv_fmul(uVar10,WORD_HEXADECIMAL_47800000);
-  swv_fadd(uVar10,0x3f000000);
-  uVar10 = swv_ffix();
+  uVar10 = swv_ffix(swv_fadd(uVar10,0x3f000000));   /* Ghidra had dropped it */
   *(undefined4 *)(param_1 + 0x60) = uVar10;
   uVar10 = FUN_010196cc(param_2,0);
   *(undefined4 *)(param_1 + 100) = uVar10;
@@ -27002,8 +26917,7 @@ void FUN_0101e534(int param_1,undefined4 param_2)
     else {
       uVar8 = FUN_01019a0c(param_2);
       uVar8 = swv_fmul(uVar8,uVar2);
-      swv_fadd(uVar8,0x3f000000);
-      uVar8 = swv_ffix();
+      uVar8 = swv_ffix(swv_fadd(uVar8,0x3f000000));   /* Ghidra had dropped it */
     }
     iVar5 = iVar9 * 4;
     iVar9 = iVar9 + 1;
@@ -27018,8 +26932,7 @@ void FUN_0101e534(int param_1,undefined4 param_2)
     else {
       uVar8 = FUN_01019a0c(param_2);
       uVar8 = swv_fmul(uVar8,uVar2);
-      swv_fadd(uVar8,0x3f000000);
-      uVar8 = swv_ffix();
+      uVar8 = swv_ffix(swv_fadd(uVar8,0x3f000000));   /* Ghidra had dropped it */
     }
     iVar5 = iVar9 * 4;
     iVar9 = iVar9 + 1;
@@ -27041,7 +26954,7 @@ void FUN_0101e534(int param_1,undefined4 param_2)
     }
     if (0 < iVar9) {
       iStack_94 = 1 << (iVar12 + iVar5 & 0xffU);
-      piVar4 = (int *)swv_New_2(0x10,0);
+      piVar4 = (int *)swv_New_2(0x10);
       if (piVar4 != (int *)0x0) {
         *piVar4 = DATA_AT_0100203C_OFFSET_6 + 0x10184c8;
         *piVar4 = DATA_AT_01001EAC_OFFSET_3 + 0x10184d4;
@@ -27917,6 +27830,7 @@ void FUN_0101f0b4(int param_1,undefined4 param_2)
   int local_30;
   int local_2c;
   undefined4 local_28;
+  uint quantised;
   
   FUN_0101df64();
   uVar2 = FUN_010196cc(param_2,0xaf,0xb5);
@@ -27974,14 +27888,14 @@ void FUN_0101f0b4(int param_1,undefined4 param_2)
     }
   }
   else if (uVar3 == 1 || uVar3 == 2) {
-    iVar8 = swv_New_2(0x10,0);
+    iVar8 = swv_New_2(0x10);
     local_34 = iVar8;
     if (iVar8 != 0) {
       FUN_01027cd8(iVar8);
       uVar2 = FUN_0100f8e8();
       FUN_0101807c(uVar2,iVar8);
     }
-    iVar8 = swv_New_2(0x10,0);
+    iVar8 = swv_New_2(0x10);
     local_38 = iVar8;
     if (iVar8 != 0) {
       FUN_01027cd8(iVar8);
@@ -28003,13 +27917,14 @@ void FUN_0101f0b4(int param_1,undefined4 param_2)
         FUN_0102f7e0(INTEGER_MINUS_1202);
       }
       for (iVar6 = 0; iVar6 < *(int *)(param_1 + 0x34); iVar6 = iVar6 + 1) {
+        /* Ghidra had dropped the value (r0) of both reads */
         if (uVar3 == 1) {
-          FUN_01019640();
+          quantised = FUN_01019640();
         }
         else {
-          FUN_01019a98(param_2);
+          quantised = FUN_01019a98(param_2);
         }
-        uVar2 = swv_fflt();
+        uVar2 = swv_fflt(quantised);
         uVar2 = swv_frdiv(local_28,uVar2);
         uVar5 = *(undefined4 *)(*(int *)(local_34 + 4) + iVar6 * 4);
         uVar2 = swv_fmul(*(undefined4 *)(*(int *)(local_38 + 4) + iVar6 * 4),uVar2);
@@ -28247,8 +28162,7 @@ void FUN_0101f8ac(int param_1,undefined4 param_2)
   FUN_01022bb8(param_1,uVar1);
   uVar1 = FUN_01019618(param_2);
   FUN_01022234(param_1,uVar1);
-  FUN_01019640(param_2);
-  uVar1 = swv_fflt();
+  uVar1 = swv_fflt(FUN_01019640(param_2));   /* Ghidra had dropped it */
   uVar1 = swv_fdiv(uVar1,FLOAT_255);
   *(undefined4 *)(param_1 + 0x28) = uVar1;
   uVar1 = FUN_01019abc(param_2);
@@ -28738,7 +28652,7 @@ void FUN_0101ffbc(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
         return;
       }
     }
-    piVar2 = (int *)swv_New_2(0x18,0);
+    piVar2 = (int *)swv_New_2(0x18);
     if (piVar2 != (int *)0x0) {
       *piVar2 = DATA_AT_0100203C_OFFSET_7 + 0x102003c;
       *piVar2 = DATA_AT_01002890_OFFSET + 0x1020048;
@@ -28793,7 +28707,7 @@ void FUN_01020104(int param_1,int param_2,int param_3,int param_4,int param_5)
     *(undefined4 *)(param_1 + 0x24) = 0;
   }
   if (((param_2 != 0 || param_3 != 0x90) || param_4 != 0) || param_5 != 0x90) {
-    puVar2 = (undefined4 *)swv_New(0x10,0);
+    puVar2 = (undefined4 *)swv_New(0x10);
     if (puVar2 != (undefined4 *)0x0) {
       *puVar2 = 0;
       puVar2[1] = 0;
@@ -29438,8 +29352,7 @@ void FUN_01020a28(int param_1,int param_2)
   
   uVar3 = WORD_HEXADECIMAL_47800000;
   *(undefined4 *)(param_1 + 0x268) = *(undefined4 *)(param_2 + 0x2c);
-  swv_fmul(*(undefined4 *)(param_2 + 0x30),uVar3);
-  iVar1 = swv_ffix();
+  iVar1 = swv_ffix(swv_fmul(*(undefined4 *)(param_2 + 0x30),uVar3));   /* Ghidra had dropped it */
   *(int *)(param_1 + 0x25c) = iVar1 >> 8;
   uVar5 = *(uint *)(param_1 + 0x28c) & 0xffffff9f;
   *(undefined4 *)(param_1 + 0x2ac) = 0;
@@ -29454,12 +29367,10 @@ void FUN_01020a28(int param_1,int param_2)
       *(uint *)(param_1 + 0x28c) = *(uint *)(param_1 + 0x28c) | 0x20;
     }
     uVar2 = swv_fmul(*(undefined4 *)(param_2 + 0x34),uVar3);
-    swv_fadd(uVar2,0x3f000000);
-    iVar1 = swv_ffix();
+    iVar1 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
     *(int *)(param_1 + 0x2b0) = iVar1;
     uVar3 = swv_fmul(*(undefined4 *)(param_2 + 0x38),uVar3);
-    swv_fadd(uVar3,0x3f000000);
-    iVar4 = swv_ffix();
+    iVar4 = swv_ffix(swv_fadd(uVar3,0x3f000000));   /* Ghidra had dropped it */
     *(int *)(param_1 + 0x2b4) = iVar4;
     if (iVar1 != 0 || iVar4 != 0) {
       *(undefined4 *)(param_1 + 0x2ac) = 1;
@@ -29642,7 +29553,7 @@ void FUN_01020d0c(int *param_1,int param_2)
     FUN_01027acc(*(undefined4 *)(param_1[8] + 0x28),param_2);
   }
   else {
-    iVar1 = swv_New(0x44,0);
+    iVar1 = swv_New(0x44);
     if (iVar1 != 0) {
       swv_Matrix4Copy(iVar1,param_2);
     }
@@ -30519,8 +30430,7 @@ void FUN_01021f28(int param_1)
       do {
         uVar5 = swv_fflt((uint)*(byte *)((int)local_34 + iVar7 + -4) -
                          (uint)*(byte *)((int)&local_24 + iVar7));
-        swv_fmul(uVar5,uVar9);
-        iVar6 = swv_ffix();
+        iVar6 = swv_ffix(swv_fmul(uVar5,uVar9));   /* Ghidra had dropped it */
         local_34[iVar7] = iVar6 + local_34[iVar7];
         iVar7 = iVar7 + 1;
       } while (iVar7 < 4);
@@ -30921,7 +30831,7 @@ void FUN_010223f0(int param_1,uint param_2,uint param_3,uint *param_4)
       bVar6 = 0xe < param_2 - 0x100;
       uVar7 = param_2 - 0x100 == 0xf;
       if ((bool)uVar7) {
-        swv_fcmp_c(*param_4,0,param_3,puVar2,param_4);
+        swv_fcmp_c(*param_4,0);
         if (bVar6) {
           swv_fcmp_b(*param_4,0x43000000);
           if (!bVar6 || (bool)uVar7) {
@@ -30948,7 +30858,7 @@ LAB_010224e8:
       bVar6 = 0xff < param_2;
       uVar7 = param_2 == 0x100;
       if ((bool)uVar7) {
-        swv_fcmp_c(*param_4,0,param_3,puVar2,param_4);
+        swv_fcmp_c(*param_4,0);
         if (bVar6) {
           swv_fcmp_b(*param_4,0x3f800000);
           if (!bVar6 || (bool)uVar7) {
@@ -30962,8 +30872,7 @@ LAB_010224e8:
           uVar3 = 0;
         }
         uVar1 = swv_fmul(uVar3,FLOAT_255);
-        swv_fadd(uVar1,0x3f000000);
-        uVar7 = swv_ffix();
+        uVar7 = swv_ffix(swv_fadd(uVar1,0x3f000000));   /* Ghidra had dropped it */
         *(undefined1 *)(param_1 + 0x23) = uVar7;
         return;
       }
@@ -31013,14 +30922,13 @@ int FUN_01022600(int param_1,uint param_2,undefined4 param_3,undefined4 *param_4
   bVar8 = 0xff < param_2;
   uVar7 = param_2 == 0x100;
   if ((bool)uVar7) {
-    swv_fcmp_c(*param_4,0,param_3,param_4);
+    swv_fcmp_c(*param_4,0);
     uVar2 = 0;
     if ((bVar8) && (swv_fcmp_b(*param_4,0x3f800000), uVar2 = 0x3f800000, !bVar8 || (bool)uVar7)) {
       uVar2 = *param_4;
     }
     uVar2 = swv_fmul(uVar2,FLOAT_255);
-    swv_fadd(uVar2,0x3f000000);
-    iVar3 = swv_ffix();
+    iVar3 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
     *(char *)(param_1 + 0x23) = (char)iVar3;
     return iVar3;
   }
@@ -31041,8 +30949,7 @@ int FUN_01022600(int param_1,uint param_2,undefined4 param_3,undefined4 *param_4
       uVar4 = 0;
     }
     uVar4 = swv_fmul(uVar4,uVar2);
-    swv_fadd(uVar4,0x3f000000);
-    uVar1 = swv_ffix();
+    uVar1 = swv_ffix(swv_fadd(uVar4,0x3f000000));   /* Ghidra had dropped it */
     *(undefined1 *)(param_1 + 0x22) = uVar1;
     swv_fcmp_c(uVar5,0);
     if ((bool)uVar9) {
@@ -31055,8 +30962,7 @@ int FUN_01022600(int param_1,uint param_2,undefined4 param_3,undefined4 *param_4
       uVar5 = 0;
     }
     uVar4 = swv_fmul(uVar5,uVar2);
-    swv_fadd(uVar4,0x3f000000);
-    uVar1 = swv_ffix();
+    uVar1 = swv_ffix(swv_fadd(uVar4,0x3f000000));   /* Ghidra had dropped it */
     *(undefined1 *)(param_1 + 0x21) = uVar1;
     swv_fcmp_c(uVar6,0);
     if ((bool)uVar9) {
@@ -31069,8 +30975,7 @@ int FUN_01022600(int param_1,uint param_2,undefined4 param_3,undefined4 *param_4
       uVar6 = 0;
     }
     uVar2 = swv_fmul(uVar6,uVar2);
-    swv_fadd(uVar2,0x3f000000);
-    iVar3 = swv_ffix();
+    iVar3 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
     *(char *)(param_1 + 0x20) = (char)iVar3;
     return iVar3;
   }
@@ -31108,8 +31013,7 @@ void FUN_010226fc(int param_1,uint param_2,undefined4 param_3,undefined4 *param_
       uVar2 = 0;
     }
     uVar2 = swv_fmul(uVar2,uVar5);
-    swv_fadd(uVar2,0x3f000000);
-    uVar1 = swv_ffix();
+    uVar1 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
     *(undefined1 *)(param_1 + 0x1e) = uVar1;
     swv_fcmp_c(uVar3,0);
     if ((bool)uVar7) {
@@ -31122,8 +31026,7 @@ void FUN_010226fc(int param_1,uint param_2,undefined4 param_3,undefined4 *param_
       uVar3 = 0;
     }
     uVar2 = swv_fmul(uVar3,uVar5);
-    swv_fadd(uVar2,0x3f000000);
-    uVar1 = swv_ffix();
+    uVar1 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
     *(undefined1 *)(param_1 + 0x1d) = uVar1;
     swv_fcmp_c(uVar4,0);
     if ((bool)uVar7) {
@@ -31136,8 +31039,7 @@ void FUN_010226fc(int param_1,uint param_2,undefined4 param_3,undefined4 *param_
       uVar4 = 0;
     }
     uVar5 = swv_fmul(uVar4,uVar5);
-    swv_fadd(uVar5,0x3f000000);
-    uVar6 = swv_ffix();
+    uVar6 = swv_ffix(swv_fadd(uVar5,0x3f000000));   /* Ghidra had dropped it */
     *(undefined1 *)(param_1 + 0x1c) = uVar6;
     return;
   }
@@ -31176,7 +31078,7 @@ void FUN_0102277c(int *param_1,uint param_2,undefined4 param_3,int *param_4)
   uVar2 = param_2 == 0x100;
   iVar1 = 0;
   if ((bool)uVar2) {
-    swv_fcmp_c(*param_4,0,param_3,param_4,param_4);
+    swv_fcmp_c(*param_4,0);
     if (bVar3) {
       swv_fcmp_b(*param_4,0x3f800000);
       if (!bVar3 || (bool)uVar2) {
@@ -31420,7 +31322,7 @@ void FUN_01022acc(undefined1 *param_1,undefined4 param_2,undefined4 param_3,unde
   undefined1 in_CY;
   
   uVar3 = FLOAT_255;
-  swv_fcmp_c(param_2,0,param_3,param_4,param_4);
+  swv_fcmp_c(param_2,0);
   if ((bool)in_CY) {
     swv_fcmp_b(param_2,0x3f800000);
     if ((bool)in_CY && !(bool)in_ZR) {
@@ -31431,8 +31333,7 @@ void FUN_01022acc(undefined1 *param_1,undefined4 param_2,undefined4 param_3,unde
     param_2 = 0;
   }
   uVar2 = swv_fmul(param_2,uVar3);
-  swv_fadd(uVar2,0x3f000000);
-  uVar1 = swv_ffix();
+  uVar1 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
   param_1[2] = uVar1;
   swv_fcmp_c(param_3,0);
   if ((bool)in_CY) {
@@ -31445,8 +31346,7 @@ void FUN_01022acc(undefined1 *param_1,undefined4 param_2,undefined4 param_3,unde
     param_3 = 0;
   }
   uVar2 = swv_fmul(param_3,uVar3);
-  swv_fadd(uVar2,0x3f000000);
-  uVar1 = swv_ffix();
+  uVar1 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
   param_1[1] = uVar1;
   swv_fcmp_c(param_4,0);
   if ((bool)in_CY) {
@@ -31459,8 +31359,7 @@ void FUN_01022acc(undefined1 *param_1,undefined4 param_2,undefined4 param_3,unde
     param_4 = 0;
   }
   uVar3 = swv_fmul(param_4,uVar3);
-  swv_fadd(uVar3,0x3f000000);
-  uVar1 = swv_ffix();
+  uVar1 = swv_ffix(swv_fadd(uVar3,0x3f000000));   /* Ghidra had dropped it */
   *param_1 = uVar1;
   return;
 }
@@ -31703,15 +31602,14 @@ LAB_01022d6c:
   do {
     iVar9 = 0;
     do {
-      swv_fmul(*(undefined4 *)(param_2 + iVar9 * 0x10 + iVar7 * 4),uVar3);
-      uVar6 = swv_ffix();
+      /* Ghidra had dropped it */
+      uVar6 = swv_ffix(swv_fmul(*(undefined4 *)(param_2 + iVar9 * 0x10 + iVar7 * 4),uVar3));
       iVar2 = iVar9 * 0x10;
       iVar9 = iVar9 + 1;
       *(undefined4 *)(param_1 + iVar2 + iVar7 * 4) = uVar6;
     } while (iVar9 < 3);
     uVar6 = swv_fmul(*(undefined4 *)(param_2 + 0x30 + iVar7 * 4),uVar3);
-    swv_fmul(uVar6,uVar5);
-    uVar6 = swv_ffix();
+    uVar6 = swv_ffix(swv_fmul(uVar6,uVar5));   /* Ghidra had dropped it */
     iVar9 = iVar7 * 4;
     iVar7 = iVar7 + 1;
     *(undefined4 *)(param_1 + iVar9 + 0x30) = uVar6;
@@ -31719,15 +31617,14 @@ LAB_01022d6c:
   uVar1 = swv_fmul(uVar3,uVar1);
   iVar7 = 0;
   do {
-    swv_fmul(*(undefined4 *)(param_2 + iVar7 * 0x10 + 0xc),uVar1);
-    uVar3 = swv_ffix();
+    /* Ghidra had dropped it */
+    uVar3 = swv_ffix(swv_fmul(*(undefined4 *)(param_2 + iVar7 * 0x10 + 0xc),uVar1));
     iVar9 = iVar7 * 0x10;
     iVar7 = iVar7 + 1;
     *(undefined4 *)(param_1 + iVar9 + 0xc) = uVar3;
   } while (iVar7 < 3);
   uVar1 = swv_fmul(*(undefined4 *)(param_2 + 0x3c),uVar1);
-  swv_fmul(uVar1,uVar5);
-  uVar1 = swv_ffix();
+  uVar1 = swv_ffix(swv_fmul(uVar1,uVar5));   /* Ghidra had dropped it */
   *(undefined4 *)(param_1 + 0x3c) = uVar1;
   return local_3c;
 }
@@ -32042,8 +31939,7 @@ undefined4 FUN_010234bc(int param_1,int param_2,undefined4 param_3,uint param_4,
         *(undefined4 *)(param_1 + 0x18) = param_3;
         if (uVar2 != 0) {
           uVar3 = swv_fmul(*(undefined4 *)(param_2 + 0x30),WORD_HEXADECIMAL_47800000);
-          swv_fadd(uVar3,0x3f000000);
-          iVar4 = swv_ffix();
+          iVar4 = swv_ffix(swv_fadd(uVar3,0x3f000000));   /* Ghidra had dropped it */
           *(int *)(param_1 + 0x14) = iVar4 >> 1;
         }
       }
@@ -32349,7 +32245,7 @@ void FUN_01023944(int *param_1,int param_2)
     FUN_01027acc(*(undefined4 *)(param_1[8] + 0x28),iVar2);
   }
   else {
-    iVar1 = swv_New(0x44,0);
+    iVar1 = swv_New(0x44);
     if (iVar1 != 0) {
       swv_Matrix4Copy(iVar1,iVar2);
     }
@@ -32399,7 +32295,7 @@ void FUN_010239fc(int param_1,int param_2,int param_3,int param_4)
   iVar4 = 0;
   piVar1 = *(int **)(param_1 + 0x14);
   if (piVar1 == (int *)0x0) {
-    piVar1 = (int *)swv_New_2(0x10,0,param_3,param_4,param_4);
+    piVar1 = (int *)swv_New_2(0x10);
     if (piVar1 != (int *)0x0) {
       FUN_01027cb4(piVar1);
       *piVar1 = DATA_AT_01002628_OFFSET_3 + 0x1023a48;
@@ -32430,7 +32326,7 @@ LAB_01023a9c:
     piVar1[2] = 0;
   }
   if ((!bVar5 && param_3 != 0) && iVar4 >= 0) {
-    iVar4 = swv_NewArray(param_3,0);
+    iVar4 = swv_NewArray(param_3);
     piVar1[1] = iVar4;
     thunk_swv_memcpy(iVar4,param_4,param_3);
     piVar1[2] = param_3;
@@ -32769,7 +32665,6 @@ void FUN_01023f30(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   bool bVar3;
   uint uVar4;
   undefined4 uVar5;
-  undefined4 unaff_r4;
   undefined1 uVar6;
   undefined1 in_ZR;
   undefined1 uVar7;
@@ -32777,18 +32672,18 @@ void FUN_01023f30(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   
   FUN_01027acc((undefined4 *)(param_1 + 0xc),param_2 + 0xc);
   uVar5 = WORD_HEXADECIMAL_377BA882;
-  swv_fcmp_c(*(uint *)(param_1 + 0x18) & 0x7fffffff,WORD_HEXADECIMAL_377BA882,param_3,param_4,unaff_r4);
+  swv_fcmp_c(*(uint *)(param_1 + 0x18) & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
   if ((((bool)in_CY && !(bool)in_ZR) ||
-      (swv_fcmp_c(*(uint *)(param_1 + 0x28) & 0x7fffffff,uVar5,param_3,param_4,unaff_r4),
+      (swv_fcmp_c(*(uint *)(param_1 + 0x28) & 0x7fffffff,uVar5),
       (bool)in_CY && !(bool)in_ZR)) ||
-     (swv_fcmp_c(*(uint *)(param_1 + 0x38) & 0x7fffffff,uVar5,param_3,param_4,unaff_r4),
+     (swv_fcmp_c(*(uint *)(param_1 + 0x38) & 0x7fffffff,uVar5),
      (bool)in_CY && !(bool)in_ZR)) {
 LAB_0101d6e0:
     bVar1 = false;
   }
   else {
     uVar4 = swv_fsub(*(undefined4 *)(param_1 + 0x48),0x3f800000);
-    swv_fcmp_c(uVar4 & 0x7fffffff,uVar5,param_3,param_4,unaff_r4);
+    swv_fcmp_c(uVar4 & 0x7fffffff,uVar5);
     if ((bool)in_CY && !(bool)in_ZR) goto LAB_0101d6e0;
     bVar1 = true;
   }
@@ -33136,12 +33031,12 @@ void FUN_0102412c(int param_1,int *param_2)
     *(undefined4 *)(param_1 + 0x30) = 0;
     /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
        (by the object's class) */
-    (*(code *)(*(int *)(*param_2 + 0x24) + *param_2))();
-    uVar3 = swv_fflt();
+    uVar3 = swv_fflt((*(code *)(*(int *)(*param_2 + 0x24) + *param_2))());   /* Ghidra had dropped it */
     *(undefined4 *)(param_1 + 0x34) = uVar3;
     /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
-    (*(code *)(*(int *)(**(int **)(param_1 + 0x20) + 0x28) + **(int **)(param_1 + 0x20)))();
-    uVar3 = swv_fflt();
+    /* Ghidra had dropped it */
+    uVar3 = swv_fflt((*(code *)(*(int *)(**(int **)(param_1 + 0x20) + 0x28) +
+                                **(int **)(param_1 + 0x20)))());
     *(undefined4 *)(param_1 + 0x38) = uVar3;
   }
   return;
@@ -33265,7 +33160,7 @@ void FUN_01024338(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3,ui
   undefined1 in_ZR;
   undefined1 in_CY;
   
-  uVar2 = swv_frsb(param_4,0x3f800000,param_3,param_4,param_4);
+  uVar2 = swv_frsb(param_4,0x3f800000);
   swv_fcmp_a(param_4,0);
   if ((bool)in_ZR) {
     *param_1 = *param_2;
@@ -33311,13 +33206,10 @@ LAB_0102444c:
     swv_fcmp_b(uVar6 & 0x7fffffff,DOUBLE_2_POINT_658456546_TIMES_TEN_TO_THE_36_LOW_WORD);
     if ((bool)in_CY && !(bool)in_ZR) {
       uVar3 = swv_fmul(uVar5,DOUBLE_2_POINT_658456546_TIMES_TEN_TO_THE_36_HIGH_WORD);
-      swv_fadd(uVar3,0x3f000000);
-      uVar3 = swv_ffix();
+      uVar3 = swv_ffix(swv_fadd(uVar3,0x3f000000));   /* Ghidra had dropped it */
       uVar4 = swv_fmul(uVar6,DOUBLE_2_POINT_658456546_TIMES_TEN_TO_THE_36_HIGH_WORD);
-      swv_fadd(uVar4,0x3f000000);
-      uVar4 = swv_ffix();
-      FUN_0102edc0(uVar4,uVar3);
-      uVar3 = swv_fflt();
+      uVar4 = swv_ffix(swv_fadd(uVar4,0x3f000000));   /* Ghidra had dropped it */
+      uVar3 = swv_fflt(FUN_0102edc0(uVar4,uVar3));   /* Ghidra had dropped it */
       uVar3 = swv_fmul(uVar3,0x37800000);
       swv_fmul(uVar2,uVar3);
       swv_f2d();
@@ -33404,13 +33296,10 @@ void FUN_010246a0(uint *param_1,uint *param_2,undefined4 param_3)
   uVar1 = DOUBLE_2_POINT_658456541_TIMES_TEN_TO_THE_36_HIGH_WORD;
   if ((bool)in_CY && !(bool)in_ZR) {
     uVar3 = swv_fmul(param_1[3],DOUBLE_2_POINT_658456541_TIMES_TEN_TO_THE_36_HIGH_WORD);
-    swv_fadd(uVar3,0x3f000000);
-    uVar3 = swv_ffix();
+    uVar3 = swv_ffix(swv_fadd(uVar3,0x3f000000));   /* Ghidra had dropped it */
     uVar1 = swv_fmul(uVar2,uVar1);
-    swv_fadd(uVar1,0x3f000000);
-    uVar1 = swv_ffix();
-    FUN_0102edc0(uVar1,uVar3);
-    uVar1 = swv_fflt();
+    uVar1 = swv_ffix(swv_fadd(uVar1,0x3f000000));   /* Ghidra had dropped it */
+    uVar1 = swv_fflt(FUN_0102edc0(uVar1,uVar3));   /* Ghidra had dropped it */
     uVar1 = swv_fmul(uVar1,0x37800000);
     uVar1 = swv_fdiv(uVar1,uVar2);
     uVar4 = swv_fmul(*param_1,uVar1);
@@ -34067,7 +33956,7 @@ void FUN_010252f4(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3,un
   undefined4 *puVar7;
   undefined1 in_ZR;
   
-  uVar1 = swv_fmul(*param_2,*param_3,param_3,param_4,0,0,0);
+  uVar1 = swv_fmul(*param_2,*param_3);
   puVar6 = param_3 + 1;
   uVar2 = swv_fmul(param_2[4],param_3[1]);
   uVar1 = swv_fadd(uVar2,uVar1);
@@ -34258,6 +34147,11 @@ undefined8 FUN_010257a8(undefined4 param_1,int param_2,undefined4 param_3,undefi
 }
 
 /* ==== 0x010257FC  (file offset 0x257FC)  FUN_010257fc ================================================ */
+/* GUESS (not yet rewritten): transforms vertex param_2 of the VertexArray param_1 (2 or 3
+   components, 1 or 2 bytes each; see swvVertexArray_GetComponent) by the fixed-point matrix param_3:
+   x, y, z into param_4 ([0..2], [4..6], [8..10] the rows, [0xc..0xe] the translation, >> [0x10]);
+   with param_5 also the fourth row into *param_5 ([3], [7], [0xf], >> [0x11]; only [0xf] when [0x13]
+   is set). 3 components with a fourth row go through FUN_0102501c (bytes) or FUN_01025104 (words). */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
 void FUN_010257fc(int param_1,int param_2,int *param_3,int *param_4,int *param_5)
@@ -34344,6 +34238,10 @@ void FUN_010257fc(int param_1,int param_2,int *param_3,int *param_4,int *param_5
 }
 
 /* ==== 0x010258D0  (file offset 0x258D0)  FUN_010258d0 ================================================ */
+/* GUESS (not yet rewritten): FUN_010257fc for the vertices param_2 .. param_3 - 1 of the
+   VertexArray param_1, by the fixed-point matrix param_4, into 12-byte vectors (param_5) and, when
+   param_6 is not NULL, words (param_6): FUN_010251ec / FUN_01025270 (3 components, bytes / words),
+   FUN_01024d84 / FUN_01024e18 (2 components), FUN_0102501c / FUN_01025104 (3 with the fourth row). */
 void FUN_010258d0(int param_1,int param_2,int param_3,undefined4 param_4,int param_5,int param_6)
 
 {
@@ -34411,6 +34309,11 @@ void FUN_010258d0(int param_1,int param_2,int param_3,undefined4 param_4,int par
 }
 
 /* ==== 0x01025A50  (file offset 0x25A50)  FUN_01025a50 ================================================ */
+/* GUESS (not yet rewritten): converts the vertices of the VertexArray param_2 (2 or 3 components)
+   to float with swvVertexArray_GetComponent and swv_fflt: x, y, z (0 with 2 components) and w (1.0
+   when param_5 is set, else 0), each vertex passed to FUN_0101471c with param_1 + 0xc and param_4,
+   which steps 16 bytes a vertex (4 floats). Error -1301 (FUN_0102f7e0) when param_3 < 4 * the vertex
+   count (GUESS: param_3 is the room, in floats) or the components are not 2 or 3. */
 void FUN_01025a50(int param_1,int param_2,int param_3,int param_4,int param_5)
 
 {
@@ -34449,13 +34352,12 @@ void FUN_01025a50(int param_1,int param_2,int param_3,int param_4,int param_5)
       uVar3 = 0;
     }
     else {
-      FUN_0100e490(param_2,iVar7,2);
-      uVar3 = swv_fflt();
+      /* Ghidra had dropped swv_fflt's argument, the component just read */
+      uVar3 = swv_fflt(swvVertexArray_GetComponent((uint8 *)param_2,iVar7,2));
     }
-    FUN_0100e490(param_2,iVar7,1);
-    uVar4 = swv_fflt();
-    FUN_0100e490(param_2,iVar7,0);
-    uVar5 = swv_fflt();
+    /* Ghidra had dropped swv_fflt's argument, the component just read */
+    uVar4 = swv_fflt(swvVertexArray_GetComponent((uint8 *)param_2,iVar7,1));
+    uVar5 = swv_fflt(swvVertexArray_GetComponent((uint8 *)param_2,iVar7,0));
     FUN_0101471c(param_1 + 0xc,uVar5,uVar4,uVar3,uVar6,param_4);
     param_4 = param_4 + 0x10;
   }
@@ -34585,7 +34487,7 @@ void FUN_01025d30(undefined4 *param_1,uint *param_2)
   uVar2 = *param_2;
   uVar3 = param_2[1];
   uVar4 = param_2[2];
-  swv_fcmp_b(uVar2 & 0x7fffffff,WORD_HEXADECIMAL_377BA882,uVar3,uVar4,uVar4);
+  swv_fcmp_b(uVar2 & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
   if (!(bool)in_CY || (bool)in_ZR) {
     swv_fcmp_b(uVar3 & 0x7fffffff,uVar1);
   }
@@ -34636,7 +34538,7 @@ void FUN_01025d38(undefined4 *param_1,uint param_2,uint param_3,uint param_4)
   undefined1 in_CY;
   
   uVar1 = WORD_HEXADECIMAL_377BA882;
-  swv_fcmp_b(param_2 & 0x7fffffff,WORD_HEXADECIMAL_377BA882,param_3,param_4,param_4);
+  swv_fcmp_b(param_2 & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
   if (!(bool)in_CY || (bool)in_ZR) {
     swv_fcmp_b(param_3 & 0x7fffffff,uVar1);
   }
@@ -35083,12 +34985,11 @@ void FUN_010263e8(undefined4 *param_1,undefined4 param_2,undefined4 param_3,unde
   undefined4 uVar1;
   undefined4 uVar2;
   
-  uVar1 = swv_fmul(*param_1,*param_1,param_3,param_4,param_4);
+  uVar1 = swv_fmul(*param_1,*param_1);
   uVar2 = swv_fmul(param_1[1],param_1[1]);
   uVar1 = swv_fadd(uVar2,uVar1);
   uVar2 = swv_fmul(param_1[2],param_1[2]);
-  swv_fadd(uVar2,uVar1);
-  uVar1 = FUN_0102f3e4();
+  uVar1 = FUN_0102f3e4(swv_fadd(uVar2,uVar1));   /* Ghidra had dropped it */
   uVar2 = swv_fmul(*param_1,uVar1);
   *param_1 = uVar2;
   uVar2 = swv_fmul(param_1[1],uVar1);
@@ -35760,7 +35661,7 @@ FUN_0102727c(undefined4 *param_1,undefined4 *param_2,undefined4 param_3,undefine
 {
   undefined4 uVar1;
   
-  uVar1 = swv_frsb(*param_2,*param_1,param_3,param_4,param_4);
+  uVar1 = swv_frsb(*param_2,*param_1);
   *param_1 = uVar1;
   uVar1 = swv_frsb(param_2[1],param_1[1]);
   param_1[1] = uVar1;
@@ -35887,7 +35788,7 @@ int * FUN_01027578(int *param_1,uint param_2,undefined4 param_3,undefined4 param
   
   uVar1 = FLOAT_1024;
   uVar3 = FLOAT_1024 | FLOAT_1024 << 8;
-  swv_fcmp_b(param_2,FLOAT_1024,param_3,param_4,param_4);
+  swv_fcmp_b(param_2,FLOAT_1024);
   if ((bool)in_CY && !(bool)in_ZR) {
     param_2 = uVar1;
   }
@@ -35895,8 +35796,7 @@ int * FUN_01027578(int *param_1,uint param_2,undefined4 param_3,undefined4 param
   if (!(bool)in_CY) {
     param_2 = uVar3;
   }
-  swv_fmul(param_2,FLOAT_256);
-  iVar2 = swv_ffix();
+  iVar2 = swv_ffix(swv_fmul(param_2,FLOAT_256));   /* Ghidra had dropped it */
   *param_1 = iVar2 * *param_1 >> 8;
   param_1[1] = iVar2 * param_1[1] >> 8;
   param_1[2] = iVar2 * param_1[2] >> 8;
@@ -36908,16 +36808,13 @@ undefined4 * FUN_010289b0(undefined4 *param_1,undefined4 *param_2)
   }
   uVar2 = WORD_HEXADECIMAL_47800000;
   uVar1 = swv_fmul(*param_2,WORD_HEXADECIMAL_47800000);
-  swv_fadd(uVar1,0x3f000000);
-  uVar1 = swv_ffix();
+  uVar1 = swv_ffix(swv_fadd(uVar1,0x3f000000));   /* Ghidra had dropped it */
   *param_1 = uVar1;
   uVar1 = swv_fmul(param_2[1],uVar2);
-  swv_fadd(uVar1,0x3f000000);
-  uVar1 = swv_ffix();
+  uVar1 = swv_ffix(swv_fadd(uVar1,0x3f000000));   /* Ghidra had dropped it */
   param_1[1] = uVar1;
   uVar2 = swv_fmul(param_2[2],uVar2);
-  swv_fadd(uVar2,0x3f000000);
-  uVar2 = swv_ffix();
+  uVar2 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
   param_1[2] = uVar2;
   return param_1;
 }
@@ -37494,14 +37391,11 @@ int * FUN_01029450(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
   
   if ((param_1 != (int *)0x0) || (param_1 = helper_malloc(0xc), param_1 != (int *)0x0)) {
     uVar1 = WORD_HEXADECIMAL_47800000;
-    swv_fmul(param_2,WORD_HEXADECIMAL_47800000);
-    iVar2 = swv_ffix();
+    iVar2 = swv_ffix(swv_fmul(param_2,WORD_HEXADECIMAL_47800000));   /* Ghidra had dropped it */
     *param_1 = iVar2 + 0x7f >> 8;
-    swv_fmul(param_3,uVar1);
-    iVar2 = swv_ffix();
+    iVar2 = swv_ffix(swv_fmul(param_3,uVar1));   /* Ghidra had dropped it */
     param_1[1] = iVar2 + 0x7f >> 8;
-    swv_fmul(param_4,uVar1);
-    iVar2 = swv_ffix();
+    iVar2 = swv_ffix(swv_fmul(param_4,uVar1));   /* Ghidra had dropped it */
     param_1[2] = iVar2 + 0x7f >> 8;
   }
   return param_1;
@@ -39601,7 +39495,7 @@ FUN_0102c620(undefined4 *param_1,undefined4 *param_2,undefined4 param_3,undefine
 {
   undefined1 in_ZR;
   
-  swv_fcmp_a(param_1[3],param_2[3],param_3,param_4,param_4);
+  swv_fcmp_a(param_1[3],param_2[3]);
   if ((bool)in_ZR) {
     swv_fcmp_a(*param_1,*param_2);
   }
@@ -39652,7 +39546,7 @@ void FUN_0102c6b4(undefined4 *param_1,uint *param_2,undefined4 *param_3,undefine
   
   uVar4 = param_2[1];
   uVar5 = param_3[2];
-  uVar1 = swv_fmul(uVar5,uVar4,param_3,param_4,param_4);
+  uVar1 = swv_fmul(uVar5,uVar4);
   uVar6 = param_2[2];
   uVar7 = param_3[1];
   uVar2 = swv_fmul(uVar7,uVar6 ^ 0x80000000);
@@ -40086,7 +39980,7 @@ void FUN_0102c8bc(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3,un
   
   iVar1 = param_2[0x10];
   if (iVar1 == 0x13) {
-    uVar2 = swv_fadd(*param_3,param_2[0xc],param_3,param_4,0,0,0);
+    uVar2 = swv_fadd(*param_3,param_2[0xc]);
     uVar3 = swv_fadd(param_3[1],param_2[0xd]);
     uVar4 = swv_fadd(param_3[2],param_2[0xe]);
     goto LAB_0102cb34;
@@ -40383,8 +40277,7 @@ int swv_Create_AnimationController(void **ppObj)
                        switch (0x0102479c); class name from the JSR-184 alphabetical numbering
                        proven by swvObj_QueryInterface's hierarchy table (see swv_types.h
                        SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(1);
@@ -40395,7 +40288,7 @@ int swv_Create_AnimationController(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -40504,8 +40397,7 @@ undefined4 FUN_0102cf84(int param_1,undefined4 param_2,undefined4 param_3)
   undefined1 auStack_9c [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -40516,7 +40408,7 @@ undefined4 FUN_0102cf84(int param_1,undefined4 param_2,undefined4 param_3)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -40531,8 +40423,7 @@ undefined4 FUN_0102cfec(int param_1,undefined4 param_2,undefined4 param_3)
   undefined1 auStack_9c [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -40544,7 +40435,7 @@ undefined4 FUN_0102cfec(int param_1,undefined4 param_2,undefined4 param_3)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -40559,8 +40450,7 @@ undefined4 FUN_0102d060(int param_1,undefined4 param_2,undefined4 param_3)
   undefined1 auStack_9c [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -40572,7 +40462,7 @@ undefined4 FUN_0102d060(int param_1,undefined4 param_2,undefined4 param_3)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -40590,8 +40480,7 @@ undefined4 FUN_0102d0d4(int param_1,undefined4 param_2)
   undefined1 auStack_98 [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   uVar5 = 1;
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
@@ -40610,7 +40499,7 @@ undefined4 FUN_0102d0d4(int param_1,undefined4 param_2)
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -40628,8 +40517,7 @@ int swv_Create_AnimationTrack(void **ppObj)
                        and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(2);
@@ -40640,7 +40528,7 @@ int swv_Create_AnimationTrack(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -40653,8 +40541,7 @@ int FUN_0102d1c0(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -40669,7 +40556,7 @@ int FUN_0102d1c0(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -40682,8 +40569,7 @@ int FUN_0102d22c(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -40698,7 +40584,7 @@ int FUN_0102d22c(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -40744,8 +40630,7 @@ undefined4 FUN_0102d310(int param_1,int param_2,int param_3)
   undefined1 auStack_9c [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = 0;
@@ -40769,7 +40654,7 @@ undefined4 FUN_0102d310(int param_1,int param_2,int param_3)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -40821,8 +40706,7 @@ int swv_Create_Appearance(void **ppObj)
                        and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(3);
@@ -40833,7 +40717,7 @@ int swv_Create_Appearance(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -40846,8 +40730,7 @@ int FUN_0102d42c(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -40862,7 +40745,7 @@ int FUN_0102d42c(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -40875,8 +40758,7 @@ int FUN_0102d498(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -40891,7 +40773,7 @@ int FUN_0102d498(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -40918,8 +40800,7 @@ int FUN_0102d51c(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -40934,7 +40815,7 @@ int FUN_0102d51c(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -40947,8 +40828,7 @@ int FUN_0102d588(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -40963,7 +40843,7 @@ int FUN_0102d588(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -40976,8 +40856,7 @@ int FUN_0102d5f4(int param_1,uint param_2,ISwerveObject **param_3)
   void *pNative;
   undefined1 auStack_98 [136];
   
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -40995,7 +40874,7 @@ int FUN_0102d5f4(int param_1,uint param_2,ISwerveObject **param_3)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -41101,8 +40980,7 @@ undefined4 FUN_0102d788(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -41116,7 +40994,7 @@ undefined4 FUN_0102d788(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -41199,8 +41077,7 @@ undefined4 FUN_0102d838(int param_1,undefined4 param_2,int param_3)
   undefined1 auStack_9c [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -41218,7 +41095,7 @@ undefined4 FUN_0102d838(int param_1,undefined4 param_2,int param_3)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -41346,8 +41223,7 @@ int swv_Create_Background(void **ppObj)
                        and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(4);
@@ -41358,7 +41234,7 @@ int swv_Create_Background(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -41449,8 +41325,7 @@ int FUN_0102dba4(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -41465,7 +41340,7 @@ int FUN_0102dba4(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -41592,8 +41467,7 @@ undefined4 FUN_0102ddb0(int param_1,undefined4 param_2,undefined4 param_3,int pa
   undefined1 auStack_a8 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a8);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a8);
     uVar2 = INTEGER_MINUS_1301;
@@ -41618,7 +41492,7 @@ undefined4 FUN_0102ddb0(int param_1,undefined4 param_2,undefined4 param_3,int pa
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -41647,8 +41521,7 @@ undefined4 FUN_0102de80(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -41666,7 +41539,7 @@ undefined4 FUN_0102de80(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -41681,8 +41554,7 @@ undefined4 FUN_0102deec(int param_1,int param_2,int param_3)
   undefined1 auStack_a0 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a0);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_a0);
     uVar1 = INTEGER_MINUS_1301;
@@ -41701,7 +41573,7 @@ undefined4 FUN_0102deec(int param_1,int param_2,int param_3)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -41771,8 +41643,7 @@ int swv_Create_Camera(void **ppObj)
                        wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(5);
@@ -41783,7 +41654,7 @@ int swv_Create_Camera(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -41798,8 +41669,7 @@ undefined4 FUN_0102e06c(int param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined1 auStack_a0 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a0);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a0);
     iVar1 = *(int *)(param_1 + 4);
@@ -41811,7 +41681,7 @@ undefined4 FUN_0102e06c(int param_1,undefined4 param_2,undefined4 param_3,undefi
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -41827,8 +41697,7 @@ undefined4 FUN_0102e0dc(int param_1,int param_2,undefined4 *param_3)
   undefined1 auStack_9c [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -41847,7 +41716,7 @@ undefined4 FUN_0102e0dc(int param_1,int param_2,undefined4 *param_3)
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -41879,8 +41748,7 @@ undefined4 FUN_0102e1b0(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -41901,7 +41769,7 @@ undefined4 FUN_0102e1b0(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -41922,8 +41790,7 @@ FUN_0102e234(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
   undefined1 auStack_ac [136];
   
   uVar6 = 0;
-  swv_TryPush(auStack_ac);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_ac));   /* Ghidra had dropped it */
   uVar7 = 1;
   if (iVar1 == 0) {
     swv_TryArm(auStack_ac);
@@ -41950,7 +41817,7 @@ FUN_0102e234(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     swv_TryPop();
   }
   else {
-    uVar6 = swv_ErrorToResult();
+    uVar6 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar6;
 }
@@ -41972,11 +41839,10 @@ FUN_0102e318(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
   undefined1 uVar9;
   undefined1 auStack_ac [136];
   
-  swv_TryPush(auStack_ac);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_ac));   /* Ghidra had dropped it */
   uVar8 = 1;
   if (iVar1 != 0) {
-    uVar7 = swv_ErrorToResult();
+    uVar7 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
     return uVar7;
   }
   swv_TryArm(auStack_ac);
@@ -42032,8 +41898,7 @@ int swv_Create_CompositingMode(void **ppObj)
                        and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(6);
@@ -42044,7 +41909,7 @@ int swv_Create_CompositingMode(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -42199,11 +42064,10 @@ undefined4 FUN_0102e66c(int param_1,undefined4 param_2)
   undefined1 uVar5;
   undefined1 auStack_98 [136];
   
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   uVar4 = 1;
   if (iVar1 != 0) {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
     return uVar2;
   }
   swv_TryArm(auStack_98);
@@ -42250,8 +42114,7 @@ undefined4 FUN_0102e724(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -42265,7 +42128,7 @@ undefined4 FUN_0102e724(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -42295,8 +42158,7 @@ undefined4 FUN_0102e7b0(int param_1,undefined4 param_2,undefined4 param_3)
   undefined1 auStack_9c [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -42310,7 +42172,7 @@ undefined4 FUN_0102e7b0(int param_1,undefined4 param_2,undefined4 param_3)
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -42384,8 +42246,7 @@ bool FUN_0102e968(int *param_1,undefined4 param_2,undefined4 param_3)
   bool bVar3;
   undefined1 auStack_a0 [136];
   
-  swv_TryPush(auStack_a0);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a0);
     /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec
@@ -42415,8 +42276,7 @@ int swv_Create_Fog(void **ppObj)
                        it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(7);
@@ -42427,7 +42287,7 @@ int swv_Create_Fog(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -42550,8 +42410,7 @@ undefined4 FUN_0102eb74(int param_1,undefined4 param_2)
   undefined1 auStack_98 [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   uVar5 = 1;
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
@@ -42570,7 +42429,7 @@ undefined4 FUN_0102eb74(int param_1,undefined4 param_2)
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -42586,8 +42445,7 @@ undefined4 FUN_0102ebf8(int param_1,undefined4 param_2,undefined4 param_3)
   undefined1 auStack_9c [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -42600,7 +42458,7 @@ undefined4 FUN_0102ebf8(int param_1,undefined4 param_2,undefined4 param_3)
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -42614,8 +42472,7 @@ undefined4 FUN_0102ec78(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -42629,7 +42486,7 @@ undefined4 FUN_0102ec78(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -43105,7 +42962,7 @@ longlong FUN_0102f240(int param_1)
 }
 
 /* ==== 0x0102F264  (file offset 0x2F264)  FUN_0102f264 ================================================ */
-uint FUN_0102f264(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+uint FUN_0102f264(undefined4 param_1)
 
 {
   undefined4 uVar1;
@@ -43122,7 +42979,7 @@ uint FUN_0102f264(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
   undefined1 in_CY;
   
   uVar4 = FLOAT_88;
-  swv_fcmp_a(param_1,0,param_3,param_4,param_4);
+  swv_fcmp_a(param_1,0);
   if ((bool)in_ZR) {
     return 0x3f800000;
   }
@@ -43139,8 +42996,8 @@ uint FUN_0102f264(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
   uVar6 = DOUBLE_5_POINT_036114712_TIMES_TEN_TO_THE_23_LOW_WORD;
   uVar7 = WORD_HEXADECIMAL_4AB73041;
   uVar4 = WORD_HEXADECIMAL_4272759C;
-  iVar2 = swv_ffix();
-  uVar3 = swv_fflt();
+  iVar2 = swv_ffix(uVar1);   /* Ghidra had dropped it */
+  uVar3 = swv_fflt(iVar2);   /* Ghidra had dropped it */
   uVar1 = swv_frsb(uVar3,uVar1);
   uVar1 = swv_fsub(uVar1,0x3f000000);
   uVar3 = swv_fmul(uVar1,uVar1);
@@ -43208,9 +43065,10 @@ uint FUN_0102f264(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
-uint FUN_0102f3e4(int param_1,undefined4 param_2,undefined4 param_3,uint param_4)
+uint FUN_0102f3e4(int param_1)
 
 {
+  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
   int iVar1;
   undefined4 uVar2;
   undefined4 uVar3;
@@ -43242,14 +43100,14 @@ uint FUN_0102f3e4(int param_1,undefined4 param_2,undefined4 param_3,uint param_4
   uVar7 = uVar5 >> 7 & 0xff0000;
   bVar14 = uVar7 == 0;
   if (!bVar14) {
-    param_4 = uVar4 >> 7 & 0xff0000;
-    bVar14 = param_4 == 0;
+    scratch = uVar4 >> 7 & 0xff0000;
+    bVar14 = scratch == 0;
   }
   if (!bVar14) {
     bVar14 = uVar7 == 0xff0000;
   }
   if (!bVar14) {
-    bVar14 = param_4 == 0xff0000;
+    bVar14 = scratch == 0xff0000;
   }
   if (bVar14) {
     uVar10 = uVar4 >> 7 & 0xff0000;
@@ -43267,12 +43125,12 @@ uint FUN_0102f3e4(int param_1,undefined4 param_2,undefined4 param_3,uint param_4
         uVar5 = uVar5 << LZCOUNT(uVar5);
         if (uVar10 != 0) {
           uVar4 = uVar4 | 0x80000000;
-          param_4 = uVar10;
+          scratch = uVar10;
           goto LAB_0103f630;
         }
       }
       uVar5 = uVar5 | 0x80000000;
-      param_4 = uVar10 + LZCOUNT(uVar4) * -0x10000 + 0x10000;
+      scratch = uVar10 + LZCOUNT(uVar4) * -0x10000 + 0x10000;
       uVar4 = uVar4 << LZCOUNT(uVar4);
       goto LAB_0103f630;
     }
@@ -43318,7 +43176,7 @@ LAB_0103f924:
     uVar4 = uVar4 << 8 | 0x80000000;
 LAB_0103f630:
     uVar10 = (uint)((ulonglong)uVar4 * (ulonglong)uVar5 >> 0x20);
-    iVar11 = uVar7 + param_4 + -0x800000;
+    iVar11 = uVar7 + scratch + -0x800000;
     if ((int)((ulonglong)uVar4 * (ulonglong)uVar5) != 0) {
       uVar10 = uVar10 | 1;
     }
@@ -43335,7 +43193,7 @@ LAB_0103f630:
     uVar9 = (uint)bVar14;
     puVar13 = &stack0x00000000 +
               uVar9 + (uint)bVar14 * 2 +
-                      uVar7 * 2 + uVar12 * 0x1000000 + iVar1 * 0x1000000 + param_4 * 0x1000000;
+                      uVar7 * 2 + uVar12 * 0x1000000 + iVar1 * 0x1000000 + scratch * 0x1000000;
     if (bVar14) {
       uVar7 = uVar10 & 0x7f;
     }
@@ -43544,18 +43402,18 @@ int thunk_FUN_01009ad0(void)
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = swv_New_2(INTEGER_2788,0);
+  iVar1 = swv_New_2(INTEGER_2788);
   if (iVar1 != 0) {
     FUN_01028d2c(iVar1);
     uVar2 = FUN_0100f8e8();
     FUN_0101807c(uVar2,iVar1);
   }
-  iVar3 = swv_New_2(700,0);
+  iVar3 = swv_New_2(700);
   if (iVar3 != 0) {
     FUN_01028f54(iVar3);
   }
   *(int *)(iVar1 + 8) = iVar3;
-  iVar3 = swv_New_2(0x3c,0);
+  iVar3 = swv_New_2(0x3c);
   if (iVar3 != 0) {
     FUN_01028b58(iVar3);
   }
@@ -43662,8 +43520,7 @@ undefined4 FUN_0102f7f8(int param_1,int param_2,int param_3,undefined4 *param_4)
   undefined1 auStack_a0 [136];
   
   uVar5 = 0;
-  swv_TryPush(auStack_a0);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a0);
     iVar1 = *(int *)(param_1 + 4);
@@ -43692,7 +43549,7 @@ undefined4 FUN_0102f7f8(int param_1,int param_2,int param_3,undefined4 *param_4)
     swv_TryPop();
   }
   else {
-    uVar5 = swv_ErrorToResult();
+    uVar5 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar5;
 }
@@ -43707,8 +43564,7 @@ undefined4 FUN_0102f898(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -43726,7 +43582,7 @@ undefined4 FUN_0102f898(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -43744,8 +43600,7 @@ int swv_Create_Graphics3D(void **ppObj)
                        and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)swv_Graphics3D_New();
@@ -43756,7 +43611,7 @@ int swv_Create_Graphics3D(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -43771,8 +43626,7 @@ undefined4 FUN_0102f960(undefined4 param_1,uint param_2,undefined4 *param_3)
   undefined1 auStack_9c [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     if (0xb < param_2) {
@@ -43783,7 +43637,7 @@ undefined4 FUN_0102f960(undefined4 param_1,uint param_2,undefined4 *param_3)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -43886,8 +43740,7 @@ undefined4 FUN_0102fb74(int param_1,int param_2,int param_3)
   undefined1 auStack_9c [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -43915,7 +43768,7 @@ undefined4 FUN_0102fb74(int param_1,int param_2,int param_3)
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -43935,8 +43788,7 @@ FUN_0102fc0c(int param_1,int param_2,int param_3,int param_4,int param_5,undefin
   undefined1 auStack_ac [136];
   
   uVar7 = 0;
-  swv_TryPush(auStack_ac);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_ac));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_ac);
     uVar1 = INTEGER_MINUS_1302;
@@ -43985,7 +43837,7 @@ FUN_0102fc0c(int param_1,int param_2,int param_3,int param_4,int param_5,undefin
     swv_TryPop();
   }
   else {
-    uVar7 = swv_ErrorToResult();
+    uVar7 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar7;
 }
@@ -44000,8 +43852,7 @@ undefined4 FUN_0102fcf8(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -44022,7 +43873,7 @@ undefined4 FUN_0102fcf8(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -44036,8 +43887,7 @@ undefined4 FUN_0102fd7c(int param_1)
   undefined1 auStack_94 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -44048,7 +43898,7 @@ undefined4 FUN_0102fd7c(int param_1)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -44064,8 +43914,7 @@ FUN_0102fdd4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
   undefined1 auStack_a4 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_a4);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a4);
     iVar1 = *(int *)(param_1 + 4);
@@ -44076,7 +43925,7 @@ FUN_0102fdd4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -44091,8 +43940,7 @@ undefined4 FUN_0102fe4c(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -44110,7 +43958,7 @@ undefined4 FUN_0102fe4c(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -44126,8 +43974,7 @@ undefined4 FUN_0102feb8(int param_1,int param_2,int param_3)
   undefined1 auStack_9c [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -44152,7 +43999,7 @@ undefined4 FUN_0102feb8(int param_1,int param_2,int param_3)
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -44180,8 +44027,7 @@ int IGraphics3D_BindTarget
   local_34 = po;
   uStack_2c = (uint)cy;
   iStack_28 = nPitch;
-  swv_TryPush(auStack_bc);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_bc));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_bc);
     pvVar2 = local_34->pNative;
@@ -44192,7 +44038,7 @@ int IGraphics3D_BindTarget
     swv_TryPop();
   }
   else {
-    iVar3 = swv_ErrorToResult();
+    iVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar3;
 }
@@ -44210,11 +44056,10 @@ undefined4 FUN_0102ffb8(int param_1,undefined4 param_2,undefined4 param_3)
   undefined1 uVar7;
   undefined1 auStack_a8 [136];
   
-  swv_TryPush(auStack_a8);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
   uVar6 = 1;
   if (iVar1 != 0) {
-    uVar5 = swv_ErrorToResult();
+    uVar5 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
     return uVar5;
   }
   swv_TryArm(auStack_a8);
@@ -44261,8 +44106,7 @@ undefined4 FUN_010300a4(int param_1,int param_2,undefined4 param_3)
   undefined1 auStack_9c [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -44273,7 +44117,7 @@ undefined4 FUN_010300a4(int param_1,int param_2,undefined4 param_3)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -44289,8 +44133,7 @@ undefined4 FUN_01030110(int param_1,undefined4 param_2,int param_3,int param_4)
   undefined1 auStack_a0 [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_a0);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a0);
     iVar1 = *(int *)(param_1 + 4);
@@ -44315,7 +44158,7 @@ undefined4 FUN_01030110(int param_1,undefined4 param_2,int param_3,int param_4)
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -44331,8 +44174,7 @@ FUN_01030198(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
   undefined1 auStack_a4 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_a4);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a4);
     iVar1 = *(int *)(param_1 + 4);
@@ -44343,7 +44185,7 @@ FUN_01030198(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -44383,8 +44225,7 @@ undefined4 FUN_01030220(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -44402,7 +44243,7 @@ undefined4 FUN_01030220(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -44420,8 +44261,7 @@ int swv_Create_Group(void **ppObj)
                        wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(9);
@@ -44432,7 +44272,7 @@ int swv_Create_Group(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -44445,8 +44285,7 @@ int FUN_010302ec(int param_1,undefined4 param_2,ISwerveObject **param_3)
   void *pNative;
   undefined1 auStack_98 [136];
   
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -44461,7 +44300,7 @@ int FUN_010302ec(int param_1,undefined4 param_2,ISwerveObject **param_3)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -44516,8 +44355,7 @@ FUN_010303f0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
   undefined1 auStack_ac [136];
   
   uVar7 = 0;
-  swv_TryPush(auStack_ac);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_ac));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_ac);
     iVar2 = *(int *)(param_1 + 4);
@@ -44548,7 +44386,7 @@ FUN_010303f0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     swv_TryPop();
   }
   else {
-    uVar7 = swv_ErrorToResult();
+    uVar7 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar7;
 }
@@ -44572,8 +44410,7 @@ FUN_010304c0(int param_1,undefined4 param_2,undefined4 *param_3,undefined4 *para
   undefined1 auStack_ac [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_ac);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_ac));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_ac);
     iVar2 = *(int *)(param_1 + 4);
@@ -44604,7 +44441,7 @@ FUN_010304c0(int param_1,undefined4 param_2,undefined4 *param_3,undefined4 *para
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -44619,8 +44456,7 @@ undefined4 FUN_010305b8(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -44638,7 +44474,7 @@ undefined4 FUN_010305b8(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -44880,8 +44716,7 @@ int swv_Create_Image2D(void **ppObj)
                        wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(10);
@@ -44892,7 +44727,7 @@ int swv_Create_Image2D(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -45033,8 +44868,7 @@ FUN_01030c54(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,
   undefined1 auStack_ac [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_ac);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_ac));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_ac);
     uVar1 = INTEGER_MINUS_1301;
@@ -45058,7 +44892,7 @@ FUN_01030c54(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -45073,8 +44907,7 @@ undefined4 FUN_01030d14(int param_1,int param_2,int param_3,int param_4)
   undefined1 auStack_a4 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a4);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_a4);
     uVar1 = INTEGER_MINUS_1301;
@@ -45095,7 +44928,7 @@ undefined4 FUN_01030d14(int param_1,int param_2,int param_3,int param_4)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -45120,8 +44953,7 @@ FUN_01030dbc(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,
   iStack_30 = param_2;
   iStack_2c = param_3;
   iStack_28 = param_4;
-  swv_TryPush(auStack_bc);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_bc));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_bc);
     uVar1 = INTEGER_MINUS_1301;
@@ -45149,7 +44981,7 @@ FUN_01030dbc(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -45164,8 +44996,7 @@ undefined4 FUN_01030e98(int param_1,int param_2,int param_3,int param_4,int para
   undefined1 auStack_a8 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a8);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_a8);
     uVar1 = INTEGER_MINUS_1301;
@@ -45186,7 +45017,7 @@ undefined4 FUN_01030e98(int param_1,int param_2,int param_3,int param_4,int para
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -45217,8 +45048,7 @@ FUN_01030f60(int param_1,int param_2,int param_3,int param_4,int param_5,undefin
   undefined1 auStack_ac [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_ac);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_ac));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_ac);
     uVar1 = INTEGER_MINUS_1301;
@@ -45245,7 +45075,7 @@ FUN_01030f60(int param_1,int param_2,int param_3,int param_4,int param_5,undefin
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -46751,8 +46581,7 @@ int swv_Create_KeyframeSequence(void **ppObj)
                        switch (0x0102479c); class name from the JSR-184 alphabetical numbering
                        proven by swvObj_QueryInterface's hierarchy table (see swv_types.h
                        SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(0x13);
@@ -46763,7 +46592,7 @@ int swv_Create_KeyframeSequence(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -46825,8 +46654,7 @@ undefined4 FUN_01032b70(int param_1,int param_2,int param_3,int param_4)
   undefined1 auStack_a4 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a4);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_a4);
     uVar1 = INTEGER_MINUS_1301;
@@ -46847,7 +46675,7 @@ undefined4 FUN_01032b70(int param_1,int param_2,int param_3,int param_4)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -46861,8 +46689,7 @@ undefined4 FUN_01032c10(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -46876,7 +46703,7 @@ undefined4 FUN_01032c10(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -46890,8 +46717,7 @@ undefined4 FUN_01032c84(int param_1,undefined4 param_2,int param_3,undefined4 pa
   undefined1 auStack_a4 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_a4);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a4);
     iVar1 = *(int *)(param_1 + 4);
@@ -46908,7 +46734,7 @@ undefined4 FUN_01032c84(int param_1,undefined4 param_2,int param_3,undefined4 pa
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -46922,8 +46748,7 @@ undefined4 FUN_01032d20(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -46937,7 +46762,7 @@ undefined4 FUN_01032d20(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -46951,8 +46776,7 @@ undefined4 FUN_01032d90(int param_1,undefined4 param_2,undefined4 param_3)
   undefined1 auStack_9c [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -46963,7 +46787,7 @@ undefined4 FUN_01032d90(int param_1,undefined4 param_2,undefined4 param_3)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -46981,8 +46805,7 @@ int swv_Create_Light(void **ppObj)
                        wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(0xc);
@@ -46993,7 +46816,7 @@ int swv_Create_Light(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -47152,8 +46975,7 @@ undefined4 FUN_0103300c(int param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined1 auStack_a8 [136];
   
   uVar7 = 0;
-  swv_TryPush(auStack_a8);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
   uVar8 = 1;
   if (iVar2 == 0) {
     swv_TryArm(auStack_a8);
@@ -47185,7 +47007,7 @@ undefined4 FUN_0103300c(int param_1,undefined4 param_2,undefined4 param_3,undefi
     swv_TryPop();
   }
   else {
-    uVar7 = swv_ErrorToResult();
+    uVar7 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar7;
 }
@@ -47215,8 +47037,7 @@ undefined4 FUN_01033108(int param_1,undefined4 param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -47228,7 +47049,7 @@ undefined4 FUN_01033108(int param_1,undefined4 param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -47242,8 +47063,7 @@ undefined4 FUN_01033174(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -47257,7 +47077,7 @@ undefined4 FUN_01033174(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -47273,11 +47093,10 @@ undefined4 FUN_010331ec(int param_1,undefined4 param_2)
   undefined1 uVar5;
   undefined1 auStack_98 [136];
   
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   uVar4 = 1;
   if (iVar1 != 0) {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
     return uVar2;
   }
   swv_TryArm(auStack_98);
@@ -47312,11 +47131,10 @@ undefined4 FUN_01033294(int param_1,undefined4 param_2)
   undefined1 uVar5;
   undefined1 auStack_98 [136];
   
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   uVar4 = 1;
   if (iVar1 != 0) {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
     return uVar2;
   }
   swv_TryArm(auStack_98);
@@ -47492,8 +47310,7 @@ int swv_Create_Loader(void **ppObj)
                        wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009b80();
@@ -47504,7 +47321,7 @@ int swv_Create_Loader(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -47517,8 +47334,7 @@ int FUN_01033690(int param_1,int param_2,ISwerveObject **param_3)
   void *pNative;
   undefined1 auStack_98 [136];
   
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -47534,7 +47350,7 @@ int FUN_01033690(int param_1,int param_2,ISwerveObject **param_3)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -47597,8 +47413,7 @@ FUN_010337a8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
   undefined1 auStack_a8 [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_a8);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a8);
     piVar2 = *(int **)(param_1 + 4);
@@ -47612,7 +47427,7 @@ FUN_010337a8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -47628,8 +47443,7 @@ undefined4 FUN_01033834(int param_1,undefined4 *param_2)
   undefined1 auStack_98 [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     piVar2 = *(int **)(param_1 + 4);
@@ -47643,7 +47457,7 @@ undefined4 FUN_01033834(int param_1,undefined4 *param_2)
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -47659,8 +47473,7 @@ undefined4 FUN_010338a0(int param_1,int param_2,undefined4 *param_3)
   undefined1 auStack_9c [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     piVar2 = *(int **)(param_1 + 4);
@@ -47674,7 +47487,7 @@ undefined4 FUN_010338a0(int param_1,int param_2,undefined4 *param_3)
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -47689,8 +47502,7 @@ undefined4 FUN_01033918(int param_1,undefined4 param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     piVar2 = *(int **)(param_1 + 4);
@@ -47703,7 +47515,7 @@ undefined4 FUN_01033918(int param_1,undefined4 param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -47777,8 +47589,7 @@ int swv_Create_Material(void **ppObj)
                        and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(0xd);
@@ -47789,7 +47600,7 @@ int swv_Create_Material(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -47804,8 +47615,7 @@ undefined4 FUN_01033a24(int param_1,int param_2,undefined4 *param_3)
   undefined1 auStack_9c [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -47820,7 +47630,7 @@ undefined4 FUN_01033a24(int param_1,int param_2,undefined4 *param_3)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -47880,8 +47690,7 @@ undefined4 FUN_01033b4c(int param_1,undefined4 param_2,undefined4 param_3)
   undefined1 auStack_9c [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -47892,7 +47701,7 @@ undefined4 FUN_01033b4c(int param_1,undefined4 param_2,undefined4 param_3)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -47908,11 +47717,10 @@ undefined4 FUN_01033bb4(int param_1,undefined4 param_2)
   undefined1 uVar5;
   undefined1 auStack_98 [136];
   
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   uVar4 = 1;
   if (iVar1 != 0) {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
     return uVar2;
   }
   swv_TryArm(auStack_98);
@@ -47963,8 +47771,7 @@ int swv_Create_Mesh(void **ppObj)
                        wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(0xe);
@@ -47975,7 +47782,7 @@ int swv_Create_Mesh(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -47988,8 +47795,7 @@ int FUN_01033ccc(int param_1,undefined4 param_2,ISwerveObject **param_3)
   void *pNative;
   undefined1 auStack_98 [136];
   
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -48004,7 +47810,7 @@ int FUN_01033ccc(int param_1,undefined4 param_2,ISwerveObject **param_3)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -48017,8 +47823,7 @@ int FUN_01033d40(int param_1,undefined4 param_2,ISwerveObject **param_3)
   void *pNative;
   undefined1 auStack_98 [136];
   
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -48033,7 +47838,7 @@ int FUN_01033d40(int param_1,undefined4 param_2,ISwerveObject **param_3)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -48061,8 +47866,7 @@ int FUN_01033dcc(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     piVar2 = *(int **)(param_1 + 4);
@@ -48078,7 +47882,7 @@ int FUN_01033dcc(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -48127,8 +47931,7 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
   iStack_30 = param_2;
   uStack_2c = param_3;
   iStack_28 = param_4;
-  swv_TryPush(auStack_bc);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_bc));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_bc);
     iVar1 = 0;
@@ -48141,7 +47944,7 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
     if (iVar1 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar2 = (int *)swv_New_2(0x10,0);
+    piVar2 = (int *)swv_New_2(0x10);
     if (piVar2 != (int *)0x0) {
       FUN_01027cb4(piVar2);
       *piVar2 = DATA_AT_0100255C_OFFSET_3 + 0x1033f44;
@@ -48164,7 +47967,7 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
     if (iVar9 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar5 = (int *)swv_New_2(0x10,0);
+    piVar5 = (int *)swv_New_2(0x10);
     if (piVar5 != (int *)0x0) {
       FUN_01027cb4(piVar5);
       *piVar5 = DATA_AT_0100252C_OFFSET_3 + 0x1033fd0;
@@ -48210,7 +48013,7 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
     swv_TryPop();
   }
   else {
-    uVar10 = swv_ErrorToResult();
+    uVar10 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar10;
 }
@@ -48228,8 +48031,7 @@ undefined4 FUN_010340d0(int param_1,int param_2,int param_3,int param_4)
   undefined1 auStack_a4 [136];
   
   uVar6 = 0;
-  swv_TryPush(auStack_a4);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_a4);
     uVar1 = INTEGER_MINUS_1302;
@@ -48268,7 +48070,7 @@ undefined4 FUN_010340d0(int param_1,int param_2,int param_3,int param_4)
     swv_TryPop();
   }
   else {
-    uVar6 = swv_ErrorToResult();
+    uVar6 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar6;
 }
@@ -48283,8 +48085,7 @@ undefined4 FUN_0103418c(int param_1,undefined4 param_2,int param_3)
   undefined1 auStack_9c [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -48302,7 +48103,7 @@ undefined4 FUN_0103418c(int param_1,undefined4 param_2,int param_3)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -48320,8 +48121,7 @@ int swv_Create_MorphingMesh(void **ppObj)
                        and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(0xf);
@@ -48332,7 +48132,7 @@ int swv_Create_MorphingMesh(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -48349,8 +48149,7 @@ int FUN_01034260(int param_1,int param_2,ISwerveObject **param_3)
   bool bVar5;
   undefined1 auStack_98 [136];
   
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -48379,7 +48178,7 @@ int FUN_01034260(int param_1,int param_2,ISwerveObject **param_3)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -48407,8 +48206,7 @@ undefined4 FUN_01034308(int param_1,undefined4 param_2,int param_3)
   undefined1 auStack_9c [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -48422,7 +48220,7 @@ undefined4 FUN_01034308(int param_1,undefined4 param_2,int param_3)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -48475,8 +48273,7 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
   iStack_30 = param_2;
   uStack_2c = param_3;
   iStack_28 = param_4;
-  swv_TryPush(auStack_c0);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_c0));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_c0);
     iVar1 = 0;
@@ -48489,7 +48286,7 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     if (iVar1 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar2 = (int *)swv_New_2(0x10,0);
+    piVar2 = (int *)swv_New_2(0x10);
     local_c4 = piVar2;
     if (piVar2 != (int *)0x0) {
       FUN_01027cb4(piVar2);
@@ -48513,7 +48310,7 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     if (iVar10 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar2 = (int *)swv_New_2(0x10,0);
+    piVar2 = (int *)swv_New_2(0x10);
     if (piVar2 != (int *)0x0) {
       FUN_01027cb4(piVar2);
       *piVar2 = DATA_AT_0100255C_OFFSET_4 + 0x1034514;
@@ -48536,7 +48333,7 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     if (iVar11 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar5 = (int *)swv_New_2(0x10,0);
+    piVar5 = (int *)swv_New_2(0x10);
     if (piVar5 != (int *)0x0) {
       FUN_01027cb4(piVar5);
       *piVar5 = DATA_AT_0100252C_OFFSET_4 + 0x10345a0;
@@ -48586,7 +48383,7 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     swv_TryPop();
   }
   else {
-    local_38 = swv_ErrorToResult();
+    local_38 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return local_38;
 }
@@ -48617,8 +48414,7 @@ undefined4 FUN_010346bc(int param_1,int param_2,uint param_3,int param_4,int par
   iStack_30 = param_2;
   uStack_2c = param_3;
   iStack_28 = param_4;
-  swv_TryPush(auStack_bc);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_bc));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_bc);
     uVar1 = INTEGER_MINUS_1302;
@@ -48632,7 +48428,7 @@ undefined4 FUN_010346bc(int param_1,int param_2,uint param_3,int param_4,int par
     if (iVar2 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar3 = (int *)swv_New_2(0x10,0);
+    piVar3 = (int *)swv_New_2(0x10);
     local_c0 = piVar3;
     if (piVar3 != (int *)0x0) {
       FUN_01027cb4(piVar3);
@@ -48682,7 +48478,7 @@ undefined4 FUN_010346bc(int param_1,int param_2,uint param_3,int param_4,int par
     swv_TryPop();
   }
   else {
-    uVar10 = swv_ErrorToResult();
+    uVar10 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar10;
 }
@@ -48696,8 +48492,7 @@ undefined4 FUN_01034834(int param_1,undefined4 param_2,int param_3)
   undefined1 auStack_9c [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -48711,7 +48506,7 @@ undefined4 FUN_01034834(int param_1,undefined4 param_2,int param_3)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -48726,8 +48521,7 @@ undefined4 FUN_010348b0(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -48745,7 +48539,7 @@ undefined4 FUN_010348b0(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -48772,8 +48566,7 @@ int FUN_01034934(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -48788,7 +48581,7 @@ int FUN_01034934(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -48820,8 +48613,7 @@ undefined4 FUN_010349b8(int param_1,int param_2,int param_3,undefined1 *param_4)
   undefined1 auStack_a4 [136];
   
   uVar6 = 0;
-  swv_TryPush(auStack_a4);
-  iVar3 = swv_setjmp();
+  iVar3 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
   if (iVar3 == 0) {
     swv_TryArm(auStack_a4);
     uVar1 = INTEGER_MINUS_1302;
@@ -48854,7 +48646,7 @@ undefined4 FUN_010349b8(int param_1,int param_2,int param_3,undefined1 *param_4)
     swv_TryPop();
   }
   else {
-    uVar6 = swv_ErrorToResult();
+    uVar6 = swv_ErrorToResult(iVar3);   /* Ghidra had dropped it */
   }
   return uVar6;
 }
@@ -48919,8 +48711,7 @@ undefined4 FUN_01034b78(int param_1,int param_2,int param_3,int param_4,int para
   undefined1 auStack_a8 [136];
   
   uVar5 = 0;
-  swv_TryPush(auStack_a8);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_a8);
     uVar1 = INTEGER_MINUS_1301;
@@ -48952,7 +48743,7 @@ undefined4 FUN_01034b78(int param_1,int param_2,int param_3,int param_4,int para
     swv_TryPop();
   }
   else {
-    uVar5 = swv_ErrorToResult();
+    uVar5 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar5;
 }
@@ -48968,11 +48759,10 @@ undefined4 FUN_01034c3c(int param_1,undefined4 param_2)
   undefined1 uVar5;
   undefined1 auStack_98 [136];
   
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   uVar4 = 1;
   if (iVar1 != 0) {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
     return uVar2;
   }
   swv_TryArm(auStack_98);
@@ -49107,8 +48897,7 @@ undefined4 FUN_01034d24(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -49129,7 +48918,7 @@ undefined4 FUN_01034d24(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -49144,8 +48933,7 @@ undefined4 FUN_01034da8(int param_1,undefined4 param_2,undefined4 *param_3)
   undefined1 auStack_9c [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -49157,7 +48945,7 @@ undefined4 FUN_01034da8(int param_1,undefined4 param_2,undefined4 *param_3)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -49171,8 +48959,7 @@ int FUN_01034e14(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     piVar2 = *(int **)(param_1 + 4);
@@ -49189,7 +48976,7 @@ int FUN_01034e14(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -49202,8 +48989,7 @@ int FUN_01034e8c(int param_1,undefined4 param_2,ISwerveObject **param_3)
   void *pNative;
   undefined1 auStack_98 [136];
   
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -49218,7 +49004,7 @@ int FUN_01034e8c(int param_1,undefined4 param_2,ISwerveObject **param_3)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -49231,8 +49017,7 @@ int FUN_01034f00(int param_1,undefined4 param_2,ISwerveObject **param_3)
   void *pNative;
   undefined1 auStack_98 [136];
   
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -49247,7 +49032,7 @@ int FUN_01034f00(int param_1,undefined4 param_2,ISwerveObject **param_3)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -49282,15 +49067,14 @@ int FUN_01034f94(int param_1,uint param_2,int param_3,uint *param_4)
   undefined1 auStack_a8 [136];
   
   iVar7 = 0;
-  swv_TryPush(auStack_a8);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_a8);
     iVar2 = *(int *)(param_1 + 4);
     if (iVar2 != 0) {
       iVar2 = iVar2 + -4;
     }
-    piVar3 = (int *)swv_New_2(0x10,0);
+    piVar3 = (int *)swv_New_2(0x10);
     if (piVar3 != (int *)0x0) {
       *piVar3 = DATA_AT_0100203C_OFFSET_40 + 0x1034ffc;
       *piVar3 = DATA_AT_01001EAC_OFFSET_11 + 0x1035008;
@@ -49329,7 +49113,7 @@ int FUN_01034f94(int param_1,uint param_2,int param_3,uint *param_4)
     swv_TryPop();
   }
   else {
-    iVar7 = swv_ErrorToResult();
+    iVar7 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return iVar7;
 }
@@ -49428,8 +49212,7 @@ undefined4 FUN_01035270(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -49450,7 +49233,7 @@ undefined4 FUN_01035270(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -49511,8 +49294,7 @@ undefined4 FUN_01035318(int param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined1 auStack_a0 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_a0);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a0);
     iVar1 = *(int *)(param_1 + 4);
@@ -49523,7 +49305,7 @@ undefined4 FUN_01035318(int param_1,undefined4 param_2,undefined4 param_3,undefi
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -51929,8 +51711,7 @@ int swv_Create_PolygonMode(void **ppObj)
                        and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(8);
@@ -51941,7 +51722,7 @@ int swv_Create_PolygonMode(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -52041,8 +51822,7 @@ undefined4 FUN_010380d0(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -52056,7 +51836,7 @@ undefined4 FUN_010380d0(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -52112,8 +51892,7 @@ undefined4 FUN_01038178(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -52127,7 +51906,7 @@ undefined4 FUN_01038178(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -52169,8 +51948,7 @@ undefined4 FUN_01038208(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -52184,7 +51962,7 @@ undefined4 FUN_01038208(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -52225,8 +52003,7 @@ int swv_Create_RayIntersection(void **ppObj)
                        switch (0x0102479c); class name from the JSR-184 alphabetical numbering
                        proven by swvObj_QueryInterface's hierarchy table (see swv_types.h
                        SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(0x1a);
@@ -52237,7 +52014,7 @@ int swv_Create_RayIntersection(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -52264,8 +52041,7 @@ int FUN_01038358(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -52280,7 +52056,7 @@ int FUN_01038358(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -52336,8 +52112,7 @@ undefined4 FUN_0103840c(int param_1,undefined4 param_2,int param_3)
   undefined1 auStack_9c [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -52351,7 +52126,7 @@ undefined4 FUN_0103840c(int param_1,undefined4 param_2,int param_3)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -52379,8 +52154,7 @@ undefined4 FUN_010384a0(int param_1,uint param_2,undefined4 *param_3)
   undefined1 auStack_9c [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -52394,7 +52168,7 @@ undefined4 FUN_010384a0(int param_1,uint param_2,undefined4 *param_3)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -52408,8 +52182,7 @@ undefined4 FUN_01038518(int param_1,uint param_2,undefined4 *param_3)
   undefined1 auStack_9c [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -52423,7 +52196,7 @@ undefined4 FUN_01038518(int param_1,uint param_2,undefined4 *param_3)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -52466,7 +52239,7 @@ int FUN_01038644(uint param_1,int param_2,int param_3,undefined4 param_4)
   undefined1 in_ZR;
   undefined1 in_CY;
   
-  swv_fcmp_c(param_1,0xcf000000,param_3,param_4,param_4);
+  swv_fcmp_c(param_1,0xcf000000);
   if (!(bool)in_CY || (bool)in_ZR) {
     iVar1 = -0x80000000;
   }
@@ -52478,12 +52251,10 @@ int FUN_01038644(uint param_1,int param_2,int param_3,undefined4 param_4)
     else {
       swv_fcmp_c(param_1,0);
       if ((bool)in_CY) {
-        swv_fadd(param_1,0x3f000000);
-        iVar1 = swv_ffix();
+        iVar1 = swv_ffix(swv_fadd(param_1,0x3f000000));   /* Ghidra had dropped it */
       }
       else {
-        swv_fadd(param_1 ^ 0x80000000,0x3f000000);
-        iVar1 = swv_ffix();
+        iVar1 = swv_ffix(swv_fadd(param_1 ^ 0x80000000,0x3f000000));   /* Ghidra had dropped it */
         iVar1 = -iVar1;
       }
     }
@@ -52573,8 +52344,7 @@ FUN_01038794(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undef
   undefined1 auStack_a4 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a4);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a4);
     iVar1 = *(int *)(param_1 + 4);
@@ -52592,7 +52362,7 @@ FUN_01038794(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undef
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -52610,8 +52380,7 @@ int swv_Create_SkinnedMesh(void **ppObj)
                        and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(0x10);
@@ -52622,7 +52391,7 @@ int swv_Create_SkinnedMesh(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -52635,8 +52404,7 @@ int FUN_01038878(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -52651,7 +52419,7 @@ int FUN_01038878(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -52699,8 +52467,7 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
   iStack_30 = param_2;
   uStack_2c = param_3;
   iStack_28 = param_4;
-  swv_TryPush(auStack_bc);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_bc));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_bc);
     iVar1 = 0;
@@ -52713,7 +52480,7 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     if (iVar1 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar2 = (int *)swv_New_2(0x10,0);
+    piVar2 = (int *)swv_New_2(0x10);
     if (piVar2 != (int *)0x0) {
       FUN_01027cb4(piVar2);
       *piVar2 = DATA_AT_0100255C_OFFSET_5 + 0x10389b4;
@@ -52736,7 +52503,7 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     if (iVar10 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar5 = (int *)swv_New_2(0x10,0);
+    piVar5 = (int *)swv_New_2(0x10);
     if (piVar5 != (int *)0x0) {
       FUN_01027cb4(piVar5);
       *piVar5 = DATA_AT_0100252C_OFFSET_5 + 0x1038a40;
@@ -52792,7 +52559,7 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     swv_TryPop();
   }
   else {
-    uVar11 = swv_ErrorToResult();
+    uVar11 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar11;
 }
@@ -52811,8 +52578,7 @@ undefined4 FUN_01038b54(int param_1,int param_2,int param_3,int param_4,int para
   undefined1 auStack_a8 [136];
   
   uVar7 = 0;
-  swv_TryPush(auStack_a8);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_a8);
     uVar1 = INTEGER_MINUS_1302;
@@ -52858,7 +52624,7 @@ undefined4 FUN_01038b54(int param_1,int param_2,int param_3,int param_4,int para
     swv_TryPop();
   }
   else {
-    uVar7 = swv_ErrorToResult();
+    uVar7 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar7;
 }
@@ -52876,8 +52642,7 @@ int swv_Create_Sprite3D(void **ppObj)
                        and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(0x12);
@@ -52888,7 +52653,7 @@ int swv_Create_Sprite3D(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -52901,8 +52666,7 @@ int FUN_01038c8c(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -52917,7 +52681,7 @@ int FUN_01038c8c(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -52986,8 +52750,7 @@ int FUN_01038d58(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -53002,7 +52765,7 @@ int FUN_01038d58(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -53041,8 +52804,7 @@ undefined4 FUN_01038e84(int param_1,int param_2,int param_3,int param_4)
   undefined1 auStack_a0 [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_a0);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a0);
     iVar1 = 0;
@@ -53072,7 +52834,7 @@ undefined4 FUN_01038e84(int param_1,int param_2,int param_3,int param_4)
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -53146,8 +52908,7 @@ FUN_01038f70(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
   undefined1 auStack_a4 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_a4);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a4);
     iVar1 = *(int *)(param_1 + 4);
@@ -53158,7 +52919,7 @@ FUN_01038f70(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -53173,8 +52934,7 @@ undefined4 FUN_01038fe8(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -53195,7 +52955,7 @@ undefined4 FUN_01038fe8(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -53313,8 +53073,7 @@ int swv_Create_Class24(void **ppObj)
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId).
                        GUESS: class 24 is an Image2D subclass with no JSR-184 name. */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(0x18);
@@ -53325,7 +53084,7 @@ int swv_Create_Class24(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -53386,8 +53145,7 @@ undefined4 FUN_0103937c(int param_1,int param_2,int param_3,undefined4 param_4,i
   undefined1 auStack_a8 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a8);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_a8);
     uVar1 = INTEGER_MINUS_1301;
@@ -53408,7 +53166,7 @@ undefined4 FUN_0103937c(int param_1,int param_2,int param_3,undefined4 param_4,i
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -53423,8 +53181,7 @@ undefined4 FUN_01039424(int param_1,int param_2,int param_3)
   undefined1 auStack_a0 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a0);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_a0);
     uVar1 = INTEGER_MINUS_1301;
@@ -53442,7 +53199,7 @@ undefined4 FUN_01039424(int param_1,int param_2,int param_3)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -53457,8 +53214,7 @@ undefined4 FUN_010394ac(int param_1,undefined4 param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -53470,7 +53226,7 @@ undefined4 FUN_010394ac(int param_1,undefined4 param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -53488,8 +53244,7 @@ undefined4 FUN_01039510(int param_1,undefined4 param_2)
   undefined1 auStack_98 [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   uVar5 = 1;
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
@@ -53508,7 +53263,7 @@ undefined4 FUN_01039510(int param_1,undefined4 param_2)
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -54272,8 +54027,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   if (pNative == (void *)0x0) {
     return 0;
   }
-  swv_TryPush(auStack_a4);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
   if (iVar1 != 0) {
     *(int *)((int)pNative + 4) = *(int *)((int)pNative + 4) + 1;
     swv_NativeRelease(pNative);
@@ -54292,7 +54046,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 1:
     pVtbl = *ppvVar2;
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x6c,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x6c);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x6c);
       }
@@ -54303,7 +54057,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 2:
     pVtbl = ppvVar2[1];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x5c,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x5c);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x5c);
       }
@@ -54314,7 +54068,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 3:
     pVtbl = ppvVar2[2];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x78,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x78);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x78);
       }
@@ -54325,7 +54079,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 4:
     pVtbl = ppvVar2[3];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x88,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x88);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x88);
       }
@@ -54336,7 +54090,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 5:
     pVtbl = ppvVar2[4];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xc0,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0xc0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0xc0);
       }
@@ -54347,7 +54101,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 6:
     pVtbl = ppvVar2[5];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x84,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x84);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x84);
       }
@@ -54358,7 +54112,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 7:
     pVtbl = ppvVar2[6];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x6c,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x6c);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x6c);
       }
@@ -54369,7 +54123,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 8:
     pVtbl = ppvVar2[0x10];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x70,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x70);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x70);
       }
@@ -54380,7 +54134,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 9:
     pVtbl = ppvVar2[8];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xc4,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0xc4);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0xc4);
       }
@@ -54391,7 +54145,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 10:
     pVtbl = ppvVar2[9];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x78,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x78);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x78);
       }
@@ -54402,7 +54156,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0xb:
     pVtbl = ppvVar2[0x17];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x50,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x50);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x50);
       }
@@ -54413,7 +54167,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0xc:
     pVtbl = ppvVar2[0xb];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xe4,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0xe4);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0xe4);
       }
@@ -54424,7 +54178,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0xd:
     pVtbl = ppvVar2[0xd];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x60,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x60);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x60);
       }
@@ -54435,7 +54189,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0xe:
     pVtbl = ppvVar2[0xe];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(200,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(200);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,200);
       }
@@ -54446,7 +54200,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0xf:
     pVtbl = ppvVar2[0xf];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xe0,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0xe0);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0xe0);
       }
@@ -54457,7 +54211,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0x10:
     pVtbl = ppvVar2[0x12];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xd8,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0xd8);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0xd8);
       }
@@ -54468,7 +54222,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0x11:
     pVtbl = ppvVar2[0x15];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xa8,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0xa8);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0xa8);
       }
@@ -54479,7 +54233,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0x12:
     pVtbl = ppvVar2[0x13];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xd8,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0xd8);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0xd8);
       }
@@ -54490,7 +54244,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0x13:
     pVtbl = ppvVar2[10];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(100,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(100);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,100);
       }
@@ -54501,7 +54255,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0x14:
     pVtbl = ppvVar2[0x18];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x54,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x54);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x54);
       }
@@ -54512,7 +54266,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0x15:
     pVtbl = ppvVar2[0x19];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x74,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x74);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x74);
       }
@@ -54523,7 +54277,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0x16:
     pVtbl = ppvVar2[0x1a];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xd4,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0xd4);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0xd4);
       }
@@ -54536,7 +54290,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0x18:
     pVtbl = ppvVar2[0x14];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x90,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x90);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x90);
       }
@@ -54547,7 +54301,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0x19:
     pVtbl = ppvVar2[7];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x5c,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x5c);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x5c);
       }
@@ -54558,7 +54312,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0x1a:
     pVtbl = ppvVar2[0x11];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x30,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x30);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x30);
       }
@@ -54569,7 +54323,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0x1b:
     pVtbl = ppvVar2[0x16];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x44,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x44);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x44);
       }
@@ -54580,7 +54334,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   case 0x1c:
     pVtbl = ppvVar2[0xc];
     if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x1c,0);
+      pVtbl = (ISwerveObjectVtbl *)swv_New(0x1c);
       if (pVtbl != (ISwerveObjectVtbl *)0x0) {
         rt_memclr_w(pVtbl,0x1c);
       }
@@ -54598,14 +54352,14 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
      object's class) */
   iVar1 = (*(code *)(*(int *)(*(int *)pNative + 4) + *(int *)pNative))(pNative);
   if (iVar1 == 0x1c) {
-    po = (ISwerveObject *)swv_New(0x20,0);
+    po = (ISwerveObject *)swv_New(0x20);
     if (po != (ISwerveObject *)0x0) {
       rt_memclr_w(po,0x20);
     }
     swv_memset(po,0,0x20);
   }
   else {
-    po = (ISwerveObject *)swv_New(0xc,0);
+    po = (ISwerveObject *)swv_New(0xc);
     if (po != (ISwerveObject *)0x0) {
       po->pvt = (ISwerveObjectVtbl *)0x0;
       po->pNative = (void *)0x0;
@@ -55133,8 +54887,7 @@ int swv_Create_Texture2D(void **ppObj)
                        and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(0x11);
@@ -55145,7 +54898,7 @@ int swv_Create_Texture2D(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -55186,8 +54939,7 @@ int FUN_0103b290(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -55202,7 +54954,7 @@ int FUN_0103b290(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -55268,8 +55020,7 @@ undefined4 FUN_0103b3ec(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = 0;
@@ -55290,7 +55041,7 @@ undefined4 FUN_0103b3ec(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -55318,8 +55069,7 @@ undefined4 FUN_0103b480(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -55333,7 +55083,7 @@ undefined4 FUN_0103b480(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -55348,8 +55098,7 @@ undefined4 FUN_0103b4f0(int param_1,int param_2,int param_3)
   undefined1 auStack_a0 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a0);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_a0);
     uVar1 = INTEGER_MINUS_1301;
@@ -55368,7 +55117,7 @@ undefined4 FUN_0103b4f0(int param_1,int param_2,int param_3)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -55383,8 +55132,7 @@ undefined4 FUN_0103b57c(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -55405,7 +55153,7 @@ undefined4 FUN_0103b57c(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -55420,8 +55168,7 @@ undefined4 FUN_0103b600(int param_1,int param_2,int param_3)
   undefined1 auStack_a0 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a0);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_a0);
     uVar1 = INTEGER_MINUS_1301;
@@ -55440,7 +55187,7 @@ undefined4 FUN_0103b600(int param_1,int param_2,int param_3)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -55458,8 +55205,7 @@ int swv_Create_Transform(void **ppObj)
                        and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(0x1b);
@@ -55470,7 +55216,7 @@ int swv_Create_Transform(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -55484,8 +55230,7 @@ undefined4 FUN_0103b6ec(int param_1,undefined4 param_2,int param_3)
   undefined1 auStack_9c [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -55499,7 +55244,7 @@ undefined4 FUN_0103b6ec(int param_1,undefined4 param_2,int param_3)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -55539,8 +55284,7 @@ undefined4 FUN_0103b84c(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = 0;
@@ -55561,7 +55305,7 @@ undefined4 FUN_0103b84c(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -55575,8 +55319,7 @@ undefined4 FUN_0103b8cc(int param_1)
   undefined1 auStack_94 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -55587,7 +55330,7 @@ undefined4 FUN_0103b8cc(int param_1)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -55602,8 +55345,7 @@ undefined4 FUN_0103b924(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -55624,7 +55366,7 @@ undefined4 FUN_0103b924(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -55644,8 +55386,7 @@ undefined4 FUN_0103b9a8(int param_1,undefined4 *param_2)
   undefined1 auStack_a0 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a0);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a0);
     iVar1 = *(int *)(param_1 + 4);
@@ -55679,7 +55420,7 @@ undefined4 FUN_0103b9a8(int param_1,undefined4 *param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -55705,8 +55446,7 @@ undefined4 FUN_0103baa8(int param_1,undefined4 *param_2)
   undefined1 auStack_a8 [136];
   
   uVar5 = 0;
-  swv_TryPush(auStack_a8);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a8);
     iVar1 = *(int *)(param_1 + 4);
@@ -55743,7 +55483,7 @@ undefined4 FUN_0103baa8(int param_1,undefined4 *param_2)
     swv_TryPop();
   }
   else {
-    uVar5 = swv_ErrorToResult();
+    uVar5 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar5;
 }
@@ -55760,8 +55500,7 @@ undefined4 FUN_0103bba8(int param_1,undefined4 *param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -55778,7 +55517,7 @@ undefined4 FUN_0103bba8(int param_1,undefined4 *param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -55795,8 +55534,7 @@ undefined4 FUN_0103bc40(int param_1,undefined4 *param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -55813,7 +55551,7 @@ undefined4 FUN_0103bc40(int param_1,undefined4 *param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -55857,8 +55595,7 @@ undefined4 FUN_0103bce8(int param_1,undefined4 param_2,int param_3)
   undefined1 auStack_9c [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -55872,7 +55609,7 @@ undefined4 FUN_0103bce8(int param_1,undefined4 param_2,int param_3)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -55887,8 +55624,7 @@ undefined4 FUN_0103bd64(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -55909,7 +55645,7 @@ undefined4 FUN_0103bd64(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -55925,8 +55661,7 @@ undefined4 FUN_0103bde8(int param_1,int param_2,undefined4 param_3,int param_4,i
   undefined1 auStack_a8 [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_a8);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_a8);
     uVar1 = INTEGER_MINUS_1302;
@@ -55951,7 +55686,7 @@ undefined4 FUN_0103bde8(int param_1,int param_2,undefined4 param_3,int param_4,i
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -55965,8 +55700,7 @@ undefined4 FUN_0103be9c(int param_1,undefined4 param_2,int param_3)
   undefined1 auStack_9c [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -55980,7 +55714,7 @@ undefined4 FUN_0103be9c(int param_1,undefined4 param_2,int param_3)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -55995,7 +55729,6 @@ void FUN_0103bf18(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   uint uVar4;
   undefined4 uVar5;
   int iVar6;
-  undefined4 unaff_r4;
   undefined1 uVar7;
   undefined1 uVar8;
   
@@ -56007,18 +55740,18 @@ void FUN_0103bf18(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   }
   FUN_01025e3c();
   uVar5 = WORD_HEXADECIMAL_377BA882;
-  swv_fcmp_c(*(uint *)(iVar6 + 0x18) & 0x7fffffff,WORD_HEXADECIMAL_377BA882,param_3,param_4,unaff_r4);
+  swv_fcmp_c(*(uint *)(iVar6 + 0x18) & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
   if ((((bool)uVar8 && !(bool)uVar7) ||
-      (swv_fcmp_c(*(uint *)(iVar6 + 0x28) & 0x7fffffff,uVar5,param_3,param_4,unaff_r4),
+      (swv_fcmp_c(*(uint *)(iVar6 + 0x28) & 0x7fffffff,uVar5),
       (bool)uVar8 && !(bool)uVar7)) ||
-     (swv_fcmp_c(*(uint *)(iVar6 + 0x38) & 0x7fffffff,uVar5,param_3,param_4,unaff_r4),
+     (swv_fcmp_c(*(uint *)(iVar6 + 0x38) & 0x7fffffff,uVar5),
      (bool)uVar8 && !(bool)uVar7)) {
 LAB_0101d6e0:
     bVar1 = false;
   }
   else {
     uVar4 = swv_fsub(*(undefined4 *)(iVar6 + 0x48),0x3f800000);
-    swv_fcmp_c(uVar4 & 0x7fffffff,uVar5,param_3,param_4,unaff_r4);
+    swv_fcmp_c(uVar4 & 0x7fffffff,uVar5);
     if ((bool)uVar8 && !(bool)uVar7) goto LAB_0101d6e0;
     bVar1 = true;
   }
@@ -56097,8 +55830,7 @@ undefined4 FUN_0103bf28(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -56119,7 +55851,7 @@ undefined4 FUN_0103bf28(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -56191,8 +55923,7 @@ undefined4 FUN_0103c094(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -56213,7 +55944,7 @@ undefined4 FUN_0103c094(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -56276,8 +56007,7 @@ undefined4 FUN_0103c250(int param_1,undefined4 *param_2)
   undefined1 auStack_a0 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a0);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a0);
     iVar1 = *(int *)(param_1 + 4);
@@ -56311,7 +56041,7 @@ undefined4 FUN_0103c250(int param_1,undefined4 *param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -56331,8 +56061,7 @@ undefined4 FUN_0103c350(int param_1,undefined4 *param_2)
   undefined1 auStack_a0 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a0);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a0);
     iVar1 = *(int *)(param_1 + 4);
@@ -56366,7 +56095,7 @@ undefined4 FUN_0103c350(int param_1,undefined4 *param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -56383,8 +56112,7 @@ undefined4 FUN_0103c450(int param_1,undefined4 *param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -56401,7 +56129,7 @@ undefined4 FUN_0103c450(int param_1,undefined4 *param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -56421,8 +56149,7 @@ undefined4 FUN_0103c4e8(int param_1,undefined4 *param_2)
   undefined1 auStack_a0 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a0);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a0);
     iVar1 = *(int *)(param_1 + 4);
@@ -56456,7 +56183,7 @@ undefined4 FUN_0103c4e8(int param_1,undefined4 *param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -56473,8 +56200,7 @@ undefined4 FUN_0103c5e8(int param_1,undefined4 *param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -56491,7 +56217,7 @@ undefined4 FUN_0103c5e8(int param_1,undefined4 *param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -56506,8 +56232,7 @@ undefined4 FUN_0103c680(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -56525,7 +56250,7 @@ undefined4 FUN_0103c680(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -56542,8 +56267,7 @@ undefined4 FUN_0103c6ec(int param_1,undefined4 *param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -56560,7 +56284,7 @@ undefined4 FUN_0103c6ec(int param_1,undefined4 *param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -56577,8 +56301,7 @@ undefined4 FUN_0103c784(int param_1,undefined4 *param_2)
   undefined1 auStack_98 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -56595,7 +56318,7 @@ undefined4 FUN_0103c784(int param_1,undefined4 *param_2)
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -56614,8 +56337,7 @@ int swv_Create_TriangleStripArray(void **ppObj)
                        switch (0x0102479c); class name from the JSR-184 alphabetical numbering
                        proven by swvObj_QueryInterface's hierarchy table (see swv_types.h
                        SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(0xb);
@@ -56626,7 +56348,7 @@ int swv_Create_TriangleStripArray(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -56655,8 +56377,7 @@ undefined4 FUN_0103c8ac(int param_1,undefined4 param_2,int param_3,undefined4 pa
   undefined1 auStack_a8 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a8);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_a8);
     uVar1 = INTEGER_MINUS_1302;
@@ -56674,7 +56395,7 @@ undefined4 FUN_0103c8ac(int param_1,undefined4 param_2,int param_3,undefined4 pa
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -56688,8 +56409,7 @@ undefined4 FUN_0103c944(int param_1,undefined4 param_2,undefined4 param_3,int pa
   undefined1 auStack_a0 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_a0);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a0);
     if (param_4 == 0) {
@@ -56703,7 +56423,7 @@ undefined4 FUN_0103c944(int param_1,undefined4 param_2,undefined4 param_3,int pa
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -56721,8 +56441,7 @@ int swv_Create_VertexArray(void **ppObj)
                        and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(0x14);
@@ -56733,7 +56452,7 @@ int swv_Create_VertexArray(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -56765,8 +56484,7 @@ undefined4 FUN_0103ca64(int param_1,int param_2,int param_3,int param_4)
   undefined1 auStack_a4 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_a4);
-  iVar2 = swv_setjmp();
+  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
     swv_TryArm(auStack_a4);
     uVar1 = INTEGER_MINUS_1301;
@@ -56792,7 +56510,7 @@ undefined4 FUN_0103ca64(int param_1,int param_2,int param_3,int param_4)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -56806,8 +56524,7 @@ undefined4 FUN_0103cb10(int param_1,undefined4 param_2,int param_3,undefined4 pa
   undefined1 auStack_a4 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_a4);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a4);
     iVar1 = *(int *)(param_1 + 4);
@@ -56824,7 +56541,7 @@ undefined4 FUN_0103cb10(int param_1,undefined4 param_2,int param_3,undefined4 pa
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -56838,8 +56555,7 @@ undefined4 FUN_0103cbac(int param_1,undefined4 param_2,int param_3,undefined4 pa
   undefined1 auStack_a4 [136];
   
   uVar2 = 0;
-  swv_TryPush(auStack_a4);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a4);
     iVar1 = *(int *)(param_1 + 4);
@@ -56856,7 +56572,7 @@ undefined4 FUN_0103cbac(int param_1,undefined4 param_2,int param_3,undefined4 pa
     swv_TryPop();
   }
   else {
-    uVar2 = swv_ErrorToResult();
+    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar2;
 }
@@ -56874,8 +56590,7 @@ int swv_Create_VertexBuffer(void **ppObj)
                        and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(0x15);
@@ -56886,7 +56601,7 @@ int swv_Create_VertexBuffer(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -56899,8 +56614,7 @@ int FUN_0103cca8(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -56915,7 +56629,7 @@ int FUN_0103cca8(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -56942,8 +56656,7 @@ int FUN_0103cd2c(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -56958,7 +56671,7 @@ int FUN_0103cd2c(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -56971,8 +56684,7 @@ int FUN_0103cd98(int param_1,undefined4 param_2,undefined4 param_3,ISwerveObject
   void *pNative;
   undefined1 auStack_9c [136];
   
-  swv_TryPush(auStack_9c);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_9c);
     iVar1 = *(int *)(param_1 + 4);
@@ -56987,7 +56699,7 @@ int FUN_0103cd98(int param_1,undefined4 param_2,undefined4 param_3,ISwerveObject
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -57001,8 +56713,7 @@ int FUN_0103ce14(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   void *pNative;
   undefined1 auStack_a0 [136];
   
-  swv_TryPush(auStack_a0);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a0);
     iVar1 = *(int *)(param_1 + 4);
@@ -57017,7 +56728,7 @@ int FUN_0103ce14(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -57069,8 +56780,7 @@ undefined4 FUN_0103cf70(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -57088,7 +56798,7 @@ undefined4 FUN_0103cf70(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -57117,8 +56827,7 @@ undefined4 FUN_0103cff0(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -57136,7 +56845,7 @@ undefined4 FUN_0103cff0(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -57153,8 +56862,7 @@ FUN_0103d05c(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undef
   undefined1 auStack_a4 [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_a4);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a4);
     iVar1 = *(int *)(param_1 + 4);
@@ -57173,7 +56881,7 @@ FUN_0103d05c(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undef
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -57191,8 +56899,7 @@ FUN_0103d0f0(int param_1,undefined4 param_2,int param_3,undefined4 param_4,undef
   undefined1 auStack_a8 [136];
   
   uVar4 = 0;
-  swv_TryPush(auStack_a8);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a8);
     iVar1 = *(int *)(param_1 + 4);
@@ -57211,7 +56918,7 @@ FUN_0103d0f0(int param_1,undefined4 param_2,int param_3,undefined4 param_4,undef
     swv_TryPop();
   }
   else {
-    uVar4 = swv_ErrorToResult();
+    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar4;
 }
@@ -57229,8 +56936,7 @@ int swv_Create_World(void **ppObj)
                        wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
                        (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
                        swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  swv_TryPush(auStack_90);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
     pNative = (void *)FUN_01009860(0x16);
@@ -57241,7 +56947,7 @@ int swv_Create_World(void **ppObj)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -57254,8 +56960,7 @@ int FUN_0103d1ec(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -57270,7 +56975,7 @@ int FUN_0103d1ec(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -57283,8 +56988,7 @@ int FUN_0103d258(int param_1,ISwerveObject **param_2)
   void *pNative;
   undefined1 auStack_94 [136];
   
-  swv_TryPush(auStack_94);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_94);
     iVar1 = *(int *)(param_1 + 4);
@@ -57299,7 +57003,7 @@ int FUN_0103d258(int param_1,ISwerveObject **param_2)
     swv_TryPop();
   }
   else {
-    iVar1 = swv_ErrorToResult();
+    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return iVar1;
 }
@@ -57330,8 +57034,7 @@ undefined4 FUN_0103d314(int param_1,int param_2)
   undefined1 auStack_98 [136];
   
   uVar3 = 0;
-  swv_TryPush(auStack_98);
-  iVar1 = swv_setjmp();
+  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = *(int *)(param_1 + 4);
@@ -57352,7 +57055,7 @@ undefined4 FUN_0103d314(int param_1,int param_2)
     swv_TryPop();
   }
   else {
-    uVar3 = swv_ErrorToResult();
+    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
   }
   return uVar3;
 }
@@ -62956,9 +62659,10 @@ LAB_0103f9e0:
 /* WARNING: Removing unreachable block (ram,0x0103f9a8) */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-uint swv_fadd(uint param_1,uint param_2,undefined4 param_3,uint param_4)
+uint swv_fadd(uint param_1,uint param_2)
 
 {
+  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
   uint *puVar1;
   uint uVar2;
   uint uVar3;
@@ -62977,9 +62681,9 @@ uint swv_fadd(uint param_1,uint param_2,undefined4 param_3,uint param_4)
     uVar6 = 0x4000001;
     if (0xff000000 < param_2 << 1 || 0xff000000 < uVar3) {
       uVar3 = param_1 * 2 + 0x800000;
-      param_4 = param_2 * 2 + 0x800000;
+      scratch = param_2 * 2 + 0x800000;
       if (uVar3 < 0xff800001) {
-        uVar3 = param_4;
+        uVar3 = scratch;
       }
       if (0xff800000 < uVar3) goto LAB_0103ed1c;
 LAB_0103f924:
@@ -63049,7 +62753,7 @@ LAB_0103ed1c:
         param_2 = param_2 + uVar3;
       }
       uVar3 = param_1 >> 0x17;
-      param_4 = uVar3 - (param_2 >> 0x17);
+      scratch = uVar3 - (param_2 >> 0x17);
       if ((param_2 & 0x7f800000) == 0) {
         param_2 = param_2 << 8;
         if (param_2 == 0) {
@@ -63064,14 +62768,14 @@ LAB_0103ed1c:
         }
         else {
           param_1 = param_1 | 0x80000000;
-          param_4 = param_4 - 1;
+          scratch = scratch - 1;
         }
       }
       else {
         param_1 = param_1 << 8 | 0x80000000;
         param_2 = param_2 << 8 | 0x80000000;
       }
-      uVar6 = param_1 - (param_2 >> (param_4 & 0xff));
+      uVar6 = param_1 - (param_2 >> (scratch & 0xff));
       if ((int)uVar6 < 0) {
         bVar8 = (bool)((byte)(uVar6 >> 7) & 1);
         uVar3 = (uVar6 >> 8) + (uVar3 - 1) * 0x800000 + (uint)bVar8;
@@ -63082,7 +62786,7 @@ LAB_0103ed1c:
           return uVar3;
         }
 LAB_0103f0f0:
-        if (param_2 << (0x20 - param_4 & 0xff) == 0) {
+        if (param_2 << (0x20 - scratch & 0xff) == 0) {
           uVar3 = uVar3 & 0xfffffffe;
         }
         else {
@@ -63108,12 +62812,12 @@ LAB_0103f0f0:
         }
         goto LAB_0103f0f0;
       }
-      param_4 = uVar3 >> 8;
+      scratch = uVar3 >> 8;
       if (bVar7) {
         if (uVar6 >> 7 == 0) {
           return 0;
         }
-        param_1 = (uVar6 >> 7) >> (uVar3 & 0xff) | param_4 << 0x1f;
+        param_1 = (uVar6 >> 7) >> (uVar3 & 0xff) | scratch << 0x1f;
         uVar3 = 2;
       }
       else {
@@ -63127,7 +62831,7 @@ LAB_0103f0f0:
         if ((uVar3 ^ uVar2) >> 8 == 0) {
           return uVar6 + uVar2 * 0x800000;
         }
-        param_1 = uVar6 >> (-uVar2 & 0xff) | param_4 << 0x1f;
+        param_1 = uVar6 >> (-uVar2 & 0xff) | scratch << 0x1f;
         uVar3 = 2;
       }
     }
@@ -63138,12 +62842,12 @@ LAB_0103f0f0:
         param_2 = param_2 + iVar4;
       }
       uVar3 = param_1 >> 0x17;
-      param_4 = uVar3 - (param_2 >> 0x17);
+      scratch = uVar3 - (param_2 >> 0x17);
       if ((param_2 & 0x7f800000) != 0) {
         param_2 = param_2 << 8 | 0x80000000;
 LAB_0103ef2c:
         uVar2 = param_1 << 8 | 0x80000000;
-        uVar6 = param_2 >> (param_4 & 0xff);
+        uVar6 = param_2 >> (scratch & 0xff);
         uVar5 = uVar2 + uVar6;
         if (CARRY4(uVar2,uVar6)) {
           uVar6 = uVar5 >> 1 | 0x80000000;
@@ -63173,8 +62877,8 @@ LAB_0103ef2c:
             return param_1;
           }
 LAB_0103ef54:
-          param_4 = 0x20 - param_4;
-          param_2 = param_2 << (param_4 & 0xff);
+          scratch = 0x20 - scratch;
+          param_2 = param_2 << (scratch & 0xff);
           if (param_2 == 0) {
             param_1 = param_1 & 0xfffffffe;
           }
@@ -63199,7 +62903,7 @@ LAB_0103efd8:
       }
       else {
         if ((uVar3 & 0xff) != 0) {
-          param_4 = param_4 - 1;
+          scratch = scratch - 1;
           goto LAB_0103ef2c;
         }
         param_1 = param_1 * 0x100 + param_2 >> 8 | uVar3 << 0x17;
@@ -63242,7 +62946,7 @@ LAB_0103efd8:
     param_1 = param_1 & 0xff7fffff | param_2;
     uVar6 = uVar3 | 0x20000000;
   }
-  uVar3 = FUN_010019e0(param_1,param_2,uVar3,param_4,uVar6,in_lr,uVar6,in_lr);
+  uVar3 = FUN_010019e0(param_1,param_2,uVar3,scratch,uVar6,in_lr,uVar6,in_lr);
   if ((uVar6 & 0xf) != 9) {
     return uVar3;
   }
@@ -63292,9 +62996,10 @@ LAB_0103f9e0:
 /* WARNING: Removing unreachable block (ram,0x0103f9a8) */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-uint swv_frsb(uint param_1,uint param_2,undefined4 param_3,uint param_4)
+uint swv_frsb(uint param_1,uint param_2)
 
 {
+  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
   uint uVar1;
   uint *puVar2;
   int iVar3;
@@ -63314,9 +63019,9 @@ uint swv_frsb(uint param_1,uint param_2,undefined4 param_3,uint param_4)
     uVar4 = 0x4000002;
     if (0xff000000 < param_1 << 1 || 0xff000000 < uVar1) {
       uVar1 = param_2 * 2 + 0x800000;
-      param_4 = param_1 * 2 + 0x800000;
+      scratch = param_1 * 2 + 0x800000;
       if (uVar1 < 0xff800001) {
-        uVar1 = param_4;
+        uVar1 = scratch;
       }
       if (0xff800000 < uVar1) goto LAB_0103ed1c;
 LAB_0103f924:
@@ -63386,7 +63091,7 @@ LAB_0103ed1c:
         param_2 = param_2 + iVar3;
       }
       uVar4 = uVar1 >> 0x17;
-      param_4 = uVar4 - (param_2 >> 0x17);
+      scratch = uVar4 - (param_2 >> 0x17);
       if ((param_2 & 0x7f800000) == 0) {
         param_1 = param_2 * 0x100;
         if (param_1 == 0) goto LAB_0103efd8;
@@ -63398,13 +63103,13 @@ LAB_0103ed1c:
           uVar6 = 1;
           goto LAB_0103f864;
         }
-        param_4 = param_4 - 1;
+        scratch = scratch - 1;
       }
       else {
         param_1 = param_2 << 8 | 0x80000000;
       }
       uVar6 = uVar1 << 8 | 0x80000000;
-      uVar1 = param_1 >> (param_4 & 0xff);
+      uVar1 = param_1 >> (scratch & 0xff);
       uVar5 = uVar6 + uVar1;
       if (CARRY4(uVar6,uVar1)) {
         uVar1 = uVar5 >> 1 | 0x80000000;
@@ -63434,8 +63139,8 @@ LAB_0103ed1c:
           return param_2;
         }
 LAB_0103ef54:
-        param_4 = 0x20 - param_4;
-        param_1 = param_1 << (param_4 & 0xff);
+        scratch = 0x20 - scratch;
+        param_1 = param_1 << (scratch & 0xff);
         if (param_1 == 0) {
           param_2 = param_2 & 0xfffffffe;
         }
@@ -63454,7 +63159,7 @@ LAB_0103ef54:
       param_2 = param_2 + uVar4;
     }
     uVar4 = uVar1 >> 0x17;
-    param_4 = uVar4 - (param_2 >> 0x17);
+    scratch = uVar4 - (param_2 >> 0x17);
     if ((param_2 & 0x7f800000) == 0) {
       param_2 = param_2 << 8;
       if (param_2 != 0) {
@@ -63464,7 +63169,7 @@ LAB_0103ef54:
         }
         else {
           uVar1 = uVar1 | 0x80000000;
-          param_4 = param_4 - 1;
+          scratch = scratch - 1;
         }
         goto LAB_0103f0ac;
       }
@@ -63484,7 +63189,7 @@ LAB_0103efd8:
       uVar1 = uVar1 << 8 | 0x80000000;
       param_2 = param_2 << 8 | 0x80000000;
 LAB_0103f0ac:
-      uVar6 = uVar1 - (param_2 >> (param_4 & 0xff));
+      uVar6 = uVar1 - (param_2 >> (scratch & 0xff));
       if ((int)uVar6 < 0) {
         bVar7 = (bool)((byte)(uVar6 >> 7) & 1);
         uVar1 = (uVar6 >> 8) + (uVar4 - 1) * 0x800000 + (uint)bVar7;
@@ -63495,7 +63200,7 @@ LAB_0103f0ac:
           return uVar1;
         }
 LAB_0103f0f0:
-        if (param_2 << (0x20 - param_4 & 0xff) == 0) {
+        if (param_2 << (0x20 - scratch & 0xff) == 0) {
           uVar1 = uVar1 & 0xfffffffe;
         }
         else {
@@ -63521,12 +63226,12 @@ LAB_0103f0f0:
         }
         goto LAB_0103f0f0;
       }
-      param_4 = uVar4 >> 8;
+      scratch = uVar4 >> 8;
       if (bVar8) {
         if (uVar6 >> 7 == 0) {
           return 0;
         }
-        uVar1 = (uVar6 >> 7) >> (uVar4 & 0xff) | param_4 << 0x1f;
+        uVar1 = (uVar6 >> 7) >> (uVar4 & 0xff) | scratch << 0x1f;
         uVar6 = 2;
       }
       else {
@@ -63540,7 +63245,7 @@ LAB_0103f0f0:
         if ((uVar4 ^ uVar5) >> 8 == 0) {
           return uVar1 + uVar5 * 0x800000;
         }
-        uVar1 = uVar1 >> (-uVar5 & 0xff) | param_4 << 0x1f;
+        uVar1 = uVar1 >> (-uVar5 & 0xff) | scratch << 0x1f;
         uVar6 = 2;
       }
     }
@@ -63578,7 +63283,7 @@ LAB_0103f864:
     param_2 = uVar1 & 0xff7fffff | param_1;
     uVar4 = uVar6 | 0x20000000;
   }
-  uVar1 = FUN_010019e0(param_2,param_1,uVar6,param_4,uVar4,in_lr,uVar4,in_lr);
+  uVar1 = FUN_010019e0(param_2,param_1,uVar6,scratch,uVar4,in_lr,uVar4,in_lr);
   if ((uVar4 & 0xf) != 9) {
     return uVar1;
   }
@@ -63628,9 +63333,10 @@ LAB_0103f9e0:
 /* WARNING: Removing unreachable block (ram,0x0103f9a8) */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-uint swv_fsub(uint param_1,uint param_2,undefined4 param_3,uint param_4)
+uint swv_fsub(uint param_1,uint param_2)
 
 {
+  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
   uint *puVar1;
   int iVar2;
   uint uVar3;
@@ -63649,9 +63355,9 @@ uint swv_fsub(uint param_1,uint param_2,undefined4 param_3,uint param_4)
     uVar6 = 0x4000002;
     if (0xff000000 < param_2 << 1 || 0xff000000 < uVar3) {
       uVar3 = param_1 * 2 + 0x800000;
-      param_4 = param_2 * 2 + 0x800000;
+      scratch = param_2 * 2 + 0x800000;
       if (uVar3 < 0xff800001) {
-        uVar3 = param_4;
+        uVar3 = scratch;
       }
       if (0xff800000 < uVar3) goto LAB_0103ed1c;
 LAB_0103f924:
@@ -63721,7 +63427,7 @@ LAB_0103ed1c:
         param_2 = param_2 + iVar2;
       }
       uVar3 = param_1 >> 0x17;
-      param_4 = uVar3 - (param_2 >> 0x17);
+      scratch = uVar3 - (param_2 >> 0x17);
       if ((param_2 & 0x7f800000) == 0) {
         param_2 = param_2 * 0x100;
         if (param_2 == 0) goto LAB_0103efd8;
@@ -63733,13 +63439,13 @@ LAB_0103ed1c:
           uVar3 = 1;
           goto LAB_0103f864;
         }
-        param_4 = param_4 - 1;
+        scratch = scratch - 1;
       }
       else {
         param_2 = param_2 << 8 | 0x80000000;
       }
       uVar4 = param_1 << 8 | 0x80000000;
-      uVar6 = param_2 >> (param_4 & 0xff);
+      uVar6 = param_2 >> (scratch & 0xff);
       uVar5 = uVar4 + uVar6;
       if (CARRY4(uVar4,uVar6)) {
         uVar6 = uVar5 >> 1 | 0x80000000;
@@ -63769,8 +63475,8 @@ LAB_0103ed1c:
           return param_1;
         }
 LAB_0103ef54:
-        param_4 = 0x20 - param_4;
-        param_2 = param_2 << (param_4 & 0xff);
+        scratch = 0x20 - scratch;
+        param_2 = param_2 << (scratch & 0xff);
         if (param_2 == 0) {
           param_1 = param_1 & 0xfffffffe;
         }
@@ -63788,7 +63494,7 @@ LAB_0103ef54:
       param_2 = param_2 + uVar3;
     }
     uVar3 = param_1 >> 0x17;
-    param_4 = uVar3 - (param_2 >> 0x17);
+    scratch = uVar3 - (param_2 >> 0x17);
     if ((param_2 & 0x7f800000) == 0) {
       param_2 = param_2 << 8;
       if (param_2 != 0) {
@@ -63798,7 +63504,7 @@ LAB_0103ef54:
         }
         else {
           param_1 = param_1 | 0x80000000;
-          param_4 = param_4 - 1;
+          scratch = scratch - 1;
         }
         goto LAB_0103f0ac;
       }
@@ -63818,7 +63524,7 @@ LAB_0103efd8:
       param_1 = param_1 << 8 | 0x80000000;
       param_2 = param_2 << 8 | 0x80000000;
 LAB_0103f0ac:
-      uVar6 = param_1 - (param_2 >> (param_4 & 0xff));
+      uVar6 = param_1 - (param_2 >> (scratch & 0xff));
       if ((int)uVar6 < 0) {
         bVar7 = (bool)((byte)(uVar6 >> 7) & 1);
         uVar3 = (uVar6 >> 8) + (uVar3 - 1) * 0x800000 + (uint)bVar7;
@@ -63829,7 +63535,7 @@ LAB_0103f0ac:
           return uVar3;
         }
 LAB_0103f0f0:
-        if (param_2 << (0x20 - param_4 & 0xff) == 0) {
+        if (param_2 << (0x20 - scratch & 0xff) == 0) {
           uVar3 = uVar3 & 0xfffffffe;
         }
         else {
@@ -63855,12 +63561,12 @@ LAB_0103f0f0:
         }
         goto LAB_0103f0f0;
       }
-      param_4 = uVar3 >> 8;
+      scratch = uVar3 >> 8;
       if (bVar8) {
         if (uVar6 >> 7 == 0) {
           return 0;
         }
-        param_1 = (uVar6 >> 7) >> (uVar3 & 0xff) | param_4 << 0x1f;
+        param_1 = (uVar6 >> 7) >> (uVar3 & 0xff) | scratch << 0x1f;
         uVar3 = 2;
       }
       else {
@@ -63874,7 +63580,7 @@ LAB_0103f0f0:
         if ((uVar3 ^ uVar4) >> 8 == 0) {
           return uVar6 + uVar4 * 0x800000;
         }
-        param_1 = uVar6 >> (-uVar4 & 0xff) | param_4 << 0x1f;
+        param_1 = uVar6 >> (-uVar4 & 0xff) | scratch << 0x1f;
         uVar3 = 2;
       }
     }
@@ -63912,7 +63618,7 @@ LAB_0103f864:
     param_1 = param_1 & 0xff7fffff | param_2;
     uVar6 = uVar3 | 0x20000000;
   }
-  uVar3 = FUN_010019e0(param_1,param_2,uVar3,param_4,uVar6,in_lr,uVar6,in_lr);
+  uVar3 = FUN_010019e0(param_1,param_2,uVar3,scratch,uVar6,in_lr,uVar6,in_lr);
   if ((uVar6 & 0xf) != 9) {
     return uVar3;
   }
@@ -63939,9 +63645,10 @@ LAB_0103f9e0:
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
-uint swv_frdiv(uint param_1,uint param_2,undefined4 param_3,uint param_4)
+uint swv_frdiv(uint param_1,uint param_2)
 
 {
+  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
   uint *puVar1;
   undefined4 uVar2;
   uint uVar3;
@@ -63963,22 +63670,22 @@ uint swv_frdiv(uint param_1,uint param_2,undefined4 param_3,uint param_4)
   uVar6 = param_2 >> 7 & 0xff0000;
   bVar11 = uVar6 == 0;
   if (!bVar11) {
-    param_4 = param_1 >> 7 & 0xff0000;
-    bVar11 = param_4 == 0;
+    scratch = param_1 >> 7 & 0xff0000;
+    bVar11 = scratch == 0;
   }
   if (!bVar11) {
     bVar11 = uVar6 == 0xff0000;
   }
   if (!bVar11) {
-    bVar11 = param_4 == 0xff0000;
+    bVar11 = scratch == 0xff0000;
   }
   if (bVar11) {
-    param_4 = param_1 >> 7 & 0xff0000;
+    scratch = param_1 >> 7 & 0xff0000;
     if ((int)(param_2 ^ param_1) < 0) {
       uVar6 = uVar6 | 0x100;
     }
     uVar7 = WORD_HEXADECIMAL_04000004;
-    if (uVar6 < 0xff0000 && param_4 < 0xff0000) {
+    if (uVar6 < 0xff0000 && scratch < 0xff0000) {
       if ((param_1 & 0x7fffffff) == 0) {
         if ((param_2 & 0x7fffffff) != 0) {
           uVar7 = WORD_HEXADECIMAL_08000004;
@@ -63993,13 +63700,13 @@ uint swv_frdiv(uint param_1,uint param_2,undefined4 param_3,uint param_4)
       if ((uVar6 & 0xff0000) == 0) {
         uVar6 = uVar6 + LZCOUNT(param_2) * -0x10000 + 0x10000;
         param_2 = param_2 << LZCOUNT(param_2);
-        if (param_4 == 0) goto LAB_0103f760;
+        if (scratch == 0) goto LAB_0103f760;
         param_1 = param_1 | 0x80000000;
       }
       else {
 LAB_0103f760:
         param_2 = param_2 | 0x80000000;
-        param_4 = param_4 + LZCOUNT(param_1) * -0x10000 + 0x10000;
+        scratch = scratch + LZCOUNT(param_1) * -0x10000 + 0x10000;
         param_1 = param_1 << LZCOUNT(param_1);
       }
       param_2 = param_2 >> 8;
@@ -64024,10 +63731,10 @@ LAB_0103f760:
       goto LAB_0103ed1c;
     }
     uVar6 = param_2 * 2 + 0x800000;
-    param_4 = param_1 * 2 + 0x800000;
+    scratch = param_1 * 2 + 0x800000;
     uVar8 = uVar6;
     if (uVar6 < 0xff800001) {
-      uVar8 = param_4;
+      uVar8 = scratch;
     }
     if (0xff800000 < uVar8) goto LAB_0103ed1c;
     uVar8 = WORD_HEXADECIMAL_04000004;
@@ -64108,7 +63815,7 @@ code_r0x0103f280:
   iVar9 = uVar8 * 0x100 + (((int)(uVar7 * iVar9) >> 4) * iVar9 >> 0x15);
   uVar8 = iVar9 * (param_2 >> 8) >> 0x14;
   uVar4 = uVar7 * uVar8 + param_2 * 0x800;
-  uVar6 = (uVar6 - param_4) + 0x7d0000;
+  uVar6 = (uVar6 - scratch) + 0x7d0000;
   uVar3 = iVar9 * (uVar4 >> 8) >> 0x13;
   uVar4 = uVar7 * uVar3 + uVar4 * 0x1000;
   uVar10 = uVar6 & 0x100;
@@ -64117,7 +63824,7 @@ code_r0x0103f280:
   if (bVar11) {
     uVar4 = uVar4 + uVar7;
   }
-  param_4 = uVar3 + uVar8 * 0x1000 + (uint)bVar11;
+  scratch = uVar3 + uVar8 * 0x1000 + (uint)bVar11;
   if (uVar4 != 0) {
     uVar10 = uVar10 | 0x40000002;
   }
@@ -64129,7 +63836,7 @@ code_r0x0103f280:
   if (bVar12) {
     uVar10 = uVar10 | 4;
   }
-  param_2 = param_4 + uVar6 * 0x800000 + (uint)bVar11;
+  param_2 = scratch + uVar6 * 0x800000 + (uint)bVar11;
   if (!bVar12) {
     bVar11 = 0xfbffff < uVar6;
   }
@@ -64168,12 +63875,12 @@ code_r0x0103f280:
       return param_2 & 0x80000000;
     }
     if ((param_1 & 0x800) == 0) {
-      param_4 = 0xc1 - (param_2 & 0x80000000 | param_2 >> 0x17 & 0xfffffeff);
-      if ((param_4 & 0x7fffffff) < 0x18) {
-        uVar7 = param_2 << (0x20 - param_4 & 0xff);
-        uVar8 = 0x20 - (0x20 - param_4);
-        param_4 = uVar8 & 0x80000000;
-        param_2 = (param_2 & 0xffffff | 0x800000) >> (uVar8 & 0xff) | param_4;
+      scratch = 0xc1 - (param_2 & 0x80000000 | param_2 >> 0x17 & 0xfffffeff);
+      if ((scratch & 0x7fffffff) < 0x18) {
+        uVar7 = param_2 << (0x20 - scratch & 0xff);
+        uVar8 = 0x20 - (0x20 - scratch);
+        scratch = uVar8 & 0x80000000;
+        param_2 = (param_2 & 0xffffff | 0x800000) >> (uVar8 & 0xff) | scratch;
         if (uVar7 == 0) {
           param_1 = 0;
           uVar7 = uVar6;
@@ -64199,21 +63906,21 @@ code_r0x0103f280:
               param_2 = param_2 + 1;
             }
           }
-          param_4 = uVar7;
+          scratch = uVar7;
           uVar7 = uVar6 | 0x40000000;
         }
       }
       else {
         param_1 = *puVar1 | 8;
         *puVar1 = param_1;
-        if (SBORROW4(param_4 & 0x7fffffff,-0x7fffffe7)) {
-          param_2 = param_4 & 0x80000000;
+        if (SBORROW4(scratch & 0x7fffffff,-0x7fffffe7)) {
+          param_2 = scratch & 0x80000000;
         }
         else {
           uVar7 = param_2 & 0x7fffff;
-          param_2 = (param_4 & 0x80000000) + 1;
+          param_2 = (scratch & 0x80000000) + 1;
           if (uVar7 == 0 && (uVar6 & 0x80000000) == 0) {
-            param_2 = param_4 & 0x80000000;
+            param_2 = scratch & 0x80000000;
           }
         }
         uVar7 = 0x40000000;
@@ -64279,7 +63986,7 @@ LAB_0103ed1c:
             param_1 = param_2 ^ uVar6;
           }
           else {
-            param_1 = param_1 ^ param_4;
+            param_1 = param_1 ^ scratch;
           }
           goto LAB_0103ee14;
         }
@@ -64307,7 +64014,7 @@ joined_r0x0103edcc:
       }
     }
   }
-  uVar6 = FUN_010019e0(param_2,param_1,uVar6,param_4);
+  uVar6 = FUN_010019e0(param_2,param_1,uVar6,scratch);
   if ((uVar8 & 0xf) != 9) {
     return uVar6;
   }
@@ -64334,9 +64041,10 @@ LAB_0103f9e0:
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
-uint swv_fdiv(uint param_1,uint param_2,undefined4 param_3,uint param_4)
+uint swv_fdiv(uint param_1,uint param_2)
 
 {
+  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
   uint *puVar1;
   undefined4 uVar2;
   uint uVar3;
@@ -64357,22 +64065,22 @@ uint swv_fdiv(uint param_1,uint param_2,undefined4 param_3,uint param_4)
   uVar6 = param_1 >> 7 & 0xff0000;
   bVar11 = uVar6 == 0;
   if (!bVar11) {
-    param_4 = param_2 >> 7 & 0xff0000;
-    bVar11 = param_4 == 0;
+    scratch = param_2 >> 7 & 0xff0000;
+    bVar11 = scratch == 0;
   }
   if (!bVar11) {
     bVar11 = uVar6 == 0xff0000;
   }
   if (!bVar11) {
-    bVar11 = param_4 == 0xff0000;
+    bVar11 = scratch == 0xff0000;
   }
   if (bVar11) {
-    param_4 = param_2 >> 7 & 0xff0000;
+    scratch = param_2 >> 7 & 0xff0000;
     if ((int)(param_1 ^ param_2) < 0) {
       uVar6 = uVar6 | 0x100;
     }
     uVar7 = WORD_HEXADECIMAL_04000004;
-    if (uVar6 < 0xff0000 && param_4 < 0xff0000) {
+    if (uVar6 < 0xff0000 && scratch < 0xff0000) {
       if ((param_2 & 0x7fffffff) == 0) {
         if ((param_1 & 0x7fffffff) != 0) {
           uVar7 = WORD_HEXADECIMAL_08000004;
@@ -64387,13 +64095,13 @@ uint swv_fdiv(uint param_1,uint param_2,undefined4 param_3,uint param_4)
       if ((uVar6 & 0xff0000) == 0) {
         uVar6 = uVar6 + LZCOUNT(param_1) * -0x10000 + 0x10000;
         param_1 = param_1 << LZCOUNT(param_1);
-        if (param_4 == 0) goto LAB_0103f760;
+        if (scratch == 0) goto LAB_0103f760;
         param_2 = param_2 | 0x80000000;
       }
       else {
 LAB_0103f760:
         param_1 = param_1 | 0x80000000;
-        param_4 = param_4 + LZCOUNT(param_2) * -0x10000 + 0x10000;
+        scratch = scratch + LZCOUNT(param_2) * -0x10000 + 0x10000;
         param_2 = param_2 << LZCOUNT(param_2);
       }
       param_1 = param_1 >> 8;
@@ -64418,10 +64126,10 @@ LAB_0103f760:
       goto LAB_0103ed1c;
     }
     uVar6 = param_1 * 2 + 0x800000;
-    param_4 = param_2 * 2 + 0x800000;
+    scratch = param_2 * 2 + 0x800000;
     uVar8 = uVar6;
     if (uVar6 < 0xff800001) {
-      uVar8 = param_4;
+      uVar8 = scratch;
     }
     if (0xff800000 < uVar8) goto LAB_0103ed1c;
     uVar8 = WORD_HEXADECIMAL_04000004;
@@ -64502,7 +64210,7 @@ code_r0x0103f280:
   iVar9 = uVar8 * 0x100 + (((int)(uVar7 * iVar9) >> 4) * iVar9 >> 0x15);
   uVar8 = iVar9 * (param_1 >> 8) >> 0x14;
   uVar4 = uVar7 * uVar8 + param_1 * 0x800;
-  uVar6 = (uVar6 - param_4) + 0x7d0000;
+  uVar6 = (uVar6 - scratch) + 0x7d0000;
   uVar3 = iVar9 * (uVar4 >> 8) >> 0x13;
   uVar4 = uVar7 * uVar3 + uVar4 * 0x1000;
   uVar10 = uVar6 & 0x100;
@@ -64511,7 +64219,7 @@ code_r0x0103f280:
   if (bVar11) {
     uVar4 = uVar4 + uVar7;
   }
-  param_4 = uVar3 + uVar8 * 0x1000 + (uint)bVar11;
+  scratch = uVar3 + uVar8 * 0x1000 + (uint)bVar11;
   if (uVar4 != 0) {
     uVar10 = uVar10 | 0x40000002;
   }
@@ -64523,7 +64231,7 @@ code_r0x0103f280:
   if (bVar12) {
     uVar10 = uVar10 | 4;
   }
-  param_1 = param_4 + uVar6 * 0x800000 + (uint)bVar11;
+  param_1 = scratch + uVar6 * 0x800000 + (uint)bVar11;
   if (!bVar12) {
     bVar11 = 0xfbffff < uVar6;
   }
@@ -64562,12 +64270,12 @@ code_r0x0103f280:
       return param_1 & 0x80000000;
     }
     if ((param_2 & 0x800) == 0) {
-      param_4 = 0xc1 - (param_1 & 0x80000000 | param_1 >> 0x17 & 0xfffffeff);
-      if ((param_4 & 0x7fffffff) < 0x18) {
-        uVar7 = param_1 << (0x20 - param_4 & 0xff);
-        uVar8 = 0x20 - (0x20 - param_4);
-        param_4 = uVar8 & 0x80000000;
-        param_1 = (param_1 & 0xffffff | 0x800000) >> (uVar8 & 0xff) | param_4;
+      scratch = 0xc1 - (param_1 & 0x80000000 | param_1 >> 0x17 & 0xfffffeff);
+      if ((scratch & 0x7fffffff) < 0x18) {
+        uVar7 = param_1 << (0x20 - scratch & 0xff);
+        uVar8 = 0x20 - (0x20 - scratch);
+        scratch = uVar8 & 0x80000000;
+        param_1 = (param_1 & 0xffffff | 0x800000) >> (uVar8 & 0xff) | scratch;
         if (uVar7 == 0) {
           param_2 = 0;
           uVar7 = uVar6;
@@ -64593,21 +64301,21 @@ code_r0x0103f280:
               param_1 = param_1 + 1;
             }
           }
-          param_4 = uVar7;
+          scratch = uVar7;
           uVar7 = uVar6 | 0x40000000;
         }
       }
       else {
         param_2 = *puVar1 | 8;
         *puVar1 = param_2;
-        if (SBORROW4(param_4 & 0x7fffffff,-0x7fffffe7)) {
-          param_1 = param_4 & 0x80000000;
+        if (SBORROW4(scratch & 0x7fffffff,-0x7fffffe7)) {
+          param_1 = scratch & 0x80000000;
         }
         else {
           uVar7 = param_1 & 0x7fffff;
-          param_1 = (param_4 & 0x80000000) + 1;
+          param_1 = (scratch & 0x80000000) + 1;
           if (uVar7 == 0 && (uVar6 & 0x80000000) == 0) {
-            param_1 = param_4 & 0x80000000;
+            param_1 = scratch & 0x80000000;
           }
         }
         uVar7 = 0x40000000;
@@ -64673,7 +64381,7 @@ LAB_0103ed1c:
             param_2 = param_1 ^ uVar6;
           }
           else {
-            param_2 = param_2 ^ param_4;
+            param_2 = param_2 ^ scratch;
           }
           goto LAB_0103ee14;
         }
@@ -64701,7 +64409,7 @@ joined_r0x0103edcc:
       }
     }
   }
-  uVar6 = FUN_010019e0(param_1,param_2,uVar6,param_4);
+  uVar6 = FUN_010019e0(param_1,param_2,uVar6,scratch);
   if ((uVar8 & 0xf) != 9) {
     return uVar6;
   }
@@ -64727,9 +64435,10 @@ LAB_0103f9e0:
 /* ==== 0x0103F428  (file offset 0x3F428)  swv_fcmp_a ================================================== */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-uint swv_fcmp_a(uint param_1,uint param_2,undefined4 param_3,uint param_4)
+uint swv_fcmp_a(uint param_1,uint param_2)
 
 {
+  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
   uint uVar1;
   undefined4 uVar2;
   uint *puVar3;
@@ -64780,10 +64489,10 @@ uint swv_fcmp_a(uint param_1,uint param_2,undefined4 param_3,uint param_4)
   }
   if ((WORD_HEXADECIMAL_04120009 & 0x50000) == 0) {
     uVar6 = param_1 * 2 + 0x800000;
-    param_4 = param_2 * 2 + 0x800000;
+    scratch = param_2 * 2 + 0x800000;
     uVar7 = uVar6;
     if (uVar6 < 0xff800001) {
-      uVar7 = param_4;
+      uVar7 = scratch;
     }
     if (0xff800000 < uVar7) goto LAB_0103ed1c;
     uVar7 = WORD_HEXADECIMAL_04120009;
@@ -64898,7 +64607,7 @@ LAB_0103ed1c:
           param_2 = param_1 ^ uVar6;
         }
         else {
-          param_2 = param_2 ^ param_4;
+          param_2 = param_2 ^ scratch;
         }
         goto LAB_0103ee14;
       }
@@ -64925,7 +64634,7 @@ joined_r0x0103edcc:
       return param_1;
     }
   }
-  uVar1 = FUN_010019e0(param_1,param_2,uVar6,param_4,uVar7,in_lr,uVar7,in_lr);
+  uVar1 = FUN_010019e0(param_1,param_2,uVar6,scratch,uVar7,in_lr,uVar7,in_lr);
   if ((uVar7 & 0xf) != 9) {
     return uVar1;
   }
@@ -65217,9 +64926,10 @@ uint swv_fflt(uint param_1)
 /* ==== 0x0103F534  (file offset 0x3F534)  swv_fcmp_b ================================================== */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-uint swv_fcmp_b(uint param_1,uint param_2,undefined4 param_3,uint param_4)
+uint swv_fcmp_b(uint param_1,uint param_2)
 
 {
+  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
   uint uVar1;
   undefined4 uVar2;
   uint *puVar3;
@@ -65269,10 +64979,10 @@ uint swv_fcmp_b(uint param_1,uint param_2,undefined4 param_3,uint param_4)
   }
   if ((WORD_HEXADECIMAL_04130009 & 0x50000) == 0) {
     uVar6 = param_1 * 2 + 0x800000;
-    param_4 = param_2 * 2 + 0x800000;
+    scratch = param_2 * 2 + 0x800000;
     uVar7 = uVar6;
     if (uVar6 < 0xff800001) {
-      uVar7 = param_4;
+      uVar7 = scratch;
     }
     if (0xff800000 < uVar7) goto LAB_0103ed1c;
     uVar7 = WORD_HEXADECIMAL_04130009;
@@ -65387,7 +65097,7 @@ LAB_0103ed1c:
           param_2 = param_1 ^ uVar6;
         }
         else {
-          param_2 = param_2 ^ param_4;
+          param_2 = param_2 ^ scratch;
         }
         goto LAB_0103ee14;
       }
@@ -65414,7 +65124,7 @@ joined_r0x0103edcc:
       return param_1;
     }
   }
-  uVar1 = FUN_010019e0(param_1,param_2,uVar6,param_4,uVar7,in_lr,uVar7,in_lr);
+  uVar1 = FUN_010019e0(param_1,param_2,uVar6,scratch,uVar7,in_lr,uVar7,in_lr);
   if ((uVar7 & 0xf) != 9) {
     return uVar1;
   }
@@ -65440,9 +65150,10 @@ LAB_0103f9e0:
 /* ==== 0x0103F59C  (file offset 0x3F59C)  swv_fcmp_c ================================================== */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-uint swv_fcmp_c(uint param_1,uint param_2,undefined4 param_3,uint param_4)
+uint swv_fcmp_c(uint param_1,uint param_2)
 
 {
+  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
   uint uVar1;
   undefined4 uVar2;
   uint *puVar3;
@@ -65492,10 +65203,10 @@ uint swv_fcmp_c(uint param_1,uint param_2,undefined4 param_3,uint param_4)
   }
   if ((WORD_HEXADECIMAL_04160009 & 0x50000) == 0) {
     uVar6 = param_1 * 2 + 0x800000;
-    param_4 = param_2 * 2 + 0x800000;
+    scratch = param_2 * 2 + 0x800000;
     uVar7 = uVar6;
     if (uVar6 < 0xff800001) {
-      uVar7 = param_4;
+      uVar7 = scratch;
     }
     if (0xff800000 < uVar7) goto LAB_0103ed1c;
     uVar7 = WORD_HEXADECIMAL_04160009;
@@ -65610,7 +65321,7 @@ LAB_0103ed1c:
           param_2 = param_1 ^ uVar6;
         }
         else {
-          param_2 = param_2 ^ param_4;
+          param_2 = param_2 ^ scratch;
         }
         goto LAB_0103ee14;
       }
@@ -65637,7 +65348,7 @@ joined_r0x0103edcc:
       return param_1;
     }
   }
-  uVar1 = FUN_010019e0(param_1,param_2,uVar6,param_4,uVar7,in_lr,uVar7,in_lr);
+  uVar1 = FUN_010019e0(param_1,param_2,uVar6,scratch,uVar7,in_lr,uVar7,in_lr);
   if ((uVar7 & 0xf) != 9) {
     return uVar1;
   }
@@ -65695,9 +65406,10 @@ LAB_0103f9e0:
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
-uint swv_fmul(uint param_1,uint param_2,undefined4 param_3,uint param_4)
+uint swv_fmul(uint param_1,uint param_2)
 
 {
+  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
   int iVar1;
   uint *puVar2;
   uint uVar3;
@@ -65717,14 +65429,14 @@ uint swv_fmul(uint param_1,uint param_2,undefined4 param_3,uint param_4)
   uVar3 = param_1 >> 7 & 0xff0000;
   bVar10 = uVar3 == 0;
   if (!bVar10) {
-    param_4 = param_2 >> 7 & 0xff0000;
-    bVar10 = param_4 == 0;
+    scratch = param_2 >> 7 & 0xff0000;
+    bVar10 = scratch == 0;
   }
   if (!bVar10) {
     bVar10 = uVar3 == 0xff0000;
   }
   if (!bVar10) {
-    bVar10 = param_4 == 0xff0000;
+    bVar10 = scratch == 0xff0000;
   }
   if (bVar10) {
     uVar7 = param_2 >> 7 & 0xff0000;
@@ -65742,12 +65454,12 @@ uint swv_fmul(uint param_1,uint param_2,undefined4 param_3,uint param_4)
         param_1 = param_1 << LZCOUNT(param_1);
         if (uVar7 != 0) {
           param_2 = param_2 | 0x80000000;
-          param_4 = uVar7;
+          scratch = uVar7;
           goto LAB_0103f630;
         }
       }
       param_1 = param_1 | 0x80000000;
-      param_4 = uVar7 + LZCOUNT(param_2) * -0x10000 + 0x10000;
+      scratch = uVar7 + LZCOUNT(param_2) * -0x10000 + 0x10000;
       param_2 = param_2 << LZCOUNT(param_2);
       goto LAB_0103f630;
     }
@@ -65793,7 +65505,7 @@ LAB_0103f924:
     param_2 = param_2 << 8 | 0x80000000;
 LAB_0103f630:
     uVar7 = (uint)((ulonglong)param_2 * (ulonglong)param_1 >> 0x20);
-    iVar4 = uVar3 + param_4 + -0x800000;
+    iVar4 = uVar3 + scratch + -0x800000;
     if ((int)((ulonglong)param_2 * (ulonglong)param_1) != 0) {
       uVar7 = uVar7 | 1;
     }
@@ -65810,7 +65522,7 @@ LAB_0103f630:
     uVar6 = (uint)bVar10;
     puVar9 = &stack0x00000000 +
              uVar6 + (uint)bVar10 * 2 +
-                     uVar3 * 2 + uVar8 * 0x1000000 + iVar1 * 0x1000000 + param_4 * 0x1000000;
+                     uVar3 * 2 + uVar8 * 0x1000000 + iVar1 * 0x1000000 + scratch * 0x1000000;
     if (bVar10) {
       uVar3 = uVar7 & 0x7f;
     }

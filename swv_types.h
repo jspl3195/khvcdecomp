@@ -229,6 +229,14 @@ typedef struct SwvKeyframeSequence {
     int32    prepared;       /* +0x4c set by swvKeyframeSequence_Prepare */
 } SwvKeyframeSequence;
 
+/* ---- VertexArray (class 29), the native object (no struct yet) ------------------------------
+ * The fields its readers use (GUESS: the names; swvVertexArray_GetComponent, FUN_010257fc,
+ * FUN_010258d0, FUN_01025a50):
+ *   +0x1c             the vertex count
+ *   +0x20             the components per vertex (the transforms take 2 or 3)
+ *   +0x24             the bytes per component: 1 (signed bytes) or 2 (signed 16-bit words)
+ *   +0x2c             the values, vertex after vertex */
+
 /* ---- the software rasteriser's context (no struct yet) --------------------------------------
  * The fields the triangle code is known to use (GUESS: the names):
  *   +0x04             the span's y (its parity picks the dither row)

@@ -275,18 +275,18 @@ void swv_InitVtbl_VertexBuffer(void **pVtbl);   /* 0x0103CEB0 */
 int swv_Create_World(void **ppObj);   /* 0x0103D18C */
 void swv_InitVtbl_World(void **pVtbl);   /* 0x0103D2C4 */
 uint swv_f2d(uint param_1,uint param_2,undefined4 param_3,uint param_4);   /* 0x0103EE80 */
-uint swv_fadd(uint param_1,uint param_2,undefined4 param_3,uint param_4);   /* 0x0103EEE8 */
-uint swv_frsb(uint param_1,uint param_2,undefined4 param_3,uint param_4);   /* 0x0103F030 */
-uint swv_fsub(uint param_1,uint param_2,undefined4 param_3,uint param_4);   /* 0x0103F064 */
-uint swv_frdiv(uint param_1,uint param_2,undefined4 param_3,uint param_4);   /* 0x0103F240 */
-uint swv_fdiv(uint param_1,uint param_2,undefined4 param_3,uint param_4);   /* 0x0103F250 */
-uint swv_fcmp_a(uint param_1,uint param_2,undefined4 param_3,uint param_4);   /* 0x0103F428 */
+uint swv_fadd(uint param_1,uint param_2);   /* 0x0103EEE8 */
+uint swv_frsb(uint param_1,uint param_2);   /* 0x0103F030 */
+uint swv_fsub(uint param_1,uint param_2);   /* 0x0103F064 */
+uint swv_frdiv(uint param_1,uint param_2);   /* 0x0103F240 */
+uint swv_fdiv(uint param_1,uint param_2);   /* 0x0103F250 */
+uint swv_fcmp_a(uint param_1,uint param_2);   /* 0x0103F428 */
 uint swv_ffix(uint param_1);   /* 0x0103F490 */
 uint swv_ffltu(int param_1);   /* 0x0103F4F8 */
 uint swv_fflt(uint param_1);   /* 0x0103F500 */
-uint swv_fcmp_b(uint param_1,uint param_2,undefined4 param_3,uint param_4);   /* 0x0103F534 */
-uint swv_fcmp_c(uint param_1,uint param_2,undefined4 param_3,uint param_4);   /* 0x0103F59C */
-uint swv_fmul(uint param_1,uint param_2,undefined4 param_3,uint param_4);   /* 0x0103F604 */
+uint swv_fcmp_b(uint param_1,uint param_2);   /* 0x0103F534 */
+uint swv_fcmp_c(uint param_1,uint param_2);   /* 0x0103F59C */
+uint swv_fmul(uint param_1,uint param_2);   /* 0x0103F604 */
 void swv_fp_status(uint param_1,uint param_2);   /* 0x0103F8E8 */
 
 /* No Ghidra function exists for these; bodies are hand-written in the .c file. */
@@ -470,7 +470,7 @@ void swv_SpanFillGouraudAlpha(uint8 *raster);   /* 0x0100C7A0 GUESS: name, see s
 void FUN_0100c92c(int param_1);
 void swv_RasterTriangle(uint8 *raster,uint8 *vertex0,uint8 *vertex1,uint8 *vertex2);   /* 0x0100CEF4 GUESS: name, see swv21brew.c */
 void swv_RasterTriangleSetup(int param_1);   /* 0x0100CF00 GUESS: name, see swv21brew.c */
-int FUN_0100e490(int param_1,int param_2,int param_3);
+int32 swvVertexArray_GetComponent(uint8 *array,int32 vertex,int32 component);   /* 0x0100E490 GUESS: name, see swv21brew.c */
 void FUN_0100e4e8(undefined4 *param_1);
 int FUN_0100e5b0(void);
 int * FUN_0100e5d4(void);
@@ -1138,8 +1138,8 @@ int FUN_0102ee88(uint param_1);
 int FUN_0102f080(int param_1);
 ulonglong FUN_0102f088(uint param_1);
 longlong FUN_0102f240(int param_1);
-uint FUN_0102f264(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-uint FUN_0102f3e4(int param_1,undefined4 param_2,undefined4 param_3,uint param_4);
+uint FUN_0102f264(undefined4 param_1);
+uint FUN_0102f3e4(int param_1);
 int FUN_0102f468(int param_1,int param_2);
 int thunk_FUN_01009ad0(void);
 void FUN_0102f514(undefined4 param_1);
