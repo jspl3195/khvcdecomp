@@ -3479,8 +3479,12 @@ LAB_010032b0:
   return CONCAT44(local_2c,param_1);
 }
 
-/* ==== 0x010033A4  (file offset 0x033A4)  FUN_010033a4 ================================================ */
-int FUN_010033a4(int param_1,undefined4 param_2)
+/* ==== 0x010033A4  (file offset 0x033A4)  swvSkin_FindOrAddBoneSet ==================================== */
+/* GUESS: name (not yet rewritten). Returns the index of the SkinnedMesh's bone set (the list at
+   +0xd0: array +0xd4, count +0xd8, SwvSkinBoneSet) equal to param_2 (swvSkin_BoneSetsEqual), searching
+   from 1 (0 is the no-bone template), or appends it (swvSkin_AppendBoneSet) and returns the old count,
+   its index. Only swvSkin_BuildBoneSets calls it. */
+int swvSkin_FindOrAddBoneSet(int param_1,undefined4 param_2)
 
 {
   int iVar1;
@@ -3491,10 +3495,12 @@ int FUN_010033a4(int param_1,undefined4 param_2)
   iVar3 = *(int *)(param_1 + 0xd8);
   while( true ) {
     if (iVar3 <= iVar2) {
-      FUN_0100418c(param_1 + 0xd0,param_2);
+      swvSkin_AppendBoneSet(param_1 + 0xd0,param_2);
       return iVar3;
     }
-    iVar1 = FUN_010047b0(param_1,*(int *)(param_1 + 0xd4) + iVar2 * 0x4c,param_2);
+    iVar1 = swvSkin_BoneSetsEqual((uint8 *)param_1,
+                                  (const uint16 *)(*(int *)(param_1 + 0xd4) + iVar2 * 0x4c),
+                                  (const uint16 *)param_2);
     if (iVar1 != 0) break;
     iVar2 = iVar2 + 1;
   }
@@ -3652,7 +3658,7 @@ void FUN_01003604(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   *(undefined4 *)(*(int *)(param_1 + 0x20) + 0x10) = 0x3f800000;
   *(undefined4 *)(*(int *)(param_1 + 0x20) + 0x14) = 0x3f800000;
   *(undefined4 *)(*(int *)(param_1 + 0x20) + 0x28) = uVar2;
-  FUN_01012568(*(int *)(param_1 + 0x20) + 0x2c);
+  swv_Matrix4SetIdentity(*(int *)(param_1 + 0x20) + 0x2c);
   *(undefined1 *)(param_1 + 0x1c) = 4;
   return;
 }
@@ -4307,8 +4313,12 @@ void FUN_0100412c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
   return;
 }
 
-/* ==== 0x0100418C  (file offset 0x0418C)  FUN_0100418c ================================================ */
-undefined4 * FUN_0100418c(int *param_1,undefined4 *param_2)
+/* ==== 0x0100418C  (file offset 0x0418C)  swvSkin_AppendBoneSet ======================================= */
+/* GUESS: name (not yet rewritten). Appends a copy of the bone set param_2 (SwvSkinBoneSet, 0x4c
+   bytes: the indices, the 0x44-byte transform through FUN_01027acc, the weight scale) to the list
+   param_1 (a SkinnedMesh's +0xd0: count +8, capacity +0xc, grown through its virtual slot +4) and
+   returns it. Called by swvSkin_BuildBoneSets (the template) and swvSkin_FindOrAddBoneSet. */
+undefined4 * swvSkin_AppendBoneSet(int *param_1,undefined4 *param_2)
 
 {
   undefined4 uVar1;
@@ -4651,55 +4661,33 @@ int swvArchive_OpenEntry(int param_1,undefined4 param_2,undefined4 *param_3,void
   return iVar3;
 }
 
-/* ==== 0x010047B0  (file offset 0x047B0)  FUN_010047b0 ================================================ */
-int FUN_010047b0(int param_1,int param_2,int param_3)
+/* ==== 0x010047B0  (file offset 0x047B0)  swvSkin_BoneSetsEqual ======================================= */
+/* GUESS: name. Whether two of a SkinnedMesh's bone sets (SwvSkinBoneSet: a stored one, a, and a new
+   one, b) are the same: for each slot, the same index into the mesh's bone table (+0xc4, SwvSkinBone),
+   or neither 0xffff (no bone) and both entries with the same weight and bone. Returns 1 or 0. Evidence
+   (0x010047b0 - 0x01004844): r12 the result, r3 the slot, `ldrh` of both indices, `sub #0xff00` /
+   `subs #0xff` for 0xffff (Ghidra's `uVar6 - 0xff00 ... != 0xff`), entries of 12 bytes (`add r12, r4,
+   r4, lsl #1` / `lsl #2`), `ldr` +0 and `ldrh` +8 compared. A quirk: it compares 4 slots, but a bone
+   set holds 2 (swvSkin_BuildBoneSets writes 2, swvSkin_VertexBones keeps the 2 heaviest); slots 2 and
+   3 are the two halves of the transform's first float, the template's identity (1.0, 0x3f800000) in
+   every set when they are compared, so they always match (GUESS: left from a limit of 4 bones per
+   vertex). Only swvSkin_FindOrAddBoneSet calls it. */
+int32 swvSkin_BoneSetsEqual(uint8 *mesh,const uint16 *a,const uint16 *b)
 
 {
-  int iVar1;
-  uint uVar2;
-  undefined4 *puVar3;
-  int iVar4;
-  int *piVar5;
-  uint uVar6;
-  int *piVar7;
-  bool bVar8;
-  
-  iVar4 = 1;
-  iVar1 = 0;
-  do {
-    uVar2 = (uint)*(ushort *)(param_2 + iVar1 * 2);
-    uVar6 = (uint)*(ushort *)(param_3 + iVar1 * 2);
-    if (iVar4 == 0) {
-LAB_01004828:
-      iVar4 = 0;
+  const SwvSkinBone *bones = *(const SwvSkinBone **)(mesh + 0xc4);
+  int32 equal = 1;
+  int32 i;
+
+  for (i = 0; i < 4 && equal; i++) {
+    if (a[i] != b[i]) {
+      if (a[i] == 0xffff || b[i] == 0xffff)
+        equal = 0;
+      else
+        equal = bones[a[i]].weight == bones[b[i]].weight && bones[a[i]].bone == bones[b[i]].bone;
     }
-    else {
-      if (uVar2 != uVar6) {
-        iVar4 = 0;
-        if (uVar2 != 0xffff) {
-          iVar4 = uVar6 - 0xff00;
-        }
-        if (uVar2 != 0xffff && iVar4 != 0xff) {
-          puVar3 = (undefined4 *)(*(int *)(param_1 + 0xc4) + uVar2 * 0xc);
-          piVar7 = (int *)(*(int *)(param_1 + 0xc4) + uVar6 * 0xc);
-          piVar5 = (int *)*puVar3;
-          bVar8 = piVar5 == (int *)*piVar7;
-          if (bVar8) {
-            piVar5 = (int *)(uint)*(ushort *)(puVar3 + 2);
-            piVar7 = (int *)(uint)*(ushort *)(piVar7 + 2);
-          }
-          if (bVar8 && piVar5 == piVar7) goto LAB_01004820;
-        }
-        goto LAB_01004828;
-      }
-LAB_01004820:
-      iVar4 = 1;
-    }
-    iVar1 = iVar1 + 1;
-    if ((3 < iVar1) || (iVar4 == 0)) {
-      return iVar4;
-    }
-  } while( true );
+  }
+  return equal;
 }
 
 /* ==== 0x01004848  (file offset 0x04848)  FUN_01004848 ================================================ */
@@ -4748,7 +4736,7 @@ int FUN_010048e4(int param_1,int param_2,undefined4 param_3)
   undefined1 auStack_60 [68];
   
   if (param_1 != 0 && param_2 != 0) {
-    FUN_01012568(param_3);
+    swv_Matrix4SetIdentity(param_3);
     if (param_1 == param_2) {
       return param_1;
     }
@@ -6338,7 +6326,7 @@ int FUN_01006b38(int param_1,int param_2)
     if ((*(byte *)(param_2 + 0x1c) & 4) == 0) {
       iVar1 = swv_New(0x44,0);
       if (iVar1 != 0) {
-        FUN_010296e8(iVar1,*(undefined4 *)(*(int *)(param_2 + 0x20) + 0x28));
+        swv_Matrix4Copy(iVar1,*(undefined4 *)(*(int *)(param_2 + 0x20) + 0x28));
       }
       *(int *)(*(int *)(param_1 + 0x20) + 0x28) = iVar1;
     }
@@ -9170,7 +9158,7 @@ int FUN_01009638(int param_1,int param_2)
   *(int *)(param_1 + 0xac) = iVar3;
   param_1 = param_1 + 0xb0;
   if (iVar3 != 0 && param_2 != 0) {
-    FUN_01012568(param_1);
+    swv_Matrix4SetIdentity(param_1);
     if (iVar3 == param_2) {
       return iVar3;
     }
@@ -9466,9 +9454,9 @@ int FUN_01009ad0(void)
     FUN_01028b58(iVar3);
   }
   *(int *)(iVar1 + 0x9a8) = iVar3;
-  FUN_01012568(iVar1 + 0xac);
-  FUN_01012568(iVar1 + 0x24);
-  FUN_01012568(iVar1 + 0x68);
+  swv_Matrix4SetIdentity(iVar1 + 0xac);
+  swv_Matrix4SetIdentity(iVar1 + 0x24);
+  swv_Matrix4SetIdentity(iVar1 + 0x68);
   *(undefined4 *)(iVar1 + 0xc) = 0x3f800000;
   if (iVar1 != 0) {
     uVar2 = FUN_0100f8e8(0);
@@ -10218,18 +10206,18 @@ uint FUN_0100a470(int param_1,undefined4 param_2,undefined4 param_3)
     FUN_0101749c(auStack_68,param_2);
     FUN_01023184(param_1 + 0xe0,1);
     if (local_28 == 0x20) {
-      FUN_01012568(auStack_68);
+      swv_Matrix4SetIdentity(auStack_68);
     }
     uVar4 = FUN_01022c5c(*(undefined4 *)(param_1 + 0xe4),auStack_68,iVar3 + 1,param_3,1);
   }
   else {
-    FUN_0101790c(iVar5);
+    swvSkin_BuildBoneSets(iVar5);
     iVar6 = *(int *)(iVar5 + 0xd8);
     FUN_01023184(param_1 + 0xe0,iVar6);
     iVar5 = 0;
     if (0 < iVar6) {
       do {
-        FUN_010296e8(auStack_ac,auStack_68);
+        swv_Matrix4Copy(auStack_ac,auStack_68);
         uVar1 = FUN_0100fe8c(*(undefined4 *)(param_1 + 0xf0),iVar5);
         FUN_0101749c(auStack_ac,uVar1);
         FUN_0101749c(auStack_ac,param_2);
@@ -14070,8 +14058,12 @@ void FUN_0100ed84(int param_1,int param_2,int param_3)
   return;
 }
 
-/* ==== 0x0100EDD4  (file offset 0x0EDD4)  FUN_0100edd4 ================================================ */
-uint FUN_0100edd4(int param_1,uint param_2,int param_3)
+/* ==== 0x0100EDD4  (file offset 0x0EDD4)  swvSkin_VertexBones ========================================= */
+/* GUESS: name (not yet rewritten). The bones of a SkinnedMesh that move vertex param_2: of the bone
+   table's entries (+0xc4, count +0xc8, SwvSkinBone) whose range (firstVertex, vertexCount) covers it, at
+   most the 2 heaviest (weight +0), their table indices into param_3 (an int[2]); returns how many.
+   An entry whose range is empty or past the vertex count is an error (FUN_0102f7e0, -1300). */
+uint swvSkin_VertexBones(int param_1,uint param_2,int param_3)
 
 {
   int iVar1;
@@ -14866,7 +14858,7 @@ int FUN_0100f950(int param_1)
   }
   else {
     if (*(int *)(param_1 + 0x80) != 0x3f) {
-      FUN_01012568(iVar2);
+      swv_Matrix4SetIdentity(iVar2);
     }
     *(undefined4 *)(param_1 + 0x84) = 0x3f800000;
   }
@@ -15063,7 +15055,7 @@ int FUN_0100fdec(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     iVar2 = *(int *)(param_1 + 0xf0);
     iVar1 = *(int *)(param_1 + 0xe4);
     if (iVar2 != 0) {
-      FUN_0101790c(iVar2,param_2,iVar1,param_4,param_4);
+      swvSkin_BuildBoneSets(iVar2,param_2,iVar1,param_4,param_4);
       iVar1 = *(int *)(param_1 + 0xe4) +
               (uint)*(ushort *)(*(int *)(iVar2 + 0xe4) + param_2 * 2) * 0x50;
     }
@@ -15088,7 +15080,7 @@ int FUN_0100fe8c(int param_1,int param_2)
   int iVar6;
   undefined1 auStack_68 [68];
   
-  FUN_0101790c();
+  swvSkin_BuildBoneSets();
   if ((0 < param_2) && (*(int *)(param_1 + 0xf4) != 0)) {
     for (iVar6 = 1; iVar6 < *(int *)(param_1 + 0xd8); iVar6 = iVar6 + 1) {
       puVar3 = (ushort *)(*(int *)(param_1 + 0xd4) + iVar6 * 0x4c);
@@ -15105,7 +15097,7 @@ int FUN_0100fe8c(int param_1,int param_2)
         if (puVar3[iVar5] == 0xffff) break;
         puVar4 = (undefined4 *)(*(int *)(param_1 + 0xc4) + (uint)puVar3[iVar5] * 0xc);
         uVar1 = FUN_0100f4dc(param_1,puVar4);
-        FUN_010296e8(auStack_68,uVar1);
+        swv_Matrix4Copy(auStack_68,uVar1);
         uVar1 = swv_fflt(*puVar4);
         uVar1 = swv_fmul(uVar1,*(undefined4 *)(puVar3 + 0x24));
         FUN_0101da48(auStack_68,uVar1);
@@ -15578,7 +15570,7 @@ undefined8 FUN_01010148(int param_1,uint param_2)
     iVar7 = *(int *)(param_1 + 0xe4);
     uVar4 = param_2;
     if (iVar5 != 0) {
-      FUN_0101790c(iVar5);
+      swvSkin_BuildBoneSets(iVar5);
       uVar4 = *(uint *)(param_1 + 0xe4);
       iVar7 = uVar4 + (uint)*(ushort *)(*(int *)(iVar5 + 0xe4) + param_2 * 2) * 0x50;
     }
@@ -15867,7 +15859,7 @@ void FUN_0101070c(int param_1,int param_2,int *param_3,undefined4 *param_4,undef
   iVar1 = *(int *)(param_1 + 0xf0);
   iVar2 = *(int *)(param_1 + 0xe4);
   if (iVar1 != 0) {
-    FUN_0101790c();
+    swvSkin_BuildBoneSets();
     iVar2 = *(int *)(param_1 + 0xe4) +
             (uint)*(ushort *)(*(int *)(iVar1 + 0xe4) + param_2 * 2) * 0x50;
   }
@@ -16020,11 +16012,11 @@ undefined4 FUN_01010938(int param_1)
          *(undefined4 *)(*(int *)(param_1 + 0x88) + 0x20);
     uVar15 = *(undefined4 *)(*(int *)(param_1 + 0x100) + 0x24);
     iVar3 = *(int *)(*(int *)(param_1 + 0x88) + 0x1c);
-    FUN_0101790c(param_1);
+    swvSkin_BuildBoneSets(param_1);
     local_28 = param_1 + 0xe0;
     uVar14 = 0xffffffff;
     uVar4 = FUN_0100fe8c(param_1,0);
-    FUN_010296e8(auStack_6c,uVar4);
+    swv_Matrix4Copy(auStack_6c,uVar4);
     local_70 = 0x20;
     FUN_0101da48(auStack_b0,*(undefined4 *)(iVar2 + 0x44));
     FUN_01025d30(auStack_b0,iVar2 + 0x38);
@@ -16236,7 +16228,7 @@ void FUN_01010e84(int param_1,int param_2,int *param_3,undefined4 *param_4)
   iVar2 = *(int *)(param_1 + 0xf0);
   iVar1 = *(int *)(param_1 + 0xe4);
   if (iVar2 != 0) {
-    FUN_0101790c(iVar2,param_2,iVar1,param_4,param_4);
+    swvSkin_BuildBoneSets(iVar2,param_2,iVar1,param_4,param_4);
     iVar1 = *(int *)(param_1 + 0xe4) +
             (uint)*(ushort *)(*(int *)(iVar2 + 0xe4) + param_2 * 2) * 0x50;
   }
@@ -17650,8 +17642,10 @@ undefined4 FUN_01012508(int param_1,int param_2)
   return 0;
 }
 
-/* ==== 0x01012568  (file offset 0x12568)  FUN_01012568 ================================================ */
-void FUN_01012568(undefined4 *param_1)
+/* ==== 0x01012568  (file offset 0x12568)  swv_Matrix4SetIdentity ====================================== */
+/* GUESS: name (not yet rewritten). Sets a transform (16 floats, row by row, then a flags word) to the
+   identity: 1.0 (0x3f800000) on the diagonal, 0 elsewhere, flags 0x3f. */
+void swv_Matrix4SetIdentity(undefined4 *param_1)
 
 {
   param_1[0xe] = 0;
@@ -18234,7 +18228,7 @@ undefined4 FUN_010130ac(void)
         puVar1[5] = 0x3f800000;
         iVar2 = FUN_0102ecec();
         puVar1[10] = *(undefined4 *)(iVar2 + 0x20);
-        FUN_01012568(puVar1 + 0xb);
+        swv_Matrix4SetIdentity(puVar1 + 0xb);
         iVar2 = FUN_0102ecec();
         *(undefined4 **)(iVar2 + 0x1c) = puVar1;
         FUN_010098fc();
@@ -18648,7 +18642,7 @@ undefined4 swv_Matrix4Invert(int param_1)
     /* the count restored from r2: Ghidra had dropped it */
     thunk_swv_memcpy(local_74,param_1,0x44);
     local_78 = 0x20;
-    FUN_01012568(local_b8);
+    swv_Matrix4SetIdentity(local_b8);
     uVar2 = 0;
     uVar11 = 0;
     do {
@@ -21021,7 +21015,7 @@ LAB_01016740:
           for (iVar3 = *(int *)(param_3 + 0x38); iVar3 != 0; iVar3 = *(int *)(iVar3 + 0x34)) {
             FUN_01018018(param_1,param_2);
             FUN_010183b0(iVar3);
-            FUN_010296e8(auStack_58,*(int *)(iVar3 + 0x20) + 0x2c);
+            swv_Matrix4Copy(auStack_58,*(int *)(iVar3 + 0x20) + 0x2c);
             iVar4 = swv_Matrix4Invert(auStack_58);
             if (iVar4 == 0) {
               FUN_0102f7e0(uVar6);
@@ -21317,7 +21311,7 @@ bool FUN_01016ecc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   *(undefined4 *)(iVar1 + 0x30) = param_5;
   *(undefined4 *)(iVar1 + 0x38) = param_2;
   uVar2 = FUN_0100f910(param_5);
-  FUN_010296e8(auStack_68,uVar2);
+  swv_Matrix4Copy(auStack_68,uVar2);
   iVar3 = swv_Matrix4Invert(auStack_68);
   if (iVar3 == 0) {
     FUN_0102f7e0(uVar4);
@@ -21891,8 +21885,15 @@ void FUN_01017894(uint *param_1)
   return;
 }
 
-/* ==== 0x0101790C  (file offset 0x1790C)  FUN_0101790c ================================================ */
-void FUN_0101790c(int param_1,undefined4 param_2,int param_3)
+/* ==== 0x0101790C  (file offset 0x1790C)  swvSkin_BuildBoneSets ======================================= */
+/* GUESS: name (not yet rewritten). Builds a SkinnedMesh's skinning data once (+0xf0 still 0), when
+   it has a vertex buffer (+0x88; its +0x1c the vertex count, its +0x24 GUESS: the positions) and +0x38
+   is set (GUESS: its bones): empties the bone-set list (+0xd0) and adds the template (index 0: no bones,
+   0xffff, 0xffff; an identity transform, swv_Matrix4SetIdentity; weight scale 1.0); then for each
+   vertex takes its bones (swvSkin_VertexBones), a weight scale of 1 / the sum of their weights, and
+   the index of the matching set (swvSkin_FindOrAddBoneSet; 0 with no bones) into the uint16 array at
+   +0xe4 (+0xe0, one per vertex). Sets +0xf0, +0xf4 and +0xf8 to 1. */
+void swvSkin_BuildBoneSets(int param_1,undefined4 param_2,int param_3)
 
 {
   undefined2 uVar1;
@@ -21940,18 +21941,18 @@ void FUN_0101790c(int param_1,undefined4 param_2,int param_3)
         *(short *)(auStack_74 + iVar4 + -4) = (short)INTEGER_65535;
       } while (iVar2 < 2);
       local_30 = 0x3f800000;
-      FUN_01012568(local_28);
-      FUN_0100418c(param_1 + 0xd0,&local_78);
+      swv_Matrix4SetIdentity(local_28);
+      swvSkin_AppendBoneSet(param_1 + 0xd0,&local_78);
       FUN_01023184(param_1 + 0xe0,iVar7);
       thunk_swv_memset(*(undefined4 *)(param_1 + 0xe4),0,*(int *)(param_1 + 0xe8) << 1);
       local_2c = auStack_c8;
       for (uVar9 = 0; (int)uVar9 < iVar7; uVar9 = uVar9 + 1) {
         local_80[0] = 0;
         local_80[1] = 0;
-        iVar2 = FUN_0100edd4(param_1,uVar9 & 0xffff,local_80);
+        iVar2 = swvSkin_VertexBones(param_1,uVar9 & 0xffff,local_80);
         iVar6 = 0;
         local_cc = local_78;
-        FUN_010296e8(local_2c,local_28);
+        swv_Matrix4Copy(local_2c,local_28);
         local_84 = local_30;
         for (iVar4 = 0; iVar4 < iVar2; iVar4 = iVar4 + 1) {
           iVar8 = local_80[iVar4];
@@ -21974,7 +21975,7 @@ void FUN_0101790c(int param_1,undefined4 param_2,int param_3)
           uVar1 = 0;
         }
         else {
-          uVar1 = FUN_010033a4(param_1,&local_cc);
+          uVar1 = swvSkin_FindOrAddBoneSet(param_1,&local_cc);
         }
         *(undefined2 *)(*(int *)(param_1 + 0xe4) + uVar9 * 2) = uVar1;
       }
@@ -24087,8 +24088,8 @@ void FUN_0101a380(int param_1,int param_2,int param_3)
     FUN_01026548(iVar1);
   }
   if (*(int *)(iVar1 + 0x80) != 0) {
-    FUN_010296e8(auStack_64);
-    FUN_010296e8(auStack_a8);
+    swv_Matrix4Copy(auStack_64);
+    swv_Matrix4Copy(auStack_a8);
     if (param_3 != 0) {
       FUN_010275fc(param_1 + 0x24,param_3 + 0xc);
       FUN_010275fc(param_1 + 0x68,param_3 + 0xc);
@@ -24491,7 +24492,7 @@ void FUN_0101a89c(int param_1,int param_2)
   }
   *(undefined4 *)(param_1 + 0x354) = 0xc9;
   FUN_0102329c(*(undefined4 *)(param_1 + 8),uVar14);
-  FUN_010296e8(puVar22 + 0x27,param_1 + 0x68);
+  swv_Matrix4Copy(puVar22 + 0x27,param_1 + 0x68);
   uVar14 = FUN_0100f950(param_2);
   FUN_010275fc(puVar22 + 0x27,uVar14);
   puVar22[0x26] = 0;
@@ -30176,7 +30177,7 @@ void FUN_01020d0c(int *param_1,int param_2)
   else {
     iVar1 = swv_New(0x44,0);
     if (iVar1 != 0) {
-      FUN_010296e8(iVar1,param_2);
+      swv_Matrix4Copy(iVar1,param_2);
     }
     *(int *)(param_1[8] + 0x28) = iVar1;
     *(byte *)(param_1 + 7) = *(byte *)(param_1 + 7) & 0xfb;
@@ -30882,7 +30883,7 @@ int FUN_01021c7c(int param_1,int param_2,int param_3,int param_4)
   }
   *(int *)(*(int *)(param_1 + 0xf8) + param_2 * 4) = iVar1;
   if (param_4 == 0 || param_3 == 0) {
-    iVar1 = FUN_01012568(*(int *)(param_1 + 0x108) + param_2 * 0x44);
+    iVar1 = swv_Matrix4SetIdentity(*(int *)(param_1 + 0x108) + param_2 * 0x44);
     return iVar1;
   }
   iVar1 = *(int *)(param_1 + 0x108) + param_2 * 0x44;
@@ -30957,7 +30958,7 @@ void FUN_01021d50(int param_1,int param_2,undefined4 param_3,int param_4)
     do {
       iVar5 = *(int *)(*(int *)(puVar7 + 0x54) + iVar3 * 4);
       if (iVar5 != 0) {
-        FUN_010296e8(puVar6,*(undefined4 *)(puVar7 + 0x48));
+        swv_Matrix4Copy(puVar6,*(undefined4 *)(puVar7 + 0x48));
         if (param_4 == 0) {
           uVar2 = FUN_0100f950(iVar5);
           FUN_010275fc(puVar6,uVar2);
@@ -32883,7 +32884,7 @@ void FUN_01023944(int *param_1,int param_2)
   else {
     iVar1 = swv_New(0x44,0);
     if (iVar1 != 0) {
-      FUN_010296e8(iVar1,iVar2);
+      swv_Matrix4Copy(iVar1,iVar2);
     }
     *(int *)(param_1[8] + 0x28) = iVar1;
     *(byte *)(param_1 + 7) = *(byte *)(param_1 + 7) & 0xfb;
@@ -34653,13 +34654,13 @@ void FUN_010254f0(int param_1)
   
   iVar2 = *(int *)(*(int *)(param_1 + 4) + 0x1c);
   iVar3 = *(int *)(param_1 + 0xf0);
-  if ((iVar3 == 0) || (FUN_0101790c(iVar3), *(int *)(iVar3 + 0xd8) < 2)) {
+  if ((iVar3 == 0) || (swvSkin_BuildBoneSets(iVar3), *(int *)(iVar3 + 0xd8) < 2)) {
     FUN_010258d0(*(undefined4 *)(param_1 + 4),0,iVar2,*(undefined4 *)(param_1 + 0xe4),
                  *(undefined4 *)(param_1 + 0x94),*(undefined4 *)(param_1 + 0xb4));
   }
   else {
     iVar4 = *(int *)(param_1 + 0xf0);
-    FUN_0101790c(iVar4);
+    swvSkin_BuildBoneSets(iVar4);
     iVar3 = 0;
     if (0 < iVar2) {
       do {
@@ -34705,7 +34706,7 @@ void FUN_010255dc(int param_1,undefined4 param_2)
   piVar10 = &local_b8;
   uVar9 = *(undefined4 *)(*(int *)(param_1 + 0x36c) + 0x24);
   local_28 = 0;
-  FUN_010296e8(auStack_6c,param_1 + 0x68);
+  swv_Matrix4Copy(auStack_6c,param_1 + 0x68);
   FUN_010275fc(auStack_6c,param_2);
   piStack_b4 = &local_28;
   local_b8 = *(int *)(param_1 + 0x36c) + 0x38;
@@ -34757,7 +34758,7 @@ void FUN_010255dc(int param_1,undefined4 param_2)
     } while (iVar7 < iVar8);
     if (*(int *)(param_1 + 0x338) == 0) {
       piVar5 = piVar10 + 2;
-      FUN_010296e8(piVar5,param_1 + 0x24);
+      swv_Matrix4Copy(piVar5,param_1 + 0x24);
       FUN_010275fc(piVar5,param_2);
       FUN_01027acc(param_1 + 0x37c,piVar5);
       *(undefined4 *)(param_1 + 0x404) = 0;
@@ -38100,7 +38101,7 @@ void * FUN_01029620(void *param_1)
   if ((param_1 == (void *)0x0) && (param_1 = helper_malloc(0x44), param_1 == (void *)0x0)) {
     return (void *)0x0;
   }
-  FUN_01012568(param_1);
+  swv_Matrix4SetIdentity(param_1);
   return param_1;
 }
 
@@ -38120,7 +38121,7 @@ void * FUN_01029650(void *param_1,uint *param_2)
     }
   }
   uVar2 = 0;
-  FUN_01012568(param_1);
+  swv_Matrix4SetIdentity(param_1);
   swv_fcmp_b(*param_2 & 0x7fffffff,uVar1);
   if ((((bool)in_CY && !(bool)uVar2) ||
       (swv_fcmp_b(param_2[1] & 0x7fffffff,uVar1), (bool)in_CY && !(bool)uVar2)) ||
@@ -38133,8 +38134,10 @@ void * FUN_01029650(void *param_1,uint *param_2)
   return param_1;
 }
 
-/* ==== 0x010296E8  (file offset 0x296E8)  FUN_010296e8 ================================================ */
-void * FUN_010296e8(void *param_1,undefined4 param_2)
+/* ==== 0x010296E8  (file offset 0x296E8)  swv_Matrix4Copy ============================================= */
+/* GUESS: name (not yet rewritten). Copies the 0x44-byte transform param_2 into param_1, allocating
+   param_1 first when it is NULL; returns param_1 (NULL with no memory). */
+void * swv_Matrix4Copy(void *param_1,undefined4 param_2)
 
 {
   if ((param_1 == (void *)0x0) && (param_1 = helper_malloc(0x44), param_1 == (void *)0x0)) {
@@ -38160,7 +38163,7 @@ FUN_01029724(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined
     return (undefined4 *)0x0;
   }
   uVar3 = 0;
-  FUN_01012568(param_1);
+  swv_Matrix4SetIdentity(param_1);
   uVar2 = swv_fsub(param_2,0x3f800000);
   swv_fcmp_c(uVar2 & 0x7fffffff,uVar1);
   if (!(bool)in_CY || (bool)uVar3) {
@@ -41827,7 +41830,7 @@ void FUN_0102da44(int param_1)
 {
   undefined1 auStack_48 [72];
   
-  FUN_010296e8(auStack_48,param_1 + 0xc);
+  swv_Matrix4Copy(auStack_48,param_1 + 0xc);
   swv_Matrix4Invert(auStack_48);
   return;
 }
@@ -44069,9 +44072,9 @@ int thunk_FUN_01009ad0(void)
     FUN_01028b58(iVar3);
   }
   *(int *)(iVar1 + 0x9a8) = iVar3;
-  FUN_01012568(iVar1 + 0xac);
-  FUN_01012568(iVar1 + 0x24);
-  FUN_01012568(iVar1 + 0x68);
+  swv_Matrix4SetIdentity(iVar1 + 0xac);
+  swv_Matrix4SetIdentity(iVar1 + 0x24);
+  swv_Matrix4SetIdentity(iVar1 + 0x68);
   *(undefined4 *)(iVar1 + 0xc) = 0x3f800000;
   if (iVar1 != 0) {
     uVar2 = FUN_0100f8e8(0);

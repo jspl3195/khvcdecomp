@@ -186,6 +186,27 @@ typedef struct SwvExtObject {
     uint32   field_18;      /* +0x18 entry only (the archive ends at +0x18): the read position */
 } SwvExtObject;
 
+/* ---- SkinnedMesh skinning data ------------------------------------------------------------
+ * Built once by swvSkin_BuildBoneSets (0x0101790c). A SkinnedMesh keeps its bone table at +0xc4
+ * (count +0xc8: SwvSkinBone, one per M3G addTransform(bone, weight, firstVertex, numVertices)); at
+ * +0xd0 a list (array +0xd4, count +0xd8) of SwvSkinBoneSet, the distinct sets of the (at most 2)
+ * heaviest bones of its vertices, index 0 the no-bone template; and at +0xe0 a list (array +0xe4,
+ * count +0xe8) of uint16, each vertex's bone-set index. +0xf0 / +0xf4 / +0xf8 become 1 once built.
+ * GUESS: the field names. */
+typedef struct SwvSkinBone {
+    int32    weight;        /* +0x00 swvSkin_VertexBones keeps the heaviest */
+    uint16   firstVertex;   /* +0x04 the first vertex it moves */
+    uint16   vertexCount;   /* +0x06 how many (0 is an error) */
+    uint16   bone;          /* +0x08 GUESS: the bone node's index */
+    uint16   pad_0a;        /* +0x0a */
+} SwvSkinBone;
+
+typedef struct SwvSkinBoneSet {
+    uint16   bones[2];      /* +0x00 indices into the bone table; 0xffff: none */
+    uint32   transform[17]; /* +0x04 16 float bits and a flags word (swv_Matrix4SetIdentity) */
+    uint32   weightScale;   /* +0x48 float bits: 1 / the sum of the bones' weights */
+} SwvSkinBoneSet;
+
 /* ---- engine globals ------------------------------------------------------------------------
  * Swerve has no writable statics either: swv_NewSwerve allocates this 0x24-byte block and
  * stores it in the *host applet* at GetAppInstance()+0x20 (KHApp.pSwerveGlobals). It also

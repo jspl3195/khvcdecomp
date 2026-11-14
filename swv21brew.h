@@ -337,7 +337,7 @@ void FUN_01002ef8(int param_1,int param_2,int param_3,undefined4 param_4,int par
 void FUN_0100300c(int param_1,uint param_2,uint param_3,int param_4,int param_5,int *param_6);
 void FUN_010031a0(int param_1,int param_2);
 undefined8 FUN_01003234(int param_1,int param_2,int param_3,int param_4,int param_5);
-int FUN_010033a4(int param_1,undefined4 param_2);
+int swvSkin_FindOrAddBoneSet(int param_1,undefined4 param_2);
 int FUN_01003408(int param_1);
 void FUN_01003474(int param_1,undefined4 param_2);
 void FUN_010034cc(int param_1,int param_2);
@@ -355,7 +355,7 @@ void FUN_0100400c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
 void FUN_0100406c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
 void FUN_010040cc(int *param_1,undefined1 *param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0100412c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
-undefined4 * FUN_0100418c(int *param_1,undefined4 *param_2);
+undefined4 * swvSkin_AppendBoneSet(int *param_1,undefined4 *param_2);
 uint32 swvExt_AddRef(SwvExtObject *object);   /* 0x010041EC GUESS: name, see swv21brew.c */
 uint32 swvExt_Release(SwvExtObject *object);   /* 0x01004200 GUESS: name, see swv21brew.c */
 void swvArchiveEntry_Read(int param_1,undefined4 param_2,uint param_3,undefined4 param_4);
@@ -363,7 +363,7 @@ void swvArchive_EnumInit(SwvExtObject *archive);   /* 0x010042BC GUESS: name, se
 undefined4 swvArchive_EnumNext(int param_1,undefined4 *param_2,int *param_3);
 int swvArchive_Open(int param_1,undefined4 param_2);
 int swvArchive_OpenEntry(int param_1,undefined4 param_2,undefined4 *param_3,void **param_4);
-int FUN_010047b0(int param_1,int param_2,int param_3);
+int32 swvSkin_BoneSetsEqual(uint8 *mesh,const uint16 *a,const uint16 *b);   /* 0x010047B0 GUESS: name, see swv21brew.c */
 int FUN_01004848(int param_1,int param_2);
 int FUN_0100486c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 int FUN_010048e4(int param_1,int param_2,undefined4 param_3);
@@ -501,7 +501,7 @@ int FUN_0100ec1c(void);
 int * FUN_0100ec40(void);
 void FUN_0100eca0(int param_1,int param_2,int param_3,int param_4,int param_5,undefined2 param_6, undefined1 param_7);
 void FUN_0100ed84(int param_1,int param_2,int param_3);
-uint FUN_0100edd4(int param_1,uint param_2,int param_3);
+uint swvSkin_VertexBones(int param_1,uint param_2,int param_3);
 int * FUN_0100eef0(int *param_1,int param_2);
 void FUN_0100efe4(int *param_1,int param_2);
 void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
@@ -613,7 +613,7 @@ undefined4 FUN_01012444(undefined4 param_1,int param_2);
 undefined4 FUN_01012478(undefined4 param_1,int param_2);
 undefined4 FUN_010124dc(undefined4 param_1,int param_2);
 undefined4 FUN_01012508(int param_1,int param_2);
-void FUN_01012568(undefined4 *param_1);
+void swv_Matrix4SetIdentity(undefined4 *param_1);
 void FUN_010125e4(int param_1,uint param_2,undefined4 param_3,undefined4 param_4,undefined4 *param_5 );
 void FUN_010126d0(void);
 void FUN_01012758(void);
@@ -672,7 +672,7 @@ void FUN_010172fc(undefined4 *param_1,uint *param_2);
 undefined4 * FUN_0101749c(undefined4 *param_1,undefined4 *param_2);
 void FUN_01017840(int *param_1,undefined4 param_2);
 void FUN_01017894(uint *param_1);
-void FUN_0101790c(int param_1,undefined4 param_2,int param_3);
+void swvSkin_BuildBoneSets(int param_1,undefined4 param_2,int param_3);
 bool FUN_01017b00(int param_1);
 int FUN_01017bc4(int param_1);
 bool FUN_01017ccc(int param_1);
@@ -981,7 +981,7 @@ int * FUN_01029540(int *param_1);
 int * FUN_010295ac(int *param_1);
 void * FUN_01029620(void *param_1);
 void * FUN_01029650(void *param_1,uint *param_2);
-void * FUN_010296e8(void *param_1,undefined4 param_2);
+void * swv_Matrix4Copy(void *param_1,undefined4 param_2);
 undefined4 * FUN_01029724(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_010297d4(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,undefined4 param_6,undefined4 param_7,undefined4 param_8, undefined4 param_9,undefined4 param_10,undefined4 param_11,undefined4 param_12, undefined4 param_13,undefined4 param_14,undefined4 param_15,undefined4 param_16, undefined4 param_17);
 void FUN_01029850(void *param_1);
