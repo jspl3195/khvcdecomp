@@ -207,6 +207,28 @@ typedef struct SwvSkinBoneSet {
     uint32   weightScale;   /* +0x48 float bits: 1 / the sum of the bones' weights */
 } SwvSkinBoneSet;
 
+/* ---- KeyframeSequence (class 12) --------------------------------------------------------------
+ * The fields the keyframe code reads (swvKeyframeSequence_*); the Object3D part before +0x1c is not
+ * identified yet. The values are JSR-184's: interpolation LINEAR 0xb0 (176), SLERP 0xb1, SPLINE 0xb2,
+ * SQUAD 0xb3, STEP 0xb4; repeat mode CONSTANT 0xc0 (192), LOOP 0xc1. A keyframe is
+ * swvKeyframeSequence_KeyframeWords words of keyframes: its time (an int), then its components (float
+ * bits; for SPLINE and SQUAD each with its two tangents). GUESS: the names of the fields not proven. */
+typedef struct SwvKeyframeSequence {
+    uint32   field_00[7];    /* +0x00 .. +0x1b not identified */
+    int32    interpolation;  /* +0x1c 0xb0 .. 0xb4 */
+    int32    repeatMode;     /* +0x20 0xc0 CONSTANT, 0xc1 LOOP */
+    uint32   duration;       /* +0x24 float bits; must be above 0 */
+    int32    field_28;       /* +0x28 an int (swvKeyframeSequence_Sample uses it - 1) */
+    int32    validFirst;     /* +0x2c the valid range (setValidRange); first > last: it wraps */
+    int32    validLast;      /* +0x30 */
+    int32    componentCount; /* +0x34 */
+    int32    keyframeCount;  /* +0x38 */
+    uint32   field_3c;       /* +0x3c not identified */
+    int32   *keyframes;      /* +0x40 keyframeCount keyframes of swvKeyframeSequence_KeyframeWords words */
+    uint32   field_44[2];    /* +0x44 .. +0x4b not identified */
+    int32    prepared;       /* +0x4c set by swvKeyframeSequence_Prepare */
+} SwvKeyframeSequence;
+
 /* ---- the software rasteriser's context (no struct yet) --------------------------------------
  * The fields the triangle code is known to use (GUESS: the names):
  *   +0x148 .. +0x154  4 RGB565 pixels (a word each): the flat colour's 2x2 dither (swv_SetupFlatDither),

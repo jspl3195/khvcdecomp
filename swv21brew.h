@@ -369,9 +369,9 @@ int FUN_0100486c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
 int FUN_010048e4(int param_1,int param_2,undefined4 param_3);
 void FUN_01004a68(int param_1,int *param_2,int *param_3,int *param_4,int *param_5);
 void swv_SetupFlatDither(uint8 *raster);   /* 0x01004B54 GUESS: name, see swv21brew.c */
-int FUN_01004c0c(int param_1);
-int FUN_01004c30(int param_1);
-void FUN_01004c4c(int param_1,int param_2);
+int32 swvKeyframeSequence_ValidCount(const SwvKeyframeSequence *sequence);   /* 0x01004C0C GUESS: name, see swv21brew.c */
+int32 swvKeyframeSequence_KeyframeWords(const SwvKeyframeSequence *sequence);   /* 0x01004C30 GUESS: name, see swv21brew.c */
+void swvKeyframeSequence_BuildTangents(int param_1,int param_2);
 void FUN_01004fb8(int *param_1);
 void FUN_01005028(int param_1);
 void FUN_010050ac(int param_1);
@@ -569,7 +569,7 @@ undefined4 FUN_01010de0(int param_1,undefined4 param_2,undefined4 param_3,undefi
 void FUN_01010e84(int param_1,int param_2,int *param_3,undefined4 *param_4);
 undefined4 FUN_01010f60(int param_1,int param_2);
 undefined4 FUN_01010f90(int param_1);
-undefined4 FUN_01010f98(int param_1,undefined4 param_2,int param_3,undefined4 *param_4,undefined4 param_5);
+undefined4 swvKeyframeSequence_Sample(int param_1,undefined4 param_2,int param_3,undefined4 *param_4,undefined4 param_5);
 void FUN_01011900(int param_1,undefined4 *param_2,undefined4 *param_3);
 void FUN_0101191c(int param_1,int param_2,undefined4 *param_3);
 undefined4 FUN_01011960(int param_1);
@@ -585,8 +585,8 @@ void FUN_01011a20(int param_1,int param_2,undefined4 *param_3);
 int FUN_01011a84(int param_1);
 uint FUN_01011aa8(int param_1);
 undefined4 FUN_01011ab8(int param_1);
-int FUN_01011ae0(int param_1,int param_2);
-int FUN_01011b4c(int param_1,int param_2);
+int swvKeyframeSequence_PreviousValid(int param_1,int param_2);
+int swvKeyframeSequence_NextValid(int param_1,int param_2);
 int FUN_01011bb4(int param_1);
 int FUN_01011be4(int param_1);
 undefined4 FUN_01011bfc(int param_1,int param_2,int param_3);
@@ -900,7 +900,7 @@ void FUN_01026468(uint *param_1);
 undefined8 FUN_01026548(int param_1,int param_2);
 void FUN_010265fc(int param_1);
 void FUN_01026614(int param_1,int param_2);
-void FUN_010266c0(int param_1);
+void swvKeyframeSequence_Prepare(int param_1);
 int FUN_010268b4(void);
 undefined8 FUN_010268d4(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01026d30(int param_1,undefined4 param_2,int param_3);

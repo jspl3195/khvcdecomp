@@ -4889,37 +4889,42 @@ void swv_SetupFlatDither(uint8 *raster)
   }
 }
 
-/* ==== 0x01004C0C  (file offset 0x04C0C)  FUN_01004c0c ================================================ */
-int FUN_01004c0c(int param_1)
+/* ==== 0x01004C0C  (file offset 0x04C0C)  swvKeyframeSequence_ValidCount ============================== */
+/* GUESS: name. How many keyframes a KeyframeSequence's valid range holds, as JSR-184 defines
+   setValidRange(first, last): last - first + 1, or, when first > last (the range wraps past the last
+   keyframe), keyframeCount - first + last + 1. Evidence (0x01004c0c - 0x01004c2c): `cmp r1, r2` of
+   +0x2c and +0x30, then `ldrgt` +0x38 / `subgt` / `addgt` or `suble`, and `add r0, r0, #1`. Callers:
+   swvKeyframeSequence_BuildTangents, swvKeyframeSequence_Sample, swvKeyframeSequence_Prepare. */
+int32 swvKeyframeSequence_ValidCount(const SwvKeyframeSequence *sequence)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 0x2c);
-  if (*(int *)(param_1 + 0x30) < iVar1) {
-    iVar1 = *(int *)(param_1 + 0x38) - iVar1;
-  }
-  else {
-    iVar1 = -iVar1;
-  }
-  return iVar1 + *(int *)(param_1 + 0x30) + 1;
+  if (sequence->validFirst > sequence->validLast)
+    return sequence->keyframeCount - sequence->validFirst + sequence->validLast + 1;
+  return sequence->validLast - sequence->validFirst + 1;
 }
 
-/* ==== 0x01004C30  (file offset 0x04C30)  FUN_01004c30 ================================================ */
-int FUN_01004c30(int param_1)
+/* ==== 0x01004C30  (file offset 0x04C30)  swvKeyframeSequence_KeyframeWords =========================== */
+/* GUESS: name. How many words a keyframe takes in a KeyframeSequence's data (+0x40): its time, then
+   its components (+0x34), three times over for SPLINE (0xb2) and SQUAD (0xb3), which keep a value and
+   two tangents per component. Evidence (0x01004c30 - 0x01004c48): `cmp r1, #0xb2` / `cmpne r1, #0xb3`
+   / `addeq r0, r0, r0, lsl #1` / `add r0, r0, #1`. */
+int32 swvKeyframeSequence_KeyframeWords(const SwvKeyframeSequence *sequence)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 0x34);
-  if (*(int *)(param_1 + 0x1c) == 0xb2 || *(int *)(param_1 + 0x1c) == 0xb3) {
-    iVar1 = iVar1 * 3;
-  }
-  return iVar1 + 1;
+  int32 words = sequence->componentCount;
+
+  if (sequence->interpolation == 0xb2 || sequence->interpolation == 0xb3)
+    words *= 3;
+  return words + 1;
 }
 
-/* ==== 0x01004C4C  (file offset 0x04C4C)  FUN_01004c4c ================================================ */
-void FUN_01004c4c(int param_1,int param_2)
+/* ==== 0x01004C4C  (file offset 0x04C4C)  swvKeyframeSequence_BuildTangents =========================== */
+/* GUESS: name (not yet rewritten). Builds the in and out tangents of a KeyframeSequence's valid
+   keyframes for SPLINE (param_2 0) or SQUAD (param_2 1, the quaternion path: FUN_010246a0,
+   FUN_0100e4e8, FUN_010272f4): for each keyframe, from its neighbours (swvKeyframeSequence_PreviousValid
+   / NextValid) scaled by the ratio of the time steps; in CONSTANT mode (0xc0) the first and last
+   keyframes get zero tangents. Only swvKeyframeSequence_Prepare calls it. */
+void swvKeyframeSequence_BuildTangents(int param_1,int param_2)
 
 {
   bool bVar1;
@@ -4959,8 +4964,8 @@ void FUN_01004c4c(int param_1,int param_2)
   
   iStack_2c = param_1;
   local_28 = param_2;
-  iVar2 = FUN_01004c30();
-  iVar3 = FUN_01004c0c(param_1);
+  iVar2 = swvKeyframeSequence_KeyframeWords((SwvKeyframeSequence *)param_1);   /* Ghidra had dropped it */
+  iVar3 = swvKeyframeSequence_ValidCount((SwvKeyframeSequence *)param_1);
   swv_fadd(*(undefined4 *)(param_1 + 0x24),0x3f000000);
   local_3c = swv_ffix();
   iVar10 = *(int *)(param_1 + 0x2c);
@@ -4995,8 +5000,8 @@ LAB_01004cd0:
       }
     }
     else {
-      local_44 = FUN_01011ae0(param_1,iVar10);
-      local_48 = FUN_01011b4c(param_1,iVar10);
+      local_44 = swvKeyframeSequence_PreviousValid(param_1,iVar10);
+      local_48 = swvKeyframeSequence_NextValid(param_1,iVar10);
       if (bVar1) {
         local_50 = 0;
         local_4c = 0;
@@ -7886,7 +7891,7 @@ void FUN_01008398(int param_1,int param_2,int param_3,int param_4)
   *(int *)(param_1 + 0x30) = param_2 + -1;
   *(int *)(param_1 + 0x34) = param_3;
   *(int *)(param_1 + 0x1c) = param_4;
-  iVar1 = FUN_01004c30(param_1);
+  iVar1 = swvKeyframeSequence_KeyframeWords((SwvKeyframeSequence *)param_1);
   uVar3 = (uint)((longlong)iVar1 * (longlong)param_2);
   iVar2 = (int)((ulonglong)((longlong)iVar1 * (longlong)param_2) >> 0x20) -
           (uint)(uVar3 < 0x7fffffff);
@@ -15617,7 +15622,8 @@ FUN_01010de0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     if (!(bool)uVar4) {
       uVar2 = FUN_01010094(*(int *)(param_1 + 0x20),param_2);
     }
-    uVar3 = FUN_01010f98(*(undefined4 *)(param_1 + 0x1c),uVar2,param_3,param_4,param_5,uVar3);
+    uVar3 = swvKeyframeSequence_Sample(*(undefined4 *)(param_1 + 0x1c),uVar2,param_3,param_4,param_5,
+                                       uVar3);
     swv_fcmp_a(uVar3,WORD_HEXADECIMAL_7F7FFFFF);
     if (!(bool)uVar4) {
       uVar2 = FUN_01010818(*(undefined4 *)(param_1 + 0x20));
@@ -15693,9 +15699,14 @@ undefined4 FUN_01010f90(int param_1)
   return *(undefined4 *)(param_1 + 0x88);
 }
 
-/* ==== 0x01010F98  (file offset 0x10F98)  FUN_01010f98 ================================================ */
+/* ==== 0x01010F98  (file offset 0x10F98)  swvKeyframeSequence_Sample ================================== */
+/* GUESS: name (not yet rewritten). Samples a KeyframeSequence at time param_2: prepares it first
+   (swvKeyframeSequence_Prepare, while +0x4c is 0); a duration (+0x24) of 0 or less is error -1300; in
+   LOOP mode (0xc1) the time wraps by the duration, otherwise it is clamped to the valid keyframes;
+   then interpolates between the keyframes around it. */
 undefined4
-FUN_01010f98(int param_1,undefined4 param_2,int param_3,undefined4 *param_4,undefined4 param_5)
+swvKeyframeSequence_Sample(int param_1,undefined4 param_2,int param_3,undefined4 *param_4,
+                           undefined4 param_5)
 
 {
   int iVar1;
@@ -15762,10 +15773,10 @@ FUN_01010f98(int param_1,undefined4 param_2,int param_3,undefined4 *param_4,unde
     FUN_0102f7e0(INTEGER_MINUS_1300);
   }
   if (*(int *)(param_1 + 0x4c) == 0) {
-    FUN_010266c0(param_1);
+    swvKeyframeSequence_Prepare(param_1);
   }
-  local_58 = FUN_01004c0c(param_1);
-  iVar1 = FUN_01004c30(param_1);
+  local_58 = swvKeyframeSequence_ValidCount((SwvKeyframeSequence *)param_1);
+  iVar1 = swvKeyframeSequence_KeyframeWords((SwvKeyframeSequence *)param_1);
   uVar15 = *(uint *)(param_1 + 0x2c);
   local_38 = iVar1 * uVar15;
   iVar13 = *(int *)(param_1 + 0x40);
@@ -15909,7 +15920,7 @@ FUN_01010f98(int param_1,undefined4 param_2,int param_3,undefined4 *param_4,unde
   }
   FUN_010001f4(local_64,uVar15);
   local_7c = extraout_r1_03;
-  iVar4 = FUN_01011b4c(param_1,uVar15);
+  iVar4 = swvKeyframeSequence_NextValid(param_1,uVar15);
   local_40 = param_4 + 1;
   uVar9 = *(int *)(param_1 + 0x1c) - 0xb0;
   uVar19 = 3 < uVar9;
@@ -16089,7 +16100,7 @@ switchD_010113b0_default:
   if (local_2c < *(int *)(param_1 + 0x34)) {
     iVar13 = local_2c;
   }
-  iVar4 = FUN_01011b4c(param_1,uVar15);
+  iVar4 = swvKeyframeSequence_NextValid(param_1,uVar15);
   iVar8 = *(int *)(param_1 + 0x40);
   for (iVar14 = 0; bVar18 = iVar14 == iVar13, iVar14 < iVar13; iVar14 = iVar14 + 1) {
     swv_fcmp_a(local_78[iVar14],*(undefined4 *)(iVar8 + iVar1 * iVar4 * 4 + 4 + iVar14 * 4));
@@ -16329,8 +16340,11 @@ undefined4 FUN_01011ab8(int param_1)
   return 3;
 }
 
-/* ==== 0x01011AE0  (file offset 0x11AE0)  FUN_01011ae0 ================================================ */
-int FUN_01011ae0(int param_1,int param_2)
+/* ==== 0x01011AE0  (file offset 0x11AE0)  swvKeyframeSequence_PreviousValid =========================== */
+/* GUESS: name (not yet rewritten). The valid keyframe before keyframe param_2 of a KeyframeSequence,
+   wrapping inside the valid range (+0x2c .. +0x30, past keyframeCount when it wraps): the range's last
+   keyframe before its first. Used for the tangents (swvKeyframeSequence_BuildTangents). */
+int swvKeyframeSequence_PreviousValid(int param_1,int param_2)
 
 {
   int iVar1;
@@ -16350,8 +16364,11 @@ int FUN_01011ae0(int param_1,int param_2)
   return param_2 + -1;
 }
 
-/* ==== 0x01011B4C  (file offset 0x11B4C)  FUN_01011b4c ================================================ */
-int FUN_01011b4c(int param_1,int param_2)
+/* ==== 0x01011B4C  (file offset 0x11B4C)  swvKeyframeSequence_NextValid =============================== */
+/* GUESS: name (not yet rewritten). The valid keyframe after keyframe param_2 of a KeyframeSequence,
+   wrapping inside the valid range like swvKeyframeSequence_PreviousValid: the range's first keyframe
+   after its last. */
+int swvKeyframeSequence_NextValid(int param_1,int param_2)
 
 {
   int iVar1;
@@ -27903,7 +27920,7 @@ void FUN_0101f0b4(int param_1,undefined4 param_2)
   if (iVar4 < 1) {
     FUN_0102f7e0(uVar2);
   }
-  iVar4 = FUN_01004c30(param_1);
+  iVar4 = swvKeyframeSequence_KeyframeWords((SwvKeyframeSequence *)param_1);
   lVar1 = (longlong)iVar4 * (longlong)*(int *)(param_1 + 0x38);
   uVar10 = (uint)lVar1;
   iVar8 = (int)((ulonglong)lVar1 >> 0x20) - (uint)(uVar10 < 0x7fffffff);
@@ -30237,7 +30254,7 @@ void FUN_01021bac(int param_1,int param_2,undefined4 param_3,int param_4,int par
   if (param_4 < *(int *)(param_1 + 0x34)) {
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
-  iVar1 = FUN_01004c30(param_1);
+  iVar1 = swvKeyframeSequence_KeyframeWords((SwvKeyframeSequence *)param_1);
   puVar4 = (undefined4 *)(*(int *)(param_1 + 0x40) + param_2 * iVar1 * 4);
   *puVar4 = param_3;
   for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0x34); iVar1 = iVar1 + 1) {
@@ -35165,8 +35182,14 @@ void FUN_010266b0(int param_1,int param_2,int param_3,int param_4)
   return;
 }
 
-/* ==== 0x010266C0  (file offset 0x266C0)  FUN_010266c0 ================================================ */
-void FUN_010266c0(int param_1)
+/* ==== 0x010266C0  (file offset 0x266C0)  swvKeyframeSequence_Prepare ================================= */
+/* GUESS: name (not yet rewritten). Checks and prepares a KeyframeSequence before its first sampling:
+   the valid keyframes' times must not decrease (also across the wrap) and the last must not pass the
+   duration (+0x24), else error -1300 (FUN_0102f7e0); marks it prepared (+0x4c = 1); for SLERP (0xb1)
+   and SQUAD (0xb3) normalises each valid keyframe's quaternion (FUN_01015128, GUESS); for SPLINE and
+   SQUAD builds the tangents (swvKeyframeSequence_BuildTangents). Only swvKeyframeSequence_Sample calls
+   it. */
+void swvKeyframeSequence_Prepare(int param_1)
 
 {
   int iVar1;
@@ -35181,7 +35204,7 @@ void FUN_010266c0(int param_1)
   undefined1 uVar8;
   undefined1 uVar9;
   
-  iVar1 = FUN_01004c30();
+  iVar1 = swvKeyframeSequence_KeyframeWords((SwvKeyframeSequence *)param_1);   /* Ghidra had dropped it */
   uVar6 = INTEGER_MINUS_1300;
   uVar7 = *(uint *)(param_1 + 0x2c);
   if (*(int *)(param_1 + 0x30) < (int)uVar7) {
@@ -35225,7 +35248,7 @@ void FUN_010266c0(int param_1)
       }
     }
   }
-  iVar3 = FUN_01004c0c(param_1);
+  iVar3 = swvKeyframeSequence_ValidCount((SwvKeyframeSequence *)param_1);
   uVar4 = swv_fflt(*(undefined4 *)(*(int *)(param_1 + 0x40) + iVar1 * *(int *)(param_1 + 0x30) * 4))
   ;
   swv_fcmp_c(uVar4,*(undefined4 *)(param_1 + 0x24));
@@ -35256,7 +35279,7 @@ void FUN_010266c0(int param_1)
       }
       uVar6 = 1;
     }
-    FUN_01004c4c(param_1,uVar6);
+    swvKeyframeSequence_BuildTangents(param_1,uVar6);
   }
   return;
 }
