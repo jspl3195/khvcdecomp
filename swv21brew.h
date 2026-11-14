@@ -372,7 +372,7 @@ void swv_SetupFlatDither(uint8 *raster);   /* 0x01004B54 GUESS: name, see swv21b
 int32 swvKeyframeSequence_ValidCount(const SwvKeyframeSequence *sequence);   /* 0x01004C0C GUESS: name, see swv21brew.c */
 int32 swvKeyframeSequence_KeyframeWords(const SwvKeyframeSequence *sequence);   /* 0x01004C30 GUESS: name, see swv21brew.c */
 void swvKeyframeSequence_BuildTangents(int param_1,int param_2);
-void FUN_01004fb8(int *param_1);
+void swv_ColourClamp(int32 *colour);   /* 0x01004FB8 GUESS: name, see swv21brew.c */
 void FUN_01005028(int param_1);
 void FUN_010050ac(int param_1);
 undefined4 FUN_01005104(int param_1,int param_2,int param_3);
@@ -639,7 +639,7 @@ void FUN_01013c58(int param_1,int param_2,int *param_3,int param_4);
 void FUN_01013e88(int param_1,int param_2);
 void FUN_0101411c(int param_1,int param_2);
 void FUN_0101420c(int param_1,int param_2);
-void FUN_010144f8(undefined4 *param_1,undefined4 param_2,undefined4 param_3);
+void swvLight_Shade(undefined4 *param_1,undefined4 param_2,undefined4 param_3);   /* 0x010144F8 GUESS: name, see swv21brew.c */
 void FUN_01014510(int param_1,int param_2);
 void FUN_0101456c(int param_1,int param_2);
 uint FUN_010146c8(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
@@ -910,10 +910,10 @@ void FUN_010272c0(int *param_1,int *param_2);
 uint * FUN_010272f4(uint *param_1,undefined4 *param_2);
 undefined4 * FUN_0102748c(undefined4 *param_1,undefined4 param_2);
 undefined8 FUN_010274dc(uint *param_1,int param_2);
-void FUN_01027538(int *param_1,int *param_2);
+void swv_ColourModulate(int32 *colour,const int32 *by);   /* 0x01027538 GUESS: name, see swv21brew.c */
 int * FUN_01027578(int *param_1,uint param_2,undefined4 param_3,undefined4 param_4);
 undefined4 * FUN_010275fc(undefined4 *param_1,undefined4 *param_2);
-void FUN_0102793c(int *param_1,int *param_2);
+void swv_ColourAdd(int32 *colour,const int32 *add);   /* 0x0102793C GUESS: name, see swv21brew.c */
 int FUN_01027970(int param_1,int param_2);
 void FUN_010279d0(undefined4 *param_1,undefined4 *param_2);
 int * FUN_010279ec(int *param_1,int param_2,undefined4 param_3,undefined4 param_4);

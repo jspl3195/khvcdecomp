@@ -5087,30 +5087,27 @@ LAB_01004cd0:
   } while( true );
 }
 
-/* ==== 0x01004FB8  (file offset 0x04FB8)  FUN_01004fb8 ================================================ */
-void FUN_01004fb8(int *param_1)
+/* ==== 0x01004FB8  (file offset 0x04FB8)  swv_ColourClamp ============================================= */
+/* GUESS: name. Clamps a lighting colour (three int32, red, green, blue, in 8.8 fixed point: 0x100 is
+   1.0) to 0 .. 1.0, in place. Evidence (0x01004fb8 - 0x01005008): for each word `cmp #0` / `strlt` 0,
+   else `cmp #0x100` / `strgt` 0x100 (the blue's `bxlt lr` returns early); r0 is left as it came and
+   the caller does not read it. Only FUN_0101bd48 calls it, last, on each vertex's lit colour (after
+   its colour terms, swv_ColourModulate / swv_ColourAdd, and each light's swvLight_Shade). */
+void swv_ColourClamp(int32 *colour)
 
 {
-  if (*param_1 < 0) {
-    *param_1 = 0;
-  }
-  else if (0x100 < *param_1) {
-    *param_1 = 0x100;
-  }
-  if (param_1[1] < 0) {
-    param_1[1] = 0;
-  }
-  else if (0x100 < param_1[1]) {
-    param_1[1] = 0x100;
-  }
-  if (-1 < param_1[2]) {
-    if (0x100 < param_1[2]) {
-      param_1[2] = 0x100;
-    }
-    return;
-  }
-  param_1[2] = 0;
-  return;
+  if (colour[0] < 0)
+    colour[0] = 0;
+  else if (colour[0] > 0x100)
+    colour[0] = 0x100;
+  if (colour[1] < 0)
+    colour[1] = 0;
+  else if (colour[1] > 0x100)
+    colour[1] = 0x100;
+  if (colour[2] < 0)
+    colour[2] = 0;
+  else if (colour[2] > 0x100)
+    colour[2] = 0x100;
 }
 
 /* ==== 0x0100500C  (file offset 0x0500C)  swv_TryArm ================================================== */
@@ -18422,8 +18419,8 @@ void FUN_01013c58(int param_1,int param_2,int *param_3,int param_4)
     iStack_40 = *(undefined4 *)(param_1 + 0x4c);
     iStack_3c = *(undefined4 *)(param_1 + 0x50);
     FUN_0100efe4(&iStack_44,uVar5);
-    FUN_01027538(&iStack_44,param_2 + 0x18);
-    FUN_0102793c(param_2,&iStack_44);
+    swv_ColourModulate(&iStack_44,param_2 + 0x18);
+    swv_ColourAdd(param_2,&iStack_44);
     return;
   }
   return;
@@ -18526,8 +18523,8 @@ void FUN_01013e88(int param_1,int param_2)
     iStack_40 = *(int *)(param_1 + 0x4c);
     iStack_3c = *(int *)(param_1 + 0x50);
     FUN_0100efe4(&iStack_44,uVar4);
-    FUN_01027538(&iStack_44,param_2 + 0xc);
-    FUN_0102793c(param_2,&iStack_44);
+    swv_ColourModulate(&iStack_44,param_2 + 0xc);
+    swv_ColourAdd(param_2,&iStack_44);
   }
   if (*(int *)(param_1 + 8) == 0) {
     return;
@@ -18561,7 +18558,7 @@ void FUN_0101411c(int param_1,int param_2)
       local_18 = *(undefined4 *)(param_1 + 0x4c);
       local_14 = *(undefined4 *)(param_1 + 0x50);
       FUN_0100efe4(&local_1c,iVar1);
-      FUN_01027538(&local_1c,param_2 + 0xc);
+      swv_ColourModulate(&local_1c,param_2 + 0xc);
       FUN_010272c0(param_2,&local_1c);
     }
   }
@@ -18686,8 +18683,8 @@ void FUN_0101420c(int param_1,int param_2)
     iStack_44 = *(int *)(param_1 + 0x4c);
     iStack_40 = *(int *)(param_1 + 0x50);
     FUN_0100efe4(&iStack_48,(uint)lVar1 >> 0x10 | (int)((ulonglong)lVar1 >> 0x20) << 0x10);
-    FUN_01027538(&iStack_48,param_2 + 0xc);
-    FUN_0102793c(param_2,&iStack_48);
+    swv_ColourModulate(&iStack_48,param_2 + 0xc);
+    swv_ColourAdd(param_2,&iStack_48);
   }
   if (*(int *)(param_1 + 8) == 0) {
     return;
@@ -18697,8 +18694,12 @@ void FUN_0101420c(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x010144F8  (file offset 0x144F8)  FUN_010144f8 ================================================ */
-void FUN_010144f8(undefined4 *param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x010144F8  (file offset 0x144F8)  swvLight_Shade ============================================== */
+/* GUESS: name (not yet rewritten). Adds one light's term to a vertex's colour: when the light
+   (param_1, 0x90 bytes) is on (+0x10), stores param_3 at +0x80 and calls the light's own routine (+0,
+   by its type) with r0 (the light) and r1 (the colour) passed through; Ghidra dropped them and took the
+   call for a jump table. FUN_0101bd48 calls it for each of its lights (+0x990, +0x994 of them). */
+void swvLight_Shade(undefined4 *param_1,undefined4 param_2,undefined4 param_3)
 
 {
   if (param_1[4] == 0) {
@@ -22476,15 +22477,15 @@ LAB_010190c8:
           local_154 = local_a4;
           local_150 = local_a0;
           FUN_0100efe4(&local_158,iVar10);
-          FUN_0102793c(&local_158,local_5c);
+          swv_ColourAdd(&local_158,local_5c);
           local_164 = local_b4;
           uStack_160 = local_b0;
           local_15c = local_ac;
           FUN_0100efe4(&local_164,iVar10);
-          FUN_0102793c(&local_164,local_60);
+          swv_ColourAdd(&local_164,local_60);
           FUN_010272c0(&local_164,&local_158);
           FUN_0100efe4(&local_164,iVar8);
-          FUN_0102793c(&local_164,&local_158);
+          swv_ColourAdd(&local_164,&local_158);
           uVar2 = FUN_01010008(&local_164);
           *(undefined2 *)(local_98 + (iVar6 * local_84 + local_13c) * 2) = uVar2;
         }
@@ -24972,7 +24973,7 @@ void FUN_0101bd48(int param_1,int param_2,int param_3,int param_4,undefined4 par
       local_98 = uVar4 | local_98;
     } while (iVar2 < *(int *)(param_1 + 0x994));
   }
-  FUN_01027538(&local_90,local_a8 + 1);
+  swv_ColourModulate(&local_90,local_a8 + 1);
   local_40 = param_1 + 0x630;
   uVar4 = 0;
   if (local_94 != 0) {
@@ -25276,7 +25277,7 @@ LAB_0101c710:
                       swv_fmul(uStack_6c,*(undefined4 *)(param_1 + 0xc));
                       uVar19 = swv_ffix();
                       *(undefined1 *)(iVar18 + 0xa0c) = uVar19;
-                      FUN_0102793c(iVar5,&local_90);
+                      swv_ColourAdd(iVar5,&local_90);
                     }
                     else {
                       if (*(int *)(param_1 + 0x344) == 0) {
@@ -25301,8 +25302,8 @@ LAB_0101c710:
                       aiStack_198[0] = local_a8[1];
                       aiStack_198[1] = local_a8[2];
                       puStack_190 = local_9c;
-                      FUN_01027538(aiStack_1ac + 5,iVar18 + 0x9d0);
-                      FUN_0102793c(iVar5,aiStack_1ac + 5);
+                      swv_ColourModulate(aiStack_1ac + 5,iVar18 + 0x9d0);
+                      swv_ColourAdd(iVar5,aiStack_1ac + 5);
                     }
                     if (local_98 != 0) {
                       if (*(int *)(iVar18 + 0xa18) == 0) {
@@ -25315,10 +25316,10 @@ LAB_0101c710:
                       }
                       iVar10 = *(int *)(param_1 + 0x994);
                       while (iVar10 = iVar10 + -1, -1 < iVar10) {
-                        FUN_010144f8(*(int *)(param_1 + 0x990) + iVar10 * 0x90,iVar5);
+                        swvLight_Shade(*(int *)(param_1 + 0x990) + iVar10 * 0x90,iVar5);
                       }
                     }
-                    uVar14 = FUN_01004fb8(iVar5);
+                    swv_ColourClamp((int32 *)iVar5);   /* Ghidra's uVar14 = : r0 is not used */
                   }
                   if (iVar9 != 0) {
                     uVar14 = *(uint *)(iVar9 + 0x2c);
@@ -27495,15 +27496,15 @@ LAB_010190c8:
           iStack_154 = iStack_a4;
           uStack_150 = uStack_a0;
           FUN_0100efe4(&iStack_158,iVar12);
-          FUN_0102793c(&iStack_158,iStack_5c);
+          swv_ColourAdd(&iStack_158,iStack_5c);
           iStack_164 = iStack_b4;
           uStack_160 = uStack_b0;
           uStack_15c = uStack_ac;
           FUN_0100efe4(&iStack_164,iVar12);
-          FUN_0102793c(&iStack_164,iStack_60);
+          swv_ColourAdd(&iStack_164,iStack_60);
           FUN_010272c0(&iStack_164,&iStack_158);
           FUN_0100efe4(&iStack_164,iVar7);
-          FUN_0102793c(&iStack_164,&iStack_158);
+          swv_ColourAdd(&iStack_164,&iStack_158);
           uVar3 = FUN_01010008(&iStack_164);
           *(undefined2 *)(iStack_98 + (iVar5 * iStack_84 + iStack_13c) * 2) = uVar3;
         }
@@ -32000,7 +32001,7 @@ undefined4 FUN_010234bc(int param_1,int param_2,undefined4 param_3,uint param_4,
   *(undefined4 *)(param_1 + 0x10) = 0;
   if ((*(uint *)(param_1 + 0x7c) & param_4) != 0) {
     if (*(int *)(param_1 + 0xc) != 0 && param_5 != 0) {
-      FUN_0102793c(param_5,param_1 + 0x48);
+      swv_ColourAdd(param_5,param_1 + 0x48);
       return 0;
     }
     if (param_2 != 0) {
@@ -35834,14 +35835,17 @@ undefined8 FUN_010274dc(uint *param_1,int param_2)
   return CONCAT44((int)((ulonglong)lVar1 >> 0x20),param_1);
 }
 
-/* ==== 0x01027538  (file offset 0x27538)  FUN_01027538 ================================================ */
-void FUN_01027538(int *param_1,int *param_2)
+/* ==== 0x01027538  (file offset 0x27538)  swv_ColourModulate ========================================== */
+/* GUESS: name. Multiplies colour by colour by, component by component, in 8.8 fixed point:
+   colour = colour * by >> 8 (an arithmetic shift). Evidence: 0x01027538 - 0x01027574 (`mul r2, r3, r2`
+   / `mov r2, r2, asr #8` / `str` for each word). Used by the lighting (GUESS: a light's colour by
+   the material's). */
+void swv_ColourModulate(int32 *colour,const int32 *by)
 
 {
-  *param_1 = *param_2 * *param_1 >> 8;
-  param_1[1] = param_2[1] * param_1[1] >> 8;
-  param_1[2] = param_2[2] * param_1[2] >> 8;
-  return;
+  colour[0] = by[0] * colour[0] >> 8;
+  colour[1] = by[1] * colour[1] >> 8;
+  colour[2] = by[2] * colour[2] >> 8;
 }
 
 /* ==== 0x01027578  (file offset 0x27578)  FUN_01027578 ================================================ */
@@ -36008,14 +36012,16 @@ undefined4 * FUN_010275fc(undefined4 *param_1,undefined4 *param_2)
   return param_1;
 }
 
-/* ==== 0x0102793C  (file offset 0x2793C)  FUN_0102793c ================================================ */
-void FUN_0102793c(int *param_1,int *param_2)
+/* ==== 0x0102793C  (file offset 0x2793C)  swv_ColourAdd =============================================== */
+/* GUESS: name. Adds colour add to colour, component by component (three int32 in 8.8 fixed point,
+   red, green, blue). Evidence: 0x0102793c - 0x0102796c (`ldr` / `ldr` / `add` / `str` for each word).
+   Used by the lighting (a light's term into the vertex's colour) and by colour gradients. */
+void swv_ColourAdd(int32 *colour,const int32 *add)
 
 {
-  *param_1 = *param_1 + *param_2;
-  param_1[1] = param_1[1] + param_2[1];
-  param_1[2] = param_1[2] + param_2[2];
-  return;
+  colour[0] += add[0];
+  colour[1] += add[1];
+  colour[2] += add[2];
 }
 
 /* ==== 0x01027970  (file offset 0x27970)  FUN_01027970 ================================================ */
