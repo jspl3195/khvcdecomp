@@ -4853,7 +4853,7 @@ void FUN_01004a68(int param_1,int *param_2,int *param_3,int *param_4,int *param_
    (>> 9, >> 8, >> 9), and each pixel ((r + d) >> 2) << 11 | ((g + d) >> 2) << 5 | (b + d) >> 2 for d = 1,
    3, 2, 0. swv_SpanFillFlatDithered picks pixel (x & 1) + (y & 1) * 2: the Bayer matrix [[1, 3], [2,
    0]]. Evidence: 0x01004b54 - 0x01004c08 (two passes, d = i + 1 then d ^ 2, the words at +0x148 + i * 8
-   and +0x14c + i * 8). Only swv_RasterTriangleSetup calls it, for flat shading with dithering. */
+   and +0x14c + i * 8). Only swv_RasterTriangleSetup calls it, for flat shading (flag 2 clear). */
 void swv_SetupFlatDither(uint8 *raster)
 
 {
@@ -10348,41 +10348,39 @@ void FUN_0100a624(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 }
 
 /* ==== 0x0100A820  (file offset 0x0A820)  swv_SpanFillFlatDithered ==================================== */
-/* GUESS: name (not yet rewritten). Fills a span with the flat colour, dithered: the pixel of the
-   2x2 pattern swv_SetupFlatDither built (+0x148, word (x & 1) + (y & 1) * 2), alternating along the
-   span with the other pixel of its row; writes a pixel (and its depth, the z-buffer at +0xc) only
-   where the depth test passes. */
-void swv_SpanFillFlatDithered(int param_1)
+/* GUESS: name. The rasteriser's span routine for flat shading: fills the span's pixels with the
+   triangle's colour, dithered (the 2x2 pattern swv_SetupFlatDither built at +0x148: the pixel (x & 1)
+   + (y & 1) * 2, then the other pixel of its row, alternately, by XOR), each only where the depth test
+   passes (the z-buffer's word >= depth >> 12, signed; then both are written). The span: y +0x04 (its
+   parity), the colour and depth rows +0x08 / +0x0c (16 bits a pixel), x +0x10 to +0xdc, the depth
+   +0x1c and its step +0x4c (re-read for each pixel). Like the binary it always does the first pixel,
+   whatever the count. Evidence: 0x0100a820 - 0x0100a8b0. swv_RasterTriangleSetup picks it with flag 2
+   clear; swv_SpanFillGouraud is its smooth-shaded sibling. */
+void swv_SpanFillFlatDithered(uint8 *raster)
 
 {
-  ushort *puVar1;
-  int iVar2;
-  uint uVar3;
-  uint uVar4;
-  int iVar5;
-  undefined2 *puVar6;
-  
-  uVar3 = *(uint *)(param_1 + 0x10);
-  puVar6 = (undefined2 *)(*(int *)(param_1 + 8) + uVar3 * 2);
-  iVar5 = *(int *)(param_1 + 0xdc) - uVar3;
-  puVar1 = (ushort *)(*(int *)(param_1 + 0xc) + uVar3 * 2);
-  uVar4 = (uVar3 & 1) + (*(uint *)(param_1 + 4) & 1) * 2;
-  iVar2 = *(int *)(param_1 + 0x1c);
-  uVar3 = *(uint *)(param_1 + uVar4 * 4 + 0x148) & 0xffff;
-  uVar4 = *(uint *)(param_1 + (uVar4 ^ 1) * 4 + 0x148) ^ uVar3;
-  while( true ) {
-    iVar5 = iVar5 + -1;
-    if (iVar2 >> 0xc <= (int)(uint)*puVar1) {
-      *puVar1 = (ushort)(iVar2 >> 0xc);
-      *puVar6 = (short)uVar3;
+  uint32 x = *(uint32 *)(raster + 0x10);
+  uint16 *pixel = *(uint16 **)(raster + 0x08) + x;
+  uint16 *depth = *(uint16 **)(raster + 0x0c) + x;
+  int32 count = *(int32 *)(raster + 0xdc) - (int32)x;
+  const uint32 *dither = (const uint32 *)(raster + 0x148);
+  uint32 slot = (x & 1) + (*(uint32 *)(raster + 0x04) & 1) * 2;
+  uint32 colour = dither[slot] & 0xffff;
+  uint32 toggle = (dither[slot ^ 1] ^ colour) & 0xffff;
+  int32 z = *(int32 *)(raster + 0x1c);
+
+  for (;;) {
+    if ((int32)*depth >= z >> 12) {
+      *depth = (uint16)(z >> 12);
+      *pixel = (uint16)colour;
     }
-    if (iVar5 < 1) break;
-    puVar6 = puVar6 + 1;
-    puVar1 = puVar1 + 1;
-    uVar3 = uVar3 ^ uVar4 & 0xffff;
-    iVar2 = *(int *)(param_1 + 0x4c) + iVar2;
+    if (--count <= 0)
+      break;
+    pixel++;
+    depth++;
+    colour ^= toggle;
+    z += *(int32 *)(raster + 0x4c);
   }
-  return;
 }
 
 /* ==== 0x0100A8B4  (file offset 0x0A8B4)  swv_SpanFillGeneric ========================================= */
@@ -10786,8 +10784,8 @@ void FUN_0100ac0c(int param_1)
   return;
 }
 
-/* ==== 0x0100B18C  (file offset 0x0B18C)  swv_SpanFillFlat ============================================ */
-void swv_SpanFillFlat(int param_1)
+/* ==== 0x0100B18C  (file offset 0x0B18C)  swv_SpanFillGouraud ========================================= */
+void swv_SpanFillGouraud(int param_1)
 
 {
   uint uVar1;
@@ -10803,7 +10801,9 @@ void swv_SpanFillFlat(int param_1)
   uint uVar11;
   ushort *puVar12;
   
-                    /* Flat (untextured, gouraud-shaded) span fill; profiled region
+                    /* Untextured, Gouraud-shaded span fill: red, green, blue interpolated (+0x38,
+                       +0x3c, +0x40), each with the 2x2 dither offset and clamped to RGB565, depth
+                       tested like swv_SpanFillFlatDithered (its flat-shaded sibling); profiled region
                        0x0100B1B8-0x0100B2A0 is its loop (tools/profile_state.py). */
   iVar5 = *(int *)(param_1 + 0x1c);
   uVar1 = *(uint *)(param_1 + 0x10);
@@ -12066,9 +12066,10 @@ void swv_RasterTriangle(uint8 *raster,uint8 *vertex0,uint8 *vertex1,uint8 *verte
 
 /* ==== 0x0100CF00  (file offset 0x0CF00)  swv_RasterTriangleSetup ===================================== */
 /* GUESS: name (not yet rewritten). Sets up the triangle whose vertices swv_RasterTriangle stored
-   (+0x290 .. +0x298) and picks its span routine (+0x2b8): for flat shading (0x44) with flag 2 clear,
-   swv_SpanFillFlatDithered after swv_SetupFlatDither, with it set, swv_SpanFillFlat (GUESS: flag 2,
-   dithering off). Called by swv_RasterTriangle (its tail jump) and twice by FUN_0100bae0. */
+   (+0x290 .. +0x298) and picks its span routine (+0x2b8): for untextured triangles (0x44) with flag 2
+   clear (flat shading) swv_SpanFillFlatDithered after swv_SetupFlatDither, with it set (smooth
+   shading) swv_SpanFillGouraud; both dither. Called by swv_RasterTriangle (its tail jump) and twice
+   by FUN_0100bae0. */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
 void swv_RasterTriangleSetup(int param_1)
@@ -12259,7 +12260,7 @@ void swv_RasterTriangleSetup(int param_1)
           iVar2 = ADDRESS_OF_swv_SpanFillFlatDithered_OFFSET + 0x100d35c;
         }
         else {
-          iVar2 = ADDRESS_OF_swv_SpanFillFlat_OFFSET + 0x100d364;
+          iVar2 = ADDRESS_OF_swv_SpanFillGouraud_OFFSET + 0x100d364;
         }
         *(int *)(param_1 + 0x2b8) = iVar2;
         swv_SetupFlatDither((uint8 *)param_1);

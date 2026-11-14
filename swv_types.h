@@ -231,11 +231,16 @@ typedef struct SwvKeyframeSequence {
 
 /* ---- the software rasteriser's context (no struct yet) --------------------------------------
  * The fields the triangle code is known to use (GUESS: the names):
+ *   +0x04             the span's y (its parity picks the dither row)
+ *   +0x08 / +0x0c     the span's rows of the colour buffer (RGB565) and the z-buffer, 16 bits a pixel
+ *   +0x10 / +0xdc     the span's first x and its end
+ *   +0x1c / +0x4c     the depth at the first pixel (compared as >> 12) and its step per pixel
+ *   +0x38 .. +0x40    the red, green, blue swv_SpanFillGouraud interpolates
  *   +0x148 .. +0x154  4 RGB565 pixels (a word each): the flat colour's 2x2 dither (swv_SetupFlatDither),
  *                     word (x & 1) + (y & 1) * 2 (swv_SpanFillFlatDithered)
  *   +0x290 .. +0x298  the triangle's three vertices (swv_RasterTriangle); a vertex is 0x3c bytes, its
  *                     +0x0c / +0x10 / +0x14 the red, green, blue in 16.16 (1.0 = 0x10000)
- *   +0x2b8            the span routine swv_RasterTriangleSetup picked (swv_SpanFillFlat,
+ *   +0x2b8            the span routine swv_RasterTriangleSetup picked (swv_SpanFillGouraud,
  *                     swv_SpanFillFlatDithered, swv_SpanFillTextured, swv_SpanFillGeneric, ...) */
 
 /* ---- engine globals ------------------------------------------------------------------------

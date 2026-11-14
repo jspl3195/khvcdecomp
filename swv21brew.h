@@ -182,7 +182,7 @@ int AEEStaticMod_New(int16 nSize,IShell *pIShell,AEEHelperFuncs *ph,IModule **pp
 void swv_TryArm(int param_1);   /* 0x0100500C */
 int swv_Graphics3D_New(void);   /* 0x010098A4 */
 void swv_SpanFillGeneric(int param_1);   /* 0x0100A8B4 */
-void swv_SpanFillFlat(int param_1);   /* 0x0100B18C */
+void swv_SpanFillGouraud(int param_1);   /* 0x0100B18C GUESS: name, see swv21brew.c */
 void swv_SpanFillTextured(int param_1);   /* 0x0100DFEC */
 uint32 swvObj_AddRef(ISwerveObject *po);   /* 0x01011F8C */
 int swvObj_QueryInterface(ISwerveObject *po,SwerveClassId cls,void **ppo);   /* 0x01011FC4 */
@@ -461,7 +461,7 @@ uint * FUN_01009eac(int param_1,int param_2,int *param_3);
 void FUN_0100a02c(int param_1,int param_2);
 uint FUN_0100a470(int param_1,undefined4 param_2,undefined4 param_3);
 void FUN_0100a624(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-void swv_SpanFillFlatDithered(int param_1);   /* 0x0100A820 GUESS: name, see swv21brew.c */
+void swv_SpanFillFlatDithered(uint8 *raster);   /* 0x0100A820 GUESS: name, see swv21brew.c */
 void FUN_0100ac0c(int param_1);
 undefined4 FUN_0100b280(int param_1,int param_2);
 void FUN_0100bae0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,undefined4 param_6);
@@ -1560,7 +1560,7 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define ADDRESS_OF_FUNCTION_0100c92c_OFFSET 0xFFFFF630   /* was DAT_0100dfd0 (word at 0x0100DFD0); PC-relative offset: + 0x100d2fc (the pc) = 0x0100C92C */
 #define ADDRESS_OF_swv_SpanFillGeneric_OFFSET 0xFFFFD5A4   /* was DAT_0100dfd4 (word at 0x0100DFD4); PC-relative offset: + 0x100d310 (the pc) = 0x0100A8B4 */
 #define ADDRESS_OF_swv_SpanFillFlatDithered_OFFSET 0xFFFFD4C4   /* was DAT_0100dfd8 (word at 0x0100DFD8); PC-relative offset: + 0x100d35c (the pc) = 0x0100A820 */
-#define ADDRESS_OF_swv_SpanFillFlat_OFFSET 0xFFFFDE28   /* was DAT_0100dfdc (word at 0x0100DFDC); PC-relative offset: + 0x100d364 (the pc) = 0x0100B18C */
+#define ADDRESS_OF_swv_SpanFillGouraud_OFFSET 0xFFFFDE28   /* was DAT_0100dfdc (word at 0x0100DFDC); PC-relative offset: + 0x100d364 (the pc) = 0x0100B18C */
 #define ADDRESS_OF_FUNCTION_0100c7a0_OFFSET 0xFFFFF420   /* was DAT_0100dfe0 (word at 0x0100DFE0); PC-relative offset: + 0x100d380 (the pc) = 0x0100C7A0 */
 #define INTEGER_4095 0x00000FFF   /* was DAT_0100dfe4 (word at 0x0100DFE4); integer 4095 */
 #define WORD_HEXADECIMAL_377BA882 0x377BA882   /* was DAT_0100e5ac, DAT_0100f34c, DAT_0100f948, DAT_010100ec, DAT_01010318, DAT_010126cc, DAT_01012904, DAT_01013740, DAT_01015ce4, DAT_01016ec0, DAT_0101cd6c, DAT_0101d860, DAT_0101da44, DAT_0101da8c, DAT_0101dbc8, DAT_0101fcc8, DAT_01025d2c, DAT_01025e1c, DAT_010260f8, DAT_01028340, DAT_010296e4, DAT_010297d0, DAT_0102cbdc (word at 0x0100E5AC); value 0x377BA882 (930850946) */
