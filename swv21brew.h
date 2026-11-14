@@ -368,7 +368,7 @@ int FUN_01004848(int param_1,int param_2);
 int FUN_0100486c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 int FUN_010048e4(int param_1,int param_2,undefined4 param_3);
 void FUN_01004a68(int param_1,int *param_2,int *param_3,int *param_4,int *param_5);
-void FUN_01004b54(int param_1);
+void swv_SetupFlatDither(uint8 *raster);   /* 0x01004B54 GUESS: name, see swv21brew.c */
 int FUN_01004c0c(int param_1);
 int FUN_01004c30(int param_1);
 void FUN_01004c4c(int param_1,int param_2);
@@ -461,15 +461,15 @@ uint * FUN_01009eac(int param_1,int param_2,int *param_3);
 void FUN_0100a02c(int param_1,int param_2);
 uint FUN_0100a470(int param_1,undefined4 param_2,undefined4 param_3);
 void FUN_0100a624(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-void FUN_0100a820(int param_1);
+void swv_SpanFillFlatDithered(int param_1);   /* 0x0100A820 GUESS: name, see swv21brew.c */
 void FUN_0100ac0c(int param_1);
 undefined4 FUN_0100b280(int param_1,int param_2);
 void FUN_0100bae0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,undefined4 param_6);
 void FUN_0100bb68(int param_1);
 void FUN_0100c7a0(int param_1);
 void FUN_0100c92c(int param_1);
-void FUN_0100cef4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-void FUN_0100cf00(int param_1);
+void swv_RasterTriangle(uint8 *raster,uint8 *vertex0,uint8 *vertex1,uint8 *vertex2);   /* 0x0100CEF4 GUESS: name, see swv21brew.c */
+void swv_RasterTriangleSetup(int param_1);   /* 0x0100CF00 GUESS: name, see swv21brew.c */
 int FUN_0100e490(int param_1,int param_2,int param_3);
 void FUN_0100e4e8(undefined4 *param_1);
 int FUN_0100e5b0(void);
@@ -1559,7 +1559,7 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define ADDRESS_OF_FUNCTION_0100ac0c_OFFSET 0xFFFFD938   /* was DAT_0100dfcc (word at 0x0100DFCC); PC-relative offset: + 0x100d2d4 (the pc) = 0x0100AC0C */
 #define ADDRESS_OF_FUNCTION_0100c92c_OFFSET 0xFFFFF630   /* was DAT_0100dfd0 (word at 0x0100DFD0); PC-relative offset: + 0x100d2fc (the pc) = 0x0100C92C */
 #define ADDRESS_OF_swv_SpanFillGeneric_OFFSET 0xFFFFD5A4   /* was DAT_0100dfd4 (word at 0x0100DFD4); PC-relative offset: + 0x100d310 (the pc) = 0x0100A8B4 */
-#define ADDRESS_OF_FUNCTION_0100a820_OFFSET 0xFFFFD4C4   /* was DAT_0100dfd8 (word at 0x0100DFD8); PC-relative offset: + 0x100d35c (the pc) = 0x0100A820 */
+#define ADDRESS_OF_swv_SpanFillFlatDithered_OFFSET 0xFFFFD4C4   /* was DAT_0100dfd8 (word at 0x0100DFD8); PC-relative offset: + 0x100d35c (the pc) = 0x0100A820 */
 #define ADDRESS_OF_swv_SpanFillFlat_OFFSET 0xFFFFDE28   /* was DAT_0100dfdc (word at 0x0100DFDC); PC-relative offset: + 0x100d364 (the pc) = 0x0100B18C */
 #define ADDRESS_OF_FUNCTION_0100c7a0_OFFSET 0xFFFFF420   /* was DAT_0100dfe0 (word at 0x0100DFE0); PC-relative offset: + 0x100d380 (the pc) = 0x0100C7A0 */
 #define INTEGER_4095 0x00000FFF   /* was DAT_0100dfe4 (word at 0x0100DFE4); integer 4095 */
@@ -1652,7 +1652,7 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define DATA_AT_0100203C_OFFSET_7 0xFFFE2000   /* was DAT_010200f8 (word at 0x010200F8); PC-relative offset: + 0x102003c (the pc) = 0x0100203C */
 #define DATA_AT_01002890_OFFSET 0xFFFE2848   /* was DAT_010200fc (word at 0x010200FC); PC-relative offset: + 0x1020048 (the pc) = 0x01002890 */
 #define DATA_AT_010023CC_OFFSET 0xFFFE236C   /* was DAT_01020100 (word at 0x01020100); PC-relative offset: + 0x1020060 (the pc) = 0x010023CC */
-#define ADDRESS_OF_FUNCTION_0100a820_OFFSET_2 0xFFFE9624   /* was DAT_01021a70 (word at 0x01021A70); PC-relative offset: + 0x10211fc (the pc) = 0x0100A820 */
+#define ADDRESS_OF_swv_SpanFillFlatDithered_OFFSET_2 0xFFFE9624   /* was DAT_01021a70 (word at 0x01021A70); PC-relative offset: + 0x10211fc (the pc) = 0x0100A820 */
 #define ADDRESS_OF_swv_SpanFillTextured_OFFSET_2 0xFFFECDE0   /* was DAT_01021a74 (word at 0x01021A74); PC-relative offset: + 0x102120c (the pc) = 0x0100DFEC */
 #define WORD_HEXADECIMAL_46FFFF00 0x46FFFF00   /* was DAT_01022138 (word at 0x01022138); value 0x46FFFF00 (1191182080) */
 #define FLOAT_127_POINT_5 0x42FF0000   /* was DAT_0102213c (word at 0x0102213C); the float 127.5 */

@@ -207,6 +207,15 @@ typedef struct SwvSkinBoneSet {
     uint32   weightScale;   /* +0x48 float bits: 1 / the sum of the bones' weights */
 } SwvSkinBoneSet;
 
+/* ---- the software rasteriser's context (no struct yet) --------------------------------------
+ * The fields the triangle code is known to use (GUESS: the names):
+ *   +0x148 .. +0x154  4 RGB565 pixels (a word each): the flat colour's 2x2 dither (swv_SetupFlatDither),
+ *                     word (x & 1) + (y & 1) * 2 (swv_SpanFillFlatDithered)
+ *   +0x290 .. +0x298  the triangle's three vertices (swv_RasterTriangle); a vertex is 0x3c bytes, its
+ *                     +0x0c / +0x10 / +0x14 the red, green, blue in 16.16 (1.0 = 0x10000)
+ *   +0x2b8            the span routine swv_RasterTriangleSetup picked (swv_SpanFillFlat,
+ *                     swv_SpanFillFlatDithered, swv_SpanFillTextured, swv_SpanFillGeneric, ...) */
+
 /* ---- engine globals ------------------------------------------------------------------------
  * Swerve has no writable statics either: swv_NewSwerve allocates this 0x24-byte block and
  * stores it in the *host applet* at GetAppInstance()+0x20 (KHApp.pSwerveGlobals). It also
