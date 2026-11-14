@@ -4853,7 +4853,9 @@ void FUN_01004a68(int param_1,int *param_2,int *param_3,int *param_4,int *param_
    (>> 9, >> 8, >> 9), and each pixel ((r + d) >> 2) << 11 | ((g + d) >> 2) << 5 | (b + d) >> 2 for d = 1,
    3, 2, 0. swv_SpanFillFlatDithered picks pixel (x & 1) + (y & 1) * 2: the Bayer matrix [[1, 3], [2,
    0]]. Evidence: 0x01004b54 - 0x01004c08 (two passes, d = i + 1 then d ^ 2, the words at +0x148 + i * 8
-   and +0x14c + i * 8). Only swv_RasterTriangleSetup calls it, for flat shading (flag 2 clear). */
+   and +0x14c + i * 8). Only swv_RasterTriangleSetup calls it, for REPLACE blending (0x44), whichever of
+   swv_SpanFillFlatDithered (flat shading, the one that reads the table) and swv_SpanFillGouraud it
+   picks. */
 void swv_SetupFlatDither(uint8 *raster)
 
 {
@@ -5817,8 +5819,9 @@ void FUN_01006078(int param_1)
       }
       *(undefined4 *)(param_1 + 0xdc) = *(undefined4 *)(param_1 + 0x280);
     }
-    /* the object's span function at +0x2b8 (GUESS: one of FUN_0100ac0c, FUN_0100bb68, FUN_0100c7a0,
-       FUN_0100c92c, which are stored there) */
+    /* the span routine swv_RasterTriangleSetup picked (+0x2b8): swv_SpanFillGeneric,
+       swv_SpanFillFlatDithered, swv_SpanFillGouraud, swv_SpanFillGouraudAlpha, swv_SpanFillTextured,
+       FUN_0100bb68, FUN_0100ac0c or FUN_0100c92c */
     (**(code **)(param_1 + 0x2b8))(param_1);
     swv_memcpy_word_aligned(param_1 + 4,auStack_164,0x154);
     return;
@@ -10384,6 +10387,12 @@ void swv_SpanFillFlatDithered(uint8 *raster)
 }
 
 /* ==== 0x0100A8B4  (file offset 0x0A8B4)  swv_SpanFillGeneric ========================================= */
+/* GUESS: name (not yet rewritten). The rasteriser's general untextured span routine, the default of
+   swv_RasterTriangleSetup: the whole JSR-184 compositing state per pixel. Alpha threshold (+0x25c:
+   draws where alpha >> 8 >= it), depth test (flag 0x20) and depth write (flag 0x40), the blending
+   (+0x268: 0x40 ALPHA .. 0x44 REPLACE; the colour already there is read unless REPLACE), colour write
+   (flag 1) and alpha write (flag 0x800, to the 8-bit alpha buffer +0x260, row stride +0x264). Its fast
+   paths: swv_SpanFillFlatDithered, swv_SpanFillGouraud, swv_SpanFillGouraudAlpha. */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
 void swv_SpanFillGeneric(int param_1)
@@ -11735,88 +11744,75 @@ void FUN_0100bb68(int param_1)
   return;
 }
 
-/* ==== 0x0100C7A0  (file offset 0x0C7A0)  FUN_0100c7a0 ================================================ */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-void FUN_0100c7a0(int param_1)
+/* ==== 0x0100C7A0  (file offset 0x0C7A0)  swv_SpanFillGouraudAlpha ==================================== */
+/* GUESS: name. The rasteriser's span routine for alpha-blended, Gouraud-shaded, untextured triangles
+   (swv_RasterTriangleSetup picks it for blending ALPHA, 0x40, with depth write off): red, green, blue
+   (+0x38 / +0x3c / +0x40, 16.16, 1.0 = 0x10000) and alpha (+0x44, 0xff00 = opaque) are interpolated
+   (steps +0x68 .. +0x74, re-read for each pixel). Below 0xff00 each channel is blended toward the
+   pixel already there (spread back to the same scale): dst + (src - dst) * (alpha >> 8) >> 8. Then
+   the 2x2 dither offset ((y & 1) + 1 ^ (x & 1) << 1, flipped by ^ 2 a pixel), the clamp to RGB565
+   and the store, as in swv_SpanFillGouraud. The depth test (z >> 12 <= the z-buffer's word) as in
+   its siblings, but the depth is never written. Like the binary it always does the first pixel,
+   whatever the count. Evidence: 0x0100c7a0 - 0x0100c928. */
+void swv_SpanFillGouraudAlpha(uint8 *raster)
 
 {
-  ushort uVar1;
-  uint uVar2;
-  uint uVar3;
-  ushort *puVar4;
-  uint uVar5;
-  int iVar6;
-  int iVar7;
-  int iVar8;
-  int iVar9;
-  int iVar10;
-  int iVar11;
-  int iVar12;
-  int iVar13;
-  int iVar14;
-  ushort *local_2c;
-  
-  uVar5 = *(uint *)(param_1 + 0x10);
-  uVar3 = (*(uint *)(param_1 + 4) & 1) + 1 ^ (uVar5 & 1) << 1;
-  puVar4 = (ushort *)(*(int *)(param_1 + 8) + uVar5 * 2);
-  local_2c = (ushort *)(*(int *)(param_1 + 0xc) + uVar5 * 2);
-  iVar9 = *(int *)(param_1 + 0x38);
-  iVar10 = *(int *)(param_1 + 0x3c);
-  iVar11 = *(int *)(param_1 + 0x40);
-  iVar8 = *(int *)(param_1 + 0xdc) - uVar5;
-  iVar6 = *(int *)(param_1 + 0x44);
-  iVar12 = *(int *)(param_1 + 0x1c);
-  while( true ) {
-    if (iVar12 >> 0xc <= (int)(uint)*local_2c) {
-      iVar7 = iVar11;
-      iVar13 = iVar9;
-      iVar14 = iVar10;
-      if (iVar6 < 0xff00) {
-        uVar1 = *puVar4;
-        uVar5 = uVar1 & 0x7e0;
-        uVar2 = uVar1 & 0x1f;
-        iVar7 = iVar6 >> 8;
-        iVar13 = (uint)(uVar1 >> 0xb) * 0x800 +
-                 ((int)((iVar9 + (uint)(uVar1 >> 0xb) * -0x800) * iVar7) >> 8);
-        iVar14 = uVar5 * 0x20 + ((int)((iVar10 + uVar5 * -0x20) * iVar7) >> 8);
-        iVar7 = uVar2 * 0x800 + ((int)((iVar11 + uVar2 * -0x800) * iVar7) >> 8);
+  uint32 x = *(uint32 *)(raster + 0x10);
+  uint32 dither = ((*(uint32 *)(raster + 0x04) & 1) + 1) ^ (x & 1) << 1;
+  uint16 *pixel = *(uint16 **)(raster + 0x08) + x;
+  uint16 *depth = *(uint16 **)(raster + 0x0c) + x;
+  int32 red = *(int32 *)(raster + 0x38);
+  int32 green = *(int32 *)(raster + 0x3c);
+  int32 blue = *(int32 *)(raster + 0x40);
+  int32 count = *(int32 *)(raster + 0xdc) - (int32)x;
+  int32 alpha = *(int32 *)(raster + 0x44);
+  int32 z = *(int32 *)(raster + 0x1c);
+
+  for (;;) {
+    if (z >> 12 <= (int32)*depth) {
+      int32 r = red;
+      int32 g = green;
+      int32 b = blue;
+
+      if (alpha < 0xff00) {
+        uint32 dst = *pixel;
+        int32 weight = alpha >> 8;
+        int32 dst_r = (int32)((dst >> 11) << 11);
+        int32 dst_g = (int32)((dst & 0x7e0) << 5);
+        int32 dst_b = (int32)((dst & 0x1f) << 11);
+
+        r = dst_r + ((red - dst_r) * weight >> 8);
+        g = dst_g + ((green - dst_g) * weight >> 8);
+        b = dst_b + ((blue - dst_b) * weight >> 8);
       }
-      iVar13 = (int)(uVar3 + (iVar13 >> 9)) >> 2;
-      iVar7 = (int)(uVar3 + (iVar7 >> 9)) >> 2;
-      iVar14 = (int)(uVar3 + (iVar14 >> 8)) >> 2;
-      if (iVar13 < 0) {
-        iVar13 = 0;
-      }
-      else if (0x1f < iVar13) {
-        iVar13 = 0x1f;
-      }
-      if (iVar14 < 0) {
-        iVar14 = 0;
-      }
-      else if (0x3f < iVar14) {
-        iVar14 = 0x3f;
-      }
-      if (iVar7 < 0) {
-        iVar7 = 0;
-      }
-      else if (0x1f < iVar7) {
-        iVar7 = 0x1f;
-      }
-      *puVar4 = (ushort)(iVar13 << 0xb) | (ushort)(iVar14 << 5) | (ushort)iVar7;
+      r = (int32)(dither + (uint32)(r >> 9)) >> 2;
+      b = (int32)(dither + (uint32)(b >> 9)) >> 2;
+      g = (int32)(dither + (uint32)(g >> 8)) >> 2;
+      if (r < 0)
+        r = 0;
+      else if (r > 0x1f)
+        r = 0x1f;
+      if (g < 0)
+        g = 0;
+      else if (g > 0x3f)
+        g = 0x3f;
+      if (b < 0)
+        b = 0;
+      else if (b > 0x1f)
+        b = 0x1f;
+      *pixel = (uint16)(r << 11 | g << 5 | b);
     }
-    iVar8 = iVar8 + -1;
-    if (iVar8 < 1) break;
-    puVar4 = puVar4 + 1;
-    uVar3 = uVar3 ^ 2;
-    local_2c = local_2c + 1;
-    iVar12 = *(int *)(param_1 + 0x4c) + iVar12;
-    iVar9 = *(int *)(param_1 + 0x68) + iVar9;
-    iVar10 = *(int *)(param_1 + 0x6c) + iVar10;
-    iVar11 = *(int *)(param_1 + 0x70) + iVar11;
-    iVar6 = *(int *)(param_1 + 0x74) + iVar6;
+    if (--count <= 0)
+      break;
+    pixel++;
+    dither ^= 2;
+    depth++;
+    z += *(int32 *)(raster + 0x4c);
+    red += *(int32 *)(raster + 0x68);
+    green += *(int32 *)(raster + 0x6c);
+    blue += *(int32 *)(raster + 0x70);
+    alpha += *(int32 *)(raster + 0x74);
   }
-  return;
 }
 
 /* ==== 0x0100C92C  (file offset 0x0C92C)  FUN_0100c92c ================================================ */
@@ -12066,10 +12062,15 @@ void swv_RasterTriangle(uint8 *raster,uint8 *vertex0,uint8 *vertex1,uint8 *verte
 
 /* ==== 0x0100CF00  (file offset 0x0CF00)  swv_RasterTriangleSetup ===================================== */
 /* GUESS: name (not yet rewritten). Sets up the triangle whose vertices swv_RasterTriangle stored
-   (+0x290 .. +0x298) and picks its span routine (+0x2b8): for untextured triangles (0x44) with flag 2
-   clear (flat shading) swv_SpanFillFlatDithered after swv_SetupFlatDither, with it set (smooth
-   shading) swv_SpanFillGouraud; both dither. Called by swv_RasterTriangle (its tail jump) and twice
-   by FUN_0100bae0. */
+   (+0x290 .. +0x298) and picks its span routine (+0x2b8) from the JSR-184 compositing state (the
+   fields in swv_types.h): swv_SpanFillGeneric by default, FUN_0100bb68 for textured triangles (flag
+   4). The untextured fast paths need no alpha threshold (+0x25c), no alpha write, colour write and
+   depth test: blending ALPHA (0x40) with depth write off gives swv_SpanFillGouraudAlpha; REPLACE
+   (0x44) with depth write on calls swv_SetupFlatDither and gives swv_SpanFillFlatDithered with flag 2
+   clear (flat shading), swv_SpanFillGouraud with it set (smooth shading); all of them dither. The
+   textured fast paths (swv_SpanFillTextured, FUN_0100ac0c, FUN_0100c92c) need unit 0 alone (unit 1's
+   +0x18c = 0x5f) with an RGB or RGBA image (+0x158 = 99 / 100). Called by swv_RasterTriangle (its
+   tail jump) and twice by FUN_0100bae0. */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
 void swv_RasterTriangleSetup(int param_1)
@@ -12252,7 +12253,7 @@ void swv_RasterTriangleSetup(int param_1)
         (*(int *)(param_1 + 0x260) == 0 || (uVar6 & 0x800) == 0)) && ((uVar6 & 0x20) != 0)) {
       if ((uVar6 & 0x40) == 0) {
         if (iVar2 == 0x40) {
-          *(int *)(param_1 + 0x2b8) = ADDRESS_OF_FUNCTION_0100c7a0_OFFSET + 0x100d380;
+          *(int *)(param_1 + 0x2b8) = ADDRESS_OF_swv_SpanFillGouraudAlpha_OFFSET + 0x100d380;
         }
       }
       else if (iVar2 == 0x44) {
@@ -12615,8 +12616,9 @@ void swv_RasterTriangleSetup(int param_1)
           }
         }
         else {
-          /* the object's span function at +0x2b8 (GUESS: one of FUN_0100ac0c, FUN_0100bb68,
-             FUN_0100c7a0, FUN_0100c92c, which are stored there) */
+          /* the span routine swv_RasterTriangleSetup picked (+0x2b8): swv_SpanFillGeneric,
+             swv_SpanFillFlatDithered, swv_SpanFillGouraud, swv_SpanFillGouraudAlpha,
+             swv_SpanFillTextured, FUN_0100bb68, FUN_0100ac0c or FUN_0100c92c */
           (**(code **)(param_1 + 0x2b8))(param_1);
         }
       }

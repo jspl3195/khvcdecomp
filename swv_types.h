@@ -235,13 +235,28 @@ typedef struct SwvKeyframeSequence {
  *   +0x08 / +0x0c     the span's rows of the colour buffer (RGB565) and the z-buffer, 16 bits a pixel
  *   +0x10 / +0xdc     the span's first x and its end
  *   +0x1c / +0x4c     the depth at the first pixel (compared as >> 12) and its step per pixel
- *   +0x38 .. +0x40    the red, green, blue swv_SpanFillGouraud interpolates
+ *   +0x38 .. +0x40    the red, green, blue the Gouraud span routines interpolate (16.16, 1.0 = 0x10000)
+ *   +0x44             the alpha (0xff00 = opaque; swv_SpanFillGouraudAlpha, swv_SpanFillGeneric)
+ *   +0x68 .. +0x74    the steps per pixel of red, green, blue and alpha
  *   +0x148 .. +0x154  4 RGB565 pixels (a word each): the flat colour's 2x2 dither (swv_SetupFlatDither),
  *                     word (x & 1) + (y & 1) * 2 (swv_SpanFillFlatDithered)
+ *   +0x158 / +0x18c   the image format of texture unit 0 / 1 (a unit is 0x34 bytes): the JSR-184
+ *                     Image2D RGB 99, RGBA 100; 0x5f when the unit is unused (GUESS)
+ *   +0x15c / +0x190   the texture blending of unit 0 / 1: the JSR-184 Texture2D FUNC_ADD 0xe0,
+ *                     BLEND 0xe1, DECAL 0xe2, MODULATE 0xe3, REPLACE 0xe4
+ *   +0x258            the flags: 1 colour write, 2 smooth shading (cleared when the three vertex
+ *                     colours are equal), 4 textured, 0x20 depth test, 0x40 depth write, 0x800 alpha
+ *                     write (0x200, 0x400 not identified)
+ *   +0x25c            the alpha threshold (a pixel is drawn where alpha >> 8 >= it)
+ *   +0x260 / +0x264   the 8-bit alpha buffer and its row stride (written with flag 0x800)
+ *   +0x268            the blending: the JSR-184 CompositingMode ALPHA 0x40, ALPHA_ADD 0x41, MODULATE
+ *                     0x42, MODULATE_X2 0x43, REPLACE 0x44
  *   +0x290 .. +0x298  the triangle's three vertices (swv_RasterTriangle); a vertex is 0x3c bytes, its
- *                     +0x0c / +0x10 / +0x14 the red, green, blue in 16.16 (1.0 = 0x10000)
- *   +0x2b8            the span routine swv_RasterTriangleSetup picked (swv_SpanFillGouraud,
- *                     swv_SpanFillFlatDithered, swv_SpanFillTextured, swv_SpanFillGeneric, ...) */
+ *                     +0x0c / +0x10 / +0x14 the red, green, blue in 16.16 (1.0 = 0x10000),
+ *                     +0x18 the alpha (a byte)
+ *   +0x2b8            the span routine swv_RasterTriangleSetup picked (swv_SpanFillGeneric,
+ *                     swv_SpanFillFlatDithered, swv_SpanFillGouraud, swv_SpanFillGouraudAlpha,
+ *                     swv_SpanFillTextured, FUN_0100bb68, FUN_0100ac0c, FUN_0100c92c) */
 
 /* ---- engine globals ------------------------------------------------------------------------
  * Swerve has no writable statics either: swv_NewSwerve allocates this 0x24-byte block and
