@@ -323,10 +323,12 @@ int FUN_01000f94(undefined4 param_1,uint param_2,undefined8 *param_3);
 undefined4 FUN_01001474(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param_4,int param_5);
 uint FUN_010015ec(uint param_1,uint param_2,undefined4 param_3,uint param_4,int param_5);
 undefined8 FUN_010019e0(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, uint param_5);
-void FUN_01001a40(void);
+int32 raise_signal_and_exit(int32 signal,int32 type);   /* 0x01001A40 GUESS: name, see swv21brew.c */
 uint FUN_01001a58(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
-undefined4 FUN_01001bb4(int param_1,char *param_2);
-undefined8 FUN_01001d94(void);
+int32 raise_signal(int32 signal,int32 type);   /* 0x01001BB4 GUESS: name, see swv21brew.c */
+int32 semihosting_exit(void);   /* 0x01001C18 GUESS: name, see swv21brew.c */
+int32 default_signal_handler(int32 signal,int32 type);   /* 0x01001C30 GUESS: name, see swv21brew.c */
+int32 debug_write_char(char character);   /* 0x01001D94 GUESS: name, see swv21brew.c */
 void FUN_01002a58(int *param_1,int param_2,undefined4 param_3,undefined4 param_4);
 int FUN_01002c70(int param_1,int param_2);
 void FUN_01002d60(int param_1,int param_2);

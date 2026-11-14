@@ -403,8 +403,6 @@ int32 raise_signal(int32 signal,int32 type);   /* 0x00101458 GUESS: name, see kh
 int32 semihosting_exit(void);   /* 0x001014BC (no Ghidra function) */
 int32 default_signal_handler(int32 signal,int32 type);   /* 0x001014D4 (no Ghidra function) */
 int32 debug_write_char(char character);   /* 0x00101638 GUESS: name, see kh_mod.c */
-int software_interrupt(int number);      /* Ghidra's name for the `svc` (swi) instruction, not a function:
-                                            the trap with the given number, its result as r0 leaves it */
 undefined4 FUN_00101ad8(int *param_1,int param_2);
 void FUN_001051d4(int param_1,int param_2);
 int32 ui_element_set_focus(UIElement *element,Screen *screen);   /* 0x00105224 GUESS: name, see kh_mod.c */

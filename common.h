@@ -64,4 +64,7 @@ typedef struct int64 {
   ((result).high = (result).high - ((result).low < (w)), (result).low = (result).low - (w))
 #define SHIFT_LEFT_WORDS(result,a,n) \
   ((result).high = (a).high << (n) | (a).low >> (32 - (n)), (result).low = (a).low << (n))
+int software_interrupt(int number);      /* Ghidra's name for the `svc` (swi) instruction, not a function:
+                                            the trap with the given number, its result as r0 leaves it */
+
 #endif /* COMMON_H */

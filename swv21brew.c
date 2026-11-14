@@ -230,7 +230,7 @@ ulonglong FUN_010001f4(uint param_1,uint param_2)
   if (param_2 >> 4 < uVar1) goto LAB_01000284;
   bVar5 = false;
   if (uVar1 == 0) {
-    uVar9 = FUN_01001bb4(2,2);
+    uVar9 = raise_signal(2,2);
     if ((int)uVar9 != 0) {
       software_interrupt(0x123456);
                     /* WARNING: Could not recover jumptable at 0x01001c24. Too many branches */
@@ -322,7 +322,7 @@ int FUN_010002c8(uint param_1,uint param_2)
   if (param_2 >> 4 < uVar1) goto LAB_0100034c;
   bVar4 = false;
   if (uVar1 == 0) {
-    iVar2 = FUN_01001bb4(2,2);
+    iVar2 = raise_signal(2,2);
     if (iVar2 != 0) {
       software_interrupt(0x123456);
                     /* WARNING: Could not recover jumptable at 0x01001c24. Too many branches */
@@ -948,7 +948,7 @@ switchD_01000b58_caseD_1:
                     (uint)CARRY4(uVar9,uVar6),uVar9 + uVar6);
   }
   if (param_3 == 0) {
-    uVar14 = FUN_01001bb4(2,2);
+    uVar14 = raise_signal(2,2);
     if ((int)uVar14 != 0) {
       software_interrupt(0x123456);
                     /* WARNING: Could not recover jumptable at 0x01001c24. Too many branches */
@@ -1115,7 +1115,7 @@ void rt_stack_postlongjmp(uint32 stackLimit,uint32 stackPointer)
 undefined4 FUN_01000c30(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
-  FUN_01001a40(param_1,0,param_3,param_4,param_4);
+  raise_signal_and_exit(param_1,0);   /* r2, r3 are not read: Ghidra's extra arguments */
   return 0;
 }
 
@@ -2069,26 +2069,23 @@ FUN_010019e0(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4
   uStack_18 = param_2;
   uStack_14 = param_3;
   uStack_10 = param_4;
-  FUN_01001a40(2,param_5 & 0x7c000000,&uStack_1c,&uStack_14);
+  raise_signal_and_exit(2,param_5 & 0x7c000000);   /* r2, r3 (&uStack_1c, &uStack_14) are not read */
   return 0;
 }
 
-/* ==== 0x01001A40  (file offset 0x01A40)  FUN_01001a40 ================================================ */
-void FUN_01001a40(void)
+/* ==== 0x01001A40  (file offset 0x01A40)  raise_signal_and_exit ======================================= */
+/* GUESS: name, the engine's own copy of kh.mod's raise_signal_and_exit (0x00101440): raise_signal(signal,
+   type) (r0, r1 passed through: Ghidra dropped them) and, when nothing handled it (raise_signal returns
+   1), a tail jump to semihosting_exit (0x01001a54; Ghidra had pasted it in and taken its `mov pc, lr`,
+   the return, for a call through lr). Called by the floating-point exception routine as (2, control &
+   0x7c000000), SIGFPE with the IEEE exception bits, and by FUN_01000c30 as (signal, 0). Returns r0 as
+   the binary leaves it: 0, or semihosting_exit's result. */
+int32 raise_signal_and_exit(int32 signal,int32 type)
 
 {
-  int iVar1;
-  uint in_lr;
-  
-  iVar1 = FUN_01001bb4();
-  if (iVar1 == 0) {
-    return;
-  }
-  software_interrupt(0x123456);
-                    /* WARNING: Could not recover jumptable at 0x01001c24. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (*(code *)(in_lr & 0xfffffffc))(0x18,WORD_HEXADECIMAL_00020026);
-  return;
+  if (raise_signal(signal,type) == 0)
+    return 0;
+  return semihosting_exit();
 }
 
 /* ==== 0x01001A58  (file offset 0x01A58)  FUN_01001a58 ================================================ */
@@ -2749,88 +2746,100 @@ LAB_0103f9e0:
   return uVar12;
 }
 
-/* ==== 0x01001BB4  (file offset 0x01BB4)  FUN_01001bb4 ================================================ */
-/* WARNING: Removing unreachable block (ram,0x01001bec) */
-/* WARNING: Removing unreachable block (ram,0x01001bf8) */
-/* WARNING: Removing unreachable block (ram,0x01001bfc) */
-/* WARNING: Removing unreachable block (ram,0x01001c00) */
-/* WARNING: Removing unreachable block (ram,0x01001c04) */
-/* WARNING: Removing unreachable block (ram,0x01001c08) */
-
-undefined4 FUN_01001bb4(int param_1,char *param_2)
+/* ==== 0x01001BB4  (file offset 0x01BB4)  raise_signal ================================================ */
+/* GUESS: name (the routine is certain: the ARM C library's signal raising routine, raise(signal, type)),
+   the engine's own copy of kh.mod's raise_signal (0x00101458). It asks a handler-lookup routine for the
+   handler installed for `signal`, passing the default handler's value (SIG_DFL, r6, pc-relative): that
+   call, `bl 0x01001bd4` at 0x01001bd0, is a bl to the next instruction, the ARM linker's placeholder for
+   a weak routine that was not linked. r0 keeps SIG_DFL, the `cmp r0, r6` always finds it, and the
+   binary tail-jumps (0x01001be8) to default_signal_handler. What the rest would do, and never does in
+   this build (0x01001bec - 0x01001c0c, Ghidra's "unreachable" blocks): call the handler unless it is
+   SIG_IGN, and return 0. Callers: raise_signal_and_exit (0x01001a40), and the divides' division by zero
+   with (2, 2) (SIGFPE, divide by zero), where Ghidra had inlined raise_signal_and_exit. Returns the
+   default handler's result, 1. */
+int32 raise_signal(int32 signal,int32 type)
 
 {
-  char cVar1;
-  char *pcVar2;
-  char *pcVar3;
-  char *unaff_r5;
-  bool bVar4;
-  
-  bVar4 = 0xc < param_1 - 1U;
-  if (bVar4) {
-    unaff_r5 = "Unknown signal";
-  }
-  pcVar2 = "";
-  pcVar3 = pcVar2;
-  if (!bVar4) {
-    unaff_r5 = (char *)(param_1 * 0x17 + DATA_AT_010429C5_OFFSET + 0x1001c45);
-    if (param_1 == 2) {
-      if (((uint)param_2 & 0x4000000) == 0) {
-        if (((uint)param_2 & 0x8000002) == 0) {
-          if (((uint)param_2 & 0x10000000) == 0) {
-            if (((uint)param_2 & 0x20000000) == 0) {
-              if (((uint)param_2 & 0x40000000) != 0) {
-                pcVar3 = "Inexact Result";
-              }
-            }
-            else {
-              pcVar3 = "Underflow";
-            }
-          }
-          else {
-            pcVar3 = "Overflow";
-          }
-        }
-        else {
-          pcVar3 = "Divide By Zero";
-        }
-      }
-      else {
-        pcVar3 = "Invalid Operation";
-      }
+  return default_signal_handler(signal,type);
+}
+
+/* ==== 0x01001C18  (file offset 0x01C18)  semihosting_exit ============================================ */
+/* GUESS: name, the engine's own copy of kh.mod's semihosting_exit (0x001014bc); only reached by
+   raise_signal_and_exit's tail jump at 0x01001a54. Evidence (0x01001c18 - 0x01001c24): ARM semihosting
+   SYS_EXIT (angel_SWIreason_ReportException): `mov r0, #0x18`, r1 = 0x20026 (ADP_Stopped_ApplicationExit,
+   the word at 0x01001c2c), `swi 0x123456` asks an attached debugger to stop the program, then `mov pc,
+   lr`; on a phone (and in khvcemu, which does not emulate swi) nothing services it, and the routine
+   returns. Returns r0 as the trap leaves it (Ghidra's `return 0x18` assumes r0 keeps the reason). */
+int32 semihosting_exit(void)
+
+{
+  /* semihosting SYS_EXIT: r0 = 0x18, r1 = ADP_Stopped_ApplicationExit (0x20026) */
+  return software_interrupt(0x123456);
+}
+
+/* ==== 0x01001C30  (file offset 0x01C30)  default_signal_handler ====================================== */
+/* GUESS: name (the routine is certain: the ARM C library's default signal handler), the engine's own copy
+   of kh.mod's default_signal_handler (0x001014d4); only reached by raise_signal's tail jump at
+   0x01001be8. Writes a newline, the signal's message from the library's table (13 entries of 0x17 bytes
+   from 0x010429dc: 1 "Abnormal termination", 2 "Arithmetic exception: ", ... as kh.mod's
+   SIGNAL_MESSAGE_TABLE; any other signal "Unknown signal"), a detail and a newline through
+   debug_write_char, and returns 1 (not handled: the caller exits). The detail: for signal 2 (SIGFPE) the
+   first of the IEEE exception bits in `type` - 0x04000000 "Invalid Operation", 0x08000000 or type 2
+   "Divide By Zero", 0x10000000 "Overflow", 0x20000000 "Underflow", 0x40000000 "Inexact Result"; for
+   signal 8 `type` is the file name; signal 9 with type 1 prints ": Heap memory corrupted" instead of its
+   message. */
+int32 default_signal_handler(int32 signal,int32 type)
+
+{
+  const char *message;
+  const char *detail = "";
+
+  if ((uint32)(signal - 1) >= 13)
+    message = "Unknown signal";
+  else {
+    /* signal * 0x17 + 0x010429c5: the table at 0x010429dc, entry 1 first */
+    message = (const char *)(signal * 0x17 + DATA_AT_010429C5_OFFSET + 0x1001c45);
+    if (signal == 2) {
+      if (type & 0x04000000)
+        detail = "Invalid Operation";
+      else if (type & 0x08000002)
+        detail = "Divide By Zero";
+      else if (type & 0x10000000)
+        detail = "Overflow";
+      else if (type & 0x20000000)
+        detail = "Underflow";
+      else if (type & 0x40000000)
+        detail = "Inexact Result";
     }
-    else {
-      pcVar3 = param_2;
-      if ((param_1 != 8) && (pcVar3 = pcVar2, param_1 == 9 && param_2 == (char *)0x1)) {
-        unaff_r5 = ": Heap memory corrupted";
-      }
-    }
+    else if (signal == 8)
+      detail = (const char *)type;                /* the file that could not be opened */
+    else if (signal == 9 && type == 1)
+      message = ": Heap memory corrupted";
   }
-  FUN_01001d94(10);
-  cVar1 = *unaff_r5;
-  while (cVar1 != '\0') {
-    FUN_01001d94(*unaff_r5);
-    cVar1 = unaff_r5[1];
-    unaff_r5 = unaff_r5 + 1;
-  }
-  cVar1 = *pcVar3;
-  while (cVar1 != '\0') {
-    FUN_01001d94(*pcVar3);
-    cVar1 = pcVar3[1];
-    pcVar3 = pcVar3 + 1;
-  }
-  FUN_01001d94(10);
+  debug_write_char('\n');
+  for (; *message != '\0'; message++)
+    debug_write_char(*message);
+  for (; *detail != '\0'; detail++)
+    debug_write_char(*detail);
+  debug_write_char('\n');
   return 1;
 }
 
-/* ==== 0x01001D94  (file offset 0x01D94)  FUN_01001d94 ================================================ */
-undefined8 FUN_01001d94(void)
+/* ==== 0x01001D94  (file offset 0x01D94)  debug_write_char ============================================ */
+/* GUESS: name (the routine is certain: the ARM C library's _ttywrch(int ch)), the engine's own copy of
+   kh.mod's debug_write_char (0x00101638). Writes one character to the debugger's console through ARM
+   semihosting. Evidence (0x01001d94 - 0x01001da8): `stmdb sp!, {r3, lr}` (r3 only keeps sp 8-byte
+   aligned and gives a stack slot), `strb r0, [sp]` stores the character in it, `mov r0, #3`
+   (SYS_WRITEC, write one character), `mov r1, sp` (its address), `swi 0x123456` (the ARM-state
+   semihosting trap). Returns r0 as the trap leaves it (SYS_WRITEC defines no result; Ghidra had dropped
+   the parameter, and its CONCAT44(local_8, 3) assumed r0 kept the 3 and r1 the buffer's address). Its
+   only caller is default_signal_handler (0x01001c30), which prints a signal's message with it. With no
+   debugger attached (a phone, khvcemu, which does not emulate swi) the trap does nothing useful. */
+int32 debug_write_char(char character)
 
 {
-  undefined1 local_8 [8];
-  
-  software_interrupt(0x123456);
-  return CONCAT44(local_8,3);
+  /* semihosting SYS_WRITEC: r0 = 3, r1 = &character (the byte stored on the stack) */
+  return software_interrupt(0x123456);
 }
 
 /* ==== 0x01002894  (file offset 0x02894)  hand-written (no Ghidra function) =========================== */
@@ -43227,7 +43236,7 @@ LAB_01000290:
     }
     return CONCAT44(param_1,(uVar2 ^ uVar1) - uVar1);
   }
-  uVar9 = FUN_01001bb4(2,2);
+  uVar9 = raise_signal(2,2);
   if ((int)uVar9 == 0) {
     return uVar9 & 0xffffffff00000000;
   }
