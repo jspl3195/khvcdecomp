@@ -4328,36 +4328,38 @@ undefined4 * FUN_0100418c(int *param_1,undefined4 *param_2)
   return puVar2;
 }
 
-/* ==== 0x010041EC  (file offset 0x041EC)  FUN_010041ec ================================================ */
-void FUN_010041ec(int param_1)
+/* ==== 0x010041EC  (file offset 0x041EC)  swvExt_AddRef =============================================== */
+/* GUESS: name. AddRef, slot 0 of both extension classes' vtables (Ext100, Ext101: SwvExtObject):
+   adds one to the reference count and returns the new count, as BREW's AddRef does. Evidence
+   (0x010041ec - 0x010041fc): `ldr r0, [r0, #4]` / `add r0, r0, #1` / `str r0, [r1, #4]` / `bx lr`,
+   r0 left holding the count (Ghidra had typed it void). Not called directly: swv_Create_Ext100
+   (0x0102d8ac) and swv_Create_Ext101 (0x0102d990) store it in their vtables. The engine's other
+   objects use swvObj_AddRef (0x01011f8c) instead. */
+uint32 swvExt_AddRef(SwvExtObject *object)
 
 {
-  *(int *)(param_1 + 4) = *(int *)(param_1 + 4) + 1;
-  return;
+  return ++object->m_nRefs;
 }
 
-/* ==== 0x01004200  (file offset 0x04200)  FUN_01004200 ================================================ */
-int FUN_01004200(void *param_1)
+/* ==== 0x01004200  (file offset 0x04200)  swvExt_Release ============================================== */
+/* GUESS: name. Release, slot 1 of both extension classes' vtables (Ext100, Ext101: SwvExtObject):
+   takes one from the reference count and, at 0, releases the object's IFile (+0x08), frees its buffer
+   (+0x0c), releases the ISwerve object (the reference the constructor took) and frees the object.
+   Returns the new count (r5, kept across the frees). Evidence: 0x01004200 - 0x0100424c. */
+uint32 swvExt_Release(SwvExtObject *object)
 
 {
-  ISwerve *po;
-  int iVar1;
-  
-  iVar1 = *(int *)((int)param_1 + 4) + -1;
-  *(int *)((int)param_1 + 4) = iVar1;
-  if (iVar1 == 0) {
-    if (*(int **)((int)param_1 + 8) != (int *)0x0) {
-      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-      (*((IFile *)*(int **)((int)param_1 + 8))->pvt->Release)((IFile *)*(int **)((int)param_1 + 8));
-    }
-    if (*(void **)((int)param_1 + 0xc) != (void *)0x0) {
-      helper_free(*(void **)((int)param_1 + 0xc));
-    }
-    po = swv_GetSwerveObject();
-    ISwerve_Release(po);
-    helper_free(param_1);
+  uint32 refs = --object->m_nRefs;
+
+  if (refs == 0) {
+    if (object->pFile != NULL)
+      (*object->pFile->pvt->Release)(object->pFile);
+    if (object->pBuffer != NULL)
+      helper_free(object->pBuffer);
+    ISwerve_Release(swv_GetSwerveObject());
+    helper_free(object);
   }
-  return iVar1;
+  return refs;
 }
 
 /* ==== 0x01004250  (file offset 0x04250)  FUN_01004250 ================================================ */
@@ -41720,8 +41722,10 @@ int swv_Create_Ext100(void **ppObj)
     if (piVar3 == (int *)0x0) {
       return 2;
     }
-    *piVar3 = ADDRESS_OF_FUNCTION_010041ec_OFFSET + 0x102d8ec;
-    piVar3[1] = ADDRESS_OF_FUNCTION_01004200_OFFSET + 0x102d8f8;
+    /* Ext100Vtbl (GUESS: name): 0 swvExt_AddRef, 1 swvExt_Release, 2-5 the class's own methods
+       (FUN_010042bc, FUN_010042d0, FUN_01004380, FUN_01004638; not yet studied) */
+    *piVar3 = ADDRESS_OF_swvExt_AddRef_OFFSET + 0x102d8ec;
+    piVar3[1] = ADDRESS_OF_swvExt_Release_OFFSET + 0x102d8f8;
     piVar3[2] = ADDRESS_OF_FUNCTION_010042bc_OFFSET + 0x102d904;
     piVar3[3] = ADDRESS_OF_FUNCTION_010042d0_OFFSET + 0x102d910;
     piVar3[4] = ADDRESS_OF_FUNCTION_01004380_OFFSET + 0x102d91c;
@@ -41764,8 +41768,10 @@ int swv_Create_Ext101(void **ppObj)
     if (piVar3 == (int *)0x0) {
       return 2;
     }
-    *piVar3 = ADDRESS_OF_FUNCTION_010041ec_OFFSET_2 + 0x102d9d0;
-    piVar3[1] = ADDRESS_OF_FUNCTION_01004200_OFFSET_2 + 0x102d9dc;
+    /* Ext101Vtbl (GUESS: name): 0 swvExt_AddRef, 1 swvExt_Release, 2 FUN_01004250 (reads from a
+       region of the IFile: seeks to start + position, reads at most size - position bytes) */
+    *piVar3 = ADDRESS_OF_swvExt_AddRef_OFFSET_2 + 0x102d9d0;
+    piVar3[1] = ADDRESS_OF_swvExt_Release_OFFSET_2 + 0x102d9dc;
     piVar3[2] = ADDRESS_OF_FUNCTION_01004250_OFFSET + 0x102d9e8;
     ppvVar1[0x1c] = piVar3;
   }

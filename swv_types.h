@@ -168,6 +168,22 @@ typedef struct IGraphics3DVtbl {
 } IGraphics3DVtbl;
 struct IGraphics3D { const IGraphics3DVtbl *pvt; void *pNative; uint32 m_nRefs; };
 
+/* ---- extension objects, classes 100 and 101 ------------------------------------------------
+ * The objects swv_Create_Ext100 (0x0102d8ac, 0x18 bytes) and swv_Create_Ext101 (0x0102d990, 0x1c
+ * bytes) build: BREW-style {vtable, refs, ...}, the vtables cached in pVtblCache[0x1b] (Ext100Vtbl,
+ * 6 slots) and [0x1c] (Ext101Vtbl, 3 slots); slots 0 and 1 are the shared swvExt_AddRef (0x010041ec)
+ * and swvExt_Release (0x01004200). GUESS: Ext100 opens a file (its slot 4, FUN_01004380, calls IFileMgr
+ * OpenFile) and Ext101 reads a region of one (its slot 2, FUN_01004250): an archive and its entries. */
+typedef struct SwvExtObject {
+    const void *pvt;        /* +0x00 Ext100Vtbl / Ext101Vtbl (arrays of function addresses) */
+    uint32   m_nRefs;       /* +0x04 1 after the constructor */
+    IFile   *pFile;         /* +0x08 released by swvExt_Release */
+    void    *pBuffer;       /* +0x0c freed by swvExt_Release */
+    uint32   field_10;      /* +0x10 Ext101: the region's start in the file (GUESS) */
+    uint32   field_14;      /* +0x14 Ext101: the region's size (GUESS) */
+    uint32   field_18;      /* +0x18 Ext101 only (Ext100 ends at +0x18): the read position (GUESS) */
+} SwvExtObject;
+
 /* ---- engine globals ------------------------------------------------------------------------
  * Swerve has no writable statics either: swv_NewSwerve allocates this 0x24-byte block and
  * stores it in the *host applet* at GetAppInstance()+0x20 (KHApp.pSwerveGlobals). It also

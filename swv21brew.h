@@ -356,8 +356,8 @@ void FUN_0100406c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
 void FUN_010040cc(int *param_1,undefined1 *param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0100412c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
 undefined4 * FUN_0100418c(int *param_1,undefined4 *param_2);
-void FUN_010041ec(int param_1);
-int FUN_01004200(void *param_1);
+uint32 swvExt_AddRef(SwvExtObject *object);   /* 0x010041EC GUESS: name, see swv21brew.c */
+uint32 swvExt_Release(SwvExtObject *object);   /* 0x01004200 GUESS: name, see swv21brew.c */
 void FUN_01004250(int param_1,undefined4 param_2,uint param_3,undefined4 param_4);
 void FUN_010042bc(int param_1);
 undefined4 FUN_010042d0(int param_1,undefined4 *param_2,int *param_3);
@@ -1882,14 +1882,14 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define ADDRESS_OF_FUNCTION_0102d818_OFFSET 0x0000011C   /* was DAT_0102d73c (word at 0x0102D73C); PC-relative offset: + 0x102d6fc (the pc) = 0x0102D818 */
 #define ADDRESS_OF_FUNCTION_0102d5f4_OFFSET 0xFFFFFEEC   /* was DAT_0102d740 (word at 0x0102D740); PC-relative offset: + 0x102d708 (the pc) = 0x0102D5F4 */
 #define ADDRESS_OF_FUNCTION_0102d838_OFFSET 0x00000124   /* was DAT_0102d744 (word at 0x0102D744); PC-relative offset: + 0x102d714 (the pc) = 0x0102D838 */
-#define ADDRESS_OF_FUNCTION_010041ec_OFFSET 0xFFFD6900   /* was DAT_0102d978 (word at 0x0102D978); PC-relative offset: + 0x102d8ec (the pc) = 0x010041EC */
-#define ADDRESS_OF_FUNCTION_01004200_OFFSET 0xFFFD6908   /* was DAT_0102d97c (word at 0x0102D97C); PC-relative offset: + 0x102d8f8 (the pc) = 0x01004200 */
+#define ADDRESS_OF_swvExt_AddRef_OFFSET 0xFFFD6900   /* was DAT_0102d978 (word at 0x0102D978); PC-relative offset: + 0x102d8ec (the pc) = 0x010041EC */
+#define ADDRESS_OF_swvExt_Release_OFFSET 0xFFFD6908   /* was DAT_0102d97c (word at 0x0102D97C); PC-relative offset: + 0x102d8f8 (the pc) = 0x01004200 */
 #define ADDRESS_OF_FUNCTION_010042bc_OFFSET 0xFFFD69B8   /* was DAT_0102d980 (word at 0x0102D980); PC-relative offset: + 0x102d904 (the pc) = 0x010042BC */
 #define ADDRESS_OF_FUNCTION_010042d0_OFFSET 0xFFFD69C0   /* was DAT_0102d984 (word at 0x0102D984); PC-relative offset: + 0x102d910 (the pc) = 0x010042D0 */
 #define ADDRESS_OF_FUNCTION_01004380_OFFSET 0xFFFD6A64   /* was DAT_0102d988 (word at 0x0102D988); PC-relative offset: + 0x102d91c (the pc) = 0x01004380 */
 #define ADDRESS_OF_FUNCTION_01004638_OFFSET 0xFFFD6D10   /* was DAT_0102d98c (word at 0x0102D98C); PC-relative offset: + 0x102d928 (the pc) = 0x01004638 */
-#define ADDRESS_OF_FUNCTION_010041ec_OFFSET_2 0xFFFD681C   /* was DAT_0102da38 (word at 0x0102DA38); PC-relative offset: + 0x102d9d0 (the pc) = 0x010041EC */
-#define ADDRESS_OF_FUNCTION_01004200_OFFSET_2 0xFFFD6824   /* was DAT_0102da3c (word at 0x0102DA3C); PC-relative offset: + 0x102d9dc (the pc) = 0x01004200 */
+#define ADDRESS_OF_swvExt_AddRef_OFFSET_2 0xFFFD681C   /* was DAT_0102da38 (word at 0x0102DA38); PC-relative offset: + 0x102d9d0 (the pc) = 0x010041EC */
+#define ADDRESS_OF_swvExt_Release_OFFSET_2 0xFFFD6824   /* was DAT_0102da3c (word at 0x0102DA3C); PC-relative offset: + 0x102d9dc (the pc) = 0x01004200 */
 #define ADDRESS_OF_FUNCTION_01004250_OFFSET 0xFFFD6868   /* was DAT_0102da40 (word at 0x0102DA40); PC-relative offset: + 0x102d9e8 (the pc) = 0x01004250 */
 #define ADDRESS_OF_FUNCTION_0102dadc_OFFSET 0xFFFFFE84   /* was DAT_0102dd10 (word at 0x0102DD10); PC-relative offset: + 0x102dc58 (the pc) = 0x0102DADC */
 #define ADDRESS_OF_FUNCTION_0102dd80_OFFSET 0x0000011C   /* was DAT_0102dd14 (word at 0x0102DD14); PC-relative offset: + 0x102dc64 (the pc) = 0x0102DD80 */
