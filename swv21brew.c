@@ -3666,81 +3666,81 @@ void FUN_01003604(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 /* ==== 0x010036A0  (file offset 0x036A0)  FUN_010036a0 ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EC0 +0xc;
    written from its disassembly (0x010036a0 - 0x010036a8). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_010036a0(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2,0);
 }
 
 /* ==== 0x010036AC  (file offset 0x036AC)  FUN_010036ac ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001ED4 +0xc;
    written from its disassembly (0x010036ac - 0x010036b4). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_010036ac(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2,0);
 }
 
 /* ==== 0x010036B8  (file offset 0x036B8)  FUN_010036b8 ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EE8 +0xc;
    written from its disassembly (0x010036b8 - 0x010036c0). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_010036b8(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2,0);
 }
 
 /* ==== 0x010036C4  (file offset 0x036C4)  FUN_010036c4 ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001EFC +0xc;
    written from its disassembly (0x010036c4 - 0x010036cc). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_010036c4(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2,0);
 }
 
 /* ==== 0x010036D0  (file offset 0x036D0)  FUN_010036d0 ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001FAC +0xc;
    written from its disassembly (0x010036d0 - 0x010036d8). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_010036d0(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2,0);
+  return swv_NewArray(param_2,0);
 }
 
 /* ==== 0x010036DC  (file offset 0x036DC)  FUN_010036dc ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001FC0 +0xc;
    written from its disassembly (0x010036dc - 0x010036e4). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_010036dc(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 1,0);
+  return swv_NewArray(param_2 << 1,0);
 }
 
 /* ==== 0x010036E8  (file offset 0x036E8)  FUN_010036e8 ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002348 +0xc;
    written from its disassembly (0x010036e8 - 0x010036f0). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_010036e8(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 3,0);
+  return swv_NewArray(param_2 << 3,0);
 }
 
 /* ==== 0x010036F4  (file offset 0x036F4)  FUN_010036f4 ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023CC +0xc;
    written from its disassembly (0x010036f4 - 0x010036fc). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_010036f4(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2,0);
 }
 
 /* ==== 0x01003700  (file offset 0x03700)  FUN_01003700 ================================================ */
@@ -3753,7 +3753,7 @@ void FUN_01003700(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
 
-  uVar1 = FUN_0102cb54(param_2 * 0x44 + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0x44 + 4,0);
   FUN_01000414(uVar1,param_2,0x44,1,ADDRESS_OF_FUNCTION_01029850_OFFSET + 0x1003728);
   return;
 }
@@ -3761,21 +3761,21 @@ void FUN_01003700(undefined4 param_1,int param_2)
 /* ==== 0x01003740  (file offset 0x03740)  FUN_01003740 ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010023F8 +0xc;
    written from its disassembly (0x01003740 - 0x01003748). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_01003740(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2,0);
 }
 
 /* ==== 0x0100374C  (file offset 0x0374C)  FUN_0100374c ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010024C4 +0xc;
    written from its disassembly (0x0100374c - 0x01003754). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_0100374c(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2,0);
 }
 
 /* ==== 0x01003758  (file offset 0x03758)  FUN_01003758 ================================================ */
@@ -3784,7 +3784,7 @@ void FUN_01003758(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
   
-  uVar1 = FUN_0102cb54(param_2 * 0xc + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0xc + 4,0);
   FUN_01000414(uVar1,param_2,0xc,1,ADDRESS_OF_FUNCTION_01027c84_OFFSET + 0x1003784);
   return;
 }
@@ -3795,7 +3795,7 @@ void FUN_010037a0(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
   
-  uVar1 = FUN_0102cb54(param_2 * 0x50,0);
+  uVar1 = swv_NewArray(param_2 * 0x50,0);
   FUN_01000414(uVar1,param_2,0x50,0,ADDRESS_OF_FUNCTION_01027cfc_OFFSET + 0x10037c8);
   return;
 }
@@ -3803,11 +3803,11 @@ void FUN_010037a0(undefined4 param_1,int param_2)
 /* ==== 0x010037E4  (file offset 0x037E4)  FUN_010037e4 ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002504 +0xc;
    written from its disassembly (0x010037e4 - 0x010037ec). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_010037e4(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2,0);
 }
 
 /* ==== 0x010037F0  (file offset 0x037F0)  FUN_010037f0 ================================================ */
@@ -3816,7 +3816,7 @@ void FUN_010037f0(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
   
-  uVar1 = FUN_0102cb54(param_2 * 0x44 + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0x44 + 4,0);
   FUN_01000414(uVar1,param_2,0x44,1,ADDRESS_OF_FUNCTION_01027e90_OFFSET + 0x100381c);
   return;
 }
@@ -3824,31 +3824,31 @@ void FUN_010037f0(undefined4 param_1,int param_2)
 /* ==== 0x01003838  (file offset 0x03838)  FUN_01003838 ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100252C +0xc;
    written from its disassembly (0x01003838 - 0x01003840). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_01003838(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2,0);
 }
 
 /* ==== 0x01003844  (file offset 0x03844)  FUN_01003844 ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002540 +0xc;
    written from its disassembly (0x01003844 - 0x0100384c). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_01003844(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2,0);
 }
 
 /* ==== 0x01003850  (file offset 0x03850)  FUN_01003850 ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100255C +0xc;
    written from its disassembly (0x01003850 - 0x01003858). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_01003850(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2,0);
 }
 
 /* ==== 0x0100385C  (file offset 0x0385C)  FUN_0100385c ================================================ */
@@ -3857,7 +3857,7 @@ void FUN_0100385c(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
   
-  uVar1 = FUN_0102cb54(param_2 * 0xc + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0xc + 4,0);
   FUN_01000414(uVar1,param_2,0xc,1,ADDRESS_OF_FUNCTION_01028a3c_OFFSET + 0x1003888);
   return;
 }
@@ -3865,31 +3865,31 @@ void FUN_0100385c(undefined4 param_1,int param_2)
 /* ==== 0x010038A4  (file offset 0x038A4)  FUN_010038a4 ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002584 +0xc;
    written from its disassembly (0x010038a4 - 0x010038ac). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_010038a4(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2,0);
 }
 
 /* ==== 0x010038B0  (file offset 0x038B0)  FUN_010038b0 ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002598 +0xc;
    written from its disassembly (0x010038b0 - 0x010038b8). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_010038b0(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2,0);
 }
 
 /* ==== 0x010038BC  (file offset 0x038BC)  FUN_010038bc ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010025AC +0xc;
    written from its disassembly (0x010038bc - 0x010038c4). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_010038bc(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2,0);
 }
 
 /* ==== 0x010038C8  (file offset 0x038C8)  FUN_010038c8 ================================================ */
@@ -3898,7 +3898,7 @@ void FUN_010038c8(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
   
-  uVar1 = FUN_0102cb54(param_2 * 0x90 + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0x90 + 4,0);
   FUN_01000414(uVar1,param_2,0x90,1,ADDRESS_OF_FUNCTION_01029110_OFFSET + 0x10038f4);
   return;
 }
@@ -3913,7 +3913,7 @@ void FUN_0100391c(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
 
-  uVar1 = FUN_0102cb54(param_2 * 0x18 + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0x18 + 4,0);
   FUN_01000414(uVar1,param_2,0x18,1,ADDRESS_OF_FUNCTION_01029878_OFFSET + 0x1003944);
   return;
 }
@@ -3921,11 +3921,11 @@ void FUN_0100391c(undefined4 param_1,int param_2)
 /* ==== 0x0100395C  (file offset 0x0395C)  FUN_0100395c ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002600 +0xc;
    written from its disassembly (0x0100395c - 0x01003968). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_0100395c(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 * 0xc,0);
+  return swv_NewArray(param_2 * 0xc,0);
 }
 
 /* ==== 0x0100396C  (file offset 0x0396C)  FUN_0100396c ================================================ */
@@ -3938,7 +3938,7 @@ void FUN_0100396c(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
 
-  uVar1 = FUN_0102cb54(param_2 * 0x90 + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0x90 + 4,0);
   FUN_01000414(uVar1,param_2,0x90,1,ADDRESS_OF_FUNCTION_010298b4_OFFSET + 0x1003994);
   return;
 }
@@ -3946,11 +3946,11 @@ void FUN_0100396c(undefined4 param_1,int param_2)
 /* ==== 0x010039AC  (file offset 0x039AC)  FUN_010039ac ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002628 +0xc;
    written from its disassembly (0x010039ac - 0x010039b8). Allocates an array of param_2 elements
-   (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_010039ac(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 * 0xc,0);
+  return swv_NewArray(param_2 * 0xc,0);
 }
 
 /* ==== 0x010039BC  (file offset 0x039BC)  FUN_010039bc ================================================ */
@@ -3963,7 +3963,7 @@ void FUN_010039bc(undefined4 param_1,int param_2)
 {
   undefined4 uVar1;
 
-  uVar1 = FUN_0102cb54(param_2 * 0x4c + 4,0);
+  uVar1 = swv_NewArray(param_2 * 0x4c + 4,0);
   FUN_01000414(uVar1,param_2,0x4c,1,ADDRESS_OF_FUNCTION_010298e0_OFFSET + 0x10039e8);
   return;
 }
@@ -3971,21 +3971,21 @@ void FUN_010039bc(undefined4 param_1,int param_2)
 /* ==== 0x01003A00  (file offset 0x03A00)  FUN_01003a00 ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtables at 0x01002438 +0x30,
    0x01002650 +0xc; written from its disassembly (0x01003a00 - 0x01003a0c). Allocates an array of
-   param_2 elements (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   param_2 elements (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_01003a00(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 * 0x14,0);
+  return swv_NewArray(param_2 * 0x14,0);
 }
 
 /* ==== 0x01003A10  (file offset 0x03A10)  FUN_01003a10 ================================================ */
 /* A routine Ghidra has no function for, reached only through the engine vtables at 0x010022E0 +0x20,
    0x01002664 +0xc; written from its disassembly (0x01003a10 - 0x01003a18). Allocates an array of
-   param_2 elements (FUN_0102cb54, a tail jump; r1 is 0). param_1 (the object) is not read. */
+   param_2 elements (swv_NewArray, a tail jump; r1 is 0). param_1 (the object) is not read. */
 void * FUN_01003a10(int param_1,int param_2)
 
 {
-  return FUN_0102cb54(param_2 << 2,0);
+  return swv_NewArray(param_2 << 2,0);
 }
 
 /* ==== 0x01003B00  (file offset 0x03B00)  FUN_01003b00 ================================================ */
@@ -6002,7 +6002,7 @@ int FUN_01006518(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     unaff_r10 = *(uint *)(iVar1 + 8);
   }
   if (iVar1 != 0 && unaff_r10 != 0) {
-    piVar2 = (int *)FUN_0102cbe0(0x10,0);
+    piVar2 = (int *)swv_New_2(0x10,0);
     if (piVar2 != (int *)0x0) {
       FUN_01027cb4(piVar2);
       *piVar2 = DATA_AT_01002628_OFFSET + 0x10065cc;
@@ -6018,7 +6018,7 @@ int FUN_01006518(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
         puVar5[1] = 0;
       }
       else {
-        uVar3 = FUN_0102cb54(iVar1,0);
+        uVar3 = swv_NewArray(iVar1,0);
         puVar5[1] = uVar3;
         thunk_swv_memcpy(uVar3,puVar7[1],iVar1);
       }
@@ -6535,7 +6535,7 @@ int FUN_01006f8c(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(0x48,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x48,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     FUN_01027b6c(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6587,7 +6587,7 @@ int FUN_01007064(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(0x1c,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x1c,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     FUN_01027c34(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6644,7 +6644,7 @@ int FUN_01007164(int param_1)
   int iVar3;
   int iVar4;
   
-  iVar1 = FUN_0102cbe0(0x40,0);
+  iVar1 = swv_New_2(0x40,0);
   if (iVar1 != 0) {
     FUN_01027d0c(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6684,7 +6684,7 @@ int FUN_01007210(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(0x38,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x38,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     FUN_01027e10(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6755,7 +6755,7 @@ undefined8 FUN_0100732c(undefined4 param_1,undefined4 param_2,int param_3,int pa
   
   local_14 = param_3;
   local_10 = param_4;
-  iVar1 = FUN_0102cbe0(0x198,0);
+  iVar1 = swv_New_2(0x198,0);
   if (iVar1 != 0) {
     FUN_01028464(iVar1);
     local_14 = iVar1;
@@ -6786,7 +6786,7 @@ int FUN_010073c8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(0x20,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x20,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     FUN_010285fc(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6834,7 +6834,7 @@ int FUN_0100748c(int param_1)
   undefined4 uVar2;
   int *piVar3;
   
-  iVar1 = FUN_0102cbe0(0x58,0);
+  iVar1 = swv_New_2(0x58,0);
   if (iVar1 != 0) {
     FUN_010286dc(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6870,7 +6870,7 @@ int FUN_01007554(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(0xe4,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0xe4,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     FUN_010287cc(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6894,7 +6894,7 @@ int FUN_010075c4(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(0x78,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x78,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     FUN_01028898(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6919,7 +6919,7 @@ int FUN_01007624(int param_1)
   int iVar3;
   int iVar4;
   
-  iVar1 = FUN_0102cbe0(0x28,0);
+  iVar1 = swv_New_2(0x28,0);
   if (iVar1 != 0) {
     FUN_01028abc(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -6969,7 +6969,7 @@ int FUN_010076e0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(0x3c,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x3c,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     FUN_01028b58(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7002,7 +7002,7 @@ int FUN_01007780(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   int iVar3;
   int *piVar4;
   
-  iVar1 = FUN_0102cbe0(0x50,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x50,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     FUN_01028cc8(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7043,7 +7043,7 @@ int FUN_01007864(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(0x48,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x48,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     FUN_010290c4(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7072,7 +7072,7 @@ int FUN_010078f4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(0x34,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x34,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     FUN_010291bc(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7102,7 +7102,7 @@ int FUN_01007984(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(0x30,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x30,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     FUN_010292b8(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7131,7 +7131,7 @@ int FUN_01007a0c(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(0xac,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0xac,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     FUN_01029304(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7155,7 +7155,7 @@ int FUN_01007a7c(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(0x88,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x88,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     FUN_0102950c(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7216,7 +7216,7 @@ int FUN_01007b94(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   int iVar3;
   int iVar4;
   
-  iVar1 = FUN_0102cbe0(0xa0,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0xa0,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     FUN_01029540(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7257,7 +7257,7 @@ int FUN_01007c50(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(0xec,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0xec,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     FUN_010295ac(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -7647,13 +7647,13 @@ LAB_0101d814:
 }
 
 /* ==== 0x0100806C  (file offset 0x0806C)  swvSection_SetSink ========================================== */
-/* GUESS: name (not yet rewritten). Sets a section reader's sink (+4), where its bytes go: shared by
-   both readers (swvSection_CreateStored; swvSectionZlib_Init). */
-void swvSection_SetSink(int param_1,undefined4 param_2)
+/* GUESS: name. Sets a section reader's sink (+4), the object its bytes go to (the M3G record reader):
+   `str r1, [r0, #4]` / `bx lr` (0x0100806c - 0x01008070). Shared by both section readers
+   (swvSection_CreateStored; swvSectionZlib_Init). */
+void swvSection_SetSink(uint8 *section,void *sink)
 
 {
-  *(undefined4 *)(param_1 + 4) = param_2;
-  return;
+  *(void **)(section + 4) = sink;
 }
 
 /* ==== 0x01008074  (file offset 0x08074)  FUN_01008074 ================================================ */
@@ -7849,7 +7849,7 @@ void FUN_010082f0(int param_1,int param_2,undefined4 param_3)
 
 /* ==== 0x0100835C  (file offset 0x0835C)  swvSectionZlib_Init ========================================= */
 /* GUESS: name (not yet rewritten). Sets up the zlib-section reader: its sink (swvSection_SetSink;
-   Ghidra dropped the arguments) and its zlib stream at +8 (FUN_010396cc, with the tag "ZLIB"). */
+   r0 and r1 passed through) and its zlib stream at +8 (FUN_010396cc, with the tag "ZLIB"). */
 uint swvSectionZlib_Init(int param_1,undefined4 param_2)
 
 {
@@ -7858,7 +7858,7 @@ uint swvSectionZlib_Init(int param_1,undefined4 param_2)
   undefined4 *puVar3;
   int *unaff_r4;
   
-  swvSection_SetSink();
+  swvSection_SetSink((uint8 *)param_1,(void *)param_2);   /* Ghidra had dropped them */
   puVar3 = (undefined4 *)(param_1 + 8);
   uVar1 = FUN_010396cc(FOUR_CHARACTER_TAG_ZLIB,param_2);
   if (uVar1 != 0) {
@@ -9297,7 +9297,7 @@ int swv_Graphics3D_New(void)
   
                     /* Creates the native Graphics3D object; swv_Create_Graphics3D wraps it (+4 is
                        the interface sub-object). GUESS: name. */
-  iVar1 = FUN_0102cbe0(0x114,0);
+  iVar1 = swv_New_2(0x114,0);
   if (iVar1 != 0) {
     FUN_01027eec(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -9324,7 +9324,7 @@ int * FUN_010098fc(void)
   undefined4 in_lr;
   
   piVar1 = (int *)FUN_0102ecec();
-  piVar2 = (int *)FUN_0102cbe0(0x7c,0);
+  piVar2 = (int *)swv_New_2(0x7c,0);
   if (piVar2 != (int *)0x0) {
     *piVar2 = DATA_AT_0100203C_OFFSET + 0x1009924;
     *piVar2 = DATA_AT_01002268_OFFSET + 0x1009930;
@@ -9345,7 +9345,7 @@ int * FUN_010098fc(void)
 
 /* ==== 0x01009944  (file offset 0x09944)  swvSection_CreateStored ===================================== */
 /* GUESS: name (not yet rewritten). Creates the M3G loader's reader for a section stored uncompressed
-   (compression byte 0): a 0xc-byte object (FUN_0102cbe0) built by swvSectionStored_Construct and
+   (compression byte 0): a 0xc-byte object (swv_New_2) built by swvSectionStored_Construct and
    registered (FUN_0100f8e8, FUN_0101807c, FUN_0101715c), its sink (where the section's bytes go, the
    record reader) set to param_1 (swvSection_SetSink). Its vtable (0x010022D4): 0 swvSectionStored_Destroy,
    1 swvSectionStored_Feed, 2 swvSectionStored_Get08. */
@@ -9356,13 +9356,13 @@ int swvSection_CreateStored(undefined4 param_1,undefined4 param_2,undefined4 par
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(0xc,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0xc,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     swvSectionStored_Construct(iVar1);
     uVar2 = FUN_0100f8e8();
     FUN_0101807c(uVar2,iVar1);
   }
-  swvSection_SetSink(iVar1,param_1);
+  swvSection_SetSink((uint8 *)iVar1,(void *)param_1);
   iVar3 = 0;
   if (iVar1 != 0) {
     uVar2 = FUN_0100f8e8(0);
@@ -9384,7 +9384,7 @@ int swvSection_CreateZlib(undefined4 param_1,undefined4 param_2,undefined4 param
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(0x10,0,param_3,param_4,param_4);
+  iVar1 = swv_New_2(0x10,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
     swvSectionZlib_Construct(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -9408,7 +9408,7 @@ void FUN_01009a04(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
   int iVar2;
   int iVar3;
   
-  piVar1 = (int *)FUN_0102cbe0(0x4c,0,param_3,param_4,param_4);
+  piVar1 = (int *)swv_New_2(0x4c,0,param_3,param_4,param_4);
   if (piVar1 != (int *)0x0) {
     iVar3 = DATA_AT_01001E5C_OFFSET + 0x1009a30;
     *piVar1 = DATA_AT_0100203C_OFFSET_2 + 0x1009a28;
@@ -9452,18 +9452,18 @@ int FUN_01009ad0(void)
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(INTEGER_2788,0);
+  iVar1 = swv_New_2(INTEGER_2788,0);
   if (iVar1 != 0) {
     FUN_01028d2c(iVar1);
     uVar2 = FUN_0100f8e8();
     FUN_0101807c(uVar2,iVar1);
   }
-  iVar3 = FUN_0102cbe0(700,0);
+  iVar3 = swv_New_2(700,0);
   if (iVar3 != 0) {
     FUN_01028f54(iVar3);
   }
   *(int *)(iVar1 + 8) = iVar3;
-  iVar3 = FUN_0102cbe0(0x3c,0);
+  iVar3 = swv_New_2(0x3c,0);
   if (iVar3 != 0) {
     FUN_01028b58(iVar3);
   }
@@ -9486,7 +9486,7 @@ int FUN_01009b80(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0xe8,0);
+  iVar1 = swv_New_2(0xe8,0);
   if (iVar1 != 0) {
     FUN_01029010(iVar1);
   }
@@ -12919,7 +12919,7 @@ int FUN_0100e5b0(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0x48,0);
+  iVar1 = swv_New_2(0x48,0);
   if (iVar1 != 0) {
     FUN_01027b6c(iVar1);
   }
@@ -12934,7 +12934,7 @@ int * FUN_0100e5d4(void)
   uint uVar2;
   int *piVar3;
   
-  piVar3 = (int *)FUN_0102cbe0(0x34,0);
+  piVar3 = (int *)swv_New_2(0x34,0);
   if (piVar3 != (int *)0x0) {
     FUN_01027c34(piVar3);
     iVar1 = INTEGER_MINUS_51212;
@@ -12958,7 +12958,7 @@ int * FUN_0100e63c(void)
   int iVar1;
   int *piVar2;
   
-  piVar2 = (int *)FUN_0102cbe0(100,0);
+  piVar2 = (int *)swv_New_2(100,0);
   if (piVar2 != (int *)0x0) {
     FUN_01027b6c(piVar2);
     *piVar2 = DATA_AT_01001E64_OFFSET + 0x100e668;
@@ -12981,7 +12981,7 @@ int FUN_0100e6b8(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0x40,0);
+  iVar1 = swv_New_2(0x40,0);
   if (iVar1 != 0) {
     FUN_01027d0c(iVar1);
   }
@@ -12994,7 +12994,7 @@ int FUN_0100e6dc(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0x50,0);
+  iVar1 = swv_New_2(0x50,0);
   if (iVar1 != 0) {
     FUN_01027d68(iVar1);
   }
@@ -13007,7 +13007,7 @@ int FUN_0100e700(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0x38,0);
+  iVar1 = swv_New_2(0x38,0);
   if (iVar1 != 0) {
     FUN_01027e10(iVar1);
   }
@@ -13021,7 +13021,7 @@ int * FUN_0100e724(void)
   int iVar1;
   int *piVar2;
   
-  piVar2 = (int *)FUN_0102cbe0(0x44,0);
+  piVar2 = (int *)swv_New_2(0x44,0);
   if (piVar2 != (int *)0x0) {
     FUN_01027c34(piVar2);
     iVar1 = INTEGER_MINUS_51068;
@@ -13048,7 +13048,7 @@ int FUN_0100e798(void)
   int iVar1;
   undefined4 uVar2;
   
-  iVar1 = FUN_0102cbe0(0x198,0);
+  iVar1 = swv_New_2(0x198,0);
   if (iVar1 != 0) {
     FUN_01028464(iVar1);
     uVar2 = FUN_0100f8e8();
@@ -13068,7 +13068,7 @@ int FUN_0100e7ec(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0x20,0);
+  iVar1 = swv_New_2(0x20,0);
   if (iVar1 != 0) {
     FUN_010285fc(iVar1);
   }
@@ -13082,7 +13082,7 @@ int * FUN_0100e810(undefined4 param_1,undefined4 param_2,undefined4 param_3,unde
   int iVar1;
   int *piVar2;
   
-  piVar2 = (int *)FUN_0102cbe0(0x114,0,param_3,param_4,param_4);
+  piVar2 = (int *)swv_New_2(0x114,0,param_3,param_4,param_4);
   if (piVar2 != (int *)0x0) {
     FUN_01029304(piVar2);
     iVar1 = INTEGER_MINUS_50960;
@@ -13113,7 +13113,7 @@ int FUN_0100e900(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0x58,0);
+  iVar1 = swv_New_2(0x58,0);
   if (iVar1 != 0) {
     FUN_010286dc(iVar1);
   }
@@ -13126,7 +13126,7 @@ int FUN_0100e924(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0xe4,0);
+  iVar1 = swv_New_2(0xe4,0);
   if (iVar1 != 0) {
     FUN_010287cc(iVar1);
   }
@@ -13139,7 +13139,7 @@ int FUN_0100e948(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0x78,0);
+  iVar1 = swv_New_2(0x78,0);
   if (iVar1 != 0) {
     FUN_01028898(iVar1);
   }
@@ -13152,7 +13152,7 @@ int FUN_0100e96c(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0x28,0);
+  iVar1 = swv_New_2(0x28,0);
   if (iVar1 != 0) {
     FUN_01028abc(iVar1);
   }
@@ -13165,7 +13165,7 @@ int FUN_0100e990(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0x3c,0);
+  iVar1 = swv_New_2(0x3c,0);
   if (iVar1 != 0) {
     FUN_01028b58(iVar1);
   }
@@ -13180,7 +13180,7 @@ void FUN_0100e9b4(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
   int iVar2;
   int iVar3;
   
-  piVar1 = (int *)FUN_0102cbe0(0x4c,0,param_3,param_4,param_4);
+  piVar1 = (int *)swv_New_2(0x4c,0,param_3,param_4,param_4);
   if (piVar1 != (int *)0x0) {
     iVar3 = DATA_AT_01001E5C_OFFSET_2 + 0x100e9e0;
     *piVar1 = DATA_AT_0100203C_OFFSET_3 + 0x100e9d8;
@@ -13222,7 +13222,7 @@ int FUN_0100ea80(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0x50,0);
+  iVar1 = swv_New_2(0x50,0);
   if (iVar1 != 0) {
     FUN_01028cc8(iVar1);
   }
@@ -13235,7 +13235,7 @@ int FUN_0100eaa4(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0x48,0);
+  iVar1 = swv_New_2(0x48,0);
   if (iVar1 != 0) {
     FUN_010290c4(iVar1);
   }
@@ -13248,7 +13248,7 @@ int FUN_0100eac8(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0x34,0);
+  iVar1 = swv_New_2(0x34,0);
   if (iVar1 != 0) {
     FUN_010291bc(iVar1);
   }
@@ -13261,7 +13261,7 @@ int FUN_0100eaec(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0x30,0);
+  iVar1 = swv_New_2(0x30,0);
   if (iVar1 != 0) {
     FUN_010292b8(iVar1);
   }
@@ -13274,7 +13274,7 @@ int FUN_0100eb10(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0xac,0);
+  iVar1 = swv_New_2(0xac,0);
   if (iVar1 != 0) {
     FUN_01029304(iVar1);
   }
@@ -13287,7 +13287,7 @@ int FUN_0100eb34(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0x24,0);
+  iVar1 = swv_New_2(0x24,0);
   if (iVar1 != 0) {
     FUN_010293e4(iVar1);
   }
@@ -13300,7 +13300,7 @@ int FUN_0100eb58(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0x88,0);
+  iVar1 = swv_New_2(0x88,0);
   if (iVar1 != 0) {
     FUN_0102950c(iVar1);
   }
@@ -13314,7 +13314,7 @@ int * FUN_0100eb7c(void)
   int iVar1;
   int *piVar2;
   
-  piVar2 = (int *)FUN_0102cbe0(0xac,0);
+  piVar2 = (int *)swv_New_2(0xac,0);
   if (piVar2 != (int *)0x0) {
     FUN_01029370(piVar2);
     iVar1 = INTEGER_MINUS_50200;
@@ -13339,7 +13339,7 @@ int FUN_0100ebf8(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0xa0,0);
+  iVar1 = swv_New_2(0xa0,0);
   if (iVar1 != 0) {
     FUN_01029540(iVar1);
   }
@@ -13352,7 +13352,7 @@ int FUN_0100ec1c(void)
 {
   int iVar1;
   
-  iVar1 = FUN_0102cbe0(0xec,0);
+  iVar1 = swv_New_2(0xec,0);
   if (iVar1 != 0) {
     FUN_010295ac(iVar1);
   }
@@ -13366,7 +13366,7 @@ int * FUN_0100ec40(void)
   int iVar1;
   int *piVar2;
   
-  piVar2 = (int *)FUN_0102cbe0(0xa4,0);
+  piVar2 = (int *)swv_New_2(0xa4,0);
   if (piVar2 != (int *)0x0) {
     FUN_01029370(piVar2);
     iVar1 = INTEGER_MINUS_50204;
@@ -14225,7 +14225,7 @@ undefined4 FUN_0100f810(void)
   
   iVar1 = FUN_0102ecec();
   if (*(int *)(iVar1 + 0x28) == 0) {
-    piVar2 = (int *)FUN_0102cbe0(0x14,0);
+    piVar2 = (int *)swv_New_2(0x14,0);
     if (piVar2 != (int *)0x0) {
       *piVar2 = DATA_AT_0100203C_OFFSET_4 + 0x100f844;
       *piVar2 = DATA_AT_010023E0_OFFSET + 0x100f850;
@@ -14470,7 +14470,7 @@ int FUN_0100fb34(int param_1,int param_2)
     }
     iVar3 = FUN_01010f60(*(undefined4 *)(param_1 + 0xb0),param_2);
     if (iVar3 == 0) {
-      iVar3 = FUN_0102cbe0(0x58,0);
+      iVar3 = swv_New_2(0x58,0);
       local_30 = iVar3;
       if (iVar3 != 0) {
         FUN_010286dc(iVar3);
@@ -15219,7 +15219,7 @@ undefined4 FUN_010104f0(int param_1)
       FUN_0102f7e0(INTEGER_MINUS_1300);
     }
     if (*(int *)(param_1 + 0xb0) == 0) {
-      iVar2 = FUN_0102cbe0(0x78,0);
+      iVar2 = swv_New_2(0x78,0);
       if (iVar2 != 0) {
         FUN_01028898(iVar2);
       }
@@ -15431,13 +15431,13 @@ undefined4 FUN_01010938(int param_1)
       FUN_0102f7e0(INTEGER_MINUS_1300);
     }
     if (*(int *)(param_1 + 0x100) == 0) {
-      iVar3 = FUN_0102cbe0(0x78,0);
+      iVar3 = swv_New_2(0x78,0);
       if (iVar3 != 0) {
         FUN_01028898(iVar3);
       }
       *(int *)(param_1 + 0x100) = iVar3;
       *(int *)(iVar3 + 8) = *(int *)(iVar3 + 8) + 1;
-      iVar3 = FUN_0102cbe0(0x58,0);
+      iVar3 = swv_New_2(0x58,0);
       if (iVar3 != 0) {
         FUN_010286dc(iVar3);
         uVar4 = FUN_0100f8e8();
@@ -17185,7 +17185,7 @@ void FUN_010126d0(void)
   int *piVar1;
   int iVar2;
   
-  piVar1 = (int *)FUN_0102cbe0(0x3c,0);
+  piVar1 = (int *)swv_New_2(0x3c,0);
   if (piVar1 != (int *)0x0) {
     *piVar1 = DATA_AT_0100203C_OFFSET_5 + 0x10126f4;
     iVar2 = DATA_AT_010025FC_OFFSET + 0x1012708;
@@ -18329,14 +18329,18 @@ undefined4 FUN_01013b34(int param_1,int param_2)
   return 1;
 }
 
-/* ==== 0x01013BB4  (file offset 0x13BB4)  FUN_01013bb4 ================================================ */
-int FUN_01013bb4(int param_1)
+/* ==== 0x01013BB4  (file offset 0x13BB4)  swv_CheckNotNull ============================================ */
+/* GUESS: name. Raises engine error -4 (FUN_0102f7e0, which does not return: it unwinds to the API's
+   swv_setjmp frame) when pointer is NULL; returns it. Evidence (0x01013bb4 - 0x01013bc8): `movs r4,
+   r0` / `mvneq r0, #3` / `bleq 0x0102f7e0` / `mov r0, r4`. Every allocator calls it on helper_malloc's
+   result (swv_New, swv_New_2, swv_NewArray), so they never return NULL and their callers' NULL tests
+   are dead code (as after a C++ new); FUN_0102ecec uses it on swv_GetGlobal00's result. */
+int32 swv_CheckNotNull(int32 pointer)
 
 {
-  if (param_1 == 0) {
-    FUN_0102f7e0(0xfffffffc);
-  }
-  return param_1;
+  if (pointer == 0)
+    FUN_0102f7e0(-4);
+  return pointer;
 }
 
 /* ==== 0x01013BCC  (file offset 0x13BCC)  FUN_01013bcc ================================================ */
@@ -20551,7 +20555,7 @@ LAB_01016740:
         if (!(bool)uVar13 || (bool)uVar19) {
           return;
         }
-        iVar3 = FUN_0102cbe0(0x50,0);
+        iVar3 = swv_New_2(0x50,0);
         if (iVar3 != 0) {
           FUN_01027d68(iVar3);
         }
@@ -21467,7 +21471,7 @@ bool FUN_01017b00(int param_1)
     iVar1 = swv_setjmp();
     if (iVar1 == 0) {
       swv_TryArm(auStack_98);
-      iVar1 = FUN_0102cbe0(0x28,0);
+      iVar1 = swv_New_2(0x28,0);
       if (iVar1 != 0) {
         FUN_01028758(iVar1);
       }
@@ -21771,7 +21775,7 @@ void FUN_01018094(int param_1)
     if (iVar2 != 0) {
       FUN_01029208(iVar2);
     }
-    FUN_01013bb4(iVar2);
+    swv_CheckNotNull(iVar2);
     *(int *)(*(int *)(param_1 + 8) + (*(int *)(param_1 + 0xc) + -1) * 4) = iVar2;
   }
   iVar2 = *(int *)(param_1 + 0x14);
@@ -22021,7 +22025,7 @@ void FUN_01018460(int param_1)
     }
     if (0 < iVar3) {
       local_94 = 1 << (iVar10 + iVar6 & 0xffU);
-      piVar4 = (int *)FUN_0102cbe0(0x10,0);
+      piVar4 = (int *)swv_New_2(0x10,0);
       if (piVar4 != (int *)0x0) {
         *piVar4 = DATA_AT_0100203C_OFFSET_6 + 0x10184c8;
         *piVar4 = DATA_AT_01001EAC_OFFSET_3 + 0x10184d4;
@@ -23200,7 +23204,7 @@ void FUN_01019ebc(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
         return;
       }
     }
-    piVar5 = (int *)FUN_0102cbe0(0x18,0);
+    piVar5 = (int *)swv_New_2(0x18,0);
     if (piVar5 != (int *)0x0) {
       *piVar5 = DATA_AT_0100203C_OFFSET_7 + 0x102003c;
       *piVar5 = DATA_AT_01002890_OFFSET + 0x1020048;
@@ -26516,7 +26520,7 @@ void FUN_0101df64(int param_1,undefined4 param_2)
   }
   uVar3 = FUN_01019698(param_2,8);
   if (uVar3 != 0) {
-    piVar4 = (int *)FUN_0102cbe0(0x10,0);
+    piVar4 = (int *)swv_New_2(0x10,0);
     if (piVar4 != (int *)0x0) {
       FUN_01027cb4(piVar4);
       *piVar4 = DATA_AT_01002628_OFFSET_2 + 0x101dff4;
@@ -26533,7 +26537,7 @@ void FUN_0101df64(int param_1,undefined4 param_2)
       iVar5 = FUN_01019698(param_2,1);
       puVar7[2] = iVar5;
       if (0 < iVar5) {
-        uVar2 = FUN_0102cb54(iVar5,0);
+        uVar2 = swv_NewArray(iVar5,0);
         puVar7[1] = uVar2;
         for (iVar5 = 0; iVar5 < (int)puVar7[2]; iVar5 = iVar5 + 1) {
           uVar1 = FUN_01019640(param_2);
@@ -26818,7 +26822,7 @@ void thunk_FUN_0101df64(int param_1,undefined4 param_2)
   }
   uVar3 = FUN_01019698(param_2,8);
   if (uVar3 != 0) {
-    piVar4 = (int *)FUN_0102cbe0(0x10,0);
+    piVar4 = (int *)swv_New_2(0x10,0);
     if (piVar4 != (int *)0x0) {
       FUN_01027cb4(piVar4);
       *piVar4 = DATA_AT_01002628_OFFSET_2 + 0x101dff4;
@@ -26835,7 +26839,7 @@ void thunk_FUN_0101df64(int param_1,undefined4 param_2)
       iVar5 = FUN_01019698(param_2,1);
       puVar7[2] = iVar5;
       if (0 < iVar5) {
-        uVar2 = FUN_0102cb54(iVar5,0);
+        uVar2 = swv_NewArray(iVar5,0);
         puVar7[1] = uVar2;
         for (iVar5 = 0; iVar5 < (int)puVar7[2]; iVar5 = iVar5 + 1) {
           uVar1 = FUN_01019640(param_2);
@@ -27034,7 +27038,7 @@ void FUN_0101e534(int param_1,undefined4 param_2)
     }
     if (0 < iVar9) {
       iStack_94 = 1 << (iVar12 + iVar5 & 0xffU);
-      piVar4 = (int *)FUN_0102cbe0(0x10,0);
+      piVar4 = (int *)swv_New_2(0x10,0);
       if (piVar4 != (int *)0x0) {
         *piVar4 = DATA_AT_0100203C_OFFSET_6 + 0x10184c8;
         *piVar4 = DATA_AT_01001EAC_OFFSET_3 + 0x10184d4;
@@ -27967,14 +27971,14 @@ void FUN_0101f0b4(int param_1,undefined4 param_2)
     }
   }
   else if (uVar3 == 1 || uVar3 == 2) {
-    iVar8 = FUN_0102cbe0(0x10,0);
+    iVar8 = swv_New_2(0x10,0);
     local_34 = iVar8;
     if (iVar8 != 0) {
       FUN_01027cd8(iVar8);
       uVar2 = FUN_0100f8e8();
       FUN_0101807c(uVar2,iVar8);
     }
-    iVar8 = FUN_0102cbe0(0x10,0);
+    iVar8 = swv_New_2(0x10,0);
     local_38 = iVar8;
     if (iVar8 != 0) {
       FUN_01027cd8(iVar8);
@@ -28731,7 +28735,7 @@ void FUN_0101ffbc(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
         return;
       }
     }
-    piVar2 = (int *)FUN_0102cbe0(0x18,0);
+    piVar2 = (int *)swv_New_2(0x18,0);
     if (piVar2 != (int *)0x0) {
       *piVar2 = DATA_AT_0100203C_OFFSET_7 + 0x102003c;
       *piVar2 = DATA_AT_01002890_OFFSET + 0x1020048;
@@ -32392,7 +32396,7 @@ void FUN_010239fc(int param_1,int param_2,int param_3,int param_4)
   iVar4 = 0;
   piVar1 = *(int **)(param_1 + 0x14);
   if (piVar1 == (int *)0x0) {
-    piVar1 = (int *)FUN_0102cbe0(0x10,0,param_3,param_4,param_4);
+    piVar1 = (int *)swv_New_2(0x10,0,param_3,param_4,param_4);
     if (piVar1 != (int *)0x0) {
       FUN_01027cb4(piVar1);
       *piVar1 = DATA_AT_01002628_OFFSET_3 + 0x1023a48;
@@ -32423,7 +32427,7 @@ LAB_01023a9c:
     piVar1[2] = 0;
   }
   if ((!bVar5 && param_3 != 0) && iVar4 >= 0) {
-    iVar4 = FUN_0102cb54(param_3,0);
+    iVar4 = swv_NewArray(param_3,0);
     piVar1[1] = iVar4;
     thunk_swv_memcpy(iVar4,param_4,param_3);
     piVar1[2] = param_3;
@@ -40143,14 +40147,17 @@ LAB_0102cb34:
   return;
 }
 
-/* ==== 0x0102CB54  (file offset 0x2CB54)  FUN_0102cb54 ================================================ */
-void * FUN_0102cb54(uint32 param_1)
+/* ==== 0x0102CB54  (file offset 0x2CB54)  swv_NewArray ================================================ */
+/* GUESS: name (GUESS: the C++ operator new[]). An engine allocation that cannot fail:
+   helper_malloc(size), checked by swv_CheckNotNull (Ghidra had dropped its argument, r0). Byte for
+   byte the same as swv_New and swv_New_2; its callers allocate arrays (count << 2 bytes). */
+void * swv_NewArray(uint32 param_1)
 
 {
   void *pvVar1;
   
   pvVar1 = helper_malloc(param_1);
-  FUN_01013bb4();
+  swv_CheckNotNull((int32)pvVar1);   /* Ghidra had dropped it */
   return pvVar1;
 }
 
@@ -40180,14 +40187,17 @@ undefined4 FUN_0102cb6c(undefined4 *param_1,undefined4 *param_2)
   return 1;
 }
 
-/* ==== 0x0102CBE0  (file offset 0x2CBE0)  FUN_0102cbe0 ================================================ */
-void * FUN_0102cbe0(uint32 param_1)
+/* ==== 0x0102CBE0  (file offset 0x2CBE0)  swv_New_2 =================================================== */
+/* GUESS: name. An engine allocation that cannot fail: helper_malloc(size), checked by
+   swv_CheckNotNull (Ghidra had dropped its argument, r0). A second copy of swv_New (0x0102cc00), byte
+   for byte the same, used by other callers (fixed-size objects). */
+void * swv_New_2(uint32 param_1)
 
 {
   void *pvVar1;
   
   pvVar1 = helper_malloc(param_1);
-  FUN_01013bb4();
+  swv_CheckNotNull((int32)pvVar1);   /* Ghidra had dropped it */
   return pvVar1;
 }
 
@@ -40224,7 +40234,7 @@ void * swv_New(uint32 param_1)
                     /* Allocates (helper_malloc) and checks the result (0x01013bb4). Used for every
                        fixed-size engine allocation. GUESS: operator new equivalent. */
   pvVar1 = helper_malloc(param_1);
-  FUN_01013bb4();
+  swv_CheckNotNull((int32)pvVar1);   /* Ghidra had dropped it */
   return pvVar1;
 }
 
@@ -42639,7 +42649,7 @@ uint32 FUN_0102ecec(void)
   uint32 uVar1;
   
   uVar1 = swv_GetGlobal00();
-  FUN_01013bb4();
+  swv_CheckNotNull((int32)uVar1);   /* Ghidra had dropped it */
   return uVar1;
 }
 
@@ -43531,18 +43541,18 @@ int thunk_FUN_01009ad0(void)
   undefined4 uVar2;
   int iVar3;
   
-  iVar1 = FUN_0102cbe0(INTEGER_2788,0);
+  iVar1 = swv_New_2(INTEGER_2788,0);
   if (iVar1 != 0) {
     FUN_01028d2c(iVar1);
     uVar2 = FUN_0100f8e8();
     FUN_0101807c(uVar2,iVar1);
   }
-  iVar3 = FUN_0102cbe0(700,0);
+  iVar3 = swv_New_2(700,0);
   if (iVar3 != 0) {
     FUN_01028f54(iVar3);
   }
   *(int *)(iVar1 + 8) = iVar3;
-  iVar3 = FUN_0102cbe0(0x3c,0);
+  iVar3 = swv_New_2(0x3c,0);
   if (iVar3 != 0) {
     FUN_01028b58(iVar3);
   }
@@ -48128,7 +48138,7 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
     if (iVar1 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar2 = (int *)FUN_0102cbe0(0x10,0);
+    piVar2 = (int *)swv_New_2(0x10,0);
     if (piVar2 != (int *)0x0) {
       FUN_01027cb4(piVar2);
       *piVar2 = DATA_AT_0100255C_OFFSET_3 + 0x1033f44;
@@ -48151,7 +48161,7 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
     if (iVar9 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar5 = (int *)FUN_0102cbe0(0x10,0);
+    piVar5 = (int *)swv_New_2(0x10,0);
     if (piVar5 != (int *)0x0) {
       FUN_01027cb4(piVar5);
       *piVar5 = DATA_AT_0100252C_OFFSET_3 + 0x1033fd0;
@@ -48476,7 +48486,7 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     if (iVar1 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar2 = (int *)FUN_0102cbe0(0x10,0);
+    piVar2 = (int *)swv_New_2(0x10,0);
     local_c4 = piVar2;
     if (piVar2 != (int *)0x0) {
       FUN_01027cb4(piVar2);
@@ -48500,7 +48510,7 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     if (iVar10 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar2 = (int *)FUN_0102cbe0(0x10,0);
+    piVar2 = (int *)swv_New_2(0x10,0);
     if (piVar2 != (int *)0x0) {
       FUN_01027cb4(piVar2);
       *piVar2 = DATA_AT_0100255C_OFFSET_4 + 0x1034514;
@@ -48523,7 +48533,7 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     if (iVar11 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar5 = (int *)FUN_0102cbe0(0x10,0);
+    piVar5 = (int *)swv_New_2(0x10,0);
     if (piVar5 != (int *)0x0) {
       FUN_01027cb4(piVar5);
       *piVar5 = DATA_AT_0100252C_OFFSET_4 + 0x10345a0;
@@ -48619,7 +48629,7 @@ undefined4 FUN_010346bc(int param_1,int param_2,uint param_3,int param_4,int par
     if (iVar2 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar3 = (int *)FUN_0102cbe0(0x10,0);
+    piVar3 = (int *)swv_New_2(0x10,0);
     local_c0 = piVar3;
     if (piVar3 != (int *)0x0) {
       FUN_01027cb4(piVar3);
@@ -49277,7 +49287,7 @@ int FUN_01034f94(int param_1,uint param_2,int param_3,uint *param_4)
     if (iVar2 != 0) {
       iVar2 = iVar2 + -4;
     }
-    piVar3 = (int *)FUN_0102cbe0(0x10,0);
+    piVar3 = (int *)swv_New_2(0x10,0);
     if (piVar3 != (int *)0x0) {
       *piVar3 = DATA_AT_0100203C_OFFSET_40 + 0x1034ffc;
       *piVar3 = DATA_AT_01001EAC_OFFSET_11 + 0x1035008;
@@ -52700,7 +52710,7 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     if (iVar1 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar2 = (int *)FUN_0102cbe0(0x10,0);
+    piVar2 = (int *)swv_New_2(0x10,0);
     if (piVar2 != (int *)0x0) {
       FUN_01027cb4(piVar2);
       *piVar2 = DATA_AT_0100255C_OFFSET_5 + 0x10389b4;
@@ -52723,7 +52733,7 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     if (iVar10 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    piVar5 = (int *)FUN_0102cbe0(0x10,0);
+    piVar5 = (int *)swv_New_2(0x10,0);
     if (piVar5 != (int *)0x0) {
       FUN_01027cb4(piVar5);
       *piVar5 = DATA_AT_0100252C_OFFSET_5 + 0x1038a40;

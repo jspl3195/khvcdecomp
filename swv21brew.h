@@ -427,7 +427,7 @@ undefined4 FUN_01007f8c(int param_1,int param_2,int param_3,int param_4,int para
 undefined4 FUN_0100800c(int param_1,undefined4 param_2,undefined4 param_3);
 void thunk_FUN_01021abc(int param_1,int param_2);
 void thunk_FUN_01023f30(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
-void swvSection_SetSink(int param_1,undefined4 param_2);
+void swvSection_SetSink(uint8 *section,void *sink);
 void FUN_01008074(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_010080e4(int param_1);
 void FUN_01008104(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,undefined4 param_6,int *param_7);
@@ -633,7 +633,7 @@ undefined4 FUN_01013ab0(int param_1,int param_2);
 undefined4 FUN_01013ac8(int param_1,int param_2);
 undefined4 FUN_01013af8(uint param_1);
 undefined4 FUN_01013b34(int param_1,int param_2);
-int FUN_01013bb4(int param_1);
+int32 swv_CheckNotNull(int32 pointer);   /* 0x01013BB4 GUESS: name, see swv21brew.c */
 void FUN_01013bcc(int param_1,undefined4 param_2);
 void FUN_01013c58(int param_1,int param_2,int *param_3,int param_4);
 void FUN_01013e88(int param_1,int param_2);
@@ -1046,9 +1046,9 @@ uint FUN_0102c7d4(undefined4 *param_1,undefined4 *param_2,undefined4 param_3,uin
 void FUN_0102c820(undefined4 *param_1,undefined4 *param_2,undefined4 param_3);
 undefined8 FUN_0102c868(int *param_1,int *param_2);
 void FUN_0102c8bc(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3,undefined4 param_4);
-void * FUN_0102cb54(uint32 param_1);
+void * swv_NewArray(uint32 param_1);
 undefined4 FUN_0102cb6c(undefined4 *param_1,undefined4 *param_2);
-void * FUN_0102cbe0(uint32 param_1);
+void * swv_New_2(uint32 param_1);
 void FUN_0102cc18(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3);
 int FUN_0102cc60(void);
 int FUN_0102cc80(int param_1,int param_2);
