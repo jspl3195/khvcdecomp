@@ -375,7 +375,7 @@ void swvKeyframeSequence_BuildTangents(int param_1,int param_2);
 void swv_ColourClamp(int32 *colour);   /* 0x01004FB8 GUESS: name, see swv21brew.c */
 void FUN_01005028(int param_1);
 void FUN_010050ac(int param_1);
-undefined4 FUN_01005104(int param_1,int param_2,int param_3);
+undefined4 FUN_01005104(int param_1,int param_2,int param_3);   /* GUESS: the Background clear, see swv21brew.c */
 void FUN_01005eb8(int param_1);
 void FUN_01005f0c(int param_1);
 void FUN_01005f28(int param_1,int param_2,int param_3,int param_4,int param_5);
@@ -499,7 +499,7 @@ int * FUN_0100eb7c(void);
 int FUN_0100ebf8(void);
 int FUN_0100ec1c(void);
 int * FUN_0100ec40(void);
-void FUN_0100eca0(int param_1,int param_2,int param_3,int param_4,int param_5,undefined2 param_6, undefined1 param_7);
+void swv_FillRect(uint8 *raster,int32 x,int32 y,int32 width,int32 height,uint16 colour,uint8 alpha);   /* 0x0100ECA0 GUESS: name, see swv21brew.c */
 void FUN_0100ed84(int param_1,int param_2,int param_3);
 uint swvSkin_VertexBones(int param_1,uint param_2,int param_3);
 int * FUN_0100eef0(int *param_1,int param_2);

@@ -237,6 +237,14 @@ typedef struct SwvKeyframeSequence {
  *   +0x24             the bytes per component: 1 (signed bytes) or 2 (signed 16-bit words)
  *   +0x2c             the values, vertex after vertex */
 
+/* ---- Background (class 4), the native object (no struct yet) ---------------------------------
+ * The fields the Background clear (FUN_01005104, GUESS) reads (GUESS: the names, from JSR-184):
+ *   +0x1c             the colour, ARGB (alpha >> 24 into the alpha buffer, the rest as RGB565)
+ *   +0x20             the image (an Image2D, or NULL)
+ *   +0x24 / +0x28     the x and y image modes: BORDER 0x20, REPEAT 0x21
+ *   +0x2c .. +0x38    the crop rectangle: x, y, width, height (floats)
+ *   +0x3c / +0x40     the colour clear and the depth clear enables */
+
 /* ---- the software rasteriser's context (no struct yet) --------------------------------------
  * The fields the triangle code is known to use (GUESS: the names):
  *   +0x04             the span's y (its parity picks the dither row)
@@ -259,6 +267,9 @@ typedef struct SwvKeyframeSequence {
  *   +0x260 / +0x264   the 8-bit alpha buffer and its row stride (written with flag 0x800)
  *   +0x268            the blending: the JSR-184 CompositingMode ALPHA 0x40, ALPHA_ADD 0x41, MODULATE
  *                     0x42, MODULATE_X2 0x43, REPLACE 0x44
+ *   +0x27c            the colour buffer (RGB565); a span's row (+0x08) is +0x27c + +0x288 * y
+ *   +0x280 / +0x284   the target's width and height (swv_FillRect clips to them)
+ *   +0x288            the colour buffer's row stride, in bytes
  *   +0x290 .. +0x298  the triangle's three vertices (swv_RasterTriangle); a vertex is 0x3c bytes, its
  *                     +0x0c / +0x10 / +0x14 the red, green, blue in 16.16 (1.0 = 0x10000),
  *                     +0x18 the alpha (a byte)

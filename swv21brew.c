@@ -5165,6 +5165,14 @@ void FUN_010050ac(int param_1)
 }
 
 /* ==== 0x01005104  (file offset 0x05104)  FUN_01005104 ================================================ */
+/* GUESS (not yet rewritten): the Background clear (JSR-184 Graphics3D.clear) of the viewport in
+   param_1 (+4 the target, +8 the rasteriser) with the Background param_2 (NULL: the colour and
+   alpha are cleared to 0): +0x1c the ARGB colour, +0x20 the image, +0x24 / +0x28 the x / y image
+   modes (0x20 BORDER, 0x21 REPEAT), +0x2c .. +0x38 the crop rectangle, +0x3c / +0x40 the colour and
+   depth clear enables. With a BORDER image it fills the strips around it with the colour
+   (swv_FillRect: above, below, left, right) and draws the image (FUN_0102329c, FUN_01024a8c);
+   without one, swv_FillRect over the whole viewport. With the depth clear on it ends by setting the
+   z-buffer (FUN_01035388) to 0xffff. */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
 undefined4 FUN_01005104(int param_1,int param_2,int param_3)
@@ -5535,23 +5543,30 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
         iStack_cc = FUN_01010008(&iStack_dc);
         if ((((iVar11 < iStack_84) && (iStack_50 = iVar11 + iStack_a0, iVar6 < iStack_50)) &&
             (iVar12 < iStack_88)) && (iStack_54 = iVar12 + iVar8, iVar10 < iStack_54)) {
+          /* height, colour and alpha: Ghidra had dropped the stack arguments */
           if (iVar10 < iVar12) {
-            FUN_0100eca0(*(undefined4 *)(param_1 + 8),iVar6,iVar10,iStack_84 - iVar6);
+            swv_FillRect(*(uint8 **)(param_1 + 8),iVar6,iVar10,iStack_84 - iVar6,iVar12 - iVar10,
+                         (uint16)iStack_cc,(uint8)uStack_d0);
           }
           if (iStack_54 < iStack_88) {
-            FUN_0100eca0(*(undefined4 *)(param_1 + 8),iVar6,iStack_54,iStack_84 - iVar6);
+            swv_FillRect(*(uint8 **)(param_1 + 8),iVar6,iStack_54,iStack_84 - iVar6,iStack_88 - iStack_54,
+                         (uint16)iStack_cc,(uint8)uStack_d0);
           }
           if (iVar6 < iVar11) {
-            FUN_0100eca0(*(undefined4 *)(param_1 + 8),iVar6,iVar12,iVar11 - iVar6);
+            swv_FillRect(*(uint8 **)(param_1 + 8),iVar6,iVar12,iVar11 - iVar6,iVar8,(uint16)iStack_cc,
+                         (uint8)uStack_d0);
           }
           if (iStack_50 < iStack_84) {
-            FUN_0100eca0(*(undefined4 *)(param_1 + 8),iStack_50,iVar12,iStack_84 - iStack_50);
+            swv_FillRect(*(uint8 **)(param_1 + 8),iStack_50,iVar12,iStack_84 - iStack_50,iVar8,
+                         (uint16)iStack_cc,(uint8)uStack_d0);
           }
           FUN_0102329c(*(undefined4 *)(param_1 + 8),piVar7);
           FUN_01024a8c(*(undefined4 *)(param_1 + 8),iVar11,iVar12,iStack_a0);
         }
         else {
-          FUN_0100eca0(*(undefined4 *)(param_1 + 8),iVar6,iVar10,iStack_84 - iVar6);
+          /* height, colour and alpha: Ghidra had dropped the stack arguments */
+          swv_FillRect(*(uint8 **)(param_1 + 8),iVar6,iVar10,iStack_84 - iVar6,iStack_88 - iVar10,
+                       (uint16)iStack_cc,(uint8)uStack_d0);
         }
       }
       if (iStack_70 == 0) {
@@ -13371,97 +13386,59 @@ int * FUN_0100ec40(void)
   return piVar2;
 }
 
-/* ==== 0x0100ECA0  (file offset 0x0ECA0)  FUN_0100eca0 ================================================ */
-void FUN_0100eca0(int param_1,int param_2,int param_3,int param_4,int param_5,undefined2 param_6,
-                 undefined1 param_7)
+/* ==== 0x0100ECA0  (file offset 0x0ECA0)  swv_FillRect ================================================ */
+/* GUESS: name. Fills a rectangle of the rasteriser's target with one RGB565 colour and, when there is
+   an alpha buffer, the same rectangle of it with alpha. Clipped first: a negative x or y moves to 0
+   (the width or height shrinking by as much), then the rectangle is cut at the target's width and
+   height (+0x280 / +0x284); nothing is drawn unless x < width, w > 0, y < height and h > 0. The
+   colour buffer +0x27c (row stride +0x288, in bytes), the alpha buffer +0x260 (row stride +0x264, a
+   byte a pixel). Evidence: 0x0100eca0 - 0x0100ed80 (the three stack arguments ldmia'd from sp +
+   0x18; Ghidra's flag tangle is the cmpgt chain at 0x0100ece4). Only caller: the Background clear
+   FUN_01005104, for the strips around the background image or the whole viewport. */
+void swv_FillRect(uint8 *raster,int32 x,int32 y,int32 width,int32 height,uint16 colour,uint8 alpha)
 
 {
-  int iVar1;
-  int iVar2;
-  int unaff_r8;
-  int iVar3;
-  undefined1 *puVar4;
-  int iVar5;
-  undefined2 *puVar6;
-  bool bVar7;
-  bool bVar8;
-  bool bVar9;
-  
-  if (param_2 < 0) {
-    param_4 = param_4 + param_2;
-    param_2 = 0;
+  int32 target_width;
+  int32 target_height;
+  int32 stride;
+  int32 alpha_stride;
+  uint16 *pixel;
+  uint8 *alpha_pixel;
+  int32 row;
+  int32 i;
+
+  if (x < 0) {
+    width += x;
+    x = 0;
   }
-  if (param_3 < 0) {
-    param_5 = param_5 + param_3;
-    param_3 = 0;
+  if (y < 0) {
+    height += y;
+    y = 0;
   }
-  iVar3 = *(int *)(param_1 + 0x280);
-  iVar5 = *(int *)(param_1 + 0x284);
-  if (iVar3 < param_2 + param_4) {
-    param_4 = iVar3 - param_2;
-  }
-  if (iVar5 < param_3 + param_5) {
-    param_5 = iVar5 - param_3;
-  }
-  bVar8 = iVar3 == param_2;
-  iVar1 = iVar3 - param_2;
-  if (iVar3 > param_2) {
-    bVar8 = param_4 == 0;
-    iVar1 = param_4;
-  }
-  bVar7 = iVar1 < 0;
-  bVar9 = iVar3 <= param_2 && SBORROW4(iVar3,param_2);
-  if (!bVar8 && bVar7 == bVar9) {
-    bVar9 = SBORROW4(iVar5,param_3);
-    bVar7 = iVar5 - param_3 < 0;
-    bVar8 = iVar5 == param_3;
-  }
-  if (!bVar8 && bVar7 == bVar9) {
-    bVar7 = param_5 < 0;
-    bVar8 = param_5 == 0;
-    bVar9 = false;
-  }
-  if (!bVar8 && bVar7 == bVar9) {
-    iVar3 = *(int *)(param_1 + 0x288);
-    puVar6 = (undefined2 *)(iVar3 * param_3 + *(int *)(param_1 + 0x27c) + param_2 * 2);
-    puVar4 = *(undefined1 **)(param_1 + 0x260);
-    bVar8 = puVar4 != (undefined1 *)0x0;
-    if (bVar8) {
-      unaff_r8 = *(int *)(param_1 + 0x264);
-    }
-    iVar5 = *(int *)(param_1 + 0x264);
-    if (bVar8) {
-      param_2 = unaff_r8 * param_3 + param_2;
-    }
-    if (bVar8) {
-      puVar4 = puVar4 + param_2;
-    }
-    param_5 = param_5 + -1;
-    if (-1 < param_5) {
-      iVar2 = param_4 + -1;
-      iVar1 = iVar2;
-      do {
-        for (; -1 < iVar1; iVar1 = iVar1 + -1) {
-          *puVar6 = param_6;
-          puVar6 = puVar6 + 1;
-        }
-        puVar6 = (undefined2 *)((int)puVar6 + iVar3 + param_4 * -2);
-        iVar1 = iVar2;
-        if (puVar4 != (undefined1 *)0x0) {
-          for (; -1 < iVar1; iVar1 = iVar1 + -1) {
-            *puVar4 = param_7;
-            puVar4 = puVar4 + 1;
-          }
-          puVar4 = puVar4 + (iVar5 - param_4);
-        }
-        param_5 = param_5 + -1;
-        iVar1 = iVar2;
-      } while (-1 < param_5);
-      return;
-    }
+  target_width = *(int32 *)(raster + 0x280);
+  target_height = *(int32 *)(raster + 0x284);
+  if (x + width > target_width)
+    width = target_width - x;
+  if (y + height > target_height)
+    height = target_height - y;
+  if (!(target_width > x && width > 0 && target_height > y && height > 0))
     return;
+  stride = *(int32 *)(raster + 0x288);
+  pixel = (uint16 *)(*(uint8 **)(raster + 0x27c) + stride * y + x * 2);
+  alpha_pixel = *(uint8 **)(raster + 0x260);
+  alpha_stride = *(int32 *)(raster + 0x264);
+  if (alpha_pixel != NULL)
+    alpha_pixel += alpha_stride * y + x;
+  for (row = 0; row < height; row++) {
+    for (i = 0; i < width; i++)
+      *pixel++ = colour;
+    pixel = (uint16 *)((uint8 *)pixel + stride - width * 2);
+    if (alpha_pixel != NULL) {
+      for (i = 0; i < width; i++)
+        *alpha_pixel++ = alpha;
+      alpha_pixel += alpha_stride - width;
+    }
   }
-  return;
 }
 
 /* ==== 0x0100ED84  (file offset 0x0ED84)  FUN_0100ed84 ================================================ */
