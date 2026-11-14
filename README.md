@@ -64,7 +64,7 @@ The code shows it was built against these libraries:
 
 | Library | Module | Evidence |
 |---|---|---|
-| libpng 1.2.0 | swv21brew.mod (the PNG decoder) | the version string `"1.2.0"` (0x0103FAA4) passed to the read struct's constructor (FUN_0103586c, GUESS: `png_create_read_struct`), its "Incompatible libpng version in application and library" check, and routines that match libpng 1.2.0's source (`png_sig_cmp`, `png_warning`, `png_error`, `png_read_data`, `png_malloc`, `png_memcpy_check`, `png_memset_check`) |
+| libpng 1.2.0 | swv21brew.mod (the PNG decoder) | the version string `"1.2.0"` (0x0103FAA4) passed to the read struct's constructor (FUN_0103586c, GUESS: `png_create_read_struct`), its "Incompatible libpng version in application and library" check, and routines that match libpng 1.2.0's source (`png_sig_cmp`, `png_warning`, `png_error`, `png_read_data`, `png_malloc`, `png_memcpy_check`, `png_memset_check`, `png_combine_row`) |
 | zlib (version not yet identified) | swv21brew.mod (libpng's inflate) | libpng's "zlib version error" / "zlib memory error" messages |
 
 ## Known code
@@ -75,11 +75,11 @@ Some routines are known code, recognised from their structure. Their comments na
 |---|---|
 | `collision_shape_turn_direction` (0x00113da4) | Franklin Antonio's segment intersection test, "Faster Line Segment Intersection", *Graphics Gems III* (1992) |
 | the double-precision `acos`, `sin`, `cos` and their kernels | fdlibm: `__ieee754_acos`, `__ieee754_rem_pio2`, `__kernel_sin`, `__kernel_cos`, `sin`, `cos` |
-| `rt_div0`, the word `memcpy` / `memclr`; swv21brew's `swv_memcpy_word_aligned` (0x01000188), `rt_memcpy` (0x01000c94), `rt_memclr_w` (0x01000130) and `rt_memset` (0x01000c54) | the ARM C library: `__rt_div0`, `__rt_memcpy_w`, `__rt_memclr_w`; `__rt_memcpy_w`, `__rt_memcpy`, `__rt_memclr_w`, GUESS: `__rt_memset` |
+| `rt_div0`, the word `memcpy` / `memclr`; swv21brew's `swv_memcpy_word_aligned` (0x01000188), `rt_memcpy` (0x01000c94), `rt_memclr_w` (0x01000130) and `rt_memset` (0x01000c54) | the ARM C library: `__rt_div0`, `__rt_memcpy_w`, `__rt_memclr_w`; `__rt_memcpy_w`, `__rt_memcpy` (certain from its shape), `__rt_memclr_w`, GUESS: `__rt_memset` |
 | swv21brew's `ll_mul` (0x0100094c) and `ll_mul_int` (0x01000028) | the ARM C library's 64-bit multiply, `_ll_mul` (`__aeabi_lmul` in later ABIs) |
 | swv21brew's `swv_memcmp` (0x01000080) | `memcmp` (GUESS: the ARM C library's, from its shape) |
 | swv21brew's `swv_setjmp` (0x01000500), `swv_longjmp` (0x01000524), `rt_stack_postlongjmp` (0x01000c24) | GUESS: the ARM C library's `setjmp`, `longjmp`, `__rt_stack_postlongjmp` |
-| swv21brew's PNG decoder: `png_sig_cmp` (0x01037e48), `png_warning` (0x01037eb0), `png_error` (0x01036088), `png_read_data` (0x01036b2c), `png_malloc` (0x01036ad0), `png_memcpy_check` (0x01036b0c), `png_memset_check` (0x01036b1c), ... | libpng 1.2.0 (its version string); its inflate is zlib |
+| swv21brew's PNG decoder: `png_sig_cmp` (0x01037e48), `png_warning` (0x01037eb0), `png_error` (0x01036088), `png_read_data` (0x01036b2c), `png_malloc` (0x01036ad0), `png_memcpy_check` (0x01036b0c), `png_memset_check` (0x01036b1c), `png_combine_row` (0x010354e0), ... | libpng 1.2.0 (its version string); its inflate is zlib |
 
 ## Status
 

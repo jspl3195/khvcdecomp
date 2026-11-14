@@ -73,14 +73,14 @@ int32 swv_memcmp(const uint8 *a,const uint8 *b,uint32 n)
 }
 
 /* ==== 0x01000100  (file offset 0x00100)  swv_memcpy ================================================== */
-/* GUESS: name (not yet rewritten). memcpy(destination, source, byteCount): the general copy
-   rt_memcpy, returning the destination (it keeps r0 across the call). Reached mostly through its
-   thunk, thunk_swv_memcpy (0x01039dec, a branch here). */
-undefined4 swv_memcpy(undefined4 param_1)
+/* GUESS: name. memcpy(destination, source, byteCount): the general copy rt_memcpy, returning the
+   destination (the binary: `stmdb sp!, {r0, lr}` / `bl rt_memcpy` / `ldmia sp!, {r0, pc}`; Ghidra had
+   dropped the arguments). Reached through its thunk, thunk_swv_memcpy (0x01039dec, a branch here). */
+void * swv_memcpy(void *destination,void *source,uint32 byteCount)
 
 {
-  rt_memcpy();
-  return param_1;
+  rt_memcpy(destination,source,byteCount);
+  return destination;
 }
 
 /* ==== 0x0100010C  (file offset 0x0010C)  swv_memset ================================================== */
@@ -171,7 +171,9 @@ undefined4 * rt_memclr_w(undefined4 *param_1,uint param_2)
    memcpy_word_aligned (0x0010021c). Evidence (0x01000188-0x010001f0): while at least 32 bytes remain,
    two `ldmcs r1!, {r3, r4, r12, lr}` / `stmcs r0!, {...}` pairs copy 32 bytes; the rest of the count is
    copied by its bits (16, 8, 4 bytes with ldm/stm and ldr/str, then 1 and 2 single bytes); alignment is
-   never checked. Ghidra's 4th parameter is r3, only a scratch register. Returns the end pointers, as the
+   never checked; rt_memcpy (0x01000c94) also ends with a tail jump here once both pointers are
+   aligned, and branches to its byte tail (0x010001d4). Ghidra's 4th parameter is r3, only a scratch
+   register. Returns the end pointers, as the
    binary leaves them: r0 the destination's, r1 the source's (FUN_01008c54, moving 0x50-byte elements,
    returns r0). Callers copy constant tables and structures (0x14-0x154 bytes, multiples of 4). */
 uint64 swv_memcpy_word_aligned(void *destination,void *source,uint32 byteCount)
@@ -1179,198 +1181,61 @@ void * rt_memset(void *destination,uint32 byteCount,uint32 pattern)
 }
 
 /* ==== 0x01000C94  (file offset 0x00C94)  rt_memcpy =================================================== */
-/* GUESS: name (not yet rewritten). The ARM C library's __rt_memcpy (ADS / RVCT; __aeabi_memcpy in
-   later ABIs): copies byteCount bytes of any alignment, the destination aligned first, then words
-   (blocks of 32 like swv_memcpy_word_aligned) or shifted words when the source is unaligned; returns
-   no meaningful value (swv_memcpy returns the destination). */
-undefined8 rt_memcpy(uint *param_1,uint *param_2,uint param_3,uint param_4)
+/* GUESS: name (the routine is certain: the ARM C library's __rt_memcpy, ADS / RVCT; __aeabi_memcpy in
+   later ABIs). memcpy(destination, source, byteCount) for any alignment. Evidence (0x01000c94 -
+   0x01000d44): under 4 bytes, a branch to 0x010001d4, the byte tail of swv_memcpy_word_aligned (1 byte
+   for bit 0 of the count, then 2 for bit 1); otherwise 1-3 bytes up to the destination's word boundary
+   (ldrb, ldrbls, ldrbcc); with the source then aligned, a tail jump to swv_memcpy_word_aligned (Ghidra
+   copied its body in); else the source is rounded down (`ldr r12, [r1, -r3]!`) and each word stored
+   is built from two aligned words, `carry >> 8k | next << (32 - 8k)`, in one loop per offset k (1, 2,
+   3: the C has one loop over the offset), then the byte tail. Ghidra's 4th parameter is r3, only a
+   scratch register. Returns the end pointers: r0 the destination's, r1 the source's, as
+   swv_memcpy_word_aligned does. Only swv_memcpy calls it. */
+uint64 rt_memcpy(void *destination,void *source,uint32 byteCount)
 
 {
-  uint *puVar1;
-  byte *pbVar2;
-  uint *puVar3;
-  byte bVar4;
-  byte bVar5;
-  uint uVar6;
-  uint in_r12;
-  uint uVar7;
-  uint uVar8;
-  bool bVar9;
-  bool bVar10;
-  
-  if (3 < param_3) {
-    uVar7 = (uint)param_1 & 3;
-    in_r12 = uVar7;
-    if (uVar7 != 0) {
-      bVar4 = (byte)*param_2;
-      puVar3 = (uint *)((int)param_2 + 1);
-      if (uVar7 < 3) {
-        puVar3 = (uint *)((int)param_2 + 2);
-        in_r12 = (uint)*(byte *)((int)param_2 + 1);
-      }
-      *(byte *)param_1 = bVar4;
-      param_2 = puVar3;
-      if (uVar7 < 2) {
-        param_2 = (uint *)((int)puVar3 + 1);
-        bVar4 = (byte)*puVar3;
-      }
-      param_3 = (param_3 + uVar7) - 4;
-      puVar3 = (uint *)((int)param_1 + 1);
-      if (uVar7 < 3) {
-        puVar3 = (uint *)((int)param_1 + 2);
-        *(byte *)((int)param_1 + 1) = (byte)in_r12;
-      }
-      param_1 = puVar3;
-      if (uVar7 < 2) {
-        param_1 = (uint *)((int)puVar3 + 1);
-        *(byte *)puVar3 = bVar4;
-      }
+  uint8 *to = (uint8 *)destination;
+  uint8 *from = (uint8 *)source;
+  const uint32 *words;
+  uint32 head;
+  uint32 shift;
+  uint32 carry;
+  uint32 next;
+  uint64 ends;
+
+  if (byteCount > 3) {
+    head = (uint32)to & 3;
+    if (head != 0) {                  /* up to the destination's word boundary */
+      head = 4 - head;
+      *to++ = *from++;
+      if (head >= 2)
+        *to++ = *from++;
+      if (head > 2)
+        *to++ = *from++;
+      byteCount -= head;
     }
-    param_4 = (uint)param_2 & 3;
-    if (param_4 == 0) {
-      bVar9 = 0x1f < param_3;
-      param_3 = param_3 - 0x20;
-      if (bVar9) {
-        do {
-          if (bVar9) {
-            uVar7 = param_2[1];
-            uVar6 = param_2[2];
-            uVar8 = param_2[3];
-            *param_1 = *param_2;
-            param_1[1] = uVar7;
-            param_1[2] = uVar6;
-            param_1[3] = uVar8;
-            param_4 = param_2[4];
-            uVar7 = param_2[5];
-            uVar6 = param_2[6];
-            uVar8 = param_2[7];
-            param_2 = param_2 + 8;
-            param_1[4] = param_4;
-            param_1[5] = uVar7;
-            param_1[6] = uVar6;
-            param_1[7] = uVar8;
-            param_1 = param_1 + 8;
-            bVar9 = 0x1f < param_3;
-            param_3 = param_3 - 0x20;
-          }
-        } while (bVar9);
+    shift = (uint32)from & 3;
+    if (shift == 0)                   /* the binary: a tail jump */
+      return swv_memcpy_word_aligned(to,from,byteCount);
+    if (byteCount >= 4) {             /* whole words from the unaligned source */
+      words = (const uint32 *)(from - shift);
+      carry = *words;
+      for (; byteCount >= 4; byteCount -= 4, to += 4) {
+        next = *++words;
+        *(uint32 *)to = carry >> (shift * 8) | next << (32 - shift * 8);
+        carry = next;
       }
-      puVar3 = param_1;
-      if ((bool)((byte)(param_3 >> 4) & 1)) {
-        param_4 = *param_2;
-        uVar7 = param_2[1];
-        uVar6 = param_2[2];
-        uVar8 = param_2[3];
-        param_2 = param_2 + 4;
-        *param_1 = param_4;
-        param_1[1] = uVar7;
-        param_1[2] = uVar6;
-        param_1[3] = uVar8;
-        puVar3 = param_1 + 4;
-      }
-      if ((int)(param_3 << 0x1c) < 0) {
-        param_4 = *param_2;
-        uVar7 = param_2[1];
-        param_2 = param_2 + 2;
-        *puVar3 = param_4;
-        puVar3[1] = uVar7;
-        puVar3 = puVar3 + 2;
-      }
-      in_r12 = param_3 << 0x1e;
-      param_1 = puVar3;
-      if ((bool)((byte)(param_3 >> 2) & 1)) {
-        param_4 = *param_2;
-        param_1 = puVar3 + 1;
-        *puVar3 = param_4;
-        param_2 = param_2 + 1;
-      }
-      if (in_r12 == 0) {
-        return CONCAT44(param_2,param_1);
-      }
-    }
-    else {
-      bVar9 = 3 < param_3;
-      param_3 = param_3 - 4;
-      if (bVar9) {
-        param_2 = (uint *)((int)param_2 - param_4);
-        in_r12 = *param_2;
-        puVar3 = param_1;
-        if (param_4 == 2) {
-          do {
-            puVar1 = param_2;
-            param_4 = in_r12 >> 0x10;
-            param_2 = puVar1 + 1;
-            in_r12 = *param_2;
-            bVar9 = 3 < param_3;
-            param_3 = param_3 - 4;
-            param_4 = param_4 | in_r12 << 0x10;
-            param_1 = puVar3 + 1;
-            *puVar3 = param_4;
-            puVar3 = param_1;
-          } while (bVar9);
-          param_2 = (uint *)((int)puVar1 + 6);
-        }
-        else if (param_4 < 3) {
-          do {
-            puVar1 = param_2;
-            param_4 = in_r12 >> 8;
-            param_2 = puVar1 + 1;
-            in_r12 = *param_2;
-            bVar9 = 3 < param_3;
-            param_3 = param_3 - 4;
-            param_4 = param_4 | in_r12 << 0x18;
-            param_1 = puVar3 + 1;
-            *puVar3 = param_4;
-            puVar3 = param_1;
-          } while (bVar9);
-          param_2 = (uint *)((int)puVar1 + 5);
-        }
-        else {
-          do {
-            puVar1 = param_2;
-            param_4 = in_r12 >> 0x18;
-            param_2 = puVar1 + 1;
-            in_r12 = *param_2;
-            bVar9 = 3 < param_3;
-            param_3 = param_3 - 4;
-            param_4 = param_4 | in_r12 << 8;
-            param_1 = puVar3 + 1;
-            *puVar3 = param_4;
-            puVar3 = param_1;
-          } while (bVar9);
-          param_2 = (uint *)((int)puVar1 + 7);
-        }
-      }
+      from = (uint8 *)words + shift;
     }
   }
-  bVar5 = (byte)in_r12;
-  bVar4 = (byte)param_4;
-  bVar10 = (bool)((byte)(param_3 >> 1) & 1);
-  param_3 = param_3 << 0x1f;
-  bVar9 = (int)param_3 < 0;
-  puVar3 = param_2;
-  if (bVar9) {
-    puVar3 = (uint *)((int)param_2 + 1);
-    param_3 = (uint)(byte)*param_2;
+  /* the last 0-3 bytes (swv_memcpy_word_aligned's tail, 0x010001d4) */
+  if (byteCount & 1)
+    *to++ = *from++;
+  if (byteCount & 2) {
+    *to++ = *from++;
+    *to++ = *from++;
   }
-  if (bVar10) {
-    pbVar2 = (byte *)((int)puVar3 + 1);
-    bVar4 = (byte)*puVar3;
-    puVar3 = (uint *)((int)puVar3 + 2);
-    bVar5 = *pbVar2;
-  }
-  puVar1 = param_1;
-  if (bVar9) {
-    puVar1 = (uint *)((int)param_1 + 1);
-    *(byte *)param_1 = (byte)param_3;
-  }
-  if (bVar10) {
-    pbVar2 = (byte *)((int)puVar1 + 1);
-    *(byte *)puVar1 = bVar4;
-    puVar1 = (uint *)((int)puVar1 + 2);
-    *pbVar2 = bVar5;
-  }
-  return CONCAT44(puVar3,puVar1);
+  return MAKE_WORDS(ends,(uint32)from,(uint32)to);
 }
 
 /* ==== 0x01000D48  (file offset 0x00D48)  FUN_01000d48 ================================================ */
@@ -5482,7 +5347,8 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
                 FUN_0101d37c(iVar6,iStack_28);
                 *(undefined4 *)(param_1 + 0x9bc) = *(undefined4 *)(iVar6 + 0x4c);
                 uVar2 = FUN_01035388(param_1,iStack_9c,iVar11 * iStack_9c * 2);
-                rt_memcpy(uVar2,*(undefined4 *)(param_1 + 0x9bc));
+                /* the binary: a tail jump to the thunk (Ghidra had merged it, swv_memcpy and rt_memcpy) */
+                thunk_swv_memcpy(uVar2,*(undefined4 *)(param_1 + 0x9bc),iVar11 * iStack_9c * 2);
                 return uVar2;
               }
               goto swv_memset;
@@ -7577,7 +7443,8 @@ undefined4 FUN_01007f8c(int param_1,int param_2,int param_3,int param_4,int para
   }
   FUN_01023184(param_1 + 0x48,param_3);
   uVar2 = *(undefined4 *)(param_1 + 0x4c);
-  rt_memcpy(uVar2,iVar1 * param_3 + param_5,param_3 * 2);
+  /* the binary: a tail jump to the thunk (Ghidra had merged it, swv_memcpy and rt_memcpy) */
+  thunk_swv_memcpy(uVar2,iVar1 * param_3 + param_5,param_3 * 2);
   return uVar2;
 }
 
@@ -8614,7 +8481,8 @@ uint FUN_01008c54(undefined4 param_1,uint param_2,uint param_3,int param_4)
     bVar3 = unaff_r4 == param_3;
   }
   if (!bVar4 || bVar3) {
-    rt_memcpy(param_3,param_2,param_4 * 0x50,param_4);
+    /* the binary: a tail jump to the thunk (Ghidra had merged it, swv_memcpy and rt_memcpy) */
+    thunk_swv_memcpy(param_3,param_2,param_4 * 0x50);
     return param_3;
   }
   if (param_2 < param_3) {
@@ -16229,7 +16097,8 @@ int FUN_01010cf4(int param_1,int param_2,undefined4 param_3,int param_4)
       iVar3 = iVar2;
     }
     if ((param_4 != 0 && iVar3 != 0) && -1 < iVar2) {
-      thunk_swv_memcpy(param_4,*(undefined4 *)(iVar4 + 4));
+      /* the count restored from r2: Ghidra had dropped it */
+      thunk_swv_memcpy(param_4,*(undefined4 *)(iVar4 + 4),iVar2);
     }
     return *(int *)(iVar4 + 8);
   }
@@ -16255,7 +16124,8 @@ int FUN_01010d40(int param_1,int param_2,undefined4 param_3,int param_4)
           iVar1 = iVar2;
         }
         if ((param_4 != 0 && iVar1 != 0) && -1 < iVar2) {
-          thunk_swv_memcpy(param_4,piVar3[1]);
+          /* the count restored from r2: Ghidra had dropped it */
+          thunk_swv_memcpy(param_4,piVar3[1],iVar2);
         }
         return piVar3[2];
       }
@@ -18736,7 +18606,8 @@ undefined4 swv_Matrix4Invert(int param_1)
   uVar13 = bVar12 || uVar2 == 0x3f;
   if (!bVar12 && uVar2 != 0x3f) {
     local_28 = param_1;
-    thunk_swv_memcpy(local_74,param_1);
+    /* the count restored from r2: Ghidra had dropped it */
+    thunk_swv_memcpy(local_74,param_1,0x44);
     local_78 = 0x20;
     FUN_01012568(local_b8);
     uVar2 = 0;
@@ -21802,7 +21673,8 @@ undefined4 * FUN_0101749c(undefined4 *param_1,undefined4 *param_2)
   puVar1 = (undefined4 *)(uVar6 | uVar5);
   if (((uint)puVar1 & 0x20) != 0) {
     if ((uVar5 & 0x20) == 0) {
-      rt_memcpy(param_1,param_2,0x44);
+      /* the binary: a tail jump to the thunk (Ghidra had merged it, swv_memcpy and rt_memcpy) */
+      thunk_swv_memcpy(param_1,param_2,0x44);
       return param_1;
     }
     return puVar1;
@@ -33364,7 +33236,8 @@ FUN_01023e44(int param_1,int param_2,int param_3,int param_4,int param_5,int par
   param_7 = param_5 * param_4 * iVar1 + param_7;
   if ((param_2 == 0 && param_3 == 0) && (iVar1 = FUN_01011960(param_1), iVar1 == param_4)) {
     uVar2 = *(undefined4 *)(param_1 + 0x4c);
-    rt_memcpy(uVar2,param_7);
+    /* the binary: a tail jump to the thunk (Ghidra had merged it, swv_memcpy and rt_memcpy) */
+    thunk_swv_memcpy(uVar2,param_7,param_5 * param_4 * 2);
     return CONCAT44(extraout_r1,uVar2);
   }
   iVar6 = param_3 + param_5;
@@ -46161,7 +46034,8 @@ LAB_01031504:
     if (local_38 < local_34) {
       local_34 = local_38;
     }
-    thunk_swv_memcpy(uVar1,pbVar11);
+    /* the count restored from r2: Ghidra had dropped it */
+    thunk_swv_memcpy(uVar1,pbVar11,local_34);
     pbVar11 = pbVar11 + local_34;
     local_38 = local_38 - local_34;
     uVar10 = uVar10 - local_34;
@@ -50199,10 +50073,14 @@ void FUN_010354b4(undefined4 param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x010354E0  (file offset 0x354E0)  FUN_010354e0 ================================================ */
+/* ==== 0x010354E0  (file offset 0x354E0)  png_combine_row ============================================= */
+/* libpng 1.2.0's png_combine_row(png_ptr, row, mask) (not yet rewritten): with mask 0xff the whole
+   row, png_memcpy(row, png_ptr->row_buf + 1, (png_ptr->width * png_ptr->row_info.pixel_depth + 7) >> 3)
+   (width at +0xfc, row_buf at +0x120, pixel_depth at +0x13f), a tail jump to thunk_swv_memcpy; otherwise
+   the pixels the interlace mask selects, by pixel depth. */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
-byte * FUN_010354e0(int param_1,byte *param_2,uint param_3)
+byte * png_combine_row(int param_1,byte *param_2,uint param_3)
 
 {
   byte bVar1;
@@ -50220,7 +50098,8 @@ byte * FUN_010354e0(int param_1,byte *param_2,uint param_3)
   bVar1 = *(byte *)(param_1 + 0x13f);
   pbVar3 = (byte *)(*(int *)(param_1 + 0x120) + 1);
   if (param_3 == 0xff) {
-    rt_memcpy();
+    /* the binary: a tail jump to the thunk (Ghidra had merged it, swv_memcpy and rt_memcpy) */
+    thunk_swv_memcpy(param_2,pbVar3,(uVar6 * bVar1 + 7) >> 3);
     return param_2;
   }
   if (bVar1 == 1) {
@@ -50300,7 +50179,8 @@ byte * FUN_010354e0(int param_1,byte *param_2,uint param_3)
     pbVar4 = param_2;
     for (uVar7 = 0; pbVar2 = param_2, uVar7 < uVar6; uVar7 = uVar7 + 1) {
       if ((uVar5 & param_3) != 0) {
-        param_2 = (byte *)thunk_swv_memcpy(pbVar4,pbVar3);
+        /* the count restored from r2: Ghidra had dropped it */
+        param_2 = (byte *)thunk_swv_memcpy(pbVar4,pbVar3,bVar1 >> 3);
       }
       if (uVar5 == 1) {
         uVar5 = 0x80;
@@ -51467,8 +51347,8 @@ void * png_malloc(int param_1,uint32 param_2)
 undefined4 png_memcpy_check(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
-  rt_memcpy(param_2,param_3,param_4);
-  return param_2;
+  /* the binary: a tail jump to the thunk (Ghidra had merged it, swv_memcpy and rt_memcpy) */
+  return thunk_swv_memcpy(param_2,param_3,param_4);
 }
 
 /* ==== 0x01036B1C  (file offset 0x36B1C)  png_memset_check ============================================ */
@@ -52054,7 +51934,7 @@ LAB_010377a4:
         if (bVar7 || (uVar5 & 2) == 0) {
           iVar4 = param_3;
           if (param_2 != 0) {
-            FUN_010354e0(param_1,param_2);
+            png_combine_row(param_1,param_2);
           }
         }
         else {
@@ -52063,11 +51943,11 @@ LAB_010377a4:
           }
           iVar4 = param_2;
           if (param_3 != 0) {
-            FUN_010354e0();
+            png_combine_row();
           }
         }
         if (iVar4 != 0) {
-          FUN_010354e0(param_1,iVar4);
+          png_combine_row(param_1,iVar4);
         }
         FUN_01036f6c(param_1);
         if (*(code **)(param_1 + 0x174) == (code *)0x0) {
@@ -52125,7 +52005,7 @@ LAB_010377a4:
   }
   if (param_3 != 0) {
 LAB_01037608:
-    FUN_010354e0(param_1,param_3);
+    png_combine_row(param_1,param_3);
   }
 LAB_01037620:
   FUN_01036f6c(param_1);
@@ -54715,12 +54595,13 @@ LAB_01039cf0:
 }
 
 /* ==== 0x01039DEC  (file offset 0x39DEC)  thunk_swv_memcpy ============================================ */
-/* A branch to swv_memcpy (0x01000100). */
-undefined4 thunk_swv_memcpy(undefined4 param_1)
+/* A branch to swv_memcpy (0x01000100): memcpy(destination, source, byteCount), returning the
+   destination. Ghidra had merged swv_memcpy in; so it did in the 7 functions that end with a tail
+   jump here. */
+undefined4 thunk_swv_memcpy(undefined4 param_1,undefined4 param_2,undefined4 param_3)
 
 {
-  rt_memcpy();
-  return param_1;
+  return (undefined4)swv_memcpy((void *)param_1,(void *)param_2,param_3);
 }
 
 /* ==== 0x01039DF0  (file offset 0x39DF0)  thunk_swv_memset ============================================ */
@@ -55506,7 +55387,8 @@ int FUN_0103ad28(int param_1,undefined4 param_2,undefined4 *param_3)
        (pvVar2 = helper_malloc(local_428 + iVar5), iVar3 = WORD_HEXADECIMAL_00010001, pvVar2 == (void *)0x0))
     break;
     if (p != (void *)0x0) {
-      thunk_swv_memcpy(pvVar2,p);
+      /* the count restored from r2: Ghidra had dropped it */
+      thunk_swv_memcpy(pvVar2,p,iVar5);
     }
     thunk_swv_memcpy((int)pvVar2 + iVar5,auStack_424,local_428);
     helper_free(p);
@@ -55690,7 +55572,8 @@ int FUN_0103b154(int param_1,undefined4 param_2,int param_3)
       thunk_swv_memcpy(param_3,param_1,iVar2);
       param_3 = param_3 + iVar2;
     }
-    thunk_swv_memcpy(param_3,param_2);
+    /* the count restored from r2: Ghidra had dropped it */
+    thunk_swv_memcpy(param_3,param_2,uVar3 + 1);
   }
   return iVar2 + uVar3 + 1;
 }

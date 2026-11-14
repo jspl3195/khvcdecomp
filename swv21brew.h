@@ -297,7 +297,7 @@ void AEEMod_FreeResources(IModule *po, IHeap *ph, IFileMgr *pfm);
 int64 ll_mul_int(uint32 aLow,int32 aHigh,int32 b);   /* 0x01000028 GUESS: name, see swv21brew.c */
 int64 ll_mul(uint32 aLow,int32 aHigh,uint32 bLow,int32 bHigh);   /* 0x0100094C, no Ghidra function; ARM's _ll_mul */
 int32 swv_memcmp(const uint8 *a,const uint8 *b,uint32 n);   /* 0x01000080 GUESS: name, see swv21brew.c */
-undefined4 swv_memcpy(undefined4 param_1);   /* 0x01000100 GUESS: name, see swv21brew.c */
+void * swv_memcpy(void *destination,void *source,uint32 byteCount);   /* 0x01000100 GUESS: name, see swv21brew.c */
 uint64 swv_memcpy_word_aligned(void *destination,void *source,uint32 byteCount);   /* 0x01000188 GUESS: name, see swv21brew.c */
 ulonglong FUN_010001f4(uint param_1,uint param_2);
 int FUN_010002c8(uint param_1,uint param_2);
@@ -316,7 +316,7 @@ ulonglong FUN_01000964(uint param_1,uint param_2,uint param_3,uint param_4);
 void rt_stack_postlongjmp(uint32 stackLimit,uint32 stackPointer);   /* 0x01000C24 GUESS: name, see swv21brew.c */
 undefined4 FUN_01000c30(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void * rt_memset(void *destination,uint32 byteCount,uint32 pattern);   /* 0x01000C54 GUESS: name, see swv21brew.c */
-undefined8 rt_memcpy(uint *param_1,uint *param_2,uint param_3,uint param_4);   /* 0x01000C94 GUESS: name, see swv21brew.c */
+uint64 rt_memcpy(void *destination,void *source,uint32 byteCount);   /* 0x01000C94 GUESS: name, see swv21brew.c */
 undefined4 FUN_01000d48(undefined4 param_1,uint param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01000f1c(int param_1,uint param_2,int *param_3);
 int FUN_01000f94(undefined4 param_1,uint param_2,undefined8 *param_3);
@@ -1281,7 +1281,7 @@ int FUN_01035388(int param_1);
 void FUN_01035404(undefined4 param_1,byte *param_2);
 void FUN_01035488(undefined4 param_1,undefined4 param_2);
 void FUN_010354b4(undefined4 param_1,undefined4 param_2);
-byte * FUN_010354e0(int param_1,byte *param_2,uint param_3);
+byte * png_combine_row(int param_1,byte *param_2,uint param_3);   /* 0x010354E0 libpng */
 undefined4 FUN_01035704(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 undefined4 FUN_01035774(int param_1,uint param_2);
 void FUN_01035814(int param_1,undefined4 param_2,undefined4 param_3);
@@ -1400,7 +1400,7 @@ void FUN_01039a10(int param_1,undefined4 *param_2);
 int FUN_01039a28(int param_1,undefined4 param_2,undefined4 param_3,int *param_4);
 int FUN_01039aac(int param_1,undefined4 param_2,undefined4 param_3,int *param_4);
 int FUN_01039c24(int param_1,int param_2);
-undefined4 thunk_swv_memcpy(undefined4 param_1);   /* 0x01039DEC */
+undefined4 thunk_swv_memcpy(undefined4 param_1,undefined4 param_2,undefined4 param_3);   /* 0x01039DEC */
 int FUN_0103a77c(int param_1,int param_2,void **param_3);
 int FUN_0103ad28(int param_1,undefined4 param_2,undefined4 *param_3);
 void FUN_0103ae48(void);
