@@ -4333,7 +4333,8 @@ undefined4 * FUN_0100418c(int *param_1,undefined4 *param_2)
    adds one to the reference count and returns the new count, as BREW's AddRef does. Evidence
    (0x010041ec - 0x010041fc): `ldr r0, [r0, #4]` / `add r0, r0, #1` / `str r0, [r1, #4]` / `bx lr`,
    r0 left holding the count (Ghidra had typed it void). Not called directly: swv_Create_Ext100
-   (0x0102d8ac) and swv_Create_Ext101 (0x0102d990) store it in their vtables. The engine's other
+   (0x0102d8ac, the SWVARC archive) and swv_Create_Ext101 (0x0102d990, an archive entry stream) store
+   it in their vtables. The engine's other
    objects use swvObj_AddRef (0x01011f8c) instead. */
 uint32 swvExt_AddRef(SwvExtObject *object)
 
@@ -4362,8 +4363,12 @@ uint32 swvExt_Release(SwvExtObject *object)
   return refs;
 }
 
-/* ==== 0x01004250  (file offset 0x04250)  FUN_01004250 ================================================ */
-void FUN_01004250(int param_1,undefined4 param_2,uint param_3,undefined4 param_4)
+/* ==== 0x01004250  (file offset 0x04250)  swvArchiveEntry_Read ======================================== */
+/* GUESS: name (not yet rewritten). Slot 2 of the archive entry stream's vtable (Ext101Vtbl): reads at
+   most param_3 bytes into param_2 from the entry's region of the archive's IFile: seeks to start
+   (field_10) + position (field_18), reads min(param_3, size (field_14) - position) bytes and advances
+   the position. */
+void swvArchiveEntry_Read(int param_1,undefined4 param_2,uint param_3,undefined4 param_4)
 
 {
   int iVar1;
@@ -4384,18 +4389,26 @@ void FUN_01004250(int param_1,undefined4 param_2,uint param_3,undefined4 param_4
   return;
 }
 
-/* ==== 0x010042BC  (file offset 0x042BC)  FUN_010042bc ================================================ */
-void FUN_010042bc(int param_1)
+/* ==== 0x010042BC  (file offset 0x042BC)  swvArchive_EnumInit ========================================= */
+/* GUESS: name. Slot 2 of the SWVARC archive's vtable (Ext100Vtbl, SwvExtObject): starts the directory
+   listing over, as BREW's EnumInit does for swvArchive_EnumNext (slot 3), by setting its index
+   (field_14) back to 0 when an archive is open (pFile set by swvArchive_Open). Evidence (0x010042bc -
+   0x010042cc): `ldr r1, [r0, #8]` / `cmp r1, #0` / `movne r1, #0` / `strne r1, [r0, #0x14]` / `bx lr`;
+   r0 is left as it came (no result). Not called directly: swv_Create_Ext100 stores it. */
+void swvArchive_EnumInit(SwvExtObject *archive)
 
 {
-  if (*(int *)(param_1 + 8) != 0) {
-    *(undefined4 *)(param_1 + 0x14) = 0;
-  }
-  return;
+  if (archive->pFile != NULL)
+    archive->field_14 = 0;
 }
 
-/* ==== 0x010042D0  (file offset 0x042D0)  FUN_010042d0 ================================================ */
-undefined4 FUN_010042d0(int param_1,undefined4 *param_2,int *param_3)
+/* ==== 0x010042D0  (file offset 0x042D0)  swvArchive_EnumNext ========================================= */
+/* GUESS: name (not yet rewritten). Slot 3 of the SWVARC archive's vtable: the next directory entry of
+   the listing swvArchive_EnumInit starts (index field_14, advanced here): *name (param_3) gets a
+   strdup of the entry's name, *size (param_2, when not NULL) its data size; returns 1, or 0 at the end
+   (or with no archive open). The directory (pBuffer): a 32-bit count, then entries {entry size, ?,
+   data size (+8), name hash (+0xc), name (+0x10)}, every value little-endian (swv_ReadLE32). */
+undefined4 swvArchive_EnumNext(int param_1,undefined4 *param_2,int *param_3)
 
 {
   uint uVar1;
@@ -4407,13 +4420,13 @@ undefined4 FUN_010042d0(int param_1,undefined4 *param_2,int *param_3)
   *param_3 = 0;
   iVar4 = *(int *)(param_1 + 0xc);
   if (*(int *)(param_1 + 8) != 0) {
-    uVar1 = FUN_01038624(iVar4);
+    uVar1 = swv_ReadLE32(iVar4);
     uVar5 = *(uint *)(param_1 + 0x14);
     if (uVar5 < uVar1) {
       *(uint *)(param_1 + 0x14) = uVar5 + 1;
       iVar4 = iVar4 + 4;
       for (; uVar5 != 0; uVar5 = uVar5 - 1) {
-        iVar2 = FUN_01038624(iVar4);
+        iVar2 = swv_ReadLE32(iVar4);
         iVar4 = iVar2 + iVar4;
       }
                     /* helper[61] char * strdup(const char *s)  (AEEHelperFuncs +0xf4, via
@@ -4422,7 +4435,7 @@ undefined4 FUN_010042d0(int param_1,undefined4 *param_2,int *param_3)
       *param_3 = iVar2;
       if (iVar2 != 0) {
         if (param_2 != (undefined4 *)0x0) {
-          uVar3 = FUN_01038624(iVar4 + 8);
+          uVar3 = swv_ReadLE32(iVar4 + 8);
           *param_2 = uVar3;
         }
         return 1;
@@ -4432,8 +4445,16 @@ undefined4 FUN_010042d0(int param_1,undefined4 *param_2,int *param_3)
   return 0;
 }
 
-/* ==== 0x01004380  (file offset 0x04380)  FUN_01004380 ================================================ */
-int FUN_01004380(int param_1,undefined4 param_2)
+/* ==== 0x01004380  (file offset 0x04380)  swvArchive_Open ============================================= */
+/* GUESS: name (not yet rewritten). Slot 4 of the SWVARC archive's vtable: opens the archive file
+   (param_2, IFileMgr OpenFile, read-only) and checks it: the 12-byte magic AB 53 57 56 41 52 43 BB 0D 0A
+   1A 0A ("\xabSWVARC\xbb\r\n\x1a\n", PNG-like; at 0x0103faac), byte 0x0c 0, the header and directory
+   size (0x0d), the file size (0x11, against IFile GetInfo) and the adler32 (0x1d, of the header and
+   directory with that field zeroed, read 0x400 bytes at a time); then reads the directory (from 0x21)
+   into pBuffer and keeps pFile and the data's start (field_10, the header and directory size). Returns
+   0, 0xd with an archive already open, 2 with no memory, or 0x1000b (GUESS: bad archive). No file of
+   the game's data has the magic: kh.mod never creates class 100. */
+int swvArchive_Open(int param_1,undefined4 param_2)
 
 {
   int iVar1;
@@ -4479,17 +4500,17 @@ int FUN_01004380(int param_1,undefined4 param_2)
         if (*(char *)((int)pvVar2 + 0xc) != '\0') {
           iVar1 = WORD_HEXADECIMAL_0001000B;
         }
-        unaff_r7 = FUN_01038624((int)pvVar2 + 0xd);
+        unaff_r7 = swv_ReadLE32((int)pvVar2 + 0xd);
         (*((IFile *)piVar3)->pvt->GetInfo)((IFile *)piVar3,auStack_78);
-        iVar4 = FUN_01038624((int)pvVar2 + 0x11);
+        iVar4 = swv_ReadLE32((int)pvVar2 + 0x11);
         if (iVar4 != local_70) {
           iVar1 = WORD_HEXADECIMAL_0001000B;
         }
-        local_2c = FUN_01038624((int)pvVar2 + 0x1d);
+        local_2c = swv_ReadLE32((int)pvVar2 + 0x1d);
         thunk_swv_memset((int)pvVar2 + 0x1d,0,4);
       }
       if (iVar1 == 0) {
-        iVar4 = thunk_FUN_0102cc94(1,pvVar2);
+        iVar4 = thunk_adler32(1,pvVar2);
         while ((iVar8 = iVar1, iVar1 = iVar8, unaff_r6 < unaff_r7 && (iVar8 == 0))) {
           uVar5 = (*((IFile *)piVar3)->pvt->Read)((IFile *)piVar3,pvVar2,0x400);
           iVar1 = WORD_HEXADECIMAL_0001000B;
@@ -4498,7 +4519,7 @@ int FUN_01004380(int param_1,undefined4 param_2)
             if (uVar5 < unaff_r7 - unaff_r6) {
               uVar6 = uVar5;
             }
-            iVar4 = thunk_FUN_0102cc94(iVar4,pvVar2,uVar6);
+            iVar4 = thunk_adler32(iVar4,pvVar2,uVar6);
             unaff_r6 = unaff_r6 + uVar5;
             iVar1 = iVar8;
           }
@@ -4548,8 +4569,15 @@ int FUN_01004380(int param_1,undefined4 param_2)
   return iVar1;
 }
 
-/* ==== 0x01004638  (file offset 0x04638)  FUN_01004638 ================================================ */
-int FUN_01004638(int param_1,undefined4 param_2,undefined4 *param_3,void **param_4)
+/* ==== 0x01004638  (file offset 0x04638)  swvArchive_OpenEntry ======================================== */
+/* GUESS: name (not yet rewritten). Slot 5 of the SWVARC archive's vtable: opens the entry named
+   param_2 as an archive entry stream (class 101, swv_Create_Ext101) in *param_4, its size in *param_3.
+   The name is lowercased (strdup, strlower) and hashed from its last character to its first, h = h *
+   0x19660d + c + 0x3c6ef35f (the constants of Numerical Recipes' quick LCG); the entry with that hash
+   (+0xc) is found by walking the directory, adding up the data sizes for its offset from field_10.
+   The stream shares the archive's IFile (AddRef) and gets its start (field_10) and size (field_14).
+   Returns 0, 0xd with no archive open, 2 with no memory, or 0x101 when no entry matches. */
+int swvArchive_OpenEntry(int param_1,undefined4 param_2,undefined4 *param_3,void **param_4)
 
 {
   bool bVar1;
@@ -4569,7 +4597,7 @@ int FUN_01004638(int param_1,undefined4 param_2,undefined4 *param_3,void **param
   }
   else {
     iVar7 = *(int *)(param_1 + 0xc);
-    iVar2 = FUN_01038624(iVar7);
+    iVar2 = swv_ReadLE32(iVar7);
     iVar3 = INTEGER_MINUS_18052;
     iVar7 = iVar7 + 4;
     iVar10 = *(int *)(param_1 + 0x10);
@@ -4595,7 +4623,7 @@ int FUN_01004638(int param_1,undefined4 param_2,undefined4 *param_3,void **param
                     /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
       (*g_pHelperFuncs->free)(iVar3);
       for (; iVar3 = INTEGER_257, iVar2 != 0; iVar2 = iVar2 + -1) {
-        iVar3 = FUN_01038624(iVar7 + 0xc);
+        iVar3 = swv_ReadLE32(iVar7 + 0xc);
         if (iVar3 == iVar8) {
           iVar3 = swv_Create_Ext101(param_4);
           if (iVar3 != 0) {
@@ -4606,16 +4634,16 @@ int FUN_01004638(int param_1,undefined4 param_2,undefined4 *param_3,void **param
           (*((IFile *)*(undefined4 **)(param_1 + 8))->pvt->AddRef)((IFile *)*(undefined4 **)(param_1 + 8));
           *(undefined4 *)((int)pvVar9 + 8) = *(undefined4 *)(param_1 + 8);
           *(int *)((int)pvVar9 + 0x10) = iVar10;
-          uVar5 = FUN_01038624(iVar7 + 8);
+          uVar5 = swv_ReadLE32(iVar7 + 8);
           *(undefined4 *)((int)pvVar9 + 0x14) = uVar5;
           if (param_3 != (undefined4 *)0x0) {
             *param_3 = uVar5;
           }
           return 0;
         }
-        iVar3 = FUN_01038624(iVar7 + 8);
+        iVar3 = swv_ReadLE32(iVar7 + 8);
         iVar10 = iVar3 + iVar10;
-        iVar3 = FUN_01038624(iVar7);
+        iVar3 = swv_ReadLE32(iVar7);
         iVar7 = iVar3 + iVar7;
       }
     }
@@ -20158,7 +20186,7 @@ undefined4 FUN_010152d8(int param_1,undefined4 param_2)
    +0x54 when +0x18 allows it; FUN_0101255c gives each byte); 2 a section's compression byte (0 or 1:
    the decompressor FUN_01009944 / FUN_010099a4 at +0x10, after the virtual slot +0x1c agrees; the
    Adler-32 at +0x3c starts); 3 to 6 and 7 to 10 two 32-bit lengths (+0x30, kept less 13 in +0x40, and
-   +0x34; FUN_010265fc checksums them); 11 the section data (checksummed by thunk_FUN_0102cc94 and fed
+   +0x34; FUN_010265fc checksums them); 11 the section data (checksummed by thunk_adler32 and fed
    to the decompressor's virtual slot +4; at the end +0x34 must equal +0x44 and the decompressor is
    deleted); 12 to 15 the section's checksum, which must match +0x3c, then the virtual slot +0x24 can
    end the file. Errors: FUN_0102f7e0 (K0 when called in the wrong state, -0x4b1 for bad lengths) and
@@ -20220,7 +20248,7 @@ int FUN_01015348(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5
       else {
         param_1[10] = param_1[10] + 1;
         param_1[0xf] = 1;
-        param_1[0xf] = thunk_FUN_0102cc94(1,p,1);
+        param_1[0xf] = thunk_adler32(1,p,1);
         if (*p == 0)
           param_1[4] = FUN_01009944(param_1);
         else if (*p == 1)
@@ -20272,7 +20300,7 @@ int FUN_01015348(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5
     case 0xb:
       n = (uint)left <= (uint)param_1[0x10] ? left : param_1[0x10];
       if (n != 0) {
-        param_1[0xf] = thunk_FUN_0102cc94(param_1[0xf],p,n);
+        param_1[0xf] = thunk_adler32(param_1[0xf],p,n);
         piVar1 = (int *)param_1[4];
         /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
            object's class) */
@@ -35677,7 +35705,7 @@ void FUN_010265fc(int param_1)
 {
   undefined4 uVar1;
   
-  uVar1 = thunk_FUN_0102cc94(*(undefined4 *)(param_1 + 0x3c));
+  uVar1 = thunk_adler32(*(undefined4 *)(param_1 + 0x3c));
   *(undefined4 *)(param_1 + 0x3c) = uVar1;
   return;
 }
@@ -40768,8 +40796,13 @@ int FUN_0102cc80(int param_1,int param_2)
   return *(int *)(param_1 + 4) + param_2 * 0x4c;
 }
 
-/* ==== 0x0102CC94  (file offset 0x2CC94)  FUN_0102cc94 ================================================ */
-uint FUN_0102cc94(uint param_1,byte *param_2,uint param_3)
+/* ==== 0x0102CC94  (file offset 0x2CC94)  adler32 ===================================================== */
+/* zlib's adler32(adler, buf, len) (not yet rewritten): Mark Adler's checksum, the sums kept modulo
+   65521 (BASE) and reduced every 5552 bytes (NMAX), from zlib's adler32.c; starts from 1. Used by the
+   M3G loader's section checksums (FUN_01015348, FUN_010265fc), by zlib's inflate setup (FUN_010311c4
+   passes its address, the word at 0x010311c0, as the check function) and by swvArchive_Open. Reached
+   through thunk_adler32 (0x01039594). */
+uint adler32(uint param_1,byte *param_2,uint param_3)
 
 {
   uint uVar1;
@@ -41722,14 +41755,14 @@ int swv_Create_Ext100(void **ppObj)
     if (piVar3 == (int *)0x0) {
       return 2;
     }
-    /* Ext100Vtbl (GUESS: name): 0 swvExt_AddRef, 1 swvExt_Release, 2-5 the class's own methods
-       (FUN_010042bc, FUN_010042d0, FUN_01004380, FUN_01004638; not yet studied) */
+    /* Ext100Vtbl (GUESS: name), the SWVARC archive: 0 swvExt_AddRef, 1 swvExt_Release,
+       2 swvArchive_EnumInit, 3 swvArchive_EnumNext, 4 swvArchive_Open, 5 swvArchive_OpenEntry */
     *piVar3 = ADDRESS_OF_swvExt_AddRef_OFFSET + 0x102d8ec;
     piVar3[1] = ADDRESS_OF_swvExt_Release_OFFSET + 0x102d8f8;
-    piVar3[2] = ADDRESS_OF_FUNCTION_010042bc_OFFSET + 0x102d904;
-    piVar3[3] = ADDRESS_OF_FUNCTION_010042d0_OFFSET + 0x102d910;
-    piVar3[4] = ADDRESS_OF_FUNCTION_01004380_OFFSET + 0x102d91c;
-    piVar3[5] = ADDRESS_OF_FUNCTION_01004638_OFFSET + 0x102d928;
+    piVar3[2] = ADDRESS_OF_swvArchive_EnumInit_OFFSET + 0x102d904;
+    piVar3[3] = ADDRESS_OF_swvArchive_EnumNext_OFFSET + 0x102d910;
+    piVar3[4] = ADDRESS_OF_swvArchive_Open_OFFSET + 0x102d91c;
+    piVar3[5] = ADDRESS_OF_swvArchive_OpenEntry_OFFSET + 0x102d928;
     ppvVar1[0x1b] = piVar3;
   }
   puVar2 = helper_malloc(0x18);
@@ -41768,11 +41801,11 @@ int swv_Create_Ext101(void **ppObj)
     if (piVar3 == (int *)0x0) {
       return 2;
     }
-    /* Ext101Vtbl (GUESS: name): 0 swvExt_AddRef, 1 swvExt_Release, 2 FUN_01004250 (reads from a
-       region of the IFile: seeks to start + position, reads at most size - position bytes) */
+    /* Ext101Vtbl (GUESS: name), an archive entry stream: 0 swvExt_AddRef, 1 swvExt_Release,
+       2 swvArchiveEntry_Read */
     *piVar3 = ADDRESS_OF_swvExt_AddRef_OFFSET_2 + 0x102d9d0;
     piVar3[1] = ADDRESS_OF_swvExt_Release_OFFSET_2 + 0x102d9dc;
-    piVar3[2] = ADDRESS_OF_FUNCTION_01004250_OFFSET + 0x102d9e8;
+    piVar3[2] = ADDRESS_OF_swvArchiveEntry_Read_OFFSET + 0x102d9e8;
     ppvVar1[0x1c] = piVar3;
   }
   puVar2 = helper_malloc(0x1c);
@@ -45816,7 +45849,7 @@ undefined4 FUN_010311c4(int param_1,char *param_2,int param_3)
     *(undefined4 *)(*(int *)(param_1 + 0x1c) + 0xc) = 0;
     *(undefined4 *)(*(int *)(param_1 + 0x1c) + 0x10) = 0xf;
     if (*(int *)(*(int *)(param_1 + 0x1c) + 0xc) == 0) {
-      iVar1 = ADDRESS_OF_FUNCTION_0102cc94_OFFSET + 0x1031184;
+      iVar1 = ADDRESS_OF_adler32_OFFSET + 0x1031184;
     }
     else {
       iVar1 = 0;
@@ -52924,8 +52957,10 @@ void swv_InitVtbl_RayIntersection(void **pVtbl)
   return;
 }
 
-/* ==== 0x01038624  (file offset 0x38624)  FUN_01038624 ================================================ */
-int FUN_01038624(byte *param_1)
+/* ==== 0x01038624  (file offset 0x38624)  swv_ReadLE32 ================================================ */
+/* GUESS: name (not yet rewritten). Reads a little-endian 32-bit value from any address, a byte at a
+   time. */
+int swv_ReadLE32(byte *param_1)
 
 {
   return (uint)*param_1 + (uint)param_1[1] * 0x100 + (uint)param_1[2] * 0x10000 +
@@ -53987,8 +54022,9 @@ undefined4 FUN_01039510(int param_1,undefined4 param_2)
   return uVar4;
 }
 
-/* ==== 0x01039594  (file offset 0x39594)  thunk_FUN_0102cc94 ========================================== */
-uint thunk_FUN_0102cc94(uint param_1,byte *param_2,uint param_3)
+/* ==== 0x01039594  (file offset 0x39594)  thunk_adler32 =============================================== */
+/* A branch to adler32 (0x0102cc94). */
+uint thunk_adler32(uint param_1,byte *param_2,uint param_3)
 
 {
   uint uVar1;

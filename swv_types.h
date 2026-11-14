@@ -56,8 +56,8 @@ typedef enum SwerveClassId {
     SWV_VERTEXARRAY         = 29,
     SWV_VERTEXBUFFER        = 30,
     SWV_WORLD               = 31,
-    SWV_EXT100              = 100,  /* GUESS: Swerve extension classes (not JSR-184); constructors */
-    SWV_EXT101              = 101   /*        0x0102d8ac / 0x0102d990, meaning unknown */
+    SWV_EXT100              = 100,  /* Swerve extension classes (not JSR-184): a SWVARC archive */
+    SWV_EXT101              = 101   /* and one entry's stream (SwvExtObject; 0x0102d8ac / 0x0102d990) */
 } SwerveClassId;
 
 /* Internal object type, returned by a native object's virtual getType (vtable +4). Values 1-22
@@ -172,16 +172,18 @@ struct IGraphics3D { const IGraphics3DVtbl *pvt; void *pNative; uint32 m_nRefs; 
  * The objects swv_Create_Ext100 (0x0102d8ac, 0x18 bytes) and swv_Create_Ext101 (0x0102d990, 0x1c
  * bytes) build: BREW-style {vtable, refs, ...}, the vtables cached in pVtblCache[0x1b] (Ext100Vtbl,
  * 6 slots) and [0x1c] (Ext101Vtbl, 3 slots); slots 0 and 1 are the shared swvExt_AddRef (0x010041ec)
- * and swvExt_Release (0x01004200). GUESS: Ext100 opens a file (its slot 4, FUN_01004380, calls IFileMgr
- * OpenFile) and Ext101 reads a region of one (its slot 2, FUN_01004250): an archive and its entries. */
+ * and swvExt_Release (0x01004200). Ext100 is a SWVARC archive (swvArchive_Open: the magic
+ * "\xabSWVARC\xbb\r\n\x1a\n", a 0x21-byte header with an adler32, a directory of named entries) with
+ * swvArchive_EnumInit / EnumNext / OpenEntry; Ext101 is one entry's stream (swvArchiveEntry_Read), a
+ * region of the archive's IFile. No file of the game's data is such an archive. */
 typedef struct SwvExtObject {
     const void *pvt;        /* +0x00 Ext100Vtbl / Ext101Vtbl (arrays of function addresses) */
     uint32   m_nRefs;       /* +0x04 1 after the constructor */
-    IFile   *pFile;         /* +0x08 released by swvExt_Release */
-    void    *pBuffer;       /* +0x0c freed by swvExt_Release */
-    uint32   field_10;      /* +0x10 Ext101: the region's start in the file (GUESS) */
-    uint32   field_14;      /* +0x14 Ext101: the region's size (GUESS) */
-    uint32   field_18;      /* +0x18 Ext101 only (Ext100 ends at +0x18): the read position (GUESS) */
+    IFile   *pFile;         /* +0x08 the archive file (an entry shares it); released by swvExt_Release */
+    void    *pBuffer;       /* +0x0c archive: its directory; freed by swvExt_Release */
+    uint32   field_10;      /* +0x10 archive: the data's start; entry: the region's start */
+    uint32   field_14;      /* +0x14 archive: the listing's index; entry: the region's size */
+    uint32   field_18;      /* +0x18 entry only (the archive ends at +0x18): the read position */
 } SwvExtObject;
 
 /* ---- engine globals ------------------------------------------------------------------------

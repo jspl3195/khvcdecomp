@@ -358,11 +358,11 @@ void FUN_0100412c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
 undefined4 * FUN_0100418c(int *param_1,undefined4 *param_2);
 uint32 swvExt_AddRef(SwvExtObject *object);   /* 0x010041EC GUESS: name, see swv21brew.c */
 uint32 swvExt_Release(SwvExtObject *object);   /* 0x01004200 GUESS: name, see swv21brew.c */
-void FUN_01004250(int param_1,undefined4 param_2,uint param_3,undefined4 param_4);
-void FUN_010042bc(int param_1);
-undefined4 FUN_010042d0(int param_1,undefined4 *param_2,int *param_3);
-int FUN_01004380(int param_1,undefined4 param_2);
-int FUN_01004638(int param_1,undefined4 param_2,undefined4 *param_3,void **param_4);
+void swvArchiveEntry_Read(int param_1,undefined4 param_2,uint param_3,undefined4 param_4);
+void swvArchive_EnumInit(SwvExtObject *archive);   /* 0x010042BC GUESS: name, see swv21brew.c */
+undefined4 swvArchive_EnumNext(int param_1,undefined4 *param_2,int *param_3);
+int swvArchive_Open(int param_1,undefined4 param_2);
+int swvArchive_OpenEntry(int param_1,undefined4 param_2,undefined4 *param_3,void **param_4);
 int FUN_010047b0(int param_1,int param_2,int param_3);
 int FUN_01004848(int param_1,int param_2);
 int FUN_0100486c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
@@ -1052,7 +1052,7 @@ void * FUN_0102cbe0(uint32 param_1);
 void FUN_0102cc18(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3);
 int FUN_0102cc60(void);
 int FUN_0102cc80(int param_1,int param_2);
-uint FUN_0102cc94(uint param_1,byte *param_2,uint param_3);
+uint adler32(uint param_1,byte *param_2,uint param_3);
 void FUN_0102ce5c(int param_1,undefined4 *param_2);
 void FUN_0102ce74(int param_1,undefined4 *param_2);
 void FUN_0102ce8c(int param_1,undefined4 param_2,undefined4 *param_3);
@@ -1361,7 +1361,7 @@ undefined4 FUN_0103840c(int param_1,undefined4 param_2,int param_3);
 void FUN_01038488(int param_1,undefined4 *param_2);
 undefined4 FUN_010384a0(int param_1,uint param_2,undefined4 *param_3);
 undefined4 FUN_01038518(int param_1,uint param_2,undefined4 *param_3);
-int FUN_01038624(byte *param_1);
+int swv_ReadLE32(byte *param_1);
 int FUN_01038644(uint param_1,int param_2,int param_3,undefined4 param_4);
 int FUN_010386cc(int *param_1);
 int FUN_010386fc(int *param_1);
@@ -1391,7 +1391,7 @@ undefined4 FUN_0103937c(int param_1,int param_2,int param_3,undefined4 param_4,i
 undefined4 FUN_01039424(int param_1,int param_2,int param_3);
 undefined4 FUN_010394ac(int param_1,undefined4 param_2);
 undefined4 FUN_01039510(int param_1,undefined4 param_2);
-uint thunk_FUN_0102cc94(uint param_1,byte *param_2,uint param_3);
+uint thunk_adler32(uint param_1,byte *param_2,uint param_3);
 bool thunk_FUN_01039670(undefined4 *param_1);
 undefined4 FUN_010395b4(undefined4 param_1,undefined4 param_2,int *param_3);
 bool FUN_01039670(undefined4 *param_1);
@@ -1884,13 +1884,13 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define ADDRESS_OF_FUNCTION_0102d838_OFFSET 0x00000124   /* was DAT_0102d744 (word at 0x0102D744); PC-relative offset: + 0x102d714 (the pc) = 0x0102D838 */
 #define ADDRESS_OF_swvExt_AddRef_OFFSET 0xFFFD6900   /* was DAT_0102d978 (word at 0x0102D978); PC-relative offset: + 0x102d8ec (the pc) = 0x010041EC */
 #define ADDRESS_OF_swvExt_Release_OFFSET 0xFFFD6908   /* was DAT_0102d97c (word at 0x0102D97C); PC-relative offset: + 0x102d8f8 (the pc) = 0x01004200 */
-#define ADDRESS_OF_FUNCTION_010042bc_OFFSET 0xFFFD69B8   /* was DAT_0102d980 (word at 0x0102D980); PC-relative offset: + 0x102d904 (the pc) = 0x010042BC */
-#define ADDRESS_OF_FUNCTION_010042d0_OFFSET 0xFFFD69C0   /* was DAT_0102d984 (word at 0x0102D984); PC-relative offset: + 0x102d910 (the pc) = 0x010042D0 */
-#define ADDRESS_OF_FUNCTION_01004380_OFFSET 0xFFFD6A64   /* was DAT_0102d988 (word at 0x0102D988); PC-relative offset: + 0x102d91c (the pc) = 0x01004380 */
-#define ADDRESS_OF_FUNCTION_01004638_OFFSET 0xFFFD6D10   /* was DAT_0102d98c (word at 0x0102D98C); PC-relative offset: + 0x102d928 (the pc) = 0x01004638 */
+#define ADDRESS_OF_swvArchive_EnumInit_OFFSET 0xFFFD69B8   /* was DAT_0102d980 (word at 0x0102D980); PC-relative offset: + 0x102d904 (the pc) = 0x010042BC */
+#define ADDRESS_OF_swvArchive_EnumNext_OFFSET 0xFFFD69C0   /* was DAT_0102d984 (word at 0x0102D984); PC-relative offset: + 0x102d910 (the pc) = 0x010042D0 */
+#define ADDRESS_OF_swvArchive_Open_OFFSET 0xFFFD6A64   /* was DAT_0102d988 (word at 0x0102D988); PC-relative offset: + 0x102d91c (the pc) = 0x01004380 */
+#define ADDRESS_OF_swvArchive_OpenEntry_OFFSET 0xFFFD6D10   /* was DAT_0102d98c (word at 0x0102D98C); PC-relative offset: + 0x102d928 (the pc) = 0x01004638 */
 #define ADDRESS_OF_swvExt_AddRef_OFFSET_2 0xFFFD681C   /* was DAT_0102da38 (word at 0x0102DA38); PC-relative offset: + 0x102d9d0 (the pc) = 0x010041EC */
 #define ADDRESS_OF_swvExt_Release_OFFSET_2 0xFFFD6824   /* was DAT_0102da3c (word at 0x0102DA3C); PC-relative offset: + 0x102d9dc (the pc) = 0x01004200 */
-#define ADDRESS_OF_FUNCTION_01004250_OFFSET 0xFFFD6868   /* was DAT_0102da40 (word at 0x0102DA40); PC-relative offset: + 0x102d9e8 (the pc) = 0x01004250 */
+#define ADDRESS_OF_swvArchiveEntry_Read_OFFSET 0xFFFD6868   /* was DAT_0102da40 (word at 0x0102DA40); PC-relative offset: + 0x102d9e8 (the pc) = 0x01004250 */
 #define ADDRESS_OF_FUNCTION_0102dadc_OFFSET 0xFFFFFE84   /* was DAT_0102dd10 (word at 0x0102DD10); PC-relative offset: + 0x102dc58 (the pc) = 0x0102DADC */
 #define ADDRESS_OF_FUNCTION_0102dd80_OFFSET 0x0000011C   /* was DAT_0102dd14 (word at 0x0102DD14); PC-relative offset: + 0x102dc64 (the pc) = 0x0102DD80 */
 #define ADDRESS_OF_FUNCTION_0102dba4_OFFSET 0xFFFFFF34   /* was DAT_0102dd18 (word at 0x0102DD18); PC-relative offset: + 0x102dc70 (the pc) = 0x0102DBA4 */
@@ -2024,7 +2024,7 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define STRING_1_DOT_1_DOT_4_OFFSET 0x0000EFA8   /* was DAT_010311b4 (word at 0x010311B4); PC-relative offset: + 0x10310a4 (the pc) = 0x0104004C */
 #define ADDRESS_OF_FUNCTION_0103d3b8_OFFSET 0x0000C2D4   /* was DAT_010311b8 (word at 0x010311B8); PC-relative offset: + 0x10310e4 (the pc) = 0x0103D3B8 */
 #define ADDRESS_OF_FUNCTION_0103d3c0_OFFSET 0x0000C2C4   /* was DAT_010311bc (word at 0x010311BC); PC-relative offset: + 0x10310fc (the pc) = 0x0103D3C0 */
-#define ADDRESS_OF_FUNCTION_0102cc94_OFFSET 0xFFFFBB10   /* was DAT_010311c0 (word at 0x010311C0); PC-relative offset: + 0x1031184 (the pc) = 0x0102CC94 */
+#define ADDRESS_OF_adler32_OFFSET 0xFFFFBB10   /* was DAT_010311c0 (word at 0x010311C0); PC-relative offset: + 0x1031184 (the pc) = 0x0102CC94 */
 #define STRING_INVALID_BLOCK_TYPE_OFFSET 0x0000FB14   /* was DAT_01031ac8 (word at 0x01031AC8); PC-relative offset: + 0x103133c (the pc) = 0x01040E50 */
 #define STRING_INVALID_STORED_BLOCK_LENGTHS_OFFSET 0x0000FA50   /* was DAT_01031acc (word at 0x01031ACC); PC-relative offset: + 0x1031414 (the pc) = 0x01040E64 */
 #define STRING_TOO_MANY_LENGTH_OR_DISTANCE_SYMBOLS_OFFSET 0x0000F8A8   /* was DAT_01031ad0 (word at 0x01031AD0); PC-relative offset: + 0x10315dc (the pc) = 0x01040E84 */
