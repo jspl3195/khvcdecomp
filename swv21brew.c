@@ -7304,19 +7304,23 @@ int FUN_01007d04(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   return iVar3;
 }
 
-/* ==== 0x01007D60  (file offset 0x07D60)  FUN_01007d60 ================================================ */
+/* ==== 0x01007D60  (file offset 0x07D60)  swvSectionStored_Get08 ====================================== */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022D4 +0x8;
-   written from its disassembly (0x01007d60 - 0x01007d64). Returns the object's word at +0x8. */
-int32 FUN_01007d60(int param_1)
+   written from its disassembly (0x01007d60 - 0x01007d64: `ldr r0, [r0, #8]` / `bx lr`). GUESS: name
+   (what the word means is not known). Slot 2 of the M3G loader's stored-section reader (compression
+   byte 0; swvSection_CreateStored, 0xc bytes: vtable, the sink at +4, this word at +8): returns its +8,
+   which only its constructor writes (0), so it is 0 for every stored section. Its zlib twin,
+   swvSectionZlib_Get0c (0x01007d68), returns +0xc. No direct reader of slot 2 has been found. */
+int32 swvSectionStored_Get08(const uint8 *section)
 
 {
-  return *(int32 *)(param_1 + 0x8);
+  return *(const int32 *)(section + 0x8);
 }
 
-/* ==== 0x01007D68  (file offset 0x07D68)  FUN_01007d68 ================================================ */
+/* ==== 0x01007D68  (file offset 0x07D68)  swvSectionZlib_Get0c ======================================== */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022E0 +0x8;
    written from its disassembly (0x01007d68 - 0x01007d6c). Returns the object's word at +0xc. */
-int32 FUN_01007d68(int param_1)
+int32 swvSectionZlib_Get0c(int param_1)
 
 {
   return *(int32 *)(param_1 + 0xc);
@@ -7642,8 +7646,10 @@ LAB_0101d814:
   return;
 }
 
-/* ==== 0x0100806C  (file offset 0x0806C)  FUN_0100806c ================================================ */
-void FUN_0100806c(int param_1,undefined4 param_2)
+/* ==== 0x0100806C  (file offset 0x0806C)  swvSection_SetSink ========================================== */
+/* GUESS: name (not yet rewritten). Sets a section reader's sink (+4), where its bytes go: shared by
+   both readers (swvSection_CreateStored; swvSectionZlib_Init). */
+void swvSection_SetSink(int param_1,undefined4 param_2)
 
 {
   *(undefined4 *)(param_1 + 4) = param_2;
@@ -7841,8 +7847,10 @@ void FUN_010082f0(int param_1,int param_2,undefined4 param_3)
   return;
 }
 
-/* ==== 0x0100835C  (file offset 0x0835C)  FUN_0100835c ================================================ */
-uint FUN_0100835c(int param_1,undefined4 param_2)
+/* ==== 0x0100835C  (file offset 0x0835C)  swvSectionZlib_Init ========================================= */
+/* GUESS: name (not yet rewritten). Sets up the zlib-section reader: its sink (swvSection_SetSink;
+   Ghidra dropped the arguments) and its zlib stream at +8 (FUN_010396cc, with the tag "ZLIB"). */
+uint swvSectionZlib_Init(int param_1,undefined4 param_2)
 
 {
   uint uVar1;
@@ -7850,7 +7858,7 @@ uint FUN_0100835c(int param_1,undefined4 param_2)
   undefined4 *puVar3;
   int *unaff_r4;
   
-  FUN_0100806c();
+  swvSection_SetSink();
   puVar3 = (undefined4 *)(param_1 + 8);
   uVar1 = FUN_010396cc(FOUR_CHARACTER_TAG_ZLIB,param_2);
   if (uVar1 != 0) {
@@ -9335,8 +9343,13 @@ int * FUN_010098fc(void)
   return piVar2;
 }
 
-/* ==== 0x01009944  (file offset 0x09944)  FUN_01009944 ================================================ */
-int FUN_01009944(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+/* ==== 0x01009944  (file offset 0x09944)  swvSection_CreateStored ===================================== */
+/* GUESS: name (not yet rewritten). Creates the M3G loader's reader for a section stored uncompressed
+   (compression byte 0): a 0xc-byte object (FUN_0102cbe0) built by swvSectionStored_Construct and
+   registered (FUN_0100f8e8, FUN_0101807c, FUN_0101715c), its sink (where the section's bytes go, the
+   record reader) set to param_1 (swvSection_SetSink). Its vtable (0x010022D4): 0 swvSectionStored_Destroy,
+   1 swvSectionStored_Feed, 2 swvSectionStored_Get08. */
+int swvSection_CreateStored(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
   int iVar1;
@@ -9345,11 +9358,11 @@ int FUN_01009944(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   
   iVar1 = FUN_0102cbe0(0xc,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
-    FUN_01028afc(iVar1);
+    swvSectionStored_Construct(iVar1);
     uVar2 = FUN_0100f8e8();
     FUN_0101807c(uVar2,iVar1);
   }
-  FUN_0100806c(iVar1,param_1);
+  swvSection_SetSink(iVar1,param_1);
   iVar3 = 0;
   if (iVar1 != 0) {
     uVar2 = FUN_0100f8e8(0);
@@ -9359,8 +9372,12 @@ int FUN_01009944(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   return iVar3;
 }
 
-/* ==== 0x010099A4  (file offset 0x099A4)  FUN_010099a4 ================================================ */
-int FUN_010099a4(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+/* ==== 0x010099A4  (file offset 0x099A4)  swvSection_CreateZlib ======================================= */
+/* GUESS: name (not yet rewritten). Creates the M3G loader's reader for a zlib-compressed section
+   (compression byte 1), like swvSection_CreateStored: a 0x10-byte object (swvSectionZlib_Construct),
+   set up by swvSectionZlib_Init with the sink param_1. Its vtable (0x010022E0): 0 swvSectionZlib_Destroy,
+   1 swvSectionZlib_Feed, 2 swvSectionZlib_Get0c. */
+int swvSection_CreateZlib(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
   int iVar1;
@@ -9369,11 +9386,11 @@ int FUN_010099a4(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   
   iVar1 = FUN_0102cbe0(0x10,0,param_3,param_4,param_4);
   if (iVar1 != 0) {
-    FUN_01028b28(iVar1);
+    swvSectionZlib_Construct(iVar1);
     uVar2 = FUN_0100f8e8();
     FUN_0101807c(uVar2,iVar1);
   }
-  FUN_0100835c(iVar1,param_1);
+  swvSectionZlib_Init(iVar1,param_1);
   iVar3 = 0;
   if (iVar1 != 0) {
     uVar2 = FUN_0100f8e8(0);
@@ -9476,12 +9493,12 @@ int FUN_01009b80(void)
   return iVar1;
 }
 
-/* ==== 0x01009BA4  (file offset 0x09BA4)  FUN_01009ba4 ================================================ */
+/* ==== 0x01009BA4  (file offset 0x09BA4)  swvSectionStored_Feed ======================================= */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022D4 +0x4;
    written from its disassembly (0x01009ba4 - 0x01009bb4). Passes the call on to the object at +4: its
    virtual slot +0x18, with param_2 and param_3 (a tail jump; r3 then holds the target's address, a
    leftover). */
-int FUN_01009ba4(int param_1,int param_2,int param_3)
+int swvSectionStored_Feed(int param_1,int param_2,int param_3)
 
 {
   int iVar1;
@@ -9492,8 +9509,11 @@ int FUN_01009ba4(int param_1,int param_2,int param_3)
   return (*(code *)(*(int *)(*(int *)iVar1 + 0x18) + *(int *)iVar1))(iVar1,param_2,param_3);
 }
 
-/* ==== 0x01009BB8  (file offset 0x09BB8)  FUN_01009bb8 ================================================ */
-undefined4 FUN_01009bb8(int param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x01009BB8  (file offset 0x09BB8)  swvSectionZlib_Feed ========================================= */
+/* GUESS: name (not yet rewritten). Slot 1 of the zlib-section reader's vtable: inflates param_3 bytes
+   at param_2 (FUN_010395b4) into the sink; on failure tears the stream (+8) down and reports the error
+   (FUN_0102f7e0). Returns 1, or 0 on failure. */
+undefined4 swvSectionZlib_Feed(int param_1,undefined4 param_2,undefined4 param_3)
 
 {
   int iVar1;
@@ -19613,19 +19633,19 @@ undefined4 FUN_010152d8(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x01015348  (file offset 0x15348)  FUN_01015348 ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002410 +0x8;
-   written from its disassembly (0x01015348 - 0x010157e0). Feeds param_5 bytes (param_3 + param_4; the
-   fifth argument is on the stack) to the M3G file reader (GUESS: the Loader's stream parser). +0x24 is
-   the state: 1 the file identifier, a byte at a time against one of the two expected strings (+0x48, or
-   +0x54 when +0x18 allows it; FUN_0101255c gives each byte); 2 a section's compression byte (0 or 1:
-   the decompressor FUN_01009944 / FUN_010099a4 at +0x10, after the virtual slot +0x1c agrees; the
-   Adler-32 at +0x3c starts); 3 to 6 and 7 to 10 two 32-bit lengths (+0x30, kept less 13 in +0x40, and
-   +0x34; FUN_010265fc checksums them); 11 the section data (checksummed by thunk_adler32 and fed
-   to the decompressor's virtual slot +4; at the end +0x34 must equal +0x44 and the decompressor is
-   deleted); 12 to 15 the section's checksum, which must match +0x3c, then the virtual slot +0x24 can
-   end the file. Errors: FUN_0102f7e0 (K0 when called in the wrong state, -0x4b1 for bad lengths) and
-   the results -7 to -11, handed to the virtual slot +0x10. Returns -1 while it needs more, the bytes
-   used when the file ended, or the error. */
+/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002410 +0x8; written
+   from its disassembly (0x01015348 - 0x010157e0). Feeds param_5 bytes (param_3 + param_4; the fifth
+   argument is on the stack) to the M3G file reader (GUESS: the Loader's stream parser). +0x24 is the
+   state: 1 the file identifier, a byte at a time against one of the two expected strings (+0x48, or +0x54
+   when +0x18 allows it; FUN_0101255c gives each byte); 2 a section's compression byte (0 or 1: the section
+   reader swvSection_CreateStored / swvSection_CreateZlib at +0x10, after the virtual slot +0x1c agrees;
+   the Adler-32 at +0x3c starts); 3 to 6 and 7 to 10 two 32-bit lengths (+0x30, kept less 13 in +0x40, and
+   +0x34; FUN_010265fc checksums them); 11 the section data (checksummed by thunk_adler32 and fed to the
+   section reader's virtual slot +4; at the end +0x34 must equal +0x44 and the section reader is deleted);
+   12 to 15 the section's checksum, which must match +0x3c, then the virtual slot +0x24 can end the file.
+   Errors: FUN_0102f7e0 (K0 when called in the wrong state, -0x4b1 for bad lengths) and the results -7 to
+   -11, handed to the virtual slot +0x10. Returns -1 while it needs more, the bytes used when the file
+   ended, or the error. */
 int FUN_01015348(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5)
 
 {
@@ -19684,9 +19704,9 @@ int FUN_01015348(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5
         param_1[0xf] = 1;
         param_1[0xf] = thunk_adler32(1,p,1);
         if (*p == 0)
-          param_1[4] = FUN_01009944(param_1);
+          param_1[4] = swvSection_CreateStored(param_1);
         else if (*p == 1)
-          param_1[4] = FUN_010099a4(param_1);
+          param_1[4] = swvSection_CreateZlib(param_1);
         else
           status = -8;
       }
@@ -36954,22 +36974,26 @@ int * FUN_01028abc(int *param_1)
   return param_1;
 }
 
-/* ==== 0x01028AFC  (file offset 0x28AFC)  FUN_01028afc ================================================ */
-int * FUN_01028afc(int *param_1)
+/* ==== 0x01028AFC  (file offset 0x28AFC)  swvSectionStored_Construct ================================== */
+/* GUESS: name (not yet rewritten). The stored-section reader's constructor: the base constructor
+   (FUN_01027ec0, base vtable 0x0100200C; Ghidra dropped its argument), its vtable (0x010022D4), +8 = 0. */
+int * swvSectionStored_Construct(int *param_1)
 
 {
   FUN_01027ec0();
-  *param_1 = DATA_AT_010022D4_OFFSET + 0x1028b14;
+  *param_1 = VTABLE_SECTION_STORED_OFFSET + 0x1028b14;
   param_1[2] = 0;
   return param_1;
 }
 
-/* ==== 0x01028B28  (file offset 0x28B28)  FUN_01028b28 ================================================ */
-int * FUN_01028b28(int *param_1)
+/* ==== 0x01028B28  (file offset 0x28B28)  swvSectionZlib_Construct ==================================== */
+/* GUESS: name (not yet rewritten). The zlib-section reader's constructor: the base constructor, its
+   vtable (0x010022E0), +8 and +0xc = 0. */
+int * swvSectionZlib_Construct(int *param_1)
 
 {
   FUN_01027ec0();
-  *param_1 = DATA_AT_010022E0_OFFSET + 0x1028b40;
+  *param_1 = VTABLE_SECTION_ZLIB_OFFSET + 0x1028b40;
   param_1[2] = 0;
   param_1[3] = 0;
   return param_1;
@@ -38309,31 +38333,31 @@ void FUN_0102a910(int *param_1,int param_2)
   return;
 }
 
-/* ==== 0x0102A974  (file offset 0x2A974)  FUN_0102a974 ================================================ */
+/* ==== 0x0102A974  (file offset 0x2A974)  swvSectionStored_Destroy ==================================== */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022D4 +0x0;
    written from its disassembly (0x0102a974 - 0x0102a9a8). Destructor (GUESS): its class's vtable, then
    the base destructor FUN_01029fc8 and, when param_2 is set, frees the object (helper_free's second
    entry, 0x0102990c; a tail jump). */
-void FUN_0102a974(int *param_1,int param_2)
+void swvSectionStored_Destroy(int *param_1,int param_2)
 
 {
-  *param_1 = DATA_AT_010022D4_OFFSET_2 + 0x102a98c;
+  *param_1 = VTABLE_SECTION_STORED_OFFSET_2 + 0x102a98c;
   FUN_01029fc8(param_1,0);
   if (param_2 != 0)
     helper_free(param_1);
   return;
 }
 
-/* ==== 0x0102A9B0  (file offset 0x2A9B0)  FUN_0102a9b0 ================================================ */
+/* ==== 0x0102A9B0  (file offset 0x2A9B0)  swvSectionZlib_Destroy ====================================== */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022E0 +0x0;
    written from its disassembly (0x0102a9b0 - 0x0102a9fc). Destructor (GUESS): its class's vtable; the
    member at +8 is torn down by thunk_FUN_01039670 when FUN_01039670 says 0; then the base destructor
    FUN_01029fc8 and, when param_2 is set, frees the object (helper_free's second entry, 0x0102990c; a
    tail jump). */
-void FUN_0102a9b0(int *param_1,int param_2)
+void swvSectionZlib_Destroy(int *param_1,int param_2)
 
 {
-  *param_1 = DATA_AT_010022E0_OFFSET_2 + 0x102a9c8;
+  *param_1 = VTABLE_SECTION_ZLIB_OFFSET_2 + 0x102a9c8;
   if (FUN_01039670(param_1 + 2) == 0)
     thunk_FUN_01039670(param_1 + 2);
   FUN_01029fc8(param_1,0);

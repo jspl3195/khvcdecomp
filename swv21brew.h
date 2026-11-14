@@ -54,8 +54,8 @@ void * FUN_010039ac(int param_1,int param_2);   /* 0x010039AC, no Ghidra functio
 void FUN_010039bc(undefined4 param_1,int param_2);   /* 0x010039BC, no Ghidra function */
 void * FUN_01003a00(int param_1,int param_2);   /* 0x01003A00, no Ghidra function */
 void * FUN_01003a10(int param_1,int param_2);   /* 0x01003A10, no Ghidra function */
-int32 FUN_01007d60(int param_1);   /* 0x01007D60, no Ghidra function */
-int32 FUN_01007d68(int param_1);   /* 0x01007D68, no Ghidra function */
+int32 swvSectionStored_Get08(const uint8 *section);   /* 0x01007D60, no Ghidra function; GUESS: name */
+int32 swvSectionZlib_Get0c(int param_1);   /* 0x01007D68, no Ghidra function */
 void FUN_01008754(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008754, no Ghidra function */
 void FUN_010087ac(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x010087AC, no Ghidra function */
 void FUN_01008804(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008804, no Ghidra function */
@@ -85,7 +85,7 @@ void FUN_01009438(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x0100943
 void FUN_010094bc(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x010094BC, no Ghidra function */
 void FUN_01009548(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x01009548, no Ghidra function */
 void FUN_010095e0(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x010095E0, no Ghidra function */
-int FUN_01009ba4(int param_1,int param_2,int param_3);   /* 0x01009BA4, no Ghidra function */
+int swvSectionStored_Feed(int param_1,int param_2,int param_3);   /* 0x01009BA4, no Ghidra function */
 void FUN_01009c80(int param_1,void *param_2);   /* 0x01009C80, no Ghidra function */
 void FUN_01009c88(int param_1,void *param_2);   /* 0x01009C88, no Ghidra function */
 void FUN_01009c90(int param_1,void *param_2);   /* 0x01009C90, no Ghidra function */
@@ -146,8 +146,8 @@ void FUN_0102a4cc(int *param_1,int param_2);   /* 0x0102A4CC, no Ghidra function
 void FUN_0102a6d8(int *param_1,int param_2);   /* 0x0102A6D8, no Ghidra function */
 void FUN_0102a804(int *param_1,int param_2);   /* 0x0102A804, no Ghidra function */
 void FUN_0102a84c(int *param_1,int param_2);   /* 0x0102A84C, no Ghidra function */
-void FUN_0102a974(int *param_1,int param_2);   /* 0x0102A974, no Ghidra function */
-void FUN_0102a9b0(int *param_1,int param_2);   /* 0x0102A9B0, no Ghidra function */
+void swvSectionStored_Destroy(int *param_1,int param_2);   /* 0x0102A974, no Ghidra function */
+void swvSectionZlib_Destroy(int *param_1,int param_2);   /* 0x0102A9B0, no Ghidra function */
 void FUN_0102aa04(int *param_1,int param_2);   /* 0x0102AA04, no Ghidra function */
 void FUN_0102aaac(int *param_1,int param_2);   /* 0x0102AAAC, no Ghidra function */
 void FUN_0102ab04(int *param_1,int param_2);   /* 0x0102AB04, no Ghidra function */
@@ -427,7 +427,7 @@ undefined4 FUN_01007f8c(int param_1,int param_2,int param_3,int param_4,int para
 undefined4 FUN_0100800c(int param_1,undefined4 param_2,undefined4 param_3);
 void thunk_FUN_01021abc(int param_1,int param_2);
 void thunk_FUN_01023f30(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
-void FUN_0100806c(int param_1,undefined4 param_2);
+void swvSection_SetSink(int param_1,undefined4 param_2);
 void FUN_01008074(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_010080e4(int param_1);
 void FUN_01008104(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,undefined4 param_6,int *param_7);
@@ -435,7 +435,7 @@ void FUN_01008144(int param_1,int param_2,int param_3,int param_4);
 void FUN_01008184(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, int param_5,int param_6);
 void FUN_010081ec(int param_1,undefined4 param_2,int param_3,int param_4,undefined4 param_5, undefined4 param_6,undefined4 param_7,undefined4 param_8);
 void FUN_010082f0(int param_1,int param_2,undefined4 param_3);
-uint FUN_0100835c(int param_1,undefined4 param_2);
+uint swvSectionZlib_Init(int param_1,undefined4 param_2);
 void FUN_01008398(int param_1,int param_2,int param_3,int param_4);
 void FUN_0100844c(int param_1,int param_2,int param_3,int param_4,int param_5);
 void FUN_01008540(int param_1,int param_2,int param_3,int param_4);
@@ -447,12 +447,12 @@ int FUN_01009638(int param_1,int param_2);
 void FUN_0100973c(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6, int param_7,int param_8,int param_9,int param_10,int param_11,int param_12);
 void FUN_01009860(int param_1);
 int * FUN_010098fc(void);
-int FUN_01009944(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-int FUN_010099a4(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
+int swvSection_CreateStored(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
+int swvSection_CreateZlib(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01009a04(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 int FUN_01009ad0(void);
 int FUN_01009b80(void);
-undefined4 FUN_01009bb8(int param_1,undefined4 param_2,undefined4 param_3);
+undefined4 swvSectionZlib_Feed(int param_1,undefined4 param_2,undefined4 param_3);
 void FUN_01009c20(void);
 void FUN_01009c48(void);
 void FUN_01009cb0(void);
@@ -956,8 +956,8 @@ void FUN_01028a3c(undefined4 *param_1);
 void FUN_01028a6c(int param_1);
 int * FUN_01028a7c(int *param_1);
 int * FUN_01028abc(int *param_1);
-int * FUN_01028afc(int *param_1);
-int * FUN_01028b28(int *param_1);
+int * swvSectionStored_Construct(int *param_1);
+int * swvSectionZlib_Construct(int *param_1);
 int * FUN_01028b58(int *param_1);
 void FUN_01028bb0(int *param_1);
 int * FUN_01028cc8(int *param_1);
@@ -1727,8 +1727,8 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define DATA_AT_01002264_OFFSET 0xFFFD98C4   /* was DAT_010289ac (word at 0x010289AC); PC-relative offset: + 0x10289a0 (the pc) = 0x01002264 */
 #define WORD_HEXADECIMAL_FFFD97D8 0xFFFD97D8   /* was DAT_01028ab8 (word at 0x01028AB8); value 0xFFFD97D8 (-157736) */
 #define WORD_HEXADECIMAL_FFFD97C8 0xFFFD97C8   /* was DAT_01028af8 (word at 0x01028AF8); value 0xFFFD97C8 (-157752) */
-#define DATA_AT_010022D4_OFFSET 0xFFFD97C0   /* was DAT_01028b24 (word at 0x01028B24); PC-relative offset: + 0x1028b14 (the pc) = 0x010022D4 */
-#define DATA_AT_010022E0_OFFSET 0xFFFD97A0   /* was DAT_01028b54 (word at 0x01028B54); PC-relative offset: + 0x1028b40 (the pc) = 0x010022E0 */
+#define VTABLE_SECTION_STORED_OFFSET 0xFFFD97C0   /* was DAT_01028b24 (word at 0x01028B24); PC-relative offset: + 0x1028b14 (the pc) = 0x010022D4 */
+#define VTABLE_SECTION_ZLIB_OFFSET 0xFFFD97A0   /* was DAT_01028b54 (word at 0x01028B54); PC-relative offset: + 0x1028b40 (the pc) = 0x010022E0 */
 #define WORD_HEXADECIMAL_FFFD977C 0xFFFD977C   /* was DAT_01028bac (word at 0x01028BAC); value 0xFFFD977C (-157828) */
 #define DATA_AT_0100235C_OFFSET 0xFFFD9784   /* was DAT_01028cb0 (word at 0x01028CB0); PC-relative offset: + 0x1028bd8 (the pc) = 0x0100235C */
 #define DATA_AT_01001EAC_OFFSET_7 0xFFFD92B4   /* was DAT_01028cb4 (word at 0x01028CB4); PC-relative offset: + 0x1028bf8 (the pc) = 0x01001EAC */
@@ -2426,8 +2426,8 @@ extern undefined4 STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET;   /* was DAT_0
 #define DATA_AT_01002264_OFFSET_2 0xFFFD7A48   /* was DAT_0102a83c (word at 0x0102A83C); PC-relative offset: + 0x102a81c (the pc) = 0x01002264 */
 #define DATA_AT_01002268_OFFSET_2 0xFFFD7A10   /* was DAT_0102a890 (word at 0x0102A890); PC-relative offset: + 0x102a858 (the pc) = 0x01002268 */
 #define DATA_AT_0100203C_OFFSET_49 0xFFFD77BC   /* was DAT_0102a894 (word at 0x0102A894); PC-relative offset: + 0x102a880 (the pc) = 0x0100203C */
-#define DATA_AT_010022D4_OFFSET_2 0xFFFD7948   /* was DAT_0102a9ac (word at 0x0102A9AC); PC-relative offset: + 0x102a98c (the pc) = 0x010022D4 */
-#define DATA_AT_010022E0_OFFSET_2 0xFFFD7918   /* was DAT_0102aa00 (word at 0x0102AA00); PC-relative offset: + 0x102a9c8 (the pc) = 0x010022E0 */
+#define VTABLE_SECTION_STORED_OFFSET_2 0xFFFD7948   /* was DAT_0102a9ac (word at 0x0102A9AC); PC-relative offset: + 0x102a98c (the pc) = 0x010022D4 */
+#define VTABLE_SECTION_ZLIB_OFFSET_2 0xFFFD7918   /* was DAT_0102aa00 (word at 0x0102AA00); PC-relative offset: + 0x102a9c8 (the pc) = 0x010022E0 */
 #define DATA_AT_010022EC_OFFSET 0xFFFD78D0   /* was DAT_0102aa44 (word at 0x0102AA44); PC-relative offset: + 0x102aa1c (the pc) = 0x010022EC */
 #define DATA_AT_01002348_OFFSET_3 0xFFFD7884   /* was DAT_0102aafc (word at 0x0102AAFC); PC-relative offset: + 0x102aac4 (the pc) = 0x01002348 */
 #define DATA_AT_0100203C_OFFSET_50 0xFFFD7554   /* was DAT_0102ab00 (word at 0x0102AB00); PC-relative offset: + 0x102aae8 (the pc) = 0x0100203C */
