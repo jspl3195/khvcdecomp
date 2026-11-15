@@ -964,6 +964,24 @@ typedef struct SwerveMaterialVtbl {
     int32 (*SetColor)(ISwerveObject *po,int32 target,uint32 argb);       /* +0x5c slot 23, 0x01033b4c */
 } SwerveMaterialVtbl;
 
+/* PolygonMode: JSR-184 1.0's ten methods, in this order (culling CULL_BACK 0xa0 .. CULL_NONE 0xa2,
+ * shading SHADE_FLAT 0xa4 / SHADE_SMOOTH 0xa5, winding WINDING_CCW 0xa8 / WINDING_CW 0xa9) */
+typedef struct SwervePolygonModeVtbl {
+    SwerveObject3DVtbl base;                                             /* +0x00 - +0x44 */
+    void (*GetCulling)(ISwerveObject *po,int32 *pCulling);               /* +0x48 slot 18, 0x01037fa0 */
+    int32 (*SetCulling)(ISwerveObject *po,int32 culling);                /* +0x4c slot 19, 0x010380d0 */
+    void (*GetShading)(ISwerveObject *po,int32 *pShading);               /* +0x50 slot 20, 0x01037fc0 */
+    int32 (*SetShading)(ISwerveObject *po,int32 shading);                /* +0x54 slot 21, 0x01038178 */
+    void (*GetWinding)(ISwerveObject *po,int32 *pWinding);               /* +0x58 slot 22, 0x01037fe0 */
+    int32 (*SetWinding)(ISwerveObject *po,int32 winding);                /* +0x5c slot 23, 0x01038208 */
+    void (*SetLocalCameraLightingEnable)(ISwerveObject *po,int32 enable);
+                                                                         /* +0x60 slot 24, 0x01038148 */
+    void (*SetPerspectiveCorrectionEnable)(ISwerveObject *po,int32 enable);
+                                                                         /* +0x64 slot 25, 0x01038160 */
+    void (*IsTwoSidedLightingEnabled)(ISwerveObject *po,uint8 *pEnabled); /* +0x68 slot 26, 0x010380b0 */
+    void (*SetTwoSidedLightingEnable)(ISwerveObject *po,int32 enable);   /* +0x6c slot 27, 0x010381f0 */
+} SwervePolygonModeVtbl;
+
 /* VertexBuffer */
 typedef struct SwerveVertexBufferVtbl {
     SwerveObject3DVtbl base;                                             /* +0x00 - +0x44 */

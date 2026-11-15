@@ -274,8 +274,12 @@ typedef struct SwvKeyframeSequence {
  *   0x007             culling: 1 CULL_BACK, 2 CULL_FRONT, 4 CULL_NONE (0xa0, 0xa1, 0xa2)
  *   0x018             winding: 8 WINDING_CCW, 0x10 WINDING_CW (0xa8, 0xa9)
  *   0x060             shading: 0x20 SHADE_FLAT, 0x40 SHADE_SMOOTH (0xa4, 0xa5)
- *   0x180             GUESS two-sided lighting: 0x80 off, 0x100 on
- *   0x200 / 0x400     GUESS local camera lighting / perspective correction (FUN_0101e778 sets them) */
+ *   0x180             two-sided lighting: 0x80 off, 0x100 on
+ *   0x200 / 0x400     local camera lighting / perspective correction (on when set)
+ * The names of the last three (GUESS, but firm): the BREW-facing slots 18 - 27 are exactly JSR-184 1.0's
+ * ten PolygonMode methods (kh_types.h SwervePolygonModeVtbl: only two-sided lighting has a getter,
+ * swvPolygonMode_TwoSidedLighting), and the M3G reader FUN_0101e778 reads them in the file format's
+ * order. */
 
 /* ---- Material (class 15), the native object (no struct yet) ------------------------------------
  * Its colours (GUESS: the names, JSR-184 Material; swvMaterial_Color, swvMaterial_SetColorValue), ARGB

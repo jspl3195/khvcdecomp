@@ -15358,19 +15358,21 @@ undefined4 FUN_010104f0(int param_1)
   return *(undefined4 *)(param_1 + 0xb0);
 }
 
-/* ==== 0x010106F8  (file offset 0x106F8)  FUN_010106f8 ================================================ */
-undefined4 FUN_010106f8(int param_1)
+/* ==== 0x010106F8  (file offset 0x106F8)  swvPolygonMode_Shading ====================================== */
+/* GUESS: name. The shading of a native PolygonMode (JSR-184 PolygonMode.getShading), from its flags
+   word (+0x1c): SHADE_FLAT (0xa4) when bit 0x20 is set, else SHADE_SMOOTH (0xa5; the field's 0x40).
+   Evidence: 0x010106f8 - 0x01010708 (`tst r0, #0x20` / `moveq r0, #0xa5` / `movne r0, #0xa4`). Only
+   swvPolygonMode_GetShading (slot 20) calls it. */
+int32 swvPolygonMode_Shading(const uint8 *mode)
 
 {
-  undefined4 uVar1;
-  
-  if ((*(uint *)(param_1 + 0x1c) & 0x20) == 0) {
-    uVar1 = 0xa5;
-  }
-  else {
-    uVar1 = 0xa4;
-  }
-  return uVar1;
+  int32 shading;
+
+  if ((*(const uint32 *)(mode + 0x1c) & 0x20) != 0)
+    shading = 0xa4;
+  else
+    shading = 0xa5;
+  return shading;
 }
 
 /* ==== 0x0101070C  (file offset 0x1070C)  FUN_0101070c ================================================ */
@@ -16268,19 +16270,21 @@ int32 swvImage2D_GetWidth(uint8 *image)
   return swvImage2D_Width(image);
 }
 
-/* ==== 0x01011980  (file offset 0x11980)  FUN_01011980 ================================================ */
-undefined4 FUN_01011980(int param_1)
+/* ==== 0x01011980  (file offset 0x11980)  swvPolygonMode_Winding ====================================== */
+/* GUESS: name. The winding of a native PolygonMode (JSR-184 PolygonMode.getWinding), from its flags
+   word (+0x1c): WINDING_CCW (0xa8) when bit 0x8 is set, else WINDING_CW (0xa9; the field's 0x10).
+   Evidence: 0x01011980 - 0x01011990 (`tst r0, #8` / `moveq r0, #0xa9` / `movne r0, #0xa8`). Only
+   swvPolygonMode_GetWinding (slot 22) calls it. */
+int32 swvPolygonMode_Winding(const uint8 *mode)
 
 {
-  undefined4 uVar1;
-  
-  if ((*(uint *)(param_1 + 0x1c) & 8) == 0) {
-    uVar1 = 0xa9;
-  }
-  else {
-    uVar1 = 0xa8;
-  }
-  return uVar1;
+  int32 winding;
+
+  if ((*(const uint32 *)(mode + 0x1c) & 0x8) != 0)
+    winding = 0xa8;
+  else
+    winding = 0xa9;
+  return winding;
 }
 
 /* ==== 0x01011994  (file offset 0x11994)  FUN_01011994 ================================================ */
@@ -16432,11 +16436,15 @@ int FUN_01011a84(int param_1)
   return param_1 + 0x90;
 }
 
-/* ==== 0x01011AA8  (file offset 0x11AA8)  FUN_01011aa8 ================================================ */
-uint FUN_01011aa8(int param_1)
+/* ==== 0x01011AA8  (file offset 0x11AA8)  swvPolygonMode_TwoSidedLighting ============================= */
+/* GUESS: name. Whether a native PolygonMode has two-sided lighting on (JSR-184
+   PolygonMode.isTwoSidedLightingEnabled): bit 0x100 of its flags word (+0x1c; the field 0x180 is 0x80
+   off, 0x100 on), as 0 or 1. Evidence: 0x01011aa8 - 0x01011ab4 (`ldr r0, [r0, #0x1c]`, `mov r1, #1`,
+   `and r0, r1, r0, lsr #8`). Only swvPolygonMode_IsTwoSidedLightingEnabled (slot 26) calls it. */
+uint32 swvPolygonMode_TwoSidedLighting(const uint8 *mode)
 
 {
-  return *(uint *)(param_1 + 0x1c) >> 8 & 1;
+  return *(const uint32 *)(mode + 0x1c) >> 8 & 1;
 }
 
 /* ==== 0x01011AB8  (file offset 0x11AB8)  FUN_01011ab8 ================================================ */
@@ -31904,7 +31912,7 @@ void FUN_010230f8(int param_1,int param_2)
 /* GUESS: name. Sets a native PolygonMode's shading (JSR-184 PolygonMode.setShading): SHADE_FLAT
    (0xa4) 0x20, SHADE_SMOOTH (0xa5) 0x40 into the field 0x60 (swvPolygonMode_SetFlags, a tail jump:
    0x01023120); any other value is ignored. Evidence: 0x01023108 - 0x01023120. Called by slot 21
-   (FUN_01038178) and FUN_0101e778. */
+   (swvPolygonMode_SetShading) and FUN_0101e778. */
 void swvPolygonMode_SetShadingValue(uint8 *mode,int32 shading)
 
 {
@@ -32792,7 +32800,7 @@ void FUN_01023c90(int param_1,int param_2,int param_3)
 /* GUESS: name. Sets a native PolygonMode's winding (JSR-184 PolygonMode.setWinding): WINDING_CCW
    (0xa8) 8, WINDING_CW (0xa9) 0x10 into the field 0x18 (swvPolygonMode_SetFlags, a tail jump:
    0x01023cfc); any other value is ignored. Evidence: 0x01023ce4 - 0x01023cfc. Called by slot 23
-   (FUN_01038208) and FUN_0101e778. */
+   (swvPolygonMode_SetWinding) and FUN_0101e778. */
 void swvPolygonMode_SetWindingValue(uint8 *mode,int32 winding)
 
 {
@@ -33140,7 +33148,7 @@ LAB_0101d814:
 /* GUESS: name. Sets a native PolygonMode's field 0x180 (GUESS: two-sided lighting, the fourth value
    of the M3G record FUN_0101e778 reads): 0x80 when enable is 0, else 0x100 (swvPolygonMode_SetFlags, a
    tail jump: 0x01023fc0). Evidence: 0x01023fb4 - 0x01023fc0 (`cmp r1, #0` / `moveq r1, #0x80` /
-   `movne r1, #0x100`). Called by slot 27 (FUN_010381f0) and FUN_0101e778. */
+   `movne r1, #0x100`). Called by slot 27 (swvPolygonMode_SetTwoSidedLightingEnable) and FUN_0101e778. */
 void swvPolygonMode_SetTwoSidedLightingValue(uint8 *mode,int32 enable)
 
 {
@@ -52060,8 +52068,11 @@ void swvPolygonMode_GetCulling(int param_1,undefined4 *param_2)
   return;
 }
 
-/* ==== 0x01037FC0  (file offset 0x37FC0)  FUN_01037fc0 ================================================ */
-void FUN_01037fc0(int param_1,undefined4 *param_2)
+/* ==== 0x01037FC0  (file offset 0x37FC0)  swvPolygonMode_GetShading =================================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 20 (+0x50) of PolygonMode (JSR-184
+   PolygonMode.getShading; kh_types.h SwervePolygonModeVtbl): *param_2 = swvPolygonMode_Shading of the
+   native object (po->pNative, +4, less 4). */
+void swvPolygonMode_GetShading(int param_1,undefined4 *param_2)
 
 {
   int iVar1;
@@ -52071,13 +52082,16 @@ void FUN_01037fc0(int param_1,undefined4 *param_2)
   if (iVar1 != 0) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_010106f8(iVar1);
+  uVar2 = swvPolygonMode_Shading((uint8 *)iVar1);
   *param_2 = uVar2;
   return;
 }
 
-/* ==== 0x01037FE0  (file offset 0x37FE0)  FUN_01037fe0 ================================================ */
-void FUN_01037fe0(int param_1,undefined4 *param_2)
+/* ==== 0x01037FE0  (file offset 0x37FE0)  swvPolygonMode_GetWinding =================================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 22 (+0x58) of PolygonMode (JSR-184
+   PolygonMode.getWinding; kh_types.h SwervePolygonModeVtbl): *param_2 = swvPolygonMode_Winding of the
+   native object (po->pNative, +4, less 4). */
+void swvPolygonMode_GetWinding(int param_1,undefined4 *param_2)
 
 {
   int iVar1;
@@ -52087,7 +52101,7 @@ void FUN_01037fe0(int param_1,undefined4 *param_2)
   if (iVar1 != 0) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_01011980(iVar1);
+  uVar2 = swvPolygonMode_Winding((uint8 *)iVar1);
   *param_2 = uVar2;
   return;
 }
@@ -52103,19 +52117,22 @@ void swv_InitVtbl_PolygonMode(void **pVtbl)
   swv_InitVtbl_Object3D();
   pVtbl[0x12] = (void *)(ADDRESS_OF_swvPolygonMode_GetCulling_OFFSET + 0x1038018);
   pVtbl[0x13] = (void *)(ADDRESS_OF_swvPolygonMode_SetCulling_OFFSET + 0x1038024);
-  pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_01037fc0_OFFSET + 0x1038030);
-  pVtbl[0x15] = (void *)(ADDRESS_OF_FUNCTION_01038178_OFFSET + 0x103803c);
-  pVtbl[0x16] = (void *)(ADDRESS_OF_FUNCTION_01037fe0_OFFSET + 0x1038048);
-  pVtbl[0x17] = (void *)(ADDRESS_OF_FUNCTION_01038208_OFFSET + 0x1038054);
-  pVtbl[0x18] = (void *)(ADDRESS_OF_FUNCTION_01038148_OFFSET + 0x1038060);
-  pVtbl[0x19] = (void *)(ADDRESS_OF_FUNCTION_01038160_OFFSET + 0x103806c);
-  pVtbl[0x1a] = (void *)(ADDRESS_OF_FUNCTION_010380b0_OFFSET + 0x1038078);
-  pVtbl[0x1b] = (void *)(ADDRESS_OF_FUNCTION_010381f0_OFFSET + 0x1038084);
+  pVtbl[0x14] = (void *)(ADDRESS_OF_swvPolygonMode_GetShading_OFFSET + 0x1038030);
+  pVtbl[0x15] = (void *)(ADDRESS_OF_swvPolygonMode_SetShading_OFFSET + 0x103803c);
+  pVtbl[0x16] = (void *)(ADDRESS_OF_swvPolygonMode_GetWinding_OFFSET + 0x1038048);
+  pVtbl[0x17] = (void *)(ADDRESS_OF_swvPolygonMode_SetWinding_OFFSET + 0x1038054);
+  pVtbl[0x18] = (void *)(ADDRESS_OF_swvPolygonMode_SetLocalCameraLightingEnable_OFFSET + 0x1038060);
+  pVtbl[0x19] = (void *)(ADDRESS_OF_swvPolygonMode_SetPerspectiveCorrectionEnable_OFFSET + 0x103806c);
+  pVtbl[0x1a] = (void *)(ADDRESS_OF_swvPolygonMode_IsTwoSidedLightingEnabled_OFFSET + 0x1038078);
+  pVtbl[0x1b] = (void *)(ADDRESS_OF_swvPolygonMode_SetTwoSidedLightingEnable_OFFSET + 0x1038084);
   return;
 }
 
-/* ==== 0x010380B0  (file offset 0x380B0)  FUN_010380b0 ================================================ */
-void FUN_010380b0(int param_1,undefined1 *param_2)
+/* ==== 0x010380B0  (file offset 0x380B0)  swvPolygonMode_IsTwoSidedLightingEnabled ==================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 26 (+0x68) of PolygonMode (JSR-184
+   PolygonMode.isTwoSidedLightingEnabled; kh_types.h SwervePolygonModeVtbl): *param_2 (a byte) =
+   swvPolygonMode_TwoSidedLighting of the native object (po->pNative, +4, less 4). */
+void swvPolygonMode_IsTwoSidedLightingEnabled(int param_1,undefined1 *param_2)
 
 {
   undefined1 uVar1;
@@ -52125,7 +52142,7 @@ void FUN_010380b0(int param_1,undefined1 *param_2)
   if (iVar2 != 0) {
     iVar2 = iVar2 + -4;
   }
-  uVar1 = FUN_01011aa8(iVar2);
+  uVar1 = (undefined1)swvPolygonMode_TwoSidedLighting((uint8 *)iVar2);
   *param_2 = uVar1;
   return;
 }
@@ -52161,8 +52178,11 @@ undefined4 swvPolygonMode_SetCulling(int param_1,int param_2)
   return uVar2;
 }
 
-/* ==== 0x01038148  (file offset 0x38148)  FUN_01038148 ================================================ */
-void FUN_01038148(int param_1,int param_2)
+/* ==== 0x01038148  (file offset 0x38148)  swvPolygonMode_SetLocalCameraLightingEnable ================= */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 24 (+0x60) of PolygonMode (JSR-184
+   PolygonMode.setLocalCameraLightingEnable; kh_types.h SwervePolygonModeVtbl): sets the flag 0x200 of
+   the native object (po->pNative, +4, less 4) when param_2 is not 0, else clears it. */
+void swvPolygonMode_SetLocalCameraLightingEnable(int param_1,int param_2)
 
 {
   int iVar1;
@@ -52182,8 +52202,11 @@ void FUN_01038148(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x01038160  (file offset 0x38160)  FUN_01038160 ================================================ */
-void FUN_01038160(int param_1,int param_2)
+/* ==== 0x01038160  (file offset 0x38160)  swvPolygonMode_SetPerspectiveCorrectionEnable =============== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 25 (+0x64) of PolygonMode (JSR-184
+   PolygonMode.setPerspectiveCorrectionEnable; kh_types.h SwervePolygonModeVtbl): sets the flag 0x400 of
+   the native object (po->pNative, +4, less 4) when param_2 is not 0, else clears it. */
+void swvPolygonMode_SetPerspectiveCorrectionEnable(int param_1,int param_2)
 
 {
   int iVar1;
@@ -52203,11 +52226,12 @@ void FUN_01038160(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x01038178  (file offset 0x38178)  FUN_01038178 ================================================ */
-/* GUESS (not yet rewritten): ISwerveObject slot 21 (+0x54) of PolygonMode, GUESS setShading: in an
-   error frame, error -1301 unless the value is SHADE_FLAT (0xa4) or SHADE_SMOOTH (0xa5), then
-   swvPolygonMode_SetShadingValue. */
-undefined4 FUN_01038178(int param_1,int param_2)
+/* ==== 0x01038178  (file offset 0x38178)  swvPolygonMode_SetShading =================================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 21 (+0x54) of PolygonMode (JSR-184
+   PolygonMode.setShading; kh_types.h SwervePolygonModeVtbl): in an error frame, error -1301 unless the
+   value is SHADE_FLAT (0xa4) or SHADE_SMOOTH (0xa5), then swvPolygonMode_SetShadingValue; on an error
+   its result code. */
+undefined4 swvPolygonMode_SetShading(int param_1,int param_2)
 
 {
   int iVar1;
@@ -52234,12 +52258,13 @@ undefined4 FUN_01038178(int param_1,int param_2)
   return uVar2;
 }
 
-/* ==== 0x010381F0  (file offset 0x381F0)  FUN_010381f0 ================================================ */
-/* GUESS (the slot's meaning): ISwerveObject slot 27 (+0x6c) of PolygonMode, GUESS
-   setTwoSidedLightingEnable: swvPolygonMode_SetTwoSidedLightingValue on the native object (po->pNative,
-   +4, less 4) with enable made 0 or 1 (`movne r1, #1`), a tail jump in the binary (0x01038204; Ghidra had
-   pasted the setter in). */
-void FUN_010381f0(int param_1,int param_2)
+/* ==== 0x010381F0  (file offset 0x381F0)  swvPolygonMode_SetTwoSidedLightingEnable ==================== */
+/* GUESS: name. ISwerveObject slot 27 (+0x6c) of PolygonMode (JSR-184
+   PolygonMode.setTwoSidedLightingEnable; kh_types.h SwervePolygonModeVtbl):
+   swvPolygonMode_SetTwoSidedLightingValue on the native object (po->pNative, +4, less 4) with enable
+   made 0 or 1 (`movne r1, #1`), a tail jump in the binary (0x01038204; Ghidra had pasted the setter
+   in). */
+void swvPolygonMode_SetTwoSidedLightingEnable(int param_1,int param_2)
 
 {
   int iVar1;
@@ -52251,11 +52276,12 @@ void FUN_010381f0(int param_1,int param_2)
   swvPolygonMode_SetTwoSidedLightingValue((uint8 *)iVar1,param_2 != 0);
 }
 
-/* ==== 0x01038208  (file offset 0x38208)  FUN_01038208 ================================================ */
-/* GUESS (not yet rewritten): ISwerveObject slot 23 (+0x5c) of PolygonMode, GUESS setWinding: in an
-   error frame, error -1301 unless the value is WINDING_CCW (0xa8) or WINDING_CW (0xa9), then
-   swvPolygonMode_SetWindingValue. */
-undefined4 FUN_01038208(int param_1,int param_2)
+/* ==== 0x01038208  (file offset 0x38208)  swvPolygonMode_SetWinding =================================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 23 (+0x5c) of PolygonMode (JSR-184
+   PolygonMode.setWinding; kh_types.h SwervePolygonModeVtbl): in an error frame, error -1301 unless the
+   value is WINDING_CCW (0xa8) or WINDING_CW (0xa9), then swvPolygonMode_SetWindingValue; on an error
+   its result code. */
+undefined4 swvPolygonMode_SetWinding(int param_1,int param_2)
 
 {
   int iVar1;

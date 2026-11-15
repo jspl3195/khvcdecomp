@@ -554,7 +554,7 @@ undefined4 FUN_01010320(int param_1,int param_2,undefined4 *param_3);
 void FUN_01010384(int param_1,int param_2,undefined4 *param_3);
 int32 swvObject3D_References(uint8 *object,int32 max,uint8 **out);   /* 0x010103D4 GUESS: name, see swv21brew.c */
 undefined4 FUN_010104f0(int param_1);
-undefined4 FUN_010106f8(int param_1);
+int32 swvPolygonMode_Shading(const uint8 *mode);   /* 0x010106F8 GUESS: name, see swv21brew.c */
 void FUN_0101070c(int param_1,int param_2,int *param_3,undefined4 *param_4,undefined4 *param_5);
 undefined4 FUN_01010818(int param_1);
 undefined4 FUN_01010828(int param_1,uint param_2,int param_3,undefined4 *param_4);
@@ -574,7 +574,7 @@ void FUN_01011900(int param_1,undefined4 *param_2,undefined4 *param_3);
 void FUN_0101191c(int param_1,int param_2,undefined4 *param_3);
 int32 swvImage2D_Width(const uint8 *image);   /* 0x01011960 GUESS: name, see swv21brew.c */
 int32 swvImage2D_GetWidth(uint8 *image);   /* 0x01011968 GUESS: name, see swv21brew.c */
-undefined4 FUN_01011980(int param_1);
+int32 swvPolygonMode_Winding(const uint8 *mode);   /* 0x01011980 GUESS: name, see swv21brew.c */
 undefined4 FUN_01011994(int param_1);
 int FUN_010119a8(int param_1,int param_2,int param_3);
 uint8 *swvNode_AlignmentReferenceY(const uint8 *node);   /* 0x010119D8 GUESS: name, see swv21brew.c */
@@ -583,7 +583,7 @@ uint8 *swvNode_AlignmentReferenceZ(const uint8 *node);   /* 0x010119FC GUESS: na
 int32 swvNode_AlignmentTargetZ(const uint8 *node);   /* 0x01011A0C GUESS: name, see swv21brew.c */
 void FUN_01011a20(int param_1,int param_2,undefined4 *param_3);
 int FUN_01011a84(int param_1);
-uint FUN_01011aa8(int param_1);
+uint32 swvPolygonMode_TwoSidedLighting(const uint8 *mode);   /* 0x01011AA8 GUESS: name, see swv21brew.c */
 undefined4 FUN_01011ab8(int param_1);
 int swvKeyframeSequence_PreviousValid(int param_1,int param_2);
 int swvKeyframeSequence_NextValid(int param_1,int param_2);
@@ -1343,15 +1343,15 @@ void png_warning(int param_1,char *param_2);   /* 0x01037EB0 libpng */
 int FUN_01037eec(undefined4 param_1,int param_2,int param_3,undefined4 param_4);
 void thunk_FUN_01036188(int param_1,int param_2);
 void swvPolygonMode_GetCulling(int param_1,undefined4 *param_2);   /* 0x01037FA0 GUESS: name, see swv21brew.c */
-void FUN_01037fc0(int param_1,undefined4 *param_2);
-void FUN_01037fe0(int param_1,undefined4 *param_2);
-void FUN_010380b0(int param_1,undefined1 *param_2);
+void swvPolygonMode_GetShading(int param_1,undefined4 *param_2);   /* 0x01037FC0 GUESS: name, see swv21brew.c */
+void swvPolygonMode_GetWinding(int param_1,undefined4 *param_2);   /* 0x01037FE0 GUESS: name, see swv21brew.c */
+void swvPolygonMode_IsTwoSidedLightingEnabled(int param_1,undefined1 *param_2);   /* 0x010380B0 GUESS: name, see swv21brew.c */
 undefined4 swvPolygonMode_SetCulling(int param_1,int param_2);   /* 0x010380D0 GUESS: name, see swv21brew.c */
-void FUN_01038148(int param_1,int param_2);
-void FUN_01038160(int param_1,int param_2);
-undefined4 FUN_01038178(int param_1,int param_2);
-void FUN_010381f0(int param_1,int param_2);
-undefined4 FUN_01038208(int param_1,int param_2);
+void swvPolygonMode_SetLocalCameraLightingEnable(int param_1,int param_2);   /* 0x01038148 GUESS: name, see swv21brew.c */
+void swvPolygonMode_SetPerspectiveCorrectionEnable(int param_1,int param_2);   /* 0x01038160 GUESS: name, see swv21brew.c */
+undefined4 swvPolygonMode_SetShading(int param_1,int param_2);   /* 0x01038178 GUESS: name, see swv21brew.c */
+void swvPolygonMode_SetTwoSidedLightingEnable(int param_1,int param_2);   /* 0x010381F0 GUESS: name, see swv21brew.c */
+undefined4 swvPolygonMode_SetWinding(int param_1,int param_2);   /* 0x01038208 GUESS: name, see swv21brew.c */
 void FUN_01038280(int param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01038340(int param_1,undefined4 *param_2);
 int FUN_01038358(int param_1,ISwerveObject **param_2);
@@ -2223,14 +2223,14 @@ extern undefined4 STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET;   /* was DAT_0
 #define PNG_SIGNATURE_OFFSET 0x00007F18   /* was DAT_01037eac (word at 0x01037EAC); PC-relative offset: + 0x1037e58 (the pc) = 0x0103FD70, libpng's png_signature (89 50 4E 47 0D 0A 1A 0A) */
 #define ADDRESS_OF_swvPolygonMode_GetCulling_OFFSET 0xFFFFFF88   /* was DAT_01038088 (word at 0x01038088); PC-relative offset: + 0x1038018 (the pc) = 0x01037FA0 */
 #define ADDRESS_OF_swvPolygonMode_SetCulling_OFFSET 0x000000AC   /* was DAT_0103808c (word at 0x0103808C); PC-relative offset: + 0x1038024 (the pc) = 0x010380D0 */
-#define ADDRESS_OF_FUNCTION_01037fc0_OFFSET 0xFFFFFF90   /* was DAT_01038090 (word at 0x01038090); PC-relative offset: + 0x1038030 (the pc) = 0x01037FC0 */
-#define ADDRESS_OF_FUNCTION_01038178_OFFSET 0x0000013C   /* was DAT_01038094 (word at 0x01038094); PC-relative offset: + 0x103803c (the pc) = 0x01038178 */
-#define ADDRESS_OF_FUNCTION_01037fe0_OFFSET 0xFFFFFF98   /* was DAT_01038098 (word at 0x01038098); PC-relative offset: + 0x1038048 (the pc) = 0x01037FE0 */
-#define ADDRESS_OF_FUNCTION_01038208_OFFSET 0x000001B4   /* was DAT_0103809c (word at 0x0103809C); PC-relative offset: + 0x1038054 (the pc) = 0x01038208 */
-#define ADDRESS_OF_FUNCTION_01038148_OFFSET 0x000000E8   /* was DAT_010380a0 (word at 0x010380A0); PC-relative offset: + 0x1038060 (the pc) = 0x01038148 */
-#define ADDRESS_OF_FUNCTION_01038160_OFFSET 0x000000F4   /* was DAT_010380a4 (word at 0x010380A4); PC-relative offset: + 0x103806c (the pc) = 0x01038160 */
-#define ADDRESS_OF_FUNCTION_010380b0_OFFSET 0x00000038   /* was DAT_010380a8 (word at 0x010380A8); PC-relative offset: + 0x1038078 (the pc) = 0x010380B0 */
-#define ADDRESS_OF_FUNCTION_010381f0_OFFSET 0x0000016C   /* was DAT_010380ac (word at 0x010380AC); PC-relative offset: + 0x1038084 (the pc) = 0x010381F0 */
+#define ADDRESS_OF_swvPolygonMode_GetShading_OFFSET 0xFFFFFF90   /* was DAT_01038090 (word at 0x01038090); PC-relative offset: + 0x1038030 (the pc) = 0x01037FC0 */
+#define ADDRESS_OF_swvPolygonMode_SetShading_OFFSET 0x0000013C   /* was DAT_01038094 (word at 0x01038094); PC-relative offset: + 0x103803c (the pc) = 0x01038178 */
+#define ADDRESS_OF_swvPolygonMode_GetWinding_OFFSET 0xFFFFFF98   /* was DAT_01038098 (word at 0x01038098); PC-relative offset: + 0x1038048 (the pc) = 0x01037FE0 */
+#define ADDRESS_OF_swvPolygonMode_SetWinding_OFFSET 0x000001B4   /* was DAT_0103809c (word at 0x0103809C); PC-relative offset: + 0x1038054 (the pc) = 0x01038208 */
+#define ADDRESS_OF_swvPolygonMode_SetLocalCameraLightingEnable_OFFSET 0x000000E8   /* was DAT_010380a0 (word at 0x010380A0); PC-relative offset: + 0x1038060 (the pc) = 0x01038148 */
+#define ADDRESS_OF_swvPolygonMode_SetPerspectiveCorrectionEnable_OFFSET 0x000000F4   /* was DAT_010380a4 (word at 0x010380A4); PC-relative offset: + 0x103806c (the pc) = 0x01038160 */
+#define ADDRESS_OF_swvPolygonMode_IsTwoSidedLightingEnabled_OFFSET 0x00000038   /* was DAT_010380a8 (word at 0x010380A8); PC-relative offset: + 0x1038078 (the pc) = 0x010380B0 */
+#define ADDRESS_OF_swvPolygonMode_SetTwoSidedLightingEnable_OFFSET 0x0000016C   /* was DAT_010380ac (word at 0x010380AC); PC-relative offset: + 0x1038084 (the pc) = 0x010381F0 */
 #define ADDRESS_OF_FUNCTION_01038340_OFFSET 0xFFFFFDA4   /* was DAT_01038600 (word at 0x01038600); PC-relative offset: + 0x103859c (the pc) = 0x01038340 */
 #define ADDRESS_OF_FUNCTION_01038358_OFFSET 0xFFFFFDB0   /* was DAT_01038604 (word at 0x01038604); PC-relative offset: + 0x10385a8 (the pc) = 0x01038358 */
 #define ADDRESS_OF_FUNCTION_01038488_OFFSET 0xFFFFFED4   /* was DAT_01038608 (word at 0x01038608); PC-relative offset: + 0x10385b4 (the pc) = 0x01038488 */
