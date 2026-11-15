@@ -3523,13 +3523,16 @@ int FUN_01003408(int param_1)
 }
 
 /* ==== 0x01003474  (file offset 0x03474)  FUN_01003474 ================================================ */
+/* GUESS (not yet rewritten): the Node alignment of node param_1 and its subtree: FUN_0100a02c
+   (param_2 for the NULL references) when either target is not NONE (swvNode_AlignmentTargetZ / Y),
+   then the same for each child (+0x38 the first, +0x34 the next). */
 void FUN_01003474(int param_1,undefined4 param_2)
 
 {
   int iVar1;
   
-  iVar1 = FUN_01011a0c();
-  if ((iVar1 != 0x90) || (iVar1 = FUN_010119e8(param_1), iVar1 != 0x90)) {
+  iVar1 = swvNode_AlignmentTargetZ((uint8 *)param_1);   /* Ghidra had dropped it */
+  if ((iVar1 != 0x90) || (iVar1 = swvNode_AlignmentTargetY((uint8 *)param_1), iVar1 != 0x90)) {
     FUN_0100a02c(param_1,param_2);
   }
   for (iVar1 = *(int *)(param_1 + 0x38); iVar1 != 0; iVar1 = *(int *)(iVar1 + 0x34)) {
@@ -3539,6 +3542,9 @@ void FUN_01003474(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x010034CC  (file offset 0x034CC)  FUN_010034cc ================================================ */
+/* GUESS (not yet rewritten): JSR-184 Node.align(reference): error -1301 unless the reference param_2
+   (NULL: the node itself) can be reached from the node (FUN_01012508), then FUN_01003474's work on the
+   node and its children. The binary shares FUN_01003474's code (Ghidra repeated it here). */
 void FUN_010034cc(int param_1,int param_2)
 
 {
@@ -3549,8 +3555,8 @@ void FUN_010034cc(int param_1,int param_2)
   if ((param_2 != 0) && (iVar2 = FUN_01012508(param_2,param_1), iVar1 = param_2, iVar2 == 0)) {
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
-  iVar2 = FUN_01011a0c();
-  if ((iVar2 != 0x90) || (iVar2 = FUN_010119e8(param_1), iVar2 != 0x90)) {
+  iVar2 = swvNode_AlignmentTargetZ((uint8 *)param_1);   /* Ghidra had dropped it */
+  if ((iVar2 != 0x90) || (iVar2 = swvNode_AlignmentTargetY((uint8 *)param_1), iVar2 != 0x90)) {
     FUN_0100a02c(param_1,iVar1);
   }
   for (iVar2 = *(int *)(param_1 + 0x38); iVar2 != 0; iVar2 = *(int *)(iVar2 + 0x34)) {
@@ -9998,6 +10004,13 @@ uint * FUN_01009eac(int param_1,int param_2,int *param_3)
 }
 
 /* ==== 0x0100A02C  (file offset 0x0A02C)  FUN_0100a02c ================================================ */
+/* GUESS (not yet rewritten): the Node alignment (JSR-184 Node.align) of the node param_1, param_2
+   standing for the parent where a reference is NULL. The targets come from swvNode_AlignmentTargetZ (z)
+   and swvNode_AlignmentTargetY (y), the references from swvNode_AlignmentReferenceZ / Y; error -1300
+   (FUN_0102f7e0) for a reference of -1, the node itself, or one it cannot be aligned to (FUN_010048e4,
+   FUN_01013ab0). With one target NONE (0x90) it turns the node about the other axis only; with both,
+   the z vector (swvNode_AlignmentVector of the z reference's matrix relative to the node, normalised by
+   FUN_010263e8) is kept and y is made perpendicular to it (cross products, FUN_0102c6b4). */
 void FUN_0100a02c(int param_1,int param_2)
 
 {
@@ -10059,8 +10072,8 @@ void FUN_0100a02c(int param_1,int param_2)
   undefined4 local_28;
   
   puVar8 = &local_178;
-  iVar1 = FUN_01011a0c();
-  iVar2 = FUN_010119e8(param_1);
+  iVar1 = swvNode_AlignmentTargetZ((uint8 *)param_1);   /* Ghidra had dropped it */
+  iVar2 = swvNode_AlignmentTargetY((uint8 *)param_1);
   uVar6 = INTEGER_MINUS_1300;
   local_34 = 0;
   local_30 = 0;
@@ -10070,10 +10083,10 @@ void FUN_0100a02c(int param_1,int param_2)
     FUN_0102c7a8(auStack_84,*(undefined4 *)(param_1 + 0x20));
     FUN_01029650(auStack_78,auStack_84);
     if (iVar1 == 0x90) {
-      iVar4 = FUN_010119d8(param_1);
+      iVar4 = (int)swvNode_AlignmentReferenceY((uint8 *)param_1);
     }
     else {
-      iVar4 = FUN_010119fc();
+      iVar4 = (int)swvNode_AlignmentReferenceZ((uint8 *)param_1);   /* Ghidra had dropped it */
       iVar2 = iVar1;
     }
     if (iVar4 == -1) {
@@ -10089,7 +10102,7 @@ void FUN_0100a02c(int param_1,int param_2)
       FUN_0102f7e0(uVar6);
     }
     FUN_0101749c(auStack_bc,auStack_78);
-    FUN_0100f350(&local_c8,param_1,auStack_bc,iVar2);
+    swvNode_AlignmentVector((uint32 *)&local_c8,(uint8 *)param_1,(uint32 *)auStack_bc,iVar2);
     uVar6 = swv_fmul(local_c8);
     uVar7 = swv_fmul(local_c4);
     uVar6 = swv_fadd(uVar7,uVar6);
@@ -10123,8 +10136,8 @@ void FUN_0100a02c(int param_1,int param_2)
   else {
     FUN_0102c7a8(auStack_84,*(undefined4 *)(param_1 + 0x20));
     FUN_01029650(auStack_78,auStack_84);
-    iVar3 = FUN_010119fc(param_1);
-    iVar4 = FUN_010119d8(param_1);
+    iVar3 = (int)swvNode_AlignmentReferenceZ((uint8 *)param_1);
+    iVar4 = (int)swvNode_AlignmentReferenceY((uint8 *)param_1);
     if (iVar3 == -1 || iVar4 == -1) {
       FUN_0102f7e0(uVar6);
     }
@@ -10154,9 +10167,9 @@ void FUN_0100a02c(int param_1,int param_2)
       }
       FUN_0101749c(auStack_100,auStack_78);
     }
-    FUN_0100f350(&uStack_10c,param_1,auStack_bc,iVar1);
+    swvNode_AlignmentVector((uint32 *)&uStack_10c,(uint8 *)param_1,(uint32 *)auStack_bc,iVar1);
     FUN_010263e8(&uStack_10c);
-    FUN_0100f350(&local_118,param_1,auStack_100,iVar2);
+    swvNode_AlignmentVector((uint32 *)&local_118,(uint8 *)param_1,(uint32 *)auStack_100,iVar2);
     FUN_010263e8(&local_118);
     FUN_0102c6b4(&local_124,&local_118,&uStack_10c);
     FUN_010263e8(&local_124);
@@ -13614,6 +13627,9 @@ void swv_ColourScale(int32 *colour,int32 factor)
 }
 
 /* ==== 0x0100F030  (file offset 0x0F030)  FUN_0100f030 ================================================ */
+/* GUESS (not yet rewritten): copies node param_2's alignment into param_1 (a duplicate): the
+   references (mapped through FUN_01013ac8 / FUN_0100ed84 when they are in the copied subtree) and the
+   targets go to FUN_01020104 in the order of Node.setAlignment(zRef, zTarget, yRef, yTarget). */
 void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -13626,19 +13642,19 @@ void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   undefined4 uVar7;
   
   uVar6 = param_4;
-  iVar1 = FUN_010119fc(param_2);
-  iVar2 = FUN_010119d8(param_2);
+  iVar1 = (int)swvNode_AlignmentReferenceZ((uint8 *)param_2);
+  iVar2 = (int)swvNode_AlignmentReferenceY((uint8 *)param_2);
   if ((iVar1 != 0 && iVar1 != -1) || (iVar2 != 0 && iVar2 != -1)) {
-    uVar3 = FUN_010119fc(param_1);
-    uVar4 = FUN_010119d8(param_1);
+    uVar3 = (int)swvNode_AlignmentReferenceZ((uint8 *)param_1);
+    uVar4 = (int)swvNode_AlignmentReferenceY((uint8 *)param_1);
     if ((iVar1 != 0 && iVar1 != -1) && (iVar5 = FUN_01013ac8(iVar1,param_3), iVar5 != 0)) {
       uVar3 = FUN_0100ed84(iVar1,param_3,param_4);
     }
     if ((iVar2 != 0 && iVar2 != -1) && (iVar1 = FUN_01013ac8(iVar2,param_3), iVar1 != 0)) {
       uVar4 = FUN_0100ed84(iVar2,param_3,param_4);
     }
-    uVar6 = FUN_010119e8(param_2);
-    uVar7 = FUN_01011a0c(param_2);
+    uVar6 = swvNode_AlignmentTargetY((uint8 *)param_2);
+    uVar7 = swvNode_AlignmentTargetZ((uint8 *)param_2);
     FUN_01020104(param_1,uVar3,uVar7,uVar4,uVar6);
   }
   iVar2 = *(int *)(param_1 + 0x38);
@@ -13777,39 +13793,46 @@ void FUN_0100f1fc(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3,un
   return;
 }
 
-/* ==== 0x0100F350  (file offset 0x0F350)  FUN_0100f350 ================================================ */
-void FUN_0100f350(undefined4 *param_1,undefined4 param_2,undefined4 *param_3,undefined4 param_4)
+/* ==== 0x0100F350  (file offset 0x0F350)  swvNode_AlignmentVector ===================================== */
+/* GUESS: name. The vector a node is aligned to (JSR-184 Node.setAlignment), out of the reference's
+   matrix (4 x 4 floats, each axis 4 consecutive words: GUESS column-major), by the target constant:
+   ORIGIN (0x91) the translation (words 12 - 14), X_AXIS (0x92) words 0 - 2, Y_AXIS (0x93) words 4 -
+   6, Z_AXIS (0x94) words 8 - 10; NONE (0x90) or any other value 0, 0, 0. node, the node being aligned
+   (what every caller passes in r1), is not read: the body starts with `mov r1, #0`. Evidence:
+   0x0100f350 - 0x0100f3c8 (`sub r3, r3, #0x90` / `cmp r3, #4` / `addls pc, pc, r3, lsl #2`). Only
+   FUN_0100a02c (GUESS: the Node alignment) calls it, for the z and the y target. */
+void swvNode_AlignmentVector(uint32 *out,uint8 *node,const uint32 *matrix,int32 target)
 
 {
-  undefined4 uVar1;
-  
-  uVar1 = 0;
-  switch(param_4) {
-  case 0x90:
-  default:
-    *param_1 = 0;
-    param_1[1] = 0;
-    goto LAB_0100f3c4;
+  const uint32 *source;
+
+  switch (target) {
   case 0x91:
-    param_3 = param_3 + 0xc;
+    source = matrix + 12;
     break;
   case 0x92:
-    *param_1 = *param_3;
-    param_1[1] = param_3[1];
-    uVar1 = param_3[2];
-    goto LAB_0100f3c4;
+    source = matrix;
+    break;
   case 0x93:
-    param_3 = param_3 + 4;
+    source = matrix + 4;
     break;
   case 0x94:
-    param_3 = param_3 + 8;
+    source = matrix + 8;
+    break;
+  default:
+    source = NULL;
+    break;
   }
-  *param_1 = *param_3;
-  param_1[1] = param_3[1];
-  uVar1 = param_3[2];
-LAB_0100f3c4:
-  param_1[2] = uVar1;
-  return;
+  if (source != NULL) {
+    out[0] = source[0];
+    out[1] = source[1];
+    out[2] = source[2];
+  }
+  else {
+    out[0] = 0;
+    out[1] = 0;
+    out[2] = 0;
+  }
 }
 
 /* ==== 0x0100F3CC  (file offset 0x0F3CC)  FUN_0100f3cc ================================================ */
@@ -16215,60 +16238,77 @@ int FUN_010119a8(int param_1,int param_2,int param_3)
   return -1;
 }
 
-/* ==== 0x010119D8  (file offset 0x119D8)  FUN_010119d8 ================================================ */
-undefined4 FUN_010119d8(int param_1)
+/* ==== 0x010119D8  (file offset 0x119D8)  swvNode_AlignmentReferenceY ================================= */
+/* GUESS: name. The reference node of a node's y alignment (JSR-184 Node.getAlignmentReference(Y_AXIS)):
+   its alignment block's (+0x24) +0xc, or NULL when it has no block (see
+   swvNode_AlignmentReferenceZ). Evidence: 0x010119d8 - 0x010119e4 (`ldr r0, [r0, #0x24]`,
+   `cmp r0, #0`, `ldrne r0, [r0, #0xc]`). The y target is swvNode_AlignmentTargetY (the block's +4). */
+uint8 *swvNode_AlignmentReferenceY(const uint8 *node)
 
 {
-  undefined4 uVar1;
-  
-  uVar1 = 0;
-  if (*(int *)(param_1 + 0x24) != 0) {
-    uVar1 = *(undefined4 *)(*(int *)(param_1 + 0x24) + 0xc);
-  }
-  return uVar1;
+  const uint8 *alignment = *(const uint8 *const *)(node + 0x24);
+  uint8 *reference;
+
+  if (alignment != NULL)
+    reference = *(uint8 *const *)(alignment + 0xc);
+  else
+    reference = NULL;
+  return reference;
 }
 
-/* ==== 0x010119E8  (file offset 0x119E8)  FUN_010119e8 ================================================ */
-undefined4 FUN_010119e8(int param_1)
+/* ==== 0x010119E8  (file offset 0x119E8)  swvNode_AlignmentTargetY ==================================== */
+/* GUESS: name. The target of a node's y alignment (JSR-184 Node.getAlignmentTarget(Y_AXIS)): its
+   alignment block's (+0x24) +4, or NONE (0x90) when it has no block. Evidence: 0x010119e8 -
+   0x010119f8 (`ldr r0, [r0, #0x24]`, `cmp r0, #0`, `moveq r0, #0x90`, `ldrne r0, [r0, #4]`). The y
+   reference is swvNode_AlignmentReferenceY (+0xc). */
+int32 swvNode_AlignmentTargetY(const uint8 *node)
 
 {
-  undefined4 uVar1;
-  
-  if (*(int *)(param_1 + 0x24) == 0) {
-    uVar1 = 0x90;
-  }
-  else {
-    uVar1 = *(undefined4 *)(*(int *)(param_1 + 0x24) + 4);
-  }
-  return uVar1;
+  const uint8 *alignment = *(const uint8 *const *)(node + 0x24);
+  int32 target;
+
+  if (alignment == NULL)
+    target = 0x90;
+  else
+    target = *(const int32 *)(alignment + 4);
+  return target;
 }
 
-/* ==== 0x010119FC  (file offset 0x119FC)  FUN_010119fc ================================================ */
-undefined4 FUN_010119fc(int param_1)
+/* ==== 0x010119FC  (file offset 0x119FC)  swvNode_AlignmentReferenceZ ================================= */
+/* GUESS: name. The reference node of a node's z alignment (JSR-184 Node.getAlignmentReference(Z_AXIS)):
+   its alignment block's (+0x24) +8, or NULL when it has no block. NULL stands for the node's parent;
+   FUN_0100a02c treats -1 as an error. Evidence: 0x010119fc - 0x01011a08 (`ldr r0, [r0, #0x24]`,
+   `cmp r0, #0`, `ldrne r0, [r0, #8]`). The z target is swvNode_AlignmentTargetZ (the block's +0). */
+uint8 *swvNode_AlignmentReferenceZ(const uint8 *node)
 
 {
-  undefined4 uVar1;
-  
-  uVar1 = 0;
-  if (*(int *)(param_1 + 0x24) != 0) {
-    uVar1 = *(undefined4 *)(*(int *)(param_1 + 0x24) + 8);
-  }
-  return uVar1;
+  const uint8 *alignment = *(const uint8 *const *)(node + 0x24);
+  uint8 *reference;
+
+  if (alignment != NULL)
+    reference = *(uint8 *const *)(alignment + 8);
+  else
+    reference = NULL;
+  return reference;
 }
 
-/* ==== 0x01011A0C  (file offset 0x11A0C)  FUN_01011a0c ================================================ */
-undefined4 FUN_01011a0c(int param_1)
+/* ==== 0x01011A0C  (file offset 0x11A0C)  swvNode_AlignmentTargetZ ==================================== */
+/* GUESS: name. The target of a node's z alignment (JSR-184 Node.getAlignmentTarget(Z_AXIS)): its
+   alignment block's (+0x24) first word, or NONE (0x90) when it has no block. Evidence: 0x01011a0c -
+   0x01011a1c (`ldr r0, [r0, #0x24]`, `cmp r0, #0`, `moveq r0, #0x90`, `ldrne r0, [r0]`). The z
+   reference is swvNode_AlignmentReferenceZ (+8); FUN_0100f030 passes both to FUN_01020104 in the
+   order of Node.setAlignment(zRef, zTarget, yRef, yTarget). */
+int32 swvNode_AlignmentTargetZ(const uint8 *node)
 
 {
-  undefined4 uVar1;
-  
-  if (*(undefined4 **)(param_1 + 0x24) == (undefined4 *)0x0) {
-    uVar1 = 0x90;
-  }
-  else {
-    uVar1 = **(undefined4 **)(param_1 + 0x24);
-  }
-  return uVar1;
+  const uint8 *alignment = *(const uint8 *const *)(node + 0x24);
+  int32 target;
+
+  if (alignment == NULL)
+    target = 0x90;
+  else
+    target = *(const int32 *)alignment;
+  return target;
 }
 
 /* ==== 0x01011A20  (file offset 0x11A20)  FUN_01011a20 ================================================ */
@@ -23175,9 +23215,9 @@ void FUN_01019ebc(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
   int *piVar6;
   
   iVar1 = FUN_0100f810();
-  uVar2 = FUN_010119fc(param_1);
+  uVar2 = (int)swvNode_AlignmentReferenceZ((uint8 *)param_1);
   FUN_0101ffbc(iVar1,param_1,uVar2);
-  iVar3 = FUN_010119d8(param_1);
+  iVar3 = (int)swvNode_AlignmentReferenceY((uint8 *)param_1);
   if (iVar3 != 0) {
     for (iVar4 = 0; iVar4 < *(int *)(iVar1 + 0xc); iVar4 = iVar4 + 1) {
       if (*(int *)(*(int *)(*(int *)(iVar1 + 8) + iVar4 * 4) + 4) == iVar3) {
@@ -23283,9 +23323,9 @@ void FUN_01019f54(undefined4 param_1)
   if (iVar1 != 0) {
     for (iVar6 = 0; iVar6 < *(int *)(iVar1 + 0xc); iVar6 = iVar6 + 1) {
       piVar7 = *(int **)(*(int *)(iVar1 + 8) + iVar6 * 4);
-      iVar2 = FUN_010119d8(param_1,iVar5);
+      iVar2 = (int)swvNode_AlignmentReferenceY((uint8 *)param_1);
       iVar4 = piVar7[1];
-      iVar3 = FUN_010119fc(param_1);
+      iVar3 = (int)swvNode_AlignmentReferenceZ((uint8 *)param_1);
       iVar5 = piVar7[1];
       if ((iVar2 == iVar4 || iVar3 == iVar5) &&
          (FUN_0101a154(piVar7,param_1), iVar5 = extraout_r1, piVar7[4] == 0)) {

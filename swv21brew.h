@@ -510,7 +510,7 @@ int32 swvObject3D_AnimationTrackCount(const uint8 *object);   /* 0x0100F170 GUES
 void *swvObject3D_AnimationTrack(const uint8 *object,int32 index);   /* 0x0100F184 GUESS: name, see swv21brew.c */
 undefined4 FUN_0100f1c8(int param_1,int param_2);
 void FUN_0100f1fc(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3,undefined4 param_4);
-void FUN_0100f350(undefined4 *param_1,undefined4 param_2,undefined4 *param_3,undefined4 param_4);
+void swvNode_AlignmentVector(uint32 *out,uint8 *node,const uint32 *matrix,int32 target);   /* 0x0100F350 GUESS: name, see swv21brew.c */
 void FUN_0100f3cc(undefined4 param_1,int param_2,undefined4 param_3,undefined4 *param_4);
 void FUN_0100f450(undefined4 param_1,int param_2,undefined4 param_3,undefined4 *param_4);
 undefined4 * FUN_0100f4dc(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
@@ -577,10 +577,10 @@ undefined4 FUN_01011968(int param_1);
 undefined4 FUN_01011980(int param_1);
 undefined4 FUN_01011994(int param_1);
 int FUN_010119a8(int param_1,int param_2,int param_3);
-undefined4 FUN_010119d8(int param_1);
-undefined4 FUN_010119e8(int param_1);
-undefined4 FUN_010119fc(int param_1);
-undefined4 FUN_01011a0c(int param_1);
+uint8 *swvNode_AlignmentReferenceY(const uint8 *node);   /* 0x010119D8 GUESS: name, see swv21brew.c */
+int32 swvNode_AlignmentTargetY(const uint8 *node);   /* 0x010119E8 GUESS: name, see swv21brew.c */
+uint8 *swvNode_AlignmentReferenceZ(const uint8 *node);   /* 0x010119FC GUESS: name, see swv21brew.c */
+int32 swvNode_AlignmentTargetZ(const uint8 *node);   /* 0x01011A0C GUESS: name, see swv21brew.c */
 void FUN_01011a20(int param_1,int param_2,undefined4 *param_3);
 int FUN_01011a84(int param_1);
 uint FUN_01011aa8(int param_1);

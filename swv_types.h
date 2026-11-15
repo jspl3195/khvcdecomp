@@ -240,6 +240,17 @@ typedef struct SwvKeyframeSequence {
  * The BREW-facing ISwerveObject slots 3 - 17 they implement: kh_types.h SwerveObject3DVtbl, filled by
  * swv_InitVtbl_Object3D. */
 
+/* ---- Node, the base of the scene-graph objects (no struct yet) ---------------------------------
+ * The fields the alignment code reads (GUESS: the names; FUN_0100a02c, GUESS the Node alignment):
+ *   +0x20             the node's transform (FUN_0102c7a8 reads it)
+ *   +0x24             the alignment block, or NULL (no alignment):
+ *                       +0x0 the z target (swvNode_AlignmentTargetZ; NONE without a block)
+ *                       +0x4 the y target (swvNode_AlignmentTargetY; NONE without a block)
+ *                       +0x8 the z reference (swvNode_AlignmentReferenceZ; NULL: the parent)
+ *                       +0xc the y reference (swvNode_AlignmentReferenceY)
+ *   +0x30             passed with the references to FUN_010048e4 (GUESS: the scene or the parent)
+ * The JSR-184 alignment targets: NONE 0x90, ORIGIN 0x91, X_AXIS 0x92, Y_AXIS 0x93, Z_AXIS 0x94. */
+
 /* ---- VertexArray (class 29), the native object (no struct yet) ------------------------------
  * The fields its readers use (GUESS: the names; swvVertexArray_GetComponent, FUN_010257fc,
  * FUN_010258d0, FUN_01025a50):
