@@ -229,6 +229,17 @@ typedef struct SwvKeyframeSequence {
     int32    prepared;       /* +0x4c set by swvKeyframeSequence_Prepare */
 } SwvKeyframeSequence;
 
+/* ---- Object3D, the base of every native object (no struct yet) --------------------------------
+ * The fields every class shares (GUESS: the names; swvObject3D_AnimationTrackCount,
+ * swvObject3D_AnimationTrack, FUN_01006518):
+ *   +0x00             the vtable (engine-relative offsets; +4 getType)
+ *   +0x0c             the user id (JSR-184 Object3D.getUserID)
+ *   +0x10             the animation track list, or NULL: a growable array, +4 the items (a word each),
+ *                     +8 the count
+ *   +0x14             a list of its own, copied when not empty (GUESS: the user parameters)
+ * The BREW-facing ISwerveObject slots 3 - 17 they implement: kh_types.h SwerveObject3DVtbl, filled by
+ * swv_InitVtbl_Object3D. */
+
 /* ---- VertexArray (class 29), the native object (no struct yet) ------------------------------
  * The fields its readers use (GUESS: the names; swvVertexArray_GetComponent, FUN_010257fc,
  * FUN_010258d0, FUN_01025a50):

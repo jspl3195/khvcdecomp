@@ -802,7 +802,7 @@ typedef struct Game {
  * Release and QueryInterface, are the shared ISwerveObjectVtbl). Each slot is listed with the swv21brew
  * function its swv_InitVtbl_* puts there. Named slots: GUESS names, the JSR-184 methods they implement
  * (from what the function does and how kh.mod calls it); slotN: not identified. */
-/* every object class (FUN_0103517c fills them) */
+/* every object class (swv_InitVtbl_Object3D fills them) */
 typedef struct SwerveObject3DVtbl {
     ISwerveObjectVtbl object;                                              /* +0x00 slots 0-2 */
     void (*GetUserId)(ISwerveObject *po,int32 *pUserId);                 /* +0x0c slot 3, 0x010350fc */

@@ -5972,6 +5972,11 @@ int FUN_010064c4(int param_1,int param_2)
 }
 
 /* ==== 0x01006518  (file offset 0x06518)  FUN_01006518 ================================================ */
+/* GUESS (not yet rewritten): the Object3D part of a duplicate (JSR-184 Object3D.duplicate): copies
+   param_2's user id (+0x0c) into param_1, frees param_1's animation track list (+0x10; FUN_0102c4d0,
+   GUESS its deleting destructor), adds each of param_2's tracks again (swvObject3D_AnimationTrack,
+   FUN_01002a58: GUESS the native addAnimationTrack), then FUN_0101a230; and a new 0x10-byte object at
+   +0x14 when param_2 has a non-empty one there (GUESS: the user parameters). */
 int FUN_01006518(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -5990,9 +5995,9 @@ int FUN_01006518(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   }
   *(undefined4 *)(param_1 + 0x10) = 0;
   if (*(int *)(param_2 + 0x10) != 0) {
-    iVar1 = FUN_0100f170(param_2);
+    iVar1 = swvObject3D_AnimationTrackCount((uint8 *)param_2);
     for (iVar4 = 0; iVar4 < iVar1; iVar4 = iVar4 + 1) {
-      uVar3 = FUN_0100f184(param_2,iVar4);
+      uVar3 = (undefined4)swvObject3D_AnimationTrack((uint8 *)param_2,iVar4);
       FUN_01002a58(param_1,uVar3);
     }
   }
@@ -13663,31 +13668,39 @@ int32 swvImage2D_AlphaStride(const uint8 *image)
   return stride;
 }
 
-/* ==== 0x0100F170  (file offset 0x0F170)  FUN_0100f170 ================================================ */
-undefined4 FUN_0100f170(int param_1)
+/* ==== 0x0100F170  (file offset 0x0F170)  swvObject3D_AnimationTrackCount ============================= */
+/* GUESS: name. The number of animation tracks of a native Object3D (JSR-184
+   Object3D.getAnimationTrackCount): its track list (+0x10, a growable array: +4 the items, +8 the
+   count) has count tracks, or there are none while the list is NULL. Evidence: 0x0100f170 -
+   0x0100f180 (`ldr r0, [r0, #0x10]`, `cmp r0, #0`, `ldrne r0, [r0, #8]`, `moveq r0, #0`). Used by
+   swvObject3D_GetAnimationTrackCount (the ISwerveObject slot 5, kh_types.h SwerveObject3DVtbl),
+   swvObject3D_AnimationTrack and FUN_01006518. */
+int32 swvObject3D_AnimationTrackCount(const uint8 *object)
 
 {
-  undefined4 uVar1;
-  
-  if (*(int *)(param_1 + 0x10) == 0) {
-    uVar1 = 0;
-  }
-  else {
-    uVar1 = *(undefined4 *)(*(int *)(param_1 + 0x10) + 8);
-  }
-  return uVar1;
+  const uint8 *tracks = *(const uint8 *const *)(object + 0x10);
+  int32 count;
+
+  if (tracks != NULL)
+    count = *(const int32 *)(tracks + 8);
+  else
+    count = 0;
+  return count;
 }
 
-/* ==== 0x0100F184  (file offset 0x0F184)  FUN_0100f184 ================================================ */
-undefined4 FUN_0100f184(int param_1,int param_2)
+/* ==== 0x0100F184  (file offset 0x0F184)  swvObject3D_AnimationTrack ================================== */
+/* GUESS: name. Animation track index of a native Object3D (JSR-184 Object3D.getAnimationTrack):
+   error -1101 (FUN_0102f7e0, which does not return; GUESS: an index out of range) unless 0 <= index
+   < swvObject3D_AnimationTrackCount, then the track list's (+0x10) item index (its +4, a word each).
+   Evidence: 0x0100f184 - 0x0100f1c0 (`cmp r1, #0` / `blt` to the error, the count, `cmp r0, r4` /
+   `bgt` past it, `ldr` +0x10 / +4 / `add r0, r0, r4, lsl #2`). Used by
+   swvObject3D_GetAnimationTrack (slot 6) and FUN_01006518. */
+void *swvObject3D_AnimationTrack(const uint8 *object,int32 index)
 
 {
-  int iVar1;
-  
-  if ((param_2 < 0) || (iVar1 = FUN_0100f170(param_1), iVar1 <= param_2)) {
+  if (index < 0 || swvObject3D_AnimationTrackCount(object) <= index)
     FUN_0102f7e0(INTEGER_MINUS_1101);
-  }
-  return *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x10) + 4) + param_2 * 4);
+  return (*(void **const *)(*(const uint8 *const *)(object + 0x10) + 4))[index];
 }
 
 /* ==== 0x0100F1C8  (file offset 0x0F1C8)  FUN_0100f1c8 ================================================ */
@@ -40399,7 +40412,7 @@ void swv_InitVtbl_AnimationController(void **pVtbl)
                        BREW vtable (0x6c bytes = 27 slots incl. the 3 shared ones). Called once by
                        swv_WrapObject for internal object type 1 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
-  FUN_0103517c();
+  swv_InitVtbl_Object3D();
   pVtbl[0x12] = (void *)(ADDRESS_OF_FUNCTION_0102cecc_OFFSET + 0x102cefc);
   pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_0102d0d4_OFFSET + 0x102cf08);
   pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_0102ce74_OFFSET + 0x102cf14);
@@ -40635,7 +40648,7 @@ void swv_InitVtbl_AnimationTrack(void **pVtbl)
                        vtable (0x5c bytes = 23 slots incl. the 3 shared ones). Called once by
                        swv_WrapObject for internal object type 2 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
-  FUN_0103517c();
+  swv_InitVtbl_Object3D();
   pVtbl[0x12] = (void *)(ADDRESS_OF_FUNCTION_0102d310_OFFSET + 0x102d2c8);
   pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_0102d1c0_OFFSET + 0x102d2d4);
   pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_0102d3ac_OFFSET + 0x102d2e0);
@@ -40911,7 +40924,7 @@ void swv_InitVtbl_Appearance(void **pVtbl)
                        vtable (0x78 bytes = 30 slots incl. the 3 shared ones). Called once by
                        swv_WrapObject for internal object type 3 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
-  FUN_0103517c();
+  swv_InitVtbl_Object3D();
   pVtbl[0x12] = (void *)(ADDRESS_OF_FUNCTION_0102d504_OFFSET + 0x102d690);
   pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_0102d788_OFFSET + 0x102d69c);
   pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_0102d51c_OFFSET + 0x102d6a8);
@@ -41405,7 +41418,7 @@ void swv_InitVtbl_Background(void **pVtbl)
                        vtable (0x88 bytes = 34 slots incl. the 3 shared ones). Called once by
                        swv_WrapObject for internal object type 4 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
-  FUN_0103517c();
+  swv_InitVtbl_Object3D();
   pVtbl[0x12] = (void *)(ADDRESS_OF_FUNCTION_0102dadc_OFFSET + 0x102dc58);
   pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_0102dd80_OFFSET + 0x102dc64);
   pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_0102dba4_OFFSET + 0x102dc70);
@@ -42002,7 +42015,7 @@ void swv_InitVtbl_CompositingMode(void **pVtbl)
                        vtable (0x84 bytes = 33 slots incl. the 3 shared ones). Called once by
                        swv_WrapObject for internal object type 6 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
-  FUN_0103517c();
+  swv_InitVtbl_Object3D();
   pVtbl[0x12] = (void *)(ADDRESS_OF_FUNCTION_0102e4ac_OFFSET + 0x102e524);
   pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_0102e66c_OFFSET + 0x102e530);
   pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_0102e4c4_OFFSET + 0x102e53c);
@@ -42394,7 +42407,7 @@ void swv_InitVtbl_Fog(void **pVtbl)
                        bytes = 27 slots incl. the 3 shared ones). Called once by swv_WrapObject for
                        internal object type 7 (SwerveObjectType); class from swvObj_QueryInterface's
                        table. Slot names not yet identified. */
-  FUN_0103517c();
+  swv_InitVtbl_Object3D();
   pVtbl[0x12] = (void *)(ADDRESS_OF_FUNCTION_0102ea40_OFFSET + 0x102ead4);
   pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_0102eb5c_OFFSET + 0x102eae0);
   pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_0102ea5c_OFFSET + 0x102eaec);
@@ -44865,7 +44878,7 @@ void swv_InitVtbl_Image2D(void **pVtbl)
                        (0x78 bytes = 30 slots incl. the 3 shared ones). Called once by
                        swv_WrapObject for internal object type 10 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
-  FUN_0103517c();
+  swv_InitVtbl_Object3D();
   pVtbl[0x12] = (void *)(ADDRESS_OF_FUNCTION_01030c54_OFFSET + 0x1030b9c);
   pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_01030dbc_OFFSET + 0x1030ba8);
   pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_01030d14_OFFSET + 0x1030bb4);
@@ -45104,14 +45117,14 @@ FUN_01030f60(int param_1,int param_2,int param_3,int param_4,int param_5,undefin
   return uVar3;
 }
 
-/* ==== 0x01031030  (file offset 0x31030)  thunk_FUN_0103517c ========================================== */
-void thunk_FUN_0103517c(int param_1)
+/* ==== 0x01031030  (file offset 0x31030)  thunk_swv_InitVtbl_Object3D ================================= */
+void thunk_swv_InitVtbl_Object3D(int param_1)
 
 {
   *(int *)(param_1 + 0xc) = ADDRESS_OF_FUNCTION_010350fc_OFFSET + 0x1035188;
   *(int *)(param_1 + 0x10) = ADDRESS_OF_FUNCTION_01035304_OFFSET + 0x1035194;
-  *(int *)(param_1 + 0x14) = ADDRESS_OF_FUNCTION_01034f74_OFFSET + 0x10351a0;
-  *(int *)(param_1 + 0x18) = ADDRESS_OF_FUNCTION_01034f00_OFFSET + 0x10351ac;
+  *(int *)(param_1 + 0x14) = ADDRESS_OF_swvObject3D_GetAnimationTrackCount_OFFSET + 0x10351a0;
+  *(int *)(param_1 + 0x18) = ADDRESS_OF_swvObject3D_GetAnimationTrack_OFFSET + 0x10351ac;
   *(int *)(param_1 + 0x1c) = ADDRESS_OF_FUNCTION_01034d24_OFFSET + 0x10351b8;
   *(int *)(param_1 + 0x20) = ADDRESS_OF_FUNCTION_01035270_OFFSET + 0x10351c4;
   *(int *)(param_1 + 0x24) = ADDRESS_OF_FUNCTION_01034da8_OFFSET + 0x10351d0;
@@ -46657,7 +46670,7 @@ void swv_InitVtbl_KeyframeSequence(void **pVtbl)
                        vtable (0x64 bytes = 25 slots incl. the 3 shared ones). Called once by
                        swv_WrapObject for internal object type 19 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
-  FUN_0103517c();
+  swv_InitVtbl_Object3D();
   pVtbl[0x12] = (void *)(ADDRESS_OF_FUNCTION_01032b70_OFFSET + 0x1032b08);
   pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_01032ac0_OFFSET + 0x1032b14);
   pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_01032c10_OFFSET + 0x1032b20);
@@ -47681,7 +47694,7 @@ void swv_InitVtbl_Material(void **pVtbl)
                        (0x60 bytes = 24 slots incl. the 3 shared ones). Called once by
                        swv_WrapObject for internal object type 13 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
-  FUN_0103517c();
+  swv_InitVtbl_Object3D();
   pVtbl[0x12] = (void *)(ADDRESS_OF_FUNCTION_01033aac_OFFSET + 0x1033adc);
   pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_01033bb4_OFFSET + 0x1033ae8);
   pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_01033b34_OFFSET + 0x1033af4);
@@ -49033,8 +49046,11 @@ int FUN_01034e8c(int param_1,undefined4 param_2,ISwerveObject **param_3)
   return iVar1;
 }
 
-/* ==== 0x01034F00  (file offset 0x34F00)  FUN_01034f00 ================================================ */
-int FUN_01034f00(int param_1,undefined4 param_2,ISwerveObject **param_3)
+/* ==== 0x01034F00  (file offset 0x34F00)  swvObject3D_GetAnimationTrack =============================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 6 (+0x18) of every class (kh_types.h
+   SwerveObject3DVtbl.GetAnimationTrack): in an error frame, swvObject3D_AnimationTrack(native, index)
+   wrapped (swv_WrapObject) into *param_3; on an error its result code (swv_ErrorToResult). */
+int swvObject3D_GetAnimationTrack(int param_1,undefined4 param_2,ISwerveObject **param_3)
 
 {
   int iVar1;
@@ -49048,7 +49064,7 @@ int FUN_01034f00(int param_1,undefined4 param_2,ISwerveObject **param_3)
     if (iVar1 != 0) {
       iVar1 = iVar1 + -4;
     }
-    pNative = (void *)FUN_0100f184(iVar1,param_2);
+    pNative = swvObject3D_AnimationTrack((uint8 *)iVar1,param_2);
     if (pNative != (void *)0x0) {
       pNative = (void *)((int)pNative + 4);
     }
@@ -49061,8 +49077,11 @@ int FUN_01034f00(int param_1,undefined4 param_2,ISwerveObject **param_3)
   return iVar1;
 }
 
-/* ==== 0x01034F74  (file offset 0x34F74)  FUN_01034f74 ================================================ */
-void FUN_01034f74(int param_1,undefined4 *param_2)
+/* ==== 0x01034F74  (file offset 0x34F74)  swvObject3D_GetAnimationTrackCount ========================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 5 (+0x14) of every class (kh_types.h
+   SwerveObject3DVtbl.GetAnimationTrackCount): *param_2 = swvObject3D_AnimationTrackCount of the native
+   object (po->pNative, +4, less 4). */
+void swvObject3D_GetAnimationTrackCount(int param_1,undefined4 *param_2)
 
 {
   int iVar1;
@@ -49072,7 +49091,7 @@ void FUN_01034f74(int param_1,undefined4 *param_2)
   if (iVar1 != 0) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_0100f170(iVar1);
+  uVar2 = swvObject3D_AnimationTrackCount((uint8 *)iVar1);
   *param_2 = uVar2;
   return;
 }
@@ -49204,14 +49223,17 @@ void FUN_0103515c(int param_1)
   return;
 }
 
-/* ==== 0x0103517C  (file offset 0x3517C)  FUN_0103517c ================================================ */
-void FUN_0103517c(int param_1)
+/* ==== 0x0103517C  (file offset 0x3517C)  swv_InitVtbl_Object3D ======================================= */
+/* GUESS: name. Fills the ISwerveObject slots every class shares, 3 - 17 (+0x0c .. +0x44: the
+   JSR-184 Object3D methods, kh_types.h SwerveObject3DVtbl), in the vtable param_1; every
+   swv_InitVtbl_* calls it before its own slots (Ghidra dropped the argument at most calls). */
+void swv_InitVtbl_Object3D(int param_1)
 
 {
   *(int *)(param_1 + 0xc) = ADDRESS_OF_FUNCTION_010350fc_OFFSET + 0x1035188;
   *(int *)(param_1 + 0x10) = ADDRESS_OF_FUNCTION_01035304_OFFSET + 0x1035194;
-  *(int *)(param_1 + 0x14) = ADDRESS_OF_FUNCTION_01034f74_OFFSET + 0x10351a0;
-  *(int *)(param_1 + 0x18) = ADDRESS_OF_FUNCTION_01034f00_OFFSET + 0x10351ac;
+  *(int *)(param_1 + 0x14) = ADDRESS_OF_swvObject3D_GetAnimationTrackCount_OFFSET + 0x10351a0;
+  *(int *)(param_1 + 0x18) = ADDRESS_OF_swvObject3D_GetAnimationTrack_OFFSET + 0x10351ac;
   *(int *)(param_1 + 0x1c) = ADDRESS_OF_FUNCTION_01034d24_OFFSET + 0x10351b8;
   *(int *)(param_1 + 0x20) = ADDRESS_OF_FUNCTION_01035270_OFFSET + 0x10351c4;
   *(int *)(param_1 + 0x24) = ADDRESS_OF_FUNCTION_01034da8_OFFSET + 0x10351d0;
@@ -51807,7 +51829,7 @@ void swv_InitVtbl_PolygonMode(void **pVtbl)
                        vtable (0x70 bytes = 28 slots incl. the 3 shared ones). Called once by
                        swv_WrapObject for internal object type 8 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
-  FUN_0103517c();
+  swv_InitVtbl_Object3D();
   pVtbl[0x12] = (void *)(ADDRESS_OF_FUNCTION_01037fa0_OFFSET + 0x1038018);
   pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_010380d0_OFFSET + 0x1038024);
   pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_01037fc0_OFFSET + 0x1038030);
@@ -55999,7 +56021,7 @@ void FUN_0103c118(int param_1,undefined4 *param_2)
 void FUN_0103c170(int param_1)
 
 {
-  FUN_0103517c();
+  swv_InitVtbl_Object3D();
   *(int *)(param_1 + 0x48) = ADDRESS_OF_FUNCTION_0103c118_OFFSET + 0x103c188;
   *(int *)(param_1 + 0x4c) = ADDRESS_OF_FUNCTION_0103c6ec_OFFSET + 0x103c194;
   *(int *)(param_1 + 0x50) = ADDRESS_OF_FUNCTION_0103c03c_OFFSET + 0x103c1a0;
@@ -56385,7 +56407,7 @@ void swv_InitVtbl_TriangleStripArray(void **pVtbl)
                        BREW vtable (0x50 bytes = 20 slots incl. the 3 shared ones). Called once by
                        swv_WrapObject for internal object type 11 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
-  thunk_FUN_0103517c();
+  thunk_swv_InitVtbl_Object3D();
   pVtbl[0x12] = (void *)(ADDRESS_OF_FUNCTION_0103c944_OFFSET + 0x103c894);
   pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_0103c8ac_OFFSET + 0x103c8a0);
   return;
@@ -56489,7 +56511,7 @@ void swv_InitVtbl_VertexArray(void **pVtbl)
                        vtable (0x54 bytes = 21 slots incl. the 3 shared ones). Called once by
                        swv_WrapObject for internal object type 20 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
-  FUN_0103517c();
+  swv_InitVtbl_Object3D();
   pVtbl[0x12] = (void *)(ADDRESS_OF_FUNCTION_0103ca64_OFFSET + 0x103ca3c);
   pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_0103cb10_OFFSET + 0x103ca48);
   pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_0103cbac_OFFSET + 0x103ca54);
@@ -56779,7 +56801,7 @@ void swv_InitVtbl_VertexBuffer(void **pVtbl)
                        vtable (0x74 bytes = 29 slots incl. the 3 shared ones). Called once by
                        swv_WrapObject for internal object type 21 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
-  FUN_0103517c();
+  swv_InitVtbl_Object3D();
   pVtbl[0x12] = (void *)(ADDRESS_OF_FUNCTION_0103cd2c_OFFSET + 0x103cec8);
   pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_0103cff0_OFFSET + 0x103ced4);
   pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_0103cca8_OFFSET + 0x103cee0);

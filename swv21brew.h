@@ -506,8 +506,8 @@ int * FUN_0100eef0(int *param_1,int param_2);
 void swv_ColourScale(int32 *colour,int32 factor);   /* 0x0100EFE4 GUESS: name, see swv21brew.c */
 void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 int32 swvImage2D_AlphaStride(const uint8 *image);   /* 0x0100F154 GUESS: name, see swv21brew.c */
-undefined4 FUN_0100f170(int param_1);
-undefined4 FUN_0100f184(int param_1,int param_2);
+int32 swvObject3D_AnimationTrackCount(const uint8 *object);   /* 0x0100F170 GUESS: name, see swv21brew.c */
+void *swvObject3D_AnimationTrack(const uint8 *object,int32 index);   /* 0x0100F184 GUESS: name, see swv21brew.c */
 undefined4 FUN_0100f1c8(int param_1,int param_2);
 void FUN_0100f1fc(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3,undefined4 param_4);
 void FUN_0100f350(undefined4 *param_1,undefined4 param_2,undefined4 *param_3,undefined4 param_4);
@@ -1183,7 +1183,7 @@ undefined4 FUN_01030dbc(int param_1,int param_2,int param_3,int param_4,undefine
 undefined4 FUN_01030e98(int param_1,int param_2,int param_3,int param_4,int param_5);
 void FUN_01030f48(int param_1,undefined1 *param_2);
 undefined4 FUN_01030f60(int param_1,int param_2,int param_3,int param_4,int param_5,undefined4 param_6, int param_7);
-void thunk_FUN_0103517c(int param_1);
+void thunk_swv_InitVtbl_Object3D(int param_1);
 void FUN_01031034(int param_1,int param_2);
 undefined4 FUN_010311c4(int param_1,char *param_2,int param_3);
 undefined4 FUN_010311d4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
@@ -1267,14 +1267,14 @@ undefined4 FUN_01034d24(int param_1,int param_2);
 undefined4 FUN_01034da8(int param_1,undefined4 param_2,undefined4 *param_3);
 int FUN_01034e14(int param_1,ISwerveObject **param_2);
 int FUN_01034e8c(int param_1,undefined4 param_2,ISwerveObject **param_3);
-int FUN_01034f00(int param_1,undefined4 param_2,ISwerveObject **param_3);
-void FUN_01034f74(int param_1,undefined4 *param_2);
+int swvObject3D_GetAnimationTrack(int param_1,undefined4 param_2,ISwerveObject **param_3);   /* 0x01034F00 GUESS: name, see swv21brew.c */
+void swvObject3D_GetAnimationTrackCount(int param_1,undefined4 *param_2);   /* 0x01034F74 GUESS: name, see swv21brew.c */
 int FUN_01034f94(int param_1,uint param_2,int param_3,uint *param_4);
 void FUN_010350fc(int param_1,undefined4 *param_2);
 void FUN_01035114(int param_1);
 void FUN_01035134(int param_1,int param_2,undefined4 *param_3);
 void FUN_0103515c(int param_1);
-void FUN_0103517c(int param_1);
+void swv_InitVtbl_Object3D(int param_1);   /* 0x0103517C GUESS: name, see swv21brew.c */
 undefined4 FUN_01035270(int param_1,int param_2);
 void FUN_010352f4(int param_1);
 void FUN_01035304(int param_1,undefined4 param_2);
@@ -2122,8 +2122,8 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define WORD_HEXADECIMAL_FFFCD4EC 0xFFFCD4EC   /* was DAT_010350f4 (word at 0x010350F4); value 0xFFFCD4EC (-207636) */
 #define ADDRESS_OF_FUNCTION_010350fc_OFFSET 0xFFFFFF74   /* was DAT_01035234 (word at 0x01035234); PC-relative offset: + 0x1035188 (the pc) = 0x010350FC */
 #define ADDRESS_OF_FUNCTION_01035304_OFFSET 0x00000170   /* was DAT_01035238 (word at 0x01035238); PC-relative offset: + 0x1035194 (the pc) = 0x01035304 */
-#define ADDRESS_OF_FUNCTION_01034f74_OFFSET 0xFFFFFDD4   /* was DAT_0103523c (word at 0x0103523C); PC-relative offset: + 0x10351a0 (the pc) = 0x01034F74 */
-#define ADDRESS_OF_FUNCTION_01034f00_OFFSET 0xFFFFFD54   /* was DAT_01035240 (word at 0x01035240); PC-relative offset: + 0x10351ac (the pc) = 0x01034F00 */
+#define ADDRESS_OF_swvObject3D_GetAnimationTrackCount_OFFSET 0xFFFFFDD4   /* was DAT_0103523c (word at 0x0103523C); PC-relative offset: + 0x10351a0 (the pc) = 0x01034F74 */
+#define ADDRESS_OF_swvObject3D_GetAnimationTrack_OFFSET 0xFFFFFD54   /* was DAT_01035240 (word at 0x01035240); PC-relative offset: + 0x10351ac (the pc) = 0x01034F00 */
 #define ADDRESS_OF_FUNCTION_01034d24_OFFSET 0xFFFFFB6C   /* was DAT_01035244 (word at 0x01035244); PC-relative offset: + 0x10351b8 (the pc) = 0x01034D24 */
 #define ADDRESS_OF_FUNCTION_01035270_OFFSET 0x000000AC   /* was DAT_01035248 (word at 0x01035248); PC-relative offset: + 0x10351c4 (the pc) = 0x01035270 */
 #define ADDRESS_OF_FUNCTION_01034da8_OFFSET 0xFFFFFBD8   /* was DAT_0103524c (word at 0x0103524C); PC-relative offset: + 0x10351d0 (the pc) = 0x01034DA8 */
