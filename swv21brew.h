@@ -544,7 +544,7 @@ int FUN_0100fdec(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 int FUN_0100fe8c(int param_1,int param_2);
 uint16 *swvImage2D_Palette(const uint8 *image);   /* 0x0100FFE4 GUESS: name, see swv21brew.c */
 int32 swvImage2D_ColourStride(const uint8 *image);   /* 0x0100FFFC GUESS: name, see swv21brew.c */
-uint FUN_01010008(int *param_1);
+uint32 swv_ColourToRGB565(const int32 *colour);   /* 0x01010008 GUESS: name, see swv21brew.c */
 void FUN_01010084(int *param_1);
 uint FUN_01010094(int param_1,int param_2,undefined4 param_3,uint param_4);
 undefined4 FUN_010100f0(int param_1,int param_2,undefined4 *param_3);
@@ -807,7 +807,7 @@ void swvPolygonMode_SetFlags(uint8 *mode,uint32 value);   /* 0x01021ED8 GUESS: n
 void FUN_01021f28(int param_1);
 void FUN_010220b0(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01022140(int *param_1,undefined4 param_2);
-void FUN_010221a0(int *param_1,uint param_2);
+void swv_ColourFromRGB(int32 *colour,uint32 argb);   /* 0x010221A0 GUESS: name, see swv21brew.c */
 void FUN_010221dc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
 void FUN_01022204(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
 void FUN_01022234(int *param_1,int param_2);

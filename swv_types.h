@@ -312,6 +312,12 @@ typedef struct SwvKeyframeSequence {
  *   +0x2c .. +0x38    the crop rectangle: x, y, width, height (floats)
  *   +0x3c / +0x40     the colour clear and the depth clear enables */
 
+/* ---- the lighting colour ---------------------------------------------------------------------------
+ * Three int32, red, green, blue, in 8.8 fixed point (0x100 is 1.0; no struct yet). Made from the RGB
+ * bytes of an ARGB word by swv_ColourFromRGB (0xff gives 0x100), worked on by swv_ColourAdd,
+ * swv_ColourModulate, swv_ColourScale (by a 16.16 factor) and swv_ColourClamp (to 0 .. 1.0), and
+ * packed into an RGB565 pixel by swv_ColourToRGB565. */
+
 /* ---- the software rasteriser's context (no struct yet) --------------------------------------
  * The fields the triangle code is known to use (GUESS: the names):
  *   +0x04             the span's y (its parity picks the dither row)

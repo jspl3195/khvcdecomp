@@ -5573,8 +5573,9 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
       }
       if (iStack_8c != 0) {
         uStack_d0 = *(uint *)(param_2 + 0x1c) >> 0x18;
-        FUN_010221a0(&iStack_dc);
-        iStack_cc = FUN_01010008(&iStack_dc);
+        /* Ghidra had dropped the colour (r1, ldr r1, [r11, #0x1c] at 0x01005934) */
+        swv_ColourFromRGB((int32 *)&iStack_dc,*(uint *)(param_2 + 0x1c));
+        iStack_cc = swv_ColourToRGB565((int32 *)&iStack_dc);
         if ((((iVar11 < iStack_84) && (iStack_50 = iVar11 + iStack_a0, iVar6 < iStack_50)) &&
             (iVar12 < iStack_88)) && (iStack_54 = iVar12 + iVar8, iVar10 < iStack_54)) {
           /* height, colour and alpha: Ghidra had dropped the stack arguments */
@@ -5644,8 +5645,8 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
       goto swv_memset;
     }
     if (iStack_8c != 0) {
-      FUN_010221a0(&uStack_a8,*(undefined4 *)(param_2 + 0x1c));
-      uVar1 = FUN_01010008(&uStack_a8);
+      swv_ColourFromRGB((int32 *)&uStack_a8,*(undefined4 *)(param_2 + 0x1c));
+      uVar1 = swv_ColourToRGB565((int32 *)&uStack_a8);
       iVar11 = iVar10 * iVar8 + iStack_6c;
       for (iVar9 = iVar6; iVar9 < iStack_84; iVar9 = iVar9 + 1) {
         *(undefined2 *)(iVar11 + iVar9 * 2) = uVar1;
@@ -14679,33 +14680,30 @@ int32 swvImage2D_ColourStride(const uint8 *image)
   return *(const int32 *)(image + 0x34) << 1;
 }
 
-/* ==== 0x01010008  (file offset 0x10008)  FUN_01010008 ================================================ */
-uint FUN_01010008(int *param_1)
+/* ==== 0x01010008  (file offset 0x10008)  swv_ColourToRGB565 ========================================== */
+/* GUESS: name. Packs a lighting colour (three int32, red, green, blue, in 8.8 fixed point: 0x100 is
+   1.0) into an RGB565 pixel: each component to 0 .. 255 as c - ((c + 0x80) >> 8) (0x100 gives 0xff),
+   each above 0xff clamped to 0xff (only when the three ORed are, an unsigned test: a negative component
+   comes out as 0xff, not 0; the callers pass colours in range), then (r >> 3) << 11 | (g >> 2) << 5 |
+   b >> 3. Evidence: 0x01010008 - 0x01010080 (`add #0x80` / `sub rN, rN, rM, asr #8` for each, `orr` /
+   `cmp #0xff` / `bls` past the clamp, `cmp #0x100` / `movcs #0xff`). The inverse of swv_ColourFromRGB.
+   Used by the Background clear FUN_01005104 and FUN_01018460. */
+uint32 swv_ColourToRGB565(const int32 *colour)
 
 {
-  uint uVar1;
-  uint uVar2;
-  uint uVar3;
-  
-  uVar2 = *param_1 - (*param_1 + 0x80 >> 8);
-  uVar3 = param_1[1] - (param_1[1] + 0x80 >> 8);
-  uVar1 = param_1[2] - (param_1[2] + 0x80 >> 8);
-  if ((uVar2 | uVar3 | uVar1) < 0x100) {
-    uVar2 = (uVar2 >> 3) << 0xb | (uVar3 >> 2) << 5;
+  uint32 r = (uint32)(colour[0] - ((colour[0] + 0x80) >> 8));
+  uint32 g = (uint32)(colour[1] - ((colour[1] + 0x80) >> 8));
+  uint32 b = (uint32)(colour[2] - ((colour[2] + 0x80) >> 8));
+
+  if ((r | g | b) > 0xff) {
+    if (r > 0xff)
+      r = 0xff;
+    if (g > 0xff)
+      g = 0xff;
+    if (b > 0xff)
+      b = 0xff;
   }
-  else {
-    if (0xff < uVar2) {
-      uVar2 = 0xff;
-    }
-    if (0xff < uVar3) {
-      uVar3 = 0xff;
-    }
-    if (0xff < uVar1) {
-      uVar1 = 0xff;
-    }
-    uVar2 = (uVar2 >> 3) << 0xb | (uVar3 >> 2) << 5;
-  }
-  return (uVar2 | uVar1 >> 3) & 0xffff;
+  return ((r >> 3) << 11 | (g >> 2) << 5 | b >> 3) & 0xffff;
 }
 
 /* ==== 0x01010084  (file offset 0x10084)  FUN_01010084 ================================================ */
@@ -17471,7 +17469,7 @@ int FUN_01012908(int *param_1,int param_2,int param_3)
   if (iVar1 != 0) {
     param_1[1] = (uint)(uVar5 != 0x80);
     param_1[2] = 0;
-    FUN_010221a0(param_1 + 0x12,*(uint *)(param_2 + 0x94) & 0xffffff);
+    swv_ColourFromRGB((int32 *)param_1 + 0x12,*(uint *)(param_2 + 0x94) & 0xffffff);
     FUN_01027578(param_1 + 0x12,*(undefined4 *)(param_2 + 0x98));
     param_1[0x1f] = *(int *)(param_2 + 0x2c);
     *param_1 = 0;
@@ -22064,7 +22062,7 @@ void FUN_010183b0(int param_1)
    levels). On the way it uses swv_ColourScale three times: two colours scaled by the same factor
    and each added to a colour (swv_ColourAdd), the second blended with the first (FUN_010272c0),
    scaled by a 0 .. 1.0 weight (clamped) and added to it, the result packed to RGB565
-   (FUN_01010008). */
+   (swv_ColourToRGB565). */
 void FUN_01018460(int param_1)
 
 {
@@ -22650,7 +22648,7 @@ LAB_010190c8:
           FUN_010272c0(&local_164,&local_158);
           swv_ColourScale(&local_164,iVar8);
           swv_ColourAdd(&local_164,&local_158);
-          uVar2 = FUN_01010008(&local_164);
+          uVar2 = swv_ColourToRGB565((int32 *)&local_164);
           *(undefined2 *)(local_98 + (iVar6 * local_84 + local_13c) * 2) = uVar2;
         }
       }
@@ -24546,7 +24544,7 @@ void FUN_0101a89c(int param_1,int param_2)
       iVar6 = *(int *)(iVar19 + 0x2c);
     }
     if (iVar19 != 0 && iVar6 != 0x4f) {
-      FUN_010221a0(param_1 + 0x99c,*(uint *)(iVar19 + 0x1c) & 0xffffff);
+      swv_ColourFromRGB((int32 *)param_1 + 0x99c,*(uint *)(iVar19 + 0x1c) & 0xffffff);
       FUN_01020cc0(*(undefined4 *)(param_1 + 8),iVar19);
       puVar22[0x12] = *(undefined4 *)(iVar19 + 0x2c);
       if (puVar22[0x23] == 0x20) {
@@ -25026,7 +25024,7 @@ void FUN_0101bd48(int param_1,int param_2,int param_3,int param_4,undefined4 par
     FUN_01020cc0(*(undefined4 *)(param_1 + 8),0);
   }
   else {
-    FUN_010221a0(local_38,*(uint *)(iVar9 + 0x1c) & 0xffffff);
+    swv_ColourFromRGB((int32 *)local_38,*(uint *)(iVar9 + 0x1c) & 0xffffff);
     FUN_01020cc0(*(undefined4 *)(param_1 + 8),iVar9);
   }
   local_88 = 0;
@@ -25036,7 +25034,7 @@ void FUN_0101bd48(int param_1,int param_2,int param_3,int param_4,undefined4 par
   if ((local_94 != 0) && (*(int *)(local_94 + 0x2c) == 0)) {
     local_7c = swvMaterial_Color((uint8 *)local_94,0x800);
     uVar3 = swvMaterial_Color((uint8 *)local_94,0x400);
-    FUN_010221a0(&local_90,uVar3);
+    swv_ColourFromRGB((int32 *)&local_90,uVar3);
   }
   if (*(int *)(local_28 + 0x20) == 0) {
     FUN_01020a28(*(undefined4 *)(param_1 + 8),*(undefined4 *)(param_1 + 0x9a8));
@@ -25399,7 +25397,7 @@ LAB_0101c710:
                   }
                   if (local_94 == 0) {
                     if (*(int *)(param_1 + 0x344) == 0) {
-                      FUN_010221a0(iVar18 + 0x9c4,local_7c);
+                      swv_ColourFromRGB((int32 *)iVar18 + 0x9c4,local_7c);
                       /* Ghidra had dropped it */
                       uVar14 = swv_ffix(swv_fmul(uStack_6c,*(undefined4 *)(param_1 + 0xc)));
                       *(char *)(iVar18 + 0xa0c) = (char)uVar14;
@@ -25422,11 +25420,11 @@ LAB_0101c710:
                   else {
                     uVar3 = swvMaterial_Color((uint8 *)local_94,0x1000);
                     iVar5 = iVar18 + 0x9c4;
-                    FUN_010221a0(iVar5,uVar3);
+                    swv_ColourFromRGB((int32 *)iVar5,uVar3);
                     uVar3 = swvMaterial_Color((uint8 *)local_94,0x2000);
-                    FUN_010221a0(iVar18 + 0x9dc,uVar3);
+                    swv_ColourFromRGB((int32 *)iVar18 + 0x9dc,uVar3);
                     if (*(int *)(local_94 + 0x2c) == 0) {
-                      FUN_010221a0(iVar18 + 0x9d0,local_7c);
+                      swv_ColourFromRGB((int32 *)iVar18 + 0x9d0,local_7c);
                       /* Ghidra had dropped it */
                       uVar19 = swv_ffix(swv_fmul(uStack_6c,*(undefined4 *)(param_1 + 0xc)));
                       *(undefined1 *)(iVar18 + 0xa0c) = uVar19;
@@ -25434,7 +25432,7 @@ LAB_0101c710:
                     }
                     else {
                       if (*(int *)(param_1 + 0x344) == 0) {
-                        FUN_010221a0(iVar18 + 0x9d0,local_7c);
+                        swv_ColourFromRGB((int32 *)iVar18 + 0x9d0,local_7c);
                         /* Ghidra had dropped it */
                         uVar19 = swv_ffix(swv_fmul(uStack_6c,*(undefined4 *)(param_1 + 0xc)));
                         *(undefined1 *)(iVar18 + 0xa0c) = uVar19;
@@ -27126,13 +27124,13 @@ void FUN_0101e534(int param_1,undefined4 param_2)
     FUN_0102f7e0(uVar8);
   }
   uVar8 = FUN_01019abc(param_2);
-  FUN_010221a0(param_1 + 0x160,uVar8);
+  swv_ColourFromRGB((int32 *)param_1 + 0x160,uVar8);
   uVar8 = FUN_01019abc(param_2);
-  FUN_010221a0(param_1 + 0x16c,uVar8);
+  swv_ColourFromRGB((int32 *)param_1 + 0x16c,uVar8);
   uVar8 = FUN_01019abc(param_2);
-  FUN_010221a0(param_1 + 0x178,uVar8);
+  swv_ColourFromRGB((int32 *)param_1 + 0x178,uVar8);
   uVar8 = FUN_01019abc(param_2);
-  FUN_010221a0(param_1 + 0x184,uVar8);
+  swv_ColourFromRGB((int32 *)param_1 + 0x184,uVar8);
   uVar11 = FUN_01019abc(param_2);
   uVar16 = 1;
   iVar9 = 0;
@@ -27671,7 +27669,7 @@ LAB_010190c8:
           FUN_010272c0(&iStack_164,&iStack_158);
           swv_ColourScale(&iStack_164,iVar7);
           swv_ColourAdd(&iStack_164,&iStack_158);
-          uVar3 = FUN_01010008(&iStack_164);
+          uVar3 = swv_ColourToRGB565((int32 *)&iStack_164);
           *(undefined2 *)(iStack_98 + (iVar5 * iStack_84 + iStack_13c) * 2) = uVar3;
         }
       }
@@ -30803,18 +30801,22 @@ void FUN_01022140(int *param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x010221A0  (file offset 0x221A0)  FUN_010221a0 ================================================ */
-void FUN_010221a0(int *param_1,uint param_2)
+/* ==== 0x010221A0  (file offset 0x221A0)  swv_ColourFromRGB =========================================== */
+/* GUESS: name. A lighting colour (three int32 in 8.8 fixed point) from the red, green and blue bytes
+   of an ARGB word (the alpha byte is not read): each byte c to c + ((c + 0x80) >> 8), so 0xff gives
+   0x100 (1.0) and 0 gives 0. Evidence: 0x010221a0 - 0x010221d8 (`lsl` / `lsr #0x18` or `and #0xff` for
+   each byte, `add #0x80` / `add rN, rN, rM, asr #8`, a `str` each). The inverse of
+   swv_ColourToRGB565. Used for the Background's colour, the lights' (+0x48) and the materials'. */
+void swv_ColourFromRGB(int32 *colour,uint32 argb)
 
 {
-  uint uVar1;
-  
-  uVar1 = (param_2 & 0xffffff) >> 0x10;
-  *param_1 = uVar1 + ((int)(uVar1 + 0x80) >> 8);
-  uVar1 = (param_2 & 0xffff) >> 8;
-  param_1[1] = uVar1 + ((int)(uVar1 + 0x80) >> 8);
-  param_1[2] = (param_2 & 0xff) + ((int)((param_2 & 0xff) + 0x80) >> 8);
-  return;
+  int32 r = (int32)((argb << 8) >> 24);
+  int32 g = (int32)((argb << 16) >> 24);
+  int32 b = (int32)(argb & 0xff);
+
+  colour[0] = r + ((r + 0x80) >> 8);
+  colour[1] = g + ((g + 0x80) >> 8);
+  colour[2] = b + ((b + 0x80) >> 8);
 }
 
 /* ==== 0x010221DC  (file offset 0x221DC)  FUN_010221dc ================================================ */
@@ -37365,7 +37367,7 @@ int * FUN_01028d2c(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
   param_1[0x265] = 0;
   param_1[0x263] = iVar1 + 0x1028e90;
   param_1[0x266] = 0;
-  FUN_010221a0(param_1 + 0x267,0);
+  swv_ColourFromRGB((int32 *)param_1 + 0x267,0);
   param_1[0x26a] = 0;
   param_1[0x26b] = iVar3;
   iVar1 = WORD_HEXADECIMAL_FFFD9100;
