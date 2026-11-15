@@ -7521,6 +7521,9 @@ undefined4 FUN_01007f8c(int param_1,int param_2,int param_3,int param_4,int para
 }
 
 /* ==== 0x0100800C  (file offset 0x0800C)  FUN_0100800c ================================================ */
+/* GUESS (not yet rewritten): makes the Image2D param_1 a blank RGB (99) image of the size param_2 x
+   param_3 (FUN_01007f40), its colour buffer (+0x48, swvImage2D_Width * swvImage2D_Height words)
+   filled with 0xff bytes. */
 undefined4 FUN_0100800c(int param_1,undefined4 param_2,undefined4 param_3)
 
 {
@@ -7529,8 +7532,8 @@ undefined4 FUN_0100800c(int param_1,undefined4 param_2,undefined4 param_3)
   undefined4 uVar3;
   
   FUN_01007f40(param_1,99,param_2,param_3,0);
-  iVar1 = FUN_01011960(param_1);
-  iVar2 = FUN_0100f714(param_1);
+  iVar1 = swvImage2D_Width((uint8 *)param_1);
+  iVar2 = swvImage2D_Height((uint8 *)param_1);
   FUN_01023184(param_1 + 0x48,iVar2 * iVar1);
   uVar3 = *(undefined4 *)(param_1 + 0x4c);
   /* the binary: a tail jump to the thunk (Ghidra had merged it and swv_memset) */
@@ -14149,19 +14152,26 @@ int32 swvImage2D_StorageFormat(const uint8 *image)
   return format;
 }
 
-/* ==== 0x0100F714  (file offset 0x0F714)  FUN_0100f714 ================================================ */
-undefined4 FUN_0100f714(int param_1)
+/* ==== 0x0100F714  (file offset 0x0F714)  swvImage2D_Height =========================================== */
+/* GUESS: name. A native Image2D's height (+0x38; its width is swvImage2D_Width, +0x34). Evidence:
+   0x0100f714 - 0x0100f718 (`ldr r0, [r0, #0x38]` / `bx lr`); its callers take width * height
+   (FUN_0100800c) or check both against 1 << +0x54 / +0x58 (FUN_01018460). swvImage2D_GetHeight calls it
+   after bringing the image up to date. */
+int32 swvImage2D_Height(const uint8 *image)
 
 {
-  return *(undefined4 *)(param_1 + 0x38);
+  return *(const int32 *)(image + 0x38);
 }
 
-/* ==== 0x0100F71C  (file offset 0x0F71C)  FUN_0100f71c ================================================ */
-undefined4 FUN_0100f71c(int param_1)
+/* ==== 0x0100F71C  (file offset 0x0F71C)  swvImage2D_GetHeight ======================================== */
+/* GUESS: name (GUESS: the Image2D's vtable +0x28, getHeight; nothing calls it directly). FUN_01018460
+   on the image first (Ghidra had dropped the argument: r0 is the image, kept in r4), then the height
+   (swvImage2D_Height, a tail jump in the binary: 0x0100f730). Evidence: 0x0100f71c - 0x0100f730. */
+int32 swvImage2D_GetHeight(uint8 *image)
 
 {
-  FUN_01018460();
-  return *(undefined4 *)(param_1 + 0x38);
+  FUN_01018460((int)image);
+  return swvImage2D_Height(image);
 }
 
 /* ==== 0x0100F734  (file offset 0x0F734)  FUN_0100f734 ================================================ */
@@ -16245,19 +16255,25 @@ void FUN_0101191c(int param_1,int param_2,undefined4 *param_3)
   return;
 }
 
-/* ==== 0x01011960  (file offset 0x11960)  FUN_01011960 ================================================ */
-undefined4 FUN_01011960(int param_1)
+/* ==== 0x01011960  (file offset 0x11960)  swvImage2D_Width ============================================ */
+/* GUESS: name. A native Image2D's width (+0x34, also its row pitch in pixels; the height is
+   swvImage2D_Height, +0x38). Evidence: 0x01011960 - 0x01011964 (`ldr r0, [r0, #0x34]` / `bx lr`).
+   swvImage2D_GetWidth calls it after bringing the image up to date. */
+int32 swvImage2D_Width(const uint8 *image)
 
 {
-  return *(undefined4 *)(param_1 + 0x34);
+  return *(const int32 *)(image + 0x34);
 }
 
-/* ==== 0x01011968  (file offset 0x11968)  FUN_01011968 ================================================ */
-undefined4 FUN_01011968(int param_1)
+/* ==== 0x01011968  (file offset 0x11968)  swvImage2D_GetWidth ========================================= */
+/* GUESS: name (GUESS: the Image2D's vtable +0x24, getWidth). FUN_01018460 on the image first (Ghidra
+   had dropped the argument), then the width (swvImage2D_Width, a tail jump in the binary: 0x0101197c).
+   Evidence: 0x01011968 - 0x0101197c. */
+int32 swvImage2D_GetWidth(uint8 *image)
 
 {
-  FUN_01018460();
-  return *(undefined4 *)(param_1 + 0x34);
+  FUN_01018460((int)image);
+  return swvImage2D_Width(image);
 }
 
 /* ==== 0x01011980  (file offset 0x11980)  FUN_01011980 ================================================ */
@@ -22031,9 +22047,13 @@ void FUN_010183b0(int param_1)
 }
 
 /* ==== 0x01018460  (file offset 0x18460)  FUN_01018460 ================================================ */
-/* GUESS (not yet rewritten): uses swv_ColourScale three times: two colours scaled by the same factor
-   and each added to a colour (swv_ColourAdd), the second blended with the first (FUN_010272c0), scaled
-   by a 0 .. 1.0 weight (clamped) and added to it, the result packed to RGB565 (FUN_01010008). */
+/* GUESS (not yet rewritten): brings an Image2D (param_1) up to date before its size is read
+   (swvImage2D_GetWidth / GetHeight call it first; GUESS: its texture copy, made a power of two in
+   each size, +0x54 / +0x58 the log2 of the width and height, FUN_01023174 when they differ, and its
+   levels). On the way it uses swv_ColourScale three times: two colours scaled by the same factor
+   and each added to a colour (swv_ColourAdd), the second blended with the first (FUN_010272c0),
+   scaled by a 0 .. 1.0 weight (clamped) and added to it, the result packed to RGB565
+   (FUN_01010008). */
 void FUN_01018460(int param_1)
 
 {
@@ -22147,9 +22167,9 @@ void FUN_01018460(int param_1)
         FUN_0101807c(uVar5,piVar4);
       }
       *(undefined4 *)(param_1 + 0x50) = *(undefined4 *)(param_1 + 0x4c);
-      iVar3 = FUN_01011960(param_1);
+      iVar3 = swvImage2D_Width((uint8 *)param_1);
       if ((iVar3 != 1 << (*(uint *)(param_1 + 0x54) & 0xff)) ||
-         (iVar3 = FUN_0100f714(param_1), iVar3 != 1 << (*(uint *)(param_1 + 0x58) & 0xff))) {
+         (iVar3 = swvImage2D_Height((uint8 *)param_1), iVar3 != 1 << (*(uint *)(param_1 + 0x58) & 0xff))) {
         FUN_01023174(param_1,1 << (*(uint *)(param_1 + 0x54) & 0xff));
       }
       if (*(int *)(param_1 + 0x30) == -1) {
@@ -22161,8 +22181,8 @@ void FUN_01018460(int param_1)
       FUN_01023184(piVar4,local_94);
       *(undefined4 *)piVar4[1] = 0;
       iVar3 = 0;
-      iVar6 = FUN_01011960(param_1);
-      local_9c = FUN_0100f714(param_1);
+      iVar6 = swvImage2D_Width((uint8 *)param_1);
+      local_9c = swvImage2D_Height((uint8 *)param_1);
       local_a8 = local_9c;
       if (local_9c < iVar6) {
         local_a8 = iVar6;
@@ -22270,8 +22290,8 @@ void FUN_01018460(int param_1)
       FUN_010272c0(&local_b4);
       iVar3 = 1 << (*(uint *)(param_1 + 0x68) & 0xff);
       local_b8 = 1 << (*(uint *)(param_1 + 0x6c) & 0xff);
-      iVar6 = FUN_01011960(param_1);
-      local_bc = FUN_0100f714(param_1);
+      iVar6 = swvImage2D_Width((uint8 *)param_1);
+      local_bc = swvImage2D_Height((uint8 *)param_1);
       local_c4 = local_bc - 1;
       local_c0 = iVar6 - 1;
       local_c8 = local_94 - 1;
@@ -26673,8 +26693,8 @@ undefined4 FUN_0101e0b0(int param_1,undefined4 param_2)
   *(undefined4 *)(param_1 + 0x5c) = uVar1;
   uVar1 = FUN_01019a0c(param_2);
   *(undefined4 *)(param_1 + 0x58) = uVar1;
-  iVar2 = FUN_01011960(param_1);
-  iVar3 = FUN_0100f714(param_1);
+  iVar2 = swvImage2D_Width((uint8 *)param_1);
+  iVar3 = swvImage2D_Height((uint8 *)param_1);
   iVar3 = iVar3 * iVar2;
   FUN_01023184(param_1 + 0x48,iVar3);
   if (*(int *)(param_1 + 0x44) == 0) {
@@ -27158,9 +27178,9 @@ void FUN_0101e534(int param_1,undefined4 param_2)
         FUN_0101807c(uVar8,piVar4);
       }
       *(undefined4 *)(param_1 + 0x50) = *(undefined4 *)(param_1 + 0x4c);
-      iVar9 = FUN_01011960(param_1);
+      iVar9 = swvImage2D_Width((uint8 *)param_1);
       if ((iVar9 != 1 << (*(uint *)(param_1 + 0x54) & 0xff)) ||
-         (iVar9 = FUN_0100f714(param_1), iVar9 != 1 << (*(uint *)(param_1 + 0x58) & 0xff))) {
+         (iVar9 = swvImage2D_Height((uint8 *)param_1), iVar9 != 1 << (*(uint *)(param_1 + 0x58) & 0xff))) {
         FUN_01023174(param_1,1 << (*(uint *)(param_1 + 0x54) & 0xff));
       }
       if (*(int *)(param_1 + 0x30) == -1) {
@@ -27172,8 +27192,8 @@ void FUN_0101e534(int param_1,undefined4 param_2)
       FUN_01023184(piVar4,iStack_94);
       *(undefined4 *)piVar4[1] = 0;
       iVar9 = 0;
-      iVar5 = FUN_01011960(param_1);
-      iStack_9c = FUN_0100f714(param_1);
+      iVar5 = swvImage2D_Width((uint8 *)param_1);
+      iStack_9c = swvImage2D_Height((uint8 *)param_1);
       iStack_a8 = iStack_9c;
       if (iStack_9c < iVar5) {
         iStack_a8 = iVar5;
@@ -27282,8 +27302,8 @@ void FUN_0101e534(int param_1,undefined4 param_2)
       FUN_010272c0(&iStack_b4);
       iVar9 = 1 << (*(uint *)(param_1 + 0x68) & 0xff);
       iStack_b8 = 1 << (*(uint *)(param_1 + 0x6c) & 0xff);
-      iVar5 = FUN_01011960(param_1);
-      iStack_bc = FUN_0100f714(param_1);
+      iVar5 = swvImage2D_Width((uint8 *)param_1);
+      iStack_bc = swvImage2D_Height((uint8 *)param_1);
       uStack_c4 = iStack_bc - 1;
       uStack_c0 = iVar5 - 1;
       uStack_c8 = iStack_94 - 1;
@@ -32883,14 +32903,14 @@ FUN_01023e44(int param_1,int param_2,int param_3,int param_4,int param_5,int par
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
   param_7 = param_5 * param_4 * iVar1 + param_7;
-  if ((param_2 == 0 && param_3 == 0) && (iVar1 = FUN_01011960(param_1), iVar1 == param_4)) {
+  if ((param_2 == 0 && param_3 == 0) && (iVar1 = swvImage2D_Width((uint8 *)param_1), iVar1 == param_4)) {
     uVar2 = *(undefined4 *)(param_1 + 0x4c);
     /* the binary: a tail jump to the thunk (Ghidra had merged it, swv_memcpy and rt_memcpy) */
     thunk_swv_memcpy(uVar2,param_7,param_5 * param_4 * 2);
     return CONCAT44(extraout_r1,uVar2);
   }
   iVar6 = param_3 + param_5;
-  iVar3 = FUN_01011960(param_1);
+  iVar3 = swvImage2D_Width((uint8 *)param_1);
   iVar1 = param_4 * 2;
   iVar5 = *(int *)(param_1 + 0x4c) + (iVar3 * param_3 + param_2) * 2;
   iVar4 = param_4 << 1;

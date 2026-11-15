@@ -522,8 +522,8 @@ uint32 swvMaterial_Color(const uint8 *material,int32 target);   /* 0x0100F620 GU
 void FUN_0100f654(int param_1,int param_2);
 int32 swvPolygonMode_Culling(const uint8 *mode);   /* 0x0100F6D8 GUESS: name, see swv21brew.c */
 int32 swvImage2D_StorageFormat(const uint8 *image);   /* 0x0100F6F8 GUESS: name, see swv21brew.c */
-undefined4 FUN_0100f714(int param_1);
-undefined4 FUN_0100f71c(int param_1);
+int32 swvImage2D_Height(const uint8 *image);   /* 0x0100F714 GUESS: name, see swv21brew.c */
+int32 swvImage2D_GetHeight(uint8 *image);   /* 0x0100F71C GUESS: name, see swv21brew.c */
 undefined4 FUN_0100f734(int param_1,int param_2);
 undefined4 FUN_0100f768(void);
 undefined4 FUN_0100f780(void);
@@ -572,8 +572,8 @@ undefined4 FUN_01010f90(int param_1);
 undefined4 swvKeyframeSequence_Sample(int param_1,undefined4 param_2,int param_3,undefined4 *param_4,undefined4 param_5);
 void FUN_01011900(int param_1,undefined4 *param_2,undefined4 *param_3);
 void FUN_0101191c(int param_1,int param_2,undefined4 *param_3);
-undefined4 FUN_01011960(int param_1);
-undefined4 FUN_01011968(int param_1);
+int32 swvImage2D_Width(const uint8 *image);   /* 0x01011960 GUESS: name, see swv21brew.c */
+int32 swvImage2D_GetWidth(uint8 *image);   /* 0x01011968 GUESS: name, see swv21brew.c */
 undefined4 FUN_01011980(int param_1);
 undefined4 FUN_01011994(int param_1);
 int FUN_010119a8(int param_1,int param_2,int param_3);
