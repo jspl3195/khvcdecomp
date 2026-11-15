@@ -505,7 +505,7 @@ uint swvSkin_VertexBones(int param_1,uint param_2,int param_3);
 int * FUN_0100eef0(int *param_1,int param_2);
 void swv_ColourScale(int32 *colour,int32 factor);   /* 0x0100EFE4 GUESS: name, see swv21brew.c */
 void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
-int FUN_0100f154(int param_1);
+int32 swvImage2D_AlphaStride(const uint8 *image);   /* 0x0100F154 GUESS: name, see swv21brew.c */
 undefined4 FUN_0100f170(int param_1);
 undefined4 FUN_0100f184(int param_1,int param_2);
 undefined4 FUN_0100f1c8(int param_1,int param_2);
@@ -521,7 +521,7 @@ undefined8 FUN_0100f5dc(undefined4 param_1,int param_2);
 undefined4 FUN_0100f620(int param_1,int param_2);
 void FUN_0100f654(int param_1,int param_2);
 undefined4 FUN_0100f6d8(int param_1);
-int FUN_0100f6f8(int param_1);
+int32 swvImage2D_StorageFormat(const uint8 *image);   /* 0x0100F6F8 GUESS: name, see swv21brew.c */
 undefined4 FUN_0100f714(int param_1);
 undefined4 FUN_0100f71c(int param_1);
 undefined4 FUN_0100f734(int param_1,int param_2);
@@ -543,7 +543,7 @@ int FUN_0100fb34(int param_1,int param_2);
 int FUN_0100fdec(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 int FUN_0100fe8c(int param_1,int param_2);
 int FUN_0100ffe4(int param_1);
-int FUN_0100fffc(int param_1);
+int32 swvImage2D_ColourStride(const uint8 *image);   /* 0x0100FFFC GUESS: name, see swv21brew.c */
 uint FUN_01010008(int *param_1);
 void FUN_01010084(int *param_1);
 uint FUN_01010094(int param_1,int param_2,undefined4 param_3,uint param_4);
@@ -587,7 +587,7 @@ uint FUN_01011aa8(int param_1);
 undefined4 FUN_01011ab8(int param_1);
 int swvKeyframeSequence_PreviousValid(int param_1,int param_2);
 int swvKeyframeSequence_NextValid(int param_1,int param_2);
-int FUN_01011bb4(int param_1);
+uint8 *swvImage2D_AlphaPlane(const uint8 *image);   /* 0x01011BB4 GUESS: name, see swv21brew.c */
 int FUN_01011be4(int param_1);
 undefined4 FUN_01011bfc(int param_1,int param_2,int param_3);
 void FUN_01011c20(undefined4 param_1,int param_2);

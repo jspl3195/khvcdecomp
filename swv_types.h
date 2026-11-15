@@ -237,6 +237,18 @@ typedef struct SwvKeyframeSequence {
  *   +0x24             the bytes per component: 1 (signed bytes) or 2 (signed 16-bit words)
  *   +0x2c             the values, vertex after vertex */
 
+/* ---- Image2D (class 10), the native object (no struct yet) -------------------------------------
+ * The fields its accessors read (GUESS: the names; swvImage2D_AlphaStride, _ColourStride,
+ * _AlphaPlane, _StorageFormat):
+ *   +0x20             the data: the RGB565 pixels, then (at +0x3c) the alpha plane
+ *   +0x34             the row pitch, in pixels (the colour rows are twice it in bytes, the alpha rows it)
+ *   +0x3c             the alpha plane's offset in the data, -1 when there is none
+ *   +0x40             the JSR-184 format: ALPHA 0x60, LUMINANCE 0x61, LUMINANCE_ALPHA 0x62, RGB 0x63,
+ *                     RGBA 0x64
+ *   +0x44             mutable (FUN_0102035c, GUESS bindTarget, wants it)
+ * Its vtable (offsets from the table, like every engine vtable): +0x24 / +0x28 the width and height
+ * (GUESS: getWidth / getHeight), +0x30 the colour data (FUN_01010084 jumps there). */
+
 /* ---- Background (class 4), the native object (no struct yet) ---------------------------------
  * The fields the Background clear (FUN_01005104, GUESS) reads (GUESS: the names, from JSR-184):
  *   +0x1c             the colour, ARGB (alpha >> 24 into the alpha buffer, the rest as RGB565)

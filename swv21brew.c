@@ -7349,7 +7349,7 @@ void FUN_01007d70(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
   FUN_0100350c(param_1,0);
   iVar2 = *(int *)(param_1 + 0x30);
   iVar4 = *(int *)(param_1 + 0x20);
-  iVar3 = FUN_01011bb4(param_1);
+  iVar3 = (int)swvImage2D_AlphaPlane((uint8 *)param_1);
   iVar2 = iVar4 + iVar2;
   iVar4 = param_4 * param_3;
   while (0 < iVar4) {
@@ -7394,7 +7394,7 @@ void FUN_01007e30(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
   FUN_0100350c(param_1,iVar2);
   thunk_swv_memcpy(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30),param_6,param_4 * param_3);
   iVar3 = FUN_0100ffe4(param_1);
-  iVar4 = FUN_01011bb4(param_1);
+  iVar4 = (int)swvImage2D_AlphaPlane((uint8 *)param_1);
   while (0 < iVar2) {
     FUN_01025bc4(param_8,param_2,iVar3,iVar4);
     param_8 = param_8 + iVar1;
@@ -13644,20 +13644,23 @@ void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   return;
 }
 
-/* ==== 0x0100F154  (file offset 0x0F154)  FUN_0100f154 ================================================ */
-int FUN_0100f154(int param_1)
+/* ==== 0x0100F154  (file offset 0x0F154)  swvImage2D_AlphaStride ====================================== */
+/* GUESS: name. The row stride of an Image2D's alpha plane (one byte a pixel): its row pitch (+0x34,
+   in pixels) when its format (+0x40) has alpha, JSR-184 ALPHA 0x60, LUMINANCE_ALPHA 0x62 or RGBA 0x64,
+   else 0. Evidence: 0x0100f154 - 0x0100f16c (`cmp #0x64` / `cmpne #0x60` / `cmpne #0x62`, `ldreq`
+   +0x34, `movne` 0; Ghidra tested the three twice). Only FUN_0102035c (GUESS: bindTarget) uses it,
+   as the target's alpha stride (+0x88). */
+int32 swvImage2D_AlphaStride(const uint8 *image)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 0x40);
-  if ((iVar1 == 100 || iVar1 == 0x60) || iVar1 == 0x62) {
-    param_1 = *(int *)(param_1 + 0x34);
-  }
-  if ((iVar1 != 100 && iVar1 != 0x60) && iVar1 != 0x62) {
-    param_1 = 0;
-  }
-  return param_1;
+  int32 format = *(const int32 *)(image + 0x40);
+  int32 stride;
+
+  if (format == 0x64 || format == 0x60 || format == 0x62)
+    stride = *(const int32 *)(image + 0x34);
+  else
+    stride = 0;
+  return stride;
 }
 
 /* ==== 0x0100F170  (file offset 0x0F170)  FUN_0100f170 ================================================ */
@@ -14028,20 +14031,22 @@ undefined4 FUN_0100f6d8(int param_1)
   return 0xa0;
 }
 
-/* ==== 0x0100F6F8  (file offset 0x0F6F8)  FUN_0100f6f8 ================================================ */
-int FUN_0100f6f8(int param_1)
+/* ==== 0x0100F6F8  (file offset 0x0F6F8)  swvImage2D_StorageFormat ==================================== */
+/* GUESS: name. The format an Image2D is stored in: its JSR-184 format (+0x40) with LUMINANCE_ALPHA
+   (0x62) as RGBA (0x64) and LUMINANCE (0x61) as RGB (0x63) (GUESS: luminance is kept as RGB565, its
+   alpha in the alpha plane); ALPHA (0x60), RGB, RGBA unchanged. Evidence: 0x0100f6f8 - 0x0100f710
+   (`cmp #0x62` / `moveq #0x64` / `bxeq lr`, `cmp #0x61` / `moveq #0x63`). FUN_0102035c (GUESS:
+   bindTarget) wants RGB or RGBA; FUN_010236c4 uses it too. */
+int32 swvImage2D_StorageFormat(const uint8 *image)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 0x40);
-  if (iVar1 != 0x62) {
-    if (iVar1 == 0x61) {
-      iVar1 = 99;
-    }
-    return iVar1;
-  }
-  return 100;
+  int32 format = *(const int32 *)(image + 0x40);
+
+  if (format == 0x62)
+    return 0x64;
+  if (format == 0x61)
+    format = 0x63;
+  return format;
 }
 
 /* ==== 0x0100F714  (file offset 0x0F714)  FUN_0100f714 ================================================ */
@@ -14544,11 +14549,15 @@ int FUN_0100ffe4(int param_1)
   return iVar1;
 }
 
-/* ==== 0x0100FFFC  (file offset 0x0FFFC)  FUN_0100fffc ================================================ */
-int FUN_0100fffc(int param_1)
+/* ==== 0x0100FFFC  (file offset 0x0FFFC)  swvImage2D_ColourStride ===================================== */
+/* GUESS: name. The row stride, in bytes, of an Image2D's colour data (RGB565, two bytes a pixel):
+   its row pitch (+0x34, in pixels) * 2. Evidence: 0x0100fffc - 0x01010004 (`ldr r0, [r0, #0x34]` /
+   `mov r0, r0, lsl #1`). Only FUN_0102035c (GUESS: bindTarget) uses it, as the target's stride
+   (+0x1c). */
+int32 swvImage2D_ColourStride(const uint8 *image)
 
 {
-  return *(int *)(param_1 + 0x34) << 1;
+  return *(const int32 *)(image + 0x34) << 1;
 }
 
 /* ==== 0x01010008  (file offset 0x10008)  FUN_01010008 ================================================ */
@@ -14581,6 +14590,9 @@ uint FUN_01010008(int *param_1)
 }
 
 /* ==== 0x01010084  (file offset 0x10084)  FUN_01010084 ================================================ */
+/* GUESS (not yet rewritten): an Image2D's colour data (RGB565): a tail jump to the image's own
+   routine at vtable +0x30 with the image in r0 (Ghidra dropped it). FUN_0102035c (GUESS: bindTarget)
+   takes it as the target's pixels (+0x20). */
 void FUN_01010084(int *param_1)
 
 {
@@ -16373,19 +16385,21 @@ int swvKeyframeSequence_NextValid(int param_1,int param_2)
   return param_2 + 1;
 }
 
-/* ==== 0x01011BB4  (file offset 0x11BB4)  FUN_01011bb4 ================================================ */
-int FUN_01011bb4(int param_1)
+/* ==== 0x01011BB4  (file offset 0x11BB4)  swvImage2D_AlphaPlane ======================================= */
+/* GUESS: name. An Image2D's alpha plane: its data (+0x20) + the plane's offset (+0x3c), or NULL when
+   the offset is -1 (no alpha). Evidence: 0x01011bb4 - 0x01011bc8 (`cmn r1, #1`, `ldrne` / `addne`,
+   `moveq r0, #0`). */
+uint8 *swvImage2D_AlphaPlane(const uint8 *image)
 
 {
-  int iVar1;
-  
-  if (*(int *)(param_1 + 0x3c) == -1) {
-    iVar1 = 0;
-  }
-  else {
-    iVar1 = *(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x3c);
-  }
-  return iVar1;
+  int32 offset = *(const int32 *)(image + 0x3c);
+  uint8 *plane;
+
+  if (offset != -1)
+    plane = *(uint8 *const *)(image + 0x20) + offset;
+  else
+    plane = NULL;
+  return plane;
 }
 
 /* ==== 0x01011BCC  (file offset 0x11BCC)  FUN_01011bcc ================================================ */
@@ -20608,7 +20622,7 @@ LAB_01016740:
               iVar7 = (*(code *)(*(int *)(*piVar10 + 0x30) + *piVar10))(piVar10);
               uVar5 = (uint)*(byte *)(iVar7 + uVar5);
             }
-            iVar7 = FUN_01011bb4(piVar10);
+            iVar7 = (int)swvImage2D_AlphaPlane((uint8 *)piVar10);
             bVar1 = *(byte *)(iVar7 + uVar5);
             /* Ghidra had dropped it */
             iVar7 = swv_ffix(swv_fmul(*(undefined4 *)(*(int *)(unaff_r8 + 0x20) + 0x30),FLOAT_255));
@@ -26308,7 +26322,7 @@ void FUN_0101dbf8(int param_1,undefined4 param_2,undefined4 param_3,undefined2 *
     FUN_0100350c(param_1,0);
     iVar7 = *(int *)(param_1 + 0x30);
     iVar9 = *(int *)(param_1 + 0x20);
-    puVar8 = (undefined1 *)FUN_01011bb4(param_1);
+    puVar8 = (undefined1 *)swvImage2D_AlphaPlane((uint8 *)param_1);
     puVar12 = (undefined2 *)(iVar9 + iVar7);
     for (; uVar5 != 0; uVar5 = uVar5 - iVar6) {
       FUN_01019920(param_2,uVar2,&puStack_28,&uStack_2c);
@@ -26339,7 +26353,7 @@ void FUN_0101dbf8(int param_1,undefined4 param_2,undefined4 param_3,undefined2 *
     }
     FUN_0100350c(param_1,iVar7);
     puStack_28 = (undefined2 *)FUN_0100ffe4(param_1);
-    puVar8 = (undefined1 *)FUN_01011bb4(param_1);
+    puVar8 = (undefined1 *)swvImage2D_AlphaPlane((uint8 *)param_1);
     do {
       FUN_01019920(param_2,uVar2,&uStack_2c,&uStack_30);
       puVar13 = puVar8;
@@ -28849,6 +28863,13 @@ void swv_Graphics3D_bindTarget
 }
 
 /* ==== 0x0102035C  (file offset 0x2035C)  FUN_0102035c ================================================ */
+/* GUESS (not yet rewritten): binds an Image2D (param_2) as the render target param_1 (JSR-184
+   Graphics3D.bindTarget): error -1301 unless the image is mutable (+0x44) and stored as RGB or RGBA
+   (swvImage2D_StorageFormat); then the target's +0x0c / +0x10 = 0, +0x14 / +0x18 the width and height
+   (the image's vtable +0x24 / +0x28), +0x1c the colour stride (swvImage2D_ColourStride), +0x20 the
+   pixels (FUN_01010084), +0x84 RGBA, +0x88 the alpha stride (swvImage2D_AlphaStride), +0x8c the alpha
+   plane (swvImage2D_AlphaPlane), +0x90 the image's +0x4c when its vtable +0x2c gives 0x18; then
+   FUN_01020b64 and FUN_0101d864 (GUESS: the viewport, the rasteriser's buffers). */
 undefined8 FUN_0102035c(int param_1,int *param_2)
 
 {
@@ -28861,7 +28882,7 @@ undefined8 FUN_0102035c(int param_1,int *param_2)
   local_28 = param_1;
   local_24 = param_2;
   if (param_2 != (int *)0x0) {
-    iVar1 = FUN_0100f6f8(param_2);
+    iVar1 = swvImage2D_StorageFormat((uint8 *)param_2);
     if ((param_2[0x11] == 0) || (iVar1 != 99 && iVar1 != 100)) {
       FUN_0102f7e0(INTEGER_MINUS_1301);
     }
@@ -28876,13 +28897,13 @@ undefined8 FUN_0102035c(int param_1,int *param_2)
     *(undefined4 *)(param_1 + 0x14) = uVar2;
     *(undefined4 *)(param_1 + 0x18) = uVar3;
     *(uint *)(param_1 + 0x84) = (uint)(iVar1 == 100);
-    uVar2 = FUN_0100fffc(param_2);
+    uVar2 = swvImage2D_ColourStride((uint8 *)param_2);
     *(undefined4 *)(param_1 + 0x1c) = uVar2;
     uVar2 = FUN_01010084(param_2);
     *(undefined4 *)(param_1 + 0x20) = uVar2;
-    uVar2 = FUN_0100f154(param_2);
+    uVar2 = swvImage2D_AlphaStride((uint8 *)param_2);
     *(undefined4 *)(param_1 + 0x88) = uVar2;
-    uVar2 = FUN_01011bb4(param_2);
+    uVar2 = (int)swvImage2D_AlphaPlane((uint8 *)param_2);
     *(undefined4 *)(param_1 + 0x8c) = uVar2;
     *(undefined4 *)(param_1 + 0x90) = 0;
     /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
@@ -31876,7 +31897,7 @@ void FUN_0102329c(int param_1,int *param_2)
     }
     *(int *)(param_1 + 0x180) = iVar4;
   }
-  uVar3 = FUN_01011bb4(param_2);
+  uVar3 = (int)swvImage2D_AlphaPlane((uint8 *)param_2);
   *(undefined4 *)(param_1 + 0x184) = uVar3;
   *(undefined4 *)(param_1 + 0x15c) = 0xe4;
   *(int *)(param_1 + 0x158) = param_2[0x10];
@@ -32155,7 +32176,7 @@ void FUN_010236c4(int param_1,int param_2,int param_3,int param_4)
         }
         *(int *)(iVar1 + 0x180) = iVar5;
       }
-      uVar4 = FUN_01011bb4(piVar7);
+      uVar4 = (int)swvImage2D_AlphaPlane((uint8 *)piVar7);
       *(undefined4 *)(iVar1 + 0x184) = uVar4;
       uVar4 = 0xe3;
       if (param_3 != 0) {
@@ -32170,7 +32191,7 @@ void FUN_010236c4(int param_1,int param_2,int param_3,int param_4)
       *(uint *)(iVar1 + 0x160) = uVar6 >> 8 & 0xff00;
       *(uint *)(iVar1 + 0x168) = (uVar6 & 0xff) << 8;
       *(uint *)(iVar1 + 0x164) = uVar6 & 0xff00;
-      uVar4 = FUN_0100f6f8(*(undefined4 *)(param_3 + 0x2c));
+      uVar4 = swvImage2D_StorageFormat((uint8 *)*(undefined4 *)(param_3 + 0x2c));
       *(undefined4 *)(iVar1 + 0x158) = uVar4;
       *(undefined4 *)(iVar1 + 0x17c) = 0;
       if (*(int *)(param_3 + 0x30) == 0xf0) {
@@ -32605,7 +32626,7 @@ LAB_01023db4:
   }
   param_2 = *(int *)(param_1 + 0x34) * param_3 + param_2;
   iVar3 = *(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30) + param_2 * 2;
-  iVar4 = FUN_01011bb4(param_1);
+  iVar4 = (int)swvImage2D_AlphaPlane((uint8 *)param_1);
   iVar4 = iVar4 + param_2;
   for (iVar5 = 0; iVar5 < param_5; iVar5 = iVar5 + 1) {
     for (iVar6 = 0; iVar6 < param_4; iVar6 = iVar6 + 1) {
@@ -44746,7 +44767,7 @@ void FUN_01030aac(int param_1,undefined4 *param_2)
   if (iVar1 != 0) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_01011bb4(iVar1);
+  uVar2 = (int)swvImage2D_AlphaPlane((uint8 *)iVar1);
   *param_2 = uVar2;
   return;
 }
