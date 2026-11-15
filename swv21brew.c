@@ -15310,6 +15310,11 @@ int32 swvObject3D_References(uint8 *object,int32 max,uint8 **out)
 }
 
 /* ==== 0x010104F0  (file offset 0x104F0)  FUN_010104f0 ================================================ */
+/* GUESS (not yet rewritten): a MorphingMesh's morphed VertexBuffer, made again when +0xac is set: error
+   -1300 when its own buffer (swvMesh_VertexBuffer) has no positions; a new VertexBuffer at +0xb0 the
+   first time (0x78 bytes, FUN_01028898); then each attribute blended (FUN_0100fb34) and set into it:
+   the positions, normals, colours and texture coordinates (FUN_0102234c, FUN_010209ac, FUN_010220b0,
+   FUN_0102358c). */
 undefined4 FUN_010104f0(int param_1)
 
 {
@@ -15323,7 +15328,7 @@ undefined4 FUN_010104f0(int param_1)
   int local_1c;
   
   if (*(int *)(param_1 + 0xac) != 0) {
-    iVar1 = FUN_01010f90(param_1);
+    iVar1 = (int)swvMesh_VertexBuffer((uint8 *)param_1);
     if (*(int *)(iVar1 + 0x24) == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1300);
     }
@@ -15512,6 +15517,10 @@ int FUN_01010924(int param_1,int param_2)
 }
 
 /* ==== 0x01010938  (file offset 0x10938)  FUN_01010938 ================================================ */
+/* GUESS (not yet rewritten): a SkinnedMesh's skinned positions, made again when +0xf8 is set: error
+   -1300 when its own buffer (swvMesh_VertexBuffer) has no positions; a new VertexBuffer at +0x100 the
+   first time (FUN_01028898); the bone sets (swvSkin_BuildBoneSets), each position read as floats
+   (swvVertexArray_GetComponent, swv_fflt), transformed by its bones and stored (FUN_0102234c). */
 /* WARNING: Removing unreachable block (ram,0x01010a24) */
 /* WARNING: Removing unreachable block (ram,0x01010a30) */
 
@@ -15543,7 +15552,7 @@ undefined4 FUN_01010938(int param_1)
   int local_28;
   
   if (*(int *)(param_1 + 0xf8) != 0) {
-    iVar2 = FUN_01010f90(param_1);
+    iVar2 = (int)swvMesh_VertexBuffer((uint8 *)param_1);
     iVar12 = *(int *)(iVar2 + 0x24);
     if (iVar12 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1300);
@@ -15840,11 +15849,16 @@ uint8 *swvVertexBuffer_Array(const uint8 *buffer,int32 attribute)
   return array;
 }
 
-/* ==== 0x01010F90  (file offset 0x10F90)  FUN_01010f90 ================================================ */
-undefined4 FUN_01010f90(int param_1)
+/* ==== 0x01010F90  (file offset 0x10F90)  swvMesh_VertexBuffer ======================================== */
+/* GUESS: name. A native Mesh's own VertexBuffer (+0x88; JSR-184 Mesh.getVertexBuffer), the one it was
+   made with: a MorphingMesh blends it into its morphed buffer (+0xb0), a SkinnedMesh skins it into
+   +0x100. Evidence: 0x01010f90 - 0x01010f94 (`ldr r0, [r0, #0x88]` / `bx lr`). The BREW-facing
+   swvMesh_GetVertexBuffer does not call it: it asks the mesh's engine vtable +0x2c instead. Used by
+   FUN_010104f0 and FUN_01010938. */
+uint8 *swvMesh_VertexBuffer(const uint8 *mesh)
 
 {
-  return *(undefined4 *)(param_1 + 0x88);
+  return *(uint8 *const *)(mesh + 0x88);
 }
 
 /* ==== 0x01010F98  (file offset 0x10F98)  swvKeyframeSequence_Sample ================================== */
@@ -37075,6 +37089,8 @@ void FUN_0102885c(int *param_1)
 }
 
 /* ==== 0x01028898  (file offset 0x28898)  FUN_01028898 ================================================ */
+/* GUESS (not yet rewritten): a VertexBuffer's constructor (0x78 bytes): its vtables, the default colour
+   (+0x20) 0xff000000 and no arrays. */
 int * FUN_01028898(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -48244,8 +48260,12 @@ void FUN_01033db4(int param_1,undefined4 *param_2)
   return;
 }
 
-/* ==== 0x01033DCC  (file offset 0x33DCC)  FUN_01033dcc ================================================ */
-int FUN_01033dcc(int param_1,ISwerveObject **param_2)
+/* ==== 0x01033DCC  (file offset 0x33DCC)  swvMesh_GetVertexBuffer ===================================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 46 (+0xb8) of Mesh and its subclasses (kh_types.h
+   SwerveMeshVtbl.GetVertexBuffer; JSR-184 Mesh.getVertexBuffer): in an error frame, the mesh's own
+   engine vtable +0x2c (not swvMesh_VertexBuffer), wrapped (swv_WrapObject) into *param_2; on an error
+   its result code. */
+int swvMesh_GetVertexBuffer(int param_1,ISwerveObject **param_2)
 
 {
   int iVar1;
@@ -48260,10 +48280,9 @@ int FUN_01033dcc(int param_1,ISwerveObject **param_2)
     if (piVar2 != (int *)0x0) {
       piVar2 = piVar2 + -1;
     }
-    /* engine virtual call, slot +0x2c: of the static engine vtables only the renderer's (0x01002398)
-       swvRenderer_Kind has it; a scene object's vtable is not among them (GUESS: not static), so for one
-       the method is not known here */
-    pNative = (void *)(*(code *)(*(int *)(*piVar2 + 0x2c) + *piVar2))();
+    /* engine virtual call, slot +0x2c: the mesh's own (GUESS: the VertexBuffer it draws with, the morphed
+       or skinned one when it has one); Ghidra had dropped the receiver, r0 = the mesh (0x01033df8) */
+    pNative = (void *)(*(code *)(*(int *)(*piVar2 + 0x2c) + *piVar2))(piVar2);
     if (pNative != (void *)0x0) {
       pNative = (void *)((int)pNative + 4);
     }
@@ -48288,7 +48307,7 @@ void swv_InitVtbl_Mesh(void **pVtbl)
   pVtbl[0x2b] = (void *)(ADDRESS_OF_FUNCTION_01033ec4_OFFSET + 0x1033e5c);
   pVtbl[0x2c] = (void *)(ADDRESS_OF_FUNCTION_010340d0_OFFSET + 0x1033e68);
   pVtbl[0x2d] = (void *)(ADDRESS_OF_FUNCTION_01033db4_OFFSET + 0x1033e74);
-  pVtbl[0x2e] = (void *)(ADDRESS_OF_FUNCTION_01033dcc_OFFSET + 0x1033e80);
+  pVtbl[0x2e] = (void *)(ADDRESS_OF_swvMesh_GetVertexBuffer_OFFSET + 0x1033e80);
   pVtbl[0x2f] = (void *)(ADDRESS_OF_FUNCTION_01033d40_OFFSET + 0x1033e8c);
   pVtbl[0x30] = (void *)(ADDRESS_OF_FUNCTION_01033ccc_OFFSET + 0x1033e98);
   pVtbl[0x31] = (void *)(ADDRESS_OF_FUNCTION_0103418c_OFFSET + 0x1033ea4);

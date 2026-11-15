@@ -568,7 +568,7 @@ undefined4 FUN_01010dac(undefined4 param_1,int param_2);
 undefined4 FUN_01010de0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 );
 void FUN_01010e84(int param_1,int param_2,int *param_3,undefined4 *param_4);
 uint8 *swvVertexBuffer_Array(const uint8 *buffer,int32 attribute);   /* 0x01010F60 GUESS: name, see swv21brew.c */
-undefined4 FUN_01010f90(int param_1);
+uint8 *swvMesh_VertexBuffer(const uint8 *mesh);   /* 0x01010F90 GUESS: name, see swv21brew.c */
 undefined4 swvKeyframeSequence_Sample(int param_1,undefined4 param_2,int param_3,undefined4 *param_4,undefined4 param_5);
 void FUN_01011900(int param_1,undefined4 *param_2,undefined4 *param_3);
 void FUN_0101191c(int param_1,int param_2,undefined4 *param_3);
@@ -1241,7 +1241,7 @@ void FUN_01033c50(int param_1,int param_2);
 int FUN_01033ccc(int param_1,undefined4 param_2,ISwerveObject **param_3);
 int FUN_01033d40(int param_1,undefined4 param_2,ISwerveObject **param_3);
 void FUN_01033db4(int param_1,undefined4 *param_2);
-int FUN_01033dcc(int param_1,ISwerveObject **param_2);
+int swvMesh_GetVertexBuffer(int param_1,ISwerveObject **param_2);   /* 0x01033DCC GUESS: name, see swv21brew.c */
 undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int param_6);
 undefined4 FUN_010340d0(int param_1,int param_2,int param_3,int param_4);
 undefined4 FUN_0103418c(int param_1,undefined4 param_2,int param_3);
@@ -2090,7 +2090,7 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define ADDRESS_OF_FUNCTION_01033ec4_OFFSET 0x00000068   /* was DAT_01033ea8 (word at 0x01033EA8); PC-relative offset: + 0x1033e5c (the pc) = 0x01033EC4 */
 #define ADDRESS_OF_FUNCTION_010340d0_OFFSET 0x00000268   /* was DAT_01033eac (word at 0x01033EAC); PC-relative offset: + 0x1033e68 (the pc) = 0x010340D0 */
 #define ADDRESS_OF_FUNCTION_01033db4_OFFSET 0xFFFFFF40   /* was DAT_01033eb0 (word at 0x01033EB0); PC-relative offset: + 0x1033e74 (the pc) = 0x01033DB4 */
-#define ADDRESS_OF_FUNCTION_01033dcc_OFFSET 0xFFFFFF4C   /* was DAT_01033eb4 (word at 0x01033EB4); PC-relative offset: + 0x1033e80 (the pc) = 0x01033DCC */
+#define ADDRESS_OF_swvMesh_GetVertexBuffer_OFFSET 0xFFFFFF4C   /* was DAT_01033eb4 (word at 0x01033EB4); PC-relative offset: + 0x1033e80 (the pc) = 0x01033DCC */
 #define ADDRESS_OF_FUNCTION_01033d40_OFFSET 0xFFFFFEB4   /* was DAT_01033eb8 (word at 0x01033EB8); PC-relative offset: + 0x1033e8c (the pc) = 0x01033D40 */
 #define ADDRESS_OF_FUNCTION_01033ccc_OFFSET 0xFFFFFE34   /* was DAT_01033ebc (word at 0x01033EBC); PC-relative offset: + 0x1033e98 (the pc) = 0x01033CCC */
 #define ADDRESS_OF_FUNCTION_0103418c_OFFSET 0x000002E8   /* was DAT_01033ec0 (word at 0x01033EC0); PC-relative offset: + 0x1033ea4 (the pc) = 0x0103418C */

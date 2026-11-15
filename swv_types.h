@@ -283,8 +283,17 @@ typedef struct SwvKeyframeSequence {
  *   +0x28             the colours (attribute 2)
  *   +0x2c             the normals (attribute 1)
  *   +0x30 / +0x34     the texture coordinates of units 0 / 1 (attributes 3, 4)
- * A MorphingMesh (FUN_0100fb34) blends them: +0x88 its base VertexBuffer, +0xc8 / +0xcc its morph
- * targets and their count, +0xd8 their weights, +0xb4 / +0xb8 the work buffer. */
+ * Made by FUN_01028898 (0x78 bytes; the default colour 0xff000000). */
+
+/* ---- Mesh, the native object (no struct yet) ----------------------------------------------------
+ * Its fields (GUESS: the names):
+ *   +0x88             its own VertexBuffer (swvMesh_VertexBuffer)
+ * Its engine vtable +0x2c gives the VertexBuffer to draw with (GUESS; swvMesh_GetVertexBuffer asks it).
+ * A MorphingMesh's (FUN_010104f0, FUN_0100fb34): +0xac set when the morphed buffer must be made again,
+ * +0xb0 the morphed VertexBuffer, +0xb4 / +0xb8 the work buffer, +0xc8 / +0xcc the morph targets and
+ * their count, +0xd8 their weights.
+ * A SkinnedMesh's (FUN_01010938): +0xf8 set when the skinned buffer must be made again, +0x100 the
+ * skinned VertexBuffer. */
 
 /* ---- VertexArray (class 29), the native object (no struct yet) ------------------------------
  * The fields its readers use (GUESS: the names; swvVertexArray_GetComponent, FUN_010257fc,
