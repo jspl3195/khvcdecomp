@@ -570,7 +570,7 @@ void FUN_01010e84(int param_1,int param_2,int *param_3,undefined4 *param_4);
 uint8 *swvVertexBuffer_Array(const uint8 *buffer,int32 attribute);   /* 0x01010F60 GUESS: name, see swv21brew.c */
 uint8 *swvMesh_VertexBuffer(const uint8 *mesh);   /* 0x01010F90 GUESS: name, see swv21brew.c */
 undefined4 swvKeyframeSequence_Sample(int param_1,undefined4 param_2,int param_3,undefined4 *param_4,undefined4 param_5);
-void FUN_01011900(int param_1,undefined4 *param_2,undefined4 *param_3);
+void swvMorphingMesh_Weights(const uint8 *mesh,int32 *pCount,uint32 **pWeights);   /* 0x01011900 GUESS: name, see swv21brew.c */
 void FUN_0101191c(int param_1,int param_2,undefined4 *param_3);
 int32 swvImage2D_Width(const uint8 *image);   /* 0x01011960 GUESS: name, see swv21brew.c */
 int32 swvImage2D_GetWidth(uint8 *image);   /* 0x01011968 GUESS: name, see swv21brew.c */

@@ -77,6 +77,18 @@ typedef enum SwerveObjectType {
     SWVT_TRANSFORM = 27,           SWVT_LOADER = 28
 } SwerveObjectType;
 
+/* JSR-184 AnimationTrack target properties (AnimationTrack +0x24; FUN_01003c38, GUESS: Object3D.animate,
+ * tests CROP, MORPH_WEIGHTS and SCALE). The values are JSR-184's. */
+typedef enum SwerveAnimTarget {
+    SWV_ANIM_ALPHA = 0x100,           SWV_ANIM_AMBIENT_COLOR = 0x101,   SWV_ANIM_COLOR = 0x102,
+    SWV_ANIM_CROP = 0x103,            SWV_ANIM_DENSITY = 0x104,         SWV_ANIM_DIFFUSE_COLOR = 0x105,
+    SWV_ANIM_EMISSIVE_COLOR = 0x106,  SWV_ANIM_FAR_DISTANCE = 0x107,    SWV_ANIM_FIELD_OF_VIEW = 0x108,
+    SWV_ANIM_INTENSITY = 0x109,       SWV_ANIM_MORPH_WEIGHTS = 0x10a,   SWV_ANIM_NEAR_DISTANCE = 0x10b,
+    SWV_ANIM_ORIENTATION = 0x10c,     SWV_ANIM_PICKABILITY = 0x10d,     SWV_ANIM_SCALE = 0x10e,
+    SWV_ANIM_SHININESS = 0x10f,       SWV_ANIM_SPECULAR_COLOR = 0x110,  SWV_ANIM_SPOT_ANGLE = 0x111,
+    SWV_ANIM_SPOT_EXPONENT = 0x112,   SWV_ANIM_TRANSLATION = 0x113,     SWV_ANIM_VISIBILITY = 0x114
+} SwerveAnimTarget;
+
 /* ISwerve::GetVersion output. 0x01024a68 writes {2, 1, 0, 0x16c, 1} = 2.1.0.364, the version in
    swv21brew's MIF (dumps/mif_dump/14957.txt). GUESS: meaning of the last word. */
 typedef struct SwerveVersion {
@@ -291,7 +303,8 @@ typedef struct SwvKeyframeSequence {
  * Its engine vtable +0x2c gives the VertexBuffer to draw with (GUESS; swvMesh_GetVertexBuffer asks it).
  * A MorphingMesh's (FUN_010104f0, FUN_0100fb34): +0xac set when the morphed buffer must be made again,
  * +0xb0 the morphed VertexBuffer, +0xb4 / +0xb8 the work buffer, +0xc8 / +0xcc the morph targets and
- * their count, +0xd8 their weights.
+ * their count, +0xd4 their weights: an engine dynamic array (FUN_01023184), +0xd8 the floats (as uint32
+ * bits), +0xdc their count (swvMorphingMesh_Weights; FUN_01006918 copies them).
  * A SkinnedMesh's (FUN_01010938): +0xf8 set when the skinned buffer must be made again, +0x100 the
  * skinned VertexBuffer. */
 

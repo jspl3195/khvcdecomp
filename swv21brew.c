@@ -4079,6 +4079,15 @@ int FUN_01003be8(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
 }
 
 /* ==== 0x01003C38  (file offset 0x03C38)  FUN_01003c38 ================================================ */
+/* GUESS (not yet rewritten): JSR-184 Object3D.animate(time) (param_2): once per world time (param_3, or
+   the next one when -1; +0x18 the last), for each animation track (+0x10) whose controller (track
+   +0x20) is active at the time (FUN_01013a80) and has a weight (+0x30), its keyframes sampled
+   (FUN_01010de0) into a 4-word buffer (or, for MORPH_WEIGHTS 0x10a, the mesh's own weights,
+   swvMorphingMesh_Weights), cleared first, and weighted in (CROP 0x103 offset by a size, a Sprite3D's
+   +0x88 / +0x8c or FUN_01038644 of +0x34 / +0x38; SCALE 0x10e from one component to three); then the
+   property set through its vtable +0x1c (this, the property, the component count, the buffer); returns
+   its vtable +0x14 (tail call) with the time and the shortest validity. The properties:
+   SwerveAnimTarget, swv_types.h. */
 undefined4 FUN_01003c38(int *param_1,undefined4 param_2,int param_3)
 
 {
@@ -4130,8 +4139,8 @@ undefined4 FUN_01003c38(int *param_1,undefined4 param_2,int param_3)
         local_44 = *(int *)(*(int *)(*(int *)(iVar4 + 4) + iVar2 * 4) + 0x24);
         local_58 = 4;
         local_5c = local_54;
-        if (local_44 == 0x10a) {
-          FUN_01011900(param_1,&local_58,&local_5c);
+        if (local_44 == 0x10a) {   /* SWV_ANIM_MORPH_WEIGHTS: the mesh's own weights */
+          swvMorphingMesh_Weights((uint8 *)param_1,&local_58,(uint32 **)&local_5c);
         }
         iVar4 = 0;
         bVar1 = false;
@@ -4147,7 +4156,8 @@ undefined4 FUN_01003c38(int *param_1,undefined4 param_2,int param_3)
              (iVar3 = FUN_01013a80(*(int *)(iVar6 + 0x20),param_2), iVar3 != 0)) {
             iVar4 = *(int *)(*(int *)(iVar6 + 0x1c) + 0x34);
             if (!bVar1) {
-              thunk_swv_memset(local_5c,0);
+              /* Ghidra had dropped the size (r2 = the count << 2, 0x01003d84) */
+              thunk_swv_memset((undefined4)local_5c,0,local_58 << 2);
             }
             bVar1 = true;
             if (local_44 == 0x103) {
@@ -16279,17 +16289,19 @@ switchD_010117dc_default:
   return local_70;
 }
 
-/* ==== 0x01011900  (file offset 0x11900)  FUN_01011900 ================================================ */
-void FUN_01011900(int param_1,undefined4 *param_2,undefined4 *param_3)
+/* ==== 0x01011900  (file offset 0x11900)  swvMorphingMesh_Weights ===================================== */
+/* GUESS: name. A MorphingMesh's morph weights (the engine dynamic array at +0xd4): *pCount = their
+   count (+0xdc), *pWeights = the array (+0xd8, floats as uint32 bits); a NULL pointer is skipped.
+   Evidence: 0x01011900 - 0x01011918 (`cmp r1, #0` / `ldrne r3, [r0, #0xdc]` / `strne r3, [r1]`, `cmp r2,
+   #0` / `ldrne r0, [r0, #0xd8]` / `strne r0, [r2]`). Only FUN_01003c38 (GUESS: Object3D.animate) calls
+   it, for a track animating MORPH_WEIGHTS (0x10a, SWV_ANIM_MORPH_WEIGHTS). */
+void swvMorphingMesh_Weights(const uint8 *mesh,int32 *pCount,uint32 **pWeights)
 
 {
-  if (param_2 != (undefined4 *)0x0) {
-    *param_2 = *(undefined4 *)(param_1 + 0xdc);
-  }
-  if (param_3 != (undefined4 *)0x0) {
-    *param_3 = *(undefined4 *)(param_1 + 0xd8);
-  }
-  return;
+  if (pCount != NULL)
+    *pCount = *(const int32 *)(mesh + 0xdc);
+  if (pWeights != NULL)
+    *pWeights = *(uint32 *const *)(mesh + 0xd8);
 }
 
 /* ==== 0x0101191C  (file offset 0x1191C)  FUN_0101191c ================================================ */
@@ -32064,6 +32076,11 @@ void FUN_01023174(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 }
 
 /* ==== 0x01023184  (file offset 0x23184)  FUN_01023184 ================================================ */
+/* GUESS (not yet rewritten): resizes the engine dynamic array param_1 (+0 its vtable, +4 the items, +8
+   the count, +0xc the capacity) to param_2 items: when the count changes and the capacity is short, its
+   vtable +4 grows it (r0 the array, r1 the new count, r2 the old one; Ghidra's pcVar1 and param_4 are
+   phantom); then the count set. Used for many arrays (Object3D +0x10, the MorphingMesh weights +0xd4,
+   ...). */
 void FUN_01023184(int *param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
