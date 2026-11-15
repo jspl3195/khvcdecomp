@@ -241,6 +241,9 @@ typedef struct SwvKeyframeSequence {
  *   +0x10             the animation track list, or NULL: a growable array, +4 the items (a word each),
  *                     +8 the count
  *   +0x14             a list of its own, copied when not empty (GUESS: the user parameters)
+ * Its engine vtable's +0x18 is reference(index) (GUESS: the name; swvObject3D_References walks it from
+ * 0): an object it refers to, 0 for none, -2 when the next index is a list (+4 the items, +8 the
+ * count), -1 past the last.
  * The BREW-facing ISwerveObject slots 3 - 17 they implement: kh_types.h SwerveObject3DVtbl, filled by
  * swv_InitVtbl_Object3D. */
 

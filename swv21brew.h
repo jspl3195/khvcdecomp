@@ -552,7 +552,7 @@ undefined8 FUN_01010148(int param_1,uint param_2);
 undefined4 FUN_010102c8(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 undefined4 FUN_01010320(int param_1,int param_2,undefined4 *param_3);
 void FUN_01010384(int param_1,int param_2,undefined4 *param_3);
-int FUN_010103d4(int *param_1,int param_2,int *param_3);
+int32 swvObject3D_References(uint8 *object,int32 max,uint8 **out);   /* 0x010103D4 GUESS: name, see swv21brew.c */
 undefined4 FUN_010104f0(int param_1);
 undefined4 FUN_010106f8(int param_1);
 void FUN_0101070c(int param_1,int param_2,int *param_3,undefined4 *param_4,undefined4 *param_5);
@@ -1270,7 +1270,7 @@ int FUN_01034e14(int param_1,ISwerveObject **param_2);
 int FUN_01034e8c(int param_1,undefined4 param_2,ISwerveObject **param_3);
 int swvObject3D_GetAnimationTrack(int param_1,undefined4 param_2,ISwerveObject **param_3);   /* 0x01034F00 GUESS: name, see swv21brew.c */
 void swvObject3D_GetAnimationTrackCount(int param_1,undefined4 *param_2);   /* 0x01034F74 GUESS: name, see swv21brew.c */
-int FUN_01034f94(int param_1,uint param_2,int param_3,uint *param_4);
+int swvObject3D_GetReferences(int param_1,uint param_2,int param_3,uint *param_4);   /* 0x01034F94 GUESS: name, see swv21brew.c */
 void FUN_010350fc(int param_1,undefined4 *param_2);
 void FUN_01035114(int param_1);
 void FUN_01035134(int param_1,int param_2,undefined4 *param_3);
@@ -2129,7 +2129,7 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define ADDRESS_OF_FUNCTION_01035270_OFFSET 0x000000AC   /* was DAT_01035248 (word at 0x01035248); PC-relative offset: + 0x10351c4 (the pc) = 0x01035270 */
 #define ADDRESS_OF_FUNCTION_01034da8_OFFSET 0xFFFFFBD8   /* was DAT_0103524c (word at 0x0103524C); PC-relative offset: + 0x10351d0 (the pc) = 0x01034DA8 */
 #define ADDRESS_OF_FUNCTION_01034e8c_OFFSET 0xFFFFFCB0   /* was DAT_01035250 (word at 0x01035250); PC-relative offset: + 0x10351dc (the pc) = 0x01034E8C */
-#define ADDRESS_OF_FUNCTION_01034f94_OFFSET 0xFFFFFDAC   /* was DAT_01035254 (word at 0x01035254); PC-relative offset: + 0x10351e8 (the pc) = 0x01034F94 */
+#define ADDRESS_OF_swvObject3D_GetReferences_OFFSET 0xFFFFFDAC   /* was DAT_01035254 (word at 0x01035254); PC-relative offset: + 0x10351e8 (the pc) = 0x01034F94 */
 #define ADDRESS_OF_FUNCTION_01035114_OFFSET 0xFFFFFF20   /* was DAT_01035258 (word at 0x01035258); PC-relative offset: + 0x10351f4 (the pc) = 0x01035114 */
 #define ADDRESS_OF_FUNCTION_01035318_OFFSET 0x00000118   /* was DAT_0103525c (word at 0x0103525C); PC-relative offset: + 0x1035200 (the pc) = 0x01035318 */
 #define ADDRESS_OF_FUNCTION_010352f4_OFFSET 0x000000E8   /* was DAT_01035260 (word at 0x01035260); PC-relative offset: + 0x103520c (the pc) = 0x010352F4 */

@@ -15221,80 +15221,67 @@ void FUN_01010384(int param_1,int param_2,undefined4 *param_3)
   return;
 }
 
-/* ==== 0x010103D4  (file offset 0x103D4)  FUN_010103d4 ================================================ */
-int FUN_010103d4(int *param_1,int param_2,int *param_3)
+/* ==== 0x010103D4  (file offset 0x103D4)  swvObject3D_References ====================================== */
+/* GUESS: name. The objects a native Object3D refers to (JSR-184 Object3D.getReferences): its own
+   method at engine vtable +0x18, reference(index), is called with index 0, 1, 2, ... until it returns
+   -1. A -2 says the next index is a list (a growable array: +4 the items, +8 the count): its non-NULL
+   items are stored, up to max - found of them, or only counted when out is NULL; any other non-zero
+   value is one object, stored while out is not NULL and found < max; 0 is skipped. Each is stored as
+   object + 4, the pointer swv_WrapObject takes; the number of them all is returned, which can be more
+   than max. Evidence: 0x010103d4 - 0x010104ec (`cmn r0, #1` / `bne` the loop, `cmn r0, #2`, the list's
+   +8 and +4, `cmp r5, #0` / `cmpne r4, r8` / `bge`). Only swvObject3D_GetReferences (slot 11) calls
+   it. */
+int32 swvObject3D_References(uint8 *object,int32 max,uint8 **out)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  int *piVar5;
-  int iVar6;
-  int iVar7;
-  
-  iVar4 = 0;
-  iVar6 = 1;
-  /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
-     FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
-     vtable is not among them (GUESS: not static), so for one the method is not known here */
-  iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,0);
-  while (iVar1 != -1) {
-    if (iVar1 == -2) {
-      iVar7 = iVar6 + 1;
-      /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
-         FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
-         vtable is not among them (GUESS: not static), so for one the method is not known here */
-      iVar6 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,iVar6);
-      iVar2 = *(int *)(iVar6 + 8);
-      iVar1 = param_2 - iVar4;
-      if (iVar2 < param_2 - iVar4) {
-        iVar1 = iVar2;
-      }
-      if (param_3 == (int *)0x0) {
-        iVar1 = 0;
-        while (iVar1 < iVar2) {
-          iVar3 = iVar1 * 4;
-          iVar1 = iVar1 + 1;
-          if (*(int *)(*(int *)(iVar6 + 4) + iVar3) != 0) {
-            iVar4 = iVar4 + 1;
+  int32 found = 0;
+  int32 index = 1;
+  int32 entry;
+
+  /* engine virtual call, slot +0x18: the object's reference(index) */
+  entry = (*(code *)(*(int32 *)(*(int32 *)object + 0x18) + *(int32 *)object))(object,0);
+  while (entry != -1) {
+    if (entry == -2) {
+      const uint8 *list;
+      uint8 *const *items;
+      int32 count;
+      int32 limit;
+      int32 i;
+
+      /* engine virtual call, slot +0x18: the list at the next index */
+      list = (const uint8 *)(*(code *)(*(int32 *)(*(int32 *)object + 0x18) + *(int32 *)object))
+                 (object,index);
+      index++;
+      count = *(const int32 *)(list + 8);
+      items = *(uint8 *const *const *)(list + 4);
+      limit = max - found;
+      if (limit > count)
+        limit = count;
+      if (out != NULL) {
+        for (i = 0; i < limit; i++) {
+          if (items[i] != NULL) {
+            *out++ = items[i] + 4;
+            found++;
           }
         }
       }
       else {
-        for (iVar2 = 0; iVar2 < iVar1; iVar2 = iVar2 + 1) {
-          iVar3 = *(int *)(*(int *)(iVar6 + 4) + iVar2 * 4);
-          piVar5 = param_3;
-          if (iVar3 != 0) {
-            piVar5 = param_3 + 1;
-            *param_3 = iVar3 + 4;
-            iVar4 = iVar4 + 1;
-          }
-          param_3 = piVar5;
+        for (i = 0; i < count; i++) {
+          if (items[i] != NULL)
+            found++;
         }
       }
     }
-    else {
-      iVar7 = iVar6;
-      if (iVar1 != 0) {
-        iVar6 = 0;
-        if (param_3 != (int *)0x0) {
-          iVar6 = iVar4 - param_2;
-        }
-        if (iVar6 < 0 != (param_3 != (int *)0x0 && SBORROW4(iVar4,param_2))) {
-          *param_3 = iVar1 + 4;
-          param_3 = param_3 + 1;
-        }
-        iVar4 = iVar4 + 1;
-      }
+    else if (entry != 0) {
+      if (out != NULL && found < max)
+        *out++ = (uint8 *)entry + 4;
+      found++;
     }
-    iVar6 = iVar7 + 1;
-    /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
-       FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
-       vtable is not among them (GUESS: not static), so for one the method is not known here */
-    iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,iVar7);
+    /* engine virtual call, slot +0x18: the object's reference(index) */
+    entry = (*(code *)(*(int32 *)(*(int32 *)object + 0x18) + *(int32 *)object))(object,index);
+    index++;
   }
-  return iVar4;
+  return found;
 }
 
 /* ==== 0x010104F0  (file offset 0x104F0)  FUN_010104f0 ================================================ */
@@ -45391,7 +45378,7 @@ void thunk_swv_InitVtbl_Object3D(int param_1)
   *(int *)(param_1 + 0x20) = ADDRESS_OF_FUNCTION_01035270_OFFSET + 0x10351c4;
   *(int *)(param_1 + 0x24) = ADDRESS_OF_FUNCTION_01034da8_OFFSET + 0x10351d0;
   *(int *)(param_1 + 0x28) = ADDRESS_OF_FUNCTION_01034e8c_OFFSET + 0x10351dc;
-  *(int *)(param_1 + 0x2c) = ADDRESS_OF_FUNCTION_01034f94_OFFSET + 0x10351e8;
+  *(int *)(param_1 + 0x2c) = ADDRESS_OF_swvObject3D_GetReferences_OFFSET + 0x10351e8;
   *(int *)(param_1 + 0x30) = ADDRESS_OF_FUNCTION_01035114_OFFSET + 0x10351f4;
   *(int *)(param_1 + 0x34) = ADDRESS_OF_FUNCTION_01035318_OFFSET + 0x1035200;
   *(int *)(param_1 + 0x38) = ADDRESS_OF_FUNCTION_010352f4_OFFSET + 0x103520c;
@@ -49371,8 +49358,13 @@ void swvObject3D_GetAnimationTrackCount(int param_1,undefined4 *param_2)
   return;
 }
 
-/* ==== 0x01034F94  (file offset 0x34F94)  FUN_01034f94 ================================================ */
-int FUN_01034f94(int param_1,uint param_2,int param_3,uint *param_4)
+/* ==== 0x01034F94  (file offset 0x34F94)  swvObject3D_GetReferences =================================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 11 (+0x2c) of every class (kh_types.h
+   SwerveObject3DVtbl.GetReferences; JSR-184 Object3D.getReferences): in an error frame, a temporary
+   array of param_2 slots, swvObject3D_References into it, error -1301 when param_2 is not 0 and the
+   output array param_3 is NULL, each of the first param_2 found wrapped (swv_WrapObject) into param_3,
+   the number of them all into *param_4; then the array destroyed. */
+int swvObject3D_GetReferences(int param_1,uint param_2,int param_3,uint *param_4)
 
 {
   int iVar1;
@@ -49405,7 +49397,8 @@ int FUN_01034f94(int param_1,uint param_2,int param_3,uint *param_4)
       FUN_0101807c(uVar4,piVar3);
     }
     FUN_01023184(piVar3,param_2);
-    uVar5 = FUN_010103d4(iVar2,param_2);
+    /* Ghidra had dropped the third argument (r2 = the array's items, ldr r2, [r5, #4] at 0x01035044) */
+    uVar5 = swvObject3D_References((uint8 *)iVar2,param_2,(uint8 **)piVar3[1]);
     if ((param_2 != 0) && (param_3 == 0)) {
       FUN_0102f7e0(INTEGER_MINUS_1301);
     }
@@ -49513,7 +49506,7 @@ void swv_InitVtbl_Object3D(int param_1)
   *(int *)(param_1 + 0x20) = ADDRESS_OF_FUNCTION_01035270_OFFSET + 0x10351c4;
   *(int *)(param_1 + 0x24) = ADDRESS_OF_FUNCTION_01034da8_OFFSET + 0x10351d0;
   *(int *)(param_1 + 0x28) = ADDRESS_OF_FUNCTION_01034e8c_OFFSET + 0x10351dc;
-  *(int *)(param_1 + 0x2c) = ADDRESS_OF_FUNCTION_01034f94_OFFSET + 0x10351e8;
+  *(int *)(param_1 + 0x2c) = ADDRESS_OF_swvObject3D_GetReferences_OFFSET + 0x10351e8;
   *(int *)(param_1 + 0x30) = ADDRESS_OF_FUNCTION_01035114_OFFSET + 0x10351f4;
   *(int *)(param_1 + 0x34) = ADDRESS_OF_FUNCTION_01035318_OFFSET + 0x1035200;
   *(int *)(param_1 + 0x38) = ADDRESS_OF_FUNCTION_010352f4_OFFSET + 0x103520c;

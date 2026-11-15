@@ -814,7 +814,8 @@ typedef struct SwerveObject3DVtbl {
     int32 (*RemoveAnimationTrack)(ISwerveObject *po,ISwerveObject *track); /* +0x20 slot 8, 0x01035270 */
     int32 (*Animate)(ISwerveObject *po,int32 worldTime,int32 *pResult);  /* +0x24 slot 9, 0x01034da8 */
     int32 (*Find)(ISwerveObject *po,int32 userId,ISwerveObject **ppo);   /* +0x28 slot 10, 0x01034e8c */
-    int32 (*slot11)();                                                   /* +0x2c slot 11, 0x01034f94 */
+    int32 (*GetReferences)(ISwerveObject *po,uint32 max,ISwerveObject **refs,uint32 *pCount);
+                                                                         /* +0x2c slot 11, 0x01034f94 */
     int32 (*GetUserParameter)(ISwerveObject *po,int32 id,int32 size,void *buffer,int32 *pLength);
                                                                          /* +0x30 slot 12, 0x01035114 */
     int32 (*slot13)();                                                   /* +0x34 slot 13, 0x01035318 */
