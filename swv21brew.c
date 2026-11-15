@@ -3173,8 +3173,8 @@ void FUN_01002d60(int param_1,int param_2)
     }
     *(int *)(param_1 + 0x38) = param_2;
     *(int *)(param_2 + 0x30) = param_1;
-    uVar2 = FUN_01010cc8(param_1);
-    FUN_01026614(param_2,uVar2);
+    uVar2 = swvNode_Depth((uint8 *)param_1);
+    swvNode_SetDepth((uint8 *)param_2,uVar2);
     FUN_01023d00(param_2);
     do {
       iVar1 = param_2;
@@ -4728,6 +4728,12 @@ int FUN_0100486c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
 }
 
 /* ==== 0x010048E4  (file offset 0x048E4)  FUN_010048e4 ================================================ */
+/* GUESS (not yet rewritten): the transform from node param_1 to node param_2 (JSR-184
+   Node.getTransformTo) into the matrix param_3 (identity when they are the same node): the deeper one
+   walked up (swvNode_Depth, the parent at +0x30) until the depths match, then both together to their
+   common ancestor, each node's transform (FUN_0100f8f8) multiplied in on the way (FUN_0101749c); one
+   side inverted (swv_Matrix4Invert, error -1000 when it cannot be); returns the common ancestor, or 0
+   when they are not in the same tree. A World target (type 0x16) is handled apart. */
 int FUN_010048e4(int param_1,int param_2,undefined4 param_3)
 
 {
@@ -4746,8 +4752,8 @@ int FUN_010048e4(int param_1,int param_2,undefined4 param_3)
        object's class) */
     iVar1 = (*(code *)(*(int *)(*(int *)(param_2 + 4) + 4) + *(int *)(param_2 + 4)))(param_2 + 4);
     if (iVar1 != 0x16) {
-      iVar3 = FUN_01010cc8(param_1);
-      iVar4 = FUN_01010cc8(param_2);
+      iVar3 = swvNode_Depth((uint8 *)param_1);
+      iVar4 = swvNode_Depth((uint8 *)param_2);
       FUN_01029620(auStack_60,0x3f);
       for (iVar1 = param_1; (iVar4 < iVar3 && (iVar1 != param_2)); iVar1 = *(int *)(iVar1 + 0x30)) {
         uVar2 = FUN_0100f8f8(iVar1);
@@ -9230,8 +9236,8 @@ int FUN_01009638(int param_1,int param_2)
        object's class) */
     iVar6 = (*(code *)(*(int *)(*(int *)(param_2 + 4) + 4) + *(int *)(param_2 + 4)))(param_2 + 4);
     if (iVar6 != 0x16) {
-      iVar5 = FUN_01010cc8(iVar3);
-      iVar2 = FUN_01010cc8(param_2);
+      iVar5 = swvNode_Depth((uint8 *)iVar3);
+      iVar2 = swvNode_Depth((uint8 *)param_2);
       FUN_01029620(auStack_60,0x3f);
       for (iVar6 = iVar3; (iVar2 < iVar5 && (iVar6 != param_2)); iVar6 = *(int *)(iVar6 + 0x30)) {
         uVar1 = FUN_0100f8f8(iVar6);
@@ -15621,20 +15627,26 @@ undefined4 FUN_01010938(int param_1)
   return *(undefined4 *)(param_1 + 0x100);
 }
 
-/* ==== 0x01010CC8  (file offset 0x10CC8)  FUN_01010cc8 ================================================ */
-uint FUN_01010cc8(int param_1)
+/* ==== 0x01010CC8  (file offset 0x10CC8)  swvNode_Depth =============================================== */
+/* GUESS: name. A node's depth in the scene tree (0 for a root): the byte cached at +0x3c, or, when it is
+   0xff (not cached, or deeper than 254), the number of its ancestors, counted up the parent links
+   (+0x30). Evidence: 0x01010cc8 - 0x01010cf0 (`ldrb r0, [r0, #0x3c]`, `cmp r0, #0xff` / `bxne lr`, then
+   `ldr r1, [r1, #0x30]` / `cmp r1, #0` / `addne`). swvNode_SetDepth keeps the cache. Used by
+   FUN_010048e4 (GUESS: the transform between two nodes) and the child inserts FUN_01014510 /
+   FUN_0101456c. */
+int32 swvNode_Depth(const uint8 *node)
 
 {
-  uint uVar1;
-  
-  if (*(byte *)(param_1 + 0x3c) != 0xff) {
-    return (uint)*(byte *)(param_1 + 0x3c);
+  int32 depth = *(const uint8 *)(node + 0x3c);
+  const uint8 *ancestor;
+
+  if (depth == 0xff) {
+    depth = 0;
+    for (ancestor = *(const uint8 *const *)(node + 0x30); ancestor != NULL;
+         ancestor = *(const uint8 *const *)(ancestor + 0x30))
+      depth++;
   }
-  uVar1 = 0;
-  while (param_1 = *(int *)(param_1 + 0x30), param_1 != 0) {
-    uVar1 = uVar1 + 1;
-  }
-  return uVar1;
+  return depth;
 }
 
 /* ==== 0x01010CF4  (file offset 0x10CF4)  FUN_01010cf4 ================================================ */
@@ -18882,6 +18894,10 @@ void swvLight_Shade(undefined4 *param_1,undefined4 param_2,undefined4 param_3)
 }
 
 /* ==== 0x01014510  (file offset 0x14510)  FUN_01014510 ================================================ */
+/* GUESS (not yet rewritten): inserts the node param_1 into param_2's parent's child list, right after
+   param_2 (+0x34 the next sibling): its count of references (+8) up, FUN_010261f0, its parent (+0x30)
+   set, its subtree's depths (swvNode_SetDepth from the parent's swvNode_Depth), FUN_01023d00; then,
+   when the tree's root is a World (type 0x16), the World's cache at +0x98 dropped. */
 void FUN_01014510(int param_1,int param_2)
 
 {
@@ -18896,8 +18912,8 @@ void FUN_01014510(int param_1,int param_2)
   }
   *(int *)(param_2 + 0x34) = param_1;
   *(undefined4 *)(param_1 + 0x30) = *(undefined4 *)(param_2 + 0x30);
-  uVar1 = FUN_01010cc8();
-  FUN_01026614(param_1,uVar1);
+  uVar1 = swvNode_Depth(*(uint8 **)(param_2 + 0x30));   /* Ghidra had dropped it (the parent) */
+  swvNode_SetDepth((uint8 *)param_1,uVar1);
   FUN_01023d00(param_1);
   do {
     iVar2 = param_1;
@@ -18922,6 +18938,8 @@ void FUN_01014510(int param_1,int param_2)
 }
 
 /* ==== 0x0101456C  (file offset 0x1456C)  FUN_0101456c ================================================ */
+/* GUESS (not yet rewritten): adds the node param_1 as param_2's first child (JSR-184 Group.addChild):
+   as FUN_01014510, but put at the head of param_2's child list (+0x38) with param_2 as its parent. */
 void FUN_0101456c(int param_1,int param_2)
 
 {
@@ -18936,8 +18954,8 @@ void FUN_0101456c(int param_1,int param_2)
   }
   *(int *)(param_2 + 0x38) = param_1;
   *(int *)(param_1 + 0x30) = param_2;
-  uVar1 = FUN_01010cc8(param_2);
-  FUN_01026614(param_1,uVar1);
+  uVar1 = swvNode_Depth((uint8 *)param_2);
+  swvNode_SetDepth((uint8 *)param_1,uVar1);
   FUN_01023d00(param_1);
   do {
     iVar2 = param_1;
@@ -28507,10 +28525,7 @@ void FUN_0101fb28(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 
 {
   int iVar1;
-  undefined4 unaff_r4;
-  undefined4 unaff_r5;
   int iVar2;
-  undefined4 in_lr;
   
   FUN_0101f9a8();
   iVar2 = *(int *)(param_1 + 0x88);
@@ -28541,7 +28556,8 @@ void FUN_0101fb28(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   *(int *)(param_1 + 0x8c) = iVar1;
   *(undefined1 *)(param_1 + 0x3c) = 0;
   for (iVar1 = *(int *)(param_1 + 0x38); iVar1 != 0; iVar1 = *(int *)(iVar1 + 0x34)) {
-    FUN_01026614(iVar1,*(undefined1 *)(param_1 + 0x3c),param_3,param_4,unaff_r4,unaff_r5,in_lr);
+    /* swvNode_SetDepth reads r0 and r1 only: Ghidra had added five phantom arguments */
+    swvNode_SetDepth((uint8 *)iVar1,*(uint8 *)(param_1 + 0x3c));
   }
   return;
 }
@@ -35134,7 +35150,7 @@ void FUN_010261f0(int param_1)
   *(undefined4 *)(param_1 + 0x34) = 0;
   *(undefined4 *)(param_1 + 0x30) = 0;
   FUN_01023d00(param_1);
-  FUN_01026614(param_1,0xffffffff);
+  swvNode_SetDepth((uint8 *)param_1,0xffffffff);
   piVar3 = (int *)(param_1 + 4);
   iVar1 = *(int *)(param_1 + 8) + -1;
   *(int *)(param_1 + 8) = iVar1;
@@ -35382,24 +35398,23 @@ void FUN_010265fc(int param_1)
   return;
 }
 
-/* ==== 0x01026614  (file offset 0x26614)  FUN_01026614 ================================================ */
-void FUN_01026614(int param_1,int param_2)
+/* ==== 0x01026614  (file offset 0x26614)  swvNode_SetDepth ============================================ */
+/* GUESS: name. Caches the depths of a node and its subtree: the node's byte at +0x3c becomes
+   parentDepth + 1 (0 for a root, parentDepth -1; 0xff, "not cached", once parentDepth reaches 0xff:
+   swvNode_Depth then counts), then the same for each child (+0x38 the first, +0x34 the next) with the
+   node's depth. Evidence: 0x01026614 - 0x0102664c (`cmp r1, #0xff` / `addlt r0, r1, #1` / `movge r0,
+   #0xff` / `strb r0, [r5, #0x3c]`, the children's loop and the recursive `bl`). */
+void swvNode_SetDepth(uint8 *node,int32 parentDepth)
 
 {
-  char cVar1;
-  int iVar2;
-  
-  if (param_2 < 0xff) {
-    cVar1 = (char)param_2 + '\x01';
-  }
-  else {
-    cVar1 = -1;
-  }
-  *(char *)(param_1 + 0x3c) = cVar1;
-  for (iVar2 = *(int *)(param_1 + 0x38); iVar2 != 0; iVar2 = *(int *)(iVar2 + 0x34)) {
-    FUN_01026614(iVar2,*(undefined1 *)(param_1 + 0x3c));
-  }
-  return;
+  uint8 *child;
+
+  if (parentDepth < 0xff)
+    *(node + 0x3c) = (uint8)(parentDepth + 1);
+  else
+    *(node + 0x3c) = 0xff;
+  for (child = *(uint8 **)(node + 0x38); child != NULL; child = *(uint8 **)(child + 0x34))
+    swvNode_SetDepth(child,*(node + 0x3c));
 }
 
 /* ==== 0x010266B0  (file offset 0x266B0)  FUN_010266b0 ================================================ */

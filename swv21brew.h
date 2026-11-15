@@ -561,7 +561,7 @@ undefined4 FUN_01010828(int param_1,uint param_2,int param_3,undefined4 *param_4
 bool FUN_010108d4(undefined4 param_1,undefined4 param_2,int param_3);
 int FUN_01010924(int param_1,int param_2);
 undefined4 FUN_01010938(int param_1);
-uint FUN_01010cc8(int param_1);
+int32 swvNode_Depth(const uint8 *node);   /* 0x01010CC8 GUESS: name, see swv21brew.c */
 int FUN_01010cf4(int param_1,int param_2,undefined4 param_3,int param_4);
 int FUN_01010d40(int param_1,int param_2,undefined4 param_3,int param_4);
 undefined4 FUN_01010dac(undefined4 param_1,int param_2);
@@ -900,7 +900,7 @@ void FUN_010263e8(undefined4 *param_1,undefined4 param_2,undefined4 param_3,unde
 void FUN_01026468(uint *param_1);
 undefined8 FUN_01026548(int param_1,int param_2);
 void FUN_010265fc(int param_1);
-void FUN_01026614(int param_1,int param_2);
+void swvNode_SetDepth(uint8 *node,int32 parentDepth);   /* 0x01026614 GUESS: name, see swv21brew.c */
 void swvKeyframeSequence_Prepare(int param_1);
 int FUN_010268b4(void);
 undefined8 FUN_010268d4(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
