@@ -14721,6 +14721,10 @@ void *swvImage2D_Pixels(uint8 *image)
 }
 
 /* ==== 0x01010094  (file offset 0x10094)  FUN_01010094 ================================================ */
+/* GUESS (not yet rewritten): an AnimationController's position (JSR-184
+   AnimationController.getPosition) at the world time param_2: its reference sequence time (+0x24, a
+   float) + (param_2 - its reference world time, +0x28) * its speed (+0x2c), the product skipped when
+   the speed is 1.0; floats through the soft-float routines, which Ghidra pasted in. */
 /* WARNING: Removing unreachable block (ram,0x0103ee1c) */
 /* WARNING: Removing unreachable block (ram,0x0103edd4) */
 /* WARNING: Removing unreachable block (ram,0x0103ede0) */
@@ -15411,11 +15415,15 @@ void FUN_0101070c(int param_1,int param_2,int *param_3,undefined4 *param_4,undef
   return;
 }
 
-/* ==== 0x01010818  (file offset 0x10818)  FUN_01010818 ================================================ */
-undefined4 FUN_01010818(int param_1)
+/* ==== 0x01010818  (file offset 0x10818)  swvAnimationController_Speed ================================ */
+/* GUESS: name. A native AnimationController's speed (JSR-184 AnimationController.getSpeed), a float
+   (its bits; 1.0 is 0x3f800000) at +0x2c. Evidence: 0x01010818 - 0x0101081c (`ldr r0, [r0, #0x2c]` /
+   `bx lr`); FUN_01010094 multiplies the world time since +0x28 by it, FUN_01010de0 divides a sequence
+   time by it. Used by swvAnimationController_GetSpeed (slot 22) and FUN_01010de0. */
+uint32 swvAnimationController_Speed(const uint8 *controller)
 
 {
-  return *(undefined4 *)(param_1 + 0x2c);
+  return *(const uint32 *)(controller + 0x2c);
 }
 
 /* ==== 0x01010820  (file offset 0x10820)  FUN_01010820 ================================================ */
@@ -15705,6 +15713,12 @@ undefined4 FUN_01010dac(undefined4 param_1,int param_2)
 }
 
 /* ==== 0x01010DE0  (file offset 0x10DE0)  FUN_01010de0 ================================================ */
+/* GUESS (not yet rewritten): an AnimationTrack's sample (param_1: +0x1c its KeyframeSequence, +0x20 its
+   AnimationController) at the world time param_2: 0x7fffffff (valid for ever) when the controller is
+   not active (FUN_01013a80); else the sequence sampled (swvKeyframeSequence_Sample) at the controller's
+   position (FUN_01010094), and the time that returns (GUESS: until the next keyframe, in sequence time)
+   divided by the controller's speed (swvAnimationController_Speed, unless 1.0) and made an integer:
+   GUESS the validity in world time that JSR-184's animate returns. */
 undefined4
 FUN_01010de0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5
             )
@@ -15727,7 +15741,7 @@ FUN_01010de0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
                                        uVar3);
     swv_fcmp_a(uVar3,WORD_HEXADECIMAL_7F7FFFFF);
     if (!(bool)uVar4) {
-      uVar2 = FUN_01010818(*(undefined4 *)(param_1 + 0x20));
+      uVar2 = swvAnimationController_Speed(*(uint8 **)(param_1 + 0x20));
       swv_fcmp_a(uVar2,0x3f800000);
       if (!(bool)uVar4) {
         uVar3 = swv_fdiv(uVar3,uVar2);
@@ -40575,8 +40589,11 @@ int swv_Create_AnimationController(void **ppObj)
   return iVar1;
 }
 
-/* ==== 0x0102CE5C  (file offset 0x2CE5C)  FUN_0102ce5c ================================================ */
-void FUN_0102ce5c(int param_1,undefined4 *param_2)
+/* ==== 0x0102CE5C  (file offset 0x2CE5C)  swvAnimationController_GetActiveIntervalEnd ================= */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 21 (+0x54) of AnimationController (JSR-184
+   AnimationController.getActiveIntervalEnd; kh_types.h SwerveAnimationControllerVtbl): *param_2 = the
+   native object (po->pNative, +4, less 4)'s active interval end (+0x20). */
+void swvAnimationController_GetActiveIntervalEnd(int param_1,undefined4 *param_2)
 
 {
   int iVar1;
@@ -40589,8 +40606,11 @@ void FUN_0102ce5c(int param_1,undefined4 *param_2)
   return;
 }
 
-/* ==== 0x0102CE74  (file offset 0x2CE74)  FUN_0102ce74 ================================================ */
-void FUN_0102ce74(int param_1,undefined4 *param_2)
+/* ==== 0x0102CE74  (file offset 0x2CE74)  swvAnimationController_GetActiveIntervalStart =============== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 20 (+0x50) of AnimationController (JSR-184
+   AnimationController.getActiveIntervalStart; kh_types.h SwerveAnimationControllerVtbl): *param_2 = the
+   native object (po->pNative, +4, less 4)'s active interval start (+0x1c). */
+void swvAnimationController_GetActiveIntervalStart(int param_1,undefined4 *param_2)
 
 {
   int iVar1;
@@ -40603,8 +40623,11 @@ void FUN_0102ce74(int param_1,undefined4 *param_2)
   return;
 }
 
-/* ==== 0x0102CE8C  (file offset 0x2CE8C)  FUN_0102ce8c ================================================ */
-void FUN_0102ce8c(int param_1,undefined4 param_2,undefined4 *param_3)
+/* ==== 0x0102CE8C  (file offset 0x2CE8C)  swvAnimationController_GetPosition ========================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 24 (+0x60) of AnimationController (JSR-184
+   AnimationController.getPosition; kh_types.h SwerveAnimationControllerVtbl): *param_3 = the sequence
+   time at the world time param_2 (FUN_01010094). */
+void swvAnimationController_GetPosition(int param_1,undefined4 param_2,undefined4 *param_3)
 
 {
   int iVar1;
@@ -40614,13 +40637,16 @@ void FUN_0102ce8c(int param_1,undefined4 param_2,undefined4 *param_3)
   if (iVar1 != 0) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_01010094(iVar1);
+  uVar2 = FUN_01010094(iVar1,param_2);   /* Ghidra had dropped the world time (r1) */
   *param_3 = uVar2;
   return;
 }
 
-/* ==== 0x0102CEAC  (file offset 0x2CEAC)  FUN_0102ceac ================================================ */
-void FUN_0102ceac(int param_1,undefined4 *param_2)
+/* ==== 0x0102CEAC  (file offset 0x2CEAC)  swvAnimationController_GetSpeed ============================= */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 22 (+0x58) of AnimationController (JSR-184
+   AnimationController.getSpeed; kh_types.h SwerveAnimationControllerVtbl): *param_2 =
+   swvAnimationController_Speed of the native object (po->pNative, +4, less 4). */
+void swvAnimationController_GetSpeed(int param_1,undefined4 *param_2)
 
 {
   int iVar1;
@@ -40630,13 +40656,16 @@ void FUN_0102ceac(int param_1,undefined4 *param_2)
   if (iVar1 != 0) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_01010818(iVar1);
+  uVar2 = swvAnimationController_Speed((uint8 *)iVar1);
   *param_2 = uVar2;
   return;
 }
 
-/* ==== 0x0102CECC  (file offset 0x2CECC)  FUN_0102cecc ================================================ */
-void FUN_0102cecc(int param_1,undefined4 *param_2)
+/* ==== 0x0102CECC  (file offset 0x2CECC)  swvAnimationController_GetWeight ============================ */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 18 (+0x48) of AnimationController (JSR-184
+   AnimationController.getWeight; kh_types.h SwerveAnimationControllerVtbl): *param_2 = the native
+   object (po->pNative, +4, less 4)'s weight (+0x30, a float). */
+void swvAnimationController_GetWeight(int param_1,undefined4 *param_2)
 
 {
   int iVar1;
@@ -40658,20 +40687,23 @@ void swv_InitVtbl_AnimationController(void **pVtbl)
                        swv_WrapObject for internal object type 1 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
   swv_InitVtbl_Object3D();
-  pVtbl[0x12] = (void *)(ADDRESS_OF_FUNCTION_0102cecc_OFFSET + 0x102cefc);
-  pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_0102d0d4_OFFSET + 0x102cf08);
-  pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_0102ce74_OFFSET + 0x102cf14);
-  pVtbl[0x15] = (void *)(ADDRESS_OF_FUNCTION_0102ce5c_OFFSET + 0x102cf20);
-  pVtbl[0x16] = (void *)(ADDRESS_OF_FUNCTION_0102ceac_OFFSET + 0x102cf2c);
-  pVtbl[0x17] = (void *)(ADDRESS_OF_FUNCTION_0102cf84_OFFSET + 0x102cf38);
-  pVtbl[0x18] = (void *)(ADDRESS_OF_FUNCTION_0102ce8c_OFFSET + 0x102cf44);
-  pVtbl[0x19] = (void *)(ADDRESS_OF_FUNCTION_0102cfec_OFFSET + 0x102cf50);
-  pVtbl[0x1a] = (void *)(ADDRESS_OF_FUNCTION_0102d060_OFFSET + 0x102cf5c);
+  pVtbl[0x12] = (void *)(ADDRESS_OF_swvAnimationController_GetWeight_OFFSET + 0x102cefc);
+  pVtbl[0x13] = (void *)(ADDRESS_OF_swvAnimationController_SetWeight_OFFSET + 0x102cf08);
+  pVtbl[0x14] = (void *)(ADDRESS_OF_swvAnimationController_GetActiveIntervalStart_OFFSET + 0x102cf14);
+  pVtbl[0x15] = (void *)(ADDRESS_OF_swvAnimationController_GetActiveIntervalEnd_OFFSET + 0x102cf20);
+  pVtbl[0x16] = (void *)(ADDRESS_OF_swvAnimationController_GetSpeed_OFFSET + 0x102cf2c);
+  pVtbl[0x17] = (void *)(ADDRESS_OF_swvAnimationController_SetActiveInterval_OFFSET + 0x102cf38);
+  pVtbl[0x18] = (void *)(ADDRESS_OF_swvAnimationController_GetPosition_OFFSET + 0x102cf44);
+  pVtbl[0x19] = (void *)(ADDRESS_OF_swvAnimationController_SetPosition_OFFSET + 0x102cf50);
+  pVtbl[0x1a] = (void *)(ADDRESS_OF_swvAnimationController_SetSpeed_OFFSET + 0x102cf5c);
   return;
 }
 
-/* ==== 0x0102CF84  (file offset 0x2CF84)  FUN_0102cf84 ================================================ */
-undefined4 FUN_0102cf84(int param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x0102CF84  (file offset 0x2CF84)  swvAnimationController_SetActiveInterval ==================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 23 (+0x5c) of AnimationController (JSR-184
+   AnimationController.setActiveInterval; kh_types.h SwerveAnimationControllerVtbl): in an error frame,
+   FUN_0101ff90 (start, end); on an error its result code. */
+undefined4 swvAnimationController_SetActiveInterval(int param_1,undefined4 param_2,undefined4 param_3)
 
 {
   int iVar1;
@@ -40695,8 +40727,11 @@ undefined4 FUN_0102cf84(int param_1,undefined4 param_2,undefined4 param_3)
   return uVar2;
 }
 
-/* ==== 0x0102CFEC  (file offset 0x2CFEC)  FUN_0102cfec ================================================ */
-undefined4 FUN_0102cfec(int param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x0102CFEC  (file offset 0x2CFEC)  swvAnimationController_SetPosition ========================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 25 (+0x64) of AnimationController (JSR-184
+   AnimationController.setPosition; kh_types.h SwerveAnimationControllerVtbl): in an error frame,
+   FUN_01022340 (the sequence time, a float, and the world time); on an error its result code. */
+undefined4 swvAnimationController_SetPosition(int param_1,undefined4 param_2,undefined4 param_3)
 
 {
   int iVar1;
@@ -40722,8 +40757,11 @@ undefined4 FUN_0102cfec(int param_1,undefined4 param_2,undefined4 param_3)
   return uVar3;
 }
 
-/* ==== 0x0102D060  (file offset 0x2D060)  FUN_0102d060 ================================================ */
-undefined4 FUN_0102d060(int param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x0102D060  (file offset 0x2D060)  swvAnimationController_SetSpeed ============================= */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 26 (+0x68) of AnimationController (JSR-184
+   AnimationController.setSpeed; kh_types.h SwerveAnimationControllerVtbl): in an error frame,
+   FUN_01023244 (the speed, a float, and the world time); on an error its result code. */
+undefined4 swvAnimationController_SetSpeed(int param_1,undefined4 param_2,undefined4 param_3)
 
 {
   int iVar1;
@@ -40749,8 +40787,12 @@ undefined4 FUN_0102d060(int param_1,undefined4 param_2,undefined4 param_3)
   return uVar3;
 }
 
-/* ==== 0x0102D0D4  (file offset 0x2D0D4)  FUN_0102d0d4 ================================================ */
-undefined4 FUN_0102d0d4(int param_1,undefined4 param_2)
+/* ==== 0x0102D0D4  (file offset 0x2D0D4)  swvAnimationController_SetWeight ============================ */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 19 (+0x4c) of AnimationController (JSR-184
+   AnimationController.setWeight; kh_types.h SwerveAnimationControllerVtbl): in an error frame, error
+   -1301 for a negative weight, then FUN_01023c88 (GUESS: stores it, +0x30); on an error its result
+   code. */
+undefined4 swvAnimationController_SetWeight(int param_1,undefined4 param_2)
 
 {
   int iVar1;

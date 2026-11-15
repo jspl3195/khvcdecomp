@@ -556,7 +556,7 @@ int32 swvObject3D_References(uint8 *object,int32 max,uint8 **out);   /* 0x010103
 undefined4 FUN_010104f0(int param_1);
 int32 swvPolygonMode_Shading(const uint8 *mode);   /* 0x010106F8 GUESS: name, see swv21brew.c */
 void FUN_0101070c(int param_1,int param_2,int *param_3,undefined4 *param_4,undefined4 *param_5);
-undefined4 FUN_01010818(int param_1);
+uint32 swvAnimationController_Speed(const uint8 *controller);   /* 0x01010818 GUESS: name, see swv21brew.c */
 undefined4 FUN_01010828(int param_1,uint param_2,int param_3,undefined4 *param_4);
 bool FUN_010108d4(undefined4 param_1,undefined4 param_2,int param_3);
 int FUN_01010924(int param_1,int param_2);
@@ -1054,15 +1054,15 @@ void FUN_0102cc18(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3);
 int FUN_0102cc60(void);
 int FUN_0102cc80(int param_1,int param_2);
 uint adler32(uint param_1,byte *param_2,uint param_3);
-void FUN_0102ce5c(int param_1,undefined4 *param_2);
-void FUN_0102ce74(int param_1,undefined4 *param_2);
-void FUN_0102ce8c(int param_1,undefined4 param_2,undefined4 *param_3);
-void FUN_0102ceac(int param_1,undefined4 *param_2);
-void FUN_0102cecc(int param_1,undefined4 *param_2);
-undefined4 FUN_0102cf84(int param_1,undefined4 param_2,undefined4 param_3);
-undefined4 FUN_0102cfec(int param_1,undefined4 param_2,undefined4 param_3);
-undefined4 FUN_0102d060(int param_1,undefined4 param_2,undefined4 param_3);
-undefined4 FUN_0102d0d4(int param_1,undefined4 param_2);
+void swvAnimationController_GetActiveIntervalEnd(int param_1,undefined4 *param_2);   /* 0x0102CE5C GUESS: name, see swv21brew.c */
+void swvAnimationController_GetActiveIntervalStart(int param_1,undefined4 *param_2);   /* 0x0102CE74 GUESS: name, see swv21brew.c */
+void swvAnimationController_GetPosition(int param_1,undefined4 param_2,undefined4 *param_3);   /* 0x0102CE8C GUESS: name, see swv21brew.c */
+void swvAnimationController_GetSpeed(int param_1,undefined4 *param_2);   /* 0x0102CEAC GUESS: name, see swv21brew.c */
+void swvAnimationController_GetWeight(int param_1,undefined4 *param_2);   /* 0x0102CECC GUESS: name, see swv21brew.c */
+undefined4 swvAnimationController_SetActiveInterval(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x0102CF84 GUESS: name, see swv21brew.c */
+undefined4 swvAnimationController_SetPosition(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x0102CFEC GUESS: name, see swv21brew.c */
+undefined4 swvAnimationController_SetSpeed(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x0102D060 GUESS: name, see swv21brew.c */
+undefined4 swvAnimationController_SetWeight(int param_1,undefined4 param_2);   /* 0x0102D0D4 GUESS: name, see swv21brew.c */
 int FUN_0102d1c0(int param_1,ISwerveObject **param_2);
 int FUN_0102d22c(int param_1,ISwerveObject **param_2);
 void FUN_0102d298(int param_1,undefined4 *param_2);
@@ -1857,15 +1857,15 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define DATA_AT_0100203C_OFFSET_39 0xFFFD5A40   /* was DAT_0102c61c (word at 0x0102C61C); PC-relative offset: + 0x102c5fc (the pc) = 0x0100203C */
 #define INTEGER_5552 0x000015B0   /* was DAT_0102cdf4 (word at 0x0102CDF4); integer 5552 */
 #define INTEGER_65521 0x0000FFF1   /* was DAT_0102cdf8 (word at 0x0102CDF8); integer 65521 */
-#define ADDRESS_OF_FUNCTION_0102cecc_OFFSET 0xFFFFFFD0   /* was DAT_0102cf60 (word at 0x0102CF60); PC-relative offset: + 0x102cefc (the pc) = 0x0102CECC */
-#define ADDRESS_OF_FUNCTION_0102d0d4_OFFSET 0x000001CC   /* was DAT_0102cf64 (word at 0x0102CF64); PC-relative offset: + 0x102cf08 (the pc) = 0x0102D0D4 */
-#define ADDRESS_OF_FUNCTION_0102ce74_OFFSET 0xFFFFFF60   /* was DAT_0102cf68 (word at 0x0102CF68); PC-relative offset: + 0x102cf14 (the pc) = 0x0102CE74 */
-#define ADDRESS_OF_FUNCTION_0102ce5c_OFFSET 0xFFFFFF3C   /* was DAT_0102cf6c (word at 0x0102CF6C); PC-relative offset: + 0x102cf20 (the pc) = 0x0102CE5C */
-#define ADDRESS_OF_FUNCTION_0102ceac_OFFSET 0xFFFFFF80   /* was DAT_0102cf70 (word at 0x0102CF70); PC-relative offset: + 0x102cf2c (the pc) = 0x0102CEAC */
-#define ADDRESS_OF_FUNCTION_0102cf84_OFFSET 0x0000004C   /* was DAT_0102cf74 (word at 0x0102CF74); PC-relative offset: + 0x102cf38 (the pc) = 0x0102CF84 */
-#define ADDRESS_OF_FUNCTION_0102ce8c_OFFSET 0xFFFFFF48   /* was DAT_0102cf78 (word at 0x0102CF78); PC-relative offset: + 0x102cf44 (the pc) = 0x0102CE8C */
-#define ADDRESS_OF_FUNCTION_0102cfec_OFFSET 0x0000009C   /* was DAT_0102cf7c (word at 0x0102CF7C); PC-relative offset: + 0x102cf50 (the pc) = 0x0102CFEC */
-#define ADDRESS_OF_FUNCTION_0102d060_OFFSET 0x00000104   /* was DAT_0102cf80 (word at 0x0102CF80); PC-relative offset: + 0x102cf5c (the pc) = 0x0102D060 */
+#define ADDRESS_OF_swvAnimationController_GetWeight_OFFSET 0xFFFFFFD0   /* was DAT_0102cf60 (word at 0x0102CF60); PC-relative offset: + 0x102cefc (the pc) = 0x0102CECC */
+#define ADDRESS_OF_swvAnimationController_SetWeight_OFFSET 0x000001CC   /* was DAT_0102cf64 (word at 0x0102CF64); PC-relative offset: + 0x102cf08 (the pc) = 0x0102D0D4 */
+#define ADDRESS_OF_swvAnimationController_GetActiveIntervalStart_OFFSET 0xFFFFFF60   /* was DAT_0102cf68 (word at 0x0102CF68); PC-relative offset: + 0x102cf14 (the pc) = 0x0102CE74 */
+#define ADDRESS_OF_swvAnimationController_GetActiveIntervalEnd_OFFSET 0xFFFFFF3C   /* was DAT_0102cf6c (word at 0x0102CF6C); PC-relative offset: + 0x102cf20 (the pc) = 0x0102CE5C */
+#define ADDRESS_OF_swvAnimationController_GetSpeed_OFFSET 0xFFFFFF80   /* was DAT_0102cf70 (word at 0x0102CF70); PC-relative offset: + 0x102cf2c (the pc) = 0x0102CEAC */
+#define ADDRESS_OF_swvAnimationController_SetActiveInterval_OFFSET 0x0000004C   /* was DAT_0102cf74 (word at 0x0102CF74); PC-relative offset: + 0x102cf38 (the pc) = 0x0102CF84 */
+#define ADDRESS_OF_swvAnimationController_GetPosition_OFFSET 0xFFFFFF48   /* was DAT_0102cf78 (word at 0x0102CF78); PC-relative offset: + 0x102cf44 (the pc) = 0x0102CE8C */
+#define ADDRESS_OF_swvAnimationController_SetPosition_OFFSET 0x0000009C   /* was DAT_0102cf7c (word at 0x0102CF7C); PC-relative offset: + 0x102cf50 (the pc) = 0x0102CFEC */
+#define ADDRESS_OF_swvAnimationController_SetSpeed_OFFSET 0x00000104   /* was DAT_0102cf80 (word at 0x0102CF80); PC-relative offset: + 0x102cf5c (the pc) = 0x0102D060 */
 #define ADDRESS_OF_FUNCTION_0102d310_OFFSET 0x00000048   /* was DAT_0102d2fc (word at 0x0102D2FC); PC-relative offset: + 0x102d2c8 (the pc) = 0x0102D310 */
 #define ADDRESS_OF_FUNCTION_0102d1c0_OFFSET 0xFFFFFEEC   /* was DAT_0102d300 (word at 0x0102D300); PC-relative offset: + 0x102d2d4 (the pc) = 0x0102D1C0 */
 #define ADDRESS_OF_FUNCTION_0102d3ac_OFFSET 0x000000CC   /* was DAT_0102d304 (word at 0x0102D304); PC-relative offset: + 0x102d2e0 (the pc) = 0x0102D3AC */

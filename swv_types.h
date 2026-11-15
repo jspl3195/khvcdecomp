@@ -211,6 +211,18 @@ typedef struct SwvSkinBoneSet {
     uint32   weightScale;   /* +0x48 float bits: 1 / the sum of the bones' weights */
 } SwvSkinBoneSet;
 
+/* ---- AnimationController, the native object (no struct yet) ------------------------------------
+ * Its fields (GUESS: the names, JSR-184 AnimationController; the BREW slots 18 - 26, kh_types.h
+ * SwerveAnimationControllerVtbl):
+ *   +0x1c / +0x20     the active interval's start and end (world times)
+ *   +0x24             the reference sequence time (a float)
+ *   +0x28             the reference world time
+ *   +0x2c             the speed (a float; swvAnimationController_Speed)
+ *   +0x30             the weight (a float)
+ * The position at a world time is +0x24 + (worldTime - +0x28) * +0x2c (FUN_01010094); an
+ * AnimationTrack's sample gives its validity as 0x7fffffff (for ever) when the controller is not
+ * active (FUN_01010de0). */
+
 /* ---- KeyframeSequence (class 12) --------------------------------------------------------------
  * The fields the keyframe code reads (swvKeyframeSequence_*); the Object3D part before +0x1c is not
  * identified yet. The values are JSR-184's: interpolation LINEAR 0xb0 (176), SLERP 0xb1, SPLINE 0xb2,

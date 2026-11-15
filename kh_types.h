@@ -1021,19 +1021,21 @@ typedef struct SwerveKeyframeSequenceVtbl {
     int32 (*slot24)();                                                   /* +0x60 slot 24, 0x01032d90 */
 } SwerveKeyframeSequenceVtbl;
 
-/* AnimationController (SetPosition's sequenceTime is a float) */
+/* AnimationController: JSR-184 1.0's nine methods, in this order (the times are int32, the weight,
+ * speed and sequence times floats as their bits) */
 typedef struct SwerveAnimationControllerVtbl {
     SwerveObject3DVtbl base;                                             /* +0x00 - +0x44 */
-    int32 (*slot18)();                                                   /* +0x48 slot 18, 0x0102cecc */
-    int32 (*slot19)();                                                   /* +0x4c slot 19, 0x0102d0d4 */
-    int32 (*slot20)();                                                   /* +0x50 slot 20, 0x0102ce74 */
-    int32 (*slot21)();                                                   /* +0x54 slot 21, 0x0102ce5c */
-    int32 (*slot22)();                                                   /* +0x58 slot 22, 0x0102ceac */
+    void (*GetWeight)(ISwerveObject *po,uint32 *pWeight);                /* +0x48 slot 18, 0x0102cecc */
+    int32 (*SetWeight)(ISwerveObject *po,uint32 weight);                 /* +0x4c slot 19, 0x0102d0d4 */
+    void (*GetActiveIntervalStart)(ISwerveObject *po,int32 *pStart);     /* +0x50 slot 20, 0x0102ce74 */
+    void (*GetActiveIntervalEnd)(ISwerveObject *po,int32 *pEnd);         /* +0x54 slot 21, 0x0102ce5c */
+    void (*GetSpeed)(ISwerveObject *po,uint32 *pSpeed);                  /* +0x58 slot 22, 0x0102ceac */
     int32 (*SetActiveInterval)(ISwerveObject *po,int32 start,int32 end); /* +0x5c slot 23, 0x0102cf84 */
-    int32 (*slot24)();                                                   /* +0x60 slot 24, 0x0102ce8c */
+    void (*GetPosition)(ISwerveObject *po,int32 worldTime,uint32 *pSequenceTime);
+                                                                         /* +0x60 slot 24, 0x0102ce8c */
     int32 (*SetPosition)(ISwerveObject *po,uint32 sequenceTime,int32 worldTime);
                                                                          /* +0x64 slot 25, 0x0102cfec */
-    int32 (*slot26)();                                                   /* +0x68 slot 26, 0x0102d060 */
+    int32 (*SetSpeed)(ISwerveObject *po,uint32 speed,int32 worldTime);   /* +0x68 slot 26, 0x0102d060 */
 } SwerveAnimationControllerVtbl;
 
 /* Loader (not an Object3D) */
