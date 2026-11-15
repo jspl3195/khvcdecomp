@@ -164,7 +164,11 @@ typedef struct IGraphics3DVtbl {
     /* 19 +0x4c */ int (*slot19)(IGraphics3D *po, ...);
     /* 20 +0x50 */ int (*slot20)(IGraphics3D *po, ...);
     /* 21 +0x54 */ int (*slot21)(IGraphics3D *po, ...);
-    /* 22 +0x58 */ int (*slot22)(IGraphics3D *po, ...);
+    /* 22 +0x58 */ int (*GetProperty)(IGraphics3D *po, uint32 index, int32 *pValue);
+                   /* 0x0102f960 swvGraphics3D_GetProperty. GUESS: name (JSR-184
+                      Graphics3D.getProperties, by index): -1301 above 11, else the value of
+                      swvGraphics3D_Property: 0 - 3 false, 4 - 5 true, 6 256, 7 - 9 1024, 10 - 11 2
+                      (GUESS the property names; kh.mod does not call it) */
 } IGraphics3DVtbl;
 struct IGraphics3D { const IGraphics3DVtbl *pvt; void *pNative; uint32 m_nRefs; };
 

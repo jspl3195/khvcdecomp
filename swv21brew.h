@@ -514,7 +514,7 @@ void swvNode_AlignmentVector(uint32 *out,uint8 *node,const uint32 *matrix,int32 
 void FUN_0100f3cc(undefined4 param_1,int param_2,undefined4 param_3,undefined4 *param_4);
 void FUN_0100f450(undefined4 param_1,int param_2,undefined4 param_3,undefined4 *param_4);
 undefined4 * FUN_0100f4dc(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
-undefined4 FUN_0100f530(undefined4 param_1);
+int32 swvGraphics3D_Property(uint32 index);   /* 0x0100F530 GUESS: name, see swv21brew.c */
 int FUN_0100f594(int param_1);
 void FUN_0100f5b4(int param_1,int *param_2,int param_3);
 undefined8 FUN_0100f5dc(undefined4 param_1,int param_2);
@@ -1147,7 +1147,7 @@ void FUN_0102f774(undefined4 param_1);
 void FUN_0102f7e0(undefined4 param_1);
 undefined4 FUN_0102f7f8(int param_1,int param_2,int param_3,undefined4 *param_4);
 undefined4 FUN_0102f898(int param_1,int param_2);
-undefined4 FUN_0102f960(undefined4 param_1,uint param_2,undefined4 *param_3);
+int32 swvGraphics3D_GetProperty(IGraphics3D *po,uint32 index,int32 *value);   /* 0x0102F960 GUESS: name, see swv21brew.c */
 void FUN_0102f9d0(int param_1,undefined4 *param_2);
 void FUN_0102f9e8(int param_1,undefined4 *param_2);
 void FUN_0102fa00(int param_1,undefined4 *param_2);
@@ -2002,7 +2002,7 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define ADDRESS_OF_FUNCTION_01030110_OFFSET 0x00000614   /* was DAT_0102fb64 (word at 0x0102FB64); PC-relative offset: + 0x102fafc (the pc) = 0x01030110 */
 #define ADDRESS_OF_FUNCTION_0102f7f8_OFFSET 0xFFFFFCF0   /* was DAT_0102fb68 (word at 0x0102FB68); PC-relative offset: + 0x102fb08 (the pc) = 0x0102F7F8 */
 #define ADDRESS_OF_FUNCTION_0102fd7c_OFFSET 0x00000268   /* was DAT_0102fb6c (word at 0x0102FB6C); PC-relative offset: + 0x102fb14 (the pc) = 0x0102FD7C */
-#define ADDRESS_OF_FUNCTION_0102f960_OFFSET 0xFFFFFE40   /* was DAT_0102fb70 (word at 0x0102FB70); PC-relative offset: + 0x102fb20 (the pc) = 0x0102F960 */
+#define ADDRESS_OF_swvGraphics3D_GetProperty_OFFSET 0xFFFFFE40   /* was DAT_0102fb70 (word at 0x0102FB70); PC-relative offset: + 0x102fb20 (the pc) = 0x0102F960 */
 #define ADDRESS_OF_FUNCTION_01030360_OFFSET 0xFFFFFFC8   /* was DAT_010303d8 (word at 0x010303D8); PC-relative offset: + 0x1030398 (the pc) = 0x01030360 */
 #define ADDRESS_OF_FUNCTION_010302ec_OFFSET 0xFFFFFF48   /* was DAT_010303dc (word at 0x010303DC); PC-relative offset: + 0x10303a4 (the pc) = 0x010302EC */
 #define ADDRESS_OF_FUNCTION_01030220_OFFSET 0xFFFFFE70   /* was DAT_010303e0 (word at 0x010303E0); PC-relative offset: + 0x10303b0 (the pc) = 0x01030220 */

@@ -13964,37 +13964,42 @@ undefined4 * FUN_0100f4dc(int param_1,int param_2,undefined4 param_3,undefined4 
   return puVar1 + 0x12;
 }
 
-/* ==== 0x0100F530  (file offset 0x0F530)  FUN_0100f530 ================================================ */
-undefined4 FUN_0100f530(undefined4 param_1)
+/* ==== 0x0100F530  (file offset 0x0F530)  swvGraphics3D_Property ====================================== */
+/* GUESS: name. One of the Graphics3D's twelve fixed properties (JSR-184 Graphics3D.getProperties),
+   by index: 0 - 3 give 0 (false), 4 and 5 give 1 (true), 6 gives 0x100, 7 - 9 give 0x400, 10 and 11 give
+   2, any other index 0. GUESS, the names, in JSR-184's order: the antialiasing, true colour, dithering
+   and mipmapping flags; perspective correction and local camera lighting; 256 the largest texture
+   dimension; 1024 the largest viewport width, height and dimension; 2 the texture units and the
+   transforms per vertex (kh.mod never asks, so nothing confirms the order). Evidence: 0x0100f530 -
+   0x0100f590 (`cmp r0, #0xb` / `addls pc, pc, r0, lsl #2`, a table of branches to the five `mov r0` /
+   `bx lr`). Only swvGraphics3D_GetProperty calls it. */
+int32 swvGraphics3D_Property(uint32 index)
 
 {
-  switch(param_1) {
-  case 0:
-    break;
-  case 1:
-    break;
-  case 2:
-    break;
-  case 3:
-    break;
+  int32 value;
+
+  switch (index) {
   case 4:
-    return 1;
   case 5:
-    return 1;
+    value = 1;
+    break;
   case 6:
-    return 0x100;
+    value = 0x100;
+    break;
   case 7:
-    return 0x400;
   case 8:
-    return 0x400;
   case 9:
-    return 0x400;
+    value = 0x400;
+    break;
   case 10:
-    return 2;
-  case 0xb:
-    return 2;
+  case 11:
+    value = 2;
+    break;
+  default:
+    value = 0;
+    break;
   }
-  return 0;
+  return value;
 }
 
 /* ==== 0x0100F594  (file offset 0x0F594)  FUN_0100f594 ================================================ */
@@ -43843,30 +43848,29 @@ int swv_Create_Graphics3D(void **ppObj)
   return iVar1;
 }
 
-/* ==== 0x0102F960  (file offset 0x2F960)  FUN_0102f960 ================================================ */
-undefined4 FUN_0102f960(undefined4 param_1,uint param_2,undefined4 *param_3)
+/* ==== 0x0102F960  (file offset 0x2F960)  swvGraphics3D_GetProperty =================================== */
+/* GUESS: name. IGraphics3D slot 22 (+0x58, swv_InitVtbl_Graphics3D's pVtbl[0x16]): in an error frame,
+   error -1301 (FUN_0102f7e0, which does not return) for an index above 11, else *value =
+   swvGraphics3D_Property(index); returns 0, or on an error its result code (swv_ErrorToResult). po is
+   not read (the properties are the same for every Graphics3D). */
+int32 swvGraphics3D_GetProperty(IGraphics3D *po,uint32 index,int32 *value)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  undefined1 auStack_9c [136];
-  
-  uVar3 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_9c);
-    if (0xb < param_2) {
+  int32 result = 0;
+  int32 error;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    if (index > 11)
       FUN_0102f7e0(INTEGER_MINUS_1301);
-    }
-    uVar2 = FUN_0100f530(param_2);
-    *param_3 = uVar2;
+    *value = swvGraphics3D_Property(index);
     swv_TryPop();
   }
-  else {
-    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar3;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x0102F9D0  (file offset 0x2F9D0)  FUN_0102f9d0 ================================================ */
@@ -43952,7 +43956,7 @@ void swv_InitVtbl_Graphics3D(void **pVtbl)
   pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_01030110_OFFSET + 0x102fafc);
   pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_0102f7f8_OFFSET + 0x102fb08);
   pVtbl[0x15] = (void *)(ADDRESS_OF_FUNCTION_0102fd7c_OFFSET + 0x102fb14);
-  pVtbl[0x16] = (void *)(ADDRESS_OF_FUNCTION_0102f960_OFFSET + 0x102fb20);
+  pVtbl[0x16] = (void *)(ADDRESS_OF_swvGraphics3D_GetProperty_OFFSET + 0x102fb20);
   return;
 }
 
