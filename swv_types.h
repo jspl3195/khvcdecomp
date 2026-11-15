@@ -89,6 +89,12 @@ typedef enum SwerveAnimTarget {
     SWV_ANIM_SPOT_EXPONENT = 0x112,   SWV_ANIM_TRANSLATION = 0x113,     SWV_ANIM_VISIBILITY = 0x114
 } SwerveAnimTarget;
 
+/* JSR-184 Image2D formats (Image2D +0x40; swvImage2D_BytesPerPixel). The values are JSR-184's. */
+typedef enum SwerveImageFormat {
+    SWV_IMAGE_ALPHA = 0x60,           SWV_IMAGE_LUMINANCE = 0x61,       SWV_IMAGE_LUMINANCE_ALPHA = 0x62,
+    SWV_IMAGE_RGB = 0x63,             SWV_IMAGE_RGBA = 0x64
+} SwerveImageFormat;
+
 /* ISwerve::GetVersion output. 0x01024a68 writes {2, 1, 0, 0x16c, 1} = 2.1.0.364, the version in
    swv21brew's MIF (dumps/mif_dump/14957.txt). GUESS: meaning of the last word. */
 typedef struct SwerveVersion {
@@ -350,10 +356,12 @@ typedef struct SwvKeyframeSequence {
  *                     twice it in bytes, the alpha rows it)
  *   +0x38             the height (swvImage2D_Height)
  *   +0x3c             the alpha plane's offset in the data, -1 when there is none
- *   +0x40             the JSR-184 format: ALPHA 0x60, LUMINANCE 0x61, LUMINANCE_ALPHA 0x62, RGB 0x63,
- *                     RGBA 0x64
+ *   +0x40             the JSR-184 format (SwerveImageFormat: ALPHA 0x60, LUMINANCE 0x61, LUMINANCE_ALPHA
+ *                     0x62, RGB 0x63, RGBA 0x64; swvImage2D_BytesPerPixel gives the bytes a pixel)
  *   +0x44             mutable (FUN_0102035c, GUESS bindTarget, wants it)
- *   +0x48             a colour buffer FUN_0100800c allocates (width * height words; GUESS: a work copy)
+ *   +0x48             a colour buffer FUN_0100800c allocates (width * height words; GUESS: a work copy),
+ *                     an engine dynamic array (+0x4c the items); FUN_01007f8c / FUN_01023e44 fill it
+ *                     from a second plane after the pixels (two bytes a pixel)
  *   +0x54 / +0x58     the log2 of the width and the height (FUN_01018460 checks the sizes against them)
  * Its vtable (offsets from the table, like every engine vtable): +0x24 / +0x28 the width and height
  * (GUESS: getWidth / getHeight, swvImage2D_GetWidth / GetHeight), +0x30 the pixels (swvImage2D_Pixels

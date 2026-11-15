@@ -7391,6 +7391,12 @@ int32 swvSectionZlib_Get0c(int param_1)
 }
 
 /* ==== 0x01007D70  (file offset 0x07D70)  FUN_01007d70 ================================================ */
+/* GUESS (not yet rewritten): builds an unpalettised Image2D (JSR-184 Image2D(format, width, height,
+   pixels)): error -4 when the width (param_3) or the height (param_4) is 0x8000 or more, -1301 when the
+   param_5 bytes of pixels are fewer than swvImage2D_BytesPerPixel * width * height; not mutable (+0x44
+   = 0), the format (+0x40), width (+0x34) and height (+0x38); its storage (FUN_0100350c); then each
+   pixel of param_6 converted by FUN_01025bc4 into the 16-bit colour plane (the data +0x20 at +0x30) and
+   the alpha plane (swvImage2D_AlphaPlane). */
 void FUN_01007d70(int param_1,undefined4 param_2,uint param_3,uint param_4,int param_5,int param_6)
 
 {
@@ -7402,7 +7408,7 @@ void FUN_01007d70(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
   if ((int)(param_3 | param_4) >> 0xf != 0) {
     FUN_0102f7e0(0xfffffffc);
   }
-  iVar1 = FUN_01011ab8(param_2);
+  iVar1 = swvImage2D_BytesPerPixel(param_2);
   if (param_5 < (int)(iVar1 * param_4 * param_3)) {
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
@@ -7445,7 +7451,7 @@ void FUN_01007e30(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
   if ((int)(param_3 | param_4) >> 0xf != 0) {
     FUN_0102f7e0(0xfffffffc);
   }
-  iVar1 = FUN_01011ab8(param_2);
+  iVar1 = swvImage2D_BytesPerPixel(param_2);
   if (param_5 < (int)(param_4 * param_3)) {
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
@@ -7526,6 +7532,11 @@ void FUN_01007f40(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
 }
 
 /* ==== 0x01007F8C  (file offset 0x07F8C)  FUN_01007f8c ================================================ */
+/* GUESS (not yet rewritten): builds an RGB Image2D (FUN_01007d70 with RGB, 0x63) whose pixels (param_5)
+   are followed by a second plane of two bytes a pixel: error -1301 when the param_4 bytes are fewer
+   than (3 + 2) * width * height; the buffer at +0x48 (an engine dynamic array, FUN_01023184) sized to
+   width * height and that plane copied into its items (+0x4c; GUESS: the pixels ready-made in RGB565).
+   Returns the buffer (the copy is a tail jump). */
 undefined4 FUN_01007f8c(int param_1,int param_2,int param_3,int param_4,int param_5)
 
 {
@@ -7534,7 +7545,7 @@ undefined4 FUN_01007f8c(int param_1,int param_2,int param_3,int param_4,int para
   
   FUN_01007d70(param_1,99,param_2,param_3,param_4,param_5);
   param_3 = param_3 * param_2;
-  iVar1 = FUN_01011ab8(99);
+  iVar1 = swvImage2D_BytesPerPixel(99);
   if (param_4 < (iVar1 + 2) * param_3) {
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
@@ -16520,25 +16531,27 @@ uint32 swvPolygonMode_TwoSidedLighting(const uint8 *mode)
   return *(const uint32 *)(mode + 0x1c) >> 8 & 1;
 }
 
-/* ==== 0x01011AB8  (file offset 0x11AB8)  FUN_01011ab8 ================================================ */
-undefined4 FUN_01011ab8(int param_1)
+/* ==== 0x01011AB8  (file offset 0x11AB8)  swvImage2D_BytesPerPixel ==================================== */
+/* GUESS: name. The bytes a pixel of a JSR-184 Image2D format takes in the pixels an application
+   gives: LUMINANCE_ALPHA (0x62) 2, RGB (0x63) 3, RGBA (0x64) 4, anything else (ALPHA 0x60,
+   LUMINANCE 0x61) 1; SwerveImageFormat, swv_types.h. Evidence: 0x01011ab8 - 0x01011adc (`cmp r0,
+   #0x62` / `moveq r0, #2` / `bxeq lr`, the same for 0x63 and 0x64, `movne r0, #1`). Used by the
+   Image2D constructors and set (FUN_01007d70, FUN_01007e30, FUN_01007f8c, FUN_01023d30,
+   FUN_01023e44) and the M3G reader (FUN_01019920, FUN_0101dbf8). */
+int32 swvImage2D_BytesPerPixel(int32 format)
 
 {
-  undefined4 uVar1;
-  
-  if (param_1 == 0x62) {
-    return 2;
-  }
-  if (param_1 != 99) {
-    if (param_1 == 100) {
-      uVar1 = 4;
-    }
-    else {
-      uVar1 = 1;
-    }
-    return uVar1;
-  }
-  return 3;
+  int32 bytes;
+
+  if (format == 0x62)
+    bytes = 2;
+  else if (format == 0x63)
+    bytes = 3;
+  else if (format == 0x64)
+    bytes = 4;
+  else
+    bytes = 1;
+  return bytes;
 }
 
 /* ==== 0x01011AE0  (file offset 0x11AE0)  swvKeyframeSequence_PreviousValid =========================== */
@@ -23109,6 +23122,10 @@ undefined4 FUN_010198c8(int param_1)
 }
 
 /* ==== 0x01019920  (file offset 0x19920)  FUN_01019920 ================================================ */
+/* GUESS (not yet rewritten): reads one pixel of the format param_2 from the M3G stream param_1:
+   swvImage2D_BytesPerPixel bytes (FUN_01019640, one byte each) into a word on the stack, which
+   FUN_01025bc4 converts into the 16-bit colour param_3 and the alpha param_4. Called by the M3G Image2D
+   reader FUN_0101dbf8 for each pixel and each palette colour. */
 void FUN_01019920(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -23116,13 +23133,11 @@ void FUN_01019920(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
   int iVar2;
   undefined4 *puVar3;
   undefined4 *puVar4;
-  undefined4 uVar5;
   undefined4 local_1c;
   
   puVar4 = &local_1c;
-  uVar5 = param_3;
   local_1c = param_4;
-  iVar2 = FUN_01011ab8(param_2);
+  iVar2 = swvImage2D_BytesPerPixel(param_2);
   if (iVar2 != 1) {
     puVar3 = puVar4;
     if (iVar2 != 2) {
@@ -23143,7 +23158,7 @@ void FUN_01019920(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
   uVar1 = FUN_01019640(param_1);
   *(undefined1 *)puVar4 = uVar1;
 LAB_01019994:
-  FUN_01025bc4(&local_1c,param_2,param_3,param_4,uVar5);
+  FUN_01025bc4(&local_1c,param_2,param_3,param_4);   /* Ghidra had added a phantom fifth */
   return;
 }
 
@@ -26591,7 +26606,7 @@ void FUN_0101dbf8(int param_1,undefined4 param_2,undefined4 param_3,undefined2 *
     return;
   }
   uVar4 = uVar4 * uVar5;
-  iVar6 = FUN_01011ab8(uVar2);
+  iVar6 = swvImage2D_BytesPerPixel(uVar2);
   uVar5 = FUN_01019698(param_2,1);
   if (uVar5 == 0) {
     uVar5 = FUN_01019698(param_2,1);
@@ -32916,6 +32931,12 @@ void FUN_01023d00(int param_1)
 }
 
 /* ==== 0x01023D30  (file offset 0x23D30)  FUN_01023d30 ================================================ */
+/* GUESS (not yet rewritten): JSR-184 Image2D.set(x, y, width, height, pixels) on the native Image2D
+   param_1 (param_2 - param_5; param_6 the pixel bytes, param_7 the pixels): error -1301 unless the
+   rectangle is inside the image (+0x34 / +0x38), not empty, and param_6 holds swvImage2D_BytesPerPixel
+   * width * height bytes; -1300 when the image is not mutable (+0x44); then each pixel converted by
+   FUN_01025bc4 into the 16-bit colour plane (the data +0x20 at +0x30, row pitch the width) and the
+   alpha plane (swvImage2D_AlphaPlane). */
 void FUN_01023d30(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6,
                  int param_7)
 
@@ -32930,7 +32951,7 @@ void FUN_01023d30(int param_1,int param_2,int param_3,int param_4,int param_5,in
   bool bVar8;
   
   uVar1 = *(undefined4 *)(param_1 + 0x40);
-  iVar2 = FUN_01011ab8();
+  iVar2 = swvImage2D_BytesPerPixel((int32)uVar1);   /* Ghidra had dropped it (the format, +0x40) */
   iVar4 = param_2;
   if (-1 < param_2) {
     iVar4 = param_4;
@@ -32979,6 +33000,10 @@ LAB_01023db4:
 }
 
 /* ==== 0x01023E44  (file offset 0x23E44)  FUN_01023e44 ================================================ */
+/* GUESS (not yet rewritten): Image2D.set for an image made by FUN_01007f8c: FUN_01023d30 with the same
+   seven arguments, then the second plane after the pixels (two bytes a pixel; error -1301 when param_6
+   is fewer than (bytes a pixel + 2) * width * height) copied into the buffer's items (+0x4c): in one
+   copy when the rectangle starts at 0, 0 and spans the image's width, else row by row. */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
 undefined8
@@ -32993,8 +33018,9 @@ FUN_01023e44(int param_1,int param_2,int param_3,int param_4,int param_5,int par
   int iVar5;
   int iVar6;
   
-  FUN_01023d30(param_1,param_2,param_3);
-  iVar1 = FUN_01011ab8(*(undefined4 *)(param_1 + 0x40));
+  /* Ghidra had dropped four arguments: the call passes on all seven (0x01023e54 - 0x01023e74) */
+  FUN_01023d30(param_1,param_2,param_3,param_4,param_5,param_6,param_7);
+  iVar1 = swvImage2D_BytesPerPixel(*(undefined4 *)(param_1 + 0x40));
   iVar4 = (iVar1 + 2) * param_5 * param_4;
   if (iVar4 - param_6 != 0 && param_6 <= iVar4) {
     FUN_0102f7e0(INTEGER_MINUS_1301);

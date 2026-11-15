@@ -584,7 +584,7 @@ int32 swvNode_AlignmentTargetZ(const uint8 *node);   /* 0x01011A0C GUESS: name, 
 void FUN_01011a20(int param_1,int param_2,undefined4 *param_3);
 int FUN_01011a84(int param_1);
 uint32 swvPolygonMode_TwoSidedLighting(const uint8 *mode);   /* 0x01011AA8 GUESS: name, see swv21brew.c */
-undefined4 FUN_01011ab8(int param_1);
+int32 swvImage2D_BytesPerPixel(int32 format);   /* 0x01011AB8 GUESS: name, see swv21brew.c */
 int swvKeyframeSequence_PreviousValid(int param_1,int param_2);
 int swvKeyframeSequence_NextValid(int param_1,int param_2);
 uint8 *swvImage2D_AlphaPlane(const uint8 *image);   /* 0x01011BB4 GUESS: name, see swv21brew.c */
