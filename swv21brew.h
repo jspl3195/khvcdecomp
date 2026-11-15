@@ -520,7 +520,7 @@ uint8 *swvGroup_NthChild(const uint8 *group,int32 *index);   /* 0x0100F5B4 GUESS
 uint8 *swvGroup_Child(const uint8 *group,int32 index);   /* 0x0100F5DC GUESS: name, see swv21brew.c */
 uint32 swvMaterial_Color(const uint8 *material,int32 target);   /* 0x0100F620 GUESS: name, see swv21brew.c */
 void FUN_0100f654(int param_1,int param_2);
-undefined4 FUN_0100f6d8(int param_1);
+int32 swvPolygonMode_Culling(const uint8 *mode);   /* 0x0100F6D8 GUESS: name, see swv21brew.c */
 int32 swvImage2D_StorageFormat(const uint8 *image);   /* 0x0100F6F8 GUESS: name, see swv21brew.c */
 undefined4 FUN_0100f714(int param_1);
 undefined4 FUN_0100f71c(int param_1);
@@ -784,7 +784,7 @@ void FUN_010209ac(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 void FUN_01020a28(int param_1,int param_2);
 undefined8 FUN_01020b64(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 );
 void FUN_01020bcc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
-void FUN_01020c1c(int param_1,int param_2);
+void swvPolygonMode_SetCullingValue(uint8 *mode,int32 culling);   /* 0x01020C1C GUESS: name, see swv21brew.c */
 void FUN_01020c44(int param_1,undefined4 param_2);
 void FUN_01020c60(int param_1,int param_2,int param_3,undefined2 param_4);
 void FUN_01020c90(int param_1,int param_2);
@@ -803,6 +803,7 @@ void FUN_01021d50(int param_1,int param_2,undefined4 param_3,int param_4);
 void FUN_01021e58(int param_1,undefined4 param_2,undefined4 param_3);
 void FUN_01021e64(int param_1,int param_2);
 void FUN_01021ec8(int param_1,undefined4 param_2);
+void swvPolygonMode_SetFlags(uint8 *mode,uint32 value);   /* 0x01021ED8 GUESS: name, see swv21brew.c */
 void FUN_01021f28(int param_1);
 void FUN_010220b0(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01022140(int *param_1,undefined4 param_2);
@@ -826,7 +827,7 @@ void FUN_01022acc(undefined1 *param_1,undefined4 param_2,undefined4 param_3,unde
 void FUN_01022bb8(int *param_1,int param_2);
 void FUN_01022bfc(int *param_1,undefined4 param_2);
 undefined4 FUN_01022c5c(int param_1,int param_2,undefined4 param_3,int param_4,int param_5);
-void FUN_01023108(int param_1,int param_2);
+void swvPolygonMode_SetShadingValue(uint8 *mode,int32 shading);   /* 0x01023108 GUESS: name, see swv21brew.c */
 void FUN_01023124(int *param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01023174(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01023184(int *param_1,int param_2,undefined4 param_3,undefined4 param_4);
@@ -848,13 +849,13 @@ void FUN_01023b3c(int param_1,int *param_2,int param_3);
 undefined8 FUN_01023bc8(int param_1,undefined4 param_2,undefined4 param_3,int param_4,int param_5);
 void FUN_01023c88(int param_1,undefined4 param_2);
 void FUN_01023c90(int param_1,int param_2,int param_3);
-void FUN_01023ce4(int param_1,int param_2);
+void swvPolygonMode_SetWindingValue(uint8 *mode,int32 winding);   /* 0x01023CE4 GUESS: name, see swv21brew.c */
 void FUN_01023d00(int param_1);
 void FUN_01023d30(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6, int param_7);
 undefined8 FUN_01023e44(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6,int param_7);
 void FUN_01023f30(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01023f50(int param_1,int param_2,undefined4 *param_3);
-void FUN_01023fb4(int param_1,int param_2);
+void swvPolygonMode_SetTwoSidedLightingValue(uint8 *mode,int32 enable);   /* 0x01023FB4 GUESS: name, see swv21brew.c */
 void FUN_01023fc4(int param_1,int param_2);
 void FUN_01023ff4(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01024058(int param_1,int param_2);
@@ -1341,11 +1342,11 @@ int32 png_sig_cmp(const uint8 *sig,uint32 start,uint32 numToCheck);   /* 0x01037
 void png_warning(int param_1,char *param_2);   /* 0x01037EB0 libpng */
 int FUN_01037eec(undefined4 param_1,int param_2,int param_3,undefined4 param_4);
 void thunk_FUN_01036188(int param_1,int param_2);
-void FUN_01037fa0(int param_1,undefined4 *param_2);
+void swvPolygonMode_GetCulling(int param_1,undefined4 *param_2);   /* 0x01037FA0 GUESS: name, see swv21brew.c */
 void FUN_01037fc0(int param_1,undefined4 *param_2);
 void FUN_01037fe0(int param_1,undefined4 *param_2);
 void FUN_010380b0(int param_1,undefined1 *param_2);
-undefined4 FUN_010380d0(int param_1,int param_2);
+undefined4 swvPolygonMode_SetCulling(int param_1,int param_2);   /* 0x010380D0 GUESS: name, see swv21brew.c */
 void FUN_01038148(int param_1,int param_2);
 void FUN_01038160(int param_1,int param_2);
 undefined4 FUN_01038178(int param_1,int param_2);
@@ -2220,8 +2221,8 @@ extern undefined4 STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET;   /* was DAT_0
 #define STRING_IT_S_AN_ERROR_TO_SET_OFFSET 0x00008280   /* was DAT_01037d90 (word at 0x01037D90); PC-relative offset: + 0x1037d74 (the pc) = 0x0103FFF4 */
 #define STRING_SAME_STRUCTURE_DOT_RESETTING_WRITE_DATA_OFFSET 0x00008238   /* was DAT_01037d94 (word at 0x01037D94); PC-relative offset: + 0x1037d88 (the pc) = 0x0103FFC0 */
 #define PNG_SIGNATURE_OFFSET 0x00007F18   /* was DAT_01037eac (word at 0x01037EAC); PC-relative offset: + 0x1037e58 (the pc) = 0x0103FD70, libpng's png_signature (89 50 4E 47 0D 0A 1A 0A) */
-#define ADDRESS_OF_FUNCTION_01037fa0_OFFSET 0xFFFFFF88   /* was DAT_01038088 (word at 0x01038088); PC-relative offset: + 0x1038018 (the pc) = 0x01037FA0 */
-#define ADDRESS_OF_FUNCTION_010380d0_OFFSET 0x000000AC   /* was DAT_0103808c (word at 0x0103808C); PC-relative offset: + 0x1038024 (the pc) = 0x010380D0 */
+#define ADDRESS_OF_swvPolygonMode_GetCulling_OFFSET 0xFFFFFF88   /* was DAT_01038088 (word at 0x01038088); PC-relative offset: + 0x1038018 (the pc) = 0x01037FA0 */
+#define ADDRESS_OF_swvPolygonMode_SetCulling_OFFSET 0x000000AC   /* was DAT_0103808c (word at 0x0103808C); PC-relative offset: + 0x1038024 (the pc) = 0x010380D0 */
 #define ADDRESS_OF_FUNCTION_01037fc0_OFFSET 0xFFFFFF90   /* was DAT_01038090 (word at 0x01038090); PC-relative offset: + 0x1038030 (the pc) = 0x01037FC0 */
 #define ADDRESS_OF_FUNCTION_01038178_OFFSET 0x0000013C   /* was DAT_01038094 (word at 0x01038094); PC-relative offset: + 0x103803c (the pc) = 0x01038178 */
 #define ADDRESS_OF_FUNCTION_01037fe0_OFFSET 0xFFFFFF98   /* was DAT_01038098 (word at 0x01038098); PC-relative offset: + 0x1038048 (the pc) = 0x01037FE0 */

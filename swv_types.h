@@ -265,6 +265,15 @@ typedef struct SwvKeyframeSequence {
  *   +0x24             the bytes per component: 1 (signed bytes) or 2 (signed 16-bit words)
  *   +0x2c             the values, vertex after vertex */
 
+/* ---- PolygonMode (class 20), the native object (no struct yet) --------------------------------
+ * +0x1c, its flags word (GUESS: the names, JSR-184 PolygonMode; swvPolygonMode_SetFlags and the
+ * setters):
+ *   0x007             culling: 1 CULL_BACK, 2 CULL_FRONT, 4 CULL_NONE (0xa0, 0xa1, 0xa2)
+ *   0x018             winding: 8 WINDING_CCW, 0x10 WINDING_CW (0xa8, 0xa9)
+ *   0x060             shading: 0x20 SHADE_FLAT, 0x40 SHADE_SMOOTH (0xa4, 0xa5)
+ *   0x180             GUESS two-sided lighting: 0x80 off, 0x100 on
+ *   0x200 / 0x400     GUESS local camera lighting / perspective correction (FUN_0101e778 sets them) */
+
 /* ---- Material (class 15), the native object (no struct yet) ------------------------------------
  * Its colours (GUESS: the names, JSR-184 Material; swvMaterial_Color, swvMaterial_SetColorValue), ARGB
  * words, by target (AMBIENT 0x400, DIFFUSE 0x800, EMISSIVE 0x1000, SPECULAR 0x2000; setColor takes an
