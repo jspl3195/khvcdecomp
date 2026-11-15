@@ -301,8 +301,8 @@ typedef struct SwvKeyframeSequence {
  *   +0x48             a colour buffer FUN_0100800c allocates (width * height words; GUESS: a work copy)
  *   +0x54 / +0x58     the log2 of the width and the height (FUN_01018460 checks the sizes against them)
  * Its vtable (offsets from the table, like every engine vtable): +0x24 / +0x28 the width and height
- * (GUESS: getWidth / getHeight, swvImage2D_GetWidth / GetHeight), +0x30 the colour data (FUN_01010084
- * jumps there). */
+ * (GUESS: getWidth / getHeight, swvImage2D_GetWidth / GetHeight), +0x30 the pixels (swvImage2D_Pixels
+ * calls it; the BREW-facing slot 25, swvImage2D_GetPixels, returns them). */
 
 /* ---- Background (class 4), the native object (no struct yet) ---------------------------------
  * The fields the Background clear (FUN_01005104, GUESS) reads (GUESS: the names, from JSR-184):

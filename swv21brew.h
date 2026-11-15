@@ -545,7 +545,7 @@ int FUN_0100fe8c(int param_1,int param_2);
 uint16 *swvImage2D_Palette(const uint8 *image);   /* 0x0100FFE4 GUESS: name, see swv21brew.c */
 int32 swvImage2D_ColourStride(const uint8 *image);   /* 0x0100FFFC GUESS: name, see swv21brew.c */
 uint32 swv_ColourToRGB565(const int32 *colour);   /* 0x01010008 GUESS: name, see swv21brew.c */
-void FUN_01010084(int *param_1);
+void *swvImage2D_Pixels(uint8 *image);   /* 0x01010084 GUESS: name, see swv21brew.c */
 uint FUN_01010094(int param_1,int param_2,undefined4 param_3,uint param_4);
 undefined4 FUN_010100f0(int param_1,int param_2,undefined4 *param_3);
 undefined8 FUN_01010148(int param_1,uint param_2);
@@ -1176,7 +1176,7 @@ void FUN_01030aac(int param_1,undefined4 *param_2);
 void FUN_01030acc(int param_1,undefined4 *param_2);
 void FUN_01030ae4(int param_1,undefined4 *param_2);
 void FUN_01030b10(int param_1,int *param_2);
-void FUN_01030b38(int param_1,undefined4 *param_2);
+void swvImage2D_GetPixels(int param_1,undefined4 *param_2);   /* 0x01030B38 GUESS: name, see swv21brew.c */
 void FUN_01030b58(int param_1,undefined4 *param_2);
 undefined4 FUN_01030c54(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,int param_6);
 undefined4 FUN_01030d14(int param_1,int param_2,int param_3,int param_4);
@@ -2017,7 +2017,7 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define ADDRESS_OF_FUNCTION_01030acc_OFFSET 0xFFFFFF00   /* was DAT_01030c34 (word at 0x01030C34); PC-relative offset: + 0x1030bcc (the pc) = 0x01030ACC */
 #define ADDRESS_OF_FUNCTION_01030b58_OFFSET 0xFFFFFF80   /* was DAT_01030c38 (word at 0x01030C38); PC-relative offset: + 0x1030bd8 (the pc) = 0x01030B58 */
 #define ADDRESS_OF_FUNCTION_01030ae4_OFFSET 0xFFFFFF00   /* was DAT_01030c3c (word at 0x01030C3C); PC-relative offset: + 0x1030be4 (the pc) = 0x01030AE4 */
-#define ADDRESS_OF_FUNCTION_01030b38_OFFSET 0xFFFFFF48   /* was DAT_01030c40 (word at 0x01030C40); PC-relative offset: + 0x1030bf0 (the pc) = 0x01030B38 */
+#define ADDRESS_OF_swvImage2D_GetPixels_OFFSET 0xFFFFFF48   /* was DAT_01030c40 (word at 0x01030C40); PC-relative offset: + 0x1030bf0 (the pc) = 0x01030B38 */
 #define ADDRESS_OF_FUNCTION_01030b10_OFFSET 0xFFFFFF14   /* was DAT_01030c44 (word at 0x01030C44); PC-relative offset: + 0x1030bfc (the pc) = 0x01030B10 */
 #define ADDRESS_OF_FUNCTION_01030aac_OFFSET 0xFFFFFEA4   /* was DAT_01030c48 (word at 0x01030C48); PC-relative offset: + 0x1030c08 (the pc) = 0x01030AAC */
 #define ADDRESS_OF_FUNCTION_01030f48_OFFSET 0x00000334   /* was DAT_01030c4c (word at 0x01030C4C); PC-relative offset: + 0x1030c14 (the pc) = 0x01030F48 */

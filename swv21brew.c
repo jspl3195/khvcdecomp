@@ -5380,9 +5380,8 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
             }
             if (bVar14 && iVar8 == iStack_9c * 2) {
               if (iStack_8c != 0) {
-                /* engine virtual call, slot +0x30: of the static engine vtables only the renderer's
-                   (0x01002398) FUN_0101a89c has it; a scene object's vtable is not among them (GUESS: not
-                   static), so for one the method is not known here */
+                /* engine virtual call, slot +0x30: piVar7 is the Background's Image2D, so its pixels
+                   (as swvImage2D_Pixels gets them; the Image2D's vtable is not a static one) */
                 uVar2 = (*(code *)(*(int *)(*piVar7 + 0x30) + *piVar7))(piVar7);
                 thunk_swv_memcpy(iStack_6c,uVar2,iVar11 * iVar8);
               }
@@ -14706,20 +14705,19 @@ uint32 swv_ColourToRGB565(const int32 *colour)
   return ((r >> 3) << 11 | (g >> 2) << 5 | b >> 3) & 0xffff;
 }
 
-/* ==== 0x01010084  (file offset 0x10084)  FUN_01010084 ================================================ */
-/* GUESS (not yet rewritten): an Image2D's colour data (RGB565): a tail jump to the image's own
-   routine at vtable +0x30 with the image in r0 (Ghidra dropped it). FUN_0102035c (GUESS: bindTarget)
-   takes it as the target's pixels (+0x20). */
-void FUN_01010084(int *param_1)
+/* ==== 0x01010084  (file offset 0x10084)  swvImage2D_Pixels =========================================== */
+/* GUESS: name. An Image2D's pixels (RGB565): its own method at engine vtable +0x30 called with the
+   image, its result returned (in the binary a tail jump: `ldr r1, [r0]` / `ldr r2, [r1, #0x30]` /
+   `add r1, r2, r1` / `bx r1`, 0x01010084 - 0x01010090; Ghidra had dropped the receiver and the result).
+   The Image2D's vtable is not among the static engine ones, so the method itself is not known. Used by
+   FUN_0102035c (GUESS: bindTarget; the target's pixels, +0x20) and swvImage2D_GetPixels (BREW slot 25);
+   the Background clear FUN_01005104 makes the same call itself. */
+void *swvImage2D_Pixels(uint8 *image)
 
 {
-                    /* WARNING: Could not recover jumptable at 0x01010090. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x30: of the static engine vtables only the renderer's (0x01002398)
-     FUN_0101a89c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
-     method is not known here */
-  (*(code *)(*(int *)(*param_1 + 0x30) + *param_1))();
-  return;
+  int32 vtable = *(int32 *)image;
+
+  return (void *)(*(code *)(*(int32 *)(vtable + 0x30) + vtable))(image);
 }
 
 /* ==== 0x01010094  (file offset 0x10094)  FUN_01010094 ================================================ */
@@ -29079,7 +29077,7 @@ void swv_Graphics3D_bindTarget
    Graphics3D.bindTarget): error -1301 unless the image is mutable (+0x44) and stored as RGB or RGBA
    (swvImage2D_StorageFormat); then the target's +0x0c / +0x10 = 0, +0x14 / +0x18 the width and height
    (the image's vtable +0x24 / +0x28), +0x1c the colour stride (swvImage2D_ColourStride), +0x20 the
-   pixels (FUN_01010084), +0x84 RGBA, +0x88 the alpha stride (swvImage2D_AlphaStride), +0x8c the alpha
+   pixels (swvImage2D_Pixels), +0x84 RGBA, +0x88 the alpha stride (swvImage2D_AlphaStride), +0x8c the alpha
    plane (swvImage2D_AlphaPlane), +0x90 the image's +0x4c when its vtable +0x2c gives 0x18; then
    FUN_01020b64 and FUN_0101d864 (GUESS: the viewport, the rasteriser's buffers). */
 undefined8 FUN_0102035c(int param_1,int *param_2)
@@ -29114,7 +29112,7 @@ undefined8 FUN_0102035c(int param_1,int *param_2)
     *(uint *)(param_1 + 0x84) = (uint)(iVar1 == 100);
     uVar2 = swvImage2D_ColourStride((uint8 *)param_2);
     *(undefined4 *)(param_1 + 0x1c) = uVar2;
-    uVar2 = FUN_01010084(param_2);
+    uVar2 = (undefined4)swvImage2D_Pixels((uint8 *)param_2);
     *(undefined4 *)(param_1 + 0x20) = uVar2;
     uVar2 = swvImage2D_AlphaStride((uint8 *)param_2);
     *(undefined4 *)(param_1 + 0x88) = uVar2;
@@ -45096,8 +45094,11 @@ void FUN_01030b10(int param_1,int *param_2)
   return;
 }
 
-/* ==== 0x01030B38  (file offset 0x30B38)  FUN_01030b38 ================================================ */
-void FUN_01030b38(int param_1,undefined4 *param_2)
+/* ==== 0x01030B38  (file offset 0x30B38)  swvImage2D_GetPixels ======================================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 25 (+0x64) of Image2D (swv_InitVtbl_Image2D's
+   pVtbl[0x19]; GUESS a Swerve extension, JSR-184's Image2D has no such method): *param_2 =
+   swvImage2D_Pixels of the native object (po->pNative, +4, less 4). */
+void swvImage2D_GetPixels(int param_1,undefined4 *param_2)
 
 {
   int iVar1;
@@ -45107,7 +45108,7 @@ void FUN_01030b38(int param_1,undefined4 *param_2)
   if (iVar1 != 0) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_01010084(iVar1);
+  uVar2 = (undefined4)swvImage2D_Pixels((uint8 *)iVar1);
   *param_2 = uVar2;
   return;
 }
@@ -45147,7 +45148,7 @@ void swv_InitVtbl_Image2D(void **pVtbl)
   pVtbl[0x16] = (void *)(ADDRESS_OF_FUNCTION_01030acc_OFFSET + 0x1030bcc);
   pVtbl[0x17] = (void *)(ADDRESS_OF_FUNCTION_01030b58_OFFSET + 0x1030bd8);
   pVtbl[0x18] = (void *)(ADDRESS_OF_FUNCTION_01030ae4_OFFSET + 0x1030be4);
-  pVtbl[0x19] = (void *)(ADDRESS_OF_FUNCTION_01030b38_OFFSET + 0x1030bf0);
+  pVtbl[0x19] = (void *)(ADDRESS_OF_swvImage2D_GetPixels_OFFSET + 0x1030bf0);
   pVtbl[0x1a] = (void *)(ADDRESS_OF_FUNCTION_01030b10_OFFSET + 0x1030bfc);
   pVtbl[0x1b] = (void *)(ADDRESS_OF_FUNCTION_01030aac_OFFSET + 0x1030c08);
   pVtbl[0x1c] = (void *)(ADDRESS_OF_FUNCTION_01030f48_OFFSET + 0x1030c14);
