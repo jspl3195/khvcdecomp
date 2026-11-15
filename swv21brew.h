@@ -518,7 +518,7 @@ int32 swvGraphics3D_Property(uint32 index);   /* 0x0100F530 GUESS: name, see swv
 int32 swvGroup_ChildCount(const uint8 *group);   /* 0x0100F594 GUESS: name, see swv21brew.c */
 uint8 *swvGroup_NthChild(const uint8 *group,int32 *index);   /* 0x0100F5B4 GUESS: name, see swv21brew.c */
 uint8 *swvGroup_Child(const uint8 *group,int32 index);   /* 0x0100F5DC GUESS: name, see swv21brew.c */
-undefined4 FUN_0100f620(int param_1,int param_2);
+uint32 swvMaterial_Color(const uint8 *material,int32 target);   /* 0x0100F620 GUESS: name, see swv21brew.c */
 void FUN_0100f654(int param_1,int param_2);
 undefined4 FUN_0100f6d8(int param_1);
 int32 swvImage2D_StorageFormat(const uint8 *image);   /* 0x0100F6F8 GUESS: name, see swv21brew.c */
@@ -779,7 +779,7 @@ undefined8 FUN_0102035c(int param_1,int *param_2);
 void FUN_01020480(int param_1,int param_2,int param_3,undefined4 param_4);
 undefined4 * FUN_010204ec(undefined4 *param_1,int param_2,int param_3);
 void FUN_0102060c(int *param_1,int *param_2,int *param_3,int param_4);
-void FUN_01020948(int param_1,uint param_2,uint param_3);
+void swvMaterial_SetColorValue(uint8 *material,uint32 targets,uint32 argb);   /* 0x01020948 GUESS: name, see swv21brew.c */
 void FUN_010209ac(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01020a28(int param_1,int param_2);
 undefined8 FUN_01020b64(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 );
@@ -1231,10 +1231,10 @@ undefined4 FUN_010338a0(int param_1,int param_2,undefined4 *param_3);
 undefined4 FUN_01033918(int param_1,undefined4 param_2);
 void FUN_01033984(int param_1,int param_2);
 int FUN_010339a4(int param_1);
-undefined4 FUN_01033a24(int param_1,int param_2,undefined4 *param_3);
+undefined4 swvMaterial_GetColor(int param_1,int param_2,undefined4 *param_3);   /* 0x01033A24 GUESS: name, see swv21brew.c */
 void FUN_01033aac(int param_1,undefined4 *param_2);
 void FUN_01033b34(int param_1,undefined1 *param_2);
-undefined4 FUN_01033b4c(int param_1,undefined4 param_2,undefined4 param_3);
+undefined4 swvMaterial_SetColor(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x01033B4C GUESS: name, see swv21brew.c */
 undefined4 FUN_01033bb4(int param_1,undefined4 param_2);
 void FUN_01033c50(int param_1,int param_2);
 int FUN_01033ccc(int param_1,undefined4 param_2,ISwerveObject **param_3);
@@ -2084,8 +2084,8 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define ADDRESS_OF_FUNCTION_01033bb4_OFFSET 0x000000CC   /* was DAT_01033b20 (word at 0x01033B20); PC-relative offset: + 0x1033ae8 (the pc) = 0x01033BB4 */
 #define ADDRESS_OF_FUNCTION_01033b34_OFFSET 0x00000040   /* was DAT_01033b24 (word at 0x01033B24); PC-relative offset: + 0x1033af4 (the pc) = 0x01033B34 */
 #define ADDRESS_OF_FUNCTION_01033c50_OFFSET 0x00000150   /* was DAT_01033b28 (word at 0x01033B28); PC-relative offset: + 0x1033b00 (the pc) = 0x01033C50 */
-#define ADDRESS_OF_FUNCTION_01033a24_OFFSET 0xFFFFFF18   /* was DAT_01033b2c (word at 0x01033B2C); PC-relative offset: + 0x1033b0c (the pc) = 0x01033A24 */
-#define ADDRESS_OF_FUNCTION_01033b4c_OFFSET 0x00000034   /* was DAT_01033b30 (word at 0x01033B30); PC-relative offset: + 0x1033b18 (the pc) = 0x01033B4C */
+#define ADDRESS_OF_swvMaterial_GetColor_OFFSET 0xFFFFFF18   /* was DAT_01033b2c (word at 0x01033B2C); PC-relative offset: + 0x1033b0c (the pc) = 0x01033A24 */
+#define ADDRESS_OF_swvMaterial_SetColor_OFFSET 0x00000034   /* was DAT_01033b30 (word at 0x01033B30); PC-relative offset: + 0x1033b18 (the pc) = 0x01033B4C */
 #define ADDRESS_OF_FUNCTION_01033ec4_OFFSET 0x00000068   /* was DAT_01033ea8 (word at 0x01033EA8); PC-relative offset: + 0x1033e5c (the pc) = 0x01033EC4 */
 #define ADDRESS_OF_FUNCTION_010340d0_OFFSET 0x00000268   /* was DAT_01033eac (word at 0x01033EAC); PC-relative offset: + 0x1033e68 (the pc) = 0x010340D0 */
 #define ADDRESS_OF_FUNCTION_01033db4_OFFSET 0xFFFFFF40   /* was DAT_01033eb0 (word at 0x01033EB0); PC-relative offset: + 0x1033e74 (the pc) = 0x01033DB4 */

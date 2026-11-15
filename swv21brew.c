@@ -14055,28 +14055,36 @@ uint8 *swvGroup_Child(const uint8 *group,int32 index)
   return child;
 }
 
-/* ==== 0x0100F620  (file offset 0x0F620)  FUN_0100f620 ================================================ */
-undefined4 FUN_0100f620(int param_1,int param_2)
+/* ==== 0x0100F620  (file offset 0x0F620)  swvMaterial_Color =========================================== */
+/* GUESS: name. One colour of a native Material (JSR-184 Material.getColor), by target: AMBIENT
+   (0x400) +0x1c, DIFFUSE (0x800) +0x20, EMISSIVE (0x1000) +0x24, SPECULAR (0x2000) +0x28 (ARGB words;
+   only the diffuse keeps its alpha, see swvMaterial_SetColorValue), any other value 0. Evidence:
+   0x0100f620 - 0x0100f650 (`cmp r1, #0x400` / `ldreq r0, [r0, #0x1c]` / `bxeq lr`, and so on). Used by
+   swvMaterial_GetColor (kh_types.h SwerveMaterialVtbl slot 22), the light setup FUN_010234bc, the
+   lighting FUN_0101bd48 and FUN_0101a514. */
+uint32 swvMaterial_Color(const uint8 *material,int32 target)
 
 {
-  undefined4 uVar1;
-  
-  if (param_2 == 0x400) {
-    return *(undefined4 *)(param_1 + 0x1c);
+  uint32 colour;
+
+  switch (target) {
+  case 0x400:
+    colour = *(const uint32 *)(material + 0x1c);
+    break;
+  case 0x800:
+    colour = *(const uint32 *)(material + 0x20);
+    break;
+  case 0x1000:
+    colour = *(const uint32 *)(material + 0x24);
+    break;
+  case 0x2000:
+    colour = *(const uint32 *)(material + 0x28);
+    break;
+  default:
+    colour = 0;
+    break;
   }
-  if (param_2 != 0x800) {
-    if (param_2 != 0x1000) {
-      if (param_2 == 0x2000) {
-        uVar1 = *(undefined4 *)(param_1 + 0x28);
-      }
-      else {
-        uVar1 = 0;
-      }
-      return uVar1;
-    }
-    return *(undefined4 *)(param_1 + 0x24);
-  }
-  return *(undefined4 *)(param_1 + 0x20);
+  return colour;
 }
 
 /* ==== 0x0100F654  (file offset 0x0F654)  FUN_0100f654 ================================================ */
@@ -23699,6 +23707,9 @@ void FUN_0101a478(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 }
 
 /* ==== 0x0101A514  (file offset 0x1A514)  FUN_0101a514 ================================================ */
+/* GUESS (not yet rewritten): sorts a mesh (param_2) for the draw: with ALPHA blending (0x40) it
+   checks the alpha factor and the Material's diffuse alpha (swvMaterial_Color: 0xff or no Material is
+   opaque), GUESS to put the mesh in the opaque or the blended pass. */
 void FUN_0101a514(int param_1,int *param_2)
 
 {
@@ -23782,7 +23793,8 @@ LAB_0101a5c0:
             iVar4 = *(int *)(iVar3 + 0x2c);
             swv_fcmp_c(*(undefined4 *)(param_1 + 0xc),0x3f800000);
             if ((bool)cVar12) {
-              if ((iVar4 == 0) || (uVar5 = FUN_0100f620(iVar4,0x800), (~uVar5 & 0xff000000) == 0)) {
+              if ((iVar4 == 0) ||
+                  (uVar5 = swvMaterial_Color((uint8 *)iVar4,0x800), (~uVar5 & 0xff000000) == 0)) {
                 iVar8 = *(int *)(*param_2 + 0x2c);
                 iVar6 = (*(code *)(iVar8 + *param_2))(param_2);
                 iVar7 = *(int *)(iVar6 + 0x2c);
@@ -23931,7 +23943,8 @@ LAB_0101a5c0:
             iVar4 = *(int *)(iVar3 + 0x2c);
             swv_fcmp_c(*(undefined4 *)(param_1 + 0xc),0x3f800000);
             if ((bool)cVar12) {
-              if ((iVar4 == 0) || (uVar5 = FUN_0100f620(iVar4,0x800), (~uVar5 & 0xff000000) == 0)) {
+              if ((iVar4 == 0) ||
+                  (uVar5 = swvMaterial_Color((uint8 *)iVar4,0x800), (~uVar5 & 0xff000000) == 0)) {
                 iVar8 = *(int *)(*param_2 + 0x2c);
                 iVar6 = (*(code *)(iVar8 + *param_2))(param_2);
                 iVar7 = *(int *)(iVar6 + 0x2c);
@@ -24987,8 +25000,8 @@ void FUN_0101bd48(int param_1,int param_2,int param_3,int param_4,undefined4 par
   local_90 = 0;
   local_94 = *(int *)(local_28 + 0x2c);
   if ((local_94 != 0) && (*(int *)(local_94 + 0x2c) == 0)) {
-    local_7c = FUN_0100f620(local_94,0x800);
-    uVar3 = FUN_0100f620(local_94,0x400);
+    local_7c = swvMaterial_Color((uint8 *)local_94,0x800);
+    uVar3 = swvMaterial_Color((uint8 *)local_94,0x400);
     FUN_010221a0(&local_90,uVar3);
   }
   if (*(int *)(local_28 + 0x20) == 0) {
@@ -25373,10 +25386,10 @@ LAB_0101c710:
                     }
                   }
                   else {
-                    uVar3 = FUN_0100f620(local_94,0x1000);
+                    uVar3 = swvMaterial_Color((uint8 *)local_94,0x1000);
                     iVar5 = iVar18 + 0x9c4;
                     FUN_010221a0(iVar5,uVar3);
-                    uVar3 = FUN_0100f620(local_94,0x2000);
+                    uVar3 = swvMaterial_Color((uint8 *)local_94,0x2000);
                     FUN_010221a0(iVar18 + 0x9dc,uVar3);
                     if (*(int *)(local_94 + 0x2c) == 0) {
                       FUN_010221a0(iVar18 + 0x9d0,local_7c);
@@ -29427,29 +29440,29 @@ void FUN_0102060c(int *param_1,int *param_2,int *param_3,int param_4)
   return;
 }
 
-/* ==== 0x01020948  (file offset 0x20948)  FUN_01020948 ================================================ */
-void FUN_01020948(int param_1,uint param_2,uint param_3)
+/* ==== 0x01020948  (file offset 0x20948)  swvMaterial_SetColorValue =================================== */
+/* GUESS: name. Sets colours of a native Material (JSR-184 Material.setColor): targets is an OR of
+   AMBIENT 0x400, DIFFUSE 0x800, EMISSIVE 0x1000 and SPECULAR 0x2000, error -1301 (FUN_0102f7e0, which
+   does not return) when it is 0 or has any other bit; each target named gets argb, the ambient,
+   emissive and specular without its alpha (& 0xffffff), the diffuse whole. Evidence: 0x01020948 -
+   0x01020990 (`movs r4, r1` / `beq`, `bics r0, r4, #0x3c00` / `beq`, the error, `bic r0, r6,
+   #0xff000000`, a `tst` / `strne` for each target). Only swvMaterial_SetColor (slot 23) calls it. */
+void swvMaterial_SetColorValue(uint8 *material,uint32 targets,uint32 argb)
 
 {
-  uint uVar1;
-  
-  if ((param_2 == 0) || ((param_2 & 0xffffc3ff) != 0)) {
+  uint32 rgb;
+
+  if (targets == 0 || (targets & ~0x3c00u) != 0)
     FUN_0102f7e0(INTEGER_MINUS_1301);
-  }
-  uVar1 = param_3 & 0xffffff;
-  if ((param_2 & 0x400) != 0) {
-    *(uint *)(param_1 + 0x1c) = uVar1;
-  }
-  if ((param_2 & 0x1000) != 0) {
-    *(uint *)(param_1 + 0x24) = uVar1;
-  }
-  if ((param_2 & 0x2000) != 0) {
-    *(uint *)(param_1 + 0x28) = uVar1;
-  }
-  if ((param_2 & 0x800) != 0) {
-    *(uint *)(param_1 + 0x20) = param_3;
-  }
-  return;
+  rgb = argb & 0xffffff;
+  if ((targets & 0x400) != 0)
+    *(uint32 *)(material + 0x1c) = rgb;
+  if ((targets & 0x1000) != 0)
+    *(uint32 *)(material + 0x24) = rgb;
+  if ((targets & 0x2000) != 0)
+    *(uint32 *)(material + 0x28) = rgb;
+  if ((targets & 0x800) != 0)
+    *(uint32 *)(material + 0x20) = argb;
 }
 
 /* ==== 0x010209AC  (file offset 0x209AC)  FUN_010209ac ================================================ */
@@ -32125,6 +32138,10 @@ void FUN_01023420(int *param_1,int param_2,int param_3,undefined4 param_4)
 }
 
 /* ==== 0x010234BC  (file offset 0x234BC)  FUN_010234bc ================================================ */
+/* GUESS (not yet rewritten): part of a light's setup for a draw (the term param_1 for the Material
+   param_2): its diffuse flag (+4) set when the Material's diffuse colour is not 0, its specular flag
+   (+8, the one that makes the light terms add FUN_01013c58) when the specular is not 0
+   (swvMaterial_Color). */
 undefined4 FUN_010234bc(int param_1,int param_2,undefined4 param_3,uint param_4,int param_5)
 
 {
@@ -32140,9 +32157,9 @@ undefined4 FUN_010234bc(int param_1,int param_2,undefined4 param_3,uint param_4,
       return 0;
     }
     if (param_2 != 0) {
-      iVar1 = FUN_0100f620(param_2,0x800);
+      iVar1 = swvMaterial_Color((uint8 *)param_2,0x800);
       *(uint *)(param_1 + 4) = (uint)(iVar1 != 0);
-      iVar1 = FUN_0100f620(param_2,0x2000);
+      iVar1 = swvMaterial_Color((uint8 *)param_2,0x2000);
       uVar2 = (uint)(iVar1 != 0);
       *(uint *)(param_1 + 8) = uVar2;
       if (*(int *)(param_1 + 4) != 0 || uVar2 != 0) {
@@ -47846,8 +47863,12 @@ int swv_Create_Material(void **ppObj)
   return iVar1;
 }
 
-/* ==== 0x01033A24  (file offset 0x33A24)  FUN_01033a24 ================================================ */
-undefined4 FUN_01033a24(int param_1,int param_2,undefined4 *param_3)
+/* ==== 0x01033A24  (file offset 0x33A24)  swvMaterial_GetColor ======================================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 22 (+0x58) of Material (kh_types.h
+   SwerveMaterialVtbl.GetColor): in an error frame, error -1301 for a target other than AMBIENT,
+   DIFFUSE, EMISSIVE or SPECULAR, else *param_3 = swvMaterial_Color(native, target); on an error its
+   result code (swv_ErrorToResult). */
+undefined4 swvMaterial_GetColor(int param_1,int param_2,undefined4 *param_3)
 
 {
   int iVar1;
@@ -47866,7 +47887,7 @@ undefined4 FUN_01033a24(int param_1,int param_2,undefined4 *param_3)
     if (((param_2 != 0x400 && param_2 != 0x800) && param_2 != 0x1000) && param_2 != 0x2000) {
       FUN_0102f7e0(INTEGER_MINUS_1301);
     }
-    uVar2 = FUN_0100f620(iVar1,param_2);
+    uVar2 = swvMaterial_Color((uint8 *)iVar1,param_2);
     *param_3 = uVar2;
     swv_TryPop();
   }
@@ -47903,8 +47924,8 @@ void swv_InitVtbl_Material(void **pVtbl)
   pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_01033bb4_OFFSET + 0x1033ae8);
   pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_01033b34_OFFSET + 0x1033af4);
   pVtbl[0x15] = (void *)(ADDRESS_OF_FUNCTION_01033c50_OFFSET + 0x1033b00);
-  pVtbl[0x16] = (void *)(ADDRESS_OF_FUNCTION_01033a24_OFFSET + 0x1033b0c);
-  pVtbl[0x17] = (void *)(ADDRESS_OF_FUNCTION_01033b4c_OFFSET + 0x1033b18);
+  pVtbl[0x16] = (void *)(ADDRESS_OF_swvMaterial_GetColor_OFFSET + 0x1033b0c);
+  pVtbl[0x17] = (void *)(ADDRESS_OF_swvMaterial_SetColor_OFFSET + 0x1033b18);
   return;
 }
 
@@ -47922,8 +47943,11 @@ void FUN_01033b34(int param_1,undefined1 *param_2)
   return;
 }
 
-/* ==== 0x01033B4C  (file offset 0x33B4C)  FUN_01033b4c ================================================ */
-undefined4 FUN_01033b4c(int param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x01033B4C  (file offset 0x33B4C)  swvMaterial_SetColor ======================================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 23 (+0x5c) of Material (kh_types.h
+   SwerveMaterialVtbl.SetColor): in an error frame, swvMaterial_SetColorValue(native, targets, argb);
+   on an error its result code (swv_ErrorToResult). */
+undefined4 swvMaterial_SetColor(int param_1,undefined4 param_2,undefined4 param_3)
 
 {
   int iVar1;
@@ -47938,7 +47962,7 @@ undefined4 FUN_01033b4c(int param_1,undefined4 param_2,undefined4 param_3)
     if (iVar1 != 0) {
       iVar1 = iVar1 + -4;
     }
-    FUN_01020948(iVar1,param_2,param_3);
+    swvMaterial_SetColorValue((uint8 *)iVar1,param_2,param_3);
     swv_TryPop();
   }
   else {

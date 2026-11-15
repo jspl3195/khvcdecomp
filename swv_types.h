@@ -265,6 +265,15 @@ typedef struct SwvKeyframeSequence {
  *   +0x24             the bytes per component: 1 (signed bytes) or 2 (signed 16-bit words)
  *   +0x2c             the values, vertex after vertex */
 
+/* ---- Material (class 15), the native object (no struct yet) ------------------------------------
+ * Its colours (GUESS: the names, JSR-184 Material; swvMaterial_Color, swvMaterial_SetColorValue), ARGB
+ * words, by target (AMBIENT 0x400, DIFFUSE 0x800, EMISSIVE 0x1000, SPECULAR 0x2000; setColor takes an
+ * OR of them):
+ *   +0x1c             the ambient colour (stored without its alpha)
+ *   +0x20             the diffuse colour (the only one with its alpha)
+ *   +0x24             the emissive colour (without its alpha)
+ *   +0x28             the specular colour (without its alpha) */
+
 /* ---- Image2D (class 10), the native object (no struct yet) -------------------------------------
  * The fields its accessors read (GUESS: the names; swvImage2D_AlphaStride, _ColourStride,
  * _AlphaPlane, _StorageFormat):
