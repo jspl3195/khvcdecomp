@@ -503,7 +503,7 @@ void swv_FillRect(uint8 *raster,int32 x,int32 y,int32 width,int32 height,uint16 
 void FUN_0100ed84(int param_1,int param_2,int param_3);
 uint swvSkin_VertexBones(int param_1,uint param_2,int param_3);
 int * FUN_0100eef0(int *param_1,int param_2);
-void FUN_0100efe4(int *param_1,int param_2);
+void swv_ColourScale(int32 *colour,int32 factor);   /* 0x0100EFE4 GUESS: name, see swv21brew.c */
 void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 int FUN_0100f154(int param_1);
 undefined4 FUN_0100f170(int param_1);
@@ -1582,7 +1582,7 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define INTEGER_MINUS_50912 0xFFFF3920   /* was DAT_0100ea7c (word at 0x0100EA7C); integer -50912 */
 #define INTEGER_MINUS_50200 0xFFFF3BE8   /* was DAT_0100ebf4 (word at 0x0100EBF4); integer -50200 */
 #define INTEGER_MINUS_50204 0xFFFF3BE4   /* was DAT_0100ec9c (word at 0x0100EC9C); integer -50204 */
-#define WORD_HEXADECIMAL_FFFC0000 0xFFFC0000   /* was DAT_0100f02c (word at 0x0100F02C); value 0xFFFC0000 (-262144) */
+#define COLOUR_SCALE_MIN 0xFFFC0000   /* was DAT_0100f02c (word at 0x0100F02C); value 0xFFFC0000 (-262144): swv_ColourScale's lower clamp, -1024.0 in 8.8 */
 #define DATA_AT_0100203C_OFFSET_4 0xFFFF27F8   /* was DAT_0100f8dc (word at 0x0100F8DC); PC-relative offset: + 0x100f844 (the pc) = 0x0100203C */
 #define DATA_AT_010023E0_OFFSET 0xFFFF2B90   /* was DAT_0100f8e0 (word at 0x0100F8E0); PC-relative offset: + 0x100f850 (the pc) = 0x010023E0 */
 #define DATA_AT_01002664_OFFSET 0xFFFF2DFC   /* was DAT_0100f8e4 (word at 0x0100F8E4); PC-relative offset: + 0x100f868 (the pc) = 0x01002664 */

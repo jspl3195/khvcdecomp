@@ -13587,21 +13587,25 @@ int * FUN_0100eef0(int *param_1,int param_2)
   return piVar3;
 }
 
-/* ==== 0x0100EFE4  (file offset 0x0EFE4)  FUN_0100efe4 ================================================ */
-void FUN_0100efe4(int *param_1,int param_2)
+/* ==== 0x0100EFE4  (file offset 0x0EFE4)  swv_ColourScale ============================================= */
+/* GUESS: name. Scales a lighting colour (three int32, red, green, blue, in 8.8 fixed point) by factor
+   (16.16), in place: the factor to 8.8 (>> 8, arithmetic), clamped to +-1024.0 (+-0x40000, so that
+   no product overflows 32 bits), then colour = factor * colour >> 8. Evidence: 0x0100efe4 - 0x0100f028
+   (`asr #8`, `cmp` / `movgt` 0x40000, `cmn` / `ldrlt` COLOUR_SCALE_MIN, a `mul` / `asr #8` / `str` for
+   each word). Used by the light terms (a light's colour by its intensity and attenuation, before
+   swv_ColourModulate and swv_ColourAdd) and by FUN_01018460 (7 calls in all; FUN_0101e534's listing
+   repeats FUN_01018460's three, a merged tail). */
+void swv_ColourScale(int32 *colour,int32 factor)
 
 {
-  param_2 = param_2 >> 8;
-  if (0x40000 < param_2) {
-    param_2 = 0x40000;
-  }
-  if (param_2 < -0x40000) {
-    param_2 = WORD_HEXADECIMAL_FFFC0000;
-  }
-  *param_1 = param_2 * *param_1 >> 8;
-  param_1[1] = param_2 * param_1[1] >> 8;
-  param_1[2] = param_2 * param_1[2] >> 8;
-  return;
+  factor >>= 8;
+  if (factor > 0x40000)
+    factor = 0x40000;
+  if (factor < -0x40000)
+    factor = (int32)COLOUR_SCALE_MIN;
+  colour[0] = factor * colour[0] >> 8;
+  colour[1] = factor * colour[1] >> 8;
+  colour[2] = factor * colour[2] >> 8;
 }
 
 /* ==== 0x0100F030  (file offset 0x0F030)  FUN_0100f030 ================================================ */
@@ -18312,6 +18316,10 @@ void FUN_01013bcc(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x01013C58  (file offset 0x13C58)  FUN_01013c58 ================================================ */
+/* GUESS (not yet rewritten): the specular term of a light, called by the DIRECTIONAL, OMNI and SPOT
+   terms (FUN_0101411c, FUN_01013e88, FUN_0101420c) with the light, the vertex colour, a direction
+   (param_3) and the light's factor (param_4): the light colour scaled (swv_ColourScale) by the specular
+   factor, modulated by the material's specular colour and added (swv_ColourAdd). */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
 void FUN_01013c58(int param_1,int param_2,int *param_3,int param_4)
@@ -18390,7 +18398,7 @@ void FUN_01013c58(int param_1,int param_2,int *param_3,int param_4)
     iStack_44 = *(int *)(param_1 + 0x48);
     iStack_40 = *(undefined4 *)(param_1 + 0x4c);
     iStack_3c = *(undefined4 *)(param_1 + 0x50);
-    FUN_0100efe4(&iStack_44,uVar5);
+    swv_ColourScale(&iStack_44,uVar5);
     swv_ColourModulate(&iStack_44,param_2 + 0x18);
     swv_ColourAdd(param_2,&iStack_44);
     return;
@@ -18399,6 +18407,11 @@ void FUN_01013c58(int param_1,int param_2,int *param_3,int param_4)
 }
 
 /* ==== 0x01013E88  (file offset 0x13E88)  FUN_01013e88 ================================================ */
+/* GUESS (not yet rewritten): the OMNI light term (mode 0x82): adds the light (param_1, 0x90 bytes;
+   swvLight_Shade's own routine at +0, set by FUN_01012908 from the JSR-184 mode) to the vertex colour
+   param_2: like FUN_0101411c, with the distance attenuation (+0x5c .. +0x64: constant, linear,
+   quadratic; FUN_0102f080) in the factor (swv_ColourScale); the specular term, FUN_01013c58, when +8 is
+   set. */
 void FUN_01013e88(int param_1,int param_2)
 
 {
@@ -18494,7 +18507,7 @@ void FUN_01013e88(int param_1,int param_2)
     iStack_44 = *(int *)(param_1 + 0x48);
     iStack_40 = *(int *)(param_1 + 0x4c);
     iStack_3c = *(int *)(param_1 + 0x50);
-    FUN_0100efe4(&iStack_44,uVar4);
+    swv_ColourScale(&iStack_44,uVar4);
     swv_ColourModulate(&iStack_44,param_2 + 0xc);
     swv_ColourAdd(param_2,&iStack_44);
   }
@@ -18507,6 +18520,11 @@ void FUN_01013e88(int param_1,int param_2)
 }
 
 /* ==== 0x0101411C  (file offset 0x1411C)  FUN_0101411c ================================================ */
+/* GUESS (not yet rewritten): the DIRECTIONAL light term (mode 0x81): adds the light (param_1, 0x90
+   bytes; swvLight_Shade's own routine at +0, set by FUN_01012908 from the JSR-184 mode) to the vertex
+   colour param_2: the light colour (+0x48 .. +0x50) scaled by the diffuse factor (swv_ColourScale),
+   modulated by the material colour (swv_ColourModulate) and added (swv_ColourAdd); the specular term,
+   FUN_01013c58, when +8 is set. */
 void FUN_0101411c(int param_1,int param_2)
 
 {
@@ -18529,7 +18547,7 @@ void FUN_0101411c(int param_1,int param_2)
       local_1c = *(int *)(param_1 + 0x48);
       local_18 = *(undefined4 *)(param_1 + 0x4c);
       local_14 = *(undefined4 *)(param_1 + 0x50);
-      FUN_0100efe4(&local_1c,iVar1);
+      swv_ColourScale(&local_1c,iVar1);
       swv_ColourModulate(&local_1c,param_2 + 0xc);
       FUN_010272c0(param_2,&local_1c);
     }
@@ -18545,6 +18563,11 @@ void FUN_0101411c(int param_1,int param_2)
 }
 
 /* ==== 0x0101420C  (file offset 0x1420C)  FUN_0101420c ================================================ */
+/* GUESS (not yet rewritten): the SPOT light term (mode 0x83): adds the light (param_1, 0x90 bytes;
+   swvLight_Shade's own routine at +0, set by FUN_01012908 from the JSR-184 mode) to the vertex colour
+   param_2: like FUN_01013e88, with the spot cone (+0x54 its angle's cosine, +0x58 its exponent; set
+   from the Light's +0x9c / +0xa0) in the factor (swv_ColourScale); the specular term, FUN_01013c58,
+   when +8 is set. */
 void FUN_0101420c(int param_1,int param_2)
 
 {
@@ -18654,7 +18677,7 @@ void FUN_0101420c(int param_1,int param_2)
     iStack_48 = *(int *)(param_1 + 0x48);
     iStack_44 = *(int *)(param_1 + 0x4c);
     iStack_40 = *(int *)(param_1 + 0x50);
-    FUN_0100efe4(&iStack_48,(uint)lVar1 >> 0x10 | (int)((ulonglong)lVar1 >> 0x20) << 0x10);
+    swv_ColourScale(&iStack_48,(uint)lVar1 >> 0x10 | (int)((ulonglong)lVar1 >> 0x20) << 0x10);
     swv_ColourModulate(&iStack_48,param_2 + 0xc);
     swv_ColourAdd(param_2,&iStack_48);
   }
@@ -21859,6 +21882,9 @@ void FUN_010183b0(int param_1)
 }
 
 /* ==== 0x01018460  (file offset 0x18460)  FUN_01018460 ================================================ */
+/* GUESS (not yet rewritten): uses swv_ColourScale three times: two colours scaled by the same factor
+   and each added to a colour (swv_ColourAdd), the second blended with the first (FUN_010272c0), scaled
+   by a 0 .. 1.0 weight (clamped) and added to it, the result packed to RGB565 (FUN_01010008). */
 void FUN_01018460(int param_1)
 
 {
@@ -22434,15 +22460,15 @@ LAB_010190c8:
           local_158 = local_a8;
           local_154 = local_a4;
           local_150 = local_a0;
-          FUN_0100efe4(&local_158,iVar10);
+          swv_ColourScale(&local_158,iVar10);
           swv_ColourAdd(&local_158,local_5c);
           local_164 = local_b4;
           uStack_160 = local_b0;
           local_15c = local_ac;
-          FUN_0100efe4(&local_164,iVar10);
+          swv_ColourScale(&local_164,iVar10);
           swv_ColourAdd(&local_164,local_60);
           FUN_010272c0(&local_164,&local_158);
-          FUN_0100efe4(&local_164,iVar8);
+          swv_ColourScale(&local_164,iVar8);
           swv_ColourAdd(&local_164,&local_158);
           uVar2 = FUN_01010008(&local_164);
           *(undefined2 *)(local_98 + (iVar6 * local_84 + local_13c) * 2) = uVar2;
@@ -27412,15 +27438,15 @@ LAB_010190c8:
           iStack_158 = iStack_a8;
           iStack_154 = iStack_a4;
           uStack_150 = uStack_a0;
-          FUN_0100efe4(&iStack_158,iVar12);
+          swv_ColourScale(&iStack_158,iVar12);
           swv_ColourAdd(&iStack_158,iStack_5c);
           iStack_164 = iStack_b4;
           uStack_160 = uStack_b0;
           uStack_15c = uStack_ac;
-          FUN_0100efe4(&iStack_164,iVar12);
+          swv_ColourScale(&iStack_164,iVar12);
           swv_ColourAdd(&iStack_164,iStack_60);
           FUN_010272c0(&iStack_164,&iStack_158);
-          FUN_0100efe4(&iStack_164,iVar7);
+          swv_ColourScale(&iStack_164,iVar7);
           swv_ColourAdd(&iStack_164,&iStack_158);
           uVar3 = FUN_01010008(&iStack_164);
           *(undefined2 *)(iStack_98 + (iVar5 * iStack_84 + iStack_13c) * 2) = uVar3;
