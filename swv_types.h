@@ -274,6 +274,18 @@ typedef struct SwvKeyframeSequence {
  *                     swvNode_Depth, swvNode_SetDepth)
  * The JSR-184 alignment targets: NONE 0x90, ORIGIN 0x91, X_AXIS 0x92, Y_AXIS 0x93, Z_AXIS 0x94. */
 
+/* ---- VertexBuffer, the native object (no struct yet) -------------------------------------------
+ * Its fields (GUESS: the names; the BREW slots, kh_types.h SwerveVertexBufferVtbl, and
+ * swvVertexBuffer_Array):
+ *   +0x1c             the vertex count
+ *   +0x20             the default colour (ARGB)
+ *   +0x24             the positions (a VertexArray; attribute 0)
+ *   +0x28             the colours (attribute 2)
+ *   +0x2c             the normals (attribute 1)
+ *   +0x30 / +0x34     the texture coordinates of units 0 / 1 (attributes 3, 4)
+ * A MorphingMesh (FUN_0100fb34) blends them: +0x88 its base VertexBuffer, +0xc8 / +0xcc its morph
+ * targets and their count, +0xd8 their weights, +0xb4 / +0xb8 the work buffer. */
+
 /* ---- VertexArray (class 29), the native object (no struct yet) ------------------------------
  * The fields its readers use (GUESS: the names; swvVertexArray_GetComponent, FUN_010257fc,
  * FUN_010258d0, FUN_01025a50):

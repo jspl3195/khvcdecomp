@@ -567,7 +567,7 @@ int FUN_01010d40(int param_1,int param_2,undefined4 param_3,int param_4);
 undefined4 FUN_01010dac(undefined4 param_1,int param_2);
 undefined4 FUN_01010de0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 );
 void FUN_01010e84(int param_1,int param_2,int *param_3,undefined4 *param_4);
-undefined4 FUN_01010f60(int param_1,int param_2);
+uint8 *swvVertexBuffer_Array(const uint8 *buffer,int32 attribute);   /* 0x01010F60 GUESS: name, see swv21brew.c */
 undefined4 FUN_01010f90(int param_1);
 undefined4 swvKeyframeSequence_Sample(int param_1,undefined4 param_2,int param_3,undefined4 *param_4,undefined4 param_5);
 void FUN_01011900(int param_1,undefined4 *param_2,undefined4 *param_3);
@@ -1456,17 +1456,17 @@ undefined4 FUN_0103c944(int param_1,undefined4 param_2,undefined4 param_3,int pa
 undefined4 FUN_0103ca64(int param_1,int param_2,int param_3,int param_4);
 undefined4 FUN_0103cb10(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5);
 undefined4 FUN_0103cbac(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5);
-int FUN_0103cca8(int param_1,ISwerveObject **param_2);
-void FUN_0103cd14(int param_1,undefined4 *param_2);
-int FUN_0103cd2c(int param_1,ISwerveObject **param_2);
-int FUN_0103cd98(int param_1,undefined4 param_2,undefined4 param_3,ISwerveObject **param_4);
-int FUN_0103ce14(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, ISwerveObject **param_5);
-void FUN_0103ce98(int param_1,undefined4 *param_2);
-undefined4 FUN_0103cf70(int param_1,int param_2);
-void FUN_0103cfdc(int param_1,undefined4 param_2);
-undefined4 FUN_0103cff0(int param_1,int param_2);
-undefined4 FUN_0103d05c(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);
-undefined4 FUN_0103d0f0(int param_1,undefined4 param_2,int param_3,undefined4 param_4,undefined4 param_5, undefined4 param_6);
+int swvVertexBuffer_GetNormals(int param_1,ISwerveObject **param_2);   /* 0x0103CCA8 GUESS: name, see swv21brew.c */
+void swvVertexBuffer_GetDefaultColor(int param_1,undefined4 *param_2);   /* 0x0103CD14 GUESS: name, see swv21brew.c */
+int swvVertexBuffer_GetColors(int param_1,ISwerveObject **param_2);   /* 0x0103CD2C GUESS: name, see swv21brew.c */
+int swvVertexBuffer_GetPositions(int param_1,undefined4 param_2,undefined4 param_3,ISwerveObject **param_4);   /* 0x0103CD98 GUESS: name, see swv21brew.c */
+int swvVertexBuffer_GetTexCoords(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, ISwerveObject **param_5);   /* 0x0103CE14 GUESS: name, see swv21brew.c */
+void swvVertexBuffer_GetVertexCount(int param_1,undefined4 *param_2);   /* 0x0103CE98 GUESS: name, see swv21brew.c */
+undefined4 swvVertexBuffer_SetNormals(int param_1,int param_2);   /* 0x0103CF70 GUESS: name, see swv21brew.c */
+void swvVertexBuffer_SetDefaultColor(int param_1,undefined4 param_2);   /* 0x0103CFDC GUESS: name, see swv21brew.c */
+undefined4 swvVertexBuffer_SetColors(int param_1,int param_2);   /* 0x0103CFF0 GUESS: name, see swv21brew.c */
+undefined4 swvVertexBuffer_SetPositions(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);   /* 0x0103D05C GUESS: name, see swv21brew.c */
+undefined4 swvVertexBuffer_SetTexCoords(int param_1,undefined4 param_2,int param_3,undefined4 param_4,undefined4 param_5, undefined4 param_6);   /* 0x0103D0F0 GUESS: name, see swv21brew.c */
 int FUN_0103d1ec(int param_1,ISwerveObject **param_2);
 int FUN_0103d258(int param_1,ISwerveObject **param_2);
 undefined4 FUN_0103d314(int param_1,int param_2);
@@ -2341,17 +2341,17 @@ extern undefined4 STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET;   /* was DAT_0
 #define ADDRESS_OF_FUNCTION_0103ca64_OFFSET 0x00000028   /* was DAT_0103ca58 (word at 0x0103CA58); PC-relative offset: + 0x103ca3c (the pc) = 0x0103CA64 */
 #define ADDRESS_OF_FUNCTION_0103cb10_OFFSET 0x000000C8   /* was DAT_0103ca5c (word at 0x0103CA5C); PC-relative offset: + 0x103ca48 (the pc) = 0x0103CB10 */
 #define ADDRESS_OF_FUNCTION_0103cbac_OFFSET 0x00000158   /* was DAT_0103ca60 (word at 0x0103CA60); PC-relative offset: + 0x103ca54 (the pc) = 0x0103CBAC */
-#define ADDRESS_OF_FUNCTION_0103cd2c_OFFSET 0xFFFFFE64   /* was DAT_0103cf44 (word at 0x0103CF44); PC-relative offset: + 0x103cec8 (the pc) = 0x0103CD2C */
-#define ADDRESS_OF_FUNCTION_0103cff0_OFFSET 0x0000011C   /* was DAT_0103cf48 (word at 0x0103CF48); PC-relative offset: + 0x103ced4 (the pc) = 0x0103CFF0 */
-#define ADDRESS_OF_FUNCTION_0103cca8_OFFSET 0xFFFFFDC8   /* was DAT_0103cf4c (word at 0x0103CF4C); PC-relative offset: + 0x103cee0 (the pc) = 0x0103CCA8 */
-#define ADDRESS_OF_FUNCTION_0103cf70_OFFSET 0x00000084   /* was DAT_0103cf50 (word at 0x0103CF50); PC-relative offset: + 0x103ceec (the pc) = 0x0103CF70 */
-#define ADDRESS_OF_FUNCTION_0103cd14_OFFSET 0xFFFFFE1C   /* was DAT_0103cf54 (word at 0x0103CF54); PC-relative offset: + 0x103cef8 (the pc) = 0x0103CD14 */
-#define ADDRESS_OF_FUNCTION_0103cfdc_OFFSET 0x000000D8   /* was DAT_0103cf58 (word at 0x0103CF58); PC-relative offset: + 0x103cf04 (the pc) = 0x0103CFDC */
-#define ADDRESS_OF_FUNCTION_0103ce98_OFFSET 0xFFFFFF88   /* was DAT_0103cf5c (word at 0x0103CF5C); PC-relative offset: + 0x103cf10 (the pc) = 0x0103CE98 */
-#define ADDRESS_OF_FUNCTION_0103cd98_OFFSET 0xFFFFFE7C   /* was DAT_0103cf60 (word at 0x0103CF60); PC-relative offset: + 0x103cf1c (the pc) = 0x0103CD98 */
-#define ADDRESS_OF_FUNCTION_0103d05c_OFFSET 0x00000134   /* was DAT_0103cf64 (word at 0x0103CF64); PC-relative offset: + 0x103cf28 (the pc) = 0x0103D05C */
-#define ADDRESS_OF_FUNCTION_0103ce14_OFFSET 0xFFFFFEE0   /* was DAT_0103cf68 (word at 0x0103CF68); PC-relative offset: + 0x103cf34 (the pc) = 0x0103CE14 */
-#define ADDRESS_OF_FUNCTION_0103d0f0_OFFSET 0x000001B0   /* was DAT_0103cf6c (word at 0x0103CF6C); PC-relative offset: + 0x103cf40 (the pc) = 0x0103D0F0 */
+#define ADDRESS_OF_swvVertexBuffer_GetColors_OFFSET 0xFFFFFE64   /* was DAT_0103cf44 (word at 0x0103CF44); PC-relative offset: + 0x103cec8 (the pc) = 0x0103CD2C */
+#define ADDRESS_OF_swvVertexBuffer_SetColors_OFFSET 0x0000011C   /* was DAT_0103cf48 (word at 0x0103CF48); PC-relative offset: + 0x103ced4 (the pc) = 0x0103CFF0 */
+#define ADDRESS_OF_swvVertexBuffer_GetNormals_OFFSET 0xFFFFFDC8   /* was DAT_0103cf4c (word at 0x0103CF4C); PC-relative offset: + 0x103cee0 (the pc) = 0x0103CCA8 */
+#define ADDRESS_OF_swvVertexBuffer_SetNormals_OFFSET 0x00000084   /* was DAT_0103cf50 (word at 0x0103CF50); PC-relative offset: + 0x103ceec (the pc) = 0x0103CF70 */
+#define ADDRESS_OF_swvVertexBuffer_GetDefaultColor_OFFSET 0xFFFFFE1C   /* was DAT_0103cf54 (word at 0x0103CF54); PC-relative offset: + 0x103cef8 (the pc) = 0x0103CD14 */
+#define ADDRESS_OF_swvVertexBuffer_SetDefaultColor_OFFSET 0x000000D8   /* was DAT_0103cf58 (word at 0x0103CF58); PC-relative offset: + 0x103cf04 (the pc) = 0x0103CFDC */
+#define ADDRESS_OF_swvVertexBuffer_GetVertexCount_OFFSET 0xFFFFFF88   /* was DAT_0103cf5c (word at 0x0103CF5C); PC-relative offset: + 0x103cf10 (the pc) = 0x0103CE98 */
+#define ADDRESS_OF_swvVertexBuffer_GetPositions_OFFSET 0xFFFFFE7C   /* was DAT_0103cf60 (word at 0x0103CF60); PC-relative offset: + 0x103cf1c (the pc) = 0x0103CD98 */
+#define ADDRESS_OF_swvVertexBuffer_SetPositions_OFFSET 0x00000134   /* was DAT_0103cf64 (word at 0x0103CF64); PC-relative offset: + 0x103cf28 (the pc) = 0x0103D05C */
+#define ADDRESS_OF_swvVertexBuffer_GetTexCoords_OFFSET 0xFFFFFEE0   /* was DAT_0103cf68 (word at 0x0103CF68); PC-relative offset: + 0x103cf34 (the pc) = 0x0103CE14 */
+#define ADDRESS_OF_swvVertexBuffer_SetTexCoords_OFFSET 0x000001B0   /* was DAT_0103cf6c (word at 0x0103CF6C); PC-relative offset: + 0x103cf40 (the pc) = 0x0103D0F0 */
 #define ADDRESS_OF_FUNCTION_0103d1ec_OFFSET 0xFFFFFF10   /* was DAT_0103d304 (word at 0x0103D304); PC-relative offset: + 0x103d2dc (the pc) = 0x0103D1EC */
 #define ADDRESS_OF_FUNCTION_0103d314_OFFSET 0x0000002C   /* was DAT_0103d308 (word at 0x0103D308); PC-relative offset: + 0x103d2e8 (the pc) = 0x0103D314 */
 #define ADDRESS_OF_FUNCTION_0103d258_OFFSET 0xFFFFFF64   /* was DAT_0103d30c (word at 0x0103D30C); PC-relative offset: + 0x103d2f4 (the pc) = 0x0103D258 */

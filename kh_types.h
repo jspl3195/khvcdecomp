@@ -982,21 +982,21 @@ typedef struct SwervePolygonModeVtbl {
     void (*SetTwoSidedLightingEnable)(ISwerveObject *po,int32 enable);   /* +0x6c slot 27, 0x010381f0 */
 } SwervePolygonModeVtbl;
 
-/* VertexBuffer */
+/* VertexBuffer: JSR-184 1.0's eleven methods, as get / set pairs (GUESS for the unchecked ones) */
 typedef struct SwerveVertexBufferVtbl {
     SwerveObject3DVtbl base;                                             /* +0x00 - +0x44 */
-    int32 (*slot18)();                                                   /* +0x48 slot 18, 0x0103cd2c */
-    int32 (*slot19)();                                                   /* +0x4c slot 19, 0x0103cff0 */
-    int32 (*slot20)();                                                   /* +0x50 slot 20, 0x0103cca8 */
-    int32 (*slot21)();                                                   /* +0x54 slot 21, 0x0103cf70 */
-    int32 (*slot22)();                                                   /* +0x58 slot 22, 0x0103cd14 */
-    int32 (*slot23)();                                                   /* +0x5c slot 23, 0x0103cfdc */
+    int32 (*GetColors)(ISwerveObject *po,ISwerveObject **ppo);           /* +0x48 slot 18, 0x0103cd2c */
+    int32 (*SetColors)(ISwerveObject *po,ISwerveObject *colors);         /* +0x4c slot 19, 0x0103cff0 */
+    int32 (*GetNormals)(ISwerveObject *po,ISwerveObject **ppo);          /* +0x50 slot 20, 0x0103cca8 */
+    int32 (*SetNormals)(ISwerveObject *po,ISwerveObject *normals);       /* +0x54 slot 21, 0x0103cf70 */
+    void (*GetDefaultColor)(ISwerveObject *po,uint32 *pArgb);            /* +0x58 slot 22, 0x0103cd14 */
+    void (*SetDefaultColor)(ISwerveObject *po,uint32 argb);              /* +0x5c slot 23, 0x0103cfdc */
     int32 (*GetVertexCount)(ISwerveObject *po,void *pCount);             /* +0x60 slot 24, 0x0103ce98 */
     int32 (*GetPositions)(ISwerveObject *po,int32 size,void *scaleBias,void *ppo);
                                                                          /* +0x64 slot 25, 0x0103cd98 */
-    int32 (*slot26)();                                                   /* +0x68 slot 26, 0x0103d05c */
-    int32 (*slot27)();                                                   /* +0x6c slot 27, 0x0103ce14 */
-    int32 (*slot28)();                                                   /* +0x70 slot 28, 0x0103d0f0 */
+    int32 (*SetPositions)();                                             /* +0x68 slot 26, 0x0103d05c */
+    int32 (*GetTexCoords)();                                             /* +0x6c slot 27, 0x0103ce14 */
+    int32 (*SetTexCoords)();                                             /* +0x70 slot 28, 0x0103d0f0 */
 } SwerveVertexBufferVtbl;
 
 /* AnimationTrack */
