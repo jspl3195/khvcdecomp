@@ -285,8 +285,12 @@ typedef struct SwvKeyframeSequence {
 
 /* ---- Image2D (class 10), the native object (no struct yet) -------------------------------------
  * The fields its accessors read (GUESS: the names; swvImage2D_AlphaStride, _ColourStride,
- * _AlphaPlane, _StorageFormat, _Width, _Height):
- *   +0x20             the data: the RGB565 pixels, then (at +0x3c) the alpha plane
+ * _AlphaPlane, _StorageFormat, _Width, _Height, _Palette, _Indices):
+ *   +0x20             the data: the RGB565 pixels, then (at +0x3c) the alpha plane; for a palettised
+ *                     image the palette (+0x2c) and the indices (+0x30) instead of the pixels
+ *   +0x2c             the palette's offset in the data (RGB565, at most 256 entries), -1 when none; its
+ *                     alpha is then the alpha plane, a byte an entry
+ *   +0x30             the index plane's offset in the data (a byte a pixel), -1 when none
  *   +0x34             the width (swvImage2D_Width), also the row pitch in pixels (the colour rows are
  *                     twice it in bytes, the alpha rows it)
  *   +0x38             the height (swvImage2D_Height)

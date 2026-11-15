@@ -117,7 +117,7 @@ void FUN_01009e44(int param_1,void *param_2);   /* 0x01009E44, no Ghidra functio
 void FUN_01009e4c(int param_1,void *param_2);   /* 0x01009E4C, no Ghidra function */
 int32 swvRenderer_Kind(int param_1);   /* 0x0100F4D4 GUESS: name, see swv21brew.c */
 int32 FUN_01010820(int param_1);   /* 0x01010820, no Ghidra function */
-int FUN_01011bcc(int param_1);   /* 0x01011BCC, no Ghidra function */
+uint8 *swvImage2D_Indices(const uint8 *image);   /* 0x01011BCC GUESS: name, see swv21brew.c */
 int FUN_01015348(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5);   /* 0x01015348 */
 int FUN_010157e8(int param_1,uint8 *param_2,uint32 param_3);   /* 0x010157E8, no Ghidra function */
 void FUN_010159cc(int param_1,int param_2);   /* 0x010159CC, no Ghidra function */
@@ -542,7 +542,7 @@ undefined4 FUN_0100fac0(int param_1);
 int FUN_0100fb34(int param_1,int param_2);
 int FUN_0100fdec(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 int FUN_0100fe8c(int param_1,int param_2);
-int FUN_0100ffe4(int param_1);
+uint16 *swvImage2D_Palette(const uint8 *image);   /* 0x0100FFE4 GUESS: name, see swv21brew.c */
 int32 swvImage2D_ColourStride(const uint8 *image);   /* 0x0100FFFC GUESS: name, see swv21brew.c */
 uint FUN_01010008(int *param_1);
 void FUN_01010084(int *param_1);
@@ -588,7 +588,7 @@ undefined4 FUN_01011ab8(int param_1);
 int swvKeyframeSequence_PreviousValid(int param_1,int param_2);
 int swvKeyframeSequence_NextValid(int param_1,int param_2);
 uint8 *swvImage2D_AlphaPlane(const uint8 *image);   /* 0x01011BB4 GUESS: name, see swv21brew.c */
-int FUN_01011be4(int param_1);
+uint8 *swvImage2D_GetIndices(uint8 *image);   /* 0x01011BE4 GUESS: name, see swv21brew.c */
 undefined4 FUN_01011bfc(int param_1,int param_2,int param_3);
 void FUN_01011c20(undefined4 param_1,int param_2);
 undefined4 FUN_01011c4c(int param_1,int param_2);

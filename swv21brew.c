@@ -7407,6 +7407,11 @@ void FUN_01007d70(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
 }
 
 /* ==== 0x01007E30  (file offset 0x07E30)  FUN_01007e30 ================================================ */
+/* GUESS (not yet rewritten): builds a palettised Image2D (JSR-184 Image2D(format, width, height,
+   pixels, palette)): error -1301 for a bad palette size; the format (+0x40), width (+0x34) and height
+   (+0x38); the width * height index bytes param_6 copied to the index plane (swvImage2D_Indices,
+   +0x30); then up to 256 palette colours (param_8, param_7 bytes in all) converted by FUN_01025bc4
+   into the palette (swvImage2D_Palette, RGB565) and its alpha (swvImage2D_AlphaPlane). */
 void FUN_01007e30(int param_1,undefined4 param_2,uint param_3,uint param_4,int param_5,
                  undefined4 param_6,int param_7,int param_8)
 
@@ -7437,7 +7442,7 @@ void FUN_01007e30(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
   }
   FUN_0100350c(param_1,iVar2);
   thunk_swv_memcpy(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30),param_6,param_4 * param_3);
-  iVar3 = FUN_0100ffe4(param_1);
+  iVar3 = (int)swvImage2D_Palette((uint8 *)param_1);
   iVar4 = (int)swvImage2D_AlphaPlane((uint8 *)param_1);
   while (0 < iVar2) {
     FUN_01025bc4(param_8,param_2,iVar3,iVar4);
@@ -14644,19 +14649,23 @@ int FUN_0100fe8c(int param_1,int param_2)
   return *(int *)(param_1 + 0xd4) + param_2 * 0x4c + 4;
 }
 
-/* ==== 0x0100FFE4  (file offset 0x0FFE4)  FUN_0100ffe4 ================================================ */
-int FUN_0100ffe4(int param_1)
+/* ==== 0x0100FFE4  (file offset 0x0FFE4)  swvImage2D_Palette ========================================== */
+/* GUESS: name. A palettised Image2D's palette, RGB565 (two bytes an entry, at most 256): its data
+   (+0x20) + the palette's offset (+0x2c), or NULL when the offset is -1 (no palette). Its alpha, a
+   byte an entry, is then the alpha plane (swvImage2D_AlphaPlane, +0x3c); the pixels are indices
+   (swvImage2D_Indices, +0x30). Evidence: 0x0100ffe4 - 0x0100fff8 (`cmn r1, #1`, `ldrne` / `addne`,
+   `moveq r0, #0`); its callers FUN_01007e30 and FUN_0101dbf8 fill it one colour at a time. */
+uint16 *swvImage2D_Palette(const uint8 *image)
 
 {
-  int iVar1;
-  
-  if (*(int *)(param_1 + 0x2c) == -1) {
-    iVar1 = 0;
-  }
-  else {
-    iVar1 = *(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x2c);
-  }
-  return iVar1;
+  int32 offset = *(const int32 *)(image + 0x2c);
+  uint16 *palette;
+
+  if (offset != -1)
+    palette = (uint16 *)(*(uint8 *const *)(image + 0x20) + offset);
+  else
+    palette = NULL;
+  return palette;
 }
 
 /* ==== 0x0100FFFC  (file offset 0x0FFFC)  swvImage2D_ColourStride ===================================== */
@@ -16540,32 +16549,34 @@ uint8 *swvImage2D_AlphaPlane(const uint8 *image)
   return plane;
 }
 
-/* ==== 0x01011BCC  (file offset 0x11BCC)  FUN_01011bcc ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100203C +0x48;
-   written from its disassembly (0x01011bcc - 0x01011be0). Returns the address of the object's current
-   item, +0x20 + +0x30, or 0 when +0x30 is -1. */
-int FUN_01011bcc(int param_1)
+/* ==== 0x01011BCC  (file offset 0x11BCC)  swvImage2D_Indices ========================================== */
+/* GUESS: name. A palettised Image2D's pixels, a byte each (the palette index): its data (+0x20) + the
+   index plane's offset (+0x30), or NULL when the offset is -1. Evidence: 0x01011bcc - 0x01011be0
+   (`ldr r1, [r0, #0x30]`, `cmn r1, #1`, `ldrne` / `addne`, `moveq r0, #0`); its function was created by
+   ghidra_scripts/SwvImage2DIndices.java (auto-analysis had folded it into swvImage2D_GetIndices, which
+   tail-jumps here). FUN_01007e30 copies the indices there. */
+uint8 *swvImage2D_Indices(const uint8 *image)
 
 {
-  if (*(int *)(param_1 + 0x30) == -1)
-    return 0;
-  return *(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30);
+  int32 offset = *(const int32 *)(image + 0x30);
+  uint8 *indices;
+
+  if (offset != -1)
+    indices = *(uint8 *const *)(image + 0x20) + offset;
+  else
+    indices = NULL;
+  return indices;
 }
 
-/* ==== 0x01011BE4  (file offset 0x11BE4)  FUN_01011be4 ================================================ */
-int FUN_01011be4(int param_1)
+/* ==== 0x01011BE4  (file offset 0x11BE4)  swvImage2D_GetIndices ======================================= */
+/* GUESS: name (GUESS: a slot of the Image2D's vtable; nothing calls it directly). FUN_01018460 on the
+   image first (Ghidra had dropped the argument: r0 is the image, kept in r4), then swvImage2D_Indices
+   (a tail jump in the binary: 0x01011bf8). Evidence: 0x01011be4 - 0x01011bf8. */
+uint8 *swvImage2D_GetIndices(uint8 *image)
 
 {
-  int iVar1;
-  
-  FUN_01018460();
-  if (*(int *)(param_1 + 0x30) == -1) {
-    iVar1 = 0;
-  }
-  else {
-    iVar1 = *(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30);
-  }
-  return iVar1;
+  FUN_01018460((int)image);
+  return swvImage2D_Indices(image);
 }
 
 /* ==== 0x01011BFC  (file offset 0x11BFC)  FUN_01011bfc ================================================ */
@@ -26425,6 +26436,10 @@ uint FUN_0101dbcc(undefined4 param_1,int param_2)
 }
 
 /* ==== 0x0101DBF8  (file offset 0x1DBF8)  FUN_0101dbf8 ================================================ */
+/* GUESS (not yet rewritten): reads an M3G Image2D's pixels into the native Image2D param_1: for a
+   palettised one, its palette (up to 256 colours, error -1202 for a bad size), each colour written to
+   the palette (swvImage2D_Palette) and its alpha to the alpha plane, then the indices; otherwise the
+   pixels themselves. */
 /* WARNING: Removing unreachable block (ram,0x0100358c) */
 /* WARNING: Removing unreachable block (ram,0x01003590) */
 /* WARNING: Removing unreachable block (ram,0x0100354c) */
@@ -26541,7 +26556,7 @@ void FUN_0101dbf8(int param_1,undefined4 param_2,undefined4 param_3,undefined2 *
       iVar7 = 0x100;
     }
     FUN_0100350c(param_1,iVar7);
-    puStack_28 = (undefined2 *)FUN_0100ffe4(param_1);
+    puStack_28 = (undefined2 *)swvImage2D_Palette((uint8 *)param_1);
     puVar8 = (undefined1 *)swvImage2D_AlphaPlane((uint8 *)param_1);
     do {
       FUN_01019920(param_2,uVar2,&uStack_2c,&uStack_30);
