@@ -3011,8 +3011,9 @@ void FUN_01002a58(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
   if (param_2 == 0) {
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
-  /* engine virtual call, slot +0x20: one of FUN_01003408, FUN_0100f71c, FUN_01012324, FUN_0101d01c,
-     FUN_010230f8 (by the object's class) */
+  /* engine virtual call, slot +0x20: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101d01c and 0x01002410's FUN_01003408 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   iVar1 = (*(code *)(*(int *)(*param_1 + 0x20) + *param_1))(param_1,*(undefined4 *)(param_2 + 0x24))
   ;
   if (iVar1 == 0) {
@@ -3057,8 +3058,8 @@ LAB_01002bd0:
           uVar5 = FUN_0102df78(*(int *)(iVar3 + 0x18) + 1);
           iVar9 = *(int *)(iVar3 + 0x10);
           pcVar8 = (code *)(*(int *)(iVar9 + 4) + iVar9);
-          /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by
-             the object's class) */
+          /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there
+             (by the object's class) */
           (*pcVar8)((int *)(iVar3 + 0x10),uVar5,*(undefined4 *)(iVar3 + 0x18),pcVar8,iVar1,iVar6);
         }
         iVar6 = *(int *)(iVar3 + 0x18);
@@ -3125,8 +3126,8 @@ int FUN_01002c70(int param_1,int param_2)
       if (*(int *)(param_1 + 0xb8) == *(int *)(param_1 + 0xbc)) {
         uVar1 = FUN_0102df78(*(int *)(param_1 + 0xb8) + 1);
         iVar2 = *(int *)(param_1 + 0xb0);
-        /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-           object's class) */
+        /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+           the object's class) */
         (*(code *)(*(int *)(iVar2 + 4) + iVar2))
                   ((int *)(param_1 + 0xb0),uVar1,*(undefined4 *)(param_1 + 0xb8));
       }
@@ -3155,7 +3156,7 @@ void FUN_01002d60(int param_1,int param_2)
   if (param_2 == 0) {
     FUN_0102f7e0(INTEGER_MINUS_1302);
   }
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   if ((((param_2 == param_1) ||
        (iVar1 = (*(code *)(*(int *)(*(int *)(param_2 + 4) + 4) + *(int *)(param_2 + 4)))
@@ -3179,15 +3180,15 @@ void FUN_01002d60(int param_1,int param_2)
       iVar1 = param_2;
       param_2 = *(int *)(iVar1 + 0x30);
     } while (*(int *)(iVar1 + 0x30) != 0);
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     iVar3 = (*(code *)(*(int *)(*(int *)(iVar1 + 4) + 4) + *(int *)(iVar1 + 4)))(iVar1 + 4);
     if (iVar3 == 0x16) {
       if (*(int *)(iVar1 + 0x98) != 0) {
         if (*(int *)(iVar1 + 0x9c) < 0) {
           iVar3 = *(int *)(iVar1 + 0x90);
-          /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by
-             the object's class) */
+          /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there
+             (by the object's class) */
           (*(code *)(*(int *)(iVar3 + 4) + iVar3))((int *)(iVar1 + 0x90),0);
         }
         *(undefined4 *)(iVar1 + 0x98) = 0;
@@ -3223,7 +3224,7 @@ undefined4 FUN_01002dfc(undefined1 *param_1,int param_2,int param_3)
   if (*(int *)(param_1 + 0xfc) == *(int *)(param_1 + 0x100)) {
     uVar1 = FUN_0102df78(*(int *)(param_1 + 0xfc) + 1);
     iVar2 = *(int *)(param_1 + 0xf4);
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(iVar2 + 4) + iVar2))(param_1 + 0xf4,uVar1,*(undefined4 *)(param_1 + 0xfc));
   }
@@ -3242,7 +3243,7 @@ undefined4 FUN_01002dfc(undefined1 *param_1,int param_2,int param_3)
   if (*(int *)(param_1 + 0x10c) == *(int *)(param_1 + 0x110)) {
     uVar1 = FUN_0102df78(*(int *)(param_1 + 0x10c) + 1);
     iVar2 = *(int *)(param_1 + 0x104);
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(iVar2 + 4) + iVar2))(param_1 + 0x104,uVar1,*(undefined4 *)(param_1 + 0x10c))
     ;
@@ -3385,8 +3386,8 @@ void FUN_010031a0(int param_1,int param_2)
       uVar1 = FUN_0102df78(*(int *)(param_1 + 0x10) + 1);
       iVar2 = *(int *)(param_1 + 8);
       pcVar4 = (code *)(*(int *)(iVar2 + 4) + iVar2);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*pcVar4)((int *)(param_1 + 8),uVar1,*(undefined4 *)(param_1 + 0x10),pcVar4,iVar3);
     }
     iVar3 = *(int *)(param_1 + 0x10);
@@ -3449,7 +3450,7 @@ LAB_010032b0:
   if (*(int *)(param_1 + 200) == *(int *)(param_1 + 0xcc)) {
     uVar3 = FUN_0102df78(*(int *)(param_1 + 200) + 1);
     iVar5 = *(int *)(param_1 + 0xc0);
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(iVar5 + 4) + iVar5))
               ((int *)(param_1 + 0xc0),uVar3,*(undefined4 *)(param_1 + 200));
@@ -4147,8 +4148,8 @@ undefined4 FUN_01003c38(int *param_1,undefined4 param_2,int param_3)
             bVar1 = true;
             if (local_44 == 0x103) {
               if (iVar4 == 2) {
-                /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there
-                   (by the object's class) */
+                /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put
+                   there (by the object's class) */
                 iVar4 = (*(code *)(*(int *)(*local_34 + 4) + *local_34))(local_34);
                 uVar11 = iVar4 == 0x12;
                 if ((bool)uVar11) {
@@ -4212,15 +4213,18 @@ undefined4 FUN_01003c38(int *param_1,undefined4 param_2,int param_3)
           iVar2 = iVar2 + 1;
         }
         if (bVar1) {
-          /* engine virtual call, slot +0x1c: one of FUN_0100486c, FUN_01011968, FUN_01021d50,
-             FUN_010224fc, FUN_01026168 (by the object's class) */
+          /* engine virtual call, slot +0x1c: of the static engine vtables only the renderer's (0x01002398)
+             FUN_01021d50 and 0x01002410's FUN_0100486c have it; a scene object's vtable is not among them
+             (GUESS: not static), so for one the method is not known here */
           (*(code *)(*(int *)(*param_1 + 0x1c) + *param_1))(param_1,local_44,iVar4,local_5c);
         }
       }
     }
                     /* WARNING: Could not recover jumptable at 0x01004000. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-    /* engine virtual call, slot +0x14: one of FUN_01005104, FUN_01010820 (by the object's class) */
+    /* engine virtual call, slot +0x14: of the static engine vtables only the renderer's (0x01002398)
+       FUN_01005104 and 0x01002410's FUN_01010820 and 0x010027d8's 0x01022908 have it; a scene object's
+       vtable is not among them (GUESS: not static), so for one the method is not known here */
     uVar5 = (*(code *)(*(int *)(*param_1 + 0x14) + *param_1))(param_1,param_2,local_38,local_28);
     return uVar5;
   }
@@ -4238,7 +4242,7 @@ void FUN_0100400c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
   if (param_1[2] == param_1[3]) {
     uVar1 = FUN_0102df78(param_1[2] + 1);
     pcVar3 = (code *)(*(int *)(*param_1 + 4) + *param_1);
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     (*pcVar3)(param_1,uVar1,param_1[2],pcVar3,param_4);
   }
@@ -4259,7 +4263,7 @@ void FUN_0100406c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
   if (param_1[2] == param_1[3]) {
     uVar1 = FUN_0102df78(param_1[2] + 1);
     pcVar3 = (code *)(*(int *)(*param_1 + 4) + *param_1);
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     (*pcVar3)(param_1,uVar1,param_1[2],pcVar3,param_4);
   }
@@ -4280,7 +4284,7 @@ void FUN_010040cc(int *param_1,undefined1 *param_2,undefined4 param_3,undefined4
   if (param_1[2] == param_1[3]) {
     uVar1 = FUN_0102df78(param_1[2] + 1);
     pcVar3 = (code *)(*(int *)(*param_1 + 4) + *param_1);
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     (*pcVar3)(param_1,uVar1,param_1[2],pcVar3,param_4);
   }
@@ -4301,7 +4305,7 @@ void FUN_0100412c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
   if (param_1[2] == param_1[3]) {
     uVar1 = FUN_0102df78(param_1[2] + 1);
     pcVar3 = (code *)(*(int *)(*param_1 + 4) + *param_1);
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     (*pcVar3)(param_1,uVar1,param_1[2],pcVar3,param_4);
   }
@@ -4324,7 +4328,7 @@ undefined4 * swvSkin_AppendBoneSet(int *param_1,undefined4 *param_2)
   
   if (param_1[2] == param_1[3]) {
     uVar1 = FUN_0102df78(param_1[2] + 1);
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*param_1 + 4) + *param_1))(param_1,uVar1,param_1[2]);
   }
@@ -4738,7 +4742,7 @@ int FUN_010048e4(int param_1,int param_2,undefined4 param_3)
     if (param_1 == param_2) {
       return param_1;
     }
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     iVar1 = (*(code *)(*(int *)(*(int *)(param_2 + 4) + 4) + *(int *)(param_2 + 4)))(param_2 + 4);
     if (iVar1 != 0x16) {
@@ -4799,10 +4803,13 @@ void FUN_01004a68(int param_1,int *param_2,int *param_3,int *param_4,int *param_
   
   iVar6 = param_1;
   piVar9 = param_4;
-  /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+  /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+     method is not known here */
   iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x98) + 0x28) + **(int **)(param_1 + 0x98)))();
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   iVar2 = (*(code *)(*(int *)(**(int **)(param_1 + 0x98) + 0x24) + **(int **)(param_1 + 0x98)))();
   iVar3 = *(int *)(param_1 + 0x8c);
   iVar7 = *(int *)(param_1 + 0x90);
@@ -5161,8 +5168,8 @@ void FUN_010050ac(int param_1)
   while (*(int *)(param_1 + 0xc) != 0) {
     piVar1 = *(int **)(*(int *)(param_1 + 8) + (*(int *)(param_1 + 0xc) + -1) * 4);
     if (piVar1 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
     }
     FUN_01023184(param_1 + 4,*(int *)(param_1 + 0xc) + -1);
@@ -5307,7 +5314,9 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
   else {
     iStack_70 = *(int *)(param_2 + 0x40);
     iStack_8c = *(int *)(param_2 + 0x3c);
-    /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
+    /* engine virtual call, slot +0x2c: of the static engine vtables only the renderer's (0x01002398)
+       swvRenderer_Kind has it; a scene object's vtable is not among them (GUESS: not static), so for one
+       the method is not known here */
     if ((((iStack_28 == 0) || (*(int *)(param_1 + 0x104) != 0)) ||
         (*(int **)(param_2 + 0x20) == (int *)0x0)) ||
        (iVar9 = **(int **)(param_2 + 0x20), iVar9 = (*(code *)(*(int *)(iVar9 + 0x2c) + iVar9))(),
@@ -5328,9 +5337,12 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
     iStack_9c = *(int *)(*(int *)(param_1 + 4) + 0x3c);
     piVar7 = *(int **)(param_2 + 0x20);
     if (piVar7 != (int *)0x0) {
-      /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
-      /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
-         (by the object's class) */
+      /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+         FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+         method is not known here */
+      /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+         FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
+         (GUESS: not static), so for one the method is not known here */
       if ((((piVar7[0xb] == -1) || (piVar7[8] + piVar7[0xb] == 0)) &&
           ((iVar12 = (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7), iVar12 == iVar11 &&
            ((iVar12 = (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7), iVar12 == iStack_9c
@@ -5339,12 +5351,15 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
          (iVar12 = FUN_01038644(*(undefined4 *)(param_2 + 0x30),0x80000000,0x7fffffff), iVar12 == 0)
          ) {
         iVar12 = FUN_01038644(*(undefined4 *)(param_2 + 0x34),0,0x7fffffff);
-        /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
-           FUN_0102da68 (by the object's class) */
+        /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+           FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
+           (GUESS: not static), so for one the method is not known here */
         iVar9 = (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7);
         if (iVar12 == iVar9) {
           iVar9 = FUN_01038644(*(undefined4 *)(param_2 + 0x38),0,0x7fffffff);
-          /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+          /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+             FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one
+             the method is not known here */
           iVar12 = (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7);
           bVar13 = iVar9 == iVar12;
           if (bVar13) {
@@ -5365,8 +5380,9 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
             }
             if (bVar14 && iVar8 == iStack_9c * 2) {
               if (iStack_8c != 0) {
-                /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's
-                   class) */
+                /* engine virtual call, slot +0x30: of the static engine vtables only the renderer's
+                   (0x01002398) FUN_0101a89c has it; a scene object's vtable is not among them (GUESS: not
+                   static), so for one the method is not known here */
                 uVar2 = (*(code *)(*(int *)(*piVar7 + 0x30) + *piVar7))(piVar7);
                 thunk_swv_memcpy(iStack_6c,uVar2,iVar11 * iVar8);
               }
@@ -5391,11 +5407,14 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
       uStack_a8 = *(uint *)(param_2 + 0x30);
       uStack_ac = *(undefined4 *)(param_2 + 0x34);
       uStack_b0 = *(undefined4 *)(param_2 + 0x38);
-      /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
-         (by the object's class) */
+      /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+         FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
+         (GUESS: not static), so for one the method is not known here */
       /* Ghidra had dropped it */
       uStack_b4 = swv_fflt((*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7));
-      /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+      /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+         FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+         method is not known here */
       /* Ghidra had dropped it */
       uStack_b8 = swv_fflt((*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7));
       iVar11 = iStack_74;
@@ -5519,27 +5538,36 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
         }
       }
       for (; iStack_c4 < 0; iStack_c4 = iStack_c4 + iVar9 * 0x10000) {
-        /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
-           FUN_0102da68 (by the object's class) */
+        /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+           FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
+           (GUESS: not static), so for one the method is not known here */
         iVar9 = (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7);
       }
-      /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
-         (by the object's class) */
+      /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+         FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
+         (GUESS: not static), so for one the method is not known here */
       while (iVar9 = (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7),
             iVar9 * 0x10000 <= iStack_c4) {
-        /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
-           FUN_0102da68 (by the object's class) */
+        /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+           FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
+           (GUESS: not static), so for one the method is not known here */
         iVar9 = (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7);
         iStack_c4 = iStack_c4 + iVar9 * -0x10000;
       }
       for (; iStack_c8 < 0; iStack_c8 = iStack_c8 + iVar9 * 0x10000) {
-        /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+        /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+           FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one
+           the method is not known here */
         iVar9 = (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7);
       }
-      /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+      /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+         FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+         method is not known here */
       while (iVar9 = (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7),
             iVar9 * 0x10000 <= iStack_c8) {
-        /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+        /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+           FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one
+           the method is not known here */
         iVar9 = (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7);
         iStack_c8 = iStack_c8 + iVar9 * -0x10000;
       }
@@ -5596,10 +5624,13 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
           }
           FUN_0101d37c(iStack_cc,iStack_28);
           *(undefined4 *)(param_1 + 0x9bc) = *(undefined4 *)(iStack_cc + 0x4c);
-          /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+          /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+             FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one
+             the method is not known here */
           uVar2 = (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7);
-          /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
-             FUN_0102da68 (by the object's class) */
+          /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+             FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
+             (GUESS: not static), so for one the method is not known here */
           uStack_d8 = (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7);
           iStack_dc = iStack_9c;
           uStack_d4 = uVar2;
@@ -5685,7 +5716,7 @@ void FUN_01005f0c(int param_1)
   iVar1 = **(int **)(param_1 + 0xa8);
                     /* WARNING: Could not recover jumptable at 0x01005f20. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   (*(code *)(*(int *)(iVar1 + 4) + iVar1))();
   return;
@@ -5744,7 +5775,9 @@ void FUN_01005f88(int param_1,int param_2)
   if (iVar1 == 0) {
     swv_TryArm(auStack_98);
     iVar1 = **(int **)(param_1 + 0xa8);
-    /* engine virtual call, slot +0x14: one of FUN_01005104, FUN_01010820 (by the object's class) */
+    /* engine virtual call, slot +0x14: of the static engine vtables only the renderer's (0x01002398)
+       FUN_01005104 and 0x01002410's FUN_01010820 and 0x010027d8's 0x01022908 have it; a scene object's
+       vtable is not among them (GUESS: not static), so for one the method is not known here */
     (*(code *)(*(int *)(iVar1 + 0x14) + iVar1))(*(int **)(param_1 + 0xa8),param_2,0);
     swv_TryPop();
   }
@@ -5947,7 +5980,7 @@ int FUN_01006438(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   *(undefined4 *)(param_1 + 0x38) = *(undefined4 *)(param_2 + 0x38);
   FUN_01023184(piVar1,*(undefined4 *)(param_2 + 0x24));
   if (0 < *(int *)(param_2 + 0x24)) {
-    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*piVar1 + 8) + *piVar1))
               (piVar1,*(undefined4 *)(param_2 + 0x20),*(undefined4 *)(param_1 + 0x20),
@@ -5969,7 +6002,7 @@ int FUN_010064c4(int param_1,int param_2)
   *(undefined4 *)(param_1 + 4) = *(undefined4 *)(param_2 + 4);
   FUN_01023184(piVar1,*(undefined4 *)(param_2 + 0x10));
   if (0 < *(int *)(param_2 + 0x10)) {
-    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*piVar1 + 8) + *piVar1))
               (piVar1,*(undefined4 *)(param_2 + 0xc),*(undefined4 *)(param_1 + 0xc));
@@ -6159,7 +6192,7 @@ int FUN_01006810(int param_1,int param_2)
   uVar1 = 0;
   if (*(int **)(param_2 + 0x38) != (int *)0x0) {
     iVar2 = **(int **)(param_2 + 0x38);
-    /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x10: one of the 35 functions the static engine vtables put there (by the
        object's class) */
     uVar1 = (*(code *)(*(int *)(iVar2 + 0x10) + iVar2))();
     FUN_010261f0();
@@ -6205,7 +6238,7 @@ int FUN_01006918(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   piVar3 = (int *)(param_1 + 0xc4);
   FUN_01023184(piVar3,*(undefined4 *)(param_2 + 0xcc));
   if (0 < *(int *)(param_2 + 0xcc)) {
-    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*piVar3 + 8) + *piVar3))
               (piVar3,*(undefined4 *)(param_2 + 200),*(undefined4 *)(param_1 + 200),
@@ -6223,7 +6256,7 @@ int FUN_01006918(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   piVar3 = (int *)(param_1 + 0xd4);
   FUN_01023184(piVar3,*(undefined4 *)(param_2 + 0xdc));
   if (0 < *(int *)(param_2 + 0xdc)) {
-    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*piVar3 + 8) + *piVar3))
               (piVar3,*(undefined4 *)(param_2 + 0xd8),*(undefined4 *)(param_1 + 0xd8));
@@ -6380,7 +6413,7 @@ int FUN_01006c1c(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   piVar4 = (int *)(param_1 + 0x8c);
   FUN_01023184(piVar4,*(undefined4 *)(param_2 + 0x94));
   if (0 < *(int *)(param_2 + 0x94)) {
-    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*piVar4 + 8) + *piVar4))
               (piVar4,*(undefined4 *)(param_2 + 0x90),*(undefined4 *)(param_1 + 0x90),
@@ -6405,7 +6438,7 @@ int FUN_01006c1c(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   piVar4 = (int *)(param_1 + 0x9c);
   FUN_01023184(piVar4,*(undefined4 *)(param_2 + 0xa4));
   if (0 < *(int *)(param_2 + 0xa4)) {
-    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*piVar4 + 8) + *piVar4))(piVar4,*(undefined4 *)(param_2 + 0xa0));
   }
@@ -6453,7 +6486,7 @@ undefined8 FUN_01006da4(int param_1,int param_2,int param_3,int param_4)
   *(undefined4 *)(param_1 + 0x34) = 0;
   piVar4 = *(int **)(param_2 + 0x38);
   if (piVar4 != (int *)0x0) {
-    /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x10: one of the 35 functions the static engine vtables put there (by the
        object's class) */
     iVar1 = (*(code *)(*(int *)(*piVar4 + 0x10) + *piVar4))(piVar4);
     local_18 = iVar1;
@@ -6465,8 +6498,8 @@ undefined8 FUN_01006da4(int param_1,int param_2,int param_3,int param_4)
     piVar4 = (int *)piVar4[0xd];
     iVar1 = local_18;
     while (piVar4 != (int *)0x0) {
-      /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x10: one of the 35 functions the static engine vtables put there (by
+         the object's class) */
       iVar5 = (*(code *)(*(int *)(*piVar4 + 0x10) + *piVar4))(piVar4);
       local_1c = iVar5;
       if (iVar5 != 0) {
@@ -6631,7 +6664,7 @@ int FUN_010070c4(int param_1)
   piVar3 = (int *)(iVar1 + 0x48);
   FUN_01023184(piVar3,*(undefined4 *)(param_1 + 0x50));
   if (0 < *(int *)(param_1 + 0x50)) {
-    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*piVar3 + 8) + *piVar3))
               (piVar3,*(undefined4 *)(param_1 + 0x4c),*(undefined4 *)(iVar1 + 0x4c));
@@ -6858,7 +6891,7 @@ int FUN_0100748c(int param_1)
   *(undefined4 *)(iVar1 + 0x24) = *(undefined4 *)(param_1 + 0x24);
   FUN_01023184(piVar3,*(undefined4 *)(param_1 + 0x30));
   if (0 < *(int *)(param_1 + 0x30)) {
-    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*piVar3 + 8) + *piVar3))
               (piVar3,*(undefined4 *)(param_1 + 0x2c),*(undefined4 *)(iVar1 + 0x2c));
@@ -7031,7 +7064,7 @@ int FUN_01007780(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   *(undefined4 *)(iVar1 + 0x38) = *(undefined4 *)(param_1 + 0x38);
   FUN_01023184(piVar4,*(undefined4 *)(param_1 + 0x44));
   if (0 < *(int *)(param_1 + 0x44)) {
-    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*piVar4 + 8) + *piVar4))
               (piVar4,*(undefined4 *)(param_1 + 0x40),*(undefined4 *)(iVar1 + 0x40));
@@ -7526,16 +7559,20 @@ void thunk_FUN_01021abc(int param_1,int param_2)
     piVar2 = piVar2 + -1;
   }
   *(int **)(param_1 + 0x2c) = piVar2;
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))();
   iVar1 = FUN_01013af8();
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   if ((iVar1 != 0) &&
      (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x24) + **(int **)(param_1 + 0x2c)))
                         (), iVar1 < 0x401)) {
-    /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+    /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+       FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+       method is not known here */
     (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) + **(int **)(param_1 + 0x2c)))();
     iVar1 = FUN_01013af8();
     if ((iVar1 != 0) &&
@@ -7689,7 +7726,9 @@ void FUN_010080e4(int param_1)
   if (in_stack_00000000 == (int *)0x0) {
     FUN_0102f7e0(INTEGER_MINUS_1302);
   }
-  /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
+  /* engine virtual call, slot +0x2c: of the static engine vtables only the renderer's (0x01002398)
+     swvRenderer_Kind has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+     method is not known here */
   iVar2 = (*(code *)(*(int *)(*in_stack_00000000 + 0x2c) + *in_stack_00000000))(in_stack_00000000);
   uVar1 = INTEGER_MINUS_1301;
   if (iVar2 != 9) {
@@ -7719,7 +7758,9 @@ void FUN_01008104(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   if (param_7 == (int *)0x0) {
     FUN_0102f7e0(INTEGER_MINUS_1302);
   }
-  /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
+  /* engine virtual call, slot +0x2c: of the static engine vtables only the renderer's (0x01002398)
+     swvRenderer_Kind has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+     method is not known here */
   iVar2 = (*(code *)(*(int *)(*param_7 + 0x2c) + *param_7))(param_7);
   uVar1 = INTEGER_MINUS_1301;
   if (iVar2 != 9) {
@@ -8103,8 +8144,8 @@ void FUN_01008744(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
     if (*(int *)(param_1 + 0x14) < 0) {
       iVar1 = *(int *)(param_1 + 8);
       pcVar2 = (code *)(*(int *)(iVar1 + 4) + iVar1);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*pcVar2)((int *)(param_1 + 8),0,*(int *)(param_1 + 0x10),pcVar2,param_4);
     }
     *(undefined4 *)(param_1 + 0x10) = 0;
@@ -9177,7 +9218,7 @@ int FUN_01009638(int param_1,int param_2)
     if (iVar3 == param_2) {
       return iVar3;
     }
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     iVar6 = (*(code *)(*(int *)(*(int *)(param_2 + 4) + 4) + *(int *)(param_2 + 4)))(param_2 + 4);
     if (iVar6 != 0x16) {
@@ -9514,8 +9555,9 @@ int swvSectionStored_Feed(int param_1,int param_2,int param_3)
   int iVar1;
 
   iVar1 = *(int *)(param_1 + 4);
-  /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec (by
-     the object's class) */
+  /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
+     FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
+     vtable is not among them (GUESS: not static), so for one the method is not known here */
   return (*(code *)(*(int *)(*(int *)iVar1 + 0x18) + *(int *)iVar1))(iVar1,param_2,param_3);
 }
 
@@ -9570,7 +9612,7 @@ void FUN_01009c48(void)
   if (piVar2 == (int *)0x0) {
     return;
   }
-  /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
      object's class); slot 0 is the destructor */
   (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
   *(undefined4 *)(iVar1 + 0x10) = 0;
@@ -9654,8 +9696,8 @@ void FUN_01009cb0(void)
   if (piVar1 != (int *)0x0) {
     piVar2 = (int *)*piVar1;
     if (piVar2 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *piVar1 = 0;
@@ -13571,8 +13613,9 @@ int * FUN_0100eef0(int *param_1,int param_2)
   }
   piVar3 = (int *)0x0;
   iVar4 = 1;
-  /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec (by
-     the object's class) */
+  /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
+     FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
+     vtable is not among them (GUESS: not static), so for one the method is not known here */
   iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,0);
   do {
     if (iVar1 == -1) {
@@ -13580,8 +13623,9 @@ int * FUN_0100eef0(int *param_1,int param_2)
     }
     if (iVar1 == -2) {
       iVar5 = iVar4 + 1;
-      /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec
-         (by the object's class) */
+      /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
+         FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
+         vtable is not among them (GUESS: not static), so for one the method is not known here */
       iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,iVar4);
       iVar6 = *(int *)(iVar1 + 8);
       for (iVar4 = 0; (piVar3 == (int *)0x0 && (iVar4 < iVar6)); iVar4 = iVar4 + 1) {
@@ -13598,8 +13642,9 @@ int * FUN_0100eef0(int *param_1,int param_2)
       }
     }
     iVar4 = iVar5 + 1;
-    /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec
-       (by the object's class) */
+    /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
+       FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
+       vtable is not among them (GUESS: not static), so for one the method is not known here */
     iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,iVar5);
   } while (piVar3 == (int *)0x0);
   return piVar3;
@@ -13891,11 +13936,14 @@ void FUN_0100f450(undefined4 param_1,int param_2,undefined4 param_3,undefined4 *
   return;
 }
 
-/* ==== 0x0100F4D4  (file offset 0x0F4D4)  FUN_0100f4d4 ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002398 +0x2c;
-   written from its disassembly (0x0100f4d4 - 0x0100f4d8). Returns 2 (GUESS: the class's type number).
-   param_1 (the object) is not read. */
-int32 FUN_0100f4d4(int param_1)
+/* ==== 0x0100F4D4  (file offset 0x0F4D4)  swvRenderer_Kind ============================================ */
+/* GUESS: name. The renderer's slot +0x2c (its vtable 0x01002398, set by its constructor FUN_01028d2c):
+   returns 2 (GUESS: the renderer's kind; what the 2 means is not known). Written from its disassembly
+   (0x0100f4d4 - 0x0100f4d8: `mov r0, #2` / `bx lr`, the bytes 02 00 a0 e3 1e ff 2f e1), which Ghidra
+   had left undisassembled (its function was then created by hand). param_1 (the renderer) is not
+   read. Other classes' slot +0x2c is another
+   method: the callers compare it with 5 (a camera), 9, 0x18, or take it as a pointer. */
+int32 swvRenderer_Kind(int param_1)
 
 {
   return 2;
@@ -14634,7 +14682,9 @@ void FUN_01010084(int *param_1)
 {
                     /* WARNING: Could not recover jumptable at 0x01010090. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
+  /* engine virtual call, slot +0x30: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a89c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+     method is not known here */
   (*(code *)(*(int *)(*param_1 + 0x30) + *param_1))();
   return;
 }
@@ -15154,14 +15204,16 @@ int FUN_010103d4(int *param_1,int param_2,int *param_3)
   
   iVar4 = 0;
   iVar6 = 1;
-  /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec (by
-     the object's class) */
+  /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
+     FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
+     vtable is not among them (GUESS: not static), so for one the method is not known here */
   iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,0);
   while (iVar1 != -1) {
     if (iVar1 == -2) {
       iVar7 = iVar6 + 1;
-      /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec
-         (by the object's class) */
+      /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
+         FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
+         vtable is not among them (GUESS: not static), so for one the method is not known here */
       iVar6 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,iVar6);
       iVar2 = *(int *)(iVar6 + 8);
       iVar1 = param_2 - iVar4;
@@ -15206,8 +15258,9 @@ int FUN_010103d4(int *param_1,int param_2,int *param_3)
       }
     }
     iVar6 = iVar7 + 1;
-    /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec
-       (by the object's class) */
+    /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
+       FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
+       vtable is not among them (GUESS: not static), so for one the method is not known here */
     iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,iVar7);
   }
   return iVar4;
@@ -16764,7 +16817,7 @@ int swvObj_QueryInterface(ISwerveObject *po,SwerveClassId cls,void **ppo)
     return (int)pIVar1;
   }
   *ppo = (void *)0x0;
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   uVar2 = (*(code *)(*(int *)(*(int *)po->pNative + 4) + *(int *)po->pNative))();
   switch(uVar2) {
@@ -16935,7 +16988,7 @@ uint32 swvObj_Release(ISwerveObject *po)
                     /* Shared slot 1 of every engine object interface: releases the native object
                        (swv_NativeRelease), drops the wrapper's refs (frees it at 0) and releases
                        the ISwerve object. */
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   iVar1 = (*(code *)(*(int *)(*(int *)po->pNative + 4) + *(int *)po->pNative))();
   if ((iVar1 == 0x1c) && (po[1].pvt != (ISwerveObjectVtbl *)0x0)) {
@@ -17756,8 +17809,8 @@ void FUN_01013290(int *param_1,int param_2,undefined4 *param_3)
   if (iVar1 == param_2) {
     if (iVar1 == param_1[3]) {
       uVar2 = FUN_0102df78(iVar1 + 1);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(*param_1 + 4) + *param_1))(param_1,uVar2,param_1[2]);
     }
     iVar1 = param_1[2];
@@ -17767,12 +17820,12 @@ void FUN_01013290(int *param_1,int param_2,undefined4 *param_3)
   else {
     if (iVar1 == param_1[3]) {
       uVar2 = FUN_0102df78(iVar1 + 1);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(*param_1 + 4) + *param_1))(param_1,uVar2,param_1[2]);
     }
     iVar1 = param_1[1] + param_2 * 8;
-    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*param_1 + 8) + *param_1))(param_1,iVar1,iVar1 + 8,param_1[2] - param_2);
     param_1[2] = param_1[2] + 1;
@@ -17796,8 +17849,8 @@ void FUN_01013368(int *param_1,int param_2,undefined4 *param_3)
   if (iVar1 == param_2) {
     if (iVar1 == param_1[3]) {
       uVar2 = FUN_0102df78(iVar1 + 1);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(*param_1 + 4) + *param_1))(param_1,uVar2,param_1[2]);
     }
     iVar1 = param_1[2];
@@ -17807,12 +17860,12 @@ void FUN_01013368(int *param_1,int param_2,undefined4 *param_3)
   else {
     if (iVar1 == param_1[3]) {
       uVar2 = FUN_0102df78(iVar1 + 1);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(*param_1 + 4) + *param_1))(param_1,uVar2,param_1[2]);
     }
     iVar1 = param_1[1] + param_2 * 4;
-    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*param_1 + 8) + *param_1))(param_1,iVar1,iVar1 + 4,param_1[2] - param_2);
     param_1[2] = param_1[2] + 1;
@@ -18796,7 +18849,7 @@ void FUN_01014510(int param_1,int param_2)
     iVar2 = param_1;
     param_1 = *(int *)(iVar2 + 0x30);
   } while (*(int *)(iVar2 + 0x30) != 0);
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   iVar3 = (*(code *)(*(int *)(*(int *)(iVar2 + 4) + 4) + *(int *)(iVar2 + 4)))(iVar2 + 4);
   if (iVar3 != 0x16) {
@@ -18805,8 +18858,8 @@ void FUN_01014510(int param_1,int param_2)
   if (*(int *)(iVar2 + 0x98) != 0) {
     if (*(int *)(iVar2 + 0x9c) < 0) {
       iVar3 = *(int *)(iVar2 + 0x90);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(iVar3 + 4) + iVar3))((int *)(iVar2 + 0x90),0);
     }
     *(undefined4 *)(iVar2 + 0x98) = 0;
@@ -18836,7 +18889,7 @@ void FUN_0101456c(int param_1,int param_2)
     iVar2 = param_1;
     param_1 = *(int *)(iVar2 + 0x30);
   } while (*(int *)(iVar2 + 0x30) != 0);
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   iVar3 = (*(code *)(*(int *)(*(int *)(iVar2 + 4) + 4) + *(int *)(iVar2 + 4)))(iVar2 + 4);
   if (iVar3 != 0x16) {
@@ -18845,8 +18898,8 @@ void FUN_0101456c(int param_1,int param_2)
   if (*(int *)(iVar2 + 0x98) != 0) {
     if (*(int *)(iVar2 + 0x9c) < 0) {
       iVar3 = *(int *)(iVar2 + 0x90);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(iVar3 + 4) + iVar3))((int *)(iVar2 + 0x90),0);
     }
     *(undefined4 *)(iVar2 + 0x98) = 0;
@@ -19627,18 +19680,19 @@ undefined4 FUN_01015220(int *param_1)
   }
   param_1[0x19] = 3;
   uVar3 = 0xffffffff;
-  /* engine virtual call, slot +0x20: one of FUN_01003408, FUN_0100f71c, FUN_01012324, FUN_0101d01c,
-     FUN_010230f8 (by the object's class) */
+  /* engine virtual call, slot +0x20: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101d01c and 0x01002410's FUN_01003408 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   iVar1 = (*(code *)(*(int *)(*param_1 + 0x20) + *param_1))(param_1);
   if (iVar1 == 0) {
     uVar3 = 0xfffffff6;
-    /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x10: one of the 35 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*param_1 + 0x10) + *param_1))(param_1,0xfffffff6);
   }
   piVar2 = (int *)param_1[4];
   if (piVar2 != (int *)0x0) {
-    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
        object's class); slot 0 is the destructor */
     (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     param_1[4] = 0;
@@ -19662,8 +19716,8 @@ undefined4 FUN_010152d8(int param_1,undefined4 param_2)
     *(undefined4 *)(param_1 + 100) = 1;
     piVar1 = *(int **)(param_1 + 0x10);
     if (piVar1 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
       *(undefined4 *)(param_1 + 0x10) = 0;
     }
@@ -19737,8 +19791,9 @@ int FUN_01015348(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5
       }
       break;
     case 2:
-      /* engine virtual call, slot +0x1c: one of FUN_0100486c, FUN_01011968, FUN_01021d50, FUN_010224fc,
-         FUN_01026168 (by the object's class) */
+      /* engine virtual call, slot +0x1c: of the static engine vtables only the renderer's (0x01002398)
+         FUN_01021d50 and 0x01002410's FUN_0100486c have it; a scene object's vtable is not among them
+         (GUESS: not static), so for one the method is not known here */
       if ((*(code *)(*(int *)(*param_1 + 0x1c) + *param_1))(param_1) == 0)
         status = -10;
       else {
@@ -19798,8 +19853,8 @@ int FUN_01015348(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5
       if (n != 0) {
         param_1[0xf] = thunk_adler32(param_1[0xf],p,n);
         piVar1 = (int *)param_1[4];
-        /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-           object's class) */
+        /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+           the object's class) */
         if ((*(code *)(*(int *)(*piVar1 + 4) + *piVar1))(piVar1,p,n) == 0) {
           status = -8;
           break;
@@ -19815,8 +19870,8 @@ int FUN_01015348(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5
         next = 0xc;
         piVar1 = (int *)param_1[4];
         if (piVar1 != (int *)0x0)
-          /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by
-             the object's class); slot 0 is the destructor */
+          /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there
+             (by the object's class); slot 0 is the destructor */
           (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
         param_1[4] = 0;
       }
@@ -19837,8 +19892,9 @@ int FUN_01015348(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5
       param_1[0xe] = param_1[0xe] | (uint)*p << 0x18;
       if (param_1[0xf] != param_1[0xe])
         status = -9;
-      /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
-         (by the object's class) */
+      /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+         FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
+         (GUESS: not static), so for one the method is not known here */
       else if ((*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1) != 0)
         done = 1;
       next = 2;
@@ -19857,7 +19913,7 @@ int FUN_01015348(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5
       break;
   }
   if (status != -1) {
-    /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x10: one of the 35 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*param_1 + 0x10) + *param_1))(param_1,status);
     return status;
@@ -19890,8 +19946,8 @@ int FUN_010157e8(int param_1,uint8 *param_2,uint32 param_3)
     switch (*(int *)(param_1 + 0x70)) {
     case 0:
       iVar1 = *(int *)(param_1 + 0x10);
-      /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by
+         the object's class) */
       *(int *)(param_1 + 0xe4) = (*(code *)(*(int *)(*(int *)iVar1 + 8) + *(int *)iVar1))(iVar1);
       *(uint *)(param_1 + 0x78) = *param_2;
       state = 1;
@@ -20174,14 +20230,17 @@ void FUN_01015ce8(undefined4 param_1,int param_2,int *param_3)
     local_30 = param_1;
     iStack_2c = param_2;
     local_28 = param_3;
-    /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
+    /* engine virtual call, slot +0x30: of the static engine vtables only the renderer's (0x01002398)
+       FUN_0101a89c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+       method is not known here */
     iVar2 = (*(code *)(*(int *)(*param_3 + 0x30) + *param_3))();
     piVar3 = local_28;
     if (iVar2 != 0x10) {
       piVar3 = (int *)0x0;
     }
     if (piVar3 == (int *)0x0) {
-      /* engine virtual call, slot +0x34: no function of the decoded engine vtables is there */
+      /* engine virtual call, slot +0x34: no static engine vtable has it (GUESS: a scene object's, its
+         vtable not static) */
       local_64 = (*(code *)(*(int *)(*local_28 + 0x34) + *local_28))();
     }
     else {
@@ -20496,7 +20555,7 @@ void FUN_010166a4(undefined4 param_1,int param_2,int param_3)
     if ((*(byte *)(param_3 + 0x3d) >> 1 & 1) == 0) {
       return;
     }
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     iVar3 = (*(code *)(*(int *)(*(int *)(param_3 + 4) + 4) + *(int *)(param_3 + 4)))(param_3 + 4);
     uVar6 = INTEGER_MINUS_1000;
@@ -20663,15 +20722,19 @@ LAB_01016740:
           piVar10 = *(int **)(param_3 + 0x98);
           iVar7 = piVar10[0x10];
           if ((iVar7 == 0x60 || iVar7 == 0x62) || iVar7 == 100) {
-            /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
-               FUN_0102da68 (by the object's class) */
+            /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's
+               (0x01002398) FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is
+               not among them (GUESS: not static), so for one the method is not known here */
             iVar7 = (*(code *)(*(int *)(*piVar10 + 0x24) + *piVar10))(piVar10);
-            /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+            /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's
+               (0x01002398) FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not
+               static), so for one the method is not known here */
             iVar8 = (*(code *)(*(int *)(*piVar10 + 0x28) + *piVar10))(piVar10);
             uVar5 = (iVar8 * iVar4 >> 0x10) * iVar7 + (iVar7 * iVar3 >> 0x10);
             if ((piVar10[0xb] != -1) && (piVar10[8] + piVar10[0xb] != 0)) {
-              /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's
-                 class) */
+              /* engine virtual call, slot +0x30: of the static engine vtables only the renderer's
+                 (0x01002398) FUN_0101a89c has it; a scene object's vtable is not among them (GUESS: not
+                 static), so for one the method is not known here */
               iVar7 = (*(code *)(*(int *)(*piVar10 + 0x30) + *piVar10))(piVar10);
               uVar5 = (uint)*(byte *)(iVar7 + uVar5);
             }
@@ -20867,8 +20930,8 @@ void FUN_01017120(undefined4 param_1,int param_2)
   if (*(int *)(param_2 + 0x10) != iVar1) {
     if (*(int *)(param_2 + 0x14) < iVar1) {
       iVar2 = *(int *)(param_2 + 8);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))((int *)(param_2 + 8),iVar1);
     }
     *(int *)(param_2 + 0x10) = iVar1;
@@ -21096,8 +21159,9 @@ void FUN_01017254(int *param_1,undefined4 param_2)
   FUN_01015128(param_1[8] + 0x18);
                     /* WARNING: Could not recover jumptable at 0x010172a4. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -21331,8 +21395,9 @@ void FUN_01017840(int *param_1,undefined4 param_2)
   FUN_01015128(param_1[8] + 0x18);
                     /* WARNING: Could not recover jumptable at 0x01017890. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -21508,8 +21573,8 @@ bool FUN_01017b00(int param_1)
       FUN_0100412c(param_1 + 0xa0,&local_9c);
       FUN_0100400c(param_1 + 0xb0,DATA_AT_01040134_OFFSET + 0x1017b88);
       iVar1 = **(int **)(param_1 + 0xe0);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(iVar1 + 4) + iVar1))(*(int **)(param_1 + 0xe0),param_1 + 0x7c);
       *(undefined4 *)(param_1 + 0x1c) = *(undefined4 *)(*(int *)(param_1 + 0xe0) + 0x10);
       swv_TryPop();
@@ -21562,8 +21627,8 @@ LAB_01017c08:
       FUN_0100412c(param_1 + 0xa0,&local_a0);
       piVar4 = (int *)FUN_01038760(&local_9c);
       FUN_0100400c(param_1 + 0xb0,DATA_AT_01040138_OFFSET_2 + 0x1017c90);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(*piVar4 + 4) + *piVar4))(piVar4,param_1 + 0x7c);
       FUN_0102bb44(&local_9c,0);
       swv_TryPop();
@@ -21603,8 +21668,8 @@ bool FUN_01017ccc(int param_1)
       FUN_0100412c(param_1 + 0xa0,&local_a0);
       piVar3 = (int *)FUN_01038760(&local_9c);
       FUN_0100400c(param_1 + 0xb0,DATA_AT_01040138_OFFSET_3 + 0x1017d70);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(*piVar3 + 4) + *piVar3))(piVar3,param_1 + 0x7c);
       local_a0 = *(int *)(param_1 + 0xa8) + -1;
       FUN_0100406c(param_1 + 0xd0,&local_a0);
@@ -21751,7 +21816,7 @@ int FUN_01018018(undefined4 param_1,int param_2)
   if (*(int *)(param_2 + 0x10) == *(int *)(param_2 + 0x14)) {
     uVar1 = FUN_0102df78(*(int *)(param_2 + 0x10) + 1);
     iVar2 = *(int *)(param_2 + 8);
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(iVar2 + 4) + iVar2))
               ((int *)(param_2 + 8),uVar1,*(undefined4 *)(param_2 + 0x10));
@@ -21790,8 +21855,8 @@ void FUN_01018094(int param_1)
     if (*(int *)(param_1 + 0xc) == *(int *)(param_1 + 0x10)) {
       uVar1 = FUN_0102df78(*(int *)(param_1 + 0xc) + 1);
       iVar2 = *(int *)(param_1 + 4);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))((int *)(param_1 + 4),uVar1);
     }
     iVar2 = *(int *)(param_1 + 0xc);
@@ -22545,8 +22610,8 @@ LAB_010190c8:
         uVar5 = FUN_0100f8e8();
         FUN_0101715c(uVar5,piVar4);
         if (piVar4 != (int *)0x0) {
-          /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by
-             the object's class); slot 0 is the destructor */
+          /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there
+             (by the object's class); slot 0 is the destructor */
           (*(code *)(*(int *)*piVar4 + *piVar4))(piVar4,1);
         }
       }
@@ -22845,7 +22910,7 @@ int FUN_010197c4(undefined4 param_1,int param_2)
   int iVar2;
   
   iVar1 = FUN_010198c8();
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   if (((iVar1 != 0) &&
       (iVar2 = (*(code *)(*(int *)(*(int *)(iVar1 + 4) + 4) + *(int *)(iVar1 + 4)))(iVar1 + 4),
@@ -22863,7 +22928,7 @@ int FUN_0101981c(undefined4 param_1,int param_2)
   int iVar2;
   
   iVar1 = FUN_010198c8();
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   if ((((iVar1 != 0) &&
        (iVar2 = (*(code *)(*(int *)(*(int *)(iVar1 + 4) + 4) + *(int *)(iVar1 + 4)))(iVar1 + 4),
@@ -22882,7 +22947,7 @@ int FUN_01019888(undefined4 param_1,int param_2)
   int iVar2;
   
   iVar1 = FUN_010198c8();
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   if ((iVar1 != 0) &&
      (iVar2 = (*(code *)(*(int *)(*(int *)(iVar1 + 4) + 4) + *(int *)(iVar1 + 4)))(iVar1 + 4),
@@ -23118,7 +23183,7 @@ void FUN_01019c10(uint param_1,int param_2,undefined4 param_3)
     uVar1 = (uint)*(byte *)(param_2 + 0x3d);
   }
   if (param_2 != 0 && (uVar1 & 1) != 0) {
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     iVar2 = (*(code *)(*(int *)(*(int *)(param_2 + 4) + 4) + *(int *)(param_2 + 4)))(param_2 + 4);
     if (iVar2 == 0xc) {
@@ -23126,8 +23191,8 @@ void FUN_01019c10(uint param_1,int param_2,undefined4 param_3)
         uVar3 = FUN_0102df78(*(int *)(param_1 + 0x98) + 1);
         iVar2 = *(int *)(param_1 + 0x90);
         pcVar4 = (code *)(*(int *)(iVar2 + 4) + iVar2);
-        /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-           object's class) */
+        /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+           the object's class) */
         (*pcVar4)((int *)(param_1 + 0x90),uVar3,*(undefined4 *)(param_1 + 0x98),pcVar4,param_3);
       }
       iVar2 = *(int *)(param_1 + 0x98);
@@ -23242,8 +23307,8 @@ void FUN_01019ebc(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
     if (*(int *)(iVar1 + 0xc) == *(int *)(iVar1 + 0x10)) {
       uVar2 = FUN_0102df78(*(int *)(iVar1 + 0xc) + 1);
       iVar3 = *(int *)(iVar1 + 4);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(iVar3 + 4) + iVar3))
                 ((int *)(iVar1 + 4),uVar2,*(undefined4 *)(iVar1 + 0xc));
     }
@@ -23295,7 +23360,7 @@ void swv_NativeRelease(int *param_1)
   }
                     /* WARNING: Could not recover jumptable at 0x01019f4c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
      object's class); slot 0 is the destructor */
   (*(code *)(*(int *)*param_1 + *param_1))(param_1,1);
   return;
@@ -23332,8 +23397,8 @@ void FUN_01019f54(undefined4 param_1)
         FUN_0101a2a4(iVar1 + 4,iVar6);
         iVar5 = extraout_r1_00;
         if (piVar7 != (int *)0x0) {
-          /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by
-             the object's class); slot 0 is the destructor */
+          /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there
+             (by the object's class); slot 0 is the destructor */
           (*(code *)(*(int *)*piVar7 + *piVar7))();
           iVar5 = extraout_r1_01;
         }
@@ -23380,7 +23445,7 @@ void FUN_0101a010(int param_1,int param_2)
   piVar1[2] = iVar4;
   if (iVar5 < iVar4) {
     iVar2 = piVar1[1] + iVar5 * 4;
-    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*piVar1 + 8) + *piVar1))(piVar1,iVar2 + 4,iVar2,iVar4 - iVar5);
   }
@@ -23395,8 +23460,8 @@ void FUN_0101a010(int param_1,int param_2)
       iVar2 = piVar1[5] + iVar6 * 4;
                     /* WARNING: Could not recover jumptable at 0x0101a0f0. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-      /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(iVar5 + 8) + iVar5))(piVar1 + 4,iVar2 + 4,iVar2,iVar4 - iVar6);
       return;
     }
@@ -23476,7 +23541,7 @@ void FUN_0101a1b0(int param_1)
   }
                     /* WARNING: Could not recover jumptable at 0x0101a218. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
      object's class); slot 0 is the destructor */
   (*(code *)(*(int *)*piVar3 + *piVar3))(piVar3,1);
   return;
@@ -23501,8 +23566,8 @@ void FUN_0101a230(int param_1)
     }
     if (iVar1 != 0) {
       piVar2 = (int *)**(int **)(param_1 + 0x14);
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*piVar2 + (int)piVar2))(*(int **)(param_1 + 0x14),1);
     }
     *(undefined4 *)(param_1 + 0x14) = 0;
@@ -23533,7 +23598,7 @@ void FUN_0101a2c0(int param_1,int param_2,undefined4 param_3)
   if (*(int *)(param_1 + 0xac) == 0) {
     FUN_0102f7e0(INTEGER_MINUS_1300);
   }
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   iVar1 = (*(code *)(*(int *)(*(int *)(param_2 + 4) + 4) + *(int *)(param_2 + 4)))(param_2 + 4);
   if (((((iVar1 != 0xe && iVar1 != 0xf) && iVar1 != 0x10) && iVar1 != 9) && iVar1 != 0x12) &&
@@ -23545,8 +23610,9 @@ void FUN_0101a2c0(int param_1,int param_2,undefined4 param_3)
     swv_TryArm(auStack_9c);
     FUN_010242a4(param_1);
     iVar1 = **(int **)(param_1 + 0xa8);
-    /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
-       (by the object's class) */
+    /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+       FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
+       (GUESS: not static), so for one the method is not known here */
     (*(code *)(*(int *)(iVar1 + 0x24) + iVar1))(*(int **)(param_1 + 0xa8),param_2,param_3);
     swv_TryPop();
   }
@@ -23558,6 +23624,9 @@ void FUN_0101a2c0(int param_1,int param_2,undefined4 param_3)
 }
 
 /* ==== 0x0101A380  (file offset 0x1A380)  FUN_0101a380 ================================================ */
+/* GUESS (not yet rewritten): the renderer's slot +0x24, rendering one node (param_2) with the
+   transform param_3 (or none): the camera's matrices (+0x24, +0x68) multiplied by it for the time of
+   the draw (FUN_0101a830, FUN_0101bb58), then restored. */
 void FUN_0101a380(int param_1,int param_2,int param_3)
 
 {
@@ -23609,8 +23678,9 @@ void FUN_0101a478(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
     swv_TryArm(auStack_a8);
     FUN_010242a4(param_1);
     iVar1 = **(int **)(param_1 + 0xa8);
-    /* engine virtual call, slot +0x20: one of FUN_01003408, FUN_0100f71c, FUN_01012324, FUN_0101d01c,
-       FUN_010230f8 (by the object's class) */
+    /* engine virtual call, slot +0x20: of the static engine vtables only the renderer's (0x01002398)
+       FUN_0101d01c and 0x01002410's FUN_01003408 have it; a scene object's vtable is not among them
+       (GUESS: not static), so for one the method is not known here */
     (*(code *)(*(int *)(iVar1 + 0x20) + iVar1))
               (*(int **)(param_1 + 0xa8),param_2,param_3,param_4,param_5,param_6);
     swv_TryPop();
@@ -23650,7 +23720,7 @@ void FUN_0101a514(int param_1,int *param_2)
     uVar2 = swv_fmul(*(undefined4 *)(param_1 + 0xc),iVar9);
     *(undefined4 *)(param_1 + 0xc) = uVar2;
   }
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   iVar9 = (*(code *)(*(int *)(param_2[1] + 4) + param_2[1]))(param_2 + 1);
   if (iVar9 != 0xf) {
@@ -23685,7 +23755,9 @@ LAB_0101a5c0:
       }
     }
   }
-  /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
+  /* engine virtual call, slot +0x2c: of the static engine vtables only the renderer's (0x01002398)
+     swvRenderer_Kind has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+     method is not known here */
   if (((param_2[0xb] & *(uint *)(param_1 + 0x108)) != 0) &&
      (iVar9 = (*(code *)(*(int *)(*param_2 + 0x2c) + *param_2))(param_2), iVar9 != 0)) {
     iVar9 = param_2[0x25];
@@ -23797,7 +23869,7 @@ void FUN_0101a830(int param_1,int *param_2)
     uVar2 = swv_fmul(*(undefined4 *)(param_1 + 0xc),iVar9);
     *(undefined4 *)(param_1 + 0xc) = uVar2;
   }
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   iVar9 = (*(code *)(*(int *)(param_2[1] + 4) + param_2[1]))(param_2 + 1);
   if (iVar9 != 0xf) {
@@ -23832,7 +23904,9 @@ LAB_0101a5c0:
       }
     }
   }
-  /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
+  /* engine virtual call, slot +0x2c: of the static engine vtables only the renderer's (0x01002398)
+     swvRenderer_Kind has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+     method is not known here */
   if (((param_2[0xb] & *(uint *)(param_1 + 0x108)) != 0) &&
      (iVar9 = (*(code *)(*(int *)(*param_2 + 0x2c) + *param_2))(param_2), iVar9 != 0)) {
     iVar9 = param_2[0x25];
@@ -24728,11 +24802,12 @@ int FUN_0101bb58(int *param_1)
       iVar9 = param_1[5] + iVar2 * 0x14;
       param_1[3] = *(int *)(iVar9 + 0xc);
       piVar8 = *(int **)(iVar9 + 0x10);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       iVar7 = (*(code *)(*(int *)(piVar8[1] + 4) + piVar8[1]))(piVar8 + 1);
       if ((iVar7 == 0xe || iVar7 == 0xf) || iVar7 == 0x10) {
-        /* engine virtual call, slot +0x34: no function of the decoded engine vtables is there */
+        /* engine virtual call, slot +0x34: no static engine vtable has it (GUESS: a scene object's, its
+           vtable not static) */
         iVar3 = (*(code *)(*(int *)(*piVar8 + 0x34) + *piVar8))(piVar8);
         param_1[0xdb] = iVar3;
         iVar3 = FUN_0100f734(piVar8,*(undefined4 *)(iVar9 + 8));
@@ -24762,7 +24837,9 @@ int FUN_0101bb58(int *param_1)
         param_1[0x1c8] = 0;
       }
       else if (iVar7 == 0x12) {
-        /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
+        /* engine virtual call, slot +0x30: of the static engine vtables only the renderer's (0x01002398)
+           FUN_0101a89c has it; a scene object's vtable is not among them (GUESS: not static), so for one
+           the method is not known here */
         (*(code *)(*(int *)(*param_1 + 0x30) + *param_1))(param_1,piVar8);
       }
       iVar7 = param_1[5] + iVar2 * 0x14;
@@ -25662,7 +25739,9 @@ void FUN_0101d17c(int param_1,int param_2)
     swv_TryArm(auStack_98);
     FUN_01009638(param_1,param_2);
     iVar2 = **(int **)(param_1 + 0xa8);
-    /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+    /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+       FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+       method is not known here */
     (*(code *)(*(int *)(iVar2 + 0x28) + iVar2))(*(int **)(param_1 + 0xa8),param_2);
     swv_TryPop();
   }
@@ -25674,6 +25753,11 @@ void FUN_0101d17c(int param_1,int param_2)
 }
 
 /* ==== 0x0101D21C  (file offset 0x1D21C)  FUN_0101d21c ================================================ */
+/* GUESS (not yet rewritten): the renderer's slot +0x28, rendering a World (param_2): it needs the
+   active camera (+0x88; its slot +0x2c must give 5, SWVT_CAMERA) and a target of the matching format,
+   clears through its slots +0x18 / +0x14 (the Background clear FUN_01005104), sets the lights
+   (FUN_0101a830), then draws the render list: meshes (types 14 - 16) with FUN_0101bd48, sprites (18)
+   through its slot +0x30. */
 int FUN_0101d21c(int *param_1,int param_2)
 
 {
@@ -25699,7 +25783,9 @@ int FUN_0101d21c(int *param_1,int param_2)
     return 0;
   }
   piVar7 = *(int **)(param_2 + 0x88);
-  /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
+  /* engine virtual call, slot +0x2c: of the static engine vtables only the renderer's (0x01002398)
+     swvRenderer_Kind has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+     method is not known here */
   if ((piVar7 == (int *)0x0) ||
      (iVar6 = (*(code *)(*(int *)(*piVar7 + 0x2c) + *piVar7))(piVar7), iVar6 != 5)) {
     FUN_0102f7e0(uVar8);
@@ -25732,17 +25818,21 @@ int FUN_0101d21c(int *param_1,int param_2)
       return iVar6;
     }
     param_1[0x270] = param_2;
-    /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec
-       (by the object's class) */
+    /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
+       FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
+       vtable is not among them (GUESS: not static), so for one the method is not known here */
     (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,piVar7,0);
-    /* engine virtual call, slot +0x14: one of FUN_01005104, FUN_01010820 (by the object's class) */
+    /* engine virtual call, slot +0x14: of the static engine vtables only the renderer's (0x01002398)
+       FUN_01005104 and 0x01002410's FUN_01010820 and 0x010027d8's 0x01022908 have it; a scene object's
+       vtable is not among them (GUESS: not static), so for one the method is not known here */
     (*(code *)(*(int *)(*param_1 + 0x14) + *param_1))
               (param_1,*(undefined4 *)(param_2 + 0x8c),piVar7);
     iVar6 = FUN_01011a84(param_2);
     uVar8 = *(undefined4 *)(iVar6 + 4);
     iVar6 = FUN_01011a84(param_2);
-    /* engine virtual call, slot +0x1c: one of FUN_0100486c, FUN_01011968, FUN_01021d50, FUN_010224fc,
-       FUN_01026168 (by the object's class) */
+    /* engine virtual call, slot +0x1c: of the static engine vtables only the renderer's (0x01002398)
+       FUN_01021d50 and 0x01002410's FUN_0100486c have it; a scene object's vtable is not among them
+       (GUESS: not static), so for one the method is not known here */
     (*(code *)(*(int *)(*param_1 + 0x1c) + *param_1))(param_1,*(undefined4 *)(iVar6 + 8),uVar8,0);
     FUN_0101a830(param_1,param_2);
     FUN_01006020(param_1 + 0x102);
@@ -25763,11 +25853,12 @@ int FUN_0101d21c(int *param_1,int param_2)
         iVar10 = param_1[5] + iVar6 * 0x14;
         param_1[3] = *(int *)(iVar10 + 0xc);
         piVar9 = *(int **)(iVar10 + 0x10);
-        /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-           object's class) */
+        /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+           the object's class) */
         iVar5 = (*(code *)(*(int *)(piVar9[1] + 4) + piVar9[1]))(piVar9 + 1);
         if ((iVar5 == 0xe || iVar5 == 0xf) || iVar5 == 0x10) {
-          /* engine virtual call, slot +0x34: no function of the decoded engine vtables is there */
+          /* engine virtual call, slot +0x34: no static engine vtable has it (GUESS: a scene object's, its
+             vtable not static) */
           iVar1 = (*(code *)(*(int *)(*piVar9 + 0x34) + *piVar9))(piVar9);
           param_1[0xdb] = iVar1;
           iVar1 = FUN_0100f734(piVar9,*(undefined4 *)(iVar10 + 8));
@@ -25797,7 +25888,9 @@ int FUN_0101d21c(int *param_1,int param_2)
           param_1[0x1c8] = 0;
         }
         else if (iVar5 == 0x12) {
-          /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
+          /* engine virtual call, slot +0x30: of the static engine vtables only the renderer's (0x01002398)
+             FUN_0101a89c has it; a scene object's vtable is not among them (GUESS: not static), so for one
+             the method is not known here */
           (*(code *)(*(int *)(*param_1 + 0x30) + *param_1))(param_1,piVar9);
         }
         iVar5 = param_1[5] + iVar6 * 0x14;
@@ -25901,7 +25994,7 @@ void FUN_0101d554(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
       iVar1 = param_2;
     }
     pcVar2 = (code *)(*(int *)(*param_1 + 4) + *param_1);
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     (*pcVar2)(param_1,param_2,iVar1,pcVar2,param_4);
     param_1[2] = iVar1;
@@ -25953,8 +26046,8 @@ void FUN_0101d620(int param_1)
   if (*(int *)(param_1 + 0x10c) != 0) {
     if (*(int *)(param_1 + 0x110) < 0) {
       iVar2 = *(int *)(param_1 + 0x104);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))((int *)(param_1 + 0x104),0);
     }
     *(undefined4 *)(param_1 + 0x10c) = 0;
@@ -26131,8 +26224,9 @@ void FUN_0101d974(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
   *(undefined4 *)(iVar2 + 0x14) = uVar3;
                     /* WARNING: Could not recover jumptable at 0x0101da3c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -26599,17 +26693,22 @@ void FUN_0101e144(int param_1,undefined4 param_2)
   }
   *(int **)(param_1 + 0x2c) = piVar2;
   if (piVar2 != (int *)0x0) {
-    /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
-       (by the object's class) */
+    /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+       FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
+       (GUESS: not static), so for one the method is not known here */
     (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))();
     iVar1 = FUN_01013af8();
     if ((iVar1 != 0) &&
        (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x24) + **(int **)(param_1 + 0x2c))
                 )(), iVar1 < 0x401)) {
-      /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+      /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+         FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+         method is not known here */
       (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) + **(int **)(param_1 + 0x2c)))();
       iVar1 = FUN_01013af8();
-      /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+      /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+         FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+         method is not known here */
       if ((iVar1 != 0) &&
          (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) +
                             **(int **)(param_1 + 0x2c)))(), iVar1 < 0x401)) goto LAB_0101e208;
@@ -26755,8 +26854,8 @@ void FUN_0101e3f4(int param_1,undefined4 param_2)
     iVar3 = piVar1[1] + -1;
     piVar1[1] = iVar3;
     if (iVar3 == 0) {
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
     }
   }
@@ -27523,8 +27622,8 @@ LAB_010190c8:
         uVar8 = FUN_0100f8e8();
         FUN_0101715c(uVar8,piVar4);
         if (piVar4 != (int *)0x0) {
-          /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by
-             the object's class); slot 0 is the destructor */
+          /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there
+             (by the object's class); slot 0 is the destructor */
           (*(code *)(*(int *)*piVar4 + *piVar4))(piVar4,1);
         }
       }
@@ -27789,8 +27888,9 @@ void FUN_0101ee08(int *param_1,undefined4 param_2)
   }
                     /* WARNING: Could not recover jumptable at 0x0101ef38. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -28738,8 +28838,8 @@ void FUN_0101ffbc(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
     if (*(int *)(param_1 + 0xc) == *(int *)(param_1 + 0x10)) {
       uVar3 = FUN_0102df78(*(int *)(param_1 + 0xc) + 1);
       iVar1 = *(int *)(param_1 + 4);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(iVar1 + 4) + iVar1))
                 ((int *)(param_1 + 4),uVar3,*(undefined4 *)(param_1 + 0xc));
     }
@@ -28939,10 +29039,13 @@ undefined8 FUN_0102035c(int param_1,int *param_2)
     if ((param_2[0x11] == 0) || (iVar1 != 99 && iVar1 != 100)) {
       FUN_0102f7e0(INTEGER_MINUS_1301);
     }
-    /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
-       (by the object's class) */
+    /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+       FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
+       (GUESS: not static), so for one the method is not known here */
     uVar2 = (*(code *)(*(int *)(*param_2 + 0x24) + *param_2))(param_2);
-    /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+    /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+       FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+       method is not known here */
     uVar3 = (*(code *)(*(int *)(*param_2 + 0x28) + *param_2))(param_2);
     local_24 = (int *)0x0;
     *(undefined4 *)(param_1 + 0xc) = 0;
@@ -28959,7 +29062,9 @@ undefined8 FUN_0102035c(int param_1,int *param_2)
     uVar2 = (int)swvImage2D_AlphaPlane((uint8 *)param_2);
     *(undefined4 *)(param_1 + 0x8c) = uVar2;
     *(undefined4 *)(param_1 + 0x90) = 0;
-    /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
+    /* engine virtual call, slot +0x2c: of the static engine vtables only the renderer's (0x01002398)
+       swvRenderer_Kind has it; a scene object's vtable is not among them (GUESS: not static), so for one
+       the method is not known here */
     iVar1 = (*(code *)(*(int *)(*param_2 + 0x2c) + *param_2))(param_2);
     if (iVar1 == 0x18) {
       *(int *)(param_1 + 0x90) = param_2[0x13];
@@ -29639,8 +29744,9 @@ void FUN_01020d0c(int *param_1,int param_2)
   }
                     /* WARNING: Could not recover jumptable at 0x01020d9c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -30152,7 +30258,7 @@ void FUN_01021a78(int param_1,undefined4 param_2,int param_3)
   iVar1 = **(int **)(param_1 + 0xa8);
                     /* WARNING: Could not recover jumptable at 0x01021aa8. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
      object's class) */
   (*(code *)(*(int *)(iVar1 + 8) + iVar1))(*(int **)(param_1 + 0xa8),param_1);
   return;
@@ -30179,16 +30285,20 @@ void FUN_01021abc(int param_1,int param_2)
     piVar2 = piVar2 + -1;
   }
   *(int **)(param_1 + 0x2c) = piVar2;
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))();
   iVar1 = FUN_01013af8();
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   if ((iVar1 != 0) &&
      (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x24) + **(int **)(param_1 + 0x2c)))
                         (), iVar1 < 0x401)) {
-    /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+    /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+       FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+       method is not known here */
     (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) + **(int **)(param_1 + 0x2c)))();
     iVar1 = FUN_01013af8();
     if ((iVar1 != 0) &&
@@ -30357,7 +30467,7 @@ void FUN_01021d10(int param_1)
     iVar1 = param_1;
     param_1 = *(int *)(iVar1 + 0x30);
   } while (*(int *)(iVar1 + 0x30) != 0);
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   iVar2 = (*(code *)(*(int *)(*(int *)(iVar1 + 4) + 4) + *(int *)(iVar1 + 4)))(iVar1 + 4);
   if (iVar2 != 0x16) {
@@ -30366,8 +30476,8 @@ void FUN_01021d10(int param_1)
   if (*(int *)(iVar1 + 0x98) != 0) {
     if (*(int *)(iVar1 + 0x9c) < 0) {
       iVar2 = *(int *)(iVar1 + 0x90);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))((int *)(iVar1 + 0x90),0);
     }
     *(undefined4 *)(iVar1 + 0x98) = 0;
@@ -30609,8 +30719,9 @@ void FUN_01022140(int *param_1,undefined4 param_2)
   FUN_01027a30(param_1[8] + 0x18,param_2);
                     /* WARNING: Could not recover jumptable at 0x01022198. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -30671,14 +30782,15 @@ void FUN_01022234(int *param_1,int param_2)
     return;
   }
   *(byte *)((int)param_1 + 0x3d) = *(byte *)((int)param_1 + 0x3d) | 2;
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   do {
     piVar1 = param_1;
     param_1 = (int *)piVar1[0xc];
   } while ((int *)piVar1[0xc] != (int *)0x0);
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   iVar2 = (*(code *)(*(int *)(piVar1[1] + 4) + piVar1[1]))(piVar1 + 1);
   if (iVar2 != 0x16) {
@@ -30687,8 +30799,8 @@ void FUN_01022234(int *param_1,int param_2)
   if (piVar1[0x26] != 0) {
     if (piVar1[0x27] < 0) {
       iVar2 = piVar1[0x24];
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))(piVar1 + 0x24,0);
     }
     piVar1[0x26] = 0;
@@ -31190,8 +31302,9 @@ void FUN_0102277c(int *param_1,uint param_2,undefined4 param_3,int *param_4)
             FUN_010279d0(param_1[8] + 0xc,param_4);
                     /* WARNING: Could not recover jumptable at 0x01022c54. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-            /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
-               FUN_0102da68 (by the object's class) */
+            /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's
+               (0x01002398) FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is
+               not among them (GUESS: not static), so for one the method is not known here */
             (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
             return;
           }
@@ -31208,8 +31321,9 @@ void FUN_0102277c(int *param_1,uint param_2,undefined4 param_3,int *param_4)
           FUN_010279d0(param_1[8],param_4);
                     /* WARNING: Could not recover jumptable at 0x010239f4. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-          /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
-             FUN_0102da68 (by the object's class) */
+          /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+             FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
+             (GUESS: not static), so for one the method is not known here */
           (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
           return;
         }
@@ -31315,8 +31429,10 @@ void FUN_0102282c(int *param_1,uint param_2,undefined4 param_3,int *param_4)
                   FUN_010279d0(param_1[8] + 0xc,param_4);
                     /* WARNING: Could not recover jumptable at 0x01022c54. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-                  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
-                     FUN_0102da68 (by the object's class) */
+                  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's
+                     (0x01002398) FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's
+                     vtable is not among them (GUESS: not static), so for one the method is not known here
+                     */
                   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
                   return;
                 }
@@ -31337,8 +31453,9 @@ void FUN_0102282c(int *param_1,uint param_2,undefined4 param_3,int *param_4)
                 FUN_010279d0(param_1[8],param_4);
                     /* WARNING: Could not recover jumptable at 0x010239f4. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-                /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0,
-                   FUN_0102da68 (by the object's class) */
+                /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's
+                   (0x01002398) FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable
+                   is not among them (GUESS: not static), so for one the method is not known here */
                 (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
                 return;
               }
@@ -31453,14 +31570,15 @@ void FUN_01022bb8(int *param_1,int param_2)
     return;
   }
   *(byte *)((int)param_1 + 0x3d) = *(byte *)((int)param_1 + 0x3d) | 1;
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   do {
     piVar1 = param_1;
     param_1 = (int *)piVar1[0xc];
   } while ((int *)piVar1[0xc] != (int *)0x0);
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   iVar2 = (*(code *)(*(int *)(piVar1[1] + 4) + piVar1[1]))(piVar1 + 1);
   if (iVar2 != 0x16) {
@@ -31469,8 +31587,8 @@ void FUN_01022bb8(int *param_1,int param_2)
   if (piVar1[0x26] != 0) {
     if (piVar1[0x27] < 0) {
       iVar2 = piVar1[0x24];
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))(piVar1 + 0x24,0);
     }
     piVar1[0x26] = 0;
@@ -31494,8 +31612,9 @@ void FUN_01022bfc(int *param_1,undefined4 param_2)
   FUN_010279d0(param_1[8] + 0xc,param_2);
                     /* WARNING: Could not recover jumptable at 0x01022c54. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -31754,8 +31873,8 @@ void FUN_01023124(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
     if (param_1[3] < param_2) {
       uVar1 = FUN_0102df78(param_2);
       pcVar2 = (code *)(*(int *)(*param_1 + 4) + *param_1);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*pcVar2)(param_1,uVar1,param_1[2],pcVar2,param_4);
     }
     param_1[2] = param_2;
@@ -31818,8 +31937,8 @@ void FUN_01023184(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
   if (param_1[2] != param_2) {
     if (param_1[3] < param_2) {
       pcVar1 = (code *)(*(int *)(*param_1 + 4) + *param_1);
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*pcVar1)(param_1,param_2,param_1[2],pcVar1,param_4);
     }
     param_1[2] = param_2;
@@ -31837,7 +31956,9 @@ void FUN_010231c4(int param_1,int *param_2)
   if (param_2 == (int *)0x0) {
     FUN_0102f7e0(INTEGER_MINUS_1302);
   }
-  /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
+  /* engine virtual call, slot +0x2c: of the static engine vtables only the renderer's (0x01002398)
+     swvRenderer_Kind has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+     method is not known here */
   iVar2 = (*(code *)(*(int *)(*param_2 + 0x2c) + *param_2))(param_2);
   uVar1 = INTEGER_MINUS_1301;
   if (iVar2 != 9) {
@@ -31908,10 +32029,13 @@ void FUN_0102329c(int param_1,int *param_2)
     *(undefined4 *)(param_1 + 0x26c) = 0;
     *(uint *)(param_1 + 0x28c) = *(uint *)(param_1 + 0x28c) & 0xfffffffb;
   }
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   iVar1 = (*(code *)(*(int *)(*param_2 + 0x24) + *param_2))(param_2);
-  /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+  /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+     method is not known here */
   iVar2 = (*(code *)(*(int *)(*param_2 + 0x28) + *param_2))(param_2);
   *(int *)(param_1 + 0x174) = iVar1;
   *(undefined4 *)(param_1 + 0x16c) = 0;
@@ -31934,12 +32058,16 @@ void FUN_0102329c(int param_1,int *param_2)
   }
   if ((param_2[0xb] == -1) || (param_2[8] + param_2[0xb] == 0)) {
     *(undefined4 *)(param_1 + 0x188) = 0;
-    /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
+    /* engine virtual call, slot +0x30: of the static engine vtables only the renderer's (0x01002398)
+       FUN_0101a89c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+       method is not known here */
     uVar3 = (*(code *)(*(int *)(*param_2 + 0x30) + *param_2))(param_2);
     *(undefined4 *)(param_1 + 0x180) = uVar3;
   }
   else {
-    /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
+    /* engine virtual call, slot +0x30: of the static engine vtables only the renderer's (0x01002398)
+       FUN_0101a89c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+       method is not known here */
     uVar3 = (*(code *)(*(int *)(*param_2 + 0x30) + *param_2))(param_2);
     *(undefined4 *)(param_1 + 0x188) = uVar3;
     if (param_2[0xb] == -1) {
@@ -31976,13 +32104,13 @@ void FUN_01023420(int *param_1,int param_2,int param_3,undefined4 param_4)
     iVar4 = param_1[3];
     param_1[2] = -1;
     param_1[3] = iVar2;
-    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*param_1 + 8) + *param_1))(param_1,param_1[1],iVar2,param_3);
     param_1[2] = iVar3;
     param_1[3] = iVar4;
   }
-  /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x10: one of the 35 functions the static engine vtables put there (by the
      object's class) */
   (*(code *)(*(int *)(*param_1 + 0x10) + *param_1))(param_1,param_1[1]);
   param_1[1] = iVar2;
@@ -32187,10 +32315,13 @@ void FUN_010236c4(int param_1,int param_2,int param_3,int param_4)
       piVar7 = *(int **)(param_3 + 0x2c);
     }
     if (piVar7 != (int *)0x0) {
-      /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
-         (by the object's class) */
+      /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+         FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
+         (GUESS: not static), so for one the method is not known here */
       iVar2 = (*(code *)(*(int *)(*piVar7 + 0x24) + *piVar7))(piVar7);
-      /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+      /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+         FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+         method is not known here */
       iVar3 = (*(code *)(*(int *)(*piVar7 + 0x28) + *piVar7))(piVar7);
       *(int *)(iVar1 + 0x174) = iVar2;
       *(undefined4 *)(iVar1 + 0x16c) = 0;
@@ -32213,12 +32344,16 @@ void FUN_010236c4(int param_1,int param_2,int param_3,int param_4)
       }
       if ((piVar7[0xb] == -1) || (piVar7[8] + piVar7[0xb] == 0)) {
         *(undefined4 *)(iVar1 + 0x188) = 0;
-        /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
+        /* engine virtual call, slot +0x30: of the static engine vtables only the renderer's (0x01002398)
+           FUN_0101a89c has it; a scene object's vtable is not among them (GUESS: not static), so for one
+           the method is not known here */
         uVar4 = (*(code *)(*(int *)(*piVar7 + 0x30) + *piVar7))(piVar7);
         *(undefined4 *)(iVar1 + 0x180) = uVar4;
       }
       else {
-        /* engine virtual call, slot +0x30: one of FUN_01003a00, FUN_0101a89c (by the object's class) */
+        /* engine virtual call, slot +0x30: of the static engine vtables only the renderer's (0x01002398)
+           FUN_0101a89c has it; a scene object's vtable is not among them (GUESS: not static), so for one
+           the method is not known here */
         uVar4 = (*(code *)(*(int *)(*piVar7 + 0x30) + *piVar7))(piVar7);
         *(undefined4 *)(iVar1 + 0x188) = uVar4;
         if (piVar7[0xb] == -1) {
@@ -32304,7 +32439,7 @@ void FUN_01023944(int *param_1,int param_2)
     iVar2 = *(int *)(iVar2 + 0x20);
   }
   else {
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     iVar1 = (*(code *)(*(int *)(param_1[1] + 4) + param_1[1]))(param_1 + 1);
     iVar2 = param_2 + 0xc;
@@ -32331,8 +32466,9 @@ void FUN_01023944(int *param_1,int param_2)
   }
                     /* WARNING: Could not recover jumptable at 0x01020d9c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -32353,8 +32489,9 @@ void FUN_010239a4(int *param_1,undefined4 param_2)
   FUN_010279d0(param_1[8],param_2);
                     /* WARNING: Could not recover jumptable at 0x010239f4. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
   return;
 }
@@ -32541,7 +32678,7 @@ undefined8 FUN_01023bc8(int param_1,undefined4 param_2,undefined4 param_3,int pa
   FUN_01026548(param_1);
   uVar1 = *(undefined4 *)(param_1 + 100);
   iVar2 = **(int **)(param_1 + 0xa8);
-  /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x10: one of the 35 functions the static engine vtables put there (by the
      object's class) */
   (*(code *)(*(int *)(iVar2 + 0x10) + iVar2))
             (*(int **)(param_1 + 0xa8),*(undefined4 *)(param_1 + 0x58),
@@ -33009,7 +33146,7 @@ void FUN_01023ff4(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   }
   if ((piVar1 != (int *)0x0) && (iVar2 = piVar1[1], piVar1[1] = iVar2 + -1, iVar2 + -1 == 0)) {
     pcVar3 = (code *)(*(int *)*piVar1 + *piVar1);
-    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
        object's class); slot 0 is the destructor */
     (*pcVar3)(piVar1,1,pcVar3,param_4,param_4);
   }
@@ -33095,7 +33232,7 @@ void FUN_0102412c(int param_1,int *param_2)
     param_2[1] = param_2[1] + 1;
   }
   if ((piVar2 != (int *)0x0) && (iVar1 = piVar2[1], piVar2[1] = iVar1 + -1, iVar1 + -1 == 0)) {
-    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
        object's class); slot 0 is the destructor */
     (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
   }
@@ -33106,11 +33243,14 @@ void FUN_0102412c(int param_1,int *param_2)
   if (param_2 != (int *)0x0) {
     *(undefined4 *)(param_1 + 0x2c) = 0;
     *(undefined4 *)(param_1 + 0x30) = 0;
-    /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
-       (by the object's class) */
+    /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+       FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
+       (GUESS: not static), so for one the method is not known here */
     uVar3 = swv_fflt((*(code *)(*(int *)(*param_2 + 0x24) + *param_2))());   /* Ghidra had dropped it */
     *(undefined4 *)(param_1 + 0x34) = uVar3;
-    /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+    /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+       FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+       method is not known here */
     /* Ghidra had dropped it */
     uVar3 = swv_fflt((*(code *)(*(int *)(**(int **)(param_1 + 0x20) + 0x28) +
                                 **(int **)(param_1 + 0x20)))());
@@ -33139,10 +33279,13 @@ void FUN_010241f4(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     piVar2 = piVar2 + -1;
   }
   *(int **)(param_1 + 0x98) = piVar2;
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   iVar1 = (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))();
-  /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+  /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+     method is not known here */
   iVar3 = (*(code *)(*(int *)(**(int **)(param_1 + 0x98) + 0x28) + **(int **)(param_1 + 0x98)))();
   if (0x400 < iVar1) {
     iVar1 = 0x400;
@@ -33192,8 +33335,9 @@ void FUN_010242a4(int param_1)
   }
   if (iVar2 != 0 && iVar1 != 0) {
     iVar1 = **(int **)(param_1 + 0xa8);
-    /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec
-       (by the object's class) */
+    /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
+       FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
+       vtable is not among them (GUESS: not static), so for one the method is not known here */
     (*(code *)(*(int *)(iVar1 + 0x18) + iVar1))(*(int **)(param_1 + 0xa8),iVar2,param_1 + 0xb0);
   }
   iVar1 = 0;
@@ -33212,8 +33356,9 @@ void FUN_010242a4(int param_1)
   iVar1 = **(int **)(param_1 + 0xa8);
                     /* WARNING: Could not recover jumptable at 0x01024334. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x1c: one of FUN_0100486c, FUN_01011968, FUN_01021d50, FUN_010224fc,
-     FUN_01026168 (by the object's class) */
+  /* engine virtual call, slot +0x1c: of the static engine vtables only the renderer's (0x01002398)
+     FUN_01021d50 and 0x01002410's FUN_0100486c have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(iVar1 + 0x1c) + iVar1))
             (*(int **)(param_1 + 0xa8),*(int *)(param_1 + 0xfc),*(undefined4 *)(param_1 + 0xf8),
              *(undefined4 *)(param_1 + 0x108));
@@ -34540,8 +34685,9 @@ void FUN_01025c8c(int *param_1,uint *param_2)
     puVar2[2] = uVar1;
                     /* WARNING: Could not recover jumptable at 0x01025d28. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-    /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68
-       (by the object's class) */
+    /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+       FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
+       (GUESS: not static), so for one the method is not known here */
     (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
     return;
   }
@@ -34918,7 +35064,7 @@ void FUN_010261f0(int param_1)
     }
                     /* WARNING: Could not recover jumptable at 0x01026290. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
        object's class); slot 0 is the destructor */
     (*(code *)(*(int *)*piVar3 + *piVar3))(piVar3,1);
     return;
@@ -34952,8 +35098,8 @@ void FUN_010262b0(void)
   if (uVar1 != 0) {
     piVar2 = *(int **)(uVar1 + 0x2c);
     if (piVar2 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *(undefined4 *)(uVar1 + 0x2c) = 0;
@@ -34994,8 +35140,8 @@ void FUN_01026310(void)
   if (uVar1 != 0) {
     piVar2 = *(int **)(uVar1 + 0x30);
     if (piVar2 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *(undefined4 *)(uVar1 + 0x30) = 0;
@@ -35017,7 +35163,7 @@ void FUN_01026348(void)
     piVar2 = *(int **)(uVar1 + 0x28);
   }
   if (uVar1 != 0 && piVar2 != (int *)0x0) {
-    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
        object's class); slot 0 is the destructor */
     (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     *(undefined4 *)(uVar1 + 0x28) = 0;
@@ -36068,7 +36214,7 @@ int * FUN_010279ec(int *param_1,int param_2,undefined4 param_3,undefined4 param_
 {
   FUN_01023184(param_1,*(undefined4 *)(param_2 + 8),param_3,param_4,param_4);
   if (0 < *(int *)(param_2 + 8)) {
-    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*param_1 + 8) + *param_1))(param_1,*(undefined4 *)(param_2 + 4),param_1[1]);
   }
@@ -37085,6 +37231,9 @@ int * FUN_01028cc8(int *param_1)
 }
 
 /* ==== 0x01028D2C  (file offset 0x28D2C)  FUN_01028d2c ================================================ */
+/* GUESS (not yet rewritten): the renderer's constructor (JSR-184 Graphics3D's software
+   implementation): its vtable 0x01002398 (swv_types.h), then its members; at least 0x9b0 bytes (the
+   destructor 0x0102ad0c reaches +0x9ac). */
 int * FUN_01028d2c(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -38137,7 +38286,7 @@ void FUN_01029ff8(int *param_1,int param_2)
   param_1[1] = DATA_AT_0100201C_OFFSET_2 + 0x102a010 + 8;
   piVar1 = (int *)param_1[0x2a];
   if (piVar1 != (int *)0x0)
-    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
        object's class); slot 0 is the destructor */
     (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
   param_1[0x2a] = 0;
@@ -38439,12 +38588,12 @@ void FUN_0102ad0c(int *param_1,int param_2)
   *param_1 = DATA_AT_01002398_OFFSET_2 + 0x102ad24;
   piVar1 = (int *)param_1[2];
   if (piVar1 != (int *)0x0)
-    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
        object's class); slot 0 is the destructor */
     (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
   piVar1 = (int *)param_1[0x26a];
   if (piVar1 != (int *)0x0)
-    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
        object's class); slot 0 is the destructor */
     (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
   FUN_010003cc((int)param_1 + 0xa7c,(int)param_1 + 0x968,-0x5c,
@@ -38524,8 +38673,8 @@ void FUN_0102b004(int *param_1,int param_2)
   for (iVar1 = 0; iVar1 < param_1[3]; iVar1 = iVar1 + 1) {
     piVar2 = *(int **)(param_1[2] + iVar1 * 4);
     if (piVar2 != (int *)0x0)
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     *(int *)(param_1[2] + iVar1 * 4) = 0;
   }
@@ -38587,8 +38736,8 @@ void FUN_0102b194(int *param_1,int param_2)
     FUN_010171a0();
     piVar1 = (int *)*param_1;
     if (piVar1 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
     }
     *param_1 = 0;
@@ -38633,7 +38782,7 @@ void FUN_0102b204(int *param_1,int param_2)
   param_1[1] = DATA_AT_01002410_OFFSET_2 + 0x102b21c + 0x28;
   piVar1 = (int *)param_1[0x38];
   if (piVar1 != (int *)0x0)
-    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
        object's class); slot 0 is the destructor */
     (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
   for (iVar2 = 0; iVar2 < param_1[0x2a]; iVar2 = iVar2 + 1) {
@@ -38860,8 +39009,8 @@ void FUN_0102b784(int *param_1,int param_2)
     FUN_0101715c(uVar1,iVar3);
     piVar2 = (int *)*param_1;
     if (piVar2 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *param_1 = 0;
@@ -38889,8 +39038,8 @@ void FUN_0102b7e0(int *param_1,int param_2)
     FUN_0101715c(uVar1,iVar3);
     piVar2 = (int *)*param_1;
     if (piVar2 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *param_1 = 0;
@@ -39042,8 +39191,8 @@ void FUN_0102ba94(int *param_1,int param_2)
     FUN_0101715c(uVar1,iVar3);
     piVar2 = (int *)*param_1;
     if (piVar2 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *param_1 = 0;
@@ -39067,8 +39216,8 @@ void FUN_0102baf0(int *param_1,int param_2)
     FUN_010171a0();
     piVar1 = (int *)*param_1;
     if (piVar1 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
     }
     *param_1 = 0;
@@ -39096,8 +39245,8 @@ void FUN_0102bb44(int *param_1,int param_2)
     FUN_0101715c(uVar1,iVar3);
     piVar2 = (int *)*param_1;
     if (piVar2 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *param_1 = 0;
@@ -39259,8 +39408,8 @@ void FUN_0102bef4(int *param_1,int param_2)
     FUN_0101715c(uVar1,iVar3);
     piVar2 = (int *)*param_1;
     if (piVar2 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
     }
     *param_1 = 0;
@@ -42326,8 +42475,9 @@ bool FUN_0102e968(int *param_1,undefined4 param_2,undefined4 param_3)
   iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_a0);
-    /* engine virtual call, slot +0x18: one of FUN_01011bfc, FUN_0101232c, FUN_010157e8, FUN_010204ec
-       (by the object's class) */
+    /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
+       FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
+       vtable is not among them (GUESS: not static), so for one the method is not known here */
     iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,param_3,param_2);
     bVar3 = iVar1 != 0;
     swv_TryPop();
@@ -44286,7 +44436,7 @@ void FUN_01030210(int param_1,int param_2)
   iVar2 = **(int **)(iVar1 + 0xa8);
                     /* WARNING: Could not recover jumptable at 0x0102653c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0xc: one of the 32 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0xc: one of the 36 functions the static engine vtables put there (by the
      object's class) */
   (*(code *)(*(int *)(iVar2 + 0xc) + iVar2))(*(int **)(iVar1 + 0xa8),iVar1);
   return;
@@ -44850,7 +45000,9 @@ void FUN_01030ae4(int param_1,undefined4 *param_2)
   if (piVar1 != (int *)0x0) {
     piVar1 = piVar1 + -1;
   }
-  /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+  /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+     method is not known here */
   uVar2 = (*(code *)(*(int *)(*piVar1 + 0x28) + *piVar1))();
   *param_2 = uVar2;
   return;
@@ -44903,8 +45055,9 @@ void FUN_01030b58(int param_1,undefined4 *param_2)
   if (piVar1 != (int *)0x0) {
     piVar1 = piVar1 + -1;
   }
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   uVar2 = (*(code *)(*(int *)(*piVar1 + 0x24) + *piVar1))();
   *param_2 = uVar2;
   return;
@@ -47497,7 +47650,7 @@ FUN_010337a8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     if (piVar2 != (int *)0x0) {
       piVar2 = piVar2 + -1;
     }
-    /* engine virtual call, slot +0x8: one of the 36 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
        object's class) */
     uVar3 = (*(code *)(*(int *)(*piVar2 + 8) + *piVar2))(piVar2,param_2,param_3,param_4,param_5);
     *param_6 = uVar3;
@@ -47527,7 +47680,7 @@ undefined4 FUN_01033834(int param_1,undefined4 *param_2)
     if (piVar2 != (int *)0x0) {
       piVar2 = piVar2 + -1;
     }
-    /* engine virtual call, slot +0xc: one of the 32 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0xc: one of the 36 functions the static engine vtables put there (by the
        object's class) */
     uVar3 = (*(code *)(*(int *)(*piVar2 + 0xc) + *piVar2))();
     *param_2 = uVar3;
@@ -47557,7 +47710,7 @@ undefined4 FUN_010338a0(int param_1,int param_2,undefined4 *param_3)
     if (piVar2 != (int *)0x0) {
       piVar2 = piVar2 + -1;
     }
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     uVar3 = (*(code *)(*(int *)(*piVar2 + 4) + *piVar2))(piVar2,param_2 != 0);
     *param_3 = uVar3;
@@ -47586,7 +47739,7 @@ undefined4 FUN_01033918(int param_1,undefined4 param_2)
     if (piVar2 != (int *)0x0) {
       piVar2 = piVar2 + -1;
     }
-    /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x10: one of the 35 functions the static engine vtables put there (by the
        object's class) */
     (*(code *)(*(int *)(*piVar2 + 0x10) + *piVar2))(piVar2,param_2);
     swv_TryPop();
@@ -47950,7 +48103,9 @@ int FUN_01033dcc(int param_1,ISwerveObject **param_2)
     if (piVar2 != (int *)0x0) {
       piVar2 = piVar2 + -1;
     }
-    /* engine virtual call, slot +0x2c: FUN_0100f4d4 (the only one the engine vtables put there) */
+    /* engine virtual call, slot +0x2c: of the static engine vtables only the renderer's (0x01002398)
+       swvRenderer_Kind has it; a scene object's vtable is not among them (GUESS: not static), so for one
+       the method is not known here */
     pNative = (void *)(*(code *)(*(int *)(*piVar2 + 0x2c) + *piVar2))();
     if (pNative != (void *)0x0) {
       pNative = (void *)((int)pNative + 4);
@@ -48073,8 +48228,8 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
       uVar3 = FUN_0100f8e8();
       FUN_0101715c(uVar3,piVar5);
       if (piVar5 != (int *)0x0) {
-        /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-           object's class); slot 0 is the destructor */
+        /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+           the object's class); slot 0 is the destructor */
         (*(code *)(*(int *)*piVar5 + *piVar5))(piVar5,1);
       }
     }
@@ -48082,8 +48237,8 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
       uVar3 = FUN_0100f8e8();
       FUN_0101715c(uVar3,piVar2);
       if (piVar2 != (int *)0x0) {
-        /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-           object's class); slot 0 is the destructor */
+        /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+           the object's class); slot 0 is the destructor */
         (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
       }
     }
@@ -48442,8 +48597,8 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
       uVar3 = FUN_0100f8e8();
       FUN_0101715c(uVar3,piVar5);
       if (piVar5 != (int *)0x0) {
-        /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-           object's class); slot 0 is the destructor */
+        /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+           the object's class); slot 0 is the destructor */
         (*(code *)(*(int *)*piVar5 + *piVar5))(piVar5,1);
       }
     }
@@ -48451,8 +48606,8 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
       uVar3 = FUN_0100f8e8();
       FUN_0101715c(uVar3,piVar2);
       if (piVar2 != (int *)0x0) {
-        /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-           object's class); slot 0 is the destructor */
+        /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+           the object's class); slot 0 is the destructor */
         (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
       }
     }
@@ -48880,14 +49035,15 @@ void FUN_01034cd8(int param_1,int param_2)
     return;
   }
   *(byte *)((int)piVar3 + 0x3d) = *(byte *)((int)piVar3 + 0x3d) | 2;
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(*piVar3 + 0x24) + *piVar3))(piVar3);
   do {
     piVar1 = piVar3;
     piVar3 = (int *)piVar1[0xc];
   } while ((int *)piVar1[0xc] != (int *)0x0);
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   iVar2 = (*(code *)(*(int *)(piVar1[1] + 4) + piVar1[1]))(piVar1 + 1);
   if (iVar2 != 0x16) {
@@ -48896,8 +49052,8 @@ void FUN_01034cd8(int param_1,int param_2)
   if (piVar1[0x26] != 0) {
     if (piVar1[0x27] < 0) {
       iVar2 = piVar1[0x24];
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))(piVar1 + 0x24,0);
     }
     piVar1[0x26] = 0;
@@ -48922,14 +49078,15 @@ void FUN_01034cf0(int param_1,int param_2)
     return;
   }
   *(byte *)((int)piVar3 + 0x3d) = *(byte *)((int)piVar3 + 0x3d) | 1;
-  /* engine virtual call, slot +0x24: one of FUN_0101a380, FUN_01026120, FUN_010261e0, FUN_0102da68 (by
-     the object's class) */
+  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
+     not static), so for one the method is not known here */
   (*(code *)(*(int *)(*piVar3 + 0x24) + *piVar3))(piVar3);
   do {
     piVar1 = piVar3;
     piVar3 = (int *)piVar1[0xc];
   } while ((int *)piVar1[0xc] != (int *)0x0);
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   iVar2 = (*(code *)(*(int *)(piVar1[1] + 4) + piVar1[1]))(piVar1 + 1);
   if (iVar2 != 0x16) {
@@ -48938,8 +49095,8 @@ void FUN_01034cf0(int param_1,int param_2)
   if (piVar1[0x26] != 0) {
     if (piVar1[0x27] < 0) {
       iVar2 = piVar1[0x24];
-      /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
-         object's class) */
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
       (*(code *)(*(int *)(iVar2 + 4) + iVar2))(piVar1 + 0x24,0);
     }
     piVar1[0x26] = 0;
@@ -48959,7 +49116,9 @@ void FUN_01034d08(int param_1)
   }
                     /* WARNING: Could not recover jumptable at 0x01034d20. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x28: FUN_0101d21c (the only one the engine vtables put there) */
+  /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
+     FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
+     method is not known here */
   (*(code *)(*(int *)(*piVar1 + 0x28) + *piVar1))();
   return;
 }
@@ -49043,7 +49202,7 @@ int FUN_01034e14(int param_1,ISwerveObject **param_2)
     if (piVar2 != (int *)0x0) {
       piVar2 = piVar2 + -1;
     }
-    /* engine virtual call, slot +0x10: one of the 32 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x10: one of the 35 functions the static engine vtables put there (by the
        object's class) */
     pNative = (void *)(*(code *)(*(int *)(*piVar2 + 0x10) + *piVar2))();
     if (pNative != (void *)0x0) {
@@ -49188,8 +49347,8 @@ int FUN_01034f94(int param_1,uint param_2,int param_3,uint *param_4)
       uVar4 = FUN_0100f8e8();
       FUN_0101715c(uVar4,piVar3);
       if (piVar3 != (int *)0x0) {
-        /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-           object's class); slot 0 is the destructor */
+        /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+           the object's class); slot 0 is the destructor */
         (*(code *)(*(int *)*piVar3 + *piVar3))(piVar3,1);
       }
     }
@@ -49348,8 +49507,8 @@ void FUN_010352f4(int param_1)
     }
     if (iVar1 != 0) {
       piVar3 = (int *)**(int **)(iVar2 + 0x14);
-      /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-         object's class); slot 0 is the destructor */
+      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+         the object's class); slot 0 is the destructor */
       (*(code *)(*piVar3 + (int)piVar3))(*(int **)(iVar2 + 0x14),1);
     }
     *(undefined4 *)(iVar2 + 0x14) = 0;
@@ -52065,7 +52224,7 @@ void FUN_01038280(int param_1,undefined4 *param_2,undefined4 param_3,undefined4 
     uVar1 = FUN_0102df78(*(int *)(param_1 + 0xc) + 1);
     iVar2 = *(int *)(param_1 + 4);
     pcVar3 = (code *)(*(int *)(iVar2 + 4) + iVar2);
-    /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
        object's class) */
     (*pcVar3)((int *)(param_1 + 4),uVar1,*(undefined4 *)(param_1 + 0xc),pcVar3,param_4);
   }
@@ -52628,8 +52787,8 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
       uVar3 = FUN_0100f8e8();
       FUN_0101715c(uVar3,piVar5);
       if (piVar5 != (int *)0x0) {
-        /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-           object's class); slot 0 is the destructor */
+        /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+           the object's class); slot 0 is the destructor */
         (*(code *)(*(int *)*piVar5 + *piVar5))(piVar5,1);
       }
     }
@@ -52637,8 +52796,8 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
       uVar3 = FUN_0100f8e8();
       FUN_0101715c(uVar3,piVar2);
       if (piVar2 != (int *)0x0) {
-        /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
-           object's class); slot 0 is the destructor */
+        /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+           the object's class); slot 0 is the destructor */
         (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
       }
     }
@@ -52972,7 +53131,7 @@ void FUN_01038f50(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   }
   if ((piVar1 != (int *)0x0) && (iVar3 = piVar1[1], piVar1[1] = iVar3 + -1, iVar3 + -1 == 0)) {
     pcVar5 = (code *)(*(int *)*piVar1 + *piVar1);
-    /* engine virtual call, slot +0x0: one of the 56 functions the engine vtables put there (by the
+    /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
        object's class); slot 0 is the destructor */
     (*pcVar5)(piVar1,1,pcVar5,param_4,param_4);
   }
@@ -54122,7 +54281,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   }
   swv_TryArm(auStack_a4);
   ppvVar2 = swv_GetVtblCache();
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   uVar3 = (*(code *)(*(int *)(*(int *)pNative + 4) + *(int *)pNative))(pNative);
   iVar1 = WORD_HEXADECIMAL_0001000D;
@@ -54434,7 +54593,7 @@ int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   pVtbl->AddRef = (_func_6 *)(ADDRESS_OF_swvObj_AddRef_OFFSET + 0x103a694);
   pVtbl->Release = (_func_7 *)(ADDRESS_OF_swvObj_Release_OFFSET + 0x103a6a0);
   pVtbl->QueryInterface = (_func_8 *)(ADDRESS_OF_swvObj_QueryInterface_OFFSET + 0x103a6ac);
-  /* engine virtual call, slot +0x4: one of the 10 functions the engine vtables put there (by the
+  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   iVar1 = (*(code *)(*(int *)(*(int *)pNative + 4) + *(int *)pNative))(pNative);
   if (iVar1 == 0x1c) {

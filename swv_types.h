@@ -311,6 +311,23 @@ typedef struct SwvKeyframeSequence {
  *                     swv_SpanFillFlatDithered, swv_SpanFillGouraud, swv_SpanFillGouraudAlpha,
  *                     swv_SpanFillTextured, FUN_0100bb68, FUN_0100ac0c, FUN_0100c92c) */
 
+/* ---- the engine's static vtables ---------------------------------------------------------------
+ * 65 tables at 0x01001dac - 0x01002890 (the constructors store them; each word an offset from the table
+ * to the method, some to this-adjusting thunks, sub r0, r0, #n / b, kept among the tables). All but
+ * three are small classes (5 slots or fewer: GUESS the containers, slot +4 FUN_01023420 in most); the
+ * scene objects' (Camera, Image2D, Group, ...) are not among them (GUESS: not static), so a virtual call
+ * on one is not resolved by these tables.
+ * The renderer's (0x01002398; constructor FUN_01028d2c, GUESS JSR-184 Graphics3D's implementation):
+ *   +0x00 0x0102ad0c the destructor          +0x1c FUN_01021d50
+ *   +0x04 FUN_01005eb8                       +0x20 FUN_0101d01c
+ *   +0x08 FUN_01024058                       +0x24 FUN_0101a380 (GUESS: render a node)
+ *   +0x0c 0x010266b0                         +0x28 FUN_0101d21c (GUESS: render a World)
+ *   +0x10 0x01023c60                         +0x2c swvRenderer_Kind (returns 2)
+ *   +0x14 FUN_01005104 (the Background clear) +0x30 FUN_0101a89c
+ *   +0x18 FUN_010204ec
+ * The two other long ones: 0x01002410 (10 slots) and 0x010027d8 (7, thunks and methods Ghidra has no
+ * function for). */
+
 /* ---- engine globals ------------------------------------------------------------------------
  * Swerve has no writable statics either: swv_NewSwerve allocates this 0x24-byte block and
  * stores it in the *host applet* at GetAppInstance()+0x20 (KHApp.pSwerveGlobals). It also

@@ -115,7 +115,7 @@ void FUN_01009e20(int param_1,void *param_2);   /* 0x01009E20, no Ghidra functio
 longlong FUN_01009e28(int param_1,int param_2);   /* 0x01009E28, no Ghidra function */
 void FUN_01009e44(int param_1,void *param_2);   /* 0x01009E44, no Ghidra function */
 void FUN_01009e4c(int param_1,void *param_2);   /* 0x01009E4C, no Ghidra function */
-int32 FUN_0100f4d4(int param_1);   /* 0x0100F4D4, no Ghidra function */
+int32 swvRenderer_Kind(int param_1);   /* 0x0100F4D4 GUESS: name, see swv21brew.c */
 int32 FUN_01010820(int param_1);   /* 0x01010820, no Ghidra function */
 int FUN_01011bcc(int param_1);   /* 0x01011BCC, no Ghidra function */
 int FUN_01015348(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5);   /* 0x01015348 */
