@@ -331,6 +331,17 @@ typedef struct SwvKeyframeSequence {
  *   +0x2c .. +0x38    the crop rectangle: x, y, width, height (floats)
  *   +0x3c / +0x40     the colour clear and the depth clear enables */
 
+/* ---- the M3G reader, the Loader's stream parser (no struct yet) ------------------------------------
+ * 0xe8 bytes (swvM3GReader_New / swvM3GReader_Construct); its engine vtables 0x01002410 at +0 and
+ * 0x01002438 at +4. Its slots: +0x04 swvM3GReader_Begin, +0x08 swvM3GReader_Feed, +0x0c
+ * swvM3GReader_End, +0x10 swvM3GReader_Fail, +0x14 swvM3GReader_State, +0x18 the record reader
+ * (FUN_010157e8), +0x24 FUN_0102da68 (+0xd8 above 0). Its fields (GUESS: the names):
+ *   +0x0c             the first error code (-1 while there is none; swvM3GReader_Fail)
+ *   +0x18             swvM3GReader_Begin's argument
+ *   +0x24             the parser's own state (1 the file identifier, 2 a section's compression byte, ...)
+ *   +0x64             the read's state: 0 new, 1 begun, 2 reading, 3 ended, 4 failed
+ *   +0x70 .. +0x7c    the record reader's state, type byte, length and record buffer */
+
 /* ---- the lighting colour ---------------------------------------------------------------------------
  * Three int32, red, green, blue, in 8.8 fixed point (0x100 is 1.0; no struct yet). Made from the RGB
  * bytes of an ARGB word by swv_ColourFromRGB (0xff gives 0x100), worked on by swv_ColourAdd,

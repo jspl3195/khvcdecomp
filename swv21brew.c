@@ -4223,8 +4223,8 @@ undefined4 FUN_01003c38(int *param_1,undefined4 param_2,int param_3)
                     /* WARNING: Could not recover jumptable at 0x01004000. Too many branches */
                     /* WARNING: Treating indirect jump as call */
     /* engine virtual call, slot +0x14: of the static engine vtables only the renderer's (0x01002398)
-       FUN_01005104 and 0x01002410's FUN_01010820 and 0x010027d8's 0x01022908 have it; a scene object's
-       vtable is not among them (GUESS: not static), so for one the method is not known here */
+       FUN_01005104 and 0x01002410's swvM3GReader_State and 0x010027d8's 0x01022908 have it; a scene
+       object's vtable is not among them (GUESS: not static), so for one the method is not known here */
     uVar5 = (*(code *)(*(int *)(*param_1 + 0x14) + *param_1))(param_1,param_2,local_38,local_28);
     return uVar5;
   }
@@ -5776,8 +5776,8 @@ void FUN_01005f88(int param_1,int param_2)
     swv_TryArm(auStack_98);
     iVar1 = **(int **)(param_1 + 0xa8);
     /* engine virtual call, slot +0x14: of the static engine vtables only the renderer's (0x01002398)
-       FUN_01005104 and 0x01002410's FUN_01010820 and 0x010027d8's 0x01022908 have it; a scene object's
-       vtable is not among them (GUESS: not static), so for one the method is not known here */
+       FUN_01005104 and 0x01002410's swvM3GReader_State and 0x010027d8's 0x01022908 have it; a scene
+       object's vtable is not among them (GUESS: not static), so for one the method is not known here */
     (*(code *)(*(int *)(iVar1 + 0x14) + iVar1))(*(int **)(param_1 + 0xa8),param_2,0);
     swv_TryPop();
   }
@@ -9539,15 +9539,17 @@ int FUN_01009ad0(void)
   return 0;
 }
 
-/* ==== 0x01009B80  (file offset 0x09B80)  FUN_01009b80 ================================================ */
-int FUN_01009b80(void)
+/* ==== 0x01009B80  (file offset 0x09B80)  swvM3GReader_New ============================================ */
+/* GUESS: name (not yet rewritten). Makes an M3G reader: 0xe8 bytes (swv_New_2), constructed by
+   swvM3GReader_Construct. The Loader's creation calls it. */
+int swvM3GReader_New(void)
 
 {
   int iVar1;
   
   iVar1 = swv_New_2(0xe8);
   if (iVar1 != 0) {
-    FUN_01029010(iVar1);
+    swvM3GReader_Construct(iVar1);
   }
   return iVar1;
 }
@@ -15426,13 +15428,16 @@ uint32 swvAnimationController_Speed(const uint8 *controller)
   return *(const uint32 *)(controller + 0x2c);
 }
 
-/* ==== 0x01010820  (file offset 0x10820)  FUN_01010820 ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002410 +0x14;
-   written from its disassembly (0x01010820 - 0x01010824). Returns the object's word at +0x64. */
-int32 FUN_01010820(int param_1)
+/* ==== 0x01010820  (file offset 0x10820)  swvM3GReader_State ========================================== */
+/* GUESS: name. The M3G reader's state (its slot +0x14, engine vtable 0x01002410), the word at +0x64:
+   0 new (its constructor swvM3GReader_Construct), 1 begun (swvM3GReader_Begin, +0x04), 2 reading
+   (swvM3GReader_Feed, +0x08, which wants 1 or 2), 3 ended (swvM3GReader_End, +0x0c, which wants 2), 4
+   failed (swvM3GReader_Fail, +0x10). Written from its disassembly (0x01010820 - 0x01010824: `ldr r0, [r0,
+   #0x64]` / `bx lr`), which Ghidra had left without a function. */
+int32 swvM3GReader_State(const uint8 *reader)
 
 {
-  return *(int32 *)(param_1 + 0x64);
+  return *(const int32 *)(reader + 0x64);
 }
 
 /* ==== 0x01010828  (file offset 0x10828)  FUN_01010828 ================================================ */
@@ -19709,8 +19714,10 @@ void FUN_010151f0(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x01015220  (file offset 0x15220)  FUN_01015220 ================================================ */
-undefined4 FUN_01015220(int *param_1)
+/* ==== 0x01015220  (file offset 0x15220)  swvM3GReader_End ============================================ */
+/* GUESS: name (not yet rewritten). The M3G reader's slot +0x0c: ends a read: error unless the state
+   (+0x64) is 2 (reading), then the state set to 3 (see swvM3GReader_State). */
+undefined4 swvM3GReader_End(int *param_1)
 
 {
   int iVar1;
@@ -19749,8 +19756,11 @@ undefined4 FUN_01015220(int *param_1)
   return uVar3;
 }
 
-/* ==== 0x010152D8  (file offset 0x152D8)  FUN_010152d8 ================================================ */
-undefined4 FUN_010152d8(int param_1,undefined4 param_2)
+/* ==== 0x010152D8  (file offset 0x152D8)  swvM3GReader_Begin ========================================== */
+/* GUESS: name (not yet rewritten). The M3G reader's slot +0x04: begins a read: error -1103 when an
+   error is already kept (+0xc not -1); param_2 kept at +0x18; unless +0x20 is set, the state (+0x64)
+   set to 1 (see swvM3GReader_State) and the object at +0x10 destroyed (its slot 0, with 1). */
+undefined4 swvM3GReader_Begin(int param_1,undefined4 param_2)
 
 {
   int *piVar1;
@@ -19777,8 +19787,8 @@ undefined4 FUN_010152d8(int param_1,undefined4 param_2)
   return uVar2;
 }
 
-/* ==== 0x01015348  (file offset 0x15348)  FUN_01015348 ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002410 +0x8; written
+/* ==== 0x01015348  (file offset 0x15348)  swvM3GReader_Feed =========================================== */
+/* GUESS: name. The M3G reader's slot +0x8 (engine vtable 0x01002410; Ghidra had no function); written
    from its disassembly (0x01015348 - 0x010157e0). Feeds param_5 bytes (param_3 + param_4; the fifth
    argument is on the stack) to the M3G file reader (GUESS: the Loader's stream parser). +0x24 is the
    state: 1 the file identifier, a byte at a time against one of the two expected strings (+0x48, or +0x54
@@ -19791,7 +19801,7 @@ undefined4 FUN_010152d8(int param_1,undefined4 param_2)
    Errors: FUN_0102f7e0 (K0 when called in the wrong state, -0x4b1 for bad lengths) and the results -7 to
    -11, handed to the virtual slot +0x10. Returns -1 while it needs more, the bytes used when the file
    ended, or the error. */
-int FUN_01015348(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5)
+int swvM3GReader_Feed(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5)
 
 {
   uint8 *p;
@@ -20063,11 +20073,11 @@ int FUN_010157e8(int param_1,uint8 *param_2,uint32 param_3)
   return ok;
 }
 
-/* ==== 0x010159CC  (file offset 0x159CC)  FUN_010159cc ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002410 +0x10;
+/* ==== 0x010159CC  (file offset 0x159CC)  swvM3GReader_Fail =========================================== */
+/* GUESS: name. The M3G reader's slot +0x10 (engine vtable 0x01002410; Ghidra had no function);
    written from its disassembly (0x010159cc - 0x010159e0). Sets +0x64 to 4 and, when +0xc is still -1,
    stores param_2 there. */
-void FUN_010159cc(int param_1,int param_2)
+void swvM3GReader_Fail(int param_1,int param_2)
 
 {
   *(int *)(param_1 + 0x64) = 4;
@@ -25881,8 +25891,8 @@ int FUN_0101d21c(int *param_1,int param_2)
        vtable is not among them (GUESS: not static), so for one the method is not known here */
     (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,piVar7,0);
     /* engine virtual call, slot +0x14: of the static engine vtables only the renderer's (0x01002398)
-       FUN_01005104 and 0x01002410's FUN_01010820 and 0x010027d8's 0x01022908 have it; a scene object's
-       vtable is not among them (GUESS: not static), so for one the method is not known here */
+       FUN_01005104 and 0x01002410's swvM3GReader_State and 0x010027d8's 0x01022908 have it; a scene
+       object's vtable is not among them (GUESS: not static), so for one the method is not known here */
     (*(code *)(*(int *)(*param_1 + 0x14) + *param_1))
               (param_1,*(undefined4 *)(param_2 + 0x8c),piVar7);
     iVar6 = FUN_01011a84(param_2);
@@ -37435,8 +37445,11 @@ int * FUN_01028f54(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
   return param_1;
 }
 
-/* ==== 0x01029010  (file offset 0x29010)  FUN_01029010 ================================================ */
-int * FUN_01029010(int *param_1)
+/* ==== 0x01029010  (file offset 0x29010)  swvM3GReader_Construct ====================================== */
+/* GUESS: name (not yet rewritten). Constructs an M3G reader: its base (FUN_01028630), its vtables
+   (0x01002410 at +0, 0x01002438 at +4), the state 0, and its containers (+0x7c, +0xa0, +0xb0, +0xc0,
+   +0xd0). */
+int * swvM3GReader_Construct(int *param_1)
 
 {
   int iVar1;
@@ -40480,7 +40493,7 @@ int FUN_0102cc80(int param_1,int param_2)
 /* ==== 0x0102CC94  (file offset 0x2CC94)  adler32 ===================================================== */
 /* zlib's adler32(adler, buf, len) (not yet rewritten): Mark Adler's checksum, the sums kept modulo
    65521 (BASE) and reduced every 5552 bytes (NMAX), from zlib's adler32.c; starts from 1. Used by the
-   M3G loader's section checksums (FUN_01015348, FUN_010265fc), by zlib's inflate setup (FUN_010311c4
+   M3G loader's section checksums (swvM3GReader_Feed, FUN_010265fc), by zlib's inflate setup (FUN_010311c4
    passes its address, the word at 0x010311c0, as the check function) and by swvArchive_Open. Reached
    through thunk_adler32 (0x01039594). */
 uint adler32(uint param_1,byte *param_2,uint param_3)
@@ -47649,7 +47662,7 @@ int swv_Create_Loader(void **ppObj)
   iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009b80();
+    pNative = (void *)swvM3GReader_New();
     if (pNative != (void *)0x0) {
       pNative = (void *)((int)pNative + 4);
     }

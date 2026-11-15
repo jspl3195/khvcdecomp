@@ -116,11 +116,11 @@ longlong FUN_01009e28(int param_1,int param_2);   /* 0x01009E28, no Ghidra funct
 void FUN_01009e44(int param_1,void *param_2);   /* 0x01009E44, no Ghidra function */
 void FUN_01009e4c(int param_1,void *param_2);   /* 0x01009E4C, no Ghidra function */
 int32 swvRenderer_Kind(int param_1);   /* 0x0100F4D4 GUESS: name, see swv21brew.c */
-int32 FUN_01010820(int param_1);   /* 0x01010820, no Ghidra function */
+int32 swvM3GReader_State(const uint8 *reader);   /* 0x01010820 GUESS: name, see swv21brew.c */
 uint8 *swvImage2D_Indices(const uint8 *image);   /* 0x01011BCC GUESS: name, see swv21brew.c */
-int FUN_01015348(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5);   /* 0x01015348 */
+int swvM3GReader_Feed(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5);   /* 0x01015348 GUESS: name, see swv21brew.c */
 int FUN_010157e8(int param_1,uint8 *param_2,uint32 param_3);   /* 0x010157E8, no Ghidra function */
-void FUN_010159cc(int param_1,int param_2);   /* 0x010159CC, no Ghidra function */
+void swvM3GReader_Fail(int param_1,int param_2);   /* 0x010159CC GUESS: name, see swv21brew.c */
 void FUN_0101f0b0(int param_1);   /* 0x0101F0B0, no Ghidra function */
 void FUN_010230f8(int param_1,int param_2);   /* 0x010230F8, no Ghidra function */
 void FUN_01023c60(int param_1,int param_2,int param_3,int param_4,int param_5);   /* 0x01023C60 */
@@ -451,7 +451,7 @@ int swvSection_CreateStored(undefined4 param_1,undefined4 param_2,undefined4 par
 int swvSection_CreateZlib(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01009a04(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 int FUN_01009ad0(void);
-int FUN_01009b80(void);
+int swvM3GReader_New(void);   /* 0x01009B80 GUESS: name, see swv21brew.c */
 undefined4 swvSectionZlib_Feed(int param_1,undefined4 param_2,undefined4 param_3);
 void FUN_01009c20(void);
 void FUN_01009c48(void);
@@ -650,8 +650,8 @@ void FUN_01014d10(undefined4 param_1,undefined4 *param_2,undefined4 *param_3,und
 void FUN_01014f98(undefined4 param_1,undefined4 *param_2,undefined4 *param_3,undefined4 *param_4);
 void FUN_01015128(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_010151f0(int param_1,int param_2);
-undefined4 FUN_01015220(int *param_1);
-undefined4 FUN_010152d8(int param_1,undefined4 param_2);
+undefined4 swvM3GReader_End(int *param_1);   /* 0x01015220 GUESS: name, see swv21brew.c */
+undefined4 swvM3GReader_Begin(int param_1,undefined4 param_2);   /* 0x010152D8 GUESS: name, see swv21brew.c */
 void FUN_010159e4(int param_1,undefined4 param_2,int param_3);
 undefined4 FUN_01015a40(undefined4 param_1,int param_2,undefined4 *param_3,undefined4 *param_4);
 void FUN_01015ce8(undefined4 param_1,int param_2,int *param_3);
@@ -964,7 +964,7 @@ void FUN_01028bb0(int *param_1);
 int * FUN_01028cc8(int *param_1);
 int * FUN_01028d2c(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 int * FUN_01028f54(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-int * FUN_01029010(int *param_1);
+int * swvM3GReader_Construct(int *param_1);   /* 0x01029010 GUESS: name, see swv21brew.c */
 int * FUN_010290c4(int *param_1);
 void FUN_01029110(undefined4 *param_1);
 int * FUN_010291bc(int *param_1);
