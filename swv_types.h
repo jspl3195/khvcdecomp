@@ -253,6 +253,8 @@ typedef struct SwvKeyframeSequence {
  *                       +0x8 the z reference (swvNode_AlignmentReferenceZ; NULL: the parent)
  *                       +0xc the y reference (swvNode_AlignmentReferenceY)
  *   +0x30             passed with the references to FUN_010048e4 (GUESS: the scene or the parent)
+ *   +0x34             the next sibling in its parent's child list (NULL: the last)
+ *   +0x38             a Group's first child (swvGroup_ChildCount, swvGroup_NthChild, FUN_01003474)
  * The JSR-184 alignment targets: NONE 0x90, ORIGIN 0x91, X_AXIS 0x92, Y_AXIS 0x93, Z_AXIS 0x94. */
 
 /* ---- VertexArray (class 29), the native object (no struct yet) ------------------------------

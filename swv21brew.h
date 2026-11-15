@@ -515,9 +515,9 @@ void FUN_0100f3cc(undefined4 param_1,int param_2,undefined4 param_3,undefined4 *
 void FUN_0100f450(undefined4 param_1,int param_2,undefined4 param_3,undefined4 *param_4);
 undefined4 * FUN_0100f4dc(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 int32 swvGraphics3D_Property(uint32 index);   /* 0x0100F530 GUESS: name, see swv21brew.c */
-int FUN_0100f594(int param_1);
-void FUN_0100f5b4(int param_1,int *param_2,int param_3);
-undefined8 FUN_0100f5dc(undefined4 param_1,int param_2);
+int32 swvGroup_ChildCount(const uint8 *group);   /* 0x0100F594 GUESS: name, see swv21brew.c */
+uint8 *swvGroup_NthChild(const uint8 *group,int32 *index);   /* 0x0100F5B4 GUESS: name, see swv21brew.c */
+uint8 *swvGroup_Child(const uint8 *group,int32 index);   /* 0x0100F5DC GUESS: name, see swv21brew.c */
 undefined4 FUN_0100f620(int param_1,int param_2);
 void FUN_0100f654(int param_1,int param_2);
 undefined4 FUN_0100f6d8(int param_1);
@@ -1165,8 +1165,8 @@ undefined4 FUN_01030110(int param_1,undefined4 param_2,int param_3,int param_4);
 undefined4 FUN_01030198(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 );
 void FUN_01030210(int param_1,int param_2);
 undefined4 FUN_01030220(int param_1,int param_2);
-int FUN_010302ec(int param_1,undefined4 param_2,ISwerveObject **param_3);
-void FUN_01030360(int param_1,undefined4 *param_2);
+int swvGroup_GetChild(int param_1,undefined4 param_2,ISwerveObject **param_3);   /* 0x010302EC GUESS: name, see swv21brew.c */
+void swvGroup_GetChildCount(int param_1,undefined4 *param_2);   /* 0x01030360 GUESS: name, see swv21brew.c */
 undefined4 FUN_010303f0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5, int param_6,undefined1 *param_7);
 undefined4 FUN_010304c0(int param_1,undefined4 param_2,undefined4 *param_3,undefined4 *param_4,int param_5, undefined1 *param_6);
 undefined4 FUN_010305b8(int param_1,int param_2);
@@ -2003,8 +2003,8 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define ADDRESS_OF_FUNCTION_0102f7f8_OFFSET 0xFFFFFCF0   /* was DAT_0102fb68 (word at 0x0102FB68); PC-relative offset: + 0x102fb08 (the pc) = 0x0102F7F8 */
 #define ADDRESS_OF_FUNCTION_0102fd7c_OFFSET 0x00000268   /* was DAT_0102fb6c (word at 0x0102FB6C); PC-relative offset: + 0x102fb14 (the pc) = 0x0102FD7C */
 #define ADDRESS_OF_swvGraphics3D_GetProperty_OFFSET 0xFFFFFE40   /* was DAT_0102fb70 (word at 0x0102FB70); PC-relative offset: + 0x102fb20 (the pc) = 0x0102F960 */
-#define ADDRESS_OF_FUNCTION_01030360_OFFSET 0xFFFFFFC8   /* was DAT_010303d8 (word at 0x010303D8); PC-relative offset: + 0x1030398 (the pc) = 0x01030360 */
-#define ADDRESS_OF_FUNCTION_010302ec_OFFSET 0xFFFFFF48   /* was DAT_010303dc (word at 0x010303DC); PC-relative offset: + 0x10303a4 (the pc) = 0x010302EC */
+#define ADDRESS_OF_swvGroup_GetChildCount_OFFSET 0xFFFFFFC8   /* was DAT_010303d8 (word at 0x010303D8); PC-relative offset: + 0x1030398 (the pc) = 0x01030360 */
+#define ADDRESS_OF_swvGroup_GetChild_OFFSET 0xFFFFFF48   /* was DAT_010303dc (word at 0x010303DC); PC-relative offset: + 0x10303a4 (the pc) = 0x010302EC */
 #define ADDRESS_OF_FUNCTION_01030220_OFFSET 0xFFFFFE70   /* was DAT_010303e0 (word at 0x010303E0); PC-relative offset: + 0x10303b0 (the pc) = 0x01030220 */
 #define ADDRESS_OF_FUNCTION_010305b8_OFFSET 0x000001FC   /* was DAT_010303e4 (word at 0x010303E4); PC-relative offset: + 0x10303bc (the pc) = 0x010305B8 */
 #define ADDRESS_OF_FUNCTION_010304c0_OFFSET 0x000000F8   /* was DAT_010303e8 (word at 0x010303E8); PC-relative offset: + 0x10303c8 (the pc) = 0x010304C0 */

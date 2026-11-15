@@ -14002,57 +14002,57 @@ int32 swvGraphics3D_Property(uint32 index)
   return value;
 }
 
-/* ==== 0x0100F594  (file offset 0x0F594)  FUN_0100f594 ================================================ */
-int FUN_0100f594(int param_1)
+/* ==== 0x0100F594  (file offset 0x0F594)  swvGroup_ChildCount ========================================= */
+/* GUESS: name. The number of children of a native Group (JSR-184 Group.getChildCount): its child
+   list, the first child at +0x38, each child's next sibling at +0x34, counted to the NULL. Evidence:
+   0x0100f594 - 0x0100f5b0 (`ldr r1, [r1, #0x38]`, then `addne r0, r0, #1` / `ldrne r1, [r1, #0x34]`
+   / `bne`). Only swvGroup_GetChildCount (kh_types.h SwerveGroupVtbl slot 43) calls it. */
+int32 swvGroup_ChildCount(const uint8 *group)
 
 {
-  int iVar1;
-  int iVar2;
-  
-  iVar1 = 0;
-  for (iVar2 = *(int *)(param_1 + 0x38); iVar2 != 0; iVar2 = *(int *)(iVar2 + 0x34)) {
-    iVar1 = iVar1 + 1;
-  }
-  return iVar1;
+  const uint8 *child;
+  int32 count = 0;
+
+  for (child = *(const uint8 *const *)(group + 0x38); child != NULL;
+       child = *(const uint8 *const *)(child + 0x34))
+    count++;
+  return count;
 }
 
-/* ==== 0x0100F5B4  (file offset 0x0F5B4)  FUN_0100f5b4 ================================================ */
-void FUN_0100f5b4(int param_1,int *param_2,int param_3)
+/* ==== 0x0100F5B4  (file offset 0x0F5B4)  swvGroup_NthChild =========================================== */
+/* GUESS: name. The child of a native Group whose number is *index (0 the first; the list as in
+   swvGroup_ChildCount), or NULL when there are not that many: *index goes down by one for each child
+   reached, so it ends at -1 when the child is found. Evidence: 0x0100f5b4 - 0x0100f5d8 (`ldrne r2,
+   [r1]` / `subne r2, r2, #1` / `strne r2, [r1]` / `cmnne r2, #1` / `bne`, the child left in r0;
+   Ghidra had read r2 as a third parameter and dropped the result). Used by swvGroup_Child and
+   FUN_01011ee4. */
+uint8 *swvGroup_NthChild(const uint8 *group,int32 *index)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 0x38);
-  while( true ) {
-    if (iVar1 != 0) {
-      param_3 = *param_2 + -1;
-      *param_2 = param_3;
-    }
-    if (iVar1 == 0 || param_3 == -1) break;
-    iVar1 = *(int *)(iVar1 + 0x34);
-  }
-  return;
+  uint8 *child = *(uint8 *const *)(group + 0x38);
+
+  while (child != NULL && --*index != -1)
+    child = *(uint8 *const *)(child + 0x34);
+  return child;
 }
 
-/* ==== 0x0100F5DC  (file offset 0x0F5DC)  FUN_0100f5dc ================================================ */
-undefined8 FUN_0100f5dc(undefined4 param_1,int param_2)
+/* ==== 0x0100F5DC  (file offset 0x0F5DC)  swvGroup_Child ============================================== */
+/* GUESS: name. Child index of a native Group (JSR-184 Group.getChild): error -1101 (FUN_0102f7e0,
+   which does not return; GUESS an index out of range) for a negative index or when the Group has no
+   such child (swvGroup_NthChild gives NULL). Evidence: 0x0100f5dc - 0x0100f618 (the index kept on the
+   stack for swvGroup_NthChild, `movlt` / `bllt` and `moveq` / `bleq` the error, r0 the child; Ghidra
+   had read the saved registers as a 64-bit result). Only swvGroup_GetChild (slot 44) calls it. */
+uint8 *swvGroup_Child(const uint8 *group,int32 index)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  undefined4 uStack_18;
-  int local_10;
-  
-  uVar1 = INTEGER_MINUS_1101;
-  local_10 = param_2;
-  if (param_2 < 0) {
+  uint8 *child;
+
+  if (index < 0)
     FUN_0102f7e0(INTEGER_MINUS_1101);
-  }
-  iVar2 = FUN_0100f5b4(param_1,&local_10);
-  if (iVar2 == 0) {
-    FUN_0102f7e0(uVar1);
-  }
-  return CONCAT44(uStack_18,iVar2);
+  child = swvGroup_NthChild(group,&index);
+  if (child == NULL)
+    FUN_0102f7e0(INTEGER_MINUS_1101);
+  return child;
 }
 
 /* ==== 0x0100F620  (file offset 0x0F620)  FUN_0100f620 ================================================ */
@@ -16735,7 +16735,8 @@ void FUN_01011ee4(undefined4 param_1,undefined4 param_2,undefined4 param_3)
   undefined4 local_8 [2];
   
   local_8[0] = param_2;
-  iVar1 = FUN_0100f5b4(param_1,local_8,param_3,param_1);
+  /* swvGroup_NthChild reads r0 and r1 only: Ghidra had added two phantom arguments */
+  iVar1 = (int)swvGroup_NthChild((uint8 *)param_1,(int32 *)local_8);
   if (iVar1 == 0) {
     FUN_01011bfc(param_1,local_8[0]);
   }
@@ -44508,8 +44509,11 @@ int swv_Create_Group(void **ppObj)
   return iVar1;
 }
 
-/* ==== 0x010302EC  (file offset 0x302EC)  FUN_010302ec ================================================ */
-int FUN_010302ec(int param_1,undefined4 param_2,ISwerveObject **param_3)
+/* ==== 0x010302EC  (file offset 0x302EC)  swvGroup_GetChild =========================================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 44 (+0xb0) of Group and World (kh_types.h
+   SwerveGroupVtbl.GetChild): in an error frame, swvGroup_Child(native, index) wrapped (swv_WrapObject)
+   into *param_3; on an error its result code (swv_ErrorToResult). */
+int swvGroup_GetChild(int param_1,undefined4 param_2,ISwerveObject **param_3)
 
 {
   int iVar1;
@@ -44523,7 +44527,7 @@ int FUN_010302ec(int param_1,undefined4 param_2,ISwerveObject **param_3)
     if (iVar1 != 0) {
       iVar1 = iVar1 + -4;
     }
-    pNative = (void *)FUN_0100f5dc(iVar1,param_2);
+    pNative = swvGroup_Child((uint8 *)iVar1,param_2);
     if (pNative != (void *)0x0) {
       pNative = (void *)((int)pNative + 4);
     }
@@ -44536,8 +44540,11 @@ int FUN_010302ec(int param_1,undefined4 param_2,ISwerveObject **param_3)
   return iVar1;
 }
 
-/* ==== 0x01030360  (file offset 0x30360)  FUN_01030360 ================================================ */
-void FUN_01030360(int param_1,undefined4 *param_2)
+/* ==== 0x01030360  (file offset 0x30360)  swvGroup_GetChildCount ====================================== */
+/* GUESS: name (not yet rewritten). ISwerveObject slot 43 (+0xac) of Group and World (kh_types.h
+   SwerveGroupVtbl.GetChildCount): *param_2 = swvGroup_ChildCount of the native object (po->pNative,
+   +4, less 4). */
+void swvGroup_GetChildCount(int param_1,undefined4 *param_2)
 
 {
   int iVar1;
@@ -44547,7 +44554,7 @@ void FUN_01030360(int param_1,undefined4 *param_2)
   if (iVar1 != 0) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_0100f594(iVar1);
+  uVar2 = swvGroup_ChildCount((uint8 *)iVar1);
   *param_2 = uVar2;
   return;
 }
@@ -44561,8 +44568,8 @@ void swv_InitVtbl_Group(void **pVtbl)
                        swv_WrapObject for internal object type 9 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
   FUN_01034a6c();
-  pVtbl[0x2b] = (void *)(ADDRESS_OF_FUNCTION_01030360_OFFSET + 0x1030398);
-  pVtbl[0x2c] = (void *)(ADDRESS_OF_FUNCTION_010302ec_OFFSET + 0x10303a4);
+  pVtbl[0x2b] = (void *)(ADDRESS_OF_swvGroup_GetChildCount_OFFSET + 0x1030398);
+  pVtbl[0x2c] = (void *)(ADDRESS_OF_swvGroup_GetChild_OFFSET + 0x10303a4);
   pVtbl[0x2d] = (void *)(ADDRESS_OF_FUNCTION_01030220_OFFSET + 0x10303b0);
   pVtbl[0x2e] = (void *)(ADDRESS_OF_FUNCTION_010305b8_OFFSET + 0x10303bc);
   pVtbl[0x2f] = (void *)(ADDRESS_OF_FUNCTION_010304c0_OFFSET + 0x10303c8);
