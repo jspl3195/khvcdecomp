@@ -7612,6 +7612,8 @@ undefined4 FUN_0100800c(int param_1,undefined4 param_2,undefined4 param_3)
 }
 
 /* ==== 0x01008064  (file offset 0x08064)  thunk_FUN_01021abc ========================================== */
+/* A one-instruction jump to FUN_01021abc (GUESS Texture2D.setImage); Ghidra repeated its code here,
+   see there. */
 void thunk_FUN_01021abc(int param_1,int param_2)
 
 {
@@ -7635,22 +7637,25 @@ void thunk_FUN_01021abc(int param_1,int param_2)
   /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
      FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
      not static), so for one the method is not known here */
-  (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))();
-  iVar1 = FUN_01013af8();
+  /* the image (the receiver) and the width restored: Ghidra had dropped them */
+  iVar1 = (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))(piVar2);
+  iVar1 = swv_IsPowerOfTwo(iVar1);
   /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
      FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
      not static), so for one the method is not known here */
   if ((iVar1 != 0) &&
      (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x24) + **(int **)(param_1 + 0x2c)))
-                        (), iVar1 < 0x401)) {
+                        (*(int **)(param_1 + 0x2c)), iVar1 < 0x401)) {
     /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
        FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
        method is not known here */
-    (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) + **(int **)(param_1 + 0x2c)))();
-    iVar1 = FUN_01013af8();
+    /* the image (the receiver) and the height restored: Ghidra had dropped them */
+    iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) +
+                        **(int **)(param_1 + 0x2c)))(*(int **)(param_1 + 0x2c));
+    iVar1 = swv_IsPowerOfTwo(iVar1);
     if ((iVar1 != 0) &&
        (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) + **(int **)(param_1 + 0x2c))
-                )(), iVar1 < 0x401)) {
+                )(*(int **)(param_1 + 0x2c)), iVar1 < 0x401)) {
       return;
     }
   }
@@ -18646,21 +18651,28 @@ int32 swvNode_HasAncestor(const uint8 *node,const uint8 *ancestor)
   return found;
 }
 
-/* ==== 0x01013AF8  (file offset 0x13AF8)  FUN_01013af8 ================================================ */
-undefined4 FUN_01013af8(uint param_1)
+/* ==== 0x01013AF8  (file offset 0x13AF8)  swv_IsPowerOfTwo ============================================ */
+/* GUESS: name. Whether value's magnitude is a power of two (1, 2, 4, ...): 0 for 0; a negative value
+   is negated first (0x80000000 stays negative and gives 0); the value halved while it is above 0 and
+   even, then 1 when nothing but bit 0 is left. Callers: FUN_01021abc (GUESS Texture2D.setImage) and
+   FUN_0101e144 (the M3G loader's Texture2D), on the image's width and height (JSR-184: powers of two,
+   up to 1024). Evidence: 0x01013af8 - 0x01013b30 (`cmp r0, #0` / `beq` 0, `bge`, `rsb r0, r0, #0`,
+   `mov r0, r0, asr #1` / `cmp r0, #0` / `ble`, `tst r0, #1` / `beq`, `bics r0, r0, #1` / `moveq r0,
+   #1`). */
+int32 swv_IsPowerOfTwo(int32 value)
 
 {
-  if (param_1 != 0) {
-    if (-1 < (int)param_1) goto LAB_01013b18;
-    for (param_1 = -param_1; 0 < (int)param_1; param_1 = (int)param_1 >> 1) {
-LAB_01013b18:
-      if ((param_1 & 1) != 0) break;
-    }
-    if ((param_1 & 0xfffffffe) == 0) {
-      return 1;
-    }
+  int32 magnitude = value;
+  int32 power = 0;
+
+  if (value != 0) {
+    if (magnitude < 0)
+      magnitude = (int32)(0 - (uint32)magnitude);
+    while (magnitude > 0 && (magnitude & 1) == 0)
+      magnitude >>= 1;
+    power = ((uint32)magnitude & ~(uint32)1) == 0;
   }
-  return 0;
+  return power;
 }
 
 /* ==== 0x01013B34  (file offset 0x13B34)  FUN_01013b34 ================================================ */
@@ -27008,6 +27020,14 @@ undefined4 FUN_0101e0b0(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x0101E144  (file offset 0x1E144)  FUN_0101e144 ================================================ */
+/* GUESS (not yet rewritten): the M3G loader's Texture2D record, on the texture param_1 and the
+   reader param_2: the Transformable part (FUN_0101ee08), the image (an object reference,
+   FUN_010197c4) at +0x2c as in Texture2D.setImage; error -1202 (the file is bad) for none, or a width
+   or height that is not a power of two (swv_IsPowerOfTwo) up to 1024; then, in the file's order, the
+   blend colour (+0x24, FUN_01019650), the blending (+0x28: FUNC_ADD 0xe0 .. REPLACE 0xe4), the
+   wrapping S and T (+0x30 / +0x34: CLAMP 0xf0, REPEAT 0xf1), the level filter (+0x38: BASE_LEVEL 0xd0,
+   LINEAR, NEAREST) and the image filter (+0x3c: LINEAR 0xd1, NEAREST 0xd2), each a byte
+   FUN_010196cc checks to lie strictly between its two bounds. */
 void FUN_0101e144(int param_1,undefined4 param_2)
 
 {
@@ -27034,22 +27054,26 @@ void FUN_0101e144(int param_1,undefined4 param_2)
     /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
        FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
        (GUESS: not static), so for one the method is not known here */
-    (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))();
-    iVar1 = FUN_01013af8();
+    /* the image (the receiver) and the width restored: Ghidra had dropped them */
+    iVar1 = (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))(piVar2);
+    iVar1 = swv_IsPowerOfTwo(iVar1);
     if ((iVar1 != 0) &&
        (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x24) + **(int **)(param_1 + 0x2c))
-                )(), iVar1 < 0x401)) {
+                )(*(int **)(param_1 + 0x2c)), iVar1 < 0x401)) {
       /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
          FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
          method is not known here */
-      (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) + **(int **)(param_1 + 0x2c)))();
-      iVar1 = FUN_01013af8();
+      /* the image (the receiver) and the height restored: Ghidra had dropped them */
+      iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) +
+                          **(int **)(param_1 + 0x2c)))(*(int **)(param_1 + 0x2c));
+      iVar1 = swv_IsPowerOfTwo(iVar1);
       /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
          FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
          method is not known here */
       if ((iVar1 != 0) &&
          (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) +
-                            **(int **)(param_1 + 0x2c)))(), iVar1 < 0x401)) goto LAB_0101e208;
+                            **(int **)(param_1 + 0x2c)))(*(int **)(param_1 + 0x2c)), iVar1 < 0x401))
+        goto LAB_0101e208;
     }
   }
   FUN_0102f7e0(INTEGER_MINUS_1202);
@@ -30606,6 +30630,13 @@ void FUN_01021a78(int param_1,undefined4 param_2,int param_3)
 }
 
 /* ==== 0x01021ABC  (file offset 0x21ABC)  FUN_01021abc ================================================ */
+/* GUESS (not yet rewritten): JSR-184 Texture2D.setImage(image) on the texture param_1: the image
+   (param_2) swapped in at +0x2c with the counts of references kept (FUN_01004848, on the objects' +4
+   parts); then error -1301 (a tail jump to FUN_0102f7e0) unless its width and its height (the image's
+   vtable +0x24 / +0x28, each asked twice) are powers of two (swv_IsPowerOfTwo) up to 1024. GUESS,
+   latent engine bugs: the image is stored before it is checked, and a NULL image is not checked
+   before its vtable is read. thunk_FUN_01021abc (0x01008064) is a jump here; Ghidra repeated the code
+   there, and followed the tail jump into FUN_0102f7e0's code at the end. */
 void FUN_01021abc(int param_1,int param_2)
 
 {
@@ -30629,22 +30660,25 @@ void FUN_01021abc(int param_1,int param_2)
   /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
      FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
      not static), so for one the method is not known here */
-  (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))();
-  iVar1 = FUN_01013af8();
+  /* the image (the receiver) and the width restored: Ghidra had dropped them */
+  iVar1 = (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))(piVar2);
+  iVar1 = swv_IsPowerOfTwo(iVar1);
   /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
      FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
      not static), so for one the method is not known here */
   if ((iVar1 != 0) &&
      (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x24) + **(int **)(param_1 + 0x2c)))
-                        (), iVar1 < 0x401)) {
+                        (*(int **)(param_1 + 0x2c)), iVar1 < 0x401)) {
     /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
        FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
        method is not known here */
-    (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) + **(int **)(param_1 + 0x2c)))();
-    iVar1 = FUN_01013af8();
+    /* the image (the receiver) and the height restored: Ghidra had dropped them */
+    iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) +
+                        **(int **)(param_1 + 0x2c)))(*(int **)(param_1 + 0x2c));
+    iVar1 = swv_IsPowerOfTwo(iVar1);
     if ((iVar1 != 0) &&
        (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) + **(int **)(param_1 + 0x2c))
-                )(), iVar1 < 0x401)) {
+                )(*(int **)(param_1 + 0x2c)), iVar1 < 0x401)) {
       return;
     }
   }

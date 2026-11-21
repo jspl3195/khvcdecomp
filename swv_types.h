@@ -417,7 +417,11 @@ typedef struct SwvKeyframeSequence {
  *   +0x54 / +0x58     the log2 of the width and the height (FUN_01018460 checks the sizes against them)
  * Its vtable (offsets from the table, like every engine vtable): +0x24 / +0x28 the width and height
  * (GUESS: getWidth / getHeight, swvImage2D_GetWidth / GetHeight), +0x30 the pixels (swvImage2D_Pixels
- * calls it; the BREW-facing slot 25, swvImage2D_GetPixels, returns them). */
+ * calls it; the BREW-facing slot 25, swvImage2D_GetPixels, returns them).
+ * A Texture2D's image (its +0x2c; FUN_01021abc, GUESS Texture2D.setImage, and the loader's
+ * FUN_0101e144) must have a width and height that are powers of two (swv_IsPowerOfTwo) up to 1024;
+ * the texture's +0x24 the blend colour, +0x28 the blending, +0x30 / +0x34 the wrapping S / T, +0x38
+ * the level filter, +0x3c the image filter (JSR-184's values). */
 
 /* ---- Background (class 4), the native object (no struct yet) ---------------------------------
  * The fields the Background clear (FUN_01005104, GUESS) reads (GUESS: the names, from JSR-184):
