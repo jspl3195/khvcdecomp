@@ -347,11 +347,14 @@ typedef struct SwvKeyframeSequence {
 /* ---- VertexBuffer, the native object (no struct yet) -------------------------------------------
  * Its fields (GUESS: the names; the BREW slots, kh_types.h SwerveVertexBufferVtbl, and
  * swvVertexBuffer_Array):
- *   +0x1c             the vertex count
+ *   +0x1c             the vertex count: that of its arrays, which must all agree (FUN_01023b3c,
+ *                     swvVertexBuffer_HasOnlyArray; -1301), 0 once it has none
  *   +0x20             the default colour (ARGB)
  *   +0x24             the positions (a VertexArray; attribute 0)
- *   +0x28             the colours (attribute 2)
- *   +0x2c             the normals (attribute 1)
+ *   +0x28             the normals (attribute 2; GUESS: corrected, was "the colours": FUN_010220b0
+ *                     enforces JSR-184's normals rule on it)
+ *   +0x2c             the colours (attribute 1; GUESS: corrected, was "the normals": FUN_010209ac
+ *                     enforces the colours' rule)
  *   +0x30 / +0x34     the texture coordinates of units 0 / 1 (attributes 3, 4)
  * Made by FUN_01028898 (0x78 bytes; the default colour 0xff000000). */
 

@@ -15385,8 +15385,8 @@ int32 swvObject3D_References(uint8 *object,int32 max,uint8 **out)
 /* GUESS (not yet rewritten): a MorphingMesh's morphed VertexBuffer, made again when +0xac is set: error
    -1300 when its own buffer (swvMesh_VertexBuffer) has no positions; a new VertexBuffer at +0xb0 the
    first time (0x78 bytes, FUN_01028898); then each attribute blended (FUN_0100fb34) and set into it:
-   the positions, normals, colours and texture coordinates (FUN_0102234c, FUN_010209ac, FUN_010220b0,
-   FUN_0102358c). */
+   the positions (FUN_0102234c), the normals (attribute 2, FUN_010220b0), the colours (attribute 1,
+   FUN_010209ac) and the texture coordinates (FUN_0102358c). */
 undefined4 FUN_010104f0(int param_1)
 
 {
@@ -15902,11 +15902,12 @@ void FUN_01010e84(int param_1,int param_2,int *param_3,undefined4 *param_4)
 
 /* ==== 0x01010F60  (file offset 0x10F60)  swvVertexBuffer_Array ======================================= */
 /* GUESS: name. One of a native VertexBuffer's arrays (VertexArrays, swvVertexArray_GetComponent's
-   object; NULL when it has none), by attribute: 0 the positions (+0x24), 1 the normals (+0x2c), 2 the
-   colours (+0x28), 3 and up the texture coordinates of unit attribute - 3 (+0x30, +0x34). There is no
+   object; NULL when it has none), by attribute: 0 the positions (+0x24), 1 the colours (+0x2c), 2 the
+   normals (+0x28), 3 and up the texture coordinates of unit attribute - 3 (+0x30, +0x34). There is no
    range check. Evidence: 0x01010f60 - 0x01010f8c (`cmp r1, #0` / `ldreq r0, [r0, #0x24]` / `bxeq lr`,
    then #1 / +0x2c, #2 / +0x28, else `sub r1, r1, #3` / `add r0, r0, r1, lsl #2` / `ldr r0, [r0,
-   #0x30]`); the fields from the BREW-facing slots (swvVertexBuffer_GetColors +0x28, GetNormals +0x2c).
+   #0x30]`); the fields from the BREW-facing slots (swvVertexBuffer_GetNormals +0x28, GetColors
+   +0x2c) and the setters' rules (FUN_010220b0 normals, FUN_010209ac colours).
    Only the MorphingMesh blend FUN_0100fb34 calls it. */
 uint8 *swvVertexBuffer_Array(const uint8 *buffer,int32 attribute)
 
@@ -16868,7 +16869,7 @@ int FUN_01011d54(int param_1,int param_2)
 }
 
 /* ==== 0x01011DE0  (file offset 0x11DE0)  FUN_01011de0 ================================================ */
-/* GUESS (not yet rewritten): a VertexBuffer's reference(index): its positions, colours, normals and the
+/* GUESS (not yet rewritten): a VertexBuffer's reference(index): its positions, normals, colours and the
    two texture coordinate sets (+0x24 .. +0x34) for indices 0 - 4, then swvObject3D_Reference(index -
    5). */
 undefined4 FUN_01011de0(int param_1,int param_2)
@@ -18675,48 +18676,32 @@ int32 swv_IsPowerOfTwo(int32 value)
   return power;
 }
 
-/* ==== 0x01013B34  (file offset 0x13B34)  FUN_01013b34 ================================================ */
-undefined4 FUN_01013b34(int param_1,int param_2)
+/* ==== 0x01013B34  (file offset 0x13B34)  swvVertexBuffer_HasOnlyArray ================================ */
+/* GUESS: name. Whether the VertexBuffer buffer has no vertex array but, at most, array: its five
+   (+0x24 the positions, +0x28 the normals, +0x2c the colours, +0x30 / +0x34 the texture coordinates)
+   counted, 1 when there are none, or one and it is array; else 0. FUN_01023b3c, the array setter,
+   asks it with the slot's current array: when other arrays are there, the new one must have the
+   buffer's vertex count. Evidence: 0x01013b34 - 0x01013bb0 (`ldr r3, [r0, #0x24]` .. `#0x2c` and the
+   loop over +0x30 / +0x34 (`cmp r3, #2`), each `movne r12` (the last found) / `addne r2, r2, #1`,
+   then `cmp r2, #0` / `beq` 1, `cmp r2, #1` / `cmpeq r12, r1`, `movne r0, #0`). */
+int32 swvVertexBuffer_HasOnlyArray(const uint8 *buffer,const uint8 *array)
 
 {
-  uint uVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  
-  iVar2 = *(int *)(param_1 + 0x24);
-  iVar4 = 0;
-  if (iVar2 != 0) {
-    iVar4 = iVar2;
-  }
-  iVar3 = *(int *)(param_1 + 0x28);
-  uVar1 = (uint)(iVar2 != 0);
-  if (iVar3 != 0) {
-    iVar4 = iVar3;
-  }
-  iVar2 = *(int *)(param_1 + 0x2c);
-  if (iVar3 != 0) {
-    uVar1 = uVar1 + 1;
-  }
-  if (iVar2 != 0) {
-    iVar4 = iVar2;
-  }
-  iVar3 = 0;
-  if (iVar2 != 0) {
-    uVar1 = uVar1 + 1;
-  }
-  do {
-    iVar2 = *(int *)(param_1 + iVar3 * 4 + 0x30);
-    iVar3 = iVar3 + 1;
-    if (iVar2 != 0) {
-      uVar1 = uVar1 + 1;
-      iVar4 = iVar2;
+  const uint8 *last = NULL;
+  int32 count = 0;
+  int32 i;
+  int32 only;
+
+  for (i = 0; i < 5; i++) {
+    const uint8 *each = *(const uint8 *const *)(buffer + 0x24 + i * 4);
+
+    if (each != NULL) {
+      last = each;
+      count++;
     }
-  } while (iVar3 < 2);
-  if ((uVar1 != 0) && (uVar1 != 1 || iVar4 != param_2)) {
-    return 0;
   }
-  return 1;
+  only = count == 0 || (count == 1 && last == array);
+  return only;
 }
 
 /* ==== 0x01013BB4  (file offset 0x13BB4)  swv_CheckNotNull ============================================ */
@@ -29811,17 +29796,18 @@ void swvMaterial_SetColorValue(uint8 *material,uint32 targets,uint32 argb)
 }
 
 /* ==== 0x010209AC  (file offset 0x209AC)  FUN_010209ac ================================================ */
+/* GUESS (not yet rewritten): JSR-184 VertexBuffer.setColors(colors) on the VertexBuffer param_1
+   (swvVertexBuffer_SetColors, slot 21, calls it): error -1301 unless the array param_2 (NULL clears)
+   has 1-byte components, 3 or 4 a vertex (JSR-184's rule for colours); then a tail jump to
+   FUN_01023b3c with the slot +0x2c (Ghidra repeated its code here). */
 void FUN_010209ac(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
   int iVar1;
   int *piVar2;
   int iVar3;
-  undefined4 unaff_r4;
-  undefined4 unaff_r5;
   bool bVar4;
   bool bVar5;
-  undefined8 uVar6;
   
   if ((param_2 != 0) &&
      ((*(int *)(param_2 + 0x24) != 1 ||
@@ -29830,9 +29816,9 @@ void FUN_010209ac(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   }
   piVar2 = (int *)(param_1 + 0x2c);
   if (param_2 != 0) {
-    uVar6 = FUN_01013b34(param_1,*piVar2,param_2,param_4,unaff_r4,unaff_r5);
-    iVar3 = (int)((ulonglong)uVar6 >> 0x20);
-    if ((int)uVar6 == 0) {
+    /* Ghidra had read a 64-bit result and more arguments (saved registers) */
+    iVar3 = swvVertexBuffer_HasOnlyArray((uint8 *)param_1,(uint8 *)*piVar2);
+    if (iVar3 == 0) {
       iVar1 = *(int *)(param_1 + 0x1c);
       if (iVar1 != 0) {
         iVar3 = *(int *)(param_2 + 0x1c);
@@ -31063,6 +31049,11 @@ void FUN_01021f28(int param_1)
 }
 
 /* ==== 0x010220B0  (file offset 0x220B0)  FUN_010220b0 ================================================ */
+/* GUESS (not yet rewritten): JSR-184 VertexBuffer.setNormals(normals) on the VertexBuffer param_1
+   (swvVertexBuffer_SetNormals, slot 19, calls it): error -1301 unless the array param_2 (NULL clears)
+   has 3 components a vertex (JSR-184's rule for normals); FUN_01023b3c with the slot +0x28; then the
+   normals' scale (+0x54: 1 / 127.5 for bytes, 1 / 32767.5 for 16-bit words; 1.0 without normals) and
+   bias (+0x48 .. +0x50, half the scale each, FUN_010279d0), mapping the stored values to -1 .. 1. */
 void FUN_010220b0(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -31278,6 +31269,11 @@ void FUN_01022340(int param_1,undefined4 param_2,undefined4 param_3)
 }
 
 /* ==== 0x0102234C  (file offset 0x2234C)  FUN_0102234c ================================================ */
+/* GUESS (not yet rewritten): JSR-184 VertexBuffer.setPositions(positions, scale, bias) on the
+   VertexBuffer param_1: errors (FUN_0102f7e0) unless the array param_2 (NULL clears) has 3
+   components a vertex, and for a bias (param_5) of fewer floats (param_4) than that; +0x44 the scale
+   (param_3), +0x38 .. +0x40 the bias (FUN_0102ed04 each; 0 without one); then a tail jump to
+   FUN_01023b3c with the slot +0x24 (Ghidra repeated its code here). */
 void FUN_0102234c(int param_1,int param_2,undefined4 param_3,int param_4,undefined4 *param_5)
 
 {
@@ -31285,13 +31281,8 @@ void FUN_0102234c(int param_1,int param_2,undefined4 param_3,int param_4,undefin
   undefined4 uVar2;
   int iVar3;
   int *piVar4;
-  undefined4 unaff_r4;
-  undefined4 unaff_r5;
-  undefined4 unaff_r6;
-  undefined4 in_lr;
   bool bVar5;
   bool bVar6;
-  undefined8 uVar7;
   
   uVar2 = INTEGER_MINUS_1301;
   if (param_2 != 0) {
@@ -31330,9 +31321,9 @@ void FUN_0102234c(int param_1,int param_2,undefined4 param_3,int param_4,undefin
   }
   piVar4 = (int *)(param_1 + 0x24);
   if (param_2 != 0) {
-    uVar7 = FUN_01013b34(param_1,*piVar4,param_2,param_4,unaff_r4,unaff_r5,unaff_r6,in_lr);
-    iVar1 = (int)((ulonglong)uVar7 >> 0x20);
-    if ((int)uVar7 == 0) {
+    /* Ghidra had read a 64-bit result and more arguments (saved registers) */
+    iVar1 = swvVertexBuffer_HasOnlyArray((uint8 *)param_1,(uint8 *)*piVar4);
+    if (iVar1 == 0) {
       iVar3 = *(int *)(param_1 + 0x1c);
       if (iVar3 != 0) {
         iVar1 = *(int *)(param_2 + 0x1c);
@@ -32563,6 +32554,12 @@ undefined4 FUN_010234bc(int param_1,int param_2,undefined4 param_3,uint param_4,
 }
 
 /* ==== 0x0102358C  (file offset 0x2358C)  FUN_0102358c ================================================ */
+/* GUESS (not yet rewritten): JSR-184 VertexBuffer.setTexCoords(index, texCoords, scale, bias) on the
+   VertexBuffer param_1: errors (FUN_0102f7e0) for a unit param_2 above 1, an array param_3 of other
+   than 2 or 3 components a vertex, or a bias (param_6) of fewer floats (param_5) than that; +0x70 + 4
+   * unit the scale (param_4), +0x58 + 0xc * unit the bias (FUN_0102ed04 each, the third only for 3
+   components; 0 without one); then a tail jump to FUN_01023b3c with the slot +0x30 + 4 * unit (Ghidra
+   repeated its code here). */
 void FUN_0102358c(int param_1,uint param_2,int param_3,undefined4 param_4,int param_5,
                  undefined4 *param_6)
 
@@ -32575,7 +32572,6 @@ void FUN_0102358c(int param_1,uint param_2,int param_3,undefined4 param_4,int pa
   int iVar6;
   bool bVar7;
   bool bVar8;
-  undefined8 uVar9;
   
   iVar2 = param_1;
   if (1 < param_2) {
@@ -32620,9 +32616,9 @@ LAB_01023650:
 LAB_01023658:
   piVar4 = (int *)(iVar6 + 0x30);
   if (param_3 != 0) {
-    uVar9 = FUN_01013b34(param_1,*piVar4);
-    iVar2 = (int)((ulonglong)uVar9 >> 0x20);
-    if ((int)uVar9 == 0) {
+    /* Ghidra had read a 64-bit result (r0 and r1) */
+    iVar2 = swvVertexBuffer_HasOnlyArray((uint8 *)param_1,(uint8 *)*piVar4);
+    if (iVar2 == 0) {
       iVar6 = *(int *)(param_1 + 0x1c);
       if (iVar6 != 0) {
         iVar2 = *(int *)(param_3 + 0x1c);
@@ -32986,6 +32982,13 @@ LAB_01023b24:
 }
 
 /* ==== 0x01023B3C  (file offset 0x23B3C)  FUN_01023b3c ================================================ */
+/* GUESS (not yet rewritten): sets one of the VertexBuffer param_1's arrays (the slot param_2, one of
+   +0x24 .. +0x34) to the VertexArray param_3 (NULL: none): when the buffer has arrays besides the
+   slot's current one (swvVertexBuffer_HasOnlyArray gives 0) and a vertex count (+0x1c), the new array
+   must have that count (its +0x1c), else -1301 (JSR-184's rule); the array swapped in with the counts
+   of references kept (FUN_01004848, on the objects' +4 parts); the buffer's vertex count then the new
+   array's, or 0 once it has no array left. FUN_0102234c, FUN_010209ac and FUN_0102358c end in a tail
+   jump to it (Ghidra repeated its code in each); FUN_010220b0 calls it. */
 void FUN_01023b3c(int param_1,int *param_2,int param_3)
 
 {
@@ -32993,12 +32996,11 @@ void FUN_01023b3c(int param_1,int *param_2,int param_3)
   int iVar2;
   bool bVar3;
   bool bVar4;
-  undefined8 uVar5;
   
   if (param_3 != 0) {
-    uVar5 = FUN_01013b34(param_1,*param_2);
-    iVar2 = (int)((ulonglong)uVar5 >> 0x20);
-    if ((int)uVar5 == 0) {
+    /* Ghidra had read a 64-bit result (r0 and r1) */
+    iVar2 = swvVertexBuffer_HasOnlyArray((uint8 *)param_1,(uint8 *)*param_2);
+    if (iVar2 == 0) {
       iVar1 = *(int *)(param_1 + 0x1c);
       if (iVar1 != 0) {
         iVar2 = *(int *)(param_3 + 0x1c);
@@ -57342,11 +57344,13 @@ int swv_Create_VertexBuffer(void **ppObj)
   return iVar1;
 }
 
-/* ==== 0x0103CCA8  (file offset 0x3CCA8)  swvVertexBuffer_GetNormals ================================== */
+/* ==== 0x0103CCA8  (file offset 0x3CCA8)  swvVertexBuffer_GetColors =================================== */
 /* GUESS: name (not yet rewritten). ISwerveObject slot 20 (+0x50) of VertexBuffer (JSR-184
-   VertexBuffer.getNormals; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
-   less 4): its normals (+0x2c) wrapped into *param_2. */
-int swvVertexBuffer_GetNormals(int param_1,ISwerveObject **param_2)
+   VertexBuffer.getColors; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
+   less 4): its colours (+0x2c) wrapped into *param_2.
+   GUESS: the colours / normals names corrected (were swapped): FUN_010209ac enforces JSR-184's colours
+   rule on +0x2c, FUN_010220b0 the normals' on +0x28. */
+int swvVertexBuffer_GetColors(int param_1,ISwerveObject **param_2)
 
 {
   int iVar1;
@@ -57390,11 +57394,13 @@ void swvVertexBuffer_GetDefaultColor(int param_1,undefined4 *param_2)
   return;
 }
 
-/* ==== 0x0103CD2C  (file offset 0x3CD2C)  swvVertexBuffer_GetColors =================================== */
+/* ==== 0x0103CD2C  (file offset 0x3CD2C)  swvVertexBuffer_GetNormals ================================== */
 /* GUESS: name (not yet rewritten). ISwerveObject slot 18 (+0x48) of VertexBuffer (JSR-184
-   VertexBuffer.getColors; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
-   less 4): its colours (+0x28) wrapped into *param_2. */
-int swvVertexBuffer_GetColors(int param_1,ISwerveObject **param_2)
+   VertexBuffer.getNormals; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
+   less 4): its normals (+0x28) wrapped into *param_2.
+   GUESS: the colours / normals names corrected (were swapped): FUN_010209ac enforces JSR-184's colours
+   rule on +0x2c, FUN_010220b0 the normals' on +0x28. */
+int swvVertexBuffer_GetNormals(int param_1,ISwerveObject **param_2)
 
 {
   int iVar1;
@@ -57511,10 +57517,10 @@ void swv_InitVtbl_VertexBuffer(void **pVtbl)
                        swv_WrapObject for internal object type 21 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
   swv_InitVtbl_Object3D();
-  pVtbl[0x12] = (void *)(ADDRESS_OF_swvVertexBuffer_GetColors_OFFSET + 0x103cec8);
-  pVtbl[0x13] = (void *)(ADDRESS_OF_swvVertexBuffer_SetColors_OFFSET + 0x103ced4);
-  pVtbl[0x14] = (void *)(ADDRESS_OF_swvVertexBuffer_GetNormals_OFFSET + 0x103cee0);
-  pVtbl[0x15] = (void *)(ADDRESS_OF_swvVertexBuffer_SetNormals_OFFSET + 0x103ceec);
+  pVtbl[0x12] = (void *)(ADDRESS_OF_swvVertexBuffer_GetNormals_OFFSET + 0x103cec8);
+  pVtbl[0x13] = (void *)(ADDRESS_OF_swvVertexBuffer_SetNormals_OFFSET + 0x103ced4);
+  pVtbl[0x14] = (void *)(ADDRESS_OF_swvVertexBuffer_GetColors_OFFSET + 0x103cee0);
+  pVtbl[0x15] = (void *)(ADDRESS_OF_swvVertexBuffer_SetColors_OFFSET + 0x103ceec);
   pVtbl[0x16] = (void *)(ADDRESS_OF_swvVertexBuffer_GetDefaultColor_OFFSET + 0x103cef8);
   pVtbl[0x17] = (void *)(ADDRESS_OF_swvVertexBuffer_SetDefaultColor_OFFSET + 0x103cf04);
   pVtbl[0x18] = (void *)(ADDRESS_OF_swvVertexBuffer_GetVertexCount_OFFSET + 0x103cf10);
@@ -57525,11 +57531,13 @@ void swv_InitVtbl_VertexBuffer(void **pVtbl)
   return;
 }
 
-/* ==== 0x0103CF70  (file offset 0x3CF70)  swvVertexBuffer_SetNormals ================================== */
+/* ==== 0x0103CF70  (file offset 0x3CF70)  swvVertexBuffer_SetColors =================================== */
 /* GUESS: name (not yet rewritten). ISwerveObject slot 21 (+0x54) of VertexBuffer (JSR-184
-   VertexBuffer.setNormals; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
-   less 4): in an error frame, FUN_010209ac (the array). */
-undefined4 swvVertexBuffer_SetNormals(int param_1,int param_2)
+   VertexBuffer.setColors; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
+   less 4): in an error frame, FUN_010209ac (the array).
+   GUESS: the colours / normals names corrected (were swapped): FUN_010209ac enforces JSR-184's colours
+   rule on +0x2c, FUN_010220b0 the normals' on +0x28. */
+undefined4 swvVertexBuffer_SetColors(int param_1,int param_2)
 
 {
   int iVar1;
@@ -57578,11 +57586,13 @@ void swvVertexBuffer_SetDefaultColor(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x0103CFF0  (file offset 0x3CFF0)  swvVertexBuffer_SetColors =================================== */
+/* ==== 0x0103CFF0  (file offset 0x3CFF0)  swvVertexBuffer_SetNormals ================================== */
 /* GUESS: name (not yet rewritten). ISwerveObject slot 19 (+0x4c) of VertexBuffer (JSR-184
-   VertexBuffer.setColors; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
-   less 4): in an error frame, FUN_010220b0 (the array). */
-undefined4 swvVertexBuffer_SetColors(int param_1,int param_2)
+   VertexBuffer.setNormals; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
+   less 4): in an error frame, FUN_010220b0 (the array).
+   GUESS: the colours / normals names corrected (were swapped): FUN_010209ac enforces JSR-184's colours
+   rule on +0x2c, FUN_010220b0 the normals' on +0x28. */
+undefined4 swvVertexBuffer_SetNormals(int param_1,int param_2)
 
 {
   int iVar1;

@@ -634,7 +634,7 @@ int32 swvAnimationController_IsActive(const uint8 *controller,int32 worldTime); 
 int32 swvNode_IsAncestorOf(const uint8 *ancestor,const uint8 *node);   /* 0x01013AB0 GUESS: name, see swv21brew.c */
 int32 swvNode_HasAncestor(const uint8 *node,const uint8 *ancestor);   /* 0x01013AC8 GUESS: name, see swv21brew.c */
 int32 swv_IsPowerOfTwo(int32 value);   /* 0x01013AF8 GUESS: name, see swv21brew.c */
-undefined4 FUN_01013b34(int param_1,int param_2);
+int32 swvVertexBuffer_HasOnlyArray(const uint8 *buffer,const uint8 *array);   /* 0x01013B34 GUESS: name, see swv21brew.c */
 int32 swv_CheckNotNull(int32 pointer);   /* 0x01013BB4 GUESS: name, see swv21brew.c */
 void FUN_01013bcc(int param_1,undefined4 param_2);
 void FUN_01013c58(int param_1,int param_2,int *param_3,int param_4);
@@ -1458,15 +1458,15 @@ undefined4 FUN_0103c944(int param_1,undefined4 param_2,undefined4 param_3,int pa
 undefined4 FUN_0103ca64(int param_1,int param_2,int param_3,int param_4);
 undefined4 FUN_0103cb10(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5);
 undefined4 FUN_0103cbac(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5);
-int swvVertexBuffer_GetNormals(int param_1,ISwerveObject **param_2);   /* 0x0103CCA8 GUESS: name, see swv21brew.c */
+int swvVertexBuffer_GetColors(int param_1,ISwerveObject **param_2);   /* 0x0103CCA8 GUESS: name, see swv21brew.c */
 void swvVertexBuffer_GetDefaultColor(int param_1,undefined4 *param_2);   /* 0x0103CD14 GUESS: name, see swv21brew.c */
-int swvVertexBuffer_GetColors(int param_1,ISwerveObject **param_2);   /* 0x0103CD2C GUESS: name, see swv21brew.c */
+int swvVertexBuffer_GetNormals(int param_1,ISwerveObject **param_2);   /* 0x0103CD2C GUESS: name, see swv21brew.c */
 int swvVertexBuffer_GetPositions(int param_1,undefined4 param_2,undefined4 param_3,ISwerveObject **param_4);   /* 0x0103CD98 GUESS: name, see swv21brew.c */
 int swvVertexBuffer_GetTexCoords(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, ISwerveObject **param_5);   /* 0x0103CE14 GUESS: name, see swv21brew.c */
 void swvVertexBuffer_GetVertexCount(int param_1,undefined4 *param_2);   /* 0x0103CE98 GUESS: name, see swv21brew.c */
-undefined4 swvVertexBuffer_SetNormals(int param_1,int param_2);   /* 0x0103CF70 GUESS: name, see swv21brew.c */
+undefined4 swvVertexBuffer_SetColors(int param_1,int param_2);   /* 0x0103CF70 GUESS: name, see swv21brew.c */
 void swvVertexBuffer_SetDefaultColor(int param_1,undefined4 param_2);   /* 0x0103CFDC GUESS: name, see swv21brew.c */
-undefined4 swvVertexBuffer_SetColors(int param_1,int param_2);   /* 0x0103CFF0 GUESS: name, see swv21brew.c */
+undefined4 swvVertexBuffer_SetNormals(int param_1,int param_2);   /* 0x0103CFF0 GUESS: name, see swv21brew.c */
 undefined4 swvVertexBuffer_SetPositions(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);   /* 0x0103D05C GUESS: name, see swv21brew.c */
 undefined4 swvVertexBuffer_SetTexCoords(int param_1,undefined4 param_2,int param_3,undefined4 param_4,undefined4 param_5, undefined4 param_6);   /* 0x0103D0F0 GUESS: name, see swv21brew.c */
 int FUN_0103d1ec(int param_1,ISwerveObject **param_2);
@@ -2343,10 +2343,10 @@ extern undefined4 STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET;   /* was DAT_0
 #define ADDRESS_OF_FUNCTION_0103ca64_OFFSET 0x00000028   /* was DAT_0103ca58 (word at 0x0103CA58); PC-relative offset: + 0x103ca3c (the pc) = 0x0103CA64 */
 #define ADDRESS_OF_FUNCTION_0103cb10_OFFSET 0x000000C8   /* was DAT_0103ca5c (word at 0x0103CA5C); PC-relative offset: + 0x103ca48 (the pc) = 0x0103CB10 */
 #define ADDRESS_OF_FUNCTION_0103cbac_OFFSET 0x00000158   /* was DAT_0103ca60 (word at 0x0103CA60); PC-relative offset: + 0x103ca54 (the pc) = 0x0103CBAC */
-#define ADDRESS_OF_swvVertexBuffer_GetColors_OFFSET 0xFFFFFE64   /* was DAT_0103cf44 (word at 0x0103CF44); PC-relative offset: + 0x103cec8 (the pc) = 0x0103CD2C */
-#define ADDRESS_OF_swvVertexBuffer_SetColors_OFFSET 0x0000011C   /* was DAT_0103cf48 (word at 0x0103CF48); PC-relative offset: + 0x103ced4 (the pc) = 0x0103CFF0 */
-#define ADDRESS_OF_swvVertexBuffer_GetNormals_OFFSET 0xFFFFFDC8   /* was DAT_0103cf4c (word at 0x0103CF4C); PC-relative offset: + 0x103cee0 (the pc) = 0x0103CCA8 */
-#define ADDRESS_OF_swvVertexBuffer_SetNormals_OFFSET 0x00000084   /* was DAT_0103cf50 (word at 0x0103CF50); PC-relative offset: + 0x103ceec (the pc) = 0x0103CF70 */
+#define ADDRESS_OF_swvVertexBuffer_GetNormals_OFFSET 0xFFFFFE64   /* was DAT_0103cf44 (word at 0x0103CF44); PC-relative offset: + 0x103cec8 (the pc) = 0x0103CD2C */
+#define ADDRESS_OF_swvVertexBuffer_SetNormals_OFFSET 0x0000011C   /* was DAT_0103cf48 (word at 0x0103CF48); PC-relative offset: + 0x103ced4 (the pc) = 0x0103CFF0 */
+#define ADDRESS_OF_swvVertexBuffer_GetColors_OFFSET 0xFFFFFDC8   /* was DAT_0103cf4c (word at 0x0103CF4C); PC-relative offset: + 0x103cee0 (the pc) = 0x0103CCA8 */
+#define ADDRESS_OF_swvVertexBuffer_SetColors_OFFSET 0x00000084   /* was DAT_0103cf50 (word at 0x0103CF50); PC-relative offset: + 0x103ceec (the pc) = 0x0103CF70 */
 #define ADDRESS_OF_swvVertexBuffer_GetDefaultColor_OFFSET 0xFFFFFE1C   /* was DAT_0103cf54 (word at 0x0103CF54); PC-relative offset: + 0x103cef8 (the pc) = 0x0103CD14 */
 #define ADDRESS_OF_swvVertexBuffer_SetDefaultColor_OFFSET 0x000000D8   /* was DAT_0103cf58 (word at 0x0103CF58); PC-relative offset: + 0x103cf04 (the pc) = 0x0103CFDC */
 #define ADDRESS_OF_swvVertexBuffer_GetVertexCount_OFFSET 0xFFFFFF88   /* was DAT_0103cf5c (word at 0x0103CF5C); PC-relative offset: + 0x103cf10 (the pc) = 0x0103CE98 */
