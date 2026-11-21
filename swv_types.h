@@ -442,6 +442,16 @@ typedef struct SwvKeyframeSequence {
  * swv_ColourModulate, swv_ColourScale (by a 16.16 factor) and swv_ColourClamp (to 0 .. 1.0), and
  * packed into an RGB565 pixel by swv_ColourToRGB565. */
 
+/* ---- an integer rectangle ------------------------------------------------------------------
+ * The engine's (BREW's AEERect has 16-bit fields): the renderer's target, clip and viewport, cut by
+ * swv_RectIntersect. GUESS: the names. */
+typedef struct SwvRect {
+    int32    x;              /* +0x00 */
+    int32    y;              /* +0x04 */
+    int32    width;          /* +0x08 */
+    int32    height;         /* +0x0c */
+} SwvRect;
+
 /* ---- the software rasteriser's context (no struct yet) --------------------------------------
  * The fields the triangle code is known to use (GUESS: the names):
  *   +0x04             the span's y (its parity picks the dither row)
@@ -488,6 +498,21 @@ typedef struct SwvKeyframeSequence {
  *   +0x10 0x01023c60                         +0x2c swvRenderer_Kind (returns 2)
  *   +0x14 FUN_01005104 (the Background clear) +0x30 FUN_0101a89c
  *   +0x18 FUN_010204ec
+ * Its target, clip and viewport fields (GUESS: the names; each rectangle an SwvRect):
+ *   +0x0c             the target's rectangle: 0, 0, its width and height (swv_Graphics3D_bindTarget,
+ *                     FUN_0102035c)
+ *   +0x1c / +0x20     the target's row stride (bytes) and pixels (RGB565)
+ *   +0x24             the clip (FUN_01020b64)
+ *   +0x34             the target cut to the clip (swv_RectIntersect); +0x44 the address of its first
+ *                     pixel, 0 when it is empty
+ *   +0x48             the viewport (FUN_01023bc8: its width and height 1 .. 1024, else -1301)
+ *   +0x58 / +0x5c     the viewport's x, y less +0x34's; +0x60 / +0x64 its width and height
+ *   +0x68             1 when the viewport is cut by the clipped target (+0x6c is not all of it)
+ *   +0x6c             the clipped target cut to the viewport (FUN_01026548); +0x80 1 when not empty
+ *   +0x7c             1 when +0x6c must be made again (FUN_01020b64, FUN_01023bc8 set it;
+ *                     FUN_01026548 clears it)
+ *   +0x84             an RGBA image target (FUN_0102035c); +0x88 / +0x8c its alpha plane's stride
+ *                     and the plane; +0x90 the image's +0x4c (for the image vtable +0x2c's 0x18)
  * The two other long ones: 0x01002410 (10 slots) and 0x010027d8 (7, thunks and methods Ghidra has no
  * function for). */
 

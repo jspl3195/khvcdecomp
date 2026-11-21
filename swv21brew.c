@@ -18159,70 +18159,47 @@ void FUN_01013368(int *param_1,int param_2,undefined4 *param_3)
   return;
 }
 
-/* ==== 0x01013440  (file offset 0x13440)  FUN_01013440 ================================================ */
-undefined4 FUN_01013440(int *param_1,int *param_2)
+/* ==== 0x01013440  (file offset 0x13440)  swv_RectIntersect =========================================== */
+/* GUESS: name. Intersects the rectangle rect with clip, in place: when they overlap (both edges
+   inclusive, x + width - 1 the right, y + height - 1 the bottom; signed compares) rect becomes their
+   intersection and the result is 1; otherwise rect is set to 0, 0, 0, 0 and the result is 0. Callers:
+   FUN_01020b64 (the target against the clip) and FUN_01026548 (that against the viewport). Evidence:
+   0x01013440 - 0x010134e8 (`ldmia r0, {r2, r3, r12}` / `ldmia r1, {r4, r5, r6}`, the `add` / `sub
+   #1` edges, `cmp r2, r6` / `cmple r3, r1` / `bgt`, `cmp r12, r4` / `cmpge lr, r5` / `bge`, the
+   `movlt` / `movgt` max and min, `stmia r0, {r2, r3}`, `sub` / `add #1` the sizes). */
+int32 swv_RectIntersect(SwvRect *rect,const SwvRect *clip)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  int iVar5;
-  int iVar6;
-  int iVar7;
-  int iVar8;
-  int iVar9;
-  bool bVar10;
-  bool bVar11;
-  
-  iVar3 = *param_1;
-  iVar4 = param_1[1];
-  iVar5 = *param_2;
-  iVar6 = param_2[1];
-  iVar8 = iVar3 + param_1[2] + -1;
-  iVar7 = iVar5 + param_2[2] + -1;
-  iVar2 = iVar6 + param_2[3] + -1;
-  bVar11 = SBORROW4(iVar3,iVar7);
-  iVar1 = iVar3 - iVar7;
-  bVar10 = iVar3 == iVar7;
-  iVar9 = iVar4 + param_1[3] + -1;
-  if (iVar3 <= iVar7) {
-    bVar11 = SBORROW4(iVar4,iVar2);
-    iVar1 = iVar4 - iVar2;
-    bVar10 = iVar4 == iVar2;
+  int32 x = rect->x;
+  int32 y = rect->y;
+  int32 right = rect->x + rect->width - 1;
+  int32 bottom = rect->y + rect->height - 1;
+  int32 clipRight = clip->x + clip->width - 1;
+  int32 clipBottom = clip->y + clip->height - 1;
+  int32 overlap = 0;
+
+  if (x <= clipRight && y <= clipBottom && right >= clip->x && bottom >= clip->y) {
+    if (x < clip->x)
+      x = clip->x;
+    if (y < clip->y)
+      y = clip->y;
+    if (right > clipRight)
+      right = clipRight;
+    if (bottom > clipBottom)
+      bottom = clipBottom;
+    rect->x = x;
+    rect->y = y;
+    rect->width = right - x + 1;
+    rect->height = bottom - y + 1;
+    overlap = 1;
   }
-  if (bVar10 || iVar1 < 0 != bVar11) {
-    bVar10 = SBORROW4(iVar8,iVar5);
-    iVar1 = iVar8 - iVar5;
-    if (iVar5 <= iVar8) {
-      bVar10 = SBORROW4(iVar9,iVar6);
-      iVar1 = iVar9 - iVar6;
-    }
-    if (iVar1 < 0 == bVar10) {
-      if (iVar3 < iVar5) {
-        iVar3 = iVar5;
-      }
-      if (iVar4 < iVar6) {
-        iVar4 = iVar6;
-      }
-      if (iVar7 < iVar8) {
-        iVar8 = iVar7;
-      }
-      if (iVar2 < iVar9) {
-        iVar9 = iVar2;
-      }
-      *param_1 = iVar3;
-      param_1[1] = iVar4;
-      param_1[2] = (iVar8 - iVar3) + 1;
-      param_1[3] = (iVar9 - iVar4) + 1;
-      return 1;
-    }
+  else {
+    rect->x = 0;
+    rect->y = 0;
+    rect->width = 0;
+    rect->height = 0;
   }
-  *param_1 = 0;
-  param_1[1] = 0;
-  param_1[2] = 0;
-  param_1[3] = 0;
-  return 0;
+  return overlap;
 }
 
 /* ==== 0x010134EC  (file offset 0x134EC)  FUN_010134ec ================================================ */
@@ -29890,6 +29867,13 @@ void FUN_01020a28(int param_1,int param_2)
 }
 
 /* ==== 0x01020B64  (file offset 0x20B64)  FUN_01020b64 ================================================ */
+/* GUESS (not yet rewritten): sets the renderer's clip (GUESS: the setClip of
+   JSR-184 Graphics3D's target): the clip x, y, width, height (param_2 .. param_5) at +0x24, +0x7c = 1
+   (the viewport to be clipped again, FUN_01026548), the target's rectangle (+0x0c) copied to +0x34 and
+   cut to the clip (swv_RectIntersect); +0x44 the address of its first pixel (the pixels +0x20, y *
+   the row stride +0x1c, x * 2: RGB565), 0 when it is empty. Callers: swv_Graphics3D_bindTarget (its
+   viewport arguments) and FUN_0102035c (the whole image). The undefined8 result (CONCAT44 of param_3
+   and param_2) is Ghidra reading registers left as they were: GUESS, no result its callers use. */
 undefined8
 FUN_01020b64(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5
             )
@@ -29907,7 +29891,8 @@ FUN_01020b64(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
   *(undefined4 *)(param_1 + 0x38) = *(undefined4 *)(param_1 + 0x10);
   *(undefined4 *)(param_1 + 0x3c) = *(undefined4 *)(param_1 + 0x14);
   *(undefined4 *)(param_1 + 0x40) = *(undefined4 *)(param_1 + 0x18);
-  iVar1 = FUN_01013440((undefined4 *)(param_1 + 0x34),(undefined4 *)(param_1 + 0x24));
+  /* the target's rectangle (+0x34, a copy of +0x0c) against the clip (+0x24) */
+  iVar1 = swv_RectIntersect((SwvRect *)(param_1 + 0x34),(const SwvRect *)(param_1 + 0x24));
   iVar2 = 0;
   if (iVar1 != 0) {
     iVar2 = *(int *)(param_1 + 0x38) * *(int *)(param_1 + 0x1c) + *(int *)(param_1 + 0x20) +
@@ -35583,6 +35568,14 @@ void FUN_01026468(uint *param_1)
 }
 
 /* ==== 0x01026548  (file offset 0x26548)  FUN_01026548 ================================================ */
+/* GUESS (not yet rewritten): clips the renderer's viewport (+0x48) to the
+   clipped target (+0x34): +0x7c = 0 (done), +0x6c the intersection (swv_RectIntersect), +0x80 1 when
+   it is not empty; then +0x58 / +0x5c the viewport's x, y less the clipped target's, +0x60 / +0x64 its
+   width and height, +0x68 1 when the intersection is not the whole viewport. The callers (the
+   Background clear FUN_01005104, the renderer's vtable +0x20 .. +0x30 methods, FUN_01017dc4,
+   FUN_01017eb8, FUN_01023bc8 the viewport setter) call it when +0x7c is set. The undefined8 result
+   (CONCAT44 of two locals) and param_2 are Ghidra's reading of r0 - r3 pushed as scratch space (the
+   offsets stored over them) and popped on return: GUESS, no result its callers use. */
 undefined8 FUN_01026548(int param_1,int param_2)
 
 {
@@ -35598,7 +35591,8 @@ undefined8 FUN_01026548(int param_1,int param_2)
   *(undefined4 *)(param_1 + 0x70) = *(undefined4 *)(param_1 + 0x38);
   *(undefined4 *)(param_1 + 0x74) = *(undefined4 *)(param_1 + 0x3c);
   *(undefined4 *)(param_1 + 0x78) = *(undefined4 *)(param_1 + 0x40);
-  iVar1 = FUN_01013440((undefined4 *)(param_1 + 0x6c),param_1 + 0x48);
+  /* the clipped target (+0x6c, a copy of +0x34) against the viewport (+0x48) */
+  iVar1 = swv_RectIntersect((SwvRect *)(param_1 + 0x6c),(const SwvRect *)(param_1 + 0x48));
   *(int *)(param_1 + 0x80) = iVar1;
   local_18 = param_1;
   iStack_14 = param_2;
