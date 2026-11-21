@@ -601,17 +601,19 @@ int FUN_01011e84(int param_1,int param_2);
 int32 swvGroup_Reference(const uint8 *group,int32 index);   /* 0x01011EE4 GUESS: name, see swv21brew.c */
 int32 FUN_01011f0c(const uint8 *object,int32 index);   /* 0x01011F0C see swv21brew.c */
 int32 FUN_01011f4c(const uint8 *object,int32 index);   /* 0x01011F4C see swv21brew.c */
-undefined4 FUN_010122f0(undefined4 param_1,int param_2);
-undefined4 FUN_01012324(void);
-undefined4 FUN_0101232c(undefined4 param_1,int param_2);
-undefined4 FUN_01012358(undefined4 param_1,int param_2);
-undefined4 FUN_01012384(undefined4 param_1,int param_2);
-undefined4 FUN_010123b0(undefined4 param_1,int param_2);
-undefined4 FUN_010123dc(undefined4 param_1,int param_2);
-undefined4 FUN_01012410(undefined4 param_1,int param_2);
-undefined4 FUN_01012444(undefined4 param_1,int param_2);
-undefined4 FUN_01012478(undefined4 param_1,int param_2);
-undefined4 FUN_010124dc(undefined4 param_1,int param_2);
+int32 swvMaterial_IsAnimatable(const uint8 *object,int32 property);   /* 0x010122F0 GUESS: name, see swv21brew.c */
+int32 swvObject3D_IsAnimatable(const uint8 *object,int32 property);   /* 0x01012324 GUESS: name, see swv21brew.c */
+int32 swvTexture2D_IsAnimatable(const uint8 *object,int32 property);   /* 0x0101232C GUESS: name, see swv21brew.c */
+int32 swvBackground_IsAnimatable(const uint8 *object,int32 property);   /* 0x01012358 GUESS: name, see swv21brew.c */
+int32 swvMorphingMesh_IsAnimatable(const uint8 *object,int32 property);   /* 0x01012384 GUESS: name, see swv21brew.c */
+int32 swvVertexBuffer_IsAnimatable(const uint8 *object,int32 property);   /* 0x010123B0 GUESS: name, see swv21brew.c */
+int32 swvTransformable_IsAnimatable(const uint8 *object,int32 property);   /* 0x010123DC GUESS: name, see swv21brew.c */
+int32 swvFog_IsAnimatable(const uint8 *object,int32 property);   /* 0x01012410 GUESS: name, see swv21brew.c */
+int32 swvNode_IsAnimatable(const uint8 *object,int32 property);   /* 0x01012444 GUESS: name, see swv21brew.c */
+int32 swvLight_IsAnimatable(const uint8 *object,int32 property);   /* 0x01012478 GUESS: name, see swv21brew.c */
+int32 FUN_010124ac(const uint8 *object,int32 property);   /* 0x010124AC hand-written (no Ghidra function), see swv21brew.c */
+int32 swvCamera_IsAnimatable(const uint8 *object,int32 property);   /* 0x010124B0 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
+int32 swvSprite3D_IsAnimatable(const uint8 *object,int32 property);   /* 0x010124DC GUESS: name, see swv21brew.c */
 undefined4 FUN_01012508(int param_1,int param_2);
 void swv_Matrix4SetIdentity(undefined4 *param_1);
 void FUN_010125e4(int param_1,uint param_2,undefined4 param_3,undefined4 param_4,undefined4 *param_5 );

@@ -89,6 +89,48 @@ typedef enum SwerveAnimTarget {
     SWV_ANIM_SPOT_EXPONENT = 0x112,   SWV_ANIM_TRANSLATION = 0x113,     SWV_ANIM_VISIBILITY = 0x114
 } SwerveAnimTarget;
 
+/* The properties each class adds to those its base class can animate: its engine vtable +0x20,
+ * IsAnimatable(property) (swvObject3D_IsAnimatable gives none; swvMaterial_IsAnimatable ..
+ * swvSprite3D_IsAnimatable and swvCamera_IsAnimatable test their mask, then ask their base;
+ * FUN_010124ac, a Node subclass's, only asks Node's). A property's bit is
+ * 1 << (property - 0xff). The masks are JSR-184's animatable properties of each class. */
+#define SWV_ANIM_BIT(property)      ((uint32)1 << ((property) - 0xff))
+/* 0x000300c6, Material; base Object3D */
+#define SWV_ANIMATED_MATERIAL       (SWV_ANIM_BIT(SWV_ANIM_ALPHA) | \
+                                     SWV_ANIM_BIT(SWV_ANIM_AMBIENT_COLOR) | \
+                                     SWV_ANIM_BIT(SWV_ANIM_DIFFUSE_COLOR) | \
+                                     SWV_ANIM_BIT(SWV_ANIM_EMISSIVE_COLOR) | \
+                                     SWV_ANIM_BIT(SWV_ANIM_SHININESS) | \
+                                     SWV_ANIM_BIT(SWV_ANIM_SPECULAR_COLOR))
+/* 0x08, Texture2D; base Transformable */
+#define SWV_ANIMATED_TEXTURE2D      (SWV_ANIM_BIT(SWV_ANIM_COLOR))
+/* 0x1a, Background; base Object3D */
+#define SWV_ANIMATED_BACKGROUND     (SWV_ANIM_BIT(SWV_ANIM_ALPHA) | SWV_ANIM_BIT(SWV_ANIM_COLOR) | \
+                                     SWV_ANIM_BIT(SWV_ANIM_CROP))
+/* 0x800, MorphingMesh; base Node */
+#define SWV_ANIMATED_MORPHINGMESH   (SWV_ANIM_BIT(SWV_ANIM_MORPH_WEIGHTS))
+/* 0x0a, VertexBuffer; base Object3D */
+#define SWV_ANIMATED_VERTEXBUFFER   (SWV_ANIM_BIT(SWV_ANIM_ALPHA) | SWV_ANIM_BIT(SWV_ANIM_COLOR))
+/* 0x0010a000, Transformable; base Object3D */
+#define SWV_ANIMATED_TRANSFORMABLE  (SWV_ANIM_BIT(SWV_ANIM_ORIENTATION) | SWV_ANIM_BIT(SWV_ANIM_SCALE) | \
+                                     SWV_ANIM_BIT(SWV_ANIM_TRANSLATION))
+/* 0x00001128, Fog; base Object3D */
+#define SWV_ANIMATED_FOG            (SWV_ANIM_BIT(SWV_ANIM_COLOR) | SWV_ANIM_BIT(SWV_ANIM_DENSITY) | \
+                                     SWV_ANIM_BIT(SWV_ANIM_FAR_DISTANCE) | \
+                                     SWV_ANIM_BIT(SWV_ANIM_NEAR_DISTANCE))
+/* 0x00204002, Node; base Transformable */
+#define SWV_ANIMATED_NODE           (SWV_ANIM_BIT(SWV_ANIM_ALPHA) | SWV_ANIM_BIT(SWV_ANIM_PICKABILITY) | \
+                                     SWV_ANIM_BIT(SWV_ANIM_VISIBILITY))
+/* 0x000c0408, Light; base Node */
+#define SWV_ANIMATED_LIGHT          (SWV_ANIM_BIT(SWV_ANIM_COLOR) | SWV_ANIM_BIT(SWV_ANIM_INTENSITY) | \
+                                     SWV_ANIM_BIT(SWV_ANIM_SPOT_ANGLE) | \
+                                     SWV_ANIM_BIT(SWV_ANIM_SPOT_EXPONENT))
+#define SWV_ANIMATED_SPRITE3D       (SWV_ANIM_BIT(SWV_ANIM_CROP))   /* 0x10, Sprite3D; base Node */
+/* 0x00001300, Camera; base Node (swvCamera_IsAnimatable, hand-written: no Ghidra function) */
+#define SWV_ANIMATED_CAMERA         (SWV_ANIM_BIT(SWV_ANIM_FAR_DISTANCE) | \
+                                     SWV_ANIM_BIT(SWV_ANIM_FIELD_OF_VIEW) | \
+                                     SWV_ANIM_BIT(SWV_ANIM_NEAR_DISTANCE))
+
 /* JSR-184 Image2D formats (Image2D +0x40; swvImage2D_BytesPerPixel). The values are JSR-184's. */
 typedef enum SwerveImageFormat {
     SWV_IMAGE_ALPHA = 0x60,           SWV_IMAGE_LUMINANCE = 0x61,       SWV_IMAGE_LUMINANCE_ALPHA = 0x62,
@@ -273,6 +315,9 @@ typedef struct SwvKeyframeSequence {
  *   +0x10             the animation track list, or NULL: a growable array, +4 the items (a word each),
  *                     +8 the count
  *   +0x14             a list of its own, copied when not empty (GUESS: the user parameters)
+ * Its engine vtable's +0x20 is IsAnimatable(property) (GUESS: the name; Object3D.addAnimationTrack,
+ * FUN_01002a58, asks it): swvObject3D_IsAnimatable gives 0; each class's own tests the properties it
+ * adds (SWV_ANIMATED_*) and then asks its base class's.
  * Its engine vtable's +0x18 is reference(index) (GUESS: the name; swvObject3D_References walks it from
  * 0): an object it refers to, 0 for none, -2 when the next index is a list (+4 the items, +8 the
  * count), -1 past the last. The base, swvObject3D_Reference, gives the animation tracks; each class's

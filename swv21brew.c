@@ -2989,6 +2989,14 @@ int AEEStaticMod_New(int16 nSize,IShell *pIShell,AEEHelperFuncs *ph,IModule **pp
 }
 
 /* ==== 0x01002A58  (file offset 0x02A58)  FUN_01002a58 ================================================ */
+/* GUESS (not yet rewritten): JSR-184 Object3D.addAnimationTrack on the native object param_1 with the
+   track param_2: error -1301 for a NULL track or when the object cannot animate its property (track
+   +0x24; the object's IsAnimatable, engine vtable +0x20); the track list at +0x10 made on first use
+   (0x20 bytes, two engine dynamic arrays: the tracks, and at +0x10 how many tracks each property has,
+   the properties in the list's order); -1301 for a track already there, or for one on a property
+   already animated whose keyframe sequence has another component count (+0x34); the track inserted
+   after the others on its property (FUN_01013368), its count of references (+8) up, its property's
+   count up (or a new property counted 1). */
 void FUN_01002a58(int *param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -3011,9 +3019,8 @@ void FUN_01002a58(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
   if (param_2 == 0) {
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
-  /* engine virtual call, slot +0x20: of the static engine vtables only the renderer's (0x01002398)
-     FUN_0101d01c and 0x01002410's FUN_01003408 have it; a scene object's vtable is not among them (GUESS:
-     not static), so for one the method is not known here */
+  /* engine virtual call, slot +0x20: the object's IsAnimatable(the track's property, +0x24):
+     swvObject3D_IsAnimatable or its class's own (swvMaterial_IsAnimatable .. swvSprite3D_IsAnimatable) */
   iVar1 = (*(code *)(*(int *)(*param_1 + 0x20) + *param_1))(param_1,*(undefined4 *)(param_2 + 0x24))
   ;
   if (iVar1 == 0) {
@@ -17176,151 +17183,256 @@ uint32 swvObj_Release(ISwerveObject *po)
   return uVar2;
 }
 
-/* ==== 0x010122F0  (file offset 0x122F0)  FUN_010122f0 ================================================ */
-undefined4 FUN_010122f0(undefined4 param_1,int param_2)
+/* ==== 0x010122F0  (file offset 0x122F0)  swvMaterial_IsAnimatable ==================================== */
+/* GUESS: name. A Material's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_MATERIAL (ALPHA,
+   AMBIENT_COLOR, DIFFUSE_COLOR, EMISSIVE_COLOR, SHININESS, SPECULAR_COLOR), else its base class's
+   answer, swvObject3D_IsAnimatable (1 when that is not 0). The bit is 1 << (property - 0xff), a
+   register shift: 0 from 32 up. The mask is JSR-184's animatable properties of Material. Evidence:
+   0x010122f0 - 0x0101231c (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `ldr r3, [0x01012300]` / `tst
+   r2, r3`, `bl` the base at 0x0101230c with r0 and r1 as they came; Ghidra had dropped them). */
+int32 swvMaterial_IsAnimatable(const uint8 *object,int32 property)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  if (((1 << (param_2 - 0xffU & 0xff) & WORD_HEXADECIMAL_000300C6) != 0) ||
-     (iVar1 = FUN_01012324(), uVar2 = 0, iVar1 != 0)) {
-    uVar2 = 1;
-  }
-  return uVar2;
+  uint32 shift = ((uint32)property - 0xff) & 0xff;
+  int32 animatable;
+
+  if (shift < 32 && ((uint32)1 << shift & SWV_ANIMATED_MATERIAL) != 0)
+    animatable = 1;
+  else
+    animatable = swvObject3D_IsAnimatable(object,property) != 0;
+  return animatable;
 }
 
-/* ==== 0x01012324  (file offset 0x12324)  FUN_01012324 ================================================ */
-undefined4 FUN_01012324(void)
+/* ==== 0x01012324  (file offset 0x12324)  swvObject3D_IsAnimatable ==================================== */
+/* GUESS: name. The Object3D base's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58,
+   JSR-184 Object3D.addAnimationTrack, raises -1301 when it gives 0): no property of its own, so 0;
+   every class's own (swvMaterial_IsAnimatable .. swvSprite3D_IsAnimatable, and swvCamera_IsAnimatable
+   and FUN_010124ac, which Ghidra has no function for; the masks in swv_types.h) ends here. Evidence:
+   0x01012324 - 0x01012328 (`mov r0, #0` / `bx lr`). */
+int32 swvObject3D_IsAnimatable(const uint8 *object,int32 property)
 
 {
   return 0;
 }
 
-/* ==== 0x0101232C  (file offset 0x1232C)  FUN_0101232c ================================================ */
-undefined4 FUN_0101232c(undefined4 param_1,int param_2)
+/* ==== 0x0101232C  (file offset 0x1232C)  swvTexture2D_IsAnimatable =================================== */
+/* GUESS: name. A Texture2D's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_TEXTURE2D (COLOR),
+   else its base class's answer, swvTransformable_IsAnimatable (1 when that is not 0). The bit is 1 <<
+   (property - 0xff), a register shift: 0 from 32 up. The mask is JSR-184's animatable properties of
+   Texture2D. Evidence: 0x0101232c - 0x01012354 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2,
+   #0x08`, `bl` the base at 0x01012344 with r0 and r1 as they came; Ghidra had dropped them). */
+int32 swvTexture2D_IsAnimatable(const uint8 *object,int32 property)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  if (((1 << (param_2 - 0xffU & 0xff) & 8U) != 0) || (iVar1 = FUN_010123dc(), uVar2 = 0, iVar1 != 0)
-     ) {
-    uVar2 = 1;
-  }
-  return uVar2;
+  uint32 shift = ((uint32)property - 0xff) & 0xff;
+  int32 animatable;
+
+  if (shift < 32 && ((uint32)1 << shift & SWV_ANIMATED_TEXTURE2D) != 0)
+    animatable = 1;
+  else
+    animatable = swvTransformable_IsAnimatable(object,property) != 0;
+  return animatable;
 }
 
-/* ==== 0x01012358  (file offset 0x12358)  FUN_01012358 ================================================ */
-undefined4 FUN_01012358(undefined4 param_1,int param_2)
+/* ==== 0x01012358  (file offset 0x12358)  swvBackground_IsAnimatable ================================== */
+/* GUESS: name. A Background's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_BACKGROUND (ALPHA,
+   COLOR, CROP), else its base class's answer, swvObject3D_IsAnimatable (1 when that is not 0). The bit
+   is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is JSR-184's animatable
+   properties of Background. Evidence: 0x01012358 - 0x01012380 (`sub r2, r1, #0xff` / `mov r2, r3, lsl
+   r2`, `tst r2, #0x1a`, `bl` the base at 0x01012370 with r0 and r1 as they came; Ghidra had dropped
+   them). */
+int32 swvBackground_IsAnimatable(const uint8 *object,int32 property)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  if (((1 << (param_2 - 0xffU & 0xff) & 0x1aU) != 0) ||
-     (iVar1 = FUN_01012324(), uVar2 = 0, iVar1 != 0)) {
-    uVar2 = 1;
-  }
-  return uVar2;
+  uint32 shift = ((uint32)property - 0xff) & 0xff;
+  int32 animatable;
+
+  if (shift < 32 && ((uint32)1 << shift & SWV_ANIMATED_BACKGROUND) != 0)
+    animatable = 1;
+  else
+    animatable = swvObject3D_IsAnimatable(object,property) != 0;
+  return animatable;
 }
 
-/* ==== 0x01012384  (file offset 0x12384)  FUN_01012384 ================================================ */
-undefined4 FUN_01012384(undefined4 param_1,int param_2)
+/* ==== 0x01012384  (file offset 0x12384)  swvMorphingMesh_IsAnimatable ================================ */
+/* GUESS: name. A MorphingMesh's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_MORPHINGMESH
+   (MORPH_WEIGHTS), else its base class's answer, swvNode_IsAnimatable (1 when that is not 0). The bit
+   is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is JSR-184's animatable
+   properties of MorphingMesh. Evidence: 0x01012384 - 0x010123ac (`sub r2, r1, #0xff` / `mov r2, r3, lsl
+   r2`, `tst r2, #0x800`, `bl` the base at 0x0101239c with r0 and r1 as they came; Ghidra had dropped
+   them). */
+int32 swvMorphingMesh_IsAnimatable(const uint8 *object,int32 property)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  if (((1 << (param_2 - 0xffU & 0xff) & 0x800U) != 0) ||
-     (iVar1 = FUN_01012444(), uVar2 = 0, iVar1 != 0)) {
-    uVar2 = 1;
-  }
-  return uVar2;
+  uint32 shift = ((uint32)property - 0xff) & 0xff;
+  int32 animatable;
+
+  if (shift < 32 && ((uint32)1 << shift & SWV_ANIMATED_MORPHINGMESH) != 0)
+    animatable = 1;
+  else
+    animatable = swvNode_IsAnimatable(object,property) != 0;
+  return animatable;
 }
 
-/* ==== 0x010123B0  (file offset 0x123B0)  FUN_010123b0 ================================================ */
-undefined4 FUN_010123b0(undefined4 param_1,int param_2)
+/* ==== 0x010123B0  (file offset 0x123B0)  swvVertexBuffer_IsAnimatable ================================ */
+/* GUESS: name. A VertexBuffer's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_VERTEXBUFFER (ALPHA,
+   COLOR), else its base class's answer, swvObject3D_IsAnimatable (1 when that is not 0). The bit is 1
+   << (property - 0xff), a register shift: 0 from 32 up. The mask is JSR-184's animatable properties of
+   VertexBuffer. Evidence: 0x010123b0 - 0x010123d8 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2,
+   #0x0a`, `bl` the base at 0x010123c8 with r0 and r1 as they came; Ghidra had dropped them). */
+int32 swvVertexBuffer_IsAnimatable(const uint8 *object,int32 property)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  if (((1 << (param_2 - 0xffU & 0xff) & 10U) != 0) ||
-     (iVar1 = FUN_01012324(), uVar2 = 0, iVar1 != 0)) {
-    uVar2 = 1;
-  }
-  return uVar2;
+  uint32 shift = ((uint32)property - 0xff) & 0xff;
+  int32 animatable;
+
+  if (shift < 32 && ((uint32)1 << shift & SWV_ANIMATED_VERTEXBUFFER) != 0)
+    animatable = 1;
+  else
+    animatable = swvObject3D_IsAnimatable(object,property) != 0;
+  return animatable;
 }
 
-/* ==== 0x010123DC  (file offset 0x123DC)  FUN_010123dc ================================================ */
-undefined4 FUN_010123dc(undefined4 param_1,int param_2)
+/* ==== 0x010123DC  (file offset 0x123DC)  swvTransformable_IsAnimatable =============================== */
+/* GUESS: name. A Transformable's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_TRANSFORMABLE
+   (ORIENTATION, SCALE, TRANSLATION), else its base class's answer, swvObject3D_IsAnimatable (1 when
+   that is not 0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is
+   JSR-184's animatable properties of Transformable. Evidence: 0x010123dc - 0x01012408 (`sub r2, r1,
+   #0xff` / `mov r2, r3, lsl r2`, `ldr r3, [0x010123ec]` / `tst r2, r3`, `bl` the base at 0x010123f8
+   with r0 and r1 as they came; Ghidra had dropped them). */
+int32 swvTransformable_IsAnimatable(const uint8 *object,int32 property)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  if (((1 << (param_2 - 0xffU & 0xff) & WORD_HEXADECIMAL_0010A000) != 0) ||
-     (iVar1 = FUN_01012324(), uVar2 = 0, iVar1 != 0)) {
-    uVar2 = 1;
-  }
-  return uVar2;
+  uint32 shift = ((uint32)property - 0xff) & 0xff;
+  int32 animatable;
+
+  if (shift < 32 && ((uint32)1 << shift & SWV_ANIMATED_TRANSFORMABLE) != 0)
+    animatable = 1;
+  else
+    animatable = swvObject3D_IsAnimatable(object,property) != 0;
+  return animatable;
 }
 
-/* ==== 0x01012410  (file offset 0x12410)  FUN_01012410 ================================================ */
-undefined4 FUN_01012410(undefined4 param_1,int param_2)
+/* ==== 0x01012410  (file offset 0x12410)  swvFog_IsAnimatable ========================================= */
+/* GUESS: name. A Fog's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_FOG (COLOR, DENSITY,
+   FAR_DISTANCE, NEAR_DISTANCE), else its base class's answer, swvObject3D_IsAnimatable (1 when that is
+   not 0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is JSR-184's
+   animatable properties of Fog. Evidence: 0x01012410 - 0x0101243c (`sub r2, r1, #0xff` / `mov r2, r3,
+   lsl r2`, `ldr r3, [0x01012420]` / `tst r2, r3`, `bl` the base at 0x0101242c with r0 and r1 as they
+   came; Ghidra had dropped them). */
+int32 swvFog_IsAnimatable(const uint8 *object,int32 property)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  if (((1 << (param_2 - 0xffU & 0xff) & INTEGER_4392) != 0) ||
-     (iVar1 = FUN_01012324(), uVar2 = 0, iVar1 != 0)) {
-    uVar2 = 1;
-  }
-  return uVar2;
+  uint32 shift = ((uint32)property - 0xff) & 0xff;
+  int32 animatable;
+
+  if (shift < 32 && ((uint32)1 << shift & SWV_ANIMATED_FOG) != 0)
+    animatable = 1;
+  else
+    animatable = swvObject3D_IsAnimatable(object,property) != 0;
+  return animatable;
 }
 
-/* ==== 0x01012444  (file offset 0x12444)  FUN_01012444 ================================================ */
-undefined4 FUN_01012444(undefined4 param_1,int param_2)
+/* ==== 0x01012444  (file offset 0x12444)  swvNode_IsAnimatable ======================================== */
+/* GUESS: name. A Node's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_NODE (ALPHA,
+   PICKABILITY, VISIBILITY), else its base class's answer, swvTransformable_IsAnimatable (1 when that is
+   not 0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is JSR-184's
+   animatable properties of Node. Evidence: 0x01012444 - 0x01012470 (`sub r2, r1, #0xff` / `mov r2, r3,
+   lsl r2`, `ldr r3, [0x01012454]` / `tst r2, r3`, `bl` the base at 0x01012460 with r0 and r1 as they
+   came; Ghidra had dropped them). */
+int32 swvNode_IsAnimatable(const uint8 *object,int32 property)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  if (((1 << (param_2 - 0xffU & 0xff) & WORD_HEXADECIMAL_00204002) != 0) ||
-     (iVar1 = FUN_010123dc(), uVar2 = 0, iVar1 != 0)) {
-    uVar2 = 1;
-  }
-  return uVar2;
+  uint32 shift = ((uint32)property - 0xff) & 0xff;
+  int32 animatable;
+
+  if (shift < 32 && ((uint32)1 << shift & SWV_ANIMATED_NODE) != 0)
+    animatable = 1;
+  else
+    animatable = swvTransformable_IsAnimatable(object,property) != 0;
+  return animatable;
 }
 
-/* ==== 0x01012478  (file offset 0x12478)  FUN_01012478 ================================================ */
-undefined4 FUN_01012478(undefined4 param_1,int param_2)
+/* ==== 0x01012478  (file offset 0x12478)  swvLight_IsAnimatable ======================================= */
+/* GUESS: name. A Light's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_LIGHT (COLOR,
+   INTENSITY, SPOT_ANGLE, SPOT_EXPONENT), else its base class's answer, swvNode_IsAnimatable (1 when
+   that is not 0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is
+   JSR-184's animatable properties of Light. Evidence: 0x01012478 - 0x010124a4 (`sub r2, r1, #0xff` /
+   `mov r2, r3, lsl r2`, `ldr r3, [0x01012488]` / `tst r2, r3`, `bl` the base at 0x01012494 with r0 and
+   r1 as they came; Ghidra had dropped them). */
+int32 swvLight_IsAnimatable(const uint8 *object,int32 property)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  if (((1 << (param_2 - 0xffU & 0xff) & WORD_HEXADECIMAL_000C0408) != 0) ||
-     (iVar1 = FUN_01012444(), uVar2 = 0, iVar1 != 0)) {
-    uVar2 = 1;
-  }
-  return uVar2;
+  uint32 shift = ((uint32)property - 0xff) & 0xff;
+  int32 animatable;
+
+  if (shift < 32 && ((uint32)1 << shift & SWV_ANIMATED_LIGHT) != 0)
+    animatable = 1;
+  else
+    animatable = swvNode_IsAnimatable(object,property) != 0;
+  return animatable;
 }
 
-/* ==== 0x010124DC  (file offset 0x124DC)  FUN_010124dc ================================================ */
-undefined4 FUN_010124dc(undefined4 param_1,int param_2)
+/* ==== 0x010124AC  (file offset 0x124AC)  FUN_010124ac ================================================ */
+/* A routine Ghidra has no function for, reached only through an engine vtable (a scene object's, not
+   static); written from its disassembly (0x010124ac: `b 0x01012444`, a tail jump, here a call). The
+   IsAnimatable(property) of a Node subclass that adds no property of its own (the class not
+   identified; GUESS: Group, Mesh, SkinnedMesh or World): swvNode_IsAnimatable's answer. */
+int32 FUN_010124ac(const uint8 *object,int32 property)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  if (((1 << (param_2 - 0xffU & 0xff) & 0x10U) != 0) ||
-     (iVar1 = FUN_01012444(), uVar2 = 0, iVar1 != 0)) {
-    uVar2 = 1;
-  }
-  return uVar2;
+  return swvNode_IsAnimatable(object,property);
+}
+
+/* ==== 0x010124B0  (file offset 0x124B0)  swvCamera_IsAnimatable ====================================== */
+/* A routine Ghidra has no function for, reached only through an engine vtable (a scene object's, not
+   static); written from its disassembly. GUESS: name. A Camera's IsAnimatable(property), its engine
+   vtable +0x20 (FUN_01002a58, JSR-184 Object3D.addAnimationTrack, asks it): 1 for the properties it
+   adds, SWV_ANIMATED_CAMERA (FAR_DISTANCE, FIELD_OF_VIEW, NEAR_DISTANCE), else its base class's answer,
+   swvNode_IsAnimatable (1 when that is not 0); the bit as in the others (0 from a shift of 32 up). The
+   mask is JSR-184's animatable properties of Camera. Evidence: 0x010124b0 - 0x010124d8 (`sub r2, r1,
+   #0xff` / `mov r2, r3, lsl r2`, `tst r2, #0x1300`, `bl 0x01012444` at 0x010124c8 with r0 and r1 as
+   they came). */
+int32 swvCamera_IsAnimatable(const uint8 *object,int32 property)
+
+{
+  uint32 shift = ((uint32)property - 0xff) & 0xff;
+  int32 animatable;
+
+  if (shift < 32 && ((uint32)1 << shift & SWV_ANIMATED_CAMERA) != 0)
+    animatable = 1;
+  else
+    animatable = swvNode_IsAnimatable(object,property) != 0;
+  return animatable;
+}
+
+/* ==== 0x010124DC  (file offset 0x124DC)  swvSprite3D_IsAnimatable ==================================== */
+/* GUESS: name. A Sprite3D's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_SPRITE3D (CROP),
+   else its base class's answer, swvNode_IsAnimatable (1 when that is not 0). The bit is 1 << (property
+   - 0xff), a register shift: 0 from 32 up. The mask is JSR-184's animatable properties of Sprite3D.
+   Evidence: 0x010124dc - 0x01012504 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2, #0x10`, `bl`
+   the base at 0x010124f4 with r0 and r1 as they came; Ghidra had dropped them). */
+int32 swvSprite3D_IsAnimatable(const uint8 *object,int32 property)
+
+{
+  uint32 shift = ((uint32)property - 0xff) & 0xff;
+  int32 animatable;
+
+  if (shift < 32 && ((uint32)1 << shift & SWV_ANIMATED_SPRITE3D) != 0)
+    animatable = 1;
+  else
+    animatable = swvNode_IsAnimatable(object,property) != 0;
+  return animatable;
 }
 
 /* ==== 0x01012508  (file offset 0x12508)  FUN_01012508 ================================================ */
