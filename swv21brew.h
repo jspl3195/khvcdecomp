@@ -631,8 +631,8 @@ int32 swv_RectIntersect(SwvRect *rect,const SwvRect *clip);   /* 0x01013440 GUES
 undefined4 FUN_010134ec(undefined4 *param_1);
 void FUN_01013744(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 int32 swvAnimationController_IsActive(const uint8 *controller,int32 worldTime);   /* 0x01013A80 GUESS: name, see swv21brew.c */
-undefined4 FUN_01013ab0(int param_1,int param_2);
-undefined4 FUN_01013ac8(int param_1,int param_2);
+int32 swvNode_IsAncestorOf(const uint8 *ancestor,const uint8 *node);   /* 0x01013AB0 GUESS: name, see swv21brew.c */
+int32 swvNode_HasAncestor(const uint8 *node,const uint8 *ancestor);   /* 0x01013AC8 GUESS: name, see swv21brew.c */
 undefined4 FUN_01013af8(uint param_1);
 undefined4 FUN_01013b34(int param_1,int param_2);
 int32 swv_CheckNotNull(int32 pointer);   /* 0x01013BB4 GUESS: name, see swv21brew.c */

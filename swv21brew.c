@@ -3151,6 +3151,13 @@ int FUN_01002c70(int param_1,int param_2)
 }
 
 /* ==== 0x01002D60  (file offset 0x02D60)  FUN_01002d60 ================================================ */
+/* GUESS (not yet rewritten): JSR-184 Group.addChild(child) on the group param_1: error -1302 for a
+   NULL child; -1301 (IllegalArgumentException) when the child is the group itself, a World (type
+   0x16), already has a parent (+0x30) or is an ancestor of the group (swvNode_IsAncestorOf); then the
+   child linked into the child list (+0x38, the siblings at +0x34) with its count of references (+8)
+   up, its parent set and its depth (swvNode_SetDepth from swvNode_Depth); when the root above is a
+   World (type 0x16), its +0x98 cleared (GUESS: a cached list to be made again). Ghidra's reading of
+   the case with children already there (the sibling walk, FUN_01014510) is incomplete. */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
 void FUN_01002d60(int param_1,int param_2)
@@ -3168,7 +3175,7 @@ void FUN_01002d60(int param_1,int param_2)
   if ((((param_2 == param_1) ||
        (iVar1 = (*(code *)(*(int *)(*(int *)(param_2 + 4) + 4) + *(int *)(param_2 + 4)))
                           (param_2 + 4), iVar1 == 0x16)) || (*(int *)(param_2 + 0x30) != 0)) ||
-     (iVar1 = FUN_01013ab0(param_2,param_1), iVar1 != 0)) {
+     (iVar1 = swvNode_IsAncestorOf((uint8 *)param_2,(uint8 *)param_1), iVar1 != 0)) {
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
   iVar1 = *(int *)(param_1 + 0x38);
@@ -3409,6 +3416,14 @@ void FUN_010031a0(int param_1,int param_2)
 }
 
 /* ==== 0x01003234  (file offset 0x03234)  FUN_01003234 ================================================ */
+/* GUESS (not yet rewritten): JSR-184 SkinnedMesh.addTransform(bone, weight, firstVertex,
+   numVertices) on the mesh param_1: error -1302 for a NULL bone; -1301 for a weight below 1, a bone
+   that is neither the skeleton (+0x38) nor under it (swvNode_HasAncestor), or numVertices below 1;
+   -1101 (IndexOutOfBounds) for a negative firstVertex or firstVertex + numVertices above 0xffff; then
+   a 10-byte record (the weight, the two 16-bit vertex numbers, the bone's index from FUN_01002c70)
+   appended to the list at +0xc0, the bone's rest transform (FUN_010048e4, the bone to the mesh) set,
+   +0xac raised to the last vertex, +0xf0 cleared (to be rebuilt). The undefined8 result is Ghidra
+   reading saved registers: GUESS, no result its callers use. */
 undefined8 FUN_01003234(int param_1,int param_2,int param_3,int param_4,int param_5)
 
 {
@@ -3433,7 +3448,10 @@ undefined8 FUN_01003234(int param_1,int param_2,int param_3,int param_4,int para
   if (param_3 < 1) {
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
-  if ((*(int *)(param_1 + 0x38) != param_2) && (iVar1 = FUN_01013ac8(param_2), iVar1 == 0)) {
+  /* the bone must be the skeleton (+0x38) or under it; the skeleton restored as the second argument
+     (r1, 0x01003264): Ghidra had dropped it */
+  if ((*(int *)(param_1 + 0x38) != param_2) &&
+      (iVar1 = swvNode_HasAncestor((uint8 *)param_2,*(uint8 **)(param_1 + 0x38)), iVar1 == 0)) {
     FUN_0102f7e0(uVar3);
   }
   if (param_5 < 1) {
@@ -4815,7 +4833,7 @@ int FUN_010048e4(int param_1,int param_2,undefined4 param_3)
     }
     uVar2 = FUN_0100f950();
     FUN_01027acc(param_3,uVar2);
-    iVar1 = FUN_01013ab0(param_2,param_1);
+    iVar1 = swvNode_IsAncestorOf((uint8 *)param_2,(uint8 *)param_1);
     if (iVar1 != 0) {
       return param_2;
     }
@@ -7770,6 +7788,9 @@ void FUN_01008074(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
 }
 
 /* ==== 0x010080E4  (file offset 0x080E4)  FUN_010080e4 ================================================ */
+/* GUESS (not yet rewritten): a SkinnedMesh constructor: FUN_010085e8 (GUESS: the Mesh part),
+   then a tail jump to FUN_010231c4 with the skeleton (the stack argument, r5). Ghidra repeated
+   FUN_010231c4's code here and read the skeleton as in_stack_00000000. */
 void FUN_010080e4(int param_1)
 
 {
@@ -7792,7 +7813,7 @@ void FUN_010080e4(int param_1)
   if (in_stack_00000000[0xc] != 0) {
     FUN_0102f7e0(uVar1);
   }
-  iVar2 = FUN_01013ab0(in_stack_00000000,param_1);
+  iVar2 = swvNode_IsAncestorOf((uint8 *)in_stack_00000000,(uint8 *)param_1);
   if (iVar2 != 0) {
     FUN_0102f7e0(uVar1);
   }
@@ -7802,6 +7823,9 @@ void FUN_010080e4(int param_1)
 }
 
 /* ==== 0x01008104  (file offset 0x08104)  FUN_01008104 ================================================ */
+/* GUESS (not yet rewritten): the other SkinnedMesh constructor: FUN_01008624 (GUESS: the Mesh
+   part with several submeshes), then a tail jump to FUN_010231c4 with the skeleton param_7; Ghidra
+   repeated FUN_010231c4's code here. */
 void FUN_01008104(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
                  undefined4 param_5,undefined4 param_6,int *param_7)
 
@@ -7824,7 +7848,7 @@ void FUN_01008104(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   if (param_7[0xc] != 0) {
     FUN_0102f7e0(uVar1);
   }
-  iVar2 = FUN_01013ab0(param_7,param_1);
+  iVar2 = swvNode_IsAncestorOf((uint8 *)param_7,(uint8 *)param_1);
   if (iVar2 != 0) {
     FUN_0102f7e0(uVar1);
   }
@@ -9310,7 +9334,7 @@ int FUN_01009638(int param_1,int param_2)
     }
     uVar1 = FUN_0100f950();
     FUN_01027acc(param_1,uVar1);
-    iVar3 = FUN_01013ab0(param_2,iVar3);
+    iVar3 = swvNode_IsAncestorOf((uint8 *)param_2,(uint8 *)iVar3);
     if (iVar3 != 0) {
       return param_2;
     }
@@ -10107,7 +10131,8 @@ uint * FUN_01009eac(int param_1,int param_2,int *param_3)
    standing for the parent where a reference is NULL. The targets come from swvNode_AlignmentTargetZ (z)
    and swvNode_AlignmentTargetY (y), the references from swvNode_AlignmentReferenceZ / Y; error -1300
    (FUN_0102f7e0) for a reference of -1, the node itself, or one it cannot be aligned to (FUN_010048e4,
-   FUN_01013ab0). With one target NONE (0x90) it turns the node about the other axis only; with both,
+   swvNode_IsAncestorOf: a descendant of the node). With one target NONE (0x90) it turns the node about
+   the other axis only; with both,
    the z vector (swvNode_AlignmentVector of the z reference's matrix relative to the node, normalised by
    FUN_010263e8) is kept and y is made perpendicular to it (cross products, FUN_0102c6b4). */
 void FUN_0100a02c(int param_1,int param_2)
@@ -10197,7 +10222,8 @@ void FUN_0100a02c(int param_1,int param_2)
     FUN_01029620(auStack_bc,0x3f);
     iVar3 = FUN_010048e4(iVar4,*(undefined4 *)(param_1 + 0x30),auStack_bc);
     if ((iVar3 == 0 || iVar4 == param_1) ||
-       ((*(int *)(param_1 + 0x30) == iVar3 && (iVar4 = FUN_01013ab0(param_1,iVar4), iVar4 != 0)))) {
+       ((*(int *)(param_1 + 0x30) == iVar3 &&
+        (iVar4 = swvNode_IsAncestorOf((uint8 *)param_1,(uint8 *)iVar4), iVar4 != 0)))) {
       FUN_0102f7e0(uVar6);
     }
     FUN_0101749c(auStack_bc,auStack_78);
@@ -10249,7 +10275,8 @@ void FUN_0100a02c(int param_1,int param_2)
     FUN_01029620(auStack_bc,0x3f);
     iVar5 = FUN_010048e4(iVar3,*(undefined4 *)(param_1 + 0x30),auStack_bc);
     if ((iVar5 == 0 || iVar3 == param_1) ||
-       ((*(int *)(param_1 + 0x30) == iVar5 && (iVar5 = FUN_01013ab0(param_1,iVar3), iVar5 != 0)))) {
+       ((*(int *)(param_1 + 0x30) == iVar5 &&
+        (iVar5 = swvNode_IsAncestorOf((uint8 *)param_1,(uint8 *)iVar3), iVar5 != 0)))) {
       FUN_0102f7e0(uVar6);
     }
     FUN_0101749c(auStack_bc,auStack_78);
@@ -10260,7 +10287,8 @@ void FUN_0100a02c(int param_1,int param_2)
     else {
       iVar3 = FUN_010048e4(iVar4,*(undefined4 *)(param_1 + 0x30),auStack_100);
       if ((iVar3 == 0 || iVar4 == param_1) ||
-         ((*(int *)(param_1 + 0x30) == iVar3 && (iVar4 = FUN_01013ab0(param_1,iVar4), iVar4 != 0))))
+         ((*(int *)(param_1 + 0x30) == iVar3 &&
+          (iVar4 = swvNode_IsAncestorOf((uint8 *)param_1,(uint8 *)iVar4), iVar4 != 0))))
       {
         FUN_0102f7e0(uVar6);
       }
@@ -13729,8 +13757,8 @@ void swv_ColourScale(int32 *colour,int32 factor)
 }
 
 /* ==== 0x0100F030  (file offset 0x0F030)  FUN_0100f030 ================================================ */
-/* GUESS (not yet rewritten): copies node param_2's alignment into param_1 (a duplicate): the
-   references (mapped through FUN_01013ac8 / FUN_0100ed84 when they are in the copied subtree) and the
+/* GUESS (not yet rewritten): copies node param_2's alignment into param_1 (a duplicate): the references
+   (mapped through swvNode_HasAncestor / FUN_0100ed84 when they are in the copied subtree) and the
    targets go to FUN_01020104 in the order of Node.setAlignment(zRef, zTarget, yRef, yTarget). */
 void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
@@ -13749,10 +13777,12 @@ void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   if ((iVar1 != 0 && iVar1 != -1) || (iVar2 != 0 && iVar2 != -1)) {
     uVar3 = (int)swvNode_AlignmentReferenceZ((uint8 *)param_1);
     uVar4 = (int)swvNode_AlignmentReferenceY((uint8 *)param_1);
-    if ((iVar1 != 0 && iVar1 != -1) && (iVar5 = FUN_01013ac8(iVar1,param_3), iVar5 != 0)) {
+    if ((iVar1 != 0 && iVar1 != -1) &&
+        (iVar5 = swvNode_HasAncestor((uint8 *)iVar1,(uint8 *)param_3), iVar5 != 0)) {
       uVar3 = FUN_0100ed84(iVar1,param_3,param_4);
     }
-    if ((iVar2 != 0 && iVar2 != -1) && (iVar1 = FUN_01013ac8(iVar2,param_3), iVar1 != 0)) {
+    if ((iVar2 != 0 && iVar2 != -1) &&
+        (iVar1 = swvNode_HasAncestor((uint8 *)iVar2,(uint8 *)param_3), iVar1 != 0)) {
       uVar4 = FUN_0100ed84(iVar2,param_3,param_4);
     }
     uVar6 = swvNode_AlignmentTargetY((uint8 *)param_2);
@@ -18578,41 +18608,42 @@ int32 swvAnimationController_IsActive(const uint8 *controller,int32 worldTime)
   return active;
 }
 
-/* ==== 0x01013AB0  (file offset 0x13AB0)  FUN_01013ab0 ================================================ */
-undefined4 FUN_01013ab0(int param_1,int param_2)
+/* ==== 0x01013AB0  (file offset 0x13AB0)  swvNode_IsAncestorOf ======================================== */
+/* GUESS: name. Whether ancestor is a proper ancestor of the Node node (its parent, its parent's
+   parent, ...): 0 for a NULL node, else swvNode_HasAncestor(node, ancestor). The binary has no loop of
+   its own: it tests node, swaps the two arguments and jumps into the next routine (a conditional tail
+   jump, here a call; Ghidra had repeated that routine's loop here). Callers: FUN_01002d60 (GUESS
+   Group.addChild: the child must not be an ancestor of the group), FUN_010231c4 (GUESS the SkinnedMesh
+   skeleton: not an ancestor of the mesh), FUN_010048e4 (Node.getTransformTo), FUN_0100a02c (the
+   alignment). Evidence: 0x01013ab0 - 0x01013ac4 (`mov r2, r0`, `movs r0, r1`, `movne r1, r2` / `bne
+   0x01013ac8`, `moveq r0, #0` / `bx lr`). */
+int32 swvNode_IsAncestorOf(const uint8 *ancestor,const uint8 *node)
 
 {
-  int iVar1;
-  
-  if (param_2 == 0) {
-    return 0;
-  }
-  iVar1 = *(int *)(param_2 + 0x30);
-  while( true ) {
-    if (iVar1 == 0) {
-      return 0;
-    }
-    if (iVar1 == param_1) break;
-    iVar1 = *(int *)(iVar1 + 0x30);
-  }
-  return 1;
+  int32 found = 0;
+
+  if (node != NULL)
+    found = swvNode_HasAncestor(node,ancestor);
+  return found;
 }
 
-/* ==== 0x01013AC8  (file offset 0x13AC8)  FUN_01013ac8 ================================================ */
-undefined4 FUN_01013ac8(int param_1,int param_2)
+/* ==== 0x01013AC8  (file offset 0x13AC8)  swvNode_HasAncestor ========================================= */
+/* GUESS: name. Whether the Node node has ancestor among its ancestors: its parents (+0x30) walked
+   from its own parent to the root, 1 on meeting ancestor, else 0 (the node itself does not count).
+   swvNode_IsAncestorOf jumps into it with the arguments swapped. Callers: FUN_01003234 (GUESS
+   SkinnedMesh.addTransform: the bone must be the skeleton or under it), FUN_0100f030 (the alignment
+   references in a copied subtree), FUN_0101d17c, FUN_0101d21c. Evidence: 0x01013ac8 - 0x01013af4 (`ldr
+   r0, [r0, #0x30]` / `cmp r0, #0` / `beq` 0, `cmp r0, r1` / `ldrne r0, [r0, #0x30]`, `mov r0, #1`). */
+int32 swvNode_HasAncestor(const uint8 *node,const uint8 *ancestor)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 0x30);
-  while( true ) {
-    if (iVar1 == 0) {
-      return 0;
-    }
-    if (iVar1 == param_2) break;
-    iVar1 = *(int *)(iVar1 + 0x30);
-  }
-  return 1;
+  const uint8 *parent = *(const uint8 *const *)(node + 0x30);
+  int32 found;
+
+  while (parent != NULL && parent != ancestor)
+    parent = *(const uint8 *const *)(parent + 0x30);
+  found = parent != NULL;
+  return found;
 }
 
 /* ==== 0x01013AF8  (file offset 0x13AF8)  FUN_01013af8 ================================================ */
@@ -26033,7 +26064,7 @@ void FUN_0101d17c(int param_1,int param_2)
   if (*(int *)(param_2 + 0x88) == 0) {
     FUN_0102f7e0(INTEGER_MINUS_1300);
   }
-  iVar2 = FUN_01013ac8(*(undefined4 *)(param_2 + 0x88),param_2);
+  iVar2 = swvNode_HasAncestor(*(uint8 **)(param_2 + 0x88),(uint8 *)param_2);
   if (iVar2 != 1) {
     FUN_0102f7e0(uVar1);
   }
@@ -26093,7 +26124,7 @@ int FUN_0101d21c(int *param_1,int param_2)
      (iVar6 = (*(code *)(*(int *)(*piVar7 + 0x2c) + *piVar7))(piVar7), iVar6 != 5)) {
     FUN_0102f7e0(uVar8);
   }
-  iVar6 = FUN_01013ac8(piVar7,param_2);
+  iVar6 = swvNode_HasAncestor((uint8 *)piVar7,(uint8 *)param_2);
   if (iVar6 == 0) {
     FUN_0102f7e0(uVar8);
   }
@@ -32282,6 +32313,11 @@ void FUN_01023184(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
 }
 
 /* ==== 0x010231C4  (file offset 0x231C4)  FUN_010231c4 ================================================ */
+/* GUESS (not yet rewritten): sets the skeleton of the SkinnedMesh param_1 (its constructors,
+   FUN_010080e4 and FUN_01008104, end in a tail jump to it): error -1302 for a NULL skeleton; -1301
+   unless it is a Group (its vtable +0x2c gives 9, SWVT_GROUP) without a parent (+0x30) that is not an
+   ancestor of the mesh (swvNode_IsAncestorOf); then FUN_0101456c (GUESS: attached as the mesh's
+   child) and +0xf0 cleared. */
 void FUN_010231c4(int param_1,int *param_2)
 
 {
@@ -32302,7 +32338,7 @@ void FUN_010231c4(int param_1,int *param_2)
   if (param_2[0xc] != 0) {
     FUN_0102f7e0(uVar1);
   }
-  iVar2 = FUN_01013ab0(param_2,param_1);
+  iVar2 = swvNode_IsAncestorOf((uint8 *)param_2,(uint8 *)param_1);
   if (iVar2 != 0) {
     FUN_0102f7e0(uVar1);
   }
