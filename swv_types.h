@@ -274,7 +274,8 @@ typedef struct SwvSkinBoneSet {
 /* ---- AnimationController, the native object (no struct yet) ------------------------------------
  * Its fields (GUESS: the names, JSR-184 AnimationController; the BREW slots 18 - 26, kh_types.h
  * SwerveAnimationControllerVtbl):
- *   +0x1c / +0x20     the active interval's start and end (world times)
+ *   +0x1c / +0x20     the active interval's start and end (world times): active when they are
+ *                     equal, else for start <= t < end (swvAnimationController_IsActive)
  *   +0x24             the reference sequence time (a float)
  *   +0x28             the reference world time
  *   +0x2c             the speed (a float; swvAnimationController_Speed)

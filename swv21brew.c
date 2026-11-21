@@ -4096,7 +4096,8 @@ int FUN_01003be8(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
 /* ==== 0x01003C38  (file offset 0x03C38)  FUN_01003c38 ================================================ */
 /* GUESS (not yet rewritten): JSR-184 Object3D.animate(time) (param_2): once per world time (param_3, or
    the next one when -1; +0x18 the last), for each animation track (+0x10) whose controller (track
-   +0x20) is active at the time (FUN_01013a80) and has a weight (+0x30), its keyframes sampled
+   +0x20) is active at the time
+   (swvAnimationController_IsActive) and has a weight (+0x30), its keyframes sampled
    (FUN_01010de0) into a 4-word buffer (or, for MORPH_WEIGHTS 0x10a, the mesh's own weights,
    swvMorphingMesh_Weights), cleared first, and weighted in (CROP 0x103 offset by a size, a Sprite3D's
    +0x88 / +0x8c or FUN_01038644 of +0x34 / +0x38; SCALE 0x10e from one component to three); then the
@@ -4168,7 +4169,7 @@ undefined4 FUN_01003c38(int *param_1,undefined4 param_2,int param_3)
           }
           swv_fcmp_b(uVar5,0);
           if (((bVar12 && !bVar10) && (*(int *)(iVar6 + 0x20) != 0)) &&
-             (iVar3 = FUN_01013a80(*(int *)(iVar6 + 0x20),param_2), iVar3 != 0)) {
+             (iVar3 = swvAnimationController_IsActive(*(uint8 **)(iVar6 + 0x20),param_2), iVar3 != 0)) {
             iVar4 = *(int *)(*(int *)(iVar6 + 0x1c) + 0x34);
             if (!bVar1) {
               /* Ghidra had dropped the size (r2 = the count << 2, 0x01003d84) */
@@ -15790,10 +15791,10 @@ undefined4 FUN_01010dac(undefined4 param_1,int param_2)
 /* ==== 0x01010DE0  (file offset 0x10DE0)  FUN_01010de0 ================================================ */
 /* GUESS (not yet rewritten): an AnimationTrack's sample (param_1: +0x1c its KeyframeSequence, +0x20 its
    AnimationController) at the world time param_2: 0x7fffffff (valid for ever) when the controller is
-   not active (FUN_01013a80); else the sequence sampled (swvKeyframeSequence_Sample) at the controller's
-   position (FUN_01010094), and the time that returns (GUESS: until the next keyframe, in sequence time)
-   divided by the controller's speed (swvAnimationController_Speed, unless 1.0) and made an integer:
-   GUESS the validity in world time that JSR-184's animate returns. */
+   not active (swvAnimationController_IsActive); else the sequence sampled (swvKeyframeSequence_Sample)
+   at the controller's position (FUN_01010094), and the time that returns (GUESS: until the next
+   keyframe, in sequence time) divided by the controller's speed (swvAnimationController_Speed, unless
+   1.0) and made an integer: GUESS the validity in world time that JSR-184's animate returns. */
 undefined4
 FUN_01010de0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5
             )
@@ -15805,7 +15806,10 @@ FUN_01010de0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
   undefined1 uVar4;
   
   uVar3 = param_4;
-  iVar1 = FUN_01013a80(*(undefined4 *)(param_1 + 0x20));
+  /* the world time restored: Ghidra had dropped it (r1, param_2, at 0x01010dfc). The controller is
+     not checked first, though it is just below: GUESS a latent engine bug (a track without a
+     controller would read its interval from 0x1c / 0x20, which on BREW does not fault) */
+  iVar1 = swvAnimationController_IsActive(*(uint8 **)(param_1 + 0x20),param_2);
   if (iVar1 != 0) {
     uVar4 = *(int *)(param_1 + 0x20) == 0;
     uVar2 = 0;
@@ -18553,15 +18557,25 @@ undefined4 swv_Matrix4Invert(int param_1)
   return 1;
 }
 
-/* ==== 0x01013A80  (file offset 0x13A80)  FUN_01013a80 ================================================ */
-undefined4 FUN_01013a80(int param_1,int param_2)
+/* ==== 0x01013A80  (file offset 0x13A80)  swvAnimationController_IsActive ============================= */
+/* GUESS: name. Whether an AnimationController is active at the world time worldTime (JSR-184): always
+   when its active interval's start (+0x1c) and end (+0x20) are equal, else when start <= worldTime <
+   end (signed). Callers: FUN_01003c38 (GUESS Object3D.animate, which skips a track whose controller is
+   not active) and FUN_01010de0 (an AnimationTrack's sample). Evidence: 0x01013a80 - 0x01013aac (`ldr
+   r2, [r0, #0x1c]` / `ldr r0, [r0, #0x20]`, `cmp r2, r0` / `beq` 1, `cmp r2, r1` / `bgt` 0, `cmp r0,
+   r1` / `bgt` 1, else 0). */
+int32 swvAnimationController_IsActive(const uint8 *controller,int32 worldTime)
 
 {
-  if ((*(int *)(param_1 + 0x1c) != *(int *)(param_1 + 0x20)) &&
-     ((param_2 < *(int *)(param_1 + 0x1c) || (*(int *)(param_1 + 0x20) <= param_2)))) {
-    return 0;
-  }
-  return 1;
+  int32 start = *(const int32 *)(controller + 0x1c);
+  int32 end = *(const int32 *)(controller + 0x20);
+  int32 active;
+
+  if (start == end)
+    active = 1;
+  else
+    active = start <= worldTime && worldTime < end;
+  return active;
 }
 
 /* ==== 0x01013AB0  (file offset 0x13AB0)  FUN_01013ab0 ================================================ */

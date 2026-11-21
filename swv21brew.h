@@ -630,7 +630,7 @@ void FUN_01013368(int *param_1,int param_2,undefined4 *param_3);
 int32 swv_RectIntersect(SwvRect *rect,const SwvRect *clip);   /* 0x01013440 GUESS: name, see swv21brew.c */
 undefined4 FUN_010134ec(undefined4 *param_1);
 void FUN_01013744(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-undefined4 FUN_01013a80(int param_1,int param_2);
+int32 swvAnimationController_IsActive(const uint8 *controller,int32 worldTime);   /* 0x01013A80 GUESS: name, see swv21brew.c */
 undefined4 FUN_01013ab0(int param_1,int param_2);
 undefined4 FUN_01013ac8(int param_1,int param_2);
 undefined4 FUN_01013af8(uint param_1);
