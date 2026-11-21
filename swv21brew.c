@@ -3554,9 +3554,10 @@ void FUN_01003474(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x010034CC  (file offset 0x034CC)  FUN_010034cc ================================================ */
-/* GUESS (not yet rewritten): JSR-184 Node.align(reference): error -1301 unless the reference param_2
-   (NULL: the node itself) can be reached from the node (FUN_01012508), then FUN_01003474's work on the
-   node and its children. The binary shares FUN_01003474's code (Ghidra repeated it here). */
+/* GUESS (not yet rewritten): JSR-184 Node.align(reference): error -1301 (IllegalArgumentException)
+   unless the reference param_2 (NULL: the node itself) is in the node's scene graph
+   (swvNode_SameSceneGraph), then FUN_01003474's work on the node and its children. The binary shares
+   FUN_01003474's code (Ghidra repeated it here). */
 void FUN_010034cc(int param_1,int param_2)
 
 {
@@ -3564,7 +3565,8 @@ void FUN_010034cc(int param_1,int param_2)
   int iVar2;
   
   iVar1 = param_1;
-  if ((param_2 != 0) && (iVar2 = FUN_01012508(param_2,param_1), iVar1 = param_2, iVar2 == 0)) {
+  if ((param_2 != 0) &&
+      (iVar2 = swvNode_SameSceneGraph((uint8 *)param_2,(uint8 *)param_1), iVar1 = param_2, iVar2 == 0)) {
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
   iVar2 = swvNode_AlignmentTargetZ((uint8 *)param_1);   /* Ghidra had dropped it */
@@ -17435,31 +17437,30 @@ int32 swvSprite3D_IsAnimatable(const uint8 *object,int32 property)
   return animatable;
 }
 
-/* ==== 0x01012508  (file offset 0x12508)  FUN_01012508 ================================================ */
-undefined4 FUN_01012508(int param_1,int param_2)
+/* ==== 0x01012508  (file offset 0x12508)  swvNode_SameSceneGraph ====================================== */
+/* GUESS: name. Whether two Nodes are in the same scene graph: 1 when both are set and share a root
+   (each walked up its parents, +0x30, to the node with none), else 0. The binary tests three things,
+   the other's root being the node, the other being the node's root, or the two roots equal; the first
+   two are cases of the third (a root has no parent, so it is its own root), so only the third is
+   written here. Callers: FUN_010034cc (JSR-184 Node.align, -1301 for a reference in another graph)
+   and FUN_01016ecc (GUESS: Group.pick, -1300 for a camera in another graph). Evidence: 0x01012508 -
+   0x01012558 (`cmp r0, #0` / `cmpne r1, #0` / `beq`, two `ldr r2, [r2, #0x30]` loops, `cmp r3, r0` /
+   `cmpne r1, r12` / `cmpne r12, r3` / `moveq r0, #1`, `mov r0, #0`). */
+int32 swvNode_SameSceneGraph(const uint8 *node,const uint8 *other)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  
-  iVar1 = param_1;
-  if (param_1 != 0 && param_2 != 0) {
-    do {
-      iVar2 = iVar1;
-      iVar3 = param_2;
-      iVar1 = *(int *)(iVar2 + 0x30);
-      iVar4 = param_2;
-    } while (*(int *)(iVar2 + 0x30) != 0);
-    for (; iVar3 != 0; iVar3 = *(int *)(iVar3 + 0x30)) {
-      iVar4 = iVar3;
-    }
-    if ((iVar4 == param_1 || param_2 == iVar2) || iVar2 == iVar4) {
-      return 1;
-    }
+  const uint8 *nodeRoot = node;
+  const uint8 *otherRoot = other;
+  int32 same = 0;
+
+  if (node != NULL && other != NULL) {
+    while (*(const uint8 *const *)(nodeRoot + 0x30) != NULL)
+      nodeRoot = *(const uint8 *const *)(nodeRoot + 0x30);
+    while (*(const uint8 *const *)(otherRoot + 0x30) != NULL)
+      otherRoot = *(const uint8 *const *)(otherRoot + 0x30);
+    same = nodeRoot == otherRoot;
   }
-  return 0;
+  return same;
 }
 
 /* ==== 0x01012568  (file offset 0x12568)  swv_Matrix4SetIdentity ====================================== */
@@ -21131,6 +21132,12 @@ bool FUN_01016d8c(int param_1,undefined4 param_2,undefined4 *param_3,uint *param
 }
 
 /* ==== 0x01016ECC  (file offset 0x16ECC)  FUN_01016ecc ================================================ */
+/* GUESS (not yet rewritten): JSR-184 Group.pick(scope, x, y, camera, ray) on the group param_1: error
+   -1300 (IllegalStateException) unless the camera param_5 is in the group's scene graph
+   (swvNode_SameSceneGraph); then the pick state (FUN_0100f7b0: +0x30 the camera, +0x38 the scope) gets
+   a ray through the viewport point (2x - 1, 1 - 2y) at depths -1 and 1, by the inverse of the camera's
+   matrix (FUN_0100f910; GUESS: its projection); the result 1 for a hit, and then ray param_6, when
+   set, passed to FUN_01027a54 (GUESS: filled in). */
 bool FUN_01016ecc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
                  undefined4 param_5,int param_6)
 
@@ -21151,7 +21158,7 @@ bool FUN_01016ecc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   undefined4 local_6c;
   undefined1 auStack_68 [68];
   
-  iVar1 = FUN_01012508(param_1,param_5);
+  iVar1 = swvNode_SameSceneGraph((uint8 *)param_1,(uint8 *)param_5);
   uVar4 = INTEGER_MINUS_1300;
   if (iVar1 == 0) {
     FUN_0102f7e0(INTEGER_MINUS_1300);

@@ -614,7 +614,7 @@ int32 swvLight_IsAnimatable(const uint8 *object,int32 property);   /* 0x01012478
 int32 FUN_010124ac(const uint8 *object,int32 property);   /* 0x010124AC hand-written (no Ghidra function), see swv21brew.c */
 int32 swvCamera_IsAnimatable(const uint8 *object,int32 property);   /* 0x010124B0 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
 int32 swvSprite3D_IsAnimatable(const uint8 *object,int32 property);   /* 0x010124DC GUESS: name, see swv21brew.c */
-undefined4 FUN_01012508(int param_1,int param_2);
+int32 swvNode_SameSceneGraph(const uint8 *node,const uint8 *other);   /* 0x01012508 GUESS: name, see swv21brew.c */
 void swv_Matrix4SetIdentity(undefined4 *param_1);
 void FUN_010125e4(int param_1,uint param_2,undefined4 param_3,undefined4 param_4,undefined4 *param_5 );
 void FUN_010126d0(void);
