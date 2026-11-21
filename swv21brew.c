@@ -5026,8 +5026,8 @@ LAB_01004cd0:
       }
     }
     else {
-      local_44 = swvKeyframeSequence_PreviousValid(param_1,iVar10);
-      local_48 = swvKeyframeSequence_NextValid(param_1,iVar10);
+      local_44 = swvKeyframeSequence_PreviousValid((const SwvKeyframeSequence *)param_1,iVar10);
+      local_48 = swvKeyframeSequence_NextValid((const SwvKeyframeSequence *)param_1,iVar10);
       if (bVar1) {
         local_50 = 0;
         local_4c = 0;
@@ -16101,7 +16101,7 @@ swvKeyframeSequence_Sample(int param_1,undefined4 param_2,int param_3,undefined4
   }
   FUN_010001f4(local_64,uVar15);
   local_7c = extraout_r1_03;
-  iVar4 = swvKeyframeSequence_NextValid(param_1,uVar15);
+  iVar4 = swvKeyframeSequence_NextValid((const SwvKeyframeSequence *)param_1,uVar15);
   local_40 = param_4 + 1;
   uVar9 = *(int *)(param_1 + 0x1c) - 0xb0;
   uVar19 = 3 < uVar9;
@@ -16281,7 +16281,7 @@ switchD_010113b0_default:
   if (local_2c < *(int *)(param_1 + 0x34)) {
     iVar13 = local_2c;
   }
-  iVar4 = swvKeyframeSequence_NextValid(param_1,uVar15);
+  iVar4 = swvKeyframeSequence_NextValid((const SwvKeyframeSequence *)param_1,uVar15);
   iVar8 = *(int *)(param_1 + 0x40);
   for (iVar14 = 0; bVar18 = iVar14 == iVar13, iVar14 < iVar13; iVar14 = iVar14 + 1) {
     swv_fcmp_a(local_78[iVar14],*(undefined4 *)(iVar8 + iVar1 * iVar4 * 4 + 4 + iVar14 * 4));
@@ -16555,58 +16555,68 @@ int32 swvImage2D_BytesPerPixel(int32 format)
 }
 
 /* ==== 0x01011AE0  (file offset 0x11AE0)  swvKeyframeSequence_PreviousValid =========================== */
-/* GUESS: name (not yet rewritten). The valid keyframe before keyframe param_2 of a KeyframeSequence,
-   wrapping inside the valid range (+0x2c .. +0x30, past keyframeCount when it wraps): the range's last
-   keyframe before its first. Used for the tangents (swvKeyframeSequence_BuildTangents). */
-int swvKeyframeSequence_PreviousValid(int param_1,int param_2)
+/* GUESS: name. The valid keyframe before the keyframe keyframe of a KeyframeSequence: the range's
+   last (validLast) before its first (validFirst), else keyframe - 1. When the range wraps (validFirst >
+   validLast: validFirst .. keyframeCount - 1, then 0 .. validLast) the wrapped keyframes come numbered
+   keyframeCount + i (swvKeyframeSequence_BuildTangents walks validFirst .. validFirst +
+   swvKeyframeSequence_ValidCount - 1, the keyframe the remainder, FUN_010001f4): keyframeCount + i gives
+   i - 1, keyframeCount (keyframe 0) keyframeCount - 1; the result is a keyframe's own index. Evidence:
+   0x01011ae0 - 0x01011b48 (`cmp r2, r3` / `bgt`, `ldr lr, [r0, #0x38]` / `sub lr, lr, #1`, `sub r1, r1,
+   r0` / `suble r0, r0, #1` / `subgt r0, r1, #1`). Only swvKeyframeSequence_BuildTangents calls it. */
+int32 swvKeyframeSequence_PreviousValid(const SwvKeyframeSequence *sequence,int32 keyframe)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 0x2c);
-  if ((*(int *)(param_1 + 0x30) < iVar1) &&
-     ((param_2 < iVar1 || (*(int *)(param_1 + 0x38) + -1 < param_2)))) {
-    iVar1 = *(int *)(param_1 + 0x38);
-    if (0 < param_2 - iVar1) {
-      iVar1 = param_2 - iVar1;
-    }
-    return iVar1 + -1;
+  int32 first = sequence->validFirst;
+  int32 previous;
+
+  if (first > sequence->validLast &&
+      (keyframe < first || keyframe > sequence->keyframeCount - 1)) {
+    /* a wrapped range: keyframeCount + i is the keyframe i */
+    if (keyframe - sequence->keyframeCount > 0)
+      previous = keyframe - sequence->keyframeCount - 1;
+    else
+      previous = sequence->keyframeCount - 1;
   }
-  if (param_2 <= iVar1) {
-    return *(int *)(param_1 + 0x30);
-  }
-  return param_2 + -1;
+  else if (keyframe <= first)
+    previous = sequence->validLast;
+  else
+    previous = keyframe - 1;
+  return previous;
 }
 
 /* ==== 0x01011B4C  (file offset 0x11B4C)  swvKeyframeSequence_NextValid =============================== */
-/* GUESS: name (not yet rewritten). The valid keyframe after keyframe param_2 of a KeyframeSequence,
-   wrapping inside the valid range like swvKeyframeSequence_PreviousValid: the range's first keyframe
-   after its last. */
-int swvKeyframeSequence_NextValid(int param_1,int param_2)
+/* GUESS: name. The valid keyframe after the keyframe keyframe of a KeyframeSequence: the range's
+   first (validFirst) after its last (validLast), else keyframe + 1. A wrapped range numbers its wrapped
+   keyframes keyframeCount + i, as swvKeyframeSequence_PreviousValid: keyframeCount + i gives i + 1 (the
+   first after the last), keyframeCount - 1 gives 0; the result is a keyframe's own index. Evidence:
+   0x01011b4c - 0x01011bb0 (`cmp r2, r12` / `bgt`, `movle r0, #0` / `ldrle pc`, `sub r0, r1, r0` / `cmp
+   r12, r0` / `addgt r0, r0, #1`). Called by swvKeyframeSequence_BuildTangents and
+   swvKeyframeSequence_Sample. */
+int32 swvKeyframeSequence_NextValid(const SwvKeyframeSequence *sequence,int32 keyframe)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  
-  iVar1 = *(int *)(param_1 + 0x2c);
-  iVar2 = *(int *)(param_1 + 0x30);
-  if (iVar2 < iVar1) {
-    if ((param_2 < iVar1) || (iVar3 = *(int *)(param_1 + 0x38) + -1, iVar3 < param_2)) {
-      param_2 = param_2 - *(int *)(param_1 + 0x38);
-      if (iVar2 <= param_2) {
-        return iVar1;
-      }
-      return param_2 + 1;
+  int32 first = sequence->validFirst;
+  int32 last = sequence->validLast;
+  int32 next;
+
+  if (first > last) {
+    if (keyframe < first || keyframe > sequence->keyframeCount - 1) {
+      /* keyframeCount + i is the keyframe i */
+      if (keyframe - sequence->keyframeCount < last)
+        next = keyframe - sequence->keyframeCount + 1;
+      else
+        next = first;
     }
-    if (iVar3 <= param_2) {
-      return 0;
-    }
+    else if (keyframe >= sequence->keyframeCount - 1)
+      next = 0;
+    else
+      next = keyframe + 1;
   }
-  else if (iVar2 <= param_2) {
-    return iVar1;
-  }
-  return param_2 + 1;
+  else if (keyframe >= last)
+    next = first;
+  else
+    next = keyframe + 1;
+  return next;
 }
 
 /* ==== 0x01011BB4  (file offset 0x11BB4)  swvImage2D_AlphaPlane ======================================= */

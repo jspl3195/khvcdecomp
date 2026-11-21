@@ -253,7 +253,9 @@ typedef struct SwvKeyframeSequence {
     int32    repeatMode;     /* +0x20 0xc0 CONSTANT, 0xc1 LOOP */
     uint32   duration;       /* +0x24 float bits; must be above 0 */
     int32    field_28;       /* +0x28 an int (swvKeyframeSequence_Sample uses it - 1) */
-    int32    validFirst;     /* +0x2c the valid range (setValidRange); first > last: it wraps */
+    int32    validFirst;     /* +0x2c the valid range (setValidRange); first > last: it wraps, and the
+                                wrapped keyframes 0 .. last are numbered keyframeCount + i
+                                (swvKeyframeSequence_PreviousValid / NextValid) */
     int32    validLast;      /* +0x30 */
     int32    componentCount; /* +0x34 */
     int32    keyframeCount;  /* +0x38 */

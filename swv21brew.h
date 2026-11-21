@@ -585,8 +585,8 @@ void FUN_01011a20(int param_1,int param_2,undefined4 *param_3);
 int FUN_01011a84(int param_1);
 uint32 swvPolygonMode_TwoSidedLighting(const uint8 *mode);   /* 0x01011AA8 GUESS: name, see swv21brew.c */
 int32 swvImage2D_BytesPerPixel(int32 format);   /* 0x01011AB8 GUESS: name, see swv21brew.c */
-int swvKeyframeSequence_PreviousValid(int param_1,int param_2);
-int swvKeyframeSequence_NextValid(int param_1,int param_2);
+int32 swvKeyframeSequence_PreviousValid(const SwvKeyframeSequence *sequence,int32 keyframe);   /* 0x01011AE0 GUESS: name, see swv21brew.c */
+int32 swvKeyframeSequence_NextValid(const SwvKeyframeSequence *sequence,int32 keyframe);   /* 0x01011B4C GUESS: name, see swv21brew.c */
 uint8 *swvImage2D_AlphaPlane(const uint8 *image);   /* 0x01011BB4 GUESS: name, see swv21brew.c */
 uint8 *swvImage2D_GetIndices(uint8 *image);   /* 0x01011BE4 GUESS: name, see swv21brew.c */
 undefined4 FUN_01011bfc(int param_1,int param_2,int param_3);
