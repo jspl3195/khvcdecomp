@@ -3992,6 +3992,10 @@ void * FUN_01003a10(int param_1,int param_2)
 }
 
 /* ==== 0x01003B00  (file offset 0x03B00)  FUN_01003b00 ================================================ */
+/* GUESS (not yet rewritten): animates a Group: FUN_01003c38 (GUESS: Object3D.animate) with param_2 /
+   param_4 on each child (+0x38, +0x34 the next) and on each object of its base references
+   (swvObject3D_Reference, walked like swvObject3D_References: -2 a list, -1 the end); returns the
+   smallest validity, from param_3. */
 int FUN_01003b00(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
 
 {
@@ -4010,10 +4014,10 @@ int FUN_01003b00(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
   }
   iVar3 = 0;
   iVar4 = 1;
-  while (iVar2 = FUN_01011bfc(param_1,iVar3), iVar2 != -1) {
+  while (iVar2 = swvObject3D_Reference((uint8 *)param_1,iVar3), iVar2 != -1) {
     if (iVar2 == -2) {
       iVar3 = iVar4 + 1;
-      iVar4 = FUN_01011bfc(param_1,iVar4);
+      iVar4 = swvObject3D_Reference((uint8 *)param_1,iVar4);
       for (iVar2 = 0; iVar2 < *(int *)(iVar4 + 8); iVar2 = iVar2 + 1) {
         iVar1 = *(int *)(*(int *)(iVar4 + 4) + iVar2 * 4);
         if ((iVar1 != 0) && (iVar1 = FUN_01003c38(iVar1,param_2,param_4), iVar1 < param_3)) {
@@ -4033,6 +4037,8 @@ int FUN_01003b00(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
 }
 
 /* ==== 0x01003BE8  (file offset 0x03BE8)  FUN_01003be8 ================================================ */
+/* GUESS (not yet rewritten): as FUN_01003b00, for a World (GUESS): first the object at +0x8c (GUESS:
+   its background, not in the tree), then the children and the base references. */
 int FUN_01003be8(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
 
 {
@@ -4056,10 +4062,10 @@ int FUN_01003be8(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
   }
   iVar3 = 0;
   iVar4 = 1;
-  while (iVar2 = FUN_01011bfc(param_1,iVar3), iVar2 != -1) {
+  while (iVar2 = swvObject3D_Reference((uint8 *)param_1,iVar3), iVar2 != -1) {
     if (iVar2 == -2) {
       iVar3 = iVar4 + 1;
-      iVar4 = FUN_01011bfc(param_1,iVar4);
+      iVar4 = swvObject3D_Reference((uint8 *)param_1,iVar4);
       for (iVar2 = 0; iVar2 < *(int *)(iVar4 + 8); iVar2 = iVar2 + 1) {
         iVar1 = *(int *)(*(int *)(iVar4 + 4) + iVar2 * 4);
         if ((iVar1 != 0) && (iVar1 = FUN_01003c38(iVar1,param_2,param_4), iVar1 < param_3)) {
@@ -14066,7 +14072,7 @@ int32 swvGroup_ChildCount(const uint8 *group)
    reached, so it ends at -1 when the child is found. Evidence: 0x0100f5b4 - 0x0100f5d8 (`ldrne r2,
    [r1]` / `subne r2, r2, #1` / `strne r2, [r1]` / `cmnne r2, #1` / `bne`, the child left in r0;
    Ghidra had read r2 as a third parameter and dropped the result). Used by swvGroup_Child and
-   FUN_01011ee4. */
+   swvGroup_Reference. */
 uint8 *swvGroup_NthChild(const uint8 *group,int32 *index)
 
 {
@@ -16666,40 +16672,50 @@ uint8 *swvImage2D_GetIndices(uint8 *image)
   return swvImage2D_Indices(image);
 }
 
-/* ==== 0x01011BFC  (file offset 0x11BFC)  FUN_01011bfc ================================================ */
-undefined4 FUN_01011bfc(int param_1,int param_2,int param_3)
+/* ==== 0x01011BFC  (file offset 0x11BFC)  swvObject3D_Reference ======================================= */
+/* GUESS: name. An Object3D's own reference(index), the base of every class's engine vtable +0x18
+   (swvObject3D_References walks it): the animation track index (the list at +0x10: +4 the items, +8
+   the count), or -1 (past the last) when it has no list or not that many; a negative index is not
+   checked. The subclasses' methods (FUN_01011c20 .. FUN_01011f4c) give their own references first and
+   then call it with index less their count. Evidence: 0x01011bfc - 0x01011c1c (`ldr r0, [r0, #0x10]` /
+   `cmp r0, #0`, `ldrne r2, [r0, #8]` / `cmpne r1, r2`, `ldrlt` +4 / `addlt` / `ldrlt`, `mvnge r0,
+   #0`); Ghidra had read r2 as a third parameter. */
+int32 swvObject3D_Reference(const uint8 *object,int32 index)
 
 {
-  int iVar1;
-  int iVar2;
-  undefined4 uVar3;
-  
-  iVar2 = *(int *)(param_1 + 0x10);
-  iVar1 = 0;
-  if (iVar2 != 0) {
-    param_3 = *(int *)(iVar2 + 8);
-    iVar1 = param_2 - param_3;
-  }
-  if (iVar1 < 0 == (iVar2 != 0 && SBORROW4(param_2,param_3))) {
-    uVar3 = 0xffffffff;
-  }
-  else {
-    uVar3 = *(undefined4 *)(*(int *)(iVar2 + 4) + param_2 * 4);
-  }
-  return uVar3;
+  const uint8 *tracks = *(const uint8 *const *)(object + 0x10);
+  int32 reference;
+
+  if (tracks != NULL && index < *(const int32 *)(tracks + 8))
+    reference = (*(const int32 *const *)(tracks + 4))[index];
+  else
+    reference = -1;
+  return reference;
 }
 
 /* ==== 0x01011C20  (file offset 0x11C20)  FUN_01011c20 ================================================ */
-void FUN_01011c20(undefined4 param_1,int param_2)
+/* GUESS: name (the class not identified). The reference(index) of a class with one reference. Its own
+   reference (+0x2c) for index 0, then swvObject3D_Reference(index - 1). Evidence: 0x01011c20 -
+   0x01011c48 (the word stored on the stack, `cmp r1, #1` / `ldrlt r0, [sp, r1, lsl #2]`, else `sub r1,
+   r1, #1` / `bl`, r0 returned by `ldmia ..., pc`; Ghidra had made it void). */
+int32 FUN_01011c20(const uint8 *object,int32 index)
 
 {
-  if (0 < param_2) {
-    FUN_01011bfc(param_1,param_2 + -1);
-  }
-  return;
+  int32 own[1];
+  int32 reference;
+
+  own[0] = *(const int32 *)(object + 0x2c);
+  if (index < 1)
+    reference = own[index];
+  else
+    reference = swvObject3D_Reference(object,index - 1);
+  return reference;
 }
 
 /* ==== 0x01011C4C  (file offset 0x11C4C)  FUN_01011c4c ================================================ */
+/* GUESS (not yet rewritten): an Appearance's reference(index) (GUESS: the six are its compositing mode,
+   fog, polygon mode, material and two textures): its own +0x20 .. +0x34 for indices 0 - 5, then
+   swvObject3D_Reference(index - 6). */
 undefined4 FUN_01011c4c(int param_1,int param_2)
 
 {
@@ -16719,22 +16735,34 @@ undefined4 FUN_01011c4c(int param_1,int param_2)
     uVar1 = local_24[param_2];
   }
   else {
-    uVar1 = FUN_01011bfc(param_1,param_2 + -6);
+    uVar1 = swvObject3D_Reference((uint8 *)param_1,param_2 + -6);
   }
   return uVar1;
 }
 
 /* ==== 0x01011CBC  (file offset 0x11CBC)  FUN_01011cbc ================================================ */
-void FUN_01011cbc(undefined4 param_1,int param_2)
+/* GUESS: name (the class not identified). The reference(index) of a class with one reference. Its own
+   reference (+0x20) for index 0, then swvObject3D_Reference(index - 1). Evidence: 0x01011cbc -
+   0x01011ce4 (the word stored on the stack, `cmp r1, #1` / `ldrlt r0, [sp, r1, lsl #2]`, else `sub r1,
+   r1, #1` / `bl`, r0 returned by `ldmia ..., pc`; Ghidra had made it void). */
+int32 FUN_01011cbc(const uint8 *object,int32 index)
 
 {
-  if (0 < param_2) {
-    FUN_01011bfc(param_1,param_2 + -1);
-  }
-  return;
+  int32 own[1];
+  int32 reference;
+
+  own[0] = *(const int32 *)(object + 0x20);
+  if (index < 1)
+    reference = own[index];
+  else
+    reference = swvObject3D_Reference(object,index - 1);
+  return reference;
 }
 
 /* ==== 0x01011CE8  (file offset 0x11CE8)  FUN_01011ce8 ================================================ */
+/* GUESS (not yet rewritten): a SkinnedMesh's reference(index) (GUESS: index 0, +0x38, its skeleton):
+   then the Mesh part as FUN_01011e84 (the template at 0x01042b10: +0x88, a list (-2) +0x8c, a list
+   +0x9c) for indices 1 - 5, then swvObject3D_Reference(index - 6). */
 int FUN_01011ce8(int param_1,int param_2)
 
 {
@@ -16754,13 +16782,16 @@ int FUN_01011ce8(int param_1,int param_2)
       iVar1 = local_20[param_2 + -1];
     }
     else {
-      iVar1 = FUN_01011bfc(param_1,param_2 + -6);
+      iVar1 = swvObject3D_Reference((uint8 *)param_1,param_2 + -6);
     }
   }
   return iVar1;
 }
 
 /* ==== 0x01011D54  (file offset 0x11D54)  FUN_01011d54 ================================================ */
+/* GUESS (not yet rewritten): a MorphingMesh's reference(index): its morph targets (index 0 -2 from the
+   template at 0x01042b08, index 1 the list +0xc4), then the Mesh part as FUN_01011e84 for indices 2 -
+   6, then swvObject3D_Reference(index - 7). */
 int FUN_01011d54(int param_1,int param_2)
 
 {
@@ -16782,13 +16813,16 @@ int FUN_01011d54(int param_1,int param_2)
       iVar1 = local_28[param_2 + -2];
     }
     else {
-      iVar1 = FUN_01011bfc(param_1,param_2 + -7);
+      iVar1 = swvObject3D_Reference((uint8 *)param_1,param_2 + -7);
     }
   }
   return iVar1;
 }
 
 /* ==== 0x01011DE0  (file offset 0x11DE0)  FUN_01011de0 ================================================ */
+/* GUESS (not yet rewritten): a VertexBuffer's reference(index): its positions, colours, normals and the
+   two texture coordinate sets (+0x24 .. +0x34) for indices 0 - 4, then swvObject3D_Reference(index -
+   5). */
 undefined4 FUN_01011de0(int param_1,int param_2)
 
 {
@@ -16806,32 +16840,36 @@ undefined4 FUN_01011de0(int param_1,int param_2)
     uVar1 = local_20[param_2];
   }
   else {
-    uVar1 = FUN_01011bfc(param_1,param_2 + -5);
+    uVar1 = swvObject3D_Reference((uint8 *)param_1,param_2 + -5);
   }
   return uVar1;
 }
 
-/* ==== 0x01011E44  (file offset 0x11E44)  FUN_01011e44 ================================================ */
-void FUN_01011e44(undefined4 *param_1,int param_2)
+/* ==== 0x01011E44  (file offset 0x11E44)  swvAnimationTrack_Reference ================================= */
+/* GUESS: name. An AnimationTrack's reference(index). Its own references (+0x1c, +0x20) for indices 0
+   and 1, then swvObject3D_Reference(index - 2). Evidence: 0x01011e44 - 0x01011e80 (both words stored
+   on the stack, `cmp r1, #2` / `ldrlt r0, [r0, r1, lsl #2]`, else `sub r1, r1, #2` / `bl`, r0 returned
+   by `ldmia ..., pc`; Ghidra had made it void and had read the saved registers as three more
+   arguments). */
+int32 swvAnimationTrack_Reference(const uint8 *object,int32 index)
 
 {
-  undefined4 *puVar1;
-  undefined4 local_c;
-  undefined4 local_8;
-  
-  local_c = param_1[7];
-  puVar1 = param_1 + 8;
-  if (param_2 < 2) {
-    param_1 = &local_c;
-  }
-  local_8 = *puVar1;
-  if (1 < param_2) {
-    FUN_01011bfc(param_1,param_2 + -2,*puVar1,0,param_2);
-  }
-  return;
+  int32 own[2];
+  int32 reference;
+
+  own[0] = *(const int32 *)(object + 0x1c);
+  own[1] = *(const int32 *)(object + 0x20);
+  if (index < 2)
+    reference = own[index];
+  else
+    reference = swvObject3D_Reference(object,index - 2);
+  return reference;
 }
 
 /* ==== 0x01011E84  (file offset 0x11E84)  FUN_01011e84 ================================================ */
+/* GUESS (not yet rewritten): a Mesh's reference(index): from the template at 0x01042b10 ({0, -2, 0, -2,
+   0}), its VertexBuffer (+0x88), -2 and the list at +0x8c (GUESS: the index buffers), -2 and the list
+   at +0x9c (GUESS: the appearances), for indices 0 - 4, then swvObject3D_Reference(index - 5). */
 int FUN_01011e84(int param_1,int param_2)
 
 {
@@ -16847,65 +16885,67 @@ int FUN_01011e84(int param_1,int param_2)
     iVar1 = local_20[param_2];
   }
   else {
-    iVar1 = FUN_01011bfc(param_1,param_2 + -5);
+    iVar1 = swvObject3D_Reference((uint8 *)param_1,param_2 + -5);
   }
   return iVar1;
 }
 
-/* ==== 0x01011EE4  (file offset 0x11EE4)  FUN_01011ee4 ================================================ */
-void FUN_01011ee4(undefined4 param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x01011EE4  (file offset 0x11EE4)  swvGroup_Reference ========================================== */
+/* GUESS: name. A Group's reference(index): its children first
+   (swvGroup_NthChild, which leaves index less the children it passed), then swvObject3D_Reference with
+   what is left. Evidence: 0x01011ee4 - 0x01011f08 (the index kept on the stack, `bl 0x0100f5b4` /
+   `cmp r0, #0`, `ldreq r1, [sp, #8]` / `bleq 0x01011bfc`, r0 returned by `ldmia ..., pc`; Ghidra had
+   made it void, with a third parameter). FUN_01011f0c chains to it. */
+int32 swvGroup_Reference(const uint8 *group,int32 index)
 
 {
-  int iVar1;
-  undefined4 local_8 [2];
-  
-  local_8[0] = param_2;
-  /* swvGroup_NthChild reads r0 and r1 only: Ghidra had added two phantom arguments */
-  iVar1 = (int)swvGroup_NthChild((uint8 *)param_1,(int32 *)local_8);
-  if (iVar1 == 0) {
-    FUN_01011bfc(param_1,local_8[0]);
-  }
-  return;
+  int32 reference = (int32)swvGroup_NthChild(group,&index);
+
+  if (reference == 0)
+    reference = swvObject3D_Reference(group,index);
+  return reference;
 }
 
 /* ==== 0x01011F0C  (file offset 0x11F0C)  FUN_01011f0c ================================================ */
-void FUN_01011f0c(undefined4 *param_1,int param_2)
+/* GUESS: name (the class: GUESS World, FUN_01003be8 animating its +0x8c). The reference(index) of a
+   Group subclass. Its own references (+0x88, +0x8c) for indices 0 and 1, then swvGroup_Reference(index
+   - 2). Evidence: 0x01011f0c - 0x01011f48 (both words stored on the stack, `cmp r1, #2` / `ldrlt r0,
+   [r0, r1, lsl #2]`, else `sub r1, r1, #2` / `bl`, r0 returned by `ldmia ..., pc`; Ghidra had made it
+   void and had read the saved registers as three more arguments). */
+int32 FUN_01011f0c(const uint8 *object,int32 index)
 
 {
-  undefined4 *puVar1;
-  undefined4 local_c;
-  undefined4 local_8;
-  
-  local_c = param_1[0x22];
-  puVar1 = param_1 + 0x23;
-  if (param_2 < 2) {
-    param_1 = &local_c;
-  }
-  local_8 = *puVar1;
-  if (1 < param_2) {
-    FUN_01011ee4(param_1,param_2 + -2,*puVar1,0,param_2);
-  }
-  return;
+  int32 own[2];
+  int32 reference;
+
+  own[0] = *(const int32 *)(object + 0x88);
+  own[1] = *(const int32 *)(object + 0x8c);
+  if (index < 2)
+    reference = own[index];
+  else
+    reference = swvGroup_Reference(object,index - 2);
+  return reference;
 }
 
 /* ==== 0x01011F4C  (file offset 0x11F4C)  FUN_01011f4c ================================================ */
-void FUN_01011f4c(undefined4 *param_1,int param_2)
+/* GUESS: name (the class not identified). The reference(index) of a class with two references. Its own
+   references (+0x98, +0x9c) for indices 0 and 1, then swvObject3D_Reference(index - 2). Evidence:
+   0x01011f4c - 0x01011f88 (both words stored on the stack, `cmp r1, #2` / `ldrlt r0, [r0, r1, lsl #2]`,
+   else `sub r1, r1, #2` / `bl`, r0 returned by `ldmia ..., pc`; Ghidra had made it void and had read
+   the saved registers as three more arguments). */
+int32 FUN_01011f4c(const uint8 *object,int32 index)
 
 {
-  undefined4 *puVar1;
-  undefined4 local_c;
-  undefined4 local_8;
-  
-  local_c = param_1[0x26];
-  puVar1 = param_1 + 0x27;
-  if (param_2 < 2) {
-    param_1 = &local_c;
-  }
-  local_8 = *puVar1;
-  if (1 < param_2) {
-    FUN_01011bfc(param_1,param_2 + -2,*puVar1,0,param_2);
-  }
-  return;
+  int32 own[2];
+  int32 reference;
+
+  own[0] = *(const int32 *)(object + 0x98);
+  own[1] = *(const int32 *)(object + 0x9c);
+  if (index < 2)
+    reference = own[index];
+  else
+    reference = swvObject3D_Reference(object,index - 2);
+  return reference;
 }
 
 /* ==== 0x01011F8C  (file offset 0x11F8C)  swvObj_AddRef =============================================== */

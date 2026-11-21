@@ -589,18 +589,18 @@ int32 swvKeyframeSequence_PreviousValid(const SwvKeyframeSequence *sequence,int3
 int32 swvKeyframeSequence_NextValid(const SwvKeyframeSequence *sequence,int32 keyframe);   /* 0x01011B4C GUESS: name, see swv21brew.c */
 uint8 *swvImage2D_AlphaPlane(const uint8 *image);   /* 0x01011BB4 GUESS: name, see swv21brew.c */
 uint8 *swvImage2D_GetIndices(uint8 *image);   /* 0x01011BE4 GUESS: name, see swv21brew.c */
-undefined4 FUN_01011bfc(int param_1,int param_2,int param_3);
-void FUN_01011c20(undefined4 param_1,int param_2);
+int32 swvObject3D_Reference(const uint8 *object,int32 index);   /* 0x01011BFC GUESS: name, see swv21brew.c */
+int32 FUN_01011c20(const uint8 *object,int32 index);   /* 0x01011C20 see swv21brew.c */
 undefined4 FUN_01011c4c(int param_1,int param_2);
-void FUN_01011cbc(undefined4 param_1,int param_2);
+int32 FUN_01011cbc(const uint8 *object,int32 index);   /* 0x01011CBC see swv21brew.c */
 int FUN_01011ce8(int param_1,int param_2);
 int FUN_01011d54(int param_1,int param_2);
 undefined4 FUN_01011de0(int param_1,int param_2);
-void FUN_01011e44(undefined4 *param_1,int param_2);
+int32 swvAnimationTrack_Reference(const uint8 *object,int32 index);   /* 0x01011E44 GUESS: name, see swv21brew.c */
 int FUN_01011e84(int param_1,int param_2);
-void FUN_01011ee4(undefined4 param_1,undefined4 param_2,undefined4 param_3);
-void FUN_01011f0c(undefined4 *param_1,int param_2);
-void FUN_01011f4c(undefined4 *param_1,int param_2);
+int32 swvGroup_Reference(const uint8 *group,int32 index);   /* 0x01011EE4 GUESS: name, see swv21brew.c */
+int32 FUN_01011f0c(const uint8 *object,int32 index);   /* 0x01011F0C see swv21brew.c */
+int32 FUN_01011f4c(const uint8 *object,int32 index);   /* 0x01011F4C see swv21brew.c */
 undefined4 FUN_010122f0(undefined4 param_1,int param_2);
 undefined4 FUN_01012324(void);
 undefined4 FUN_0101232c(undefined4 param_1,int param_2);
