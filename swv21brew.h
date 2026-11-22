@@ -709,10 +709,10 @@ int FUN_01019888(undefined4 param_1,int param_2);
 undefined4 FUN_010198c8(int param_1);
 void FUN_01019920(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_010199ac(undefined4 param_1,int param_2,int param_3,undefined4 param_4);
-uint FUN_01019a0c(undefined4 param_1,undefined4 param_2,undefined4 param_3,uint param_4);
+uint FUN_01019a0c(int param_1);
 uint FUN_01019a98(undefined4 param_1);
 uint FUN_01019abc(undefined4 param_1);
-void FUN_01019afc(undefined4 param_1,undefined4 param_2,uint param_3,uint param_4);
+void FUN_01019afc(int param_1,int param_2);
 void FUN_01019ba4(undefined4 param_1,undefined4 *param_2);
 undefined1 FUN_01019bd4(int param_1);
 void FUN_01019c10(uint param_1,int param_2,undefined4 param_3);
@@ -837,7 +837,7 @@ undefined4 FUN_01022c5c(int param_1,int param_2,undefined4 param_3,int param_4,i
 void swvPolygonMode_SetShadingValue(uint8 *mode,int32 shading);   /* 0x01023108 GUESS: name, see swv21brew.c */
 void FUN_01023124(int *param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01023174(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-void FUN_01023184(int *param_1,int param_2,undefined4 param_3,undefined4 param_4);
+void FUN_01023184(int *param_1,int param_2);
 void FUN_010231c4(int param_1,int *param_2);
 void swvAnimationController_SetSpeedValue(uint8 *controller,uint32 speed,int32 worldTime);   /* 0x01023244 JSR-184 1.1, see swv21brew.c */
 void FUN_0102327c(int param_1,undefined4 param_2);

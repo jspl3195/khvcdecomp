@@ -22140,7 +22140,7 @@ void FUN_010199ac(undefined4 param_1,int param_2,int param_3,undefined4 param_4)
 }
 
 /* ==== 0x01019A0C  (file offset 0x19A0C)  FUN_01019a0c ================================================ */
-uint FUN_01019a0c(undefined4 param_1,undefined4 param_2,undefined4 param_3,uint param_4)
+uint FUN_01019a0c(int param_1)
 
 {
   undefined1 uVar1;
@@ -22149,8 +22149,7 @@ uint FUN_01019a0c(undefined4 param_1,undefined4 param_2,undefined4 param_3,uint 
   undefined4 local_10;
   
   iVar3 = 0;
-  local_10 = param_4;
-  do {
+  do {   /* the four bytes fill local_10 (Ghidra's param_2 - param_4 were saved registers) */
     uVar1 = FUN_01019bd4(param_1);
     *(undefined1 *)((int)&local_10 + iVar3) = uVar1;
     iVar3 = iVar3 + 1;
@@ -22195,7 +22194,7 @@ uint FUN_01019abc(undefined4 param_1)
 }
 
 /* ==== 0x01019AFC  (file offset 0x19AFC)  FUN_01019afc ================================================ */
-void FUN_01019afc(undefined4 param_1,undefined4 param_2,uint param_3,uint param_4)
+void FUN_01019afc(int param_1,int param_2)
 
 {
   uint uVar1;
@@ -22206,8 +22205,8 @@ void FUN_01019afc(undefined4 param_1,undefined4 param_2,uint param_3,uint param_
   uint local_18;
   
   uVar2 = INTEGER_MINUS_1101;
-  local_1c = param_3;
-  local_18 = param_4;
+  /* local_1c / local_18: stack words whose upper bytes are never set (Ghidra's param_3 / param_4 were
+     the pushed r2 / r3) */
   while( true ) {
     bVar3 = FUN_01019bd4(param_1);
     local_18 = CONCAT31(local_18._1_3_,bVar3);
@@ -30437,12 +30436,11 @@ void FUN_01023174(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 }
 
 /* ==== 0x01023184  (file offset 0x23184)  FUN_01023184 ================================================ */
-/* GUESS (not yet rewritten): resizes the engine dynamic array param_1 (+0 its vtable, +4 the items, +8
-   the count, +0xc the capacity) to param_2 items: when the count changes and the capacity is short, its
-   vtable +4 grows it (r0 the array, r1 the new count, r2 the old one; Ghidra's pcVar1 and param_4 are
-   phantom); then the count set. Used for many arrays (Object3D +0x10, the MorphingMesh weights +0xd4,
-   ...). */
-void FUN_01023184(int *param_1,int param_2,undefined4 param_3,undefined4 param_4)
+/* GUESS (not yet rewritten): resizes the engine dynamic array param_1 (+0 its vtable, +4 the items, +8 the
+   count, +0xc the capacity) to param_2 items: when the count changes and the capacity is short, its vtable
+   +4 grows it (r0 the array, r1 the new count, r2 the old one; Ghidra had two more, phantom); then the
+   count set. Used for many arrays (Object3D +0x10, the MorphingMesh weights +0xd4, ...). */
+void FUN_01023184(int *param_1,int param_2)
 
 {
   code *pcVar1;
@@ -30452,7 +30450,7 @@ void FUN_01023184(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
       pcVar1 = (code *)(*(int *)(*param_1 + 4) + *param_1);
       /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
          the object's class) */
-      (*pcVar1)(param_1,param_2,param_1[2],pcVar1,param_4);
+      (*pcVar1)(param_1,param_2,param_1[2]);
     }
     param_1[2] = param_2;
   }
