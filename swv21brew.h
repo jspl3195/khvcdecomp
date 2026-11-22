@@ -1137,7 +1137,7 @@ undefined4 FUN_0102eb74(int param_1,undefined4 param_2);
 undefined4 FUN_0102ebf8(int param_1,undefined4 param_2,undefined4 param_3);
 undefined4 FUN_0102ec78(int param_1,int param_2);
 uint32 FUN_0102ecec(void);
-uint FUN_0102ed04(uint param_1);
+uint32 swv_CheckFloat(uint32 value);   /* 0x0102ED04 GUESS: name, see swv21brew.c */
 ulonglong FUN_0102ed3c(uint param_1,uint param_2);
 undefined8 FUN_0102ed54(int param_1,int param_2,int param_3,uint param_4);
 int FUN_0102edb4(int param_1);

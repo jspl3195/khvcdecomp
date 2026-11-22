@@ -14186,7 +14186,7 @@ void *swvImage2D_Pixels(uint8 *image)
    swv_fcmp_c, swv_fmul, swv_fadd; Ghidra had pasted in swv_fadd, which the code tail-jumps to). The
    swv_fcmp_c result is in the flags (`bls`): written as the bit test it amounts to, for two non-negative
    finite floats swv_fcmp_c does `cmp r0, r1` (an infinite or NaN difference, from a speed setSpeed's
-   FUN_0102ed04 would have refused, takes fplib's exception path, 0x0103daa8, instead). Callers:
+   swv_CheckFloat would have refused, takes fplib's exception path, 0x0103daa8, instead). Callers:
    swvAnimationController_GetPosition (slot 24) and FUN_01010de0 (an AnimationTrack's sample). Evidence:
    0x01010094 - 0x010100e8 (`sub r0, r1, r0` / `bl` 0x0103f500, `mov r1, #0x3f800000` / `bl` 0x0103f064,
    `bic r0, r0, #0x80000000` / `bl` 0x0103f59c, `movls r1, r6` / `ldrls r0, [r4, #0x24]`, else `bl`
@@ -18833,9 +18833,9 @@ int32 swvM3GReader_Begin(uint8 *reader,int32 allowSwerve)
    equal +0x34, and the section reader is deleted); 12 to 15 the section's Checksum (section 6.5), which
    must match +0x3c, then the virtual slot +0x24 can end the file. +0x2c counts the bytes read, +0x1c the
    header's TotalFileSize (section 10.1; -1 until the header is read). Errors: FUN_0102f7e0 (-1103
-   SWVE_READER_STATE when called in the wrong state, -1201 (-0x4b1) for bad lengths) and the results -7
-   (bad identifier), -8 (bad CompressionScheme, or the section reader refused), -9 (bad checksum), -10 (the
-   slot +0x1c refused) and -11 (data past TotalFileSize), handed to the virtual slot +0x10
+   SWVE_READER_STATE when called in the wrong state, -1201 SWVE_BAD_LENGTH for bad lengths) and the results
+   -7 (bad identifier), -8 (bad CompressionScheme, or the section reader refused), -9 (bad checksum), -10
+   (the slot +0x1c refused) and -11 (data past TotalFileSize), handed to the virtual slot +0x10
    (swvM3GReader_Fail; -11 is returned without it). Returns -1 while it needs more, the bytes used when the
    file ended, or the error. */
 int32 swvM3GReader_Feed(uint8 *reader,int32 array,const uint8 *data,int32 offset,int32 length)
@@ -18922,7 +18922,7 @@ int32 swvM3GReader_Feed(uint8 *reader,int32 array,const uint8 *data,int32 offset
       FUN_010265fc((int32)reader,p - 3,4);
       *(uint32 *)(reader + 0x40) = *(uint32 *)(reader + 0x30);
       if (*(uint32 *)(reader + 0x40) < 0xd)
-        FUN_0102f7e0(-0x4b1);
+        FUN_0102f7e0(SWVE_BAD_LENGTH);
       *(uint32 *)(reader + 0x40) -= 0xd;
       next = 7;
       break;
@@ -18962,7 +18962,7 @@ int32 swvM3GReader_Feed(uint8 *reader,int32 array,const uint8 *data,int32 offset
       p += n;
       if (*(int32 *)(reader + 0x40) == 0) {
         if (*(int32 *)(reader + 0x34) != *(int32 *)(reader + 0x44))
-          FUN_0102f7e0(-0x4b1);
+          FUN_0102f7e0(SWVE_BAD_LENGTH);
         next = 0xc;
         section = *(uint8 **)(reader + 0x10);
         if (section != NULL)
@@ -28939,7 +28939,7 @@ void FUN_01021bac(int param_1,int param_2,undefined4 param_3,int param_4,int par
   puVar4 = (undefined4 *)(*(int *)(param_1 + 0x40) + param_2 * iVar1 * 4);
   *puVar4 = param_3;
   for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0x34); iVar1 = iVar1 + 1) {
-    uVar2 = FUN_0102ed04(*(undefined4 *)(param_5 + iVar1 * 4));
+    uVar2 = swv_CheckFloat(*(undefined4 *)(param_5 + iVar1 * 4));
     puVar4[iVar1 + 1] = uVar2;
   }
   if (*(int *)(param_1 + 0x4c) == 0) {
@@ -29462,7 +29462,7 @@ void swvAnimationController_SetPositionValue(uint8 *controller,uint32 sequenceTi
 /* JSR-184 1.1, VertexBuffer.setPositions(positions, scale, bias) on the VertexBuffer buffer: with an array
    positions (NULL clears), error -1301 (IllegalArgumentException) unless it has 3 components a vertex, and
    for a bias of fewer floats (length) than that (checked again as length < 3); +0x44 the scale, +0x38 ..
-   +0x40 the bias (FUN_0102ed04 each: -1001 for a denormal, infinite or NaN float; 0 without one); then
+   +0x40 the bias (swv_CheckFloat each: -1001 for a denormal, infinite or NaN float; 0 without one); then
    FUN_01023b3c with the slot +0x24 (a tail jump in the binary; Ghidra had repeated its code here).
    Callers: swvVertexBuffer_SetPositions (slot 26), FUN_010104f0 and FUN_01010938 (the morphed and skinned
    buffers). Evidence: 0x0102234c - 0x010223e8 (`ldr r8, [0x10223ec]`, -1301 for every check; `cmp r5,
@@ -29486,9 +29486,9 @@ void swvVertexBuffer_SetPositionsValue(uint8 *buffer,uint8 *positions,uint32 sca
     else {
       if (length < 3)
         FUN_0102f7e0(INTEGER_MINUS_1301);
-      *(uint32 *)(buffer + 0x38) = FUN_0102ed04(bias[0]);
-      *(uint32 *)(buffer + 0x3c) = FUN_0102ed04(bias[1]);
-      *(uint32 *)(buffer + 0x40) = FUN_0102ed04(bias[2]);
+      *(uint32 *)(buffer + 0x38) = swv_CheckFloat(bias[0]);
+      *(uint32 *)(buffer + 0x3c) = swv_CheckFloat(bias[1]);
+      *(uint32 *)(buffer + 0x40) = swv_CheckFloat(bias[2]);
     }
   }
   FUN_01023b3c((int)buffer,(int *)(buffer + 0x24),(int)positions);
@@ -30681,7 +30681,7 @@ undefined4 FUN_010234bc(int param_1,int param_2,undefined4 param_3,uint param_4,
    -1101 (IndexOutOfBoundsException) for a unit index above 1 (two units; an unsigned compare); with an
    array texCoords (NULL clears), -1301 (IllegalArgumentException) for other than 2 or 3 components a
    vertex or a bias of fewer floats (length) than that (checked twice); +0x70 + 4 * index the scale, +0x58
-   + 0xc * index the bias (FUN_0102ed04 each: -1001 for a denormal, infinite or NaN float; the third only
+   + 0xc * index the bias (swv_CheckFloat each: -1001 for a denormal, infinite or NaN float; the third only
    for 3 components; 0 without one); then FUN_01023b3c with the slot +0x30 + 4 * index (a tail jump in the
    binary; Ghidra had repeated its code here). Callers: swvVertexBuffer_SetTexCoords (slot 28) and
    FUN_010104f0. Evidence: 0x0102358c - 0x0102366c (`ldrcs r0, [0x1023670]` -1101 and `ldr r11,
@@ -30713,10 +30713,10 @@ void swvVertexBuffer_SetTexCoordsValue(uint8 *buffer,uint32 index,uint8 *texCoor
     else {
       if (*(const int32 *)(texCoords + 0x20) > length)
         FUN_0102f7e0(INTEGER_MINUS_1301);
-      unitBias[0] = FUN_0102ed04(bias[0]);
-      unitBias[1] = FUN_0102ed04(bias[1]);
+      unitBias[0] = swv_CheckFloat(bias[0]);
+      unitBias[1] = swv_CheckFloat(bias[1]);
       if (components > 2)
-        unitBias[2] = FUN_0102ed04(bias[2]);
+        unitBias[2] = swv_CheckFloat(bias[2]);
       else
         unitBias[2] = 0;
     }
@@ -31189,7 +31189,7 @@ void FUN_01023c90(int param_1,int param_2,int param_3)
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
   for (iVar2 = 0; iVar2 < iVar3; iVar2 = iVar2 + 1) {
-    uVar1 = FUN_0102ed04(*(undefined4 *)(param_3 + iVar2 * 4));
+    uVar1 = swv_CheckFloat(*(undefined4 *)(param_3 + iVar2 * 4));
     *(undefined4 *)(*(int *)(param_1 + 0xd8) + iVar2 * 4) = uVar1;
   }
   *(undefined4 *)(param_1 + 0xac) = 1;
@@ -31440,7 +31440,7 @@ void FUN_01023f50(int param_1,int param_2,undefined4 *param_3)
     puVar8 = param_3;
     do {
       param_3 = puVar8 + 1;
-      uVar4 = FUN_0102ed04(*puVar8);
+      uVar4 = swv_CheckFloat(*puVar8);
       iVar6 = iVar5 + 1;
       ((undefined4 *)(param_1 + 0xc))[iVar5 * 4 + uVar7] = uVar4;
       uVar4 = WORD_HEXADECIMAL_377BA882;
@@ -33004,10 +33004,10 @@ void FUN_01025b30(int param_1,uint param_2,undefined4 *param_3)
   }
   iVar5 = (int)(param_2 + ((uint)((int)param_2 >> 0x1f) >> 0x1e)) >> 2;
   while (0 < iVar5) {
-    uVar1 = FUN_0102ed04(param_3[3]);
-    uVar2 = FUN_0102ed04(param_3[2]);
-    uVar3 = FUN_0102ed04(param_3[1]);
-    uVar4 = FUN_0102ed04(*param_3);
+    uVar1 = swv_CheckFloat(param_3[3]);
+    uVar2 = swv_CheckFloat(param_3[2]);
+    uVar3 = swv_CheckFloat(param_3[1]);
+    uVar4 = swv_CheckFloat(*param_3);
     FUN_0101471c(param_1 + 0xc,uVar4,uVar3,uVar2,uVar1,param_3);
     param_3 = param_3 + 4;
     iVar5 = iVar5 + -1;
@@ -39012,10 +39012,10 @@ int32 swvAnimationController_SetActiveInterval(ISwerveObject *po,int32 start,int
 /* JSR-184 1.1, AnimationController.setPosition: ISwerveObject slot 25 (+0x64) of AnimationController
    (kh_types.h SwerveAnimationControllerVtbl): in an error frame, swvAnimationController_SetPositionValue
    on the native object (po->pNative, less 4 when not NULL) with the sequence time, a float checked by
-   FUN_0102ed04 (error -1001 for a denormal, an infinity or a NaN), and the world time: the reference point
-   (twref, tsref), +0x28 / +0x24; returns 0, or on an error its result code (swv_ErrorToResult). Evidence:
-   0x0102cfec - 0x0102d05c (`bl` 0x0102ed04 on r7, the sequence time, `mov r1, r0`, `mov r2, r6`, `bl`
-   0x01022340). */
+   swv_CheckFloat (error -1001 for a denormal, an infinity or a NaN), and the world time: the reference
+   point (twref, tsref), +0x28 / +0x24; returns 0, or on an error its result code (swv_ErrorToResult).
+   Evidence: 0x0102cfec - 0x0102d05c (`bl` 0x0102ed04 on r7, the sequence time, `mov r1, r0`, `mov r2, r6`,
+   `bl` 0x01022340). */
 int32 swvAnimationController_SetPosition(ISwerveObject *po,uint32 sequenceTime,int32 worldTime)
 
 {
@@ -39030,7 +39030,7 @@ int32 swvAnimationController_SetPosition(ISwerveObject *po,uint32 sequenceTime,i
     controller = (uint8 *)po->pNative;
     if (controller != NULL)
       controller -= 4;
-    swvAnimationController_SetPositionValue(controller,FUN_0102ed04(sequenceTime),worldTime);
+    swvAnimationController_SetPositionValue(controller,swv_CheckFloat(sequenceTime),worldTime);
     swv_TryPop();
   }
   else
@@ -39041,7 +39041,7 @@ int32 swvAnimationController_SetPosition(ISwerveObject *po,uint32 sequenceTime,i
 /* ==== 0x0102D060  (file offset 0x2D060)  swvAnimationController_SetSpeed ============================= */
 /* JSR-184 1.1, AnimationController.setSpeed: ISwerveObject slot 26 (+0x68) of AnimationController
    (kh_types.h SwerveAnimationControllerVtbl): in an error frame, swvAnimationController_SetSpeedValue on
-   the native object (po->pNative, less 4 when not NULL) with the speed, a float checked by FUN_0102ed04
+   the native object (po->pNative, less 4 when not NULL) with the speed, a float checked by swv_CheckFloat
    (error -1001 for a denormal, an infinity or a NaN), and the world time: tsref' = getPosition(worldTime),
    twref' = worldTime, s' = speed, as the spec; +0x24 / +0x28 / +0x2c; returns 0, or on an error its result
    code (swv_ErrorToResult). Evidence: 0x0102d060 - 0x0102d0d0 (`bl` 0x0102ed04 on r7, the speed, `mov r1,
@@ -39060,7 +39060,7 @@ int32 swvAnimationController_SetSpeed(ISwerveObject *po,uint32 speed,int32 world
     controller = (uint8 *)po->pNative;
     if (controller != NULL)
       controller -= 4;
-    swvAnimationController_SetSpeedValue(controller,FUN_0102ed04(speed),worldTime);
+    swvAnimationController_SetSpeedValue(controller,swv_CheckFloat(speed),worldTime);
     swv_TryPop();
   }
   else
@@ -39070,14 +39070,14 @@ int32 swvAnimationController_SetSpeed(ISwerveObject *po,uint32 speed,int32 world
 
 /* ==== 0x0102D0D4  (file offset 0x2D0D4)  swvAnimationController_SetWeight ============================ */
 /* JSR-184 1.1, AnimationController.setWeight: ISwerveObject slot 19 (+0x4c) of AnimationController
-   (kh_types.h SwerveAnimationControllerVtbl): in an error frame, the weight checked by FUN_0102ed04 (error
-   -1001 for a denormal, an infinity or a NaN), error -1301 (IllegalArgumentException) for a negative
-   weight, then swvAnimationController_SetWeightValue (stores it, +0x30) on the native object (po->pNative,
-   less 4 when not NULL); returns 0, or on an error its result code (swv_ErrorToResult). The test is
-   swv_fcmp_c(FUN_0102ed04(0), weight) and `hi` (0 > weight; the result is in the flags): written as the
-   bit test it amounts to, the sign set and the magnitude not 0 (-0.0 passes; no NaN is left). Evidence:
-   0x0102d0d4 - 0x0102d158 (the frame at sp, `bl` 0x0102ed04 on r5, then on 0, `mov r1, r5` / `bl`
-   0x0103f59c, `ldrhi` / `blhi` the error; Ghidra had made the flags unrelated values). */
+   (kh_types.h SwerveAnimationControllerVtbl): in an error frame, the weight checked by swv_CheckFloat
+   (error -1001 for a denormal, an infinity or a NaN), error -1301 (IllegalArgumentException) for a
+   negative weight, then swvAnimationController_SetWeightValue (stores it, +0x30) on the native object
+   (po->pNative, less 4 when not NULL); returns 0, or on an error its result code (swv_ErrorToResult). The
+   test is swv_fcmp_c(swv_CheckFloat(0), weight) and `hi` (0 > weight; the result is in the flags): written
+   as the bit test it amounts to, the sign set and the magnitude not 0 (-0.0 passes; no NaN is left).
+   Evidence: 0x0102d0d4 - 0x0102d158 (the frame at sp, `bl` 0x0102ed04 on r5, then on 0, `mov r1, r5` /
+   `bl` 0x0103f59c, `ldrhi` / `blhi` the error; Ghidra had made the flags unrelated values). */
 int32 swvAnimationController_SetWeight(ISwerveObject *po,uint32 weight)
 
 {
@@ -39092,8 +39092,8 @@ int32 swvAnimationController_SetWeight(ISwerveObject *po,uint32 weight)
     controller = (uint8 *)po->pNative;
     if (controller != NULL)
       controller -= 4;
-    weight = FUN_0102ed04(weight);
-    if ((swv_fcmp_c(FUN_0102ed04(0),weight), (weight & 0x80000000) != 0 && (weight & 0x7fffffff) != 0))
+    weight = swv_CheckFloat(weight);
+    if ((swv_fcmp_c(swv_CheckFloat(0),weight), (weight & 0x80000000) != 0 && (weight & 0x7fffffff) != 0))
       FUN_0102f7e0(INTEGER_MINUS_1301);
     swvAnimationController_SetWeightValue(controller,weight);
     swv_TryPop();
@@ -40416,20 +40416,20 @@ FUN_0102e234(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     if (iVar1 != 0) {
       iVar1 = iVar1 + -4;
     }
-    uVar2 = FUN_0102ed04(param_2);
-    uVar3 = FUN_0102ed04(0);
+    uVar2 = swv_CheckFloat(param_2);
+    uVar3 = swv_CheckFloat(0);
     swv_fcmp_c(uVar3,uVar2);
     if ((bool)uVar7) {
       FUN_0102f7e0(uVar5);
     }
-    uVar3 = FUN_0102ed04(param_3);
-    uVar4 = FUN_0102ed04(0);
+    uVar3 = swv_CheckFloat(param_3);
+    uVar4 = swv_CheckFloat(0);
     swv_fcmp_c(uVar4,uVar3);
     if ((bool)uVar7) {
       FUN_0102f7e0(uVar5);
     }
-    uVar5 = FUN_0102ed04(param_4);
-    uVar4 = FUN_0102ed04(param_5);
+    uVar5 = swv_CheckFloat(param_4);
+    uVar4 = swv_CheckFloat(param_5);
     FUN_010221dc(iVar1,uVar2,uVar3,uVar5,uVar4);
     swv_TryPop();
   }
@@ -40469,30 +40469,30 @@ FUN_0102e318(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
   if (!(bool)uVar9) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_0102ed04(param_2);
-  uVar3 = FUN_0102ed04(0);
+  uVar2 = swv_CheckFloat(param_2);
+  uVar3 = swv_CheckFloat(0);
   swv_fcmp_c(uVar3,uVar2);
   if (!(bool)uVar8) {
-    uVar3 = FUN_0102ed04(FLOAT_180);
+    uVar3 = swv_CheckFloat(FLOAT_180);
     swv_fcmp_b(uVar3,uVar2);
     if ((bool)uVar8 && !(bool)uVar9) goto LAB_0102e3a4;
   }
   FUN_0102f7e0(uVar7);
 LAB_0102e3a4:
-  uVar3 = FUN_0102ed04(param_3);
-  uVar4 = FUN_0102ed04(0);
+  uVar3 = swv_CheckFloat(param_3);
+  uVar4 = swv_CheckFloat(0);
   swv_fcmp_c(uVar4,uVar3);
   if ((bool)uVar8) {
     FUN_0102f7e0(uVar7);
   }
-  uVar4 = FUN_0102ed04(param_4);
-  uVar5 = FUN_0102ed04(0);
+  uVar4 = swv_CheckFloat(param_4);
+  uVar5 = swv_CheckFloat(0);
   swv_fcmp_c(uVar5,uVar4);
   if ((bool)uVar8) {
     FUN_0102f7e0(uVar7);
   }
-  uVar5 = FUN_0102ed04(param_5);
-  uVar6 = FUN_0102ed04(0);
+  uVar5 = swv_CheckFloat(param_5);
+  uVar6 = swv_CheckFloat(0);
   swv_fcmp_c(uVar6,uVar5);
   if ((bool)uVar8) {
     FUN_0102f7e0(uVar7);
@@ -40696,11 +40696,11 @@ undefined4 FUN_0102e66c(int param_1,undefined4 param_2)
   if (!(bool)uVar5) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_0102ed04(param_2);
-  uVar3 = FUN_0102ed04(0);
+  uVar2 = swv_CheckFloat(param_2);
+  uVar3 = swv_CheckFloat(0);
   swv_fcmp_c(uVar3,uVar2);
   if (!(bool)uVar4 || (bool)uVar5) {
-    uVar3 = FUN_0102ed04(0x3f800000);
+    uVar3 = swv_CheckFloat(0x3f800000);
     swv_fcmp_b(uVar3,uVar2);
     if ((bool)uVar4) goto LAB_0102e6e4;
   }
@@ -40785,8 +40785,8 @@ undefined4 FUN_0102e7b0(int param_1,undefined4 param_2,undefined4 param_3)
     if (iVar1 != 0) {
       iVar1 = iVar1 + -4;
     }
-    uVar2 = FUN_0102ed04(param_2);
-    uVar3 = FUN_0102ed04(param_3);
+    uVar2 = swv_CheckFloat(param_2);
+    uVar3 = swv_CheckFloat(param_3);
     *(undefined4 *)(iVar1 + 0x34) = uVar2;
     *(undefined4 *)(iVar1 + 0x38) = uVar3;
     swv_TryPop();
@@ -41043,8 +41043,8 @@ undefined4 FUN_0102eb74(int param_1,undefined4 param_2)
     if (!(bool)uVar6) {
       iVar1 = iVar1 + -4;
     }
-    uVar2 = FUN_0102ed04(param_2);
-    uVar3 = FUN_0102ed04(0);
+    uVar2 = swv_CheckFloat(param_2);
+    uVar3 = swv_CheckFloat(0);
     swv_fcmp_c(uVar3,uVar2);
     if ((bool)uVar5 && !(bool)uVar6) {
       FUN_0102f7e0(INTEGER_MINUS_1301);
@@ -41076,8 +41076,8 @@ undefined4 FUN_0102ebf8(int param_1,undefined4 param_2,undefined4 param_3)
     if (iVar1 != 0) {
       iVar1 = iVar1 + -4;
     }
-    uVar2 = FUN_0102ed04(param_2);
-    uVar3 = FUN_0102ed04(param_3);
+    uVar2 = swv_CheckFloat(param_2);
+    uVar3 = swv_CheckFloat(param_3);
     FUN_01021e58(iVar1,uVar2,uVar3);
     swv_TryPop();
   }
@@ -41136,21 +41136,22 @@ uint32 FUN_0102ecec(void)
   return uVar1;
 }
 
-/* ==== 0x0102ED04  (file offset 0x2ED04)  FUN_0102ed04 ================================================ */
-uint FUN_0102ed04(uint param_1)
+/* ==== 0x0102ED04  (file offset 0x2ED04)  swv_CheckFloat ============================================== */
+/* GUESS: name. Checks a float argument (its bits): raises SWVE_BAD_FLOAT (-1001; FUN_0102f7e0, which
+   does not return) for a denormal (exponent 0, magnitude not 0), an infinity or a NaN (exponent 0xff);
+   +-0 and the normal numbers pass. Returns the value unchanged. The BREW slots run it on the floats they
+   are given (AnimationController setPosition / setSpeed / setWeight, swvGroup_PickRay's ray, the
+   transform setters). Evidence: 0x0102ed04 - 0x0102ed34 (`ands r0, r0, r1` with 0x7f800000, `addne ip,
+   r0, #0xc0000000` / `subsne ip, ip, #0x3f800000` / `bne`, `bics r0, r0, #0x80000000` / `mvnne r0,
+   #0x3e8` / `blne 0x0102f7e0`, `ldr r0, [sp]`). */
+uint32 swv_CheckFloat(uint32 value)
 
 {
-  uint uVar1;
-  int in_r12;
-  
-  uVar1 = param_1 & WORD_HEXADECIMAL_7F800000;
-  if (uVar1 != 0) {
-    in_r12 = uVar1 + 0xc0000000;
-  }
-  if ((uVar1 == 0 || in_r12 == 0x3f800000) && ((param_1 & 0x7fffffff) != 0)) {
-    FUN_0102f7e0(0xfffffc17);
-  }
-  return param_1;
+  uint32 exponent = value & WORD_HEXADECIMAL_7F800000;
+
+  if ((exponent == 0 || exponent == WORD_HEXADECIMAL_7F800000) && (value & 0x7fffffff) != 0)
+    FUN_0102f7e0(SWVE_BAD_FLOAT);
+  return value;
 }
 
 /* ==== 0x0102ED3C  (file offset 0x2ED3C)  FUN_0102ed3c ================================================ */
@@ -42683,23 +42684,23 @@ undefined4 FUN_0102ffb8(int param_1,undefined4 param_2,undefined4 param_3)
   if (!(bool)uVar7) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_0102ed04(param_2);
-  uVar3 = FUN_0102ed04(0);
+  uVar2 = swv_CheckFloat(param_2);
+  uVar3 = swv_CheckFloat(0);
   swv_fcmp_c(uVar3,uVar2);
   if ((bool)uVar6 && !(bool)uVar7) {
 LAB_01030038:
     FUN_0102f7e0(uVar5);
   }
   else {
-    uVar3 = FUN_0102ed04(0x3f800000);
+    uVar3 = swv_CheckFloat(0x3f800000);
     swv_fcmp_b(uVar3,uVar2);
     if (!(bool)uVar6) goto LAB_01030038;
   }
-  uVar3 = FUN_0102ed04(param_3);
-  uVar4 = FUN_0102ed04(0);
+  uVar3 = swv_CheckFloat(param_3);
+  uVar4 = swv_CheckFloat(0);
   swv_fcmp_c(uVar4,uVar3);
   if (!(bool)uVar6 || (bool)uVar7) {
-    uVar4 = FUN_0102ed04(0x3f800000);
+    uVar4 = swv_CheckFloat(0x3f800000);
     swv_fcmp_b(uVar4,uVar3);
     if ((bool)uVar6) goto LAB_0103007c;
   }
@@ -42981,8 +42982,8 @@ FUN_010303f0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     if (iVar2 != 0) {
       iVar2 = iVar2 + -4;
     }
-    uVar3 = FUN_0102ed04(param_3);
-    uVar4 = FUN_0102ed04(param_4);
+    uVar3 = swv_CheckFloat(param_3);
+    uVar4 = swv_CheckFloat(param_4);
     iVar5 = 0;
     if (param_5 != 0) {
       iVar5 = *(int *)(param_5 + 4);
@@ -43014,7 +43015,7 @@ FUN_010303f0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
 /* JSR-184 1.1, Group.pick(scope, ox, oy, oz, dx, dy, dz, ri), the ray form: ISwerveObject slot 47 (+0xbc)
    of Group and World (kh_types.h SwerveGroupVtbl.Pick; the game's camera_avoid_walls casts its wall ray
    with it): in an error frame, the origin's and the direction's three floats each checked by
-   FUN_0102ed04 (error -1001 for a denormal, infinite or NaN float) into two local vectors (each first
+   swv_CheckFloat (error -1001 for a denormal, infinite or NaN float) into two local vectors (each first
    zeroed), then swvGroup_PickRayValue(the native group (po->pNative, less 4 when not NULL), scope, the
    origin, the direction, the native RayIntersection (ri's pNative less 4; NULL for a NULL ri or one
    without a native object)) and its result (1 for a hit) stored as a byte in *pHit; returns 0, or on an
@@ -43044,15 +43045,15 @@ int32 swvGroup_PickRay(ISwerveObject *po,int32 scope,const uint32 *origin,const 
     rayOrigin[0] = 0;
     rayOrigin[1] = 0;
     rayOrigin[2] = 0;
-    rayOrigin[0] = FUN_0102ed04(origin[0]);
-    rayOrigin[1] = FUN_0102ed04(origin[1]);
-    rayOrigin[2] = FUN_0102ed04(origin[2]);
+    rayOrigin[0] = swv_CheckFloat(origin[0]);
+    rayOrigin[1] = swv_CheckFloat(origin[1]);
+    rayOrigin[2] = swv_CheckFloat(origin[2]);
     rayDirection[0] = 0;
     rayDirection[1] = 0;
     rayDirection[2] = 0;
-    rayDirection[0] = FUN_0102ed04(direction[0]);
-    rayDirection[1] = FUN_0102ed04(direction[1]);
-    rayDirection[2] = FUN_0102ed04(direction[2]);
+    rayDirection[0] = swv_CheckFloat(direction[0]);
+    rayDirection[1] = swv_CheckFloat(direction[1]);
+    rayDirection[2] = swv_CheckFloat(direction[2]);
     ray = NULL;
     if (ri != NULL)
       ray = (uint8 *)ri->pNative;
@@ -45593,20 +45594,20 @@ undefined4 FUN_0103300c(int param_1,undefined4 param_2,undefined4 param_3,undefi
     if (!(bool)uVar9) {
       iVar2 = iVar2 + -4;
     }
-    uVar3 = FUN_0102ed04(param_2);
-    uVar4 = FUN_0102ed04(0);
+    uVar3 = swv_CheckFloat(param_2);
+    uVar4 = swv_CheckFloat(0);
     swv_fcmp_c(uVar4,uVar3);
     if ((bool)uVar8 && !(bool)uVar9) {
       FUN_0102f7e0(uVar1);
     }
-    uVar4 = FUN_0102ed04(param_3);
-    uVar5 = FUN_0102ed04(0);
+    uVar4 = swv_CheckFloat(param_3);
+    uVar5 = swv_CheckFloat(0);
     swv_fcmp_c(uVar5,uVar4);
     if ((bool)uVar8 && !(bool)uVar9) {
       FUN_0102f7e0(uVar1);
     }
-    uVar5 = FUN_0102ed04(param_4);
-    uVar6 = FUN_0102ed04(0);
+    uVar5 = swv_CheckFloat(param_4);
+    uVar6 = swv_CheckFloat(0);
     swv_fcmp_c(uVar6,uVar5);
     if ((bool)uVar8 && !(bool)uVar9) {
       FUN_0102f7e0(uVar1);
@@ -45652,7 +45653,7 @@ undefined4 FUN_01033108(int param_1,undefined4 param_2)
     if (iVar1 != 0) {
       iVar1 = iVar1 + -4;
     }
-    uVar2 = FUN_0102ed04(param_2);
+    uVar2 = swv_CheckFloat(param_2);
     FUN_01021b6c(iVar1,uVar2);
     swv_TryPop();
   }
@@ -45713,11 +45714,11 @@ undefined4 FUN_010331ec(int param_1,undefined4 param_2)
   if (!(bool)uVar5) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_0102ed04(param_2);
-  uVar3 = FUN_0102ed04(0);
+  uVar2 = swv_CheckFloat(param_2);
+  uVar3 = swv_CheckFloat(0);
   swv_fcmp_c(uVar3,uVar2);
   if (!(bool)uVar4 || (bool)uVar5) {
-    uVar3 = FUN_0102ed04(FLOAT_90);
+    uVar3 = swv_CheckFloat(FLOAT_90);
     swv_fcmp_b(uVar3,uVar2);
     if ((bool)uVar4) goto LAB_01033264;
   }
@@ -45751,11 +45752,11 @@ undefined4 FUN_01033294(int param_1,undefined4 param_2)
   if (!(bool)uVar5) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_0102ed04(param_2);
-  uVar3 = FUN_0102ed04(0);
+  uVar2 = swv_CheckFloat(param_2);
+  uVar3 = swv_CheckFloat(0);
   swv_fcmp_c(uVar3,uVar2);
   if (!(bool)uVar4 || (bool)uVar5) {
-    uVar3 = FUN_0102ed04(0x43000000);
+    uVar3 = swv_CheckFloat(0x43000000);
     swv_fcmp_b(uVar3,uVar2);
     if ((bool)uVar4) goto LAB_0103330c;
   }
@@ -46347,11 +46348,11 @@ undefined4 FUN_01033bb4(int param_1,undefined4 param_2)
   if (!(bool)uVar5) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_0102ed04(param_2);
-  uVar3 = FUN_0102ed04(0);
+  uVar2 = swv_CheckFloat(param_2);
+  uVar3 = swv_CheckFloat(0);
   swv_fcmp_c(uVar3,uVar2);
   if (!(bool)uVar4 || (bool)uVar5) {
-    uVar3 = FUN_0102ed04(0x43000000);
+    uVar3 = swv_CheckFloat(0x43000000);
     swv_fcmp_b(uVar3,uVar2);
     if ((bool)uVar4) goto LAB_01033c2c;
   }
@@ -47401,11 +47402,11 @@ undefined4 FUN_01034c3c(int param_1,undefined4 param_2)
   if (!(bool)uVar5) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_0102ed04(param_2);
-  uVar3 = FUN_0102ed04(0);
+  uVar2 = swv_CheckFloat(param_2);
+  uVar3 = swv_CheckFloat(0);
   swv_fcmp_c(uVar3,uVar2);
   if (!(bool)uVar4 || (bool)uVar5) {
-    uVar3 = FUN_0102ed04(0x3f800000);
+    uVar3 = swv_CheckFloat(0x3f800000);
     swv_fcmp_b(uVar3,uVar2);
     if ((bool)uVar4) goto LAB_01034cb4;
   }
@@ -51836,7 +51837,7 @@ undefined4 FUN_010394ac(int param_1,undefined4 param_2)
     if (iVar1 != 0) {
       iVar1 = iVar1 + -4;
     }
-    uVar2 = FUN_0102ed04(param_2);
+    uVar2 = swv_CheckFloat(param_2);
     *(undefined4 *)(iVar1 + 0x5c) = uVar2;
     swv_TryPop();
   }
@@ -51868,8 +51869,8 @@ undefined4 FUN_01039510(int param_1,undefined4 param_2)
     if (!(bool)uVar6) {
       iVar1 = iVar1 + -4;
     }
-    uVar2 = FUN_0102ed04(param_2);
-    uVar3 = FUN_0102ed04(0);
+    uVar2 = swv_CheckFloat(param_2);
+    uVar3 = swv_CheckFloat(0);
     swv_fcmp_c(uVar3,uVar2);
     if ((bool)uVar5 && !(bool)uVar6) {
       FUN_0102f7e0(INTEGER_MINUS_1301);
@@ -52038,13 +52039,13 @@ undefined4 FUN_010396cc(int param_1,int param_2,undefined4 *param_3)
 
 /* ==== 0x0103976C  (file offset 0x3976C)  swv_ErrorToResult =========================================== */
 /* GUESS: name. Maps an internal (negative) engine error number (SwerveError) to the result code returned
-   through the BREW interface: 0 for 0; 0x10001 .. 0x1000f for -4, -9, -39, -41, -1000, -1001, -1101
-   (IndexOutOfBoundsException), -1103, -1200, -1201, -1202 (IOException), -1203, -1300
-   (IllegalStateException), -1301 (IllegalArgumentException), -1302 (NullPointerException); 0x10000 for any
-   other value (-2 among them). The binary is a compiled switch, a binary search (Ghidra's SCARRY4 tests).
-   Evidence: 0x0103976c - 0x01039868 (`adds r12, r1, #0x400` / `addles r12, r12, #0x4d` / `addeq r0, r0,
-   #7`, the `cmn` / `adds` equality tests, `ldreq r0` of the literals 0x0103986c - 0x010398a0, `mov r0,
-   #0x10000`, `cmp r1, #0` / `moveq r0, #0`). */
+   through the BREW interface: 0 for 0; 0x10001 .. 0x1000f for -4, -9, -39, -41, -1000, -1001
+   (SWVE_BAD_FLOAT), -1101 (IndexOutOfBoundsException), -1103, -1200, -1201, -1202 (IOException), -1203,
+   -1300 (IllegalStateException), -1301 (IllegalArgumentException), -1302 (NullPointerException); 0x10000
+   for any other value (-2 among them). The binary is a compiled switch, a binary search (Ghidra's SCARRY4
+   tests). Evidence: 0x0103976c - 0x01039868 (`adds r12, r1, #0x400` / `addles r12, r12, #0x4d` / `addeq
+   r0, r0, #7`, the `cmn` / `adds` equality tests, `ldreq r0` of the literals 0x0103986c - 0x010398a0, `mov
+   r0, #0x10000`, `cmp r1, #0` / `moveq r0, #0`). */
 uint32 swv_ErrorToResult(int32 error)
 
 {
@@ -52069,7 +52070,7 @@ uint32 swv_ErrorToResult(int32 error)
   case SWVE_ARITHMETIC:
     result = WORD_HEXADECIMAL_00010005;
     break;
-  case -0x3e9:
+  case SWVE_BAD_FLOAT:
     result = WORD_HEXADECIMAL_00010006;
     break;
   case SWVE_INDEX_OUT_OF_BOUNDS:
@@ -52081,7 +52082,7 @@ uint32 swv_ErrorToResult(int32 error)
   case SWVE_END_OF_DATA:
     result = WORD_HEXADECIMAL_00010009;
     break;
-  case -0x4b1:
+  case SWVE_BAD_LENGTH:
     result = WORD_HEXADECIMAL_0001000A;
     break;
   case SWVE_BAD_FILE:
@@ -53684,11 +53685,11 @@ undefined4 FUN_0103b9a8(int param_1,undefined4 *param_2)
     local_ac = 0;
     local_a8 = 0;
     local_a4 = 0;
-    uVar2 = FUN_0102ed04(*param_2);
+    uVar2 = swv_CheckFloat(*param_2);
     uVar2 = swv_fmul(uVar2,WORD_HEXADECIMAL_3C8EFA35);
-    local_ac = FUN_0102ed04(param_2[1]);
-    local_a8 = FUN_0102ed04(param_2[2]);
-    local_a4 = FUN_0102ed04(param_2[3]);
+    local_ac = swv_CheckFloat(param_2[1]);
+    local_a8 = swv_CheckFloat(param_2[2]);
+    local_a4 = swv_CheckFloat(param_2[3]);
     swv_fcmp_a(uVar2,0);
     if (!(bool)uVar4) {
       swv_fcmp_a(local_ac,0);
@@ -53745,10 +53746,10 @@ undefined4 FUN_0103baa8(int param_1,undefined4 *param_2)
     local_b8 = 0;
     local_b4 = 0;
     local_b0 = 0;
-    uVar2 = FUN_0102ed04(param_2[3]);
-    uVar3 = FUN_0102ed04(*param_2);
-    uVar4 = FUN_0102ed04(param_2[1]);
-    local_c0 = FUN_0102ed04(param_2[2]);
+    uVar2 = swv_CheckFloat(param_2[3]);
+    uVar3 = swv_CheckFloat(*param_2);
+    uVar4 = swv_CheckFloat(param_2[1]);
+    local_c0 = swv_CheckFloat(param_2[2]);
     local_c8 = uVar3;
     uStack_c4 = uVar4;
     local_bc = uVar2;
@@ -53797,9 +53798,9 @@ undefined4 FUN_0103bba8(int param_1,undefined4 *param_2)
     local_a4 = 0;
     local_a0 = 0;
     local_9c = 0;
-    local_a4 = FUN_0102ed04(*param_2);
-    local_a0 = FUN_0102ed04(param_2[1]);
-    local_9c = FUN_0102ed04(param_2[2]);
+    local_a4 = swv_CheckFloat(*param_2);
+    local_a0 = swv_CheckFloat(param_2[1]);
+    local_9c = swv_CheckFloat(param_2[2]);
     FUN_010172a8(iVar1,&local_a4);
     swv_TryPop();
   }
@@ -53831,9 +53832,9 @@ undefined4 FUN_0103bc40(int param_1,undefined4 *param_2)
     local_a4 = 0;
     local_a0 = 0;
     local_9c = 0;
-    local_a4 = FUN_0102ed04(*param_2);
-    local_a0 = FUN_0102ed04(param_2[1]);
-    local_9c = FUN_0102ed04(param_2[2]);
+    local_a4 = swv_CheckFloat(*param_2);
+    local_a0 = swv_CheckFloat(param_2[1]);
+    local_9c = swv_CheckFloat(param_2[2]);
     FUN_010172d4(iVar1,&local_a4);
     swv_TryPop();
   }
@@ -54305,11 +54306,11 @@ undefined4 FUN_0103c250(int param_1,undefined4 *param_2)
     local_ac = 0;
     local_a8 = 0;
     local_a4 = 0;
-    uVar2 = FUN_0102ed04(*param_2);
+    uVar2 = swv_CheckFloat(*param_2);
     uVar2 = swv_fmul(uVar2,WORD_HEXADECIMAL_3C8EFA35);
-    local_ac = FUN_0102ed04(param_2[1]);
-    local_a8 = FUN_0102ed04(param_2[2]);
-    local_a4 = FUN_0102ed04(param_2[3]);
+    local_ac = swv_CheckFloat(param_2[1]);
+    local_a8 = swv_CheckFloat(param_2[2]);
+    local_a4 = swv_CheckFloat(param_2[3]);
     swv_fcmp_a(uVar2,0);
     if (!(bool)uVar4) {
       swv_fcmp_a(local_ac,0);
@@ -54359,11 +54360,11 @@ undefined4 FUN_0103c350(int param_1,undefined4 *param_2)
     local_ac = 0;
     local_a8 = 0;
     local_a4 = 0;
-    uVar2 = FUN_0102ed04(*param_2);
+    uVar2 = swv_CheckFloat(*param_2);
     uVar2 = swv_fmul(uVar2,WORD_HEXADECIMAL_3C8EFA35);
-    local_ac = FUN_0102ed04(param_2[1]);
-    local_a8 = FUN_0102ed04(param_2[2]);
-    local_a4 = FUN_0102ed04(param_2[3]);
+    local_ac = swv_CheckFloat(param_2[1]);
+    local_a8 = swv_CheckFloat(param_2[2]);
+    local_a4 = swv_CheckFloat(param_2[3]);
     swv_fcmp_a(uVar2,0);
     if (!(bool)uVar4) {
       swv_fcmp_a(local_ac,0);
@@ -54409,9 +54410,9 @@ undefined4 FUN_0103c450(int param_1,undefined4 *param_2)
     local_a4 = 0;
     local_a0 = 0;
     local_9c = 0;
-    local_a4 = FUN_0102ed04(*param_2);
-    local_a0 = FUN_0102ed04(param_2[1]);
-    local_9c = FUN_0102ed04(param_2[2]);
+    local_a4 = swv_CheckFloat(*param_2);
+    local_a0 = swv_CheckFloat(param_2[1]);
+    local_9c = swv_CheckFloat(param_2[2]);
     FUN_0101d974(iVar1,&local_a4);
     swv_TryPop();
   }
@@ -54447,11 +54448,11 @@ undefined4 FUN_0103c4e8(int param_1,undefined4 *param_2)
     local_ac = 0;
     local_a8 = 0;
     local_a4 = 0;
-    uVar2 = FUN_0102ed04(*param_2);
+    uVar2 = swv_CheckFloat(*param_2);
     uVar2 = swv_fmul(uVar2,WORD_HEXADECIMAL_3C8EFA35);
-    local_ac = FUN_0102ed04(param_2[1]);
-    local_a8 = FUN_0102ed04(param_2[2]);
-    local_a4 = FUN_0102ed04(param_2[3]);
+    local_ac = swv_CheckFloat(param_2[1]);
+    local_a8 = swv_CheckFloat(param_2[2]);
+    local_a4 = swv_CheckFloat(param_2[3]);
     swv_fcmp_a(uVar2,0);
     if (!(bool)uVar4) {
       swv_fcmp_a(local_ac,0);
@@ -54497,9 +54498,9 @@ undefined4 FUN_0103c5e8(int param_1,undefined4 *param_2)
     local_a4 = 0;
     local_a0 = 0;
     local_9c = 0;
-    local_a4 = FUN_0102ed04(*param_2);
-    local_a0 = FUN_0102ed04(param_2[1]);
-    local_9c = FUN_0102ed04(param_2[2]);
+    local_a4 = swv_CheckFloat(*param_2);
+    local_a0 = swv_CheckFloat(param_2[1]);
+    local_9c = swv_CheckFloat(param_2[2]);
     FUN_01022bfc(iVar1,&local_a4);
     swv_TryPop();
   }
@@ -54564,9 +54565,9 @@ undefined4 FUN_0103c6ec(int param_1,undefined4 *param_2)
     local_a4 = 0;
     local_a0 = 0;
     local_9c = 0;
-    local_a4 = FUN_0102ed04(*param_2);
-    local_a0 = FUN_0102ed04(param_2[1]);
-    local_9c = FUN_0102ed04(param_2[2]);
+    local_a4 = swv_CheckFloat(*param_2);
+    local_a0 = swv_CheckFloat(param_2[1]);
+    local_9c = swv_CheckFloat(param_2[2]);
     FUN_010239a4(iVar1,&local_a4);
     swv_TryPop();
   }
@@ -54598,9 +54599,9 @@ undefined4 FUN_0103c784(int param_1,undefined4 *param_2)
     local_a4 = 0;
     local_a0 = 0;
     local_9c = 0;
-    local_a4 = FUN_0102ed04(*param_2);
-    local_a0 = FUN_0102ed04(param_2[1]);
-    local_9c = FUN_0102ed04(param_2[2]);
+    local_a4 = swv_CheckFloat(*param_2);
+    local_a0 = swv_CheckFloat(param_2[1]);
+    local_9c = swv_CheckFloat(param_2[2]);
     FUN_01025c8c(iVar1,&local_a4);
     swv_TryPop();
   }
@@ -55180,7 +55181,7 @@ int32 swvVertexBuffer_SetNormals(ISwerveObject *po,ISwerveObject *normals)
 /* ==== 0x0103D05C  (file offset 0x3D05C)  swvVertexBuffer_SetPositions ================================ */
 /* JSR-184 1.1, VertexBuffer.setPositions. ISwerveObject slot 26 (+0x68) of VertexBuffer (kh_types.h
    SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in an error frame, the scale
-   checked (FUN_0102ed04: error -1001 for a denormal, infinite or NaN float) and
+   checked (swv_CheckFloat: error -1001 for a denormal, infinite or NaN float) and
    swvVertexBuffer_SetPositionsValue (the array's native object, NULL clears; the scale; the bias and its
    length); 0, or on an error its result code (swv_ErrorToResult). Evidence: 0x0103d05c - 0x0103d0ec (`ldr
    r7, [sp, #0xa8]` the fifth argument, `mov r0, r8` / `bl 0x0102ed04`, `str r7, [sp, #0x0]` / `bl
@@ -55206,7 +55207,7 @@ int32 swvVertexBuffer_SetPositions(ISwerveObject *po,ISwerveObject *positions,ui
       array = (uint8 *)positions->pNative;
     if (array != NULL)
       array -= 4;
-    swvVertexBuffer_SetPositionsValue(buffer,array,FUN_0102ed04(scale),length,bias);
+    swvVertexBuffer_SetPositionsValue(buffer,array,swv_CheckFloat(scale),length,bias);
     swv_TryPop();
   }
   else
@@ -55217,7 +55218,7 @@ int32 swvVertexBuffer_SetPositions(ISwerveObject *po,ISwerveObject *positions,ui
 /* ==== 0x0103D0F0  (file offset 0x3D0F0)  swvVertexBuffer_SetTexCoords ================================ */
 /* JSR-184 1.1, VertexBuffer.setTexCoords. ISwerveObject slot 28 (+0x70) of VertexBuffer (kh_types.h
    SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in an error frame, the scale
-   checked (FUN_0102ed04: error -1001 for a denormal, infinite or NaN float) and
+   checked (swv_CheckFloat: error -1001 for a denormal, infinite or NaN float) and
    swvVertexBuffer_SetTexCoordsValue (the unit, the array's native object, NULL clears; the scale; the bias
    and its length); 0, or on an error its result code (swv_ErrorToResult). Evidence: 0x0103d0f0 -
    0x0103d188 (`ldr r9, [sp, #0xb0]` / `ldr r8, [sp, #0xb4]` the fifth and sixth arguments, `mov r0, r10` /
@@ -55243,7 +55244,7 @@ int32 swvVertexBuffer_SetTexCoords(ISwerveObject *po,uint32 index,ISwerveObject 
       array = (uint8 *)texCoords->pNative;
     if (array != NULL)
       array -= 4;
-    swvVertexBuffer_SetTexCoordsValue(buffer,index,array,FUN_0102ed04(scale),length,bias);
+    swvVertexBuffer_SetTexCoordsValue(buffer,index,array,swv_CheckFloat(scale),length,bias);
     swv_TryPop();
   }
   else

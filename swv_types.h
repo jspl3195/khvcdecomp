@@ -88,12 +88,17 @@ typedef enum SwerveObjectType {
  * IOException for data not in a valid format (the M3G record readers' range checks). */
 typedef enum SwerveError {
     SWVE_ARITHMETIC           = -1000,   /* ArithmeticException */
+    SWVE_BAD_FLOAT            = -1001,   /* GUESS: name; a float argument that is a denormal, an infinity
+                                            or a NaN (swv_CheckFloat); JSR-184 1.1 has no such check
+                                            (GUESS: an ArithmeticException to the application) */
     SWVE_INDEX_OUT_OF_BOUNDS  = -1101,   /* IndexOutOfBoundsException */
     SWVE_READER_STATE         = -1103,   /* GUESS: the M3G reader used out of order (swvM3GReader_End /
                                             _Begin); no spec method maps to it */
     SWVE_END_OF_DATA          = -1200,   /* GUESS: a read past the end of the loader's buffer
                                             (FUN_01019698, FUN_01026d30); an IOException to the
                                             application */
+    SWVE_BAD_LENGTH           = -1201,   /* GUESS: name; an M3G section's lengths are not consistent
+                                            (swvM3GReader_Feed); an IOException to the application */
     SWVE_BAD_FILE             = -1202,   /* IOException: the M3G data is not valid */
     SWVE_ILLEGAL_STATE        = -1300,   /* IllegalStateException */
     SWVE_ILLEGAL_ARGUMENT     = -1301,   /* IllegalArgumentException */
