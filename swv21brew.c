@@ -21078,15 +21078,23 @@ void swvCleanupFrame_Push(uint8 *frame,int32 object)
   swvCleanupFrame_Append(frame,&slot);
 }
 
-/* ==== 0x010181B4  (file offset 0x181B4)  FUN_010181b4 ================================================ */
-uint FUN_010181b4(int param_1)
+/* ==== 0x010181B4  (file offset 0x181B4)  swvRandom_Next ============================================== */
+/* GUESS: name. The next 16-bit random number of the generator generator (a 0xc-byte engine object,
+   FUN_0102885c: +0 its vtable, +4 the seed, +8 the state): state = state * 1664525 + 1013904223 (mod
+   2^32), stored back; returns its low 16 bits. The multiplier and increment are the quick generator of
+   Numerical Recipes in C, 2nd ed., ch. 7.1 (ranqd1). The procedural Image2D (swv_types.h, Image2D) has
+   one at +0x48, seeded 0x31417926 by its constructor FUN_01028464; FUN_01018460 and FUN_0101e534 reset
+   the state from the seed (+0x4c to +0x50) before each fill, so an image always gets the same noise,
+   and take three numbers a point (less their mean) as the colour jitter. Evidence: 0x010181b4 -
+   0x010181d4 (`ldr r1, [r0, #8]`, `mul r1, r2, r1` / `add r1, r1, r2` with the words at 0x010181d8 /
+   0x010181dc, `str r1, [r0, #8]`, `lsl r0, r1, #0x10` / `lsr r0, r0, #0x10`). */
+uint32 swvRandom_Next(uint8 *generator)
 
 {
-  uint uVar1;
-  
-  uVar1 = DOUBLE_1_POINT_342271274_TIMES_TEN_TO_THE_MINUS_17_LOW_WORD * *(int *)(param_1 + 8) + DOUBLE_1_POINT_342271274_TIMES_TEN_TO_THE_MINUS_17_HIGH_WORD;
-  *(uint *)(param_1 + 8) = uVar1;
-  return uVar1 & 0xffff;
+  uint32 state = WORD_HEXADECIMAL_0019660D * *(uint32 *)(generator + 8) + WORD_HEXADECIMAL_3C6EF35F;
+
+  *(uint32 *)(generator + 8) = state;
+  return state & 0xffff;
 }
 
 /* ==== 0x010181E4  (file offset 0x181E4)  FUN_010181e4 ================================================ */
@@ -21389,9 +21397,9 @@ void FUN_01018460(int param_1)
             local_c0 = local_38;
             local_bc = local_3c;
             local_ac = uVar16;
-            iVar15 = FUN_010181b4(local_30);
-            iVar8 = FUN_010181b4(local_30);
-            iVar7 = FUN_010181b4(local_30);
+            iVar15 = swvRandom_Next((uint8 *)local_30);
+            iVar8 = swvRandom_Next((uint8 *)local_30);
+            iVar7 = swvRandom_Next((uint8 *)local_30);
             uVar19 = ll_mul_int(INTEGER_21845,INTEGER_0,iVar15 + iVar8 + iVar7);
             uVar9 = (uVar19.low >> 16 | (uint32)uVar19.high << 16);
             iVar15 = iVar15 - uVar9;
@@ -21686,7 +21694,7 @@ LAB_010190c8:
             uVar17 = uVar17 & local_c0;
             uVar12 = local_150 & local_c4;
             if ((uVar16 & 0x4000) != 0) {
-              local_d0 = FUN_0101dbcc(param_1,*(undefined4 *)
+              local_d0 = swvRandom_Hash((uint8 *)param_1,*(uint32 *)
                                                (piVar4[1] + (iVar6 * uVar12 + uVar17) * 4));
             }
             if ((uVar16 & 0x800) != 0) {
@@ -21711,7 +21719,7 @@ LAB_010190c8:
             }
           }
           if ((uVar16 & 0x8000) != 0) {
-            local_cc = FUN_0101dbcc(param_1,*(undefined4 *)
+            local_cc = swvRandom_Hash((uint8 *)param_1,*(uint32 *)
                                              (piVar4[1] + (iVar6 * local_134 + local_13c) * 4));
           }
           if ((uVar16 & 0x1000) != 0) {
@@ -25536,12 +25544,22 @@ void FUN_0101da90(undefined4 *param_1,undefined4 param_2,undefined4 param_3,unde
   return;
 }
 
-/* ==== 0x0101DBCC  (file offset 0x1DBCC)  FUN_0101dbcc ================================================ */
-uint FUN_0101dbcc(undefined4 param_1,int param_2)
+/* ==== 0x0101DBCC  (file offset 0x1DBCC)  swvRandom_Hash ============================================== */
+/* GUESS: name. A 16-bit hash of seed: three steps of the generator of swvRandom_Next (x = x * 1664525 +
+   1013904223, Numerical Recipes in C, 2nd ed., ch. 7.1) from seed, the low 16 bits of the last
+   returned. image (the procedural Image2D its callers, FUN_01018460 and FUN_0101e534, work on) is not
+   read: r0 is loaded with the multiplier first. The callers hash a value of their work grid (a
+   word a point, made by swv_New_2) with it. Evidence: 0x0101dbcc - 0x0101dbec (`ldr r0, [0x0101dbf0]`,
+   `mul r2, r0, r1` / `add r2, r2, r1` with r1 then the increment, `mla r2, r0, r2, r1`, `mla r0, r2, r0,
+   r1`, `lsl` / `lsr` by 16). */
+uint32 swvRandom_Hash(uint8 *image,uint32 seed)
 
 {
-  return (DOUBLE_1_POINT_342271274_TIMES_TEN_TO_THE_MINUS_17_LOW_WORD * (DOUBLE_1_POINT_342271274_TIMES_TEN_TO_THE_MINUS_17_LOW_WORD * param_2 + DOUBLE_1_POINT_342271274_TIMES_TEN_TO_THE_MINUS_17_HIGH_WORD) + DOUBLE_1_POINT_342271274_TIMES_TEN_TO_THE_MINUS_17_HIGH_WORD) * DOUBLE_1_POINT_342271274_TIMES_TEN_TO_THE_MINUS_17_LOW_WORD +
-         DOUBLE_1_POINT_342271274_TIMES_TEN_TO_THE_MINUS_17_HIGH_WORD & 0xffff;
+  uint32 state = WORD_HEXADECIMAL_0019660D * seed + WORD_HEXADECIMAL_3C6EF35F;
+
+  state = WORD_HEXADECIMAL_0019660D * state + WORD_HEXADECIMAL_3C6EF35F;
+  state = state * WORD_HEXADECIMAL_0019660D + WORD_HEXADECIMAL_3C6EF35F;
+  return state & 0xffff;
 }
 
 /* ==== 0x0101DBF8  (file offset 0x1DBF8)  swvM3G_ReadImage2D ========================================== */
@@ -26228,9 +26246,9 @@ void FUN_0101e534(int param_1,undefined4 param_2)
             uStack_c0 = iStack_38;
             iStack_bc = iStack_3c;
             uStack_ac = uVar11;
-            iVar18 = FUN_010181b4(iStack_30);
-            iVar7 = FUN_010181b4(iStack_30);
-            iVar6 = FUN_010181b4(iStack_30);
+            iVar18 = swvRandom_Next((uint8 *)iStack_30);
+            iVar7 = swvRandom_Next((uint8 *)iStack_30);
+            iVar6 = swvRandom_Next((uint8 *)iStack_30);
             uVar21 = ll_mul_int(INTEGER_21845,INTEGER_0,iVar18 + iVar7 + iVar6);
             uVar16 = (uVar21.low >> 16 | (uint32)uVar21.high << 16);
             iVar18 = iVar18 - uVar16;
@@ -26528,7 +26546,7 @@ LAB_010190c8:
             uVar19 = uVar19 & uStack_c0;
             uVar14 = uStack_150 & uStack_c4;
             if ((uVar11 & 0x4000) != 0) {
-              uStack_d0 = FUN_0101dbcc(param_1,*(undefined4 *)
+              uStack_d0 = swvRandom_Hash((uint8 *)param_1,*(uint32 *)
                                                 (piVar4[1] + (iVar5 * uVar14 + uVar19) * 4));
             }
             if ((uVar11 & 0x800) != 0) {
@@ -26553,7 +26571,7 @@ LAB_010190c8:
             }
           }
           if ((uVar11 & 0x8000) != 0) {
-            uStack_cc = FUN_0101dbcc(param_1,*(undefined4 *)
+            uStack_cc = swvRandom_Hash((uint8 *)param_1,*(uint32 *)
                                               (piVar4[1] + (iVar5 * iStack_134 + iStack_13c) * 4));
           }
           if ((uVar11 & 0x1000) != 0) {

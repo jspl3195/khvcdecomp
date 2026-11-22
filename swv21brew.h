@@ -700,7 +700,7 @@ int FUN_01018018(undefined4 param_1,int param_2);
 void swvCleanupStack_Push(uint8 *stack,int32 object);   /* 0x0101807C GUESS: name, see swv21brew.c */
 void swvCleanupStack_Enter(uint8 *stack);   /* 0x01018094 GUESS: name, see swv21brew.c */
 void swvErrorFrames_Push(uint8 *frames,uint8 *frame);   /* 0x01018170 GUESS: name, see swv21brew.c */
-uint FUN_010181b4(int param_1);
+uint32 swvRandom_Next(uint8 *generator);   /* 0x010181B4 GUESS: name, see swv21brew.c */
 void FUN_010181e4(int param_1,int param_2);
 void FUN_010183b0(int param_1);
 void FUN_01018460(int param_1);
@@ -758,7 +758,7 @@ void FUN_0101d8c8(int param_1);
 void FUN_0101d974(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0101da48(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0101da90(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-uint FUN_0101dbcc(undefined4 param_1,int param_2);
+uint32 swvRandom_Hash(uint8 *image,uint32 seed);   /* 0x0101DBCC GUESS: name, see swv21brew.c */
 void swvM3G_ReadImage2D(uint8 *image,uint8 *stream);   /* 0x0101DBF8 GUESS: name, see swv21brew.c */
 void FUN_0101de2c(int param_1,undefined4 param_2);
 void swvM3G_ReadMaterial(uint8 *material,uint8 *stream);   /* 0x0101DED0 JSR-184 1.1, see swv21brew.c */
@@ -1551,8 +1551,8 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define WORD_HEXADECIMAL_0001000B 0x0001000B   /* was DAT_01004628, DAT_0103986c (word at 0x01004628); value 0x0001000B (65547) */
 #define DATA_AT_0103FAAC_OFFSET 0x0003B660   /* was DAT_01004630 (word at 0x01004630); PC-relative offset: + 0x100444c (the pc) = 0x0103FAAC */
 #define INTEGER_MINUS_18052 0xFFFFB97C   /* was DAT_01004798 (word at 0x01004798); integer -18052 */
-#define WORD_HEXADECIMAL_3C6EF35F 0x3C6EF35F   /* was DAT_010047a0 (word at 0x010047A0); value 0x3C6EF35F (1013904223) */
-#define WORD_HEXADECIMAL_0019660D 0x0019660D   /* was DAT_010047a4 (word at 0x010047A4); value 0x0019660D (1664525) */
+#define WORD_HEXADECIMAL_3C6EF35F 0x3C6EF35F   /* was DAT_010047a0, DAT_010181dc, DAT_0101dbf4 (word at 0x010047A0); value 0x3C6EF35F (1013904223); the quick LCG increment, Numerical Recipes in C, 2nd ed., ch. 7.1 */
+#define WORD_HEXADECIMAL_0019660D 0x0019660D   /* was DAT_010047a4, DAT_010181d8, DAT_0101dbf0 (word at 0x010047A4); value 0x0019660D (1664525); the quick LCG multiplier, Numerical Recipes in C, 2nd ed., ch. 7.1 */
 #define INTEGER_257 0x00000101   /* was DAT_010047ac, DAT_01032a08 (word at 0x010047AC); integer 257 */
 #define DATA_AT_01040138_OFFSET 0x0003B864   /* was DAT_010048e0 (word at 0x010048E0); PC-relative offset: + 0x10048d4 (the pc) = 0x01040138 */
 #define INTEGER_MINUS_1000 0xFFFFFC18   /* was DAT_01004a64, DAT_0100f94c, DAT_0101031c, DAT_010167fc, DAT_010204e8 (word at 0x01004A64); integer -1000 */
@@ -2562,8 +2562,6 @@ extern undefined4 STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET;   /* was DAT_0
 #define DOUBLE_MINUS_1_POINT_038205979_TIMES_TEN_TO_THE_34_HIGH_WORD 0xC6FFFE00   /* was DAT_01005eb4 (word at 0x01005EB4); with the word at 0x01005EB0: the double -1.038205978920834e+34 = 0xC6FFFE0046FFFE00 */
 #define DOUBLE_2_POINT_658456541_TIMES_TEN_TO_THE_36_LOW_WORD 0x377BA882   /* was DAT_010146c0 (word at 0x010146C0); with the word at 0x010146C4: the double 2.658456541047245e+36 = 0x47800000377BA882 */
 #define DOUBLE_2_POINT_658456541_TIMES_TEN_TO_THE_36_HIGH_WORD 0x47800000   /* was DAT_010146c4 (word at 0x010146C4); with the word at 0x010146C0: the double 2.658456541047245e+36 = 0x47800000377BA882 */
-#define DOUBLE_1_POINT_342271274_TIMES_TEN_TO_THE_MINUS_17_LOW_WORD 0x0019660D   /* was DAT_010181d8, DAT_0101dbf0 (word at 0x010181D8); with the word at 0x010181DC: the double 1.342271274202179e-17 = 0x3C6EF35F0019660D */
-#define DOUBLE_1_POINT_342271274_TIMES_TEN_TO_THE_MINUS_17_HIGH_WORD 0x3C6EF35F   /* was DAT_010181dc, DAT_0101dbf4 (word at 0x010181DC); with the word at 0x010181D8: the double 1.342271274202179e-17 = 0x3C6EF35F0019660D */
 #define DOUBLE_1_POINT_03820598_TIMES_TEN_TO_THE_34_LOW_WORD 0x47800000   /* was DAT_010183a8 (word at 0x010183A8); with the word at 0x010183AC: the double 1.0382059798880336e+34 = 0x46FFFE0047800000 */
 #define DOUBLE_1_POINT_03820598_TIMES_TEN_TO_THE_34_HIGH_WORD 0x46FFFE00   /* was DAT_010183ac (word at 0x010183AC); with the word at 0x010183A8: the double 1.0382059798880336e+34 = 0x46FFFE0047800000 */
 #define DOUBLE_2_POINT_658456546_TIMES_TEN_TO_THE_36_LOW_WORD 0x37FBA882   /* was DAT_01024694 (word at 0x01024694); with the word at 0x01024698: the double 2.6584565459990054e+36 = 0x4780000037FBA882 */

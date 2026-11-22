@@ -514,10 +514,21 @@ typedef struct SwvKeyframeSequence {
  *   +0x40             the JSR-184 format (SwerveImageFormat: ALPHA 0x60, LUMINANCE 0x61, LUMINANCE_ALPHA
  *                     0x62, RGB 0x63, RGBA 0x64; swvImage2D_BytesPerPixel gives the bytes a pixel)
  *   +0x44             mutable (FUN_0102035c, Graphics3D.bindTarget of an Image2D, wants it)
- *   +0x48             a colour buffer FUN_0100800c allocates (width * height words; GUESS: a work copy),
+ * The plain Image2D ends there (0x48 bytes: FUN_01006f8c allocates that and copies it with FUN_01006438).
+ * From +0x48 the fields depend on the kind of image (GUESS: subclasses):
+ *   +0x48             FUN_0100800c's image: a colour buffer (width * height words; GUESS: a work copy),
  *                     an engine dynamic array (+0x4c the items); FUN_01007f8c / FUN_01023e44 fill it
  *                     from a second plane after the pixels (two bytes a pixel)
- *   +0x54 / +0x58     the log2 of the width and the height (FUN_01018460 checks the sizes against them)
+ * The procedural image (0x198 bytes: FUN_0100732c allocates it, FUN_01028464 its constructor,
+ * FUN_01006750 its copy; FUN_01018460 fills it, from swvImage2D_GetWidth / GetHeight):
+ *   +0x48             its random generator (FUN_0102885c, 0xc bytes: +0 a vtable, set again to
+ *                     0x010020a0 by the constructor; swvRandom_Next): +0x4c the seed (0x31417926),
+ *                     +0x50 the state, reset from the seed before each fill (the same image every time)
+ *   +0x54 / +0x58     the log2 of the width and the height (7 and 7, 128 x 128, from the constructor;
+ *                     FUN_01018460 resizes the image, FUN_01023174, when they differ)
+ *   +0x190            set: no fill
+ *   +0x194            the fill is due (1 from the constructor and the copy; FUN_01018460 clears it
+ *                     after a fill; GUESS: FUN_01013214 sets it when a parameter changes)
  * Its vtable (offsets from the table, like every engine vtable): +0x24 / +0x28 the width and height
  * (GUESS: getWidth / getHeight, swvImage2D_GetWidth / GetHeight), +0x30 the pixels (swvImage2D_Pixels
  * calls it; the BREW-facing slot 25, swvImage2D_GetPixels, returns them). A Texture2D's image (its +0x2c;
