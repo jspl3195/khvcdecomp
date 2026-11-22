@@ -163,205 +163,72 @@ uint64 swv_memcpy_word_aligned(void *destination,void *source,uint32 byteCount)
 }
 
 /* ==== 0x010001F4  (file offset 0x001F4)  swv_rt_sdiv ================================================= */
-/* (not yet rewritten) ARM's C library signed division __rt_sdiv (the ARM ADS / SDT run-time library, by
-   its shape and its calls; GUESS: the name): the dividend param_2 (r1) by the divisor param_1 (r0),
-   rounded toward zero; a two-word result, .low (r0) the quotient and .high (r1) the remainder (with the
-   dividend's sign): callers that want the remainder (x % n) read .high, which Ghidra showed as
-   extraout_r1. A zero divisor branches to 0x01000c44 (__rt_div0: raise_signal_and_exit(2, 2) at
-   0x01001a40; Ghidra pasted the signal code in). Evidence: 0x010001f4 - 0x010002c4 (`ands r2, r0,
-   #0x80000000` / `rsbmi`, `eors r3, r2, r1, asr #32` / `rsbhs`, the `rsbs` / `subhs` / `adc` steps, `rsbs
-   ip, r0, #0` / `bhs 0x01000c44`, `eors r0, r2, r3, asr #31` / `add r0, r0, r3, lsr #31` the quotient,
-   `rsbhs r1, r1, #0` the remainder's sign). */
-int64 swv_rt_sdiv(uint param_1,uint param_2)
+/* GUESS: name. ARM's C library signed division __rt_sdiv (the ARM ADS / SDT run-time library, by its shape
+   and its calls), the engine's own copy of kh.mod's rt_sdiv (0x00100288): the dividend (r1) by the
+   divisor (r0), the divisor first as in ARM's routine; a two-word result, .low (r0) the quotient, rounded
+   toward zero (C's /), and .high (r1) the remainder, with the dividend's sign (C's %): callers that want
+   x % n read .high, which Ghidra showed as extraout_r1. The binary divides the magnitudes by
+   shift-and-subtract, eight steps per pass, first skipping the steps whose shifted divisor is above the
+   dividend, with 1 bits shifted into the quotient word as the loop's end marker; the rewrite takes one
+   bit per step. INT_MIN / -1 gives INT_MIN, remainder 0, as the binary. A zero divisor tail-jumps (`bhs
+   0x01000c44`) to swv_rt_div0 (SIGFPE), whose result r0 is returned (Ghidra pasted the signal code in
+   and took the semihosting `mov pc, lr` for a call through lr); r1 is then left by the signal routines
+   (0x20026, semihosting_exit's argument): not modeled, 0 here. Evidence: 0x010001f4 - 0x010002c4 (`ands
+   r2, r0, #0x80000000` / `rsbmi r0, r0, #0` the divisor's sign and magnitude, `eors r3, r2, r1, asr
+   #32` / `rsbhs r1, r1, #0` the dividend's, `rsbs ip, r0, r1, lsr #k` / `subhs r1, r1, r0, lsl #k` /
+   `adc r2, r2, r2` the steps, `rsbs ip, r0, #0` / `bhs 0x01000c44`, `eors r0, r2, r3, asr #31` / `add
+   r0, r0, r3, lsr #31` the quotient's sign, `rsbhs r1, r1, #0` the remainder's). Tested under unicorn
+   against the binary (2,069,938 cases with swv_rt_udiv, 0 mismatches). */
+int64 swv_rt_sdiv(int32 divisor,int32 dividend)
 
 {
   int64 result;
-  uint uVar1;
-  uint uVar2;
-  uint uVar3;
-  uint uVar4;
-  uint in_lr;
-  bool bVar5;
-  bool bVar6;
-  bool bVar7;
-  bool bVar8;
-  ulonglong uVar9;
-  
-  uVar2 = param_1 & 0x80000000;
-  if ((int)uVar2 < 0) {
-    param_1 = -param_1;
-  }
-  uVar4 = uVar2 ^ (int)param_2 >> 0x20;
-  if (SUB41(param_2 >> 0x1f,0)) {
-    param_2 = -param_2;
-  }
-  uVar1 = param_1;
-  if (param_2 >> 3 < param_1) goto LAB_01000290;
-  if (param_2 >> 8 < param_1) goto LAB_01000254;
-  uVar1 = param_1 << 8;
-  uVar2 = 0xff000000;
-  if (param_2 >> 4 < uVar1) goto LAB_01000284;
-  if (param_2 >> 8 < uVar1) goto LAB_01000254;
-  uVar1 = param_1 << 0x10;
-  uVar2 = 0xffff0000;
-  if (uVar1 <= param_2 >> 8) {
-    uVar1 = param_1 << 0x18;
-    uVar2 = 0xffffff00;
-  }
-  if (param_2 >> 4 < uVar1) goto LAB_01000284;
-  bVar5 = false;
-  if (uVar1 == 0) {
-    uVar9 = raise_signal(2,2);
-    if ((int)uVar9 != 0) {
-      software_interrupt(0x123456);
-                    /* WARNING: Could not recover jumptable at 0x01001c24. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      uVar9 = (*(code *)(in_lr & 0xfffffffc))(0x18,WORD_HEXADECIMAL_00020026);
-      (void)MAKE_WORDS(result,(int32)(uVar9 >> 0x20),(uint32)uVar9);
-      return result;
+  uint32 d = divisor < 0 ? 0 - (uint32)divisor : (uint32)divisor;
+  uint32 n = dividend < 0 ? 0 - (uint32)dividend : (uint32)dividend;
+  uint32 quotient = 0;
+  int32 bit;
+
+  if (d == 0)
+    return MAKE_WORDS(result,0,(uint32)swv_rt_div0());   /* the binary's tail jump (0x0100024c) */
+  for (bit = 31; bit >= 0; bit--)
+    if (n >> bit >= d) {
+      n -= d << bit;
+      quotient |= (uint32)1 << bit;
     }
-    (void)MAKE_WORDS(result,(int32)(uVar9 >> 0x20),0);
-    return result;
-  }
-  do {
-    if (bVar5) {
-      uVar1 = uVar1 >> 8;
-    }
-LAB_01000254:
-    bVar5 = uVar1 <= param_2 >> 7;
-    if (bVar5) {
-      param_2 = param_2 + uVar1 * -0x80;
-    }
-    bVar6 = uVar1 <= param_2 >> 6;
-    if (bVar6) {
-      param_2 = param_2 + uVar1 * -0x40;
-    }
-    bVar7 = uVar1 <= param_2 >> 5;
-    if (bVar7) {
-      param_2 = param_2 + uVar1 * -0x20;
-    }
-    bVar8 = uVar1 <= param_2 >> 4;
-    if (bVar8) {
-      param_2 = param_2 + uVar1 * -0x10;
-    }
-    uVar2 = (((uVar2 * 2 + (uint)bVar5) * 2 + (uint)bVar6) * 2 + (uint)bVar7) * 2 + (uint)bVar8;
-LAB_01000284:
-    bVar5 = uVar1 <= param_2 >> 3;
-    if (bVar5) {
-      param_2 = param_2 + uVar1 * -8;
-    }
-    uVar2 = uVar2 * 2 + (uint)bVar5;
-LAB_01000290:
-    bVar5 = uVar1 <= param_2 >> 2;
-    if (bVar5) {
-      param_2 = param_2 + uVar1 * -4;
-    }
-    bVar6 = uVar1 <= param_2 >> 1;
-    if (bVar6) {
-      param_2 = param_2 + uVar1 * -2;
-    }
-    uVar3 = (uVar2 * 2 + (uint)bVar5) * 2 + (uint)bVar6;
-    bVar6 = uVar1 <= param_2;
-    if (bVar6) {
-      param_2 = param_2 - uVar1;
-    }
-    uVar2 = uVar3 * 2 + (uint)bVar6;
-    bVar5 = true;
-  } while (CARRY4(uVar3,uVar3) || CARRY4(uVar3 * 2,(uint)bVar6));
-  uVar1 = (int)uVar4 >> 0x1f;
-  if ((bool)((byte)(uVar4 >> 0x1e) & 1)) {
-    param_2 = -param_2;
-  }
-  (void)MAKE_WORDS(result,(int32)param_2,(uVar2 ^ uVar1) - uVar1);
-  return result;
+  if ((divisor < 0) != (dividend < 0))
+    quotient = 0 - quotient;
+  if (dividend < 0)
+    n = 0 - n;
+  return MAKE_WORDS(result,(int32)n,quotient);
 }
 
-/* ==== 0x010002C8  (file offset 0x002C8)  FUN_010002c8 ================================================ */
-int FUN_010002c8(uint param_1,uint param_2)
+/* ==== 0x010002C8  (file offset 0x002C8)  swv_rt_udiv ================================================= */
+/* GUESS: name. ARM's C library unsigned division __rt_udiv (the ARM ADS / SDT run-time library, by its
+   shape: __rt_sdiv's steps without the signs), the engine's own copy of kh.mod's rt_udiv (0x0010035c):
+   the dividend (r1) by the divisor (r0), the divisor first as in ARM's routine; a two-word result, .low
+   (r0) the quotient (C's /) and .high (r1) the remainder (C's %), which Ghidra showed as extraout_r1.
+   The binary's shift-and-subtract runs eight steps per pass (see swv_rt_sdiv); the rewrite takes one bit
+   per step. A zero divisor tail-jumps (`bhs 0x01000c44`) to swv_rt_div0 (SIGFPE), whose result r0 is
+   returned (Ghidra pasted the signal code in); r1 is then left by the signal routines: not modeled, 0
+   here. Evidence: 0x010002c8 - 0x01000384 (`mov r2, #0`, `rsbs ip, r0, r1, lsr #k` / `subhs r1, r1, r0,
+   lsl #k` / `adc r2, r2, r2` the steps, `rsbs ip, r0, #0` / `bhs 0x01000c44`, `mov r0, r2`; r1 keeps the
+   remainder). Callers: the PNG reader's size checks and adler32's modulo 65521. Tested under unicorn
+   against the binary (2,069,938 cases with swv_rt_sdiv, 0 mismatches). */
+uint64 swv_rt_udiv(uint32 divisor,uint32 dividend)
 
 {
-  uint uVar1;
-  int iVar2;
-  uint uVar3;
-  uint in_lr;
-  bool bVar4;
-  bool bVar5;
-  bool bVar6;
-  bool bVar7;
-  
-  iVar2 = 0;
-  uVar1 = param_1;
-  if (param_2 >> 3 < param_1) goto LAB_01000358;
-  if (param_2 >> 8 < param_1) goto LAB_0100031c;
-  uVar1 = param_1 << 8;
-  iVar2 = -0x1000000;
-  if (param_2 >> 4 < uVar1) goto LAB_0100034c;
-  if (param_2 >> 8 < uVar1) goto LAB_0100031c;
-  uVar1 = param_1 << 0x10;
-  iVar2 = -0x10000;
-  if (uVar1 <= param_2 >> 8) {
-    uVar1 = param_1 << 0x18;
-    iVar2 = -0x100;
-  }
-  if (param_2 >> 4 < uVar1) goto LAB_0100034c;
-  bVar4 = false;
-  if (uVar1 == 0) {
-    iVar2 = raise_signal(2,2);
-    if (iVar2 != 0) {
-      software_interrupt(0x123456);
-                    /* WARNING: Could not recover jumptable at 0x01001c24. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      iVar2 = (*(code *)(in_lr & 0xfffffffc))(0x18,WORD_HEXADECIMAL_00020026);
-      return iVar2;
+  uint64 result;
+  uint32 quotient = 0;
+  int32 bit;
+
+  if (divisor == 0)
+    return MAKE_WORDS(result,0,(uint32)swv_rt_div0());   /* the binary's tail jump (0x01000314) */
+  for (bit = 31; bit >= 0; bit--)
+    if (dividend >> bit >= divisor) {
+      dividend -= divisor << bit;
+      quotient |= (uint32)1 << bit;
     }
-    return 0;
-  }
-  do {
-    if (bVar4) {
-      uVar1 = uVar1 >> 8;
-    }
-LAB_0100031c:
-    bVar4 = uVar1 <= param_2 >> 7;
-    if (bVar4) {
-      param_2 = param_2 + uVar1 * -0x80;
-    }
-    bVar5 = uVar1 <= param_2 >> 6;
-    if (bVar5) {
-      param_2 = param_2 + uVar1 * -0x40;
-    }
-    bVar6 = uVar1 <= param_2 >> 5;
-    if (bVar6) {
-      param_2 = param_2 + uVar1 * -0x20;
-    }
-    bVar7 = uVar1 <= param_2 >> 4;
-    if (bVar7) {
-      param_2 = param_2 + uVar1 * -0x10;
-    }
-    iVar2 = (((iVar2 * 2 + (uint)bVar4) * 2 + (uint)bVar5) * 2 + (uint)bVar6) * 2 + (uint)bVar7;
-LAB_0100034c:
-    bVar4 = uVar1 <= param_2 >> 3;
-    if (bVar4) {
-      param_2 = param_2 + uVar1 * -8;
-    }
-    iVar2 = iVar2 * 2 + (uint)bVar4;
-LAB_01000358:
-    bVar4 = uVar1 <= param_2 >> 2;
-    if (bVar4) {
-      param_2 = param_2 + uVar1 * -4;
-    }
-    bVar5 = uVar1 <= param_2 >> 1;
-    if (bVar5) {
-      param_2 = param_2 + uVar1 * -2;
-    }
-    uVar3 = (iVar2 * 2 + (uint)bVar4) * 2 + (uint)bVar5;
-    bVar5 = uVar1 <= param_2;
-    if (bVar5) {
-      param_2 = param_2 - uVar1;
-    }
-    iVar2 = uVar3 * 2 + (uint)bVar5;
-    bVar4 = true;
-  } while (CARRY4(uVar3,uVar3) || CARRY4(uVar3 * 2,(uint)bVar5));
-  return iVar2;
+  return MAKE_WORDS(result,dividend,quotient);
 }
 
 /* ==== 0x01000388  (file offset 0x00388)  FUN_01000388 ================================================ */
@@ -1087,6 +954,21 @@ undefined4 FUN_01000c30(undefined4 param_1,undefined4 param_2,undefined4 param_3
 {
   raise_signal_and_exit(param_1,0);   /* r2, r3 are not read: Ghidra's extra arguments */
   return 0;
+}
+
+/* ==== 0x01000C44  (file offset 0x00C44)  hand-written (no Ghidra function) =========================== */
+/* GUESS: name (ARM's __rt_div0 path: the ARM ADS / SDT run-time library's division by zero handling).
+   The divide-by-zero exit of swv_rt_sdiv and swv_rt_udiv (their `bhs 0x01000c44` at 0x0100024c and
+   0x01000314): raise_signal_and_exit(2, 2), SIGFPE with type 2, divide by zero (the default handler
+   prints "Arithmetic exception: Divide By Zero"), the binary's tail jump, so its result r0 is the
+   divide's. The engine's own copy of kh.mod's rt_div0_raise (0x00100a4c). A routine Ghidra has no
+   function for (it starts after FUN_01000c30's `pop {r3, pc}`, and Ghidra took it into the two divides'
+   bodies), written from its disassembly (0x01000c44 - 0x01000c4c: `mov r0, #2`, `mov r1, #2`, `b
+   0x01001a40`). */
+int32 swv_rt_div0(void)
+
+{
+  return raise_signal_and_exit(2,2);
 }
 
 /* ==== 0x01000C54  (file offset 0x00C54)  rt_memset =================================================== */
@@ -25597,7 +25479,7 @@ uint FUN_0101dbcc(undefined4 param_1,int param_2)
    (swvImage2D_Palette) and its alpha to the alpha plane, then the indices (a Byte[] of at least width *
    height, else -1202, FUN_01019640, into +0x20 + +0x30). For ALPHA (0x60) FUN_01019920 writes no colour
    (FUN_01025bc4), so the colour stored is whatever the local held (a stack slot the code never sets: the
-   r1 .. r3 it saved on entry). The size tests use FUN_010002c8 (ARM's __rt_udiv): its remainder (r1) is
+   r1 .. r3 it saved on entry). The size tests use swv_rt_udiv (ARM's __rt_udiv): its remainder (r1) is
    the size less quotient * bytes per pixel here, its prototype giving the quotient only. Evidence:
    0x0101dbf8 - 0x0101de24 (r0 and r1 kept for swvM3G_ReadObject3D: Ghidra had dropped them and given the
    function the saved r1 .. r3 as parameters; `orr r0, r7, r5` / `movs r0, r0, asr #15` / `mvnne r0, #3`;
@@ -25643,9 +25525,9 @@ void swvM3G_ReadImage2D(uint8 *image,uint8 *stream)
     size = FUN_01019698((int32)stream,1);
     if (size != 0) {
       if (size < (uint32)bytesPerPixel << 8 &&
-          size - FUN_010002c8(bytesPerPixel,size) * (uint32)bytesPerPixel != 0)
+          size - swv_rt_udiv(bytesPerPixel,size).low * (uint32)bytesPerPixel != 0)
         FUN_0102f7e0(INTEGER_MINUS_1202);
-      colours = FUN_010002c8(bytesPerPixel,size);
+      colours = swv_rt_udiv(bytesPerPixel,size).low;
       if (colours > 0x100)
         colours = 0x100;
       FUN_0100350c((int32)image,colours);
@@ -34127,7 +34009,6 @@ int FUN_01026d84(int *param_1,int param_2)
   int iVar2;
   undefined4 *puVar3;
   int iVar4;
-  int extraout_r1;
   byte *pbVar5;
   bool bVar6;
   bool bVar7;
@@ -34191,8 +34072,7 @@ LAB_01026e80:
     *param_1 = (int)(pbVar5 + 1);
     puVar3 = (undefined4 *)param_1[7];
     bVar1 = *pbVar5;
-    FUN_010002c8(0x1f,(uint)bVar1 + puVar3[1] * 0x100);
-    if (extraout_r1 == 0) {
+    if (swv_rt_udiv(0x1f,(uint)bVar1 + puVar3[1] * 0x100).high == 0) {
       if ((bVar1 & 0x20) != 0) {
         *(undefined4 *)param_1[7] = 2;
         iVar4 = iVar2;
@@ -38921,7 +38801,7 @@ int FUN_0102cc80(int param_1,int param_2)
    s1 (the low half) and s2 (the high half) kept modulo 65521 (BASE), reduced every 5552 bytes (NMAX) and
    the bytes taken 16 at a time (zlib's DO16, which the binary has unrolled) then one at a time; 1 for a
    NULL buf.
-   The reductions are FUN_010002c8 (ARM's __rt_udiv: the quotient in r0, the remainder in r1, which the
+   The reductions are swv_rt_udiv (ARM's __rt_udiv: the quotient in r0, the remainder in r1, which the
    code keeps; its prototype gives the quotient, so the remainder is the value less quotient * 65521).
    Used by the M3G loader's section checksums (swvM3GReader_Feed, FUN_010265fc), by zlib's inflate setup
    (FUN_010311c4 passes its address, the word at 0x010311c0, as the check function) and by
@@ -38953,8 +38833,8 @@ uint32 adler32(uint32 adler,const uint8 *buf,uint32 len)
         s1 += *buf++;
         s2 += s1;
       }
-      s1 -= FUN_010002c8(INTEGER_65521,s1) * INTEGER_65521;
-      s2 -= FUN_010002c8(INTEGER_65521,s2) * INTEGER_65521;
+      s1 -= swv_rt_udiv(INTEGER_65521,s1).low * INTEGER_65521;
+      s2 -= swv_rt_udiv(INTEGER_65521,s2).low * INTEGER_65521;
     }
     checksum = s1 | s2 << 16;
   }
@@ -48928,7 +48808,7 @@ uint * FUN_010362a0(int param_1,uint *param_2,uint *param_3,uint *param_4,uint *
     if ((uVar2 & 4) != 0) {
       iVar1 = iVar1 + 1;
     }
-    uVar3 = FUN_010002c8((int)(iVar1 * *param_5 + 7) >> 3,0x7fffffff,uVar2,uVar3,param_4);
+    uVar3 = swv_rt_udiv((int)(iVar1 * *param_5 + 7) >> 3,0x7fffffff).low;   /* r0, r1 only */
     if (uVar3 < *param_3) {
       png_warning((uint8 *)param_1,
           (const char *)(STRING_WIDTH_TOO_LARGE_FOR_LIBPNG_TO_OFFSET + 0x1036360));
@@ -49137,7 +49017,6 @@ void FUN_01036610(int param_1,int param_2,uint param_3)
   uint uVar1;
   uint uVar2;
   int iVar3;
-  int extraout_r1;
   undefined1 *puVar4;
   undefined1 local_31c;
   undefined1 local_31b;
@@ -49153,7 +49032,7 @@ LAB_01036660:
     *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 2;
     if ((*(byte *)(param_1 + 0x15a) & 2) != 0) {
       if (*(byte *)(param_1 + 0x15a) == 3) {
-        if ((0x300 < param_3) || (FUN_010002c8(3,param_3), extraout_r1 != 0)) {
+        if ((0x300 < param_3) || swv_rt_udiv(3,param_3).high != 0) {
           png_error((uint8 *)param_1,(const char *)(STRING_INVALID_PALETTE_CHUNK_OFFSET + 0x10366d0));
         }
         uVar1 = swv_rt_sdiv(3,param_3).low;
@@ -49702,16 +49581,16 @@ void FUN_01036f6c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
       *(byte *)(param_1 + 0x158) = bVar1;
       if (6 < uVar2) break;
       iVar3 = *(int *)(iVar7 + uVar2 * 4);
-      iVar3 = FUN_010002c8(iVar3,(*(int *)(param_1 + 0xfc) + iVar3 + -1) -
-                                 *(int *)(iVar6 + uVar2 * 4));
+      iVar3 = swv_rt_udiv(iVar3,(*(int *)(param_1 + 0xfc) + iVar3 + -1) -
+                                *(int *)(iVar6 + uVar2 * 4)).low;
       *(int *)(param_1 + 0x114) = iVar3;
       *(uint *)(param_1 + 0x110) = ((uint)*(byte *)(param_1 + 0x15d) * iVar3 + 7 >> 3) + 1;
       if ((*(uint *)(param_1 + 0xa4) & 2) != 0) {
         return;
       }
       iVar4 = *(int *)(iVar9 + uVar2 * 4);
-      uVar5 = FUN_010002c8(iVar4,(*(int *)(param_1 + 0x100) + iVar4 + -1) -
-                                 *(int *)(iVar8 + uVar2 * 4));
+      uVar5 = swv_rt_udiv(iVar4,(*(int *)(param_1 + 0x100) + iVar4 + -1) -
+                                *(int *)(iVar8 + uVar2 * 4)).low;
       *(undefined4 *)(param_1 + 0x104) = uVar5;
       if (iVar3 != 0) {
         return;
@@ -50087,18 +49966,18 @@ void FUN_01037904(int param_1)
   }
   else {
     if ((*(uint *)(param_1 + 0xa4) & 2) == 0) {
-      uVar3 = FUN_010002c8(*(int *)(DATA_AT_0103FF50_OFFSET_2 + 0x103795c),
-                           (*(int *)(param_1 + 0x100) + *(int *)(DATA_AT_0103FF50_OFFSET_2 + 0x103795c) + -1) -
-                           *(int *)(DATA_AT_0103FF34_OFFSET_2 + 0x1037974));
+      uVar3 = swv_rt_udiv(*(int *)(DATA_AT_0103FF50_OFFSET_2 + 0x103795c),
+                          (*(int *)(param_1 + 0x100) + *(int *)(DATA_AT_0103FF50_OFFSET_2 + 0x103795c) + -1) -
+                          *(int *)(DATA_AT_0103FF34_OFFSET_2 + 0x1037974)).low;
     }
     else {
       uVar3 = *(undefined4 *)(param_1 + 0x100);
     }
     *(undefined4 *)(param_1 + 0x104) = uVar3;
     iVar4 = *(int *)(DATA_AT_0103FF18_OFFSET_3 + 0x1037998 + (uint)*(byte *)(param_1 + 0x158) * 4);
-    iVar4 = FUN_010002c8(iVar4,(*(int *)(param_1 + 0xfc) + iVar4 + -1) -
-                               *(int *)(DATA_AT_0103FEFC_OFFSET_2 + 0x10379ac +
-                                       (uint)*(byte *)(param_1 + 0x158) * 4));
+    iVar4 = swv_rt_udiv(iVar4,(*(int *)(param_1 + 0xfc) + iVar4 + -1) -
+                              *(int *)(DATA_AT_0103FEFC_OFFSET_2 + 0x10379ac +
+                                      (uint)*(byte *)(param_1 + 0x158) * 4)).low;
     *(int *)(param_1 + 0x114) = iVar4;
     uVar2 = (uint)*(byte *)(param_1 + 0x15d) * iVar4 + 7 >> 3;
   }
@@ -50198,7 +50077,7 @@ LAB_01037b78:
   uVar1 = (param_5 & 0xff) * (uint)*(byte *)((int)param_2 + 0x1d);
   uVar2 = uVar1 & 0xff;
   *(char *)((int)param_2 + 0x1e) = (char)uVar1;
-  uVar1 = FUN_010002c8(uVar2 + 7 >> 3,0x7fffffff);
+  uVar1 = swv_rt_udiv(uVar2 + 7 >> 3,0x7fffffff).low;
   if (uVar1 < param_3) {
     png_warning((uint8 *)param_1,
         (const char *)(STRING_WIDTH_TOO_LARGE_TO_PROCESS_IMAGE_OFFSET + 0x1037c44));

@@ -296,6 +296,7 @@ void swvObject3D_InsertAnimationTrack(uint8 *tracks,uint8 *track);   /* 0x01002B
 SwvSkinBoneSet * swvSkin_CopyBoneSet(SwvSkinBoneSet *destination,const SwvSkinBoneSet *source);   /* 0x01027B40 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
 void swvPolygonMode_SetLocalCameraLightingValue(uint8 *mode,int32 enable);   /* 0x0100E4B8 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
 void swvPolygonMode_SetPerspectiveCorrectionValue(uint8 *mode,int32 enable);   /* 0x0100E4D0 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
+int32 swv_rt_div0(void);   /* 0x01000C44 GUESS: name (ARM's __rt_div0), hand-written (no Ghidra function), see swv21brew.c */
 
 /* Not yet identified (auto-named by Ghidra). */
 int64 ll_mul_int(uint32 aLow,int32 aHigh,int32 b);   /* 0x01000028 GUESS: name, see swv21brew.c */
@@ -303,8 +304,8 @@ int64 ll_mul(uint32 aLow,int32 aHigh,uint32 bLow,int32 bHigh);   /* 0x0100094C, 
 int32 swv_memcmp(const uint8 *a,const uint8 *b,uint32 n);   /* 0x01000080 GUESS: name, see swv21brew.c */
 void * swv_memcpy(void *destination,void *source,uint32 byteCount);   /* 0x01000100 GUESS: name, see swv21brew.c */
 uint64 swv_memcpy_word_aligned(void *destination,void *source,uint32 byteCount);   /* 0x01000188 GUESS: name, see swv21brew.c */
-int64 swv_rt_sdiv(uint param_1,uint param_2);   /* 0x010001F4 GUESS: name (ARM's __rt_sdiv: .low the quotient, .high the remainder), see swv21brew.c */
-int FUN_010002c8(uint param_1,uint param_2);
+int64 swv_rt_sdiv(int32 divisor,int32 dividend);   /* 0x010001F4 GUESS: name (ARM's __rt_sdiv: .low the quotient, .high the remainder), see swv21brew.c */
+uint64 swv_rt_udiv(uint32 divisor,uint32 dividend);   /* 0x010002C8 GUESS: name (ARM's __rt_udiv: .low the quotient, .high the remainder), see swv21brew.c */
 void FUN_01000388(int param_1,int param_2,int param_3,uint param_4);
 void FUN_010003cc(int param_1,int param_2,int param_3,uint param_4);
 int * FUN_01000414(int *param_1,int param_2,int param_3,int param_4,uint param_5);
