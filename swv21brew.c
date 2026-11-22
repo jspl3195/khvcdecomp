@@ -19881,57 +19881,65 @@ LAB_01016d6c:
   } while( true );
 }
 
-/* ==== 0x01016D8C  (file offset 0x16D8C)  FUN_01016d8c ================================================ */
-bool FUN_01016d8c(int param_1,undefined4 param_2,undefined4 *param_3,uint *param_4,int param_5)
+/* ==== 0x01016D8C  (file offset 0x16D8C)  swvGroup_PickRayValue ======================================= */
+/* JSR-184 1.1, Group.pick(scope, ox, oy, oz, dx, dy, dz, ri), the ray form, on the native group group
+   (the ISwerveObject slot 47, swvGroup_PickRay, passes the origin and the direction as three floats each,
+   and ri as the native RayIntersection or NULL): error -1301 (IllegalArgumentException; FUN_0102f7e0,
+   which does not return) when the direction is zero, which the engine takes as each |d| at most
+   0x377ba882 (about 1.5e-5; the spec says dx = dy = dz = 0); then the pick state (FUN_0100f7b0: +0x30 no
+   camera, +0x38 the scope, +8 to FUN_01023184 with 0) gets the ray's two ends, +0x18 the origin and +0x24
+   origin + direction (FUN_010279d0); the result record (FUN_0100f7e0, +0x34; FUN_01021b7c with 0: no
+   intersected node, its +0xc; +0x14 the distance FLT_MAX 0x7f7fffff) given the origin and the direction
+   (FUN_01022a94: its +0x34 and +0x40, the ray RayIntersection.getRay returns); FUN_010166a4 the pick
+   through the group (its picker, +0x88, the state, the group). Returns 1 for a hit (the record's
+   intersected node set) and then fills ri, when set, from the record (FUN_01027a54(ri, record): r1
+   restored, Ghidra had dropped it; the spec leaves ri unmodified on a miss), 0 for none; FUN_01021b7c on
+   the record again (releases the node). The same tail as the camera form (swvGroup_Pick, 0x01016ECC),
+   which also sets +0x30 to the camera. Ghidra had dropped FUN_01023184's count (r1, the 0 stored at
+   +0x30), read the saved r1 - r3 as locals and pasted stale flags into the three compares: written
+   with common.h's FLOAT_GT after the comma (each `bls` goes on to the next, the last `bhi` skips the
+   error). Evidence: 0x01016d8c - 0x01016ebc (`bic r0, r0, #0x80000000` / `bl 0x0103f534` and the
+   `ldrls` / `blls` pairs, `bhi` / `bl 0x0102f7e0` with -1301; `mov r1, #0` / `str r1, [r0, #0x30]` /
+   `str r9, [r0, #0x38]` / `add r0, r0, #8` / `bl 0x01023184`; `bl 0x0103eee8` three times, direction
+   word then origin word, `stmib sp, {r9, r10}`, `add r1, sp, #4` / `bl 0x010279d0`; `str r1, [r0,
+   #0x14]`; `add r0, r8, #0x88` / `bl 0x010166a4`; `movs r5, r0` / `movne r5, #1`, `cmpne r7, #0` / `ldr
+   r1, [r4, #0x34]` / `blne 0x01027a54`). */
+int32 swvGroup_PickRayValue(uint8 *group,int32 scope,const uint32 *origin,const uint32 *direction,
+                            uint8 *ri)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  undefined1 in_ZR;
-  undefined1 in_CY;
-  bool bVar4;
-  undefined4 uStack_2c;
-  undefined4 *puStack_28;
-  uint *local_24;
-  
-  uVar2 = WORD_HEXADECIMAL_377BA882;
-  uStack_2c = param_2;
-  puStack_28 = param_3;
-  local_24 = param_4;
-  swv_fcmp_b(*param_4 & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
-  if (!(bool)in_CY || (bool)in_ZR) {
-    swv_fcmp_b(param_4[1] & 0x7fffffff,uVar2);
-  }
-  if (!(bool)in_CY || (bool)in_ZR) {
-    swv_fcmp_b(param_4[2] & 0x7fffffff,uVar2);
-  }
-  if (!(bool)in_CY || (bool)in_ZR) {
+  uint32 end[3];
+  uint8 *state;
+  uint32 record;
+  int32 hit;
+
+  if ((swv_fcmp_b(direction[0] & 0x7fffffff,WORD_HEXADECIMAL_377BA882),
+       !FLOAT_GT(direction[0] & 0x7fffffff,WORD_HEXADECIMAL_377BA882)) &&
+      (swv_fcmp_b(direction[1] & 0x7fffffff,WORD_HEXADECIMAL_377BA882),
+       !FLOAT_GT(direction[1] & 0x7fffffff,WORD_HEXADECIMAL_377BA882)) &&
+      (swv_fcmp_b(direction[2] & 0x7fffffff,WORD_HEXADECIMAL_377BA882),
+       !FLOAT_GT(direction[2] & 0x7fffffff,WORD_HEXADECIMAL_377BA882)))
     FUN_0102f7e0(INTEGER_MINUS_1301);
-  }
-  iVar1 = FUN_0100f7b0();
-  *(undefined4 *)(iVar1 + 0x30) = 0;
-  *(undefined4 *)(iVar1 + 0x38) = param_2;
-  FUN_01023184(iVar1 + 8);
-  FUN_010279d0(iVar1 + 0x18,param_3);
-  uVar2 = swv_fadd(*param_4,*param_3);
-  uVar3 = swv_fadd(param_4[1],param_3[1]);
-  local_24 = (uint *)swv_fadd(param_4[2],param_3[2]);
-  uStack_2c = uVar2;
-  puStack_28 = (undefined4 *)uVar3;
-  FUN_010279d0(iVar1 + 0x24,&uStack_2c);
-  uVar2 = FUN_0100f7e0();
-  *(undefined4 *)(iVar1 + 0x34) = uVar2;
-  FUN_01021b7c(uVar2,0);
-  *(undefined4 *)(*(int *)(iVar1 + 0x34) + 0x14) = WORD_HEXADECIMAL_7F7FFFFF;
-  FUN_01022a94(*(undefined4 *)(iVar1 + 0x34),param_3,param_4);
-  FUN_010166a4(param_1 + 0x88,iVar1,param_1);
-  bVar4 = *(int *)(*(int *)(iVar1 + 0x34) + 0xc) != 0;
-  if (bVar4 && param_5 != 0) {
-    FUN_01027a54(param_5);
-  }
-  FUN_01021b7c(*(undefined4 *)(iVar1 + 0x34),0);
-  return bVar4;
+  state = (uint8 *)FUN_0100f7b0();
+  *(uint32 *)(state + 0x30) = 0;
+  *(int32 *)(state + 0x38) = scope;
+  FUN_01023184((int *)(state + 8),0);
+  FUN_010279d0((undefined4 *)(state + 0x18),(undefined4 *)origin);
+  end[0] = swv_fadd(direction[0],origin[0]);
+  end[1] = swv_fadd(direction[1],origin[1]);
+  end[2] = swv_fadd(direction[2],origin[2]);
+  FUN_010279d0((undefined4 *)(state + 0x24),end);
+  record = FUN_0100f7e0();
+  *(uint32 *)(state + 0x34) = record;
+  FUN_01021b7c((int)record,0);
+  *(uint32 *)(*(uint8 **)(state + 0x34) + 0x14) = WORD_HEXADECIMAL_7F7FFFFF;
+  FUN_01022a94(*(int *)(state + 0x34),(undefined4)origin,(undefined4 *)direction);
+  FUN_010166a4((undefined4)(group + 0x88),(int)state,(int)group);
+  hit = *(int32 *)(*(uint8 **)(state + 0x34) + 0xc) != 0;
+  if (hit != 0 && ri != NULL)
+    FUN_01027a54((int)ri,*(int *)(state + 0x34));
+  FUN_01021b7c(*(int *)(state + 0x34),0);
+  return hit;
 }
 
 /* ==== 0x01016ECC  (file offset 0x16ECC)  swvGroup_Pick =============================================== */
@@ -43002,59 +43010,60 @@ FUN_010303f0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
   return uVar7;
 }
 
-/* ==== 0x010304C0  (file offset 0x304C0)  FUN_010304c0 ================================================ */
-undefined4
-FUN_010304c0(int param_1,undefined4 param_2,undefined4 *param_3,undefined4 *param_4,int param_5,
-            undefined1 *param_6)
+/* ==== 0x010304C0  (file offset 0x304C0)  swvGroup_PickRay ============================================ */
+/* JSR-184 1.1, Group.pick(scope, ox, oy, oz, dx, dy, dz, ri), the ray form: ISwerveObject slot 47 (+0xbc)
+   of Group and World (kh_types.h SwerveGroupVtbl.Pick; the game's camera_avoid_walls casts its wall ray
+   with it): in an error frame, the origin's and the direction's three floats each checked by
+   FUN_0102ed04 (error -1001 for a denormal, infinite or NaN float) into two local vectors (each first
+   zeroed), then swvGroup_PickRayValue(the native group (po->pNative, less 4 when not NULL), scope, the
+   origin, the direction, the native RayIntersection (ri's pNative less 4; NULL for a NULL ri or one
+   without a native object)) and its result (1 for a hit) stored as a byte in *pHit; returns 0, or on an
+   error its result code (swv_ErrorToResult; *pHit then not written). Evidence: 0x010304c0 - 0x010305b4
+   (`mov r8, #0x0` the result, `str r6, [sp, #0x10]` .. `[sp, #0x18]` and `[sp, #0x4]` .. `[sp, #0xc]`
+   the zeroed vectors, `bl 0x0102ed04` six times, `movs r0, r7` / `ldrne r0, [r7, #0x4]` / `movs r3, r0`
+   / `subne r3, r0, #0x4` / `str r3, [sp]`, `bl 0x01016d8c` / `strb r0, [r10]`, `bl 0x0103976c` / `mov
+   r8, r0`). */
+int32 swvGroup_PickRay(ISwerveObject *po,int32 scope,const uint32 *origin,const uint32 *direction,
+                       ISwerveObject *ri,uint8 *pHit)
 
 {
-  undefined1 uVar1;
-  int iVar2;
-  int iVar3;
-  undefined4 uVar4;
-  undefined4 local_c4;
-  undefined4 local_c0;
-  undefined4 local_bc;
-  undefined4 local_b8;
-  undefined4 local_b4;
-  undefined4 local_b0;
-  undefined1 auStack_ac [136];
-  
-  uVar4 = 0;
-  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_ac));   /* Ghidra had dropped it */
-  if (iVar2 == 0) {
-    swv_TryArm(auStack_ac);
-    iVar2 = *(int *)(param_1 + 4);
-    if (iVar2 != 0) {
-      iVar2 = iVar2 + -4;
-    }
-    local_b8 = 0;
-    local_b4 = 0;
-    local_b0 = 0;
-    local_b8 = FUN_0102ed04(*param_3);
-    local_b4 = FUN_0102ed04(param_3[1]);
-    local_b0 = FUN_0102ed04(param_3[2]);
-    local_c4 = 0;
-    local_c0 = 0;
-    local_bc = 0;
-    local_c4 = FUN_0102ed04(*param_4);
-    local_c0 = FUN_0102ed04(param_4[1]);
-    local_bc = FUN_0102ed04(param_4[2]);
-    iVar3 = 0;
-    if (param_5 != 0) {
-      iVar3 = *(int *)(param_5 + 4);
-    }
-    if (iVar3 != 0) {
-      iVar3 = iVar3 + -4;
-    }
-    uVar1 = FUN_01016d8c(iVar2,param_2,&local_b8,&local_c4,iVar3);
-    *param_6 = uVar1;
+  int32 result = 0;
+  int32 error;
+  uint8 *group;
+  uint8 *ray;
+  uint32 rayDirection[3];
+  uint32 rayOrigin[3];
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (error == 0) {
+    swv_TryArm(frame);
+    group = (uint8 *)po->pNative;
+    if (group != NULL)
+      group -= 4;
+    rayOrigin[0] = 0;
+    rayOrigin[1] = 0;
+    rayOrigin[2] = 0;
+    rayOrigin[0] = FUN_0102ed04(origin[0]);
+    rayOrigin[1] = FUN_0102ed04(origin[1]);
+    rayOrigin[2] = FUN_0102ed04(origin[2]);
+    rayDirection[0] = 0;
+    rayDirection[1] = 0;
+    rayDirection[2] = 0;
+    rayDirection[0] = FUN_0102ed04(direction[0]);
+    rayDirection[1] = FUN_0102ed04(direction[1]);
+    rayDirection[2] = FUN_0102ed04(direction[2]);
+    ray = NULL;
+    if (ri != NULL)
+      ray = (uint8 *)ri->pNative;
+    if (ray != NULL)
+      ray -= 4;
+    *pHit = (uint8)swvGroup_PickRayValue(group,scope,rayOrigin,rayDirection,ray);
     swv_TryPop();
   }
-  else {
-    uVar4 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
-  }
-  return uVar4;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x010305B8  (file offset 0x305B8)  FUN_010305b8 ================================================ */
@@ -50613,18 +50622,21 @@ int32 swv_Create_RayIntersection(void **ppObj)
   return result;
 }
 
-/* ==== 0x01038340  (file offset 0x38340)  FUN_01038340 ================================================ */
-void FUN_01038340(int param_1,undefined4 *param_2)
+/* ==== 0x01038340  (file offset 0x38340)  swvRayIntersection_GetDistance ============================== */
+/* JSR-184 1.1, RayIntersection.getDistance: ISwerveObject slot 3 (+0xc) of RayIntersection (kh_types.h
+   SwerveRayIntersectionVtbl.GetDistance): *pDistance = the native object's (po->pNative, less 4 when not
+   NULL) +0x14, the distance from the ray's origin in lengths of its direction (swvGroup_PickRayValue and
+   swvGroup_Pick start it at FLT_MAX); no error frame, the spec lists no exception. No result: r0 is left
+   holding the distance (the game's camera_avoid_walls reads only *pDistance). Evidence: 0x01038340 -
+   0x01038354 (`subne r0, r0, #0x4`, `ldr r0, [r0, #0x14]` / `str r0, [r1, #0x0]` / `bx lr`). */
+void swvRayIntersection_GetDistance(ISwerveObject *po,uint32 *pDistance)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  *param_2 = *(undefined4 *)(iVar1 + 0x14);
-  return;
+  const uint8 *ray = (const uint8 *)po->pNative;
+
+  if (ray != NULL)
+    ray -= 4;
+  *pDistance = *(const uint32 *)(ray + 0x14);
 }
 
 /* ==== 0x01038358  (file offset 0x38358)  FUN_01038358 ================================================ */

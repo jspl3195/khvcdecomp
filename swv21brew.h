@@ -663,7 +663,7 @@ void FUN_010159e4(int param_1,undefined4 param_2,int param_3);
 undefined4 FUN_01015a40(undefined4 param_1,int param_2,undefined4 *param_3,undefined4 *param_4);
 void FUN_01015ce8(undefined4 param_1,int param_2,int *param_3);
 void FUN_010166a4(undefined4 param_1,int param_2,int param_3);
-bool FUN_01016d8c(int param_1,undefined4 param_2,undefined4 *param_3,uint *param_4,int param_5);
+int32 swvGroup_PickRayValue(uint8 *group,int32 scope,const uint32 *origin,const uint32 *direction,uint8 *ri);   /* 0x01016D8C JSR-184 1.1, see swv21brew.c */
 int32 swvGroup_Pick(uint8 *group,int32 scope,uint32 x,uint32 y,uint8 *camera,uint8 *ri);   /* 0x01016ECC GUESS: name, see swv21brew.c */
 void FUN_01017120(undefined4 param_1,int param_2);
 void FUN_0101715c(int param_1);
@@ -1176,7 +1176,7 @@ undefined4 FUN_01030220(int param_1,int param_2);
 int32 swvGroup_GetChild(ISwerveObject *po,int32 index,ISwerveObject **ppo);   /* 0x010302EC GUESS: name, see swv21brew.c */
 void swvGroup_GetChildCount(ISwerveObject *po,int32 *pCount);   /* 0x01030360 GUESS: name, see swv21brew.c */
 undefined4 FUN_010303f0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5, int param_6,undefined1 *param_7);
-undefined4 FUN_010304c0(int param_1,undefined4 param_2,undefined4 *param_3,undefined4 *param_4,int param_5, undefined1 *param_6);
+int32 swvGroup_PickRay(ISwerveObject *po,int32 scope,const uint32 *origin,const uint32 *direction,ISwerveObject *ri,uint8 *pHit);   /* 0x010304C0 JSR-184 1.1, see swv21brew.c */
 undefined4 FUN_010305b8(int param_1,int param_2);
 undefined4 FUN_01030624(int *param_1,uint param_2,uint param_3,int param_4,int param_5,uint *param_6, uint *param_7,int param_8,int *param_9,uint *param_10);
 void FUN_01030aac(int param_1,undefined4 *param_2);
@@ -1360,7 +1360,7 @@ int32 swvPolygonMode_SetShading(ISwerveObject *po,int32 shading);   /* 0x0103817
 void swvPolygonMode_SetTwoSidedLightingEnable(ISwerveObject *po,int32 enable);   /* 0x010381F0 JSR-184 1.1, see swv21brew.c */
 int32 swvPolygonMode_SetWinding(ISwerveObject *po,int32 winding);   /* 0x01038208 JSR-184 1.1, see swv21brew.c */
 void FUN_01038280(int param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
-void FUN_01038340(int param_1,undefined4 *param_2);
+void swvRayIntersection_GetDistance(ISwerveObject *po,uint32 *pDistance);   /* 0x01038340 JSR-184 1.1, see swv21brew.c */
 int FUN_01038358(int param_1,ISwerveObject **param_2);
 void FUN_010383c4(int param_1,undefined4 *param_2);
 void FUN_010383dc(int param_1,undefined4 *param_2);
@@ -2015,7 +2015,7 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define ADDRESS_OF_swvGroup_GetChild_OFFSET 0xFFFFFF48   /* was DAT_010303dc (word at 0x010303DC); PC-relative offset: + 0x10303a4 (the pc) = 0x010302EC */
 #define ADDRESS_OF_FUNCTION_01030220_OFFSET 0xFFFFFE70   /* was DAT_010303e0 (word at 0x010303E0); PC-relative offset: + 0x10303b0 (the pc) = 0x01030220 */
 #define ADDRESS_OF_FUNCTION_010305b8_OFFSET 0x000001FC   /* was DAT_010303e4 (word at 0x010303E4); PC-relative offset: + 0x10303bc (the pc) = 0x010305B8 */
-#define ADDRESS_OF_FUNCTION_010304c0_OFFSET 0x000000F8   /* was DAT_010303e8 (word at 0x010303E8); PC-relative offset: + 0x10303c8 (the pc) = 0x010304C0 */
+#define ADDRESS_OF_FUNCTION_010304c0_OFFSET 0x000000F8   /* was DAT_010303e8 (word at 0x010303E8); PC-relative offset: + 0x10303c8 (the pc) = 0x010304C0 (swvGroup_PickRay) */
 #define ADDRESS_OF_FUNCTION_010303f0_OFFSET 0x0000001C   /* was DAT_010303ec (word at 0x010303EC); PC-relative offset: + 0x10303d4 (the pc) = 0x010303F0 */
 #define ADDRESS_OF_swvImage2D_InitFromPixels_OFFSET 0x000000B8   /* was DAT_01030c24 (word at 0x01030C24); PC-relative offset: + 0x1030b9c (the pc) = 0x01030C54 */
 #define ADDRESS_OF_swvImage2D_InitFromPalette_OFFSET 0x00000214   /* was DAT_01030c28 (word at 0x01030C28); PC-relative offset: + 0x1030ba8 (the pc) = 0x01030DBC */
@@ -2239,7 +2239,7 @@ extern undefined4 STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET;   /* was DAT_0
 #define ADDRESS_OF_swvPolygonMode_SetPerspectiveCorrectionEnable_OFFSET 0x000000F4   /* was DAT_010380a4 (word at 0x010380A4); PC-relative offset: + 0x103806c (the pc) = 0x01038160 */
 #define ADDRESS_OF_swvPolygonMode_IsTwoSidedLightingEnabled_OFFSET 0x00000038   /* was DAT_010380a8 (word at 0x010380A8); PC-relative offset: + 0x1038078 (the pc) = 0x010380B0 */
 #define ADDRESS_OF_swvPolygonMode_SetTwoSidedLightingEnable_OFFSET 0x0000016C   /* was DAT_010380ac (word at 0x010380AC); PC-relative offset: + 0x1038084 (the pc) = 0x010381F0 */
-#define ADDRESS_OF_FUNCTION_01038340_OFFSET 0xFFFFFDA4   /* was DAT_01038600 (word at 0x01038600); PC-relative offset: + 0x103859c (the pc) = 0x01038340 */
+#define ADDRESS_OF_FUNCTION_01038340_OFFSET 0xFFFFFDA4   /* was DAT_01038600 (word at 0x01038600); PC-relative offset: + 0x103859c (the pc) = 0x01038340 (swvRayIntersection_GetDistance) */
 #define ADDRESS_OF_FUNCTION_01038358_OFFSET 0xFFFFFDB0   /* was DAT_01038604 (word at 0x01038604); PC-relative offset: + 0x10385a8 (the pc) = 0x01038358 */
 #define ADDRESS_OF_FUNCTION_01038488_OFFSET 0xFFFFFED4   /* was DAT_01038608 (word at 0x01038608); PC-relative offset: + 0x10385b4 (the pc) = 0x01038488 */
 #define ADDRESS_OF_FUNCTION_010383c4_OFFSET 0xFFFFFE04   /* was DAT_0103860c (word at 0x0103860C); PC-relative offset: + 0x10385c0 (the pc) = 0x010383C4 */
