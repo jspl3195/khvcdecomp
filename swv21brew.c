@@ -8044,36 +8044,50 @@ uint swvSectionZlib_Init(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x01008398  (file offset 0x08398)  swvKeyframeSequence_Construct =============================== */
-void swvKeyframeSequence_Construct(int param_1,int param_2,int param_3,int param_4)
+/* GUESS: name. JSR-184 1.1, the KeyframeSequence constructor, native (keyframeCount, componentCount,
+   interpolation): error -1301 (IllegalArgumentException; FUN_0102f7e0, which does not return) for SLERP
+   (0xb1) or SQUAD (0xb3) unless componentCount is 4 (quaternions, as the spec); the counts and the
+   interpolation stored (+0x38, +0x34, +0x1c), the valid range's last keyframe (+0x30) = keyframeCount - 1;
+   error -4 (GUESS: out of memory) when keyframeCount * swvKeyframeSequence_KeyframeWords, a signed 64-bit
+   product (`smull`), is above 0x7fffffff (the test: 0 - (product - 0x7fffffff) < 0, with the double 0.0's
+   words, ZERO_DOUBLE_*, as the 0); the keyframe array (+0x3c, its items at +0x40) sized to that many words
+   (FUN_01023184) and, when not empty, zeroed (thunk_swv_memset, 4 bytes a word); not prepared yet (+0x4c =
+   0, swvKeyframeSequence_Prepare). The range checks of the counts and the interpolation are the caller's
+   (FUN_01032b70's, the BREW slot). Evidence: 0x01008398 - 0x0100843c (`cmp r3, #0xb1` / `cmpne r6, #0xb3`,
+   `cmp r7, #4` / `blne` the error, the four `str`, `bl` 0x01004c30, `smull r12, r1, r0, r5`, `mvn r2,
+   #0x80000000` / `subs` / `sbc`, `adr r2, 0x1008444` / `ldmia`, `subs` / `sbcs` / `mvnlt r0, #3` / `bllt`,
+   `mul r5, r6, r5`, `movgt r2, r5, lsl #2` for the `blgt` 0x01039df0: Ghidra had dropped that size). */
+void swvKeyframeSequence_Construct(SwvKeyframeSequence *sequence,int32 keyframeCount,int32 componentCount,
+                                   int32 interpolation)
 
 {
-  int iVar1;
-  int iVar2;
-  uint uVar3;
-  bool bVar4;
-  
-  if ((param_4 == 0xb1 || param_4 == 0xb3) && (param_3 != 4)) {
+  int32 words;
+  int32 total;
+  uint64 product;
+  uint64 zero;
+
+  if ((interpolation == 0xb1 || interpolation == 0xb3) && componentCount != 4)
     FUN_0102f7e0(INTEGER_MINUS_1301);
-  }
-  *(int *)(param_1 + 0x38) = param_2;
-  *(int *)(param_1 + 0x30) = param_2 + -1;
-  *(int *)(param_1 + 0x34) = param_3;
-  *(int *)(param_1 + 0x1c) = param_4;
-  iVar1 = swvKeyframeSequence_KeyframeWords((SwvKeyframeSequence *)param_1);
-  uVar3 = (uint)((longlong)iVar1 * (longlong)param_2);
-  iVar2 = (int)((ulonglong)((longlong)iVar1 * (longlong)param_2) >> 0x20) -
-          (uint)(uVar3 < 0x7fffffff);
-  bVar4 = ZERO_DOUBLE_LOW_WORD < uVar3 + 0x80000001;
-  if ((int)(ZERO_DOUBLE_HIGH_WORD - (iVar2 + (uint)bVar4)) < 0 !=
-      (SBORROW4(ZERO_DOUBLE_HIGH_WORD,iVar2) != SBORROW4(ZERO_DOUBLE_HIGH_WORD - iVar2,(uint)bVar4))) {
+  sequence->keyframeCount = keyframeCount;
+  sequence->validLast = keyframeCount - 1;
+  sequence->componentCount = componentCount;
+  sequence->interpolation = interpolation;
+  words = swvKeyframeSequence_KeyframeWords(sequence);
+  MULTIPLY_WORDS(product,(uint32)words,(uint32)keyframeCount);
+  if (words < 0)
+    product.high -= (uint32)keyframeCount;
+  if (keyframeCount < 0)
+    product.high -= (uint32)words;
+  SUBTRACT_WORD(product,0x7fffffff);
+  (void)MAKE_WORDS(zero,ZERO_DOUBLE_HIGH_WORD,ZERO_DOUBLE_LOW_WORD);
+  SUBTRACT_WORDS(product,zero,product);
+  if ((int32)product.high < 0)
     FUN_0102f7e0(0xfffffffc);
-  }
-  FUN_01023184(param_1 + 0x3c,iVar1 * param_2);
-  if (0 < iVar1 * param_2) {
-    thunk_swv_memset(*(undefined4 *)(param_1 + 0x40),0);
-  }
-  *(undefined4 *)(param_1 + 0x4c) = 0;
-  return;
+  total = words * keyframeCount;
+  FUN_01023184((int *)&sequence->field_3c,total);
+  if (total > 0)
+    thunk_swv_memset((undefined4)sequence->keyframes,0,(undefined4)(total << 2));
+  sequence->prepared = 0;
 }
 
 /* ==== 0x0100844C  (file offset 0x0844C)  FUN_0100844c ================================================ */
@@ -13727,56 +13741,53 @@ LAB_0100eed4:
 }
 
 /* ==== 0x0100EEF0  (file offset 0x0EEF0)  swvObject3D_FindValue ======================================= */
-int * swvObject3D_FindValue(int *param_1,int param_2)
+/* JSR-184 1.1, Object3D.find, native: the object itself when its user id (+0x0c) is userId, else the
+   first found, depth first, among the objects it refers to: its own reference(index) method (engine vtable
+   +0x18, as swvObject3D_References walks it) called with index 0, 1, 2, ... until it returns -1 or one is
+   found; a -2 says the next index is a list (+4 the items, +8 the count), whose non-NULL items are
+   searched in turn; 0 is skipped. NULL when none has the id. One more reference(index) call follows the
+   find, as the code does. Callers: swvObject3D_Find (slot 10) and itself. Evidence: 0x0100eef0 -
+   0x0100efe0 (`ldr r0, [r0, #0xc]` / `cmp r0, r1` / `moveq r0, r8`, the `blx` through +0x18 with r1 = r6
+   / `add r6, r6, #1`, `cmn r0, #2`, the list's +8 / +4 and `cmp r5, #0` / `cmp r4, r10` / `blt`, `cmp r5,
+   #0` / `cmn r0, #1` after the next call). */
+uint8 *swvObject3D_FindValue(uint8 *object,int32 userId)
 
 {
-  int iVar1;
-  int iVar2;
-  int *piVar3;
-  int iVar4;
-  int iVar5;
-  int iVar6;
-  
-  if (param_1[3] == param_2) {
-    return param_1;
-  }
-  piVar3 = (int *)0x0;
-  iVar4 = 1;
-  /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
-     FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
-     vtable is not among them (GUESS: not static), so for one the method is not known here */
-  iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,0);
-  do {
-    if (iVar1 == -1) {
-      return piVar3;
-    }
-    if (iVar1 == -2) {
-      iVar5 = iVar4 + 1;
-      /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
-         FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
-         vtable is not among them (GUESS: not static), so for one the method is not known here */
-      iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,iVar4);
-      iVar6 = *(int *)(iVar1 + 8);
-      for (iVar4 = 0; (piVar3 == (int *)0x0 && (iVar4 < iVar6)); iVar4 = iVar4 + 1) {
-        iVar2 = *(int *)(*(int *)(iVar1 + 4) + iVar4 * 4);
-        if (iVar2 != 0) {
-          piVar3 = (int *)swvObject3D_FindValue(iVar2,param_2);
+  uint8 *found = NULL;
+  int32 index = 1;
+  int32 entry;
+
+  if (*(const int32 *)(object + 0xc) == userId)
+    found = object;
+  else {
+    /* engine virtual call, slot +0x18: the object's reference(index) */
+    entry = (*(code *)(*(int32 *)(*(int32 *)object + 0x18) + *(int32 *)object))(object,0);
+    while (found == NULL && entry != -1) {
+      if (entry == -2) {
+        const uint8 *list;
+        uint8 *const *items;
+        int32 count;
+        int32 i;
+
+        /* engine virtual call, slot +0x18: the list at the next index */
+        list = (const uint8 *)(*(code *)(*(int32 *)(*(int32 *)object + 0x18) + *(int32 *)object))
+                   (object,index);
+        index++;
+        count = *(const int32 *)(list + 8);
+        items = *(uint8 *const *const *)(list + 4);
+        for (i = 0; found == NULL && i < count; i++) {
+          if (items[i] != NULL)
+            found = swvObject3D_FindValue(items[i],userId);
         }
       }
+      else if (entry != 0)
+        found = swvObject3D_FindValue((uint8 *)entry,userId);
+      /* engine virtual call, slot +0x18: the object's reference(index) */
+      entry = (*(code *)(*(int32 *)(*(int32 *)object + 0x18) + *(int32 *)object))(object,index);
+      index++;
     }
-    else {
-      iVar5 = iVar4;
-      if (iVar1 != 0) {
-        piVar3 = (int *)swvObject3D_FindValue(iVar1,param_2);
-      }
-    }
-    iVar4 = iVar5 + 1;
-    /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
-       FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
-       vtable is not among them (GUESS: not static), so for one the method is not known here */
-    iVar1 = (*(code *)(*(int *)(*param_1 + 0x18) + *param_1))(param_1,iVar5);
-  } while (piVar3 == (int *)0x0);
-  return piVar3;
+  }
+  return found;
 }
 
 /* ==== 0x0100EFE4  (file offset 0x0EFE4)  swv_ColourScale ============================================= */
@@ -14857,357 +14868,33 @@ void *swvImage2D_Pixels(uint8 *image)
 }
 
 /* ==== 0x01010094  (file offset 0x10094)  swvAnimationController_Position ============================= */
-/* (not yet rewritten) JSR-184 1.1, AnimationController.getPosition, native: the AnimationController's
-   sequence time at the world time param_2, ts = tsref + s (tw - twref): its reference sequence time
-   (+0x24, a float) + (param_2 - its reference world time, +0x28) * its speed (+0x2c), the multiply skipped
-   when |speed - 1.0| < 0x377ba882 (about 1.5e-5); floats through the soft-float routines, which Ghidra
-   pasted in. */
-/* WARNING: Removing unreachable block (ram,0x0103ee1c) */
-/* WARNING: Removing unreachable block (ram,0x0103edd4) */
-/* WARNING: Removing unreachable block (ram,0x0103ede0) */
-/* WARNING: Removing unreachable block (ram,0x0103ede8) */
-/* WARNING: Removing unreachable block (ram,0x0103ede4) */
-/* WARNING: Removing unreachable block (ram,0x0103edec) */
-/* WARNING: Removing unreachable block (ram,0x0103ee0c) */
-/* WARNING: Removing unreachable block (ram,0x0103f988) */
-/* WARNING: Removing unreachable block (ram,0x0103f994) */
-/* WARNING: Removing unreachable block (ram,0x0103f99c) */
-/* WARNING: Removing unreachable block (ram,0x0103f944) */
-/* WARNING: Removing unreachable block (ram,0x0103f94c) */
-/* WARNING: Removing unreachable block (ram,0x0103f954) */
-/* WARNING: Removing unreachable block (ram,0x0103f958) */
-/* WARNING: Removing unreachable block (ram,0x0103f95c) */
-/* WARNING: Removing unreachable block (ram,0x0103f96c) */
-/* WARNING: Removing unreachable block (ram,0x0103f970) */
-/* WARNING: Removing unreachable block (ram,0x0103f978) */
-/* WARNING: Removing unreachable block (ram,0x0103f97c) */
-/* WARNING: Removing unreachable block (ram,0x0103ee38) */
-/* WARNING: Removing unreachable block (ram,0x0103ee44) */
-/* WARNING: Removing unreachable block (ram,0x0103edc4) */
-/* WARNING: Removing unreachable block (ram,0x0103edd0) */
-/* WARNING: Removing unreachable block (ram,0x0103f9a8) */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint swvAnimationController_Position(int param_1,int param_2,undefined4 param_3,uint param_4)
+/* JSR-184 1.1, AnimationController.getPosition, native: the AnimationController's sequence time at the
+   world time worldTime, ts = tsref + s (tw - twref): its reference sequence time (+0x24, a float) +
+   (worldTime - its reference world time, +0x28) * its speed (+0x2c), the multiply skipped when |speed -
+   1.0| is at most 0x377ba882 (about 1.5e-5); floats through the soft-float routines (swv_fflt, swv_fsub,
+   swv_fcmp_c, swv_fmul, swv_fadd; Ghidra had pasted in swv_fadd, which the code tail-jumps to). The
+   swv_fcmp_c result is in the flags (`bls`): written as the bit test it amounts to, for two non-negative
+   finite floats swv_fcmp_c does `cmp r0, r1` (an infinite or NaN difference, from a speed setSpeed's
+   FUN_0102ed04 would have refused, takes fplib's exception path, 0x0103daa8, instead). Callers:
+   swvAnimationController_GetPosition (slot 24) and FUN_01010de0 (an AnimationTrack's sample). Evidence:
+   0x01010094 - 0x010100e8 (`sub r0, r1, r0` / `bl` 0x0103f500, `mov r1, #0x3f800000` / `bl` 0x0103f064,
+   `bic r0, r0, #0x80000000` / `bl` 0x0103f59c, `movls r1, r6` / `ldrls r0, [r4, #0x24]`, else `bl`
+   0x0103f604 / `ldr r1, [r4, #0x24]`, `b` 0x0103eee8; Ghidra had read r2 / r3 as two more parameters). */
+uint32 swvAnimationController_Position(const uint8 *controller,int32 worldTime)
 
 {
-  uint uVar1;
-  uint uVar2;
-  uint *puVar3;
-  uint uVar4;
-  uint uVar5;
-  int iVar6;
-  uint uVar7;
-  undefined4 uVar8;
-  uint uVar9;
-  uint in_lr;
-  undefined1 in_ZR;
-  undefined1 in_CY;
-  bool bVar10;
-  bool bVar11;
-  
-  uVar8 = *(undefined4 *)(param_1 + 0x2c);
-  uVar1 = swv_fflt(param_2 - *(int *)(param_1 + 0x28));
-  uVar2 = swv_fsub(uVar8,0x3f800000);
-  swv_fcmp_c(uVar2 & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
-  if (!(bool)in_CY || (bool)in_ZR) {
-    uVar2 = *(uint *)(param_1 + 0x24);
-  }
-  else {
-    uVar2 = swv_fmul(uVar8,uVar1);
-    uVar1 = *(uint *)(param_1 + 0x24);
-  }
-  if ((~(uVar2 << 1) & 0xff000000) == 0 || (~(uVar1 << 1) & 0xff000000) == 0) {
-    uVar7 = uVar2 * 2;
-    uVar4 = 0x4000001;
-    if (0xff000000 < uVar1 << 1 || 0xff000000 < uVar7) {
-      uVar7 = uVar2 * 2 + 0x800000;
-      param_4 = uVar1 * 2 + 0x800000;
-      if (uVar7 < 0xff800001) {
-        uVar7 = param_4;
-      }
-      if (0xff800000 < uVar7) goto LAB_0103ed1c;
-LAB_0103f924:
-      if ((uVar4 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x0103f938. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        if ((uVar4 & 0xf) == 8) {
-                    /* WARNING: Could not recover jumptable at 0x0103f9b0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-          uVar1 = (*(code *)(in_lr & 0xfffffffc))(_UNK_0103f9b4,uVar1);
-          return uVar1;
-        }
-        uVar1 = (*(code *)(in_lr & 0xfffffffc))();
-        return uVar1;
-      }
-      uVar1 = 8;
-      goto LAB_0103f9e0;
-    }
-    if (uVar7 != uVar1 * 2) {
-      if (uVar7 != 0xff000000) {
-        return uVar1;
-      }
-      return uVar2;
-    }
-    if (-1 < (int)(uVar2 ^ uVar1)) {
-      return uVar2;
-    }
-    uVar4 = 0x4000001;
-LAB_0103ed1c:
-    uVar7 = uVar1;
-    puVar3 = (uint *)swv_GetFpStatusPtr();
-    uVar5 = *puVar3;
-    uVar9 = uVar4;
-    if ((uVar4 & ~(uVar5 << 0x12) & 0x30000000) != 0) {
-      uVar9 = uVar4 | 0x40000000;
-    }
-    uVar4 = uVar9 | uVar5 & 0x1c00000;
-    *puVar3 = uVar5 | uVar9 >> 0x1a;
-    bVar11 = (uVar9 & 0xf) != 8;
-    if (bVar11) {
-      uVar9 = 0;
-    }
-    else {
-      uVar9 = 0x20000;
-    }
-    if (!bVar11 && (uVar9 & ~uVar4) == 0) {
-      uVar4 = uVar4 | 0xc00000;
-    }
-    if ((uVar4 & 0x10000000) == 0) {
-      if ((uVar4 & 0x40000000) == 0) {
-        if ((uVar5 & 0x100) == 0) goto LAB_0103f924;
-      }
-      else if ((uVar5 & 0x1000) == 0) {
-        return uVar2;
-      }
-    }
-    else if ((uVar5 & 0x400) == 0) {
-      return WORD_HEXADECIMAL_7F800000 | uVar2 & 0x80000000;
-    }
-  }
-  else {
-    if ((int)(uVar2 ^ uVar1) < 0) {
-      uVar1 = uVar1 ^ 0x80000000;
-      if (uVar2 < uVar1) {
-        uVar7 = uVar2 - uVar1 ^ 0x80000000;
-        uVar2 = uVar2 - uVar7;
-        uVar1 = uVar1 + uVar7;
-      }
-      uVar7 = uVar2 >> 0x17;
-      param_4 = uVar7 - (uVar1 >> 0x17);
-      if ((uVar1 & 0x7f800000) == 0) {
-        uVar1 = uVar1 << 8;
-        if (uVar1 == 0) {
-          if ((uVar2 & 0x7fffffff) == 0) {
-            uVar2 = 0;
-          }
-          goto LAB_0103efd8;
-        }
-        uVar2 = uVar2 << 8;
-        if ((uVar7 & 0xff) == 0) {
-          uVar7 = uVar7 + 1;
-        }
-        else {
-          uVar2 = uVar2 | 0x80000000;
-          param_4 = param_4 - 1;
-        }
-      }
-      else {
-        uVar2 = uVar2 << 8 | 0x80000000;
-        uVar1 = uVar1 << 8 | 0x80000000;
-      }
-      uVar4 = uVar2 - (uVar1 >> (param_4 & 0xff));
-      if ((int)uVar4 < 0) {
-        bVar11 = (bool)((byte)(uVar4 >> 7) & 1);
-        uVar2 = (uVar4 >> 8) + (uVar7 - 1) * 0x800000 + (uint)bVar11;
-        if (!bVar11) {
-          return uVar2;
-        }
-        if ((uVar4 & 0x7f) != 0) {
-          return uVar2;
-        }
-LAB_0103f0f0:
-        if (uVar1 << (0x20 - param_4 & 0xff) == 0) {
-          uVar2 = uVar2 & 0xfffffffe;
-        }
-        else {
-          uVar2 = uVar2 - 1;
-        }
-        return uVar2;
-      }
-      bVar10 = (uVar7 & 0xfe) == 0;
-      bVar11 = false;
-      if (!bVar10) {
-        uVar2 = uVar4 * 2;
-        bVar11 = (int)uVar2 < 0;
-        bVar10 = uVar2 == 0;
-      }
-      if (bVar11) {
-        bVar11 = (bool)((byte)(uVar2 >> 7) & 1);
-        uVar2 = ((int)uVar2 >> 8) + uVar7 * 0x800000 + (uint)bVar11;
-        if (!bVar11) {
-          return uVar2;
-        }
-        if ((uVar4 & 0x3f) != 0) {
-          return uVar2;
-        }
-        goto LAB_0103f0f0;
-      }
-      param_4 = uVar7 >> 8;
-      if (bVar10) {
-        if (uVar4 >> 7 == 0) {
-          return 0;
-        }
-        uVar2 = (uVar4 >> 7) >> (uVar7 & 0xff) | param_4 << 0x1f;
-        uVar7 = 2;
-      }
-      else {
-        if (uVar2 == 0) {
-          return 0;
-        }
-        uVar2 = uVar2 >> 2;
-        uVar4 = uVar7 - LZCOUNT(uVar2);
-        uVar1 = 0x28U - LZCOUNT(uVar2) & 0x1f;
-        uVar1 = uVar2 >> uVar1 | uVar2 << 0x20 - uVar1;
-        if ((uVar7 ^ uVar4) >> 8 == 0) {
-          return uVar1 + uVar4 * 0x800000;
-        }
-        uVar2 = uVar1 >> (-uVar4 & 0xff) | param_4 << 0x1f;
-        uVar7 = 2;
-      }
-    }
-    else {
-      iVar6 = uVar2 - uVar1;
-      if (uVar2 < uVar1) {
-        uVar2 = uVar2 - iVar6;
-        uVar1 = uVar1 + iVar6;
-      }
-      uVar7 = uVar2 >> 0x17;
-      param_4 = uVar7 - (uVar1 >> 0x17);
-      if ((uVar1 & 0x7f800000) != 0) {
-        uVar1 = uVar1 << 8 | 0x80000000;
-LAB_0103ef2c:
-        uVar4 = uVar2 << 8 | 0x80000000;
-        uVar2 = uVar1 >> (param_4 & 0xff);
-        uVar9 = uVar4 + uVar2;
-        if (CARRY4(uVar4,uVar2)) {
-          uVar4 = uVar9 >> 1 | 0x80000000;
-          bVar11 = (bool)((byte)(uVar4 >> 7) & 1);
-          uVar4 = uVar4 >> 8;
-          uVar2 = uVar4 + uVar7 * 0x800000 + (uint)bVar11;
-          if (bVar11) {
-            uVar4 = uVar9 & 0xff;
-          }
-          uVar7 = uVar2 * 2;
-          if (uVar4 == 0) goto LAB_0103ef54;
-          if (uVar7 < 0xff000000) {
-            return uVar2;
-          }
-        }
-        else {
-          bVar11 = (bool)((byte)(uVar9 >> 7) & 1);
-          uVar2 = (uVar9 >> 8) + (uVar7 - 1) * 0x800000 + (uint)bVar11;
-          if (!bVar11) {
-            return uVar2;
-          }
-          uVar7 = uVar2 * 2;
-          if ((uVar9 & 0x7f) != 0) {
-            bVar11 = 0xfeffffff < uVar7;
-          }
-          if (!bVar11) {
-            return uVar2;
-          }
-LAB_0103ef54:
-          param_4 = 0x20 - param_4;
-          uVar1 = uVar1 << (param_4 & 0xff);
-          if (uVar1 == 0) {
-            uVar2 = uVar2 & 0xfffffffe;
-          }
-          if (uVar7 < 0xff000000) {
-            return uVar2;
-          }
-        }
-        uVar2 = uVar2 + 0xa0000000;
-        uVar4 = 0x10000001;
-        goto LAB_0103ed1c;
-      }
-      uVar1 = uVar1 * 0x100;
-      if (uVar1 == 0) {
-LAB_0103efd8:
-        if ((uVar7 & 0xff) != 0) {
-          return uVar2;
-        }
-        if ((uVar2 & 0x7fffffff) == 0) {
-          return uVar2;
-        }
-        uVar7 = 1;
-      }
-      else {
-        if ((uVar7 & 0xff) != 0) {
-          param_4 = param_4 - 1;
-          goto LAB_0103ef2c;
-        }
-        uVar2 = uVar2 * 0x100 + uVar1 >> 8 | uVar7 << 0x17;
-        if ((uVar2 & 0x800000) != 0) {
-          return uVar2;
-        }
-        uVar7 = 1;
-      }
-    }
-    puVar3 = (uint *)swv_GetFpStatusPtr();
-    if ((*puVar3 & 0x1000000) != 0) {
-      return uVar2 & 0x80000000;
-    }
-    if ((*puVar3 & 0x800) == 0) {
-      return uVar2;
-    }
-    uVar1 = uVar2 & 0x80000000 | 0x60000000;
-    if ((uVar2 & 0xff0000) == 0) {
-      uVar2 = uVar2 << 8;
-      uVar1 = uVar1 + 0xfc000000;
-    }
-    if ((uVar2 & 0xff0000) == 0) {
-      uVar2 = uVar2 << 8;
-      uVar1 = uVar1 + 0xfc000000;
-    }
-    if ((uVar2 & 0xf00000) == 0) {
-      uVar2 = uVar2 << 4;
-      uVar1 = uVar1 + 0xfe000000;
-    }
-    if ((uVar2 & 0xc00000) == 0) {
-      uVar2 = uVar2 << 2;
-      uVar1 = uVar1 - 0x1000000;
-    }
-    if ((uVar2 & 0x800000) == 0) {
-      uVar2 = uVar2 << 1;
-    }
-    else {
-      uVar1 = uVar1 + 0x800000;
-    }
-    uVar2 = uVar2 & 0xff7fffff | uVar1;
-    uVar4 = uVar7 | 0x20000000;
-  }
-  uVar1 = FUN_010019e0(uVar2,uVar1,uVar7,param_4,uVar4,in_lr,uVar4,in_lr);
-  if ((uVar4 & 0xf) != 9) {
-    return uVar1;
-  }
-LAB_0103f9e0:
-  if ((uVar4 & 0x100000) == 0) {
-    return (uint)((uVar4 & uVar1 << 0x10) != 0);
-  }
-  if ((uVar4 & 0xf0000) == 0) {
-    uVar2 = uVar1 << 0x1d;
-    if ((bool)((byte)(uVar1 >> 3) & 1)) {
-      uVar2 = uVar2 | 0x30000000;
-    }
-    puVar3 = (uint *)swv_GetFpStatusPtr();
-    *puVar3 = *puVar3 & 0xfffffff | uVar2;
-    return uVar1;
-  }
-  if ((uVar1 & 8) != 0) {
-    return uVar1;
-  }
-  return 2 - uVar1;
+  uint32 speed = *(const uint32 *)(controller + 0x2c);
+  uint32 elapsed;
+  uint32 difference;
+  uint32 position;
+
+  elapsed = swv_fflt((uint32)(worldTime - *(const int32 *)(controller + 0x28)));
+  difference = swv_fsub(speed,0x3f800000) & 0x7fffffff;
+  if ((swv_fcmp_c(difference,WORD_HEXADECIMAL_377BA882), difference <= WORD_HEXADECIMAL_377BA882))
+    position = swv_fadd(*(const uint32 *)(controller + 0x24),elapsed);
+  else
+    position = swv_fadd(swv_fmul(speed,elapsed),*(const uint32 *)(controller + 0x24));
+  return position;
 }
 
 /* ==== 0x010100F0  (file offset 0x100F0)  swvVertexBuffer_GetPositionsValue =========================== */
@@ -15900,7 +15587,7 @@ FUN_01010de0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     uVar4 = *(int *)(param_1 + 0x20) == 0;
     uVar2 = 0;
     if (!(bool)uVar4) {
-      uVar2 = swvAnimationController_Position(*(int *)(param_1 + 0x20),param_2);
+      uVar2 = swvAnimationController_Position(*(const uint8 **)(param_1 + 0x20),(int32)param_2);
     }
     uVar3 = swvKeyframeSequence_Sample(*(undefined4 *)(param_1 + 0x1c),uVar2,param_3,param_4,param_5,
                                        uVar3);
@@ -17052,231 +16739,172 @@ int32 FUN_01011f4c(const uint8 *object,int32 index)
 }
 
 /* ==== 0x01011F8C  (file offset 0x11F8C)  swvObj_AddRef =============================================== */
+/* Shared slot 0 (AddRef) of every engine object interface: bumps the ISwerve object's refs
+   (swv_GetSwerveObject, +4), the native object's refs (po->pNative's +4) and the wrapper's refs (+8);
+   returns the wrapper's new count. Evidence: 0x01011f8c - 0x01011fc0 (`bl` 0x01039938, `ldr r1, [r0, #4]`
+   / `add` / `str`; `ldr r0, [r4, #4]`, the same on its +4; `ldr r0, [r4, #8]` / `add` / `str`, r0 the
+   result). Also called by swvObj_QueryInterface and swv_WrapObject. */
 uint32 swvObj_AddRef(ISwerveObject *po)
 
 {
-  ISwerve *pIVar1;
-  uint32 uVar2;
-  
-                    /* Shared slot 0 of every engine object interface: bumps the wrapper's refs
-                       (+8), the native object's refs and the ISwerve object's refs. */
-  pIVar1 = swv_GetSwerveObject();
-  pIVar1->m_nRefs = pIVar1->m_nRefs + 1;
-  *(int *)((int)po->pNative + 4) = *(int *)((int)po->pNative + 4) + 1;
-  uVar2 = po->m_nRefs + 1;
-  po->m_nRefs = uVar2;
-  return uVar2;
+  ISwerve *swerve = swv_GetSwerveObject();
+  uint32 refs;
+
+  swerve->m_nRefs++;
+  (*(int32 *)((uint8 *)po->pNative + 4))++;
+  refs = ++po->m_nRefs;
+  return refs;
 }
 
 /* ==== 0x01011FC4  (file offset 0x11FC4)  swvObj_QueryInterface ======================================= */
-int swvObj_QueryInterface(ISwerveObject *po,SwerveClassId cls,void **ppo)
+/* Shared slot 2 of every engine object interface: QueryInterface(cls, ppo). EBADPARM (14) for a NULL
+   ppo; else *ppo = NULL, and the native object's type (its getType, engine vtable +4, given po->pNative)
+   picks the class ids accepted: the object's own class id and the ids of all its JSR-184 base classes
+   (Object3D 0x13 always; Node 0x12, Transformable 0x1b, Mesh 0x10, Group 9, IndexBuffer 0xb, Image2D 0xa
+   as applicable; Graphics3D, RayIntersection, Transform and Loader only their own); then *ppo = po, AddRef
+   (swvObj_AddRef) and 0. Otherwise, and for the types 0, 23 and above 28, ECLASSNOTSUPPORT (3). This table
+   is the evidence for the SwerveClassId numbering. Evidence: 0x01011fc4 - 0x01012290 (`movs r6, r2` /
+   `moveq r0, #0xe` / `beq` the return, `str r0, [r6]`, `ldr r0, [r7, #4]` / `ldr r1, [r0]` / `ldr r2,
+   [r1, #4]` / `blx`, r0 po->pNative: Ghidra had dropped it; `cmp r0, #0x1c` / `addls pc, pc, r0, lsl #2`,
+   the `cmp r4` / `cmpne r4` chains, `str r7, [r6]` / `bl` 0x01011f8c, `mov r0, r5`). */
+int32 swvObj_QueryInterface(ISwerveObject *po,SwerveClassId cls,void **ppo)
 
 {
-  ISwerveObject *pIVar1;
-  undefined4 uVar2;
-  int iVar3;
-  
-                    /* Shared slot 2 of every engine object interface: QueryInterface(cls, ppo).
-                       Accepts the object's own class id and the ids of all its JSR-184 base classes
-                       (Object3D 0x13 always; Node 0x12, Transformable 0x1b, Mesh 0x10, Group 9,
-                       IndexBuffer 0xb, Image2D 0xa as applicable); otherwise returns 3
-                       (ECLASSNOTSUPPORT). This table is the evidence for the SwerveClassId
-                       numbering. */
-  pIVar1 = po;
-  if (ppo == (void **)0x0) {
-    pIVar1 = (ISwerveObject *)BAD_PARAMETER_ERROR_AS_POINTER;
+  int32 result = ECLASSNOTSUPPORT;
+  int32 accepted;
+  int32 vt;
+
+  if (ppo == NULL)
+    result = EBADPARM;
+  else {
+    *ppo = NULL;
+    vt = *(const int32 *)po->pNative;
+    /* engine virtual call, slot +0x4: the native object's getType */
+    switch ((*(code *)(*(int32 *)(vt + 4) + vt))(po->pNative)) {
+    case SWVT_ANIMATIONCONTROLLER:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_ANIMATIONCONTROLLER;
+      break;
+    case SWVT_ANIMATIONTRACK:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_ANIMATIONTRACK;
+      break;
+    case SWVT_APPEARANCE:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_APPEARANCE;
+      break;
+    case SWVT_BACKGROUND:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_BACKGROUND;
+      break;
+    case SWVT_CAMERA:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_TRANSFORMABLE || cls == SWV_NODE || cls == SWV_CAMERA;
+      break;
+    case SWVT_COMPOSITINGMODE:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_COMPOSITINGMODE;
+      break;
+    case SWVT_FOG:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_FOG;
+      break;
+    case SWVT_POLYGONMODE:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_POLYGONMODE;
+      break;
+    case SWVT_GROUP:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_TRANSFORMABLE || cls == SWV_NODE || cls == SWV_GROUP;
+      break;
+    case SWVT_IMAGE2D:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_IMAGE2D;
+      break;
+    case SWVT_TRIANGLESTRIPARRAY:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_INDEXBUFFER || cls == SWV_TRIANGLESTRIPARRAY;
+      break;
+    case SWVT_LIGHT:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_TRANSFORMABLE || cls == SWV_NODE || cls == SWV_LIGHT;
+      break;
+    case SWVT_MATERIAL:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_MATERIAL;
+      break;
+    case SWVT_MESH:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_TRANSFORMABLE || cls == SWV_NODE || cls == SWV_MESH;
+      break;
+    case SWVT_MORPHINGMESH:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_TRANSFORMABLE || cls == SWV_NODE || cls == SWV_MESH ||
+                 cls == SWV_MORPHINGMESH;
+      break;
+    case SWVT_SKINNEDMESH:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_TRANSFORMABLE || cls == SWV_NODE || cls == SWV_MESH ||
+                 cls == SWV_SKINNEDMESH;
+      break;
+    case SWVT_TEXTURE2D:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_TRANSFORMABLE || cls == SWV_TEXTURE2D;
+      break;
+    case SWVT_SPRITE3D:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_TRANSFORMABLE || cls == SWV_NODE || cls == SWV_SPRITE3D;
+      break;
+    case SWVT_KEYFRAMESEQUENCE:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_KEYFRAMESEQUENCE;
+      break;
+    case SWVT_VERTEXARRAY:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_VERTEXARRAY;
+      break;
+    case SWVT_VERTEXBUFFER:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_VERTEXBUFFER;
+      break;
+    case SWVT_WORLD:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_TRANSFORMABLE || cls == SWV_NODE || cls == SWV_GROUP ||
+                 cls == SWV_WORLD;
+      break;
+    case SWVT_CLASS24:
+      accepted = cls == SWV_OBJECT3D || cls == SWV_IMAGE2D || cls == SWV_CLASS24;
+      break;
+    case SWVT_GRAPHICS3D:
+      accepted = cls == SWV_GRAPHICS3D;
+      break;
+    case SWVT_RAYINTERSECTION:
+      accepted = cls == SWV_RAYINTERSECTION;
+      break;
+    case SWVT_TRANSFORM:
+      accepted = cls == SWV_TRANSFORM;
+      break;
+    case SWVT_LOADER:
+      accepted = cls == SWV_LOADER;
+      break;
+    default:
+      accepted = 0;
+      break;
+    }
+    if (accepted) {
+      result = SUCCESS;
+      *ppo = po;
+      swvObj_AddRef(po);
+    }
   }
-  iVar3 = 3;
-  if (ppo == (void **)0x0) {
-    return (int)pIVar1;
-  }
-  *ppo = (void *)0x0;
-  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
-     object's class) */
-  uVar2 = (*(code *)(*(int *)(*(int *)po->pNative + 4) + *(int *)po->pNative))();
-  switch(uVar2) {
-  case 0:
-    return 3;
-  case 1:
-    if (cls != SWV_OBJECT3D && cls != SWV_ANIMATIONCONTROLLER) {
-      return 3;
-    }
-    break;
-  case 2:
-    if (cls != SWV_OBJECT3D && cls != SWV_ANIMATIONTRACK) {
-      return 3;
-    }
-    break;
-  case 3:
-    if (cls != SWV_OBJECT3D && cls != SWV_APPEARANCE) {
-      return 3;
-    }
-    break;
-  case 4:
-    if (cls != SWV_OBJECT3D && cls != SWV_BACKGROUND) {
-      return 3;
-    }
-    break;
-  case 5:
-    if (((cls != SWV_OBJECT3D && cls != SWV_TRANSFORMABLE) && cls != SWV_NODE) && cls != SWV_CAMERA)
-    {
-      return 3;
-    }
-    break;
-  case 6:
-    if (cls != SWV_OBJECT3D && cls != SWV_COMPOSITINGMODE) {
-      return 3;
-    }
-    break;
-  case 7:
-    if (cls != SWV_OBJECT3D && cls != SWV_FOG) {
-      return 3;
-    }
-    break;
-  case 8:
-    if (cls != SWV_OBJECT3D && cls != SWV_POLYGONMODE) {
-      return 3;
-    }
-    break;
-  case 9:
-    if (((cls != SWV_OBJECT3D && cls != SWV_TRANSFORMABLE) && cls != SWV_NODE) && cls != SWV_GROUP)
-    {
-      return 3;
-    }
-    break;
-  case 10:
-    if (cls != SWV_OBJECT3D && cls != SWV_IMAGE2D) {
-      return 3;
-    }
-    break;
-  case 0xb:
-    if ((cls != SWV_OBJECT3D && cls != SWV_INDEXBUFFER) && cls != SWV_TRIANGLESTRIPARRAY) {
-      return 3;
-    }
-    break;
-  case 0xc:
-    if (((cls != SWV_OBJECT3D && cls != SWV_TRANSFORMABLE) && cls != SWV_NODE) && cls != SWV_LIGHT)
-    {
-      return 3;
-    }
-    break;
-  case 0xd:
-    if (cls != SWV_OBJECT3D && cls != SWV_MATERIAL) {
-      return 3;
-    }
-    break;
-  case 0xe:
-    if (((cls != SWV_OBJECT3D && cls != SWV_TRANSFORMABLE) && cls != SWV_NODE) && cls != SWV_MESH) {
-      return 3;
-    }
-    break;
-  case 0xf:
-    if ((((cls != SWV_OBJECT3D && cls != SWV_TRANSFORMABLE) && cls != SWV_NODE) && cls != SWV_MESH)
-        && cls != SWV_MORPHINGMESH) {
-      return 3;
-    }
-    break;
-  case 0x10:
-    if ((((cls != SWV_OBJECT3D && cls != SWV_TRANSFORMABLE) && cls != SWV_NODE) && cls != SWV_MESH)
-        && cls != SWV_SKINNEDMESH) {
-      return 3;
-    }
-    break;
-  case 0x11:
-    if ((cls != SWV_OBJECT3D && cls != SWV_TRANSFORMABLE) && cls != SWV_TEXTURE2D) {
-      return 3;
-    }
-    break;
-  case 0x12:
-    if (((cls != SWV_OBJECT3D && cls != SWV_TRANSFORMABLE) && cls != SWV_NODE) &&
-        cls != SWV_SPRITE3D) {
-      return 3;
-    }
-    break;
-  case 0x13:
-    if (cls != SWV_OBJECT3D && cls != SWV_KEYFRAMESEQUENCE) {
-      return 3;
-    }
-    break;
-  case 0x14:
-    if (cls != SWV_OBJECT3D && cls != SWV_VERTEXARRAY) {
-      return 3;
-    }
-    break;
-  case 0x15:
-    if (cls != SWV_OBJECT3D && cls != SWV_VERTEXBUFFER) {
-      return 3;
-    }
-    break;
-  case 0x16:
-    if ((((cls != SWV_OBJECT3D && cls != SWV_TRANSFORMABLE) && cls != SWV_NODE) && cls != SWV_GROUP)
-        && cls != SWV_WORLD) {
-      return 3;
-    }
-    break;
-  case 0x17:
-    return 3;
-  case 0x18:
-    if ((cls != SWV_OBJECT3D && cls != SWV_IMAGE2D) && cls != SWV_CLASS24) {
-      return 3;
-    }
-    break;
-  case 0x19:
-    if (cls != SWV_GRAPHICS3D) {
-      return 3;
-    }
-    break;
-  case 0x1a:
-    if (cls != SWV_RAYINTERSECTION) {
-      return 3;
-    }
-    break;
-  case 0x1b:
-    if (cls != SWV_TRANSFORM) {
-      return 3;
-    }
-    break;
-  case 0x1c:
-    if (cls != SWV_LOADER) {
-      return 3;
-    }
-    break;
-  default:
-    goto LAB_01012290;
-  }
-  iVar3 = 0;
-  *ppo = po;
-  swvObj_AddRef(po);
-LAB_01012290:
-  return iVar3;
+  return result;
 }
 
 /* ==== 0x01012294  (file offset 0x12294)  swvObj_Release ============================================== */
+/* Shared slot 1 (Release) of every engine object interface: a Loader (the native object's getType,
+   its engine vtable +4, gives 28, SWVT_LOADER) first releases the interface its wrapper keeps at +0x0c,
+   when there is one; then the native object is released (swv_NativeRelease), the wrapper's refs (+8)
+   dropped (the wrapper freed at 0, helper_free) and the ISwerve object released (ISwerve_Release); returns
+   the wrapper's new count. Evidence: 0x01012294 - 0x010122ec (`ldr r0, [r0, #4]` / `ldr r1, [r0]` / `ldr
+   r2, [r1, #4]` / `blx`, the call given po->pNative in r0, which Ghidra had dropped; `cmp r0, #0x1c`, `ldr
+   r0, [r4, #0xc]` / `blne` 0x01012294, `subs r5, r0, #1` / `bleq` 0x010398d0, `mov r0, r5`). */
 uint32 swvObj_Release(ISwerveObject *po)
 
 {
-  int iVar1;
-  ISwerve *po_00;
-  uint32 uVar2;
-  
-                    /* Shared slot 1 of every engine object interface: releases the native object
-                       (swv_NativeRelease), drops the wrapper's refs (frees it at 0) and releases
-                       the ISwerve object. */
-  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
-     object's class) */
-  iVar1 = (*(code *)(*(int *)(*(int *)po->pNative + 4) + *(int *)po->pNative))();
-  if ((iVar1 == 0x1c) && (po[1].pvt != (ISwerveObjectVtbl *)0x0)) {
-    swvObj_Release((ISwerveObject *)po[1].pvt);
+  int32 vt = *(const int32 *)po->pNative;
+  ISwerveObject *inner;
+  uint32 refs;
+
+  /* engine virtual call, slot +0x4: the native object's getType */
+  if ((*(code *)(*(int32 *)(vt + 4) + vt))(po->pNative) == 0x1c) {
+    inner = *(ISwerveObject **)((uint8 *)po + 0xc);
+    if (inner != NULL)
+      swvObj_Release(inner);
   }
-  swv_NativeRelease(po->pNative);
-  uVar2 = po->m_nRefs - 1;
-  po->m_nRefs = uVar2;
-  if (uVar2 == 0) {
+  swv_NativeRelease((int *)po->pNative);
+  refs = --po->m_nRefs;
+  if (refs == 0)
     helper_free(po);
-  }
-  po_00 = swv_GetSwerveObject();
-  ISwerve_Release(po_00);
-  return uVar2;
+  ISwerve_Release(swv_GetSwerveObject());
+  return refs;
 }
 
 /* ==== 0x010122F0  (file offset 0x122F0)  swvMaterial_IsAnimatable ==================================== */
@@ -23814,63 +23442,64 @@ void FUN_01019f54(undefined4 param_1)
 }
 
 /* ==== 0x0101A010  (file offset 0x1A010)  swvObject3D_RemoveAnimationTrackValue ======================= */
-void swvObject3D_RemoveAnimationTrackValue(int param_1,int param_2)
+/* JSR-184 1.1, Object3D.removeAnimationTrack, native: nothing without a track list (+0x10) or when the
+   track is not in it (the spec: no effect). The list (swvObject3D_AddAnimationTrackValue's 0x20 bytes)
+   holds two engine dynamic arrays: the tracks (+4 the items, +8 the count), kept grouped by property
+   (track +0x24), and at +0x10 each group's track count (+0x14 the items, +0x18 the count). Walking the
+   tracks, the group number goes up at each change of property; the track found is released
+   (swv_NativeRelease, on track + 4), the count dropped and the tracks after it moved down one (the array's
+   engine vtable +8, GUESS: a move of count items from source to destination); its group's count dropped,
+   and a group left empty removed the same way from the second array. Only swvObject3D_RemoveAnimationTrack
+   (slot 8) calls it. Evidence: 0x0101a010 - 0x0101a100 (`ldr r12, [r0, #8]` the count read once, `cmp r3,
+   r2` / `movne r3, r2` / `addne r6, r6, #1`, `cmp r0, r1`, `add r0, r0, #4` / `bl` 0x01019f28, the `blx
+   r12` given r0 the array, r1 the item after, r2 the item, r3 the count after; `subs r1, r1, #1` /
+   `ldmiane`, the second array the same through `bx r12`, a tail call). */
+void swvObject3D_RemoveAnimationTrackValue(uint8 *object,const uint8 *track)
 
 {
-  int *piVar1;
-  int iVar2;
-  int *piVar3;
-  int iVar4;
-  int iVar5;
-  int iVar6;
-  
-  piVar1 = *(int **)(param_1 + 0x10);
-  if (piVar1 == (int *)0x0) {
-    return;
-  }
-  iVar5 = 0;
-  iVar4 = 0xff;
-  iVar6 = -1;
-  while( true ) {
-    if (piVar1[2] <= iVar5) {
-      return;
+  uint8 *tracks = *(uint8 **)(object + 0x10);
+  uint8 *const *items;
+  uint8 *slot;
+  int32 *groupCount;
+  int32 count;
+  int32 remaining;
+  int32 property = 0xff;
+  int32 group = -1;
+  int32 i;
+  int32 vt;
+
+  if (tracks != NULL) {
+    count = *(const int32 *)(tracks + 8);
+    items = *(uint8 *const *const *)(tracks + 4);
+    for (i = 0; i < count; i++) {
+      if (*(const int32 *)(items[i] + 0x24) != property) {
+        property = *(const int32 *)(items[i] + 0x24);
+        group++;
+      }
+      if (items[i] == track)
+        break;
     }
-    iVar2 = *(int *)(piVar1[1] + iVar5 * 4);
-    if (iVar4 != *(int *)(iVar2 + 0x24)) {
-      iVar6 = iVar6 + 1;
-      iVar4 = *(int *)(iVar2 + 0x24);
+    if (i < count) {
+      swv_NativeRelease((int *)(items[i] + 4));
+      remaining = --*(int32 *)(tracks + 8);
+      if (i < remaining) {
+        slot = *(uint8 **)(tracks + 4) + i * 4;
+        vt = *(const int32 *)tracks;
+        /* engine virtual call, slot +0x8: the track array's move */
+        (*(code *)(*(int32 *)(vt + 8) + vt))(tracks,slot + 4,slot,remaining - i);
+      }
+      groupCount = *(int32 **)(tracks + 0x14) + group;
+      if (--*groupCount == 0) {
+        remaining = --*(int32 *)(tracks + 0x18);
+        if (group < remaining) {
+          slot = *(uint8 **)(tracks + 0x14) + group * 4;
+          vt = *(const int32 *)(tracks + 0x10);
+          /* engine virtual call, slot +0x8: the group count array's move */
+          (*(code *)(*(int32 *)(vt + 8) + vt))(tracks + 0x10,slot + 4,slot,remaining - group);
+        }
+      }
     }
-    if (iVar2 == param_2) break;
-    iVar5 = iVar5 + 1;
   }
-  swv_NativeRelease(iVar2 + 4);
-  iVar4 = piVar1[2] + -1;
-  piVar1[2] = iVar4;
-  if (iVar5 < iVar4) {
-    iVar2 = piVar1[1] + iVar5 * 4;
-    /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by the
-       object's class) */
-    (*(code *)(*(int *)(*piVar1 + 8) + *piVar1))(piVar1,iVar2 + 4,iVar2,iVar4 - iVar5);
-  }
-  piVar3 = (int *)(piVar1[5] + iVar6 * 4);
-  iVar4 = *piVar3 + -1;
-  *piVar3 = iVar4;
-  if (iVar4 == 0) {
-    iVar4 = piVar1[6] + -1;
-    piVar1[6] = iVar4;
-    if (iVar6 < iVar4) {
-      iVar5 = piVar1[4];
-      iVar2 = piVar1[5] + iVar6 * 4;
-                    /* WARNING: Could not recover jumptable at 0x0101a0f0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      /* engine virtual call, slot +0x8: one of the 40 functions the static engine vtables put there (by
-         the object's class) */
-      (*(code *)(*(int *)(iVar5 + 8) + iVar5))(piVar1 + 4,iVar2 + 4,iVar2,iVar4 - iVar6);
-      return;
-    }
-    return;
-  }
-  return;
 }
 
 /* ==== 0x0101A104  (file offset 0x1A104)  FUN_0101a104 ================================================ */
@@ -29227,15 +28856,18 @@ void swvVertexArray_SetBytes(int param_1,int param_2,int param_3,int param_4,und
 }
 
 /* ==== 0x0101FF90  (file offset 0x1FF90)  swvAnimationController_SetActiveIntervalValue =============== */
-void swvAnimationController_SetActiveIntervalValue(int param_1,int param_2,int param_3)
+/* JSR-184 1.1, AnimationController.setActiveInterval, native: error -1301 (IllegalArgumentException;
+   FUN_0102f7e0, which does not return) when start > end, as the spec says; then the interval's start at
+   +0x1c and its end at +0x20 (world times; start == end: always active, swvAnimationController_IsActive).
+   Only swvAnimationController_SetActiveInterval (slot 23) calls it. Evidence: 0x0101ff90 - 0x0101ffb4
+   (`cmp r1, r2` / `ldrgt` / `blgt` the error, `str r5, [r4, #0x1c]`, `str r6, [r4, #0x20]`). */
+void swvAnimationController_SetActiveIntervalValue(uint8 *controller,int32 start,int32 end)
 
 {
-  if (param_3 < param_2) {
+  if (start > end)
     FUN_0102f7e0(INTEGER_MINUS_1301);
-  }
-  *(int *)(param_1 + 0x1c) = param_2;
-  *(int *)(param_1 + 0x20) = param_3;
-  return;
+  *(int32 *)(controller + 0x1c) = start;
+  *(int32 *)(controller + 0x20) = end;
 }
 
 /* ==== 0x0101FFBC  (file offset 0x1FFBC)  FUN_0101ffbc ================================================ */
@@ -31362,12 +30994,15 @@ void FUN_010222a8(undefined4 *param_1,int *param_2,int param_3,int param_4)
 }
 
 /* ==== 0x01022340  (file offset 0x22340)  swvAnimationController_SetPositionValue ===================== */
-void swvAnimationController_SetPositionValue(int param_1,undefined4 param_2,undefined4 param_3)
+/* JSR-184 1.1, AnimationController.setPosition, native: the reference point (tsref, twref) set to the
+   sequence time (a float, its bits) at +0x24 and the world time at +0x28, from which
+   swvAnimationController_Position counts. Only swvAnimationController_SetPosition (slot 25) calls it.
+   Evidence: 0x01022340 - 0x01022348 (`str r1, [r0, #0x24]`, `str r2, [r0, #0x28]`). */
+void swvAnimationController_SetPositionValue(uint8 *controller,uint32 sequenceTime,int32 worldTime)
 
 {
-  *(undefined4 *)(param_1 + 0x24) = param_2;
-  *(undefined4 *)(param_1 + 0x28) = param_3;
-  return;
+  *(uint32 *)(controller + 0x24) = sequenceTime;
+  *(int32 *)(controller + 0x28) = worldTime;
 }
 
 /* ==== 0x0102234C  (file offset 0x2234C)  swvVertexBuffer_SetPositionsValue =========================== */
@@ -32477,18 +32112,24 @@ void FUN_010231c4(int param_1,int *param_2)
 }
 
 /* ==== 0x01023244  (file offset 0x23244)  swvAnimationController_SetSpeedValue ======================== */
-void swvAnimationController_SetSpeedValue(int param_1,undefined4 param_2,int param_3)
+/* JSR-184 1.1, AnimationController.setSpeed, native: as the spec, the reference point moves to the world
+   time first so the sequence time does not jump: tsref (+0x24) = the position at worldTime, tsref + s
+   (worldTime - twref), worked out with the old speed (swv_fflt / swv_fmul / swv_fadd, the multiply never
+   skipped, unlike swvAnimationController_Position); then twref (+0x28) = worldTime and the speed (+0x2c, a
+   float, its bits) = speed, the three stored by one `stmia`. Only swvAnimationController_SetSpeed (slot
+   26) calls it. Evidence: 0x01023244 - 0x01023278 (`sub r0, r2, r0`, the elapsed world time, `bl`
+   0x0103f500 / 0x0103f604 / 0x0103eee8, `add r1, r4, #0x24` / `stmia r1, {r0, r5, r6}`). */
+void swvAnimationController_SetSpeedValue(uint8 *controller,uint32 speed,int32 worldTime)
 
 {
-  undefined4 uVar1;
-  
-  uVar1 = swv_fflt(param_3 - *(int *)(param_1 + 0x28));
-  uVar1 = swv_fmul(uVar1,*(undefined4 *)(param_1 + 0x2c));
-  uVar1 = swv_fadd(uVar1,*(undefined4 *)(param_1 + 0x24));
-  *(undefined4 *)(param_1 + 0x24) = uVar1;
-  *(int *)(param_1 + 0x28) = param_3;
-  *(undefined4 *)(param_1 + 0x2c) = param_2;
-  return;
+  uint32 position;
+
+  position = swv_fflt((uint32)(worldTime - *(const int32 *)(controller + 0x28)));
+  position = swv_fmul(position,*(const uint32 *)(controller + 0x2c));
+  position = swv_fadd(position,*(const uint32 *)(controller + 0x24));
+  *(uint32 *)(controller + 0x24) = position;
+  *(int32 *)(controller + 0x28) = worldTime;
+  *(uint32 *)(controller + 0x2c) = speed;
 }
 
 /* ==== 0x0102327C  (file offset 0x2327C)  FUN_0102327c ================================================ */
@@ -33219,11 +32860,14 @@ void FUN_01023c60(int param_1,int param_2,int param_3,int param_4,int param_5)
 }
 
 /* ==== 0x01023C88  (file offset 0x23C88)  swvAnimationController_SetWeightValue ======================= */
-void swvAnimationController_SetWeightValue(int param_1,undefined4 param_2)
+/* JSR-184 1.1, AnimationController.setWeight, native: stores the weight (a float, its bits) at +0x30; the
+   check that it is not negative (-1301, IllegalArgumentException) is the caller's,
+   swvAnimationController_SetWeight (slot 19, kh_types.h SwerveAnimationControllerVtbl), its only caller.
+   Evidence: 0x01023c88 - 0x01023c8c (`str r1, [r0, #0x30]` / `bx lr`). */
+void swvAnimationController_SetWeightValue(uint8 *controller,uint32 weight)
 
 {
-  *(undefined4 *)(param_1 + 0x30) = param_2;
-  return;
+  *(uint32 *)(controller + 0x30) = weight;
 }
 
 /* ==== 0x01023C90  (file offset 0x23C90)  FUN_01023c90 ================================================ */
@@ -41056,92 +40700,79 @@ int swv_Create_AnimationController(void **ppObj)
 }
 
 /* ==== 0x0102CE5C  (file offset 0x2CE5C)  swvAnimationController_GetActiveIntervalEnd ================= */
-/* (not yet rewritten) JSR-184 1.1, AnimationController.getActiveIntervalEnd: ISwerveObject slot 21 (+0x54)
-   of AnimationController (kh_types.h SwerveAnimationControllerVtbl): *param_2 = the native object
-   (po->pNative, +4, less 4)'s active interval end (+0x20). */
-void swvAnimationController_GetActiveIntervalEnd(int param_1,undefined4 *param_2)
+/* JSR-184 1.1, AnimationController.getActiveIntervalEnd: ISwerveObject slot 21 (+0x54) of
+   AnimationController (kh_types.h SwerveAnimationControllerVtbl): *pEnd = the native object
+   (po->pNative, +4, less 4)'s active interval end (+0x20). Evidence: 0x0102ce5c - 0x0102ce70 (`ldr r0,
+   [r0, #4]` / `subne r0, r0, #4`, `ldr r0, [r0, #0x20]` / `str r0, [r1]`). */
+void swvAnimationController_GetActiveIntervalEnd(ISwerveObject *po,int32 *pEnd)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  *param_2 = *(undefined4 *)(iVar1 + 0x20);
-  return;
+  const uint8 *controller = (const uint8 *)po->pNative;
+
+  if (controller != NULL)
+    controller -= 4;
+  *pEnd = *(const int32 *)(controller + 0x20);
 }
 
 /* ==== 0x0102CE74  (file offset 0x2CE74)  swvAnimationController_GetActiveIntervalStart =============== */
-/* (not yet rewritten) JSR-184 1.1, AnimationController.getActiveIntervalStart: ISwerveObject slot 20
-   (+0x50) of AnimationController (kh_types.h SwerveAnimationControllerVtbl): *param_2 = the native object
-   (po->pNative, +4, less 4)'s active interval start (+0x1c). */
-void swvAnimationController_GetActiveIntervalStart(int param_1,undefined4 *param_2)
+/* JSR-184 1.1, AnimationController.getActiveIntervalStart: ISwerveObject slot 20 (+0x50) of
+   AnimationController (kh_types.h SwerveAnimationControllerVtbl): *pStart = the native object
+   (po->pNative, +4, less 4)'s active interval start (+0x1c). Evidence: 0x0102ce74 - 0x0102ce88 (`ldr r0,
+   [r0, #4]` / `subne r0, r0, #4`, `ldr r0, [r0, #0x1c]` / `str r0, [r1]`). */
+void swvAnimationController_GetActiveIntervalStart(ISwerveObject *po,int32 *pStart)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  *param_2 = *(undefined4 *)(iVar1 + 0x1c);
-  return;
+  const uint8 *controller = (const uint8 *)po->pNative;
+
+  if (controller != NULL)
+    controller -= 4;
+  *pStart = *(const int32 *)(controller + 0x1c);
 }
 
 /* ==== 0x0102CE8C  (file offset 0x2CE8C)  swvAnimationController_GetPosition ========================== */
-/* (not yet rewritten) JSR-184 1.1, AnimationController.getPosition: ISwerveObject slot 24 (+0x60) of
-   AnimationController (kh_types.h SwerveAnimationControllerVtbl): *param_3 = the sequence time at the
-   world time param_2 (swvAnimationController_Position, the native getPosition). */
-void swvAnimationController_GetPosition(int param_1,undefined4 param_2,undefined4 *param_3)
+/* JSR-184 1.1, AnimationController.getPosition: ISwerveObject slot 24 (+0x60) of AnimationController
+   (kh_types.h SwerveAnimationControllerVtbl): *pSequenceTime = the sequence time at the world time
+   worldTime (swvAnimationController_Position, the native getPosition, on the native object: po->pNative,
+   +4, less 4). Evidence: 0x0102ce8c - 0x0102cea8 (r1, the world time, left in place for the `bl`
+   0x01010094; `str r0, [r4]`). */
+void swvAnimationController_GetPosition(ISwerveObject *po,int32 worldTime,uint32 *pSequenceTime)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  uVar2 = swvAnimationController_Position(iVar1,param_2);   /* Ghidra had dropped the world time (r1) */
-  *param_3 = uVar2;
-  return;
+  const uint8 *controller = (const uint8 *)po->pNative;
+
+  if (controller != NULL)
+    controller -= 4;
+  *pSequenceTime = swvAnimationController_Position(controller,worldTime);
 }
 
 /* ==== 0x0102CEAC  (file offset 0x2CEAC)  swvAnimationController_GetSpeed ============================= */
-/* (not yet rewritten) JSR-184 1.1, AnimationController.getSpeed: ISwerveObject slot 22 (+0x58) of
-   AnimationController (kh_types.h SwerveAnimationControllerVtbl): *param_2 = swvAnimationController_Speed
-   of the native object (po->pNative, +4, less 4). */
-void swvAnimationController_GetSpeed(int param_1,undefined4 *param_2)
+/* JSR-184 1.1, AnimationController.getSpeed: ISwerveObject slot 22 (+0x58) of AnimationController
+   (kh_types.h SwerveAnimationControllerVtbl): *pSpeed = swvAnimationController_Speed of the native object
+   (po->pNative, +4, less 4). Evidence: 0x0102ceac - 0x0102cec8 (`subne r0, r0, #4`, `bl` 0x01010818,
+   `str r0, [r4]`). */
+void swvAnimationController_GetSpeed(ISwerveObject *po,uint32 *pSpeed)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  uVar2 = swvAnimationController_Speed((uint8 *)iVar1);
-  *param_2 = uVar2;
-  return;
+  const uint8 *controller = (const uint8 *)po->pNative;
+
+  if (controller != NULL)
+    controller -= 4;
+  *pSpeed = swvAnimationController_Speed(controller);
 }
 
 /* ==== 0x0102CECC  (file offset 0x2CECC)  swvAnimationController_GetWeight ============================ */
-/* (not yet rewritten) JSR-184 1.1, AnimationController.getWeight: ISwerveObject slot 18 (+0x48) of
-   AnimationController (kh_types.h SwerveAnimationControllerVtbl): *param_2 = the native object
-   (po->pNative, +4, less 4)'s weight (+0x30, a float). */
-void swvAnimationController_GetWeight(int param_1,undefined4 *param_2)
+/* JSR-184 1.1, AnimationController.getWeight: ISwerveObject slot 18 (+0x48) of AnimationController
+   (kh_types.h SwerveAnimationControllerVtbl): *pWeight = the native object (po->pNative, +4, less 4)'s
+   weight (+0x30, a float, its bits). Evidence: 0x0102cecc - 0x0102cee0 (`ldr r0, [r0, #4]` / `subne r0,
+   r0, #4`, `ldr r0, [r0, #0x30]` / `str r0, [r1]`). */
+void swvAnimationController_GetWeight(ISwerveObject *po,uint32 *pWeight)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  *param_2 = *(undefined4 *)(iVar1 + 0x30);
-  return;
+  const uint8 *controller = (const uint8 *)po->pNative;
+
+  if (controller != NULL)
+    controller -= 4;
+  *pWeight = *(const uint32 *)(controller + 0x30);
 }
 
 /* ==== 0x0102CEE4  (file offset 0x2CEE4)  swv_InitVtbl_AnimationController ============================ */
@@ -41166,136 +40797,128 @@ void swv_InitVtbl_AnimationController(void **pVtbl)
 }
 
 /* ==== 0x0102CF84  (file offset 0x2CF84)  swvAnimationController_SetActiveInterval ==================== */
-/* (not yet rewritten) JSR-184 1.1, AnimationController.setActiveInterval: ISwerveObject slot 23 (+0x5c) of
+/* JSR-184 1.1, AnimationController.setActiveInterval: ISwerveObject slot 23 (+0x5c) of
    AnimationController (kh_types.h SwerveAnimationControllerVtbl): in an error frame,
    swvAnimationController_SetActiveIntervalValue (start, end: error -1301, IllegalArgumentException, when
-   start > end, else +0x1c / +0x20 stored); on an error its result code. */
-undefined4 swvAnimationController_SetActiveInterval(int param_1,undefined4 param_2,undefined4 param_3)
+   start > end, else +0x1c / +0x20 stored) on the native object (po->pNative, less 4 when not NULL);
+   returns 0, or on an error its result code (swv_ErrorToResult). Evidence: 0x0102cf84 - 0x0102cfe8 (the
+   frame at sp + 4 for `bl` 0x01025e98 / 0x01000500 / 0x0100500c; r1 / r2 kept for the `bl` 0x0101ff90;
+   `bl` 0x0103976c given setjmp's r0). */
+int32 swvAnimationController_SetActiveInterval(ISwerveObject *po,int32 start,int32 end)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined1 auStack_9c [136];
-  
-  uVar2 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_9c);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    swvAnimationController_SetActiveIntervalValue(iVar1,param_2,param_3);
+  int32 result = 0;
+  int32 error;
+  uint8 *controller;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    controller = (uint8 *)po->pNative;
+    if (controller != NULL)
+      controller -= 4;
+    swvAnimationController_SetActiveIntervalValue(controller,start,end);
     swv_TryPop();
   }
-  else {
-    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar2;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x0102CFEC  (file offset 0x2CFEC)  swvAnimationController_SetPosition ========================== */
-/* (not yet rewritten) JSR-184 1.1, AnimationController.setPosition: ISwerveObject slot 25 (+0x64) of
-   AnimationController (kh_types.h SwerveAnimationControllerVtbl): in an error frame,
-   swvAnimationController_SetPositionValue (the sequence time, a float checked by FUN_0102ed04, and the
-   world time: the reference point (twref, tsref), +0x28 / +0x24); on an error its result code. */
-undefined4 swvAnimationController_SetPosition(int param_1,undefined4 param_2,undefined4 param_3)
+/* JSR-184 1.1, AnimationController.setPosition: ISwerveObject slot 25 (+0x64) of AnimationController
+   (kh_types.h SwerveAnimationControllerVtbl): in an error frame, swvAnimationController_SetPositionValue
+   on the native object (po->pNative, less 4 when not NULL) with the sequence time, a float checked by
+   FUN_0102ed04 (error -1001 for a denormal, an infinity or a NaN), and the world time: the reference point
+   (twref, tsref), +0x28 / +0x24; returns 0, or on an error its result code (swv_ErrorToResult). Evidence:
+   0x0102cfec - 0x0102d05c (`bl` 0x0102ed04 on r7, the sequence time, `mov r1, r0`, `mov r2, r6`, `bl`
+   0x01022340). */
+int32 swvAnimationController_SetPosition(ISwerveObject *po,uint32 sequenceTime,int32 worldTime)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  undefined1 auStack_9c [136];
-  
-  uVar3 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_9c);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    uVar2 = FUN_0102ed04(param_2);
-    swvAnimationController_SetPositionValue(iVar1,uVar2,param_3);
+  int32 result = 0;
+  int32 error;
+  uint8 *controller;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    controller = (uint8 *)po->pNative;
+    if (controller != NULL)
+      controller -= 4;
+    swvAnimationController_SetPositionValue(controller,FUN_0102ed04(sequenceTime),worldTime);
     swv_TryPop();
   }
-  else {
-    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar3;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x0102D060  (file offset 0x2D060)  swvAnimationController_SetSpeed ============================= */
-/* (not yet rewritten) JSR-184 1.1, AnimationController.setSpeed: ISwerveObject slot 26 (+0x68) of
-   AnimationController (kh_types.h SwerveAnimationControllerVtbl): in an error frame,
-   swvAnimationController_SetSpeedValue (the speed, a float checked by FUN_0102ed04, and the world time:
-   tsref' = getPosition(worldTime), twref' = worldTime, s' = speed, as the spec; +0x24 / +0x28 / +0x2c); on
-   an error its result code. */
-undefined4 swvAnimationController_SetSpeed(int param_1,undefined4 param_2,undefined4 param_3)
+/* JSR-184 1.1, AnimationController.setSpeed: ISwerveObject slot 26 (+0x68) of AnimationController
+   (kh_types.h SwerveAnimationControllerVtbl): in an error frame, swvAnimationController_SetSpeedValue on
+   the native object (po->pNative, less 4 when not NULL) with the speed, a float checked by FUN_0102ed04
+   (error -1001 for a denormal, an infinity or a NaN), and the world time: tsref' = getPosition(worldTime),
+   twref' = worldTime, s' = speed, as the spec; +0x24 / +0x28 / +0x2c; returns 0, or on an error its result
+   code (swv_ErrorToResult). Evidence: 0x0102d060 - 0x0102d0d0 (`bl` 0x0102ed04 on r7, the speed, `mov r1,
+   r0`, `mov r2, r6`, `bl` 0x01023244). */
+int32 swvAnimationController_SetSpeed(ISwerveObject *po,uint32 speed,int32 worldTime)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  undefined1 auStack_9c [136];
-  
-  uVar3 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_9c);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    uVar2 = FUN_0102ed04(param_2);
-    swvAnimationController_SetSpeedValue(iVar1,uVar2,param_3);
+  int32 result = 0;
+  int32 error;
+  uint8 *controller;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    controller = (uint8 *)po->pNative;
+    if (controller != NULL)
+      controller -= 4;
+    swvAnimationController_SetSpeedValue(controller,FUN_0102ed04(speed),worldTime);
     swv_TryPop();
   }
-  else {
-    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar3;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x0102D0D4  (file offset 0x2D0D4)  swvAnimationController_SetWeight ============================ */
-/* (not yet rewritten) JSR-184 1.1, AnimationController.setWeight: ISwerveObject slot 19 (+0x4c) of
-   AnimationController (kh_types.h SwerveAnimationControllerVtbl): in an error frame, error -1301
-   (IllegalArgumentException) for a negative weight, then swvAnimationController_SetWeightValue (stores it,
-   +0x30); on an error its result code. */
-undefined4 swvAnimationController_SetWeight(int param_1,undefined4 param_2)
+/* JSR-184 1.1, AnimationController.setWeight: ISwerveObject slot 19 (+0x4c) of AnimationController
+   (kh_types.h SwerveAnimationControllerVtbl): in an error frame, the weight checked by FUN_0102ed04 (error
+   -1001 for a denormal, an infinity or a NaN), error -1301 (IllegalArgumentException) for a negative
+   weight, then swvAnimationController_SetWeightValue (stores it, +0x30) on the native object (po->pNative,
+   less 4 when not NULL); returns 0, or on an error its result code (swv_ErrorToResult). The test is
+   swv_fcmp_c(FUN_0102ed04(0), weight) and `hi` (0 > weight; the result is in the flags): written as the
+   bit test it amounts to, the sign set and the magnitude not 0 (-0.0 passes; no NaN is left). Evidence:
+   0x0102d0d4 - 0x0102d158 (the frame at sp, `bl` 0x0102ed04 on r5, then on 0, `mov r1, r5` / `bl`
+   0x0103f59c, `ldrhi` / `blhi` the error; Ghidra had made the flags unrelated values). */
+int32 swvAnimationController_SetWeight(ISwerveObject *po,uint32 weight)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  undefined4 uVar4;
-  undefined1 uVar5;
-  undefined1 uVar6;
-  undefined1 auStack_98 [136];
-  
-  uVar4 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
-  uVar5 = 1;
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_98);
-    iVar1 = *(int *)(param_1 + 4);
-    uVar6 = iVar1 == 0;
-    if (!(bool)uVar6) {
-      iVar1 = iVar1 + -4;
-    }
-    uVar2 = FUN_0102ed04(param_2);
-    uVar3 = FUN_0102ed04(0);
-    swv_fcmp_c(uVar3,uVar2);
-    if ((bool)uVar5 && !(bool)uVar6) {
+  int32 result = 0;
+  int32 error;
+  uint8 *controller;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    controller = (uint8 *)po->pNative;
+    if (controller != NULL)
+      controller -= 4;
+    weight = FUN_0102ed04(weight);
+    if ((swv_fcmp_c(FUN_0102ed04(0),weight), (weight & 0x80000000) != 0 && (weight & 0x7fffffff) != 0))
       FUN_0102f7e0(INTEGER_MINUS_1301);
-    }
-    swvAnimationController_SetWeightValue(iVar1,uVar2);
+    swvAnimationController_SetWeightValue(controller,weight);
     swv_TryPop();
   }
-  else {
-    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar4;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x0102D160  (file offset 0x2D160)  swv_Create_AnimationTrack =================================== */
@@ -47479,7 +47102,7 @@ undefined4 FUN_01032b70(int param_1,int param_2,int param_3,int param_4)
     if (iVar2 != 0) {
       iVar2 = iVar2 + -4;
     }
-    swvKeyframeSequence_Construct(iVar2,param_2,param_3,param_4);
+    swvKeyframeSequence_Construct((SwvKeyframeSequence *)iVar2,param_2,param_3,param_4);
     swv_TryPop();
   }
   else {
@@ -49712,262 +49335,268 @@ void FUN_01034d08(int param_1)
 }
 
 /* ==== 0x01034D24  (file offset 0x34D24)  swvObject3D_AddAnimationTrack =============================== */
-undefined4 swvObject3D_AddAnimationTrack(int param_1,int param_2)
+/* JSR-184 1.1, Object3D.addAnimationTrack: ISwerveObject slot 7 (+0x1c) of every class (kh_types.h
+   SwerveObject3DVtbl.AddAnimationTrack): in an error frame, error -1302 (NullPointerException) when the
+   track's native object (track->pNative, less 4 when not NULL; none for a NULL track) is NULL, then
+   swvObject3D_AddAnimationTrackValue(the native object (po->pNative, less 4 when not NULL), that track
+   object); returns 0, or on an error its result code (swv_ErrorToResult). Evidence: 0x01034d24 -
+   0x01034da0 (`movs r0, r5` / `ldrne r0, [r5, #4]`, `movs r5, r0` / `subne r5, r0, #4`, `cmp r5, #0` /
+   `bleq` the error, `bl` 0x01002a58 given r0 / r1 only: the two more parameters of its prototype are
+   Ghidra's). */
+int32 swvObject3D_AddAnimationTrack(ISwerveObject *po,ISwerveObject *track)
 
 {
-  int iVar1;
-  int iVar2;
-  undefined4 uVar3;
-  undefined1 auStack_98 [136];
-  
-  uVar3 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_98);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    iVar2 = 0;
-    if (param_2 != 0) {
-      iVar2 = *(int *)(param_2 + 4);
-    }
-    if (iVar2 != 0) {
-      iVar2 = iVar2 + -4;
-    }
-    if (iVar2 == 0) {
+  int32 result = 0;
+  int32 error;
+  uint8 *object;
+  uint8 *trackObject;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    object = (uint8 *)po->pNative;
+    if (object != NULL)
+      object -= 4;
+    trackObject = NULL;
+    if (track != NULL)
+      trackObject = (uint8 *)track->pNative;
+    if (trackObject != NULL)
+      trackObject -= 4;
+    if (trackObject == NULL)
       FUN_0102f7e0(INTEGER_MINUS_1302);
-    }
-    swvObject3D_AddAnimationTrackValue(iVar1,iVar2);
+    swvObject3D_AddAnimationTrackValue((int *)object,(int)trackObject);
     swv_TryPop();
   }
-  else {
-    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar3;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x01034DA8  (file offset 0x34DA8)  swvObject3D_Animate ========================================= */
-undefined4 swvObject3D_Animate(int param_1,undefined4 param_2,undefined4 *param_3)
+/* JSR-184 1.1, Object3D.animate: ISwerveObject slot 9 (+0x24) of every class (kh_types.h
+   SwerveObject3DVtbl.Animate): in an error frame, *pValidity = swvObject3D_AnimateValue(the native object
+   (po->pNative, less 4 when not NULL), worldTime, -1), the validity interval the spec's animate returns
+   (GUESS: -1 asks swvObject3D_AnimateValue for a new animation pass number, which it takes from
+   FUN_0102ecec's +0x18); returns 0, or on an error its result code (swv_ErrorToResult). Evidence:
+   0x01034da8 - 0x01034e10 (`mov r1, r5`, `mvn r2, #0`, `bl` 0x01003c38, `str r0, [r7]`). */
+int32 swvObject3D_Animate(ISwerveObject *po,int32 worldTime,int32 *pValidity)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  undefined1 auStack_9c [136];
-  
-  uVar3 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_9c);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    uVar2 = swvObject3D_AnimateValue(iVar1,param_2,0xffffffff);
-    *param_3 = uVar2;
+  int32 result = 0;
+  int32 error;
+  uint8 *object;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    object = (uint8 *)po->pNative;
+    if (object != NULL)
+      object -= 4;
+    *pValidity = (int32)swvObject3D_AnimateValue((int *)object,(undefined4)worldTime,-1);
     swv_TryPop();
   }
-  else {
-    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar3;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x01034E14  (file offset 0x34E14)  swvObject3D_Duplicate ======================================= */
-int swvObject3D_Duplicate(int param_1,ISwerveObject **param_2)
+/* JSR-184 1.1, Object3D.duplicate: ISwerveObject slot 17 (+0x44) of every class (kh_types.h
+   SwerveObject3DVtbl.Duplicate): in an error frame, the native object's (po->pNative, less 4 when not
+   NULL) own duplicate method (its engine vtable +0x10, given the object) makes the copy, which is wrapped
+   (swv_WrapObject, given the copy + 4, or NULL) into *ppo; returns swv_WrapObject's result, or on an error
+   its result code (swv_ErrorToResult). Evidence: 0x01034e14 - 0x01034e88 (`subne r0, r0, #4`, `ldr r1,
+   [r0]` / `ldr r2, [r1, #0x10]` / `blx`, r0 the object: Ghidra had dropped it; `addne r0, r0, #4`, `bl`
+   0x01039fb4). */
+int32 swvObject3D_Duplicate(ISwerveObject *po,ISwerveObject **ppo)
 
 {
-  int iVar1;
-  int *piVar2;
-  void *pNative;
-  undefined1 auStack_94 [136];
-  
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_94);
-    piVar2 = *(int **)(param_1 + 4);
-    if (piVar2 != (int *)0x0) {
-      piVar2 = piVar2 + -1;
-    }
-    /* engine virtual call, slot +0x10: one of the 35 functions the static engine vtables put there (by the
-       object's class) */
-    pNative = (void *)(*(code *)(*(int *)(*piVar2 + 0x10) + *piVar2))();
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,param_2);
+  int32 result;
+  int32 error;
+  uint8 *object;
+  uint8 *copy;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    object = (uint8 *)po->pNative;
+    if (object != NULL)
+      object -= 4;
+    /* engine virtual call, slot +0x10: the object's duplicate */
+    copy = (uint8 *)(*(code *)(*(int32 *)(*(int32 *)object + 0x10) + *(int32 *)object))(object);
+    if (copy != NULL)
+      copy += 4;
+    result = swv_WrapObject(copy,ppo);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x01034E8C  (file offset 0x34E8C)  swvObject3D_Find ============================================ */
-int swvObject3D_Find(int param_1,undefined4 param_2,ISwerveObject **param_3)
+/* JSR-184 1.1, Object3D.find: ISwerveObject slot 10 (+0x28) of every class (kh_types.h
+   SwerveObject3DVtbl.Find): in an error frame, swvObject3D_FindValue(the native object (po->pNative, less
+   4 when not NULL), userId) wrapped (swv_WrapObject, given the object + 4, or NULL for none) into *ppo;
+   returns swv_WrapObject's result, or on an error its result code (swv_ErrorToResult). Evidence:
+   0x01034e8c - 0x01034efc (`bl` 0x0100eef0, `cmp r0, #0` / `addne r0, r0, #4`, `bl` 0x01039fb4 / `mov r4,
+   r0`). */
+int32 swvObject3D_Find(ISwerveObject *po,int32 userId,ISwerveObject **ppo)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_98 [136];
-  
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_98);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    pNative = (void *)swvObject3D_FindValue(iVar1,param_2);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,param_3);
+  int32 result;
+  int32 error;
+  uint8 *object;
+  uint8 *found;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    object = (uint8 *)po->pNative;
+    if (object != NULL)
+      object -= 4;
+    found = swvObject3D_FindValue(object,userId);
+    if (found != NULL)
+      found += 4;
+    result = swv_WrapObject(found,ppo);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x01034F00  (file offset 0x34F00)  swvObject3D_GetAnimationTrack =============================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 6 (+0x18) of every class (kh_types.h
-   SwerveObject3DVtbl.GetAnimationTrack): in an error frame, swvObject3D_AnimationTrack(native, index)
-   wrapped (swv_WrapObject) into *param_3; on an error its result code (swv_ErrorToResult). */
-int swvObject3D_GetAnimationTrack(int param_1,undefined4 param_2,ISwerveObject **param_3)
+/* GUESS: name. ISwerveObject slot 6 (+0x18) of every class (kh_types.h
+   SwerveObject3DVtbl.GetAnimationTrack; JSR-184 1.1, Object3D.getAnimationTrack): in an error frame,
+   swvObject3D_AnimationTrack(the native object (po->pNative, less 4 when not NULL), index: error -1101 out
+   of range) wrapped (swv_WrapObject, given the track + 4, or NULL) into *ppo; returns swv_WrapObject's
+   result, or on an error its result code (swv_ErrorToResult). Evidence: 0x01034f00 - 0x01034f70 (`bl`
+   0x0100f184, `addne r0, r0, #4`, `bl` 0x01039fb4 / `mov r4, r0`). */
+int32 swvObject3D_GetAnimationTrack(ISwerveObject *po,int32 index,ISwerveObject **ppo)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_98 [136];
-  
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_98);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    pNative = swvObject3D_AnimationTrack((uint8 *)iVar1,param_2);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,param_3);
+  int32 result;
+  int32 error;
+  const uint8 *object;
+  uint8 *track;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    object = (const uint8 *)po->pNative;
+    if (object != NULL)
+      object -= 4;
+    track = (uint8 *)swvObject3D_AnimationTrack(object,index);
+    if (track != NULL)
+      track += 4;
+    result = swv_WrapObject(track,ppo);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x01034F74  (file offset 0x34F74)  swvObject3D_GetAnimationTrackCount ========================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 5 (+0x14) of every class (kh_types.h
-   SwerveObject3DVtbl.GetAnimationTrackCount): *param_2 = swvObject3D_AnimationTrackCount of the native
-   object (po->pNative, +4, less 4). */
-void swvObject3D_GetAnimationTrackCount(int param_1,undefined4 *param_2)
+/* GUESS: name. ISwerveObject slot 5 (+0x14) of every class (kh_types.h
+   SwerveObject3DVtbl.GetAnimationTrackCount; JSR-184 1.1, Object3D.getAnimationTrackCount): *pCount =
+   swvObject3D_AnimationTrackCount of the native object (po->pNative, +4, less 4). Evidence: 0x01034f74 -
+   0x01034f90 (`subne r0, r0, #4`, `bl` 0x0100f170, `str r0, [r4]`). */
+void swvObject3D_GetAnimationTrackCount(ISwerveObject *po,int32 *pCount)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  uVar2 = swvObject3D_AnimationTrackCount((uint8 *)iVar1);
-  *param_2 = uVar2;
-  return;
+  const uint8 *object = (const uint8 *)po->pNative;
+
+  if (object != NULL)
+    object -= 4;
+  *pCount = swvObject3D_AnimationTrackCount(object);
 }
 
 /* ==== 0x01034F94  (file offset 0x34F94)  swvObject3D_GetReferences =================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 11 (+0x2c) of every class (kh_types.h
-   SwerveObject3DVtbl.GetReferences; JSR-184 1.1, Object3D.getReferences): in an error frame, a temporary
-   array of param_2 slots, swvObject3D_References into it, error -1301 when param_2 is not 0 and the output
-   array param_3 is NULL, each of the first param_2 found wrapped (swv_WrapObject) into param_3, the count
-   swvObject3D_References gives into *param_4; then the array destroyed. Differs from 1.1 (GUESS: 1.0
-   behaviour, or the BREW interface's): no -1301 (IllegalArgumentException) for an array shorter than the
-   references, param_2 < the count; the copy is cut to param_2 instead. */
-int swvObject3D_GetReferences(int param_1,uint param_2,int param_3,uint *param_4)
+/* GUESS: name. ISwerveObject slot 11 (+0x2c) of every class (kh_types.h SwerveObject3DVtbl.GetReferences;
+   JSR-184 1.1, Object3D.getReferences): in an error frame, a temporary engine dynamic array
+   (swv_New_2(0x10): its vtable set three times, the constructors' chain, items and counts 0; registered
+   with FUN_0101807c(FUN_0100f8e8(), array) when allocated) sized to max slots (FUN_01023184),
+   swvObject3D_References of the native object (po->pNative, less 4 when not NULL) into it, error -1301
+   when max is not 0 and the output array refs is NULL, each of the first max found wrapped
+   (swv_WrapObject) into refs until one fails, the count swvObject3D_References gives into *pCount; then
+   the array unregistered (FUN_0101715c) and destroyed (its engine vtable +0, with 1). Returns 0, the
+   failing swv_WrapObject's result, or on an error its result code (swv_ErrorToResult). Differs from 1.1
+   (GUESS: 1.0 behaviour, or the BREW interface's): no -1301 (IllegalArgumentException) for an array
+   shorter than the references, max < the count; the copy is cut to max instead. Evidence: 0x01034f94 -
+   0x010350e8 (`mov r0, #0x10` / `bl` 0x0102cbe0, the three `add r1, pc, r1` stores, `beq` past the
+   registration on the allocation's flags, `ldr r2, [r5, #4]` for the `bl` 0x010103d4: Ghidra had dropped
+   it, `cmp r7, r9` / `movcc r9, r7`, `cmp r4, r9` / `bcs`, `cmp r6, #0` / `beq` the loop, `str r7, [r10]`,
+   `movs r0, r5` / `blxne` the destructor with r1 = 1; FUN_0101715c is given r0 / r1, its prototype one).
+   */
+int32 swvObject3D_GetReferences(ISwerveObject *po,uint32 max,ISwerveObject **refs,uint32 *pCount)
 
 {
-  int iVar1;
-  int iVar2;
-  int *piVar3;
-  undefined4 uVar4;
-  uint uVar5;
-  uint uVar6;
-  int iVar7;
-  undefined1 auStack_a8 [136];
-  
-  iVar7 = 0;
-  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
-  if (iVar2 == 0) {
-    swv_TryArm(auStack_a8);
-    iVar2 = *(int *)(param_1 + 4);
-    if (iVar2 != 0) {
-      iVar2 = iVar2 + -4;
+  int32 result = 0;
+  int32 error;
+  uint8 *object;
+  int32 *array;
+  uint32 count;
+  uint32 i;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    object = (uint8 *)po->pNative;
+    if (object != NULL)
+      object -= 4;
+    array = (int32 *)swv_New_2(0x10);
+    if (array != NULL) {
+      array[0] = DATA_AT_0100203C_OFFSET_40 + 0x1034ffc;
+      array[0] = DATA_AT_01001EAC_OFFSET_11 + 0x1035008;
+      array[1] = 0;
+      array[2] = 0;
+      array[0] = WORD_HEXADECIMAL_FFFCD4EC + 0x1035018;
+      array[3] = 0;
+      FUN_0101807c((int)FUN_0100f8e8(),(undefined4)array);
     }
-    piVar3 = (int *)swv_New_2(0x10);
-    if (piVar3 != (int *)0x0) {
-      *piVar3 = DATA_AT_0100203C_OFFSET_40 + 0x1034ffc;
-      *piVar3 = DATA_AT_01001EAC_OFFSET_11 + 0x1035008;
-      piVar3[1] = 0;
-      iVar1 = WORD_HEXADECIMAL_FFFCD4EC;
-      piVar3[2] = 0;
-      *piVar3 = iVar1 + 0x1035018;
-      piVar3[3] = 0;
-      uVar4 = FUN_0100f8e8();
-      FUN_0101807c(uVar4,piVar3);
-    }
-    FUN_01023184(piVar3,param_2);
-    /* Ghidra had dropped the third argument (r2 = the array's items, ldr r2, [r5, #4] at 0x01035044) */
-    uVar5 = swvObject3D_References((uint8 *)iVar2,param_2,(uint8 **)piVar3[1]);
-    if ((param_2 != 0) && (param_3 == 0)) {
+    FUN_01023184((int *)array,(int)max);
+    count = (uint32)swvObject3D_References(object,(int32)max,(uint8 **)array[1]);
+    if (max != 0 && refs == NULL)
       FUN_0102f7e0(INTEGER_MINUS_1301);
-    }
-    if (uVar5 < param_2) {
-      param_2 = uVar5;
-    }
-    uVar6 = 0;
-    while ((uVar6 < param_2 && (iVar7 == 0))) {
-      iVar7 = swv_WrapObject(*(void **)(piVar3[1] + uVar6 * 4),
-                             (ISwerveObject **)(param_3 + uVar6 * 4));
-      uVar6 = uVar6 + 1;
-    }
-    *param_4 = uVar5;
-    if (piVar3 != (int *)0x0) {
-      uVar4 = FUN_0100f8e8();
-      FUN_0101715c(uVar4,piVar3);
-      if (piVar3 != (int *)0x0) {
-        /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
-           the object's class); slot 0 is the destructor */
-        (*(code *)(*(int *)*piVar3 + *piVar3))(piVar3,1);
-      }
+    if (count < max)
+      max = count;
+    for (i = 0; i < max && result == 0; i++)
+      result = swv_WrapObject(((void **)array[1])[i],refs + i);
+    *pCount = count;
+    if (array != NULL) {
+      FUN_0101715c((int)FUN_0100f8e8(),array);
+      if (array != NULL)
+        /* engine virtual call, slot +0x0: the array's destructor */
+        (*(code *)(*(int32 *)array[0] + array[0]))(array,1);
     }
     swv_TryPop();
   }
-  else {
-    iVar7 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
-  }
-  return iVar7;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x010350FC  (file offset 0x350FC)  swvObject3D_GetUserId ======================================= */
-void swvObject3D_GetUserId(int param_1,undefined4 *param_2)
+/* JSR-184 1.1, Object3D.getUserID: ISwerveObject slot 3 (+0x0c) of every class (kh_types.h
+   SwerveObject3DVtbl.GetUserId): *pUserId = the user id (+0x0c) of the native object (po->pNative, less 4
+   when not NULL). Evidence: 0x010350fc - 0x01035110 (`ldr r0, [r0, #4]` / `cmp r0, #0` / `subne r0, r0,
+   #4`, `ldr r0, [r0, #0xc]` / `str r0, [r1]`). */
+void swvObject3D_GetUserId(ISwerveObject *po,int32 *pUserId)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  *param_2 = *(undefined4 *)(iVar1 + 0xc);
-  return;
+  const uint8 *object = (const uint8 *)po->pNative;
+
+  if (object != NULL)
+    object -= 4;
+  *pUserId = *(const int32 *)(object + 0xc);
 }
 
 /* ==== 0x01035114  (file offset 0x35114)  FUN_01035114 ================================================ */
@@ -50044,39 +49673,41 @@ void swv_InitVtbl_Object3D(int param_1)
 }
 
 /* ==== 0x01035270  (file offset 0x35270)  swvObject3D_RemoveAnimationTrack ============================ */
-undefined4 swvObject3D_RemoveAnimationTrack(int param_1,int param_2)
+/* GUESS: name. ISwerveObject slot 8 (+0x20) of every class (kh_types.h
+   SwerveObject3DVtbl.RemoveAnimationTrack; JSR-184 1.1, Object3D.removeAnimationTrack): in an error frame,
+   error -1302 (NullPointerException) when the track's native object (track->pNative, less 4 when not NULL;
+   none for a NULL track) is NULL, then swvObject3D_RemoveAnimationTrackValue(the native object
+   (po->pNative, less 4 when not NULL), that track object); returns 0, or on an error its result code
+   (swv_ErrorToResult). Evidence: 0x01035270 - 0x010352ec (`movs r0, r5` / `ldrne r0, [r5, #4]`, `movs r5,
+   r0` / `subne r5, r0, #4`, `cmp r5, #0` / `bleq` the error, `bl` 0x0101a010). */
+int32 swvObject3D_RemoveAnimationTrack(ISwerveObject *po,ISwerveObject *track)
 
 {
-  int iVar1;
-  int iVar2;
-  undefined4 uVar3;
-  undefined1 auStack_98 [136];
-  
-  uVar3 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_98);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    iVar2 = 0;
-    if (param_2 != 0) {
-      iVar2 = *(int *)(param_2 + 4);
-    }
-    if (iVar2 != 0) {
-      iVar2 = iVar2 + -4;
-    }
-    if (iVar2 == 0) {
+  int32 result = 0;
+  int32 error;
+  uint8 *object;
+  uint8 *trackObject;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    object = (uint8 *)po->pNative;
+    if (object != NULL)
+      object -= 4;
+    trackObject = NULL;
+    if (track != NULL)
+      trackObject = (uint8 *)track->pNative;
+    if (trackObject != NULL)
+      trackObject -= 4;
+    if (trackObject == NULL)
       FUN_0102f7e0(INTEGER_MINUS_1302);
-    }
-    swvObject3D_RemoveAnimationTrackValue(iVar1,iVar2);
+    swvObject3D_RemoveAnimationTrackValue(object,trackObject);
     swv_TryPop();
   }
-  else {
-    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar3;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x010352F4  (file offset 0x352F4)  FUN_010352f4 ================================================ */
@@ -50113,17 +49744,19 @@ void FUN_010352f4(int param_1)
 }
 
 /* ==== 0x01035304  (file offset 0x35304)  swvObject3D_SetUserId ======================================= */
-void swvObject3D_SetUserId(int param_1,undefined4 param_2)
+/* JSR-184 1.1, Object3D.setUserID: ISwerveObject slot 4 (+0x10) of every class (kh_types.h
+   SwerveObject3DVtbl.SetUserId): the native object's (po->pNative, less 4 when not NULL) user id (+0x0c) =
+   userId. No result: r0 is left the native object (kh_types.h gives the slot an int32 result, which the
+   code does not set). Evidence: 0x01035304 - 0x01035314 (`ldr r0, [r0, #4]` / `subne r0, r0, #4`, `str
+   r1, [r0, #0xc]` / `bx lr`). */
+void swvObject3D_SetUserId(ISwerveObject *po,int32 userId)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  *(undefined4 *)(iVar1 + 0xc) = param_2;
-  return;
+  uint8 *object = (uint8 *)po->pNative;
+
+  if (object != NULL)
+    object -= 4;
+  *(int32 *)(object + 0xc) = userId;
 }
 
 /* ==== 0x01035318  (file offset 0x35318)  FUN_01035318 ================================================ */

@@ -185,7 +185,7 @@ void swv_SpanFillGeneric(int param_1);   /* 0x0100A8B4 GUESS: name, see swv21bre
 void swv_SpanFillGouraud(int param_1);   /* 0x0100B18C GUESS: name, see swv21brew.c */
 void swv_SpanFillTextured(int param_1);   /* 0x0100DFEC */
 uint32 swvObj_AddRef(ISwerveObject *po);   /* 0x01011F8C */
-int swvObj_QueryInterface(ISwerveObject *po,SwerveClassId cls,void **ppo);   /* 0x01011FC4 */
+int32 swvObj_QueryInterface(ISwerveObject *po,SwerveClassId cls,void **ppo);   /* 0x01011FC4 */
 uint32 swvObj_Release(ISwerveObject *po);   /* 0x01012294 */
 undefined4 swv_Matrix4Invert(int param_1);   /* 0x0101376C */
 void swv_NativeRelease(int *param_1);   /* 0x01019F28 */
@@ -436,7 +436,7 @@ void FUN_01008184(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
 void FUN_010081ec(int param_1,undefined4 param_2,int param_3,int param_4,undefined4 param_5, undefined4 param_6,undefined4 param_7,undefined4 param_8);
 void FUN_010082f0(int param_1,int param_2,undefined4 param_3);
 uint swvSectionZlib_Init(int param_1,undefined4 param_2);
-void swvKeyframeSequence_Construct(int param_1,int param_2,int param_3,int param_4);   /* 0x01008398 GUESS: name, see swv21brew.c */
+void swvKeyframeSequence_Construct(SwvKeyframeSequence *sequence,int32 keyframeCount,int32 componentCount,int32 interpolation);   /* 0x01008398 GUESS: name, see swv21brew.c */
 void FUN_0100844c(int param_1,int param_2,int param_3,int param_4,int param_5);
 void FUN_01008540(int param_1,int param_2,int param_3,int param_4);
 void FUN_010085e8(void);
@@ -502,7 +502,7 @@ int * FUN_0100ec40(void);
 void swv_FillRect(uint8 *raster,int32 x,int32 y,int32 width,int32 height,uint16 colour,uint8 alpha);   /* 0x0100ECA0 GUESS: name, see swv21brew.c */
 void FUN_0100ed84(int param_1,int param_2,int param_3);
 uint swvSkin_VertexBones(int param_1,uint param_2,int param_3);
-int * swvObject3D_FindValue(int *param_1,int param_2);   /* 0x0100EEF0 JSR-184 1.1, see swv21brew.c */
+uint8 *swvObject3D_FindValue(uint8 *object,int32 userId);   /* 0x0100EEF0 JSR-184 1.1, see swv21brew.c */
 void swv_ColourScale(int32 *colour,int32 factor);   /* 0x0100EFE4 GUESS: name, see swv21brew.c */
 void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 int32 swvImage2D_AlphaStride(const uint8 *image);   /* 0x0100F154 GUESS: name, see swv21brew.c */
@@ -546,7 +546,7 @@ uint16 *swvImage2D_Palette(const uint8 *image);   /* 0x0100FFE4 GUESS: name, see
 int32 swvImage2D_ColourStride(const uint8 *image);   /* 0x0100FFFC GUESS: name, see swv21brew.c */
 uint32 swv_ColourToRGB565(const int32 *colour);   /* 0x01010008 GUESS: name, see swv21brew.c */
 void *swvImage2D_Pixels(uint8 *image);   /* 0x01010084 GUESS: name, see swv21brew.c */
-uint swvAnimationController_Position(int param_1,int param_2,undefined4 param_3,uint param_4);   /* 0x01010094 JSR-184 1.1, see swv21brew.c */
+uint32 swvAnimationController_Position(const uint8 *controller,int32 worldTime);   /* 0x01010094 JSR-184 1.1, see swv21brew.c */
 undefined4 swvVertexBuffer_GetPositionsValue(int param_1,int param_2,undefined4 *param_3);   /* 0x010100F0 JSR-184 1.1, see swv21brew.c */
 undefined8 FUN_01010148(int param_1,uint param_2);
 undefined4 FUN_010102c8(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
@@ -715,7 +715,7 @@ void FUN_01019cc0(int param_1,int param_2);
 void FUN_01019ebc(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01019f00(undefined4 param_1,int param_2,undefined4 param_3);
 void FUN_01019f54(undefined4 param_1);
-void swvObject3D_RemoveAnimationTrackValue(int param_1,int param_2);   /* 0x0101A010 JSR-184 1.1, see swv21brew.c */
+void swvObject3D_RemoveAnimationTrackValue(uint8 *object,const uint8 *track);   /* 0x0101A010 JSR-184 1.1, see swv21brew.c */
 void FUN_0101a104(int param_1,int param_2);
 void FUN_0101a154(int param_1,int param_2);
 void FUN_0101a1b0(int param_1);
@@ -771,7 +771,7 @@ void swvM3G_ReadSprite3D(int param_1,undefined4 param_2);   /* 0x0101FCCC GUESS:
 void swvVertexArray_SetShorts(int param_1,int param_2,int param_3,int param_4,undefined4 param_5);   /* 0x0101FDC4 JSR-184 1.1, see swv21brew.c */
 void FUN_0101fe5c(int param_1,int param_2,int param_3,undefined4 param_4,int param_5,int param_6);
 void swvVertexArray_SetBytes(int param_1,int param_2,int param_3,int param_4,undefined4 param_5);   /* 0x0101FEFC JSR-184 1.1, see swv21brew.c */
-void swvAnimationController_SetActiveIntervalValue(int param_1,int param_2,int param_3);   /* 0x0101FF90 JSR-184 1.1, see swv21brew.c */
+void swvAnimationController_SetActiveIntervalValue(uint8 *controller,int32 start,int32 end);   /* 0x0101FF90 JSR-184 1.1, see swv21brew.c */
 void FUN_0101ffbc(int param_1,undefined4 param_2,int param_3,undefined4 param_4);
 void swvNode_SetAlignment(int param_1,int param_2,int param_3,int param_4,int param_5);   /* 0x01020104 GUESS: name, see swv21brew.c */
 void FUN_010201dc(int param_1,int param_2,int param_3);
@@ -815,7 +815,7 @@ void FUN_01022204(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 void FUN_01022234(int *param_1,int param_2);
 void FUN_01022278(int param_1,int param_2);
 void FUN_010222a8(undefined4 *param_1,int *param_2,int param_3,int param_4);
-void swvAnimationController_SetPositionValue(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x01022340 JSR-184 1.1, see swv21brew.c */
+void swvAnimationController_SetPositionValue(uint8 *controller,uint32 sequenceTime,int32 worldTime);   /* 0x01022340 JSR-184 1.1, see swv21brew.c */
 void swvVertexBuffer_SetPositionsValue(int param_1,int param_2,undefined4 param_3,int param_4,undefined4 *param_5);   /* 0x0102234C JSR-184 1.1, see swv21brew.c */
 void FUN_010223f0(int param_1,uint param_2,uint param_3,uint *param_4);
 void FUN_010224fc(void);
@@ -834,7 +834,7 @@ void FUN_01023124(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
 void FUN_01023174(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01023184(int *param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_010231c4(int param_1,int *param_2);
-void swvAnimationController_SetSpeedValue(int param_1,undefined4 param_2,int param_3);   /* 0x01023244 JSR-184 1.1, see swv21brew.c */
+void swvAnimationController_SetSpeedValue(uint8 *controller,uint32 speed,int32 worldTime);   /* 0x01023244 JSR-184 1.1, see swv21brew.c */
 void FUN_0102327c(int param_1,undefined4 param_2);
 void FUN_0102328c(int param_1,undefined4 param_2);
 void FUN_0102329c(int param_1,int *param_2);
@@ -849,7 +849,7 @@ void FUN_010239fc(int param_1,int param_2,int param_3,int param_4);
 void FUN_01023af0(int param_1,int param_2,int param_3);
 void FUN_01023b3c(int param_1,int *param_2,int param_3);
 undefined8 FUN_01023bc8(int param_1,undefined4 param_2,undefined4 param_3,int param_4,int param_5);
-void swvAnimationController_SetWeightValue(int param_1,undefined4 param_2);   /* 0x01023C88 JSR-184 1.1, see swv21brew.c */
+void swvAnimationController_SetWeightValue(uint8 *controller,uint32 weight);   /* 0x01023C88 JSR-184 1.1, see swv21brew.c */
 void FUN_01023c90(int param_1,int param_2,int param_3);
 void swvPolygonMode_SetWindingValue(uint8 *mode,int32 winding);   /* 0x01023CE4 GUESS: name, see swv21brew.c */
 void FUN_01023d00(int param_1);
@@ -1056,15 +1056,15 @@ void FUN_0102cc18(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3);
 int FUN_0102cc60(void);
 int FUN_0102cc80(int param_1,int param_2);
 uint adler32(uint param_1,byte *param_2,uint param_3);
-void swvAnimationController_GetActiveIntervalEnd(int param_1,undefined4 *param_2);   /* 0x0102CE5C JSR-184 1.1, see swv21brew.c */
-void swvAnimationController_GetActiveIntervalStart(int param_1,undefined4 *param_2);   /* 0x0102CE74 JSR-184 1.1, see swv21brew.c */
-void swvAnimationController_GetPosition(int param_1,undefined4 param_2,undefined4 *param_3);   /* 0x0102CE8C JSR-184 1.1, see swv21brew.c */
-void swvAnimationController_GetSpeed(int param_1,undefined4 *param_2);   /* 0x0102CEAC JSR-184 1.1, see swv21brew.c */
-void swvAnimationController_GetWeight(int param_1,undefined4 *param_2);   /* 0x0102CECC JSR-184 1.1, see swv21brew.c */
-undefined4 swvAnimationController_SetActiveInterval(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x0102CF84 JSR-184 1.1, see swv21brew.c */
-undefined4 swvAnimationController_SetPosition(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x0102CFEC JSR-184 1.1, see swv21brew.c */
-undefined4 swvAnimationController_SetSpeed(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x0102D060 JSR-184 1.1, see swv21brew.c */
-undefined4 swvAnimationController_SetWeight(int param_1,undefined4 param_2);   /* 0x0102D0D4 JSR-184 1.1, see swv21brew.c */
+void swvAnimationController_GetActiveIntervalEnd(ISwerveObject *po,int32 *pEnd);   /* 0x0102CE5C JSR-184 1.1, see swv21brew.c */
+void swvAnimationController_GetActiveIntervalStart(ISwerveObject *po,int32 *pStart);   /* 0x0102CE74 JSR-184 1.1, see swv21brew.c */
+void swvAnimationController_GetPosition(ISwerveObject *po,int32 worldTime,uint32 *pSequenceTime);   /* 0x0102CE8C JSR-184 1.1, see swv21brew.c */
+void swvAnimationController_GetSpeed(ISwerveObject *po,uint32 *pSpeed);   /* 0x0102CEAC JSR-184 1.1, see swv21brew.c */
+void swvAnimationController_GetWeight(ISwerveObject *po,uint32 *pWeight);   /* 0x0102CECC JSR-184 1.1, see swv21brew.c */
+int32 swvAnimationController_SetActiveInterval(ISwerveObject *po,int32 start,int32 end);   /* 0x0102CF84 JSR-184 1.1, see swv21brew.c */
+int32 swvAnimationController_SetPosition(ISwerveObject *po,uint32 sequenceTime,int32 worldTime);   /* 0x0102CFEC JSR-184 1.1, see swv21brew.c */
+int32 swvAnimationController_SetSpeed(ISwerveObject *po,uint32 speed,int32 worldTime);   /* 0x0102D060 JSR-184 1.1, see swv21brew.c */
+int32 swvAnimationController_SetWeight(ISwerveObject *po,uint32 weight);   /* 0x0102D0D4 JSR-184 1.1, see swv21brew.c */
 int FUN_0102d1c0(int param_1,ISwerveObject **param_2);
 int FUN_0102d22c(int param_1,ISwerveObject **param_2);
 void FUN_0102d298(int param_1,undefined4 *param_2);
@@ -1266,21 +1266,21 @@ undefined4 FUN_01034c3c(int param_1,undefined4 param_2);
 void FUN_01034cd8(int param_1,int param_2);
 void FUN_01034cf0(int param_1,int param_2);
 void FUN_01034d08(int param_1);
-undefined4 swvObject3D_AddAnimationTrack(int param_1,int param_2);   /* 0x01034D24 JSR-184 1.1, see swv21brew.c */
-undefined4 swvObject3D_Animate(int param_1,undefined4 param_2,undefined4 *param_3);   /* 0x01034DA8 JSR-184 1.1, see swv21brew.c */
-int swvObject3D_Duplicate(int param_1,ISwerveObject **param_2);   /* 0x01034E14 JSR-184 1.1, see swv21brew.c */
-int swvObject3D_Find(int param_1,undefined4 param_2,ISwerveObject **param_3);   /* 0x01034E8C JSR-184 1.1, see swv21brew.c */
-int swvObject3D_GetAnimationTrack(int param_1,undefined4 param_2,ISwerveObject **param_3);   /* 0x01034F00 GUESS: name, see swv21brew.c */
-void swvObject3D_GetAnimationTrackCount(int param_1,undefined4 *param_2);   /* 0x01034F74 GUESS: name, see swv21brew.c */
-int swvObject3D_GetReferences(int param_1,uint param_2,int param_3,uint *param_4);   /* 0x01034F94 GUESS: name, see swv21brew.c */
-void swvObject3D_GetUserId(int param_1,undefined4 *param_2);   /* 0x010350FC JSR-184 1.1, see swv21brew.c */
+int32 swvObject3D_AddAnimationTrack(ISwerveObject *po,ISwerveObject *track);   /* 0x01034D24 JSR-184 1.1, see swv21brew.c */
+int32 swvObject3D_Animate(ISwerveObject *po,int32 worldTime,int32 *pValidity);   /* 0x01034DA8 JSR-184 1.1, see swv21brew.c */
+int32 swvObject3D_Duplicate(ISwerveObject *po,ISwerveObject **ppo);   /* 0x01034E14 JSR-184 1.1, see swv21brew.c */
+int32 swvObject3D_Find(ISwerveObject *po,int32 userId,ISwerveObject **ppo);   /* 0x01034E8C JSR-184 1.1, see swv21brew.c */
+int32 swvObject3D_GetAnimationTrack(ISwerveObject *po,int32 index,ISwerveObject **ppo);   /* 0x01034F00 GUESS: name, see swv21brew.c */
+void swvObject3D_GetAnimationTrackCount(ISwerveObject *po,int32 *pCount);   /* 0x01034F74 GUESS: name, see swv21brew.c */
+int32 swvObject3D_GetReferences(ISwerveObject *po,uint32 max,ISwerveObject **refs,uint32 *pCount);   /* 0x01034F94 GUESS: name, see swv21brew.c */
+void swvObject3D_GetUserId(ISwerveObject *po,int32 *pUserId);   /* 0x010350FC JSR-184 1.1, see swv21brew.c */
 void FUN_01035114(int param_1);
 void FUN_01035134(int param_1,int param_2,undefined4 *param_3);
 void FUN_0103515c(int param_1);
 void swv_InitVtbl_Object3D(int param_1);   /* 0x0103517C GUESS: name, see swv21brew.c */
-undefined4 swvObject3D_RemoveAnimationTrack(int param_1,int param_2);   /* 0x01035270 GUESS: name, see swv21brew.c */
+int32 swvObject3D_RemoveAnimationTrack(ISwerveObject *po,ISwerveObject *track);   /* 0x01035270 GUESS: name, see swv21brew.c */
 void FUN_010352f4(int param_1);
-void swvObject3D_SetUserId(int param_1,undefined4 param_2);   /* 0x01035304 JSR-184 1.1, see swv21brew.c */
+void swvObject3D_SetUserId(ISwerveObject *po,int32 userId);   /* 0x01035304 JSR-184 1.1, see swv21brew.c */
 undefined4 FUN_01035318(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 int FUN_01035388(int param_1);
 void FUN_01035404(undefined4 param_1,byte *param_2);
