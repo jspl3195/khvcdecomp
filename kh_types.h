@@ -649,9 +649,9 @@ typedef struct MotionEntity {
     int32    turning;               /* +0x154 0 at creation; 1 while a turn started by motion_entity_start_turn
                                      runs */
     ISwerveObject *pitchNode;     /* +0x158 GUESS: name; 0 at creation; its node's first child as a
-                                     Transformable (motion_entity_setup), handed &pitch (SetOrientation,
-                                     slot +0x5c) whenever the pitch changes; released by
-                                     motion_entity_destroy */
+                                     Group (QueryInterface 9, SWV_GROUP; motion_entity_setup),
+                                     handed &pitch (SetOrientation, slot +0x5c) whenever the pitch
+                                     changes; released by motion_entity_destroy */
     uint8  unknown_15c[0x64];
     uint32 turnAngle;             /* +0x1c0 a float (its bits): the angle left to turn, positive */
     uint32 turnSpeed;             /* +0x1c4 a float (its bits): the turn speed, its sign the direction */

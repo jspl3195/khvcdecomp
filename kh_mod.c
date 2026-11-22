@@ -6643,8 +6643,8 @@ Screen * screen_create(Screen *screen,ScreenStack *stack,uint8 framed)
 /* ==== 0x0010BE14  (file offset 0x0BE14)  text_table_create =========================================== */
 /* GUESS: names. The text table's constructor (KHApp.texts, made by kh_OnAppStart): allocates its 8 bytes
    when `table` is 0 (returns 0 when out of memory), keeps the app and loads the game's texts from
-   "language.m3g" (FUN_0011b518, the Swerve Loader: its last object is kept as the source the texts are
-   looked up in). */
+   "language.m3g" (FUN_0011b518, the Swerve Loader, JSR-184 1.1, Loader.load: its last object is kept as
+   the source the texts are looked up in). */
 TextTable * text_table_create(TextTable *table)
 
 {
@@ -7074,9 +7074,10 @@ void enemy_destroy(Enemy *enemy,int32 freeIt)
 
 /* ==== 0x0010C73C  (file offset 0x0C73C)  camera_destroy ============================================== */
 /* GUESS: name (not yet rewritten). The camera's destructor (kind 3; the game's teardown, for
-   Game.camera): releases its two Swerve objects (+0x1c8, the pitch node's grandchild, and +0x204, the
-   Swerve object of class 0x15 its set-up creates), then the MotionEntity part (motion_entity_destroy
-   with 0) and the camera itself when `param_2` is set. */
+   Game.camera): releases its two Swerve objects (+0x1c8, the pitch node's grandchild, a Camera
+   (FUN_0011f8ac makes it the World's active camera: JSR-184 1.1, World.setActiveCamera), and +0x204, the
+   RayIntersection (class 0x15) its set-up FUN_00117d30 creates), then the MotionEntity part
+   (motion_entity_destroy with 0) and the camera itself when `param_2` is set. */
 void camera_destroy(int param_1,int param_2)
 
 {
@@ -8396,11 +8397,13 @@ AECHAR * string_to_wide(int32 context,char **text,AECHAR **wide)
 
 /* ==== 0x0010E280  (file offset 0x0E280)  camera_avoid_walls ========================================== */
 /* GUESS: names. Keeps the camera out of walls: casts a ray from `from` (its position) toward `to` (where
-   it goes) through the game's root scene (slot +0xbc, GUESS: a pick) against field_204, and when it hits
-   (field_204's slot +0xc gives the distance) closer than the way + 1.1, pulls `to` in to 1.1 short of
-   the hit along the ray and points the yaw from the target to it (+ 90). Only x and y are pulled in: z
-   keeps the planned height (research_notes/decomp/GAME_BUGS.md). The distance test is the binary's
-   float_compare_less and bcs, written after the comma. Called by camera_update unless skipCollision or
+   it goes) through the game's root scene (slot +0xbc, JSR-184 1.1, Group.pick, scope 1) into field_204, a
+   RayIntersection, and when it hits (field_204's slot +0xc gives the distance: JSR-184 1.1,
+   RayIntersection.getDistance, in lengths of the ray's direction, normalized here, so in world units)
+   closer than the way + 1.1, pulls `to` in to 1.1 short of the hit along the ray and points the yaw from
+   the target to it (+ 90). Only x and y are pulled in: z keeps the planned height
+   (research_notes/decomp/GAME_BUGS.md). The distance test is the binary's float_compare_less and bcs,
+   written after the comma. Called by camera_update unless skipCollision or
    fixedView is set. */
 void camera_avoid_walls(Camera *camera,uint32 *from,uint32 *to)
 
@@ -8412,7 +8415,7 @@ void camera_avoid_walls(Camera *camera,uint32 *from,uint32 *to)
   uint32 move[3];
   uint32 reach;
   uint32 distance;
-  uint8 hit[4];   /* the pick's flag; its first byte is read */
+  uint8 hit[4];   /* the pick's result (JSR-184 1.1, Group.pick: a Mesh was hit); its first byte is read */
 
   direction[0] = float_subtract(to[0],from[0]);
   direction[1] = float_subtract(to[1],from[1]);
@@ -8828,14 +8831,14 @@ LAB_00120a28:
 
 /* ==== 0x0010E94C  (file offset 0x0E94C)  animations_drop_missing ===================================== */
 /* GUESS: name. Frees every animation whose controller is no longer in the scene: each used slot's user id
-   is looked up in the app's World (KHApp.pObj6c, not the table's own `world`; World Find, slot 10) and the
-   slot is freed (user id -1) when nothing is found, else the found controller is released again at once.
-   Called after the old scene leaves the World (script_command_run's loadScene) and after an object is
-   removed from its group (app_context_remove_object); FUN_00118640 calls it right after animations_reset,
-   when every slot is already free. The result is cleared only once, before the loop (0x0010e95c): when the
-   engine fails inside Find before writing it, the previous slot's controller, already released, is
-   released again and the slot kept (GAME_BUGS.md). r0 is left as 0 or the last Release's result, read by
-   no caller. */
+   is looked up in the app's World (KHApp.pObj6c, not the table's own `world`; Find, slot 10: JSR-184 1.1,
+   Object3D.find) and the slot is freed (user id -1) when nothing is found, else the found controller is
+   released again at once. Called after the old scene leaves the World (script_command_run's loadScene) and
+   after an object is removed from its group (app_context_remove_object); FUN_00118640 calls it right after
+   animations_reset, when every slot is already free. The result is cleared only once, before the loop
+   (0x0010e95c): when the engine fails inside Find before writing it, the previous slot's controller,
+   already released, is released again and the slot kept (GAME_BUGS.md). r0 is left as 0 or the last
+   Release's result, read by no caller. */
 void animations_drop_missing(Animations *animations)
 
 {
@@ -10600,8 +10603,9 @@ int32 script_command_run(ScriptCommand *command)
         FUN_00113340((int)app->animations);
     }
     break;
-  case 0x25:   /* setAppearance: copies the appearance elements of one scene object (by user id) to the
-                  object's */
+  case 0x25:   /* setAppearance: copies the appearances of one scene object (by user id) to the object's
+                  (JSR-184 1.1, Mesh.getAppearance / setAppearance, submesh by submesh; the source's first
+                  to every submesh when the submesh counts differ) */
     if (command->object == (LevelObject *)0x0)
       break;
     element = (int32 *)0x0;
@@ -10637,7 +10641,9 @@ int32 script_command_run(ScriptCommand *command)
     (*((ISwerveObject *)source)->pvt->Release)((ISwerveObject *)source);
     (*((ISwerveObject *)destination)->pvt->Release)((ISwerveObject *)destination);
     break;
-  case 0x26:   /* setBackground: an image ("<name>.m3g"), or a colour */
+  case 0x26:   /* setBackground: the Background of the World loaded from "<name>.m3g" (JSR-184 1.1,
+                  World.getBackground / setBackground), or a colour for the current one (JSR-184 1.1,
+                  Background.setColor) */
     element = (int32 *)0x0;
     if (command->text == (char *)0x0) {
       (*((const SwerveWorldVtbl *)app->pObj6c->pvt)->GetBackground)(app->pObj6c,&element);
@@ -12300,13 +12306,14 @@ int32 text_table_get_text(TextTable *table,int32 textId,char **text)
 /* ==== 0x00114240  (file offset 0x14240)  FUN_00114240 ================================================ */
 /* GUESS: what it does. The height of the ground or ceiling at (param_2, param_3) from height param_4 in
    the direction param_5 (+1.0 / -1.0): unless param_7 asks for the fixed height (+0x204 set, then
-   +0x208), casts a ray (a RayIntersection, ISwerve class 0x15) from (param_2, param_3, param_4) along (0,
-   0, param_5) and takes the hit's distance (default 999999 * param_5), then with param_9 lets the 120
-   objects at +0x10 (those with +0x38 set) give a nearer surface (level_object_get_surface: the top of a
-   shape under (param_2, param_3) as the ground, its bottom as the ceiling); *param_6 tells whether
-   anything was found. The compares leave their result in the flags (`blo` / `bhs` / `bls` at 0x001143b8 -
-   0x00114400), written after the comma. Written from its disassembly: Ghidra read stale flags and r1
-   leftovers there. */
+   +0x208), casts a ray (JSR-184 1.1, Group.pick, scope 1, into a RayIntersection, ISwerve class 0x15) from
+   (param_2, param_3, param_4) along (0, 0, param_5) and takes the hit's distance (JSR-184 1.1,
+   RayIntersection.getDistance: in lengths of the direction, so world units for +-1.0; default 999999 *
+   param_5), then with param_9 lets the 120 objects at +0x10 (those with +0x38 set) give a nearer surface
+   (level_object_get_surface: the top of a shape under (param_2, param_3) as the ground, its bottom as the
+   ceiling); *param_6 tells whether anything was found. The compares leave their result in the flags (`blo`
+   / `bhs` / `bls` at 0x001143b8 - 0x00114400), written after the comma. Written from its disassembly:
+   Ghidra read stale flags and r1 leftovers there. */
 undefined4
 FUN_00114240(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
             undefined4 param_5,undefined4 *param_6,int param_7,undefined4 param_8,int param_9)
@@ -12524,8 +12531,9 @@ int32 * progress_find_variable(Progress *progress,const char *name)
 
 
 /* ==== 0x00114750  (file offset 0x14750)  level_object_is_visible ===================================== */
-/* GUESS: names. Whether a level object is drawn: asks its scene node (Node IsRenderingEnabled, slot 34)
-   into `visible` and returns it. Used by boss_combat_region_pick_marker. */
+/* GUESS: names. Whether a level object's scene node has its own rendering flag set: asks the node (slot
+   34, JSR-184 1.1, Node.isRenderingEnabled: the local flag, not the effective status, which a disabled
+   ancestor clears) into `visible` and returns it. Used by boss_combat_region_pick_marker. */
 int32 level_object_is_visible(LevelObject *object)
 
 {
@@ -14052,8 +14060,8 @@ void combat_region_setup(CombatRegion *region,int32 context)
 
 /* ==== 0x001180C4  (file offset 0x180C4)  motion_entity_setup ========================================= */
 /* GUESS: name (not yet rewritten). The MotionEntity's set-up from its scene node (kind 1, and the start
-   of the character's and the camera's): pitchNode is its node's first child as a Transformable
-   (QueryInterface 9), the orientations cleared, the stored pitch and heading applied
+   of the character's and the camera's): pitchNode is its node's first child as a Group (QueryInterface 9,
+   SWV_GROUP), the orientations cleared, the stored pitch and heading applied
    (motion_entity_pitch_by, motion_entity_turn), the LevelObject set-up (FUN_00118910), then its speeds
    from its node's user parameter 0x3488ACED (one value per line, divided by 1000: per ms), kept twice
    (speeds and speedsCopy), and more level data (0x1DED5D32 into +0x118 / +0x11c, divided by 1000). */
@@ -14157,10 +14165,10 @@ undefined8 motion_entity_setup(int param_1,uint param_2)
      - the indexes of its 29 animations by user id (the table at 0x00126EA8), the priorities of 16 of
        them (animation slots from the table at 0x00126F1C, priorities from 0x00126F5C), speed 2.0 for
        animations 9-12 and 1.5 for 19, 21 and 27;
-     - five objects of the game's scene by user id (Find), the "CharacterShadow" scene (FUN_0011ae04)
-       and two level objects by name hash (game_find_object);
+     - five objects of the game's scene by user id (Find, JSR-184 1.1, Object3D.find), the
+       "CharacterShadow" scene (FUN_0011ae04) and two level objects by name hash (game_find_object);
    then FUN_0011fc80(character, 0). Ghidra dropped the fifth Find's output (+0x1ec) and the 0 passed to
-   slots +0x8c and +0x94. */
+   slots +0x8c and +0x94 (JSR-184 1.1, Node.setRenderingEnable and Node.setPickingEnable). */
 void character_setup(Character *character,int32 *error)
 
 {
@@ -14651,8 +14659,9 @@ void FUN_00118910(int param_1,undefined4 param_2)
                        then spans -height/2..height/2 in z), else the box's z size;
      sphere            radius: size 1, else the largest half of the box's sizes;
      poly              one vertex per child of the node, at the entities named "1transform",
-                       "2transform", ... (Find); "Clockwise" tag; FUN_00121ab0 (with the node in r1 as
-                       well, 0x00119448); height: size 1, the box from 0 to it in z when given;
+                       "2transform", ... (JSR-184 1.1, Object3D.find); "Clockwise" tag; FUN_00121ab0 (with
+                       the node in r1 as well, 0x00119448); height: size 1, the box from 0 to it in z when
+                       given;
      others (cuboid, rect)  the box: sizes 1 and 2 across x and y (when both are given), 0..size 3 in z;
                        its 4 corners as vertices (x, y only); height: the box's z size.
    The float comparisons leave their results in the flags (float_compare_equal equality, float_compare_greater `bhi`;
@@ -14914,7 +14923,8 @@ void kh_OnAppStart(KHApp *pMe)
                     /* swv21brew: IGraphics3D_BindTarget (0x0102ff38, Graphics3D vtbl[8] +0x20) ->
                        native swv_Graphics3D_bindTarget (0x010202e4): BindTarget(cx, cy, nPitch,
                        pBmp, x, y, dx, dy) with the screen IDIB fields and pMe->rcView. GUESS: name
-                       (JSR-184 Graphics3D.bindTarget); the 8 arguments are confirmed from the
+                       (JSR-184 1.1, Graphics3D.bindTarget, for a raw bitmap; how it differs from 1.1 is at
+                       swv_Graphics3D_bindTarget); the 8 arguments are confirmed from the
                        Swerve side. */
           iVar2 = (*pMe->pSwerveTarget->pvt->BindTarget)
                             (pMe->pSwerveTarget,pIVar5->cx,pIVar5->cy,(int)pIVar5->nPitch,
@@ -16301,8 +16311,8 @@ void settings_load(int param_1,undefined4 param_2)
    World (KHApp.pObj6c), after resetting the animations and releasing the old World: stage 0
    "disney.m3g", 1 "swerve.m3g", else "intro.m3g", in which it also finds the group 0x3E11FC00
    (Intro.characterGroup), loads "character.grp" into it (FUN_0011ae04; Intro.character) and hides the
-   object 0x1DFBEC7F; error 263 when the scene does not load. Then, without an error, adds the scene's
-   animations (FUN_00118640). Called by intro_create and intro_start. */
+   object 0x1DFBEC7F (JSR-184 1.1, Node.setRenderingEnable); error 263 when the scene does not load. Then,
+   without an error, adds the scene's animations (FUN_00118640). Called by intro_create and intro_start. */
 void intro_load_scene(int param_1,int *param_2)
 
 {
@@ -18280,7 +18290,8 @@ switchD_0001e310_default:
 
 /* ==== 0x0011E36C  (file offset 0x1E36C)  motion_entity_pitch_by ====================================== */
 /* GUESS: name. Tilts by `angle` degrees (a float, its bits; float_add adds): the pitch wrapped into
-   -180..180 is handed to pitchNode (slot +0x5c; the binary tail-jumps to it, 0x0011e3b8). Nothing
+   -180..180 is handed to pitchNode (slot +0x5c, JSR-184 1.1, Transformable.setOrientation, an angle in
+   degrees about an axis; the binary tail-jumps to it, 0x0011e3b8). Nothing
    without a pitchNode. The camera (camera_update) tilts with it to look at its target's middle. */
 void motion_entity_pitch_by(MotionEntity *entity,uint32 angle)
 
@@ -18299,8 +18310,9 @@ void motion_entity_pitch_by(MotionEntity *entity,uint32 angle)
    direction from the entity to the centre (direction_to) plus `angle`, and the entity goes to the point
    at the same distance (vector_length3) on that line, x = centre x - distance * cos, y = centre y +
    distance * sin (the heading in radians: times FLOAT_DEGREES_TO_RADIANS = pi/180; GUESS: float_sin
-   cosine, float_cos sine), handed to its node (slot +0x4c). Then the heading, wrapped into -180..180,
-   goes to its node (slot +0x5c; the binary tail-jumps to it, 0x0011e528). Ghidra's listing had read the
+   cosine, float_cos sine), handed to its node (slot +0x4c, JSR-184 1.1, Transformable.setTranslation).
+   Then the heading, wrapped into -180..180, goes to its node (slot +0x5c, JSR-184 1.1,
+   Transformable.setOrientation; the binary tail-jumps to it, 0x0011e528). Ghidra's listing had read the
    centre's y from the wrong stack slot (in_r2). */
 void motion_entity_turn(MotionEntity *entity,uint32 angle)
 
@@ -19284,9 +19296,12 @@ void FUN_0011fc80(int param_1,undefined4 param_2)
 
 /* ==== 0x0011FCC4  (file offset 0x1FCC4)  animations_set_position ===================================== */
 /* GUESS: name. Hands animation `index` its position: finds its controller in the world by user id the
-   first time (Find; 0 is returned when there is none), sets the controller's active interval to the
-   1 ms from worldTime and its sequence time to `position` (as a float); -1 instead makes the interval
-   the 1 ms before worldTime with sequence time -1.0 (GUESS: stops it). Returns the controller's
+   first time (Find, JSR-184 1.1, Object3D.find; 0 is returned when there is none), sets the controller's
+   active interval to the 1 ms from worldTime (JSR-184 1.1, AnimationController.setActiveInterval: active
+   while start <= t < end) and its sequence time at worldTime to `position` (as a float; JSR-184 1.1,
+   AnimationController.setPosition); -1 instead makes the interval the 1 ms before worldTime, with sequence
+   time -1.0: the controller is then inactive from worldTime on, so its tracks no longer update their
+   properties (JSR-184 1.1, Object3D.animate) and the animation stops. Returns the controller's
    SetPosition result (the binary tail-jumps to it, 0x0011fd58 / 0x0011fd84); Ghidra had declared it
    void. Ghidra dropped the second argument of SetActiveInterval in the -1 case (r2, worldTime). */
 int32 animations_set_position(Animations *animations,int32 index,int32 position)
@@ -19556,7 +19571,8 @@ void FUN_001201cc(int param_1,undefined4 param_2)
 
 /* ==== 0x00120244  (file offset 0x20244)  motion_entity_set_pitch ===================================== */
 /* GUESS: name. Sets the pitch (a float, its bits, in degrees), wrapped into -180..180, and hands it to
-   pitchNode (slot +0x5c; the binary tail-jumps to it, 0x00120288). Nothing without a pitchNode. */
+   pitchNode (slot +0x5c, JSR-184 1.1, Transformable.setOrientation; the binary tail-jumps to it,
+   0x00120288). Nothing without a pitchNode. */
 void motion_entity_set_pitch(MotionEntity *entity,uint32 pitch)
 
 {
@@ -19570,10 +19586,10 @@ void motion_entity_set_pitch(MotionEntity *entity,uint32 pitch)
 
 /* ==== 0x00120290  (file offset 0x20290)  motion_entity_set_heading =================================== */
 /* GUESS: name. Sets the heading (a float, its bits, in degrees), wrapped into -180..180, and hands it to
-   the scene node (slot +0x5c; the binary tail-jumps to it, 0x001202c8). Unlike motion_entity_set_pitch
-   there is no check for the node. Used by the script's setYRot for anything but the camera
-   (camera_set_yaw is the camera's), and by 10 other call sites (GUESS: to face a point or another
-   object). */
+   the scene node (slot +0x5c, JSR-184 1.1, Transformable.setOrientation; the binary tail-jumps to it,
+   0x001202c8). Unlike motion_entity_set_pitch there is no check for the node. Used by the script's setYRot
+   for anything but the camera (camera_set_yaw is the camera's), and by 10 other call sites (GUESS: to face
+   a point or another object). */
 void motion_entity_set_heading(MotionEntity *entity,uint32 heading)
 
 {
@@ -19906,11 +19922,14 @@ void game_destroy_children(Game *game,LevelObject *parent)
 
 
 /* ==== 0x0012088C  (file offset 0x2088C)  animations_add_from_scene =================================== */
-/* GUESS: name. Adds the animations of a scene, from `object` down: for each animation track of the
-   object, its controller's user id (0 = none) and its keyframe sequence's duration. A controller already
-   in the table keeps the longest duration; a new one takes a free slot (animations_find_free_slot):
-   state 1, priority 2, speed 1.0, position 0. When the object is a Group, its children are walked too: a
-   Group or a MorphingMesh directly, a SkinnedMesh through its skeleton. Called (through
+/* GUESS: name. Adds the animations of a scene, from `object` down: for each animation track of the object
+   (JSR-184 1.1, Object3D.getAnimationTrack), its controller's user id (JSR-184 1.1,
+   AnimationTrack.getController, Object3D.getUserID; 0 = none, so a controller left at the default user id
+   0 is skipped too) and its keyframe sequence's duration (JSR-184 1.1, AnimationTrack.getKeyframeSequence,
+   KeyframeSequence.getDuration). A controller already in the table keeps the longest duration; a new one
+   takes a free slot (animations_find_free_slot): state 1, priority 2, speed 1.0, position 0. When the
+   object is a Group, its children are walked too: a Group or a MorphingMesh directly, a SkinnedMesh
+   through its skeleton (JSR-184 1.1, SkinnedMesh.getSkeleton). Called (through
    thunk_animations_add_from_scene) after a scene is loaded (FUN_0011ae04). */
 void animations_add_from_scene(Animations *animations,ISwerveObject *object)
 
@@ -20206,10 +20225,11 @@ void FUN_00120f8c(int param_1,int *param_2,int param_3,int *param_4,int param_5)
    parameter 0x009660B3, read by FUN_00114520) gets a level object in a free slot, of the class its tags
    name (FUN_00119b0c): "MotionEntity", "CombatRegion", "BossCombatRegion", else a plain one. Its parent
    is `parent`, or 0 with the "NoParent" tag. Unless the node has the "DeadEnd" tag, its children are
-   walked too (the node is a Group: GetChildCount / GetChild), with the new object, if any, as their
-   parent: a child Group directly, a child SkinnedMesh through its skeleton (GetSkeleton). Called by
-   FUN_0010a5d8 (the game's root scene), script_command_run (after a scene is loaded, FUN_0011ae04) and
-   level_object_load_clipart (a level object's own scene, with that object as the parent). */
+   walked too (the node is a Group: JSR-184 1.1, Group.getChildCount / getChild), with the new object, if
+   any, as their parent: a child Group directly, a child SkinnedMesh through its skeleton (JSR-184 1.1,
+   SkinnedMesh.getSkeleton). Called by FUN_0010a5d8 (the game's root scene), script_command_run (after a
+   scene is loaded, FUN_0011ae04) and level_object_load_clipart (a level object's own scene, with that
+   object as the parent). */
 void game_create_objects(Game *game,ISwerveObject *node,LevelObject *parent)
 
 {
@@ -20318,8 +20338,8 @@ LevelObject * level_object_update_trigger(LevelObject *object,uint32 x,uint32 y,
 /* ==== 0x00121584  (file offset 0x21584)  app_context_remove_object =================================== */
 /* GUESS: names. Removes an object's scene node from its group: when `param_4` is set, the animation
    controllers are released first (animations_release_controllers); `param_2`'s node (QueryInterface 0x12)
-   is removed from the group `param_3` (Group RemoveChild) and released, and `param_2` itself released;
-   then, when `param_4` is set, the animations whose controllers left the World are freed
+   is removed from the group `param_3` (JSR-184 1.1, Group.removeChild) and released, and `param_2` itself
+   released; then, when `param_4` is set, the animations whose controllers left the World are freed
    (animations_drop_missing). Last, the app's +0x7c and +0x80 are set to aee_GetUpTimeMS(). `param_1` is
    the AppContext (+0x0c its app). */
 void app_context_remove_object(int param_1,int *param_2,int *param_3,int param_4)
@@ -21852,7 +21872,7 @@ LAB_00123ba8:
    float_multiply multiplies, float_to_int makes the product an integer) and hands its controller the new
    position: a looping one (state 3) wraps around its duration, one playing once (state 2) stops at
    either end (state 4); one never played (state 1) is stopped. Then animates the world at worldTime
-   (Animate). */
+   (Animate, JSR-184 1.1, Object3D.animate; the validity interval it returns, `result`, is not read). */
 void animations_update(Animations *animations,int32 worldTime,int32 elapsed,int32 animate)
 
 {
