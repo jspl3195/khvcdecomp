@@ -332,16 +332,16 @@ int32 default_signal_handler(int32 signal,int32 type);   /* 0x01001C30 GUESS: na
 int32 debug_write_char(char character);   /* 0x01001D94 GUESS: name, see swv21brew.c */
 void swvObject3D_AddAnimationTrackValue(int *param_1,int param_2,undefined4 param_3,undefined4 param_4);   /* 0x01002A58 JSR-184 1.1, see swv21brew.c */
 int FUN_01002c70(int param_1,int param_2);
-void swvGroup_AddChild(int param_1,int param_2);   /* 0x01002D60 GUESS: name, see swv21brew.c */
+void swvGroup_AddChild(uint8 *group,uint8 *child);   /* 0x01002D60 GUESS: name, see swv21brew.c */
 undefined4 FUN_01002dfc(undefined1 *param_1,int param_2,int param_3);
 void FUN_01002ef8(int param_1,int param_2,int param_3,undefined4 param_4,int param_5,int param_6);
 void FUN_0100300c(int param_1,uint param_2,uint param_3,int param_4,int param_5,int *param_6);
 void FUN_010031a0(int param_1,int param_2);
-undefined8 swvSkinnedMesh_AddTransform(int param_1,int param_2,int param_3,int param_4,int param_5);   /* 0x01003234 GUESS: name, see swv21brew.c */
+void swvSkinnedMesh_AddTransform(uint8 *mesh,uint8 *bone,int32 weight,int32 firstVertex,int32 numVertices);   /* 0x01003234 GUESS: name, see swv21brew.c */
 int32 swvSkin_FindOrAddBoneSet(uint8 *mesh,const SwvSkinBoneSet *boneSet);   /* 0x010033A4 GUESS: name, see swv21brew.c */
 int FUN_01003408(int param_1);
 void FUN_01003474(int param_1,undefined4 param_2);
-void swvNode_Align(int param_1,int param_2);   /* 0x010034CC JSR-184 1.1, see swv21brew.c */
+void swvNode_Align(uint8 *node,uint8 *reference);   /* 0x010034CC JSR-184 1.1, see swv21brew.c */
 void FUN_0100350c(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01003604(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01003758(undefined4 param_1,int param_2);
@@ -548,7 +548,7 @@ int32 swvImage2D_ColourStride(const uint8 *image);   /* 0x0100FFFC GUESS: name, 
 uint32 swv_ColourToRGB565(const int32 *colour);   /* 0x01010008 GUESS: name, see swv21brew.c */
 void *swvImage2D_Pixels(uint8 *image);   /* 0x01010084 GUESS: name, see swv21brew.c */
 uint32 swvAnimationController_Position(const uint8 *controller,int32 worldTime);   /* 0x01010094 JSR-184 1.1, see swv21brew.c */
-undefined4 swvVertexBuffer_GetPositionsValue(int param_1,int param_2,undefined4 *param_3);   /* 0x010100F0 JSR-184 1.1, see swv21brew.c */
+uint8 *swvVertexBuffer_GetPositionsValue(const uint8 *buffer,int32 length,uint32 *scaleBias);   /* 0x010100F0 JSR-184 1.1, see swv21brew.c */
 undefined8 FUN_01010148(int param_1,uint param_2);
 undefined4 FUN_010102c8(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 undefined4 FUN_01010320(int param_1,int param_2,undefined4 *param_3);
@@ -558,8 +558,8 @@ undefined4 FUN_010104f0(int param_1);
 int32 swvPolygonMode_Shading(const uint8 *mode);   /* 0x010106F8 GUESS: name, see swv21brew.c */
 void FUN_0101070c(int param_1,int param_2,int *param_3,undefined4 *param_4,undefined4 *param_5);
 uint32 swvAnimationController_Speed(const uint8 *controller);   /* 0x01010818 JSR-184 1.1, see swv21brew.c */
-undefined4 swvVertexBuffer_GetTexCoordsValue(int param_1,uint param_2,int param_3,undefined4 *param_4);   /* 0x01010828 JSR-184 1.1, see swv21brew.c */
-bool swvNode_GetTransformTo(undefined4 param_1,undefined4 param_2,int param_3);   /* 0x010108D4 JSR-184 1.1, see swv21brew.c */
+uint8 *swvVertexBuffer_GetTexCoordsValue(const uint8 *buffer,uint32 index,int32 length,uint32 *scaleBias);   /* 0x01010828 JSR-184 1.1, see swv21brew.c */
+int32 swvNode_GetTransformTo(uint8 *node,uint8 *target,uint8 *transform);   /* 0x010108D4 JSR-184 1.1, see swv21brew.c */
 int FUN_01010924(int param_1,int param_2);
 undefined4 FUN_01010938(int param_1);
 int32 swvNode_Depth(const uint8 *node);   /* 0x01010CC8 GUESS: name, see swv21brew.c */
@@ -642,7 +642,7 @@ void FUN_01013c58(int param_1,int param_2,int *param_3,int param_4);
 void FUN_01013e88(int param_1,int param_2);
 void FUN_0101411c(int param_1,int param_2);
 void FUN_0101420c(int param_1,int param_2);
-void swvLight_Shade(undefined4 *param_1,undefined4 param_2,undefined4 param_3);   /* 0x010144F8 GUESS: name, see swv21brew.c */
+void swvLight_Shade(uint8 *light,int32 *colour,uint32 backSide);   /* 0x010144F8 GUESS: name, see swv21brew.c */
 void FUN_01014510(int param_1,int param_2);
 void FUN_0101456c(int param_1,int param_2);
 uint FUN_010146c8(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
@@ -660,7 +660,7 @@ undefined4 FUN_01015a40(undefined4 param_1,int param_2,undefined4 *param_3,undef
 void FUN_01015ce8(undefined4 param_1,int param_2,int *param_3);
 void FUN_010166a4(undefined4 param_1,int param_2,int param_3);
 bool FUN_01016d8c(int param_1,undefined4 param_2,undefined4 *param_3,uint *param_4,int param_5);
-bool swvGroup_Pick(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,int param_6);   /* 0x01016ECC GUESS: name, see swv21brew.c */
+int32 swvGroup_Pick(uint8 *group,int32 scope,uint32 x,uint32 y,uint8 *camera,uint8 *ri);   /* 0x01016ECC GUESS: name, see swv21brew.c */
 void FUN_01017120(undefined4 param_1,int param_2);
 void FUN_0101715c(int param_1);
 void FUN_01017174(int param_1);
@@ -769,12 +769,12 @@ void swvM3G_ReadLight(int param_1,undefined4 param_2);   /* 0x0101F9F8 JSR-184 1
 void swvM3G_ReadWorld(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);   /* 0x0101FB28 JSR-184 1.1, see swv21brew.c */
 void swvM3G_ReadCamera(int param_1,undefined4 param_2);   /* 0x0101FBA8 JSR-184 1.1, see swv21brew.c */
 void swvM3G_ReadSprite3D(int param_1,undefined4 param_2);   /* 0x0101FCCC GUESS: name, see swv21brew.c */
-void swvVertexArray_SetShorts(int param_1,int param_2,int param_3,int param_4,undefined4 param_5);   /* 0x0101FDC4 JSR-184 1.1, see swv21brew.c */
+void swvVertexArray_SetShorts(uint8 *array,int32 firstVertex,int32 numVertices,int32 length,const int16 *values);   /* 0x0101FDC4 JSR-184 1.1, see swv21brew.c */
 void FUN_0101fe5c(int param_1,int param_2,int param_3,undefined4 param_4,int param_5,int param_6);
-void swvVertexArray_SetBytes(int param_1,int param_2,int param_3,int param_4,undefined4 param_5);   /* 0x0101FEFC JSR-184 1.1, see swv21brew.c */
+void swvVertexArray_SetBytes(uint8 *array,int32 firstVertex,int32 numVertices,int32 length,const int8 *values);   /* 0x0101FEFC JSR-184 1.1, see swv21brew.c */
 void swvAnimationController_SetActiveIntervalValue(uint8 *controller,int32 start,int32 end);   /* 0x0101FF90 JSR-184 1.1, see swv21brew.c */
 void FUN_0101ffbc(int param_1,undefined4 param_2,int param_3,undefined4 param_4);
-void swvNode_SetAlignment(int param_1,int param_2,int param_3,int param_4,int param_5);   /* 0x01020104 GUESS: name, see swv21brew.c */
+void swvNode_SetAlignment(uint8 *node,uint8 *zReference,int32 zTarget,uint8 *yReference,int32 yTarget);   /* 0x01020104 GUESS: name, see swv21brew.c */
 void FUN_010201dc(int param_1,int param_2,int param_3);
 void FUN_0102023c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01020290(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
@@ -783,7 +783,7 @@ void FUN_01020480(int param_1,int param_2,int param_3,undefined4 param_4);
 undefined4 * FUN_010204ec(undefined4 *param_1,int param_2,int param_3);
 void FUN_0102060c(int *param_1,int *param_2,int *param_3,int param_4);
 void swvMaterial_SetColorValue(uint8 *material,uint32 targets,uint32 argb);   /* 0x01020948 GUESS: name, see swv21brew.c */
-void swvVertexBuffer_SetColorsValue(int param_1,int param_2,undefined4 param_3,undefined4 param_4);   /* 0x010209AC JSR-184 1.1, see swv21brew.c */
+void swvVertexBuffer_SetColorsValue(uint8 *buffer,uint8 *colors);   /* 0x010209AC JSR-184 1.1, see swv21brew.c */
 void FUN_01020a28(int param_1,int param_2);
 undefined8 FUN_01020b64(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 );
 void FUN_01020bcc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
@@ -808,7 +808,7 @@ void FUN_01021e64(int param_1,int param_2);
 void FUN_01021ec8(int param_1,undefined4 param_2);
 void swvPolygonMode_SetFlags(uint8 *mode,uint32 value);   /* 0x01021ED8 GUESS: name, see swv21brew.c */
 void FUN_01021f28(int param_1);
-void swvVertexBuffer_SetNormalsValue(int param_1,int param_2,undefined4 param_3,undefined4 param_4);   /* 0x010220B0 JSR-184 1.1, see swv21brew.c */
+void swvVertexBuffer_SetNormalsValue(uint8 *buffer,uint8 *normals);   /* 0x010220B0 JSR-184 1.1, see swv21brew.c */
 void FUN_01022140(int *param_1,undefined4 param_2);
 void swv_ColourFromRGB(int32 *colour,uint32 argb);   /* 0x010221A0 GUESS: name, see swv21brew.c */
 void FUN_010221dc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
@@ -817,7 +817,7 @@ void FUN_01022234(int *param_1,int param_2);
 void FUN_01022278(int param_1,int param_2);
 void FUN_010222a8(undefined4 *param_1,int *param_2,int param_3,int param_4);
 void swvAnimationController_SetPositionValue(uint8 *controller,uint32 sequenceTime,int32 worldTime);   /* 0x01022340 JSR-184 1.1, see swv21brew.c */
-void swvVertexBuffer_SetPositionsValue(int param_1,int param_2,undefined4 param_3,int param_4,undefined4 *param_5);   /* 0x0102234C JSR-184 1.1, see swv21brew.c */
+void swvVertexBuffer_SetPositionsValue(uint8 *buffer,uint8 *positions,uint32 scale,int32 length,const uint32 *bias);   /* 0x0102234C JSR-184 1.1, see swv21brew.c */
 void FUN_010223f0(int param_1,uint param_2,uint param_3,uint *param_4);
 void FUN_010224fc(void);
 int FUN_01022600(int param_1,uint param_2,undefined4 param_3,undefined4 *param_4);
@@ -841,7 +841,7 @@ void FUN_0102328c(int param_1,undefined4 param_2);
 void FUN_0102329c(int param_1,int *param_2);
 void FUN_01023420(int *param_1,int param_2,int param_3,undefined4 param_4);
 undefined4 FUN_010234bc(int param_1,int param_2,undefined4 param_3,uint param_4,int param_5);
-void swvVertexBuffer_SetTexCoordsValue(int param_1,uint param_2,int param_3,undefined4 param_4,int param_5, undefined4 *param_6);   /* 0x0102358C JSR-184 1.1, see swv21brew.c */
+void swvVertexBuffer_SetTexCoordsValue(uint8 *buffer,uint32 index,uint8 *texCoords,uint32 scale,int32 length,const uint32 *bias);   /* 0x0102358C JSR-184 1.1, see swv21brew.c */
 void FUN_01023678(int param_1,uint param_2,int param_3);
 void FUN_010236c4(int param_1,int param_2,int param_3,int param_4);
 void FUN_01023944(int *param_1,int param_2);
@@ -1169,8 +1169,8 @@ undefined4 FUN_01030110(int param_1,undefined4 param_2,int param_3,int param_4);
 undefined4 FUN_01030198(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 );
 void FUN_01030210(int param_1,int param_2);
 undefined4 FUN_01030220(int param_1,int param_2);
-int swvGroup_GetChild(int param_1,undefined4 param_2,ISwerveObject **param_3);   /* 0x010302EC GUESS: name, see swv21brew.c */
-void swvGroup_GetChildCount(int param_1,undefined4 *param_2);   /* 0x01030360 GUESS: name, see swv21brew.c */
+int32 swvGroup_GetChild(ISwerveObject *po,int32 index,ISwerveObject **ppo);   /* 0x010302EC GUESS: name, see swv21brew.c */
+void swvGroup_GetChildCount(ISwerveObject *po,int32 *pCount);   /* 0x01030360 GUESS: name, see swv21brew.c */
 undefined4 FUN_010303f0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5, int param_6,undefined1 *param_7);
 undefined4 FUN_010304c0(int param_1,undefined4 param_2,undefined4 *param_3,undefined4 *param_4,int param_5, undefined1 *param_6);
 undefined4 FUN_010305b8(int param_1,int param_2);
@@ -1244,7 +1244,7 @@ void FUN_01033c50(int param_1,int param_2);
 int FUN_01033ccc(int param_1,undefined4 param_2,ISwerveObject **param_3);
 int FUN_01033d40(int param_1,undefined4 param_2,ISwerveObject **param_3);
 void FUN_01033db4(int param_1,undefined4 *param_2);
-int swvMesh_GetVertexBuffer(int param_1,ISwerveObject **param_2);   /* 0x01033DCC GUESS: name, see swv21brew.c */
+int32 swvMesh_GetVertexBuffer(ISwerveObject *po,ISwerveObject **ppo);   /* 0x01033DCC GUESS: name, see swv21brew.c */
 undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int param_6);
 undefined4 FUN_010340d0(int param_1,int param_2,int param_3,int param_4);
 undefined4 FUN_0103418c(int param_1,undefined4 param_2,int param_3);
@@ -1287,7 +1287,7 @@ int FUN_01035388(int param_1);
 void FUN_01035404(undefined4 param_1,byte *param_2);
 void FUN_01035488(undefined4 param_1,undefined4 param_2);
 void FUN_010354b4(undefined4 param_1,undefined4 param_2);
-byte * png_combine_row(int param_1,byte *param_2,uint param_3);   /* 0x010354E0 libpng */
+void png_combine_row(uint8 *png_ptr,uint8 *row,int32 mask);   /* 0x010354E0 libpng */
 undefined4 FUN_01035704(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 undefined4 FUN_01035774(int param_1,uint param_2);
 void FUN_01035814(int param_1,undefined4 param_2,undefined4 param_3);
@@ -1300,7 +1300,7 @@ void FUN_01035b14(int *param_1,undefined1 *param_2);
 void FUN_01035b70(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01035e84(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01035f30(uint *param_1,int param_2);
-void png_error(int param_1);   /* 0x01036088 libpng */
+void png_error(uint8 *png_ptr,const char *message);   /* 0x01036088 libpng */
 void FUN_010360b0(int param_1,int param_2,int param_3);
 void FUN_01036188(int param_1,int param_2);
 void FUN_0103619c(int param_1,uint param_2,uint param_3,int param_4);
@@ -1318,12 +1318,12 @@ undefined4 FUN_010369f4(int param_1,undefined4 param_2,uint param_3,undefined4 p
 void FUN_01036a70(undefined4 param_1,undefined4 param_2);
 undefined4 FUN_01036a98(undefined4 *param_1,uint param_2);
 void FUN_01036acc(void);
-void * png_malloc(int param_1,uint32 param_2);   /* 0x01036AD0 libpng */
+void *png_malloc(uint8 *png_ptr,uint32 size);   /* 0x01036AD0 libpng */
 /* 0x01036B0C libpng */
-undefined4 png_memcpy_check(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
+void *png_memcpy_check(uint8 *png_ptr,void *s1,void *s2,uint32 length);   /* 0x01036B0C libpng */
 /* 0x01036B1C libpng */
-undefined4 png_memset_check(undefined4 param_1,undefined4 param_2,uint param_3,undefined4 param_4);
-void png_read_data(int param_1);   /* 0x01036B2C libpng */
+void *png_memset_check(uint8 *png_ptr,void *s1,int32 value,uint32 length);   /* 0x01036B1C libpng */
+void png_read_data(uint8 *png_ptr,uint8 *data,uint32 length);   /* 0x01036B2C libpng */
 void FUN_01036b48(int param_1,int param_2,int param_3);
 void FUN_01036c24(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01036db4(undefined4 param_1,int param_2,byte *param_3,byte *param_4,undefined4 param_5);
@@ -1342,7 +1342,7 @@ void FUN_01037d48(int param_1,undefined4 param_2,undefined4 param_3);
 void FUN_01037d98(int param_1);
 void FUN_01037da8(int param_1,int param_2,int param_3,int param_4,int param_5);
 int32 png_sig_cmp(const uint8 *sig,uint32 start,uint32 numToCheck);   /* 0x01037E48 libpng */
-void png_warning(int param_1,char *param_2);   /* 0x01037EB0 libpng */
+void png_warning(uint8 *png_ptr,const char *message);   /* 0x01037EB0 libpng */
 int FUN_01037eec(undefined4 param_1,int param_2,int param_3,undefined4 param_4);
 void thunk_FUN_01036188(int param_1,int param_2);
 void swvPolygonMode_GetCulling(ISwerveObject *po,int32 *pCulling);   /* 0x01037FA0 JSR-184 1.1, see swv21brew.c */
@@ -1459,17 +1459,17 @@ undefined4 FUN_0103c944(int param_1,undefined4 param_2,undefined4 param_3,int pa
 undefined4 FUN_0103ca64(int param_1,int param_2,int param_3,int param_4);
 undefined4 FUN_0103cb10(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5);
 undefined4 FUN_0103cbac(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5);
-int swvVertexBuffer_GetColors(int param_1,ISwerveObject **param_2);   /* 0x0103CCA8 JSR-184 1.1, see swv21brew.c */
-void swvVertexBuffer_GetDefaultColor(int param_1,undefined4 *param_2);   /* 0x0103CD14 JSR-184 1.1, see swv21brew.c */
-int swvVertexBuffer_GetNormals(int param_1,ISwerveObject **param_2);   /* 0x0103CD2C JSR-184 1.1, see swv21brew.c */
-int swvVertexBuffer_GetPositions(int param_1,undefined4 param_2,undefined4 param_3,ISwerveObject **param_4);   /* 0x0103CD98 JSR-184 1.1, see swv21brew.c */
-int swvVertexBuffer_GetTexCoords(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, ISwerveObject **param_5);   /* 0x0103CE14 JSR-184 1.1, see swv21brew.c */
-void swvVertexBuffer_GetVertexCount(int param_1,undefined4 *param_2);   /* 0x0103CE98 JSR-184 1.1, see swv21brew.c */
-undefined4 swvVertexBuffer_SetColors(int param_1,int param_2);   /* 0x0103CF70 JSR-184 1.1, see swv21brew.c */
-void swvVertexBuffer_SetDefaultColor(int param_1,undefined4 param_2);   /* 0x0103CFDC JSR-184 1.1, see swv21brew.c */
-undefined4 swvVertexBuffer_SetNormals(int param_1,int param_2);   /* 0x0103CFF0 JSR-184 1.1, see swv21brew.c */
-undefined4 swvVertexBuffer_SetPositions(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);   /* 0x0103D05C JSR-184 1.1, see swv21brew.c */
-undefined4 swvVertexBuffer_SetTexCoords(int param_1,undefined4 param_2,int param_3,undefined4 param_4,undefined4 param_5, undefined4 param_6);   /* 0x0103D0F0 JSR-184 1.1, see swv21brew.c */
+int32 swvVertexBuffer_GetColors(ISwerveObject *po,ISwerveObject **ppo);   /* 0x0103CCA8 JSR-184 1.1, see swv21brew.c */
+void swvVertexBuffer_GetDefaultColor(ISwerveObject *po,uint32 *pArgb);   /* 0x0103CD14 JSR-184 1.1, see swv21brew.c */
+int32 swvVertexBuffer_GetNormals(ISwerveObject *po,ISwerveObject **ppo);   /* 0x0103CD2C JSR-184 1.1, see swv21brew.c */
+int32 swvVertexBuffer_GetPositions(ISwerveObject *po,int32 length,uint32 *scaleBias,ISwerveObject **ppo);   /* 0x0103CD98 JSR-184 1.1, see swv21brew.c */
+int32 swvVertexBuffer_GetTexCoords(ISwerveObject *po,uint32 index,int32 length,uint32 *scaleBias,ISwerveObject **ppo);   /* 0x0103CE14 JSR-184 1.1, see swv21brew.c */
+void swvVertexBuffer_GetVertexCount(ISwerveObject *po,int32 *pCount);   /* 0x0103CE98 JSR-184 1.1, see swv21brew.c */
+int32 swvVertexBuffer_SetColors(ISwerveObject *po,ISwerveObject *colors);   /* 0x0103CF70 JSR-184 1.1, see swv21brew.c */
+void swvVertexBuffer_SetDefaultColor(ISwerveObject *po,uint32 argb);   /* 0x0103CFDC JSR-184 1.1, see swv21brew.c */
+int32 swvVertexBuffer_SetNormals(ISwerveObject *po,ISwerveObject *normals);   /* 0x0103CFF0 JSR-184 1.1, see swv21brew.c */
+int32 swvVertexBuffer_SetPositions(ISwerveObject *po,ISwerveObject *positions,uint32 scale,int32 length,const uint32 *bias);   /* 0x0103D05C JSR-184 1.1, see swv21brew.c */
+int32 swvVertexBuffer_SetTexCoords(ISwerveObject *po,uint32 index,ISwerveObject *texCoords,uint32 scale,int32 length,const uint32 *bias);   /* 0x0103D0F0 JSR-184 1.1, see swv21brew.c */
 int FUN_0103d1ec(int param_1,ISwerveObject **param_2);
 int FUN_0103d258(int param_1,ISwerveObject **param_2);
 undefined4 FUN_0103d314(int param_1,int param_2);
@@ -2177,6 +2177,7 @@ extern undefined4 STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET;   /* was DAT_0
 #define STRING_TRNS_CHUNK_NOT_ALLOWED_WITH_ALPHA_OFFSET 0x0000A744   /* was DAT_010369f0 (word at 0x010369F0); PC-relative offset: + 0x1036960 (the pc) = 0x010410A4 */
 #define STRING_IDAT_OFFSET 0x000094C7   /* was DAT_01036a68 (word at 0x01036A68); PC-relative offset: + 0x1036a20 (the pc) = 0x0103FEE7 */
 #define STRING_UNKNOWN_CRITICAL_CHUNK_OFFSET 0x0000A690   /* was DAT_01036a6c (word at 0x01036A6C); PC-relative offset: + 0x1036a54 (the pc) = 0x010410E4 */
+#define STRING_CALL_TO_NULL_READ_FUNCTION_OFFSET 0x00009464   /* DAT_01036b44: + 0x1036b40 = 0x0103FFA4 */
 #define STRING_OUT_OF_MEMORY_OFFSET 0x0000A6A8   /* was DAT_01036b08 (word at 0x01036B08); PC-relative offset: + 0x1036afc (the pc) = 0x010411A4 */
 #define STRING_IDAT_OFFSET_2 0x000092A3   /* was DAT_01036d9c (word at 0x01036D9C); PC-relative offset: + 0x1036c44 (the pc) = 0x0103FEE7 */
 #define STRING_TOO_MANY_IDAT_S_FOUND_OFFSET 0x0000910C   /* was DAT_01036da0 (word at 0x01036DA0); PC-relative offset: + 0x1036c4c (the pc) = 0x0103FD58 */

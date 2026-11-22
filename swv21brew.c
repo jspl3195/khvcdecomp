@@ -3125,73 +3125,38 @@ int FUN_01002c70(int param_1,int param_2)
 }
 
 /* ==== 0x01002D60  (file offset 0x02D60)  swvGroup_AddChild =========================================== */
-/* (not yet rewritten) JSR-184 1.1, Group.addChild(child) on the group param_1: error -1302
-   (NullPointerException) for a NULL child; -1301 (IllegalArgumentException) when the child is the group
-   itself, a World (type 0x16), already has a parent (+0x30) or is an ancestor of the group
-   (swvNode_IsAncestorOf). Differs from 1.1 (GUESS: 1.0 behaviour): 1.1 throws only for a parent other
-   than this Group, here a child already in this group is refused too. Then the child linked into the
-   child list (+0x38, the siblings at +0x34) with its count of references (+8) up, its parent set and
-   its depth (swvNode_SetDepth from swvNode_Depth); when the root above is a World (type 0x16), its
-   +0x98 cleared (GUESS: a cached list to be made again). Ghidra's reading of the case with children
-   already there (the sibling walk, FUN_01014510) is incomplete. */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-void swvGroup_AddChild(int param_1,int param_2)
+/* GUESS: name. JSR-184 1.1, Group.addChild(child) on the group group: error -1302 (NullPointerException)
+   for a NULL child; -1301 (IllegalArgumentException) when the child is the group itself, a World (type
+   0x16, the child's engine vtable +4 on its +4 part), already has a parent (+0x30) or is an ancestor of
+   the group (swvNode_IsAncestorOf). Differs from 1.1 (GUESS: 1.0 behaviour): 1.1 throws only for a parent
+   other than this Group, here a child already in this group is refused too. Then the child linked in, a
+   tail jump in the binary: as the first child (FUN_0101456c, with the group) when the group has none
+   (+0x38), else after the last one (FUN_01014510, with the last child, +0x34 the next sibling; Ghidra had
+   dropped that argument and repeated FUN_0101456c's code here): its count of references (+8) up, its
+   parent set, its depth, and the root World's cache cleared. Evidence: 0x01002d60 - 0x01002df0 (`ldreq r0,
+   [0x1002df4]` -1302, `cmp r4, r5` / `beq`, `blx r1` / `cmp r0, #0x16`, `ldr r0, [r4, #0x30]`, `bl
+   0x01013ab0` with r0 the child, `ldr r0, [0x1002df8]` -1301, `moveq r1, r5` / `moveq r0, r4` / `beq
+   0x0101456c`, the `ldr r0, [r1, #0x34]` loop, `mov r0, r4` / `bl 0x01014510` with r1 the last child). */
+void swvGroup_AddChild(uint8 *group,uint8 *child)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  int iVar3;
-  
-  if (param_2 == 0) {
+  int32 vtable;
+  uint8 *last;
+
+  if (child == NULL)
     FUN_0102f7e0(INTEGER_MINUS_1302);
-  }
-  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
-     object's class) */
-  if ((((param_2 == param_1) ||
-       (iVar1 = (*(code *)(*(int *)(*(int *)(param_2 + 4) + 4) + *(int *)(param_2 + 4)))
-                          (param_2 + 4), iVar1 == 0x16)) || (*(int *)(param_2 + 0x30) != 0)) ||
-     (iVar1 = swvNode_IsAncestorOf((uint8 *)param_2,(uint8 *)param_1), iVar1 != 0)) {
+  if (child == group ||
+      (vtable = *(int32 *)(child + 4), (*(code *)(*(int32 *)(vtable + 4) + vtable))(child + 4) == 0x16) ||
+      *(uint8 **)(child + 0x30) != NULL || swvNode_IsAncestorOf(child,group) != 0)
     FUN_0102f7e0(INTEGER_MINUS_1301);
+  last = *(uint8 **)(group + 0x38);
+  if (last == NULL)
+    FUN_0101456c((int)child,(int)group);
+  else {
+    while (*(uint8 **)(last + 0x34) != NULL)
+      last = *(uint8 **)(last + 0x34);
+    FUN_01014510((int)child,(int)last);
   }
-  iVar1 = *(int *)(param_1 + 0x38);
-  if (iVar1 == 0) {
-    *(int *)(param_2 + 8) = *(int *)(param_2 + 8) + 1;
-    FUN_010261f0(param_2);
-    if (*(int *)(param_1 + 0x38) != 0) {
-      *(int *)(param_2 + 0x34) = *(int *)(param_1 + 0x38);
-    }
-    *(int *)(param_1 + 0x38) = param_2;
-    *(int *)(param_2 + 0x30) = param_1;
-    uVar2 = swvNode_Depth((uint8 *)param_1);
-    swvNode_SetDepth((uint8 *)param_2,uVar2);
-    FUN_01023d00(param_2);
-    do {
-      iVar1 = param_2;
-      param_2 = *(int *)(iVar1 + 0x30);
-    } while (*(int *)(iVar1 + 0x30) != 0);
-    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
-       object's class) */
-    iVar3 = (*(code *)(*(int *)(*(int *)(iVar1 + 4) + 4) + *(int *)(iVar1 + 4)))(iVar1 + 4);
-    if (iVar3 == 0x16) {
-      if (*(int *)(iVar1 + 0x98) != 0) {
-        if (*(int *)(iVar1 + 0x9c) < 0) {
-          iVar3 = *(int *)(iVar1 + 0x90);
-          /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there
-             (by the object's class) */
-          (*(code *)(*(int *)(iVar3 + 4) + iVar3))((int *)(iVar1 + 0x90),0);
-        }
-        *(undefined4 *)(iVar1 + 0x98) = 0;
-      }
-      return;
-    }
-    return;
-  }
-  do {
-    iVar1 = *(int *)(iVar1 + 0x34);
-  } while (iVar1 != 0);
-  FUN_01014510(param_2);
-  return;
 }
 
 /* ==== 0x01002DFC  (file offset 0x02DFC)  FUN_01002dfc ================================================ */
@@ -3392,91 +3357,75 @@ void FUN_010031a0(int param_1,int param_2)
 }
 
 /* ==== 0x01003234  (file offset 0x03234)  swvSkinnedMesh_AddTransform ================================= */
-/* (not yet rewritten) JSR-184 1.1, SkinnedMesh.addTransform(bone, weight, firstVertex, numVertices) on
-   the mesh param_1: error -1302 (NullPointerException) for a NULL bone; -1301
-   (IllegalArgumentException) for a weight below 1, a bone that is neither the skeleton (+0x38) nor
-   under it (swvNode_HasAncestor), or numVertices below 1; -1101 (IndexOutOfBoundsException) for a
-   negative firstVertex or firstVertex + numVertices above 0xffff (65535); then a 10-byte record (the
-   weight, the two 16-bit vertex numbers, the bone's index from FUN_01002c70) appended to the list at
-   +0xc0, the bone's at-rest transform set from FUN_010048e4 (this.getTransformTo(bone), -1000
-   ArithmeticException when it cannot be computed), +0xac raised to the last vertex, +0xf0 cleared (to
-   be rebuilt). The undefined8 result is Ghidra reading saved registers: GUESS, no result its callers
-   use. */
-undefined8 swvSkinnedMesh_AddTransform(int param_1,int param_2,int param_3,int param_4,int param_5)
+/* GUESS: name. JSR-184 1.1, SkinnedMesh.addTransform(bone, weight, firstVertex, numVertices) on the mesh
+   mesh: error -1302 (NullPointerException) for a NULL bone; -1301 (IllegalArgumentException) for a weight
+   below 1, a bone that is neither the skeleton (+0x38) nor under it (swvNode_HasAncestor), or numVertices
+   below 1; -1101 (IndexOutOfBoundsException) for a negative firstVertex or firstVertex + numVertices above
+   0xffff (65535; a signed compare of the wrapped sum); then a 10-byte record (the weight, the two 16-bit
+   vertex numbers, the bone's 16-bit index from FUN_01002c70; 12 bytes zeroed on the stack) appended to the
+   engine dynamic array at +0xc0 (+0xc4 the items, 12 bytes each, +0xc8 the count, +0xcc the capacity; when
+   full, its vtable +4 called with the new capacity from FUN_0102df78(count + 1, capacity) and the count),
+   the bone's at-rest matrix (+4 in its 0x90-byte entry of +0xb4) set by FUN_010048e4
+   (this.getTransformTo(bone); -1000 ArithmeticException when it cannot be inverted, its result not read
+   here) with its +0xc, +0x1c, +0x2c cleared and +0x3c 1.0, +0xac raised to the last vertex, +0xf0 cleared
+   (to be rebuilt). No result: Ghidra's 64-bit one was the saved r0 (the mesh) and a stack word, restored
+   by the `ldmia` (r0 - r3 pushed as the record's room). Evidence: 0x01003234 - 0x01003394 (`movs r5, r1` /
+   `bleq`, `cmp r10, #0x0` / `blle`, `ldr r1, [r4, #0x38]` / `cmp r1, r5` / `bl 0x01013ac8` with r1 the
+   skeleton, `cmp r6, #0x0` / `blle`, `add r9, r7, r6`, `cmp r7, #0x0` / `blt`, `subs r12, r9, #0xff00` /
+   `subges r12, r12, #0xff` / `ble`, `stmia r0!, {r1, r2}` / `str r1`, the three `strh`, `ldr r1, [r4,
+   #0xcc]` kept as FUN_0102df78's r1 (Ghidra had dropped it), `blx r3`, `mov r2, #0xa` / `bl 0x01000188`,
+   `str r2, [r6, #0xc]!` / `str r1, [r6, #0x30]`, `strcc r0, [r4, #0xac]`). */
+void swvSkinnedMesh_AddTransform(uint8 *mesh,uint8 *bone,int32 weight,int32 firstVertex,int32 numVertices)
 
 {
-  int iVar1;
-  uint uVar2;
-  undefined4 uVar3;
-  int iVar4;
-  int iVar5;
-  bool bVar6;
-  bool bVar7;
-  int local_2c;
-  int local_28;
-  uint local_24;
-  
-  local_2c = param_2;
-  local_28 = param_3;
-  local_24 = param_4;
-  if (param_2 == 0) {
+  uint32 record[3];
+  uint16 *halves = (uint16 *)record;
+  uint8 *list = mesh + 0xc0;
+  uint8 *restMatrix;
+  int32 last;
+  uint32 lastVertex;
+  uint32 boneIndex;
+  int32 capacity;
+  int32 count;
+  int32 vtable;
+
+  if (bone == NULL)
     FUN_0102f7e0(INTEGER_MINUS_1302);
-  }
-  uVar3 = INTEGER_MINUS_1301;
-  if (param_3 < 1) {
+  if (weight <= 0)
     FUN_0102f7e0(INTEGER_MINUS_1301);
+  if (*(uint8 **)(mesh + 0x38) != bone && swvNode_HasAncestor(bone,*(uint8 **)(mesh + 0x38)) == 0)
+    FUN_0102f7e0(INTEGER_MINUS_1301);
+  if (numVertices <= 0)
+    FUN_0102f7e0(INTEGER_MINUS_1301);
+  last = (int32)((uint32)firstVertex + (uint32)numVertices);
+  if (firstVertex < 0 || last > 0xffff)
+    FUN_0102f7e0(INTEGER_MINUS_1101);
+  boneIndex = (uint32)FUN_01002c70((int)mesh,(int)bone);
+  record[0] = 0;
+  record[1] = 0;
+  record[2] = 0;
+  record[0] = (uint32)weight;
+  halves[2] = (uint16)firstVertex;
+  halves[3] = (uint16)numVertices;
+  halves[4] = (uint16)boneIndex;
+  if (*(int32 *)(list + 8) == *(int32 *)(list + 0xc)) {
+    capacity = FUN_0102df78(*(int32 *)(list + 8) + 1,*(int32 *)(list + 0xc));
+    vtable = *(int32 *)list;
+    (*(code *)(*(int32 *)(vtable + 4) + vtable))(list,capacity,*(int32 *)(list + 8));
   }
-  /* the bone must be the skeleton (+0x38) or under it; the skeleton restored as the second argument
-     (r1, 0x01003264): Ghidra had dropped it */
-  if ((*(int *)(param_1 + 0x38) != param_2) &&
-      (iVar1 = swvNode_HasAncestor((uint8 *)param_2,*(uint8 **)(param_1 + 0x38)), iVar1 == 0)) {
-    FUN_0102f7e0(uVar3);
-  }
-  if (param_5 < 1) {
-    FUN_0102f7e0(uVar3);
-  }
-  iVar1 = param_4 + param_5;
-  if (-1 < param_4) {
-    bVar7 = SBORROW4(iVar1,0xff00);
-    iVar4 = iVar1 + -0xff00;
-    bVar6 = iVar4 == 0;
-    iVar5 = iVar4;
-    if (0xfeff < iVar1) {
-      bVar7 = SBORROW4(iVar4,0xff);
-      iVar5 = iVar1 + -0xffff;
-      bVar6 = iVar4 == 0xff;
-    }
-    if (bVar6 || iVar5 < 0 != bVar7) goto LAB_010032b0;
-  }
-  FUN_0102f7e0(INTEGER_MINUS_1101);
-LAB_010032b0:
-  uVar2 = FUN_01002c70(param_1,param_2);
-  local_28 = CONCAT22((short)param_5,(short)param_4);
-  local_24 = uVar2 & 0xffff;
-  local_2c = param_3;
-  if (*(int *)(param_1 + 200) == *(int *)(param_1 + 0xcc)) {
-    uVar3 = FUN_0102df78(*(int *)(param_1 + 200) + 1);
-    iVar5 = *(int *)(param_1 + 0xc0);
-    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
-       object's class) */
-    (*(code *)(*(int *)(iVar5 + 4) + iVar5))
-              ((int *)(param_1 + 0xc0),uVar3,*(undefined4 *)(param_1 + 200));
-  }
-  iVar5 = *(int *)(param_1 + 200);
-  *(int *)(param_1 + 200) = iVar5 + 1;
-  swv_memcpy_word_aligned(*(int *)(param_1 + 0xc4) + iVar5 * 0xc,&local_2c,10);
-  iVar5 = *(int *)(param_1 + 0xb4) + uVar2 * 0x90;
-  FUN_010048e4(param_1,param_2,iVar5 + 4);
-  *(undefined4 *)(iVar5 + 0x30) = 0;
-  *(undefined4 *)(iVar5 + 0x20) = 0;
-  *(undefined4 *)(iVar5 + 0x10) = 0;
-  *(undefined4 *)(iVar5 + 0x40) = 0x3f800000;
-  uVar2 = iVar1 - 1U & 0xffff;
-  if (*(uint *)(param_1 + 0xac) < uVar2) {
-    *(uint *)(param_1 + 0xac) = uVar2;
-  }
-  *(undefined4 *)(param_1 + 0xf0) = 0;
-  return CONCAT44(local_2c,param_1);
+  count = *(int32 *)(list + 8);
+  *(int32 *)(list + 8) = count + 1;
+  swv_memcpy_word_aligned(*(uint8 **)(list + 4) + count * 0xc,record,10);
+  restMatrix = *(uint8 **)(mesh + 0xb4) + boneIndex * 0x90 + 4;
+  FUN_010048e4((int)mesh,(int)bone,(undefined4)restMatrix);
+  *(uint32 *)(restMatrix + 0x2c) = 0;
+  *(uint32 *)(restMatrix + 0x1c) = 0;
+  *(uint32 *)(restMatrix + 0xc) = 0;
+  *(uint32 *)(restMatrix + 0x3c) = 0x3f800000;
+  lastVertex = ((uint32)last - 1) & 0xffff;
+  if (*(uint32 *)(mesh + 0xac) < lastVertex)
+    *(uint32 *)(mesh + 0xac) = lastVertex;
+  *(uint32 *)(mesh + 0xf0) = 0;
 }
 
 /* ==== 0x010033A4  (file offset 0x033A4)  swvSkin_FindOrAddBoneSet ==================================== */
@@ -3545,29 +3494,21 @@ void FUN_01003474(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x010034CC  (file offset 0x034CC)  swvNode_Align =============================================== */
-/* (not yet rewritten) JSR-184 1.1, Node.align(reference): error -1301 (IllegalArgumentException) unless
-   the reference param_2 (NULL: the node itself) is in the node's scene graph (swvNode_SameSceneGraph),
+/* JSR-184 1.1, Node.align(reference) on the node node: a NULL reference is the node itself; otherwise
+   error -1301 (IllegalArgumentException) unless it is in the node's scene graph (swvNode_SameSceneGraph);
    then FUN_01003474's work on the node and its children (FUN_0100a02c for each aligned node, with the
-   reference). The binary shares FUN_01003474's code (Ghidra repeated it here). */
-void swvNode_Align(int param_1,int param_2)
+   reference), a tail jump in the binary (Ghidra had repeated its code here). Only the BREW wrapper
+   FUN_010348b0 (slot 42) calls it. Evidence: 0x010034cc - 0x01003504 (`movs r4, r1` / `moveq r4, r5`, `bl
+   0x01012508` with r0 the reference, r1 the node, `bleq` -1301, `mov r1, r4` / `mov r0, r5` / `b
+   0x01003474`). */
+void swvNode_Align(uint8 *node,uint8 *reference)
 
 {
-  int iVar1;
-  int iVar2;
-  
-  iVar1 = param_1;
-  if ((param_2 != 0) &&
-      (iVar2 = swvNode_SameSceneGraph((uint8 *)param_2,(uint8 *)param_1), iVar1 = param_2, iVar2 == 0)) {
+  if (reference == NULL)
+    reference = node;
+  else if (swvNode_SameSceneGraph(reference,node) == 0)
     FUN_0102f7e0(INTEGER_MINUS_1301);
-  }
-  iVar2 = swvNode_AlignmentTargetZ((uint8 *)param_1);   /* Ghidra had dropped it */
-  if ((iVar2 != 0x90) || (iVar2 = swvNode_AlignmentTargetY((uint8 *)param_1), iVar2 != 0x90)) {
-    FUN_0100a02c(param_1,iVar1);
-  }
-  for (iVar2 = *(int *)(param_1 + 0x38); iVar2 != 0; iVar2 = *(int *)(iVar2 + 0x34)) {
-    FUN_01003474(iVar2,iVar1);
-  }
-  return;
+  FUN_01003474((int)node,(undefined4)reference);
 }
 
 /* ==== 0x0100350C  (file offset 0x0350C)  FUN_0100350c ================================================ */
@@ -6227,7 +6168,8 @@ int FUN_01006810(int param_1,int param_2)
                           (uint)*(ushort *)(*(int *)(param_2 + 0xc4) + iVar2 * 0xc + 8) * 0x90),
                          *(undefined4 *)(param_2 + 0x38),*(undefined4 *)(param_1 + 0x38));
     puVar3 = (undefined4 *)(*(int *)(param_2 + 0xc4) + iVar2 * 0xc);
-    swvSkinnedMesh_AddTransform(param_1,uVar1,*puVar3,*(undefined2 *)(puVar3 + 1),*(undefined2
+    swvSkinnedMesh_AddTransform((uint8 *)param_1,(uint8 *)uVar1,*puVar3,*(undefined2 *)(puVar3 + 1),
+        *(undefined2
     *)((int)puVar3 + 6)) ;
   }
   *(undefined4 *)(param_1 + 0xf0) = 0;
@@ -6500,7 +6442,7 @@ undefined8 FUN_01006da4(int param_1,int param_2,int param_3,int param_4)
     uVar3 = *(undefined4 *)(iVar1 + 4);
     uVar2 = *(undefined4 *)(iVar1 + 8);
   }
-  swvNode_SetAlignment(param_1,uVar2);
+  swvNode_SetAlignment((uint8 *)param_1,(uint8 *)uVar2);
   *(undefined4 *)(param_1 + 0x30) = 0;
   *(undefined4 *)(param_1 + 0x34) = 0;
   piVar4 = *(int **)(param_2 + 0x38);
@@ -13652,7 +13594,7 @@ void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     }
     uVar6 = swvNode_AlignmentTargetY((uint8 *)param_2);
     uVar7 = swvNode_AlignmentTargetZ((uint8 *)param_2);
-    swvNode_SetAlignment(param_1,uVar3,uVar7,uVar4,uVar6);
+    swvNode_SetAlignment((uint8 *)param_1,(uint8 *)uVar3,uVar7,(uint8 *)uVar4,uVar6);
   }
   iVar2 = *(int *)(param_1 + 0x38);
   for (iVar1 = *(int *)(param_2 + 0x38); iVar1 != 0; iVar1 = *(int *)(iVar1 + 0x34)) {
@@ -14710,25 +14652,27 @@ uint32 swvAnimationController_Position(const uint8 *controller,int32 worldTime)
 }
 
 /* ==== 0x010100F0  (file offset 0x100F0)  swvVertexBuffer_GetPositionsValue =========================== */
-undefined4 swvVertexBuffer_GetPositionsValue(int param_1,int param_2,undefined4 *param_3)
+/* JSR-184 1.1, VertexBuffer.getPositions(scaleBias) on the VertexBuffer buffer: error -1301
+   (IllegalArgumentException; FUN_0102f7e0, which does not return) for a scaleBias of fewer than 4 floats
+   (length); with positions (+0x24) and a scaleBias, scaleBias = the scale (+0x44) then the 3 bias floats
+   (+0x38 .. +0x40); the positions (NULL: none) returned. Only swvVertexBuffer_GetPositions (slot 25) calls
+   it. Evidence: 0x010100f0 - 0x01010140 (`cmp r2, #0x0` / `cmpne r1, #0x4` / `bllt`, `cmpne r5, #0x0` /
+   `beq`, the four `ldr` / `str`, `ldr r0, [r4, #0x24]`). */
+uint8 *swvVertexBuffer_GetPositionsValue(const uint8 *buffer,int32 length,uint32 *scaleBias)
 
 {
-  int iVar1;
-  
-  iVar1 = 0;
-  if (param_3 != (undefined4 *)0x0) {
-    iVar1 = param_2 + -4;
-  }
-  if (iVar1 < 0 != (param_3 != (undefined4 *)0x0 && SBORROW4(param_2,4))) {
+  uint8 *positions;
+
+  if (scaleBias != NULL && length < 4)
     FUN_0102f7e0(INTEGER_MINUS_1301);
+  if (*(uint8 *const *)(buffer + 0x24) != NULL && scaleBias != NULL) {
+    scaleBias[0] = *(const uint32 *)(buffer + 0x44);
+    scaleBias[1] = *(const uint32 *)(buffer + 0x38);
+    scaleBias[2] = *(const uint32 *)(buffer + 0x3c);
+    scaleBias[3] = *(const uint32 *)(buffer + 0x40);
   }
-  if (*(int *)(param_1 + 0x24) != 0 && param_3 != (undefined4 *)0x0) {
-    *param_3 = *(undefined4 *)(param_1 + 0x44);
-    param_3[1] = *(undefined4 *)(param_1 + 0x38);
-    param_3[2] = *(undefined4 *)(param_1 + 0x3c);
-    param_3[3] = *(undefined4 *)(param_1 + 0x40);
-  }
-  return *(undefined4 *)(param_1 + 0x24);
+  positions = *(uint8 *const *)(buffer + 0x24);
+  return positions;
 }
 
 /* ==== 0x01010148  (file offset 0x10148)  FUN_01010148 ================================================ */
@@ -14964,9 +14908,10 @@ undefined4 FUN_010104f0(int param_1)
     if (iVar2 != 0) {
       uVar3 = FUN_0100f8e8();
       FUN_0101807c(uVar3,iVar2);
-    } swvVertexBuffer_SetPositionsValue(*(undefined4 *)(param_1 + 0xb0),local_1c,*(undefined4 *)(iVar1 +
+    } swvVertexBuffer_SetPositionsValue((uint8 *)*(undefined4 *)(param_1 + 0xb0),(uint8 *)local_1c,
+        *(undefined4 *)(iVar1 +
     0x44),3,
-                 iVar1 + 0x38);
+                 (const uint32 *)(iVar1 + 0x38));
     FUN_01038730(&local_1c);
     iVar2 = FUN_0100fb34(param_1,2);
     local_20 = iVar2;
@@ -14974,7 +14919,7 @@ undefined4 FUN_010104f0(int param_1)
       uVar3 = FUN_0100f8e8();
       FUN_0101807c(uVar3,iVar2);
     }
-    swvVertexBuffer_SetNormalsValue(*(undefined4 *)(param_1 + 0xb0),local_20);
+    swvVertexBuffer_SetNormalsValue((uint8 *)*(undefined4 *)(param_1 + 0xb0),(uint8 *)local_20);
     FUN_01038730(&local_20);
     iVar2 = FUN_0100fb34(param_1,1);
     local_24 = iVar2;
@@ -14982,7 +14927,7 @@ undefined4 FUN_010104f0(int param_1)
       uVar3 = FUN_0100f8e8();
       FUN_0101807c(uVar3,iVar2);
     }
-    swvVertexBuffer_SetColorsValue(*(undefined4 *)(param_1 + 0xb0),local_24);
+    swvVertexBuffer_SetColorsValue((uint8 *)*(undefined4 *)(param_1 + 0xb0),(uint8 *)local_24);
     FUN_01038730(&local_24);
     iVar2 = 0;
     do {
@@ -14992,8 +14937,9 @@ undefined4 FUN_010104f0(int param_1)
         uVar3 = FUN_0100f8e8();
         FUN_0101807c(uVar3,iVar4);
       }
-      swvVertexBuffer_SetTexCoordsValue(*(undefined4 *)(param_1 + 0xb0),iVar2,local_28,
-                   *(undefined4 *)(iVar1 + iVar2 * 4 + 0x70),3,iVar1 + iVar2 * 0xc + 0x58);
+      swvVertexBuffer_SetTexCoordsValue((uint8 *)*(undefined4 *)(param_1 + 0xb0),iVar2,(uint8 *)local_28,
+                   *(undefined4 *)(iVar1 + iVar2 * 4 + 0x70),3,
+                       (const uint32 *)(iVar1 + iVar2 * 0xc + 0x58));
       FUN_01038730(&local_28);
       FUN_0102baf0(&local_28,0);
       iVar2 = iVar2 + 1;
@@ -15083,47 +15029,60 @@ int32 swvM3GReader_State(const uint8 *reader)
 }
 
 /* ==== 0x01010828  (file offset 0x10828)  swvVertexBuffer_GetTexCoordsValue =========================== */
-undefined4 swvVertexBuffer_GetTexCoordsValue(int param_1,uint param_2,int param_3,undefined4 *param_4)
+/* JSR-184 1.1, VertexBuffer.getTexCoords(index, scaleBias) on the VertexBuffer buffer: error -1101
+   (IndexOutOfBoundsException) for a unit index above 1 (an unsigned compare: a negative one too); with a
+   scaleBias, -1301 (IllegalArgumentException) for fewer floats (length) than the unit's components + 1;
+   with the unit's array (+0x30 + 4 * index) and a scaleBias, scaleBias = the scale (+0x70 + 4 * index)
+   then the bias (+0x58 + 0xc * index: 2 floats, the third only for 3 components); the array (NULL: none)
+   returned. Without an array the check is skipped for a length of 3 or more; below 3 the binary reads the
+   components from address 0x20 (from the NULL array), kept here. Only swvVertexBuffer_GetTexCoords (slot
+   27) calls it. Evidence: 0x01010828 - 0x010108c8 (`cmp r1, #0x2` / `blcs`, `cmp r6, #0x0` / `beq`, `cmp
+   r0, #0x0` / `bne`, `cmp r8, #0x3` / `bge` 0x010108c4, `ldr r0, [r0, #0x20]` / `add r0, r0, #0x1` / `cmp
+   r0, r8` / `blgt`, `ldr r2, [r1, #0x58]!`, `cmp r0, #0x2` / `ldrgt` / `strgt`). */
+uint8 *swvVertexBuffer_GetTexCoordsValue(const uint8 *buffer,uint32 index,int32 length,uint32 *scaleBias)
 
 {
-  int iVar1;
-  
-  if (1 < param_2) {
+  const uint8 *unit = buffer + index * 4;
+  const uint8 *bias = buffer + index * 0xc;
+  uint8 *texCoords;
+
+  if (index > 1)
     FUN_0102f7e0(INTEGER_MINUS_1101);
+  if (scaleBias != NULL && (*(uint8 *const *)(unit + 0x30) != NULL || length < 3) &&
+      *(const int32 *)(*(uint8 *const *)(unit + 0x30) + 0x20) + 1 > length)
+    FUN_0102f7e0(INTEGER_MINUS_1301);
+  texCoords = *(uint8 *const *)(unit + 0x30);
+  if (texCoords != NULL && scaleBias != NULL) {
+    scaleBias[0] = *(const uint32 *)(unit + 0x70);
+    scaleBias[1] = *(const uint32 *)(bias + 0x58);
+    scaleBias[2] = *(const uint32 *)(bias + 0x5c);
+    if (*(const int32 *)(texCoords + 0x20) > 2)
+      scaleBias[3] = *(const uint32 *)(bias + 0x60);
   }
-  iVar1 = param_1 + param_2 * 4;
-  if (param_4 != (undefined4 *)0x0) {
-    if ((*(int *)(iVar1 + 0x30) == 0) && (2 < param_3)) goto LAB_010108c4;
-    if (param_3 < *(int *)(*(int *)(iVar1 + 0x30) + 0x20) + 1) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
-    }
-  }
-  if (*(int *)(iVar1 + 0x30) != 0 && param_4 != (undefined4 *)0x0) {
-    param_1 = param_1 + param_2 * 0xc;
-    *param_4 = *(undefined4 *)(iVar1 + 0x70);
-    param_4[1] = *(undefined4 *)(param_1 + 0x58);
-    param_4[2] = *(undefined4 *)(param_1 + 0x5c);
-    if (2 < *(int *)(*(int *)(iVar1 + 0x30) + 0x20)) {
-      param_4[3] = *(undefined4 *)(param_1 + 0x60);
-    }
-  }
-LAB_010108c4:
-  return *(undefined4 *)(iVar1 + 0x30);
+  return texCoords;
 }
 
 /* ==== 0x010108D4  (file offset 0x108D4)  swvNode_GetTransformTo ====================================== */
-bool swvNode_GetTransformTo(undefined4 param_1,undefined4 param_2,int param_3)
+/* JSR-184 1.1, Node.getTransformTo(target, transform) on the node node: a matrix on the stack (0x44 bytes:
+   16 floats and the flags word) made identity (FUN_01029620), FUN_010048e4(node, target, matrix) (the
+   node-to-target matrix; 0 when there is no path), and when there is one the matrix copied (FUN_01027acc)
+   into the Transform transform (its matrix at +0xc); 1 then, else 0. The binary also sets r1 = 0x3f for
+   FUN_01029620, which neither it nor swv_Matrix4SetIdentity reads (not an argument). Only the BREW wrapper
+   FUN_010349b8 (slot 40, the -1302 NullPointerException checks) calls it. Evidence: 0x010108d4 -
+   0x01010920 (`add r0, sp, #0x4` / `bl 0x01029620`, `bl 0x010048e4` with r0 - r2, `beq` with r0 0, `add
+   r0, r4, #0xc` / `bl 0x01027acc`, `mov r0, #0x1`). */
+int32 swvNode_GetTransformTo(uint8 *node,uint8 *target,uint8 *transform)
 
 {
-  int iVar1;
-  undefined1 auStack_54 [68];
-  
-  FUN_01029620(auStack_54,0x3f);
-  iVar1 = FUN_010048e4(param_1,param_2,auStack_54);
-  if (iVar1 != 0) {
-    FUN_01027acc(param_3 + 0xc,auStack_54);
+  uint32 matrix[17];
+  int32 found = 0;
+
+  FUN_01029620(matrix);
+  if (FUN_010048e4((int)node,(int)target,(undefined4)matrix) != 0) {
+    FUN_01027acc((undefined4)(transform + 0xc),(undefined4)matrix);
+    found = 1;
   }
-  return iVar1 != 0;
+  return found;
 }
 
 /* ==== 0x01010924  (file offset 0x10924)  FUN_01010924 ================================================ */
@@ -15196,7 +15155,8 @@ undefined4 FUN_01010938(int param_1)
         FUN_010171a0(iVar3,0);
         iVar6 = iVar3;
       }
-      swvVertexBuffer_SetPositionsValue(*(undefined4 *)(param_1 + 0x100),iVar6,uVar4,3,iVar2 + 0x38);
+      swvVertexBuffer_SetPositionsValue((uint8 *)*(undefined4 *)(param_1 + 0x100),(uint8 *)iVar6,uVar4,3,
+          (const uint32 *)(iVar2 + 0x38));
     }
     *(undefined4 *)(*(int *)(param_1 + 0x100) + 0x20) =
          *(undefined4 *)(*(int *)(param_1 + 0x88) + 0x20);
@@ -18616,21 +18576,21 @@ void FUN_0101420c(int param_1,int param_2)
 }
 
 /* ==== 0x010144F8  (file offset 0x144F8)  swvLight_Shade ============================================== */
-/* GUESS: name (not yet rewritten). Adds one light's term to a vertex's colour: when the light
-   (param_1, 0x90 bytes) is on (+0x10), stores param_3 at +0x80 and calls the light's own routine (+0,
-   by its type) with r0 (the light) and r1 (the colour) passed through; Ghidra dropped them and took the
-   call for a jump table. FUN_0101bd48 calls it for each of its lights (+0x990, +0x994 of them). */
-void swvLight_Shade(undefined4 *param_1,undefined4 param_2,undefined4 param_3)
+/* GUESS: name. Adds one light's term to a vertex's colour: when the light (light, 0x90 bytes) is on
+   (+0x10), stores backSide at +0x80 and calls the light's own routine (+0, an absolute address, by its
+   type; set by FUN_01012908) with the light and the colour (a tail jump in the binary, r0 and r1 passed
+   through; Ghidra had dropped them and taken the jump for a jump table). FUN_0101bd48 calls it for each of
+   its lights (+0x990, +0x994 of them) with backSide 1 when the PolygonMode's two-sided lighting (+0x354
+   bit 0x100) is on and its r8 (GUESS: the face's side) is not negative, else 0 (0x0101c9c0 - 0x0101c9d8;
+   Ghidra's call there lacks it). Evidence: 0x010144f8 - 0x0101450c (`ldr r3, [r0, #0x10]` / `cmp r3,
+   #0x0`, `strne r2, [r0, #0x80]`, `ldrne r2, [r0, #0x0]` / `bxne r2`). */
+void swvLight_Shade(uint8 *light,int32 *colour,uint32 backSide)
 
 {
-  if (param_1[4] == 0) {
-    return;
+  if (*(const int32 *)(light + 0x10) != 0) {
+    *(uint32 *)(light + 0x80) = backSide;
+    (*(code *)*(int32 *)light)(light,colour);
   }
-  param_1[0x20] = param_3;
-                    /* WARNING: Could not recover jumptable at 0x01014508. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (*(code *)*param_1)();
-  return;
 }
 
 /* ==== 0x01014510  (file offset 0x14510)  FUN_01014510 ================================================ */
@@ -19863,7 +19823,7 @@ void FUN_010159e4(int param_1,undefined4 param_2,int param_3)
   
   piVar1 = *(int **)(param_1 + 0x94);
   if ((piVar1 == (int *)0x0) || ((uint)piVar1[1] < (uint)(*piVar1 + param_3))) {
-    png_error(param_1,STRING_READ_ERROR_OFFSET + 0x1015a1c);
+    png_error((uint8 *)param_1,(const char *)(STRING_READ_ERROR_OFFSET + 0x1015a1c));
   }
   thunk_swv_memcpy(param_2,*piVar1,param_3);
   *piVar1 = *piVar1 + param_3;
@@ -20665,94 +20625,88 @@ bool FUN_01016d8c(int param_1,undefined4 param_2,undefined4 *param_3,uint *param
 }
 
 /* ==== 0x01016ECC  (file offset 0x16ECC)  swvGroup_Pick =============================================== */
-/* (not yet rewritten) JSR-184 1.1, Group.pick(scope, x, y, camera, ri) on the group param_1: error
-   -1300 (IllegalStateException) unless the camera param_5 is in the group's scene graph
-   (swvNode_SameSceneGraph; the -1302 for a NULL camera is in the BREW wrapper FUN_010303f0); then the
-   pick state (FUN_0100f7b0: +0x30 the camera, +0x38 the scope) gets a ray through the viewport point
-   (2x - 1, 1 - 2y) at depths -1 and 1, by the inverse of the camera's matrix (FUN_0100f910; GUESS: its
-   projection, the spec's P inverse), error -1300 too when it cannot be inverted: differs from 1.1
-   (GUESS: 1.0 behaviour), whose ArithmeticException is -1000 (the same r6, 0x01016f40); the ray then
-   taken to the group (FUN_010048e4, camera to group); the result 1 for a hit, and then ray param_6,
-   when set, passed to FUN_01027a54 (GUESS: filled in). */
-bool swvGroup_Pick(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
-                 undefined4 param_5,int param_6)
+/* GUESS: name. JSR-184 1.1, Group.pick(scope, x, y, camera, ri) on the group group: error -1300
+   (IllegalStateException) unless the camera is in the group's scene graph (swvNode_SameSceneGraph; the
+   -1302 for a NULL camera is in the BREW wrapper FUN_010303f0); then the pick state (FUN_0100f7b0: +8 to
+   FUN_01023184 with 0, +0x30 the camera, +0x38 the scope) gets a ray through the viewport point (2x - 1, 1
+   - 2y) at depths -1 and 1 (+0x18 and +0x24, FUN_010279d0), by the inverse of the camera's matrix
+   (FUN_0100f910, swv_Matrix4Copy, swv_Matrix4Invert; GUESS: its projection, the spec's P inverse;
+   FUN_010252f4 with w 1.0), error -1300 too when it cannot be inverted: differs from 1.1 (GUESS: 1.0
+   behaviour), whose ArithmeticException is -1000 (the same r6, 0x01016f40); the group's picker (+0x88:
+   FUN_01018018 before and after); the ray then taken to the group (FUN_010048e4, camera to group, into a
+   matrix whose flags word, +0x40, is first set to 0x20: the binary keeps the point's three words in that
+   matrix's last three, as here; FUN_0101d674, FUN_010257a8); the result record (FUN_0100f7e0, +0x34;
+   FUN_01021b7c with 0, +0x14 the distance FLT_MAX 0x7f7fffff) given the ray's start and far - near
+   (swv_frsb; FUN_01022a94); FUN_010166a4 the pick through the group, FUN_01017120 twice; the result 1 for
+   a hit (the record's +0xc), and then ri, when set, filled from the record (FUN_01027a54(ri, record): r1
+   restored, Ghidra had dropped it), FUN_01021b7c on the record again. Evidence: 0x01016ecc - 0x01017118
+   (`ldr r6, [0x101711c]` -1300 for both checks, `str r10, [r4, #0x30]` / `str r11, [r4, #0x38]`, `orr r0,
+   r11, r11, lsl #0x8` -1.0 at sp + 0x4c, `mov r0, #0x20` / `str r0, [sp, #0x4c]` then `add r2, sp, #0xc` /
+   `bl 0x010048e4`, `sub r1, r11, #0xc0000001`, `ldr r1, [r4, #0x34]` / `movne r0, r9` / `blne
+   0x01027a54`). */
+int32 swvGroup_Pick(uint8 *group,int32 scope,uint32 x,uint32 y,uint8 *camera,uint8 *ri)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  int iVar3;
-  undefined4 uVar4;
-  undefined4 *puVar5;
-  undefined4 *puVar6;
-  bool bVar7;
-  undefined4 local_b8;
-  undefined4 uStack_b4;
-  undefined4 local_b0;
-  undefined1 auStack_ac [56];
-  undefined4 local_74;
-  undefined4 local_70;
-  undefined4 local_6c;
-  undefined1 auStack_68 [68];
-  
-  iVar1 = swvNode_SameSceneGraph((uint8 *)param_1,(uint8 *)param_5);
-  uVar4 = INTEGER_MINUS_1300;
-  if (iVar1 == 0) {
+  uint32 direction[3];
+  uint32 transform[17];
+  uint32 *point = transform + 14;
+  uint32 inverse[17];
+  uint8 *picker = group + 0x88;
+  uint8 *state;
+  uint32 *nearPoint;
+  uint32 *farPoint;
+  uint32 pointX;
+  uint32 pointY;
+  int32 hit;
+
+  if (swvNode_SameSceneGraph(group,camera) == 0)
     FUN_0102f7e0(INTEGER_MINUS_1300);
-  }
-  iVar1 = FUN_0100f7b0();
-  FUN_01023184(iVar1 + 8,0);
-  *(undefined4 *)(iVar1 + 0x30) = param_5;
-  *(undefined4 *)(iVar1 + 0x38) = param_2;
-  uVar2 = FUN_0100f910(param_5);
-  swv_Matrix4Copy(auStack_68,uVar2);
-  iVar3 = swv_Matrix4Invert(auStack_68);
-  if (iVar3 == 0) {
-    FUN_0102f7e0(uVar4);
-  }
-  uVar4 = swv_fmul(param_3,0x40000000);
-  uVar2 = swv_fmul(param_4,0x40000000);
-  uVar4 = swv_fsub(uVar4,0x3f800000);
-  uVar2 = swv_frsb(uVar2,0x3f800000);
-  local_6c = 0xbf800000;
-  puVar5 = (undefined4 *)(iVar1 + 0x18);
-  local_74 = uVar4;
-  local_70 = uVar2;
-  FUN_010279d0(puVar5,&local_74);
-  puVar6 = (undefined4 *)(iVar1 + 0x24);
-  local_6c = 0x3f800000;
-  local_74 = uVar4;
-  local_70 = uVar2;
-  FUN_010279d0(puVar6,&local_74);
-  iVar3 = param_1 + 0x88;
-  FUN_01018018(iVar3,iVar1);
-  FUN_010252f4(&local_74,auStack_68,puVar5,0x3f800000);
-  FUN_010279d0(puVar5,&local_74);
-  FUN_010252f4(&local_74,auStack_68,puVar6,0x3f800000);
-  FUN_010279d0(puVar6,&local_74);
-  FUN_01018018(iVar3,iVar1);
-  local_6c = 0x20;
-  FUN_010048e4(param_5,param_1,auStack_ac);
-  FUN_0101d674(auStack_ac);
-  FUN_010257a8(iVar3,iVar1,auStack_ac);
-  uVar4 = FUN_0100f7e0();
-  *(undefined4 *)(iVar1 + 0x34) = uVar4;
-  FUN_01021b7c(uVar4,0);
-  *(undefined4 *)(*(int *)(iVar1 + 0x34) + 0x14) = 0x7f7fffff;
-  uVar4 = swv_frsb(*puVar5,*puVar6);
-  uVar2 = swv_frsb(*(undefined4 *)(iVar1 + 0x1c),*(undefined4 *)(iVar1 + 0x28));
-  local_b0 = swv_frsb(*(undefined4 *)(iVar1 + 0x20),*(undefined4 *)(iVar1 + 0x2c));
-  local_b8 = uVar4;
-  uStack_b4 = uVar2;
-  FUN_01022a94(*(undefined4 *)(iVar1 + 0x34),puVar5,&local_b8);
-  FUN_010166a4(iVar3,iVar1,param_1);
-  FUN_01017120(iVar3,iVar1);
-  FUN_01017120(iVar3,iVar1);
-  bVar7 = *(int *)(*(int *)(iVar1 + 0x34) + 0xc) != 0;
-  if (bVar7 && param_6 != 0) {
-    FUN_01027a54(param_6);
-  }
-  FUN_01021b7c(*(undefined4 *)(iVar1 + 0x34),0);
-  return bVar7;
+  state = (uint8 *)FUN_0100f7b0();
+  FUN_01023184((int *)(state + 8),0);
+  *(uint8 **)(state + 0x30) = camera;
+  *(int32 *)(state + 0x38) = scope;
+  swv_Matrix4Copy(inverse,(undefined4)FUN_0100f910((int)camera));
+  if (swv_Matrix4Invert((int)inverse) == 0)
+    FUN_0102f7e0(INTEGER_MINUS_1300);
+  pointX = swv_fmul(x,0x40000000);
+  pointY = swv_fmul(y,0x40000000);
+  pointX = swv_fsub(pointX,0x3f800000);
+  pointY = swv_frsb(pointY,0x3f800000);
+  nearPoint = (uint32 *)(state + 0x18);
+  farPoint = (uint32 *)(state + 0x24);
+  point[0] = pointX;
+  point[1] = pointY;
+  point[2] = 0xbf800000;
+  FUN_010279d0(nearPoint,point);
+  point[0] = pointX;
+  point[1] = pointY;
+  point[2] = 0x3f800000;
+  FUN_010279d0(farPoint,point);
+  FUN_01018018((undefined4)picker,(int)state);
+  FUN_010252f4(point,inverse,nearPoint,0x3f800000);
+  FUN_010279d0(nearPoint,point);
+  FUN_010252f4(point,inverse,farPoint,0x3f800000);
+  FUN_010279d0(farPoint,point);
+  FUN_01018018((undefined4)picker,(int)state);
+  transform[16] = 0x20;
+  FUN_010048e4((int)camera,(int)group,(undefined4)transform);
+  FUN_0101d674(transform);
+  FUN_010257a8((undefined4)picker,(int)state,(undefined4)transform);
+  *(uint32 *)(state + 0x34) = FUN_0100f7e0();
+  FUN_01021b7c(*(int *)(state + 0x34),0);
+  *(uint32 *)(*(uint8 **)(state + 0x34) + 0x14) = 0x7f7fffff;
+  direction[0] = swv_frsb(nearPoint[0],farPoint[0]);
+  direction[1] = swv_frsb(nearPoint[1],farPoint[1]);
+  direction[2] = swv_frsb(nearPoint[2],farPoint[2]);
+  FUN_01022a94(*(int *)(state + 0x34),(undefined4)nearPoint,direction);
+  FUN_010166a4((undefined4)picker,(int)state,(int)group);
+  FUN_01017120((undefined4)picker,(int)state);
+  FUN_01017120((undefined4)picker,(int)state);
+  hit = *(int32 *)(*(uint8 **)(state + 0x34) + 0xc) != 0;
+  if (hit != 0 && ri != NULL)
+    FUN_01027a54((int)ri,*(int *)(state + 0x34));
+  FUN_01021b7c(*(int *)(state + 0x34),0);
+  return hit;
 }
 
 /* ==== 0x01017120  (file offset 0x17120)  FUN_01017120 ================================================ */
@@ -25238,7 +25192,8 @@ LAB_0101c710:
                       }
                       iVar10 = *(int *)(param_1 + 0x994);
                       while (iVar10 = iVar10 + -1, -1 < iVar10) {
-                        swvLight_Shade(*(int *)(param_1 + 0x990) + iVar10 * 0x90,iVar5);
+                        swvLight_Shade((uint8 *)(*(int *)(param_1 + 0x990) + iVar10 * 0x90),
+                            (int32 *)iVar5);
                       }
                     }
                     swv_ColourClamp((int32 *)iVar5);   /* Ghidra's uVar14 = : r0 is not used */
@@ -27503,7 +27458,7 @@ void swvM3G_ReadSkinnedMesh(int param_1,undefined4 param_2)
       *(uint *)(param_1 + 0xac) = uVar5;
     }
     uVar6 = thunk_FUN_01019abc(param_2);
-    swvSkinnedMesh_AddTransform(param_1,uVar1,uVar6,uVar3,uVar4);
+    swvSkinnedMesh_AddTransform((uint8 *)param_1,(uint8 *)uVar1,uVar6,uVar3,uVar4);
   }
   return;
 }
@@ -28154,7 +28109,7 @@ void swvM3G_ReadNode(int param_1,undefined4 param_2)
     uVar3 = FUN_010196cc(param_2,0x8f,0x95);
     uVar4 = FUN_0101981c(param_2,1);
     uVar5 = FUN_0101981c(param_2,1);
-    swvNode_SetAlignment(param_1,uVar4,uVar1,uVar5,uVar3);
+    swvNode_SetAlignment((uint8 *)param_1,(uint8 *)uVar4,uVar1,(uint8 *)uVar5,uVar3);
   }
   return;
 }
@@ -28171,7 +28126,7 @@ void swvM3G_ReadGroup(undefined4 param_1,undefined4 param_2)
   iVar1 = FUN_01019698(param_2,4);
   for (iVar3 = 0; iVar3 < iVar1; iVar3 = iVar3 + 1) {
     uVar2 = FUN_0101981c(param_2,0);
-    swvGroup_AddChild(param_1,uVar2);
+    swvGroup_AddChild((uint8 *)param_1,(uint8 *)uVar2);
   }
   return;
 }
@@ -28513,31 +28468,34 @@ void swvM3G_ReadSprite3D(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x0101FDC4  (file offset 0x1FDC4)  swvVertexArray_SetShorts ==================================== */
-void swvVertexArray_SetShorts(int param_1,int param_2,int param_3,int param_4,undefined4 param_5)
+/* JSR-184 1.1, VertexArray.set(firstVertex, numVertices, short[] values) on the VertexArray array: error
+   -1300 (IllegalStateException) unless it holds 16-bit components (+0x24 is 2); -1301
+   (IllegalArgumentException) for fewer values (length) than numVertices * its components (+0x20); -1101
+   (IndexOutOfBoundsException) for a negative firstVertex, one not below the vertex count (+0x1c), or
+   firstVertex + numVertices above it (differs from 1.1, whose only limits are firstVertex < 0 and
+   firstVertex + numVertices > the count); then the values copied (thunk_swv_memcpy) into the array's
+   values (+0x2c) from firstVertex on, and +0x38 set (GUESS: changed). The BREW wrapper FUN_0103cb10 checks
+   numVertices < 0 (-1301) and NULL values (-1302). Evidence: 0x0101fdc4 - 0x0101fe4c (`cmp r0, #0x2` /
+   `blne`, `mul r0, r6, r0` / `cmp r0, r8` / `ldrgt r0, [0x101fe54]` -1301, the argument Ghidra had
+   dropped, `cmp r5, #0x0` / `cmpge r0, r5` / `ble`, `cmp r1, r0` / `ble`, `add r0, r2, r0, lsl #0x1`, `str
+   r0, [r4, #0x38]`). */
+void swvVertexArray_SetShorts(uint8 *array,int32 firstVertex,int32 numVertices,int32 length,
+                              const int16 *values)
 
 {
-  int iVar1;
-  bool bVar2;
-  
-  if (*(int *)(param_1 + 0x24) != 2) {
+  int32 components;
+
+  if (*(const int32 *)(array + 0x24) != 2)
     FUN_0102f7e0(INTEGER_MINUS_1300);
-  }
-  iVar1 = param_3 * *(int *)(param_1 + 0x20);
-  if (iVar1 - param_4 != 0 && param_4 <= iVar1) {
-    iVar1 = FUN_0102f7e0();
-  }
-  bVar2 = param_2 == 0;
-  if (param_2 >= 0) {
-    iVar1 = *(int *)(param_1 + 0x1c);
-    bVar2 = iVar1 == param_2;
-  }
-  if ((bVar2 || (param_2 < 0 || iVar1 < param_2)) || (iVar1 < param_2 + param_3)) {
+  if (numVertices * *(const int32 *)(array + 0x20) > length)
+    FUN_0102f7e0(INTEGER_MINUS_1301);
+  if (firstVertex < 0 || *(const int32 *)(array + 0x1c) <= firstVertex ||
+      firstVertex + numVertices > *(const int32 *)(array + 0x1c))
     FUN_0102f7e0(INTEGER_MINUS_1101);
-  }
-  thunk_swv_memcpy(*(int *)(param_1 + 0x2c) + param_2 * *(int *)(param_1 + 0x20) * 2,param_5,
-                     param_3 * *(int *)(param_1 + 0x20) * 2);
-  *(undefined4 *)(param_1 + 0x38) = 1;
-  return;
+  components = *(const int32 *)(array + 0x20);
+  thunk_swv_memcpy((undefined4)(*(uint8 **)(array + 0x2c) + firstVertex * components * 2),
+                   (undefined4)values,(undefined4)(numVertices * components * 2));
+  *(int32 *)(array + 0x38) = 1;
 }
 
 /* ==== 0x0101FE5C  (file offset 0x1FE5C)  FUN_0101fe5c ================================================ */
@@ -28573,31 +28531,31 @@ void FUN_0101fe5c(int param_1,int param_2,int param_3,undefined4 param_4,int par
 }
 
 /* ==== 0x0101FEFC  (file offset 0x1FEFC)  swvVertexArray_SetBytes ===================================== */
-void swvVertexArray_SetBytes(int param_1,int param_2,int param_3,int param_4,undefined4 param_5)
+/* JSR-184 1.1, VertexArray.set(firstVertex, numVertices, byte[] values) on the VertexArray array: as
+   swvVertexArray_SetShorts for 8-bit components (error -1300, IllegalStateException, unless +0x24 is 1;
+   -1301 for fewer values, length, than numVertices * the components; -1101 for the vertex range, with the
+   same extra firstVertex < the count), the values copied a byte each; +0x38 set (GUESS: changed). The BREW
+   wrapper FUN_0103cbac checks numVertices < 0 (-1301) and NULL values (-1302). Evidence: 0x0101fefc -
+   0x0101ff80 (`cmp r0, #0x1` / `blne`, `mul` / `cmp r0, r8` / `ldrgt r0, [0x101ff88]` -1301, the argument
+   Ghidra had dropped, `cmp r5, #0x0` / `cmpge r0, r5` / `ble`, `add r0, r2, r0`, `str r0, [r4, #0x38]`).
+   */
+void swvVertexArray_SetBytes(uint8 *array,int32 firstVertex,int32 numVertices,int32 length,
+                             const int8 *values)
 
 {
-  int iVar1;
-  bool bVar2;
-  
-  if (*(int *)(param_1 + 0x24) != 1) {
+  int32 components;
+
+  if (*(const int32 *)(array + 0x24) != 1)
     FUN_0102f7e0(INTEGER_MINUS_1300);
-  }
-  iVar1 = param_3 * *(int *)(param_1 + 0x20);
-  if (iVar1 - param_4 != 0 && param_4 <= iVar1) {
-    iVar1 = FUN_0102f7e0();
-  }
-  bVar2 = param_2 == 0;
-  if (param_2 >= 0) {
-    iVar1 = *(int *)(param_1 + 0x1c);
-    bVar2 = iVar1 == param_2;
-  }
-  if ((bVar2 || (param_2 < 0 || iVar1 < param_2)) || (iVar1 < param_2 + param_3)) {
+  if (numVertices * *(const int32 *)(array + 0x20) > length)
+    FUN_0102f7e0(INTEGER_MINUS_1301);
+  if (firstVertex < 0 || *(const int32 *)(array + 0x1c) <= firstVertex ||
+      firstVertex + numVertices > *(const int32 *)(array + 0x1c))
     FUN_0102f7e0(INTEGER_MINUS_1101);
-  }
-  thunk_swv_memcpy(*(int *)(param_1 + 0x2c) + param_2 * *(int *)(param_1 + 0x20),param_5,
-                     param_3 * *(int *)(param_1 + 0x20));
-  *(undefined4 *)(param_1 + 0x38) = 1;
-  return;
+  components = *(const int32 *)(array + 0x20);
+  thunk_swv_memcpy((undefined4)(*(uint8 **)(array + 0x2c) + firstVertex * components),(undefined4)values,
+                   (undefined4)(numVertices * components));
+  *(int32 *)(array + 0x38) = 1;
 }
 
 /* ==== 0x0101FF90  (file offset 0x1FF90)  swvAnimationController_SetActiveIntervalValue =============== */
@@ -28670,40 +28628,46 @@ void FUN_0101ffbc(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
 }
 
 /* ==== 0x01020104  (file offset 0x20104)  swvNode_SetAlignment ======================================== */
-void swvNode_SetAlignment(int param_1,int param_2,int param_3,int param_4,int param_5)
+/* GUESS: name. JSR-184 1.1, Node.setAlignment(zRef, zTarget, yRef, yTarget) on the node node: error -1301
+   (IllegalArgumentException) when a reference is the node itself, or when both references are the same
+   node with the same target other than NONE (0x90); the old alignment record (+0x24) dropped (FUN_01019f54
+   on the node, then helper_free); unless all is NONE and NULL, a new 16-byte record (swv_New, zeroed): +0
+   the z target, +4 the y target, +8 the z reference, +0xc the y reference (as swvNode_AlignmentTargetZ / Y
+   and swvNode_AlignmentReferenceZ / Y read them), then FUN_01019ebc on the node. The targets' range is
+   checked by the callers (swv_types.h, the Node notes). Evidence: 0x01020104 - 0x010201d4 (`cmp r1, r0` /
+   `cmpne r8, r4` / `bleq`, `cmp r6, r8` / `bne`, `cmp r7, #0x90` / `cmpne r5, #0x90` / `beq`, `cmp r7, r5`
+   / `bleq`, `bl 0x01019f54` / `bl 0x01029910`, the `cmpeq` chain, `mov r0, #0x10` / `bl 0x0102cc00`,
+   `stmiane r0!, {r1, r2}` / `stmiane r0, {r1, r2}`, the four `str` through +0x24, `bl 0x01019ebc` with r0
+   the node). */
+void swvNode_SetAlignment(uint8 *node,uint8 *zReference,int32 zTarget,uint8 *yReference,int32 yTarget)
 
 {
-  undefined4 uVar1;
-  undefined4 *puVar2;
-  
-  uVar1 = INTEGER_MINUS_1301;
-  if (param_2 == param_1 || param_4 == param_1) {
+  uint32 *alignment;
+
+  if (zReference == node || yReference == node)
     FUN_0102f7e0(INTEGER_MINUS_1301);
+  if (zReference == yReference && zTarget != 0x90 && yTarget != 0x90 && zTarget == yTarget)
+    FUN_0102f7e0(INTEGER_MINUS_1301);
+  if (*(uint32 **)(node + 0x24) != NULL) {
+    FUN_01019f54((undefined4)node);
+    helper_free(*(void **)(node + 0x24));
+    *(uint32 **)(node + 0x24) = NULL;
   }
-  if (((param_2 == param_4) && (param_3 != 0x90 && param_5 != 0x90)) && (param_3 == param_5)) {
-    FUN_0102f7e0(uVar1);
-  }
-  if (*(int *)(param_1 + 0x24) != 0) {
-    FUN_01019f54(param_1);
-    helper_free(*(void **)(param_1 + 0x24));
-    *(undefined4 *)(param_1 + 0x24) = 0;
-  }
-  if (((param_2 != 0 || param_3 != 0x90) || param_4 != 0) || param_5 != 0x90) {
-    puVar2 = (undefined4 *)swv_New(0x10);
-    if (puVar2 != (undefined4 *)0x0) {
-      *puVar2 = 0;
-      puVar2[1] = 0;
-      puVar2[2] = 0;
-      puVar2[3] = 0;
+  if (zReference != NULL || zTarget != 0x90 || yReference != NULL || yTarget != 0x90) {
+    alignment = (uint32 *)swv_New(0x10);
+    if (alignment != NULL) {
+      alignment[0] = 0;
+      alignment[1] = 0;
+      alignment[2] = 0;
+      alignment[3] = 0;
     }
-    *(undefined4 **)(param_1 + 0x24) = puVar2;
-    puVar2[2] = param_2;
-    **(int **)(param_1 + 0x24) = param_3;
-    *(int *)(*(int *)(param_1 + 0x24) + 0xc) = param_4;
-    *(int *)(*(int *)(param_1 + 0x24) + 4) = param_5;
-    FUN_01019ebc(param_1);
+    *(uint32 **)(node + 0x24) = alignment;
+    alignment[2] = (uint32)zReference;
+    (*(uint32 **)(node + 0x24))[0] = (uint32)zTarget;
+    (*(uint32 **)(node + 0x24))[3] = (uint32)yReference;
+    (*(uint32 **)(node + 0x24))[1] = (uint32)yTarget;
+    FUN_01019ebc((undefined4)node);
   }
-  return;
 }
 
 /* ==== 0x010201DC  (file offset 0x201DC)  FUN_010201dc ================================================ */
@@ -29248,80 +29212,20 @@ void swvMaterial_SetColorValue(uint8 *material,uint32 targets,uint32 argb)
 }
 
 /* ==== 0x010209AC  (file offset 0x209AC)  swvVertexBuffer_SetColorsValue ============================== */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setColors(colors) on the VertexBuffer param_1
-   (swvVertexBuffer_SetColors, slot 21, calls it): error -1301 (IllegalArgumentException) unless the
-   array param_2 (NULL clears) has 1-byte components and 3 or 4 a vertex; then a tail jump to
-   FUN_01023b3c with the slot +0x2c (Ghidra repeated its code here). */
-void swvVertexBuffer_SetColorsValue(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
+/* JSR-184 1.1, VertexBuffer.setColors(colors) on the VertexBuffer buffer (swvVertexBuffer_SetColors, slot
+   21, and FUN_010104f0 call it): error -1301 (IllegalArgumentException) unless the array colors (NULL
+   clears) has 1-byte components and 3 or 4 a vertex; then FUN_01023b3c with the slot +0x2c (a tail jump in
+   the binary; Ghidra had repeated its code here). Two arguments. Evidence: 0x010209ac - 0x010209f0 (`movs
+   r4, r1` / `beq`, `cmp r0, #0x1` / `bne`, `cmp r0, #0x3` / `cmpne r0, #0x4` / `beq`, `ldr r0,
+   [0x10209f4]` -1301, `add r1, r5, #0x2c` / `b 0x01023b3c`). */
+void swvVertexBuffer_SetColorsValue(uint8 *buffer,uint8 *colors)
 
 {
-  int iVar1;
-  int *piVar2;
-  int iVar3;
-  bool bVar4;
-  bool bVar5;
-  
-  if ((param_2 != 0) &&
-     ((*(int *)(param_2 + 0x24) != 1 ||
-      (*(int *)(param_2 + 0x20) != 3 && *(int *)(param_2 + 0x20) != 4)))) {
+  if (colors != NULL &&
+      (*(const int32 *)(colors + 0x24) != 1 ||
+       (*(const int32 *)(colors + 0x20) != 3 && *(const int32 *)(colors + 0x20) != 4)))
     FUN_0102f7e0(INTEGER_MINUS_1301);
-  }
-  piVar2 = (int *)(param_1 + 0x2c);
-  if (param_2 != 0) {
-    /* Ghidra had read a 64-bit result and more arguments (saved registers) */
-    iVar3 = swvVertexBuffer_HasOnlyArray((uint8 *)param_1,(uint8 *)*piVar2);
-    if (iVar3 == 0) {
-      iVar1 = *(int *)(param_1 + 0x1c);
-      if (iVar1 != 0) {
-        iVar3 = *(int *)(param_2 + 0x1c);
-      }
-      if (iVar1 != 0 && iVar3 != iVar1) {
-        FUN_0102f7e0(INTEGER_MINUS_1301);
-      }
-    }
-  }
-  iVar3 = *piVar2;
-  if (iVar3 == param_2) {
-    return;
-  }
-  if (param_2 != 0) {
-    param_2 = param_2 + 4;
-  }
-  if (iVar3 != 0) {
-    iVar3 = iVar3 + 4;
-  }
-  iVar3 = FUN_01004848(iVar3,param_2);
-  if (iVar3 != 0) {
-    iVar3 = iVar3 + -4;
-  }
-  *piVar2 = iVar3;
-  if (iVar3 == 0) {
-    iVar3 = *(int *)(param_1 + 0x24);
-    bVar4 = iVar3 == 0;
-    if (bVar4) {
-      iVar3 = *(int *)(param_1 + 0x2c);
-    }
-    bVar5 = bVar4 && iVar3 == 0;
-    if (bVar4 && iVar3 == 0) {
-      bVar5 = *(int *)(param_1 + 0x28) == 0;
-    }
-    iVar3 = 0;
-    do {
-      if ((bVar5) && (*(int *)(param_1 + iVar3 * 4 + 0x30) == 0)) {
-        bVar5 = true;
-      }
-      else {
-        bVar5 = false;
-      }
-      iVar3 = iVar3 + 1;
-    } while (iVar3 < 2);
-    if (bVar5) {
-      *(undefined4 *)(param_1 + 0x1c) = 0;
-    }
-    return;
-  }
-  *(undefined4 *)(param_1 + 0x1c) = *(undefined4 *)(iVar3 + 0x1c);
-  return;
+  FUN_01023b3c((int)buffer,(int *)(buffer + 0x2c),(int)colors);
 }
 
 /* ==== 0x01020A28  (file offset 0x20A28)  FUN_01020a28 ================================================ */
@@ -30475,48 +30379,40 @@ void FUN_01021f28(int param_1)
 }
 
 /* ==== 0x010220B0  (file offset 0x220B0)  swvVertexBuffer_SetNormalsValue ============================= */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setNormals(normals) on the VertexBuffer param_1
-   (swvVertexBuffer_SetNormals, slot 19, calls it): error -1301 (IllegalArgumentException) unless the
-   array param_2 (NULL clears) has 3 components a vertex; FUN_01023b3c with the slot +0x28; then the
-   normals' scale (+0x54: 1 / 127.5 for bytes, 1 / 32767.5 for 16-bit words; 1.0 without normals) and
-   bias (+0x48 .. +0x50, half the scale each, FUN_010279d0), mapping the stored values to -1 .. 1, the
-   largest positive integer to +1 and the most negative to -1, as the spec asks. */
-void swvVertexBuffer_SetNormalsValue(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
+/* JSR-184 1.1, VertexBuffer.setNormals(normals) on the VertexBuffer buffer (swvVertexBuffer_SetNormals,
+   slot 19, and FUN_010104f0 call it): error -1301 (IllegalArgumentException) unless the array normals
+   (NULL clears) has 3 components a vertex; FUN_01023b3c with the slot +0x28; then the normals' scale
+   (+0x54: 1 / 127.5 for bytes, 1 / 32767.5 for 16-bit words, swv_frdiv; 1.0 without normals) and bias
+   (+0x48 .. +0x50, half the scale each, swv_fmul; 0 without normals; FUN_010279d0 copies the three),
+   mapping the stored values to -1 .. 1, the largest positive integer to +1 and the most negative to -1, as
+   the spec asks. Two arguments: the stack words Ghidra had taken for more (the `stmdb sp!, {r1, r2, r3,
+   ...}`) are the bias's room. Evidence: 0x010220b0 - 0x01022130 (`movs r5, r1` / `ldrne r0, [r5, #0x20]` /
+   `cmpne r0, #0x3` / `blne`, `add r1, r4, #0x28` / `bl 0x01023b3c`, `ldrne r0, [0x1022138]` / `ldreq r0,
+   [0x102213c]` / `bl 0x0103f240`, `mov r1, #0x3f000000` / `bl 0x0103f604`, the three `str r0, [sp, ...]`,
+   `bl 0x010279d0`). */
+void swvVertexBuffer_SetNormalsValue(uint8 *buffer,uint8 *normals)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  int local_18;
-  int local_14;
-  int local_10;
-  
-  iVar1 = param_1;
-  if (param_2 != 0) {
-    iVar1 = *(int *)(param_2 + 0x20);
-  }
-  local_18 = param_2;
-  local_14 = param_3;
-  local_10 = param_4;
-  if (param_2 != 0 && iVar1 != 3) {
+  uint32 bias[3];
+  uint32 half = 0;
+  uint32 scale;
+
+  if (normals != NULL && *(const int32 *)(normals + 0x20) != 3)
     FUN_0102f7e0(INTEGER_MINUS_1301);
+  FUN_01023b3c((int)buffer,(int *)(buffer + 0x28),(int)normals);
+  *(uint32 *)(buffer + 0x54) = 0x3f800000;
+  if (*(uint8 **)(buffer + 0x28) != NULL) {
+    scale = WORD_HEXADECIMAL_46FFFF00;
+    if (*(const int32 *)(*(uint8 **)(buffer + 0x28) + 0x24) == 1)
+      scale = FLOAT_127_POINT_5;
+    scale = swv_frdiv(scale,0x3f800000);
+    *(uint32 *)(buffer + 0x54) = scale;
+    half = swv_fmul(scale,0x3f000000);
   }
-  FUN_01023b3c(param_1,param_1 + 0x28,param_2);
-  *(undefined4 *)(param_1 + 0x54) = 0x3f800000;
-  iVar1 = 0;
-  if (*(int *)(param_1 + 0x28) != 0) {
-    uVar2 = WORD_HEXADECIMAL_46FFFF00;
-    if (*(int *)(*(int *)(param_1 + 0x28) + 0x24) == 1) {
-      uVar2 = FLOAT_127_POINT_5;
-    }
-    uVar2 = swv_frdiv(uVar2,0x3f800000);
-    *(undefined4 *)(param_1 + 0x54) = uVar2;
-    iVar1 = swv_fmul(uVar2,0x3f000000);
-  }
-  local_18 = iVar1;
-  local_14 = iVar1;
-  local_10 = iVar1;
-  FUN_010279d0(param_1 + 0x48,&local_18);
-  return;
+  bias[0] = half;
+  bias[1] = half;
+  bias[2] = half;
+  FUN_010279d0((undefined4 *)(buffer + 0x48),bias);
 }
 
 /* ==== 0x01022140  (file offset 0x22140)  FUN_01022140 ================================================ */
@@ -30699,114 +30595,39 @@ void swvAnimationController_SetPositionValue(uint8 *controller,uint32 sequenceTi
 }
 
 /* ==== 0x0102234C  (file offset 0x2234C)  swvVertexBuffer_SetPositionsValue =========================== */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setPositions(positions, scale, bias) on the
-   VertexBuffer param_1: error -1301 (IllegalArgumentException) unless the array param_2 (NULL clears)
-   has 3 components a vertex, and for a bias (param_5) of fewer floats (param_4) than that; +0x44 the
-   scale (param_3), +0x38 .. +0x40 the bias (FUN_0102ed04 each; 0 without one); then a tail jump to
-   FUN_01023b3c with the slot +0x24 (Ghidra repeated its code here). Evidence: 0x0102236c (`ldr r8,
-   [0x10223ec]`, -1301 for every check). */
-void swvVertexBuffer_SetPositionsValue(int param_1,int param_2,undefined4 param_3,int param_4,
-                                       undefined4 *param_5)
+/* JSR-184 1.1, VertexBuffer.setPositions(positions, scale, bias) on the VertexBuffer buffer: with an array
+   positions (NULL clears), error -1301 (IllegalArgumentException) unless it has 3 components a vertex, and
+   for a bias of fewer floats (length) than that (checked again as length < 3); +0x44 the scale, +0x38 ..
+   +0x40 the bias (FUN_0102ed04 each: -1001 for a denormal, infinite or NaN float; 0 without one); then
+   FUN_01023b3c with the slot +0x24 (a tail jump in the binary; Ghidra had repeated its code here).
+   Callers: swvVertexBuffer_SetPositions (slot 26), FUN_010104f0 and FUN_01010938 (the morphed and skinned
+   buffers). Evidence: 0x0102234c - 0x010223e8 (`ldr r8, [0x10223ec]`, -1301 for every check; `cmp r5,
+   #0x0` / `ldrne r0, [r6, #0x20]` / `cmpne r0, r7` / `blgt`, `str r9, [r4, #0x44]`, `streq` 0, `cmp r7,
+   #0x3` / `bllt`, the three `bl 0x0102ed04`, `add r1, r4, #0x24` / `b 0x01023b3c`). */
+void swvVertexBuffer_SetPositionsValue(uint8 *buffer,uint8 *positions,uint32 scale,int32 length,
+                                       const uint32 *bias)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  int iVar3;
-  int *piVar4;
-  bool bVar5;
-  bool bVar6;
-  
-  uVar2 = INTEGER_MINUS_1301;
-  if (param_2 != 0) {
-    iVar1 = *(int *)(param_2 + 0x20);
-    if (iVar1 != 3) {
-      iVar1 = FUN_0102f7e0();
-    }
-    bVar5 = param_5 != (undefined4 *)0x0;
-    iVar3 = 0;
-    if (bVar5) {
-      iVar1 = *(int *)(param_2 + 0x20);
-      iVar3 = iVar1 - param_4;
-    }
-    if ((bVar5 && iVar1 != param_4) && iVar3 < 0 == (bVar5 && SBORROW4(iVar1,param_4))) {
-      iVar1 = FUN_0102f7e0();
-    }
-    if (param_5 == (undefined4 *)0x0) {
-      iVar1 = 0;
-    }
-    *(undefined4 *)(param_1 + 0x44) = param_3;
-    if (param_5 == (undefined4 *)0x0) {
-      *(int *)(param_1 + 0x38) = iVar1;
-      *(int *)(param_1 + 0x3c) = iVar1;
+  if (positions != NULL) {
+    if (*(const int32 *)(positions + 0x20) != 3)
+      FUN_0102f7e0(INTEGER_MINUS_1301);
+    if (bias != NULL && *(const int32 *)(positions + 0x20) > length)
+      FUN_0102f7e0(INTEGER_MINUS_1301);
+    *(uint32 *)(buffer + 0x44) = scale;
+    if (bias == NULL) {
+      *(uint32 *)(buffer + 0x38) = 0;
+      *(uint32 *)(buffer + 0x3c) = 0;
+      *(uint32 *)(buffer + 0x40) = 0;
     }
     else {
-      if (param_4 < 3) {
-        FUN_0102f7e0(uVar2);
-      }
-      uVar2 = FUN_0102ed04(*param_5);
-      *(undefined4 *)(param_1 + 0x38) = uVar2;
-      uVar2 = FUN_0102ed04(param_5[1]);
-      *(undefined4 *)(param_1 + 0x3c) = uVar2;
-      iVar1 = FUN_0102ed04(param_5[2]);
-    }
-    *(int *)(param_1 + 0x40) = iVar1;
-  }
-  piVar4 = (int *)(param_1 + 0x24);
-  if (param_2 != 0) {
-    /* Ghidra had read a 64-bit result and more arguments (saved registers) */
-    iVar1 = swvVertexBuffer_HasOnlyArray((uint8 *)param_1,(uint8 *)*piVar4);
-    if (iVar1 == 0) {
-      iVar3 = *(int *)(param_1 + 0x1c);
-      if (iVar3 != 0) {
-        iVar1 = *(int *)(param_2 + 0x1c);
-      }
-      if (iVar3 != 0 && iVar1 != iVar3) {
+      if (length < 3)
         FUN_0102f7e0(INTEGER_MINUS_1301);
-      }
+      *(uint32 *)(buffer + 0x38) = FUN_0102ed04(bias[0]);
+      *(uint32 *)(buffer + 0x3c) = FUN_0102ed04(bias[1]);
+      *(uint32 *)(buffer + 0x40) = FUN_0102ed04(bias[2]);
     }
   }
-  iVar1 = *piVar4;
-  if (iVar1 == param_2) {
-    return;
-  }
-  if (param_2 != 0) {
-    param_2 = param_2 + 4;
-  }
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + 4;
-  }
-  iVar1 = FUN_01004848(iVar1,param_2);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  *piVar4 = iVar1;
-  if (iVar1 == 0) {
-    iVar1 = *(int *)(param_1 + 0x24);
-    bVar5 = iVar1 == 0;
-    if (bVar5) {
-      iVar1 = *(int *)(param_1 + 0x2c);
-    }
-    bVar6 = bVar5 && iVar1 == 0;
-    if (bVar5 && iVar1 == 0) {
-      bVar6 = *(int *)(param_1 + 0x28) == 0;
-    }
-    iVar1 = 0;
-    do {
-      if ((bVar6) && (*(int *)(param_1 + iVar1 * 4 + 0x30) == 0)) {
-        bVar6 = true;
-      }
-      else {
-        bVar6 = false;
-      }
-      iVar1 = iVar1 + 1;
-    } while (iVar1 < 2);
-    if (bVar6) {
-      *(undefined4 *)(param_1 + 0x1c) = 0;
-    }
-    return;
-  }
-  *(undefined4 *)(param_1 + 0x1c) = *(undefined4 *)(iVar1 + 0x1c);
-  return;
+  FUN_01023b3c((int)buffer,(int *)(buffer + 0x24),(int)positions);
 }
 
 /* ==== 0x010223F0  (file offset 0x223F0)  FUN_010223f0 ================================================ */
@@ -31992,123 +31813,51 @@ undefined4 FUN_010234bc(int param_1,int param_2,undefined4 param_3,uint param_4,
 }
 
 /* ==== 0x0102358C  (file offset 0x2358C)  swvVertexBuffer_SetTexCoordsValue =========================== */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setTexCoords(index, texCoords, scale, bias) on the
-   VertexBuffer param_1: error -1101 (IndexOutOfBoundsException) for a unit param_2 above 1 (two
-   units), -1301 (IllegalArgumentException) for an array param_3 of other than 2 or 3 components a
-   vertex or a bias (param_6) of fewer floats (param_5) than that; +0x70 + 4 * unit the scale
-   (param_4), +0x58 + 0xc * unit the bias (FUN_0102ed04 each, the third only for 3 components; 0
-   without one); then a tail jump to FUN_01023b3c with the slot +0x30 + 4 * unit (Ghidra repeated its
-   code here). Evidence: 0x010235a8 / 0x010235c4 (the literals -1101 and -1301). */
-void swvVertexBuffer_SetTexCoordsValue(int param_1,uint param_2,int param_3,undefined4 param_4,int param_5,
-                 undefined4 *param_6)
+/* JSR-184 1.1, VertexBuffer.setTexCoords(index, texCoords, scale, bias) on the VertexBuffer buffer: error
+   -1101 (IndexOutOfBoundsException) for a unit index above 1 (two units; an unsigned compare); with an
+   array texCoords (NULL clears), -1301 (IllegalArgumentException) for other than 2 or 3 components a
+   vertex or a bias of fewer floats (length) than that (checked twice); +0x70 + 4 * index the scale, +0x58
+   + 0xc * index the bias (FUN_0102ed04 each: -1001 for a denormal, infinite or NaN float; the third only
+   for 3 components; 0 without one); then FUN_01023b3c with the slot +0x30 + 4 * index (a tail jump in the
+   binary; Ghidra had repeated its code here). Callers: swvVertexBuffer_SetTexCoords (slot 28) and
+   FUN_010104f0. Evidence: 0x0102358c - 0x0102366c (`ldrcs r0, [0x1023670]` -1101 and `ldr r11,
+   [0x1023674]` -1301, `cmp r6, #0x2` / `cmpne r6, #0x3`, `cmp r4, #0x0` / `cmpne r0, r10` / `blgt`, `str
+   r0, [r9, #0x70]` from the saved r3, `streq` 0, `cmp r0, r10` / `blgt`, `cmp r6, #0x2` / `ble`, `add r1,
+   r9, #0x30` / `b 0x01023b3c`). */
+void swvVertexBuffer_SetTexCoordsValue(uint8 *buffer,uint32 index,uint8 *texCoords,uint32 scale,
+                                       int32 length,const uint32 *bias)
 
 {
-  int iVar1;
-  int iVar2;
-  undefined4 uVar3;
-  int *piVar4;
-  int iVar5;
-  int iVar6;
-  bool bVar7;
-  bool bVar8;
-  
-  iVar2 = param_1;
-  if (1 < param_2) {
-    iVar2 = FUN_0102f7e0();
-  }
-  uVar3 = INTEGER_MINUS_1301;
-  iVar6 = param_1 + param_2 * 4;
-  if (param_3 == 0) goto LAB_01023658;
-  iVar5 = *(int *)(param_3 + 0x20);
-  if (iVar5 != 2 && iVar5 != 3) {
-    iVar2 = FUN_0102f7e0();
-  }
-  bVar7 = param_6 != (undefined4 *)0x0;
-  iVar1 = 0;
-  if (bVar7) {
-    iVar2 = *(int *)(param_3 + 0x20);
-    iVar1 = iVar2 - param_5;
-  }
-  if ((bVar7 && iVar2 != param_5) && iVar1 < 0 == (bVar7 && SBORROW4(iVar2,param_5))) {
-    FUN_0102f7e0(uVar3);
-  }
-  *(undefined4 *)(iVar6 + 0x70) = param_4;
-  iVar2 = param_1 + param_2 * 0xc;
-  if (param_6 == (undefined4 *)0x0) {
-    *(undefined4 *)(iVar2 + 0x58) = 0;
-    *(undefined4 *)(iVar2 + 0x5c) = 0;
-LAB_01023650:
-    uVar3 = 0;
-  }
-  else {
-    if (param_5 < *(int *)(param_3 + 0x20)) {
-      FUN_0102f7e0(uVar3);
+  uint8 *unit = buffer + index * 4;
+  uint32 *unitBias = (uint32 *)(buffer + index * 0xc + 0x58);
+  int32 components;
+
+  if (index > 1)
+    FUN_0102f7e0(INTEGER_MINUS_1101);
+  if (texCoords != NULL) {
+    components = *(const int32 *)(texCoords + 0x20);
+    if (components != 2 && components != 3)
+      FUN_0102f7e0(INTEGER_MINUS_1301);
+    if (bias != NULL && *(const int32 *)(texCoords + 0x20) > length)
+      FUN_0102f7e0(INTEGER_MINUS_1301);
+    *(uint32 *)(unit + 0x70) = scale;
+    if (bias == NULL) {
+      unitBias[0] = 0;
+      unitBias[1] = 0;
+      unitBias[2] = 0;
     }
-    uVar3 = FUN_0102ed04(*param_6);
-    *(undefined4 *)(iVar2 + 0x58) = uVar3;
-    uVar3 = FUN_0102ed04(param_6[1]);
-    *(undefined4 *)(iVar2 + 0x5c) = uVar3;
-    if (iVar5 < 3) goto LAB_01023650;
-    uVar3 = FUN_0102ed04(param_6[2]);
-  }
-  *(undefined4 *)(iVar2 + 0x60) = uVar3;
-LAB_01023658:
-  piVar4 = (int *)(iVar6 + 0x30);
-  if (param_3 != 0) {
-    /* Ghidra had read a 64-bit result (r0 and r1) */
-    iVar2 = swvVertexBuffer_HasOnlyArray((uint8 *)param_1,(uint8 *)*piVar4);
-    if (iVar2 == 0) {
-      iVar6 = *(int *)(param_1 + 0x1c);
-      if (iVar6 != 0) {
-        iVar2 = *(int *)(param_3 + 0x1c);
-      }
-      if (iVar6 != 0 && iVar2 != iVar6) {
+    else {
+      if (*(const int32 *)(texCoords + 0x20) > length)
         FUN_0102f7e0(INTEGER_MINUS_1301);
-      }
+      unitBias[0] = FUN_0102ed04(bias[0]);
+      unitBias[1] = FUN_0102ed04(bias[1]);
+      if (components > 2)
+        unitBias[2] = FUN_0102ed04(bias[2]);
+      else
+        unitBias[2] = 0;
     }
   }
-  iVar2 = *piVar4;
-  if (iVar2 != param_3) {
-    if (param_3 != 0) {
-      param_3 = param_3 + 4;
-    }
-    if (iVar2 != 0) {
-      iVar2 = iVar2 + 4;
-    }
-    iVar2 = FUN_01004848(iVar2,param_3);
-    if (iVar2 != 0) {
-      iVar2 = iVar2 + -4;
-    }
-    *piVar4 = iVar2;
-    if (iVar2 != 0) {
-      *(undefined4 *)(param_1 + 0x1c) = *(undefined4 *)(iVar2 + 0x1c);
-      return;
-    }
-    iVar2 = *(int *)(param_1 + 0x24);
-    bVar7 = iVar2 == 0;
-    if (bVar7) {
-      iVar2 = *(int *)(param_1 + 0x2c);
-    }
-    bVar8 = bVar7 && iVar2 == 0;
-    if (bVar7 && iVar2 == 0) {
-      bVar8 = *(int *)(param_1 + 0x28) == 0;
-    }
-    iVar2 = 0;
-    do {
-      if ((bVar8) && (*(int *)(param_1 + iVar2 * 4 + 0x30) == 0)) {
-        bVar8 = true;
-      }
-      else {
-        bVar8 = false;
-      }
-      iVar2 = iVar2 + 1;
-    } while (iVar2 < 2);
-    if (bVar8) {
-      *(undefined4 *)(param_1 + 0x1c) = 0;
-    }
-    return;
-  }
-  return;
+  FUN_01023b3c((int)buffer,(int *)(unit + 0x30),(int)texCoords);
 }
 
 /* ==== 0x01023678  (file offset 0x23678)  FUN_01023678 ================================================ */
@@ -44318,7 +44067,7 @@ undefined4 FUN_01030220(int param_1,int param_2)
     if (iVar2 != 0) {
       iVar2 = iVar2 + -4;
     }
-    swvGroup_AddChild(iVar1,iVar2);
+    swvGroup_AddChild((uint8 *)iVar1,(uint8 *)iVar2);
     swv_TryPop();
   }
   else {
@@ -44360,53 +44109,49 @@ int32 swv_Create_Group(void **ppObj)
 }
 
 /* ==== 0x010302EC  (file offset 0x302EC)  swvGroup_GetChild =========================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 44 (+0xb0) of Group and World (kh_types.h
-   SwerveGroupVtbl.GetChild): in an error frame, swvGroup_Child(native, index) wrapped (swv_WrapObject)
-   into *param_3; on an error its result code (swv_ErrorToResult). */
-int swvGroup_GetChild(int param_1,undefined4 param_2,ISwerveObject **param_3)
+/* GUESS: name. ISwerveObject slot 44 (+0xb0) of Group and World (kh_types.h SwerveGroupVtbl.GetChild): in
+   an error frame, swvGroup_Child(native, index) wrapped (swv_WrapObject, the child's +4 part) into *ppo;
+   on an error its result code (swv_ErrorToResult). Evidence: 0x010302ec - 0x0103035c (`mov r1, r4` / `bl
+   0x0100f5dc`, `addne r0, r0, #0x4`, `mov r1, r6` / `bl 0x01039fb4`, `bl 0x0103976c`). */
+int32 swvGroup_GetChild(ISwerveObject *po,int32 index,ISwerveObject **ppo)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_98 [136];
-  
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_98);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    pNative = swvGroup_Child((uint8 *)iVar1,param_2);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,param_3);
+  int32 result;
+  int32 error;
+  const uint8 *group;
+  uint8 *child;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    group = (const uint8 *)po->pNative;
+    if (group != NULL)
+      group -= 4;
+    child = swvGroup_Child(group,index);
+    if (child != NULL)
+      child += 4;
+    result = swv_WrapObject(child,ppo);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x01030360  (file offset 0x30360)  swvGroup_GetChildCount ====================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 43 (+0xac) of Group and World (kh_types.h
-   SwerveGroupVtbl.GetChildCount): *param_2 = swvGroup_ChildCount of the native object (po->pNative,
-   +4, less 4). */
-void swvGroup_GetChildCount(int param_1,undefined4 *param_2)
+/* GUESS: name. ISwerveObject slot 43 (+0xac) of Group and World (kh_types.h
+   SwerveGroupVtbl.GetChildCount): *pCount = swvGroup_ChildCount of the native object (po->pNative, +4,
+   less 4). Evidence: 0x01030360 - 0x0103037c (`subne r0, r0, #0x4` / `bl 0x0100f594`, `str r0, [r4,
+   #0x0]`). */
+void swvGroup_GetChildCount(ISwerveObject *po,int32 *pCount)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  uVar2 = swvGroup_ChildCount((uint8 *)iVar1);
-  *param_2 = uVar2;
-  return;
+  const uint8 *group = (const uint8 *)po->pNative;
+
+  if (group != NULL)
+    group -= 4;
+  *pCount = swvGroup_ChildCount(group);
 }
 
 /* ==== 0x01030380  (file offset 0x30380)  swv_InitVtbl_Group ========================================== */
@@ -44469,7 +44214,7 @@ FUN_010303f0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     if (iVar6 != 0) {
       iVar6 = iVar6 + -4;
     }
-    uVar1 = swvGroup_Pick(iVar2,param_2,uVar3,uVar4,iVar5,iVar6);
+    uVar1 = swvGroup_Pick((uint8 *)iVar2,param_2,uVar3,uVar4,(uint8 *)iVar5,(uint8 *)iVar6);
     *param_7 = uVar1;
     swv_TryPop();
   }
@@ -47947,38 +47692,39 @@ void FUN_01033db4(int param_1,undefined4 *param_2)
 }
 
 /* ==== 0x01033DCC  (file offset 0x33DCC)  swvMesh_GetVertexBuffer ===================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 46 (+0xb8) of Mesh and its subclasses (kh_types.h
-   SwerveMeshVtbl.GetVertexBuffer; JSR-184 Mesh.getVertexBuffer): in an error frame, the mesh's own
-   engine vtable +0x2c (not swvMesh_VertexBuffer), wrapped (swv_WrapObject) into *param_2; on an error
-   its result code. */
-int swvMesh_GetVertexBuffer(int param_1,ISwerveObject **param_2)
+/* GUESS: name. ISwerveObject slot 46 (+0xb8) of Mesh and its subclasses (kh_types.h
+   SwerveMeshVtbl.GetVertexBuffer; JSR-184 Mesh.getVertexBuffer): in an error frame, the mesh's own engine
+   vtable +0x2c called with the mesh (not swvMesh_VertexBuffer; GUESS: the VertexBuffer it draws with, the
+   morphed or skinned one when it has one), wrapped (swv_WrapObject, the buffer's +4 part) into *ppo; on an
+   error its result code (swv_ErrorToResult). Evidence: 0x01033dcc - 0x01033e40 (`ldr r1, [r0, #0x0]` /
+   `ldr r2, [r1, #0x2c]` / `add r1, r2, r1` / `blx r1` with r0 the mesh, `addne r0, r0, #0x4`, `bl
+   0x01039fb4`). */
+int32 swvMesh_GetVertexBuffer(ISwerveObject *po,ISwerveObject **ppo)
 
 {
-  int iVar1;
-  int *piVar2;
-  void *pNative;
-  undefined1 auStack_94 [136];
-  
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_94);
-    piVar2 = *(int **)(param_1 + 4);
-    if (piVar2 != (int *)0x0) {
-      piVar2 = piVar2 + -1;
-    }
-    /* engine virtual call, slot +0x2c: the mesh's own (GUESS: the VertexBuffer it draws with, the morphed
-       or skinned one when it has one); Ghidra had dropped the receiver, r0 = the mesh (0x01033df8) */
-    pNative = (void *)(*(code *)(*(int *)(*piVar2 + 0x2c) + *piVar2))(piVar2);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,param_2);
+  int32 result;
+  int32 error;
+  uint8 *mesh;
+  int32 vtable;
+  uint8 *vertexBuffer;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    mesh = (uint8 *)po->pNative;
+    if (mesh != NULL)
+      mesh -= 4;
+    vtable = *(int32 *)mesh;
+    vertexBuffer = (uint8 *)(*(code *)(*(int32 *)(vtable + 0x2c) + vtable))(mesh);
+    if (vertexBuffer != NULL)
+      vertexBuffer += 4;
+    result = swv_WrapObject(vertexBuffer,ppo);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x01033E44  (file offset 0x33E44)  swv_InitVtbl_Mesh =========================================== */
@@ -48632,7 +48378,7 @@ undefined4 FUN_010348b0(int param_1,int param_2)
     if (iVar2 != 0) {
       iVar2 = iVar2 + -4;
     }
-    swvNode_Align(iVar1,iVar2);
+    swvNode_Align((uint8 *)iVar1,(uint8 *)iVar2);
     swv_TryPop();
   }
   else {
@@ -48738,7 +48484,7 @@ undefined4 FUN_010349b8(int param_1,int param_2,int param_3,undefined1 *param_4)
     if (iVar5 == 0) {
       FUN_0102f7e0(uVar1);
     }
-    uVar2 = swvNode_GetTransformTo(iVar3,iVar4,iVar5);
+    uVar2 = swvNode_GetTransformTo((uint8 *)iVar3,(uint8 *)iVar4,(uint8 *)iVar5);
     *param_4 = uVar2;
     swv_TryPop();
   }
@@ -48836,7 +48582,7 @@ undefined4 FUN_01034b78(int param_1,int param_2,int param_3,int param_4,int para
     if (4 < param_5 - 0x90U) {
       FUN_0102f7e0(uVar1);
     }
-    swvNode_SetAlignment(iVar2,iVar3,param_3,iVar4,param_5);
+    swvNode_SetAlignment((uint8 *)iVar2,(uint8 *)iVar3,param_3,(uint8 *)iVar4,param_5);
     swv_TryPop();
   }
   else {
@@ -49496,7 +49242,7 @@ void FUN_01035404(undefined4 param_1,byte *param_2)
     }
   }
   FUN_010360b0(param_1,auStack_5c,(int)&STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET + STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET);
-  png_error(param_1,auStack_5c);
+  png_error((uint8 *)param_1,(const char *)auStack_5c);
   return;
 }
 
@@ -49507,7 +49253,7 @@ void FUN_01035488(undefined4 param_1,undefined4 param_2)
   undefined1 auStack_5c [84];
   
   FUN_010360b0(param_1,auStack_5c,param_2);
-  png_error(param_1,auStack_5c);
+  png_error((uint8 *)param_1,(const char *)auStack_5c);
   return;
 }
 
@@ -49518,130 +49264,104 @@ void FUN_010354b4(undefined4 param_1,undefined4 param_2)
   undefined1 auStack_5c [84];
   
   FUN_010360b0(param_1,auStack_5c,param_2);
-  png_warning(param_1,auStack_5c);
+  png_warning((uint8 *)param_1,(const char *)auStack_5c);
   return;
 }
 
 /* ==== 0x010354E0  (file offset 0x354E0)  png_combine_row ============================================= */
-/* libpng 1.2.0's png_combine_row(png_ptr, row, mask) (not yet rewritten): with mask 0xff the whole
-   row, png_memcpy(row, png_ptr->row_buf + 1, (png_ptr->width * png_ptr->row_info.pixel_depth + 7) >> 3)
-   (width at +0xfc, row_buf at +0x120, pixel_depth at +0x13f), a tail jump to thunk_swv_memcpy; otherwise
-   the pixels the interlace mask selects, by pixel depth. */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-byte * png_combine_row(int param_1,byte *param_2,uint param_3)
+/* libpng 1.2.0's png_combine_row(png_ptr, row, mask) (pngrutil.c, built without
+   PNG_READ_PACKSWAP_SUPPORTED, so the shifts always run from the high bits): with mask 0xff the whole row,
+   png_memcpy(row, png_ptr->row_buf + 1, (png_ptr->width * png_ptr->row_info.pixel_depth + 7) >> 3) (width
+   at +0xfc, row_buf at +0x120, pixel_depth at +0x13f), a tail jump to thunk_swv_memcpy; otherwise the
+   pixels the interlace mask selects (one bit a pixel, from 0x80, repeating every 8), by pixel depth: 1, 2
+   and 4 bits merged into the row's bytes (the keep masks 0x7f7f, 0x3f3f and 0x0f0f shifted), other depths
+   copied whole (thunk_swv_memcpy, pixel_depth >> 3 bytes a pixel). No result: Ghidra's byte * was r0 as
+   the loops leave it. Evidence: 0x010354e0 - 0x010356f8 (`cmp r4, #0xff`, `muleq r3, r2, r9` / `addeq r2,
+   r3, #0x7` / `moveq r2, r2, lsr #0x3` / `beq 0x01039dec`, `cmp r2, #0x1` / `#0x2` / `#0x4`, `eor r6, r1,
+   r10, lsr #0x11` 0x7f7f, `ldr r6, [0x1035700]` 0x3f3f, `ldr r6, [0x10356fc]` 0x0f0f, `tst r1, r4`, `rsb
+   r8, r0, #0x7` / `and r7, r7, r6, lsr r8` / `orr r5, r7, r5, lsl r0`, `movne r1, r1, asr #0x1`, `cmp r12,
+   r9` / `bcc`, `movne r7, r2, lsr #0x3`, `tst r8, r4` / `blne 0x01039dec`, `movne r8, r8, lsr #0x1`). */
+void png_combine_row(uint8 *png_ptr,uint8 *row,int32 mask)
 
 {
-  byte bVar1;
-  byte *pbVar2;
-  byte *pbVar3;
-  byte *pbVar4;
-  uint uVar5;
-  uint uVar6;
-  uint uVar7;
-  uint uVar8;
-  
-  uVar7 = INTEGER_16191;
-  uVar5 = INTEGER_3855;
-  uVar6 = *(uint *)(param_1 + 0xfc);
-  bVar1 = *(byte *)(param_1 + 0x13f);
-  pbVar3 = (byte *)(*(int *)(param_1 + 0x120) + 1);
-  if (param_3 == 0xff) {
-    /* the binary: a tail jump to the thunk (Ghidra had merged it, swv_memcpy and rt_memcpy) */
-    thunk_swv_memcpy(param_2,pbVar3,(uVar6 * bVar1 + 7) >> 3);
-    return param_2;
-  }
-  if (bVar1 == 1) {
-    uVar5 = 0x80;
-    pbVar2 = (byte *)0x7;
-    for (uVar7 = 0; uVar7 < uVar6; uVar7 = uVar7 + 1) {
-      if ((uVar5 & param_3) != 0) {
-        *param_2 = *param_2 & (byte)(0x7f7f >> (7U - (int)pbVar2 & 0xff)) |
-                   (byte)((*pbVar3 >> ((uint)pbVar2 & 0xff) & 1) << ((uint)pbVar2 & 0xff));
+  uint8 *sp = *(uint8 **)(png_ptr + 0x120) + 1;
+  uint8 *dp = row;
+  uint32 row_width = *(uint32 *)(png_ptr + 0xfc);
+  uint32 pixel_depth = *(png_ptr + 0x13f);
+  uint32 pixel_bytes;
+  uint32 i;
+  int32 m = 0x80;
+  int32 shift;
+
+  if (mask == 0xff)
+    thunk_swv_memcpy((undefined4)row,(undefined4)sp,(row_width * pixel_depth + 7) >> 3);
+  else if (pixel_depth == 1) {
+    shift = 7;
+    for (i = 0; i < row_width; i++) {
+      if ((m & mask) != 0)
+        *dp = (uint8)((*dp & 0x7f7f >> (7 - shift)) | ((*sp >> shift & 1) << shift));
+      if (shift == 0) {
+        shift = 7;
+        sp++;
+        dp++;
       }
-      if (pbVar2 == (byte *)0x0) {
-        pbVar2 = (byte *)0x7;
-        pbVar3 = pbVar3 + 1;
-        param_2 = param_2 + 1;
-      }
-      else {
-        pbVar2 = pbVar2 + -1;
-      }
-      if (uVar5 == 1) {
-        uVar5 = 0x80;
-      }
-      else {
-        uVar5 = (int)uVar5 >> 1;
-      }
+      else
+        shift -= 1;
+      if (m == 1)
+        m = 0x80;
+      else
+        m >>= 1;
     }
   }
-  else if (bVar1 == 2) {
-    pbVar2 = SIX_AS_BYTE_POINTER;
-    uVar5 = 0x80;
-    for (uVar8 = 0; uVar8 < uVar6; uVar8 = uVar8 + 1) {
-      if ((uVar5 & param_3) != 0) {
-        *param_2 = *param_2 & (byte)(uVar7 >> (6U - (int)pbVar2 & 0xff)) |
-                   (byte)((*pbVar3 >> ((uint)pbVar2 & 0xff) & 3) << ((uint)pbVar2 & 0xff));
+  else if (pixel_depth == 2) {
+    shift = 6;
+    for (i = 0; i < row_width; i++) {
+      if ((m & mask) != 0)
+        *dp = (uint8)((*dp & INTEGER_16191 >> (6 - shift)) | ((*sp >> shift & 3) << shift));
+      if (shift == 0) {
+        shift = 6;
+        sp++;
+        dp++;
       }
-      if (pbVar2 == (byte *)0x0) {
-        pbVar2 = SIX_AS_BYTE_POINTER;
-        pbVar3 = pbVar3 + 1;
-        param_2 = param_2 + 1;
-      }
-      else {
-        pbVar2 = pbVar2 + -2;
-      }
-      if (uVar5 == 1) {
-        uVar5 = 0x80;
-      }
-      else {
-        uVar5 = (int)uVar5 >> 1;
-      }
+      else
+        shift -= 2;
+      if (m == 1)
+        m = 0x80;
+      else
+        m >>= 1;
     }
   }
-  else if (bVar1 == 4) {
-    pbVar2 = &UndefinedInstruction;
-    uVar7 = 0x80;
-    for (uVar8 = 0; uVar8 < uVar6; uVar8 = uVar8 + 1) {
-      if ((uVar7 & param_3) != 0) {
-        *param_2 = *param_2 & (byte)(uVar5 >> (4U - (int)pbVar2 & 0xff)) |
-                   (byte)((*pbVar3 >> ((uint)pbVar2 & 0xff) & 0xf) << ((uint)pbVar2 & 0xff));
+  else if (pixel_depth == 4) {
+    shift = 4;
+    for (i = 0; i < row_width; i++) {
+      if ((m & mask) != 0)
+        *dp = (uint8)((*dp & INTEGER_3855 >> (4 - shift)) | ((*sp >> shift & 0xf) << shift));
+      if (shift == 0) {
+        shift = 4;
+        sp++;
+        dp++;
       }
-      if (pbVar2 == (byte *)0x0) {
-        pbVar2 = &UndefinedInstruction;
-        pbVar3 = pbVar3 + 1;
-        param_2 = param_2 + 1;
-      }
-      else {
-        pbVar2 = pbVar2 + -4;
-      }
-      if (uVar7 == 1) {
-        uVar7 = 0x80;
-      }
-      else {
-        uVar7 = (int)uVar7 >> 1;
-      }
+      else
+        shift -= 4;
+      if (m == 1)
+        m = 0x80;
+      else
+        m >>= 1;
     }
   }
   else {
-    uVar5 = 0x80;
-    pbVar4 = param_2;
-    for (uVar7 = 0; pbVar2 = param_2, uVar7 < uVar6; uVar7 = uVar7 + 1) {
-      if ((uVar5 & param_3) != 0) {
-        /* the count restored from r2: Ghidra had dropped it */
-        param_2 = (byte *)thunk_swv_memcpy(pbVar4,pbVar3,bVar1 >> 3);
-      }
-      if (uVar5 == 1) {
-        uVar5 = 0x80;
-      }
-      else {
-        uVar5 = uVar5 >> 1;
-      }
-      pbVar3 = pbVar3 + (bVar1 >> 3);
-      pbVar4 = pbVar4 + (bVar1 >> 3);
+    pixel_bytes = pixel_depth >> 3;
+    for (i = 0; i < row_width; i++) {
+      if ((m & mask) != 0)
+        thunk_swv_memcpy((undefined4)dp,(undefined4)sp,pixel_bytes);
+      if (m == 1)
+        m = 0x80;
+      else
+        m >>= 1;
+      sp += pixel_bytes;
+      dp += pixel_bytes;
     }
   }
-  return pbVar2;
 }
 
 /* ==== 0x01035704  (file offset 0x35704)  FUN_01035704 ================================================ */
@@ -49661,7 +49381,7 @@ undefined4 FUN_01035704(int param_1,undefined4 param_2,undefined4 param_3,undefi
   bVar1 = false;
 LAB_0103573c:
   uStack_10 = param_4;
-  png_read_data(param_1,&uStack_10,4);
+  png_read_data((uint8 *)param_1,(uint8 *)&uStack_10,4);
   if ((bVar1) && (iVar2 = FUN_01036438(&uStack_10), *(int *)(param_1 + 0x144) != iVar2)) {
     uVar3 = 1;
   }
@@ -49711,7 +49431,7 @@ void FUN_01035814(int param_1,undefined4 param_2,undefined4 param_3)
   undefined4 unaff_r4;
   undefined4 in_lr;
   
-  png_read_data();
+  png_read_data((uint8 *)param_1,(uint8 *)param_2,param_3);
   bVar1 = true;
   uVar3 = *(uint *)(param_1 + 0xa0);
   if ((*(byte *)(param_1 + 0x150) & 0x20) == 0) {
@@ -49785,7 +49505,8 @@ int FUN_0103586c(char *param_1,undefined4 param_2,undefined4 param_3,undefined4 
   if ((*(uint *)(iVar3 + 0xa0) & 0x20000) == 0) goto LAB_01035978;
   if ((param_1 == (char *)0x0) || (cVar2 = *param_1, cVar2 != *pcVar7)) {
 LAB_01035968:
-    png_error(iVar3,STRING_INCOMPATIBLE_LIBPNG_VERSION_IN_APPLICATION_AND_OFFSET + 0x1035974);
+    png_error((uint8 *)iVar3,
+        (const char *)(STRING_INCOMPATIBLE_LIBPNG_VERSION_IN_APPLICATION_AND_OFFSET + 0x1035974));
   }
   else if (cVar2 == '1') {
     if (param_1[2] != *(char *)(iVar4 + 0x10358ee)) goto LAB_01035968;
@@ -49793,7 +49514,7 @@ LAB_01035968:
   else if ((cVar2 == '0') && ((byte)param_1[2] < 0x39)) goto LAB_01035968;
 LAB_01035978:
   *(undefined4 *)(iVar3 + 0xe4) = 0x2000;
-  uVar6 = png_malloc(iVar3);
+  uVar6 = png_malloc((uint8 *)iVar3);
   *(undefined4 *)(iVar3 + 0xe0) = uVar6;
   *(int *)(iVar3 + 200) = ADDRESS_OF_FUNCTION_01037eec_OFFSET + 0x1035998;
   *(int *)(iVar3 + 0xcc) = DATA_AT_01037F3C_OFFSET + 0x10359a4;
@@ -49810,7 +49531,7 @@ LAB_01035978:
     if (iVar4 == 0) goto LAB_010359f8;
     iVar4 = STRING_UNKNOWN_ZLIB_ERROR_OFFSET + 0x10359f4;
   }
-  png_error(iVar3,iVar4);
+  png_error((uint8 *)iVar3,(const char *)iVar4);
 LAB_010359f8:
   *(undefined4 *)(iVar3 + 0xb4) = *(undefined4 *)(iVar3 + 0xe0);
   *(undefined4 *)(iVar3 + 0xb8) = *(undefined4 *)(iVar3 + 0xe4);
@@ -50057,7 +49778,8 @@ void FUN_01035e84(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   int iVar2;
   
   if (*(int *)(param_1 + 0x120) == 0) {
-    png_error(param_1,STRING_NULL_ROW_BUFFER_OFFSET + 0x1035ea0,param_3,param_4,param_4);
+    png_error((uint8 *)param_1,(const char *)(STRING_NULL_ROW_BUFFER_OFFSET + 0x1035ea0),param_3,param_4,
+        param_4);
   }
   iVar2 = param_1 + 0x134;
   if ((*(uint *)(param_1 + 0xa4) & 0x400) != 0) {
@@ -50146,26 +49868,21 @@ void FUN_01035f30(uint *param_1,int param_2)
 }
 
 /* ==== 0x01036088  (file offset 0x36088)  png_error =================================================== */
-/* libpng 1.2.0's png_error(png_ptr, message) (not yet rewritten): calls the png_struct's error_fn
-   (+0x80) with png_ptr and the message (r1, passed through: Ghidra dropped it), then swv_longjmp
-   (png_ptr->jmpbuf at +0, 1), a tail jump that Ghidra merged in (from rt_stack_postlongjmp on). No
-   default error handler in this build. */
-/* WARNING: Removing unreachable block (ram,0x01000540) */
-
-void png_error(int param_1)
+/* libpng 1.2.0's png_error(png_ptr, message) (pngerror.c, built without PNG_ERROR_NUMBERS_SUPPORTED):
+   calls the png_struct's error_fn (+0x80, an absolute address) with png_ptr and the message when it is
+   set, then png_default_error's longjmp(png_ptr->jmpbuf, 1): swv_longjmp with the jmpbuf at +0 (a tail
+   jump; Ghidra had merged it in, from rt_stack_postlongjmp on). Differs from the source: the default
+   handler prints nothing (no stderr in this build). Does not return. Evidence: 0x01036088 - 0x010360ac
+   (`ldr r2, [r0, #0x80]` / `cmp r2, #0x0` / `movne r0, r4` / `blxne r2` with r1 the message passed
+   through, Ghidra had dropped it; `mov r0, r4` / `mov r1, #0x1` / `b 0x01000524`). */
+void png_error(uint8 *png_ptr,const char *message)
 
 {
-  if (*(code **)(param_1 + 0x80) != (code *)0x0) {
-    /* a function pointer the object keeps at +0x80 (not identified) */
-    (**(code **)(param_1 + 0x80))(param_1);
-  }
-  rt_stack_postlongjmp(*(undefined4 *)(param_1 + 0x20),*(undefined4 *)(param_1 + 0x24));
-                    /* WARNING: Could not recover jumptable at 0x0100054c. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  /* the function passed in (its address with the low bits cleared): the element constructor or
-     destructor */
-  (*(code *)(*(uint *)(param_1 + 0xc) & 0xfffffffc))(1);
-  return;
+  void (*error_fn)(uint8 *,const char *) = *(void (**)(uint8 *,const char *))(png_ptr + 0x80);
+
+  if (error_fn != NULL)
+    (*error_fn)(png_ptr,message);
+  swv_longjmp((uint32 *)png_ptr,1);
 }
 
 /* ==== 0x010360B0  (file offset 0x360B0)  FUN_010360b0 ================================================ */
@@ -50315,7 +50032,8 @@ uint * FUN_010362a0(int param_1,uint *param_2,uint *param_3,uint *param_4,uint *
     }
     uVar3 = FUN_010002c8((int)(iVar1 * *param_5 + 7) >> 3,0x7fffffff,uVar2,uVar3,param_4);
     if (uVar3 < *param_3) {
-      png_warning(param_1,STRING_WIDTH_TOO_LARGE_FOR_LIBPNG_TO_OFFSET + 0x1036360);
+      png_warning((uint8 *)param_1,
+          (const char *)(STRING_WIDTH_TOO_LARGE_FOR_LIBPNG_TO_OFFSET + 0x1036360));
     }
     param_5 = (uint *)0x1;
   }
@@ -50416,7 +50134,8 @@ undefined4 FUN_01036474(int param_1,int param_2,uint param_3,undefined4 param_4)
   uint uVar2;
   
   if ((*(uint *)(param_1 + 0x9c) & 1) == 0 || (*(uint *)(param_1 + 0x9c) & 4) == 0) {
-    png_error(param_1,STRING_NO_IMAGE_IN_FILE_OFFSET + 0x1036498,param_3,param_4,param_4);
+    png_error((uint8 *)param_1,(const char *)(STRING_NO_IMAGE_IN_FILE_OFFSET + 0x1036498),param_3,param_4,
+        param_4);
     param_2 = extraout_r1;
   }
   if (param_3 != 0) {
@@ -50424,7 +50143,7 @@ undefined4 FUN_01036474(int param_1,int param_2,uint param_3,undefined4 param_4)
   }
   *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 0x18;
   if (param_3 != 0) {
-    png_warning(param_1,param_2 + 0x10364b8);
+    png_warning((uint8 *)param_1,(const char *)(param_2 + 0x10364b8));
   }
   uVar2 = *(uint *)(param_1 + 0xe4);
   for (; uVar2 < param_3; param_3 = param_3 - uVar2) {
@@ -50466,10 +50185,10 @@ void FUN_010364d4(int param_1,undefined4 param_2,int param_3)
   undefined1 local_1c;
   
   if ((*(uint *)(param_1 + 0x9c) & 1) != 0) {
-    png_error(param_1,STRING_OUT_OF_PLACE_IHDR_OFFSET + 0x10364fc);
+    png_error((uint8 *)param_1,(const char *)(STRING_OUT_OF_PLACE_IHDR_OFFSET + 0x10364fc));
   }
   if (param_3 != 0xd) {
-    png_error(param_1,STRING_INVALID_IHDR_CHUNK_OFFSET + 0x1036510);
+    png_error((uint8 *)param_1,(const char *)(STRING_INVALID_IHDR_CHUNK_OFFSET + 0x1036510));
   }
   *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 1;
   FUN_01035814(param_1,auStack_28,0xd);
@@ -50531,13 +50250,13 @@ void FUN_01036610(int param_1,int param_2,uint param_3)
   if ((uVar1 & 1) == 0) {
     iVar3 = STRING_MISSING_IHDR_BEFORE_PLTE_OFFSET + 0x1036638;
 LAB_01036658:
-    png_error(param_1,iVar3);
+    png_error((uint8 *)param_1,(const char *)iVar3);
 LAB_01036660:
     *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 2;
     if ((*(byte *)(param_1 + 0x15a) & 2) != 0) {
       if (*(byte *)(param_1 + 0x15a) == 3) {
         if ((0x300 < param_3) || (FUN_010002c8(3,param_3), extraout_r1 != 0)) {
-          png_error(param_1,STRING_INVALID_PALETTE_CHUNK_OFFSET + 0x10366d0);
+          png_error((uint8 *)param_1,(const char *)(STRING_INVALID_PALETTE_CHUNK_OFFSET + 0x10366d0));
         }
         uVar1 = FUN_010001f4(3,param_3);
         puVar4 = local_318;
@@ -50579,13 +50298,15 @@ LAB_01036660:
           return;
         }
         if ((uVar1 & 0xffff) < (uint)*(ushort *)(param_1 + 0x14e)) {
-          png_warning(param_1,STRING_TRUNCATING_INCORRECT_TRNS_CHUNK_LENGTH_OFFSET + 0x10367ec);
+          png_warning((uint8 *)param_1,
+              (const char *)(STRING_TRUNCATING_INCORRECT_TRNS_CHUNK_LENGTH_OFFSET + 0x10367ec));
           *(short *)(param_1 + 0x14e) = (short)uVar1;
         }
         if ((uint)*(ushort *)(param_2 + 0x16) <= (uVar1 & 0xffff)) {
           return;
         }
-        png_warning(param_1,STRING_TRUNCATING_INCORRECT_INFO_TRNS_CHUNK_LENGTH_OFFSET + 0x103680c);
+        png_warning((uint8 *)param_1,
+            (const char *)(STRING_TRUNCATING_INCORRECT_INFO_TRNS_CHUNK_LENGTH_OFFSET + 0x103680c));
         *(short *)(param_2 + 0x16) = (short)uVar1;
         return;
       }
@@ -50603,7 +50324,7 @@ LAB_01036660:
     }
     iVar3 = STRING_INVALID_PLTE_AFTER_IDAT_OFFSET + 0x1036648;
   }
-  png_warning(param_1,iVar3);
+  png_warning((uint8 *)param_1,(const char *)iVar3);
 LAB_01036694:
   FUN_01035774(param_1,param_3);
   return;
@@ -50623,7 +50344,7 @@ void FUN_01036838(int param_1,int param_2,uint param_3)
   
   uVar3 = *(uint *)(param_1 + 0x9c);
   if ((uVar3 & 1) == 0) {
-    png_error(param_1,STRING_MISSING_IHDR_BEFORE_TRNS_OFFSET + 0x1036864);
+    png_error((uint8 *)param_1,(const char *)(STRING_MISSING_IHDR_BEFORE_TRNS_OFFSET + 0x1036864));
   }
   else {
     if ((uVar3 & 4) != 0) {
@@ -50642,7 +50363,7 @@ void FUN_01036838(int param_1,int param_2,uint param_3)
   iVar4 = STRING_INCORRECT_TRNS_CHUNK_LENGTH_OFFSET + 0x10368a4;
   if (cVar1 == '\x03') {
     if ((*(uint *)(param_1 + 0x9c) & 2) == 0) {
-      png_warning(param_1,STRING_MISSING_PLTE_BEFORE_TRNS_OFFSET + 0x10368c4);
+      png_warning((uint8 *)param_1,(const char *)(STRING_MISSING_PLTE_BEFORE_TRNS_OFFSET + 0x10368c4));
     }
     else if (*(ushort *)(param_1 + 0x14c) < param_3) goto LAB_01036968;
     if (param_3 != 0) {
@@ -50685,7 +50406,7 @@ LAB_010369a4:
     iVar4 = STRING_TRNS_CHUNK_NOT_ALLOWED_WITH_ALPHA_OFFSET + 0x1036960;
   }
 LAB_01036968:
-  png_warning(param_1,iVar4);
+  png_warning((uint8 *)param_1,(const char *)iVar4);
   FUN_01035774(param_1,param_3);
   return;
 }
@@ -50770,83 +50491,67 @@ void FUN_01036acc(void)
 }
 
 /* ==== 0x01036AD0  (file offset 0x36AD0)  png_malloc ================================================== */
-/* libpng 1.2.0's png_malloc(png_ptr, size) (not yet rewritten): 0 when png_ptr or size is 0, else
-   helper malloc, with png_error(png_ptr, "Out of Memory") when that fails (a build without user memory
-   functions). */
-void * png_malloc(int param_1,uint32 param_2)
+/* libpng 1.2.0's png_malloc(png_ptr, size) (pngmem.c, built without PNG_USER_MEM_SUPPORTED, so
+   png_malloc_default's body): NULL when png_ptr or size is 0, else helper_malloc (the source's malloc),
+   with png_error(png_ptr, "Out of Memory") when that fails (the string at 0x010411A4). Evidence:
+   0x01036ad0 - 0x01036b04 (`movs r5, r0` / `cmpne r0, #0x0` / `moveq r0, #0x0`, `bl 0x01039598`, `ldreq
+   r1, [0x1036b08]` / `addeq r1, pc, r1` / `bleq 0x01036088`). */
+void *png_malloc(uint8 *png_ptr,uint32 size)
 
 {
-  void *pvVar1;
-  
-  if (param_1 == 0 || param_2 == 0) {
-    pvVar1 = (void *)0x0;
+  void *ret = NULL;
+
+  if (png_ptr != NULL && size != 0) {
+    ret = helper_malloc(size);
+    if (ret == NULL)
+      png_error(png_ptr,(const char *)(STRING_OUT_OF_MEMORY_OFFSET + 0x1036afc));
   }
-  else {
-    pvVar1 = helper_malloc(param_2);
-    if (pvVar1 == (void *)0x0) {
-      png_error(param_1,STRING_OUT_OF_MEMORY_OFFSET + 0x1036afc);
-    }
-  }
-  return pvVar1;
+  return ret;
 }
 
 /* ==== 0x01036B0C  (file offset 0x36B0C)  png_memcpy_check ============================================ */
-/* libpng 1.2.0's png_memcpy_check(png_ptr, s1, s2, size) (not yet rewritten): memcpy(s1, s2, size),
-   returning s1; the size check of libpng's source compiles away on a 32-bit target. */
-undefined4 png_memcpy_check(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+/* libpng 1.2.0's png_memcpy_check(png_ptr, s1, s2, length) (pngmem.c): memcpy(s1, s2, length) through
+   thunk_swv_memcpy, returning s1; the source's size check (png_error "Overflow in png_memcpy_check.")
+   compiles away on a 32-bit target. Evidence: 0x01036b0c - 0x01036b18 (`mov r0, r1` / `mov r1, r2` / `mov
+   r2, r3` / `b 0x01039dec`, a tail jump to the thunk; Ghidra had merged it, swv_memcpy and rt_memcpy). */
+void *png_memcpy_check(uint8 *png_ptr,void *s1,void *s2,uint32 length)
 
 {
-  /* the binary: a tail jump to the thunk (Ghidra had merged it, swv_memcpy and rt_memcpy) */
-  return thunk_swv_memcpy(param_2,param_3,param_4);
+  void *result = (void *)thunk_swv_memcpy((undefined4)s1,(undefined4)s2,(undefined4)length);
+
+  return result;
 }
 
 /* ==== 0x01036B1C  (file offset 0x36B1C)  png_memset_check ============================================ */
-/* libpng 1.2.0's png_memset_check(png_ptr, s1, value, size): memset(s1, value, size) (the binary: its
-   arguments moved down a register and a tail jump to thunk_swv_memset; Ghidra had merged the thunk and
-   swv_memset). The size check of libpng's source compiles away on a 32-bit target. */
-undefined4 png_memset_check(undefined4 param_1,undefined4 param_2,uint param_3,undefined4 param_4)
+/* libpng 1.2.0's png_memset_check(png_ptr, s1, value, length) (pngmem.c): memset(s1, value, length)
+   through thunk_swv_memset, its result returned (the binary: the arguments moved down a register and a
+   tail jump to thunk_swv_memset; Ghidra had merged the thunk and swv_memset). The source's size check
+   (png_error "Overflow in png_memset_check.") compiles away on a 32-bit target. Evidence: 0x01036b1c -
+   0x01036b28 (`mov r0, r1` / `mov r1, r2` / `mov r2, r3` / `b 0x01039df0`). */
+void *png_memset_check(uint8 *png_ptr,void *s1,int32 value,uint32 length)
 
 {
-  return thunk_swv_memset(param_2,param_3,param_4);
+  void *result = (void *)thunk_swv_memset((undefined4)s1,(uint)value,(undefined4)length);
+
+  return result;
 }
 
 /* ==== 0x01036B2C  (file offset 0x36B2C)  png_read_data =============================================== */
-/* libpng 1.2.0's png_read_data(png_ptr, data, length) (not yet rewritten): a tail jump to the
-   png_struct's read_data_fn (+0x90) when set, else png_error(png_ptr, "Call to NULL read function")
-   (the message at 0x0103FFA4, pc + 0x9464 from the literal at 0x01036b44: Ghidra dropped it and
-   merged png_error in). */
-/* WARNING: Removing unreachable block (ram,0x01000540) */
-/* WARNING: Removing unreachable block (ram,0x01036b44) */
-/* WARNING: Removing unreachable block (ram,0x01036b54) */
-/* WARNING: Removing unreachable block (ram,0x01036b64) */
-/* WARNING: Removing unreachable block (ram,0x01036b68) */
-/* WARNING: Removing unreachable block (ram,0x01036b74) */
-/* WARNING: Removing unreachable block (ram,0x01036ba0) */
-/* WARNING: Removing unreachable block (ram,0x01036bac) */
-/* WARNING: Removing unreachable block (ram,0x01036bbc) */
-/* WARNING: Removing unreachable block (ram,0x01036bc8) */
-
-void png_read_data(int param_1)
+/* libpng 1.2.0's png_read_data(png_ptr, data, length) (pngrio.c): the png_struct's read_data_fn (+0x90, an
+   absolute address) with png_ptr, data and length when it is set (a tail jump, r0 - r2 passed through),
+   else png_error(png_ptr, "Call to NULL read function") (the message at 0x0103FFA4, pc + 0x9464 from the
+   literal at 0x01036b44; a tail jump too; Ghidra had dropped the arguments and merged png_error in).
+   Evidence: 0x01036b2c - 0x01036b44 (`ldr r3, [r0, #0x90]` / `cmp r3, #0x0`, `ldreq r1, [0x1036b44]` /
+   `addeq r1, pc, r1` / `beq 0x01036088`, `bxne r3`). */
+void png_read_data(uint8 *png_ptr,uint8 *data,uint32 length)
 
 {
-  if (*(code **)(param_1 + 0x90) != (code *)0x0) {
-                    /* WARNING: Could not recover jumptable at 0x01036b40. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-    /* a function pointer the object keeps at +0x90 (not identified) */
-    (**(code **)(param_1 + 0x90))();
-    return;
-  }
-  if (*(code **)(param_1 + 0x80) != (code *)0x0) {
-    /* a function pointer the object keeps at +0x80 (not identified) */
-    (**(code **)(param_1 + 0x80))(param_1);
-  }
-  rt_stack_postlongjmp(*(undefined4 *)(param_1 + 0x20),*(undefined4 *)(param_1 + 0x24));
-                    /* WARNING: Could not recover jumptable at 0x0100054c. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  /* the function passed in (its address with the low bits cleared): the element constructor or
-     destructor */
-  (*(code *)(*(uint *)(param_1 + 0xc) & 0xfffffffc))(1);
-  return;
+  void (*read_data_fn)(uint8 *,uint8 *,uint32) = *(void (**)(uint8 *,uint8 *,uint32))(png_ptr + 0x90);
+
+  if (read_data_fn == NULL)
+    png_error(png_ptr,(const char *)(STRING_CALL_TO_NULL_READ_FUNCTION_OFFSET + 0x1036b40));
+  else
+    (*read_data_fn)(png_ptr,data,length);
 }
 
 /* ==== 0x01036B48  (file offset 0x36B48)  FUN_01036b48 ================================================ */
@@ -50912,7 +50617,7 @@ void FUN_01036c24(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   iVar7 = STRING_TRNS_OFFSET + 0x1036c5c;
   iVar4 = param_1 + 0x150;
   do {
-    png_read_data(param_1,&uStack_28,4);
+    png_read_data((uint8 *)param_1,(uint8 *)&uStack_28,4);
     iVar1 = FUN_01036438(&uStack_28);
     FUN_01037a70(param_1);
     FUN_01035814(param_1,iVar4,4);
@@ -50933,7 +50638,7 @@ void FUN_01036c24(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
             uVar3 = *(uint *)(param_1 + 0x9c);
           }
           if (iVar1 != 0 || (uVar3 & 8) != 0) {
-            png_error(param_1,iVar8);
+            png_error((uint8 *)param_1,(const char *)iVar8);
           }
           FUN_01035774(param_1,iVar1);
         }
@@ -51023,7 +50728,8 @@ void FUN_01036db4(undefined4 param_1,int param_2,byte *param_3,byte *param_4,und
     }
     break;
   default:
-    png_warning(param_1,STRING_IGNORING_BAD_ADAPTIVE_FILTER_TYPE_OFFSET + 0x1036f5c);
+    png_warning((uint8 *)param_1,
+        (const char *)(STRING_IGNORING_BAD_ADAPTIVE_FILTER_TYPE_OFFSET + 0x1036f5c));
     *param_3 = 0;
     return;
   }
@@ -51086,7 +50792,8 @@ void FUN_01036f6c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   uStack_28 = param_4;
   if (*(char *)(param_1 + 0x157) != '\0') {
     *(undefined4 *)(param_1 + 0x118) = 0;
-    png_memset_check(param_1,*(undefined4 *)(param_1 + 0x11c),0,*(int *)(param_1 + 0x10c) + 1,param_2);
+    png_memset_check((uint8 *)param_1,(void *)*(undefined4 *)(param_1 + 0x11c),0,
+        *(int *)(param_1 + 0x10c) + 1,param_2);
     iVar6 = DATA_AT_0103FEFC_OFFSET + 0x1036fc8;
     iVar7 = DATA_AT_0103FF18_OFFSET_2 + 0x1036fd0;
     iVar8 = DATA_AT_0103FF34_OFFSET + 0x1036fd8;
@@ -51124,14 +50831,14 @@ void FUN_01036f6c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
     if (*(int *)(param_1 + 0xac) == 0) {
       while (*(int *)(param_1 + 0x140) == 0) {
         FUN_01035774(param_1,0);
-        png_read_data(param_1,&uStack_2c);
+        png_read_data((uint8 *)param_1,(uint8 *)&uStack_2c,4);
         uVar5 = FUN_01036438(&uStack_2c);
         *(undefined4 *)(param_1 + 0x140) = uVar5;
         FUN_01037a70(param_1);
         FUN_01035814(param_1,param_1 + 0x150,4);
         iVar3 = swv_memcmp(param_1 + 0x150,iVar6,4);
         if (iVar3 != 0) {
-          png_error(param_1,iVar7);
+          png_error((uint8 *)param_1,(const char *)iVar7);
         }
       }
       *(uint *)(param_1 + 0xac) = *(uint *)(param_1 + 0xe4);
@@ -51149,15 +50856,15 @@ void FUN_01036f6c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
       if (*(int *)(param_1 + 0xc0) == 0) {
         iVar3 = iVar9;
       }
-      png_error(param_1,iVar3);
+      png_error((uint8 *)param_1,(const char *)iVar3);
     }
     if (*(int *)(param_1 + 0xb8) == 0) {
-      png_error(param_1,iVar8);
+      png_error((uint8 *)param_1,(const char *)iVar8);
     }
   }
   if (*(int *)(param_1 + 0xb8) == 0) {
 LAB_0103718c:
-    png_error(param_1,iVar8);
+    png_error((uint8 *)param_1,(const char *)iVar8);
   }
   else {
     iVar6 = *(int *)(param_1 + 0xac);
@@ -51177,7 +50884,7 @@ LAB_010371b8:
     iVar6 = *(int *)(param_1 + 0xac);
   }
   if (!bVar10 || iVar6 != 0) {
-    png_error(param_1,STRING_EXTRA_COMPRESSION_DATA_OFFSET + 0x10371d4);
+    png_error((uint8 *)param_1,(const char *)(STRING_EXTRA_COMPRESSION_DATA_OFFSET + 0x10371d4));
   }
   FUN_010311d4(param_1 + 0xa8);
   *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 8;
@@ -51225,7 +50932,7 @@ void FUN_010372a8(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   uStack_28 = param_4;
   if (uVar3 < 8) {
     iVar4 = -uVar3 + 8;
-    png_read_data(param_1,param_2 + uVar3 + 0x20,iVar4);
+    png_read_data((uint8 *)param_1,(uint8 *)(param_2 + uVar3 + 0x20),iVar4);
     *(undefined1 *)(param_1 + 0x160) = 8;
     iVar4 = png_sig_cmp(param_2 + 0x20,uVar3,iVar4);
     if (iVar4 != 0) {
@@ -51235,7 +50942,7 @@ void FUN_010372a8(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
       else {
         iVar4 = STRING_PNG_FILE_CORRUPTED_BY_ASCII_CONVERSION_OFFSET + 0x1037330;
       }
-      png_error(param_1,iVar4);
+      png_error((uint8 *)param_1,(const char *)iVar4);
     }
     if (uVar3 < 3) {
       *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 0x1000;
@@ -51250,7 +50957,7 @@ void FUN_010372a8(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     while( true ) {
       while( true ) {
         while( true ) {
-          png_read_data(param_1,&uStack_28,4);
+          png_read_data((uint8 *)param_1,(uint8 *)&uStack_28,4);
           uVar1 = FUN_01036438(&uStack_28);
           FUN_01037a70(param_1);
           FUN_01035814(param_1,iVar4,4);
@@ -51284,7 +50991,7 @@ void FUN_010372a8(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     goto LAB_01037470;
     iVar4 = STRING_MISSING_PLTE_BEFORE_IDAT_OFFSET + 0x103746c;
   }
-  png_error(param_1,iVar4);
+  png_error((uint8 *)param_1,(const char *)iVar4);
 LAB_01037470:
   *(undefined4 *)(param_1 + 0x140) = uVar1;
   *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 4;
@@ -51318,7 +51025,8 @@ void FUN_010374dc(int param_1,int param_2,int param_3,uint param_4)
   if (!bVar7 || (uVar5 & 2) == 0) {
 switchD_01037524_default:
     if ((*(uint *)(param_1 + 0x9c) & 4) == 0) {
-      png_error(param_1,STRING_INVALID_ATTEMPT_TO_READ_ROW_DATA_OFFSET + 0x1037640);
+      png_error((uint8 *)param_1,
+          (const char *)(STRING_INVALID_ATTEMPT_TO_READ_ROW_DATA_OFFSET + 0x1037640));
     }
     iVar4 = INTEGER_34955;
     *(undefined4 *)(param_1 + 0xb4) = *(undefined4 *)(param_1 + 0x120);
@@ -51328,14 +51036,14 @@ switchD_01037524_default:
       if (*(int *)(param_1 + 0xac) == 0) {
         while (*(int *)(param_1 + 0x140) == 0) {
           FUN_01035774(param_1,0);
-          png_read_data(param_1,&local_28,4);
+          png_read_data((uint8 *)param_1,(uint8 *)&local_28,4);
           uVar2 = FUN_01036438(&local_28);
           *(undefined4 *)(param_1 + 0x140) = uVar2;
           FUN_01037a70(param_1);
           FUN_01035814(param_1,param_1 + 0x150,4);
           iVar3 = swv_memcmp(param_1 + 0x150,iVar4 + 0x103765c,4);
           if (iVar3 != 0) {
-            png_error(param_1,iVar6);
+            png_error((uint8 *)param_1,(const char *)iVar6);
           }
         }
         *(uint *)(param_1 + 0xac) = *(uint *)(param_1 + 0xe4);
@@ -51353,7 +51061,7 @@ switchD_01037524_default:
         if (iVar3 == 0) {
           iVar3 = STRING_DECOMPRESSION_ERROR_OFFSET_2 + 0x1037794;
         }
-        png_error(param_1,iVar3);
+        png_error((uint8 *)param_1,(const char *)iVar3);
       }
       if (*(int *)(param_1 + 0xb8) == 0) {
 LAB_010377a4:
@@ -51370,7 +51078,8 @@ LAB_010377a4:
           FUN_01036db4(param_1,param_1 + 0x134,*(byte **)(param_1 + 0x120) + 1,
                        *(int *)(param_1 + 0x11c) + 1);
         }
-        png_memcpy_check(param_1,*(undefined4 *)(param_1 + 0x11c),*(undefined4 *)(param_1 + 0x120),
+        png_memcpy_check((uint8 *)param_1,(void *)*(undefined4 *)(param_1 + 0x11c),
+            (void *)*(undefined4 *)(param_1 + 0x120),
                      *(int *)(param_1 + 0x10c) + 1);
         if (*(int *)(param_1 + 0xa4) != 0) {
           FUN_01035e84(param_1);
@@ -51383,7 +51092,7 @@ LAB_010377a4:
         if (bVar7 || (uVar5 & 2) == 0) {
           iVar4 = param_3;
           if (param_2 != 0) {
-            png_combine_row(param_1,param_2);
+            png_combine_row((uint8 *)param_1,(uint8 *)param_2);
           }
         }
         else {
@@ -51396,7 +51105,7 @@ LAB_010377a4:
           }
         }
         if (iVar4 != 0) {
-          png_combine_row(param_1,iVar4);
+          png_combine_row((uint8 *)param_1,(uint8 *)iVar4);
         }
         FUN_01036f6c(param_1);
         if (*(code **)(param_1 + 0x174) == (code *)0x0) {
@@ -51419,7 +51128,7 @@ LAB_010377a4:
       bVar8 = *(int *)(param_1 + 0x140) == 0;
     }
     if (!bVar8) {
-      png_error(param_1,STRING_EXTRA_COMPRESSED_DATA_OFFSET_2 + 0x1037758);
+      png_error((uint8 *)param_1,(const char *)(STRING_EXTRA_COMPRESSED_DATA_OFFSET_2 + 0x1037758));
     }
     *(uint *)(param_1 + 0x9c) = *(uint *)(param_1 + 0x9c) | 8;
     *(uint *)(param_1 + 0xa0) = *(uint *)(param_1 + 0xa0) | 0x20;
@@ -51454,7 +51163,7 @@ LAB_010377a4:
   }
   if (param_3 != 0) {
 LAB_01037608:
-    png_combine_row(param_1,param_3);
+    png_combine_row((uint8 *)param_1,(uint8 *)param_3);
   }
 LAB_01037620:
   FUN_01036f6c(param_1);
@@ -51505,13 +51214,13 @@ void FUN_01037904(int param_1)
   if (bVar5 && bVar1 < 8) {
     uVar2 = 8;
   }
-  iVar4 = png_malloc(param_1,(uVar2 * (*(int *)(param_1 + 0xfc) + 7U & 0xfffffff8) + 7 >> 3) +
+  iVar4 = png_malloc((uint8 *)param_1,(uVar2 * (*(int *)(param_1 + 0xfc) + 7U & 0xfffffff8) + 7 >> 3) +
                                ((int)(uVar2 + 7) >> 3) + 0x41);
   *(int *)(param_1 + 0x180) = iVar4;
   *(int *)(param_1 + 0x120) = iVar4 + 0x20;
-  uVar3 = png_malloc(param_1,*(int *)(param_1 + 0x10c) + 1);
+  uVar3 = png_malloc((uint8 *)param_1,*(int *)(param_1 + 0x10c) + 1);
   *(undefined4 *)(param_1 + 0x11c) = uVar3;
-  png_memset_check(param_1,uVar3,0,*(int *)(param_1 + 0x10c) + 1);
+  png_memset_check((uint8 *)param_1,(void *)uVar3,0,*(int *)(param_1 + 0x10c) + 1);
   *(uint *)(param_1 + 0xa0) = *(uint *)(param_1 + 0xa0) | 0x40;
   return;
 }
@@ -51539,36 +51248,38 @@ void FUN_01037a90(int param_1,uint *param_2,uint param_3,uint param_4,uint param
     return;
   }
   if (param_3 == 0 || param_4 == 0) {
-    png_error(param_1,STRING_IMAGE_WIDTH_OR_HEIGHT_IS_ZERO_OFFSET + 0x1037ad0,param_3,param_4,param_4);
+    png_error((uint8 *)param_1,(const char *)(STRING_IMAGE_WIDTH_OR_HEIGHT_IS_ZERO_OFFSET + 0x1037ad0),
+        param_3,param_4,param_4);
   }
   uVar1 = param_3;
   if (param_3 < 0x80000000) {
     uVar1 = param_4;
   }
   if (0x7fffffff < uVar1) {
-    png_error(param_1,STRING_INVALID_IMAGE_SIZE_IN_IHDR_OFFSET + 0x1037ae8);
+    png_error((uint8 *)param_1,(const char *)(STRING_INVALID_IMAGE_SIZE_IN_IHDR_OFFSET + 0x1037ae8));
   }
   if ((((param_5 != 1 && param_5 != 2) && param_5 != 4) && param_5 != 8) && param_5 != 0x10) {
-    png_error(param_1,STRING_INVALID_BIT_DEPTH_IN_IHDR_OFFSET + 0x1037b0c);
+    png_error((uint8 *)param_1,(const char *)(STRING_INVALID_BIT_DEPTH_IN_IHDR_OFFSET + 0x1037b0c));
   }
   if ((((int)param_6 < 0) || (param_6 == 1 || param_6 == 5)) || (6 < (int)param_6)) {
-    png_error(param_1,STRING_INVALID_COLOR_TYPE_IN_IHDR_OFFSET + 0x1037b38);
+    png_error((uint8 *)param_1,(const char *)(STRING_INVALID_COLOR_TYPE_IN_IHDR_OFFSET + 0x1037b38));
   }
   if (param_6 == 3) {
     if ((int)param_5 < 9) goto LAB_01037b78;
   }
   else if (((param_6 != 2 && param_6 != 4) && param_6 != 6) || (7 < (int)param_5))
   goto LAB_01037b78;
-  png_error(param_1,STRING_INVALID_COLOR_TYPE_SLASH_BIT_DEPTH_OFFSET + 0x1037b74);
+  png_error((uint8 *)param_1,(const char *)(STRING_INVALID_COLOR_TYPE_SLASH_BIT_DEPTH_OFFSET + 0x1037b74));
 LAB_01037b78:
   if (1 < param_7) {
-    png_error(param_1,STRING_UNKNOWN_INTERLACE_METHOD_IN_IHDR_OFFSET + 0x1037b8c);
+    png_error((uint8 *)param_1,(const char *)(STRING_UNKNOWN_INTERLACE_METHOD_IN_IHDR_OFFSET + 0x1037b8c));
   }
   if (param_8 != 0) {
-    png_error(param_1,STRING_UNKNOWN_COMPRESSION_METHOD_IN_IHDR_OFFSET + 0x1037ba0);
+    png_error((uint8 *)param_1,
+        (const char *)(STRING_UNKNOWN_COMPRESSION_METHOD_IN_IHDR_OFFSET + 0x1037ba0));
   }
   if (param_9 != 0) {
-    png_error(param_1,STRING_UNKNOWN_FILTER_METHOD_IN_IHDR_OFFSET + 0x1037bb4);
+    png_error((uint8 *)param_1,(const char *)(STRING_UNKNOWN_FILTER_METHOD_IN_IHDR_OFFSET + 0x1037bb4));
   }
   *param_2 = param_3;
   param_2[1] = param_4;
@@ -51591,7 +51302,8 @@ LAB_01037b78:
   *(char *)((int)param_2 + 0x1e) = (char)uVar1;
   uVar1 = FUN_010002c8(uVar2 + 7 >> 3,0x7fffffff);
   if (uVar1 < param_3) {
-    png_warning(param_1,STRING_WIDTH_TOO_LARGE_TO_PROCESS_IMAGE_OFFSET + 0x1037c44);
+    png_warning((uint8 *)param_1,
+        (const char *)(STRING_WIDTH_TOO_LARGE_TO_PROCESS_IMAGE_OFFSET + 0x1037c44));
     uVar1 = 0;
   }
   else {
@@ -51675,7 +51387,7 @@ void FUN_01037d48(int param_1,undefined4 param_2,undefined4 param_3)
   }
   iVar2 = STRING_IT_S_AN_ERROR_TO_SET_OFFSET + 0x1037d74;
   *(undefined4 *)(param_1 + 0x8c) = 0;
-  png_warning(param_1,iVar2);
+  png_warning((uint8 *)param_1,(const char *)iVar2);
   pcVar3 = (char *)(STRING_SAME_STRUCTURE_DOT_RESETTING_WRITE_DATA_OFFSET + 0x1037d88);
   iVar2 = 0;
   if (*pcVar3 == '#') {
@@ -51720,7 +51432,7 @@ void FUN_01037da8(int param_1,int param_2,int param_3,int param_4,int param_5)
   }
   if (param_3 != 0) {
     FUN_0103619c(param_1,param_2,0x2000,0);
-    uVar1 = png_malloc(param_1,param_4);
+    uVar1 = png_malloc((uint8 *)param_1,param_4);
     *(undefined4 *)(param_2 + 0x28) = uVar1;
     *(undefined4 *)(param_1 + 0x164) = uVar1;
     thunk_swv_memcpy(*(undefined4 *)(param_2 + 0x28),param_3,param_4);
@@ -51760,40 +51472,26 @@ int32 png_sig_cmp(const uint8 *sig,uint32 start,uint32 numToCheck)
 }
 
 /* ==== 0x01037EB0  (file offset 0x37EB0)  png_warning ================================================= */
-/* libpng 1.2.0's png_warning (not yet rewritten): skips a "#nnn" error-number prefix (up to the space,
-   at most 14 characters) and passes the message to the png_struct's warning_fn (+0x84); with none set
-   it returns (no default handler in this build). The png_struct's other handlers: error_fn (+0x80,
-   png_error), read_data_fn (+0x90, png_read_data). */
-void png_warning(int param_1,char *param_2)
+/* libpng 1.2.0's png_warning(png_ptr, message) (pngerror.c, built without PNG_ERROR_NUMBERS_SUPPORTED, so
+   the "#nnn" error-number prefix is always skipped: up to the first space, offset at most 14) and the rest
+   of the message passed to the png_struct's warning_fn (+0x84, an absolute address; a tail jump); with
+   none set it returns: differs from the source, whose png_default_warning is not in this build. The
+   png_struct's other handlers: error_fn (+0x80, png_error), read_data_fn (+0x90, png_read_data). Evidence:
+   0x01037eb0 - 0x01037ee8 (`cmp r3, #0x23` / `bne`, `ldrb r3, [r1, r2]` / `cmp r3, #0x20` / `addne r2, r2,
+   #0x1` / `cmpne r2, #0xf` / `blt`, `ldr r3, [r0, #0x84]` / `addne r1, r1, r2` / `bxne r3`). */
+void png_warning(uint8 *png_ptr,const char *message)
 
 {
-  int iVar1;
-  int iVar2;
-  uint uVar3;
-  bool bVar4;
-  
-  iVar2 = 0;
-  if (*param_2 == '#') {
-    iVar2 = 1;
-    do {
-      uVar3 = (uint)(byte)param_2[iVar2];
-      bVar4 = SBORROW4(uVar3,0x20);
-      iVar1 = uVar3 - 0x20;
-      if (uVar3 != 0x20) {
-        bVar4 = SBORROW4(iVar2 + 1,0xf);
-        iVar1 = iVar2 + -0xe;
-        iVar2 = iVar2 + 1;
-      }
-    } while (iVar1 < 0 != bVar4);
+  void (*warning_fn)(uint8 *,const char *) = *(void (**)(uint8 *,const char *))(png_ptr + 0x84);
+  int32 offset = 0;
+
+  if (*message == '#') {
+    for (offset = 1; offset < 15; offset++)
+      if (message[offset] == ' ')
+        break;
   }
-  if (*(code **)(param_1 + 0x84) == (code *)0x0) {
-    return;
-  }
-                    /* WARNING: Could not recover jumptable at 0x01037ee4. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  /* a function pointer the object keeps at +0x84 (not identified) */
-  (**(code **)(param_1 + 0x84))(param_1,param_2 + iVar2);
-  return;
+  if (warning_fn != NULL)
+    (*warning_fn)(png_ptr,message + offset);
 }
 
 /* ==== 0x01037EEC  (file offset 0x37EEC)  FUN_01037eec ================================================ */
@@ -51803,7 +51501,7 @@ int FUN_01037eec(undefined4 param_1,int param_2,int param_3,undefined4 param_4)
   int iVar1;
   int iVar2;
   
-  iVar1 = png_malloc(param_1,param_3 * param_2,param_3,param_4,param_4);
+  iVar1 = png_malloc((uint8 *)param_1,param_3 * param_2,param_3,param_4,param_4);
   iVar2 = iVar1;
   if (0x8000 < (uint)(param_3 * param_2)) {
     thunk_swv_memset(iVar1,0,0x8000);
@@ -52491,7 +52189,7 @@ FUN_01038794(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undef
     if (iVar2 != 0) {
       iVar2 = iVar2 + -4;
     }
-    swvSkinnedMesh_AddTransform(iVar1,iVar2,param_3,param_4,param_5);
+    swvSkinnedMesh_AddTransform((uint8 *)iVar1,(uint8 *)iVar2,param_3,param_4,param_5);
     swv_TryPop();
   }
   else {
@@ -56647,7 +56345,7 @@ undefined4 FUN_0103cb10(int param_1,undefined4 param_2,int param_3,undefined4 pa
     if (param_5 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    swvVertexArray_SetShorts(iVar1,param_2,param_3,param_4,param_5);
+    swvVertexArray_SetShorts((uint8 *)iVar1,param_2,param_3,param_4,(const int16 *)param_5);
     swv_TryPop();
   }
   else {
@@ -56678,7 +56376,7 @@ undefined4 FUN_0103cbac(int param_1,undefined4 param_2,int param_3,undefined4 pa
     if (param_5 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    swvVertexArray_SetBytes(iVar1,param_2,param_3,param_4,param_5);
+    swvVertexArray_SetBytes((uint8 *)iVar1,param_2,param_3,param_4,(const int8 *)param_5);
     swv_TryPop();
   }
   else {
@@ -56720,169 +56418,170 @@ int32 swv_Create_VertexBuffer(void **ppObj)
 }
 
 /* ==== 0x0103CCA8  (file offset 0x3CCA8)  swvVertexBuffer_GetColors =================================== */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getColors. ISwerveObject slot 20 (+0x50) of VertexBuffer
-   (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): its colours (+0x2c)
-   wrapped into *param_2. The colours / normals names corrected (were swapped):
+/* JSR-184 1.1, VertexBuffer.getColors. ISwerveObject slot 20 (+0x50) of VertexBuffer (kh_types.h
+   SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in an error frame, its colours
+   (+0x2c) wrapped (swv_WrapObject, the array's +4 part) into *ppo; on an error its result code
+   (swv_ErrorToResult). The colours / normals names corrected (were swapped):
    swvVertexBuffer_SetColorsValue enforces VertexBuffer.setColors' rule on +0x2c,
-   swvVertexBuffer_SetNormalsValue setNormals' on +0x28. */
-int swvVertexBuffer_GetColors(int param_1,ISwerveObject **param_2)
+   swvVertexBuffer_SetNormalsValue setNormals' on +0x28. Evidence: 0x0103cca8 - 0x0103cd10 (`bl 0x01025e98`
+   / `bl 0x01000500` on sp + 4, `ldr r0, [r0, #0x2c]` / `addne r0, r0, #0x4`, `bl 0x01039fb4`, `bl
+   0x0103976c` with the setjmp result). */
+int32 swvVertexBuffer_GetColors(ISwerveObject *po,ISwerveObject **ppo)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_94 [136];
-  
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_94);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    pNative = *(void **)(iVar1 + 0x2c);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,param_2);
+  int32 result;
+  int32 error;
+  const uint8 *buffer;
+  uint8 *colors;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    buffer = (const uint8 *)po->pNative;
+    if (buffer != NULL)
+      buffer -= 4;
+    colors = *(uint8 *const *)(buffer + 0x2c);
+    if (colors != NULL)
+      colors += 4;
+    result = swv_WrapObject(colors,ppo);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x0103CD14  (file offset 0x3CD14)  swvVertexBuffer_GetDefaultColor ============================= */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getDefaultColor. ISwerveObject slot 22 (+0x58) of
-   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4):
-   *param_2 = its default colour (+0x20, 0xAARRGGBB). */
-void swvVertexBuffer_GetDefaultColor(int param_1,undefined4 *param_2)
+/* JSR-184 1.1, VertexBuffer.getDefaultColor. ISwerveObject slot 22 (+0x58) of VertexBuffer (kh_types.h
+   SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): *pArgb = its default colour
+   (+0x20, 0xAARRGGBB). Evidence: 0x0103cd14 - 0x0103cd28 (`subne r0, r0, #0x4`, `ldr r0, [r0, #0x20]` /
+   `str r0, [r1, #0x0]`). */
+void swvVertexBuffer_GetDefaultColor(ISwerveObject *po,uint32 *pArgb)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  *param_2 = *(undefined4 *)(iVar1 + 0x20);
-  return;
+  const uint8 *buffer = (const uint8 *)po->pNative;
+
+  if (buffer != NULL)
+    buffer -= 4;
+  *pArgb = *(const uint32 *)(buffer + 0x20);
 }
 
 /* ==== 0x0103CD2C  (file offset 0x3CD2C)  swvVertexBuffer_GetNormals ================================== */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getNormals. ISwerveObject slot 18 (+0x48) of VertexBuffer
-   (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): its normals (+0x28)
-   wrapped into *param_2. The colours / normals names corrected (were swapped):
+/* JSR-184 1.1, VertexBuffer.getNormals. ISwerveObject slot 18 (+0x48) of VertexBuffer (kh_types.h
+   SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in an error frame, its normals
+   (+0x28) wrapped (swv_WrapObject, the array's +4 part) into *ppo; on an error its result code
+   (swv_ErrorToResult). The colours / normals names corrected (were swapped):
    swvVertexBuffer_SetColorsValue enforces VertexBuffer.setColors' rule on +0x2c,
-   swvVertexBuffer_SetNormalsValue setNormals' on +0x28. */
-int swvVertexBuffer_GetNormals(int param_1,ISwerveObject **param_2)
+   swvVertexBuffer_SetNormalsValue setNormals' on +0x28. Evidence: 0x0103cd2c - 0x0103cd94 (as
+   swvVertexBuffer_GetColors, `ldr r0, [r0, #0x28]`). */
+int32 swvVertexBuffer_GetNormals(ISwerveObject *po,ISwerveObject **ppo)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_94 [136];
-  
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_94));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_94);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    pNative = *(void **)(iVar1 + 0x28);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,param_2);
+  int32 result;
+  int32 error;
+  const uint8 *buffer;
+  uint8 *normals;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    buffer = (const uint8 *)po->pNative;
+    if (buffer != NULL)
+      buffer -= 4;
+    normals = *(uint8 *const *)(buffer + 0x28);
+    if (normals != NULL)
+      normals += 4;
+    result = swv_WrapObject(normals,ppo);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x0103CD98  (file offset 0x3CD98)  swvVertexBuffer_GetPositions ================================ */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getPositions. ISwerveObject slot 25 (+0x64) of
-   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): its
+/* JSR-184 1.1, VertexBuffer.getPositions. ISwerveObject slot 25 (+0x64) of VertexBuffer (kh_types.h
+   SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in an error frame, its
    positions and their scale and bias (swvVertexBuffer_GetPositionsValue: the scale then the 3 bias floats;
-   -1301, IllegalArgumentException, for a scaleBias shorter than 4), the array wrapped into *param_4. */
-int swvVertexBuffer_GetPositions(int param_1,undefined4 param_2,undefined4 param_3,ISwerveObject **param_4)
+   -1301, IllegalArgumentException, for a scaleBias shorter than 4), the array wrapped (swv_WrapObject)
+   into *ppo; on an error its result code (swv_ErrorToResult). Evidence: 0x0103cd98 - 0x0103ce10 (r1, r2
+   kept in r6, r4 for `bl 0x010100f0`, `addne r0, r0, #0x4`, `mov r1, r7` / `bl 0x01039fb4`). */
+int32 swvVertexBuffer_GetPositions(ISwerveObject *po,int32 length,uint32 *scaleBias,ISwerveObject **ppo)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_9c [136];
-  
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_9c);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    pNative = (void *)swvVertexBuffer_GetPositionsValue(iVar1,param_2,param_3);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,param_4);
+  int32 result;
+  int32 error;
+  const uint8 *buffer;
+  uint8 *positions;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    buffer = (const uint8 *)po->pNative;
+    if (buffer != NULL)
+      buffer -= 4;
+    positions = swvVertexBuffer_GetPositionsValue(buffer,length,scaleBias);
+    if (positions != NULL)
+      positions += 4;
+    result = swv_WrapObject(positions,ppo);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x0103CE14  (file offset 0x3CE14)  swvVertexBuffer_GetTexCoords ================================ */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getTexCoords. ISwerveObject slot 27 (+0x6c) of
-   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): unit
-   param_2 (error -1101, IndexOutOfBoundsException, above 1; swvVertexBuffer_GetTexCoordsValue) and its
-   scale and bias (-1301, IllegalArgumentException, for a scaleBias shorter than the components + 1), the
-   array wrapped into the last argument. */
-int swvVertexBuffer_GetTexCoords(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
-                ISwerveObject **param_5)
+/* JSR-184 1.1, VertexBuffer.getTexCoords. ISwerveObject slot 27 (+0x6c) of VertexBuffer (kh_types.h
+   SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in an error frame, unit index
+   (error -1101, IndexOutOfBoundsException, above 1; swvVertexBuffer_GetTexCoordsValue) and its scale and
+   bias (-1301, IllegalArgumentException, for a scaleBias shorter than the components + 1), the array
+   wrapped (swv_WrapObject) into *ppo; on an error its result code (swv_ErrorToResult). Evidence:
+   0x0103ce14 - 0x0103ce94 (`ldr r4, [sp, #0xa0]` the fifth argument, `bl 0x01010828` with r1 - r3, `mov
+   r1, r4` / `bl 0x01039fb4`). */
+int32 swvVertexBuffer_GetTexCoords(ISwerveObject *po,uint32 index,int32 length,uint32 *scaleBias,
+                                   ISwerveObject **ppo)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_a0 [136];
-  
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a0));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_a0);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    pNative = (void *)swvVertexBuffer_GetTexCoordsValue(iVar1,param_2,param_3,param_4);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,param_5);
+  int32 result;
+  int32 error;
+  const uint8 *buffer;
+  uint8 *texCoords;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    buffer = (const uint8 *)po->pNative;
+    if (buffer != NULL)
+      buffer -= 4;
+    texCoords = swvVertexBuffer_GetTexCoordsValue(buffer,index,length,scaleBias);
+    if (texCoords != NULL)
+      texCoords += 4;
+    result = swv_WrapObject(texCoords,ppo);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x0103CE98  (file offset 0x3CE98)  swvVertexBuffer_GetVertexCount ============================== */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getVertexCount. ISwerveObject slot 24 (+0x60) of
-   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4):
-   *param_2 = its vertex count (+0x1c; 0 without arrays). */
-void swvVertexBuffer_GetVertexCount(int param_1,undefined4 *param_2)
+/* JSR-184 1.1, VertexBuffer.getVertexCount. ISwerveObject slot 24 (+0x60) of VertexBuffer (kh_types.h
+   SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): *pCount = its vertex count
+   (+0x1c; 0 without arrays). No result (r0 is left as the count). Evidence: 0x0103ce98 - 0x0103ceac
+   (`subne r0, r0, #0x4`, `ldr r0, [r0, #0x1c]` / `str r0, [r1, #0x0]`). */
+void swvVertexBuffer_GetVertexCount(ISwerveObject *po,int32 *pCount)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  *param_2 = *(undefined4 *)(iVar1 + 0x1c);
-  return;
+  const uint8 *buffer = (const uint8 *)po->pNative;
+
+  if (buffer != NULL)
+    buffer -= 4;
+  *pCount = *(const int32 *)(buffer + 0x1c);
 }
 
 /* ==== 0x0103CEB0  (file offset 0x3CEB0)  swv_InitVtbl_VertexBuffer =================================== */
@@ -56909,176 +56608,163 @@ void swv_InitVtbl_VertexBuffer(void **pVtbl)
 }
 
 /* ==== 0x0103CF70  (file offset 0x3CF70)  swvVertexBuffer_SetColors =================================== */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setColors. ISwerveObject slot 21 (+0x54) of VertexBuffer
-   (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in an error frame,
-   swvVertexBuffer_SetColorsValue (the array). The colours / normals names corrected (were swapped):
+/* JSR-184 1.1, VertexBuffer.setColors. ISwerveObject slot 21 (+0x54) of VertexBuffer (kh_types.h
+   SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in an error frame,
+   swvVertexBuffer_SetColorsValue with the array's native object (NULL clears); 0, or on an error its
+   result code (swv_ErrorToResult). The colours / normals names corrected (were swapped):
    swvVertexBuffer_SetColorsValue enforces VertexBuffer.setColors' rule on +0x2c,
-   swvVertexBuffer_SetNormalsValue setNormals' on +0x28. */
-undefined4 swvVertexBuffer_SetColors(int param_1,int param_2)
+   swvVertexBuffer_SetNormalsValue setNormals' on +0x28. Evidence: 0x0103cf70 - 0x0103cfd8 (`movs r1, r5` /
+   `ldrne r1, [r5, #0x4]` / `subne r1, r1, #0x4`, `bl 0x010209ac` with r0 and r1 only). */
+int32 swvVertexBuffer_SetColors(ISwerveObject *po,ISwerveObject *colors)
 
 {
-  int iVar1;
-  int iVar2;
-  undefined4 uVar3;
-  undefined1 auStack_98 [136];
-  
-  uVar3 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_98);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    iVar2 = 0;
-    if (param_2 != 0) {
-      iVar2 = *(int *)(param_2 + 4);
-    }
-    if (iVar2 != 0) {
-      iVar2 = iVar2 + -4;
-    }
-    swvVertexBuffer_SetColorsValue(iVar1,iVar2);
+  int32 result = 0;
+  int32 error;
+  uint8 *buffer;
+  uint8 *array;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    buffer = (uint8 *)po->pNative;
+    if (buffer != NULL)
+      buffer -= 4;
+    array = NULL;
+    if (colors != NULL)
+      array = (uint8 *)colors->pNative;
+    if (array != NULL)
+      array -= 4;
+    swvVertexBuffer_SetColorsValue(buffer,array);
     swv_TryPop();
   }
-  else {
-    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar3;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x0103CFDC  (file offset 0x3CFDC)  swvVertexBuffer_SetDefaultColor ============================= */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setDefaultColor. ISwerveObject slot 23 (+0x5c) of
-   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): its
-   default colour (+0x20) = param_2 (0xAARRGGBB). */
-void swvVertexBuffer_SetDefaultColor(int param_1,undefined4 param_2)
+/* JSR-184 1.1, VertexBuffer.setDefaultColor. ISwerveObject slot 23 (+0x5c) of VertexBuffer (kh_types.h
+   SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): its default colour (+0x20) =
+   argb (0xAARRGGBB). Evidence: 0x0103cfdc - 0x0103cfec (`subne r0, r0, #0x4`, `str r1, [r0, #0x20]`). */
+void swvVertexBuffer_SetDefaultColor(ISwerveObject *po,uint32 argb)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  *(undefined4 *)(iVar1 + 0x20) = param_2;
-  return;
+  uint8 *buffer = (uint8 *)po->pNative;
+
+  if (buffer != NULL)
+    buffer -= 4;
+  *(uint32 *)(buffer + 0x20) = argb;
 }
 
 /* ==== 0x0103CFF0  (file offset 0x3CFF0)  swvVertexBuffer_SetNormals ================================== */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setNormals. ISwerveObject slot 19 (+0x4c) of VertexBuffer
-   (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in an error frame,
-   swvVertexBuffer_SetNormalsValue (the array). The colours / normals names corrected (were swapped):
+/* JSR-184 1.1, VertexBuffer.setNormals. ISwerveObject slot 19 (+0x4c) of VertexBuffer (kh_types.h
+   SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in an error frame,
+   swvVertexBuffer_SetNormalsValue with the array's native object (NULL clears); 0, or on an error its
+   result code (swv_ErrorToResult). The colours / normals names corrected (were swapped):
    swvVertexBuffer_SetColorsValue enforces VertexBuffer.setColors' rule on +0x2c,
-   swvVertexBuffer_SetNormalsValue setNormals' on +0x28. */
-undefined4 swvVertexBuffer_SetNormals(int param_1,int param_2)
+   swvVertexBuffer_SetNormalsValue setNormals' on +0x28. Evidence: 0x0103cff0 - 0x0103d058 (as
+   swvVertexBuffer_SetColors, `bl 0x010220b0` with r0 and r1 only). */
+int32 swvVertexBuffer_SetNormals(ISwerveObject *po,ISwerveObject *normals)
 
 {
-  int iVar1;
-  int iVar2;
-  undefined4 uVar3;
-  undefined1 auStack_98 [136];
-  
-  uVar3 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_98);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    iVar2 = 0;
-    if (param_2 != 0) {
-      iVar2 = *(int *)(param_2 + 4);
-    }
-    if (iVar2 != 0) {
-      iVar2 = iVar2 + -4;
-    }
-    swvVertexBuffer_SetNormalsValue(iVar1,iVar2);
+  int32 result = 0;
+  int32 error;
+  uint8 *buffer;
+  uint8 *array;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    buffer = (uint8 *)po->pNative;
+    if (buffer != NULL)
+      buffer -= 4;
+    array = NULL;
+    if (normals != NULL)
+      array = (uint8 *)normals->pNative;
+    if (array != NULL)
+      array -= 4;
+    swvVertexBuffer_SetNormalsValue(buffer,array);
     swv_TryPop();
   }
-  else {
-    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar3;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x0103D05C  (file offset 0x3D05C)  swvVertexBuffer_SetPositions ================================ */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setPositions. ISwerveObject slot 26 (+0x68) of
-   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in
-   an error frame, swvVertexBuffer_SetPositionsValue (the array, its scale and bias). */
-undefined4
-swvVertexBuffer_SetPositions(int param_1,int param_2,undefined4 param_3,undefined4 param_4,
-                             undefined4 param_5)
+/* JSR-184 1.1, VertexBuffer.setPositions. ISwerveObject slot 26 (+0x68) of VertexBuffer (kh_types.h
+   SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in an error frame, the scale
+   checked (FUN_0102ed04: error -1001 for a denormal, infinite or NaN float) and
+   swvVertexBuffer_SetPositionsValue (the array's native object, NULL clears; the scale; the bias and its
+   length); 0, or on an error its result code (swv_ErrorToResult). Evidence: 0x0103d05c - 0x0103d0ec (`ldr
+   r7, [sp, #0xa8]` the fifth argument, `mov r0, r8` / `bl 0x0102ed04`, `str r7, [sp, #0x0]` / `bl
+   0x0102234c`). */
+int32 swvVertexBuffer_SetPositions(ISwerveObject *po,ISwerveObject *positions,uint32 scale,int32 length,
+                                   const uint32 *bias)
 
 {
-  int iVar1;
-  int iVar2;
-  undefined4 uVar3;
-  undefined4 uVar4;
-  undefined1 auStack_a4 [136];
-  
-  uVar4 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_a4);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    iVar2 = 0;
-    if (param_2 != 0) {
-      iVar2 = *(int *)(param_2 + 4);
-    }
-    if (iVar2 != 0) {
-      iVar2 = iVar2 + -4;
-    }
-    uVar3 = FUN_0102ed04(param_3);
-    swvVertexBuffer_SetPositionsValue(iVar1,iVar2,uVar3,param_4,param_5);
+  int32 result = 0;
+  int32 error;
+  uint8 *buffer;
+  uint8 *array;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    buffer = (uint8 *)po->pNative;
+    if (buffer != NULL)
+      buffer -= 4;
+    array = NULL;
+    if (positions != NULL)
+      array = (uint8 *)positions->pNative;
+    if (array != NULL)
+      array -= 4;
+    swvVertexBuffer_SetPositionsValue(buffer,array,FUN_0102ed04(scale),length,bias);
     swv_TryPop();
   }
-  else {
-    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar4;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x0103D0F0  (file offset 0x3D0F0)  swvVertexBuffer_SetTexCoords ================================ */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setTexCoords. ISwerveObject slot 28 (+0x70) of
-   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in
-   an error frame, swvVertexBuffer_SetTexCoordsValue (the unit, the array, its scale and bias). */
-undefined4
-swvVertexBuffer_SetTexCoords(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
-                             undefined4 param_5,undefined4 param_6)
+/* JSR-184 1.1, VertexBuffer.setTexCoords. ISwerveObject slot 28 (+0x70) of VertexBuffer (kh_types.h
+   SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in an error frame, the scale
+   checked (FUN_0102ed04: error -1001 for a denormal, infinite or NaN float) and
+   swvVertexBuffer_SetTexCoordsValue (the unit, the array's native object, NULL clears; the scale; the bias
+   and its length); 0, or on an error its result code (swv_ErrorToResult). Evidence: 0x0103d0f0 -
+   0x0103d188 (`ldr r9, [sp, #0xb0]` / `ldr r8, [sp, #0xb4]` the fifth and sixth arguments, `mov r0, r10` /
+   `bl 0x0102ed04`, `str r8, [sp, #0x4]` / `str r9, [sp, #0x0]` / `bl 0x0102358c`). */
+int32 swvVertexBuffer_SetTexCoords(ISwerveObject *po,uint32 index,ISwerveObject *texCoords,uint32 scale,
+                                   int32 length,const uint32 *bias)
 
 {
-  int iVar1;
-  int iVar2;
-  undefined4 uVar3;
-  undefined4 uVar4;
-  undefined1 auStack_a8 [136];
-  
-  uVar4 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_a8);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    iVar2 = 0;
-    if (param_3 != 0) {
-      iVar2 = *(int *)(param_3 + 4);
-    }
-    if (iVar2 != 0) {
-      iVar2 = iVar2 + -4;
-    }
-    uVar3 = FUN_0102ed04(param_4);
-    swvVertexBuffer_SetTexCoordsValue(iVar1,param_2,iVar2,uVar3,param_5,param_6);
+  int32 result = 0;
+  int32 error;
+  uint8 *buffer;
+  uint8 *array;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    buffer = (uint8 *)po->pNative;
+    if (buffer != NULL)
+      buffer -= 4;
+    array = NULL;
+    if (texCoords != NULL)
+      array = (uint8 *)texCoords->pNative;
+    if (array != NULL)
+      array -= 4;
+    swvVertexBuffer_SetTexCoordsValue(buffer,index,array,FUN_0102ed04(scale),length,bias);
     swv_TryPop();
   }
-  else {
-    uVar4 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar4;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x0103D18C  (file offset 0x3D18C)  swv_Create_World ============================================ */
