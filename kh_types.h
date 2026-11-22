@@ -986,8 +986,8 @@ typedef struct SwervePolygonModeVtbl {
 typedef struct SwerveVertexBufferVtbl {
     SwerveObject3DVtbl base;                                             /* +0x00 - +0x44 */
     /* slots 18 - 21: the colours / normals names corrected (were swapped): slot 19's native
-       FUN_010220b0 enforces JSR-184 1.1 VertexBuffer.setNormals' rule (+0x28), slot 21's
-       FUN_010209ac setColors' (+0x2c) */
+       swvVertexBuffer_SetNormalsValue enforces JSR-184 1.1 VertexBuffer.setNormals' rule (+0x28), slot
+       21's swvVertexBuffer_SetColorsValue setColors' (+0x2c) */
     int32 (*GetNormals)(ISwerveObject *po,ISwerveObject **ppo);          /* +0x48 slot 18, 0x0103cd2c */
     int32 (*SetNormals)(ISwerveObject *po,ISwerveObject *normals);       /* +0x4c slot 19, 0x0103cff0 */
     int32 (*GetColors)(ISwerveObject *po,ISwerveObject **ppo);           /* +0x50 slot 20, 0x0103cca8 */

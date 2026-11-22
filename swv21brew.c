@@ -2988,18 +2988,18 @@ int AEEStaticMod_New(int16 nSize,IShell *pIShell,AEEHelperFuncs *ph,IModule **pp
   return iVar2;
 }
 
-/* ==== 0x01002A58  (file offset 0x02A58)  FUN_01002a58 ================================================ */
+/* ==== 0x01002A58  (file offset 0x02A58)  swvObject3D_AddAnimationTrackValue ========================== */
 /* (not yet rewritten) JSR-184 1.1, Object3D.addAnimationTrack, on the native object param_1 with the track
    param_2: error -1301 (IllegalArgumentException) for a NULL track (the spec's NullPointerException,
-   -1302, is raised before, by the ISwerveObject slot 7, FUN_01034d24; a NULL reaches here only from the
-   engine's own callers) or when the object cannot animate its property (track +0x24; the object's
-   IsAnimatable, engine vtable +0x20); the track list at +0x10 made on first use (0x20 bytes, two engine
-   dynamic arrays: the tracks, and at +0x10 how many tracks each property has, the properties in the list's
-   order); -1301 for a track already there, or for one on a property already animated whose keyframe
+   -1302, is raised before, by the ISwerveObject slot 7, swvObject3D_AddAnimationTrack; a NULL reaches here
+   only from the engine's own callers) or when the object cannot animate its property (track +0x24; the
+   object's IsAnimatable, engine vtable +0x20); the track list at +0x10 made on first use (0x20 bytes, two
+   engine dynamic arrays: the tracks, and at +0x10 how many tracks each property has, the properties in the
+   list's order); -1301 for a track already there, or for one on a property already animated whose keyframe
    sequence has another component count (+0x34, the spec's keyframe size); the track inserted after the
    others on its property (FUN_01013368; the spec leaves the position undefined), its count of references
    (+8) up, its property's count up (or a new property counted 1). */
-void FUN_01002a58(int *param_1,int param_2,undefined4 param_3,undefined4 param_4)
+void swvObject3D_AddAnimationTrackValue(int *param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
   int iVar1;
@@ -3152,7 +3152,7 @@ int FUN_01002c70(int param_1,int param_2)
   return iVar2;
 }
 
-/* ==== 0x01002D60  (file offset 0x02D60)  FUN_01002d60 ================================================ */
+/* ==== 0x01002D60  (file offset 0x02D60)  swvGroup_AddChild =========================================== */
 /* (not yet rewritten) JSR-184 1.1, Group.addChild(child) on the group param_1: error -1302
    (NullPointerException) for a NULL child; -1301 (IllegalArgumentException) when the child is the group
    itself, a World (type 0x16), already has a parent (+0x30) or is an ancestor of the group
@@ -3164,7 +3164,7 @@ int FUN_01002c70(int param_1,int param_2)
    already there (the sibling walk, FUN_01014510) is incomplete. */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
-void FUN_01002d60(int param_1,int param_2)
+void swvGroup_AddChild(int param_1,int param_2)
 
 {
   int iVar1;
@@ -3419,7 +3419,7 @@ void FUN_010031a0(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x01003234  (file offset 0x03234)  FUN_01003234 ================================================ */
+/* ==== 0x01003234  (file offset 0x03234)  swvSkinnedMesh_AddTransform ================================= */
 /* (not yet rewritten) JSR-184 1.1, SkinnedMesh.addTransform(bone, weight, firstVertex, numVertices) on
    the mesh param_1: error -1302 (NullPointerException) for a NULL bone; -1301
    (IllegalArgumentException) for a weight below 1, a bone that is neither the skeleton (+0x38) nor
@@ -3430,7 +3430,7 @@ void FUN_010031a0(int param_1,int param_2)
    ArithmeticException when it cannot be computed), +0xac raised to the last vertex, +0xf0 cleared (to
    be rebuilt). The undefined8 result is Ghidra reading saved registers: GUESS, no result its callers
    use. */
-undefined8 FUN_01003234(int param_1,int param_2,int param_3,int param_4,int param_5)
+undefined8 swvSkinnedMesh_AddTransform(int param_1,int param_2,int param_3,int param_4,int param_5)
 
 {
   int iVar1;
@@ -3577,12 +3577,12 @@ void FUN_01003474(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x010034CC  (file offset 0x034CC)  FUN_010034cc ================================================ */
+/* ==== 0x010034CC  (file offset 0x034CC)  swvNode_Align =============================================== */
 /* (not yet rewritten) JSR-184 1.1, Node.align(reference): error -1301 (IllegalArgumentException) unless
    the reference param_2 (NULL: the node itself) is in the node's scene graph (swvNode_SameSceneGraph),
    then FUN_01003474's work on the node and its children (FUN_0100a02c for each aligned node, with the
    reference). The binary shares FUN_01003474's code (Ghidra repeated it here). */
-void FUN_010034cc(int param_1,int param_2)
+void swvNode_Align(int param_1,int param_2)
 
 {
   int iVar1;
@@ -4025,11 +4025,11 @@ void * FUN_01003a10(int param_1,int param_2)
 }
 
 /* ==== 0x01003B00  (file offset 0x03B00)  FUN_01003b00 ================================================ */
-/* GUESS (not yet rewritten): animates a Group: FUN_01003c38 (the native JSR-184 1.1, Object3D.animate)
-   with param_2 (the world time) / param_4 (the animate pass) on each child (+0x38, +0x34 the next) and on
-   each object of its base references (swvObject3D_Reference, walked like swvObject3D_References: -2 a
-   list, -1 the end); returns the smallest validity, from param_3 (the spec's reachable objects: the
-   minimum of their validity intervals). */
+/* GUESS (not yet rewritten): animates a Group: swvObject3D_AnimateValue (the native JSR-184 1.1,
+   Object3D.animate) with param_2 (the world time) / param_4 (the animate pass) on each child (+0x38, +0x34
+   the next) and on each object of its base references (swvObject3D_Reference, walked like
+   swvObject3D_References: -2 a list, -1 the end); returns the smallest validity, from param_3 (the spec's
+   reachable objects: the minimum of their validity intervals). */
 int FUN_01003b00(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
 
 {
@@ -4040,7 +4040,7 @@ int FUN_01003b00(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
   
   iVar3 = *(int *)(param_1 + 0x38);
   while (iVar3 != 0) {
-    iVar4 = FUN_01003c38(iVar3,param_2,param_4);
+    iVar4 = swvObject3D_AnimateValue(iVar3,param_2,param_4);
     iVar3 = *(int *)(iVar3 + 0x34);
     if (iVar4 < param_3) {
       param_3 = iVar4;
@@ -4054,14 +4054,14 @@ int FUN_01003b00(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
       iVar4 = swvObject3D_Reference((uint8 *)param_1,iVar4);
       for (iVar2 = 0; iVar2 < *(int *)(iVar4 + 8); iVar2 = iVar2 + 1) {
         iVar1 = *(int *)(*(int *)(iVar4 + 4) + iVar2 * 4);
-        if ((iVar1 != 0) && (iVar1 = FUN_01003c38(iVar1,param_2,param_4), iVar1 < param_3)) {
+        if ((iVar1 != 0) && (iVar1 = swvObject3D_AnimateValue(iVar1,param_2,param_4), iVar1 < param_3)) {
           param_3 = iVar1;
         }
       }
     }
     else {
       iVar3 = iVar4;
-      if ((iVar2 != 0) && (iVar4 = FUN_01003c38(iVar2,param_2,param_4), iVar4 < param_3)) {
+      if ((iVar2 != 0) && (iVar4 = swvObject3D_AnimateValue(iVar2,param_2,param_4), iVar4 < param_3)) {
         param_3 = iVar4;
       }
     }
@@ -4082,13 +4082,13 @@ int FUN_01003be8(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
   int iVar4;
   
   if ((*(int *)(param_1 + 0x8c) != 0) &&
-     (iVar3 = FUN_01003c38(*(int *)(param_1 + 0x8c),param_2,param_4,param_4,param_4),
+     (iVar3 = swvObject3D_AnimateValue(*(int *)(param_1 + 0x8c),param_2,param_4,param_4,param_4),
      iVar3 < param_3)) {
     param_3 = iVar3;
   }
   iVar3 = *(int *)(param_1 + 0x38);
   while (iVar3 != 0) {
-    iVar4 = FUN_01003c38(iVar3,param_2,param_4);
+    iVar4 = swvObject3D_AnimateValue(iVar3,param_2,param_4);
     iVar3 = *(int *)(iVar3 + 0x34);
     if (iVar4 < param_3) {
       param_3 = iVar4;
@@ -4102,14 +4102,14 @@ int FUN_01003be8(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
       iVar4 = swvObject3D_Reference((uint8 *)param_1,iVar4);
       for (iVar2 = 0; iVar2 < *(int *)(iVar4 + 8); iVar2 = iVar2 + 1) {
         iVar1 = *(int *)(*(int *)(iVar4 + 4) + iVar2 * 4);
-        if ((iVar1 != 0) && (iVar1 = FUN_01003c38(iVar1,param_2,param_4), iVar1 < param_3)) {
+        if ((iVar1 != 0) && (iVar1 = swvObject3D_AnimateValue(iVar1,param_2,param_4), iVar1 < param_3)) {
           param_3 = iVar1;
         }
       }
     }
     else {
       iVar3 = iVar4;
-      if ((iVar2 != 0) && (iVar4 = FUN_01003c38(iVar2,param_2,param_4), iVar4 < param_3)) {
+      if ((iVar2 != 0) && (iVar4 = swvObject3D_AnimateValue(iVar2,param_2,param_4), iVar4 < param_3)) {
         param_3 = iVar4;
       }
     }
@@ -4118,7 +4118,7 @@ int FUN_01003be8(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
   return param_3;
 }
 
-/* ==== 0x01003C38  (file offset 0x03C38)  FUN_01003c38 ================================================ */
+/* ==== 0x01003C38  (file offset 0x03C38)  swvObject3D_AnimateValue ==================================== */
 /* (not yet rewritten) JSR-184 1.1, Object3D.animate(time) (param_2), native: once per animate pass
    (param_3, a pass number, not a time: when -1 a new one, the global counter at FUN_0102ecec() + 0x18 plus
    1, 0 after -2; the object's +0x18 the last pass it took part in, so an object reached twice is animated
@@ -4132,7 +4132,7 @@ int FUN_01003be8(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
    call: the class's references animated, FUN_01003b00 for a Group) with the time, the shortest validity
    (0x7fffffff, the spec's recommended maximum, when nothing is active) and the pass. The properties:
    SwerveAnimTarget, swv_types.h. */
-undefined4 FUN_01003c38(int *param_1,undefined4 param_2,int param_3)
+undefined4 swvObject3D_AnimateValue(int *param_1,undefined4 param_2,int param_3)
 
 {
   bool bVar1;
@@ -4786,15 +4786,14 @@ int FUN_0100486c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
 }
 
 /* ==== 0x010048E4  (file offset 0x048E4)  FUN_010048e4 ================================================ */
-/* (not yet rewritten) the transform from node param_1 to node param_2 (JSR-184 1.1,
-   Node.getTransformTo: param_1's coordinates into param_2's) into the matrix param_3 (identity when
-   they are the same node): the deeper one walked up (swvNode_Depth, the parent at +0x30) until the
-   depths match, then both together to their common ancestor, each node's transform (FUN_0100f8f8)
-   multiplied in on the way (FUN_0101749c); param_2's side inverted (swv_Matrix4Invert, error -1000
-   (ArithmeticException) when it cannot be); returns the common ancestor, or 0 when there is no path
-   (getTransformTo's false) or a node is NULL (the -1302 NullPointerException checks are in the BREW
-   wrapper FUN_010349b8, slot 40). FUN_010108d4 is the boolean getTransformTo on it. A World target
-   (type 0x16) is handled apart. */
+/* (not yet rewritten) the transform from node param_1 to node param_2 (JSR-184 1.1, Node.getTransformTo:
+   param_1's coordinates into param_2's) into the matrix param_3 (identity when they are the same node):
+   the deeper one walked up (swvNode_Depth, the parent at +0x30) until the depths match, then both together
+   to their common ancestor, each node's transform (FUN_0100f8f8) multiplied in on the way (FUN_0101749c);
+   param_2's side inverted (swv_Matrix4Invert, error -1000 (ArithmeticException) when it cannot be);
+   returns the common ancestor, or 0 when there is no path (getTransformTo's false) or a node is NULL (the
+   -1302 NullPointerException checks are in the BREW wrapper FUN_010349b8, slot 40). swvNode_GetTransformTo
+   is the boolean getTransformTo on it. A World target (type 0x16) is handled apart. */
 int FUN_010048e4(int param_1,int param_2,undefined4 param_3)
 
 {
@@ -6085,8 +6084,9 @@ int FUN_010064c4(int param_1,int param_2)
 /* GUESS (not yet rewritten): the Object3D part of a duplicate (JSR-184 1.1, Object3D.duplicate: the same
    user ID, the same references): copies param_2's user id (+0x0c) into param_1, frees param_1's animation
    track list (+0x10; FUN_0102c4d0, GUESS its deleting destructor), adds each of param_2's tracks again
-   (swvObject3D_AnimationTrack, FUN_01002a58: the native addAnimationTrack), then FUN_0101a230; and a new
-   0x10-byte object at +0x14 when param_2 has a non-empty one there (GUESS: the user parameters). */
+   (swvObject3D_AnimationTrack, swvObject3D_AddAnimationTrackValue: the native addAnimationTrack), then
+   FUN_0101a230; and a new 0x10-byte object at +0x14 when param_2 has a non-empty one there (GUESS: the
+   user parameters). */
 int FUN_01006518(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -6108,7 +6108,7 @@ int FUN_01006518(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     iVar1 = swvObject3D_AnimationTrackCount((uint8 *)param_2);
     for (iVar4 = 0; iVar4 < iVar1; iVar4 = iVar4 + 1) {
       uVar3 = (undefined4)swvObject3D_AnimationTrack((uint8 *)param_2,iVar4);
-      FUN_01002a58(param_1,uVar3);
+      swvObject3D_AddAnimationTrackValue(param_1,uVar3);
     }
   }
   FUN_0101a230(param_1);
@@ -6279,8 +6279,8 @@ int FUN_01006810(int param_1,int param_2)
                           (uint)*(ushort *)(*(int *)(param_2 + 0xc4) + iVar2 * 0xc + 8) * 0x90),
                          *(undefined4 *)(param_2 + 0x38),*(undefined4 *)(param_1 + 0x38));
     puVar3 = (undefined4 *)(*(int *)(param_2 + 0xc4) + iVar2 * 0xc);
-    FUN_01003234(param_1,uVar1,*puVar3,*(undefined2 *)(puVar3 + 1),*(undefined2 *)((int)puVar3 + 6))
-    ;
+    swvSkinnedMesh_AddTransform(param_1,uVar1,*puVar3,*(undefined2 *)(puVar3 + 1),*(undefined2
+    *)((int)puVar3 + 6)) ;
   }
   *(undefined4 *)(param_1 + 0xf0) = 0;
   *(undefined4 *)(param_1 + 0xf4) = 1;
@@ -6552,7 +6552,7 @@ undefined8 FUN_01006da4(int param_1,int param_2,int param_3,int param_4)
     uVar3 = *(undefined4 *)(iVar1 + 4);
     uVar2 = *(undefined4 *)(iVar1 + 8);
   }
-  FUN_01020104(param_1,uVar2);
+  swvNode_SetAlignment(param_1,uVar2);
   *(undefined4 *)(param_1 + 0x30) = 0;
   *(undefined4 *)(param_1 + 0x34) = 0;
   piVar4 = *(int **)(param_2 + 0x38);
@@ -7444,13 +7444,13 @@ int32 swvSectionZlib_Get0c(int param_1)
 /* ==== 0x01007D70  (file offset 0x07D70)  FUN_01007d70 ================================================ */
 /* GUESS (not yet rewritten): builds an unpalettised, immutable Image2D (JSR-184 1.1, Image2D(format,
    width, height, image)); the format, width > 0 and height > 0 (-1301) and NULL image (-1302) checks are
-   its BREW-facing caller's (FUN_01030c54, Image2D slot 18). Here error -1301 (IllegalArgumentException)
-   when the param_5 bytes of pixels are fewer than swvImage2D_BytesPerPixel * width * height, as the spec
-   lists; not mutable (+0x44 = 0), the format (+0x40), width (+0x34) and height (+0x38); its storage
-   (FUN_0100350c); then each pixel of param_6 converted by FUN_01025bc4 into the 16-bit colour plane (the
-   data +0x20 at +0x30) and the alpha plane (swvImage2D_AlphaPlane). Differs from 1.1: error -4 (not a
-   SwerveError code; GUESS: an engine size limit) when the width (param_3) or the height (param_4) is
-   0x8000 or more, which the spec bounds only by memory. */
+   its BREW-facing caller's (swvImage2D_InitFromPixels, Image2D slot 18). Here error -1301
+   (IllegalArgumentException) when the param_5 bytes of pixels are fewer than swvImage2D_BytesPerPixel *
+   width * height, as the spec lists; not mutable (+0x44 = 0), the format (+0x40), width (+0x34) and height
+   (+0x38); its storage (FUN_0100350c); then each pixel of param_6 converted by FUN_01025bc4 into the
+   16-bit colour plane (the data +0x20 at +0x30) and the alpha plane (swvImage2D_AlphaPlane). Differs from
+   1.1: error -4 (not a SwerveError code; GUESS: an engine size limit) when the width (param_3) or the
+   height (param_4) is 0x8000 or more, which the spec bounds only by memory. */
 void FUN_01007d70(int param_1,undefined4 param_2,uint param_3,uint param_4,int param_5,int param_6)
 
 {
@@ -7488,8 +7488,8 @@ void FUN_01007d70(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
 
 /* ==== 0x01007E30  (file offset 0x07E30)  FUN_01007e30 ================================================ */
 /* GUESS (not yet rewritten): builds a palettised, immutable Image2D (JSR-184 1.1, Image2D(format, width,
-   height, image, palette)); the format, width > 0 and height > 0 (-1301) and NULL image or palette
-   (-1302) checks are its BREW-facing caller's (FUN_01030dbc, Image2D slot 19). Here error -1301
+   height, image, palette)); the format, width > 0 and height > 0 (-1301) and NULL image or palette (-1302)
+   checks are its BREW-facing caller's (swvImage2D_InitFromPalette, Image2D slot 19). Here error -1301
    (IllegalArgumentException) when the param_5 index bytes are fewer than width * height, or when the
    palette's param_7 bytes are fewer than 256 entries and not a whole number of entries (the spec's
    (palette.length < 256*C) && (palette.length % C != 0); FUN_010001f4 the division); the format (+0x40),
@@ -7637,11 +7637,12 @@ undefined4 FUN_0100800c(int param_1,undefined4 param_2,undefined4 param_3)
   return uVar3;
 }
 
-/* ==== 0x01008064  (file offset 0x08064)  thunk_FUN_01021abc ========================================== */
-/* A one-instruction jump to FUN_01021abc (JSR-184 1.1, Texture2D.setImage), called by the Texture2D slot
-   31 FUN_0103b3ec (GUESS: its constructor, Texture2D(image)); Ghidra repeated its code here, see there.
+/* ==== 0x01008064  (file offset 0x08064)  thunk_swvTexture2D_SetImage ================================= */
+/* A one-instruction jump to swvTexture2D_SetImage (JSR-184 1.1, Texture2D.setImage), called by the
+   Texture2D slot 31 FUN_0103b3ec (GUESS: its constructor, Texture2D(image)); Ghidra repeated its code
+   here, see there.
    */
-void thunk_FUN_01021abc(int param_1,int param_2)
+void thunk_swvTexture2D_SetImage(int param_1,int param_2)
 
 {
   int iVar1;
@@ -8042,8 +8043,8 @@ uint swvSectionZlib_Init(int param_1,undefined4 param_2)
   return uVar1;
 }
 
-/* ==== 0x01008398  (file offset 0x08398)  FUN_01008398 ================================================ */
-void FUN_01008398(int param_1,int param_2,int param_3,int param_4)
+/* ==== 0x01008398  (file offset 0x08398)  swvKeyframeSequence_Construct =============================== */
+void swvKeyframeSequence_Construct(int param_1,int param_2,int param_3,int param_4)
 
 {
   int iVar1;
@@ -13725,8 +13726,8 @@ LAB_0100eed4:
   } while( true );
 }
 
-/* ==== 0x0100EEF0  (file offset 0x0EEF0)  FUN_0100eef0 ================================================ */
-int * FUN_0100eef0(int *param_1,int param_2)
+/* ==== 0x0100EEF0  (file offset 0x0EEF0)  swvObject3D_FindValue ======================================= */
+int * swvObject3D_FindValue(int *param_1,int param_2)
 
 {
   int iVar1;
@@ -13759,14 +13760,14 @@ int * FUN_0100eef0(int *param_1,int param_2)
       for (iVar4 = 0; (piVar3 == (int *)0x0 && (iVar4 < iVar6)); iVar4 = iVar4 + 1) {
         iVar2 = *(int *)(*(int *)(iVar1 + 4) + iVar4 * 4);
         if (iVar2 != 0) {
-          piVar3 = (int *)FUN_0100eef0(iVar2,param_2);
+          piVar3 = (int *)swvObject3D_FindValue(iVar2,param_2);
         }
       }
     }
     else {
       iVar5 = iVar4;
       if (iVar1 != 0) {
-        piVar3 = (int *)FUN_0100eef0(iVar1,param_2);
+        piVar3 = (int *)swvObject3D_FindValue(iVar1,param_2);
       }
     }
     iVar4 = iVar5 + 1;
@@ -13802,7 +13803,7 @@ void swv_ColourScale(int32 *colour,int32 factor)
 /* ==== 0x0100F030  (file offset 0x0F030)  FUN_0100f030 ================================================ */
 /* GUESS (not yet rewritten): copies node param_2's alignment into param_1 (a duplicate): the references
    (mapped through swvNode_HasAncestor / FUN_0100ed84 when they are in the copied subtree) and the
-   targets go to FUN_01020104 (JSR-184 1.1, Node.setAlignment(zRef, zTarget, yRef, yTarget)). */
+   targets go to swvNode_SetAlignment (JSR-184 1.1, Node.setAlignment(zRef, zTarget, yRef, yTarget)). */
 void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -13830,7 +13831,7 @@ void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     }
     uVar6 = swvNode_AlignmentTargetY((uint8 *)param_2);
     uVar7 = swvNode_AlignmentTargetZ((uint8 *)param_2);
-    FUN_01020104(param_1,uVar3,uVar7,uVar4,uVar6);
+    swvNode_SetAlignment(param_1,uVar3,uVar7,uVar4,uVar6);
   }
   iVar2 = *(int *)(param_1 + 0x38);
   for (iVar1 = *(int *)(param_2 + 0x38); iVar1 != 0; iVar1 = *(int *)(iVar1 + 0x34)) {
@@ -14093,17 +14094,17 @@ undefined4 * FUN_0100f4dc(int param_1,int param_2,undefined4 param_3,undefined4 
 }
 
 /* ==== 0x0100F530  (file offset 0x0F530)  swvGraphics3D_Property ====================================== */
-/* GUESS: name. One of the Graphics3D's twelve fixed properties (JSR-184 1.1, Graphics3D.getProperties),
-   by index: 0 - 3 give 0 (false), 4 and 5 give 1 (true), 6 gives 0x100, 7 - 9 give 0x400, 10 and 11 give
-   2, any other index 0. GUESS, the names: 1.1's fourteen keys less the two viewport keys it adds
+/* GUESS: name. One of the Graphics3D's twelve fixed properties (JSR-184 1.1, Graphics3D.getProperties), by
+   index: 0 - 3 give 0 (false), 4 and 5 give 1 (true), 6 gives 0x100, 7 - 9 give 0x400, 10 and 11 give 2,
+   any other index 0. GUESS, the names: 1.1's fourteen keys less the two viewport keys it adds
    (maxViewportWidth, maxViewportHeight), in its table's order: supportAntialiasing, supportTrueColor,
    supportDithering and supportMipmapping false; supportPerspectiveCorrection and
    supportLocalCameraLighting true; maxLights 256; maxViewportDimension, maxTextureDimension and
    maxSpriteCropDimension 1024 (the engine's own limits: a viewport 1 .. 1024, swv_Graphics3D_bindTarget
-   and FUN_01023bc8; a texture up to 1024, FUN_01021abc); maxTransformsPerVertex and numTextureUnits 2
-   (the rasteriser has two texture units). kh.mod never asks, so nothing confirms the order. Evidence:
-   0x0100f530 - 0x0100f590 (`cmp r0, #0xb` / `addls pc, pc, r0, lsl #2`, a table of branches to the five
-   `mov r0` / `bx lr`). Only swvGraphics3D_GetProperty calls it. */
+   and FUN_01023bc8; a texture up to 1024, swvTexture2D_SetImage); maxTransformsPerVertex and
+   numTextureUnits 2 (the rasteriser has two texture units). kh.mod never asks, so nothing confirms the
+   order. Evidence: 0x0100f530 - 0x0100f590 (`cmp r0, #0xb` / `addls pc, pc, r0, lsl #2`, a table of
+   branches to the five `mov r0` / `bx lr`). Only swvGraphics3D_GetProperty calls it. */
 int32 swvGraphics3D_Property(uint32 index)
 
 {
@@ -14789,7 +14790,7 @@ int FUN_0100fe8c(int param_1,int param_2)
    (+0x20) + the palette's offset (+0x2c), or NULL when the offset is -1 (no palette). Its alpha, a
    byte an entry, is then the alpha plane (swvImage2D_AlphaPlane, +0x3c); the pixels are indices
    (swvImage2D_Indices, +0x30). Evidence: 0x0100ffe4 - 0x0100fff8 (`cmn r1, #1`, `ldrne` / `addne`,
-   `moveq r0, #0`); its callers FUN_01007e30 and FUN_0101dbf8 fill it one colour at a time. */
+   `moveq r0, #0`); its callers FUN_01007e30 and swvM3G_ReadImage2D fill it one colour at a time. */
 uint16 *swvImage2D_Palette(const uint8 *image)
 
 {
@@ -14855,7 +14856,7 @@ void *swvImage2D_Pixels(uint8 *image)
   return (void *)(*(code *)(*(int32 *)(vtable + 0x30) + vtable))(image);
 }
 
-/* ==== 0x01010094  (file offset 0x10094)  FUN_01010094 ================================================ */
+/* ==== 0x01010094  (file offset 0x10094)  swvAnimationController_Position ============================= */
 /* (not yet rewritten) JSR-184 1.1, AnimationController.getPosition, native: the AnimationController's
    sequence time at the world time param_2, ts = tsref + s (tw - twref): its reference sequence time
    (+0x24, a float) + (param_2 - its reference world time, +0x28) * its speed (+0x2c), the multiply skipped
@@ -14887,7 +14888,7 @@ void *swvImage2D_Pixels(uint8 *image)
 /* WARNING: Removing unreachable block (ram,0x0103f9a8) */
 /* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
 
-uint FUN_01010094(int param_1,int param_2,undefined4 param_3,uint param_4)
+uint swvAnimationController_Position(int param_1,int param_2,undefined4 param_3,uint param_4)
 
 {
   uint uVar1;
@@ -15209,8 +15210,8 @@ LAB_0103f9e0:
   return 2 - uVar1;
 }
 
-/* ==== 0x010100F0  (file offset 0x100F0)  FUN_010100f0 ================================================ */
-undefined4 FUN_010100f0(int param_1,int param_2,undefined4 *param_3)
+/* ==== 0x010100F0  (file offset 0x100F0)  swvVertexBuffer_GetPositionsValue =========================== */
+undefined4 swvVertexBuffer_GetPositionsValue(int param_1,int param_2,undefined4 *param_3)
 
 {
   int iVar1;
@@ -15428,10 +15429,11 @@ int32 swvObject3D_References(uint8 *object,int32 max,uint8 **out)
 
 /* ==== 0x010104F0  (file offset 0x104F0)  FUN_010104f0 ================================================ */
 /* GUESS (not yet rewritten): a MorphingMesh's morphed VertexBuffer, made again when +0xac is set: error
-   -1300 when its own buffer (swvMesh_VertexBuffer) has no positions; a new VertexBuffer at +0xb0 the
-   first time (0x78 bytes, FUN_01028898); then each attribute blended (FUN_0100fb34) and set into it:
-   the positions (FUN_0102234c), the normals (attribute 2, FUN_010220b0), the colours (attribute 1,
-   FUN_010209ac) and the texture coordinates (FUN_0102358c). */
+   -1300 when its own buffer (swvMesh_VertexBuffer) has no positions; a new VertexBuffer at +0xb0 the first
+   time (0x78 bytes, FUN_01028898); then each attribute blended (FUN_0100fb34) and set into it: the
+   positions (swvVertexBuffer_SetPositionsValue), the normals (attribute 2,
+   swvVertexBuffer_SetNormalsValue), the colours (attribute 1, swvVertexBuffer_SetColorsValue) and the
+   texture coordinates (swvVertexBuffer_SetTexCoordsValue). */
 undefined4 FUN_010104f0(int param_1)
 
 {
@@ -15463,8 +15465,8 @@ undefined4 FUN_010104f0(int param_1)
     if (iVar2 != 0) {
       uVar3 = FUN_0100f8e8();
       FUN_0101807c(uVar3,iVar2);
-    }
-    FUN_0102234c(*(undefined4 *)(param_1 + 0xb0),local_1c,*(undefined4 *)(iVar1 + 0x44),3,
+    } swvVertexBuffer_SetPositionsValue(*(undefined4 *)(param_1 + 0xb0),local_1c,*(undefined4 *)(iVar1 +
+    0x44),3,
                  iVar1 + 0x38);
     FUN_01038730(&local_1c);
     iVar2 = FUN_0100fb34(param_1,2);
@@ -15473,7 +15475,7 @@ undefined4 FUN_010104f0(int param_1)
       uVar3 = FUN_0100f8e8();
       FUN_0101807c(uVar3,iVar2);
     }
-    FUN_010220b0(*(undefined4 *)(param_1 + 0xb0),local_20);
+    swvVertexBuffer_SetNormalsValue(*(undefined4 *)(param_1 + 0xb0),local_20);
     FUN_01038730(&local_20);
     iVar2 = FUN_0100fb34(param_1,1);
     local_24 = iVar2;
@@ -15481,7 +15483,7 @@ undefined4 FUN_010104f0(int param_1)
       uVar3 = FUN_0100f8e8();
       FUN_0101807c(uVar3,iVar2);
     }
-    FUN_010209ac(*(undefined4 *)(param_1 + 0xb0),local_24);
+    swvVertexBuffer_SetColorsValue(*(undefined4 *)(param_1 + 0xb0),local_24);
     FUN_01038730(&local_24);
     iVar2 = 0;
     do {
@@ -15491,7 +15493,7 @@ undefined4 FUN_010104f0(int param_1)
         uVar3 = FUN_0100f8e8();
         FUN_0101807c(uVar3,iVar4);
       }
-      FUN_0102358c(*(undefined4 *)(param_1 + 0xb0),iVar2,local_28,
+      swvVertexBuffer_SetTexCoordsValue(*(undefined4 *)(param_1 + 0xb0),iVar2,local_28,
                    *(undefined4 *)(iVar1 + iVar2 * 4 + 0x70),3,iVar1 + iVar2 * 0xc + 0x58);
       FUN_01038730(&local_28);
       FUN_0102baf0(&local_28,0);
@@ -15560,9 +15562,9 @@ void FUN_0101070c(int param_1,int param_2,int *param_3,undefined4 *param_4,undef
 
 /* ==== 0x01010818  (file offset 0x10818)  swvAnimationController_Speed ================================ */
 /* JSR-184 1.1, AnimationController.getSpeed, native: the speed, a float (its bits; 1.0 is 0x3f800000) at
-   +0x2c. Evidence: 0x01010818 - 0x0101081c (`ldr r0, [r0, #0x2c]` / `bx lr`); FUN_01010094 multiplies the
-   world time since +0x28 by it, FUN_01010de0 divides a sequence time by it. Used by
-   swvAnimationController_GetSpeed (slot 22) and FUN_01010de0. */
+   +0x2c. Evidence: 0x01010818 - 0x0101081c (`ldr r0, [r0, #0x2c]` / `bx lr`);
+   swvAnimationController_Position multiplies the world time since +0x28 by it, FUN_01010de0 divides a
+   sequence time by it. Used by swvAnimationController_GetSpeed (slot 22) and FUN_01010de0. */
 uint32 swvAnimationController_Speed(const uint8 *controller)
 
 {
@@ -15581,8 +15583,8 @@ int32 swvM3GReader_State(const uint8 *reader)
   return *(const int32 *)(reader + 0x64);
 }
 
-/* ==== 0x01010828  (file offset 0x10828)  FUN_01010828 ================================================ */
-undefined4 FUN_01010828(int param_1,uint param_2,int param_3,undefined4 *param_4)
+/* ==== 0x01010828  (file offset 0x10828)  swvVertexBuffer_GetTexCoordsValue =========================== */
+undefined4 swvVertexBuffer_GetTexCoordsValue(int param_1,uint param_2,int param_3,undefined4 *param_4)
 
 {
   int iVar1;
@@ -15610,8 +15612,8 @@ LAB_010108c4:
   return *(undefined4 *)(iVar1 + 0x30);
 }
 
-/* ==== 0x010108D4  (file offset 0x108D4)  FUN_010108d4 ================================================ */
-bool FUN_010108d4(undefined4 param_1,undefined4 param_2,int param_3)
+/* ==== 0x010108D4  (file offset 0x108D4)  swvNode_GetTransformTo ====================================== */
+bool swvNode_GetTransformTo(undefined4 param_1,undefined4 param_2,int param_3)
 
 {
   int iVar1;
@@ -15634,10 +15636,11 @@ int FUN_01010924(int param_1,int param_2)
 }
 
 /* ==== 0x01010938  (file offset 0x10938)  FUN_01010938 ================================================ */
-/* GUESS (not yet rewritten): a SkinnedMesh's skinned positions, made again when +0xf8 is set: error
-   -1300 when its own buffer (swvMesh_VertexBuffer) has no positions; a new VertexBuffer at +0x100 the
-   first time (FUN_01028898); the bone sets (swvSkin_BuildBoneSets), each position read as floats
-   (swvVertexArray_GetComponent, swv_fflt), transformed by its bones and stored (FUN_0102234c). */
+/* GUESS (not yet rewritten): a SkinnedMesh's skinned positions, made again when +0xf8 is set: error -1300
+   when its own buffer (swvMesh_VertexBuffer) has no positions; a new VertexBuffer at +0x100 the first time
+   (FUN_01028898); the bone sets (swvSkin_BuildBoneSets), each position read as floats
+   (swvVertexArray_GetComponent, swv_fflt), transformed by its bones and stored
+   (swvVertexBuffer_SetPositionsValue). */
 /* WARNING: Removing unreachable block (ram,0x01010a24) */
 /* WARNING: Removing unreachable block (ram,0x01010a30) */
 
@@ -15694,7 +15697,7 @@ undefined4 FUN_01010938(int param_1)
         FUN_010171a0(iVar3,0);
         iVar6 = iVar3;
       }
-      FUN_0102234c(*(undefined4 *)(param_1 + 0x100),iVar6,uVar4,3,iVar2 + 0x38);
+      swvVertexBuffer_SetPositionsValue(*(undefined4 *)(param_1 + 0x100),iVar6,uVar4,3,iVar2 + 0x38);
     }
     *(undefined4 *)(*(int *)(param_1 + 0x100) + 0x20) =
          *(undefined4 *)(*(int *)(param_1 + 0x88) + 0x20);
@@ -15872,10 +15875,11 @@ undefined4 FUN_01010dac(undefined4 param_1,int param_2)
 /* GUESS (not yet rewritten): an AnimationTrack's sample (param_1: +0x1c its KeyframeSequence, +0x20 its
    AnimationController) at the world time param_2: 0x7fffffff (valid for ever, the maximum JSR-184 1.1,
    Object3D.animate recommends) when the controller is not active (swvAnimationController_IsActive); else
-   the sequence sampled (swvKeyframeSequence_Sample) at the controller's position (FUN_01010094,
-   AnimationController.getPosition), and the time that returns (GUESS: until the next keyframe, in sequence
-   time) divided by the controller's speed (swvAnimationController_Speed, unless 1.0) and made an integer:
-   the validity interval, in world time, that Object3D.animate returns (FUN_01003c38 keeps the smallest).
+   the sequence sampled (swvKeyframeSequence_Sample) at the controller's position
+   (swvAnimationController_Position, AnimationController.getPosition), and the time that returns (GUESS:
+   until the next keyframe, in sequence time) divided by the controller's speed
+   (swvAnimationController_Speed, unless 1.0) and made an integer: the validity interval, in world time,
+   that Object3D.animate returns (swvObject3D_AnimateValue keeps the smallest).
    */
 undefined4
 FUN_01010de0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5
@@ -15896,7 +15900,7 @@ FUN_01010de0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     uVar4 = *(int *)(param_1 + 0x20) == 0;
     uVar2 = 0;
     if (!(bool)uVar4) {
-      uVar2 = FUN_01010094(*(int *)(param_1 + 0x20),param_2);
+      uVar2 = swvAnimationController_Position(*(int *)(param_1 + 0x20),param_2);
     }
     uVar3 = swvKeyframeSequence_Sample(*(undefined4 *)(param_1 + 0x1c),uVar2,param_3,param_4,param_5,
                                        uVar3);
@@ -15948,14 +15952,14 @@ void FUN_01010e84(int param_1,int param_2,int *param_3,undefined4 *param_4)
 }
 
 /* ==== 0x01010F60  (file offset 0x10F60)  swvVertexBuffer_Array ======================================= */
-/* GUESS: name. One of a native VertexBuffer's arrays (VertexArrays, swvVertexArray_GetComponent's
-   object; NULL when it has none), by attribute: 0 the positions (+0x24), 1 the colours (+0x2c), 2 the
-   normals (+0x28), 3 and up the texture coordinates of unit attribute - 3 (+0x30, +0x34). There is no
-   range check. Evidence: 0x01010f60 - 0x01010f8c (`cmp r1, #0` / `ldreq r0, [r0, #0x24]` / `bxeq lr`,
-   then #1 / +0x2c, #2 / +0x28, else `sub r1, r1, #3` / `add r0, r0, r1, lsl #2` / `ldr r0, [r0,
-   #0x30]`); the fields from the BREW-facing slots (swvVertexBuffer_GetNormals +0x28, GetColors
-   +0x2c) and the setters' rules (FUN_010220b0 normals, FUN_010209ac colours).
-   Only the MorphingMesh blend FUN_0100fb34 calls it. */
+/* GUESS: name. One of a native VertexBuffer's arrays (VertexArrays, swvVertexArray_GetComponent's object;
+   NULL when it has none), by attribute: 0 the positions (+0x24), 1 the colours (+0x2c), 2 the normals
+   (+0x28), 3 and up the texture coordinates of unit attribute - 3 (+0x30, +0x34). There is no range check.
+   Evidence: 0x01010f60 - 0x01010f8c (`cmp r1, #0` / `ldreq r0, [r0, #0x24]` / `bxeq lr`, then #1 / +0x2c,
+   #2 / +0x28, else `sub r1, r1, #3` / `add r0, r0, r1, lsl #2` / `ldr r0, [r0, #0x30]`); the fields from
+   the BREW-facing slots (swvVertexBuffer_GetNormals +0x28, GetColors +0x2c) and the setters' rules
+   (swvVertexBuffer_SetNormalsValue normals, swvVertexBuffer_SetColorsValue colours). Only the MorphingMesh
+   blend FUN_0100fb34 calls it. */
 uint8 *swvVertexBuffer_Array(const uint8 *buffer,int32 attribute)
 
 {
@@ -16403,11 +16407,11 @@ switchD_010117dc_default:
 }
 
 /* ==== 0x01011900  (file offset 0x11900)  swvMorphingMesh_Weights ===================================== */
-/* GUESS: name. A MorphingMesh's morph weights (the engine dynamic array at +0xd4): *pCount = their
-   count (+0xdc), *pWeights = the array (+0xd8, floats as uint32 bits); a NULL pointer is skipped.
-   Evidence: 0x01011900 - 0x01011918 (`cmp r1, #0` / `ldrne r3, [r0, #0xdc]` / `strne r3, [r1]`, `cmp r2,
-   #0` / `ldrne r0, [r0, #0xd8]` / `strne r0, [r2]`). Only FUN_01003c38 (GUESS: Object3D.animate) calls
-   it, for a track animating MORPH_WEIGHTS (0x10a, SWV_ANIM_MORPH_WEIGHTS). */
+/* GUESS: name. A MorphingMesh's morph weights (the engine dynamic array at +0xd4): *pCount = their count
+   (+0xdc), *pWeights = the array (+0xd8, floats as uint32 bits); a NULL pointer is skipped. Evidence:
+   0x01011900 - 0x01011918 (`cmp r1, #0` / `ldrne r3, [r0, #0xdc]` / `strne r3, [r1]`, `cmp r2, #0` /
+   `ldrne r0, [r0, #0xd8]` / `strne r0, [r2]`). Only swvObject3D_AnimateValue (Object3D.animate)
+   calls it, for a track animating MORPH_WEIGHTS (0x10a, SWV_ANIM_MORPH_WEIGHTS). */
 void swvMorphingMesh_Weights(const uint8 *mesh,int32 *pCount,uint32 **pWeights)
 
 {
@@ -16566,7 +16570,7 @@ uint8 *swvNode_AlignmentReferenceZ(const uint8 *node)
 /* The target of a node's z alignment (JSR-184 1.1, Node.getAlignmentTarget(Z_AXIS)): its alignment
    block's (+0x24) first word, or NONE (0x90) when it has no block (the 1.1 default). Evidence:
    0x01011a0c - 0x01011a1c (`ldr r0, [r0, #0x24]`, `cmp r0, #0`, `moveq r0, #0x90`, `ldrne r0, [r0]`).
-   The z reference is swvNode_AlignmentReferenceZ (+8); FUN_0100f030 passes both to FUN_01020104
+   The z reference is swvNode_AlignmentReferenceZ (+8); FUN_0100f030 passes both to swvNode_SetAlignment
    (Node.setAlignment(zRef, zTarget, yRef, yTarget)). */
 int32 swvNode_AlignmentTargetZ(const uint8 *node)
 
@@ -16641,8 +16645,8 @@ uint32 swvPolygonMode_TwoSidedLighting(const uint8 *mode)
    (JSR-184 1.1, Image2D, its format constants): LUMINANCE_ALPHA (0x62) 2, RGB (0x63) 3, RGBA (0x64) 4,
    anything else (ALPHA 0x60, LUMINANCE 0x61) 1; SwerveImageFormat, swv_types.h. Evidence: 0x01011ab8 -
    0x01011adc (`cmp r0, #0x62` / `moveq r0, #2` / `bxeq lr`, the same for 0x63 and 0x64, `movne r0, #1`).
-   Used by the Image2D constructors and set (FUN_01007d70, FUN_01007e30, FUN_01007f8c, FUN_01023d30,
-   FUN_01023e44) and the M3G reader (FUN_01019920, FUN_0101dbf8). */
+   Used by the Image2D constructors and set (FUN_01007d70, FUN_01007e30, FUN_01007f8c, swvImage2D_SetValue,
+   FUN_01023e44) and the M3G reader (FUN_01019920, swvM3G_ReadImage2D). */
 int32 swvImage2D_BytesPerPixel(int32 format)
 
 {
@@ -17276,13 +17280,14 @@ uint32 swvObj_Release(ISwerveObject *po)
 }
 
 /* ==== 0x010122F0  (file offset 0x122F0)  swvMaterial_IsAnimatable ==================================== */
-/* GUESS: name. A Material's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184 1.1,
-   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_MATERIAL (ALPHA,
-   AMBIENT_COLOR, DIFFUSE_COLOR, EMISSIVE_COLOR, SHININESS, SPECULAR_COLOR), else its base class's answer,
-   swvObject3D_IsAnimatable (1 when that is not 0). The bit is 1 << (property - 0xff), a register shift: 0
-   from 32 up. The mask is the properties JSR-184 1.1, AnimationTrack's fields give Material. Evidence:
-   0x010122f0 - 0x0101231c (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `ldr r3, [0x01012300]` / `tst r2,
-   r3`, `bl` the base at 0x0101230c with r0 and r1 as they came; Ghidra had dropped them). */
+/* GUESS: name. A Material's IsAnimatable(property), its engine vtable +0x20
+   (swvObject3D_AddAnimationTrackValue, JSR-184 1.1, Object3D.addAnimationTrack, asks it): 1 for the
+   properties it adds, SWV_ANIMATED_MATERIAL (ALPHA, AMBIENT_COLOR, DIFFUSE_COLOR, EMISSIVE_COLOR,
+   SHININESS, SPECULAR_COLOR), else its base class's answer, swvObject3D_IsAnimatable (1 when that is not
+   0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is the properties
+   JSR-184 1.1, AnimationTrack's fields give Material. Evidence: 0x010122f0 - 0x0101231c (`sub r2, r1,
+   #0xff` / `mov r2, r3, lsl r2`, `ldr r3, [0x01012300]` / `tst r2, r3`, `bl` the base at 0x0101230c with
+   r0 and r1 as they came; Ghidra had dropped them). */
 int32 swvMaterial_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17297,12 +17302,12 @@ int32 swvMaterial_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x01012324  (file offset 0x12324)  swvObject3D_IsAnimatable ==================================== */
-/* GUESS: name. The Object3D base's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
-   1.1, Object3D.addAnimationTrack, raises -1301, IllegalArgumentException for an incompatible track, when
-   it gives 0): no property of its own (the spec gives Object3D none), so 0; every class's own
-   (swvMaterial_IsAnimatable .. swvSprite3D_IsAnimatable, and swvCamera_IsAnimatable and FUN_010124ac,
-   which Ghidra has no function for; the masks in swv_types.h) ends here. Evidence: 0x01012324 - 0x01012328
-   (`mov r0, #0` / `bx lr`). */
+/* GUESS: name. The Object3D base's IsAnimatable(property), its engine vtable +0x20
+   (swvObject3D_AddAnimationTrackValue, JSR-184 1.1, Object3D.addAnimationTrack, raises -1301,
+   IllegalArgumentException for an incompatible track, when it gives 0): no property of its own (the spec
+   gives Object3D none), so 0; every class's own (swvMaterial_IsAnimatable .. swvSprite3D_IsAnimatable, and
+   swvCamera_IsAnimatable and FUN_010124ac, which Ghidra has no function for; the masks in swv_types.h)
+   ends here. Evidence: 0x01012324 - 0x01012328 (`mov r0, #0` / `bx lr`). */
 int32 swvObject3D_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17310,12 +17315,13 @@ int32 swvObject3D_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x0101232C  (file offset 0x1232C)  swvTexture2D_IsAnimatable =================================== */
-/* GUESS: name. A Texture2D's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184 1.1,
-   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_TEXTURE2D (COLOR), else
-   its base class's answer, swvTransformable_IsAnimatable (1 when that is not 0). The bit is 1 << (property
-   - 0xff), a register shift: 0 from 32 up. The mask is the properties JSR-184 1.1, AnimationTrack's fields
-   give Texture2D. Evidence: 0x0101232c - 0x01012354 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2,
-   #0x08`, `bl` the base at 0x01012344 with r0 and r1 as they came; Ghidra had dropped them). */
+/* GUESS: name. A Texture2D's IsAnimatable(property), its engine vtable +0x20
+   (swvObject3D_AddAnimationTrackValue, JSR-184 1.1, Object3D.addAnimationTrack, asks it): 1 for the
+   properties it adds, SWV_ANIMATED_TEXTURE2D (COLOR), else its base class's answer,
+   swvTransformable_IsAnimatable (1 when that is not 0). The bit is 1 << (property - 0xff), a register
+   shift: 0 from 32 up. The mask is the properties JSR-184 1.1, AnimationTrack's fields give Texture2D.
+   Evidence: 0x0101232c - 0x01012354 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2, #0x08`, `bl` the
+   base at 0x01012344 with r0 and r1 as they came; Ghidra had dropped them). */
 int32 swvTexture2D_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17330,13 +17336,13 @@ int32 swvTexture2D_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x01012358  (file offset 0x12358)  swvBackground_IsAnimatable ================================== */
-/* GUESS: name. A Background's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184 1.1,
-   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_BACKGROUND (ALPHA,
-   COLOR, CROP), else its base class's answer, swvObject3D_IsAnimatable (1 when that is not 0). The bit is
-   1 << (property - 0xff), a register shift: 0 from 32 up. The mask is the properties JSR-184 1.1,
-   AnimationTrack's fields give Background. Evidence: 0x01012358 - 0x01012380 (`sub r2, r1, #0xff` / `mov
-   r2, r3, lsl r2`, `tst r2, #0x1a`, `bl` the base at 0x01012370 with r0 and r1 as they came; Ghidra had
-   dropped them). */
+/* GUESS: name. A Background's IsAnimatable(property), its engine vtable +0x20
+   (swvObject3D_AddAnimationTrackValue, JSR-184 1.1, Object3D.addAnimationTrack, asks it): 1 for the
+   properties it adds, SWV_ANIMATED_BACKGROUND (ALPHA, COLOR, CROP), else its base class's answer,
+   swvObject3D_IsAnimatable (1 when that is not 0). The bit is 1 << (property - 0xff), a register shift: 0
+   from 32 up. The mask is the properties JSR-184 1.1, AnimationTrack's fields give Background. Evidence:
+   0x01012358 - 0x01012380 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2, #0x1a`, `bl` the base at
+   0x01012370 with r0 and r1 as they came; Ghidra had dropped them). */
 int32 swvBackground_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17351,13 +17357,13 @@ int32 swvBackground_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x01012384  (file offset 0x12384)  swvMorphingMesh_IsAnimatable ================================ */
-/* GUESS: name. A MorphingMesh's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
-   1.1, Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_MORPHINGMESH
-   (MORPH_WEIGHTS), else its base class's answer, swvNode_IsAnimatable (1 when that is not 0). The bit is 1
-   << (property - 0xff), a register shift: 0 from 32 up. The mask is the properties JSR-184 1.1,
-   AnimationTrack's fields give MorphingMesh. Evidence: 0x01012384 - 0x010123ac (`sub r2, r1, #0xff` / `mov
-   r2, r3, lsl r2`, `tst r2, #0x800`, `bl` the base at 0x0101239c with r0 and r1 as they came; Ghidra had
-   dropped them). */
+/* GUESS: name. A MorphingMesh's IsAnimatable(property), its engine vtable +0x20
+   (swvObject3D_AddAnimationTrackValue, JSR-184 1.1, Object3D.addAnimationTrack, asks it): 1 for the
+   properties it adds, SWV_ANIMATED_MORPHINGMESH (MORPH_WEIGHTS), else its base class's answer,
+   swvNode_IsAnimatable (1 when that is not 0). The bit is 1 << (property - 0xff), a register shift: 0 from
+   32 up. The mask is the properties JSR-184 1.1, AnimationTrack's fields give MorphingMesh. Evidence:
+   0x01012384 - 0x010123ac (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2, #0x800`, `bl` the base at
+   0x0101239c with r0 and r1 as they came; Ghidra had dropped them). */
 int32 swvMorphingMesh_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17372,13 +17378,13 @@ int32 swvMorphingMesh_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x010123B0  (file offset 0x123B0)  swvVertexBuffer_IsAnimatable ================================ */
-/* GUESS: name. A VertexBuffer's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
-   1.1, Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_VERTEXBUFFER
-   (ALPHA, COLOR), else its base class's answer, swvObject3D_IsAnimatable (1 when that is not 0). The bit
-   is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is the properties JSR-184 1.1,
-   AnimationTrack's fields give VertexBuffer. Evidence: 0x010123b0 - 0x010123d8 (`sub r2, r1, #0xff` / `mov
-   r2, r3, lsl r2`, `tst r2, #0x0a`, `bl` the base at 0x010123c8 with r0 and r1 as they came; Ghidra had
-   dropped them). */
+/* GUESS: name. A VertexBuffer's IsAnimatable(property), its engine vtable +0x20
+   (swvObject3D_AddAnimationTrackValue, JSR-184 1.1, Object3D.addAnimationTrack, asks it): 1 for the
+   properties it adds, SWV_ANIMATED_VERTEXBUFFER (ALPHA, COLOR), else its base class's answer,
+   swvObject3D_IsAnimatable (1 when that is not 0). The bit is 1 << (property - 0xff), a register shift: 0
+   from 32 up. The mask is the properties JSR-184 1.1, AnimationTrack's fields give VertexBuffer. Evidence:
+   0x010123b0 - 0x010123d8 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2, #0x0a`, `bl` the base at
+   0x010123c8 with r0 and r1 as they came; Ghidra had dropped them). */
 int32 swvVertexBuffer_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17393,13 +17399,13 @@ int32 swvVertexBuffer_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x010123DC  (file offset 0x123DC)  swvTransformable_IsAnimatable =============================== */
-/* GUESS: name. A Transformable's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
-   1.1, Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_TRANSFORMABLE
-   (ORIENTATION, SCALE, TRANSLATION), else its base class's answer, swvObject3D_IsAnimatable (1 when that
-   is not 0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is the properties
-   JSR-184 1.1, AnimationTrack's fields give Transformable. Evidence: 0x010123dc - 0x01012408 (`sub r2, r1,
-   #0xff` / `mov r2, r3, lsl r2`, `ldr r3, [0x010123ec]` / `tst r2, r3`, `bl` the base at 0x010123f8 with
-   r0 and r1 as they came; Ghidra had dropped them). */
+/* GUESS: name. A Transformable's IsAnimatable(property), its engine vtable +0x20
+   (swvObject3D_AddAnimationTrackValue, JSR-184 1.1, Object3D.addAnimationTrack, asks it): 1 for the
+   properties it adds, SWV_ANIMATED_TRANSFORMABLE (ORIENTATION, SCALE, TRANSLATION), else its base class's
+   answer, swvObject3D_IsAnimatable (1 when that is not 0). The bit is 1 << (property - 0xff), a register
+   shift: 0 from 32 up. The mask is the properties JSR-184 1.1, AnimationTrack's fields give Transformable.
+   Evidence: 0x010123dc - 0x01012408 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `ldr r3, [0x010123ec]` /
+   `tst r2, r3`, `bl` the base at 0x010123f8 with r0 and r1 as they came; Ghidra had dropped them). */
 int32 swvTransformable_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17414,13 +17420,13 @@ int32 swvTransformable_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x01012410  (file offset 0x12410)  swvFog_IsAnimatable ========================================= */
-/* GUESS: name. A Fog's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184 1.1,
-   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_FOG (COLOR, DENSITY,
-   FAR_DISTANCE, NEAR_DISTANCE), else its base class's answer, swvObject3D_IsAnimatable (1 when that is not
-   0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is the properties
-   JSR-184 1.1, AnimationTrack's fields give Fog. Evidence: 0x01012410 - 0x0101243c (`sub r2, r1, #0xff` /
-   `mov r2, r3, lsl r2`, `ldr r3, [0x01012420]` / `tst r2, r3`, `bl` the base at 0x0101242c with r0 and r1
-   as they came; Ghidra had dropped them). */
+/* GUESS: name. A Fog's IsAnimatable(property), its engine vtable +0x20
+   (swvObject3D_AddAnimationTrackValue, JSR-184 1.1, Object3D.addAnimationTrack, asks it): 1 for the
+   properties it adds, SWV_ANIMATED_FOG (COLOR, DENSITY, FAR_DISTANCE, NEAR_DISTANCE), else its base
+   class's answer, swvObject3D_IsAnimatable (1 when that is not 0). The bit is 1 << (property - 0xff), a
+   register shift: 0 from 32 up. The mask is the properties JSR-184 1.1, AnimationTrack's fields give Fog.
+   Evidence: 0x01012410 - 0x0101243c (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `ldr r3, [0x01012420]` /
+   `tst r2, r3`, `bl` the base at 0x0101242c with r0 and r1 as they came; Ghidra had dropped them). */
 int32 swvFog_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17435,13 +17441,13 @@ int32 swvFog_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x01012444  (file offset 0x12444)  swvNode_IsAnimatable ======================================== */
-/* GUESS: name. A Node's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184 1.1,
-   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_NODE (ALPHA,
-   PICKABILITY, VISIBILITY), else its base class's answer, swvTransformable_IsAnimatable (1 when that is
-   not 0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is the properties
-   JSR-184 1.1, AnimationTrack's fields give Node. Evidence: 0x01012444 - 0x01012470 (`sub r2, r1, #0xff` /
-   `mov r2, r3, lsl r2`, `ldr r3, [0x01012454]` / `tst r2, r3`, `bl` the base at 0x01012460 with r0 and r1
-   as they came; Ghidra had dropped them). */
+/* GUESS: name. A Node's IsAnimatable(property), its engine vtable +0x20
+   (swvObject3D_AddAnimationTrackValue, JSR-184 1.1, Object3D.addAnimationTrack, asks it): 1 for the
+   properties it adds, SWV_ANIMATED_NODE (ALPHA, PICKABILITY, VISIBILITY), else its base class's answer,
+   swvTransformable_IsAnimatable (1 when that is not 0). The bit is 1 << (property - 0xff), a register
+   shift: 0 from 32 up. The mask is the properties JSR-184 1.1, AnimationTrack's fields give Node.
+   Evidence: 0x01012444 - 0x01012470 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `ldr r3, [0x01012454]` /
+   `tst r2, r3`, `bl` the base at 0x01012460 with r0 and r1 as they came; Ghidra had dropped them). */
 int32 swvNode_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17456,13 +17462,14 @@ int32 swvNode_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x01012478  (file offset 0x12478)  swvLight_IsAnimatable ======================================= */
-/* GUESS: name. A Light's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184 1.1,
-   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_LIGHT (COLOR,
-   INTENSITY, SPOT_ANGLE, SPOT_EXPONENT), else its base class's answer, swvNode_IsAnimatable (1 when that
-   is not 0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is the properties
-   JSR-184 1.1, AnimationTrack's fields give Light. Evidence: 0x01012478 - 0x010124a4 (`sub r2, r1, #0xff`
-   / `mov r2, r3, lsl r2`, `ldr r3, [0x01012488]` / `tst r2, r3`, `bl` the base at 0x01012494 with r0 and
-   r1 as they came; Ghidra had dropped them). */
+/* GUESS: name. A Light's IsAnimatable(property), its engine vtable +0x20
+   (swvObject3D_AddAnimationTrackValue, JSR-184 1.1, Object3D.addAnimationTrack, asks it): 1 for the
+   properties it adds, SWV_ANIMATED_LIGHT (COLOR, INTENSITY, SPOT_ANGLE, SPOT_EXPONENT), else its base
+   class's answer, swvNode_IsAnimatable (1 when that is not 0). The bit is 1 << (property - 0xff), a
+   register shift: 0 from 32 up. The mask is the properties JSR-184 1.1, AnimationTrack's fields give
+   Light. Evidence: 0x01012478 - 0x010124a4 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `ldr r3,
+   [0x01012488]` / `tst r2, r3`, `bl` the base at 0x01012494 with r0 and r1 as they came; Ghidra had
+   dropped them). */
 int32 swvLight_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17490,12 +17497,12 @@ int32 FUN_010124ac(const uint8 *object,int32 property)
 /* ==== 0x010124B0  (file offset 0x124B0)  swvCamera_IsAnimatable ====================================== */
 /* A routine Ghidra has no function for, reached only through an engine vtable (a scene object's, not
    static); written from its disassembly. GUESS: name. A Camera's IsAnimatable(property), its engine vtable
-   +0x20 (FUN_01002a58, JSR-184 1.1, Object3D.addAnimationTrack, asks it): 1 for the properties it adds,
-   SWV_ANIMATED_CAMERA (FAR_DISTANCE, FIELD_OF_VIEW, NEAR_DISTANCE), else its base class's answer,
-   swvNode_IsAnimatable (1 when that is not 0); the bit as in the others (0 from a shift of 32 up). The
-   mask is the properties JSR-184 1.1, AnimationTrack's fields give Camera. Evidence: 0x010124b0 -
-   0x010124d8 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2, #0x1300`, `bl 0x01012444` at 0x010124c8
-   with r0 and r1 as they came). */
+   +0x20 (swvObject3D_AddAnimationTrackValue, JSR-184 1.1, Object3D.addAnimationTrack, asks it): 1 for the
+   properties it adds, SWV_ANIMATED_CAMERA (FAR_DISTANCE, FIELD_OF_VIEW, NEAR_DISTANCE), else its base
+   class's answer, swvNode_IsAnimatable (1 when that is not 0); the bit as in the others (0 from a shift of
+   32 up). The mask is the properties JSR-184 1.1, AnimationTrack's fields give Camera. Evidence:
+   0x010124b0 - 0x010124d8 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2, #0x1300`, `bl 0x01012444`
+   at 0x010124c8 with r0 and r1 as they came). */
 int32 swvCamera_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17510,12 +17517,13 @@ int32 swvCamera_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x010124DC  (file offset 0x124DC)  swvSprite3D_IsAnimatable ==================================== */
-/* GUESS: name. A Sprite3D's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184 1.1,
-   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_SPRITE3D (CROP), else
-   its base class's answer, swvNode_IsAnimatable (1 when that is not 0). The bit is 1 << (property - 0xff),
-   a register shift: 0 from 32 up. The mask is the properties JSR-184 1.1, AnimationTrack's fields give
-   Sprite3D. Evidence: 0x010124dc - 0x01012504 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2,
-   #0x10`, `bl` the base at 0x010124f4 with r0 and r1 as they came; Ghidra had dropped them). */
+/* GUESS: name. A Sprite3D's IsAnimatable(property), its engine vtable +0x20
+   (swvObject3D_AddAnimationTrackValue, JSR-184 1.1, Object3D.addAnimationTrack, asks it): 1 for the
+   properties it adds, SWV_ANIMATED_SPRITE3D (CROP), else its base class's answer, swvNode_IsAnimatable (1
+   when that is not 0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is the
+   properties JSR-184 1.1, AnimationTrack's fields give Sprite3D. Evidence: 0x010124dc - 0x01012504 (`sub
+   r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2, #0x10`, `bl` the base at 0x010124f4 with r0 and r1 as
+   they came; Ghidra had dropped them). */
 int32 swvSprite3D_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17534,8 +17542,8 @@ int32 swvSprite3D_IsAnimatable(const uint8 *object,int32 property)
    (each walked up its parents, +0x30, to the node with none), else 0. The binary tests three things,
    the other's root being the node, the other being the node's root, or the two roots equal; the first
    two are cases of the third (a root has no parent, so it is its own root), so only the third is
-   written here. Callers: FUN_010034cc (JSR-184 1.1, Node.align: -1301 IllegalArgumentException for a
-   reference in another graph) and FUN_01016ecc (JSR-184 1.1, Group.pick: -1300 IllegalStateException
+   written here. Callers: swvNode_Align (JSR-184 1.1, Node.align: -1301 IllegalArgumentException for a
+   reference in another graph) and swvGroup_Pick (JSR-184 1.1, Group.pick: -1300 IllegalStateException
    for a camera with no path to the group). Evidence: 0x01012508 - 0x01012558 (`cmp r0, #0` / `cmpne r1,
    #0` / `beq`, two `ldr r2, [r2, #0x30]` loops, `cmp r3, r0` / `cmpne r1, r12` / `cmpne r12, r3` /
    `moveq r0, #1`, `mov r0, #0`). */
@@ -18649,7 +18657,7 @@ undefined4 swv_Matrix4Invert(int param_1)
 /* ==== 0x01013A80  (file offset 0x13A80)  swvAnimationController_IsActive ============================= */
 /* GUESS: name. Whether an AnimationController is active at the world time worldTime (JSR-184 1.1,
    AnimationController.setActiveInterval): always when its active interval's start (+0x1c) and end (+0x20)
-   are equal, else when start <= worldTime < end (signed). Callers: FUN_01003c38 (the native
+   are equal, else when start <= worldTime < end (signed). Callers: swvObject3D_AnimateValue (the native
    Object3D.animate, which skips a track whose controller is not active) and FUN_01010de0 (an
    AnimationTrack's sample). Evidence: 0x01013a80 - 0x01013aac (`ldr r2, [r0, #0x1c]` / `ldr r0, [r0,
    #0x20]`, `cmp r2, r0` / `beq` 1, `cmp r2, r1` / `bgt` 0, `cmp r0, r1` / `bgt` 1, else 0). */
@@ -18671,7 +18679,7 @@ int32 swvAnimationController_IsActive(const uint8 *controller,int32 worldTime)
 /* GUESS: name. Whether ancestor is a proper ancestor of the Node node (its parent, its parent's parent,
    ...): 0 for a NULL node, else swvNode_HasAncestor(node, ancestor). The binary has no loop of its own:
    it tests node, swaps the two arguments and jumps into the next routine (a conditional tail jump, here
-   a call; Ghidra had repeated that routine's loop here). Callers: FUN_01002d60 (JSR-184 1.1,
+   a call; Ghidra had repeated that routine's loop here). Callers: swvGroup_AddChild (JSR-184 1.1,
    Group.addChild: the child must not be an ancestor of the group), FUN_010231c4 (GUESS the SkinnedMesh
    skeleton: not an ancestor of the mesh), FUN_010048e4 (Node.getTransformTo), FUN_0100a02c (Node.align:
    a node aligned to its descendant). Evidence: 0x01013ab0 - 0x01013ac4 (`mov r2, r0`, `movs r0, r1`,
@@ -18687,12 +18695,13 @@ int32 swvNode_IsAncestorOf(const uint8 *ancestor,const uint8 *node)
 }
 
 /* ==== 0x01013AC8  (file offset 0x13AC8)  swvNode_HasAncestor ========================================= */
-/* GUESS: name. Whether the Node node has ancestor among its ancestors: its parents (+0x30) walked from
-   its own parent to the root, 1 on meeting ancestor, else 0 (the node itself does not count).
-   swvNode_IsAncestorOf jumps into it with the arguments swapped. Callers: FUN_01003234 (JSR-184 1.1,
-   SkinnedMesh.addTransform: the bone must be the skeleton or under it), FUN_0100f030 (the alignment
-   references in a copied subtree), FUN_0101d17c, FUN_0101d21c. Evidence: 0x01013ac8 - 0x01013af4 (`ldr
-   r0, [r0, #0x30]` / `cmp r0, #0` / `beq` 0, `cmp r0, r1` / `ldrne r0, [r0, #0x30]`, `mov r0, #1`). */
+/* GUESS: name. Whether the Node node has ancestor among its ancestors: its parents (+0x30) walked from its
+   own parent to the root, 1 on meeting ancestor, else 0 (the node itself does not count).
+   swvNode_IsAncestorOf jumps into it with the arguments swapped. Callers: swvSkinnedMesh_AddTransform
+   (JSR-184 1.1, SkinnedMesh.addTransform: the bone must be the skeleton or under it), FUN_0100f030 (the
+   alignment references in a copied subtree), FUN_0101d17c, FUN_0101d21c. Evidence: 0x01013ac8 - 0x01013af4
+   (`ldr r0, [r0, #0x30]` / `cmp r0, #0` / `beq` 0, `cmp r0, r1` / `ldrne r0, [r0, #0x30]`, `mov r0, #1`).
+   */
 int32 swvNode_HasAncestor(const uint8 *node,const uint8 *ancestor)
 
 {
@@ -18708,11 +18717,11 @@ int32 swvNode_HasAncestor(const uint8 *node,const uint8 *ancestor)
 /* ==== 0x01013AF8  (file offset 0x13AF8)  swv_IsPowerOfTwo ============================================ */
 /* GUESS: name. Whether value's magnitude is a power of two (1, 2, 4, ...): 0 for 0; a negative value is
    negated first (0x80000000 stays negative and gives 0); the value halved while it is above 0 and even,
-   then 1 when nothing but bit 0 is left. Callers: FUN_01021abc (JSR-184 1.1, Texture2D.setImage) and
-   FUN_0101e144 (the M3G loader's Texture2D), on the image's width and height (the spec: positive powers
-   of two, up to the implementation's maximum, here 1024). Evidence: 0x01013af8 - 0x01013b30 (`cmp r0,
-   #0` / `beq` 0, `bge`, `rsb r0, r0, #0`, `mov r0, r0, asr #1` / `cmp r0, #0` / `ble`, `tst r0, #1` /
-   `beq`, `bics r0, r0, #1` / `moveq r0, #1`). */
+   then 1 when nothing but bit 0 is left. Callers: swvTexture2D_SetImage (JSR-184 1.1, Texture2D.setImage)
+   and swvM3G_ReadTexture2D (the M3G loader's Texture2D), on the image's width and height (the spec:
+   positive powers of two, up to the implementation's maximum, here 1024). Evidence: 0x01013af8 -
+   0x01013b30 (`cmp r0, #0` / `beq` 0, `bge`, `rsb r0, r0, #0`, `mov r0, r0, asr #1` / `cmp r0, #0` /
+   `ble`, `tst r0, #1` / `beq`, `bics r0, r0, #1` / `moveq r0, #1`). */
 int32 swv_IsPowerOfTwo(int32 value)
 
 {
@@ -21214,7 +21223,7 @@ bool FUN_01016d8c(int param_1,undefined4 param_2,undefined4 *param_3,uint *param
   return bVar4;
 }
 
-/* ==== 0x01016ECC  (file offset 0x16ECC)  FUN_01016ecc ================================================ */
+/* ==== 0x01016ECC  (file offset 0x16ECC)  swvGroup_Pick =============================================== */
 /* (not yet rewritten) JSR-184 1.1, Group.pick(scope, x, y, camera, ri) on the group param_1: error
    -1300 (IllegalStateException) unless the camera param_5 is in the group's scene graph
    (swvNode_SameSceneGraph; the -1302 for a NULL camera is in the BREW wrapper FUN_010303f0); then the
@@ -21224,7 +21233,7 @@ bool FUN_01016d8c(int param_1,undefined4 param_2,undefined4 *param_3,uint *param
    (GUESS: 1.0 behaviour), whose ArithmeticException is -1000 (the same r6, 0x01016f40); the ray then
    taken to the group (FUN_010048e4, camera to group); the result 1 for a hit, and then ray param_6,
    when set, passed to FUN_01027a54 (GUESS: filled in). */
-bool FUN_01016ecc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
+bool swvGroup_Pick(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
                  undefined4 param_5,int param_6)
 
 {
@@ -23378,10 +23387,10 @@ undefined4 FUN_010198c8(int param_1)
 
 /* ==== 0x01019920  (file offset 0x19920)  FUN_01019920 ================================================ */
 /* (not yet rewritten) M3G file format section 11.10: reads one pixel specifier of the format param_2 from
-   the M3G stream param_1: swvImage2D_BytesPerPixel bytes (1 ALPHA / LUMINANCE, 2 LUMINANCE_ALPHA, 3 RGB,
-   4 RGBA; FUN_01019640, one byte each) into a word on the stack, which FUN_01025bc4 converts into the
-   16-bit colour param_3 and the alpha param_4. Called by the M3G Image2D reader FUN_0101dbf8 for each
-   pixel and each palette colour. */
+   the M3G stream param_1: swvImage2D_BytesPerPixel bytes (1 ALPHA / LUMINANCE, 2 LUMINANCE_ALPHA, 3 RGB, 4
+   RGBA; FUN_01019640, one byte each) into a word on the stack, which FUN_01025bc4 converts into the 16-bit
+   colour param_3 and the alpha param_4. Called by the M3G Image2D reader swvM3G_ReadImage2D for each pixel
+   and each palette colour. */
 void FUN_01019920(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -23804,8 +23813,8 @@ void FUN_01019f54(undefined4 param_1)
   return;
 }
 
-/* ==== 0x0101A010  (file offset 0x1A010)  FUN_0101a010 ================================================ */
-void FUN_0101a010(int param_1,int param_2)
+/* ==== 0x0101A010  (file offset 0x1A010)  swvObject3D_RemoveAnimationTrackValue ======================= */
+void swvObject3D_RemoveAnimationTrackValue(int param_1,int param_2)
 
 {
   int *piVar1;
@@ -26781,16 +26790,16 @@ uint FUN_0101dbcc(undefined4 param_1,int param_2)
          DOUBLE_1_POINT_342271274_TIMES_TEN_TO_THE_MINUS_17_HIGH_WORD & 0xffff;
 }
 
-/* ==== 0x0101DBF8  (file offset 0x1DBF8)  FUN_0101dbf8 ================================================ */
+/* ==== 0x0101DBF8  (file offset 0x1DBF8)  swvM3G_ReadImage2D ========================================== */
 /* (not yet rewritten) M3G file format section 11.10, Image2D (ObjectType 10): reads the record into the
-   native Image2D param_1: the Object3D part (FUN_0101df64), the format (+0x40, ALPHA 0x60 .. RGBA 0x64),
-   isMutable (+0x44), the width (+0x34) and height (+0x38) (error -1202 for 0, -4 for 0x8000 or more). A
-   mutable image has no pixel data: its planes are set to 0xff (JSR-184 1.1, Image2D(format, width,
-   height): opaque white). Otherwise the palette (Byte[]): none, then the pixels themselves (a Byte[] of at
-   least width * height pixel specifiers, else -1202); else its colours (error -1202 for a size not a
-   multiple of the pixel's below 256 entries; differs from section 11.10: a longer palette is not refused,
-   its first 256 entries are kept), each written to the palette (swvImage2D_Palette) and its alpha to the
-   alpha plane, then the indices (a Byte[] of at least width * height, else -1202). */
+   native Image2D param_1: the Object3D part (swvM3G_ReadObject3D), the format (+0x40, ALPHA 0x60 .. RGBA
+   0x64), isMutable (+0x44), the width (+0x34) and height (+0x38) (error -1202 for 0, -4 for 0x8000 or
+   more). A mutable image has no pixel data: its planes are set to 0xff (JSR-184 1.1, Image2D(format,
+   width, height): opaque white). Otherwise the palette (Byte[]): none, then the pixels themselves (a
+   Byte[] of at least width * height pixel specifiers, else -1202); else its colours (error -1202 for a
+   size not a multiple of the pixel's below 256 entries; differs from section 11.10: a longer palette is
+   not refused, its first 256 entries are kept), each written to the palette (swvImage2D_Palette) and its
+   alpha to the alpha plane, then the indices (a Byte[] of at least width * height, else -1202). */
 /* WARNING: Removing unreachable block (ram,0x0100358c) */
 /* WARNING: Removing unreachable block (ram,0x01003590) */
 /* WARNING: Removing unreachable block (ram,0x0100354c) */
@@ -26799,7 +26808,7 @@ uint FUN_0101dbcc(undefined4 param_1,int param_2)
 /* WARNING: Removing unreachable block (ram,0x010035c0) */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
-void FUN_0101dbf8(int param_1,undefined4 param_2,undefined4 param_3,undefined2 *param_4)
+void swvM3G_ReadImage2D(int param_1,undefined4 param_2,undefined4 param_3,undefined2 *param_4)
 
 {
   undefined1 uVar1;
@@ -26824,7 +26833,7 @@ void FUN_0101dbf8(int param_1,undefined4 param_2,undefined4 param_3,undefined2 *
   uStack_30 = param_2;
   uStack_2c = param_3;
   puStack_28 = param_4;
-  FUN_0101df64();
+  swvM3G_ReadObject3D();
   uVar2 = FUN_010196cc(param_2,0x5f,0x65);
   uVar3 = FUN_01019618(param_2);
   *(undefined4 *)(param_1 + 0x44) = uVar3;
@@ -26969,15 +26978,15 @@ void FUN_0101de2c(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x0101DED0  (file offset 0x1DED0)  FUN_0101ded0 ================================================ */
-void FUN_0101ded0(int param_1,undefined4 param_2)
+/* ==== 0x0101DED0  (file offset 0x1DED0)  swvM3G_ReadMaterial ========================================= */
+void swvM3G_ReadMaterial(int param_1,undefined4 param_2)
 
 {
   undefined4 uVar1;
   undefined1 in_ZR;
   undefined1 in_CY;
   
-  FUN_0101df64();
+  swvM3G_ReadObject3D();
   FUN_01019650(param_2,param_1 + 0x1c,0);
   FUN_01019650(param_2,param_1 + 0x20,1);
   FUN_01019650(param_2,param_1 + 0x24,0);
@@ -26994,8 +27003,8 @@ void FUN_0101ded0(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x0101DF64  (file offset 0x1DF64)  FUN_0101df64 ================================================ */
-void FUN_0101df64(int param_1,undefined4 param_2)
+/* ==== 0x0101DF64  (file offset 0x1DF64)  swvM3G_ReadObject3D ========================================= */
+void swvM3G_ReadObject3D(int param_1,undefined4 param_2)
 
 {
   undefined1 uVar1;
@@ -27011,7 +27020,7 @@ void FUN_0101df64(int param_1,undefined4 param_2)
   uVar3 = FUN_01019698(param_2,4);
   for (uVar6 = 0; uVar6 < uVar3; uVar6 = uVar6 + 1) {
     uVar2 = FUN_01019888(param_2,2);
-    FUN_01002a58(param_1,uVar2);
+    swvObject3D_AddAnimationTrackValue(param_1,uVar2);
   }
   uVar3 = FUN_01019698(param_2,8);
   if (uVar3 != 0) {
@@ -27054,7 +27063,7 @@ undefined4 FUN_0101e0b0(int param_1,undefined4 param_2)
   int iVar2;
   int iVar3;
   
-  FUN_0101dbf8();
+  swvM3G_ReadImage2D();
   uVar1 = FUN_01019a0c(param_2);
   *(undefined4 *)(param_1 + 0x5c) = uVar1;
   uVar1 = FUN_01019a0c(param_2);
@@ -27077,18 +27086,18 @@ undefined4 FUN_0101e0b0(int param_1,undefined4 param_2)
   return uVar1;
 }
 
-/* ==== 0x0101E144  (file offset 0x1E144)  FUN_0101e144 ================================================ */
+/* ==== 0x0101E144  (file offset 0x1E144)  swvM3G_ReadTexture2D ======================================== */
 /* (not yet rewritten) M3G file format section 11.24, Texture2D (ObjectType 17): the record, on the texture
-   param_1 and the reader param_2: the Transformable part (FUN_0101ee08), the image (an ObjectIndex,
-   FUN_010197c4: an Image2D or one of Swerve's types 23 / 24) at +0x2c as in Texture2D.setImage; error
-   -1202 (the file is bad) for none, or a width or height that is not a power of two (swv_IsPowerOfTwo)
-   up to 1024 (JSR-184 1.1, Texture2D(image): NullPointerException / IllegalArgumentException); then, in
-   the file's order, the blend colour (+0x24, ColorRGB, FUN_01019650), the blending (+0x28: FUNC_ADD
-   0xe0 .. FUNC_REPLACE 0xe4), the wrapping S and T (+0x30 / +0x34: WRAP_CLAMP 0xf0, WRAP_REPEAT 0xf1),
-   the level filter (+0x38: FILTER_BASE_LEVEL 0xd0, FILTER_LINEAR, FILTER_NEAREST) and the image filter
-   (+0x3c: FILTER_LINEAR 0xd1, FILTER_NEAREST 0xd2, as Texture2D.setFiltering), each a byte FUN_010196cc
-   checks to lie strictly between its two bounds. */
-void FUN_0101e144(int param_1,undefined4 param_2)
+   param_1 and the reader param_2: the Transformable part (swvM3G_ReadTransformable), the image (an
+   ObjectIndex, FUN_010197c4: an Image2D or one of Swerve's types 23 / 24) at +0x2c as in
+   Texture2D.setImage; error -1202 (the file is bad) for none, or a width or height that is not a power of
+   two (swv_IsPowerOfTwo) up to 1024 (JSR-184 1.1, Texture2D(image): NullPointerException /
+   IllegalArgumentException); then, in the file's order, the blend colour (+0x24, ColorRGB, FUN_01019650),
+   the blending (+0x28: FUNC_ADD 0xe0 .. FUNC_REPLACE 0xe4), the wrapping S and T (+0x30 / +0x34:
+   WRAP_CLAMP 0xf0, WRAP_REPEAT 0xf1), the level filter (+0x38: FILTER_BASE_LEVEL 0xd0, FILTER_LINEAR,
+   FILTER_NEAREST) and the image filter (+0x3c: FILTER_LINEAR 0xd1, FILTER_NEAREST 0xd2, as
+   Texture2D.setFiltering), each a byte FUN_010196cc checks to lie strictly between its two bounds. */
+void swvM3G_ReadTexture2D(int param_1,undefined4 param_2)
 
 {
   int iVar1;
@@ -27096,7 +27105,7 @@ void FUN_0101e144(int param_1,undefined4 param_2)
   undefined4 uVar3;
   int iVar4;
   
-  FUN_0101ee08();
+  swvM3G_ReadTransformable();
   iVar4 = *(int *)(param_1 + 0x2c);
   iVar1 = FUN_010197c4(param_2,0);
   if (iVar1 != 0) {
@@ -27152,8 +27161,8 @@ LAB_0101e208:
   return;
 }
 
-/* ==== 0x0101E288  (file offset 0x1E288)  FUN_0101e288 ================================================ */
-void FUN_0101e288(int param_1,undefined4 param_2)
+/* ==== 0x0101E288  (file offset 0x1E288)  swvM3G_ReadAppearance ======================================= */
+void swvM3G_ReadAppearance(int param_1,undefined4 param_2)
 
 {
   undefined4 uVar1;
@@ -27163,7 +27172,7 @@ void FUN_0101e288(int param_1,undefined4 param_2)
   int iVar5;
   int iVar6;
   
-  FUN_0101df64();
+  swvM3G_ReadObject3D();
   iVar2 = FUN_01019640(param_2);
   *(int *)(param_1 + 0x1c) = iVar2;
   uVar1 = INTEGER_MINUS_1202;
@@ -27247,8 +27256,8 @@ void FUN_0101e288(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x0101E3F4  (file offset 0x1E3F4)  FUN_0101e3f4 ================================================ */
-void FUN_0101e3f4(int param_1,undefined4 param_2)
+/* ==== 0x0101E3F4  (file offset 0x1E3F4)  swvM3G_ReadBackground ======================================= */
+void swvM3G_ReadBackground(int param_1,undefined4 param_2)
 
 {
   int *piVar1;
@@ -27257,7 +27266,7 @@ void FUN_0101e3f4(int param_1,undefined4 param_2)
   undefined4 uVar4;
   undefined1 uVar5;
   
-  FUN_0101df64();
+  swvM3G_ReadObject3D();
   FUN_01019650(param_2,param_1 + 0x1c,1);
   piVar1 = *(int **)(param_1 + 0x20);
   if (piVar1 != (int *)0x0) {
@@ -27311,8 +27320,8 @@ void FUN_0101e3f4(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x0101E530  (file offset 0x1E530)  thunk_FUN_0101df64 ========================================== */
-void thunk_FUN_0101df64(int param_1,undefined4 param_2)
+/* ==== 0x0101E530  (file offset 0x1E530)  thunk_swvM3G_ReadObject3D =================================== */
+void thunk_swvM3G_ReadObject3D(int param_1,undefined4 param_2)
 
 {
   undefined1 uVar1;
@@ -27328,7 +27337,7 @@ void thunk_FUN_0101df64(int param_1,undefined4 param_2)
   uVar3 = FUN_01019698(param_2,4);
   for (uVar6 = 0; uVar6 < uVar3; uVar6 = uVar6 + 1) {
     uVar2 = FUN_01019888(param_2,2);
-    FUN_01002a58(param_1,uVar2);
+    swvObject3D_AddAnimationTrackValue(param_1,uVar2);
   }
   uVar3 = FUN_01019698(param_2,8);
   if (uVar3 != 0) {
@@ -27454,7 +27463,7 @@ void FUN_0101e534(int param_1,undefined4 param_2)
   uint uStack_2c;
   uint uStack_28;
   
-  FUN_0101df64();
+  swvM3G_ReadObject3D();
   uVar8 = FUN_01019abc(param_2);
   *(undefined4 *)(param_1 + 0x4c) = uVar8;
   iVar9 = FUN_01019640(param_2);
@@ -28055,20 +28064,20 @@ LAB_010190c8:
   return;
 }
 
-/* ==== 0x0101E778  (file offset 0x1E778)  FUN_0101e778 ================================================ */
+/* ==== 0x0101E778  (file offset 0x1E778)  swvM3G_ReadPolygonMode ====================================== */
 /* (not yet rewritten) M3G file format section 11.20, PolygonMode (ObjectType 8): reads the record into the
-   native PolygonMode param_1, in the file format's order: the Object3D part (FUN_0101df64), the culling
-   (CULL_BACK 0xa0 .. CULL_NONE 0xa2), shading (SHADE_FLAT 0xa4, SHADE_SMOOTH 0xa5) and winding
+   native PolygonMode param_1, in the file format's order: the Object3D part (swvM3G_ReadObject3D), the
+   culling (CULL_BACK 0xa0 .. CULL_NONE 0xa2), shading (SHADE_FLAT 0xa4, SHADE_SMOOTH 0xa5) and winding
    (WINDING_CCW 0xa8, WINDING_CW 0xa9), each read as one of its constants (FUN_010196cc), then three
-   Booleans: twoSidedLightingEnabled (swvPolygonMode_SetTwoSidedLightingValue),
-   localCameraLightingEnabled (flag 0x200) and perspectiveCorrectionEnabled (flag 0x400). */
-void FUN_0101e778(int param_1,undefined4 param_2)
+   Booleans: twoSidedLightingEnabled (swvPolygonMode_SetTwoSidedLightingValue), localCameraLightingEnabled
+   (flag 0x200) and perspectiveCorrectionEnabled (flag 0x400). */
+void swvM3G_ReadPolygonMode(int param_1,undefined4 param_2)
 
 {
   undefined4 uVar1;
   int iVar2;
   
-  FUN_0101df64();
+  swvM3G_ReadObject3D();
   uVar1 = FUN_010196cc(param_2,0x9f,0xa3);
   swvPolygonMode_SetCullingValue((uint8 *)param_1,uVar1);
   uVar1 = FUN_010196cc(param_2,0xa3,0xa6);
@@ -28088,8 +28097,8 @@ void FUN_0101e778(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x0101E824  (file offset 0x1E824)  FUN_0101e824 ================================================ */
-void FUN_0101e824(int param_1,undefined4 param_2)
+/* ==== 0x0101E824  (file offset 0x1E824)  swvM3G_ReadSkinnedMesh ====================================== */
+void swvM3G_ReadSkinnedMesh(int param_1,undefined4 param_2)
 
 {
   undefined4 uVar1;
@@ -28100,7 +28109,7 @@ void FUN_0101e824(int param_1,undefined4 param_2)
   undefined4 uVar6;
   int iVar7;
   
-  FUN_0101f760();
+  swvM3G_ReadMesh();
   uVar1 = FUN_01019888(param_2,9);
   FUN_010231c4(param_1,uVar1);
   iVar2 = FUN_01019698(param_2,0x10);
@@ -28120,13 +28129,13 @@ void FUN_0101e824(int param_1,undefined4 param_2)
       *(uint *)(param_1 + 0xac) = uVar5;
     }
     uVar6 = thunk_FUN_01019abc(param_2);
-    FUN_01003234(param_1,uVar1,uVar6,uVar3,uVar4);
+    swvSkinnedMesh_AddTransform(param_1,uVar1,uVar6,uVar3,uVar4);
   }
   return;
 }
 
-/* ==== 0x0101E8EC  (file offset 0x1E8EC)  FUN_0101e8ec ================================================ */
-void FUN_0101e8ec(int param_1,undefined4 param_2)
+/* ==== 0x0101E8EC  (file offset 0x1E8EC)  swvM3G_ReadVertexArray ====================================== */
+void swvM3G_ReadVertexArray(int param_1,undefined4 param_2)
 
 {
   undefined4 uVar1;
@@ -28141,7 +28150,7 @@ void FUN_0101e8ec(int param_1,undefined4 param_2)
   char cVar10;
   short sVar11;
   
-  FUN_0101df64();
+  swvM3G_ReadObject3D();
   iVar6 = FUN_01019640(param_2);
   *(int *)(param_1 + 0x24) = iVar6;
   uVar1 = INTEGER_MINUS_1202;
@@ -28203,8 +28212,8 @@ void FUN_0101e8ec(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x0101EA94  (file offset 0x1EA94)  FUN_0101ea94 ================================================ */
-void FUN_0101ea94(int param_1,undefined4 param_2,uint param_3,uint param_4)
+/* ==== 0x0101EA94  (file offset 0x1EA94)  swvM3G_ReadHeader =========================================== */
+void swvM3G_ReadHeader(int param_1,undefined4 param_2,uint param_3,uint param_4)
 
 {
   uint uVar1;
@@ -28259,8 +28268,8 @@ void FUN_0101ea94(int param_1,undefined4 param_2,uint param_3,uint param_4)
   return;
 }
 
-/* ==== 0x0101EE08  (file offset 0x1EE08)  FUN_0101ee08 ================================================ */
-void FUN_0101ee08(int *param_1,undefined4 param_2)
+/* ==== 0x0101EE08  (file offset 0x1EE08)  swvM3G_ReadTransformable ==================================== */
+void swvM3G_ReadTransformable(int *param_1,undefined4 param_2)
 
 {
   int iVar1;
@@ -28275,7 +28284,7 @@ void FUN_0101ee08(int *param_1,undefined4 param_2)
   undefined4 local_1c;
   undefined4 local_18;
   
-  FUN_0101df64();
+  swvM3G_ReadObject3D();
   iVar1 = FUN_01019618(param_2);
   uVar3 = iVar1 == 0;
   if (!(bool)uVar3) {
@@ -28323,10 +28332,10 @@ void FUN_0101ee08(int *param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x0101EF44  (file offset 0x1EF44)  FUN_0101ef44 ================================================ */
+/* ==== 0x0101EF44  (file offset 0x1EF44)  swvM3G_ReadAnimationTrack =================================== */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
-void FUN_0101ef44(int param_1,undefined4 param_2)
+void swvM3G_ReadAnimationTrack(int param_1,undefined4 param_2)
 
 {
   int iVar1;
@@ -28336,7 +28345,7 @@ void FUN_0101ef44(int param_1,undefined4 param_2)
   int iVar5;
   bool bVar6;
   
-  FUN_0101df64();
+  swvM3G_ReadObject3D();
   iVar5 = *(int *)(param_1 + 0x1c);
   iVar1 = FUN_01019888(param_2,0x13);
   if (iVar1 != 0) {
@@ -28408,8 +28417,8 @@ void FUN_0101f0b0(int param_1)
   return;
 }
 
-/* ==== 0x0101F0B4  (file offset 0x1F0B4)  FUN_0101f0b4 ================================================ */
-void FUN_0101f0b4(int param_1,undefined4 param_2)
+/* ==== 0x0101F0B4  (file offset 0x1F0B4)  swvM3G_ReadKeyframeSequence ================================= */
+void swvM3G_ReadKeyframeSequence(int param_1,undefined4 param_2)
 
 {
   longlong lVar1;
@@ -28430,7 +28439,7 @@ void FUN_0101f0b4(int param_1,undefined4 param_2)
   undefined4 local_28;
   uint quantised;
   
-  FUN_0101df64();
+  swvM3G_ReadObject3D();
   uVar2 = FUN_010196cc(param_2,0xaf,0xb5);
   *(undefined4 *)(param_1 + 0x1c) = uVar2;
   uVar2 = FUN_010196cc(param_2,0xbf,0xc2);
@@ -28559,8 +28568,8 @@ LAB_01023b24:
   return;
 }
 
-/* ==== 0x0101F3E4  (file offset 0x1F3E4)  FUN_0101f3e4 ================================================ */
-void FUN_0101f3e4(int param_1,undefined4 param_2)
+/* ==== 0x0101F3E4  (file offset 0x1F3E4)  swvM3G_ReadTriangleStripArray =============================== */
+void swvM3G_ReadTriangleStripArray(int param_1,undefined4 param_2)
 
 {
   undefined4 uVar1;
@@ -28573,7 +28582,7 @@ void FUN_0101f3e4(int param_1,undefined4 param_2)
   int iVar8;
   bool bVar9;
   
-  thunk_FUN_0101df64();
+  thunk_swvM3G_ReadObject3D();
   uVar4 = FUN_01019640(param_2);
   uVar1 = INTEGER_MINUS_1202;
   uVar5 = uVar4;
@@ -28673,8 +28682,8 @@ LAB_0101f5b8:
   return;
 }
 
-/* ==== 0x0101F760  (file offset 0x1F760)  FUN_0101f760 ================================================ */
-void FUN_0101f760(int param_1,undefined4 param_2)
+/* ==== 0x0101F760  (file offset 0x1F760)  swvM3G_ReadMesh ============================================= */
+void swvM3G_ReadMesh(int param_1,undefined4 param_2)
 
 {
   undefined4 uVar1;
@@ -28683,7 +28692,7 @@ void FUN_0101f760(int param_1,undefined4 param_2)
   int iVar4;
   int iVar5;
   
-  FUN_0101f8ac();
+  swvM3G_ReadNode();
   iVar4 = *(int *)(param_1 + 0x88);
   iVar2 = FUN_01019888(param_2,0x15);
   if (iVar2 != 0) {
@@ -28742,8 +28751,8 @@ void FUN_0101f760(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x0101F8AC  (file offset 0x1F8AC)  FUN_0101f8ac ================================================ */
-void FUN_0101f8ac(int param_1,undefined4 param_2)
+/* ==== 0x0101F8AC  (file offset 0x1F8AC)  swvM3G_ReadNode ============================================= */
+void swvM3G_ReadNode(int param_1,undefined4 param_2)
 
 {
   undefined4 uVar1;
@@ -28752,7 +28761,7 @@ void FUN_0101f8ac(int param_1,undefined4 param_2)
   undefined4 uVar4;
   undefined4 uVar5;
   
-  FUN_0101ee08();
+  swvM3G_ReadTransformable();
   if ((*(uint *)(*(int *)(*(int *)(param_1 + 0x20) + 0x28) + 0x40) & 2) == 0) {
     FUN_0102f7e0(INTEGER_MINUS_1202);
   }
@@ -28771,30 +28780,30 @@ void FUN_0101f8ac(int param_1,undefined4 param_2)
     uVar3 = FUN_010196cc(param_2,0x8f,0x95);
     uVar4 = FUN_0101981c(param_2,1);
     uVar5 = FUN_0101981c(param_2,1);
-    FUN_01020104(param_1,uVar4,uVar1,uVar5,uVar3);
+    swvNode_SetAlignment(param_1,uVar4,uVar1,uVar5,uVar3);
   }
   return;
 }
 
-/* ==== 0x0101F9A8  (file offset 0x1F9A8)  FUN_0101f9a8 ================================================ */
-void FUN_0101f9a8(undefined4 param_1,undefined4 param_2)
+/* ==== 0x0101F9A8  (file offset 0x1F9A8)  swvM3G_ReadGroup ============================================ */
+void swvM3G_ReadGroup(undefined4 param_1,undefined4 param_2)
 
 {
   int iVar1;
   undefined4 uVar2;
   int iVar3;
   
-  FUN_0101f8ac();
+  swvM3G_ReadNode();
   iVar1 = FUN_01019698(param_2,4);
   for (iVar3 = 0; iVar3 < iVar1; iVar3 = iVar3 + 1) {
     uVar2 = FUN_0101981c(param_2,0);
-    FUN_01002d60(param_1,uVar2);
+    swvGroup_AddChild(param_1,uVar2);
   }
   return;
 }
 
-/* ==== 0x0101F9F8  (file offset 0x1F9F8)  FUN_0101f9f8 ================================================ */
-void FUN_0101f9f8(int param_1,undefined4 param_2)
+/* ==== 0x0101F9F8  (file offset 0x1F9F8)  swvM3G_ReadLight ============================================ */
+void swvM3G_ReadLight(int param_1,undefined4 param_2)
 
 {
   undefined4 uVar1;
@@ -28803,7 +28812,7 @@ void FUN_0101f9f8(int param_1,undefined4 param_2)
   undefined1 in_CY;
   
   uVar1 = INTEGER_MINUS_1202;
-  FUN_0101f8ac();
+  swvM3G_ReadNode();
   uVar2 = FUN_01019a0c(param_2);
   *(undefined4 *)(param_1 + 0x88) = uVar2;
   uVar2 = FUN_01019a0c(param_2);
@@ -28852,16 +28861,16 @@ void FUN_0101f9f8(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x0101FB28  (file offset 0x1FB28)  FUN_0101fb28 ================================================ */
+/* ==== 0x0101FB28  (file offset 0x1FB28)  swvM3G_ReadWorld ============================================ */
 /* WARNING: Removing unreachable block (ram,0x01026624) */
 
-void FUN_0101fb28(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+void swvM3G_ReadWorld(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
   int iVar1;
   int iVar2;
   
-  FUN_0101f9a8();
+  swvM3G_ReadGroup();
   iVar2 = *(int *)(param_1 + 0x88);
   iVar1 = FUN_01019888(param_2,5);
   if (iVar1 != 0) {
@@ -28896,10 +28905,10 @@ void FUN_0101fb28(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   return;
 }
 
-/* ==== 0x0101FBA8  (file offset 0x1FBA8)  FUN_0101fba8 ================================================ */
+/* ==== 0x0101FBA8  (file offset 0x1FBA8)  swvM3G_ReadCamera =========================================== */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
-void FUN_0101fba8(int param_1,undefined4 param_2)
+void swvM3G_ReadCamera(int param_1,undefined4 param_2)
 
 {
   bool bVar1;
@@ -28914,7 +28923,7 @@ void FUN_0101fba8(int param_1,undefined4 param_2)
   undefined1 uVar10;
   undefined1 uVar11;
   
-  FUN_0101f8ac();
+  swvM3G_ReadNode();
   uVar4 = FUN_010196cc(param_2,0x2f,0x33);
   *(uint *)(param_1 + 0x88) = uVar4;
   uVar9 = INTEGER_MINUS_1202;
@@ -29069,8 +29078,8 @@ LAB_0101d814:
   return;
 }
 
-/* ==== 0x0101FCCC  (file offset 0x1FCCC)  FUN_0101fccc ================================================ */
-void FUN_0101fccc(int param_1,undefined4 param_2)
+/* ==== 0x0101FCCC  (file offset 0x1FCCC)  swvM3G_ReadSprite3D ========================================= */
+void swvM3G_ReadSprite3D(int param_1,undefined4 param_2)
 
 {
   undefined4 uVar1;
@@ -29078,7 +29087,7 @@ void FUN_0101fccc(int param_1,undefined4 param_2)
   undefined4 uVar3;
   int iVar4;
   
-  FUN_0101f8ac();
+  swvM3G_ReadNode();
   iVar4 = *(int *)(param_1 + 0x98);
   iVar2 = FUN_010197c4(param_2,0);
   if (iVar2 != 0) {
@@ -29129,8 +29138,8 @@ void FUN_0101fccc(int param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x0101FDC4  (file offset 0x1FDC4)  FUN_0101fdc4 ================================================ */
-void FUN_0101fdc4(int param_1,int param_2,int param_3,int param_4,undefined4 param_5)
+/* ==== 0x0101FDC4  (file offset 0x1FDC4)  swvVertexArray_SetShorts ==================================== */
+void swvVertexArray_SetShorts(int param_1,int param_2,int param_3,int param_4,undefined4 param_5)
 
 {
   int iVar1;
@@ -29189,8 +29198,8 @@ void FUN_0101fe5c(int param_1,int param_2,int param_3,undefined4 param_4,int par
   return;
 }
 
-/* ==== 0x0101FEFC  (file offset 0x1FEFC)  FUN_0101fefc ================================================ */
-void FUN_0101fefc(int param_1,int param_2,int param_3,int param_4,undefined4 param_5)
+/* ==== 0x0101FEFC  (file offset 0x1FEFC)  swvVertexArray_SetBytes ===================================== */
+void swvVertexArray_SetBytes(int param_1,int param_2,int param_3,int param_4,undefined4 param_5)
 
 {
   int iVar1;
@@ -29217,8 +29226,8 @@ void FUN_0101fefc(int param_1,int param_2,int param_3,int param_4,undefined4 par
   return;
 }
 
-/* ==== 0x0101FF90  (file offset 0x1FF90)  FUN_0101ff90 ================================================ */
-void FUN_0101ff90(int param_1,int param_2,int param_3)
+/* ==== 0x0101FF90  (file offset 0x1FF90)  swvAnimationController_SetActiveIntervalValue =============== */
+void swvAnimationController_SetActiveIntervalValue(int param_1,int param_2,int param_3)
 
 {
   if (param_3 < param_2) {
@@ -29283,8 +29292,8 @@ void FUN_0101ffbc(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
   return;
 }
 
-/* ==== 0x01020104  (file offset 0x20104)  FUN_01020104 ================================================ */
-void FUN_01020104(int param_1,int param_2,int param_3,int param_4,int param_5)
+/* ==== 0x01020104  (file offset 0x20104)  swvNode_SetAlignment ======================================== */
+void swvNode_SetAlignment(int param_1,int param_2,int param_3,int param_4,int param_5)
 
 {
   undefined4 uVar1;
@@ -29883,12 +29892,12 @@ void swvMaterial_SetColorValue(uint8 *material,uint32 targets,uint32 argb)
     *(uint32 *)(material + 0x20) = argb;
 }
 
-/* ==== 0x010209AC  (file offset 0x209AC)  FUN_010209ac ================================================ */
+/* ==== 0x010209AC  (file offset 0x209AC)  swvVertexBuffer_SetColorsValue ============================== */
 /* (not yet rewritten) JSR-184 1.1, VertexBuffer.setColors(colors) on the VertexBuffer param_1
    (swvVertexBuffer_SetColors, slot 21, calls it): error -1301 (IllegalArgumentException) unless the
    array param_2 (NULL clears) has 1-byte components and 3 or 4 a vertex; then a tail jump to
    FUN_01023b3c with the slot +0x2c (Ghidra repeated its code here). */
-void FUN_010209ac(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
+void swvVertexBuffer_SetColorsValue(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
   int iVar1;
@@ -30069,7 +30078,7 @@ void FUN_01020bcc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
    (0xa0) 1, CULL_FRONT (0xa1) 2, CULL_NONE (0xa2) 4 into the field 0x7 (swvPolygonMode_SetFlags, a tail
    jump in the binary: 0x01020c40); any other value is ignored (the callers check it first). Evidence:
    0x01020c1c - 0x01020c40. Called by swvPolygonMode_SetCulling (slot 19) and the M3G reader
-   FUN_0101e778. */
+   swvM3G_ReadPolygonMode. */
 void swvPolygonMode_SetCullingValue(uint8 *mode,int32 culling)
 
 {
@@ -30704,18 +30713,18 @@ void FUN_01021a78(int param_1,undefined4 param_2,int param_3)
   return;
 }
 
-/* ==== 0x01021ABC  (file offset 0x21ABC)  FUN_01021abc ================================================ */
-/* (not yet rewritten) JSR-184 1.1, Texture2D.setImage(image), on the texture param_1: the image
-   (param_2) swapped in at +0x2c with the counts of references kept (FUN_01004848, on the objects' +4
-   parts); then error -1301 (IllegalArgumentException; a tail jump to FUN_0102f7e0) unless its width and
-   its height (the image's vtable +0x24 / +0x28, each asked twice) are powers of two (swv_IsPowerOfTwo)
-   up to 1024 (the implementation's maximum; GUESS: getProperties' maxTextureDimension,
-   swvGraphics3D_Property 7 - 9). A NULL image (-1302, NullPointerException) is refused by its callers,
-   the Texture2D slots FUN_0103b57c (33) and FUN_0103b3ec (31, through thunk_FUN_01021abc), before they
-   call it. GUESS, a latent engine bug: the image is stored before it is checked, so a texture keeps an
-   image it refused. thunk_FUN_01021abc (0x01008064) is a jump here; Ghidra repeated the code there, and
-   followed the tail jump into FUN_0102f7e0's code at the end. */
-void FUN_01021abc(int param_1,int param_2)
+/* ==== 0x01021ABC  (file offset 0x21ABC)  swvTexture2D_SetImage ======================================= */
+/* (not yet rewritten) JSR-184 1.1, Texture2D.setImage(image), on the texture param_1: the image (param_2)
+   swapped in at +0x2c with the counts of references kept (FUN_01004848, on the objects' +4 parts); then
+   error -1301 (IllegalArgumentException; a tail jump to FUN_0102f7e0) unless its width and its height (the
+   image's vtable +0x24 / +0x28, each asked twice) are powers of two (swv_IsPowerOfTwo) up to 1024 (the
+   implementation's maximum; GUESS: getProperties' maxTextureDimension, swvGraphics3D_Property 7 - 9). A
+   NULL image (-1302, NullPointerException) is refused by its callers, the Texture2D slots FUN_0103b57c
+   (33) and FUN_0103b3ec (31, through thunk_swvTexture2D_SetImage), before they call it. GUESS, a latent
+   engine bug: the image is stored before it is checked, so a texture keeps an image it refused.
+   thunk_swvTexture2D_SetImage (0x01008064) is a jump here; Ghidra repeated the code there, and followed
+   the tail jump into FUN_0102f7e0's code at the end. */
+void swvTexture2D_SetImage(int param_1,int param_2)
 
 {
   int iVar1;
@@ -31140,14 +31149,14 @@ void FUN_01021f28(int param_1)
   return;
 }
 
-/* ==== 0x010220B0  (file offset 0x220B0)  FUN_010220b0 ================================================ */
+/* ==== 0x010220B0  (file offset 0x220B0)  swvVertexBuffer_SetNormalsValue ============================= */
 /* (not yet rewritten) JSR-184 1.1, VertexBuffer.setNormals(normals) on the VertexBuffer param_1
    (swvVertexBuffer_SetNormals, slot 19, calls it): error -1301 (IllegalArgumentException) unless the
    array param_2 (NULL clears) has 3 components a vertex; FUN_01023b3c with the slot +0x28; then the
    normals' scale (+0x54: 1 / 127.5 for bytes, 1 / 32767.5 for 16-bit words; 1.0 without normals) and
    bias (+0x48 .. +0x50, half the scale each, FUN_010279d0), mapping the stored values to -1 .. 1, the
    largest positive integer to +1 and the most negative to -1, as the spec asks. */
-void FUN_010220b0(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
+void swvVertexBuffer_SetNormalsValue(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
   int iVar1;
@@ -31352,8 +31361,8 @@ void FUN_010222a8(undefined4 *param_1,int *param_2,int param_3,int param_4)
   return;
 }
 
-/* ==== 0x01022340  (file offset 0x22340)  FUN_01022340 ================================================ */
-void FUN_01022340(int param_1,undefined4 param_2,undefined4 param_3)
+/* ==== 0x01022340  (file offset 0x22340)  swvAnimationController_SetPositionValue ===================== */
+void swvAnimationController_SetPositionValue(int param_1,undefined4 param_2,undefined4 param_3)
 
 {
   *(undefined4 *)(param_1 + 0x24) = param_2;
@@ -31361,14 +31370,15 @@ void FUN_01022340(int param_1,undefined4 param_2,undefined4 param_3)
   return;
 }
 
-/* ==== 0x0102234C  (file offset 0x2234C)  FUN_0102234c ================================================ */
+/* ==== 0x0102234C  (file offset 0x2234C)  swvVertexBuffer_SetPositionsValue =========================== */
 /* (not yet rewritten) JSR-184 1.1, VertexBuffer.setPositions(positions, scale, bias) on the
    VertexBuffer param_1: error -1301 (IllegalArgumentException) unless the array param_2 (NULL clears)
    has 3 components a vertex, and for a bias (param_5) of fewer floats (param_4) than that; +0x44 the
    scale (param_3), +0x38 .. +0x40 the bias (FUN_0102ed04 each; 0 without one); then a tail jump to
    FUN_01023b3c with the slot +0x24 (Ghidra repeated its code here). Evidence: 0x0102236c (`ldr r8,
    [0x10223ec]`, -1301 for every check). */
-void FUN_0102234c(int param_1,int param_2,undefined4 param_3,int param_4,undefined4 *param_5)
+void swvVertexBuffer_SetPositionsValue(int param_1,int param_2,undefined4 param_3,int param_4,
+                                       undefined4 *param_5)
 
 {
   int iVar1;
@@ -32327,7 +32337,7 @@ void FUN_010230f8(int param_1,int param_2)
 /* GUESS: name. Sets a native PolygonMode's shading (JSR-184 1.1, PolygonMode.setShading): SHADE_FLAT
    (0xa4) 0x20, SHADE_SMOOTH (0xa5) 0x40 into the field 0x60 (swvPolygonMode_SetFlags, a tail jump:
    0x01023120); any other value is ignored. Evidence: 0x01023108 - 0x01023120. Called by slot 21
-   (swvPolygonMode_SetShading) and FUN_0101e778. */
+   (swvPolygonMode_SetShading) and swvM3G_ReadPolygonMode. */
 void swvPolygonMode_SetShadingValue(uint8 *mode,int32 shading)
 
 {
@@ -32466,8 +32476,8 @@ void FUN_010231c4(int param_1,int *param_2)
   return;
 }
 
-/* ==== 0x01023244  (file offset 0x23244)  FUN_01023244 ================================================ */
-void FUN_01023244(int param_1,undefined4 param_2,int param_3)
+/* ==== 0x01023244  (file offset 0x23244)  swvAnimationController_SetSpeedValue ======================== */
+void swvAnimationController_SetSpeedValue(int param_1,undefined4 param_2,int param_3)
 
 {
   undefined4 uVar1;
@@ -32647,7 +32657,7 @@ undefined4 FUN_010234bc(int param_1,int param_2,undefined4 param_3,uint param_4,
   return *(undefined4 *)(param_1 + 0x10);
 }
 
-/* ==== 0x0102358C  (file offset 0x2358C)  FUN_0102358c ================================================ */
+/* ==== 0x0102358C  (file offset 0x2358C)  swvVertexBuffer_SetTexCoordsValue =========================== */
 /* (not yet rewritten) JSR-184 1.1, VertexBuffer.setTexCoords(index, texCoords, scale, bias) on the
    VertexBuffer param_1: error -1101 (IndexOutOfBoundsException) for a unit param_2 above 1 (two
    units), -1301 (IllegalArgumentException) for an array param_3 of other than 2 or 3 components a
@@ -32655,7 +32665,7 @@ undefined4 FUN_010234bc(int param_1,int param_2,undefined4 param_3,uint param_4,
    (param_4), +0x58 + 0xc * unit the bias (FUN_0102ed04 each, the third only for 3 components; 0
    without one); then a tail jump to FUN_01023b3c with the slot +0x30 + 4 * unit (Ghidra repeated its
    code here). Evidence: 0x010235a8 / 0x010235c4 (the literals -1101 and -1301). */
-void FUN_0102358c(int param_1,uint param_2,int param_3,undefined4 param_4,int param_5,
+void swvVertexBuffer_SetTexCoordsValue(int param_1,uint param_2,int param_3,undefined4 param_4,int param_5,
                  undefined4 *param_6)
 
 {
@@ -33077,15 +33087,16 @@ LAB_01023b24:
 }
 
 /* ==== 0x01023B3C  (file offset 0x23B3C)  FUN_01023b3c ================================================ */
-/* GUESS (not yet rewritten): sets one of the VertexBuffer param_1's arrays (the slot param_2, one of
-   +0x24 .. +0x34) to the VertexArray param_3 (NULL: none): when the buffer has arrays besides the
-   slot's current one (swvVertexBuffer_HasOnlyArray gives 0) and a vertex count (+0x1c), the new array
-   must have that count (its +0x1c), else -1301 (IllegalArgumentException; JSR-184 1.1, VertexBuffer
-   setPositions .. setColors: getVertexCount differs while at least one other VertexArray is set); the
-   array swapped in with the counts of references kept (FUN_01004848, on the objects' +4 parts); the
-   buffer's vertex count then the new array's, or 0 once it has no array left (as getVertexCount).
-   FUN_0102234c, FUN_010209ac and FUN_0102358c end in a tail jump to it (Ghidra repeated its code in
-   each); FUN_010220b0 calls it. */
+/* GUESS (not yet rewritten): sets one of the VertexBuffer param_1's arrays (the slot param_2, one of +0x24
+   .. +0x34) to the VertexArray param_3 (NULL: none): when the buffer has arrays besides the slot's current
+   one (swvVertexBuffer_HasOnlyArray gives 0) and a vertex count (+0x1c), the new array must have that
+   count (its +0x1c), else -1301 (IllegalArgumentException; JSR-184 1.1, VertexBuffer setPositions ..
+   setColors: getVertexCount differs while at least one other VertexArray is set); the array swapped in
+   with the counts of references kept (FUN_01004848, on the objects' +4 parts); the buffer's vertex count
+   then the new array's, or 0 once it has no array left (as getVertexCount).
+   swvVertexBuffer_SetPositionsValue, swvVertexBuffer_SetColorsValue and swvVertexBuffer_SetTexCoordsValue
+   end in a tail jump to it (Ghidra repeated its code in each); swvVertexBuffer_SetNormalsValue calls it.
+   */
 void FUN_01023b3c(int param_1,int *param_2,int param_3)
 
 {
@@ -33207,8 +33218,8 @@ void FUN_01023c60(int param_1,int param_2,int param_3,int param_4,int param_5)
   return;
 }
 
-/* ==== 0x01023C88  (file offset 0x23C88)  FUN_01023c88 ================================================ */
-void FUN_01023c88(int param_1,undefined4 param_2)
+/* ==== 0x01023C88  (file offset 0x23C88)  swvAnimationController_SetWeightValue ======================= */
+void swvAnimationController_SetWeightValue(int param_1,undefined4 param_2)
 
 {
   *(undefined4 *)(param_1 + 0x30) = param_2;
@@ -33239,7 +33250,7 @@ void FUN_01023c90(int param_1,int param_2,int param_3)
 /* GUESS: name. Sets a native PolygonMode's winding (JSR-184 1.1, PolygonMode.setWinding): WINDING_CCW
    (0xa8) 8, WINDING_CW (0xa9) 0x10 into the field 0x18 (swvPolygonMode_SetFlags, a tail jump:
    0x01023cfc); any other value is ignored. Evidence: 0x01023ce4 - 0x01023cfc. Called by slot 23
-   (swvPolygonMode_SetWinding) and FUN_0101e778. */
+   (swvPolygonMode_SetWinding) and swvM3G_ReadPolygonMode. */
 void swvPolygonMode_SetWindingValue(uint8 *mode,int32 winding)
 
 {
@@ -33267,16 +33278,16 @@ void FUN_01023d00(int param_1)
   return;
 }
 
-/* ==== 0x01023D30  (file offset 0x23D30)  FUN_01023d30 ================================================ */
+/* ==== 0x01023D30  (file offset 0x23D30)  swvImage2D_SetValue ========================================= */
 /* (not yet rewritten) JSR-184 1.1, Image2D.set(x, y, width, height, image) on the native Image2D param_1
-   (param_2 - param_5; param_6 the pixel bytes, param_7 the pixels); its BREW-facing caller FUN_01030f60
+   (param_2 - param_5; param_6 the pixel bytes, param_7 the pixels); its BREW-facing caller swvImage2D_Set
    (Image2D slot 29) first refuses x < 0, y < 0, width <= 0 and height <= 0 (-1301) and NULL pixels
    (-1302). Here error -1301 (IllegalArgumentException) unless the rectangle is inside the image (+0x34 /
    +0x38), not empty, and param_6 holds swvImage2D_BytesPerPixel * width * height bytes; then -1300
    (IllegalStateException) when the image is not mutable (+0x44); then each pixel converted by
    FUN_01025bc4 into the 16-bit colour plane (the data +0x20 at +0x30, row pitch the width) and the alpha
    plane (swvImage2D_AlphaPlane). */
-void FUN_01023d30(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6,
+void swvImage2D_SetValue(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6,
                  int param_7)
 
 {
@@ -33339,10 +33350,10 @@ LAB_01023db4:
 }
 
 /* ==== 0x01023E44  (file offset 0x23E44)  FUN_01023e44 ================================================ */
-/* GUESS (not yet rewritten): Image2D.set for an image made by FUN_01007f8c: FUN_01023d30 with the same
-   seven arguments, then the second plane after the pixels (two bytes a pixel; error -1301 when param_6
-   is fewer than (bytes a pixel + 2) * width * height) copied into the buffer's items (+0x4c): in one
-   copy when the rectangle starts at 0, 0 and spans the image's width, else row by row. */
+/* GUESS (not yet rewritten): Image2D.set for an image made by FUN_01007f8c: swvImage2D_SetValue with the
+   same seven arguments, then the second plane after the pixels (two bytes a pixel; error -1301 when
+   param_6 is fewer than (bytes a pixel + 2) * width * height) copied into the buffer's items (+0x4c): in
+   one copy when the rectangle starts at 0, 0 and spans the image's width, else row by row. */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
 undefined8
@@ -33358,7 +33369,7 @@ FUN_01023e44(int param_1,int param_2,int param_3,int param_4,int param_5,int par
   int iVar6;
   
   /* Ghidra had dropped four arguments: the call passes on all seven (0x01023e54 - 0x01023e74) */
-  FUN_01023d30(param_1,param_2,param_3,param_4,param_5,param_6,param_7);
+  swvImage2D_SetValue(param_1,param_2,param_3,param_4,param_5,param_6,param_7);
   iVar1 = swvImage2D_BytesPerPixel(*(undefined4 *)(param_1 + 0x40));
   iVar4 = (iVar1 + 2) * param_5 * param_4;
   if (iVar4 - param_6 != 0 && param_6 <= iVar4) {
@@ -33598,11 +33609,11 @@ LAB_0101d814:
 
 /* ==== 0x01023FB4  (file offset 0x23FB4)  swvPolygonMode_SetTwoSidedLightingValue ===================== */
 /* GUESS: name. Sets a native PolygonMode's field 0x180 (GUESS: two-sided lighting; it is what slot 27,
-   swvPolygonMode_SetTwoSidedLightingEnable, sets, and the fourth value of the M3G record FUN_0101e778
-   reads, twoSidedLightingEnabled in M3G file format 11.20): 0x80 when enable is 0, else 0x100
-   (swvPolygonMode_SetFlags, a tail jump: 0x01023fc0). Evidence: 0x01023fb4 - 0x01023fc0 (`cmp r1, #0` /
-   `moveq r1, #0x80` / `movne r1, #0x100`). Called by slot 27 (swvPolygonMode_SetTwoSidedLightingEnable)
-   and FUN_0101e778. */
+   swvPolygonMode_SetTwoSidedLightingEnable, sets, and the fourth value of the M3G record
+   swvM3G_ReadPolygonMode reads, twoSidedLightingEnabled in M3G file format 11.20): 0x80 when enable is 0,
+   else 0x100 (swvPolygonMode_SetFlags, a tail jump: 0x01023fc0). Evidence: 0x01023fb4 - 0x01023fc0 (`cmp
+   r1, #0` / `moveq r1, #0x80` / `movne r1, #0x100`). Called by slot 27
+   (swvPolygonMode_SetTwoSidedLightingEnable) and swvM3G_ReadPolygonMode. */
 void swvPolygonMode_SetTwoSidedLightingValue(uint8 *mode,int32 enable)
 
 {
@@ -41081,7 +41092,7 @@ void swvAnimationController_GetActiveIntervalStart(int param_1,undefined4 *param
 /* ==== 0x0102CE8C  (file offset 0x2CE8C)  swvAnimationController_GetPosition ========================== */
 /* (not yet rewritten) JSR-184 1.1, AnimationController.getPosition: ISwerveObject slot 24 (+0x60) of
    AnimationController (kh_types.h SwerveAnimationControllerVtbl): *param_3 = the sequence time at the
-   world time param_2 (FUN_01010094, the native getPosition). */
+   world time param_2 (swvAnimationController_Position, the native getPosition). */
 void swvAnimationController_GetPosition(int param_1,undefined4 param_2,undefined4 *param_3)
 
 {
@@ -41092,7 +41103,7 @@ void swvAnimationController_GetPosition(int param_1,undefined4 param_2,undefined
   if (iVar1 != 0) {
     iVar1 = iVar1 + -4;
   }
-  uVar2 = FUN_01010094(iVar1,param_2);   /* Ghidra had dropped the world time (r1) */
+  uVar2 = swvAnimationController_Position(iVar1,param_2);   /* Ghidra had dropped the world time (r1) */
   *param_3 = uVar2;
   return;
 }
@@ -41156,9 +41167,9 @@ void swv_InitVtbl_AnimationController(void **pVtbl)
 
 /* ==== 0x0102CF84  (file offset 0x2CF84)  swvAnimationController_SetActiveInterval ==================== */
 /* (not yet rewritten) JSR-184 1.1, AnimationController.setActiveInterval: ISwerveObject slot 23 (+0x5c) of
-   AnimationController (kh_types.h SwerveAnimationControllerVtbl): in an error frame, FUN_0101ff90 (start,
-   end: error -1301, IllegalArgumentException, when start > end, else +0x1c / +0x20 stored); on an error
-   its result code. */
+   AnimationController (kh_types.h SwerveAnimationControllerVtbl): in an error frame,
+   swvAnimationController_SetActiveIntervalValue (start, end: error -1301, IllegalArgumentException, when
+   start > end, else +0x1c / +0x20 stored); on an error its result code. */
 undefined4 swvAnimationController_SetActiveInterval(int param_1,undefined4 param_2,undefined4 param_3)
 
 {
@@ -41174,7 +41185,7 @@ undefined4 swvAnimationController_SetActiveInterval(int param_1,undefined4 param
     if (iVar1 != 0) {
       iVar1 = iVar1 + -4;
     }
-    FUN_0101ff90(iVar1,param_2,param_3);
+    swvAnimationController_SetActiveIntervalValue(iVar1,param_2,param_3);
     swv_TryPop();
   }
   else {
@@ -41185,9 +41196,9 @@ undefined4 swvAnimationController_SetActiveInterval(int param_1,undefined4 param
 
 /* ==== 0x0102CFEC  (file offset 0x2CFEC)  swvAnimationController_SetPosition ========================== */
 /* (not yet rewritten) JSR-184 1.1, AnimationController.setPosition: ISwerveObject slot 25 (+0x64) of
-   AnimationController (kh_types.h SwerveAnimationControllerVtbl): in an error frame, FUN_01022340 (the
-   sequence time, a float checked by FUN_0102ed04, and the world time: the reference point (twref, tsref),
-   +0x28 / +0x24); on an error its result code. */
+   AnimationController (kh_types.h SwerveAnimationControllerVtbl): in an error frame,
+   swvAnimationController_SetPositionValue (the sequence time, a float checked by FUN_0102ed04, and the
+   world time: the reference point (twref, tsref), +0x28 / +0x24); on an error its result code. */
 undefined4 swvAnimationController_SetPosition(int param_1,undefined4 param_2,undefined4 param_3)
 
 {
@@ -41205,7 +41216,7 @@ undefined4 swvAnimationController_SetPosition(int param_1,undefined4 param_2,und
       iVar1 = iVar1 + -4;
     }
     uVar2 = FUN_0102ed04(param_2);
-    FUN_01022340(iVar1,uVar2,param_3);
+    swvAnimationController_SetPositionValue(iVar1,uVar2,param_3);
     swv_TryPop();
   }
   else {
@@ -41216,9 +41227,10 @@ undefined4 swvAnimationController_SetPosition(int param_1,undefined4 param_2,und
 
 /* ==== 0x0102D060  (file offset 0x2D060)  swvAnimationController_SetSpeed ============================= */
 /* (not yet rewritten) JSR-184 1.1, AnimationController.setSpeed: ISwerveObject slot 26 (+0x68) of
-   AnimationController (kh_types.h SwerveAnimationControllerVtbl): in an error frame, FUN_01023244 (the
-   speed, a float checked by FUN_0102ed04, and the world time: tsref' = getPosition(worldTime), twref' =
-   worldTime, s' = speed, as the spec; +0x24 / +0x28 / +0x2c); on an error its result code. */
+   AnimationController (kh_types.h SwerveAnimationControllerVtbl): in an error frame,
+   swvAnimationController_SetSpeedValue (the speed, a float checked by FUN_0102ed04, and the world time:
+   tsref' = getPosition(worldTime), twref' = worldTime, s' = speed, as the spec; +0x24 / +0x28 / +0x2c); on
+   an error its result code. */
 undefined4 swvAnimationController_SetSpeed(int param_1,undefined4 param_2,undefined4 param_3)
 
 {
@@ -41236,7 +41248,7 @@ undefined4 swvAnimationController_SetSpeed(int param_1,undefined4 param_2,undefi
       iVar1 = iVar1 + -4;
     }
     uVar2 = FUN_0102ed04(param_2);
-    FUN_01023244(iVar1,uVar2,param_3);
+    swvAnimationController_SetSpeedValue(iVar1,uVar2,param_3);
     swv_TryPop();
   }
   else {
@@ -41248,8 +41260,8 @@ undefined4 swvAnimationController_SetSpeed(int param_1,undefined4 param_2,undefi
 /* ==== 0x0102D0D4  (file offset 0x2D0D4)  swvAnimationController_SetWeight ============================ */
 /* (not yet rewritten) JSR-184 1.1, AnimationController.setWeight: ISwerveObject slot 19 (+0x4c) of
    AnimationController (kh_types.h SwerveAnimationControllerVtbl): in an error frame, error -1301
-   (IllegalArgumentException) for a negative weight, then FUN_01023c88 (stores it, +0x30); on an error its
-   result code. */
+   (IllegalArgumentException) for a negative weight, then swvAnimationController_SetWeightValue (stores it,
+   +0x30); on an error its result code. */
 undefined4 swvAnimationController_SetWeight(int param_1,undefined4 param_2)
 
 {
@@ -41277,7 +41289,7 @@ undefined4 swvAnimationController_SetWeight(int param_1,undefined4 param_2)
     if ((bool)uVar5 && !(bool)uVar6) {
       FUN_0102f7e0(INTEGER_MINUS_1301);
     }
-    FUN_01023c88(iVar1,uVar2);
+    swvAnimationController_SetWeightValue(iVar1,uVar2);
     swv_TryPop();
   }
   else {
@@ -45022,7 +45034,7 @@ undefined4 FUN_01030220(int param_1,int param_2)
     if (iVar2 != 0) {
       iVar2 = iVar2 + -4;
     }
-    FUN_01002d60(iVar1,iVar2);
+    swvGroup_AddChild(iVar1,iVar2);
     swv_TryPop();
   }
   else {
@@ -45170,7 +45182,7 @@ FUN_010303f0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     if (iVar6 != 0) {
       iVar6 = iVar6 + -4;
     }
-    uVar1 = FUN_01016ecc(iVar2,param_2,uVar3,uVar4,iVar5,iVar6);
+    uVar1 = swvGroup_Pick(iVar2,param_2,uVar3,uVar4,iVar5,iVar6);
     *param_7 = uVar1;
     swv_TryPop();
   }
@@ -45638,8 +45650,8 @@ void swv_InitVtbl_Image2D(void **pVtbl)
                        swv_WrapObject for internal object type 10 (SwerveObjectType); class from
                        swvObj_QueryInterface's table. Slot names not yet identified. */
   swv_InitVtbl_Object3D();
-  pVtbl[0x12] = (void *)(ADDRESS_OF_FUNCTION_01030c54_OFFSET + 0x1030b9c);
-  pVtbl[0x13] = (void *)(ADDRESS_OF_FUNCTION_01030dbc_OFFSET + 0x1030ba8);
+  pVtbl[0x12] = (void *)(ADDRESS_OF_swvImage2D_InitFromPixels_OFFSET + 0x1030b9c);
+  pVtbl[0x13] = (void *)(ADDRESS_OF_swvImage2D_InitFromPalette_OFFSET + 0x1030ba8);
   pVtbl[0x14] = (void *)(ADDRESS_OF_FUNCTION_01030d14_OFFSET + 0x1030bb4);
   pVtbl[0x15] = (void *)(ADDRESS_OF_FUNCTION_01030e98_OFFSET + 0x1030bc0);
   pVtbl[0x16] = (void *)(ADDRESS_OF_FUNCTION_01030acc_OFFSET + 0x1030bcc);
@@ -45649,13 +45661,13 @@ void swv_InitVtbl_Image2D(void **pVtbl)
   pVtbl[0x1a] = (void *)(ADDRESS_OF_FUNCTION_01030b10_OFFSET + 0x1030bfc);
   pVtbl[0x1b] = (void *)(ADDRESS_OF_FUNCTION_01030aac_OFFSET + 0x1030c08);
   pVtbl[0x1c] = (void *)(ADDRESS_OF_FUNCTION_01030f48_OFFSET + 0x1030c14);
-  pVtbl[0x1d] = (void *)(ADDRESS_OF_FUNCTION_01030f60_OFFSET + 0x1030c20);
+  pVtbl[0x1d] = (void *)(ADDRESS_OF_swvImage2D_Set_OFFSET + 0x1030c20);
   return;
 }
 
-/* ==== 0x01030C54  (file offset 0x30C54)  FUN_01030c54 ================================================ */
+/* ==== 0x01030C54  (file offset 0x30C54)  swvImage2D_InitFromPixels =================================== */
 undefined4
-FUN_01030c54(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,int param_6)
+swvImage2D_InitFromPixels(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,int param_6)
 
 {
   undefined4 uVar1;
@@ -45729,9 +45741,9 @@ undefined4 FUN_01030d14(int param_1,int param_2,int param_3,int param_4)
   return uVar3;
 }
 
-/* ==== 0x01030DBC  (file offset 0x30DBC)  FUN_01030dbc ================================================ */
+/* ==== 0x01030DBC  (file offset 0x30DBC)  swvImage2D_InitFromPalette ================================== */
 undefined4
-FUN_01030dbc(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,int param_6,
+swvImage2D_InitFromPalette(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,int param_6,
             undefined4 param_7,int param_8)
 
 {
@@ -45832,9 +45844,9 @@ void FUN_01030f48(int param_1,undefined1 *param_2)
   return;
 }
 
-/* ==== 0x01030F60  (file offset 0x30F60)  FUN_01030f60 ================================================ */
+/* ==== 0x01030F60  (file offset 0x30F60)  swvImage2D_Set ============================================== */
 undefined4
-FUN_01030f60(int param_1,int param_2,int param_3,int param_4,int param_5,undefined4 param_6,
+swvImage2D_Set(int param_1,int param_2,int param_3,int param_4,int param_5,undefined4 param_6,
             int param_7)
 
 {
@@ -45867,7 +45879,7 @@ FUN_01030f60(int param_1,int param_2,int param_3,int param_4,int param_5,undefin
     if (param_7 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    FUN_01023d30(iVar2,param_2,param_3,param_4,param_5,param_6,param_7);
+    swvImage2D_SetValue(iVar2,param_2,param_3,param_4,param_5,param_6,param_7);
     swv_TryPop();
   }
   else {
@@ -45880,21 +45892,21 @@ FUN_01030f60(int param_1,int param_2,int param_3,int param_4,int param_5,undefin
 void thunk_swv_InitVtbl_Object3D(int param_1)
 
 {
-  *(int *)(param_1 + 0xc) = ADDRESS_OF_FUNCTION_010350fc_OFFSET + 0x1035188;
-  *(int *)(param_1 + 0x10) = ADDRESS_OF_FUNCTION_01035304_OFFSET + 0x1035194;
+  *(int *)(param_1 + 0xc) = ADDRESS_OF_swvObject3D_GetUserId_OFFSET + 0x1035188;
+  *(int *)(param_1 + 0x10) = ADDRESS_OF_swvObject3D_SetUserId_OFFSET + 0x1035194;
   *(int *)(param_1 + 0x14) = ADDRESS_OF_swvObject3D_GetAnimationTrackCount_OFFSET + 0x10351a0;
   *(int *)(param_1 + 0x18) = ADDRESS_OF_swvObject3D_GetAnimationTrack_OFFSET + 0x10351ac;
-  *(int *)(param_1 + 0x1c) = ADDRESS_OF_FUNCTION_01034d24_OFFSET + 0x10351b8;
-  *(int *)(param_1 + 0x20) = ADDRESS_OF_FUNCTION_01035270_OFFSET + 0x10351c4;
-  *(int *)(param_1 + 0x24) = ADDRESS_OF_FUNCTION_01034da8_OFFSET + 0x10351d0;
-  *(int *)(param_1 + 0x28) = ADDRESS_OF_FUNCTION_01034e8c_OFFSET + 0x10351dc;
+  *(int *)(param_1 + 0x1c) = ADDRESS_OF_swvObject3D_AddAnimationTrack_OFFSET + 0x10351b8;
+  *(int *)(param_1 + 0x20) = ADDRESS_OF_swvObject3D_RemoveAnimationTrack_OFFSET + 0x10351c4;
+  *(int *)(param_1 + 0x24) = ADDRESS_OF_swvObject3D_Animate_OFFSET + 0x10351d0;
+  *(int *)(param_1 + 0x28) = ADDRESS_OF_swvObject3D_Find_OFFSET + 0x10351dc;
   *(int *)(param_1 + 0x2c) = ADDRESS_OF_swvObject3D_GetReferences_OFFSET + 0x10351e8;
   *(int *)(param_1 + 0x30) = ADDRESS_OF_FUNCTION_01035114_OFFSET + 0x10351f4;
   *(int *)(param_1 + 0x34) = ADDRESS_OF_FUNCTION_01035318_OFFSET + 0x1035200;
   *(int *)(param_1 + 0x38) = ADDRESS_OF_FUNCTION_010352f4_OFFSET + 0x103520c;
   *(int *)(param_1 + 0x3c) = ADDRESS_OF_FUNCTION_01035134_OFFSET + 0x1035218;
   *(int *)(param_1 + 0x40) = ADDRESS_OF_FUNCTION_0103515c_OFFSET + 0x1035224;
-  *(int *)(param_1 + 0x44) = ADDRESS_OF_FUNCTION_01034e14_OFFSET + 0x1035230;
+  *(int *)(param_1 + 0x44) = ADDRESS_OF_swvObject3D_Duplicate_OFFSET + 0x1035230;
   return;
 }
 
@@ -47467,7 +47479,7 @@ undefined4 FUN_01032b70(int param_1,int param_2,int param_3,int param_4)
     if (iVar2 != 0) {
       iVar2 = iVar2 + -4;
     }
-    FUN_01008398(iVar2,param_2,param_3,param_4);
+    swvKeyframeSequence_Construct(iVar2,param_2,param_3,param_4);
     swv_TryPop();
   }
   else {
@@ -49343,7 +49355,7 @@ undefined4 FUN_010348b0(int param_1,int param_2)
     if (iVar2 != 0) {
       iVar2 = iVar2 + -4;
     }
-    FUN_010034cc(iVar1,iVar2);
+    swvNode_Align(iVar1,iVar2);
     swv_TryPop();
   }
   else {
@@ -49449,7 +49461,7 @@ undefined4 FUN_010349b8(int param_1,int param_2,int param_3,undefined1 *param_4)
     if (iVar5 == 0) {
       FUN_0102f7e0(uVar1);
     }
-    uVar2 = FUN_010108d4(iVar3,iVar4,iVar5);
+    uVar2 = swvNode_GetTransformTo(iVar3,iVar4,iVar5);
     *param_4 = uVar2;
     swv_TryPop();
   }
@@ -49547,7 +49559,7 @@ undefined4 FUN_01034b78(int param_1,int param_2,int param_3,int param_4,int para
     if (4 < param_5 - 0x90U) {
       FUN_0102f7e0(uVar1);
     }
-    FUN_01020104(iVar2,iVar3,param_3,iVar4,param_5);
+    swvNode_SetAlignment(iVar2,iVar3,param_3,iVar4,param_5);
     swv_TryPop();
   }
   else {
@@ -49699,8 +49711,8 @@ void FUN_01034d08(int param_1)
   return;
 }
 
-/* ==== 0x01034D24  (file offset 0x34D24)  FUN_01034d24 ================================================ */
-undefined4 FUN_01034d24(int param_1,int param_2)
+/* ==== 0x01034D24  (file offset 0x34D24)  swvObject3D_AddAnimationTrack =============================== */
+undefined4 swvObject3D_AddAnimationTrack(int param_1,int param_2)
 
 {
   int iVar1;
@@ -49726,7 +49738,7 @@ undefined4 FUN_01034d24(int param_1,int param_2)
     if (iVar2 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    FUN_01002a58(iVar1,iVar2);
+    swvObject3D_AddAnimationTrackValue(iVar1,iVar2);
     swv_TryPop();
   }
   else {
@@ -49735,8 +49747,8 @@ undefined4 FUN_01034d24(int param_1,int param_2)
   return uVar3;
 }
 
-/* ==== 0x01034DA8  (file offset 0x34DA8)  FUN_01034da8 ================================================ */
-undefined4 FUN_01034da8(int param_1,undefined4 param_2,undefined4 *param_3)
+/* ==== 0x01034DA8  (file offset 0x34DA8)  swvObject3D_Animate ========================================= */
+undefined4 swvObject3D_Animate(int param_1,undefined4 param_2,undefined4 *param_3)
 
 {
   int iVar1;
@@ -49752,7 +49764,7 @@ undefined4 FUN_01034da8(int param_1,undefined4 param_2,undefined4 *param_3)
     if (iVar1 != 0) {
       iVar1 = iVar1 + -4;
     }
-    uVar2 = FUN_01003c38(iVar1,param_2,0xffffffff);
+    uVar2 = swvObject3D_AnimateValue(iVar1,param_2,0xffffffff);
     *param_3 = uVar2;
     swv_TryPop();
   }
@@ -49762,8 +49774,8 @@ undefined4 FUN_01034da8(int param_1,undefined4 param_2,undefined4 *param_3)
   return uVar3;
 }
 
-/* ==== 0x01034E14  (file offset 0x34E14)  FUN_01034e14 ================================================ */
-int FUN_01034e14(int param_1,ISwerveObject **param_2)
+/* ==== 0x01034E14  (file offset 0x34E14)  swvObject3D_Duplicate ======================================= */
+int swvObject3D_Duplicate(int param_1,ISwerveObject **param_2)
 
 {
   int iVar1;
@@ -49793,8 +49805,8 @@ int FUN_01034e14(int param_1,ISwerveObject **param_2)
   return iVar1;
 }
 
-/* ==== 0x01034E8C  (file offset 0x34E8C)  FUN_01034e8c ================================================ */
-int FUN_01034e8c(int param_1,undefined4 param_2,ISwerveObject **param_3)
+/* ==== 0x01034E8C  (file offset 0x34E8C)  swvObject3D_Find ============================================ */
+int swvObject3D_Find(int param_1,undefined4 param_2,ISwerveObject **param_3)
 
 {
   int iVar1;
@@ -49808,7 +49820,7 @@ int FUN_01034e8c(int param_1,undefined4 param_2,ISwerveObject **param_3)
     if (iVar1 != 0) {
       iVar1 = iVar1 + -4;
     }
-    pNative = (void *)FUN_0100eef0(iVar1,param_2);
+    pNative = (void *)swvObject3D_FindValue(iVar1,param_2);
     if (pNative != (void *)0x0) {
       pNative = (void *)((int)pNative + 4);
     }
@@ -49944,8 +49956,8 @@ int swvObject3D_GetReferences(int param_1,uint param_2,int param_3,uint *param_4
   return iVar7;
 }
 
-/* ==== 0x010350FC  (file offset 0x350FC)  FUN_010350fc ================================================ */
-void FUN_010350fc(int param_1,undefined4 *param_2)
+/* ==== 0x010350FC  (file offset 0x350FC)  swvObject3D_GetUserId ======================================= */
+void swvObject3D_GetUserId(int param_1,undefined4 *param_2)
 
 {
   int iVar1;
@@ -50013,26 +50025,26 @@ void FUN_0103515c(int param_1)
 void swv_InitVtbl_Object3D(int param_1)
 
 {
-  *(int *)(param_1 + 0xc) = ADDRESS_OF_FUNCTION_010350fc_OFFSET + 0x1035188;
-  *(int *)(param_1 + 0x10) = ADDRESS_OF_FUNCTION_01035304_OFFSET + 0x1035194;
+  *(int *)(param_1 + 0xc) = ADDRESS_OF_swvObject3D_GetUserId_OFFSET + 0x1035188;
+  *(int *)(param_1 + 0x10) = ADDRESS_OF_swvObject3D_SetUserId_OFFSET + 0x1035194;
   *(int *)(param_1 + 0x14) = ADDRESS_OF_swvObject3D_GetAnimationTrackCount_OFFSET + 0x10351a0;
   *(int *)(param_1 + 0x18) = ADDRESS_OF_swvObject3D_GetAnimationTrack_OFFSET + 0x10351ac;
-  *(int *)(param_1 + 0x1c) = ADDRESS_OF_FUNCTION_01034d24_OFFSET + 0x10351b8;
-  *(int *)(param_1 + 0x20) = ADDRESS_OF_FUNCTION_01035270_OFFSET + 0x10351c4;
-  *(int *)(param_1 + 0x24) = ADDRESS_OF_FUNCTION_01034da8_OFFSET + 0x10351d0;
-  *(int *)(param_1 + 0x28) = ADDRESS_OF_FUNCTION_01034e8c_OFFSET + 0x10351dc;
+  *(int *)(param_1 + 0x1c) = ADDRESS_OF_swvObject3D_AddAnimationTrack_OFFSET + 0x10351b8;
+  *(int *)(param_1 + 0x20) = ADDRESS_OF_swvObject3D_RemoveAnimationTrack_OFFSET + 0x10351c4;
+  *(int *)(param_1 + 0x24) = ADDRESS_OF_swvObject3D_Animate_OFFSET + 0x10351d0;
+  *(int *)(param_1 + 0x28) = ADDRESS_OF_swvObject3D_Find_OFFSET + 0x10351dc;
   *(int *)(param_1 + 0x2c) = ADDRESS_OF_swvObject3D_GetReferences_OFFSET + 0x10351e8;
   *(int *)(param_1 + 0x30) = ADDRESS_OF_FUNCTION_01035114_OFFSET + 0x10351f4;
   *(int *)(param_1 + 0x34) = ADDRESS_OF_FUNCTION_01035318_OFFSET + 0x1035200;
   *(int *)(param_1 + 0x38) = ADDRESS_OF_FUNCTION_010352f4_OFFSET + 0x103520c;
   *(int *)(param_1 + 0x3c) = ADDRESS_OF_FUNCTION_01035134_OFFSET + 0x1035218;
   *(int *)(param_1 + 0x40) = ADDRESS_OF_FUNCTION_0103515c_OFFSET + 0x1035224;
-  *(int *)(param_1 + 0x44) = ADDRESS_OF_FUNCTION_01034e14_OFFSET + 0x1035230;
+  *(int *)(param_1 + 0x44) = ADDRESS_OF_swvObject3D_Duplicate_OFFSET + 0x1035230;
   return;
 }
 
-/* ==== 0x01035270  (file offset 0x35270)  FUN_01035270 ================================================ */
-undefined4 FUN_01035270(int param_1,int param_2)
+/* ==== 0x01035270  (file offset 0x35270)  swvObject3D_RemoveAnimationTrack ============================ */
+undefined4 swvObject3D_RemoveAnimationTrack(int param_1,int param_2)
 
 {
   int iVar1;
@@ -50058,7 +50070,7 @@ undefined4 FUN_01035270(int param_1,int param_2)
     if (iVar2 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    FUN_0101a010(iVar1,iVar2);
+    swvObject3D_RemoveAnimationTrackValue(iVar1,iVar2);
     swv_TryPop();
   }
   else {
@@ -50100,8 +50112,8 @@ void FUN_010352f4(int param_1)
   return;
 }
 
-/* ==== 0x01035304  (file offset 0x35304)  FUN_01035304 ================================================ */
-void FUN_01035304(int param_1,undefined4 param_2)
+/* ==== 0x01035304  (file offset 0x35304)  swvObject3D_SetUserId ======================================= */
+void swvObject3D_SetUserId(int param_1,undefined4 param_2)
 
 {
   int iVar1;
@@ -53206,7 +53218,7 @@ FUN_01038794(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undef
     if (iVar2 != 0) {
       iVar2 = iVar2 + -4;
     }
-    FUN_01003234(iVar1,iVar2,param_3,param_4,param_5);
+    swvSkinnedMesh_AddTransform(iVar1,iVar2,param_3,param_4,param_5);
     swv_TryPop();
   }
   else {
@@ -55482,11 +55494,11 @@ switchD_0103a908_default:
             }
           }
         }
-        /* Image2D slot +0x48: FUN_01030c54 (the object is an Image2D) */
+        /* Image2D slot +0x48: swvImage2D_InitFromPixels (the object is an Image2D) */
         iVar15 = (**(code **)(*(int *)*local_28 + 0x48))(*local_28,iVar14,iVar3,iVar4,local_48,p);
       }
       else {
-        /* Image2D slot +0x4c: FUN_01030dbc (the object is an Image2D) */
+        /* Image2D slot +0x4c: swvImage2D_InitFromPalette (the object is an Image2D) */
         iVar15 = (**(code **)(*(int *)*local_28 + 0x4c))(*local_28,iVar14,iVar3,iVar4,local_48,p,0);
       }
     }
@@ -55886,7 +55898,7 @@ undefined4 FUN_0103b3ec(int param_1,int param_2)
     if (iVar2 != 0) {
       iVar2 = iVar2 + -4;
     }
-    thunk_FUN_01021abc(iVar2,iVar1);
+    thunk_swvTexture2D_SetImage(iVar2,iVar1);
     swv_TryPop();
   }
   else {
@@ -55998,7 +56010,7 @@ undefined4 FUN_0103b57c(int param_1,int param_2)
     if (iVar2 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    FUN_01021abc(iVar1,iVar2);
+    swvTexture2D_SetImage(iVar1,iVar2);
     swv_TryPop();
   }
   else {
@@ -57386,7 +57398,7 @@ undefined4 FUN_0103cb10(int param_1,undefined4 param_2,int param_3,undefined4 pa
     if (param_5 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    FUN_0101fdc4(iVar1,param_2,param_3,param_4,param_5);
+    swvVertexArray_SetShorts(iVar1,param_2,param_3,param_4,param_5);
     swv_TryPop();
   }
   else {
@@ -57417,7 +57429,7 @@ undefined4 FUN_0103cbac(int param_1,undefined4 param_2,int param_3,undefined4 pa
     if (param_5 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    FUN_0101fefc(iVar1,param_2,param_3,param_4,param_5);
+    swvVertexArray_SetBytes(iVar1,param_2,param_3,param_4,param_5);
     swv_TryPop();
   }
   else {
@@ -57456,10 +57468,11 @@ int swv_Create_VertexBuffer(void **ppObj)
 }
 
 /* ==== 0x0103CCA8  (file offset 0x3CCA8)  swvVertexBuffer_GetColors =================================== */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getColors. ISwerveObject slot 20 (+0x50) of
-   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): its
-   colours (+0x2c) wrapped into *param_2. The colours / normals names corrected (were swapped):
-   FUN_010209ac enforces VertexBuffer.setColors' rule on +0x2c, FUN_010220b0 setNormals' on +0x28. */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getColors. ISwerveObject slot 20 (+0x50) of VertexBuffer
+   (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): its colours (+0x2c)
+   wrapped into *param_2. The colours / normals names corrected (were swapped):
+   swvVertexBuffer_SetColorsValue enforces VertexBuffer.setColors' rule on +0x2c,
+   swvVertexBuffer_SetNormalsValue setNormals' on +0x28. */
 int swvVertexBuffer_GetColors(int param_1,ISwerveObject **param_2)
 
 {
@@ -57505,10 +57518,11 @@ void swvVertexBuffer_GetDefaultColor(int param_1,undefined4 *param_2)
 }
 
 /* ==== 0x0103CD2C  (file offset 0x3CD2C)  swvVertexBuffer_GetNormals ================================== */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getNormals. ISwerveObject slot 18 (+0x48) of
-   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): its
-   normals (+0x28) wrapped into *param_2. The colours / normals names corrected (were swapped):
-   FUN_010209ac enforces VertexBuffer.setColors' rule on +0x2c, FUN_010220b0 setNormals' on +0x28. */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getNormals. ISwerveObject slot 18 (+0x48) of VertexBuffer
+   (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): its normals (+0x28)
+   wrapped into *param_2. The colours / normals names corrected (were swapped):
+   swvVertexBuffer_SetColorsValue enforces VertexBuffer.setColors' rule on +0x2c,
+   swvVertexBuffer_SetNormalsValue setNormals' on +0x28. */
 int swvVertexBuffer_GetNormals(int param_1,ISwerveObject **param_2)
 
 {
@@ -57539,8 +57553,8 @@ int swvVertexBuffer_GetNormals(int param_1,ISwerveObject **param_2)
 /* ==== 0x0103CD98  (file offset 0x3CD98)  swvVertexBuffer_GetPositions ================================ */
 /* (not yet rewritten) JSR-184 1.1, VertexBuffer.getPositions. ISwerveObject slot 25 (+0x64) of
    VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): its
-   positions and their scale and bias (FUN_010100f0: the scale then the 3 bias floats; -1301,
-   IllegalArgumentException, for a scaleBias shorter than 4), the array wrapped into *param_4. */
+   positions and their scale and bias (swvVertexBuffer_GetPositionsValue: the scale then the 3 bias floats;
+   -1301, IllegalArgumentException, for a scaleBias shorter than 4), the array wrapped into *param_4. */
 int swvVertexBuffer_GetPositions(int param_1,undefined4 param_2,undefined4 param_3,ISwerveObject **param_4)
 
 {
@@ -57555,7 +57569,7 @@ int swvVertexBuffer_GetPositions(int param_1,undefined4 param_2,undefined4 param
     if (iVar1 != 0) {
       iVar1 = iVar1 + -4;
     }
-    pNative = (void *)FUN_010100f0(iVar1,param_2,param_3);
+    pNative = (void *)swvVertexBuffer_GetPositionsValue(iVar1,param_2,param_3);
     if (pNative != (void *)0x0) {
       pNative = (void *)((int)pNative + 4);
     }
@@ -57571,9 +57585,9 @@ int swvVertexBuffer_GetPositions(int param_1,undefined4 param_2,undefined4 param
 /* ==== 0x0103CE14  (file offset 0x3CE14)  swvVertexBuffer_GetTexCoords ================================ */
 /* (not yet rewritten) JSR-184 1.1, VertexBuffer.getTexCoords. ISwerveObject slot 27 (+0x6c) of
    VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): unit
-   param_2 (error -1101, IndexOutOfBoundsException, above 1; FUN_01010828) and its scale and bias (-1301,
-   IllegalArgumentException, for a scaleBias shorter than the components + 1), the array wrapped into
-   the last argument. */
+   param_2 (error -1101, IndexOutOfBoundsException, above 1; swvVertexBuffer_GetTexCoordsValue) and its
+   scale and bias (-1301, IllegalArgumentException, for a scaleBias shorter than the components + 1), the
+   array wrapped into the last argument. */
 int swvVertexBuffer_GetTexCoords(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
                 ISwerveObject **param_5)
 
@@ -57589,7 +57603,7 @@ int swvVertexBuffer_GetTexCoords(int param_1,undefined4 param_2,undefined4 param
     if (iVar1 != 0) {
       iVar1 = iVar1 + -4;
     }
-    pNative = (void *)FUN_01010828(iVar1,param_2,param_3,param_4);
+    pNative = (void *)swvVertexBuffer_GetTexCoordsValue(iVar1,param_2,param_3,param_4);
     if (pNative != (void *)0x0) {
       pNative = (void *)((int)pNative + 4);
     }
@@ -57643,10 +57657,11 @@ void swv_InitVtbl_VertexBuffer(void **pVtbl)
 }
 
 /* ==== 0x0103CF70  (file offset 0x3CF70)  swvVertexBuffer_SetColors =================================== */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setColors. ISwerveObject slot 21 (+0x54) of
-   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in
-   an error frame, FUN_010209ac (the array). The colours / normals names corrected (were swapped):
-   FUN_010209ac enforces VertexBuffer.setColors' rule on +0x2c, FUN_010220b0 setNormals' on +0x28. */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setColors. ISwerveObject slot 21 (+0x54) of VertexBuffer
+   (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in an error frame,
+   swvVertexBuffer_SetColorsValue (the array). The colours / normals names corrected (were swapped):
+   swvVertexBuffer_SetColorsValue enforces VertexBuffer.setColors' rule on +0x2c,
+   swvVertexBuffer_SetNormalsValue setNormals' on +0x28. */
 undefined4 swvVertexBuffer_SetColors(int param_1,int param_2)
 
 {
@@ -57670,7 +57685,7 @@ undefined4 swvVertexBuffer_SetColors(int param_1,int param_2)
     if (iVar2 != 0) {
       iVar2 = iVar2 + -4;
     }
-    FUN_010209ac(iVar1,iVar2);
+    swvVertexBuffer_SetColorsValue(iVar1,iVar2);
     swv_TryPop();
   }
   else {
@@ -57697,10 +57712,11 @@ void swvVertexBuffer_SetDefaultColor(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x0103CFF0  (file offset 0x3CFF0)  swvVertexBuffer_SetNormals ================================== */
-/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setNormals. ISwerveObject slot 19 (+0x4c) of
-   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in
-   an error frame, FUN_010220b0 (the array). The colours / normals names corrected (were swapped):
-   FUN_010209ac enforces VertexBuffer.setColors' rule on +0x2c, FUN_010220b0 setNormals' on +0x28. */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setNormals. ISwerveObject slot 19 (+0x4c) of VertexBuffer
+   (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in an error frame,
+   swvVertexBuffer_SetNormalsValue (the array). The colours / normals names corrected (were swapped):
+   swvVertexBuffer_SetColorsValue enforces VertexBuffer.setColors' rule on +0x2c,
+   swvVertexBuffer_SetNormalsValue setNormals' on +0x28. */
 undefined4 swvVertexBuffer_SetNormals(int param_1,int param_2)
 
 {
@@ -57724,7 +57740,7 @@ undefined4 swvVertexBuffer_SetNormals(int param_1,int param_2)
     if (iVar2 != 0) {
       iVar2 = iVar2 + -4;
     }
-    FUN_010220b0(iVar1,iVar2);
+    swvVertexBuffer_SetNormalsValue(iVar1,iVar2);
     swv_TryPop();
   }
   else {
@@ -57736,7 +57752,7 @@ undefined4 swvVertexBuffer_SetNormals(int param_1,int param_2)
 /* ==== 0x0103D05C  (file offset 0x3D05C)  swvVertexBuffer_SetPositions ================================ */
 /* (not yet rewritten) JSR-184 1.1, VertexBuffer.setPositions. ISwerveObject slot 26 (+0x68) of
    VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in
-   an error frame, FUN_0102234c (the array, its scale and bias). */
+   an error frame, swvVertexBuffer_SetPositionsValue (the array, its scale and bias). */
 undefined4
 swvVertexBuffer_SetPositions(int param_1,int param_2,undefined4 param_3,undefined4 param_4,
                              undefined4 param_5)
@@ -57764,7 +57780,7 @@ swvVertexBuffer_SetPositions(int param_1,int param_2,undefined4 param_3,undefine
       iVar2 = iVar2 + -4;
     }
     uVar3 = FUN_0102ed04(param_3);
-    FUN_0102234c(iVar1,iVar2,uVar3,param_4,param_5);
+    swvVertexBuffer_SetPositionsValue(iVar1,iVar2,uVar3,param_4,param_5);
     swv_TryPop();
   }
   else {
@@ -57776,7 +57792,7 @@ swvVertexBuffer_SetPositions(int param_1,int param_2,undefined4 param_3,undefine
 /* ==== 0x0103D0F0  (file offset 0x3D0F0)  swvVertexBuffer_SetTexCoords ================================ */
 /* (not yet rewritten) JSR-184 1.1, VertexBuffer.setTexCoords. ISwerveObject slot 28 (+0x70) of
    VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in
-   an error frame, FUN_0102358c (the unit, the array, its scale and bias). */
+   an error frame, swvVertexBuffer_SetTexCoordsValue (the unit, the array, its scale and bias). */
 undefined4
 swvVertexBuffer_SetTexCoords(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
                              undefined4 param_5,undefined4 param_6)
@@ -57804,7 +57820,7 @@ swvVertexBuffer_SetTexCoords(int param_1,undefined4 param_2,int param_3,undefine
       iVar2 = iVar2 + -4;
     }
     uVar3 = FUN_0102ed04(param_4);
-    FUN_0102358c(iVar1,param_2,iVar2,uVar3,param_5,param_6);
+    swvVertexBuffer_SetTexCoordsValue(iVar1,param_2,iVar2,uVar3,param_5,param_6);
     swv_TryPop();
   }
   else {

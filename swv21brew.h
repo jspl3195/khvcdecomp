@@ -329,18 +329,18 @@ int32 raise_signal(int32 signal,int32 type);   /* 0x01001BB4 GUESS: name, see sw
 int32 semihosting_exit(void);   /* 0x01001C18 GUESS: name, see swv21brew.c */
 int32 default_signal_handler(int32 signal,int32 type);   /* 0x01001C30 GUESS: name, see swv21brew.c */
 int32 debug_write_char(char character);   /* 0x01001D94 GUESS: name, see swv21brew.c */
-void FUN_01002a58(int *param_1,int param_2,undefined4 param_3,undefined4 param_4);
+void swvObject3D_AddAnimationTrackValue(int *param_1,int param_2,undefined4 param_3,undefined4 param_4);   /* 0x01002A58 JSR-184 1.1, see swv21brew.c */
 int FUN_01002c70(int param_1,int param_2);
-void FUN_01002d60(int param_1,int param_2);
+void swvGroup_AddChild(int param_1,int param_2);   /* 0x01002D60 GUESS: name, see swv21brew.c */
 undefined4 FUN_01002dfc(undefined1 *param_1,int param_2,int param_3);
 void FUN_01002ef8(int param_1,int param_2,int param_3,undefined4 param_4,int param_5,int param_6);
 void FUN_0100300c(int param_1,uint param_2,uint param_3,int param_4,int param_5,int *param_6);
 void FUN_010031a0(int param_1,int param_2);
-undefined8 FUN_01003234(int param_1,int param_2,int param_3,int param_4,int param_5);
+undefined8 swvSkinnedMesh_AddTransform(int param_1,int param_2,int param_3,int param_4,int param_5);   /* 0x01003234 GUESS: name, see swv21brew.c */
 int swvSkin_FindOrAddBoneSet(int param_1,undefined4 param_2);
 int FUN_01003408(int param_1);
 void FUN_01003474(int param_1,undefined4 param_2);
-void FUN_010034cc(int param_1,int param_2);
+void swvNode_Align(int param_1,int param_2);   /* 0x010034CC JSR-184 1.1, see swv21brew.c */
 void FUN_0100350c(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01003604(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01003758(undefined4 param_1,int param_2);
@@ -350,7 +350,7 @@ void FUN_0100385c(undefined4 param_1,int param_2);
 void FUN_010038c8(undefined4 param_1,int param_2);
 int FUN_01003b00(int param_1,undefined4 param_2,int param_3,undefined4 param_4);
 int FUN_01003be8(int param_1,undefined4 param_2,int param_3,undefined4 param_4);
-undefined4 FUN_01003c38(int *param_1,undefined4 param_2,int param_3);
+undefined4 swvObject3D_AnimateValue(int *param_1,undefined4 param_2,int param_3);   /* 0x01003C38 JSR-184 1.1, see swv21brew.c */
 void FUN_0100400c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0100406c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
 void FUN_010040cc(int *param_1,undefined1 *param_2,undefined4 param_3,undefined4 param_4);
@@ -425,7 +425,7 @@ void FUN_01007e30(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
 void FUN_01007f40(int param_1,undefined4 param_2,uint param_3,uint param_4,int param_5);
 undefined4 FUN_01007f8c(int param_1,int param_2,int param_3,int param_4,int param_5);
 undefined4 FUN_0100800c(int param_1,undefined4 param_2,undefined4 param_3);
-void thunk_FUN_01021abc(int param_1,int param_2);
+void thunk_swvTexture2D_SetImage(int param_1,int param_2);
 void thunk_FUN_01023f30(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void swvSection_SetSink(uint8 *section,void *sink);
 void FUN_01008074(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
@@ -436,7 +436,7 @@ void FUN_01008184(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
 void FUN_010081ec(int param_1,undefined4 param_2,int param_3,int param_4,undefined4 param_5, undefined4 param_6,undefined4 param_7,undefined4 param_8);
 void FUN_010082f0(int param_1,int param_2,undefined4 param_3);
 uint swvSectionZlib_Init(int param_1,undefined4 param_2);
-void FUN_01008398(int param_1,int param_2,int param_3,int param_4);
+void swvKeyframeSequence_Construct(int param_1,int param_2,int param_3,int param_4);   /* 0x01008398 GUESS: name, see swv21brew.c */
 void FUN_0100844c(int param_1,int param_2,int param_3,int param_4,int param_5);
 void FUN_01008540(int param_1,int param_2,int param_3,int param_4);
 void FUN_010085e8(void);
@@ -502,7 +502,7 @@ int * FUN_0100ec40(void);
 void swv_FillRect(uint8 *raster,int32 x,int32 y,int32 width,int32 height,uint16 colour,uint8 alpha);   /* 0x0100ECA0 GUESS: name, see swv21brew.c */
 void FUN_0100ed84(int param_1,int param_2,int param_3);
 uint swvSkin_VertexBones(int param_1,uint param_2,int param_3);
-int * FUN_0100eef0(int *param_1,int param_2);
+int * swvObject3D_FindValue(int *param_1,int param_2);   /* 0x0100EEF0 JSR-184 1.1, see swv21brew.c */
 void swv_ColourScale(int32 *colour,int32 factor);   /* 0x0100EFE4 GUESS: name, see swv21brew.c */
 void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 int32 swvImage2D_AlphaStride(const uint8 *image);   /* 0x0100F154 GUESS: name, see swv21brew.c */
@@ -546,8 +546,8 @@ uint16 *swvImage2D_Palette(const uint8 *image);   /* 0x0100FFE4 GUESS: name, see
 int32 swvImage2D_ColourStride(const uint8 *image);   /* 0x0100FFFC GUESS: name, see swv21brew.c */
 uint32 swv_ColourToRGB565(const int32 *colour);   /* 0x01010008 GUESS: name, see swv21brew.c */
 void *swvImage2D_Pixels(uint8 *image);   /* 0x01010084 GUESS: name, see swv21brew.c */
-uint FUN_01010094(int param_1,int param_2,undefined4 param_3,uint param_4);
-undefined4 FUN_010100f0(int param_1,int param_2,undefined4 *param_3);
+uint swvAnimationController_Position(int param_1,int param_2,undefined4 param_3,uint param_4);   /* 0x01010094 JSR-184 1.1, see swv21brew.c */
+undefined4 swvVertexBuffer_GetPositionsValue(int param_1,int param_2,undefined4 *param_3);   /* 0x010100F0 JSR-184 1.1, see swv21brew.c */
 undefined8 FUN_01010148(int param_1,uint param_2);
 undefined4 FUN_010102c8(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 undefined4 FUN_01010320(int param_1,int param_2,undefined4 *param_3);
@@ -557,8 +557,8 @@ undefined4 FUN_010104f0(int param_1);
 int32 swvPolygonMode_Shading(const uint8 *mode);   /* 0x010106F8 GUESS: name, see swv21brew.c */
 void FUN_0101070c(int param_1,int param_2,int *param_3,undefined4 *param_4,undefined4 *param_5);
 uint32 swvAnimationController_Speed(const uint8 *controller);   /* 0x01010818 JSR-184 1.1, see swv21brew.c */
-undefined4 FUN_01010828(int param_1,uint param_2,int param_3,undefined4 *param_4);
-bool FUN_010108d4(undefined4 param_1,undefined4 param_2,int param_3);
+undefined4 swvVertexBuffer_GetTexCoordsValue(int param_1,uint param_2,int param_3,undefined4 *param_4);   /* 0x01010828 JSR-184 1.1, see swv21brew.c */
+bool swvNode_GetTransformTo(undefined4 param_1,undefined4 param_2,int param_3);   /* 0x010108D4 JSR-184 1.1, see swv21brew.c */
 int FUN_01010924(int param_1,int param_2);
 undefined4 FUN_01010938(int param_1);
 int32 swvNode_Depth(const uint8 *node);   /* 0x01010CC8 GUESS: name, see swv21brew.c */
@@ -659,7 +659,7 @@ undefined4 FUN_01015a40(undefined4 param_1,int param_2,undefined4 *param_3,undef
 void FUN_01015ce8(undefined4 param_1,int param_2,int *param_3);
 void FUN_010166a4(undefined4 param_1,int param_2,int param_3);
 bool FUN_01016d8c(int param_1,undefined4 param_2,undefined4 *param_3,uint *param_4,int param_5);
-bool FUN_01016ecc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,int param_6);
+bool swvGroup_Pick(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,int param_6);   /* 0x01016ECC GUESS: name, see swv21brew.c */
 void FUN_01017120(undefined4 param_1,int param_2);
 void FUN_0101715c(int param_1);
 void FUN_01017174(int param_1);
@@ -715,7 +715,7 @@ void FUN_01019cc0(int param_1,int param_2);
 void FUN_01019ebc(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01019f00(undefined4 param_1,int param_2,undefined4 param_3);
 void FUN_01019f54(undefined4 param_1);
-void FUN_0101a010(int param_1,int param_2);
+void swvObject3D_RemoveAnimationTrackValue(int param_1,int param_2);   /* 0x0101A010 JSR-184 1.1, see swv21brew.c */
 void FUN_0101a104(int param_1,int param_2);
 void FUN_0101a154(int param_1,int param_2);
 void FUN_0101a1b0(int param_1);
@@ -743,37 +743,37 @@ void FUN_0101d974(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
 void FUN_0101da48(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0101da90(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 uint FUN_0101dbcc(undefined4 param_1,int param_2);
-void FUN_0101dbf8(int param_1,undefined4 param_2,undefined4 param_3,undefined2 *param_4);
+void swvM3G_ReadImage2D(int param_1,undefined4 param_2,undefined4 param_3,undefined2 *param_4);   /* 0x0101DBF8 GUESS: name, see swv21brew.c */
 void FUN_0101de2c(int param_1,undefined4 param_2);
-void FUN_0101ded0(int param_1,undefined4 param_2);
-void FUN_0101df64(int param_1,undefined4 param_2);
+void swvM3G_ReadMaterial(int param_1,undefined4 param_2);   /* 0x0101DED0 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadObject3D(int param_1,undefined4 param_2);   /* 0x0101DF64 JSR-184 1.1, see swv21brew.c */
 undefined4 FUN_0101e0b0(int param_1,undefined4 param_2);
-void FUN_0101e144(int param_1,undefined4 param_2);
-void FUN_0101e288(int param_1,undefined4 param_2);
-void FUN_0101e3f4(int param_1,undefined4 param_2);
-void thunk_FUN_0101df64(int param_1,undefined4 param_2);
+void swvM3G_ReadTexture2D(int param_1,undefined4 param_2);   /* 0x0101E144 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadAppearance(int param_1,undefined4 param_2);   /* 0x0101E288 GUESS: name, see swv21brew.c */
+void swvM3G_ReadBackground(int param_1,undefined4 param_2);   /* 0x0101E3F4 JSR-184 1.1, see swv21brew.c */
+void thunk_swvM3G_ReadObject3D(int param_1,undefined4 param_2);
 void FUN_0101e534(int param_1,undefined4 param_2);
-void FUN_0101e778(int param_1,undefined4 param_2);
-void FUN_0101e824(int param_1,undefined4 param_2);
-void FUN_0101e8ec(int param_1,undefined4 param_2);
-void FUN_0101ea94(int param_1,undefined4 param_2,uint param_3,uint param_4);
-void FUN_0101ee08(int *param_1,undefined4 param_2);
-void FUN_0101ef44(int param_1,undefined4 param_2);
-void FUN_0101f0b4(int param_1,undefined4 param_2);
-void FUN_0101f3e4(int param_1,undefined4 param_2);
-void FUN_0101f760(int param_1,undefined4 param_2);
-void FUN_0101f8ac(int param_1,undefined4 param_2);
-void FUN_0101f9a8(undefined4 param_1,undefined4 param_2);
-void FUN_0101f9f8(int param_1,undefined4 param_2);
-void FUN_0101fb28(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-void FUN_0101fba8(int param_1,undefined4 param_2);
-void FUN_0101fccc(int param_1,undefined4 param_2);
-void FUN_0101fdc4(int param_1,int param_2,int param_3,int param_4,undefined4 param_5);
+void swvM3G_ReadPolygonMode(int param_1,undefined4 param_2);   /* 0x0101E778 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadSkinnedMesh(int param_1,undefined4 param_2);   /* 0x0101E824 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadVertexArray(int param_1,undefined4 param_2);   /* 0x0101E8EC JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadHeader(int param_1,undefined4 param_2,uint param_3,uint param_4);   /* 0x0101EA94 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadTransformable(int *param_1,undefined4 param_2);   /* 0x0101EE08 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadAnimationTrack(int param_1,undefined4 param_2);   /* 0x0101EF44 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadKeyframeSequence(int param_1,undefined4 param_2);   /* 0x0101F0B4 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadTriangleStripArray(int param_1,undefined4 param_2);   /* 0x0101F3E4 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadMesh(int param_1,undefined4 param_2);   /* 0x0101F760 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadNode(int param_1,undefined4 param_2);   /* 0x0101F8AC JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadGroup(undefined4 param_1,undefined4 param_2);   /* 0x0101F9A8 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadLight(int param_1,undefined4 param_2);   /* 0x0101F9F8 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadWorld(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);   /* 0x0101FB28 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadCamera(int param_1,undefined4 param_2);   /* 0x0101FBA8 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadSprite3D(int param_1,undefined4 param_2);   /* 0x0101FCCC GUESS: name, see swv21brew.c */
+void swvVertexArray_SetShorts(int param_1,int param_2,int param_3,int param_4,undefined4 param_5);   /* 0x0101FDC4 JSR-184 1.1, see swv21brew.c */
 void FUN_0101fe5c(int param_1,int param_2,int param_3,undefined4 param_4,int param_5,int param_6);
-void FUN_0101fefc(int param_1,int param_2,int param_3,int param_4,undefined4 param_5);
-void FUN_0101ff90(int param_1,int param_2,int param_3);
+void swvVertexArray_SetBytes(int param_1,int param_2,int param_3,int param_4,undefined4 param_5);   /* 0x0101FEFC JSR-184 1.1, see swv21brew.c */
+void swvAnimationController_SetActiveIntervalValue(int param_1,int param_2,int param_3);   /* 0x0101FF90 JSR-184 1.1, see swv21brew.c */
 void FUN_0101ffbc(int param_1,undefined4 param_2,int param_3,undefined4 param_4);
-void FUN_01020104(int param_1,int param_2,int param_3,int param_4,int param_5);
+void swvNode_SetAlignment(int param_1,int param_2,int param_3,int param_4,int param_5);   /* 0x01020104 GUESS: name, see swv21brew.c */
 void FUN_010201dc(int param_1,int param_2,int param_3);
 void FUN_0102023c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01020290(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
@@ -782,7 +782,7 @@ void FUN_01020480(int param_1,int param_2,int param_3,undefined4 param_4);
 undefined4 * FUN_010204ec(undefined4 *param_1,int param_2,int param_3);
 void FUN_0102060c(int *param_1,int *param_2,int *param_3,int param_4);
 void swvMaterial_SetColorValue(uint8 *material,uint32 targets,uint32 argb);   /* 0x01020948 GUESS: name, see swv21brew.c */
-void FUN_010209ac(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
+void swvVertexBuffer_SetColorsValue(int param_1,int param_2,undefined4 param_3,undefined4 param_4);   /* 0x010209AC JSR-184 1.1, see swv21brew.c */
 void FUN_01020a28(int param_1,int param_2);
 undefined8 FUN_01020b64(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5 );
 void FUN_01020bcc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
@@ -795,7 +795,7 @@ void FUN_01020d0c(int *param_1,int param_2);
 void FUN_01020da0(int param_1,int param_2);
 void FUN_01020dec(int param_1);
 void FUN_01021a78(int param_1,undefined4 param_2,int param_3);
-void FUN_01021abc(int param_1,int param_2);
+void swvTexture2D_SetImage(int param_1,int param_2);   /* 0x01021ABC JSR-184 1.1, see swv21brew.c */
 void FUN_01021b6c(int param_1,undefined4 param_2);
 void FUN_01021b7c(int param_1,int param_2);
 void FUN_01021bac(int param_1,int param_2,undefined4 param_3,int param_4,int param_5);
@@ -807,7 +807,7 @@ void FUN_01021e64(int param_1,int param_2);
 void FUN_01021ec8(int param_1,undefined4 param_2);
 void swvPolygonMode_SetFlags(uint8 *mode,uint32 value);   /* 0x01021ED8 GUESS: name, see swv21brew.c */
 void FUN_01021f28(int param_1);
-void FUN_010220b0(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
+void swvVertexBuffer_SetNormalsValue(int param_1,int param_2,undefined4 param_3,undefined4 param_4);   /* 0x010220B0 JSR-184 1.1, see swv21brew.c */
 void FUN_01022140(int *param_1,undefined4 param_2);
 void swv_ColourFromRGB(int32 *colour,uint32 argb);   /* 0x010221A0 GUESS: name, see swv21brew.c */
 void FUN_010221dc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5);
@@ -815,8 +815,8 @@ void FUN_01022204(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 void FUN_01022234(int *param_1,int param_2);
 void FUN_01022278(int param_1,int param_2);
 void FUN_010222a8(undefined4 *param_1,int *param_2,int param_3,int param_4);
-void FUN_01022340(int param_1,undefined4 param_2,undefined4 param_3);
-void FUN_0102234c(int param_1,int param_2,undefined4 param_3,int param_4,undefined4 *param_5);
+void swvAnimationController_SetPositionValue(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x01022340 JSR-184 1.1, see swv21brew.c */
+void swvVertexBuffer_SetPositionsValue(int param_1,int param_2,undefined4 param_3,int param_4,undefined4 *param_5);   /* 0x0102234C JSR-184 1.1, see swv21brew.c */
 void FUN_010223f0(int param_1,uint param_2,uint param_3,uint *param_4);
 void FUN_010224fc(void);
 int FUN_01022600(int param_1,uint param_2,undefined4 param_3,undefined4 *param_4);
@@ -834,13 +834,13 @@ void FUN_01023124(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
 void FUN_01023174(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01023184(int *param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_010231c4(int param_1,int *param_2);
-void FUN_01023244(int param_1,undefined4 param_2,int param_3);
+void swvAnimationController_SetSpeedValue(int param_1,undefined4 param_2,int param_3);   /* 0x01023244 JSR-184 1.1, see swv21brew.c */
 void FUN_0102327c(int param_1,undefined4 param_2);
 void FUN_0102328c(int param_1,undefined4 param_2);
 void FUN_0102329c(int param_1,int *param_2);
 void FUN_01023420(int *param_1,int param_2,int param_3,undefined4 param_4);
 undefined4 FUN_010234bc(int param_1,int param_2,undefined4 param_3,uint param_4,int param_5);
-void FUN_0102358c(int param_1,uint param_2,int param_3,undefined4 param_4,int param_5, undefined4 *param_6);
+void swvVertexBuffer_SetTexCoordsValue(int param_1,uint param_2,int param_3,undefined4 param_4,int param_5, undefined4 *param_6);   /* 0x0102358C JSR-184 1.1, see swv21brew.c */
 void FUN_01023678(int param_1,uint param_2,int param_3);
 void FUN_010236c4(int param_1,int param_2,int param_3,int param_4);
 void FUN_01023944(int *param_1,int param_2);
@@ -849,11 +849,11 @@ void FUN_010239fc(int param_1,int param_2,int param_3,int param_4);
 void FUN_01023af0(int param_1,int param_2,int param_3);
 void FUN_01023b3c(int param_1,int *param_2,int param_3);
 undefined8 FUN_01023bc8(int param_1,undefined4 param_2,undefined4 param_3,int param_4,int param_5);
-void FUN_01023c88(int param_1,undefined4 param_2);
+void swvAnimationController_SetWeightValue(int param_1,undefined4 param_2);   /* 0x01023C88 JSR-184 1.1, see swv21brew.c */
 void FUN_01023c90(int param_1,int param_2,int param_3);
 void swvPolygonMode_SetWindingValue(uint8 *mode,int32 winding);   /* 0x01023CE4 GUESS: name, see swv21brew.c */
 void FUN_01023d00(int param_1);
-void FUN_01023d30(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6, int param_7);
+void swvImage2D_SetValue(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6, int param_7);   /* 0x01023D30 JSR-184 1.1, see swv21brew.c */
 undefined8 FUN_01023e44(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6,int param_7);
 void FUN_01023f30(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01023f50(int param_1,int param_2,undefined4 *param_3);
@@ -1180,12 +1180,12 @@ void FUN_01030ae4(int param_1,undefined4 *param_2);
 void FUN_01030b10(int param_1,int *param_2);
 void swvImage2D_GetPixels(int param_1,undefined4 *param_2);   /* 0x01030B38 GUESS: name, see swv21brew.c */
 void FUN_01030b58(int param_1,undefined4 *param_2);
-undefined4 FUN_01030c54(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,int param_6);
+undefined4 swvImage2D_InitFromPixels(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,int param_6);   /* 0x01030C54 GUESS: name, see swv21brew.c */
 undefined4 FUN_01030d14(int param_1,int param_2,int param_3,int param_4);
-undefined4 FUN_01030dbc(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,int param_6, undefined4 param_7,int param_8);
+undefined4 swvImage2D_InitFromPalette(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,int param_6, undefined4 param_7,int param_8);   /* 0x01030DBC GUESS: name, see swv21brew.c */
 undefined4 FUN_01030e98(int param_1,int param_2,int param_3,int param_4,int param_5);
 void FUN_01030f48(int param_1,undefined1 *param_2);
-undefined4 FUN_01030f60(int param_1,int param_2,int param_3,int param_4,int param_5,undefined4 param_6, int param_7);
+undefined4 swvImage2D_Set(int param_1,int param_2,int param_3,int param_4,int param_5,undefined4 param_6, int param_7);   /* 0x01030F60 JSR-184 1.1, see swv21brew.c */
 void thunk_swv_InitVtbl_Object3D(int param_1);
 void FUN_01031034(int param_1,int param_2);
 undefined4 FUN_010311c4(int param_1,char *param_2,int param_3);
@@ -1266,21 +1266,21 @@ undefined4 FUN_01034c3c(int param_1,undefined4 param_2);
 void FUN_01034cd8(int param_1,int param_2);
 void FUN_01034cf0(int param_1,int param_2);
 void FUN_01034d08(int param_1);
-undefined4 FUN_01034d24(int param_1,int param_2);
-undefined4 FUN_01034da8(int param_1,undefined4 param_2,undefined4 *param_3);
-int FUN_01034e14(int param_1,ISwerveObject **param_2);
-int FUN_01034e8c(int param_1,undefined4 param_2,ISwerveObject **param_3);
+undefined4 swvObject3D_AddAnimationTrack(int param_1,int param_2);   /* 0x01034D24 JSR-184 1.1, see swv21brew.c */
+undefined4 swvObject3D_Animate(int param_1,undefined4 param_2,undefined4 *param_3);   /* 0x01034DA8 JSR-184 1.1, see swv21brew.c */
+int swvObject3D_Duplicate(int param_1,ISwerveObject **param_2);   /* 0x01034E14 JSR-184 1.1, see swv21brew.c */
+int swvObject3D_Find(int param_1,undefined4 param_2,ISwerveObject **param_3);   /* 0x01034E8C JSR-184 1.1, see swv21brew.c */
 int swvObject3D_GetAnimationTrack(int param_1,undefined4 param_2,ISwerveObject **param_3);   /* 0x01034F00 GUESS: name, see swv21brew.c */
 void swvObject3D_GetAnimationTrackCount(int param_1,undefined4 *param_2);   /* 0x01034F74 GUESS: name, see swv21brew.c */
 int swvObject3D_GetReferences(int param_1,uint param_2,int param_3,uint *param_4);   /* 0x01034F94 GUESS: name, see swv21brew.c */
-void FUN_010350fc(int param_1,undefined4 *param_2);
+void swvObject3D_GetUserId(int param_1,undefined4 *param_2);   /* 0x010350FC JSR-184 1.1, see swv21brew.c */
 void FUN_01035114(int param_1);
 void FUN_01035134(int param_1,int param_2,undefined4 *param_3);
 void FUN_0103515c(int param_1);
 void swv_InitVtbl_Object3D(int param_1);   /* 0x0103517C GUESS: name, see swv21brew.c */
-undefined4 FUN_01035270(int param_1,int param_2);
+undefined4 swvObject3D_RemoveAnimationTrack(int param_1,int param_2);   /* 0x01035270 GUESS: name, see swv21brew.c */
 void FUN_010352f4(int param_1);
-void FUN_01035304(int param_1,undefined4 param_2);
+void swvObject3D_SetUserId(int param_1,undefined4 param_2);   /* 0x01035304 JSR-184 1.1, see swv21brew.c */
 undefined4 FUN_01035318(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 int FUN_01035388(int param_1);
 void FUN_01035404(undefined4 param_1,byte *param_2);
@@ -2012,8 +2012,8 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define ADDRESS_OF_FUNCTION_010305b8_OFFSET 0x000001FC   /* was DAT_010303e4 (word at 0x010303E4); PC-relative offset: + 0x10303bc (the pc) = 0x010305B8 */
 #define ADDRESS_OF_FUNCTION_010304c0_OFFSET 0x000000F8   /* was DAT_010303e8 (word at 0x010303E8); PC-relative offset: + 0x10303c8 (the pc) = 0x010304C0 */
 #define ADDRESS_OF_FUNCTION_010303f0_OFFSET 0x0000001C   /* was DAT_010303ec (word at 0x010303EC); PC-relative offset: + 0x10303d4 (the pc) = 0x010303F0 */
-#define ADDRESS_OF_FUNCTION_01030c54_OFFSET 0x000000B8   /* was DAT_01030c24 (word at 0x01030C24); PC-relative offset: + 0x1030b9c (the pc) = 0x01030C54 */
-#define ADDRESS_OF_FUNCTION_01030dbc_OFFSET 0x00000214   /* was DAT_01030c28 (word at 0x01030C28); PC-relative offset: + 0x1030ba8 (the pc) = 0x01030DBC */
+#define ADDRESS_OF_swvImage2D_InitFromPixels_OFFSET 0x000000B8   /* was DAT_01030c24 (word at 0x01030C24); PC-relative offset: + 0x1030b9c (the pc) = 0x01030C54 */
+#define ADDRESS_OF_swvImage2D_InitFromPalette_OFFSET 0x00000214   /* was DAT_01030c28 (word at 0x01030C28); PC-relative offset: + 0x1030ba8 (the pc) = 0x01030DBC */
 #define ADDRESS_OF_FUNCTION_01030d14_OFFSET 0x00000160   /* was DAT_01030c2c (word at 0x01030C2C); PC-relative offset: + 0x1030bb4 (the pc) = 0x01030D14 */
 #define ADDRESS_OF_FUNCTION_01030e98_OFFSET 0x000002D8   /* was DAT_01030c30 (word at 0x01030C30); PC-relative offset: + 0x1030bc0 (the pc) = 0x01030E98 */
 #define ADDRESS_OF_FUNCTION_01030acc_OFFSET 0xFFFFFF00   /* was DAT_01030c34 (word at 0x01030C34); PC-relative offset: + 0x1030bcc (the pc) = 0x01030ACC */
@@ -2023,7 +2023,7 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define ADDRESS_OF_FUNCTION_01030b10_OFFSET 0xFFFFFF14   /* was DAT_01030c44 (word at 0x01030C44); PC-relative offset: + 0x1030bfc (the pc) = 0x01030B10 */
 #define ADDRESS_OF_FUNCTION_01030aac_OFFSET 0xFFFFFEA4   /* was DAT_01030c48 (word at 0x01030C48); PC-relative offset: + 0x1030c08 (the pc) = 0x01030AAC */
 #define ADDRESS_OF_FUNCTION_01030f48_OFFSET 0x00000334   /* was DAT_01030c4c (word at 0x01030C4C); PC-relative offset: + 0x1030c14 (the pc) = 0x01030F48 */
-#define ADDRESS_OF_FUNCTION_01030f60_OFFSET 0x00000340   /* was DAT_01030c50 (word at 0x01030C50); PC-relative offset: + 0x1030c20 (the pc) = 0x01030F60 */
+#define ADDRESS_OF_swvImage2D_Set_OFFSET 0x00000340   /* was DAT_01030c50 (word at 0x01030C50); PC-relative offset: + 0x1030c20 (the pc) = 0x01030F60 */
 #define STRING_1_DOT_1_DOT_4_OFFSET 0x0000EFA8   /* was DAT_010311b4 (word at 0x010311B4); PC-relative offset: + 0x10310a4 (the pc) = 0x0104004C */
 #define ADDRESS_OF_FUNCTION_0103d3b8_OFFSET 0x0000C2D4   /* was DAT_010311b8 (word at 0x010311B8); PC-relative offset: + 0x10310e4 (the pc) = 0x0103D3B8 */
 #define ADDRESS_OF_FUNCTION_0103d3c0_OFFSET 0x0000C2C4   /* was DAT_010311bc (word at 0x010311BC); PC-relative offset: + 0x10310fc (the pc) = 0x0103D3C0 */
@@ -2123,21 +2123,21 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define DATA_AT_0100203C_OFFSET_40 0xFFFCD040   /* was DAT_010350ec (word at 0x010350EC); PC-relative offset: + 0x1034ffc (the pc) = 0x0100203C */
 #define DATA_AT_01001EAC_OFFSET_11 0xFFFCCEA4   /* was DAT_010350f0 (word at 0x010350F0); PC-relative offset: + 0x1035008 (the pc) = 0x01001EAC */
 #define WORD_HEXADECIMAL_FFFCD4EC 0xFFFCD4EC   /* was DAT_010350f4 (word at 0x010350F4); value 0xFFFCD4EC (-207636) */
-#define ADDRESS_OF_FUNCTION_010350fc_OFFSET 0xFFFFFF74   /* was DAT_01035234 (word at 0x01035234); PC-relative offset: + 0x1035188 (the pc) = 0x010350FC */
-#define ADDRESS_OF_FUNCTION_01035304_OFFSET 0x00000170   /* was DAT_01035238 (word at 0x01035238); PC-relative offset: + 0x1035194 (the pc) = 0x01035304 */
+#define ADDRESS_OF_swvObject3D_GetUserId_OFFSET 0xFFFFFF74   /* was DAT_01035234 (word at 0x01035234); PC-relative offset: + 0x1035188 (the pc) = 0x010350FC */
+#define ADDRESS_OF_swvObject3D_SetUserId_OFFSET 0x00000170   /* was DAT_01035238 (word at 0x01035238); PC-relative offset: + 0x1035194 (the pc) = 0x01035304 */
 #define ADDRESS_OF_swvObject3D_GetAnimationTrackCount_OFFSET 0xFFFFFDD4   /* was DAT_0103523c (word at 0x0103523C); PC-relative offset: + 0x10351a0 (the pc) = 0x01034F74 */
 #define ADDRESS_OF_swvObject3D_GetAnimationTrack_OFFSET 0xFFFFFD54   /* was DAT_01035240 (word at 0x01035240); PC-relative offset: + 0x10351ac (the pc) = 0x01034F00 */
-#define ADDRESS_OF_FUNCTION_01034d24_OFFSET 0xFFFFFB6C   /* was DAT_01035244 (word at 0x01035244); PC-relative offset: + 0x10351b8 (the pc) = 0x01034D24 */
-#define ADDRESS_OF_FUNCTION_01035270_OFFSET 0x000000AC   /* was DAT_01035248 (word at 0x01035248); PC-relative offset: + 0x10351c4 (the pc) = 0x01035270 */
-#define ADDRESS_OF_FUNCTION_01034da8_OFFSET 0xFFFFFBD8   /* was DAT_0103524c (word at 0x0103524C); PC-relative offset: + 0x10351d0 (the pc) = 0x01034DA8 */
-#define ADDRESS_OF_FUNCTION_01034e8c_OFFSET 0xFFFFFCB0   /* was DAT_01035250 (word at 0x01035250); PC-relative offset: + 0x10351dc (the pc) = 0x01034E8C */
+#define ADDRESS_OF_swvObject3D_AddAnimationTrack_OFFSET 0xFFFFFB6C   /* was DAT_01035244 (word at 0x01035244); PC-relative offset: + 0x10351b8 (the pc) = 0x01034D24 */
+#define ADDRESS_OF_swvObject3D_RemoveAnimationTrack_OFFSET 0x000000AC   /* was DAT_01035248 (word at 0x01035248); PC-relative offset: + 0x10351c4 (the pc) = 0x01035270 */
+#define ADDRESS_OF_swvObject3D_Animate_OFFSET 0xFFFFFBD8   /* was DAT_0103524c (word at 0x0103524C); PC-relative offset: + 0x10351d0 (the pc) = 0x01034DA8 */
+#define ADDRESS_OF_swvObject3D_Find_OFFSET 0xFFFFFCB0   /* was DAT_01035250 (word at 0x01035250); PC-relative offset: + 0x10351dc (the pc) = 0x01034E8C */
 #define ADDRESS_OF_swvObject3D_GetReferences_OFFSET 0xFFFFFDAC   /* was DAT_01035254 (word at 0x01035254); PC-relative offset: + 0x10351e8 (the pc) = 0x01034F94 */
 #define ADDRESS_OF_FUNCTION_01035114_OFFSET 0xFFFFFF20   /* was DAT_01035258 (word at 0x01035258); PC-relative offset: + 0x10351f4 (the pc) = 0x01035114 */
 #define ADDRESS_OF_FUNCTION_01035318_OFFSET 0x00000118   /* was DAT_0103525c (word at 0x0103525C); PC-relative offset: + 0x1035200 (the pc) = 0x01035318 */
 #define ADDRESS_OF_FUNCTION_010352f4_OFFSET 0x000000E8   /* was DAT_01035260 (word at 0x01035260); PC-relative offset: + 0x103520c (the pc) = 0x010352F4 */
 #define ADDRESS_OF_FUNCTION_01035134_OFFSET 0xFFFFFF1C   /* was DAT_01035264 (word at 0x01035264); PC-relative offset: + 0x1035218 (the pc) = 0x01035134 */
 #define ADDRESS_OF_FUNCTION_0103515c_OFFSET 0xFFFFFF38   /* was DAT_01035268 (word at 0x01035268); PC-relative offset: + 0x1035224 (the pc) = 0x0103515C */
-#define ADDRESS_OF_FUNCTION_01034e14_OFFSET 0xFFFFFBE4   /* was DAT_0103526c (word at 0x0103526C); PC-relative offset: + 0x1035230 (the pc) = 0x01034E14 */
+#define ADDRESS_OF_swvObject3D_Duplicate_OFFSET 0xFFFFFBE4   /* was DAT_0103526c (word at 0x0103526C); PC-relative offset: + 0x1035230 (the pc) = 0x01034E14 */
 extern undefined4 STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET;   /* was DAT_01035484 (word at 0x01035484 = 0x0000BC4C); word relative to its own address: 0x01035484 + 0x0000BC4C = 0x010410D0 */
 #define INTEGER_3855 0x00000F0F   /* was DAT_010356fc, DAT_01035e78 (word at 0x010356FC); integer 3855 */
 #define INTEGER_16191 0x00003F3F   /* was DAT_01035700, DAT_01035e80 (word at 0x01035700); integer 16191 */
