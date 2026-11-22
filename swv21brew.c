@@ -2829,7 +2829,7 @@ int AEEStaticMod_New(int16 nSize,IShell *pIShell,AEEHelperFuncs *ph,IModule **pp
 
 /* ==== 0x01002A58  (file offset 0x02A58)  swvObject3D_AddAnimationTrackValue ========================== */
 /* JSR-184 1.1, Object3D.addAnimationTrack, on the native object object with the track track: error -1301
-   (IllegalArgumentException; FUN_0102f7e0, which does not return) for a NULL track (the spec's
+   (IllegalArgumentException; swv_Throw, which does not return) for a NULL track (the spec's
    NullPointerException, -1302, is raised before, by the ISwerveObject slot 7,
    swvObject3D_AddAnimationTrack; a NULL reaches here only from the engine's own callers) or when the
    object cannot animate its property (track +0x24; the object's IsAnimatable, engine vtable +0x20); the
@@ -2849,12 +2849,12 @@ void swvObject3D_AddAnimationTrackValue(uint8 *object,uint8 *track)
   int32 vtable;
 
   if (track == NULL)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   vtable = *(int32 *)object;
   /* engine virtual call, slot +0x20: the object's IsAnimatable(the track's property, +0x24):
      swvObject3D_IsAnimatable or its class's own (swvMaterial_IsAnimatable .. swvSprite3D_IsAnimatable) */
   if ((*(code *)(*(int32 *)(vtable + 0x20) + vtable))(object,*(int32 *)(track + 0x24)) == 0)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   if (*(uint8 **)(object + 0x10) == NULL) {
     tracks = (uint8 *)swv_New(0x20);
     if (tracks != NULL) {
@@ -2874,7 +2874,7 @@ void swvObject3D_AddAnimationTrackValue(uint8 *object,uint8 *track)
    - 0x01002c68): inserts the AnimationTrack track into an Object3D's track list tracks (0x20 bytes, two
    engine dynamic arrays: the tracks, +4 the items, +8 the count, kept grouped by property, track +0x24;
    and at +0x10 each group's track count, +0x14 the items, +0x18 the count, +0x1c the capacity). Error
-   -1301 (IllegalArgumentException; FUN_0102f7e0, which does not return) for a track already in the list,
+   -1301 (IllegalArgumentException; swv_Throw, which does not return) for a track already in the list,
    or for one on a property already animated whose keyframe sequence (+0x1c; none counts as 0) has another
    component count (+0x34, the spec's keyframe size: JSR-184 1.1, Object3D.addAnimationTrack). Walking the
    tracks, the group number goes up at each change of property (as swvObject3D_RemoveAnimationTrackValue
@@ -2907,7 +2907,7 @@ void swvObject3D_InsertAnimationTrack(uint8 *tracks,uint8 *track)
 
   for (i = 0; i < count; i++)
     if (items[i] == track)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
   target = *(int32 *)(tracks + 0x18);
   for (i = 0; i < count; i++) {
     if (property != *(int32 *)(items[i] + 0x24)) {
@@ -2919,7 +2919,7 @@ void swvObject3D_InsertAnimationTrack(uint8 *tracks,uint8 *track)
       components = sequence != NULL ? *(const int32 *)(sequence + 0x34) : 0;
       sequence = *(const uint8 **)(track + 0x1c);
       if ((sequence != NULL ? *(const int32 *)(sequence + 0x34) : 0) != components)
-        FUN_0102f7e0(INTEGER_MINUS_1301);
+        swv_Throw(INTEGER_MINUS_1301);
       position = i;
       target = group;
       break;
@@ -3010,11 +3010,11 @@ void swvGroup_AddChild(uint8 *group,uint8 *child)
   uint8 *last;
 
   if (child == NULL)
-    FUN_0102f7e0(INTEGER_MINUS_1302);
+    swv_Throw(INTEGER_MINUS_1302);
   if (child == group ||
       (vtable = *(int32 *)(child + 4), (*(code *)(*(int32 *)(vtable + 4) + vtable))(child + 4) == 0x16) ||
       *(uint8 **)(child + 0x30) != NULL || swvNode_IsAncestorOf(child,group) != 0)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   last = *(uint8 **)(group + 0x38);
   if (last == NULL)
     FUN_0101456c((int)child,(int)group);
@@ -3264,16 +3264,16 @@ void swvSkinnedMesh_AddTransform(uint8 *mesh,uint8 *bone,int32 weight,int32 firs
   int32 vtable;
 
   if (bone == NULL)
-    FUN_0102f7e0(INTEGER_MINUS_1302);
+    swv_Throw(INTEGER_MINUS_1302);
   if (weight <= 0)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   if (*(uint8 **)(mesh + 0x38) != bone && swvNode_HasAncestor(bone,*(uint8 **)(mesh + 0x38)) == 0)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   if (numVertices <= 0)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   last = (int32)((uint32)firstVertex + (uint32)numVertices);
   if (firstVertex < 0 || last > 0xffff)
-    FUN_0102f7e0(INTEGER_MINUS_1101);
+    swv_Throw(INTEGER_MINUS_1101);
   boneIndex = (uint32)FUN_01002c70((int)mesh,(int)bone);
   record[0] = 0;
   record[1] = 0;
@@ -3381,7 +3381,7 @@ void swvNode_Align(uint8 *node,uint8 *reference)
   if (reference == NULL)
     reference = node;
   else if (swvNode_SameSceneGraph(reference,node) == 0)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   FUN_01003474((int)node,(undefined4)reference);
 }
 
@@ -4562,7 +4562,7 @@ int FUN_010048e4(int param_1,int param_2,undefined4 param_3)
       }
       iVar3 = swv_Matrix4Invert((uint32 *)param_3);
       if (iVar3 == 0) {
-        FUN_0102f7e0(INTEGER_MINUS_1000);
+        swv_Throw(INTEGER_MINUS_1000);
       }
       FUN_010275fc(param_3,auStack_60);
       return iVar1;
@@ -5530,7 +5530,7 @@ void FUN_01005f88(int param_1,int param_2)
     iVar2 = *(int *)(iVar2 + 0x40);
   }
   if ((bVar3 && bVar4) && iVar2 != iVar1) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
@@ -5544,7 +5544,7 @@ void FUN_01005f88(int param_1,int param_2)
   }
   else {
     FUN_01005f0c(param_1);
-    FUN_0102f7e0(iVar1);
+    swv_Throw(iVar1);
   }
   return;
 }
@@ -7155,11 +7155,11 @@ void FUN_01007d70(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
   int iVar4;
   
   if ((int)(param_3 | param_4) >> 0xf != 0) {
-    FUN_0102f7e0(0xfffffffc);
+    swv_Throw(0xfffffffc);
   }
   iVar1 = swvImage2D_BytesPerPixel(param_2);
   if (param_5 < (int)(iVar1 * param_4 * param_3)) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   *(undefined4 *)(param_1 + 0x44) = 0;
   *(undefined4 *)(param_1 + 0x40) = param_2;
@@ -7203,14 +7203,14 @@ void FUN_01007e30(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
   int iVar4;
   
   if ((int)(param_3 | param_4) >> 0xf != 0) {
-    FUN_0102f7e0(0xfffffffc);
+    swv_Throw(0xfffffffc);
   }
   iVar1 = swvImage2D_BytesPerPixel(param_2);
   if (param_5 < (int)(param_4 * param_3)) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   if ((param_7 < iVar1 * 0x100) && (swv_rt_sdiv(iVar1,param_7).high != 0)) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   *(undefined4 *)(param_1 + 0x44) = 0;
   *(undefined4 *)(param_1 + 0x40) = param_2;
@@ -7252,7 +7252,7 @@ void FUN_01007f40(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
   int unaff_r7;
   
   if ((int)(param_3 | param_4) >> 0xf != 0) {
-    FUN_0102f7e0(0xfffffffc);
+    swv_Throw(0xfffffffc);
   }
   *(int *)(param_1 + 0x44) = 1 - param_5;
   *(uint *)(param_1 + 0x34) = param_3;
@@ -7301,7 +7301,7 @@ undefined4 FUN_01007f8c(int param_1,int param_2,int param_3,int param_4,int para
   param_3 = param_3 * param_2;
   iVar1 = swvImage2D_BytesPerPixel(99);
   if (param_4 < (iVar1 + 2) * param_3) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   FUN_01023184(param_1 + 0x48,param_3);
   uVar2 = *(undefined4 *)(param_1 + 0x4c);
@@ -7472,7 +7472,7 @@ void FUN_010080e4(int param_1)
   
   FUN_010085e8();
   if (in_stack_00000000 == (int *)0x0) {
-    FUN_0102f7e0(INTEGER_MINUS_1302);
+    swv_Throw(INTEGER_MINUS_1302);
   }
   /* engine virtual call, slot +0x2c: of the static engine vtables only the renderer's (0x01002398)
      swvRenderer_Kind has it; a scene object's vtable is not among them (GUESS: not static), so for one the
@@ -7480,14 +7480,14 @@ void FUN_010080e4(int param_1)
   iVar2 = (*(code *)(*(int *)(*in_stack_00000000 + 0x2c) + *in_stack_00000000))(in_stack_00000000);
   uVar1 = INTEGER_MINUS_1301;
   if (iVar2 != 9) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   if (in_stack_00000000[0xc] != 0) {
-    FUN_0102f7e0(uVar1);
+    swv_Throw(uVar1);
   }
   iVar2 = swvNode_IsAncestorOf((uint8 *)in_stack_00000000,(uint8 *)param_1);
   if (iVar2 != 0) {
-    FUN_0102f7e0(uVar1);
+    swv_Throw(uVar1);
   }
   FUN_0101456c(in_stack_00000000,param_1);
   *(undefined4 *)(param_1 + 0xf0) = 0;
@@ -7507,7 +7507,7 @@ void FUN_01008104(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   
   FUN_01008624(param_1,param_2,param_3,param_4,param_5,param_6,param_4);
   if (param_7 == (int *)0x0) {
-    FUN_0102f7e0(INTEGER_MINUS_1302);
+    swv_Throw(INTEGER_MINUS_1302);
   }
   /* engine virtual call, slot +0x2c: of the static engine vtables only the renderer's (0x01002398)
      swvRenderer_Kind has it; a scene object's vtable is not among them (GUESS: not static), so for one the
@@ -7515,14 +7515,14 @@ void FUN_01008104(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   iVar2 = (*(code *)(*(int *)(*param_7 + 0x2c) + *param_7))(param_7);
   uVar1 = INTEGER_MINUS_1301;
   if (iVar2 != 9) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   if (param_7[0xc] != 0) {
-    FUN_0102f7e0(uVar1);
+    swv_Throw(uVar1);
   }
   iVar2 = swvNode_IsAncestorOf((uint8 *)param_7,(uint8 *)param_1);
   if (iVar2 != 0) {
-    FUN_0102f7e0(uVar1);
+    swv_Throw(uVar1);
   }
   FUN_0101456c(param_7,param_1);
   *(undefined4 *)(param_1 + 0xf0) = 0;
@@ -7575,7 +7575,7 @@ void FUN_010081ec(int param_1,undefined4 param_2,int param_3,int param_4,undefin
   
   iVar3 = param_4;
   if (param_3 < 1) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   FUN_01008624(param_1,param_2,param_5,param_6,param_7,param_8,iVar3);
   FUN_01023184(param_1 + 0xc4,param_3);
@@ -7592,7 +7592,7 @@ void FUN_010081ec(int param_1,undefined4 param_2,int param_3,int param_4,undefin
       *(int *)(iVar2 + 8) = *(int *)(iVar2 + 8) + 1;
     }
     if (*(int *)(*(int *)(param_1 + 200) + iVar3 * 4) == 0) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     *(undefined4 *)(*(int *)(param_1 + 0xd8) + iVar3 * 4) = 0;
   }
@@ -7607,7 +7607,6 @@ void FUN_010082f0(int param_1,int param_2,undefined4 param_3)
 {
   int iVar1;
   uint uVar2;
-  void *pvVar3;
   int iVar4;
   undefined4 uVar5;
   
@@ -7633,17 +7632,7 @@ void FUN_010082f0(int param_1,int param_2,undefined4 param_3)
     if ((uVar2 & 1 << (*(uint *)(param_2 + 0x34) & 0xff)) != 0) {
       return;
     }
-    iVar1 = (int)swv_ErrorFrames();
-    swvErrorFrame_Throw(*(uint8 **)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),uVar5);
-    if (*(int *)(iVar1 + 0x14) != 0) {
-      swvErrorFrame_Throw(*(uint8 **)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),uVar5);
-    }
-    pvVar3 = helper_GetAppInstance();
-    uVar5 = *(undefined4 *)((int)pvVar3 + 0xc);
-    pvVar3 = helper_GetAppInstance();
-                    /* WARNING: Could not recover jumptable at 0x010398cc. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-    (*((IShell *)*(int **)((int)pvVar3 + 0xc))->pvt->CloseApplet)((IShell *)uVar5,0);
+    swv_Throw(uVar5);   /* a tail jump; Ghidra had pasted swv_Throw's code here */
     return;
   }
   return;
@@ -7671,7 +7660,7 @@ uint32 swvSectionZlib_Init(uint8 *section,void *sink)
 
 /* ==== 0x01008398  (file offset 0x08398)  swvKeyframeSequence_Construct =============================== */
 /* GUESS: name. JSR-184 1.1, the KeyframeSequence constructor, native (keyframeCount, componentCount,
-   interpolation): error -1301 (IllegalArgumentException; FUN_0102f7e0, which does not return) for SLERP
+   interpolation): error -1301 (IllegalArgumentException; swv_Throw, which does not return) for SLERP
    (0xb1) or SQUAD (0xb3) unless componentCount is 4 (quaternions, as the spec); the counts and the
    interpolation stored (+0x38, +0x34, +0x1c), the valid range's last keyframe (+0x30) = keyframeCount - 1;
    error -4 (GUESS: out of memory) when keyframeCount * swvKeyframeSequence_KeyframeWords, a signed 64-bit
@@ -7693,7 +7682,7 @@ void swvKeyframeSequence_Construct(SwvKeyframeSequence *sequence,int32 keyframeC
   uint64 zero;
 
   if ((interpolation == 0xb1 || interpolation == 0xb3) && componentCount != 4)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   sequence->keyframeCount = keyframeCount;
   sequence->validLast = keyframeCount - 1;
   sequence->componentCount = componentCount;
@@ -7708,7 +7697,7 @@ void swvKeyframeSequence_Construct(SwvKeyframeSequence *sequence,int32 keyframeC
   (void)MAKE_WORDS(zero,ZERO_DOUBLE_HIGH_WORD,ZERO_DOUBLE_LOW_WORD);
   SUBTRACT_WORDS(product,zero,product);
   if ((int32)product.high < 0)
-    FUN_0102f7e0(0xfffffffc);
+    swv_Throw(0xfffffffc);
   total = words * keyframeCount;
   FUN_01023184((int *)&sequence->field_3c,total);
   if (total > 0)
@@ -7724,7 +7713,6 @@ void FUN_0100844c(int param_1,int param_2,int param_3,int param_4,int param_5)
 {
   undefined4 uVar1;
   uint uVar2;
-  void *pvVar3;
   int iVar4;
   undefined4 uVar5;
   int iVar6;
@@ -7732,7 +7720,7 @@ void FUN_0100844c(int param_1,int param_2,int param_3,int param_4,int param_5)
   
   uVar5 = INTEGER_MINUS_1301;
   if (param_4 < 1) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   *(undefined4 *)(param_1 + 0x20) = 0;
   FUN_01023184(param_1 + 0x28,param_2);
@@ -7745,7 +7733,7 @@ void FUN_0100844c(int param_1,int param_2,int param_3,int param_4,int param_5)
       bVar7 = uVar2 - 0xff00 == 0xff;
     }
     if ((0xfeff < uVar2 && 0xfe < uVar2 - 0xff00) && !bVar7) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     uVar2 = *(uint *)(param_3 + iVar4 * 4);
     if (*(uint *)(param_1 + 0x1c) < uVar2) {
@@ -7757,7 +7745,7 @@ void FUN_0100844c(int param_1,int param_2,int param_3,int param_4,int param_5)
   iVar6 = 0;
   for (iVar4 = 0; iVar4 < param_4; iVar4 = iVar4 + 1) {
     if (*(int *)(param_5 + iVar4 * 4) < 3) {
-      FUN_0102f7e0(uVar5);
+      swv_Throw(uVar5);
     }
     *(short *)(*(int *)(param_1 + 0x3c) + iVar4 * 2) = (short)*(undefined4 *)(param_5 + iVar4 * 4);
     iVar6 = *(int *)(param_5 + iVar4 * 4) + iVar6;
@@ -7765,17 +7753,7 @@ void FUN_0100844c(int param_1,int param_2,int param_3,int param_4,int param_5)
   if (iVar6 <= param_2) {
     return;
   }
-  iVar4 = (int)swv_ErrorFrames();
-  swvErrorFrame_Throw(*(uint8 **)(iVar4 + *(int *)(iVar4 + 0x14) * 4 + -4),uVar5);
-  if (*(int *)(iVar4 + 0x14) != 0) {
-    swvErrorFrame_Throw(*(uint8 **)(iVar4 + *(int *)(iVar4 + 0x14) * 4 + -4),uVar5);
-  }
-  pvVar3 = helper_GetAppInstance();
-  uVar5 = *(undefined4 *)((int)pvVar3 + 0xc);
-  pvVar3 = helper_GetAppInstance();
-                    /* WARNING: Could not recover jumptable at 0x010398cc. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (*((IShell *)*(int **)((int)pvVar3 + 0xc))->pvt->CloseApplet)((IShell *)uVar5,0);
+  swv_Throw(uVar5);   /* a tail jump; Ghidra had pasted swv_Throw's code here */
   return;
 }
 
@@ -7792,11 +7770,11 @@ void FUN_01008540(int param_1,int param_2,int param_3,int param_4)
   
   uVar1 = INTEGER_MINUS_1101;
   if (param_2 < 0) {
-    FUN_0102f7e0(INTEGER_MINUS_1101);
+    swv_Throw(INTEGER_MINUS_1101);
   }
   uVar2 = INTEGER_MINUS_1301;
   if (param_3 < 1) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   *(undefined4 *)(param_1 + 0x20) = 1;
   *(short *)(param_1 + 0x24) = (short)param_2;
@@ -7805,7 +7783,7 @@ void FUN_01008540(int param_1,int param_2,int param_3,int param_4)
     iVar3 = *(int *)(param_4 + iVar4 * 4);
     param_2 = iVar3 + param_2;
     if (iVar3 < 3) {
-      FUN_0102f7e0(uVar2);
+      swv_Throw(uVar2);
     }
     *(short *)(*(int *)(param_1 + 0x3c) + iVar4 * 2) = (short)*(undefined4 *)(param_4 + iVar4 * 4);
   }
@@ -7815,7 +7793,7 @@ void FUN_01008540(int param_1,int param_2,int param_3,int param_4)
     bVar6 = param_2 - 0xff01U == 0xff;
   }
   if ((0xfeff < uVar5 && 0xfe < param_2 - 0xff01U) && !bVar6) {
-    FUN_0102f7e0(uVar1);
+    swv_Throw(uVar1);
   }
   *(uint *)(param_1 + 0x1c) = uVar5;
   return;
@@ -7839,14 +7817,14 @@ void FUN_01008624(int param_1,int param_2,int param_3,int param_4,int param_5,in
   
   uVar1 = INTEGER_MINUS_1301;
   if (param_3 < 1) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   iVar3 = 0;
   if (param_6 != 0) {
     iVar3 = param_5 - param_3;
   }
   if (iVar3 < 0 != (param_6 != 0 && SBORROW4(param_5,param_3))) {
-    FUN_0102f7e0(uVar1);
+    swv_Throw(uVar1);
   }
   *(int *)(param_1 + 0x88) = param_2;
   *(int *)(param_2 + 8) = *(int *)(param_2 + 8) + 1;
@@ -7861,7 +7839,7 @@ void FUN_01008624(int param_1,int param_2,int param_3,int param_4,int param_5,in
   uVar1 = INTEGER_MINUS_1302;
   for (iVar3 = 0; iVar3 < param_3; iVar3 = iVar3 + 1) {
     if (*(int *)(param_4 + iVar3 * 4) == 0) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     iVar2 = *(int *)(param_4 + iVar3 * 4);
     *(int *)(iVar2 + 4) = *(int *)(iVar2 + 4) + 1;
@@ -8991,7 +8969,7 @@ int FUN_01009638(int param_1,int param_2)
       }
       iVar3 = swv_Matrix4Invert((uint32 *)param_1);
       if (iVar3 == 0) {
-        FUN_0102f7e0(INTEGER_MINUS_1000);
+        swv_Throw(INTEGER_MINUS_1000);
       }
       FUN_010275fc(param_1,auStack_60);
       return iVar6;
@@ -9314,7 +9292,7 @@ int32 swvSectionStored_Feed(uint8 *section,const uint8 *data,int32 length)
 /* GUESS: name. Slot 1 of the zlib-section reader's vtable (0x010022E0 +0x4): clears the error word of the
    engine's globals (FUN_0102ecec, +0x24), then inflates length bytes at data through the section's zlib
    stream (+8; FUN_010395b4, which hands what it inflates to the sink); on failure the stream is torn
-   down (thunk_FUN_01039670) and an error the inflate left in the globals, if any, raised (FUN_0102f7e0,
+   down (thunk_FUN_01039670) and an error the inflate left in the globals, if any, raised (swv_Throw,
    which does not return). Returns 1, or 0 on failure. Evidence: 0x01009bb8 - 0x01009c1c (`add r2, r4,
    #8` the stream, FUN_010395b4's third argument: Ghidra had dropped it; `movne r0, #1` / `ldmiane`, `mov
    r0, #0`). swvM3GReader_Feed calls it through the section reader's slot +4. */
@@ -9329,7 +9307,7 @@ int32 swvSectionZlib_Feed(uint8 *section,const uint8 *data,int32 length)
   else {
     thunk_FUN_01039670((uint32 *)(section + 8));
     if (*(int32 *)(FUN_0102ecec() + 0x24) != 0)
-      FUN_0102f7e0(*(int32 *)(FUN_0102ecec() + 0x24));
+      swv_Throw(*(int32 *)(FUN_0102ecec() + 0x24));
   }
   return fed;
 }
@@ -9894,7 +9872,7 @@ void FUN_0100a02c(int param_1,int param_2)
       iVar2 = iVar1;
     }
     if (iVar4 == -1) {
-      FUN_0102f7e0(uVar6);
+      swv_Throw(uVar6);
     }
     if (iVar4 == 0) {
       iVar4 = param_2;
@@ -9904,7 +9882,7 @@ void FUN_0100a02c(int param_1,int param_2)
     if ((iVar3 == 0 || iVar4 == param_1) ||
        ((*(int *)(param_1 + 0x30) == iVar3 &&
         (iVar4 = swvNode_IsAncestorOf((uint8 *)param_1,(uint8 *)iVar4), iVar4 != 0)))) {
-      FUN_0102f7e0(uVar6);
+      swv_Throw(uVar6);
     }
     FUN_0101749c(auStack_bc,auStack_78);
     swvNode_AlignmentVector((uint32 *)&local_c8,(uint8 *)param_1,(uint32 *)auStack_bc,iVar2);
@@ -9943,7 +9921,7 @@ void FUN_0100a02c(int param_1,int param_2)
     iVar3 = (int)swvNode_AlignmentReferenceZ((uint8 *)param_1);
     iVar4 = (int)swvNode_AlignmentReferenceY((uint8 *)param_1);
     if (iVar3 == -1 || iVar4 == -1) {
-      FUN_0102f7e0(uVar6);
+      swv_Throw(uVar6);
     }
     if (iVar3 == 0) {
       iVar3 = param_2;
@@ -9956,7 +9934,7 @@ void FUN_0100a02c(int param_1,int param_2)
     if ((iVar5 == 0 || iVar3 == param_1) ||
        ((*(int *)(param_1 + 0x30) == iVar5 &&
         (iVar5 = swvNode_IsAncestorOf((uint8 *)param_1,(uint8 *)iVar3), iVar5 != 0)))) {
-      FUN_0102f7e0(uVar6);
+      swv_Throw(uVar6);
     }
     FUN_0101749c(auStack_bc,auStack_78);
     FUN_01029620(auStack_100,0x3f);
@@ -9969,7 +9947,7 @@ void FUN_0100a02c(int param_1,int param_2)
          ((*(int *)(param_1 + 0x30) == iVar3 &&
           (iVar4 = swvNode_IsAncestorOf((uint8 *)param_1,(uint8 *)iVar4), iVar4 != 0))))
       {
-        FUN_0102f7e0(uVar6);
+        swv_Throw(uVar6);
       }
       FUN_0101749c(auStack_100,auStack_78);
     }
@@ -13023,7 +13001,7 @@ void FUN_0100ed84(int param_1,int param_2,int param_3)
 /* GUESS: name. The bones of a SkinnedMesh that move vertex vertex: of the bone table's entries (+0xc4,
    count +0xc8, SwvSkinBone) whose range (firstVertex, vertexCount) covers it, at most 2, their table
    indices into bones (an int32[2]); returns how many. An entry whose range is empty or past the vertex
-   count (the skin's VertexBuffer, +0x88, its +0x1c) is an error (FUN_0102f7e0, -1300, which does not
+   count (the skin's VertexBuffer, +0x88, its +0x1c) is an error (swv_Throw, -1300, which does not
    return), whether it covers the vertex or not. While fewer than 2 are kept a covering entry is added;
    after that one heavier (weight +0) than the heaviest weight kept so far replaces the lighter of the two
    kept (GUESS, a quirk: compared with the heaviest, not the lighter one, so a bone between the two is
@@ -13046,9 +13024,9 @@ int32 swvSkin_VertexBones(const uint8 *mesh,uint32 vertex,int32 *bones)
     int32 j;
 
     if (bone->firstVertex >= vertexCount)
-      FUN_0102f7e0(INTEGER_MINUS_1300);
+      swv_Throw(INTEGER_MINUS_1300);
     if (bone->vertexCount == 0 || bone->firstVertex + bone->vertexCount > vertexCount)
-      FUN_0102f7e0(INTEGER_MINUS_1300);
+      swv_Throw(INTEGER_MINUS_1300);
     if (bone->firstVertex <= vertex && vertex < (uint32)(bone->firstVertex + bone->vertexCount)) {
       if (count < 2)
         slot = count++;
@@ -13218,7 +13196,7 @@ int32 swvObject3D_AnimationTrackCount(const uint8 *object)
 }
 
 /* ==== 0x0100F184  (file offset 0x0F184)  swvObject3D_AnimationTrack ================================== */
-/* JSR-184 1.1, Object3D.getAnimationTrack, native: error -1101 (IndexOutOfBoundsException; FUN_0102f7e0,
+/* JSR-184 1.1, Object3D.getAnimationTrack, native: error -1101 (IndexOutOfBoundsException; swv_Throw,
    which does not return) unless 0 <= index < swvObject3D_AnimationTrackCount, then the track list's
    (+0x10) item index (its +4, a word each). Evidence: 0x0100f184 - 0x0100f1c0 (`cmp r1, #0` / `blt` to the
    error, the count, `cmp r0, r4` / `bgt` past it, `ldr` +0x10 / +4 / `add r0, r0, r4, lsl #2`). Used by
@@ -13227,7 +13205,7 @@ void *swvObject3D_AnimationTrack(const uint8 *object,int32 index)
 
 {
   if (index < 0 || swvObject3D_AnimationTrackCount(object) <= index)
-    FUN_0102f7e0(INTEGER_MINUS_1101);
+    swv_Throw(INTEGER_MINUS_1101);
   return (*(void **const *)(*(const uint8 *const *)(object + 0x10) + 4))[index];
 }
 
@@ -13252,7 +13230,7 @@ undefined4 FUN_0100f1c8(int param_1,int param_2)
     iVar2 = INTEGER_MINUS_1101;
   }
   if (bVar4 || (!bVar3 || iVar1 < param_2)) {
-    FUN_0102f7e0(iVar2);
+    swv_Throw(iVar2);
   }
   return *(undefined4 *)(*(int *)(param_1 + 0xa0) + param_2 * 4);
 }
@@ -13509,7 +13487,7 @@ uint8 *swvGroup_NthChild(const uint8 *group,int32 *index)
 
 /* ==== 0x0100F5DC  (file offset 0x0F5DC)  swvGroup_Child ============================================== */
 /* Child index of a native Group (JSR-184 1.1, Group.getChild): error -1101 (IndexOutOfBoundsException;
-   FUN_0102f7e0, which does not return) for a negative index or when the Group has no such child
+   swv_Throw, which does not return) for a negative index or when the Group has no such child
    (swvGroup_NthChild gives NULL). Evidence: 0x0100f5dc - 0x0100f618 (the index kept on the stack for
    swvGroup_NthChild, `movlt` / `bllt` and `moveq` / `bleq` the error, r0 the child; Ghidra had read the
    saved registers as a 64-bit result). Only swvGroup_GetChild (slot 44) calls it. */
@@ -13519,10 +13497,10 @@ uint8 *swvGroup_Child(const uint8 *group,int32 index)
   uint8 *child;
 
   if (index < 0)
-    FUN_0102f7e0(INTEGER_MINUS_1101);
+    swv_Throw(INTEGER_MINUS_1101);
   child = swvGroup_NthChild(group,&index);
   if (child == NULL)
-    FUN_0102f7e0(INTEGER_MINUS_1101);
+    swv_Throw(INTEGER_MINUS_1101);
   return child;
 }
 
@@ -13666,7 +13644,7 @@ undefined4 FUN_0100f734(int param_1,int param_2)
     iVar2 = INTEGER_MINUS_1101;
   }
   if (bVar4 || (!bVar3 || iVar1 < param_2)) {
-    FUN_0102f7e0(iVar2);
+    swv_Throw(iVar2);
   }
   return *(undefined4 *)(*(int *)(param_1 + 0x90) + param_2 * 4);
 }
@@ -13838,7 +13816,7 @@ int FUN_0100f910(int param_1)
   uVar1 = swv_fsub(*(undefined4 *)(param_1 + 0xe8),*(undefined4 *)(param_1 + 0xe4));
   swv_fcmp_b(uVar1 & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
   if (!(bool)in_CY || (bool)in_ZR) {
-    FUN_0102f7e0(INTEGER_MINUS_1000);
+    swv_Throw(INTEGER_MINUS_1000);
   }
   FUN_01019cc0(param_1);
   return param_1 + 0x94;
@@ -13990,7 +13968,7 @@ int FUN_0100fb34(int param_1,int param_2)
       iVar4 = (int)swvVertexBuffer_Array((uint8 *)*(undefined4 *)(*(int *)(param_1 + 200) + iVar3 * 4),
                                          param_2);
       if (iVar4 != 0) {
-        FUN_0102f7e0(uVar6);
+        swv_Throw(uVar6);
       }
     }
   }
@@ -14016,16 +13994,16 @@ int FUN_0100fb34(int param_1,int param_2)
         iVar2 = (int)swvVertexBuffer_Array((uint8 *)*(undefined4 *)(*(int *)(param_1 + 200) + iVar4 * 4),
                                            param_2);
         if (iVar2 == 0) {
-          FUN_0102f7e0(INTEGER_MINUS_1300);
+          swv_Throw(INTEGER_MINUS_1300);
         }
         if (*(int *)(iVar2 + 0x24) != iVar3) {
-          FUN_0102f7e0(INTEGER_MINUS_1300);
+          swv_Throw(INTEGER_MINUS_1300);
         }
         if (*(int *)(iVar2 + 0x20) != *(int *)(iVar1 + 0x20)) {
-          FUN_0102f7e0(INTEGER_MINUS_1300);
+          swv_Throw(INTEGER_MINUS_1300);
         }
         if (*(int *)(iVar2 + 0x1c) != *(int *)(iVar1 + 0x1c)) {
-          FUN_0102f7e0(INTEGER_MINUS_1300);
+          swv_Throw(INTEGER_MINUS_1300);
         }
         if (iVar1 != iVar2) {
           uVar6 = swv_fadd(uVar6,uVar5);
@@ -14236,7 +14214,7 @@ uint32 swvAnimationController_Position(const uint8 *controller,int32 worldTime)
 
 /* ==== 0x010100F0  (file offset 0x100F0)  swvVertexBuffer_GetPositionsValue =========================== */
 /* JSR-184 1.1, VertexBuffer.getPositions(scaleBias) on the VertexBuffer buffer: error -1301
-   (IllegalArgumentException; FUN_0102f7e0, which does not return) for a scaleBias of fewer than 4 floats
+   (IllegalArgumentException; swv_Throw, which does not return) for a scaleBias of fewer than 4 floats
    (length); with positions (+0x24) and a scaleBias, scaleBias = the scale (+0x44) then the 3 bias floats
    (+0x38 .. +0x40); the positions (NULL: none) returned. Only swvVertexBuffer_GetPositions (slot 25) calls
    it. Evidence: 0x010100f0 - 0x01010140 (`cmp r2, #0x0` / `cmpne r1, #0x4` / `bllt`, `cmpne r5, #0x0` /
@@ -14247,7 +14225,7 @@ uint8 *swvVertexBuffer_GetPositionsValue(const uint8 *buffer,int32 length,uint32
   uint8 *positions;
 
   if (scaleBias != NULL && length < 4)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   if (*(uint8 *const *)(buffer + 0x24) != NULL && scaleBias != NULL) {
     scaleBias[0] = *(const uint32 *)(buffer + 0x44);
     scaleBias[1] = *(const uint32 *)(buffer + 0x38);
@@ -14334,7 +14312,7 @@ undefined4 FUN_010102c8(int param_1,int param_2,undefined4 param_3,undefined4 pa
   uVar1 = swv_fsub(*(undefined4 *)(param_1 + 0xe8),*(undefined4 *)(param_1 + 0xe4));
   swv_fcmp_b(uVar1 & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
   if (!(bool)in_CY || (bool)in_ZR) {
-    FUN_0102f7e0(INTEGER_MINUS_1000);
+    swv_Throw(INTEGER_MINUS_1000);
   }
   if (param_2 != 0) {
     FUN_01019cc0(param_1);
@@ -14355,7 +14333,7 @@ undefined4 FUN_01010320(int param_1,int param_2,undefined4 *param_3)
     iVar1 = param_2 + -4;
   }
   if (iVar1 < 0 != (param_3 != (undefined4 *)0x0 && SBORROW4(param_2,4))) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   if (*(int *)(param_1 + 0x88) != 0x30 && param_3 != (undefined4 *)0x0) {
     if (*(int *)(param_1 + 0x88) == 0x32) {
@@ -14377,7 +14355,7 @@ void FUN_01010384(int param_1,int param_2,undefined4 *param_3)
 
 {
   if (param_2 < 6) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   *param_3 = *(undefined4 *)(param_1 + 0x34);
   param_3[1] = *(undefined4 *)(param_1 + 0x38);
@@ -14475,7 +14453,7 @@ undefined4 FUN_010104f0(int param_1)
   if (*(int *)(param_1 + 0xac) != 0) {
     iVar1 = (int)swvMesh_VertexBuffer((uint8 *)param_1);
     if (*(int *)(iVar1 + 0x24) == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1300);
+      swv_Throw(INTEGER_MINUS_1300);
     }
     if (*(int *)(param_1 + 0xb0) == 0) {
       iVar2 = swv_New_2(0x78);
@@ -14630,10 +14608,10 @@ uint8 *swvVertexBuffer_GetTexCoordsValue(const uint8 *buffer,uint32 index,int32 
   uint8 *texCoords;
 
   if (index > 1)
-    FUN_0102f7e0(INTEGER_MINUS_1101);
+    swv_Throw(INTEGER_MINUS_1101);
   if (scaleBias != NULL && (*(uint8 *const *)(unit + 0x30) != NULL || length < 3) &&
       *(const int32 *)(*(uint8 *const *)(unit + 0x30) + 0x20) + 1 > length)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   texCoords = *(uint8 *const *)(unit + 0x30);
   if (texCoords != NULL && scaleBias != NULL) {
     scaleBias[0] = *(const uint32 *)(unit + 0x70);
@@ -14716,7 +14694,7 @@ undefined4 FUN_01010938(int param_1)
     iVar2 = (int)swvMesh_VertexBuffer((uint8 *)param_1);
     iVar12 = *(int *)(iVar2 + 0x24);
     if (iVar12 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1300);
+      swv_Throw(INTEGER_MINUS_1300);
     }
     if (*(int *)(param_1 + 0x100) == 0) {
       iVar3 = swv_New_2(0x78);
@@ -15035,7 +15013,7 @@ uint8 *swvMesh_VertexBuffer(const uint8 *mesh)
    adding weight * the sampled value to each of the first count words (or the component count, if fewer;
    always 4 for SLERP / SQUAD), the weighted sum JSR-184 1.1, Object3D.animate defines; returns the time
    (float bits) the sample stays valid for, or 0 (the caller, FUN_01010de0, turns it into the validity
-   interval). Error -1300 (SWVE_ILLEGAL_STATE; FUN_0102f7e0, which does not return) for a duration (+0x24)
+   interval). Error -1300 (SWVE_ILLEGAL_STATE; swv_Throw, which does not return) for a duration (+0x24)
    not above 0; prepared first while +0x4c is 0 (swvKeyframeSequence_Prepare). The keyframe range: the
    valid keyframes validFirst .. validFirst + the valid count - 1, keyframe k at k % keyframeCount (the
    remainder of swv_rt_sdiv), firstTime and lastTime their times. In LOOP mode (0xc1) the time wraps by the
@@ -15109,7 +15087,7 @@ uint32 swvKeyframeSequence_Sample(SwvKeyframeSequence *sequence,uint32 time,int3
   const uint32 *tangentNext;
 
   if ((swv_fcmp_b(sequence->duration,0), !FLOAT_GT(sequence->duration,0)))
-    FUN_0102f7e0(INTEGER_MINUS_1300);
+    swv_Throw(INTEGER_MINUS_1300);
   if (sequence->prepared == 0)
     swvKeyframeSequence_Prepare(sequence);
   valid = swvKeyframeSequence_ValidCount(sequence);
@@ -15288,7 +15266,7 @@ void FUN_0101191c(int param_1,int param_2,undefined4 *param_3)
   
   iVar2 = *(int *)(param_1 + 0xcc);
   if (param_2 < iVar2) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   for (iVar1 = 0; iVar1 < iVar2; iVar1 = iVar1 + 1) {
     *param_3 = *(undefined4 *)(*(int *)(param_1 + 0xd8) + iVar1 * 4);
@@ -15453,7 +15431,7 @@ void FUN_01011a20(int param_1,int param_2,undefined4 *param_3)
   undefined4 *puVar4;
   
   if (param_2 < 0x10) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   if (param_3 != (undefined4 *)0x0) {
     if (0xf < param_2) {
@@ -17224,7 +17202,7 @@ void FUN_01013744(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   uVar8 = iVar4 == 0;
   uVar7 = 1;
   if ((bool)uVar8) {
-    FUN_0102f7e0(0xffffffd7);
+    swv_Throw(0xffffffd7);
   }
   uVar6 = WORD_HEXADECIMAL_377BA882;
   swv_fcmp_c(*(uint *)(param_1 + 0x18) & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
@@ -17529,7 +17507,7 @@ int32 swvVertexBuffer_HasOnlyArray(const uint8 *buffer,const uint8 *array)
 }
 
 /* ==== 0x01013BB4  (file offset 0x13BB4)  swv_CheckNotNull ============================================ */
-/* GUESS: name. Raises engine error -4 (FUN_0102f7e0, which does not return: it unwinds to the API's
+/* GUESS: name. Raises engine error -4 (swv_Throw, which does not return: it unwinds to the API's
    swv_setjmp frame) when pointer is NULL; returns it. Evidence (0x01013bb4 - 0x01013bc8): `movs r4,
    r0` / `mvneq r0, #3` / `bleq 0x0102f7e0` / `mov r0, r4`. Every allocator calls it on helper_malloc's
    result (swv_New, swv_New_2, swv_NewArray), so they never return NULL and their callers' NULL tests
@@ -17538,7 +17516,7 @@ int32 swv_CheckNotNull(int32 pointer)
 
 {
   if (pointer == 0)
-    FUN_0102f7e0(-4);
+    swv_Throw(-4);
   return pointer;
 }
 
@@ -17547,7 +17525,7 @@ int32 swv_CheckNotNull(int32 pointer)
    when the frame is not active (+0x80); otherwise it is popped off the error frame list
    (swvErrorFrames_Pop), the cleanup stack unwound (swvCleanupStack_Leave, the level swv_TryArm entered,
    for an armed frame, +0x84; swvCleanupStack_Unwind otherwise) and swv_longjmp makes the frame's
-   swv_setjmp return error. The error raise (FUN_0102f7e0, through 0x01013c1c, which Ghidra took into it)
+   swv_setjmp return error. The error raise (swv_Throw, through 0x01013c1c, which Ghidra took into it)
    calls it on the last frame, then on the one before when the first was not active. Ghidra had dropped
    every argument but swv_longjmp's. Evidence:
    0x01013bcc - 0x01013c18 (`ldr r0, [r0, #0x80]` / `cmp r0, #0` / `beq`, `bl 0x0100f7d0` / `bl
@@ -17564,6 +17542,27 @@ void swvErrorFrame_Throw(uint8 *frame,int32 error)
       swvCleanupStack_Unwind(swv_CleanupStack());
     swv_longjmp((uint32 *)frame,error);
   }
+}
+
+/* ==== 0x01013C1C  (file offset 0x13C1C)  swvErrorFrames_Throw ======================================== */
+/* A routine Ghidra has no function for (swv_Throw reaches it by a tail jump, and Ghidra took it into that
+   function's body and those of the functions that tail-jump to swv_Throw), written from its disassembly
+   (0x01013c1c - 0x01013c54). GUESS: name. Throws the engine error error to the error frame list frames
+   (swv_types.h, the cleanup stack and the error frames): swvErrorFrame_Throw on the last frame (its count
+   +0x14, the frames the words from +0); when that frame was not active (swvErrorFrame_Throw came back)
+   and frames are left, on the new last one; when none takes it, the applet is closed (swv_CloseApplet; a
+   tail jump), whose result is returned. Evidence: `ldr r0, [r0, #0x14]` / `add r0, r4, r0, lsl #2` / `ldr
+   r0, [r0, #-4]` / `bl 0x01013bcc`, the count reloaded / `cmp r0, #0` / `blne 0x01013bcc` with r1 the
+   error, `b 0x010398a4`. */
+int32 swvErrorFrames_Throw(uint8 *frames,int32 error)
+
+{
+  uint8 *const *list = (uint8 *const *)frames;
+
+  swvErrorFrame_Throw(list[*(int32 *)(frames + 0x14) - 1],error);
+  if (*(int32 *)(frames + 0x14) != 0)
+    swvErrorFrame_Throw(list[*(int32 *)(frames + 0x14) - 1],error);
+  return swv_CloseApplet();
 }
 
 /* ==== 0x01013C58  (file offset 0x13C58)  FUN_01013c58 ================================================ */
@@ -18804,7 +18803,7 @@ void swvNode_ForgetAlignmentReference(uint8 *node,const uint8 *reference)
 }
 
 /* ==== 0x01015220  (file offset 0x15220)  swvM3GReader_End ============================================ */
-/* GUESS: name. The M3G reader's slot +0x0c: ends a read: error -1103 (SWVE_READER_STATE; FUN_0102f7e0,
+/* GUESS: name. The M3G reader's slot +0x0c: ends a read: error -1103 (SWVE_READER_STATE; swv_Throw,
    which does not return) when an error is already kept (+0xc not -1), unless the state (+0x64) is 1 or 2
    (begun or reading), and unless the file parser (+0x24) waits for a section's compression byte (2), i.e.
    the data ended between two sections (M3G file format section 9: a file cut inside a section is an
@@ -18819,11 +18818,11 @@ int32 swvM3GReader_End(uint8 *reader)
   uint8 *section;
 
   if (*(int32 *)(reader + 0xc) != -1)
-    FUN_0102f7e0(INTEGER_MINUS_1103);
+    swv_Throw(INTEGER_MINUS_1103);
   if (*(int32 *)(reader + 0x64) != 1 && *(int32 *)(reader + 0x64) != 2)
-    FUN_0102f7e0(INTEGER_MINUS_1103);
+    swv_Throw(INTEGER_MINUS_1103);
   if (*(int32 *)(reader + 0x24) != 2)
-    FUN_0102f7e0(INTEGER_MINUS_1103);
+    swv_Throw(INTEGER_MINUS_1103);
   *(int32 *)(reader + 0x64) = 3;
   result = -1;
   /* engine virtual call, slot +0x20: of the static engine vtables only the renderer's (0x01002398)
@@ -18842,7 +18841,7 @@ int32 swvM3GReader_End(uint8 *reader)
 }
 
 /* ==== 0x010152D8  (file offset 0x152D8)  swvM3GReader_Begin ========================================== */
-/* GUESS: name. The M3G reader's slot +0x04: begins a read: error -1103 (SWVE_READER_STATE; FUN_0102f7e0,
+/* GUESS: name. The M3G reader's slot +0x04: begins a read: error -1103 (SWVE_READER_STATE; swv_Throw,
    which does not return) when an error is already kept (+0xc not -1); allowSwerve kept at +0x18
    (non-zero: Swerve's own file identifier and types 23, 24 allowed, see swv_types.h); then -5 when the
    file identifier has been begun (+0x20, the bytes of it matched, not 0), else -1, the state (+0x64) set
@@ -18855,7 +18854,7 @@ int32 swvM3GReader_Begin(uint8 *reader,int32 allowSwerve)
   uint8 *section;
 
   if (*(int32 *)(reader + 0xc) != -1)
-    FUN_0102f7e0(INTEGER_MINUS_1103);
+    swv_Throw(INTEGER_MINUS_1103);
   *(int32 *)(reader + 0x18) = allowSwerve;
   if (*(int32 *)(reader + 0x20) != 0)
     result = -5;
@@ -18888,7 +18887,7 @@ int32 swvM3GReader_Begin(uint8 *reader,int32 allowSwerve)
    fed to the section reader's virtual slot +4; at the end the bytes the record reader took, +0x44, must
    equal +0x34, and the section reader is deleted); 12 to 15 the section's Checksum (section 6.5), which
    must match +0x3c, then the virtual slot +0x24 can end the file. +0x2c counts the bytes read, +0x1c the
-   header's TotalFileSize (section 10.1; -1 until the header is read). Errors: FUN_0102f7e0 (-1103
+   header's TotalFileSize (section 10.1; -1 until the header is read). Errors: swv_Throw (-1103
    SWVE_READER_STATE when called in the wrong state, -1201 SWVE_BAD_LENGTH for bad lengths) and the results
    -7 (bad identifier), -8 (bad CompressionScheme, or the section reader refused), -9 (bad checksum), -10
    (the slot +0x1c refused) and -11 (data past TotalFileSize), handed to the virtual slot +0x10
@@ -18907,9 +18906,9 @@ int32 swvM3GReader_Feed(uint8 *reader,int32 array,const uint8 *data,int32 offset
   uint8 *section;
 
   if (*(int32 *)(reader + 0xc) != -1)
-    FUN_0102f7e0(0xfffffbb1);
+    swv_Throw(0xfffffbb1);
   if (*(int32 *)(reader + 0x64) != 1 && *(int32 *)(reader + 0x64) != 2)
-    FUN_0102f7e0(0xfffffbb1);
+    swv_Throw(0xfffffbb1);
   *(int32 *)(reader + 0x64) = 2;
   p = data + offset;
   left = length;
@@ -18978,7 +18977,7 @@ int32 swvM3GReader_Feed(uint8 *reader,int32 array,const uint8 *data,int32 offset
       FUN_010265fc((int32)reader,p - 3,4);
       *(uint32 *)(reader + 0x40) = *(uint32 *)(reader + 0x30);
       if (*(uint32 *)(reader + 0x40) < 0xd)
-        FUN_0102f7e0(SWVE_BAD_LENGTH);
+        swv_Throw(SWVE_BAD_LENGTH);
       *(uint32 *)(reader + 0x40) -= 0xd;
       next = 7;
       break;
@@ -19018,7 +19017,7 @@ int32 swvM3GReader_Feed(uint8 *reader,int32 array,const uint8 *data,int32 offset
       p += n;
       if (*(int32 *)(reader + 0x40) == 0) {
         if (*(int32 *)(reader + 0x34) != *(int32 *)(reader + 0x44))
-          FUN_0102f7e0(SWVE_BAD_LENGTH);
+          swv_Throw(SWVE_BAD_LENGTH);
         next = 0xc;
         section = *(uint8 **)(reader + 0x10);
         if (section != NULL)
@@ -19403,7 +19402,7 @@ void FUN_01015ce8(undefined4 param_1,int param_2,int *param_3)
     local_68 = local_28[0x25];
     local_6c = *(int *)(local_64 + 0x24);
     if (local_6c == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1300);
+      swv_Throw(INTEGER_MINUS_1300);
     }
     if (local_64 != 0) {
       uVar8 = *(undefined4 *)(local_64 + 0x44);
@@ -19443,7 +19442,7 @@ void FUN_01015ce8(undefined4 param_1,int param_2,int *param_3)
             }
             iVar2 = FUN_0100f734(local_28,local_d8);
             if (*(uint *)(local_64 + 0x1c) <= *(uint *)(iVar2 + 0x1c)) {
-              FUN_0102f7e0(INTEGER_MINUS_1300);
+              swv_Throw(INTEGER_MINUS_1300);
             }
             local_e4 = iVar2 + 0x38;
             local_e8 = *(int *)(iVar2 + 0x40);
@@ -19524,7 +19523,7 @@ LAB_0101610c:
                     *(undefined4 *)(*(int *)(param_2 + 0x34) + 0x20) = 0;
                     do {
                       if (1 < uVar4) {
-                        FUN_0102f7e0(INTEGER_MINUS_1101);
+                        swv_Throw(INTEGER_MINUS_1101);
                       }
                       iVar2 = local_dc + uVar4 * 4;
                       iVar10 = *(int *)(iVar2 + 0x30);
@@ -19726,7 +19725,7 @@ LAB_01016740:
             swv_Matrix4Copy(auStack_58,*(int *)(iVar3 + 0x20) + 0x2c);
             iVar4 = swv_Matrix4Invert((uint32 *)auStack_58);
             if (iVar4 == 0) {
-              FUN_0102f7e0(uVar6);
+              swv_Throw(uVar6);
             }
             FUN_010257a8(param_1,param_2,auStack_58);
             FUN_010166a4(param_1,param_2,iVar3);
@@ -19780,7 +19779,7 @@ LAB_01016740:
         uVar19 = iVar3 == 0;
         uVar13 = 1;
         if ((bool)uVar19) {
-          FUN_0102f7e0(INTEGER_MINUS_1300);
+          swv_Throw(INTEGER_MINUS_1300);
         }
         local_78[1] = 0;
         local_78[2] = 0;
@@ -19940,7 +19939,7 @@ LAB_01016d6c:
 /* ==== 0x01016D8C  (file offset 0x16D8C)  swvGroup_PickRayValue ======================================= */
 /* JSR-184 1.1, Group.pick(scope, ox, oy, oz, dx, dy, dz, ri), the ray form, on the native group group
    (the ISwerveObject slot 47, swvGroup_PickRay, passes the origin and the direction as three floats each,
-   and ri as the native RayIntersection or NULL): error -1301 (IllegalArgumentException; FUN_0102f7e0,
+   and ri as the native RayIntersection or NULL): error -1301 (IllegalArgumentException; swv_Throw,
    which does not return) when the direction is zero, which the engine takes as each |d| at most
    0x377ba882 (about 1.5e-5; the spec says dx = dy = dz = 0); then the pick state (FUN_0100f7b0: +0x30 no
    camera, +0x38 the scope, +8 to FUN_01023184 with 0) gets the ray's two ends, +0x18 the origin and +0x24
@@ -19976,7 +19975,7 @@ int32 swvGroup_PickRayValue(uint8 *group,int32 scope,const uint32 *origin,const 
        !FLOAT_GT(direction[1] & 0x7fffffff,WORD_HEXADECIMAL_377BA882)) &&
       (swv_fcmp_b(direction[2] & 0x7fffffff,WORD_HEXADECIMAL_377BA882),
        !FLOAT_GT(direction[2] & 0x7fffffff,WORD_HEXADECIMAL_377BA882)))
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   state = (uint8 *)FUN_0100f7b0();
   *(uint32 *)(state + 0x30) = 0;
   *(int32 *)(state + 0x38) = scope;
@@ -20003,7 +20002,7 @@ int32 swvGroup_PickRayValue(uint8 *group,int32 scope,const uint32 *origin,const 
 /* JSR-184 1.1, Group.pick(scope, x, y, camera, ri), the camera form, on the native group group (the
    ISwerveObject slot 48, swvGroup_PickCamera, passes x and y as floats, the native Camera, never NULL:
    its -1302 NullPointerException for a NULL camera, and ri as the native RayIntersection or NULL): error
-   -1300 (IllegalStateException; FUN_0102f7e0, which does not return) unless the camera is in the
+   -1300 (IllegalStateException; swv_Throw, which does not return) unless the camera is in the
    group's scene graph (swvNode_SameSceneGraph; the spec: no scene graph path between camera and this
    Group); then the pick state (FUN_0100f7b0: +8 to FUN_01023184 with 0, +0x30 the camera, +0x38 the
    scope) gets a ray through the viewport point (2x - 1, 1 - 2y) at depths -1 and 1 (+0x18 and +0x24,
@@ -20039,14 +20038,14 @@ int32 swvGroup_PickCameraValue(uint8 *group,int32 scope,uint32 x,uint32 y,uint8 
   int32 hit;
 
   if (swvNode_SameSceneGraph(group,camera) == 0)
-    FUN_0102f7e0(INTEGER_MINUS_1300);
+    swv_Throw(INTEGER_MINUS_1300);
   state = (uint8 *)FUN_0100f7b0();
   FUN_01023184((int *)(state + 8),0);
   *(uint8 **)(state + 0x30) = camera;
   *(int32 *)(state + 0x38) = scope;
   swv_Matrix4Copy(inverse,(undefined4)FUN_0100f910((int)camera));
   if (swv_Matrix4Invert(inverse) == 0)
-    FUN_0102f7e0(INTEGER_MINUS_1300);
+    swv_Throw(INTEGER_MINUS_1300);
   pointX = swv_fmul(x,0x40000000);
   pointY = swv_fmul(y,0x40000000);
   pointX = swv_fsub(pointX,0x3f800000);
@@ -20633,7 +20632,7 @@ void FUN_01017894(uint *param_1)
    0: no bones, 0xffff, 0xffff; an identity transform, swv_Matrix4SetIdentity, its flags word first set to
    0x20 and then overwritten; weight scale 1.0); sizes the per-vertex list (+0xe0) to the vertex count and
    zeroes it; then for each vertex starts from a copy of the template, takes its bones
-   (swvSkin_VertexBones; each one's range checked again, error -1300 through FUN_0102f7e0, which does not
+   (swvSkin_VertexBones; each one's range checked again, error -1300 through swv_Throw, which does not
    return), their indices and a weight scale of 1 / the sum of their weights (swv_fflt, swv_frdiv) when the
    sum is positive, and stores the index of the matching set (swvSkin_FindOrAddBoneSet; 0 with no bones)
    into the uint16 array at +0xe4. Sets +0xf0, +0xf4 and +0xf8 to 1. Only the mesh is passed (r0; Ghidra's
@@ -20684,9 +20683,9 @@ void swvSkin_BuildBoneSets(uint8 *mesh)
         const SwvSkinBone *bone = *(const SwvSkinBone *const *)(mesh + 0xc4) + bones[i];
 
         if (bone->firstVertex >= vertexCount)
-          FUN_0102f7e0(INTEGER_MINUS_1300);
+          swv_Throw(INTEGER_MINUS_1300);
         if (bone->vertexCount == 0 || bone->firstVertex + bone->vertexCount > vertexCount)
-          FUN_0102f7e0(INTEGER_MINUS_1300);
+          swv_Throw(INTEGER_MINUS_1300);
         set.bones[i] = (uint16)bones[i];
         weights += bone->weight;
       }
@@ -21887,7 +21886,7 @@ bool FUN_01019618(int param_1)
   
   bVar1 = FUN_01019bd4();
   if ((bVar1 & 0xfe) != 0) {
-    FUN_0102f7e0(INTEGER_MINUS_1101);
+    swv_Throw(INTEGER_MINUS_1101);
   }
   return bVar1 != 0;
 }
@@ -21930,7 +21929,7 @@ int FUN_01019698(int param_1,int param_2)
   
   iVar1 = FUN_01019abc();
   if (*(uint *)(param_1 + 0xc) <= (uint)(param_2 * iVar1)) {
-    FUN_0102f7e0(INTEGER_MINUS_1200);
+    swv_Throw(INTEGER_MINUS_1200);
   }
   return iVar1;
 }
@@ -21944,7 +21943,7 @@ uint FUN_010196cc(undefined4 param_1,uint param_2,uint param_3)
   uVar1 = FUN_01019bd4();
   uVar1 = uVar1 & 0xff;
   if ((uVar1 <= param_2) || (param_3 <= uVar1)) {
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   }
   return uVar1;
 }
@@ -22112,7 +22111,7 @@ int FUN_010197c4(undefined4 param_1,int param_2)
   if (((iVar1 != 0) &&
       (iVar2 = (*(code *)(*(int *)(*(int *)(iVar1 + 4) + 4) + *(int *)(iVar1 + 4)))(iVar1 + 4),
       iVar2 != 10 && iVar2 != 0x17)) && ((param_2 == 0 || (iVar2 != 0x18)))) {
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   }
   return iVar1;
 }
@@ -22131,7 +22130,7 @@ int FUN_0101981c(undefined4 param_1,int param_2)
        (iVar2 = (*(code *)(*(int *)(*(int *)(iVar1 + 4) + 4) + *(int *)(iVar1 + 4)))(iVar1 + 4),
        iVar2 != 5 && iVar2 != 9)) && ((param_2 == 0 || (iVar2 != 0x16)))) &&
      ((((iVar2 != 0xc && iVar2 != 0xe) && iVar2 != 0xf) && iVar2 != 0x10) && iVar2 != 0x12)) {
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   }
   return iVar1;
 }
@@ -22149,7 +22148,7 @@ int FUN_01019888(undefined4 param_1,int param_2)
   if ((iVar1 != 0) &&
      (iVar2 = (*(code *)(*(int *)(*(int *)(iVar1 + 4) + 4) + *(int *)(iVar1 + 4)))(iVar1 + 4),
      iVar2 != param_2)) {
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   }
   return iVar1;
 }
@@ -22174,7 +22173,7 @@ undefined4 FUN_010198c8(int param_1)
       bVar4 = uVar2 == uVar1;
     }
     if (!bVar5 || bVar4) {
-      FUN_0102f7e0(INTEGER_MINUS_1202);
+      swv_Throw(INTEGER_MINUS_1202);
     }
   }
   uVar3 = *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x1c) + 4) + uVar1 * 4);
@@ -22261,7 +22260,7 @@ uint FUN_01019a0c(int param_1)
   if (bVar2 == 0 || bVar2 == 0xff) {
     if (((local_10._3_1_ != 0 || local_10._2_1_ != 0) || local_10._1_1_ != '\0') ||
         (char)local_10 != '\0') {
-      FUN_0102f7e0(INTEGER_MINUS_1202);
+      swv_Throw(INTEGER_MINUS_1202);
     }
   }
   return local_10 & 0xff000000 | (local_10 >> 0x10 & 0xff) << 0x10 | (local_10 >> 8 & 0xff) << 8 |
@@ -22327,13 +22326,13 @@ void FUN_01019afc(int param_1,int param_2)
         bVar3 = FUN_01019bd4(param_1);
         local_1c = CONCAT31(local_1c._1_3_,bVar3);
         if ((bVar3 & 0xc0) != 0x80) {
-          FUN_0102f7e0(uVar2);
+          swv_Throw(uVar2);
         }
         puVar4 = &local_1c;
       }
     }
     else {
-      FUN_0102f7e0(uVar2);
+      swv_Throw(uVar2);
     }
   }
   return;
@@ -22361,7 +22360,7 @@ undefined1 FUN_01019bd4(int param_1)
   int iVar1;
   
   if (*(uint *)(param_1 + 0xc) <= *(uint *)(param_1 + 0x14)) {
-    FUN_0102f7e0(INTEGER_MINUS_1200);
+    swv_Throw(INTEGER_MINUS_1200);
   }
   iVar1 = *(int *)(param_1 + 0x14);
   *(int *)(param_1 + 0x14) = iVar1 + 1;
@@ -22631,7 +22630,7 @@ void FUN_0101a104(int param_1,int param_2)
   
   if (param_2 != 0) {
     if ((*(byte *)(param_2 + 0x3d) >> 2 & 1) != 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     for (iVar1 = *(int *)(param_1 + 0x38); iVar1 != 0; iVar1 = *(int *)(iVar1 + 0x34)) {
       if (iVar1 == param_2) {
@@ -22760,14 +22759,14 @@ void FUN_0101a2c0(int param_1,int param_2,undefined4 param_3)
   undefined1 auStack_9c [136];
   
   if (*(int *)(param_1 + 0xac) == 0) {
-    FUN_0102f7e0(INTEGER_MINUS_1300);
+    swv_Throw(INTEGER_MINUS_1300);
   }
   /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
      object's class) */
   iVar1 = (*(code *)(*(int *)(*(int *)(param_2 + 4) + 4) + *(int *)(param_2 + 4)))(param_2 + 4);
   if (((((iVar1 != 0xe && iVar1 != 0xf) && iVar1 != 0x10) && iVar1 != 9) && iVar1 != 0x12) &&
       iVar1 != 0x16) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
@@ -22782,7 +22781,7 @@ void FUN_0101a2c0(int param_1,int param_2,undefined4 param_3)
   }
   else {
     FUN_01005f0c(param_1);
-    FUN_0102f7e0(iVar1);
+    swv_Throw(iVar1);
   }
   return;
 }
@@ -22835,7 +22834,7 @@ void FUN_0101a478(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   undefined1 auStack_a8 [136];
   
   if (*(int *)(param_1 + 0xac) == 0) {
-    FUN_0102f7e0(INTEGER_MINUS_1300);
+    swv_Throw(INTEGER_MINUS_1300);
   }
   iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a8));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
@@ -22851,7 +22850,7 @@ void FUN_0101a478(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   }
   else {
     FUN_01005f0c(param_1);
-    FUN_0102f7e0(iVar1);
+    swv_Throw(iVar1);
   }
   return;
 }
@@ -22968,7 +22967,7 @@ LAB_0101a5c0:
               uVar5 = 0;
               do {
                 if (1 < uVar5) {
-                  FUN_0102f7e0(INTEGER_MINUS_1101);
+                  swv_Throw(INTEGER_MINUS_1101);
                 }
                 iVar8 = *(int *)(iVar3 + uVar5 * 4 + 0x30);
                 iVar4 = 0;
@@ -23118,7 +23117,7 @@ LAB_0101a5c0:
               uVar5 = 0;
               do {
                 if (1 < uVar5) {
-                  FUN_0102f7e0(INTEGER_MINUS_1101);
+                  swv_Throw(INTEGER_MINUS_1101);
                 }
                 iVar8 = *(int *)(iVar3 + uVar5 * 4 + 0x30);
                 iVar4 = 0;
@@ -23977,12 +23976,12 @@ int FUN_0101bb58(int *param_1)
         param_1[0xdb] = iVar3;
         iVar3 = FUN_0100f734(piVar8,*(undefined4 *)(iVar9 + 8));
         if (*(uint *)(param_1[0xdb] + 0x1c) <= *(uint *)(iVar3 + 0x1c)) {
-          FUN_0102f7e0(uVar1);
+          swv_Throw(uVar1);
         }
         uVar4 = FUN_0100f1c8(piVar8,*(undefined4 *)(iVar9 + 8));
         if (iVar7 == 0x10) {
           if (*(uint *)(param_1[0xdb] + 0x1c) <= (piVar8[0x2b] & 0xffffU)) {
-            FUN_0102f7e0(uVar1);
+            swv_Throw(uVar1);
           }
           param_1[0x13e] = (int)piVar8;
           param_1[0x183] = (int)piVar8;
@@ -24168,7 +24167,7 @@ void FUN_0101bd48(int param_1,int param_2,int param_3,int param_4,undefined4 par
   uVar4 = 0;
   do {
     if (1 < uVar4) {
-      FUN_0102f7e0(INTEGER_MINUS_1101,uVar3);
+      swv_Throw(INTEGER_MINUS_1101,uVar3);
     }
     iVar17 = *(int *)(local_28 + uVar4 * 4 + 0x30);
     local_98 = *(int *)(local_30 + uVar4 * 4 + 0x30);
@@ -24182,7 +24181,7 @@ void FUN_0101bd48(int param_1,int param_2,int param_3,int param_4,undefined4 par
     if (iVar17 != 0 && iVar2 != 0) {
       uVar19 = 1;
       if (local_98 == 0) {
-        FUN_0102f7e0(INTEGER_MINUS_1300);
+        swv_Throw(INTEGER_MINUS_1300);
       }
       local_9c = (undefined4 *)FUN_010339a4(iVar17);
       iVar2 = HIGH_WORD_OF_DOUBLE_5_POINT_277655813_TIMES_TEN_TO_THE_13;
@@ -24246,7 +24245,7 @@ void FUN_0101bd48(int param_1,int param_2,int param_3,int param_4,undefined4 par
   }
   if (local_94 != 0 && uVar4 != 0) {
     if (*(int *)(*(int *)(param_1 + 0x36c) + 0x28) == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1300);
+      swv_Throw(INTEGER_MINUS_1300);
     }
     *(undefined4 *)(param_1 + 0x350) = 1;
     iVar2 = param_1 + 0x3c0;
@@ -24854,10 +24853,10 @@ void FUN_0101d01c(int param_1,int param_2,int param_3,int param_4,int param_5)
     return;
   }
   if (*(int *)(param_2 + 0x24) == 0) {
-    FUN_0102f7e0(INTEGER_MINUS_1300);
+    swv_Throw(INTEGER_MINUS_1300);
   }
   if (*(uint *)(param_2 + 0x1c) <= *(uint *)(param_3 + 0x1c)) {
-    FUN_0102f7e0(uVar1);
+    swv_Throw(uVar1);
   }
   *(int *)(param_1 + 0x36c) = param_2;
   FUN_01006020(param_1 + 0x408);
@@ -24894,11 +24893,11 @@ void FUN_0101d17c(int param_1,int param_2)
   
   uVar1 = INTEGER_MINUS_1300;
   if (*(int *)(param_2 + 0x88) == 0) {
-    FUN_0102f7e0(INTEGER_MINUS_1300);
+    swv_Throw(INTEGER_MINUS_1300);
   }
   iVar2 = swvNode_HasAncestor(*(uint8 **)(param_2 + 0x88),(uint8 *)param_2);
   if (iVar2 != 1) {
-    FUN_0102f7e0(uVar1);
+    swv_Throw(uVar1);
   }
   iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
   if (iVar2 == 0) {
@@ -24913,7 +24912,7 @@ void FUN_0101d17c(int param_1,int param_2)
   }
   else {
     FUN_01005f0c(param_1);
-    FUN_0102f7e0(iVar2);
+    swv_Throw(iVar2);
   }
   return;
 }
@@ -24954,11 +24953,11 @@ int FUN_0101d21c(int *param_1,int param_2)
      method is not known here */
   if ((piVar7 == (int *)0x0) ||
      (iVar6 = (*(code *)(*(int *)(*piVar7 + 0x2c) + *piVar7))(piVar7), iVar6 != 5)) {
-    FUN_0102f7e0(uVar8);
+    swv_Throw(uVar8);
   }
   iVar6 = swvNode_HasAncestor((uint8 *)piVar7,(uint8 *)param_2);
   if (iVar6 == 0) {
-    FUN_0102f7e0(uVar8);
+    swv_Throw(uVar8);
   }
   if (*(int *)(param_1[1] + 0x8c) == 0) {
     iVar6 = 99;
@@ -24976,7 +24975,7 @@ int FUN_0101d21c(int *param_1,int param_2)
     iVar5 = *(int *)(iVar5 + 0x40);
   }
   if ((bVar11 && bVar12) && iVar5 != iVar6) {
-    iVar6 = FUN_0102f7e0(uVar8);
+    iVar6 = swv_Throw(uVar8);
   }
   if (piVar7 != (int *)0x0) {
     bVar11 = piVar7[0x22] == 0x30;
@@ -25029,12 +25028,12 @@ int FUN_0101d21c(int *param_1,int param_2)
           param_1[0xdb] = iVar1;
           iVar1 = FUN_0100f734(piVar9,*(undefined4 *)(iVar10 + 8));
           if (*(uint *)(param_1[0xdb] + 0x1c) <= *(uint *)(iVar1 + 0x1c)) {
-            FUN_0102f7e0(uVar8);
+            swv_Throw(uVar8);
           }
           uVar2 = FUN_0100f1c8(piVar9,*(undefined4 *)(iVar10 + 8));
           if (iVar5 == 0x10) {
             if (*(uint *)(param_1[0xdb] + 0x1c) <= (piVar9[0x2b] & 0xffffU)) {
-              FUN_0102f7e0(uVar8);
+              swv_Throw(uVar8);
             }
             param_1[0x13e] = (int)piVar9;
             param_1[0x183] = (int)piVar9;
@@ -25595,9 +25594,9 @@ void swvM3G_ReadImage2D(uint8 *image,uint8 *stream)
   width = FUN_01019abc((int32)stream);
   height = FUN_01019abc((int32)stream);
   if (width == 0 || height == 0)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   if ((width | height) >> 15 != 0)
-    FUN_0102f7e0(-4);
+    swv_Throw(-4);
   *(uint32 *)(image + 0x38) = height;
   *(uint32 *)(image + 0x34) = width;
   *(int32 *)(image + 0x40) = format;
@@ -25610,7 +25609,7 @@ void swvM3G_ReadImage2D(uint8 *image,uint8 *stream)
     if (size != 0) {
       if (size < (uint32)bytesPerPixel << 8 &&
           size - swv_rt_udiv(bytesPerPixel,size).low * (uint32)bytesPerPixel != 0)
-        FUN_0102f7e0(INTEGER_MINUS_1202);
+        swv_Throw(INTEGER_MINUS_1202);
       colours = swv_rt_udiv(bytesPerPixel,size).low;
       if (colours > 0x100)
         colours = 0x100;
@@ -25629,7 +25628,7 @@ void swvM3G_ReadImage2D(uint8 *image,uint8 *stream)
       } while (size != 0);
       size = FUN_01019698((int32)stream,1);
       if (size < pixels)
-        FUN_0102f7e0(INTEGER_MINUS_1202);
+        swv_Throw(INTEGER_MINUS_1202);
       indices = *(uint8 **)(image + 0x20) + *(int32 *)(image + 0x30);
       for (; size != 0; size--) {
         index = FUN_01019640((int32)stream);
@@ -25642,7 +25641,7 @@ void swvM3G_ReadImage2D(uint8 *image,uint8 *stream)
     else {
       size = FUN_01019698((int32)stream,1);
       if (bytesPerPixel * pixels > size)
-        FUN_0102f7e0(INTEGER_MINUS_1202);
+        swv_Throw(INTEGER_MINUS_1202);
       FUN_0100350c((int32)image,0);
       colourPlane = (uint16 *)(*(uint8 **)(image + 0x20) + *(int32 *)(image + 0x30));
       alphaPlane = swvImage2D_AlphaPlane(image);
@@ -25704,7 +25703,7 @@ void swvM3G_ReadMaterial(uint8 *material,uint8 *stream)
   *(uint32 *)(material + 0x30) = FUN_01019a0c((int32)stream);
   if ((swv_fcmp_b(*(uint32 *)(material + 0x30),0), *(float *)(material + 0x30) < 0.0f) ||
       (swv_fcmp_c(*(uint32 *)(material + 0x30),0x43000000), !(*(float *)(material + 0x30) <= 128.0f)))
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   *(int32 *)(material + 0x2c) = FUN_01019618((int32)stream);
 }
 
@@ -25829,7 +25828,7 @@ void swvM3G_ReadTexture2D(uint8 *texture,uint8 *stream)
       (*(code *)(*(int32 *)(*(int32 *)image + 0x24) + *(int32 *)image))(image) > 0x400 ||
       swv_IsPowerOfTwo((*(code *)(*(int32 *)(*(int32 *)image + 0x28) + *(int32 *)image))(image)) == 0 ||
       (*(code *)(*(int32 *)(*(int32 *)image + 0x28) + *(int32 *)image))(image) > 0x400)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   FUN_01019650((int32)stream,texture + 0x24,0);
   *(int32 *)(texture + 0x28) = FUN_010196cc((int32)stream,0xdf,0xe5);
   *(int32 *)(texture + 0x30) = FUN_010196cc((int32)stream,0xef,0xf2);
@@ -25863,7 +25862,7 @@ void swvM3G_ReadAppearance(uint8 *appearance,uint8 *stream)
   layer = FUN_01019640((int32)stream);
   *(int32 *)(appearance + 0x1c) = layer;
   if (layer < -0x3f || layer > 0x3f)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   old = *(uint8 **)(appearance + 0x20);
   object = (uint8 *)FUN_01019888((int32)stream,6);
   object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
@@ -25896,7 +25895,7 @@ void swvM3G_ReadAppearance(uint8 *appearance,uint8 *stream)
   for (i = 0; i < count; i++) {
     object = (uint8 *)FUN_01019888((int32)stream,0x11);
     if (object == NULL)
-      FUN_0102f7e0(INTEGER_MINUS_1202);
+      swv_Throw(INTEGER_MINUS_1202);
     if (i < 2) {
       old = *(uint8 **)(appearance + 0x30 + i * 4);
       object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
@@ -25955,7 +25954,7 @@ void swvM3G_ReadBackground(uint8 *background,uint8 *stream)
   *(uint32 *)(background + 0x38) = swv_fflt(thunk_FUN_01019abc((int32)stream));
   if ((swv_fcmp_b(*(uint32 *)(background + 0x34),0), *(float *)(background + 0x34) < 0.0f) ||
       (swv_fcmp_b(*(uint32 *)(background + 0x38),0), *(float *)(background + 0x38) < 0.0f))
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   *(int32 *)(background + 0x3c) = FUN_01019618((int32)stream);
   *(int32 *)(background + 0x40) = FUN_01019618((int32)stream);
 }
@@ -26071,17 +26070,17 @@ void FUN_0101e534(int param_1,undefined4 param_2)
   *(int *)(param_1 + 0x54) = iVar9;
   uVar8 = INTEGER_MINUS_1202;
   if ((iVar9 < 0) || (0xf < iVar9)) {
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   }
   iVar9 = FUN_01019640(param_2);
   *(int *)(param_1 + 0x58) = iVar9;
   if ((iVar9 < 0) || (0xf < iVar9)) {
-    FUN_0102f7e0(uVar8);
+    swv_Throw(uVar8);
   }
   iVar9 = thunk_FUN_01019abc(param_2);
   *(int *)(param_1 + 0x5c) = iVar9;
   if ((iVar9 < 0) || (0xf < iVar9)) {
-    FUN_0102f7e0(uVar8);
+    swv_Throw(uVar8);
   }
   uVar10 = FUN_01019a0c(param_2);
   uVar2 = WORD_HEXADECIMAL_47800000;
@@ -26093,12 +26092,12 @@ void FUN_0101e534(int param_1,undefined4 param_2)
   iVar9 = FUN_01019640(param_2);
   *(int *)(param_1 + 0x68) = iVar9;
   if ((iVar9 < 0) || (0xf < iVar9)) {
-    FUN_0102f7e0(uVar8);
+    swv_Throw(uVar8);
   }
   iVar9 = FUN_01019640(param_2);
   *(int *)(param_1 + 0x6c) = iVar9;
   if ((iVar9 < 0) || (0xf < iVar9)) {
-    FUN_0102f7e0(uVar8);
+    swv_Throw(uVar8);
   }
   uVar8 = FUN_01019abc(param_2);
   swv_ColourFromRGB((int32 *)param_1 + 0x160,uVar8);
@@ -26749,13 +26748,13 @@ void swvM3G_ReadVertexArray(uint8 *array,uint8 *stream)
   swvM3G_ReadObject3D(array,stream);
   *(int32 *)(array + 0x24) = FUN_01019640((int32)stream);
   if (*(int32 *)(array + 0x24) < 1 || *(int32 *)(array + 0x24) > 2)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   *(int32 *)(array + 0x20) = FUN_01019640((int32)stream);
   if (*(int32 *)(array + 0x20) < 2 || *(int32 *)(array + 0x20) > 4)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   encoding = FUN_01019640((int32)stream);
   if (encoding > 1)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   *(int32 *)(array + 0x1c) = FUN_01019a98((int32)stream);
   if (*(int32 *)(array + 0x24) == 1) {
     FUN_01023184((int *)(array + 0x28),*(int32 *)(array + 0x1c) * *(int32 *)(array + 0x20));
@@ -26803,7 +26802,7 @@ void swvM3G_ReadHeader(uint8 *header,uint8 *stream)
   major = FUN_01019640((int32)stream);
   minor = FUN_01019640((int32)stream);
   if (major != 1 || minor != 0)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   *(int32 *)(header + 0xc) = FUN_01019618((int32)stream);
   *(uint32 *)(header + 0x10) = FUN_01019abc((int32)stream);
   *(uint32 *)(header + 0x14) = FUN_01019abc((int32)stream);
@@ -26847,7 +26846,7 @@ void swvM3G_ReadMorphingMesh(uint8 *mesh,uint8 *stream)
       target -= 4;
     (*(uint8 ***)(mesh + 0xc8))[i] = target;
     if (target == NULL)
-      FUN_0102f7e0(INTEGER_MINUS_1202);
+      swv_Throw(INTEGER_MINUS_1202);
     (*(uint32 **)(mesh + 0xd8))[i] = FUN_01019a0c((int32)stream);
   }
 }
@@ -26904,7 +26903,7 @@ void swvM3G_ReadVertexBuffer(uint8 *buffer,uint8 *stream)
   array = (uint8 *)FUN_01019888((int32)stream,0x14);
   if (array != NULL) {
     if (counted == 1 && *(int32 *)(array + 0x1c) != *(int32 *)(buffer + 0x1c))
-      FUN_0102f7e0(INTEGER_MINUS_1202);
+      swv_Throw(INTEGER_MINUS_1202);
     *(int32 *)(buffer + 0x1c) = *(int32 *)(array + 0x1c);
     counted = 1;
     swvVertexBuffer_SetNormalsValue(buffer,array);
@@ -26918,7 +26917,7 @@ void swvM3G_ReadVertexBuffer(uint8 *buffer,uint8 *stream)
   *(uint8 **)(buffer + 0x2c) = array;
   if (array != NULL) {
     if (counted == 1 && *(int32 *)(array + 0x1c) != *(int32 *)(buffer + 0x1c))
-      FUN_0102f7e0(INTEGER_MINUS_1202);
+      swv_Throw(INTEGER_MINUS_1202);
     counted = 1;
     *(int32 *)(buffer + 0x1c) = *(int32 *)(array + 0x1c);
   }
@@ -26929,7 +26928,7 @@ void swvM3G_ReadVertexBuffer(uint8 *buffer,uint8 *stream)
   for (i = 0; i < count; i++) {
     array = (uint8 *)FUN_01019888((int32)stream,0x14);
     if (array == NULL)
-      FUN_0102f7e0(INTEGER_MINUS_1202);
+      swv_Throw(INTEGER_MINUS_1202);
     bias[0] = FUN_01019a0c((int32)stream);
     bias[1] = FUN_01019a0c((int32)stream);
     bias[2] = FUN_01019a0c((int32)stream);
@@ -26943,7 +26942,7 @@ void swvM3G_ReadVertexBuffer(uint8 *buffer,uint8 *stream)
       *(uint8 **)(buffer + 0x30 + i * 4) = array;
       if (array != NULL) {
         if (counted == 1 && *(int32 *)(array + 0x1c) != *(int32 *)(buffer + 0x1c))
-          FUN_0102f7e0(INTEGER_MINUS_1202);
+          swv_Throw(INTEGER_MINUS_1202);
         counted = 1;
         *(int32 *)(buffer + 0x1c) = *(int32 *)(array + 0x1c);
       }
@@ -26995,7 +26994,7 @@ void swvM3G_ReadTransformable(uint8 *object,uint8 *stream)
         (swv_fcmp_a(axis[0],0), *(float *)&axis[0] == 0.0f) &&
         (swv_fcmp_a(axis[1],0), *(float *)&axis[1] == 0.0f) &&
         (swv_fcmp_a(axis[2],0), *(float *)&axis[2] == 0.0f))
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     FUN_01028344(orientation,angle,axis);
     FUN_01022140((int *)object,(uint32)orientation);
   }
@@ -27016,7 +27015,7 @@ void swvM3G_ReadTransformable(uint8 *object,uint8 *stream)
    interface pointers, +4); the property (+0x24, UInt32, FUN_01019abc): -1202 unless ALPHA 0x100 ..
    VISIBILITY 0x114; then FUN_01010dac gives the property's mask of allowed component counts (-1: any)
    and -1202 when the sequence's componentCount is not among them (AnimationTrack(sequence, property):
-   IllegalArgumentException; a tail jump to FUN_0102f7e0, whose code Ghidra had pasted here). Evidence:
+   IllegalArgumentException; a tail jump to swv_Throw, whose code Ghidra had pasted here). Evidence:
    0x0101ef44 - 0x0101f01c (r0 and r1 kept for swvM3G_ReadObject3D: Ghidra had dropped them; `cmp r0,
    #0xff` / `ble`, `subs r12, r0, #0x100` / `subges r12, r12, #0x15` / `blt` past the error; `cmn r0, #1`
    / `beq`, `tst r0, r2, lsl r1` with r1 the componentCount (a register shift: its low byte, 32 or more
@@ -27039,7 +27038,7 @@ void swvM3G_ReadAnimationTrack(uint8 *track,uint8 *stream)
     object -= 4;
   *(uint8 **)(track + 0x1c) = object;
   if (object == NULL)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   old = *(uint8 **)(track + 0x20);
   object = (uint8 *)FUN_01019888((int32)stream,1);
   object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
@@ -27050,12 +27049,12 @@ void swvM3G_ReadAnimationTrack(uint8 *track,uint8 *stream)
   property = FUN_01019abc((int32)stream);
   *(int32 *)(track + 0x24) = property;
   if (property < 0x100 || property >= 0x115)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   counts = FUN_01010dac((uint32)track,*(int32 *)(track + 0x24));
   if (counts != 0xffffffff) {
     shift = (uint32)(*(SwvKeyframeSequence **)(track + 0x1c))->componentCount & 0xff;
     if ((counts & (shift < 32 ? (uint32)1 << shift : 0)) == 0)
-      FUN_0102f7e0(INTEGER_MINUS_1202);
+      swv_Throw(INTEGER_MINUS_1202);
   }
 }
 
@@ -27139,10 +27138,10 @@ void swvM3G_ReadKeyframeSequence(SwvKeyframeSequence *sequence,uint8 *stream)
   sequence->repeatMode = FUN_010196cc((int32)stream,0xbf,0xc2);
   encoding = FUN_01019640((int32)stream);
   if (encoding > 2)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   sequence->durationInt = FUN_01019abc((int32)stream);
   if (sequence->durationInt <= 0)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   sequence->duration = swv_fflt(sequence->durationInt);
   validFirst = FUN_01019abc((int32)stream);
   validLast = FUN_01019abc((int32)stream);
@@ -27150,24 +27149,24 @@ void swvM3G_ReadKeyframeSequence(SwvKeyframeSequence *sequence,uint8 *stream)
   if (sequence->componentCount < 1 ||
       ((sequence->interpolation == 0xb1 || sequence->interpolation == 0xb3) &&
        sequence->componentCount != 4))
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   sequence->keyframeCount = FUN_01019abc((int32)stream);
   if (sequence->keyframeCount < 1)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   words = swvKeyframeSequence_KeyframeWords(sequence);
   wordsMagnitude = words < 0 ? 0 - (uint32)words : (uint32)words;
   countMagnitude = sequence->keyframeCount < 0 ? 0 - (uint32)sequence->keyframeCount
                                                : (uint32)sequence->keyframeCount;
   MULTIPLY_WORDS(size,wordsMagnitude,countMagnitude);
   if ((words < 0) == (sequence->keyframeCount < 0) && (size.high != 0 || size.low > 0x7fffffff))
-    FUN_0102f7e0(-4);
+    swv_Throw(-4);
   FUN_01023184((int *)&sequence->field_3c,words * sequence->keyframeCount);
   if (encoding == 0) {
     for (frame = 0; frame < sequence->keyframeCount; frame++) {
       keyframe = sequence->keyframes + words * frame;
       *keyframe = thunk_FUN_01019abc((int32)stream);
       if (*keyframe < 0)
-        FUN_0102f7e0(INTEGER_MINUS_1202);
+        swv_Throw(INTEGER_MINUS_1202);
       for (component = 0; component < sequence->componentCount; component++)
         keyframe[component + 1] = FUN_01019a0c((int32)stream);
     }
@@ -27190,7 +27189,7 @@ void swvM3G_ReadKeyframeSequence(SwvKeyframeSequence *sequence,uint8 *stream)
       keyframe = sequence->keyframes + words * frame;
       *keyframe = thunk_FUN_01019abc((int32)stream);
       if (*keyframe < 0)
-        FUN_0102f7e0(INTEGER_MINUS_1202);
+        swv_Throw(INTEGER_MINUS_1202);
       for (component = 0; component < sequence->componentCount; component++) {
         if (encoding == 1)
           quantised = FUN_01019640((int32)stream);
@@ -27205,7 +27204,7 @@ void swvM3G_ReadKeyframeSequence(SwvKeyframeSequence *sequence,uint8 *stream)
     FUN_0102b784((int *)&bias,0);
   }
   else
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   FUN_01023af0((int32)sequence,validFirst,validLast);
 }
 
@@ -27236,7 +27235,7 @@ void swvM3G_ReadTriangleStripArray(uint8 *strips,uint8 *stream)
   thunk_swvM3G_ReadObject3D(strips,stream);
   encoding = FUN_01019640((int32)stream);
   if (encoding > 2 && encoding - 0x80 > 2)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   *(uint32 *)(strips + 0x20) = ~(encoding >> 7) & 1;
   *(uint32 *)(strips + 0x1c) = 0;
   if (encoding == 0x80) {
@@ -27245,7 +27244,7 @@ void swvM3G_ReadTriangleStripArray(uint8 *strips,uint8 *stream)
     for (i = 0; i < count; i++) {
       index = FUN_01019abc((int32)stream);
       if (index > 0xffff)
-        FUN_0102f7e0(INTEGER_MINUS_1101);
+        swv_Throw(INTEGER_MINUS_1101);
       if (*(uint32 *)(strips + 0x1c) < index)
         *(uint32 *)(strips + 0x1c) = index;
       (*(uint16 **)(strips + 0x2c))[i] = (uint16)index;
@@ -27274,7 +27273,7 @@ void swvM3G_ReadTriangleStripArray(uint8 *strips,uint8 *stream)
   else if (encoding == 0) {
     index = FUN_01019abc((int32)stream);
     if (index > 0xffff)
-      FUN_0102f7e0(INTEGER_MINUS_1101);
+      swv_Throw(INTEGER_MINUS_1101);
     *(uint16 *)(strips + 0x24) = (uint16)index;
   }
   else if (encoding == 1)
@@ -27286,11 +27285,11 @@ void swvM3G_ReadTriangleStripArray(uint8 *strips,uint8 *stream)
   count = *(int32 *)(strips + 0x40);
   for (i = 0; i < count; i++) {
     if ((*(uint16 **)(strips + 0x3c))[i] < 3)
-      FUN_0102f7e0(INTEGER_MINUS_1202);
+      swv_Throw(INTEGER_MINUS_1202);
     sum += (*(uint16 **)(strips + 0x3c))[i];
   }
   if (*(int32 *)(strips + 0x30) > sum)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   if (*(int32 *)(strips + 0x20) != 0)
     *(int32 *)(strips + 0x1c) = *(uint16 *)(strips + 0x24) + sum - 1;
 }
@@ -27298,7 +27297,7 @@ void swvM3G_ReadTriangleStripArray(uint8 *strips,uint8 *stream)
 /* ==== 0x0101F640  (file offset 0x1F640)  swvM3G_ReadAnimationController ============================== */
 /* GUESS: name. M3G file format section 11.1, AnimationController (ObjectType 1): reads the record into the
    native AnimationController controller: the Object3D part (swvM3G_ReadObject3D), the speed (+0x2c) and
-   weight (+0x30) (Float32s, FUN_01019a0c), error -1202 (the file is bad; FUN_0102f7e0, which does not
+   weight (+0x30) (Float32s, FUN_01019a0c), error -1202 (the file is bad; swv_Throw, which does not
    return) for a weight below 0 or a NaN (AnimationController.setWeight's IllegalArgumentException),
    activeIntervalStart (+0x1c) and activeIntervalEnd (+0x20) (Int32s, thunk_FUN_01019abc), -1202 when the
    start is after the end (signed; setActiveInterval's check), then referenceSequenceTime (+0x24,
@@ -27320,11 +27319,11 @@ void swvM3G_ReadAnimationController(uint8 *controller,uint8 *stream)
   weight = FUN_01019a0c((int32)stream);
   *(uint32 *)(controller + 0x30) = weight;
   if ((swv_fcmp_b(weight,0), !FLOAT_GE(weight,0)))
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   *(int32 *)(controller + 0x1c) = thunk_FUN_01019abc((int32)stream);
   *(int32 *)(controller + 0x20) = thunk_FUN_01019abc((int32)stream);
   if (*(int32 *)(controller + 0x1c) > *(int32 *)(controller + 0x20))
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   *(uint32 *)(controller + 0x24) = FUN_01019a0c((int32)stream);
   *(int32 *)(controller + 0x28) = thunk_FUN_01019abc((int32)stream);
 }
@@ -27334,7 +27333,7 @@ void swvM3G_ReadAnimationController(uint8 *controller,uint8 *stream)
    the Object3D part (swvM3G_ReadObject3D), the colour (+0x1c, ColorRGB, FUN_01019650), the mode (+0x2c:
    EXPONENTIAL 0x50 or LINEAR 0x51, FUN_010196cc: a byte strictly between its bounds, else -1202, the
    file is bad); EXPONENTIAL: the density (+0x20, Float32, FUN_01019a0c; no check that it is not
-   negative); LINEAR: near (+0x24) and far (+0x28), then -1202 (FUN_0102f7e0, a tail jump) when |near -
+   negative); LINEAR: near (+0x24) and far (+0x28), then -1202 (swv_Throw, a tail jump) when |near -
    far| (swv_fsub, the sign bit cleared) is at most 0x377ba882 (about 1.5e-5) or a NaN: the engine's
    near == far. The class's M3G reader: slot +0x4 of its engine vtable 0x01002678 (constructor
    FUN_010292b8, made by FUN_0100eaec through the factory FUN_01009860), called by FUN_01017bc4 for each
@@ -27364,7 +27363,7 @@ void swvM3G_ReadFog(uint8 *fog,uint8 *stream)
     distance = swv_fsub(*(uint32 *)(fog + 0x24),farPlane) & 0x7fffffff;
     if ((swv_fcmp_b(distance,WORD_HEXADECIMAL_377BA882),
          !FLOAT_GT(distance,WORD_HEXADECIMAL_377BA882)))
-      FUN_0102f7e0(INTEGER_MINUS_1202);
+      swv_Throw(INTEGER_MINUS_1202);
   }
 }
 
@@ -27396,7 +27395,7 @@ void swvM3G_ReadMesh(uint8 *mesh,uint8 *stream)
     object -= 4;
   *(uint8 **)(mesh + 0x88) = object;
   if (object == NULL)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   count = FUN_01019698((int32)stream,8);
   if (count > 0) {
     FUN_01023184((int *)(mesh + 0x8c),count);
@@ -27413,7 +27412,7 @@ void swvM3G_ReadMesh(uint8 *mesh,uint8 *stream)
       object -= 4;
     *(uint8 **)(*(uint8 **)(mesh + 0x90) + i * 4) = object;
     if (object == NULL)
-      FUN_0102f7e0(INTEGER_MINUS_1202);
+      swv_Throw(INTEGER_MINUS_1202);
     old = *(uint8 **)(*(uint8 **)(mesh + 0xa0) + i * 4);
     object = (uint8 *)FUN_01019888((int32)stream,3);
     object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
@@ -27446,7 +27445,7 @@ void swvM3G_ReadNode(uint8 *node,uint8 *stream)
 
   swvM3G_ReadTransformable(node,stream);
   if ((*(uint32 *)(*(uint8 **)(*(uint8 **)(node + 0x20) + 0x28) + 0x40) & 2) == 0)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   FUN_01022bb8((int *)node,FUN_01019618((int32)stream));
   FUN_01022234((int *)node,FUN_01019618((int32)stream));
   *(uint32 *)(node + 0x28) = swv_fdiv(swv_fflt(FUN_01019640((int32)stream)),FLOAT_255);
@@ -27513,22 +27512,22 @@ void swvM3G_ReadLight(uint8 *light,uint8 *stream)
   if ((swv_fcmp_b(*(uint32 *)(light + 0x88),0), *(float *)(light + 0x88) < 0.0f) ||
       (swv_fcmp_b(*(uint32 *)(light + 0x8c),0), *(float *)(light + 0x8c) < 0.0f) ||
       (swv_fcmp_b(*(uint32 *)(light + 0x90),0), *(float *)(light + 0x90) < 0.0f))
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   if ((swv_fcmp_a(*(uint32 *)(light + 0x88),0), *(float *)(light + 0x88) == 0.0f) &&
       (swv_fcmp_a(*(uint32 *)(light + 0x8c),0), *(float *)(light + 0x8c) == 0.0f) &&
       (swv_fcmp_a(*(uint32 *)(light + 0x90),0), *(float *)(light + 0x90) == 0.0f))
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   FUN_01019650((int32)stream,light + 0x94,0);
   *(int32 *)(light + 0xa4) = FUN_010196cc((int32)stream,0x7f,0x84);
   *(uint32 *)(light + 0x98) = FUN_01019a0c((int32)stream);
   *(uint32 *)(light + 0x9c) = FUN_01019a0c((int32)stream);
   if ((swv_fcmp_b(*(uint32 *)(light + 0x9c),0), *(float *)(light + 0x9c) < 0.0f) ||
       (swv_fcmp_c(*(uint32 *)(light + 0x9c),FLOAT_90), !(*(float *)(light + 0x9c) <= 90.0f)))
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   *(uint32 *)(light + 0xa0) = FUN_01019a0c((int32)stream);
   if ((swv_fcmp_b(*(uint32 *)(light + 0xa0),0), *(float *)(light + 0xa0) < 0.0f) ||
       (swv_fcmp_c(*(uint32 *)(light + 0xa0),0x43000000), !(*(float *)(light + 0xa0) <= 128.0f)))
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
 }
 
 /* ==== 0x0101FB28  (file offset 0x1FB28)  swvM3G_ReadWorld ============================================ */
@@ -27573,7 +27572,7 @@ void swvM3G_ReadWorld(uint8 *world,uint8 *stream)
    aspect ratio (+0xe0, above 0), near (+0xe4) and far (+0xe8), whose difference must pass 0x377BA882
    (about 1.5e-5) either way; for PERSPECTIVE both near and far above 0 (Camera.setPerspective /
    setParallel: IllegalArgumentException); else -1202 (the file is bad; the last a tail jump to
-   FUN_0102f7e0, whose code Ghidra had pasted here). Evidence: 0x0101fba8 - 0x0101fcb8 (r0 and r1 kept for
+   swv_Throw, whose code Ghidra had pasted here). Evidence: 0x0101fba8 - 0x0101fcb8 (r0 and r1 kept for
    swvM3G_ReadNode: Ghidra had dropped them; `addeq r1, r4, #0x94` / `beq 0x0101977c`; `bl 0x0103f534`
    (swv_fcmp_b) / `bhi` past the error and `bls` / `blls` to it, `bl 0x0103f59c` (swv_fcmp_c) with the
    float 180.0 (HIGH_WORD_OF_DOUBLE_5_POINT_629499534_TIMES_TEN_TO_THE_15, 0x43340000) / `bcc` past it;
@@ -27595,7 +27594,7 @@ void swvM3G_ReadCamera(uint8 *camera,uint8 *stream)
     if (projection == 0x31) {
       *(uint32 *)(camera + 0xdc) = FUN_01019a0c((int32)stream);
       if (swv_fcmp_b(*(uint32 *)(camera + 0xdc),0), *(float *)(camera + 0xdc) <= 0.0f)
-        FUN_0102f7e0(INTEGER_MINUS_1202);
+        swv_Throw(INTEGER_MINUS_1202);
     }
     else {
       *(uint32 *)(camera + 0xd8) = FUN_01019a0c((int32)stream);
@@ -27603,20 +27602,20 @@ void swvM3G_ReadCamera(uint8 *camera,uint8 *stream)
           (swv_fcmp_c(*(uint32 *)(camera + 0xd8),
                       HIGH_WORD_OF_DOUBLE_5_POINT_629499534_TIMES_TEN_TO_THE_15),
            !(*(float *)(camera + 0xd8) < 180.0f)))
-        FUN_0102f7e0(INTEGER_MINUS_1202);
+        swv_Throw(INTEGER_MINUS_1202);
     }
     *(uint32 *)(camera + 0xe0) = FUN_01019a0c((int32)stream);
     if (swv_fcmp_b(*(uint32 *)(camera + 0xe0),0), *(float *)(camera + 0xe0) <= 0.0f)
-      FUN_0102f7e0(INTEGER_MINUS_1202);
+      swv_Throw(INTEGER_MINUS_1202);
     *(uint32 *)(camera + 0xe4) = FUN_01019a0c((int32)stream);
     *(uint32 *)(camera + 0xe8) = FUN_01019a0c((int32)stream);
     difference = swv_fsub(*(uint32 *)(camera + 0xe4),*(uint32 *)(camera + 0xe8)) & 0x7fffffff;
     if (swv_fcmp_b(difference,epsilon), *(float *)&difference <= *(float *)&epsilon)
-      FUN_0102f7e0(INTEGER_MINUS_1202);
+      swv_Throw(INTEGER_MINUS_1202);
     if (*(int32 *)(camera + 0x88) == 0x32 &&
         ((swv_fcmp_b(*(uint32 *)(camera + 0xe4),0), *(float *)(camera + 0xe4) <= 0.0f) ||
          (swv_fcmp_b(*(uint32 *)(camera + 0xe8),0), *(float *)(camera + 0xe8) <= 0.0f)))
-      FUN_0102f7e0(INTEGER_MINUS_1202);
+      swv_Throw(INTEGER_MINUS_1202);
   }
 }
 
@@ -27646,7 +27645,7 @@ void swvM3G_ReadSprite3D(uint8 *sprite,uint8 *stream)
     object -= 4;
   *(uint8 **)(sprite + 0x98) = object;
   if (object == NULL)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   old = *(uint8 **)(sprite + 0x9c);
   object = (uint8 *)FUN_01019888((int32)stream,3);
   object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
@@ -27655,14 +27654,14 @@ void swvM3G_ReadSprite3D(uint8 *sprite,uint8 *stream)
     object -= 4;
   *(uint8 **)(sprite + 0x9c) = object;
   if (object == NULL)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
   *(int32 *)(sprite + 0xa0) = FUN_01019618((int32)stream);
   *(int32 *)(sprite + 0x90) = thunk_FUN_01019abc((int32)stream);
   *(int32 *)(sprite + 0x94) = thunk_FUN_01019abc((int32)stream);
   *(int32 *)(sprite + 0x8c) = thunk_FUN_01019abc((int32)stream);
   *(int32 *)(sprite + 0x88) = thunk_FUN_01019abc((int32)stream);
   if (FUN_01039270(*(int32 *)(sprite + 0x8c)) > 0x400 || FUN_01039270(*(int32 *)(sprite + 0x88)) > 0x400)
-    FUN_0102f7e0(INTEGER_MINUS_1202);
+    swv_Throw(INTEGER_MINUS_1202);
 }
 
 /* ==== 0x0101FDC4  (file offset 0x1FDC4)  swvVertexArray_SetShorts ==================================== */
@@ -27684,12 +27683,12 @@ void swvVertexArray_SetShorts(uint8 *array,int32 firstVertex,int32 numVertices,i
   int32 components;
 
   if (*(const int32 *)(array + 0x24) != 2)
-    FUN_0102f7e0(INTEGER_MINUS_1300);
+    swv_Throw(INTEGER_MINUS_1300);
   if (numVertices * *(const int32 *)(array + 0x20) > length)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   if (firstVertex < 0 || *(const int32 *)(array + 0x1c) <= firstVertex ||
       firstVertex + numVertices > *(const int32 *)(array + 0x1c))
-    FUN_0102f7e0(INTEGER_MINUS_1101);
+    swv_Throw(INTEGER_MINUS_1101);
   components = *(const int32 *)(array + 0x20);
   thunk_swv_memcpy((undefined4)(*(uint8 **)(array + 0x2c) + firstVertex * components * 2),
                    (undefined4)values,(undefined4)(numVertices * components * 2));
@@ -27744,12 +27743,12 @@ void swvVertexArray_SetBytes(uint8 *array,int32 firstVertex,int32 numVertices,in
   int32 components;
 
   if (*(const int32 *)(array + 0x24) != 1)
-    FUN_0102f7e0(INTEGER_MINUS_1300);
+    swv_Throw(INTEGER_MINUS_1300);
   if (numVertices * *(const int32 *)(array + 0x20) > length)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   if (firstVertex < 0 || *(const int32 *)(array + 0x1c) <= firstVertex ||
       firstVertex + numVertices > *(const int32 *)(array + 0x1c))
-    FUN_0102f7e0(INTEGER_MINUS_1101);
+    swv_Throw(INTEGER_MINUS_1101);
   components = *(const int32 *)(array + 0x20);
   thunk_swv_memcpy((undefined4)(*(uint8 **)(array + 0x2c) + firstVertex * components),(undefined4)values,
                    (undefined4)(numVertices * components));
@@ -27758,7 +27757,7 @@ void swvVertexArray_SetBytes(uint8 *array,int32 firstVertex,int32 numVertices,in
 
 /* ==== 0x0101FF90  (file offset 0x1FF90)  swvAnimationController_SetActiveIntervalValue =============== */
 /* JSR-184 1.1, AnimationController.setActiveInterval, native: error -1301 (IllegalArgumentException;
-   FUN_0102f7e0, which does not return) when start > end, as the spec says; then the interval's start at
+   swv_Throw, which does not return) when start > end, as the spec says; then the interval's start at
    +0x1c and its end at +0x20 (world times; start == end: always active, swvAnimationController_IsActive).
    Only swvAnimationController_SetActiveInterval (slot 23) calls it. Evidence: 0x0101ff90 - 0x0101ffb4
    (`cmp r1, r2` / `ldrgt` / `blgt` the error, `str r5, [r4, #0x1c]`, `str r6, [r4, #0x20]`). */
@@ -27766,7 +27765,7 @@ void swvAnimationController_SetActiveIntervalValue(uint8 *controller,int32 start
 
 {
   if (start > end)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   *(int32 *)(controller + 0x1c) = start;
   *(int32 *)(controller + 0x20) = end;
 }
@@ -27851,9 +27850,9 @@ void swvNode_SetAlignment(uint8 *node,uint8 *zReference,int32 zTarget,uint8 *yRe
   uint32 *alignment;
 
   if (zReference == node || yReference == node)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   if (zReference == yReference && zTarget != 0x90 && yTarget != 0x90 && zTarget == yTarget)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   if (*(uint32 **)(node + 0x24) != NULL) {
     swvAlignment_Unregister(node);
     helper_free(*(void **)(node + 0x24));
@@ -27897,7 +27896,7 @@ void FUN_010201dc(int param_1,int param_2,int param_3)
     iVar2 = INTEGER_MINUS_1101;
   }
   if (bVar4 || (!bVar3 || iVar1 < param_2)) {
-    FUN_0102f7e0(iVar2);
+    swv_Throw(iVar2);
   }
   iVar1 = *(int *)(*(int *)(param_1 + 0xa0) + param_2 * 4);
   if (param_3 != 0) {
@@ -27928,7 +27927,7 @@ void FUN_0102023c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
     swv_fcmp_a(param_4,0);
   }
   if ((bool)in_ZR) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   *(undefined4 *)(param_1 + 0x88) = param_2;
   *(undefined4 *)(param_1 + 0x8c) = param_3;
@@ -28007,7 +28006,7 @@ undefined8 FUN_0102035c(int param_1,int *param_2)
   if (param_2 != (int *)0x0) {
     iVar1 = swvImage2D_StorageFormat((uint8 *)param_2);
     if ((param_2[0x11] == 0) || (iVar1 != 99 && iVar1 != 100)) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
        FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
@@ -28068,7 +28067,7 @@ void FUN_01020480(int param_1,int param_2,int param_3,undefined4 param_4)
   if (param_3 != 0) {
     iVar1 = FUN_0102da44(param_3);
     if (iVar1 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1000);
+      swv_Throw(INTEGER_MINUS_1000);
     }
     FUN_01027acc((undefined4 *)(param_1 + 0xb0),param_3 + 0xc);
     return;
@@ -28141,7 +28140,7 @@ undefined4 * FUN_010204ec(undefined4 *param_1,int param_2,int param_3)
     param_1[0x2b8] = uStack_24;
     iVar2 = swv_Matrix4Invert(puVar10);
     if (iVar2 == 0) {
-      FUN_0102f7e0(0xfffffc18);
+      swv_Throw(0xfffffc18);
     }
     param_1[0x42] = *(undefined4 *)(param_2 + 0x2c);
     iVar2 = *(int *)(param_2 + 0x88);
@@ -28394,7 +28393,7 @@ void FUN_0102060c(int *param_1,int *param_2,int *param_3,int param_4)
 /* ==== 0x01020948  (file offset 0x20948)  swvMaterial_SetColorValue =================================== */
 /* GUESS: name. Sets colours of a native Material (JSR-184 1.1, Material.setColor): targets is an OR of
    AMBIENT 0x400, DIFFUSE 0x800, EMISSIVE 0x1000 and SPECULAR 0x2000, error -1301
-   (IllegalArgumentException; FUN_0102f7e0, which does not return) when it is 0 or has any other bit;
+   (IllegalArgumentException; swv_Throw, which does not return) when it is 0 or has any other bit;
    each target named gets argb, the ambient, emissive and specular without its alpha (& 0xffffff), the
    diffuse whole (the spec: the alpha is ignored for all but the diffuse colour). Evidence: 0x01020948 -
    0x01020990 (`movs r4, r1` / `beq`, `bics r0, r4, #0x3c00` / `beq`, the error, `bic r0, r6,
@@ -28405,7 +28404,7 @@ void swvMaterial_SetColorValue(uint8 *material,uint32 targets,uint32 argb)
   uint32 rgb;
 
   if (targets == 0 || (targets & ~0x3c00u) != 0)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   rgb = argb & 0xffffff;
   if ((targets & 0x400) != 0)
     *(uint32 *)(material + 0x1c) = rgb;
@@ -28430,7 +28429,7 @@ void swvVertexBuffer_SetColorsValue(uint8 *buffer,uint8 *colors)
   if (colors != NULL &&
       (*(const int32 *)(colors + 0x24) != 1 ||
        (*(const int32 *)(colors + 0x20) != 3 && *(const int32 *)(colors + 0x20) != 4)))
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   FUN_01023b3c((int)buffer,(int *)(buffer + 0x2c),(int)colors);
 }
 
@@ -28529,7 +28528,7 @@ void FUN_01020bcc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   
   iVar1 = FUN_01039270(param_4);
   if ((0x400 < iVar1) || (iVar1 = FUN_01039270(param_5), 0x400 < iVar1)) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   *(undefined4 *)(param_1 + 0x88) = param_5;
   *(undefined4 *)(param_1 + 0x8c) = param_4;
@@ -28673,7 +28672,7 @@ void FUN_01020da0(int param_1,int param_2)
   
   iVar1 = FUN_0102da44(param_2);
   if (iVar1 == 0) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   *(undefined4 *)(param_1 + 0x88) = 0x30;
   FUN_01027acc(param_1 + 0x94,param_2 + 0xc);
@@ -29181,7 +29180,7 @@ void FUN_01021a78(int param_1,undefined4 param_2,int param_3)
 /* ==== 0x01021ABC  (file offset 0x21ABC)  swvTexture2D_SetImage ======================================= */
 /* JSR-184 1.1, Texture2D.setImage(image), on the native texture: the image swapped in at +0x2c with
    the counts of references kept (FUN_01004848, on the objects' +4 parts); then error -1301
-   (IllegalArgumentException; a tail jump to FUN_0102f7e0, which does not return) unless its width and
+   (IllegalArgumentException; a tail jump to swv_Throw, which does not return) unless its width and
    its height (the image's vtable +0x24 / +0x28, each asked twice) are powers of two (swv_IsPowerOfTwo)
    up to 1024 (the implementation's maximum; GUESS: getProperties' maxTextureDimension,
    swvGraphics3D_Property 7 - 9). A NULL image (-1302, NullPointerException) is refused by its callers,
@@ -29192,7 +29191,7 @@ void FUN_01021a78(int param_1,undefined4 param_2,int param_3)
    are GUESS getWidth / getHeight). Evidence: 0x01021abc - 0x01021b64 (`addne r1, r1, #4` / `addne r0,
    r0, #4` / `bl 0x01004848` / `subne r0, r0, #4` / `str r0, [r4, #0x2c]`; each `blx r1` with r0 the
    image, its result to `bl 0x01013af8` or `cmp r0, #0x400`; `ldmiale sp!, {r4, pc}`, else `b
-   0x0102f7e0`; Ghidra had dropped the receivers and followed the tail jump into FUN_0102f7e0's code). */
+   0x0102f7e0`; Ghidra had dropped the receivers and followed the tail jump into swv_Throw's code). */
 void swvTexture2D_SetImage(uint8 *texture,uint8 *image)
 
 {
@@ -29216,7 +29215,7 @@ void swvTexture2D_SetImage(uint8 *texture,uint8 *image)
           swv_IsPowerOfTwo((*(code *)(*(int32 *)(vtable + 0x28) + vtable))(held)) == 0)
       || (held = *(uint8 **)(texture + 0x2c), vtable = *(int32 *)held,
           (*(code *)(*(int32 *)(vtable + 0x28) + vtable))(held) > 0x400))
-    FUN_0102f7e0(INTEGER_MINUS_1301);   /* the binary: a tail jump */
+    swv_Throw(INTEGER_MINUS_1301);   /* the binary: a tail jump */
 }
 
 /* ==== 0x01021B6C  (file offset 0x21B6C)  FUN_01021b6c ================================================ */
@@ -29272,10 +29271,10 @@ void FUN_01021bac(int param_1,int param_2,undefined4 param_3,int param_4,int par
     iVar3 = INTEGER_MINUS_1101;
   }
   if (bVar6 || (!bVar5 || iVar1 < param_2)) {
-    FUN_0102f7e0(iVar3);
+    swv_Throw(iVar3);
   }
   if (param_4 < *(int *)(param_1 + 0x34)) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   iVar1 = swvKeyframeSequence_KeyframeWords((SwvKeyframeSequence *)param_1);
   puVar4 = (undefined4 *)(*(int *)(param_1 + 0x40) + param_2 * iVar1 * 4);
@@ -29327,7 +29326,7 @@ int FUN_01021c7c(int param_1,int param_2,int param_3,int param_4)
     iVar2 = INTEGER_MINUS_1101;
   }
   if (bVar4 || (!bVar3 || iVar1 < param_2)) {
-    FUN_0102f7e0(iVar2);
+    swv_Throw(iVar2);
   }
   iVar1 = *(int *)(*(int *)(param_1 + 0xf8) + param_2 * 4);
   if (param_3 == 0) {
@@ -29604,7 +29603,7 @@ void swvVertexBuffer_SetNormalsValue(uint8 *buffer,uint8 *normals)
   uint32 scale;
 
   if (normals != NULL && *(const int32 *)(normals + 0x20) != 3)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   FUN_01023b3c((int)buffer,(int *)(buffer + 0x28),(int)normals);
   *(uint32 *)(buffer + 0x54) = 0x3f800000;
   if (*(uint8 **)(buffer + 0x28) != NULL) {
@@ -29816,9 +29815,9 @@ void swvVertexBuffer_SetPositionsValue(uint8 *buffer,uint8 *positions,uint32 sca
 {
   if (positions != NULL) {
     if (*(const int32 *)(positions + 0x20) != 3)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     if (bias != NULL && *(const int32 *)(positions + 0x20) > length)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     *(uint32 *)(buffer + 0x44) = scale;
     if (bias == NULL) {
       *(uint32 *)(buffer + 0x38) = 0;
@@ -29827,7 +29826,7 @@ void swvVertexBuffer_SetPositionsValue(uint8 *buffer,uint8 *positions,uint32 sca
     }
     else {
       if (length < 3)
-        FUN_0102f7e0(INTEGER_MINUS_1301);
+        swv_Throw(INTEGER_MINUS_1301);
       *(uint32 *)(buffer + 0x38) = swv_CheckFloat(bias[0]);
       *(uint32 *)(buffer + 0x3c) = swv_CheckFloat(bias[1]);
       *(uint32 *)(buffer + 0x40) = swv_CheckFloat(bias[2]);
@@ -30808,7 +30807,7 @@ void FUN_010231c4(int param_1,int *param_2)
   int iVar2;
   
   if (param_2 == (int *)0x0) {
-    FUN_0102f7e0(INTEGER_MINUS_1302);
+    swv_Throw(INTEGER_MINUS_1302);
   }
   /* engine virtual call, slot +0x2c: of the static engine vtables only the renderer's (0x01002398)
      swvRenderer_Kind has it; a scene object's vtable is not among them (GUESS: not static), so for one the
@@ -30816,14 +30815,14 @@ void FUN_010231c4(int param_1,int *param_2)
   iVar2 = (*(code *)(*(int *)(*param_2 + 0x2c) + *param_2))(param_2);
   uVar1 = INTEGER_MINUS_1301;
   if (iVar2 != 9) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   if (param_2[0xc] != 0) {
-    FUN_0102f7e0(uVar1);
+    swv_Throw(uVar1);
   }
   iVar2 = swvNode_IsAncestorOf((uint8 *)param_2,(uint8 *)param_1);
   if (iVar2 != 0) {
-    FUN_0102f7e0(uVar1);
+    swv_Throw(uVar1);
   }
   FUN_0101456c(param_2,param_1);
   *(undefined4 *)(param_1 + 0xf0) = 0;
@@ -31038,13 +31037,13 @@ void swvVertexBuffer_SetTexCoordsValue(uint8 *buffer,uint32 index,uint8 *texCoor
   int32 components;
 
   if (index > 1)
-    FUN_0102f7e0(INTEGER_MINUS_1101);
+    swv_Throw(INTEGER_MINUS_1101);
   if (texCoords != NULL) {
     components = *(const int32 *)(texCoords + 0x20);
     if (components != 2 && components != 3)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     if (bias != NULL && *(const int32 *)(texCoords + 0x20) > length)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     *(uint32 *)(unit + 0x70) = scale;
     if (bias == NULL) {
       unitBias[0] = 0;
@@ -31053,7 +31052,7 @@ void swvVertexBuffer_SetTexCoordsValue(uint8 *buffer,uint32 index,uint8 *texCoor
     }
     else {
       if (*(const int32 *)(texCoords + 0x20) > length)
-        FUN_0102f7e0(INTEGER_MINUS_1301);
+        swv_Throw(INTEGER_MINUS_1301);
       unitBias[0] = swv_CheckFloat(bias[0]);
       unitBias[1] = swv_CheckFloat(bias[1]);
       if (components > 2)
@@ -31072,7 +31071,7 @@ void FUN_01023678(int param_1,uint param_2,int param_3)
   int iVar1;
   
   if (1 < param_2) {
-    FUN_0102f7e0(INTEGER_MINUS_1101);
+    swv_Throw(INTEGER_MINUS_1101);
   }
   param_1 = param_1 + param_2 * 4;
   iVar1 = *(int *)(param_1 + 0x30);
@@ -31242,7 +31241,7 @@ void FUN_01023944(int *param_1,int param_2)
     iVar1 = (*(code *)(*(int *)(param_1[1] + 4) + param_1[1]))(param_1 + 1);
     iVar2 = param_2 + 0xc;
     if ((iVar1 != 0x11) && ((*(uint *)(param_2 + 0x4c) & 2) == 0)) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
   }
   if ((*(byte *)(param_1 + 7) & 2) != 0) {
@@ -31366,7 +31365,7 @@ void FUN_01023af0(int param_1,int param_2,int param_3)
     }
     if (!bVar2 && (-1 < param_3 && param_3 <= iVar1)) goto LAB_01023b24;
   }
-  FUN_0102f7e0(INTEGER_MINUS_1101);
+  swv_Throw(INTEGER_MINUS_1101);
 LAB_01023b24:
   *(int *)(param_1 + 0x2c) = param_2;
   *(int *)(param_1 + 0x30) = param_3;
@@ -31402,7 +31401,7 @@ void FUN_01023b3c(int param_1,int *param_2,int param_3)
         iVar2 = *(int *)(param_3 + 0x1c);
       }
       if (iVar1 != 0 && iVar2 != iVar1) {
-        FUN_0102f7e0(INTEGER_MINUS_1301);
+        swv_Throw(INTEGER_MINUS_1301);
       }
     }
   }
@@ -31475,7 +31474,7 @@ undefined8 FUN_01023bc8(int param_1,undefined4 param_2,undefined4 param_3,int pa
     bVar5 = param_5 - 1U == INTEGER_1023;
   }
   if (bVar7 && !bVar5) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   *(undefined4 *)(param_1 + 0x48) = param_2;
   *(undefined4 *)(param_1 + 0x4c) = param_3;
@@ -31527,7 +31526,7 @@ void FUN_01023c90(int param_1,int param_2,int param_3)
   
   iVar3 = *(int *)(param_1 + 0xcc);
   if (param_2 < iVar3) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   for (iVar2 = 0; iVar2 < iVar3; iVar2 = iVar2 + 1) {
     uVar1 = swv_CheckFloat(*(undefined4 *)(param_3 + iVar2 * 4));
@@ -31573,7 +31572,7 @@ void FUN_01023d00(int param_1)
 /* JSR-184 1.1, Image2D.set(x, y, width, height, image) on the native Image2D image (size the bytes of
    pixels); its BREW-facing caller swvImage2D_Set (Image2D slot 29) first refuses x < 0, y < 0, width <=
    0 and height <= 0 (-1301) and NULL pixels (-1302). Here error -1301 (IllegalArgumentException;
-   FUN_0102f7e0, which does not return) unless the rectangle is inside the image (+0x34 / +0x38; signed
+   swv_Throw, which does not return) unless the rectangle is inside the image (+0x34 / +0x38; signed
    compares of the wrapped sums), not empty, and size holds at least swvImage2D_BytesPerPixel * width *
    height bytes; then -1300 (IllegalStateException) when the image is not mutable (+0x44); then each
    pixel converted by FUN_01025bc4 into the 16-bit colour plane (the data +0x20 at +0x30, row pitch the
@@ -31597,9 +31596,9 @@ void swvImage2D_SetValue(uint8 *image,int32 x,int32 y,int32 width,int32 height,i
   if (x < 0 || width <= 0 || (int32)((uint32)x + (uint32)width) > *(int32 *)(image + 0x34) || y < 0
       || height <= 0 || (int32)((uint32)y + (uint32)height) > *(int32 *)(image + 0x38)
       || (int32)((uint32)bytesPerPixel * ((uint32)height * (uint32)width)) > size)
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   if (*(int32 *)(image + 0x44) == 0)
-    FUN_0102f7e0(INTEGER_MINUS_1300);
+    swv_Throw(INTEGER_MINUS_1300);
   offset = *(int32 *)(image + 0x34) * y + x;
   colour = *(uint8 **)(image + 0x20) + *(int32 *)(image + 0x30) + offset * 2;
   alpha = swvImage2D_AlphaPlane(image) + offset;
@@ -31637,7 +31636,7 @@ FUN_01023e44(int param_1,int param_2,int param_3,int param_4,int param_5,int par
   iVar1 = swvImage2D_BytesPerPixel(*(undefined4 *)(param_1 + 0x40));
   iVar4 = (iVar1 + 2) * param_5 * param_4;
   if (iVar4 - param_6 != 0 && param_6 <= iVar4) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   param_7 = param_5 * param_4 * iVar1 + param_7;
   if ((param_2 == 0 && param_3 == 0) && (iVar1 = swvImage2D_Width((uint8 *)param_1), iVar1 == param_4)) {
@@ -31772,7 +31771,7 @@ void FUN_01023f50(int param_1,int param_2,undefined4 *param_3)
   undefined1 uVar10;
   
   if (param_2 < 0x10) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   *(undefined4 *)(param_1 + 0x4c) = 1;
   uVar7 = 0;
@@ -32004,7 +32003,7 @@ void FUN_0102412c(int param_1,int *param_2)
     iVar1 = param_2[0x10];
   }
   if ((param_2 != (int *)0x0 && iVar1 != 99) && iVar1 != 100) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   piVar2 = *(int **)(param_1 + 0x20);
   if (piVar2 != (int *)0x0) {
@@ -33278,7 +33277,7 @@ void FUN_010258d0(int param_1,int param_2,int param_3,undefined4 param_4,int par
 /* GUESS (not yet rewritten): converts the vertices of the VertexArray param_2 (2 or 3 components)
    to float with swvVertexArray_GetComponent and swv_fflt: x, y, z (0 with 2 components) and w (1.0
    when param_5 is set, else 0), each vertex passed to FUN_0101471c with param_1 + 0xc and param_4,
-   which steps 16 bytes a vertex (4 floats). Error -1301 (FUN_0102f7e0) when param_3 < 4 * the vertex
+   which steps 16 bytes a vertex (4 floats). Error -1301 (swv_Throw) when param_3 < 4 * the vertex
    count (GUESS: param_3 is the room, in floats) or the components are not 2 or 3. */
 void FUN_01025a50(int param_1,int param_2,int param_3,int param_4,int param_5)
 
@@ -33302,10 +33301,10 @@ void FUN_01025a50(int param_1,int param_2,int param_3,int param_4,int param_5)
   }
   iVar9 = *(int *)(param_2 + 0x20);
   if (param_3 < iVar7) {
-    FUN_0102f7e0(iVar2);
+    swv_Throw(iVar2);
   }
   if (1 < iVar9 - 2U) {
-    FUN_0102f7e0(iVar1);
+    swv_Throw(iVar1);
   }
   if (param_5 == 0) {
     uVar6 = 0;
@@ -33341,7 +33340,7 @@ void FUN_01025b30(int param_1,uint param_2,undefined4 *param_3)
   int iVar5;
   
   if ((param_2 & 3) != 0) {
-    FUN_0102f7e0(INTEGER_MINUS_1301);
+    swv_Throw(INTEGER_MINUS_1301);
   }
   iVar5 = (int)(param_2 + ((uint)((int)param_2 >> 0x1f) >> 0x1e)) >> 2;
   while (0 < iVar5) {
@@ -34087,7 +34086,7 @@ void FUN_010266b0(int param_1,int param_2,int param_3,int param_4)
 
 /* ==== 0x010266C0  (file offset 0x266C0)  swvKeyframeSequence_Prepare ================================= */
 /* GUESS: name. Checks and prepares the KeyframeSequence sequence before its first sampling: the valid
-   keyframes' times (signed ints) must not decrease, else error -1300 (FUN_0102f7e0, which does not return;
+   keyframes' times (signed ints) must not decrease, else error -1300 (swv_Throw, which does not return;
    SWVE_ILLEGAL_STATE: the IllegalStateException Object3D.animate throws, JSR-184 1.1,
    KeyframeSequence.setValidRange: the valid keyframes' times must be in non-decreasing order). With
    validFirst <= validLast the pairs validFirst .. validLast are checked; for a wrapped range (validFirst >
@@ -34116,22 +34115,22 @@ void swvKeyframeSequence_Prepare(SwvKeyframeSequence *sequence)
   if (i <= sequence->validLast) {
     for (; i < sequence->validLast; i++)
       if (sequence->keyframes[words * i] > sequence->keyframes[words * (i + 1)])
-        FUN_0102f7e0(INTEGER_MINUS_1300);
+        swv_Throw(INTEGER_MINUS_1300);
   }
   else {
     for (; i < sequence->keyframeCount - 1; i++)
       if (sequence->keyframes[words * i] > sequence->keyframes[words * (i + 1)])
-        FUN_0102f7e0(INTEGER_MINUS_1300);
+        swv_Throw(INTEGER_MINUS_1300);
     if (sequence->keyframes[words * (sequence->keyframeCount - 1)] > sequence->keyframes[0])
-      FUN_0102f7e0(INTEGER_MINUS_1300);
+      swv_Throw(INTEGER_MINUS_1300);
     for (i = 0; i < sequence->validLast - 1; i++)
       if (sequence->keyframes[words * i] > sequence->keyframes[words * (i + 1)])
-        FUN_0102f7e0(INTEGER_MINUS_1300);
+        swv_Throw(INTEGER_MINUS_1300);
   }
   valid = swvKeyframeSequence_ValidCount(sequence);
   lastTime = swv_fflt(sequence->keyframes[words * sequence->validLast]);
   if ((swv_fcmp_c(lastTime,sequence->duration), !FLOAT_LE(lastTime,sequence->duration)))
-    FUN_0102f7e0(INTEGER_MINUS_1300);
+    swv_Throw(INTEGER_MINUS_1300);
   sequence->prepared = 1;
   if (sequence->interpolation == 0xb1) {
     for (i = sequence->validFirst; i < sequence->validFirst + valid; i++)
@@ -34344,7 +34343,7 @@ void FUN_01026d30(int param_1,undefined4 param_2,int param_3)
 
 {
   if (*(uint *)(param_1 + 0xc) < (uint)(*(int *)(param_1 + 0x18) + param_3)) {
-    FUN_0102f7e0(INTEGER_MINUS_1200);
+    swv_Throw(INTEGER_MINUS_1200);
   }
   thunk_swv_memcpy(*(int *)(param_1 + 8) + *(int *)(param_1 + 0x18),param_2,param_3);
   *(int *)(param_1 + 0x18) = *(int *)(param_1 + 0x18) + param_3;
@@ -39464,7 +39463,7 @@ int32 swvAnimationController_SetWeight(ISwerveObject *po,uint32 weight)
       controller -= 4;
     weight = swv_CheckFloat(weight);
     if ((swv_fcmp_c(swv_CheckFloat(0),weight), (weight & 0x80000000) != 0 && (weight & 0x7fffffff) != 0))
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     swvAnimationController_SetWeightValue(controller,weight);
     swv_TryPop();
   }
@@ -39613,10 +39612,10 @@ undefined4 FUN_0102d310(int param_1,int param_2,int param_3)
       iVar1 = iVar1 + -4;
     }
     if (iVar1 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     if (0x14 < param_3 - 0x100U) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     iVar2 = *(int *)(param_1 + 4);
     if (iVar2 != 0) {
@@ -39839,7 +39838,7 @@ int FUN_0102d5f4(int param_1,uint param_2,ISwerveObject **param_3)
       iVar1 = iVar1 + -4;
     }
     if (1 < param_2) {
-      FUN_0102f7e0(INTEGER_MINUS_1101);
+      swv_Throw(INTEGER_MINUS_1101);
     }
     pNative = *(void **)(iVar1 + param_2 * 4 + 0x30);
     if (pNative != (void *)0x0) {
@@ -39963,7 +39962,7 @@ undefined4 FUN_0102d788(int param_1,int param_2)
       iVar1 = iVar1 + -4;
     }
     if (0x7e < param_2 + 0x3fU) {
-      FUN_0102f7e0(INTEGER_MINUS_1101);
+      swv_Throw(INTEGER_MINUS_1101);
     }
     *(int *)(iVar1 + 0x1c) = param_2;
     swv_TryPop();
@@ -40460,10 +40459,10 @@ undefined4 FUN_0102ddb0(int param_1,undefined4 param_2,undefined4 param_3,int pa
       iVar1 = iVar1 + -4;
     }
     if (param_4 < 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     if (param_5 < 0) {
-      FUN_0102f7e0(uVar2);
+      swv_Throw(uVar2);
     }
     uVar2 = swv_fflt(param_2);
     *(undefined4 *)(iVar1 + 0x2c) = uVar2;
@@ -40547,10 +40546,10 @@ undefined4 FUN_0102deec(int param_1,int param_2,int param_3)
       iVar2 = iVar2 + -4;
     }
     if (1 < param_2 - 0x20U) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     if (1 < param_3 - 0x20U) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     *(int *)(iVar2 + 0x24) = param_2;
     *(int *)(iVar2 + 0x28) = param_3;
@@ -40750,7 +40749,7 @@ undefined4 FUN_0102e1b0(int param_1,int param_2)
       iVar2 = iVar2 + -4;
     }
     if (iVar2 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     FUN_01020da0(iVar1,iVar2);
     swv_TryPop();
@@ -40790,13 +40789,13 @@ FUN_0102e234(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     uVar3 = swv_CheckFloat(0);
     swv_fcmp_c(uVar3,uVar2);
     if ((bool)uVar7) {
-      FUN_0102f7e0(uVar5);
+      swv_Throw(uVar5);
     }
     uVar3 = swv_CheckFloat(param_3);
     uVar4 = swv_CheckFloat(0);
     swv_fcmp_c(uVar4,uVar3);
     if ((bool)uVar7) {
-      FUN_0102f7e0(uVar5);
+      swv_Throw(uVar5);
     }
     uVar5 = swv_CheckFloat(param_4);
     uVar4 = swv_CheckFloat(param_5);
@@ -40847,25 +40846,25 @@ FUN_0102e318(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     swv_fcmp_b(uVar3,uVar2);
     if ((bool)uVar8 && !(bool)uVar9) goto LAB_0102e3a4;
   }
-  FUN_0102f7e0(uVar7);
+  swv_Throw(uVar7);
 LAB_0102e3a4:
   uVar3 = swv_CheckFloat(param_3);
   uVar4 = swv_CheckFloat(0);
   swv_fcmp_c(uVar4,uVar3);
   if ((bool)uVar8) {
-    FUN_0102f7e0(uVar7);
+    swv_Throw(uVar7);
   }
   uVar4 = swv_CheckFloat(param_4);
   uVar5 = swv_CheckFloat(0);
   swv_fcmp_c(uVar5,uVar4);
   if ((bool)uVar8) {
-    FUN_0102f7e0(uVar7);
+    swv_Throw(uVar7);
   }
   uVar5 = swv_CheckFloat(param_5);
   uVar6 = swv_CheckFloat(0);
   swv_fcmp_c(uVar6,uVar5);
   if ((bool)uVar8) {
-    FUN_0102f7e0(uVar7);
+    swv_Throw(uVar7);
   }
   FUN_01022204(iVar1,uVar2,uVar3,uVar4,uVar5);
   swv_TryPop();
@@ -41074,7 +41073,7 @@ undefined4 FUN_0102e66c(int param_1,undefined4 param_2)
     swv_fcmp_b(uVar3,uVar2);
     if ((bool)uVar4) goto LAB_0102e6e4;
   }
-  FUN_0102f7e0(INTEGER_MINUS_1301);
+  swv_Throw(INTEGER_MINUS_1301);
 LAB_0102e6e4:
   *(undefined4 *)(iVar1 + 0x30) = uVar2;
   swv_TryPop();
@@ -41112,7 +41111,7 @@ undefined4 FUN_0102e724(int param_1,int param_2)
       iVar1 = iVar1 + -4;
     }
     if (4 < param_2 - 0x40U) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     *(int *)(iVar1 + 0x2c) = param_2;
     swv_TryPop();
@@ -41417,7 +41416,7 @@ undefined4 FUN_0102eb74(int param_1,undefined4 param_2)
     uVar3 = swv_CheckFloat(0);
     swv_fcmp_c(uVar3,uVar2);
     if ((bool)uVar5 && !(bool)uVar6) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     *(undefined4 *)(iVar1 + 0x20) = uVar2;
     swv_TryPop();
@@ -41474,7 +41473,7 @@ undefined4 FUN_0102ec78(int param_1,int param_2)
       iVar1 = iVar1 + -4;
     }
     if (1 < param_2 - 0x50U) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     *(int *)(iVar1 + 0x2c) = param_2;
     swv_TryPop();
@@ -41507,7 +41506,7 @@ uint32 FUN_0102ecec(void)
 }
 
 /* ==== 0x0102ED04  (file offset 0x2ED04)  swv_CheckFloat ============================================== */
-/* GUESS: name. Checks a float argument (its bits): raises SWVE_BAD_FLOAT (-1001; FUN_0102f7e0, which
+/* GUESS: name. Checks a float argument (its bits): raises SWVE_BAD_FLOAT (-1001; swv_Throw, which
    does not return) for a denormal (exponent 0, magnitude not 0), an infinity or a NaN (exponent 0xff);
    +-0 and the normal numbers pass. Returns the value unchanged. The BREW slots run it on the floats they
    are given (AnimationController setPosition / setSpeed / setWeight, swvGroup_PickRay's ray, the
@@ -41520,7 +41519,7 @@ uint32 swv_CheckFloat(uint32 value)
   uint32 exponent = value & WORD_HEXADECIMAL_7F800000;
 
   if ((exponent == 0 || exponent == WORD_HEXADECIMAL_7F800000) && (value & 0x7fffffff) != 0)
-    FUN_0102f7e0(SWVE_BAD_FLOAT);
+    swv_Throw(SWVE_BAD_FLOAT);
   return value;
 }
 
@@ -42478,26 +42477,17 @@ void FUN_0102f774(undefined4 param_1)
   return;
 }
 
-/* ==== 0x0102F7E0  (file offset 0x2F7E0)  FUN_0102f7e0 ================================================ */
-void FUN_0102f7e0(undefined4 param_1)
+/* ==== 0x0102F7E0  (file offset 0x2F7E0)  swv_Throw =================================================== */
+/* GUESS: name. The engine's error throw: error (an engine error code, swv_types.h SwerveError) is thrown
+   to the error frame list (swvErrorFrames_Throw on swv_ErrorFrames; a tail jump, which Ghidra took in):
+   swv_longjmp back to the last active frame's swv_setjmp, so it does not return while an API entry's
+   frame is active; with none, the applet is closed (swv_CloseApplet) and that result returned (Ghidra
+   had made it void; FUN_0101d21c reads it). Evidence: 0x0102f7e0 - 0x0102f7f4 (`mov r4, r0` / `bl
+   0x0100f7d0`, `mov r1, r4`, `pop {r4, lr}` / `b 0x01013c1c`). */
+int32 swv_Throw(int32 error)
 
 {
-  int iVar1;
-  void *pvVar2;
-  undefined4 uVar3;
-  
-  iVar1 = (int)swv_ErrorFrames();
-  swvErrorFrame_Throw(*(uint8 **)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),param_1);
-  if (*(int *)(iVar1 + 0x14) != 0) {
-    swvErrorFrame_Throw(*(uint8 **)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),param_1);
-  }
-  pvVar2 = helper_GetAppInstance();
-  uVar3 = *(undefined4 *)((int)pvVar2 + 0xc);
-  pvVar2 = helper_GetAppInstance();
-                    /* WARNING: Could not recover jumptable at 0x010398cc. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (*((IShell *)*(int **)((int)pvVar2 + 0xc))->pvt->CloseApplet)((IShell *)uVar3,0);
-  return;
+  return swvErrorFrames_Throw(swv_ErrorFrames(),error);
 }
 
 /* ==== 0x0102F7F8  (file offset 0x2F7F8)  FUN_0102f7f8 ================================================ */
@@ -42527,7 +42517,7 @@ undefined4 FUN_0102f7f8(int param_1,int param_2,int param_3,undefined4 *param_4)
       iVar2 = iVar2 + -4;
     }
     if (iVar2 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     iVar3 = 0;
     if (param_3 != 0) {
@@ -42612,7 +42602,7 @@ int32 swv_Create_Graphics3D(void **ppObj)
 
 /* ==== 0x0102F960  (file offset 0x2F960)  swvGraphics3D_GetProperty =================================== */
 /* GUESS: name. IGraphics3D slot 22 (+0x58, swv_InitVtbl_Graphics3D's pVtbl[0x16]): in an error frame,
-   error -1301 (FUN_0102f7e0, which does not return) for an index above 11, else *value =
+   error -1301 (swv_Throw, which does not return) for an index above 11, else *value =
    swvGraphics3D_Property(index); returns 0, or on an error its result code (swv_ErrorToResult). po is
    not read (the properties are the same for every Graphics3D). */
 int32 swvGraphics3D_GetProperty(IGraphics3D *po,uint32 index,int32 *value)
@@ -42626,7 +42616,7 @@ int32 swvGraphics3D_GetProperty(IGraphics3D *po,uint32 index,int32 *value)
   if (error == 0) {
     swv_TryArm(frame);
     if (index > 11)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     *value = swvGraphics3D_Property(index);
     swv_TryPop();
   }
@@ -42748,7 +42738,7 @@ undefined4 FUN_0102fb74(int param_1,int param_2,int param_3)
       iVar2 = iVar2 + -4;
     }
     if (iVar2 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     iVar3 = 0;
     if (param_3 != 0) {
@@ -42797,7 +42787,7 @@ FUN_0102fc0c(int param_1,int param_2,int param_3,int param_4,int param_5,undefin
       iVar3 = iVar3 + -4;
     }
     if (iVar3 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     iVar4 = 0;
     if (param_3 != 0) {
@@ -42807,7 +42797,7 @@ FUN_0102fc0c(int param_1,int param_2,int param_3,int param_4,int param_5,undefin
       iVar4 = iVar4 + -4;
     }
     if (iVar4 == 0) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     iVar5 = 0;
     if (param_4 != 0) {
@@ -42817,7 +42807,7 @@ FUN_0102fc0c(int param_1,int param_2,int param_3,int param_4,int param_5,undefin
       iVar5 = iVar5 + -4;
     }
     if (iVar5 == 0) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     iVar6 = 0;
     if (param_5 != 0) {
@@ -42860,7 +42850,7 @@ undefined4 FUN_0102fcf8(int param_1,int param_2)
       iVar2 = iVar2 + -4;
     }
     if (iVar2 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     FUN_0101d17c(iVar1,iVar2);
     swv_TryPop();
@@ -43059,7 +43049,7 @@ undefined4 FUN_0102ffb8(int param_1,undefined4 param_2,undefined4 param_3)
   swv_fcmp_c(uVar3,uVar2);
   if ((bool)uVar6 && !(bool)uVar7) {
 LAB_01030038:
-    FUN_0102f7e0(uVar5);
+    swv_Throw(uVar5);
   }
   else {
     uVar3 = swv_CheckFloat(0x3f800000);
@@ -43074,7 +43064,7 @@ LAB_01030038:
     swv_fcmp_b(uVar4,uVar3);
     if ((bool)uVar6) goto LAB_0103007c;
   }
-  FUN_0102f7e0(uVar5);
+  swv_Throw(uVar5);
 LAB_0103007c:
   *(undefined4 *)(iVar1 + 0x94) = uVar2;
   *(undefined4 *)(iVar1 + 0x98) = uVar3;
@@ -43333,7 +43323,7 @@ void swv_InitVtbl_Group(void **pVtbl)
 /* JSR-184 1.1, Group.pick(scope, x, y, camera, ri), the camera form: ISwerveObject slot 48 (+0xc0) of
    Group and World (kh_types.h SwerveGroupVtbl.PickCamera; the ray form is slot 47, swvGroup_PickRay): in
    an error frame, x and y checked by swv_CheckFloat (error -1001 for a denormal, infinite or NaN float),
-   then error -1302 (NullPointerException; FUN_0102f7e0, which does not return) for a NULL camera or one
+   then error -1302 (NullPointerException; swv_Throw, which does not return) for a NULL camera or one
    without a native object (the spec: camera is null), then swvGroup_PickCameraValue(the native group
    (po->pNative, less 4 when not NULL), scope, x, y, the native Camera (camera's pNative less 4), the
    native RayIntersection (ri's pNative less 4; NULL for a NULL ri or one without a native object)),
@@ -43371,7 +43361,7 @@ int32 swvGroup_PickCamera(ISwerveObject *po,int32 scope,uint32 x,uint32 y,ISwerv
     if (view != NULL)
       view -= 4;
     if (view == NULL)
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     ray = NULL;
     if (ri != NULL)
       ray = (uint8 *)ri->pNative;
@@ -43860,7 +43850,7 @@ void swv_InitVtbl_Image2D(void **pVtbl)
 /* ==== 0x01030C54  (file offset 0x30C54)  swvImage2D_InitFromPixels =================================== */
 /* GUESS: name. ISwerveObject slot 18 (+0x48) of Image2D (swv_InitVtbl_Image2D's pVtbl[0x12]; JSR-184
    1.1, Image2D(format, width, height, image)): in an error frame, error -1301 (IllegalArgumentException;
-   FUN_0102f7e0, which does not return) unless 0x60 <= format <= 0x64 (ALPHA, LUMINANCE,
+   swv_Throw, which does not return) unless 0x60 <= format <= 0x64 (ALPHA, LUMINANCE,
    LUMINANCE_ALPHA, RGB, RGBA), width > 0 and height > 0; -1302 (NullPointerException) for NULL pixels;
    then FUN_01007d70 builds the native object (po->pNative, +4, less 4) from the size bytes of pixels;
    returns 0, or on an error its result code (swv_ErrorToResult). Evidence: 0x01030c54 - 0x01030d08 (r10
@@ -43880,13 +43870,13 @@ int32 swvImage2D_InitFromPixels(ISwerveObject *po,int32 format,int32 width,int32
   if (error == 0) {
     swv_TryArm((int)frame);
     if ((uint32)format - 0x60 > 4)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     if (width < 1)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     if (height < 1)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     if (pixels == NULL)
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     image = (uint8 *)po->pNative;
     if (image != NULL)
       image -= 4;
@@ -43913,13 +43903,13 @@ undefined4 FUN_01030d14(int param_1,int param_2,int param_3,int param_4)
     swv_TryArm(auStack_a4);
     uVar1 = INTEGER_MINUS_1301;
     if (4 < param_2 - 0x60U) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     if (param_3 < 1) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     if (param_4 < 1) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     iVar2 = *(int *)(param_1 + 4);
     if (iVar2 != 0) {
@@ -43937,7 +43927,7 @@ undefined4 FUN_01030d14(int param_1,int param_2,int param_3,int param_4)
 /* ==== 0x01030DBC  (file offset 0x30DBC)  swvImage2D_InitFromPalette ================================== */
 /* GUESS: name. ISwerveObject slot 19 (+0x4c) of Image2D (swv_InitVtbl_Image2D's pVtbl[0x13]; JSR-184
    1.1, Image2D(format, width, height, image, palette)): in an error frame, error -1301
-   (IllegalArgumentException; FUN_0102f7e0, which does not return) unless 0x60 <= format <= 0x64, width
+   (IllegalArgumentException; swv_Throw, which does not return) unless 0x60 <= format <= 0x64, width
    > 0 and height > 0; -1302 (NullPointerException) for NULL indices or a NULL palette; then
    FUN_01007e30 builds the native object (po->pNative, +4, less 4) from the indexSize bytes of indices
    and the paletteSize bytes of palette; returns 0, or on an error its result code (swv_ErrorToResult).
@@ -43958,15 +43948,15 @@ int32 swvImage2D_InitFromPalette(ISwerveObject *po,int32 format,int32 width,int3
   if (error == 0) {
     swv_TryArm((int)frame);
     if ((uint32)format - 0x60 > 4)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     if (width < 1)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     if (height < 1)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     if (indices == NULL)
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     if (palette == NULL)
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     image = (uint8 *)po->pNative;
     if (image != NULL)
       image -= 4;
@@ -43994,13 +43984,13 @@ undefined4 FUN_01030e98(int param_1,int param_2,int param_3,int param_4,int para
     swv_TryArm(auStack_a8);
     uVar1 = INTEGER_MINUS_1301;
     if (4 < param_2 - 0x60U) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     if (param_3 < 1) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     if (param_4 < 1) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     iVar2 = *(int *)(param_1 + 4);
     if (iVar2 != 0) {
@@ -44032,7 +44022,7 @@ void FUN_01030f48(int param_1,undefined1 *param_2)
 /* ==== 0x01030F60  (file offset 0x30F60)  swvImage2D_Set ============================================== */
 /* ISwerveObject slot 29 (+0x74) of Image2D (swv_InitVtbl_Image2D's pVtbl[0x1d]; JSR-184 1.1,
    Image2D.set(x, y, width, height, image)): in an error frame, error -1301 (IllegalArgumentException;
-   FUN_0102f7e0, which does not return) for x < 0, y < 0, width <= 0 or height <= 0; -1302
+   swv_Throw, which does not return) for x < 0, y < 0, width <= 0 or height <= 0; -1302
    (NullPointerException) for NULL pixels; then swvImage2D_SetValue on the native object (po->pNative,
    +4, less 4) with the size bytes of pixels; returns 0, or on an error its result code
    (swv_ErrorToResult). Evidence: 0x01030f60 - 0x01031024 (the stack arguments height r7, size, pixels
@@ -44054,15 +44044,15 @@ int32 swvImage2D_Set(ISwerveObject *po,int32 x,int32 y,int32 width,int32 height,
     if (image != NULL)
       image -= 4;
     if (x < 0)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     if (y < 0)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     if (width < 1)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     if (height < 1)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     if (pixels == NULL)
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     swvImage2D_SetValue(image,x,y,width,height,size,pixels);
     swv_TryPop();
   }
@@ -45639,13 +45629,13 @@ undefined4 FUN_01032b70(int param_1,int param_2,int param_3,int param_4)
     swv_TryArm(auStack_a4);
     uVar1 = INTEGER_MINUS_1301;
     if (param_2 < 1) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     if (param_3 < 1) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     if (4 < param_4 - 0xb0U) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     iVar2 = *(int *)(param_1 + 4);
     if (iVar2 != 0) {
@@ -45677,7 +45667,7 @@ undefined4 FUN_01032c10(int param_1,int param_2)
       iVar1 = iVar1 + -4;
     }
     if (param_2 < 1) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     FUN_01020c44(iVar1,param_2);
     swv_TryPop();
@@ -45705,10 +45695,10 @@ undefined4 FUN_01032c84(int param_1,undefined4 param_2,int param_3,undefined4 pa
       iVar1 = iVar1 + -4;
     }
     if (param_3 < 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     if (param_5 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     FUN_01021bac(iVar1,param_2,param_3,param_4,param_5);
     swv_TryPop();
@@ -45736,7 +45726,7 @@ undefined4 FUN_01032d20(int param_1,int param_2)
       iVar1 = iVar1 + -4;
     }
     if (1 < param_2 - 0xc0U) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     *(int *)(iVar1 + 0x20) = param_2;
     swv_TryPop();
@@ -45972,19 +45962,19 @@ undefined4 FUN_0103300c(int param_1,undefined4 param_2,undefined4 param_3,undefi
     uVar4 = swv_CheckFloat(0);
     swv_fcmp_c(uVar4,uVar3);
     if ((bool)uVar8 && !(bool)uVar9) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     uVar4 = swv_CheckFloat(param_3);
     uVar5 = swv_CheckFloat(0);
     swv_fcmp_c(uVar5,uVar4);
     if ((bool)uVar8 && !(bool)uVar9) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     uVar5 = swv_CheckFloat(param_4);
     uVar6 = swv_CheckFloat(0);
     swv_fcmp_c(uVar6,uVar5);
     if ((bool)uVar8 && !(bool)uVar9) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     FUN_0102023c(iVar2,uVar3,uVar4,uVar5);
     swv_TryPop();
@@ -46054,7 +46044,7 @@ undefined4 FUN_01033174(int param_1,int param_2)
       iVar1 = iVar1 + -4;
     }
     if (3 < param_2 - 0x80U) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     FUN_01021ec8(iVar1,param_2);
     swv_TryPop();
@@ -46096,7 +46086,7 @@ undefined4 FUN_010331ec(int param_1,undefined4 param_2)
     swv_fcmp_b(uVar3,uVar2);
     if ((bool)uVar4) goto LAB_01033264;
   }
-  FUN_0102f7e0(INTEGER_MINUS_1301);
+  swv_Throw(INTEGER_MINUS_1301);
 LAB_01033264:
   FUN_0102327c(iVar1,uVar2);
   swv_TryPop();
@@ -46134,7 +46124,7 @@ undefined4 FUN_01033294(int param_1,undefined4 param_2)
     swv_fcmp_b(uVar3,uVar2);
     if ((bool)uVar4) goto LAB_0103330c;
   }
-  FUN_0102f7e0(INTEGER_MINUS_1301);
+  swv_Throw(INTEGER_MINUS_1301);
 LAB_0103330c:
   FUN_0102328c(iVar1,uVar2);
   swv_TryPop();
@@ -46595,7 +46585,7 @@ int32 swv_Create_Material(void **ppObj)
 
 /* ==== 0x01033A24  (file offset 0x33A24)  swvMaterial_GetColor ======================================== */
 /* GUESS: name. ISwerveObject slot 22 (+0x58) of Material (JSR-184 1.1, Material.getColor; kh_types.h
-   SwerveMaterialVtbl.GetColor): in an error frame, error -1301 (IllegalArgumentException; FUN_0102f7e0,
+   SwerveMaterialVtbl.GetColor): in an error frame, error -1301 (IllegalArgumentException; swv_Throw,
    which does not return) for a target other than AMBIENT (0x400), DIFFUSE (0x800), EMISSIVE (0x1000) or
    SPECULAR (0x2000), else *pArgb = swvMaterial_Color of the native object (po->pNative, +4, less 4) and
    target; returns 0, or on an error its result code (swv_ErrorToResult). Evidence: 0x01033a24 -
@@ -46616,7 +46606,7 @@ int32 swvMaterial_GetColor(ISwerveObject *po,int32 target,uint32 *pArgb)
     if (material != NULL)
       material -= 4;
     if (target != 0x400 && target != 0x800 && target != 0x1000 && target != 0x2000)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     *pArgb = swvMaterial_Color(material,target);
     swv_TryPop();
   }
@@ -46730,7 +46720,7 @@ undefined4 FUN_01033bb4(int param_1,undefined4 param_2)
     swv_fcmp_b(uVar3,uVar2);
     if ((bool)uVar4) goto LAB_01033c2c;
   }
-  FUN_0102f7e0(INTEGER_MINUS_1301);
+  swv_Throw(INTEGER_MINUS_1301);
 LAB_01033c2c:
   *(undefined4 *)(iVar1 + 0x30) = uVar2;
   swv_TryPop();
@@ -46944,7 +46934,7 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
       iVar1 = iVar1 + -4;
     }
     if (iVar1 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     piVar2 = (int *)swv_New_2(0x10);
     if (piVar2 != (int *)0x0) {
@@ -46967,7 +46957,7 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
       *(int *)(piVar2[1] + uVar4 * 4) = iVar8;
     }
     if (iVar9 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     piVar5 = (int *)swv_New_2(0x10);
     if (piVar5 != (int *)0x0) {
@@ -47045,7 +47035,7 @@ undefined4 FUN_010340d0(int param_1,int param_2,int param_3,int param_4)
       iVar2 = iVar2 + -4;
     }
     if (iVar2 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     iVar3 = 0;
     if (param_3 != 0) {
@@ -47055,7 +47045,7 @@ undefined4 FUN_010340d0(int param_1,int param_2,int param_3,int param_4)
       iVar3 = iVar3 + -4;
     }
     if (iVar3 == 0) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     iVar4 = 0;
     if (param_4 != 0) {
@@ -47173,7 +47163,7 @@ int FUN_01034260(int param_1,int param_2,ISwerveObject **param_3)
       iVar2 = INTEGER_MINUS_1101;
     }
     if (bVar5 || (!bVar4 || iVar1 < param_2)) {
-      FUN_0102f7e0(iVar2);
+      swv_Throw(iVar2);
     }
     pNative = *(void **)(*(int *)(iVar3 + 200) + param_2 * 4);
     if (pNative != (void *)0x0) {
@@ -47219,7 +47209,7 @@ undefined4 FUN_01034308(int param_1,undefined4 param_2,int param_3)
       iVar1 = iVar1 + -4;
     }
     if (param_3 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     FUN_0101191c(iVar1,param_2,param_3);
     swv_TryPop();
@@ -47289,7 +47279,7 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
       iVar1 = iVar1 + -4;
     }
     if (iVar1 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     piVar2 = (int *)swv_New_2(0x10);
     local_c4 = piVar2;
@@ -47313,7 +47303,7 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
       *(int *)(local_c4[1] + uVar4 * 4) = iVar11;
     }
     if (iVar10 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     piVar2 = (int *)swv_New_2(0x10);
     if (piVar2 != (int *)0x0) {
@@ -47336,7 +47326,7 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
       *(int *)(piVar2[1] + uVar4 * 4) = iVar9;
     }
     if (iVar11 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     piVar5 = (int *)swv_New_2(0x10);
     if (piVar5 != (int *)0x0) {
@@ -47431,7 +47421,7 @@ undefined4 FUN_010346bc(int param_1,int param_2,uint param_3,int param_4,int par
       iVar2 = iVar2 + -4;
     }
     if (iVar2 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     piVar3 = (int *)swv_New_2(0x10);
     local_c0 = piVar3;
@@ -47455,7 +47445,7 @@ undefined4 FUN_010346bc(int param_1,int param_2,uint param_3,int param_4,int par
       *(int *)(local_c0[1] + uVar5 * 4) = iVar6;
     }
     if (iVar9 == 0) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     iVar6 = 0;
     if (param_5 != 0) {
@@ -47465,7 +47455,7 @@ undefined4 FUN_010346bc(int param_1,int param_2,uint param_3,int param_4,int par
       iVar6 = iVar6 + -4;
     }
     if (iVar6 == 0) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     iVar7 = 0;
     if (param_6 != 0) {
@@ -47505,7 +47495,7 @@ undefined4 FUN_01034834(int param_1,undefined4 param_2,int param_3)
       iVar1 = iVar1 + -4;
     }
     if (param_3 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     FUN_01023c90(iVar1,param_2,param_3);
     swv_TryPop();
@@ -47634,7 +47624,7 @@ undefined4 FUN_010349b8(int param_1,int param_2,int param_3,undefined1 *param_4)
       iVar4 = iVar4 + -4;
     }
     if (iVar4 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     iVar5 = 0;
     if (param_3 != 0) {
@@ -47644,7 +47634,7 @@ undefined4 FUN_010349b8(int param_1,int param_2,int param_3,undefined1 *param_4)
       iVar5 = iVar5 + -4;
     }
     if (iVar5 == 0) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     uVar2 = swvNode_GetTransformTo((uint8 *)iVar3,(uint8 *)iVar4,(uint8 *)iVar5);
     *param_4 = uVar2;
@@ -47732,7 +47722,7 @@ undefined4 FUN_01034b78(int param_1,int param_2,int param_3,int param_4,int para
       iVar3 = iVar3 + -4;
     }
     if (4 < param_3 - 0x90U) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     iVar4 = 0;
     if (param_4 != 0) {
@@ -47742,7 +47732,7 @@ undefined4 FUN_01034b78(int param_1,int param_2,int param_3,int param_4,int para
       iVar4 = iVar4 + -4;
     }
     if (4 < param_5 - 0x90U) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     swvNode_SetAlignment((uint8 *)iVar2,(uint8 *)iVar3,param_3,(uint8 *)iVar4,param_5);
     swv_TryPop();
@@ -47784,7 +47774,7 @@ undefined4 FUN_01034c3c(int param_1,undefined4 param_2)
     swv_fcmp_b(uVar3,uVar2);
     if ((bool)uVar4) goto LAB_01034cb4;
   }
-  FUN_0102f7e0(INTEGER_MINUS_1301);
+  swv_Throw(INTEGER_MINUS_1301);
 LAB_01034cb4:
   *(undefined4 *)(iVar1 + 0x28) = uVar2;
   swv_TryPop();
@@ -47926,7 +47916,7 @@ int32 swvObject3D_AddAnimationTrack(ISwerveObject *po,ISwerveObject *track)
     if (trackObject != NULL)
       trackObject -= 4;
     if (trackObject == NULL)
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     swvObject3D_AddAnimationTrackValue(object,trackObject);
     swv_TryPop();
   }
@@ -48128,7 +48118,7 @@ int32 swvObject3D_GetReferences(ISwerveObject *po,uint32 max,ISwerveObject **ref
     FUN_01023184((int *)array,(int)max);
     count = (uint32)swvObject3D_References(object,(int32)max,(uint8 **)array[1]);
     if (max != 0 && refs == NULL)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     if (count < max)
       max = count;
     for (i = 0; i < max && result == 0; i++)
@@ -48264,7 +48254,7 @@ int32 swvObject3D_RemoveAnimationTrack(ISwerveObject *po,ISwerveObject *track)
     if (trackObject != NULL)
       trackObject -= 4;
     if (trackObject == NULL)
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     swvObject3D_RemoveAnimationTrackValue(object,trackObject);
     swv_TryPop();
   }
@@ -50802,7 +50792,7 @@ void swvPolygonMode_IsTwoSidedLightingEnabled(ISwerveObject *po,uint8 *pEnabled)
 
 /* ==== 0x010380D0  (file offset 0x380D0)  swvPolygonMode_SetCulling =================================== */
 /* ISwerveObject slot 19 (+0x4c) of PolygonMode (JSR-184 1.1, PolygonMode.setCulling; kh_types.h
-   SwervePolygonModeVtbl): in an error frame, error -1301 (IllegalArgumentException; FUN_0102f7e0, which
+   SwervePolygonModeVtbl): in an error frame, error -1301 (IllegalArgumentException; swv_Throw, which
    does not return) unless 0xa0 <= culling <= 0xa2 (CULL_BACK, CULL_FRONT, CULL_NONE), then
    swvPolygonMode_SetCullingValue on the native object (po->pNative, +4, less 4); returns 0, or on an
    error its result code (swv_ErrorToResult). Evidence: 0x010380d0 - 0x01038140 (`sub r0, r4, #0xa0` /
@@ -50823,7 +50813,7 @@ int32 swvPolygonMode_SetCulling(ISwerveObject *po,int32 culling)
     if (mode != NULL)
       mode -= 4;
     if ((uint32)culling - 0xa0 > 2)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     swvPolygonMode_SetCullingValue(mode,culling);
     swv_TryPop();
   }
@@ -50868,7 +50858,7 @@ void swvPolygonMode_SetPerspectiveCorrectionEnable(ISwerveObject *po,int32 enabl
 
 /* ==== 0x01038178  (file offset 0x38178)  swvPolygonMode_SetShading =================================== */
 /* ISwerveObject slot 21 (+0x54) of PolygonMode (JSR-184 1.1, PolygonMode.setShading; kh_types.h
-   SwervePolygonModeVtbl): in an error frame, error -1301 (IllegalArgumentException; FUN_0102f7e0, which
+   SwervePolygonModeVtbl): in an error frame, error -1301 (IllegalArgumentException; swv_Throw, which
    does not return) unless the value is SHADE_FLAT (0xa4) or SHADE_SMOOTH (0xa5), then
    swvPolygonMode_SetShadingValue on the native object (po->pNative, +4, less 4); returns 0, or on an
    error its result code (swv_ErrorToResult). Evidence: 0x01038178 - 0x010381e8 (`sub r0, r4, #0xa4` /
@@ -50888,7 +50878,7 @@ int32 swvPolygonMode_SetShading(ISwerveObject *po,int32 shading)
     if (mode != NULL)
       mode -= 4;
     if ((uint32)shading - 0xa4 > 1)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     swvPolygonMode_SetShadingValue(mode,shading);
     swv_TryPop();
   }
@@ -50915,7 +50905,7 @@ void swvPolygonMode_SetTwoSidedLightingEnable(ISwerveObject *po,int32 enable)
 
 /* ==== 0x01038208  (file offset 0x38208)  swvPolygonMode_SetWinding =================================== */
 /* ISwerveObject slot 23 (+0x5c) of PolygonMode (JSR-184 1.1, PolygonMode.setWinding; kh_types.h
-   SwervePolygonModeVtbl): in an error frame, error -1301 (IllegalArgumentException; FUN_0102f7e0, which
+   SwervePolygonModeVtbl): in an error frame, error -1301 (IllegalArgumentException; swv_Throw, which
    does not return) unless the value is WINDING_CCW (0xa8) or WINDING_CW (0xa9), then
    swvPolygonMode_SetWindingValue on the native object (po->pNative, +4, less 4); returns 0, or on an
    error its result code (swv_ErrorToResult). Evidence: 0x01038208 - 0x01038278 (`sub r0, r4, #0xa8` /
@@ -50935,7 +50925,7 @@ int32 swvPolygonMode_SetWinding(ISwerveObject *po,int32 winding)
     if (mode != NULL)
       mode -= 4;
     if ((uint32)winding - 0xa8 > 1)
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     swvPolygonMode_SetWindingValue(mode,winding);
     swv_TryPop();
   }
@@ -51109,7 +51099,7 @@ undefined4 FUN_0103840c(int param_1,undefined4 param_2,int param_3)
       iVar1 = iVar1 + -4;
     }
     if (param_3 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     FUN_01010384(iVar1,param_2,param_3);
     swv_TryPop();
@@ -51151,7 +51141,7 @@ undefined4 FUN_010384a0(int param_1,uint param_2,undefined4 *param_3)
       iVar1 = iVar1 + -4;
     }
     if (1 < param_2) {
-      FUN_0102f7e0(INTEGER_MINUS_1101);
+      swv_Throw(INTEGER_MINUS_1101);
     }
     *param_3 = *(undefined4 *)(iVar1 + param_2 * 4 + 0x18);
     swv_TryPop();
@@ -51179,7 +51169,7 @@ undefined4 FUN_01038518(int param_1,uint param_2,undefined4 *param_3)
       iVar1 = iVar1 + -4;
     }
     if (1 < param_2) {
-      FUN_0102f7e0(INTEGER_MINUS_1101);
+      swv_Throw(INTEGER_MINUS_1101);
     }
     *param_3 = *(undefined4 *)(iVar1 + param_2 * 4 + 0x20);
     swv_TryPop();
@@ -51470,7 +51460,7 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
       iVar1 = iVar1 + -4;
     }
     if (iVar1 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     piVar2 = (int *)swv_New_2(0x10);
     if (piVar2 != (int *)0x0) {
@@ -51493,7 +51483,7 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
       *(int *)(piVar2[1] + uVar4 * 4) = iVar9;
     }
     if (iVar10 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     piVar5 = (int *)swv_New_2(0x10);
     if (piVar5 != (int *)0x0) {
@@ -51582,7 +51572,7 @@ undefined4 FUN_01038b54(int param_1,int param_2,int param_3,int param_4,int para
       iVar2 = iVar2 + -4;
     }
     if (iVar2 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     iVar3 = 0;
     if (param_3 != 0) {
@@ -51592,7 +51582,7 @@ undefined4 FUN_01038b54(int param_1,int param_2,int param_3,int param_4,int para
       iVar3 = iVar3 + -4;
     }
     if (iVar3 == 0) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     iVar4 = 0;
     if (param_4 != 0) {
@@ -51810,7 +51800,7 @@ undefined4 FUN_01038e84(int param_1,int param_2,int param_3,int param_4)
       iVar1 = iVar1 + -4;
     }
     if (iVar1 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     iVar2 = 0;
     if (param_4 != 0) {
@@ -51944,7 +51934,7 @@ undefined4 FUN_01038fe8(int param_1,int param_2)
       iVar2 = iVar2 + -4;
     }
     if (iVar2 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     FUN_010241f4(iVar1,iVar2);
     swv_TryPop();
@@ -52148,13 +52138,13 @@ undefined4 FUN_0103937c(int param_1,int param_2,int param_3,undefined4 param_4,i
     swv_TryArm(auStack_a8);
     uVar1 = INTEGER_MINUS_1301;
     if (param_2 < 1) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     if (param_3 < 1) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     if (param_5 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     iVar2 = *(int *)(param_1 + 4);
     if (iVar2 != 0) {
@@ -52184,10 +52174,10 @@ undefined4 FUN_01039424(int param_1,int param_2,int param_3)
     swv_TryArm(auStack_a0);
     uVar1 = INTEGER_MINUS_1301;
     if (param_2 < 1) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     if (param_3 < 1) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     iVar2 = *(int *)(param_1 + 4);
     if (iVar2 != 0) {
@@ -52255,7 +52245,7 @@ undefined4 FUN_01039510(int param_1,undefined4 param_2)
     uVar3 = swv_CheckFloat(0);
     swv_fcmp_c(uVar3,uVar2);
     if ((bool)uVar5 && !(bool)uVar6) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     *(undefined4 *)(iVar1 + 0x58) = uVar2;
     swv_TryPop();
@@ -52484,6 +52474,24 @@ uint32 swv_ErrorToResult(int32 error)
     break;
   }
   return result;
+}
+
+/* ==== 0x010398A4  (file offset 0x398A4)  swv_CloseApplet ============================================= */
+/* A routine Ghidra has no function for (swvErrorFrames_Throw reaches it by a tail jump, and Ghidra took
+   it into that function's callers), written from its disassembly (0x010398a4 - 0x010398cc). GUESS: name.
+   Closes the host applet: ISHELL_CloseApplet(shell, FALSE) on its shell (KHApp's AEEApplet m_pIShell,
+   +0xc, of helper_GetAppInstance, read twice: once for the argument, once for the vtable; a tail jump
+   through IShellVtbl +0x18), its result returned. The engine's last resort for an error thrown with no
+   error frame active (swvErrorFrames_Throw). Evidence: `bl 0x01039960` / `ldr r4, [r0, #0xc]`, `bl
+   0x01039960` / `ldr r0, [r0, #0xc]` / `ldr r0, [r0]` / `ldr r2, [r0, #0x18]`, `mov r1, #0`, `mov r0,
+   r4` / `bx r2`. */
+int32 swv_CloseApplet(void)
+
+{
+  IShell *shell = *(IShell **)((uint8 *)helper_GetAppInstance() + 0xc);
+  IShell *again = *(IShell **)((uint8 *)helper_GetAppInstance() + 0xc);
+
+  return again->pvt->CloseApplet(shell,0);
 }
 
 /* ==== 0x010398D0  (file offset 0x398D0)  helper_free ================================================= */
@@ -52896,7 +52904,7 @@ int swv_NewSwerve(int16 nSize,IShell *pIShell,IModule *pIModule,ISwerve **ppObj)
    asks the native object for its type (virtual at vtbl+4, SwerveObjectType), builds that type's vtable
    once (0x1c..0xe4 bytes, swv_InitVtbl_<Class>) and caches it in SwerveGlobals->pVtblCache, then sets the
    3 shared slots (AddRef 0x01011f8c, Release 0x01012294, QueryInterface 0x01011fc4). GUESS: name. In
-   detail: error -1302 (NullPointerException; FUN_0102f7e0, which does not return) for a NULL ppOut;
+   detail: error -1302 (NullPointerException; swv_Throw, which does not return) for a NULL ppOut;
    *ppOut = NULL; a NULL pNative returns 0. Then, in an error frame: the type (the engine virtual call,
    slot +4) picks the cache entry (the table of swv_GetVtblCache) and the vtable's size; a missing vtable
    is allocated (swv_New), cleared (rt_memclr_w) and filled by the class's swv_InitVtbl_*. Type 0, 23 and
@@ -52927,7 +52935,7 @@ int32 swv_WrapObject(void *pNative,ISwerveObject **ppOut)
   uint8 frame[136];
 
   if (ppOut == NULL)
-    FUN_0102f7e0(INTEGER_MINUS_1302);
+    swv_Throw(INTEGER_MINUS_1302);
   *ppOut = NULL;
   if (pNative != NULL) {
     if (swv_setjmp((uint32 *)swv_TryPush(frame)) != 0) {
@@ -53698,7 +53706,7 @@ undefined4 FUN_0103b3ec(int param_1,int param_2)
       iVar1 = iVar1 + -4;
     }
     if (iVar1 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     iVar2 = *(int *)(param_1 + 4);
     if (iVar2 != 0) {
@@ -53744,7 +53752,7 @@ undefined4 FUN_0103b480(int param_1,int param_2)
       iVar1 = iVar1 + -4;
     }
     if (4 < param_2 - 0xe0U) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     *(int *)(iVar1 + 0x28) = param_2;
     swv_TryPop();
@@ -53774,10 +53782,10 @@ undefined4 FUN_0103b4f0(int param_1,int param_2,int param_3)
       iVar2 = iVar2 + -4;
     }
     if (2 < param_2 - 0xd0U) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     if (param_3 != 0xd1 && param_3 != 0xd2) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     *(int *)(iVar2 + 0x38) = param_2;
     *(int *)(iVar2 + 0x3c) = param_3;
@@ -53814,7 +53822,7 @@ undefined4 FUN_0103b57c(int param_1,int param_2)
       iVar2 = iVar2 + -4;
     }
     if (iVar2 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     swvTexture2D_SetImage((uint8 *)iVar1,(uint8 *)iVar2);
     swv_TryPop();
@@ -53844,10 +53852,10 @@ undefined4 FUN_0103b600(int param_1,int param_2,int param_3)
       iVar2 = iVar2 + -4;
     }
     if (1 < param_2 - 0xf0U) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     if (1 < param_3 - 0xf0U) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     *(int *)(iVar2 + 0x30) = param_2;
     *(int *)(iVar2 + 0x34) = param_3;
@@ -53908,7 +53916,7 @@ undefined4 FUN_0103b6ec(int param_1,undefined4 param_2,int param_3)
       iVar1 = iVar1 + -4;
     }
     if (param_3 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     FUN_01011a20(iVar1,param_2,param_3);
     swv_TryPop();
@@ -53965,7 +53973,7 @@ undefined4 FUN_0103b84c(int param_1,int param_2)
       iVar1 = iVar1 + -4;
     }
     if (iVar1 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     iVar2 = *(int *)(param_1 + 4);
     if (iVar2 != 0) {
@@ -54030,7 +54038,7 @@ undefined4 FUN_0103b924(int param_1,int param_2)
       iVar2 = iVar2 + -4;
     }
     if (iVar2 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     FUN_010171ec(iVar1,iVar2);
     swv_TryPop();
@@ -54082,7 +54090,7 @@ undefined4 FUN_0103b9a8(int param_1,undefined4 *param_2)
         swv_fcmp_a(local_a4,0);
       }
       if ((bool)uVar4) {
-        FUN_0102f7e0(INTEGER_MINUS_1301);
+        swv_Throw(INTEGER_MINUS_1301);
       }
     }
     FUN_01028344(auStack_bc,uVar2,&local_ac);
@@ -54147,7 +54155,7 @@ undefined4 FUN_0103baa8(int param_1,undefined4 *param_2)
       swv_fcmp_a(local_b0,0);
     }
     if ((bool)uVar6) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     FUN_010171f8(iVar1,&local_b8);
     swv_TryPop();
@@ -54273,7 +54281,7 @@ undefined4 FUN_0103bce8(int param_1,undefined4 param_2,int param_3)
       iVar1 = iVar1 + -4;
     }
     if (param_3 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     FUN_01023f50(iVar1,param_2,param_3);
     swv_TryPop();
@@ -54309,7 +54317,7 @@ undefined4 FUN_0103bd64(int param_1,int param_2)
       iVar2 = iVar2 + -4;
     }
     if (iVar2 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     FUN_01023f30(iVar1,iVar2);
     swv_TryPop();
@@ -54347,10 +54355,10 @@ undefined4 FUN_0103bde8(int param_1,int param_2,undefined4 param_3,int param_4,i
       iVar3 = iVar3 + -4;
     }
     if (iVar3 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     if (param_4 == 0) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     FUN_01025a50(iVar2,iVar3,param_3,param_4,param_5 != 0);
     swv_TryPop();
@@ -54378,7 +54386,7 @@ undefined4 FUN_0103be9c(int param_1,undefined4 param_2,int param_3)
       iVar1 = iVar1 + -4;
     }
     if (param_3 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     FUN_01025b30(iVar1,param_2,param_3);
     swv_TryPop();
@@ -54515,7 +54523,7 @@ undefined4 FUN_0103bf28(int param_1,int param_2)
       iVar2 = iVar2 + -4;
     }
     if (iVar2 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     FUN_0100f654(iVar1,iVar2);
     swv_TryPop();
@@ -54608,7 +54616,7 @@ undefined4 FUN_0103c094(int param_1,int param_2)
       iVar2 = iVar2 + -4;
     }
     if (iVar2 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     FUN_01010924(iVar1,iVar2);
     swv_TryPop();
@@ -54703,7 +54711,7 @@ undefined4 FUN_0103c250(int param_1,undefined4 *param_2)
         swv_fcmp_a(local_a4,0);
       }
       if ((bool)uVar4) {
-        FUN_0102f7e0(INTEGER_MINUS_1301);
+        swv_Throw(INTEGER_MINUS_1301);
       }
     }
     FUN_01028344(auStack_bc,uVar2,&local_ac);
@@ -54757,7 +54765,7 @@ undefined4 FUN_0103c350(int param_1,undefined4 *param_2)
         swv_fcmp_a(local_a4,0);
       }
       if ((bool)uVar4) {
-        FUN_0102f7e0(INTEGER_MINUS_1301);
+        swv_Throw(INTEGER_MINUS_1301);
       }
     }
     FUN_01028344(auStack_bc,uVar2,&local_ac);
@@ -54845,7 +54853,7 @@ undefined4 FUN_0103c4e8(int param_1,undefined4 *param_2)
         swv_fcmp_a(local_a4,0);
       }
       if ((bool)uVar4) {
-        FUN_0102f7e0(INTEGER_MINUS_1301);
+        swv_Throw(INTEGER_MINUS_1301);
       }
     }
     FUN_01028344(auStack_bc,uVar2,&local_ac);
@@ -55054,10 +55062,10 @@ undefined4 FUN_0103c8ac(int param_1,undefined4 param_2,int param_3,undefined4 pa
     swv_TryArm(auStack_a8);
     uVar1 = INTEGER_MINUS_1302;
     if (param_3 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     if (param_5 == 0) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     iVar2 = *(int *)(param_1 + 4);
     if (iVar2 != 0) {
@@ -55085,7 +55093,7 @@ undefined4 FUN_0103c944(int param_1,undefined4 param_2,undefined4 param_3,int pa
   if (iVar1 == 0) {
     swv_TryArm(auStack_a0);
     if (param_4 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     iVar1 = *(int *)(param_1 + 4);
     if (iVar1 != 0) {
@@ -55169,13 +55177,13 @@ undefined4 FUN_0103ca64(int param_1,int param_2,int param_3,int param_4)
       bVar4 = param_2 - 0xff01U == 0xfe;
     }
     if ((bVar5 && 0xfd < param_2 - 0xff01U) && !bVar4) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     if (2 < param_3 - 2U) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     if (1 < param_4 - 1U) {
-      FUN_0102f7e0(uVar1);
+      swv_Throw(uVar1);
     }
     iVar2 = *(int *)(param_1 + 4);
     if (iVar2 != 0) {
@@ -55207,10 +55215,10 @@ undefined4 FUN_0103cb10(int param_1,undefined4 param_2,int param_3,undefined4 pa
       iVar1 = iVar1 + -4;
     }
     if (param_3 < 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     if (param_5 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     swvVertexArray_SetShorts((uint8 *)iVar1,param_2,param_3,param_4,(const int16 *)param_5);
     swv_TryPop();
@@ -55238,10 +55246,10 @@ undefined4 FUN_0103cbac(int param_1,undefined4 param_2,int param_3,undefined4 pa
       iVar1 = iVar1 + -4;
     }
     if (param_3 < 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1301);
+      swv_Throw(INTEGER_MINUS_1301);
     }
     if (param_5 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     swvVertexArray_SetBytes((uint8 *)iVar1,param_2,param_3,param_4,(const int8 *)param_5);
     swv_TryPop();
@@ -55763,7 +55771,7 @@ undefined4 FUN_0103d314(int param_1,int param_2)
       iVar2 = iVar2 + -4;
     }
     if (iVar2 == 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1302);
+      swv_Throw(INTEGER_MINUS_1302);
     }
     FUN_01023fc4(iVar1,iVar2);
     swv_TryPop();

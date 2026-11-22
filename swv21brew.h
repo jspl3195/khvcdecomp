@@ -60,6 +60,8 @@ void FUN_01008754(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008
 void FUN_010087ac(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x010087AC, no Ghidra function */
 void FUN_01008804(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008804, no Ghidra function */
 void FUN_0100885c(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x0100885C, no Ghidra function */
+int32 swv_CloseApplet(void);   /* 0x010398A4, no Ghidra function */
+int32 swvErrorFrames_Throw(uint8 *frames,int32 error);   /* 0x01013C1C, no Ghidra function */
 void swvCleanupFrame_Push(uint8 *frame,int32 object);   /* 0x01018188, no Ghidra function */
 void swvCleanupFrame_Open(uint8 *frame);   /* 0x010125BC, no Ghidra function */
 void swvCleanupFrame_Pop(uint8 *frame,int32 object);   /* 0x010171B8, no Ghidra function */
@@ -1161,7 +1163,7 @@ int FUN_0102f468(int param_1,int param_2);
 int thunk_FUN_01009ad0(void);
 void FUN_0102f514(undefined4 param_1);
 void FUN_0102f774(undefined4 param_1);
-void FUN_0102f7e0(undefined4 param_1);
+int32 swv_Throw(int32 error);   /* 0x0102F7E0 GUESS: name, see swv21brew.c */
 undefined4 FUN_0102f7f8(int param_1,int param_2,int param_3,undefined4 *param_4);
 undefined4 FUN_0102f898(int param_1,int param_2);
 int32 swvGraphics3D_GetProperty(IGraphics3D *po,uint32 index,int32 *value);   /* 0x0102F960 GUESS: name, see swv21brew.c */
