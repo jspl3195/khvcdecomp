@@ -374,8 +374,8 @@ int32 swv_setjmp(uint32 *env)
    linker leaves a call to a weak routine that is not linked in, as in swv_setjmp), env[8] and env[9]
    become the stack limit and stack pointer (rt_stack_postlongjmp), r0 = val or 1, r4-r7 come back from
    env[4..7] and r8, r9, fp, lr from env[0..3], and `mov pc, lr` returns a second time from the call to
-   swv_setjmp (Ghidra: the call through env[3]). Used by the engine's error throw (FUN_01013bcc) and by
-   libpng's png_error (png_struct's jmpbuf at +0). */
+   swv_setjmp (Ghidra: the call through env[3]). Used by the engine's error throw (swvErrorFrame_Throw) and
+   by libpng's png_error (png_struct's jmpbuf at +0). */
 void swv_longjmp(uint32 *env,int32 val)
 
 {
@@ -4868,64 +4868,71 @@ void swv_ColourClamp(int32 *colour)
 }
 
 /* ==== 0x0100500C  (file offset 0x0500C)  swv_TryArm ================================================== */
-/* GUESS: name. Marks the error frame armed (+0x84 = 1) after swv_setjmp returned 0, first passing the
-   engine's current frame list (FUN_0100f8e8) to FUN_01018094. Evidence: 0x0100500c - 0x01005024 (`bl
-   0x0100f8e8` whose result stays in r0 for `bl 0x01018094`: Ghidra had dropped that argument; `mov r0, #1`
-   / `str r0, [r4, #0x84]`). */
+/* GUESS: name. Marks the error frame armed (+0x84 = 1) after swv_setjmp returned 0, first entering a new
+   level of the engine's cleanup stack (swvCleanupStack_Enter on swv_CleanupStack). Evidence: 0x0100500c -
+   0x01005024 (`bl 0x0100f8e8` whose result stays in r0 for `bl 0x01018094`: Ghidra had dropped that
+   argument; `mov r0, #1` / `str r0, [r4, #0x84]`). */
 void swv_TryArm(uint8 *frame)
 
 {
-  FUN_01018094(FUN_0100f8e8());
+  swvCleanupStack_Enter(swv_CleanupStack());
   *(uint32 *)(frame + 0x84) = 1;
 }
 
-/* ==== 0x01005028  (file offset 0x05028)  FUN_01005028 ================================================ */
-void FUN_01005028(int param_1)
+/* ==== 0x01005028  (file offset 0x05028)  swvCleanupStack_Unwind ====================================== */
+/* GUESS: name. Frees what the cleanup stack stack's current level holds, when the stack is ready (+0x18;
+   swvCleanupStack_Enter clears it while it grows the stack) and a level is open (+0x14 the depth): a
+   level with no frame is closed (depth - 1); a frame not open (+0x14 0) is destroyed
+   (swvCleanupFrame_Destroy, deleting), its slot cleared and the level closed; an open frame has every
+   object it holds destroyed (swvCleanupFrame_DestroyAll) and stays. The stack is then ready (+0x18 = 1).
+   Called by swvCleanupStack_Leave and by swvErrorFrame_Throw for a frame not armed. Evidence: 0x01005028
+   - 0x010050a8 (`ldr r0, [r0, #0x18]` / `cmp r0, #0` / `ldrne r0, [r4, #0x14]` / `cmpne r0, #0` / `ble`,
+   `streq r1, [r4, #0x14]` with depth - 1, `ldr r1, [r0, #0x14]` / `bne` to `bl 0x010050ac`, `mov r1, #1`
+   / `bl 0x0102b4c4`, the slot and depth reloaded, `str r0, [r4, #0x18]` with 1). */
+void swvCleanupStack_Unwind(uint8 *stack)
 
 {
-  int iVar1;
-  int iVar2;
-  bool bVar3;
-  
-  bVar3 = *(int *)(param_1 + 0x18) != 0;
-  iVar1 = 0;
-  if (bVar3) {
-    iVar1 = *(int *)(param_1 + 0x14);
+  int32 depth;
+  uint8 *frame;
+
+  if (*(int32 *)(stack + 0x18) != 0 && *(int32 *)(stack + 0x14) > 0) {
+    depth = *(int32 *)(stack + 0x14);
+    frame = (*(uint8 ***)(stack + 8))[depth - 1];
+    if (frame == NULL)
+      *(int32 *)(stack + 0x14) = depth - 1;
+    else if (*(int32 *)(frame + 0x14) == 0) {
+      swvCleanupFrame_Destroy(frame,1);
+      (*(uint8 ***)(stack + 8))[*(int32 *)(stack + 0x14) - 1] = NULL;
+      *(int32 *)(stack + 0x14) = *(int32 *)(stack + 0x14) - 1;
+    }
+    else
+      swvCleanupFrame_DestroyAll(frame);
   }
-  if ((bVar3 && iVar1 != 0) && -1 < iVar1) {
-    iVar2 = *(int *)(*(int *)(param_1 + 8) + (iVar1 + -1) * 4);
-    if (iVar2 == 0) {
-      *(int *)(param_1 + 0x14) = iVar1 + -1;
-    }
-    else if (*(int *)(iVar2 + 0x14) == 0) {
-      FUN_0102b4c4(iVar2,1);
-      *(undefined4 *)(*(int *)(param_1 + 8) + (*(int *)(param_1 + 0x14) + -1) * 4) = 0;
-      *(int *)(param_1 + 0x14) = *(int *)(param_1 + 0x14) + -1;
-    }
-    else {
-      FUN_010050ac();
-    }
-  }
-  *(undefined4 *)(param_1 + 0x18) = 1;
-  return;
+  *(uint32 *)(stack + 0x18) = 1;
 }
 
-/* ==== 0x010050AC  (file offset 0x050AC)  FUN_010050ac ================================================ */
-void FUN_010050ac(int param_1)
+/* ==== 0x010050AC  (file offset 0x050AC)  swvCleanupFrame_DestroyAll ================================== */
+/* GUESS: name. Destroys every object the cleanup frame frame holds, the last first: each non-NULL one
+   through its engine vtable +0 (the destructor, deleting), then the frame's array (+4: +8 the items, +0xc
+   the count) sized to count - 1 (FUN_01023184), until it is empty (the empty last slot as well). Called by
+   swvCleanupStack_Unwind. Evidence: 0x010050ac - 0x01005100 (`add r5, r0, #4`, `ldr r0, [r4, #0xc]` /
+   `cmp r0, #0` / `bne`, the slot at count - 1, `ldrne r1, [r0]` / `blxne r2` with r1 1, `sub r1, r0, #1`
+   / `mov r0, r5` / `bl 0x01023184`). */
+void swvCleanupFrame_DestroyAll(uint8 *frame)
 
 {
-  int *piVar1;
-  
-  while (*(int *)(param_1 + 0xc) != 0) {
-    piVar1 = *(int **)(*(int *)(param_1 + 8) + (*(int *)(param_1 + 0xc) + -1) * 4);
-    if (piVar1 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
-         the object's class); slot 0 is the destructor */
-      (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
+  int32 *object;
+  int32 vtable;
+
+  while (*(int32 *)(frame + 0xc) != 0) {
+    object = (*(int32 ***)(frame + 8))[*(int32 *)(frame + 0xc) - 1];
+    if (object != NULL) {
+      vtable = *object;
+      /* engine virtual call, slot +0x0: the held object's destructor, deleting (1) */
+      (*(code *)(*(int32 *)vtable + vtable))(object,1);
     }
-    FUN_01023184(param_1 + 4,*(int *)(param_1 + 0xc) + -1);
+    FUN_01023184((int *)(frame + 4),*(int32 *)(frame + 0xc) - 1);
   }
-  return;
 }
 
 /* ==== 0x01005104  (file offset 0x05104)  FUN_01005104 ================================================ */
@@ -6247,8 +6254,8 @@ undefined8 FUN_01006da4(int param_1,int param_2,int param_3,int param_4)
     iVar1 = (*(code *)(*(int *)(*piVar4 + 0x10) + *piVar4))(piVar4);
     local_18 = iVar1;
     if (iVar1 != 0) {
-      uVar2 = FUN_0100f8e8();
-      FUN_0101807c(uVar2,iVar1);
+      uVar2 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Push((uint8 *)uVar2,iVar1);
     }
     *(int *)(local_18 + 0x30) = param_1;
     piVar4 = (int *)piVar4[0xd];
@@ -6259,8 +6266,8 @@ undefined8 FUN_01006da4(int param_1,int param_2,int param_3,int param_4)
       iVar5 = (*(code *)(*(int *)(*piVar4 + 0x10) + *piVar4))(piVar4);
       local_1c = iVar5;
       if (iVar5 != 0) {
-        uVar2 = FUN_0100f8e8();
-        FUN_0101807c(uVar2,iVar5);
+        uVar2 = (undefined4)swv_CleanupStack();
+        swvCleanupStack_Push((uint8 *)uVar2,iVar5);
       }
       FUN_01014510(local_1c,iVar1);
       iVar1 = FUN_010386cc(&local_1c);
@@ -6338,14 +6345,14 @@ int FUN_01006f8c(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   iVar1 = swv_New_2(0x48);
   if (iVar1 != 0) {
     FUN_01027b6c(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006438(iVar1,param_1);
   iVar3 = 0;
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -6361,8 +6368,8 @@ int FUN_01006fec(int param_1)
   
   iVar1 = FUN_0100e5d4();
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006518(iVar1,param_1);
   *(undefined4 *)(iVar1 + 0x1c) = *(undefined4 *)(param_1 + 0x1c);
@@ -6373,7 +6380,7 @@ int FUN_01006fec(int param_1)
   *(undefined4 *)(iVar1 + 0x30) = *(undefined4 *)(param_1 + 0x30);
   iVar3 = 0;
   if (iVar1 != 0) {
-    FUN_010171a0(iVar1);
+    swv_CleanupPop(iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -6390,14 +6397,14 @@ int FUN_01007064(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   iVar1 = swv_New_2(0x1c);
   if (iVar1 != 0) {
     FUN_01027c34(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006518(iVar1,param_1);
   iVar3 = 0;
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -6413,8 +6420,8 @@ int FUN_010070c4(int param_1)
   
   iVar1 = FUN_0100e63c();
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006438(iVar1,param_1);
   piVar3 = (int *)(iVar1 + 0x48);
@@ -6431,7 +6438,7 @@ int FUN_010070c4(int param_1)
   if (iVar1 == 0) {
     return 0;
   }
-  FUN_010171a0(iVar1);
+  swv_CleanupPop(iVar1);
   return iVar1;
 }
 
@@ -6447,8 +6454,8 @@ int FUN_01007164(int param_1)
   iVar1 = swv_New_2(0x40);
   if (iVar1 != 0) {
     FUN_01027d0c(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006b38(iVar1,param_1);
   iVar3 = *(int *)(iVar1 + 0x2c);
@@ -6469,8 +6476,8 @@ int FUN_01007164(int param_1)
   *(undefined4 *)(iVar1 + 0x24) = *(undefined4 *)(param_1 + 0x24);
   *(undefined4 *)(iVar1 + 0x28) = *(undefined4 *)(param_1 + 0x28);
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar1);
     return iVar1;
   }
   return 0;
@@ -6487,14 +6494,14 @@ int FUN_01007210(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   iVar1 = swv_New_2(0x38);
   if (iVar1 != 0) {
     FUN_01027e10(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006650(iVar1,param_1);
   iVar3 = 0;
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -6511,8 +6518,8 @@ int FUN_01007270(int param_1)
   
   iVar1 = FUN_0100e724();
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006518(iVar1,param_1);
   *(undefined4 *)(iVar1 + 0x1c) = *(undefined4 *)(param_1 + 0x1c);
@@ -6540,7 +6547,7 @@ int FUN_01007270(int param_1)
   if (iVar1 == 0) {
     return 0;
   }
-  FUN_010171a0(iVar1);
+  swv_CleanupPop(iVar1);
   return iVar1;
 }
 
@@ -6559,8 +6566,8 @@ undefined8 FUN_0100732c(undefined4 param_1,undefined4 param_2,int param_3,int pa
   if (iVar1 != 0) {
     FUN_01028464(iVar1);
     local_14 = iVar1;
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
     iVar1 = local_14;
   }
   local_14 = iVar1;
@@ -6569,8 +6576,8 @@ undefined8 FUN_0100732c(undefined4 param_1,undefined4 param_2,int param_3,int pa
   FUN_0102ba94(&local_14,0);
   local_10 = iVar1;
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006750(local_10,param_1);
   uVar2 = FUN_010386fc(&local_10);
@@ -6589,15 +6596,15 @@ int FUN_010073c8(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   iVar1 = swv_New_2(0x20);
   if (iVar1 != 0) {
     FUN_010285fc(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006518(iVar1,param_1);
   *(undefined4 *)(iVar1 + 0x1c) = *(undefined4 *)(param_1 + 0x1c);
   iVar3 = 0;
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -6613,14 +6620,14 @@ int FUN_01007430(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   
   iVar1 = FUN_0100e810();
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006810(iVar1,param_1);
   FUN_0100f030(iVar1,param_1,param_1,iVar1,param_4);
   iVar3 = 0;
   if (iVar1 != 0) {
-    FUN_010171a0(iVar1);
+    swv_CleanupPop(iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -6637,8 +6644,8 @@ int FUN_0100748c(int param_1)
   iVar1 = swv_New_2(0x58);
   if (iVar1 != 0) {
     FUN_010286dc(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006518(iVar1,param_1);
   piVar3 = (int *)(iVar1 + 0x28);
@@ -6655,8 +6662,8 @@ int FUN_0100748c(int param_1)
   *(undefined4 *)(iVar1 + 0x38) = 1;
   *(undefined4 *)(iVar1 + 0x3c) = *(undefined4 *)(param_1 + 0x3c);
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar1);
     return iVar1;
   }
   return 0;
@@ -6673,14 +6680,14 @@ int FUN_01007554(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   iVar1 = swv_New_2(0xe4);
   if (iVar1 != 0) {
     FUN_010287cc(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006918(iVar1,param_1);
   FUN_0100f030(iVar1,param_1,param_1,iVar1);
   iVar3 = 0;
   if (iVar1 != 0) {
-    FUN_010171a0(iVar1);
+    swv_CleanupPop(iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -6697,14 +6704,14 @@ int FUN_010075c4(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   iVar1 = swv_New_2(0x78);
   if (iVar1 != 0) {
     FUN_01028898(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006a10(iVar1,param_1);
   iVar3 = 0;
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -6722,8 +6729,8 @@ int FUN_01007624(int param_1)
   iVar1 = swv_New_2(0x28);
   if (iVar1 != 0) {
     FUN_01028abc(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006518(iVar1,param_1);
   iVar3 = *(int *)(iVar1 + 0x1c);
@@ -6754,8 +6761,8 @@ int FUN_01007624(int param_1)
   *(int *)(iVar1 + 0x20) = iVar3;
   *(undefined4 *)(iVar1 + 0x24) = *(undefined4 *)(param_1 + 0x24);
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar1);
     return iVar1;
   }
   return 0;
@@ -6772,8 +6779,8 @@ int FUN_010076e0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   iVar1 = swv_New_2(0x3c);
   if (iVar1 != 0) {
     FUN_01028b58(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006518(iVar1,param_1);
   *(undefined4 *)(iVar1 + 0x1c) = *(undefined4 *)(param_1 + 0x1c);
@@ -6786,8 +6793,8 @@ int FUN_010076e0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   *(undefined4 *)(iVar1 + 0x38) = *(undefined4 *)(param_1 + 0x38);
   iVar3 = 0;
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -6805,8 +6812,8 @@ int FUN_01007780(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   iVar1 = swv_New_2(0x50);
   if (iVar1 != 0) {
     FUN_01028cc8(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006518(iVar1,param_1);
   piVar4 = (int *)(iVar1 + 0x3c);
@@ -6828,8 +6835,8 @@ int FUN_01007780(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   *(undefined4 *)(iVar1 + 0x4c) = *(undefined4 *)(param_1 + 0x4c);
   iVar3 = 0;
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -6846,8 +6853,8 @@ int FUN_01007864(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   iVar1 = swv_New_2(0x48);
   if (iVar1 != 0) {
     FUN_010290c4(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006518(iVar1,param_1);
   *(undefined4 *)(iVar1 + 0x1c) = *(undefined4 *)(param_1 + 0x1c);
@@ -6857,8 +6864,8 @@ int FUN_01007864(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   FUN_010279ec(iVar1 + 0x38,param_1 + 0x38);
   iVar3 = 0;
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -6875,8 +6882,8 @@ int FUN_010078f4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   iVar1 = swv_New_2(0x34);
   if (iVar1 != 0) {
     FUN_010291bc(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006518(iVar1,param_1);
   *(undefined4 *)(iVar1 + 0x1c) = *(undefined4 *)(param_1 + 0x1c);
@@ -6887,8 +6894,8 @@ int FUN_010078f4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   *(undefined4 *)(iVar1 + 0x30) = *(undefined4 *)(param_1 + 0x30);
   iVar3 = 0;
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -6905,8 +6912,8 @@ int FUN_01007984(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   iVar1 = swv_New_2(0x30);
   if (iVar1 != 0) {
     FUN_010292b8(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006518(iVar1,param_1);
   *(undefined4 *)(iVar1 + 0x1c) = *(undefined4 *)(param_1 + 0x1c);
@@ -6916,8 +6923,8 @@ int FUN_01007984(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   *(undefined4 *)(iVar1 + 0x2c) = *(undefined4 *)(param_1 + 0x2c);
   iVar3 = 0;
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -6934,14 +6941,14 @@ int FUN_01007a0c(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   iVar1 = swv_New_2(0xac);
   if (iVar1 != 0) {
     FUN_01029304(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006c1c(iVar1,param_1);
   FUN_0100f030(iVar1,param_1,param_1,iVar1);
   iVar3 = 0;
   if (iVar1 != 0) {
-    FUN_010171a0(iVar1);
+    swv_CleanupPop(iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -6958,14 +6965,14 @@ int FUN_01007a7c(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   iVar1 = swv_New_2(0x88);
   if (iVar1 != 0) {
     FUN_0102950c(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006da4(iVar1,param_1);
   FUN_0100f030(iVar1,param_1,param_1,iVar1);
   iVar3 = 0;
   if (iVar1 != 0) {
-    FUN_010171a0(iVar1);
+    swv_CleanupPop(iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -6983,8 +6990,8 @@ int FUN_01007aec(int param_1)
   
   iVar3 = FUN_0100eb7c();
   if (iVar3 != 0) {
-    uVar4 = FUN_0100f8e8();
-    FUN_0101807c(uVar4,iVar3);
+    uVar4 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar4,iVar3);
   }
   FUN_01006da4(iVar3,param_1);
   iVar5 = 0;
@@ -7003,7 +7010,7 @@ int FUN_01007aec(int param_1)
   if (iVar3 == 0) {
     return 0;
   }
-  FUN_010171a0(iVar3);
+  swv_CleanupPop(iVar3);
   return iVar3;
 }
 
@@ -7019,8 +7026,8 @@ int FUN_01007b94(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   iVar1 = swv_New_2(0xa0);
   if (iVar1 != 0) {
     FUN_01029540(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006da4(iVar1,param_1);
   if (*(int *)(param_1 + 0x88) != 0) {
@@ -7043,7 +7050,7 @@ int FUN_01007b94(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   FUN_0100f030(iVar1,param_1,param_1,iVar1);
   iVar3 = 0;
   if (iVar1 != 0) {
-    FUN_010171a0(iVar1);
+    swv_CleanupPop(iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -7060,8 +7067,8 @@ int FUN_01007c50(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   iVar1 = swv_New_2(0xec);
   if (iVar1 != 0) {
     FUN_010295ac(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006da4(iVar1,param_1);
   *(undefined4 *)(iVar1 + 0x88) = *(undefined4 *)(param_1 + 0x88);
@@ -7075,7 +7082,7 @@ int FUN_01007c50(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
   FUN_0100f030(iVar1,param_1,param_1,iVar1);
   iVar3 = 0;
   if (iVar1 != 0) {
-    FUN_010171a0(iVar1);
+    swv_CleanupPop(iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -7091,14 +7098,14 @@ int FUN_01007d04(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefi
   
   iVar1 = FUN_0100ec40();
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01006efc(iVar1,param_1);
   FUN_0100f030(iVar1,param_1,param_1,iVar1,param_4);
   iVar3 = 0;
   if (iVar1 != 0) {
-    FUN_010171a0(iVar1);
+    swv_CleanupPop(iVar1);
     iVar3 = iVar1;
   }
   return iVar3;
@@ -7626,10 +7633,10 @@ void FUN_010082f0(int param_1,int param_2,undefined4 param_3)
     if ((uVar2 & 1 << (*(uint *)(param_2 + 0x34) & 0xff)) != 0) {
       return;
     }
-    iVar1 = FUN_0100f7d0();
-    FUN_01013bcc(*(undefined4 *)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),uVar5);
+    iVar1 = (int)swv_ErrorFrames();
+    swvErrorFrame_Throw(*(uint8 **)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),uVar5);
     if (*(int *)(iVar1 + 0x14) != 0) {
-      FUN_01013bcc(*(undefined4 *)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),uVar5);
+      swvErrorFrame_Throw(*(uint8 **)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),uVar5);
     }
     pvVar3 = helper_GetAppInstance();
     uVar5 = *(undefined4 *)((int)pvVar3 + 0xc);
@@ -7758,10 +7765,10 @@ void FUN_0100844c(int param_1,int param_2,int param_3,int param_4,int param_5)
   if (iVar6 <= param_2) {
     return;
   }
-  iVar4 = FUN_0100f7d0();
-  FUN_01013bcc(*(undefined4 *)(iVar4 + *(int *)(iVar4 + 0x14) * 4 + -4),uVar5);
+  iVar4 = (int)swv_ErrorFrames();
+  swvErrorFrame_Throw(*(uint8 **)(iVar4 + *(int *)(iVar4 + 0x14) * 4 + -4),uVar5);
   if (*(int *)(iVar4 + 0x14) != 0) {
-    FUN_01013bcc(*(undefined4 *)(iVar4 + *(int *)(iVar4 + 0x14) * 4 + -4),uVar5);
+    swvErrorFrame_Throw(*(uint8 **)(iVar4 + *(int *)(iVar4 + 0x14) * 4 + -4),uVar5);
   }
   pvVar3 = helper_GetAppInstance();
   uVar5 = *(undefined4 *)((int)pvVar3 + 0xc);
@@ -9082,13 +9089,13 @@ void FUN_01009860(int param_1)
 /* ==== 0x010098A4  (file offset 0x098A4)  swv_Graphics3D_New ========================================== */
 /* GUESS: name. Creates the native Graphics3D object (0x114 bytes, swv_New_2, which cannot fail);
    swv_Create_Graphics3D wraps it (+4 is the interface sub-object). Constructed by FUN_01027eec and, while
-   its renderer is made, held by FUN_0101807c on the context FUN_0100f8e8 gives (GUESS: a stack of
-   objects under construction, for the error frames; FUN_0101715c drops it again); its +0xa8 the
+   its renderer is made, pushed on the engine's cleanup stack (swvCleanupStack_Push on swv_CleanupStack, so
+   that an error thrown meanwhile destroys it; swvCleanupStack_Pop takes it off again); its +0xa8 the
    renderer thunk_FUN_01009ad0 creates (GUESS). The store to +0xa8 is made whether or not the object
    was allocated, as in the binary. Evidence: 0x010098a4 - 0x010098f8 (`mov r0, #0x114` / `bl
    0x0102cbe0`, `movs r4, r0` / `blne 0x01027eec`, `bl 0x0100f8e8` / `mov r1, r4` / `bl 0x0101807c`, `bl
    0x0102f510` / `str r0, [r4, #0xa8]`, `bl 0x0100f8e8` / `bl 0x0101715c` (r1, the object, not read
-   there), r0 the object or 0; Ghidra had given the second FUN_0100f8e8 an argument). */
+   there), r0 the object or 0; Ghidra had given the second swv_CleanupStack an argument). */
 uint8 *swv_Graphics3D_New(void)
 
 {
@@ -9096,11 +9103,11 @@ uint8 *swv_Graphics3D_New(void)
 
   if (graphics != NULL) {
     FUN_01027eec((int *)graphics);
-    FUN_0101807c((int)FUN_0100f8e8(),(undefined4)graphics);
+    swvCleanupStack_Push(swv_CleanupStack(),(int32)graphics);
   }
   *(int32 *)(graphics + 0xa8) = thunk_FUN_01009ad0();
   if (graphics != NULL)
-    FUN_0101715c((int)FUN_0100f8e8(),(int32)graphics);
+    swvCleanupStack_Pop(swv_CleanupStack(),(int32)graphics);
   return graphics;
 }
 
@@ -9137,10 +9144,10 @@ int * FUN_010098fc(void)
 /* ==== 0x01009944  (file offset 0x09944)  swvSection_CreateStored ===================================== */
 /* GUESS: name. Creates the M3G loader's reader for a section stored uncompressed (CompressionScheme 0, M3G
    file format section 6.1): a 0xc-byte object (swv_New_2; r1 = 0, not read) built by
-   swvSectionStored_Construct and kept on the engine's object stack while it is set up (FUN_0101807c with
-   the globals' +0x10, FUN_0100f8e8, then FUN_0101715c; r1 is the object for that one too, which reads
-   only r0), its sink (where the section's bytes go, the M3G reader sink) set by swvSection_SetSink.
-   Returns the section reader (NULL when there is none). Its vtable (0x010022D4): 0
+   swvSectionStored_Construct and kept on the engine's cleanup stack while it is set up
+   (swvCleanupStack_Push on swv_CleanupStack, then swvCleanupStack_Pop; r1 is the object for that one too,
+   which reads only r0), its sink (where the section's bytes go, the M3G reader sink) set by
+   swvSection_SetSink. Returns the section reader (NULL when there is none). Its vtable (0x010022D4): 0
    swvSectionStored_Destroy, 1 swvSectionStored_Feed, 2 swvSectionStored_Get08. swvM3GReader_Feed calls
    it with the reader itself. Evidence: 0x01009944 - 0x010099a0 (r0 the sink kept in r5: Ghidra had
    given it four parameters; `mov r0, #0` / `cmp r4, #0` / `beq` the result). */
@@ -9153,11 +9160,11 @@ uint8 *swvSection_CreateStored(void *sink)
   section = (uint8 *)swv_New_2(0xc);
   if (section != NULL) {
     swvSectionStored_Construct(section);
-    FUN_0101807c(FUN_0100f8e8(),(uint32)section);
+    swvCleanupStack_Push(swv_CleanupStack(),(int32)section);
   }
   swvSection_SetSink(section,sink);
   if (section != NULL) {
-    FUN_0101715c(FUN_0100f8e8(),(int32)section);
+    swvCleanupStack_Pop(swv_CleanupStack(),(int32)section);
     created = section;
   }
   return created;
@@ -9166,9 +9173,9 @@ uint8 *swvSection_CreateStored(void *sink)
 /* ==== 0x010099A4  (file offset 0x099A4)  swvSection_CreateZlib ======================================= */
 /* GUESS: name. Creates the M3G loader's reader for a zlib-compressed section (CompressionScheme 1, zlib
    with a 32 k buffer, M3G file format section 6.1), like swvSection_CreateStored: a 0x10-byte object
-   (swv_New_2) built by swvSectionZlib_Construct, kept on the engine's object stack while it is set up
-   (FUN_0101807c, FUN_0101715c), its sink and zlib stream set by swvSectionZlib_Init (its result not
-   read). Returns the section reader (NULL when there is none). Its vtable (0x010022E0): 0
+   (swv_New_2) built by swvSectionZlib_Construct, kept on the engine's cleanup stack while it is set up
+   (swvCleanupStack_Push, swvCleanupStack_Pop), its sink and zlib stream set by swvSectionZlib_Init (its
+   result not read). Returns the section reader (NULL when there is none). Its vtable (0x010022E0): 0
    swvSectionZlib_Destroy, 1 swvSectionZlib_Feed, 2 swvSectionZlib_Get0c. Evidence: 0x010099a4 -
    0x01009a00 (the same code as swvSection_CreateStored's, `bl 0x0100835c` in place of `bl 0x0100806c`). */
 uint8 *swvSection_CreateZlib(void *sink)
@@ -9180,11 +9187,11 @@ uint8 *swvSection_CreateZlib(void *sink)
   section = (uint8 *)swv_New_2(0x10);
   if (section != NULL) {
     swvSectionZlib_Construct(section);
-    FUN_0101807c(FUN_0100f8e8(),(uint32)section);
+    swvCleanupStack_Push(swv_CleanupStack(),(int32)section);
   }
   swvSectionZlib_Init(section,sink);
   if (section != NULL) {
-    FUN_0101715c(FUN_0100f8e8(),(int32)section);
+    swvCleanupStack_Pop(swv_CleanupStack(),(int32)section);
     created = section;
   }
   return created;
@@ -9245,8 +9252,8 @@ int FUN_01009ad0(void)
   iVar1 = swv_New_2(INTEGER_2788);
   if (iVar1 != 0) {
     FUN_01028d2c(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   iVar3 = swv_New_2(700);
   if (iVar3 != 0) {
@@ -9263,8 +9270,8 @@ int FUN_01009ad0(void)
   swv_Matrix4SetIdentity(iVar1 + 0x68);
   *(undefined4 *)(iVar1 + 0xc) = 0x3f800000;
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar1);
     return iVar1;
   }
   return 0;
@@ -12599,12 +12606,12 @@ int FUN_0100e798(void)
   iVar1 = swv_New_2(0x198);
   if (iVar1 != 0) {
     FUN_01028464(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   FUN_01008074(iVar1);
   if (iVar1 != 0) {
-    FUN_010171a0(iVar1);
+    swv_CleanupPop(iVar1);
     return iVar1;
   }
   return 0;
@@ -13729,14 +13736,14 @@ undefined4 FUN_0100f7b0(void)
   return *(undefined4 *)(iVar1 + 0x2c);
 }
 
-/* ==== 0x0100F7D0  (file offset 0x0F7D0)  FUN_0100f7d0 ================================================ */
-undefined4 FUN_0100f7d0(void)
+/* ==== 0x0100F7D0  (file offset 0x0F7D0)  swv_ErrorFrames ============================================= */
+/* GUESS: name. The engine's error frame list: the engine state's (FUN_0102ecec) +0xc (swv_types.h, the
+   cleanup stack and the error frames). Evidence: 0x0100f7d0 - 0x0100f7dc (`bl 0x0102ecec` / `ldr r0, [r0,
+   #0xc]`). */
+uint8 *swv_ErrorFrames(void)
 
 {
-  int iVar1;
-  
-  iVar1 = FUN_0102ecec();
-  return *(undefined4 *)(iVar1 + 0xc);
+  return *(uint8 **)(FUN_0102ecec() + 0xc);
 }
 
 /* ==== 0x0100F7E0  (file offset 0x0F7E0)  FUN_0100f7e0 ================================================ */
@@ -13760,14 +13767,14 @@ undefined4 FUN_0100f7e0(void)
 /* GUESS: name. The list of alignment reference trackers (swv_types.h, the alignment reference trackers),
    kept in the engine globals (FUN_0102ecec, +0x28) and made on first use: 0x14 bytes (swv_New_2), the
    base engine vtable 0x0100203C and then its own, 0x010023E0, and at +4 an engine dynamic array
-   (FUN_01027cb4, then its vtable 0x01002664); the new list is handed to the engine's guard (globals +0x10,
-   FUN_0100f8e8; FUN_0101807c) and let go of (FUN_010171a0) once it is stored. The second hand-over test
-   is dead code (the list was moved out of the held pointer just before: an inlined reference holder's
-   release, which Ghidra dropped): it is kept. Evidence: 0x0100f810 - 0x0100f8d8 (`ldr r0, [r0, #0x28]` /
-   `bne`, `mov r0, #0x14` / `bl 0x0102cbe0`, the three `add r0, pc, r0` / `str`, `bl 0x01027cb4` on r4 +
-   4, `bl 0x0100f8e8` / `bl 0x0101807c`, `mov r5, #0` / `bl 0x010171a0` / `mov r4, r5`, `str r5, [r0,
-   #0x28]`, the unreachable `bl 0x010171a0` / `blxne r2` with r1 1 at 0x0100f8b0 - 0x0100f8cc, `ldr r0,
-   [r0, #0x28]` from FUN_0102ecec again). */
+   (FUN_01027cb4, then its vtable 0x01002664); the new list is pushed on the engine's cleanup stack
+   (swvCleanupStack_Push on swv_CleanupStack) and popped (swv_CleanupPop) once it is stored. The second
+   hand-over test is dead code (the list was moved out of the held pointer just before: an inlined
+   reference holder's release, which Ghidra dropped): it is kept. Evidence: 0x0100f810 - 0x0100f8d8 (`ldr
+   r0, [r0, #0x28]` / `bne`, `mov r0, #0x14` / `bl 0x0102cbe0`, the three `add r0, pc, r0` / `str`, `bl
+   0x01027cb4` on r4 + 4, `bl 0x0100f8e8` / `bl 0x0101807c`, `mov r5, #0` / `bl 0x010171a0` / `mov r4, r5`,
+   `str r5, [r0, #0x28]`, the unreachable `bl 0x010171a0` / `blxne r2` with r1 1 at 0x0100f8b0 -
+   0x0100f8cc, `ldr r0, [r0, #0x28]` from FUN_0102ecec again). */
 uint8 *swvAlignment_Trackers(void)
 
 {
@@ -13782,18 +13789,18 @@ uint8 *swvAlignment_Trackers(void)
       *(uint32 *)list = DATA_AT_010023E0_OFFSET + 0x100f850;
       FUN_01027cb4((int *)(list + 4));
       *(uint32 *)(list + 4) = DATA_AT_01002664_OFFSET + 0x100f868;
-      FUN_0101807c((int)FUN_0100f8e8(),(undefined4)list);
+      swvCleanupStack_Push(swv_CleanupStack(),(int32)list);
     }
     held = NULL;
     if (list != NULL) {
-      FUN_010171a0((int32)list);
+      swv_CleanupPop((int32)list);
       held = list;
       list = NULL;
     }
     *(uint8 **)(FUN_0102ecec() + 0x28) = held;
     if (list != NULL) {
       /* dead code: list is NULL here */
-      FUN_010171a0((int32)list);
+      swv_CleanupPop((int32)list);
       vtable = *(int32 *)list;
       /* engine virtual call, slot +0x0: the list's destructor, deleting (1) */
       (*(code *)(*(int32 *)vtable + vtable))(list,1);
@@ -13802,14 +13809,14 @@ uint8 *swvAlignment_Trackers(void)
   return *(uint8 **)(FUN_0102ecec() + 0x28);
 }
 
-/* ==== 0x0100F8E8  (file offset 0x0F8E8)  FUN_0100f8e8 ================================================ */
-undefined4 FUN_0100f8e8(void)
+/* ==== 0x0100F8E8  (file offset 0x0F8E8)  swv_CleanupStack ============================================ */
+/* GUESS: name. The engine's cleanup stack: the engine state's (FUN_0102ecec) +0x10, made by
+   swvCleanupStack_Create (swv_types.h, the cleanup stack and the error frames). Evidence: 0x0100f8e8 -
+   0x0100f8f4 (`bl 0x0102ecec` / `ldr r0, [r0, #0x10]`). */
+uint8 *swv_CleanupStack(void)
 
 {
-  int iVar1;
-  
-  iVar1 = FUN_0102ecec();
-  return *(undefined4 *)(iVar1 + 0x10);
+  return *(uint8 **)(FUN_0102ecec() + 0x10);
 }
 
 /* ==== 0x0100F8F8  (file offset 0x0F8F8)  FUN_0100f8f8 ================================================ */
@@ -14037,8 +14044,8 @@ int FUN_0100fb34(int param_1,int param_2)
       local_30 = iVar3;
       if (iVar3 != 0) {
         FUN_010286dc(iVar3);
-        uVar6 = FUN_0100f8e8();
-        FUN_0101807c(uVar6,iVar3);
+        uVar6 = (undefined4)swv_CleanupStack();
+        swvCleanupStack_Push((uint8 *)uVar6,iVar3);
       }
       FUN_01008144(local_30,*(undefined4 *)(iVar1 + 0x1c),*(undefined4 *)(iVar1 + 0x20));
       iVar3 = FUN_01038730(&local_30);
@@ -14482,8 +14489,8 @@ undefined4 FUN_010104f0(int param_1)
     iVar2 = FUN_0100fb34(param_1,0);
     local_1c = iVar2;
     if (iVar2 != 0) {
-      uVar3 = FUN_0100f8e8();
-      FUN_0101807c(uVar3,iVar2);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Push((uint8 *)uVar3,iVar2);
     } swvVertexBuffer_SetPositionsValue((uint8 *)*(undefined4 *)(param_1 + 0xb0),(uint8 *)local_1c,
         *(undefined4 *)(iVar1 +
     0x44),3,
@@ -14492,16 +14499,16 @@ undefined4 FUN_010104f0(int param_1)
     iVar2 = FUN_0100fb34(param_1,2);
     local_20 = iVar2;
     if (iVar2 != 0) {
-      uVar3 = FUN_0100f8e8();
-      FUN_0101807c(uVar3,iVar2);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Push((uint8 *)uVar3,iVar2);
     }
     swvVertexBuffer_SetNormalsValue((uint8 *)*(undefined4 *)(param_1 + 0xb0),(uint8 *)local_20);
     FUN_01038730(&local_20);
     iVar2 = FUN_0100fb34(param_1,1);
     local_24 = iVar2;
     if (iVar2 != 0) {
-      uVar3 = FUN_0100f8e8();
-      FUN_0101807c(uVar3,iVar2);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Push((uint8 *)uVar3,iVar2);
     }
     swvVertexBuffer_SetColorsValue((uint8 *)*(undefined4 *)(param_1 + 0xb0),(uint8 *)local_24);
     FUN_01038730(&local_24);
@@ -14510,8 +14517,8 @@ undefined4 FUN_010104f0(int param_1)
       iVar4 = FUN_0100fb34(param_1,iVar2 + 3);
       local_28 = iVar4;
       if (iVar4 != 0) {
-        uVar3 = FUN_0100f8e8();
-        FUN_0101807c(uVar3,iVar4);
+        uVar3 = (undefined4)swv_CleanupStack();
+        swvCleanupStack_Push((uint8 *)uVar3,iVar4);
       }
       swvVertexBuffer_SetTexCoordsValue((uint8 *)*(undefined4 *)(param_1 + 0xb0),iVar2,(uint8 *)local_28,
                    *(undefined4 *)(iVar1 + iVar2 * 4 + 0x70),3,
@@ -14721,14 +14728,14 @@ undefined4 FUN_01010938(int param_1)
       iVar3 = swv_New_2(0x58);
       if (iVar3 != 0) {
         FUN_010286dc(iVar3);
-        uVar4 = FUN_0100f8e8();
-        FUN_0101807c(uVar4,iVar3);
+        uVar4 = (undefined4)swv_CleanupStack();
+        swvCleanupStack_Push((uint8 *)uVar4,iVar3);
       }
       FUN_01008144(iVar3,*(undefined4 *)(iVar12 + 0x1c),*(undefined4 *)(iVar12 + 0x20),2);
       uVar4 = *(undefined4 *)(iVar2 + 0x44);
       iVar6 = 0;
       if (iVar3 != 0) {
-        FUN_010171a0(iVar3,0);
+        swv_CleanupPop(iVar3);
         iVar6 = iVar3;
       }
       swvVertexBuffer_SetPositionsValue((uint8 *)*(undefined4 *)(param_1 + 0x100),(uint8 *)iVar6,uVar4,3,
@@ -16383,6 +16390,21 @@ void swv_Matrix4SetIdentity(uint32 *matrix)
   matrix[16] = 0x3f;
 }
 
+/* ==== 0x010125BC  (file offset 0x125BC)  swvCleanupFrame_Open ======================================== */
+/* A routine Ghidra has no function for (swvCleanupStack_Enter reaches it by a tail jump, and Ghidra took
+   it into that function's body), written from its disassembly (0x010125bc - 0x010125e0). GUESS: name.
+   Opens the cleanup frame frame for a new level: one empty slot appended (swvCleanupFrame_Append, the
+   slot swvCleanupStack_Push fills), then open (+0x14 = 1). Evidence: `add r1, sp, #4` / `str r0, [sp,
+   #4]` with 0 / `bl 0x01038280`, `mov r0, #1` / `str r0, [r4, #0x14]`. */
+void swvCleanupFrame_Open(uint8 *frame)
+
+{
+  uint32 slot = 0;
+
+  swvCleanupFrame_Append(frame,&slot);
+  *(uint32 *)(frame + 0x14) = 1;
+}
+
 /* ==== 0x010125E4  (file offset 0x125E4)  FUN_010125e4 ================================================ */
 void FUN_010125e4(int param_1,uint param_2,undefined4 param_3,undefined4 param_4,undefined4 *param_5
                  )
@@ -16496,7 +16518,7 @@ void * FUN_010127a4(void)
   void *pvVar3;
   
   iVar1 = FUN_01012758();
-  if (((iVar1 == 0) || (iVar1 = FUN_0101303c(), iVar1 == 0)) ||
+  if (((iVar1 == 0) || (iVar1 = (int)swvCleanupStack_Create(), iVar1 == 0)) ||
      (uVar2 = swv_GetGlobal00(), uVar2 == 0)) {
     pvVar3 = (void *)0x0;
   }
@@ -16851,32 +16873,36 @@ int FUN_01012908(int *param_1,int param_2,int param_3)
   return 0;
 }
 
-/* ==== 0x0101303C  (file offset 0x1303C)  FUN_0101303c ================================================ */
-void FUN_0101303c(void)
+/* ==== 0x0101303C  (file offset 0x1303C)  swvCleanupStack_Create ====================================== */
+/* GUESS: name. Makes the engine's cleanup stack (swv_types.h, the cleanup stack and the error frames) and
+   stores it at the engine state's (swv_GetGlobal00) +0x10, where swv_CleanupStack reads it: 0x1c bytes
+   (helper_malloc), the engine vtable 0x010024D8 (slot +0 swvCleanupStack_Destroy), at +4 an engine dynamic
+   array of frames (first the base vtable 0x01001EAC, then 0x010025D4; +8 the items, +0xc the count, +0x10
+   the capacity, all 0) and the depth (+0x14) 0. Nothing without an engine state. Returns the stack (NULL
+   without an engine state or memory); FUN_010127a4 tests it (Ghidra had made it void). Evidence:
+   0x0101303c - 0x0101309c (`bl 0x0102f464` / `cmp r0, #0` / `popeq` with r0 0, `add r4, r0, #0x10`, `mov
+   r0, #0x1c` / `bl 0x0102cbfc`, `stm r0, {r1, r2}`, the zero stores, `str r3, [r0, #4]`, `str r0, [r4]`
+   with r0 left the result). */
+uint8 *swvCleanupStack_Create(void)
 
 {
-  uint32 uVar1;
-  int *piVar2;
-  int iVar3;
-  
-  uVar1 = swv_GetGlobal00();
-  if (uVar1 == 0) {
-    return;
+  uint8 *engine = (uint8 *)swv_GetGlobal00();
+  uint32 *stack = NULL;
+
+  if (engine != NULL) {
+    stack = (uint32 *)helper_malloc(0x1c);
+    if (stack != NULL) {
+      stack[0] = DATA_AT_010024D8_OFFSET + 0x1013070;
+      stack[1] = DATA_AT_01001EAC_OFFSET_2 + 0x1013078;
+      stack[2] = 0;
+      stack[3] = 0;
+      stack[4] = 0;
+      stack[1] = WORD_HEXADECIMAL_FFFEF544 + 0x1013090;   /* 0x010025D4 */
+      stack[5] = 0;
+    }
+    *(uint32 **)(engine + 0x10) = stack;
   }
-  piVar2 = helper_malloc(0x1c);
-  if (piVar2 != (int *)0x0) {
-    iVar3 = DATA_AT_01001EAC_OFFSET_2 + 0x1013078;
-    *piVar2 = DATA_AT_010024D8_OFFSET + 0x1013070;
-    piVar2[1] = iVar3;
-    piVar2[2] = 0;
-    iVar3 = WORD_HEXADECIMAL_FFFEF544;
-    piVar2[3] = 0;
-    piVar2[4] = 0;
-    piVar2[1] = iVar3 + 0x1013090;
-    piVar2[5] = 0;
-  }
-  *(int **)(uVar1 + 0x10) = piVar2;
-  return;
+  return (uint8 *)stack;
 }
 
 /* ==== 0x010130AC  (file offset 0x130AC)  FUN_010130ac ================================================ */
@@ -17516,24 +17542,28 @@ int32 swv_CheckNotNull(int32 pointer)
   return pointer;
 }
 
-/* ==== 0x01013BCC  (file offset 0x13BCC)  FUN_01013bcc ================================================ */
-void FUN_01013bcc(int param_1,undefined4 param_2)
+/* ==== 0x01013BCC  (file offset 0x13BCC)  swvErrorFrame_Throw ========================================= */
+/* GUESS: name. Throws the engine error error to the error frame frame (swv_TryPush's 136 bytes): nothing
+   when the frame is not active (+0x80); otherwise it is popped off the error frame list
+   (swvErrorFrames_Pop), the cleanup stack unwound (swvCleanupStack_Leave, the level swv_TryArm entered,
+   for an armed frame, +0x84; swvCleanupStack_Unwind otherwise) and swv_longjmp makes the frame's
+   swv_setjmp return error. The error raise (FUN_0102f7e0, through 0x01013c1c, which Ghidra took into it)
+   calls it on the last frame, then on the one before when the first was not active. Ghidra had dropped
+   every argument but swv_longjmp's. Evidence:
+   0x01013bcc - 0x01013c18 (`ldr r0, [r0, #0x80]` / `cmp r0, #0` / `beq`, `bl 0x0100f7d0` / `bl
+   0x01017190` with r0 kept, `ldr r0, [r4, #0x84]`, `bl 0x0100f8e8` / `bl 0x01017174` or `bl 0x01005028`,
+   `mov r1, r5` / `mov r0, r4` / `bl 0x01000524`). */
+void swvErrorFrame_Throw(uint8 *frame,int32 error)
 
 {
-  if (*(int *)(param_1 + 0x80) != 0) {
-    FUN_0100f7d0();
-    FUN_01017190();
-    if (*(int *)(param_1 + 0x84) == 0) {
-      FUN_0100f8e8();
-      FUN_01005028();
-    }
-    else {
-      FUN_0100f8e8();
-      FUN_01017174();
-    }
-    swv_longjmp((uint32 *)param_1,param_2);
+  if (*(uint32 *)(frame + 0x80) != 0) {
+    swvErrorFrames_Pop(swv_ErrorFrames());
+    if (*(uint32 *)(frame + 0x84) != 0)
+      swvCleanupStack_Leave(swv_CleanupStack());
+    else
+      swvCleanupStack_Unwind(swv_CleanupStack());
+    swv_longjmp((uint32 *)frame,error);
   }
-  return;
 }
 
 /* ==== 0x01013C58  (file offset 0x13C58)  FUN_01013c58 ================================================ */
@@ -19776,8 +19806,8 @@ LAB_01016740:
         uVar19 = 1;
         local_78[0] = iVar3;
         if (iVar3 != 0) {
-          uVar11 = FUN_0100f8e8();
-          FUN_0101807c(uVar11,iVar3);
+          uVar11 = (undefined4)swv_CleanupStack();
+          swvCleanupStack_Push((uint8 *)uVar11,iVar3);
         }
         FUN_010102c8(*(undefined4 *)(param_2 + 0x30),local_78[0]);
         iVar3 = local_78[0] + 0xc;
@@ -20079,58 +20109,60 @@ void FUN_01017120(undefined4 param_1,int param_2)
   return;
 }
 
-/* ==== 0x0101715C  (file offset 0x1715C)  FUN_0101715c ================================================ */
-/* GUESS (not yet named): the engine's guard (globals +0x10, FUN_0100f8e8; GUESS: the objects under
-   construction, so that an error unwinding the stack can free them) lets go of its last held object:
-   FUN_010171b8 on its current frame (+8 the frames, +0x14 how many are open: the last one) and object (a
-   tail jump; Ghidra took FUN_010171b8 in). object is passed on but not read (the frame's last slot is
-   dropped, whichever object it holds). FUN_0101807c is the hold. Evidence: 0x0101715c - 0x01017170 (`ldr
-   r2, [r0, #0x14]`, `ldr r0, [r0, #8]`, `sub r2, r2, #1`, `ldr r0, [r0]` at r2 * 4, `b 0x010171b8` with
-   r1 unchanged). */
-void FUN_0101715c(int32 guard,int32 object)
+/* ==== 0x0101715C  (file offset 0x1715C)  swvCleanupStack_Pop ========================================= */
+/* GUESS: name. Pops the last object off the cleanup stack stack (swv_types.h, the cleanup stack and the
+   error frames), its caller having stored it: swvCleanupFrame_Pop on the current level's frame (+8 the
+   frames, +0x14 the depth) and object (a tail jump; Ghidra took swvCleanupFrame_Pop in). object is passed
+   on but not read (the last slot goes, whichever object it holds). swvCleanupStack_Push is the push.
+   Evidence: 0x0101715c - 0x01017170 (`ldr r2, [r0, #0x14]`, `ldr r0, [r0, #8]`, `sub r2, r2, #1`, `ldr
+   r0, [r0]` at r2 * 4, `b 0x010171b8` with r1 unchanged). */
+void swvCleanupStack_Pop(uint8 *stack,int32 object)
 
 {
-  uint8 *const *frames = *(uint8 *const *const *)((uint8 *)guard + 8);
-
-  FUN_010171b8(frames[*(const int32 *)((uint8 *)guard + 0x14) - 1],object);
+  swvCleanupFrame_Pop((*(uint8 ***)(stack + 8))[*(int32 *)(stack + 0x14) - 1],object);
 }
 
-/* ==== 0x01017174  (file offset 0x17174)  FUN_01017174 ================================================ */
-void FUN_01017174(int param_1)
+/* ==== 0x01017174  (file offset 0x17174)  swvCleanupStack_Leave ======================================= */
+/* GUESS: name. Leaves the cleanup stack stack's current level, the one swvCleanupStack_Enter opened:
+   swvCleanupStack_Unwind (what it still holds destroyed), then the depth (+0x14) less one. Called by
+   swv_TryPop and by swvErrorFrame_Throw for an armed frame. Evidence: 0x01017174 - 0x0101718c (`mov r4,
+   r0` / `bl 0x01005028`, `ldr r0, [r4, #0x14]` / `sub r0, r0, #1` / `str`). */
+void swvCleanupStack_Leave(uint8 *stack)
 
 {
-  FUN_01005028();
-  *(int *)(param_1 + 0x14) = *(int *)(param_1 + 0x14) + -1;
-  return;
+  swvCleanupStack_Unwind(stack);
+  *(int32 *)(stack + 0x14) = *(int32 *)(stack + 0x14) - 1;
 }
 
-/* ==== 0x01017190  (file offset 0x17190)  FUN_01017190 ================================================ */
-void FUN_01017190(int param_1)
+/* ==== 0x01017190  (file offset 0x17190)  swvErrorFrames_Pop ========================================== */
+/* GUESS: name. Pops the last frame off the error frame list frames (swv_ErrorFrames): its count (+0x14)
+   less one. Called by swv_TryPop and swvErrorFrame_Throw. Evidence: 0x01017190 - 0x0101719c (`ldr r1,
+   [r0, #0x14]` / `sub r1, r1, #1` / `str r1, [r0, #0x14]`). */
+void swvErrorFrames_Pop(uint8 *frames)
 
 {
-  *(int *)(param_1 + 0x14) = *(int *)(param_1 + 0x14) + -1;
-  return;
+  *(int32 *)(frames + 0x14) = *(int32 *)(frames + 0x14) - 1;
 }
 
-/* ==== 0x010171A0  (file offset 0x171A0)  FUN_010171a0 ================================================ */
-/* GUESS (not yet named): the engine's guard (FUN_0100f8e8) lets go of object, the last object
-   FUN_0101807c gave it, once the caller has stored it: FUN_0101715c on the guard and object (a tail
-   jump; Ghidra took FUN_0101715c's code in and read no parameter). Evidence: 0x010171a0 - 0x010171b4
-   (`mov r4, r0`, `bl 0x0100f8e8`, `mov r1, r4`, `b 0x0101715c`). */
-void FUN_010171a0(int32 object)
+/* ==== 0x010171A0  (file offset 0x171A0)  swv_CleanupPop ============================================== */
+/* GUESS: name. Pops object, the last object swvCleanupStack_Push put on the engine's cleanup stack,
+   once the caller has stored it: swvCleanupStack_Pop on swv_CleanupStack and object (a tail jump; Ghidra
+   took swvCleanupStack_Pop's code in and read no parameter). Evidence: 0x010171a0 - 0x010171b4 (`mov r4,
+   r0`, `bl 0x0100f8e8`, `mov r1, r4`, `b 0x0101715c`). */
+void swv_CleanupPop(int32 object)
 
 {
-  FUN_0101715c((int32)FUN_0100f8e8(),object);
+  swvCleanupStack_Pop(swv_CleanupStack(),object);
 }
 
-/* ==== 0x010171B8  (file offset 0x171B8)  FUN_010171b8 ================================================ */
-/* A routine Ghidra has no function for (FUN_0101715c reaches it by a tail jump, and Ghidra took it into
-   that function's body), written from its disassembly (0x010171b8 - 0x010171e8). Drops the last slot of
-   the guard frame frame (GUESS: see FUN_0101715c): its engine dynamic array (+4: +8 the items, +0xc the
-   count) sized to count - 1 (FUN_01023184), then the new last slot cleared (FUN_0101807c keeps an empty
-   slot at the end). object is passed on by FUN_0101715c but not read. Evidence: `ldr r0, [r0, #0xc]` /
-   `sub r1, r0, #1` / `add r0, r4, #4` / `bl 0x01023184`, the count read again, `str r1, [r0]` with 0. */
-void FUN_010171b8(uint8 *frame,int32 object)
+/* ==== 0x010171B8  (file offset 0x171B8)  swvCleanupFrame_Pop ========================================= */
+/* A routine Ghidra has no function for (swvCleanupStack_Pop reaches it by a tail jump, and Ghidra took it
+   into that function's body), written from its disassembly (0x010171b8 - 0x010171e8). GUESS: name. Drops
+   the last slot of the cleanup frame frame: its array (+4: +8 the items, +0xc the count) sized to count -
+   1 (FUN_01023184), then the new last slot cleared (the empty slot swvCleanupStack_Push fills next).
+   object is passed on by swvCleanupStack_Pop but not read. Evidence: `ldr r0, [r0, #0xc]` / `sub r1, r0,
+   #1` / `add r0, r4, #4` / `bl 0x01023184`, the count read again, `str r1, [r0]` with 0. */
+void swvCleanupFrame_Pop(uint8 *frame,int32 object)
 
 {
   FUN_01023184((int *)(frame + 4),*(int32 *)(frame + 0xc) - 1);
@@ -20746,8 +20778,8 @@ LAB_01017c08:
       iVar2 = FUN_01009860(*(undefined4 *)(param_1 + 0x78));
       local_9c = iVar2;
       if (iVar2 != 0) {
-        uVar3 = FUN_0100f8e8();
-        FUN_0101807c(uVar3,iVar2);
+        uVar3 = (undefined4)swv_CleanupStack();
+        swvCleanupStack_Push((uint8 *)uVar3,iVar2);
       }
       *(int *)(local_9c + 8) = *(int *)(local_9c + 8) + 1;
       local_a0 = local_9c;
@@ -20789,8 +20821,8 @@ bool FUN_01017ccc(int param_1)
       iVar1 = FUN_01009860(0xff);
       local_9c = iVar1;
       if (iVar1 != 0) {
-        uVar2 = FUN_0100f8e8();
-        FUN_0101807c(uVar2,iVar1);
+        uVar2 = (undefined4)swv_CleanupStack();
+        swvCleanupStack_Push((uint8 *)uVar2,iVar1);
       }
       *(int *)(local_9c + 8) = *(int *)(local_9c + 8) + 1;
       local_a0 = local_9c;
@@ -20958,62 +20990,94 @@ int FUN_01018018(undefined4 param_1,int param_2)
   return iVar2;
 }
 
-/* ==== 0x0101807C  (file offset 0x1807C)  FUN_0101807c ================================================ */
-void FUN_0101807c(int param_1,undefined4 param_2)
+/* ==== 0x0101807C  (file offset 0x1807C)  swvCleanupStack_Push ======================================== */
+/* GUESS: name. Pushes object, just made, on the cleanup stack stack (swv_types.h, the cleanup stack and
+   the error frames), so that an error thrown before its caller stores it destroys it:
+   swvCleanupFrame_Push on the current level's frame (+8 the frames, +0x14 the depth) and object (a tail
+   jump; Ghidra took swvCleanupFrame_Push in). swv_CleanupPop / swvCleanupStack_Pop take it off again.
+   Evidence: 0x0101807c - 0x01018090 (`ldr r2, [r0, #0x14]`, `ldr r0, [r0, #8]`, `sub r2, r2, #1`, `ldr
+   r0, [r0]` at r2 * 4, `b 0x01018188` with r1 unchanged). */
+void swvCleanupStack_Push(uint8 *stack,int32 object)
 
 {
-  int iVar1;
-  undefined4 local_8 [2];
-  
-  iVar1 = *(int *)(*(int *)(param_1 + 8) + (*(int *)(param_1 + 0x14) + -1) * 4);
-  *(undefined4 *)(*(int *)(iVar1 + 8) + (*(int *)(iVar1 + 0xc) + -1) * 4) = param_2;
-  local_8[0] = 0;
-  FUN_01038280(iVar1,local_8);
-  return;
+  swvCleanupFrame_Push((*(uint8 ***)(stack + 8))[*(int32 *)(stack + 0x14) - 1],object);
 }
 
-/* ==== 0x01018094  (file offset 0x18094)  FUN_01018094 ================================================ */
-void FUN_01018094(int param_1)
+/* ==== 0x01018094  (file offset 0x18094)  swvCleanupStack_Enter ======================================= */
+/* GUESS: name. Enters a new level of the cleanup stack stack, for swv_TryArm: the stack not ready
+   (+0x18 = 0) meanwhile; when every frame is in use (the frame count +0xc equal to the depth +0x14) a
+   new one is added: an empty slot appended to the frame array (+4; grown first when full: its engine
+   vtable +4, with the new capacity from FUN_0102df78(count + 1, capacity) and the count), then a new
+   frame (swv_New(0x18), swvCleanupFrame_Construct when not NULL, swv_CheckNotNull) stored in it. Then
+   the depth one more, the stack ready (+0x18 = 1), and the new level's frame opened
+   (swvCleanupFrame_Open; a tail jump that Ghidra took in). Ghidra had dropped the FUN_0102df78 and
+   swvCleanupFrame_Construct arguments. Evidence: 0x01018094 - 0x0101816c (`str r0, [r4, #0x18]` with 0,
+   `cmp r0, r1` with +0xc / +0x14, `add r5, r4, #4`, `bl 0x0102df78` with r1 the capacity, `blx r3` with
+   r2 the count, `str r1, [r0]` the 0 from `[sp]`, `mov r0, #0x18` / `bl 0x0102cc00`, `blne 0x01029208`,
+   `bl 0x01013bb4`, `str r5, [r0]` at count - 1, the depth stored + 1, `str r1, [r4, #0x18]` with 1, `b
+   0x010125bc` with the frame at the new depth - 1). */
+void swvCleanupStack_Enter(uint8 *stack)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  
-  *(undefined4 *)(param_1 + 0x18) = 0;
-  if (*(int *)(param_1 + 0xc) == *(int *)(param_1 + 0x14)) {
-    if (*(int *)(param_1 + 0xc) == *(int *)(param_1 + 0x10)) {
-      uVar1 = FUN_0102df78(*(int *)(param_1 + 0xc) + 1);
-      iVar2 = *(int *)(param_1 + 4);
-      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
-         the object's class) */
-      (*(code *)(*(int *)(iVar2 + 4) + iVar2))((int *)(param_1 + 4),uVar1);
+  uint8 *frames = stack + 4;
+  int32 count;
+  int32 capacity;
+  int32 vtable;
+  int32 depth;
+  uint8 *frame;
+
+  *(uint32 *)(stack + 0x18) = 0;
+  if (*(int32 *)(stack + 0xc) == *(int32 *)(stack + 0x14)) {
+    count = *(int32 *)(stack + 0xc);
+    if (count == *(int32 *)(stack + 0x10)) {
+      capacity = FUN_0102df78(count + 1,*(int32 *)(stack + 0x10));
+      vtable = *(int32 *)frames;
+      /* engine virtual call, slot +0x4: the frame array's grow (GUESS; as in FUN_01023184), r1 the new
+         capacity, r2 the count */
+      (*(code *)(*(int32 *)(vtable + 4) + vtable))(frames,capacity,*(int32 *)(frames + 8));
     }
-    iVar2 = *(int *)(param_1 + 0xc);
-    *(int *)(param_1 + 0xc) = iVar2 + 1;
-    *(undefined4 *)(*(int *)(param_1 + 8) + iVar2 * 4) = 0;
-    iVar2 = swv_New(0x18);
-    if (iVar2 != 0) {
-      FUN_01029208(iVar2);
-    }
-    swv_CheckNotNull(iVar2);
-    *(int *)(*(int *)(param_1 + 8) + (*(int *)(param_1 + 0xc) + -1) * 4) = iVar2;
+    count = *(int32 *)(frames + 8);
+    *(int32 *)(frames + 8) = count + 1;
+    (*(uint32 **)(frames + 4))[count] = 0;
+    frame = (uint8 *)swv_New(0x18);
+    if (frame != NULL)
+      swvCleanupFrame_Construct(frame);
+    swv_CheckNotNull((int32)frame);
+    (*(uint8 ***)(stack + 8))[*(int32 *)(stack + 0xc) - 1] = frame;
   }
-  iVar2 = *(int *)(param_1 + 0x14);
-  *(int *)(param_1 + 0x14) = iVar2 + 1;
-  *(undefined4 *)(param_1 + 0x18) = 1;
-  iVar2 = *(int *)(*(int *)(param_1 + 8) + iVar2 * 4);
-  FUN_01038280(iVar2,&stack0xfffffff4);
-  *(undefined4 *)(iVar2 + 0x14) = 1;
-  return;
+  depth = *(int32 *)(stack + 0x14) + 1;
+  *(int32 *)(stack + 0x14) = depth;
+  *(uint32 *)(stack + 0x18) = 1;
+  swvCleanupFrame_Open((*(uint8 ***)(stack + 8))[depth - 1]);
 }
 
-/* ==== 0x01018170  (file offset 0x18170)  FUN_01018170 ================================================ */
-void FUN_01018170(int param_1,undefined4 param_2)
+/* ==== 0x01018170  (file offset 0x18170)  swvErrorFrames_Push ========================================= */
+/* GUESS: name. Pushes the error frame frame on the error frame list frames (swv_ErrorFrames): stored at
+   the count (+0x14) as an index from the list's start (the frames are the words before the count), then
+   the count one more. Called by swv_TryPush. Evidence: 0x01018170 - 0x01018184 (`ldr r2, [r0, #0x14]` /
+   `str r1, [r0, r2, lsl #2]`, the count reloaded, `add r1, r1, #1` / `str`). */
+void swvErrorFrames_Push(uint8 *frames,uint8 *frame)
 
 {
-  *(undefined4 *)(param_1 + *(int *)(param_1 + 0x14) * 4) = param_2;
-  *(int *)(param_1 + 0x14) = *(int *)(param_1 + 0x14) + 1;
-  return;
+  ((uint8 **)frames)[*(int32 *)(frames + 0x14)] = frame;
+  *(int32 *)(frames + 0x14) = *(int32 *)(frames + 0x14) + 1;
+}
+
+/* ==== 0x01018188  (file offset 0x18188)  swvCleanupFrame_Push ======================================== */
+/* A routine Ghidra has no function for (swvCleanupStack_Push reaches it by a tail jump, and Ghidra took it
+   into that function's body), written from its disassembly (0x01018188 - 0x010181b0). GUESS: name. Puts
+   object in the cleanup frame frame's empty last slot (+4 its array: +8 the items, +0xc the count), then
+   appends a new empty slot (swvCleanupFrame_Append): the object is held before the append can run out
+   of memory and throw. Evidence: `ldr r2, [r0, #0xc]` / `ldr r3, [r0, #8]` / `sub r2, r2, #1` / `str r1,
+   [r2]` at r2 * 4, `str r1, [sp]` with 0 / `mov r1, sp` / `bl 0x01038280`. */
+void swvCleanupFrame_Push(uint8 *frame,int32 object)
+
+{
+  uint32 slot;
+
+  (*(int32 **)(frame + 8))[*(int32 *)(frame + 0xc) - 1] = object;
+  slot = 0;
+  swvCleanupFrame_Append(frame,&slot);
 }
 
 /* ==== 0x010181B4  (file offset 0x181B4)  FUN_010181b4 ================================================ */
@@ -21259,8 +21323,8 @@ void FUN_01018460(int param_1)
         piVar4[2] = 0;
         *piVar4 = iVar3 + 0x10184e8;
         piVar4[3] = 0;
-        uVar5 = FUN_0100f8e8();
-        FUN_0101807c(uVar5,piVar4);
+        uVar5 = (undefined4)swv_CleanupStack();
+        swvCleanupStack_Push((uint8 *)uVar5,piVar4);
       }
       *(undefined4 *)(param_1 + 0x50) = *(undefined4 *)(param_1 + 0x4c);
       iVar3 = swvImage2D_Width((uint8 *)param_1);
@@ -21740,8 +21804,8 @@ LAB_010190c8:
         }
       }
       if (piVar4 != (int *)0x0) {
-        uVar5 = FUN_0100f8e8();
-        FUN_0101715c(uVar5,piVar4);
+        uVar5 = (undefined4)swv_CleanupStack();
+        swvCleanupStack_Pop((uint8 *)uVar5,piVar4);
         if (piVar4 != (int *)0x0) {
           /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there
              (by the object's class); slot 0 is the destructor */
@@ -26100,8 +26164,8 @@ void FUN_0101e534(int param_1,undefined4 param_2)
         piVar4[2] = 0;
         *piVar4 = iVar9 + 0x10184e8;
         piVar4[3] = 0;
-        uVar8 = FUN_0100f8e8();
-        FUN_0101807c(uVar8,piVar4);
+        uVar8 = (undefined4)swv_CleanupStack();
+        swvCleanupStack_Push((uint8 *)uVar8,piVar4);
       }
       *(undefined4 *)(param_1 + 0x50) = *(undefined4 *)(param_1 + 0x4c);
       iVar9 = swvImage2D_Width((uint8 *)param_1);
@@ -26587,8 +26651,8 @@ LAB_010190c8:
         }
       }
       if (piVar4 != (int *)0x0) {
-        uVar8 = FUN_0100f8e8();
-        FUN_0101715c(uVar8,piVar4);
+        uVar8 = (undefined4)swv_CleanupStack();
+        swvCleanupStack_Pop((uint8 *)uVar8,piVar4);
         if (piVar4 != (int *)0x0) {
           /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there
              (by the object's class); slot 0 is the destructor */
@@ -27042,10 +27106,10 @@ void FUN_0101f0b0(int param_1)
    (+0x3c, its data +0x40) sized (FUN_01023184). Each keyframe: its time (UInt32, thunk_FUN_01019abc;
    -1202 when negative) and componentCount values: encoding 0 Float32s (FUN_01019a0c); encodings 1 and 2
    the vectorBias and vectorScale first (two engine float arrays, swv_New_2(0x10) / FUN_01027cd8, kept on
-   the engine's object stack, FUN_0101807c, and read by FUN_010199ac), then Bytes (FUN_01019640) or
-   UInt16s (FUN_01019a98), each bias + scale * (value / 255 or 65535); the two arrays released at the end
-   (FUN_0102b784). Last the valid range set (FUN_01023af0: KeyframeSequence.setValidRange, error -1101 out
-   of range; a tail jump, whose code Ghidra had pasted here). Evidence: 0x0101f0b4 - 0x0101f3d0 (r0 and
+   the engine's cleanup stack, swvCleanupStack_Push, and read by FUN_010199ac), then Bytes (FUN_01019640)
+   or UInt16s (FUN_01019a98), each bias + scale * (value / 255 or 65535); the two arrays released at the
+   end (FUN_0102b784). Last the valid range set (FUN_01023af0: KeyframeSequence.setValidRange, error -1101
+   out of range; a tail jump, whose code Ghidra had pasted here). Evidence: 0x0101f0b4 - 0x0101f3d0 (r0 and
    r1 kept for swvM3G_ReadObject3D: Ghidra had dropped them; `cmp r0, #1` / `blt` and `cmp r1, #0xb1` /
    `cmpne r1, #0xb3` / `bne` / `cmp r0, #4` / `beq` past the error (Ghidra had 0xb1 alone as an error);
    `smull` / `subs` / `sbc` / `subs` / `sbcs` from the double 0.0 (0x0101f3d8) / `mvnlt r0, #3`; the bias
@@ -27112,12 +27176,12 @@ void swvM3G_ReadKeyframeSequence(SwvKeyframeSequence *sequence,uint8 *stream)
     bias = (uint8 *)swv_New_2(0x10);
     if (bias != NULL) {
       FUN_01027cd8((int *)bias);
-      FUN_0101807c(FUN_0100f8e8(),(uint32)bias);
+      swvCleanupStack_Push(swv_CleanupStack(),(int32)bias);
     }
     scale = (uint8 *)swv_New_2(0x10);
     if (scale != NULL) {
       FUN_01027cd8((int *)scale);
-      FUN_0101807c(FUN_0100f8e8(),(uint32)scale);
+      swvCleanupStack_Push(swv_CleanupStack(),(int32)scale);
     }
     FUN_010199ac((int32)stream,(int32)bias,sequence->componentCount);
     FUN_010199ac((int32)stream,(int32)scale,sequence->componentCount);
@@ -27713,12 +27777,12 @@ void swvAnimationController_SetActiveIntervalValue(uint8 *controller,int32 start
    trackers, +0xc the count, read once for the search): the tracker whose reference (+4) it is gets the
    node (swvAlignmentTracker_AddNode); without one, a new tracker (0x18 bytes, swv_New_2; the base engine
    vtable 0x0100203C and then its own, 0x01002890, no reference, at +8 an engine dynamic array,
-   FUN_01027cb4, then its vtable 0x010023CC) is held by the engine's guard (FUN_0100f8e8, FUN_0101807c),
-   given the reference (swvAlignmentTracker_SetReference) and the node, appended to the list (its array
-   grown first when full: its engine vtable +4, with the new capacity from FUN_0102df78(count + 1,
-   capacity) and the count) and let go of by the guard (FUN_010171a0, a tail jump that Ghidra took in).
-   Called twice by swvAlignment_Register (z, then y). Evidence: 0x0101ffbc - 0x010200f4 (`movs r6, r2` /
-   `beq`, `ldr r2, [r5, #0xc]` before the loop, `bl 0x010031a0` on a match, `mov r0, #0x18` / `bl
+   FUN_01027cb4, then its vtable 0x010023CC) is pushed on the engine's cleanup stack
+   (swvCleanupStack_Push), given the reference (swvAlignmentTracker_SetReference) and the node, appended to
+   the list (its array grown first when full: its engine vtable +4, with the new capacity from
+   FUN_0102df78(count + 1, capacity) and the count) and popped (swv_CleanupPop, a tail jump that Ghidra
+   took in). Called twice by swvAlignment_Register (z, then y). Evidence: 0x0101ffbc - 0x010200f4 (`movs
+   r6, r2` / `beq`, `ldr r2, [r5, #0xc]` before the loop, `bl 0x010031a0` on a match, `mov r0, #0x18` / `bl
    0x0102cbe0`, `stm r4, {r0, r1}` with r1 0, `bl 0x01027cb4` on r4 + 8, `bl 0x0100f8e8` / `bl 0x0101807c`
    when not NULL, `bl 0x01008744`, `bl 0x010031a0`, `add r5, r5, #4`, `bl 0x0102df78` with r1 the
    capacity, `blx r3` with r2 the count, `popne` / `bne 0x010171a0`). */
@@ -27746,7 +27810,7 @@ void swvAlignment_RegisterReference(uint8 *trackers,uint8 *node,uint8 *reference
         *(uint8 **)(tracker + 4) = NULL;
         FUN_01027cb4((int *)(tracker + 8));
         *(uint32 *)(tracker + 8) = DATA_AT_010023CC_OFFSET + 0x1020060;
-        FUN_0101807c((int)FUN_0100f8e8(),(undefined4)tracker);
+        swvCleanupStack_Push(swv_CleanupStack(),(int32)tracker);
       }
       swvAlignmentTracker_SetReference(tracker,reference);
       swvAlignmentTracker_AddNode(tracker,node);
@@ -27763,7 +27827,7 @@ void swvAlignment_RegisterReference(uint8 *trackers,uint8 *node,uint8 *reference
       *(int32 *)(list + 8) = count + 1;
       (*(uint8 ***)(list + 4))[count] = tracker;
       if (tracker != NULL)
-        FUN_010171a0((int32)tracker);
+        swv_CleanupPop((int32)tracker);
     }
   }
 }
@@ -33517,7 +33581,7 @@ void FUN_01025e3c(int param_1)
 
 /* ==== 0x01025E98  (file offset 0x25E98)  swv_TryPush ================================================= */
 /* GUESS: name. Pushes a 136-byte error frame (buffer +0x80 = active, +0x84 = armed): both cleared, the
-   frame appended to the engine's frame list (FUN_01018170 on FUN_0100f7d0's list), then active = 1;
+   frame appended to the engine's frame list (swvErrorFrames_Push on swv_ErrorFrames), then active = 1;
    returns the frame, for swv_setjmp (its first 0x2c bytes are the jmp_buf). Pattern: frame on the stack,
    swv_setjmp, swv_TryArm on the 0 path, swv_TryPop at the end; on error the code is mapped by
    swv_ErrorToResult. Evidence: 0x01025e98 - 0x01025ec4 (`str r0, [r4, #0x80]` / `[r4, #0x84]` with 0, `bl
@@ -33528,7 +33592,7 @@ uint8 *swv_TryPush(uint8 *frame)
 {
   *(uint32 *)(frame + 0x80) = 0;
   *(uint32 *)(frame + 0x84) = 0;
-  FUN_01018170(FUN_0100f7d0(),(undefined4)frame);
+  swvErrorFrames_Push(swv_ErrorFrames(),frame);
   *(uint32 *)(frame + 0x80) = 1;
   return frame;
 }
@@ -33754,15 +33818,16 @@ void FUN_010261f0(int param_1)
 }
 
 /* ==== 0x01026298  (file offset 0x26298)  swv_TryPop ================================================== */
-/* GUESS: name. Pops the current error frame: FUN_01017190 on the frame list (FUN_0100f7d0, its count +0x14
-   less one), then a tail jump to FUN_01017174 with FUN_0100f8e8's list. Evidence: 0x01026298 - 0x010262ac
-   (`bl 0x0100f7d0` / `bl 0x01017190` and `bl 0x0100f8e8` / `b 0x01017174`, each with the first call's
-   result left in r0: Ghidra had dropped both arguments and repeated FUN_01017174's code here). */
+/* GUESS: name. Pops the current error frame: swvErrorFrames_Pop on the frame list (swv_ErrorFrames), then
+   a tail jump to swvCleanupStack_Leave on the cleanup stack (swv_CleanupStack: the level swv_TryArm
+   entered). Evidence: 0x01026298 - 0x010262ac (`bl 0x0100f7d0` / `bl 0x01017190` and `bl 0x0100f8e8` /
+   `b 0x01017174`, each with the first call's result left in r0: Ghidra had dropped both arguments and
+   repeated swvCleanupStack_Leave's code here). */
 void swv_TryPop(void)
 
 {
-  FUN_01017190(FUN_0100f7d0());
-  FUN_01017174(FUN_0100f8e8());
+  swvErrorFrames_Pop(swv_ErrorFrames());
+  swvCleanupStack_Leave(swv_CleanupStack());
 }
 
 /* ==== 0x010262B0  (file offset 0x262B0)  FUN_010262b0 ================================================ */
@@ -36142,24 +36207,32 @@ int * FUN_010291bc(int *param_1)
   return param_1;
 }
 
-/* ==== 0x01029208  (file offset 0x29208)  FUN_01029208 ================================================ */
-void FUN_01029208(int *param_1)
+/* ==== 0x01029208  (file offset 0x29208)  swvCleanupFrame_Construct =================================== */
+/* GUESS: name. Constructs the cleanup frame frame (0x18 bytes; made with helper_malloc when NULL): the
+   engine vtable 0x01002558, at +4 an engine dynamic array of the held objects (first the base vtable
+   0x01001EAC, then 0x01002540; +8 the items, +0xc the count, +0x10 the capacity, all 0), not open (+0x14
+   0). Returns the frame (NULL without memory); its caller, swvCleanupStack_Enter, does not read it
+   (Ghidra had made it void). Evidence: 0x01029208 - 0x01029258 (`cmp r0, #0` / `bne`, `mov r0, #0x18` /
+   `bl 0x0102cbf8` / `beq` to the end, `stm r0, {r1, r2}`, the zero stores, `str r3, [r0, #4]`, r0 kept to
+   `pop {r3, pc}`). */
+uint8 *swvCleanupFrame_Construct(uint8 *frame)
 
 {
-  int iVar1;
-  
-  if ((param_1 != (int *)0x0) || (param_1 = helper_malloc(0x18), param_1 != (int *)0x0)) {
-    iVar1 = DATA_AT_01001EAC_OFFSET_9 + 0x1029238;
-    *param_1 = DATA_AT_01002558_OFFSET + 0x1029230;
-    param_1[1] = iVar1;
-    param_1[2] = 0;
-    iVar1 = WORD_HEXADECIMAL_FFFD92F0;
-    param_1[3] = 0;
-    param_1[4] = 0;
-    param_1[1] = iVar1 + 0x1029250;
-    param_1[5] = 0;
+  uint32 *words;
+
+  if (frame == NULL)
+    frame = (uint8 *)helper_malloc(0x18);
+  if (frame != NULL) {
+    words = (uint32 *)frame;
+    words[0] = DATA_AT_01002558_OFFSET + 0x1029230;
+    words[1] = DATA_AT_01001EAC_OFFSET_9 + 0x1029238;
+    words[2] = 0;
+    words[3] = 0;
+    words[4] = 0;
+    words[1] = WORD_HEXADECIMAL_FFFD92F0 + 0x1029250;   /* 0x01002540 */
+    words[5] = 0;
   }
-  return;
+  return frame;
 }
 
 /* ==== 0x01029268  (file offset 0x29268)  FUN_01029268 ================================================ */
@@ -37405,28 +37478,31 @@ void FUN_0102b13c(int *param_1,int param_2)
 }
 
 /* ==== 0x0102B194  (file offset 0x2B194)  FUN_0102b194 ================================================ */
-void FUN_0102b194(int *param_1,int param_2)
+/* GUESS (not yet named): the destructor of a one-word holder of an object on the cleanup stack (a local
+   of its callers, given with deleting 0): when it holds one, the object is popped (swv_CleanupPop),
+   destroyed through its engine vtable +0 (deleting) and the holder cleared; when deleting is set the
+   holder is freed (helper_free's third entry, 0x01029910; a tail jump). FUN_0102baf0 is the same code.
+   Ghidra had dropped swv_CleanupPop's argument and the clearing store. Evidence: 0x0102b194 - 0x0102b1e4
+   (`ldr r0, [r0]` / `cmp r0, #0` / `beq`, `bl 0x010171a0` with r0 the object, `ldr r0, [r4]` reloaded,
+   `blxne r2` with r1 1, `str r0, [r4]` with 0, `cmp r5, #0` / `bne 0x01029910`). */
+void FUN_0102b194(int32 *holder,int32 deleting)
 
 {
-  int *piVar1;
-  
-  if (*param_1 != 0) {
-    FUN_010171a0();
-    piVar1 = (int *)*param_1;
-    if (piVar1 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
-         the object's class); slot 0 is the destructor */
-      (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
+  int32 *object;
+  int32 vtable;
+
+  if (*holder != 0) {
+    swv_CleanupPop(*holder);
+    object = (int32 *)*holder;
+    if (object != NULL) {
+      vtable = *object;
+      /* engine virtual call, slot +0x0: the held object's destructor, deleting (1) */
+      (*(code *)(*(int32 *)vtable + vtable))(object,1);
     }
-    *param_1 = 0;
+    *holder = 0;
   }
-  if (param_2 == 0) {
-    return;
-  }
-                    /* WARNING: Could not recover jumptable at 0x010398e0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (*g_pHelperFuncs->free)(param_1);
-  return;
+  if (deleting != 0)
+    helper_free(holder);
 }
 
 /* ==== 0x0102B1E8  (file offset 0x2B1E8)  FUN_0102b1e8 ================================================ */
@@ -37524,52 +37600,62 @@ void FUN_0102b3d0(int *param_1,int param_2)
   return;
 }
 
-/* ==== 0x0102B428  (file offset 0x2B428)  FUN_0102b428 ================================================ */
+/* ==== 0x0102B428  (file offset 0x2B428)  swvCleanupStack_Destroy ===================================== */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010024D8 +0x0;
-   written from its disassembly (0x0102b428 - 0x0102b4b4). Destructor (GUESS): its class's vtable;
-   FUN_0102b4c4 (with 1) on each object of the array at +8 (count +0xc); the member container at +4;
-   then, when param_2 is set, frees the object (helper_free's third entry, 0x01029910; a tail jump). */
-void FUN_0102b428(int *param_1,int param_2)
+   written from its disassembly (0x0102b428 - 0x0102b4b4). GUESS: name. The cleanup stack's destructor
+   (swvCleanupStack_Create): its class's vtable; each non-NULL frame of its frame array (+4: +8 the items,
+   +0xc the count) destroyed (swvCleanupFrame_Destroy, deleting); that array's destructor inlined: its
+   vtable 0x010025D4, the items freed and, when +0xc is -1, the buffer at +0x10 (as the other engine
+   arrays' destructors), then the base engine vtable 0x0100203C; when deleting is set the stack is freed
+   (helper_free's third entry, 0x01029910; a tail jump). Evidence: `str r0, [r5]`, the loop to `cmp r0,
+   r4` / `bgt` with `blne 0x0102b4c4` and r1 1, `str r0, [r5, #4]`, `bl 0x01029908` twice (`cmn r0, #1`),
+   `str r0, [r4]`, `cmp r6, #0` / `bne 0x01029910`. */
+void swvCleanupStack_Destroy(uint8 *stack,int32 deleting)
 
 {
-  int iVar1;
+  uint8 *frames = stack + 4;
+  uint8 *frame;
+  int32 i;
 
-  *param_1 = DATA_AT_010024D8_OFFSET_2 + 0x102b440;
-  for (iVar1 = 0; iVar1 < param_1[3]; iVar1 = iVar1 + 1) {
-    if (*(int *)(param_1[2] + iVar1 * 4) != 0)
-      FUN_0102b4c4(*(int **)(param_1[2] + iVar1 * 4),1);
+  *(uint32 *)stack = DATA_AT_010024D8_OFFSET_2 + 0x102b440;
+  for (i = 0; i < *(int32 *)(stack + 0xc); i++) {
+    frame = (*(uint8 ***)(stack + 8))[i];
+    if (frame != NULL)
+      swvCleanupFrame_Destroy(frame,1);
   }
-  param_1[0x1] = DATA_AT_010025D4_OFFSET + 0x102b480;
-  helper_free((void *)param_1[0x2]);
-  if (param_1[0x3] == -1)
-    helper_free((void *)param_1[0x4]);
-  param_1[0x1] = DATA_AT_0100203C_OFFSET_59 + 0x102b4a4;
-  if (param_2 != 0)
-    helper_free(param_1);
-  return;
+  *(uint32 *)frames = DATA_AT_010025D4_OFFSET + 0x102b480;
+  helper_free(*(void **)(frames + 4));
+  if (*(int32 *)(frames + 8) == -1)
+    helper_free(*(void **)(frames + 0xc));
+  *(uint32 *)frames = DATA_AT_0100203C_OFFSET_59 + 0x102b4a4;
+  if (deleting != 0)
+    helper_free(stack);
 }
 
-/* ==== 0x0102B4C4  (file offset 0x2B4C4)  FUN_0102b4c4 ================================================ */
-void FUN_0102b4c4(int *param_1,int param_2)
+/* ==== 0x0102B4C4  (file offset 0x2B4C4)  swvCleanupFrame_Destroy ===================================== */
+/* GUESS: name. Destroys the cleanup frame frame, not what it holds (swvCleanupFrame_DestroyAll does
+   that): its array's (+4) destructor inlined: that array's vtable 0x01002540, the items (+8) freed
+   and, when +0xc is -1, the buffer at +0x10 (as the other engine arrays' destructors), then the base
+   engine vtable 0x0100203C for both; when deleting is set the frame is freed (helper_free's third entry,
+   0x01029910; a tail jump, which Ghidra took in). Called by swvCleanupStack_Unwind and
+   swvCleanupStack_Destroy. Evidence: 0x0102b4c4 - 0x0102b518 (`add r4, r0, #4` / `str r0, [r4]`, `ldr
+   r0, [r4, #4]` / `bl 0x01029908`, `cmn r0, #1` / `bleq 0x01029908`, `str r0, [r4]` / `str r0, [r5]`,
+   `cmp r6, #0` / `bne 0x01029910`). */
+void swvCleanupFrame_Destroy(uint8 *frame,int32 deleting)
 
 {
-  int iVar1;
-  
-  param_1[1] = DATA_AT_01002540_OFFSET + 0x102b4e0;
-  helper_free((void *)param_1[2]);
-  if (param_1[3] == -1) {
-    helper_free((void *)param_1[4]);
-  }
-  iVar1 = DATA_AT_0100203C_OFFSET_24 + 0x102b504;
-  param_1[1] = iVar1;
-  *param_1 = iVar1;
-  if (param_2 == 0) {
-    return;
-  }
-                    /* WARNING: Could not recover jumptable at 0x010398e0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (*g_pHelperFuncs->free)(param_1);
-  return;
+  uint8 *objects = frame + 4;
+  uint32 base;
+
+  *(uint32 *)objects = DATA_AT_01002540_OFFSET + 0x102b4e0;
+  helper_free(*(void **)(objects + 4));
+  if (*(int32 *)(objects + 8) == -1)
+    helper_free(*(void **)(objects + 0xc));
+  base = DATA_AT_0100203C_OFFSET_24 + 0x102b504;
+  *(uint32 *)objects = base;
+  *(uint32 *)frame = base;
+  if (deleting != 0)
+    helper_free(frame);
 }
 
 /* ==== 0x0102B524  (file offset 0x2B524)  FUN_0102b524 ================================================ */
@@ -37683,8 +37769,8 @@ void FUN_0102b784(int *param_1,int param_2)
   
   iVar3 = *param_1;
   if (iVar3 != 0) {
-    uVar1 = FUN_0100f8e8();
-    FUN_0101715c(uVar1,iVar3);
+    uVar1 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar1,iVar3);
     piVar2 = (int *)*param_1;
     if (piVar2 != (int *)0x0) {
       /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
@@ -37712,8 +37798,8 @@ void FUN_0102b7e0(int *param_1,int param_2)
   
   iVar3 = *param_1;
   if (iVar3 != 0) {
-    uVar1 = FUN_0100f8e8();
-    FUN_0101715c(uVar1,iVar3);
+    uVar1 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar1,iVar3);
     piVar2 = (int *)*param_1;
     if (piVar2 != (int *)0x0) {
       /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
@@ -37865,8 +37951,8 @@ void FUN_0102ba94(int *param_1,int param_2)
   
   iVar3 = *param_1;
   if (iVar3 != 0) {
-    uVar1 = FUN_0100f8e8();
-    FUN_0101715c(uVar1,iVar3);
+    uVar1 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar1,iVar3);
     piVar2 = (int *)*param_1;
     if (piVar2 != (int *)0x0) {
       /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
@@ -37885,28 +37971,31 @@ void FUN_0102ba94(int *param_1,int param_2)
 }
 
 /* ==== 0x0102BAF0  (file offset 0x2BAF0)  FUN_0102baf0 ================================================ */
-void FUN_0102baf0(int *param_1,int param_2)
+/* GUESS (not yet named): FUN_0102b194's code again (a holder of an object on the cleanup stack, given
+   with deleting 0 by its callers): when it holds one, the object is popped (swv_CleanupPop), destroyed
+   through its engine vtable +0 (deleting) and the holder cleared; when deleting is set the holder is
+   freed (helper_free's third entry, 0x01029910; a tail jump). Ghidra had dropped swv_CleanupPop's
+   argument and the clearing store. Evidence: 0x0102baf0 - 0x0102bb40 (`ldr r0, [r0]` / `cmp r0, #0` /
+   `beq`, `bl 0x010171a0` with r0 the object, `ldr r0, [r4]` reloaded, `blxne r2` with r1 1, `str r0,
+   [r4]` with 0, `cmp r5, #0` / `bne 0x01029910`). */
+void FUN_0102baf0(int32 *holder,int32 deleting)
 
 {
-  int *piVar1;
-  
-  if (*param_1 != 0) {
-    FUN_010171a0();
-    piVar1 = (int *)*param_1;
-    if (piVar1 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
-         the object's class); slot 0 is the destructor */
-      (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
+  int32 *object;
+  int32 vtable;
+
+  if (*holder != 0) {
+    swv_CleanupPop(*holder);
+    object = (int32 *)*holder;
+    if (object != NULL) {
+      vtable = *object;
+      /* engine virtual call, slot +0x0: the held object's destructor, deleting (1) */
+      (*(code *)(*(int32 *)vtable + vtable))(object,1);
     }
-    *param_1 = 0;
+    *holder = 0;
   }
-  if (param_2 == 0) {
-    return;
-  }
-                    /* WARNING: Could not recover jumptable at 0x010398e0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (*g_pHelperFuncs->free)(param_1);
-  return;
+  if (deleting != 0)
+    helper_free(holder);
 }
 
 /* ==== 0x0102BB44  (file offset 0x2BB44)  FUN_0102bb44 ================================================ */
@@ -37919,8 +38008,8 @@ void FUN_0102bb44(int *param_1,int param_2)
   
   iVar3 = *param_1;
   if (iVar3 != 0) {
-    uVar1 = FUN_0100f8e8();
-    FUN_0101715c(uVar1,iVar3);
+    uVar1 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar1,iVar3);
     piVar2 = (int *)*param_1;
     if (piVar2 != (int *)0x0) {
       /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
@@ -38082,8 +38171,8 @@ void FUN_0102bef4(int *param_1,int param_2)
   
   iVar3 = *param_1;
   if (iVar3 != 0) {
-    uVar1 = FUN_0100f8e8();
-    FUN_0101715c(uVar1,iVar3);
+    uVar1 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar1,iVar3);
     piVar2 = (int *)*param_1;
     if (piVar2 != (int *)0x0) {
       /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
@@ -42308,8 +42397,8 @@ int thunk_FUN_01009ad0(void)
   iVar1 = swv_New_2(INTEGER_2788);
   if (iVar1 != 0) {
     FUN_01028d2c(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Push((uint8 *)uVar2,iVar1);
   }
   iVar3 = swv_New_2(700);
   if (iVar3 != 0) {
@@ -42326,8 +42415,8 @@ int thunk_FUN_01009ad0(void)
   swv_Matrix4SetIdentity(iVar1 + 0x68);
   *(undefined4 *)(iVar1 + 0xc) = 0x3f800000;
   if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar1);
     return iVar1;
   }
   return 0;
@@ -42397,10 +42486,10 @@ void FUN_0102f7e0(undefined4 param_1)
   void *pvVar2;
   undefined4 uVar3;
   
-  iVar1 = FUN_0100f7d0();
-  FUN_01013bcc(*(undefined4 *)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),param_1);
+  iVar1 = (int)swv_ErrorFrames();
+  swvErrorFrame_Throw(*(uint8 **)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),param_1);
   if (*(int *)(iVar1 + 0x14) != 0) {
-    FUN_01013bcc(*(undefined4 *)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),param_1);
+    swvErrorFrame_Throw(*(uint8 **)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),param_1);
   }
   pvVar2 = helper_GetAppInstance();
   uVar3 = *(undefined4 *)((int)pvVar2 + 0xc);
@@ -46861,8 +46950,8 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
     if (piVar2 != (int *)0x0) {
       FUN_01027cb4(piVar2);
       *piVar2 = DATA_AT_0100255C_OFFSET_3 + 0x1033f44;
-      uVar3 = FUN_0100f8e8();
-      FUN_0101807c(uVar3,piVar2);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Push((uint8 *)uVar3,piVar2);
     }
     FUN_01023184(piVar2,param_3);
     iVar9 = piVar2[1];
@@ -46884,8 +46973,8 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
     if (piVar5 != (int *)0x0) {
       FUN_01027cb4(piVar5);
       *piVar5 = DATA_AT_0100252C_OFFSET_3 + 0x1033fd0;
-      uVar3 = FUN_0100f8e8();
-      FUN_0101807c(uVar3,piVar5);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Push((uint8 *)uVar3,piVar5);
     }
     FUN_01023184(piVar5,param_5);
     iVar8 = piVar5[1];
@@ -46906,8 +46995,8 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
     }
     FUN_01008624(iVar6,iVar1,param_3,iVar9,param_5,iVar8);
     if (piVar5 != (int *)0x0) {
-      uVar3 = FUN_0100f8e8();
-      FUN_0101715c(uVar3,piVar5);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Pop((uint8 *)uVar3,piVar5);
       if (piVar5 != (int *)0x0) {
         /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
            the object's class); slot 0 is the destructor */
@@ -46915,8 +47004,8 @@ undefined4 FUN_01033ec4(int param_1,int param_2,uint param_3,int param_4,uint pa
       }
     }
     if (piVar2 != (int *)0x0) {
-      uVar3 = FUN_0100f8e8();
-      FUN_0101715c(uVar3,piVar2);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Pop((uint8 *)uVar3,piVar2);
       if (piVar2 != (int *)0x0) {
         /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
            the object's class); slot 0 is the destructor */
@@ -47207,8 +47296,8 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     if (piVar2 != (int *)0x0) {
       FUN_01027cb4(piVar2);
       *piVar2 = DATA_AT_01002584_OFFSET_2 + 0x103447c;
-      uVar3 = FUN_0100f8e8();
-      FUN_0101807c(uVar3,piVar2);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Push((uint8 *)uVar3,piVar2);
     }
     FUN_01023184(local_c4,param_3);
     iVar10 = local_c4[1];
@@ -47230,8 +47319,8 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     if (piVar2 != (int *)0x0) {
       FUN_01027cb4(piVar2);
       *piVar2 = DATA_AT_0100255C_OFFSET_4 + 0x1034514;
-      uVar3 = FUN_0100f8e8();
-      FUN_0101807c(uVar3,piVar2);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Push((uint8 *)uVar3,piVar2);
     }
     FUN_01023184(piVar2,param_5);
     iVar11 = piVar2[1];
@@ -47253,8 +47342,8 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     if (piVar5 != (int *)0x0) {
       FUN_01027cb4(piVar5);
       *piVar5 = DATA_AT_0100252C_OFFSET_4 + 0x10345a0;
-      uVar3 = FUN_0100f8e8();
-      FUN_0101807c(uVar3,piVar5);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Push((uint8 *)uVar3,piVar5);
     }
     FUN_01023184(piVar5,param_7);
     uVar4 = 0;
@@ -47278,8 +47367,8 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     }
     FUN_010081ec(iVar6,iVar1,param_3,iVar10,param_5,iVar11,param_7,iVar9);
     if (piVar5 != (int *)0x0) {
-      uVar3 = FUN_0100f8e8();
-      FUN_0101715c(uVar3,piVar5);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Pop((uint8 *)uVar3,piVar5);
       if (piVar5 != (int *)0x0) {
         /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
            the object's class); slot 0 is the destructor */
@@ -47287,8 +47376,8 @@ FUN_010343f4(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
       }
     }
     if (piVar2 != (int *)0x0) {
-      uVar3 = FUN_0100f8e8();
-      FUN_0101715c(uVar3,piVar2);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Pop((uint8 *)uVar3,piVar2);
       if (piVar2 != (int *)0x0) {
         /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
            the object's class); slot 0 is the destructor */
@@ -47349,8 +47438,8 @@ undefined4 FUN_010346bc(int param_1,int param_2,uint param_3,int param_4,int par
     if (piVar3 != (int *)0x0) {
       FUN_01027cb4(piVar3);
       *piVar3 = DATA_AT_01002584_OFFSET_3 + 0x1034740;
-      uVar4 = FUN_0100f8e8();
-      FUN_0101807c(uVar4,piVar3);
+      uVar4 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Push((uint8 *)uVar4,piVar3);
     }
     FUN_01023184(local_c0,param_3);
     iVar9 = local_c0[1];
@@ -47994,19 +48083,20 @@ void swvObject3D_GetAnimationTrackCount(ISwerveObject *po,int32 *pCount)
 /* ==== 0x01034F94  (file offset 0x34F94)  swvObject3D_GetReferences =================================== */
 /* GUESS: name. ISwerveObject slot 11 (+0x2c) of every class (kh_types.h SwerveObject3DVtbl.GetReferences;
    JSR-184 1.1, Object3D.getReferences): in an error frame, a temporary engine dynamic array
-   (swv_New_2(0x10): its vtable set three times, the constructors' chain, items and counts 0; registered
-   with FUN_0101807c(FUN_0100f8e8(), array) when allocated) sized to max slots (FUN_01023184),
-   swvObject3D_References of the native object (po->pNative, less 4 when not NULL) into it, error -1301
-   when max is not 0 and the output array refs is NULL, each of the first max found wrapped
+   (swv_New_2(0x10): its vtable set three times, the constructors' chain, items and counts 0; pushed on
+   the cleanup stack, swvCleanupStack_Push(swv_CleanupStack(), array), when allocated) sized to max slots
+   (FUN_01023184), swvObject3D_References of the native object (po->pNative, less 4 when not NULL) into it,
+   error -1301 when max is not 0 and the output array refs is NULL, each of the first max found wrapped
    (swv_WrapObject) into refs until one fails, the count swvObject3D_References gives into *pCount; then
-   the array unregistered (FUN_0101715c) and destroyed (its engine vtable +0, with 1). Returns 0, the
+   the array popped (swvCleanupStack_Pop) and destroyed (its engine vtable +0, with 1). Returns 0, the
    failing swv_WrapObject's result, or on an error its result code (swv_ErrorToResult). Differs from 1.1
    (GUESS: 1.0 behaviour, or the BREW interface's): no -1301 (IllegalArgumentException) for an array
    shorter than the references, max < the count; the copy is cut to max instead. Evidence: 0x01034f94 -
    0x010350e8 (`mov r0, #0x10` / `bl` 0x0102cbe0, the three `add r1, pc, r1` stores, `beq` past the
    registration on the allocation's flags, `ldr r2, [r5, #4]` for the `bl` 0x010103d4: Ghidra had dropped
    it, `cmp r7, r9` / `movcc r9, r7`, `cmp r4, r9` / `bcs`, `cmp r6, #0` / `beq` the loop, `str r7, [r10]`,
-   `movs r0, r5` / `blxne` the destructor with r1 = 1; FUN_0101715c is given r0 / r1, its prototype one).
+   `movs r0, r5` / `blxne` the destructor with r1 = 1; swvCleanupStack_Pop is given r0 / r1, its prototype
+   one).
    */
 int32 swvObject3D_GetReferences(ISwerveObject *po,uint32 max,ISwerveObject **refs,uint32 *pCount)
 
@@ -48033,7 +48123,7 @@ int32 swvObject3D_GetReferences(ISwerveObject *po,uint32 max,ISwerveObject **ref
       array[2] = 0;
       array[0] = WORD_HEXADECIMAL_FFFCD4EC + 0x1035018;
       array[3] = 0;
-      FUN_0101807c((int)FUN_0100f8e8(),(undefined4)array);
+      swvCleanupStack_Push(swv_CleanupStack(),(int32)array);
     }
     FUN_01023184((int *)array,(int)max);
     count = (uint32)swvObject3D_References(object,(int32)max,(uint8 **)array[1]);
@@ -48045,7 +48135,7 @@ int32 swvObject3D_GetReferences(ISwerveObject *po,uint32 max,ISwerveObject **ref
       result = swv_WrapObject(((void **)array[1])[i],refs + i);
     *pCount = count;
     if (array != NULL) {
-      FUN_0101715c((int)FUN_0100f8e8(),(int32)array);
+      swvCleanupStack_Pop(swv_CleanupStack(),(int32)array);
       if (array != NULL)
         /* engine virtual call, slot +0x0: the array's destructor */
         (*(code *)(*(int32 *)array[0] + array[0]))(array,1);
@@ -50854,26 +50944,32 @@ int32 swvPolygonMode_SetWinding(ISwerveObject *po,int32 winding)
   return result;
 }
 
-/* ==== 0x01038280  (file offset 0x38280)  FUN_01038280 ================================================ */
-void FUN_01038280(int param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4)
+/* ==== 0x01038280  (file offset 0x38280)  swvCleanupFrame_Append ====================================== */
+/* GUESS: name. Appends the word at slot to the cleanup frame frame's array (+4: +8 the items, +0xc the
+   count, +0x10 the capacity), grown first when full (its engine vtable +4, with the new capacity from
+   FUN_0102df78(count + 1, capacity) and the count). Called by swvCleanupFrame_Push and
+   swvCleanupFrame_Open, each with an empty slot (0). Ghidra had read r2 / r3 as more parameters.
+   Evidence: 0x01038280 - 0x010382dc (`add r4, r0, #4`, `ldr r0, [r0, #0xc]` / `ldr r1, [r4, #0xc]` / `cmp
+   r0, r1`, `bl 0x0102df78`, `blx r3` with r2 the count, `str r1, [r4, #8]` + 1, `ldr r1, [r5]` / `str r1,
+   [r0]`). */
+void swvCleanupFrame_Append(uint8 *frame,const uint32 *slot)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  code *pcVar3;
-  
-  if (*(int *)(param_1 + 0xc) == *(int *)(param_1 + 0x10)) {
-    uVar1 = FUN_0102df78(*(int *)(param_1 + 0xc) + 1);
-    iVar2 = *(int *)(param_1 + 4);
-    pcVar3 = (code *)(*(int *)(iVar2 + 4) + iVar2);
-    /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
-       object's class) */
-    (*pcVar3)((int *)(param_1 + 4),uVar1,*(undefined4 *)(param_1 + 0xc),pcVar3,param_4);
+  uint8 *objects = frame + 4;
+  int32 count = *(int32 *)(frame + 0xc);
+  int32 capacity;
+  int32 vtable;
+
+  if (count == *(int32 *)(objects + 0xc)) {
+    capacity = FUN_0102df78(count + 1,*(int32 *)(objects + 0xc));
+    vtable = *(int32 *)objects;
+    /* engine virtual call, slot +0x4: the array's grow (GUESS; as in FUN_01023184), r1 the new capacity,
+       r2 the count */
+    (*(code *)(*(int32 *)(vtable + 4) + vtable))(objects,capacity,*(int32 *)(objects + 8));
   }
-  iVar2 = *(int *)(param_1 + 0xc);
-  *(int *)(param_1 + 0xc) = iVar2 + 1;
-  *(undefined4 *)(*(int *)(param_1 + 8) + iVar2 * 4) = *param_2;
-  return;
+  count = *(int32 *)(objects + 8);
+  *(int32 *)(objects + 8) = count + 1;
+  (*(uint32 **)(objects + 4))[count] = *slot;
 }
 
 /* ==== 0x010382E0  (file offset 0x382E0)  swv_Create_RayIntersection ================================== */
@@ -51167,7 +51263,7 @@ int FUN_010386cc(int *param_1)
   if (*param_1 == 0) {
     return 0;
   }
-  FUN_010171a0(*param_1);
+  swv_CleanupPop(*param_1);
   iVar1 = *param_1;
   *param_1 = 0;
   return iVar1;
@@ -51184,8 +51280,8 @@ int FUN_010386fc(int *param_1)
   iVar1 = 0;
   iVar3 = *param_1;
   if (iVar3 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar3);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar3);
     iVar1 = *param_1;
     *param_1 = 0;
   }
@@ -51201,7 +51297,7 @@ int FUN_01038730(int *param_1)
   if (*param_1 == 0) {
     return 0;
   }
-  FUN_010171a0(*param_1);
+  swv_CleanupPop(*param_1);
   iVar1 = *param_1;
   *param_1 = 0;
   return iVar1;
@@ -51218,8 +51314,8 @@ int FUN_01038760(int *param_1)
   iVar1 = 0;
   iVar3 = *param_1;
   if (iVar3 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar3);
+    uVar2 = (undefined4)swv_CleanupStack();
+    swvCleanupStack_Pop((uint8 *)uVar2,iVar3);
     iVar1 = *param_1;
     *param_1 = 0;
   }
@@ -51380,8 +51476,8 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     if (piVar2 != (int *)0x0) {
       FUN_01027cb4(piVar2);
       *piVar2 = DATA_AT_0100255C_OFFSET_5 + 0x10389b4;
-      uVar3 = FUN_0100f8e8();
-      FUN_0101807c(uVar3,piVar2);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Push((uint8 *)uVar3,piVar2);
     }
     FUN_01023184(piVar2,param_3);
     iVar10 = piVar2[1];
@@ -51403,8 +51499,8 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     if (piVar5 != (int *)0x0) {
       FUN_01027cb4(piVar5);
       *piVar5 = DATA_AT_0100252C_OFFSET_5 + 0x1038a40;
-      uVar3 = FUN_0100f8e8();
-      FUN_0101807c(uVar3,piVar5);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Push((uint8 *)uVar3,piVar5);
     }
     FUN_01023184(piVar5,param_5);
     uVar4 = 0;
@@ -51435,8 +51531,8 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
     }
     FUN_01008104(iVar7,iVar1,param_3,iVar10,param_5,iVar9,iVar6);
     if (piVar5 != (int *)0x0) {
-      uVar3 = FUN_0100f8e8();
-      FUN_0101715c(uVar3,piVar5);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Pop((uint8 *)uVar3,piVar5);
       if (piVar5 != (int *)0x0) {
         /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
            the object's class); slot 0 is the destructor */
@@ -51444,8 +51540,8 @@ FUN_01038934(int param_1,int param_2,uint param_3,int param_4,uint param_5,int p
       }
     }
     if (piVar2 != (int *)0x0) {
-      uVar3 = FUN_0100f8e8();
-      FUN_0101715c(uVar3,piVar2);
+      uVar3 = (undefined4)swv_CleanupStack();
+      swvCleanupStack_Pop((uint8 *)uVar3,piVar2);
       if (piVar2 != (int *)0x0) {
         /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
            the object's class); slot 0 is the destructor */

@@ -410,6 +410,33 @@ typedef struct SwvKeyframeSequence {
  * aligned to it (swvNode_ForgetAlignmentReference), so Node.align refuses it later (-1300) instead of
  * reading a freed node. */
 
+/* ---- Error frames and the cleanup stack (no struct yet) ---------------------------------------
+ * The engine's error handling (GUESS: the names; it works like a C++ try with a cleanup stack). Each
+ * API entry runs inside an error frame: 136 bytes on its stack, the first 0x2c a jmp_buf (swv_setjmp),
+ * +0x80 active, +0x84 armed. swv_TryPush pushes it on the error frame list (the engine state's,
+ * FUN_0102ecec, +0xc; swv_ErrorFrames): the frames are the words from +0, +0x14 their count (swvErrorFrames_Push /
+ * swvErrorFrames_Pop). swv_TryArm enters a new level of the cleanup stack (the engine state's +0x10,
+ * swv_CleanupStack; made by swvCleanupStack_Create, destroyed by swvCleanupStack_Destroy):
+ *   +0x00             engine vtable 0x010024D8 (slot +0 swvCleanupStack_Destroy)
+ *   +0x04             an engine dynamic array (vtable 0x010025D4) of frames, one a level: +8 the items,
+ *                     +0xc the count, +0x10 the capacity (a frame stays allocated once made)
+ *   +0x14             the depth: the levels entered (swvCleanupStack_Enter / swvCleanupStack_Leave)
+ *   +0x18             ready (cleared while swvCleanupStack_Enter grows the stack; swvCleanupStack_Unwind
+ *                     does nothing until it is set)
+ * A cleanup frame: 0x18 bytes, engine vtable 0x01002558 (swvCleanupFrame_Construct,
+ * swvCleanupFrame_Destroy):
+ *   +0x04             an engine dynamic array (vtable 0x01002540) of the objects held: +8 the items, +0xc
+ *                     the count, +0x10 the capacity; the last slot is kept empty (swvCleanupFrame_Open
+ *                     appends it), so that swvCleanupStack_Push stores an object before it appends the
+ *                     next slot, the step that can run out of memory
+ *   +0x14             open (swvCleanupFrame_Open)
+ * A new object is pushed while it is set up (swvCleanupStack_Push) and popped once its owner has stored
+ * it (swv_CleanupPop / swvCleanupStack_Pop). swv_TryPop leaves the level (swvCleanupStack_Leave: what it
+ * still holds destroyed) and pops the error frame. An error (FUN_0102f7e0) is thrown to the last active
+ * frame (swvErrorFrame_Throw): the frame popped, the cleanup stack unwound (each object still held
+ * destroyed through its engine vtable +0) and swv_longjmp back to its swv_setjmp, whose caller maps the
+ * code (swv_ErrorToResult). */
+
 /* ---- VertexBuffer, the native object (no struct yet) -------------------------------------------
  * Its fields (GUESS: the names; the BREW slots, kh_types.h SwerveVertexBufferVtbl, and
  * swvVertexBuffer_Array):

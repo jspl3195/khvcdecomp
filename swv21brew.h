@@ -60,7 +60,9 @@ void FUN_01008754(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008
 void FUN_010087ac(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x010087AC, no Ghidra function */
 void FUN_01008804(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008804, no Ghidra function */
 void FUN_0100885c(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x0100885C, no Ghidra function */
-void FUN_010171b8(uint8 *frame,int32 object);   /* 0x010171B8, no Ghidra function */
+void swvCleanupFrame_Push(uint8 *frame,int32 object);   /* 0x01018188, no Ghidra function */
+void swvCleanupFrame_Open(uint8 *frame);   /* 0x010125BC, no Ghidra function */
+void swvCleanupFrame_Pop(uint8 *frame,int32 object);   /* 0x010171B8, no Ghidra function */
 void FUN_010088cc(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x010088CC, no Ghidra function */
 void FUN_0100893c(int param_1,uint16 *src,uint16 *dst,int32 count);   /* 0x0100893C, no Ghidra function */
 void FUN_010089ac(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x010089AC, no Ghidra function */
@@ -159,7 +161,7 @@ void FUN_0102b0c0(int *param_1,int param_2);   /* 0x0102B0C0, no Ghidra function
 void FUN_0102b13c(int *param_1,int param_2);   /* 0x0102B13C, no Ghidra function */
 void FUN_0102b1e8(int *param_1,int param_2);   /* 0x0102B1E8, no Ghidra function */
 void FUN_0102b204(int *param_1,int param_2);   /* 0x0102B204, no Ghidra function */
-void FUN_0102b428(int *param_1,int param_2);   /* 0x0102B428, no Ghidra function */
+void swvCleanupStack_Destroy(uint8 *stack,int32 deleting);   /* 0x0102B428, no Ghidra function */
 void FUN_0102b9e4(int *param_1,int param_2);   /* 0x0102B9E4, no Ghidra function */
 void FUN_0102ba3c(int *param_1,int param_2);   /* 0x0102BA3C, no Ghidra function */
 void FUN_0102bcd0(int *param_1,int param_2);   /* 0x0102BCD0, no Ghidra function */
@@ -385,8 +387,8 @@ int32 swvKeyframeSequence_ValidCount(const SwvKeyframeSequence *sequence);   /* 
 int32 swvKeyframeSequence_KeyframeWords(const SwvKeyframeSequence *sequence);   /* 0x01004C30 GUESS: name, see swv21brew.c */
 void swvKeyframeSequence_BuildTangents(SwvKeyframeSequence *sequence,int32 quaternions);   /* 0x01004C4C GUESS: name, see swv21brew.c */
 void swv_ColourClamp(int32 *colour);   /* 0x01004FB8 GUESS: name, see swv21brew.c */
-void FUN_01005028(int param_1);
-void FUN_010050ac(int param_1);
+void swvCleanupStack_Unwind(uint8 *stack);   /* 0x01005028 GUESS: name, see swv21brew.c */
+void swvCleanupFrame_DestroyAll(uint8 *frame);   /* 0x010050AC GUESS: name, see swv21brew.c */
 undefined4 FUN_01005104(int param_1,int param_2,int param_3);   /* GUESS: the Background clear, see swv21brew.c */
 void FUN_01005eb8(int param_1);
 void FUN_01005f0c(int param_1);
@@ -541,10 +543,10 @@ undefined4 FUN_0100f768(void);
 undefined4 FUN_0100f780(void);
 undefined4 FUN_0100f798(void);
 undefined4 FUN_0100f7b0(void);
-undefined4 FUN_0100f7d0(void);
+uint8 *swv_ErrorFrames(void);   /* 0x0100F7D0 GUESS: name, see swv21brew.c */
 undefined4 FUN_0100f7e0(void);
 uint8 *swvAlignment_Trackers(void);   /* 0x0100F810 GUESS: name, see swv21brew.c */
-undefined4 FUN_0100f8e8(void);
+uint8 *swv_CleanupStack(void);   /* 0x0100F8E8 GUESS: name, see swv21brew.c */
 int FUN_0100f8f8(int param_1);
 int FUN_0100f910(int param_1);
 int FUN_0100f950(int param_1);
@@ -634,7 +636,7 @@ void FUN_01012758(void);
 void * FUN_010127a4(void);
 void FUN_010127fc(int param_1,uint param_2,undefined4 param_3,undefined4 param_4,undefined4 *param_5 ,undefined4 *param_6);
 int FUN_01012908(int *param_1,int param_2,int param_3);
-void FUN_0101303c(void);
+uint8 *swvCleanupStack_Create(void);   /* 0x0101303C GUESS: name, see swv21brew.c */
 undefined4 FUN_010130ac(void);
 void FUN_01013214(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);
 void FUN_01013290(int *param_1,int param_2,undefined4 *param_3);
@@ -648,7 +650,7 @@ int32 swvNode_HasAncestor(const uint8 *node,const uint8 *ancestor);   /* 0x01013
 int32 swv_IsPowerOfTwo(int32 value);   /* 0x01013AF8 GUESS: name, see swv21brew.c */
 int32 swvVertexBuffer_HasOnlyArray(const uint8 *buffer,const uint8 *array);   /* 0x01013B34 GUESS: name, see swv21brew.c */
 int32 swv_CheckNotNull(int32 pointer);   /* 0x01013BB4 GUESS: name, see swv21brew.c */
-void FUN_01013bcc(int param_1,undefined4 param_2);
+void swvErrorFrame_Throw(uint8 *frame,int32 error);   /* 0x01013BCC GUESS: name, see swv21brew.c */
 void FUN_01013c58(int param_1,int param_2,int *param_3,int param_4);
 void FUN_01013e88(int param_1,int param_2);
 void FUN_0101411c(int param_1,int param_2);
@@ -673,10 +675,10 @@ void FUN_010166a4(undefined4 param_1,int param_2,int param_3);
 int32 swvGroup_PickRayValue(uint8 *group,int32 scope,const uint32 *origin,const uint32 *direction,uint8 *ri);   /* 0x01016D8C JSR-184 1.1, see swv21brew.c */
 int32 swvGroup_PickCameraValue(uint8 *group,int32 scope,uint32 x,uint32 y,uint8 *camera,uint8 *ri);   /* 0x01016ECC JSR-184 1.1, see swv21brew.c */
 void FUN_01017120(undefined4 param_1,int param_2);
-void FUN_0101715c(int32 guard,int32 object);
-void FUN_01017174(int param_1);
-void FUN_01017190(int param_1);
-void FUN_010171a0(int32 object);
+void swvCleanupStack_Pop(uint8 *stack,int32 object);   /* 0x0101715C GUESS: name, see swv21brew.c */
+void swvCleanupStack_Leave(uint8 *stack);   /* 0x01017174 GUESS: name, see swv21brew.c */
+void swvErrorFrames_Pop(uint8 *frames);   /* 0x01017190 GUESS: name, see swv21brew.c */
+void swv_CleanupPop(int32 object);   /* 0x010171A0 GUESS: name, see swv21brew.c */
 undefined4 * FUN_010171ec(int param_1,int param_2);
 void FUN_010171f8(int param_1,undefined4 *param_2);
 void FUN_01017254(int *param_1,undefined4 param_2);
@@ -693,9 +695,9 @@ bool FUN_01017ccc(int param_1);
 void FUN_01017dc4(int param_1,int *param_2,int *param_3);
 void FUN_01017eb8(int param_1,int *param_2,int *param_3,int param_4);
 int FUN_01018018(undefined4 param_1,int param_2);
-void FUN_0101807c(int param_1,undefined4 param_2);
-void FUN_01018094(int param_1);
-void FUN_01018170(int param_1,undefined4 param_2);
+void swvCleanupStack_Push(uint8 *stack,int32 object);   /* 0x0101807C GUESS: name, see swv21brew.c */
+void swvCleanupStack_Enter(uint8 *stack);   /* 0x01018094 GUESS: name, see swv21brew.c */
+void swvErrorFrames_Push(uint8 *frames,uint8 *frame);   /* 0x01018170 GUESS: name, see swv21brew.c */
 uint FUN_010181b4(int param_1);
 void FUN_010181e4(int param_1,int param_2);
 void FUN_010183b0(int param_1);
@@ -982,7 +984,7 @@ uint8 *swvM3GReader_Construct(uint8 *reader);   /* 0x01029010 GUESS: name, see s
 int * FUN_010290c4(int *param_1);
 void FUN_01029110(undefined4 *param_1);
 int * FUN_010291bc(int *param_1);
-void FUN_01029208(int *param_1);
+uint8 *swvCleanupFrame_Construct(uint8 *frame);   /* 0x01029208 GUESS: name, see swv21brew.c */
 void FUN_01029268(int *param_1);
 int * FUN_010292b8(int *param_1);
 int * FUN_01029304(int *param_1);
@@ -1020,10 +1022,10 @@ void FUN_01029fdc(int *param_1,int param_2);
 void FUN_0102a7c8(int *param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0102a898(int *param_1,int param_2);
 void FUN_0102a910(int *param_1,int param_2);
-void FUN_0102b194(int *param_1,int param_2);
+void FUN_0102b194(int32 *holder,int32 deleting);
 void FUN_0102b38c(int *param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0102b3d0(int *param_1,int param_2);
-void FUN_0102b4c4(int *param_1,int param_2);
+void swvCleanupFrame_Destroy(uint8 *frame,int32 deleting);   /* 0x0102B4C4 GUESS: name, see swv21brew.c */
 void FUN_0102b524(int *param_1,int param_2);
 void FUN_0102b5fc(int *param_1,int param_2);
 void FUN_0102b654(int *param_1,int param_2);
@@ -1036,7 +1038,7 @@ void FUN_0102b8ac(int *param_1,int param_2);
 void FUN_0102b90c(int *param_1,int param_2);
 void FUN_0102b964(int *param_1,int param_2);
 void FUN_0102ba94(int *param_1,int param_2);
-void FUN_0102baf0(int *param_1,int param_2);
+void FUN_0102baf0(int32 *holder,int32 deleting);
 void FUN_0102bb44(int *param_1,int param_2);
 void FUN_0102bba0(int *param_1,int param_2);
 void FUN_0102bbf8(int *param_1,int param_2);
@@ -1366,7 +1368,7 @@ void swvPolygonMode_SetPerspectiveCorrectionEnable(ISwerveObject *po,int32 enabl
 int32 swvPolygonMode_SetShading(ISwerveObject *po,int32 shading);   /* 0x01038178 JSR-184 1.1, see swv21brew.c */
 void swvPolygonMode_SetTwoSidedLightingEnable(ISwerveObject *po,int32 enable);   /* 0x010381F0 JSR-184 1.1, see swv21brew.c */
 int32 swvPolygonMode_SetWinding(ISwerveObject *po,int32 winding);   /* 0x01038208 JSR-184 1.1, see swv21brew.c */
-void FUN_01038280(int param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
+void swvCleanupFrame_Append(uint8 *frame,const uint32 *slot);   /* 0x01038280 GUESS: name, see swv21brew.c */
 void swvRayIntersection_GetDistance(ISwerveObject *po,uint32 *pDistance);   /* 0x01038340 JSR-184 1.1, see swv21brew.c */
 int FUN_01038358(int param_1,ISwerveObject **param_2);
 void FUN_010383c4(int param_1,undefined4 *param_2);
