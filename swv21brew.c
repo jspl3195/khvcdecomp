@@ -956,7 +956,7 @@ undefined4 FUN_01000c30(undefined4 param_1,undefined4 param_2,undefined4 param_3
   return 0;
 }
 
-/* ==== 0x01000C44  (file offset 0x00C44)  hand-written (no Ghidra function) =========================== */
+/* ==== 0x01000C44  (file offset 0x00C44)  swv_rt_div0 ================================================= */
 /* GUESS: name (ARM's __rt_div0 path: the ARM ADS / SDT run-time library's division by zero handling).
    The divide-by-zero exit of swv_rt_sdiv and swv_rt_udiv (their `bhs 0x01000c44` at 0x0100024c and
    0x01000314): raise_signal_and_exit(2, 2), SIGFPE with type 2, divide by zero (the default handler
@@ -2868,8 +2868,8 @@ void swvObject3D_AddAnimationTrackValue(uint8 *object,uint8 *track)
   swvObject3D_InsertAnimationTrack(*(uint8 **)(object + 0x10),track);
 }
 
-/* ==== 0x01002B00  (file offset 0x02B00)  hand-written (no Ghidra function) =========================== */
-/* GUESS: name. A routine Ghidra has no function for (only swvObject3D_AddAnimationTrackValue reaches it,
+/* ==== 0x01002B00  (file offset 0x02B00)  swvObject3D_InsertAnimationTrack ============================ */
+/* GUESS: name. A routine Ghidra had no function for (only swvObject3D_AddAnimationTrackValue reaches it,
    by a tail jump, and Ghidra took it into that function's body), written from its disassembly (0x01002b00
    - 0x01002c68): inserts the AnimationTrack track into an Object3D's track list tracks (0x20 bytes, two
    engine dynamic arrays: the tracks, +4 the items, +8 the count, kept grouped by property, track +0x24;
@@ -12387,8 +12387,8 @@ int32 swvVertexArray_GetComponent(uint8 *array,int32 vertex,int32 component)
   return value;
 }
 
-/* ==== 0x0100E4B8  (file offset 0x0E4B8)  hand-written (no Ghidra function) =========================== */
-/* GUESS: name. A routine Ghidra has no function for (only slot 24,
+/* ==== 0x0100E4B8  (file offset 0x0E4B8)  swvPolygonMode_SetLocalCameraLightingValue ================== */
+/* GUESS: name. A routine Ghidra had no function for (only slot 24,
    swvPolygonMode_SetLocalCameraLightingEnable, reaches it, by a tail jump, and Ghidra took it into that
    function's body), written from its disassembly (0x0100e4b8 - 0x0100e4cc): sets the flag 0x200 (GUESS:
    local camera lighting, JSR-184 1.1 PolygonMode.setLocalCameraLightingEnable) of a native PolygonMode's
@@ -12403,8 +12403,8 @@ void swvPolygonMode_SetLocalCameraLightingValue(uint8 *mode,int32 enable)
     *(uint32 *)(mode + 0x1c) |= 0x200;
 }
 
-/* ==== 0x0100E4D0  (file offset 0x0E4D0)  hand-written (no Ghidra function) =========================== */
-/* GUESS: name. A routine Ghidra has no function for (only slot 25,
+/* ==== 0x0100E4D0  (file offset 0x0E4D0)  swvPolygonMode_SetPerspectiveCorrectionValue ================ */
+/* GUESS: name. A routine Ghidra had no function for (only slot 25,
    swvPolygonMode_SetPerspectiveCorrectionEnable, reaches it, by a tail jump, and Ghidra took it into that
    function's body), written from its disassembly (0x0100e4d0 - 0x0100e4e4): sets the flag 0x400 (GUESS:
    perspective correction, JSR-184 1.1 PolygonMode.setPerspectiveCorrectionEnable) of a native
@@ -26744,7 +26744,7 @@ void swvM3G_ReadHeader(uint8 *header,uint8 *stream)
   FUN_01019afc((int32)stream,(uint32)(header + 0x18));
 }
 
-/* ==== 0x0101EAFC  (file offset 0x1EAFC)  hand-written (no Ghidra function) =========================== */
+/* ==== 0x0101EAFC  (file offset 0x1EAFC)  swvM3G_ReadMorphingMesh ===================================== */
 /* GUESS: name. M3G file format section 11.17, MorphingMesh (ObjectType 15): reads the record into the
    native MorphingMesh mesh: the Mesh part (swvM3G_ReadMesh), morphTargetCount (FUN_01019698 with 8 bytes
    an element), the morph-target array (+0xc4, its data +0xc8) sized (FUN_01023184) and, for a count
@@ -26786,7 +26786,7 @@ void swvM3G_ReadMorphingMesh(uint8 *mesh,uint8 *stream)
   }
 }
 
-/* ==== 0x0101EBC8  (file offset 0x1EBC8)  hand-written (no Ghidra function) =========================== */
+/* ==== 0x0101EBC8  (file offset 0x1EBC8)  swvM3G_ReadVertexBuffer ===================================== */
 /* GUESS: name. M3G file format section 11.29, VertexBuffer (ObjectType 21): reads the record into the
    native VertexBuffer buffer: the Object3D part (swvM3G_ReadObject3D), the defaultColor (+0x20,
    ColorRGBA, FUN_01019650), the positions (+0x24, a VertexArray, FUN_01019888 with 20, or null; kept by
@@ -26802,7 +26802,7 @@ void swvM3G_ReadMorphingMesh(uint8 *mesh,uint8 *stream)
    colours and texture coordinates are stored directly, without the swvVertexBuffer_Set*Value checks.
    The class's M3G reader: slot +0x4 of its engine vtable 0x01002210 (constructor FUN_01028898, made by
    FUN_0100e948 through the factory FUN_01009860), called by FUN_01017bc4 for each record of the type.
-   A routine Ghidra has no function for, reached only through that vtable, written from its disassembly
+   A routine Ghidra had no function for, reached only through that vtable, written from its disassembly
    (0x0101ebc8 - 0x0101ee00). Evidence: `push {r1-r3, ...}` the bias buffer at sp (`str r0, [sp]`,
    `[sp, #4]`, `[sp, #8]` with 0 before the loop), `mov r1, sp` / `bl 0x010279d0`; `cmp r7, #1` / `bne`
    before each count check (r7: the vertex count set); `cmp r6, #2` / `bge` past the kept part. */
@@ -26993,7 +26993,7 @@ void swvM3G_ReadAnimationTrack(uint8 *track,uint8 *stream)
   }
 }
 
-/* ==== 0x0101F024  (file offset 0x1F024)  hand-written (no Ghidra function) =========================== */
+/* ==== 0x0101F024  (file offset 0x1F024)  swvM3G_ReadCompositingMode ================================== */
 /* GUESS: name. M3G file format section 11.6, CompositingMode (ObjectType 6): reads the record into the
    native CompositingMode mode, in the spec's order: the Object3D part (swvM3G_ReadObject3D), the
    Booleans (FUN_01019618) depthTestEnabled (+0x24), depthWriteEnabled (+0x28), colorWriteEnabled (+0x1c)
@@ -27229,7 +27229,7 @@ void swvM3G_ReadTriangleStripArray(uint8 *strips,uint8 *stream)
     *(int32 *)(strips + 0x1c) = *(uint16 *)(strips + 0x24) + sum - 1;
 }
 
-/* ==== 0x0101F640  (file offset 0x1F640)  hand-written (no Ghidra function) =========================== */
+/* ==== 0x0101F640  (file offset 0x1F640)  swvM3G_ReadAnimationController ============================== */
 /* GUESS: name. M3G file format section 11.1, AnimationController (ObjectType 1): reads the record into the
    native AnimationController controller: the Object3D part (swvM3G_ReadObject3D), the speed (+0x2c) and
    weight (+0x30) (Float32s, FUN_01019a0c), error -1202 (the file is bad; FUN_0102f7e0, which does not
@@ -27240,7 +27240,7 @@ void swvM3G_ReadTriangleStripArray(uint8 *strips,uint8 *stream)
    swvAnimationController_SetSpeedValue, _SetWeightValue, _SetActiveIntervalValue and _SetPositionValue
    use. The class's M3G reader: slot +0x4 of its engine vtable 0x0100248C (constructor FUN_010291bc,
    made by FUN_0100eac8 through the factory FUN_01009860), called by FUN_01017bc4 for each record of
-   the type. A routine Ghidra has no function for, reached only through that vtable, written from its
+   the type. A routine Ghidra had no function for, reached only through that vtable, written from its
    disassembly (0x0101f640 - 0x0101f6bc). Evidence: `ldr r6, [pc, #0x6c]` (-1202, 0x0101f6c0), `mov r1,
    #0` / `bl 0x0103f534` (swv_fcmp_b: unordered leaves C clear) / `bllo` the error; `ldr r1, [r4,
    #0x1c]` / `cmp r1, r0` / `blgt`. */
@@ -27263,7 +27263,7 @@ void swvM3G_ReadAnimationController(uint8 *controller,uint8 *stream)
   *(int32 *)(controller + 0x28) = thunk_FUN_01019abc((int32)stream);
 }
 
-/* ==== 0x0101F6C4  (file offset 0x1F6C4)  hand-written (no Ghidra function) =========================== */
+/* ==== 0x0101F6C4  (file offset 0x1F6C4)  swvM3G_ReadFog ============================================== */
 /* GUESS: name. M3G file format section 11.7, Fog (ObjectType 7): reads the record into the native Fog fog:
    the Object3D part (swvM3G_ReadObject3D), the colour (+0x1c, ColorRGB, FUN_01019650), the mode (+0x2c:
    EXPONENTIAL 0x50 or LINEAR 0x51, FUN_010196cc: a byte strictly between its bounds, else -1202, the
@@ -27272,7 +27272,7 @@ void swvM3G_ReadAnimationController(uint8 *controller,uint8 *stream)
    far| (swv_fsub, the sign bit cleared) is at most 0x377ba882 (about 1.5e-5) or a NaN: the engine's
    near == far. The class's M3G reader: slot +0x4 of its engine vtable 0x01002678 (constructor
    FUN_010292b8, made by FUN_0100eaec through the factory FUN_01009860), called by FUN_01017bc4 for each
-   record of the type. A routine Ghidra has no function for, reached only through that vtable, written
+   record of the type. A routine Ghidra had no function for, reached only through that vtable, written
    from its disassembly (0x0101f6c4 - 0x0101f754). Evidence: `mov r2, #0x52` / `mov r1, #0x4f` / `bl
    0x010196cc`; `cmp r0, #0x50` / `beq 0x0101f748` (the EXPONENTIAL read laid out after the return),
    `cmp r0, #0x51` / `bne`; `bl 0x0103f064` / `bic r0, r0, #0x80000000` / `ldr r1` (0x0101f758) / `bl
@@ -27393,13 +27393,13 @@ void swvM3G_ReadNode(uint8 *node,uint8 *stream)
   }
 }
 
-/* ==== 0x0101F998  (file offset 0x1F998)  hand-written (no Ghidra function) =========================== */
+/* ==== 0x0101F998  (file offset 0x1F998)  swvM3G_ReadExternalReference ================================ */
 /* GUESS: name. M3G file format section 10.2, External Reference (ObjectType 255): reads the record into
    the native external reference reference: no superclass data (no Object3D part, as the spec says), only
    the URI (a String: FUN_01019afc reads the UTF-8 bytes into the engine string at +0xc, which the
    constructor FUN_010293e4 makes; a tail jump). The class's M3G reader: slot +0x4 of its engine vtable
    0x0100272C (made by FUN_0100eb34, the factory FUN_01009860's type 255 entry), called by FUN_01017ccc
-   for each record of the external-reference section. A routine Ghidra has no function for, reached
+   for each record of the external-reference section. A routine Ghidra had no function for, reached
    only through that vtable, written from its disassembly (0x0101f998 - 0x0101f9a4: `mov r2, r0`, `mov
    r0, r1`, `add r1, r2, #0xc`, `b 0x01019afc`). */
 void swvM3G_ReadExternalReference(uint8 *reference,uint8 *stream)
@@ -34921,10 +34921,10 @@ FUN_01027b08(undefined4 *param_1,undefined4 *param_2,undefined4 param_3,undefine
   return param_1;
 }
 
-/* ==== 0x01027B40  (file offset 0x27B40)  hand-written (no Ghidra function) =========================== */
+/* ==== 0x01027B40  (file offset 0x27B40)  swvSkin_CopyBoneSet ========================================= */
 /* GUESS: name. Copies the SkinnedMesh bone set source (SwvSkinBoneSet, 0x4c bytes) into destination: the
    two bone indices (one word), the 0x44-byte transform (FUN_01027acc) and the weight scale; returns
-   destination. Ghidra has no function here: only swvSkin_AppendBoneSet reaches it, by a tail jump, and
+   destination. Ghidra had no function here: only swvSkin_AppendBoneSet reaches it, by a tail jump, and
    Ghidra took it into that function's body. Evidence: 0x01027b40 - 0x01027b68 (`ldr r0, [r1], #4` / `str
    r0, [r4]`, `add r0, r4, #4` / `bl 0x01027acc` with r1 = source + 4, `ldr r0, [r5, #0x48]` / `str r0,
    [r4, #0x48]`, `mov r0, r4`). */
