@@ -664,7 +664,7 @@ undefined4 FUN_01015a40(undefined4 param_1,int param_2,undefined4 *param_3,undef
 void FUN_01015ce8(undefined4 param_1,int param_2,int *param_3);
 void FUN_010166a4(undefined4 param_1,int param_2,int param_3);
 int32 swvGroup_PickRayValue(uint8 *group,int32 scope,const uint32 *origin,const uint32 *direction,uint8 *ri);   /* 0x01016D8C JSR-184 1.1, see swv21brew.c */
-int32 swvGroup_Pick(uint8 *group,int32 scope,uint32 x,uint32 y,uint8 *camera,uint8 *ri);   /* 0x01016ECC GUESS: name, see swv21brew.c */
+int32 swvGroup_PickCameraValue(uint8 *group,int32 scope,uint32 x,uint32 y,uint8 *camera,uint8 *ri);   /* 0x01016ECC JSR-184 1.1, see swv21brew.c */
 void FUN_01017120(undefined4 param_1,int param_2);
 void FUN_0101715c(int param_1);
 void FUN_01017174(int param_1);
@@ -1175,7 +1175,7 @@ void FUN_01030210(int param_1,int param_2);
 undefined4 FUN_01030220(int param_1,int param_2);
 int32 swvGroup_GetChild(ISwerveObject *po,int32 index,ISwerveObject **ppo);   /* 0x010302EC GUESS: name, see swv21brew.c */
 void swvGroup_GetChildCount(ISwerveObject *po,int32 *pCount);   /* 0x01030360 GUESS: name, see swv21brew.c */
-undefined4 FUN_010303f0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5, int param_6,undefined1 *param_7);
+int32 swvGroup_PickCamera(ISwerveObject *po,int32 scope,uint32 x,uint32 y,ISwerveObject *camera,ISwerveObject *ri,uint8 *pHit);   /* 0x010303F0 JSR-184 1.1, see swv21brew.c */
 int32 swvGroup_PickRay(ISwerveObject *po,int32 scope,const uint32 *origin,const uint32 *direction,ISwerveObject *ri,uint8 *pHit);   /* 0x010304C0 JSR-184 1.1, see swv21brew.c */
 undefined4 FUN_010305b8(int param_1,int param_2);
 undefined4 FUN_01030624(int *param_1,uint param_2,uint param_3,int param_4,int param_5,uint *param_6, uint *param_7,int param_8,int *param_9,uint *param_10);
@@ -2016,7 +2016,7 @@ uint FUN_0103e908(uint param_1,uint param_2,uint param_3,uint param_4);
 #define ADDRESS_OF_FUNCTION_01030220_OFFSET 0xFFFFFE70   /* was DAT_010303e0 (word at 0x010303E0); PC-relative offset: + 0x10303b0 (the pc) = 0x01030220 */
 #define ADDRESS_OF_FUNCTION_010305b8_OFFSET 0x000001FC   /* was DAT_010303e4 (word at 0x010303E4); PC-relative offset: + 0x10303bc (the pc) = 0x010305B8 */
 #define ADDRESS_OF_FUNCTION_010304c0_OFFSET 0x000000F8   /* was DAT_010303e8 (word at 0x010303E8); PC-relative offset: + 0x10303c8 (the pc) = 0x010304C0 (swvGroup_PickRay) */
-#define ADDRESS_OF_FUNCTION_010303f0_OFFSET 0x0000001C   /* was DAT_010303ec (word at 0x010303EC); PC-relative offset: + 0x10303d4 (the pc) = 0x010303F0 */
+#define ADDRESS_OF_FUNCTION_010303f0_OFFSET 0x0000001C   /* was DAT_010303ec (word at 0x010303EC); PC-relative offset: + 0x10303d4 (the pc) = 0x010303F0 (swvGroup_PickCamera) */
 #define ADDRESS_OF_swvImage2D_InitFromPixels_OFFSET 0x000000B8   /* was DAT_01030c24 (word at 0x01030C24); PC-relative offset: + 0x1030b9c (the pc) = 0x01030C54 */
 #define ADDRESS_OF_swvImage2D_InitFromPalette_OFFSET 0x00000214   /* was DAT_01030c28 (word at 0x01030C28); PC-relative offset: + 0x1030ba8 (the pc) = 0x01030DBC */
 #define ADDRESS_OF_FUNCTION_01030d14_OFFSET 0x00000160   /* was DAT_01030c2c (word at 0x01030C2C); PC-relative offset: + 0x1030bb4 (the pc) = 0x01030D14 */

@@ -16316,10 +16316,10 @@ int32 swvSprite3D_IsAnimatable(const uint8 *object,int32 property)
    the other's root being the node, the other being the node's root, or the two roots equal; the first
    two are cases of the third (a root has no parent, so it is its own root), so only the third is
    written here. Callers: swvNode_Align (JSR-184 1.1, Node.align: -1301 IllegalArgumentException for a
-   reference in another graph) and swvGroup_Pick (JSR-184 1.1, Group.pick: -1300 IllegalStateException
-   for a camera with no path to the group). Evidence: 0x01012508 - 0x01012558 (`cmp r0, #0` / `cmpne r1,
-   #0` / `beq`, two `ldr r2, [r2, #0x30]` loops, `cmp r3, r0` / `cmpne r1, r12` / `cmpne r12, r3` /
-   `moveq r0, #1`, `mov r0, #0`). */
+   reference in another graph) and swvGroup_PickCameraValue (JSR-184 1.1, Group.pick: -1300
+   IllegalStateException for a camera with no path to the group). Evidence: 0x01012508 - 0x01012558 (`cmp
+   r0, #0` / `cmpne r1, #0` / `beq`, two `ldr r2, [r2, #0x30]` loops, `cmp r3, r0` / `cmpne r1, r12` /
+   `cmpne r12, r3` / `moveq r0, #1`, `mov r0, #0`). */
 int32 swvNode_SameSceneGraph(const uint8 *node,const uint8 *other)
 
 {
@@ -19894,10 +19894,11 @@ LAB_01016d6c:
    through the group (its picker, +0x88, the state, the group). Returns 1 for a hit (the record's
    intersected node set) and then fills ri, when set, from the record (FUN_01027a54(ri, record): r1
    restored, Ghidra had dropped it; the spec leaves ri unmodified on a miss), 0 for none; FUN_01021b7c on
-   the record again (releases the node). The same tail as the camera form (swvGroup_Pick, 0x01016ECC),
-   which also sets +0x30 to the camera. Ghidra had dropped FUN_01023184's count (r1, the 0 stored at
-   +0x30), read the saved r1 - r3 as locals and pasted stale flags into the three compares: written
-   with common.h's FLOAT_GT after the comma (each `bls` goes on to the next, the last `bhi` skips the
+   the record again (releases the node). The same tail as the camera form (swvGroup_PickCameraValue,
+   0x01016ECC), which also sets +0x30 to the camera. Ghidra had dropped FUN_01023184's count (r1, the
+   0 stored at +0x30), read the saved r1 - r3 as locals and pasted stale flags into the three
+   compares: written with common.h's FLOAT_GT after the comma (each `bls` goes on to the next, the
+   last `bhi` skips the
    error). Evidence: 0x01016d8c - 0x01016ebc (`bic r0, r0, #0x80000000` / `bl 0x0103f534` and the
    `ldrls` / `blls` pairs, `bhi` / `bl 0x0102f7e0` with -1301; `mov r1, #0` / `str r1, [r0, #0x30]` /
    `str r9, [r0, #0x38]` / `add r0, r0, #8` / `bl 0x01023184`; `bl 0x0103eee8` three times, direction
@@ -19942,27 +19943,31 @@ int32 swvGroup_PickRayValue(uint8 *group,int32 scope,const uint32 *origin,const 
   return hit;
 }
 
-/* ==== 0x01016ECC  (file offset 0x16ECC)  swvGroup_Pick =============================================== */
-/* GUESS: name. JSR-184 1.1, Group.pick(scope, x, y, camera, ri) on the group group: error -1300
-   (IllegalStateException) unless the camera is in the group's scene graph (swvNode_SameSceneGraph; the
-   -1302 for a NULL camera is in the BREW wrapper FUN_010303f0); then the pick state (FUN_0100f7b0: +8 to
-   FUN_01023184 with 0, +0x30 the camera, +0x38 the scope) gets a ray through the viewport point (2x - 1, 1
-   - 2y) at depths -1 and 1 (+0x18 and +0x24, FUN_010279d0), by the inverse of the camera's matrix
-   (FUN_0100f910, swv_Matrix4Copy, swv_Matrix4Invert; GUESS: its projection, the spec's P inverse;
-   FUN_010252f4 with w 1.0), error -1300 too when it cannot be inverted: differs from 1.1 (GUESS: 1.0
-   behaviour), whose ArithmeticException is -1000 (the same r6, 0x01016f40); the group's picker (+0x88:
-   FUN_01018018 before and after); the ray then taken to the group (FUN_010048e4, camera to group, into a
-   matrix whose flags word, +0x40, is first set to 0x20: the binary keeps the point's three words in that
+/* ==== 0x01016ECC  (file offset 0x16ECC)  swvGroup_PickCameraValue ==================================== */
+/* JSR-184 1.1, Group.pick(scope, x, y, camera, ri), the camera form, on the native group group (the
+   ISwerveObject slot 48, swvGroup_PickCamera, passes x and y as floats, the native Camera, never NULL:
+   its -1302 NullPointerException for a NULL camera, and ri as the native RayIntersection or NULL): error
+   -1300 (IllegalStateException; FUN_0102f7e0, which does not return) unless the camera is in the
+   group's scene graph (swvNode_SameSceneGraph; the spec: no scene graph path between camera and this
+   Group); then the pick state (FUN_0100f7b0: +8 to FUN_01023184 with 0, +0x30 the camera, +0x38 the
+   scope) gets a ray through the viewport point (2x - 1, 1 - 2y) at depths -1 and 1 (+0x18 and +0x24,
+   FUN_010279d0; the spec's p and p' in NDC), by the inverse of the camera's matrix (FUN_0100f910,
+   swv_Matrix4Copy, swv_Matrix4Invert; GUESS: its projection, the spec's P inverse; FUN_010252f4 with w
+   1.0), error -1300 too when it cannot be inverted: differs from 1.1 (GUESS: 1.0 behaviour), whose
+   ArithmeticException is -1000 (the same r6, 0x01016f40); the group's picker (+0x88: FUN_01018018
+   before and after); the ray then taken to the group (FUN_010048e4, camera to group, into a matrix
+   whose flags word, +0x40, is first set to 0x20: the binary keeps the point's three words in that
    matrix's last three, as here; FUN_0101d674, FUN_010257a8); the result record (FUN_0100f7e0, +0x34;
    FUN_01021b7c with 0, +0x14 the distance FLT_MAX 0x7f7fffff) given the ray's start and far - near
-   (swv_frsb; FUN_01022a94); FUN_010166a4 the pick through the group, FUN_01017120 twice; the result 1 for
-   a hit (the record's +0xc), and then ri, when set, filled from the record (FUN_01027a54(ri, record): r1
-   restored, Ghidra had dropped it), FUN_01021b7c on the record again. Evidence: 0x01016ecc - 0x01017118
-   (`ldr r6, [0x101711c]` -1300 for both checks, `str r10, [r4, #0x30]` / `str r11, [r4, #0x38]`, `orr r0,
-   r11, r11, lsl #0x8` -1.0 at sp + 0x4c, `mov r0, #0x20` / `str r0, [sp, #0x4c]` then `add r2, sp, #0xc` /
-   `bl 0x010048e4`, `sub r1, r11, #0xc0000001`, `ldr r1, [r4, #0x34]` / `movne r0, r9` / `blne
-   0x01027a54`). */
-int32 swvGroup_Pick(uint8 *group,int32 scope,uint32 x,uint32 y,uint8 *camera,uint8 *ri)
+   (swv_frsb; FUN_01022a94; the spec's origin p and direction p' - p); FUN_010166a4 the pick through the
+   group, FUN_01017120 twice; the result 1 for a hit (the record's +0xc), and then ri, when set, filled
+   from the record (FUN_01027a54(ri, record): r1 restored, Ghidra had dropped it; the spec leaves ri
+   unmodified on a miss), FUN_01021b7c on the record again. The same tail as the ray form
+   (swvGroup_PickRayValue, 0x01016D8C). Evidence: 0x01016ecc - 0x01017118 (`ldr r6, [0x101711c]` -1300
+   for both checks, `str r10, [r4, #0x30]` / `str r11, [r4, #0x38]`, `orr r0, r11, r11, lsl #0x8` -1.0
+   at sp + 0x4c, `mov r0, #0x20` / `str r0, [sp, #0x4c]` then `add r2, sp, #0xc` / `bl 0x010048e4`, `sub
+   r1, r11, #0xc0000001`, `ldr r1, [r4, #0x34]` / `movne r0, r9` / `blne 0x01027a54`). */
+int32 swvGroup_PickCameraValue(uint8 *group,int32 scope,uint32 x,uint32 y,uint8 *camera,uint8 *ri)
 
 {
   uint32 direction[3];
@@ -42959,56 +42964,60 @@ void swv_InitVtbl_Group(void **pVtbl)
   return;
 }
 
-/* ==== 0x010303F0  (file offset 0x303F0)  FUN_010303f0 ================================================ */
-undefined4
-FUN_010303f0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,int param_5,
-            int param_6,undefined1 *param_7)
+/* ==== 0x010303F0  (file offset 0x303F0)  swvGroup_PickCamera ========================================= */
+/* JSR-184 1.1, Group.pick(scope, x, y, camera, ri), the camera form: ISwerveObject slot 48 (+0xc0) of
+   Group and World (kh_types.h SwerveGroupVtbl.PickCamera; the ray form is slot 47, swvGroup_PickRay): in
+   an error frame, x and y checked by swv_CheckFloat (error -1001 for a denormal, infinite or NaN float),
+   then error -1302 (NullPointerException; FUN_0102f7e0, which does not return) for a NULL camera or one
+   without a native object (the spec: camera is null), then swvGroup_PickCameraValue(the native group
+   (po->pNative, less 4 when not NULL), scope, x, y, the native Camera (camera's pNative less 4), the
+   native RayIntersection (ri's pNative less 4; NULL for a NULL ri or one without a native object)),
+   which raises the spec's IllegalStateException (-1300) for a camera in another scene graph, and its
+   result (1 for a hit) stored as a byte in *pHit; returns 0, or on an error its result code
+   (swv_ErrorToResult; *pHit then not written). Evidence: 0x010303f0 - 0x010304b8 (`mov r6, #0x0` the
+   result, `ldm r9, {r4, r5, r9}` camera / ri / pHit from the stack, `bl 0x0102ed04` twice, `movs r0,
+   r4` / `ldrne r0, [r4, #0x4]` / `movs r4, r0` / `subne r4, r0, #0x4` / `cmp r4, #0x0` / `ldreq r0,
+   [pc, #0x4c]` -1302 / `bleq 0x0102f7e0`, `str r4, [sp]` / `str r3, [sp, #0x4]`, `bl 0x01016ecc` /
+   `strb r0, [r9]`, `bl 0x0103976c` / `mov r6, r0`). */
+int32 swvGroup_PickCamera(ISwerveObject *po,int32 scope,uint32 x,uint32 y,ISwerveObject *camera,
+                          ISwerveObject *ri,uint8 *pHit)
 
 {
-  undefined1 uVar1;
-  int iVar2;
-  undefined4 uVar3;
-  undefined4 uVar4;
-  int iVar5;
-  int iVar6;
-  undefined4 uVar7;
-  undefined1 auStack_ac [136];
-  
-  uVar7 = 0;
-  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_ac));   /* Ghidra had dropped it */
-  if (iVar2 == 0) {
-    swv_TryArm(auStack_ac);
-    iVar2 = *(int *)(param_1 + 4);
-    if (iVar2 != 0) {
-      iVar2 = iVar2 + -4;
-    }
-    uVar3 = swv_CheckFloat(param_3);
-    uVar4 = swv_CheckFloat(param_4);
-    iVar5 = 0;
-    if (param_5 != 0) {
-      iVar5 = *(int *)(param_5 + 4);
-    }
-    if (iVar5 != 0) {
-      iVar5 = iVar5 + -4;
-    }
-    if (iVar5 == 0) {
+  int32 result = 0;
+  int32 error;
+  uint8 *group;
+  uint8 *view;
+  uint8 *ray;
+  uint32 pointX;
+  uint32 pointY;
+  uint8 frame[136];
+
+  error = (int32)swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (error == 0) {
+    swv_TryArm(frame);
+    group = (uint8 *)po->pNative;
+    if (group != NULL)
+      group -= 4;
+    pointX = swv_CheckFloat(x);
+    pointY = swv_CheckFloat(y);
+    view = NULL;
+    if (camera != NULL)
+      view = (uint8 *)camera->pNative;
+    if (view != NULL)
+      view -= 4;
+    if (view == NULL)
       FUN_0102f7e0(INTEGER_MINUS_1302);
-    }
-    iVar6 = 0;
-    if (param_6 != 0) {
-      iVar6 = *(int *)(param_6 + 4);
-    }
-    if (iVar6 != 0) {
-      iVar6 = iVar6 + -4;
-    }
-    uVar1 = swvGroup_Pick((uint8 *)iVar2,param_2,uVar3,uVar4,(uint8 *)iVar5,(uint8 *)iVar6);
-    *param_7 = uVar1;
+    ray = NULL;
+    if (ri != NULL)
+      ray = (uint8 *)ri->pNative;
+    if (ray != NULL)
+      ray -= 4;
+    *pHit = (uint8)swvGroup_PickCameraValue(group,scope,pointX,pointY,view,ray);
     swv_TryPop();
   }
-  else {
-    uVar7 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
-  }
-  return uVar7;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x010304C0  (file offset 0x304C0)  swvGroup_PickRay ============================================ */
@@ -50626,10 +50635,11 @@ int32 swv_Create_RayIntersection(void **ppObj)
 /* ==== 0x01038340  (file offset 0x38340)  swvRayIntersection_GetDistance ============================== */
 /* JSR-184 1.1, RayIntersection.getDistance: ISwerveObject slot 3 (+0xc) of RayIntersection (kh_types.h
    SwerveRayIntersectionVtbl.GetDistance): *pDistance = the native object's (po->pNative, less 4 when not
-   NULL) +0x14, the distance from the ray's origin in lengths of its direction (swvGroup_PickRayValue and
-   swvGroup_Pick start it at FLT_MAX); no error frame, the spec lists no exception. No result: r0 is left
-   holding the distance (the game's camera_avoid_walls reads only *pDistance). Evidence: 0x01038340 -
-   0x01038354 (`subne r0, r0, #0x4`, `ldr r0, [r0, #0x14]` / `str r0, [r1, #0x0]` / `bx lr`). */
+   NULL) +0x14, the distance from the ray's origin in lengths of its direction (swvGroup_PickRayValue
+   and swvGroup_PickCameraValue start it at FLT_MAX); no error frame, the spec lists no exception. No
+   result: r0 is left holding the distance (the game's camera_avoid_walls reads only *pDistance).
+   Evidence: 0x01038340 - 0x01038354 (`subne r0, r0, #0x4`, `ldr r0, [r0, #0x14]` / `str r0, [r1,
+   #0x0]` / `bx lr`). */
 void swvRayIntersection_GetDistance(ISwerveObject *po,uint32 *pDistance)
 
 {

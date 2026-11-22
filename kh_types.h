@@ -870,7 +870,8 @@ typedef struct SwerveGroupVtbl {
     int32 (*RemoveChild)(ISwerveObject *po,void *child);                 /* +0xb8 slot 46, 0x010305b8 */
     int32 (*Pick)(ISwerveObject *po,int32 scope,void *origin,void *direction,void *ray,void *pHit);
                                                                          /* +0xbc slot 47, 0x010304c0 */
-    int32 (*slot48)();                                                   /* +0xc0 slot 48, 0x010303f0 */
+    int32 (*PickCamera)(ISwerveObject *po,int32 scope,uint32 x,uint32 y,void *camera,void *ray,void *pHit);
+                                                                         /* +0xc0 slot 48, 0x010303f0 */
 } SwerveGroupVtbl;
 
 /* World */
