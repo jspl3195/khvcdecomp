@@ -115,7 +115,7 @@ void FUN_01009e20(int param_1,void *param_2);   /* 0x01009E20, no Ghidra functio
 longlong FUN_01009e28(int param_1,int param_2);   /* 0x01009E28, no Ghidra function */
 void FUN_01009e44(int param_1,void *param_2);   /* 0x01009E44, no Ghidra function */
 void FUN_01009e4c(int param_1,void *param_2);   /* 0x01009E4C, no Ghidra function */
-int32 swvRenderer_Kind(int param_1);   /* 0x0100F4D4 GUESS: name, see swv21brew.c */
+int32 swvRenderer_Kind(const uint8 *renderer);   /* 0x0100F4D4 GUESS: name, see swv21brew.c */
 int32 swvM3GReader_State(const uint8 *reader);   /* 0x01010820 GUESS: name, see swv21brew.c */
 uint8 *swvImage2D_Indices(const uint8 *image);   /* 0x01011BCC GUESS: name, see swv21brew.c */
 int swvM3GReader_Feed(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5);   /* 0x01015348 GUESS: name, see swv21brew.c */
@@ -180,16 +180,16 @@ int AEEMod_CreateInstance(IModule *po,IShell *pIShell,AEECLSID ClsId,void **ppOb
 uint32 AEEMod_Release(IModule *po);   /* 0x01002910 */
 int AEEStaticMod_New(int16 nSize,IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod,void *pfnMC, void *pfnMF);   /* 0x0100297C */
 void swv_TryArm(int param_1);   /* 0x0100500C */
-int swv_Graphics3D_New(void);   /* 0x010098A4 */
-void swv_SpanFillGeneric(int param_1);   /* 0x0100A8B4 GUESS: name, see swv21brew.c */
-void swv_SpanFillGouraud(int param_1);   /* 0x0100B18C GUESS: name, see swv21brew.c */
+uint8 *swv_Graphics3D_New(void);   /* 0x010098A4 */
+void swv_SpanFillGeneric(uint8 *raster);   /* 0x0100A8B4 GUESS: name, see swv21brew.c */
+void swv_SpanFillGouraud(uint8 *raster);   /* 0x0100B18C GUESS: name, see swv21brew.c */
 void swv_SpanFillTextured(int param_1);   /* 0x0100DFEC */
 uint32 swvObj_AddRef(ISwerveObject *po);   /* 0x01011F8C */
 int32 swvObj_QueryInterface(ISwerveObject *po,SwerveClassId cls,void **ppo);   /* 0x01011FC4 */
 uint32 swvObj_Release(ISwerveObject *po);   /* 0x01012294 */
 undefined4 swv_Matrix4Invert(int param_1);   /* 0x0101376C */
 void swv_NativeRelease(int *param_1);   /* 0x01019F28 */
-void swv_Graphics3D_bindTarget (int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,undefined4 param_6,undefined4 param_7,undefined4 param_8, undefined4 param_9);   /* 0x010202E4 */
+void swv_Graphics3D_bindTarget(uint8 *graphics,int32 width,int32 height,int32 pitch,void *pixels,int32 x, int32 y,int32 dx,int32 dy);   /* 0x010202E4 */
 uint32 ISwerve_AddRef(ISwerve *po);   /* 0x01024788 */
 int ISwerve_CreateObject(ISwerve *po,SwerveClassId cls,void **ppObj);   /* 0x0102479C */
 uint32 ISwerve_Release(ISwerve *po);   /* 0x01024978 */
@@ -795,7 +795,7 @@ void FUN_01020d0c(int *param_1,int param_2);
 void FUN_01020da0(int param_1,int param_2);
 void FUN_01020dec(int param_1);
 void FUN_01021a78(int param_1,undefined4 param_2,int param_3);
-void swvTexture2D_SetImage(int param_1,int param_2);   /* 0x01021ABC JSR-184 1.1, see swv21brew.c */
+void swvTexture2D_SetImage(uint8 *texture,uint8 *image);   /* 0x01021ABC JSR-184 1.1, see swv21brew.c */
 void FUN_01021b6c(int param_1,undefined4 param_2);
 void FUN_01021b7c(int param_1,int param_2);
 void FUN_01021bac(int param_1,int param_2,undefined4 param_3,int param_4,int param_5);
@@ -853,7 +853,7 @@ void swvAnimationController_SetWeightValue(uint8 *controller,uint32 weight);   /
 void FUN_01023c90(int param_1,int param_2,int param_3);
 void swvPolygonMode_SetWindingValue(uint8 *mode,int32 winding);   /* 0x01023CE4 GUESS: name, see swv21brew.c */
 void FUN_01023d00(int param_1);
-void swvImage2D_SetValue(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6, int param_7);   /* 0x01023D30 JSR-184 1.1, see swv21brew.c */
+void swvImage2D_SetValue(uint8 *image,int32 x,int32 y,int32 width,int32 height,int32 size, const uint8 *pixels);   /* 0x01023D30 JSR-184 1.1, see swv21brew.c */
 undefined8 FUN_01023e44(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6,int param_7);
 void FUN_01023f30(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01023f50(int param_1,int param_2,undefined4 *param_3);
@@ -1178,14 +1178,14 @@ void FUN_01030aac(int param_1,undefined4 *param_2);
 void FUN_01030acc(int param_1,undefined4 *param_2);
 void FUN_01030ae4(int param_1,undefined4 *param_2);
 void FUN_01030b10(int param_1,int *param_2);
-void swvImage2D_GetPixels(int param_1,undefined4 *param_2);   /* 0x01030B38 GUESS: name, see swv21brew.c */
+void swvImage2D_GetPixels(ISwerveObject *po,void **pPixels);   /* 0x01030B38 GUESS: name, see swv21brew.c */
 void FUN_01030b58(int param_1,undefined4 *param_2);
-undefined4 swvImage2D_InitFromPixels(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,int param_6);   /* 0x01030C54 GUESS: name, see swv21brew.c */
+int32 swvImage2D_InitFromPixels(ISwerveObject *po,int32 format,int32 width,int32 height,int32 size, const uint8 *pixels);   /* 0x01030C54 GUESS: name, see swv21brew.c */
 undefined4 FUN_01030d14(int param_1,int param_2,int param_3,int param_4);
-undefined4 swvImage2D_InitFromPalette(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,int param_6, undefined4 param_7,int param_8);   /* 0x01030DBC GUESS: name, see swv21brew.c */
+int32 swvImage2D_InitFromPalette(ISwerveObject *po,int32 format,int32 width,int32 height,int32 indexSize, const uint8 *indices,int32 paletteSize,const uint8 *palette);   /* 0x01030DBC GUESS: name, see swv21brew.c */
 undefined4 FUN_01030e98(int param_1,int param_2,int param_3,int param_4,int param_5);
 void FUN_01030f48(int param_1,undefined1 *param_2);
-undefined4 swvImage2D_Set(int param_1,int param_2,int param_3,int param_4,int param_5,undefined4 param_6, int param_7);   /* 0x01030F60 JSR-184 1.1, see swv21brew.c */
+int32 swvImage2D_Set(ISwerveObject *po,int32 x,int32 y,int32 width,int32 height,int32 size, const uint8 *pixels);   /* 0x01030F60 JSR-184 1.1, see swv21brew.c */
 void thunk_swv_InitVtbl_Object3D(int param_1);
 void FUN_01031034(int param_1,int param_2);
 undefined4 FUN_010311c4(int param_1,char *param_2,int param_3);
@@ -1234,10 +1234,10 @@ undefined4 FUN_010338a0(int param_1,int param_2,undefined4 *param_3);
 undefined4 FUN_01033918(int param_1,undefined4 param_2);
 void FUN_01033984(int param_1,int param_2);
 int FUN_010339a4(int param_1);
-undefined4 swvMaterial_GetColor(int param_1,int param_2,undefined4 *param_3);   /* 0x01033A24 GUESS: name, see swv21brew.c */
+int32 swvMaterial_GetColor(ISwerveObject *po,int32 target,uint32 *pArgb);   /* 0x01033A24 GUESS: name, see swv21brew.c */
 void FUN_01033aac(int param_1,undefined4 *param_2);
 void FUN_01033b34(int param_1,undefined1 *param_2);
-undefined4 swvMaterial_SetColor(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x01033B4C GUESS: name, see swv21brew.c */
+int32 swvMaterial_SetColor(ISwerveObject *po,uint32 targets,uint32 argb);   /* 0x01033B4C GUESS: name, see swv21brew.c */
 undefined4 FUN_01033bb4(int param_1,undefined4 param_2);
 void FUN_01033c50(int param_1,int param_2);
 int FUN_01033ccc(int param_1,undefined4 param_2,ISwerveObject **param_3);
@@ -1344,16 +1344,16 @@ int32 png_sig_cmp(const uint8 *sig,uint32 start,uint32 numToCheck);   /* 0x01037
 void png_warning(int param_1,char *param_2);   /* 0x01037EB0 libpng */
 int FUN_01037eec(undefined4 param_1,int param_2,int param_3,undefined4 param_4);
 void thunk_FUN_01036188(int param_1,int param_2);
-void swvPolygonMode_GetCulling(int param_1,undefined4 *param_2);   /* 0x01037FA0 JSR-184 1.1, see swv21brew.c */
-void swvPolygonMode_GetShading(int param_1,undefined4 *param_2);   /* 0x01037FC0 JSR-184 1.1, see swv21brew.c */
-void swvPolygonMode_GetWinding(int param_1,undefined4 *param_2);   /* 0x01037FE0 JSR-184 1.1, see swv21brew.c */
-void swvPolygonMode_IsTwoSidedLightingEnabled(int param_1,undefined1 *param_2);   /* 0x010380B0 JSR-184 1.1, see swv21brew.c */
-undefined4 swvPolygonMode_SetCulling(int param_1,int param_2);   /* 0x010380D0 JSR-184 1.1, see swv21brew.c */
+void swvPolygonMode_GetCulling(ISwerveObject *po,int32 *pCulling);   /* 0x01037FA0 JSR-184 1.1, see swv21brew.c */
+void swvPolygonMode_GetShading(ISwerveObject *po,int32 *pShading);   /* 0x01037FC0 JSR-184 1.1, see swv21brew.c */
+void swvPolygonMode_GetWinding(ISwerveObject *po,int32 *pWinding);   /* 0x01037FE0 JSR-184 1.1, see swv21brew.c */
+void swvPolygonMode_IsTwoSidedLightingEnabled(ISwerveObject *po,uint8 *pEnabled);   /* 0x010380B0 JSR-184 1.1, see swv21brew.c */
+int32 swvPolygonMode_SetCulling(ISwerveObject *po,int32 culling);   /* 0x010380D0 JSR-184 1.1, see swv21brew.c */
 void swvPolygonMode_SetLocalCameraLightingEnable(int param_1,int param_2);   /* 0x01038148 JSR-184 1.1, see swv21brew.c */
 void swvPolygonMode_SetPerspectiveCorrectionEnable(int param_1,int param_2);   /* 0x01038160 JSR-184 1.1, see swv21brew.c */
-undefined4 swvPolygonMode_SetShading(int param_1,int param_2);   /* 0x01038178 JSR-184 1.1, see swv21brew.c */
-void swvPolygonMode_SetTwoSidedLightingEnable(int param_1,int param_2);   /* 0x010381F0 JSR-184 1.1, see swv21brew.c */
-undefined4 swvPolygonMode_SetWinding(int param_1,int param_2);   /* 0x01038208 JSR-184 1.1, see swv21brew.c */
+int32 swvPolygonMode_SetShading(ISwerveObject *po,int32 shading);   /* 0x01038178 JSR-184 1.1, see swv21brew.c */
+void swvPolygonMode_SetTwoSidedLightingEnable(ISwerveObject *po,int32 enable);   /* 0x010381F0 JSR-184 1.1, see swv21brew.c */
+int32 swvPolygonMode_SetWinding(ISwerveObject *po,int32 winding);   /* 0x01038208 JSR-184 1.1, see swv21brew.c */
 void FUN_01038280(int param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01038340(int param_1,undefined4 *param_2);
 int FUN_01038358(int param_1,ISwerveObject **param_2);

@@ -9466,28 +9466,28 @@ void FUN_01009860(int param_1)
 }
 
 /* ==== 0x010098A4  (file offset 0x098A4)  swv_Graphics3D_New ========================================== */
-int swv_Graphics3D_New(void)
+/* GUESS: name. Creates the native Graphics3D object (0x114 bytes, swv_New_2, which cannot fail);
+   swv_Create_Graphics3D wraps it (+4 is the interface sub-object). Constructed by FUN_01027eec and, while
+   its renderer is made, held by FUN_0101807c on the context FUN_0100f8e8 gives (GUESS: a stack of
+   objects under construction, for the error frames; FUN_0101715c drops it again); its +0xa8 the
+   renderer thunk_FUN_01009ad0 creates (GUESS). The store to +0xa8 is made whether or not the object
+   was allocated, as in the binary. Evidence: 0x010098a4 - 0x010098f8 (`mov r0, #0x114` / `bl
+   0x0102cbe0`, `movs r4, r0` / `blne 0x01027eec`, `bl 0x0100f8e8` / `mov r1, r4` / `bl 0x0101807c`, `bl
+   0x0102f510` / `str r0, [r4, #0xa8]`, `bl 0x0100f8e8` / `bl 0x0101715c` (r1, the object, not read
+   there), r0 the object or 0; Ghidra had given the second FUN_0100f8e8 an argument). */
+uint8 *swv_Graphics3D_New(void)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-                    /* Creates the native Graphics3D object; swv_Create_Graphics3D wraps it (+4 is
-                       the interface sub-object). GUESS: name. */
-  iVar1 = swv_New_2(0x114);
-  if (iVar1 != 0) {
-    FUN_01027eec(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+  uint8 *graphics = (uint8 *)swv_New_2(0x114);
+
+  if (graphics != NULL) {
+    FUN_01027eec((int *)graphics);
+    FUN_0101807c((int)FUN_0100f8e8(),(undefined4)graphics);
   }
-  uVar2 = thunk_FUN_01009ad0();
-  *(undefined4 *)(iVar1 + 0xa8) = uVar2;
-  if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
-    return iVar1;
-  }
-  return 0;
+  *(int32 *)(graphics + 0xa8) = thunk_FUN_01009ad0();
+  if (graphics != NULL)
+    FUN_0101715c((int)FUN_0100f8e8());
+  return graphics;
 }
 
 /* ==== 0x010098FC  (file offset 0x098FC)  FUN_010098fc ================================================ */
@@ -10583,187 +10583,139 @@ void swv_SpanFillFlatDithered(uint8 *raster)
 }
 
 /* ==== 0x0100A8B4  (file offset 0x0A8B4)  swv_SpanFillGeneric ========================================= */
-/* GUESS: name (not yet rewritten). The rasteriser's general untextured span routine, the default of
-   swv_RasterTriangleSetup: the whole compositing state per pixel (JSR-184 1.1, CompositingMode). Alpha
-   threshold (+0x25c: draws where alpha >> 8 >= it, as CompositingMode.setAlphaThreshold), depth test
-   (flag 0x20) and depth write (flag 0x40), the blending (+0x268: 0x40 ALPHA .. 0x44 REPLACE, the
-   CompositingMode constants; the colour already there is read unless REPLACE), colour write (flag 1)
-   and alpha write (flag 0x800, to the 8-bit alpha buffer +0x260, row stride +0x264). Its fast paths:
-   swv_SpanFillFlatDithered, swv_SpanFillGouraud, swv_SpanFillGouraudAlpha. */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-void swv_SpanFillGeneric(int param_1)
+/* GUESS: name. The rasteriser's general untextured span routine, the default of
+   swv_RasterTriangleSetup: the whole compositing state per pixel (JSR-184 1.1, CompositingMode),
+   re-reading the flag words (+0x258) for every pixel. About half of all guest instructions in the
+   game are spent here (khvcemu tools/gen_swerve_patch.py, tools/profile_state.py). Alpha threshold
+   (+0x25c: draws where alpha >> 8 >= it, as CompositingMode.setAlphaThreshold), depth test (flag 0x20:
+   the z-buffer's word >= depth >> 12) and depth write (flag 0x40), the blending (+0x268, the
+   CompositingMode constants: 0x40 ALPHA dst + (src - dst) * a >> 8 below 0xff00; 0x41 ALPHA_ADD dst +
+   src * a >> 8 below 0xff00, else dst + src; 0x42 MODULATE (src + 1) * (dst >> 8) >> 8; 0x43
+   MODULATE_X2 src * (dst >> 8) >> 7; 0x44 REPLACE, and any other value, src; the colour and the alpha
+   already there are read unless REPLACE, spread to the source's scale: red, green, blue << 11, << 5,
+   << 11 of their RGB565 fields, the alpha byte << 8), the 2x2 dither offset and the clamp to RGB565
+   as in swv_SpanFillGouraud, the alpha clamped to 0 .. 0xff00; colour write (flag 1) and alpha write
+   (flag 0x800 with an alpha buffer +0x260, row stride +0x264, else the alpha byte goes to a local).
+   The span: y +0x04, the colour and depth rows +0x08 / +0x0c, x +0x10 to +0xdc, depth +0x1c (step
+   +0x4c), red, green, blue, alpha +0x38 .. +0x44 (steps +0x68 .. +0x74). Like the binary it always
+   does the first pixel, whatever the count. Its fast paths: swv_SpanFillFlatDithered,
+   swv_SpanFillGouraud, swv_SpanFillGouraudAlpha. Evidence: 0x0100a8b4 - 0x0100ac08 (`mov r9, sp` /
+   `strb r1, [sp]` the local, `ldrne r2, [r0, #0x258]` / `tstne r2, #0x800` / `mla`, `cmp r1, lr, asr
+   #8` / `bgt`, `cmpne r2, r10, asr #0xc` / `blt`, `tst r1, #0x40` / `strhne`, the `cmp r11, #0x44 ..
+   #0x43` branches, `cmp r1, #0xff00` / `movgt`, `tst r4, #1` / `strh`, `strb r1, [r9]`, `addne r9,
+   r9, #1`, the steps). */
+void swv_SpanFillGeneric(uint8 *raster)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  ushort uVar4;
-  uint uVar5;
-  uint uVar6;
-  uint uVar7;
-  int iVar8;
-  int iVar9;
-  int iVar10;
-  uint uVar11;
-  byte *pbVar12;
-  int iVar13;
-  int iVar14;
-  int iVar15;
-  int iVar16;
-  bool bVar17;
-  byte local_48 [4];
-  int local_44;
-  int local_40;
-  uint local_3c;
-  int local_38;
-  ushort *local_34;
-  ushort *local_30;
-  int local_2c;
-  int local_28;
-  
-                    /* Per-pixel span fill, generic version: re-reads flag words from the rasteriser
-                       state for every pixel. About half of all guest instructions in the game are
-                       spent here (khvcemu tools/gen_swerve_patch.py, tools/profile_state.py). State
-                       fields: +4 y, +8 framebuffer, +0xC depth buffer, +0x10 x start, +0xDC x end,
-                       +0x1C z, +0x38..+0x44 R/G/B/A and +0x68..+0x74 their steps, +0x4C z step,
-                       +0x258 flags (1 colour write, 0x20 depth test, 0x40 depth write, 0x800 alpha
-                       buffer), +0x25C alpha threshold, +0x260 alpha buffer, +0x268 blend mode. */
-  pbVar12 = local_48;
-  uVar7 = *(uint *)(param_1 + 0x10);
-  uVar11 = (*(uint *)(param_1 + 4) & 1) + 1 ^ (uVar7 & 1) << 1;
-  local_30 = (ushort *)(*(int *)(param_1 + 8) + uVar7 * 2);
-  local_34 = (ushort *)(*(int *)(param_1 + 0xc) + uVar7 * 2);
-  local_38 = *(int *)(param_1 + 0xdc) - uVar7;
-  uVar7 = *(uint *)(param_1 + 0x38);
-  iVar13 = *(int *)(param_1 + 0x1c);
-  local_3c = uVar7;
-  local_40 = *(int *)(param_1 + 0x3c);
-  local_44 = *(int *)(param_1 + 0x40);
-  iVar16 = *(int *)(param_1 + 0x44);
-  local_48[0] = 0;
-  iVar8 = *(int *)(param_1 + 0x260);
-  if (iVar8 != 0) {
-    uVar7 = *(uint *)(param_1 + 600);
-  }
-  if (iVar8 != 0 && (uVar7 & 0x800) != 0) {
-    pbVar12 = (byte *)(*(int *)(param_1 + 0x264) * *(int *)(param_1 + 4) + iVar8 +
-                      *(int *)(param_1 + 0x10));
-  }
-  while( true ) {
-    local_2c = iVar16 >> 8;
-    if (*(int *)(param_1 + 0x25c) <= local_2c) {
-      bVar17 = (*(uint *)(param_1 + 600) & 0x20) != 0;
-      uVar7 = 0;
-      if (bVar17) {
-        uVar7 = (uint)*local_34;
-      }
-      if (!bVar17 || iVar13 >> 0xc <= (int)uVar7) {
-        if ((*(uint *)(param_1 + 600) & 0x40) != 0) {
-          *local_34 = (ushort)(iVar13 >> 0xc);
-        }
-        iVar14 = *(int *)(param_1 + 0x268);
-        iVar8 = iVar16;
-        uVar7 = local_3c;
-        iVar9 = local_40;
-        iVar15 = local_44;
-        if (iVar14 != 0x44) {
-          uVar4 = *local_30;
-          uVar5 = uVar4 & 0x7e0;
-          iVar10 = uVar5 * 0x20;
-          uVar6 = uVar4 & 0x1f;
-          iVar3 = uVar6 * 0x800;
-          iVar1 = (uint)(uVar4 >> 0xb) * 0x800;
-          iVar2 = (uint)*pbVar12 * 0x100;
-          if (iVar14 == 0x40) {
-            if (iVar16 < 0xff00) {
-              uVar7 = iVar1 + ((int)((local_3c + (uint)(uVar4 >> 0xb) * -0x800) * local_2c) >> 8);
-              iVar9 = iVar10 + ((int)((local_40 + uVar5 * -0x20) * local_2c) >> 8);
-              iVar15 = iVar3 + ((int)((local_44 + uVar6 * -0x800) * local_2c) >> 8);
-              iVar8 = iVar2 + ((int)((iVar16 + (uint)*pbVar12 * -0x100) * local_2c) >> 8);
+  uint32 x = *(uint32 *)(raster + 0x10);
+  uint32 dither = ((*(uint32 *)(raster + 0x04) & 1) + 1) ^ (x & 1) << 1;
+  uint16 *pixel = *(uint16 **)(raster + 0x08) + x;
+  uint16 *depth = *(uint16 **)(raster + 0x0c) + x;
+  int32 count = *(int32 *)(raster + 0xdc) - (int32)x;
+  int32 red = *(int32 *)(raster + 0x38);
+  int32 z = *(int32 *)(raster + 0x1c);
+  int32 green = *(int32 *)(raster + 0x3c);
+  int32 blue = *(int32 *)(raster + 0x40);
+  int32 alpha = *(int32 *)(raster + 0x44);
+  uint8 localAlpha = 0;
+  uint8 *alphaOut = &localAlpha;
+
+  if (*(uint8 **)(raster + 0x260) != NULL && (*(uint32 *)(raster + 0x258) & 0x800) != 0)
+    alphaOut = *(uint8 **)(raster + 0x260) + *(int32 *)(raster + 0x264) * *(int32 *)(raster + 0x04)
+               + *(int32 *)(raster + 0x10);
+  for (;;) {
+    if (*(int32 *)(raster + 0x25c) <= alpha >> 8) {
+      uint32 flags = *(uint32 *)(raster + 0x258);
+
+      if ((flags & 0x20) == 0 || (int32)*depth >= z >> 12) {
+        int32 blending = *(int32 *)(raster + 0x268);
+        int32 r = red;
+        int32 g = green;
+        int32 b = blue;
+        int32 a = alpha;
+
+        if ((flags & 0x40) != 0)
+          *depth = (uint16)(z >> 12);
+        if (blending != 0x44) {
+          uint32 dst = *pixel;
+          int32 dst_r = (int32)((dst >> 11) << 11);
+          int32 dst_g = (int32)((dst & 0x7e0) << 5);
+          int32 dst_b = (int32)((dst & 0x1f) << 11);
+          int32 dst_a = (int32)*alphaOut << 8;
+          int32 weight = alpha >> 8;
+
+          if (blending == 0x40) {
+            if (alpha < 0xff00) {
+              r = dst_r + ((red - dst_r) * weight >> 8);
+              g = dst_g + ((green - dst_g) * weight >> 8);
+              b = dst_b + ((blue - dst_b) * weight >> 8);
+              a = dst_a + ((alpha - dst_a) * weight >> 8);
             }
           }
-          else if (iVar14 == 0x41) {
-            if (iVar16 < 0xff00) {
-              local_28 = local_2c;
-              iVar8 = iVar2 + (iVar16 * local_2c >> 8);
-              uVar7 = iVar1 + ((int)(local_3c * local_2c) >> 8);
-              iVar9 = iVar10 + (local_40 * local_2c >> 8);
-              iVar15 = iVar3 + (local_44 * local_2c >> 8);
+          else if (blending == 0x41) {
+            if (alpha < 0xff00) {
+              r = dst_r + (red * weight >> 8);
+              g = dst_g + (green * weight >> 8);
+              b = dst_b + (blue * weight >> 8);
+              a = dst_a + (alpha * weight >> 8);
             }
             else {
-              iVar8 = iVar16 + iVar2;
-              uVar7 = local_3c + iVar1;
-              iVar9 = local_40 + iVar10;
-              iVar15 = local_44 + iVar3;
+              r = red + dst_r;
+              g = green + dst_g;
+              b = blue + dst_b;
+              a = alpha + dst_a;
             }
           }
-          else if (iVar14 == 0x42) {
-            iVar8 = (iVar16 + 1) * (iVar2 >> 8) >> 8;
-            uVar7 = (int)((local_3c + 1) * (iVar1 >> 8)) >> 8;
-            iVar9 = (local_40 + 1) * (iVar10 >> 8) >> 8;
-            iVar15 = (local_44 + 1) * (iVar3 >> 8) >> 8;
+          else if (blending == 0x42) {
+            r = (red + 1) * (dst_r >> 8) >> 8;
+            g = (green + 1) * (dst_g >> 8) >> 8;
+            b = (blue + 1) * (dst_b >> 8) >> 8;
+            a = (alpha + 1) * (dst_a >> 8) >> 8;
           }
-          else if (iVar14 == 0x43) {
-            iVar8 = iVar16 * (iVar2 >> 8) >> 7;
-            uVar7 = (int)(local_3c * (iVar1 >> 8)) >> 7;
-            iVar9 = local_40 * (iVar10 >> 8) >> 7;
-            iVar15 = local_44 * (iVar3 >> 8) >> 7;
+          else if (blending == 0x43) {
+            r = red * (dst_r >> 8) >> 7;
+            g = green * (dst_g >> 8) >> 7;
+            b = blue * (dst_b >> 8) >> 7;
+            a = alpha * (dst_a >> 8) >> 7;
           }
         }
-        iVar14 = (int)(uVar11 + ((int)uVar7 >> 9)) >> 2;
-        iVar15 = (int)(uVar11 + (iVar15 >> 9)) >> 2;
-        iVar9 = (int)(uVar11 + (iVar9 >> 8)) >> 2;
-        if (iVar14 < 0) {
-          iVar14 = 0;
-        }
-        else if (0x1f < iVar14) {
-          iVar14 = 0x1f;
-        }
-        if (iVar9 < 0) {
-          iVar9 = 0;
-        }
-        else if (0x3f < iVar9) {
-          iVar9 = 0x3f;
-        }
-        if (iVar15 < 0) {
-          iVar15 = 0;
-        }
-        else if (0x1f < iVar15) {
-          iVar15 = 0x1f;
-        }
-        if (iVar8 < 0) {
-          iVar8 = 0;
-        }
-        else if (0xff00 < iVar8) {
-          iVar8 = 0xff00;
-        }
-        if ((*(uint *)(param_1 + 600) & 1) != 0) {
-          *local_30 = (ushort)(iVar14 << 0xb) | (ushort)(iVar9 << 5) | (ushort)iVar15;
-        }
-        *pbVar12 = (byte)((uint)iVar8 >> 8);
+        r = (int32)(dither + (uint32)(r >> 9)) >> 2;
+        g = (int32)(dither + (uint32)(g >> 8)) >> 2;
+        b = (int32)(dither + (uint32)(b >> 9)) >> 2;
+        if (r < 0)
+          r = 0;
+        else if (r > 0x1f)
+          r = 0x1f;
+        if (g < 0)
+          g = 0;
+        else if (g > 0x3f)
+          g = 0x3f;
+        if (b < 0)
+          b = 0;
+        else if (b > 0x1f)
+          b = 0x1f;
+        if (a < 0)
+          a = 0;
+        else if (a > 0xff00)
+          a = 0xff00;
+        if ((*(uint32 *)(raster + 0x258) & 1) != 0)
+          *pixel = (uint16)(r << 11 | g << 5 | b);
+        *alphaOut = (uint8)(a >> 8);
       }
     }
-    local_38 = local_38 + -1;
-    if (local_38 < 1) break;
-    uVar11 = uVar11 ^ 2;
-    local_34 = local_34 + 1;
-    local_30 = local_30 + 1;
-    bVar17 = *(int *)(param_1 + 0x260) != 0;
-    uVar7 = 0;
-    if (bVar17) {
-      uVar7 = *(uint *)(param_1 + 600);
-    }
-    if (bVar17 && (uVar7 & 0x800) != 0) {
-      pbVar12 = pbVar12 + 1;
-    }
-    iVar13 = *(int *)(param_1 + 0x4c) + iVar13;
-    local_3c = *(int *)(param_1 + 0x68) + local_3c;
-    local_40 = *(int *)(param_1 + 0x6c) + local_40;
-    local_44 = *(int *)(param_1 + 0x70) + local_44;
-    iVar16 = *(int *)(param_1 + 0x74) + iVar16;
+    if (--count <= 0)
+      break;
+    dither ^= 2;
+    depth++;
+    pixel++;
+    if (*(uint8 **)(raster + 0x260) != NULL && (*(uint32 *)(raster + 0x258) & 0x800) != 0)
+      alphaOut++;
+    z += *(int32 *)(raster + 0x4c);
+    red += *(int32 *)(raster + 0x68);
+    green += *(int32 *)(raster + 0x6c);
+    blue += *(int32 *)(raster + 0x70);
+    alpha += *(int32 *)(raster + 0x74);
   }
-  return;
 }
 
 /* ==== 0x0100AC0C  (file offset 0x0AC0C)  FUN_0100ac0c ================================================ */
@@ -10991,72 +10943,59 @@ void FUN_0100ac0c(int param_1)
 }
 
 /* ==== 0x0100B18C  (file offset 0x0B18C)  swv_SpanFillGouraud ========================================= */
-void swv_SpanFillGouraud(int param_1)
+/* GUESS: name. The rasteriser's span routine for untextured, Gouraud-shaded, opaque triangles: red,
+   green, blue (+0x38 / +0x3c / +0x40, 16.16, 1.0 = 0x10000) interpolated (steps +0x68 .. +0x70,
+   re-read for each pixel), each with the 2x2 dither offset ((y & 1) + 1 ^ (x & 1) << 1, flipped by ^ 2
+   a pixel) and clamped to RGB565; depth tested like swv_SpanFillFlatDithered (its flat-shaded
+   sibling: the z-buffer's word >= depth >> 12, signed; then both are written). Like the binary it
+   always does the first pixel, whatever the count. Profiled region 0x0100B1B8-0x0100B2A0 is its loop
+   (tools/profile_state.py). Evidence: 0x0100b18c - 0x0100b27c (`eor r12, r2, r3, lsl #1` the dither,
+   `ldmia r9, {r7, r8, r9}` the colour, `cmp r1, r4, asr #0xc` / `blt`, `add r1, r12, r7, asr #9` /
+   `asr #2` (green `asr #8`), the `movlt` / `movgt` clamps, `sub r5, r5, #1` / `ldmiale`, the steps). */
+void swv_SpanFillGouraud(uint8 *raster)
 
 {
-  uint uVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  int iVar5;
-  int iVar6;
-  ushort *puVar7;
-  int iVar8;
-  int iVar9;
-  int iVar10;
-  uint uVar11;
-  ushort *puVar12;
-  
-                    /* Untextured, Gouraud-shaded span fill: red, green, blue interpolated (+0x38,
-                       +0x3c, +0x40), each with the 2x2 dither offset and clamped to RGB565, depth
-                       tested like swv_SpanFillFlatDithered (its flat-shaded sibling); profiled region
-                       0x0100B1B8-0x0100B2A0 is its loop (tools/profile_state.py). */
-  iVar5 = *(int *)(param_1 + 0x1c);
-  uVar1 = *(uint *)(param_1 + 0x10);
-  uVar11 = (*(uint *)(param_1 + 4) & 1) + 1 ^ (uVar1 & 1) << 1;
-  puVar7 = (ushort *)(*(int *)(param_1 + 8) + uVar1 * 2);
-  puVar12 = (ushort *)(*(int *)(param_1 + 0xc) + uVar1 * 2);
-  iVar8 = *(int *)(param_1 + 0x38);
-  iVar9 = *(int *)(param_1 + 0x3c);
-  iVar10 = *(int *)(param_1 + 0x40);
-  iVar6 = *(int *)(param_1 + 0xdc) - uVar1;
-  while( true ) {
-    if (iVar5 >> 0xc <= (int)(uint)*puVar12) {
-      *puVar12 = (ushort)(iVar5 >> 0xc);
-      iVar2 = (int)(uVar11 + (iVar8 >> 9)) >> 2;
-      iVar4 = (int)(uVar11 + (iVar10 >> 9)) >> 2;
-      iVar3 = (int)(uVar11 + (iVar9 >> 8)) >> 2;
-      if (iVar2 < 0) {
-        iVar2 = 0;
-      }
-      else if (0x1f < iVar2) {
-        iVar2 = 0x1f;
-      }
-      if (iVar3 < 0) {
-        iVar3 = 0;
-      }
-      else if (0x3f < iVar3) {
-        iVar3 = 0x3f;
-      }
-      if (iVar4 < 0) {
-        iVar4 = 0;
-      }
-      else if (0x1f < iVar4) {
-        iVar4 = 0x1f;
-      }
-      *puVar7 = (ushort)(iVar2 << 0xb) | (ushort)(iVar3 << 5) | (ushort)iVar4;
+  uint32 x = *(uint32 *)(raster + 0x10);
+  uint32 dither = ((*(uint32 *)(raster + 0x04) & 1) + 1) ^ (x & 1) << 1;
+  uint16 *pixel = *(uint16 **)(raster + 0x08) + x;
+  uint16 *depth = *(uint16 **)(raster + 0x0c) + x;
+  int32 red = *(int32 *)(raster + 0x38);
+  int32 green = *(int32 *)(raster + 0x3c);
+  int32 blue = *(int32 *)(raster + 0x40);
+  int32 count = *(int32 *)(raster + 0xdc) - (int32)x;
+  int32 z = *(int32 *)(raster + 0x1c);
+
+  for (;;) {
+    if ((int32)*depth >= z >> 12) {
+      int32 r = (int32)(dither + (uint32)(red >> 9)) >> 2;
+      int32 g = (int32)(dither + (uint32)(green >> 8)) >> 2;
+      int32 b = (int32)(dither + (uint32)(blue >> 9)) >> 2;
+
+      *depth = (uint16)(z >> 12);
+      if (r < 0)
+        r = 0;
+      else if (r > 0x1f)
+        r = 0x1f;
+      if (g < 0)
+        g = 0;
+      else if (g > 0x3f)
+        g = 0x3f;
+      if (b < 0)
+        b = 0;
+      else if (b > 0x1f)
+        b = 0x1f;
+      *pixel = (uint16)(r << 11 | g << 5 | b);
     }
-    iVar6 = iVar6 + -1;
-    if (iVar6 < 1) break;
-    puVar12 = puVar12 + 1;
-    uVar11 = uVar11 ^ 2;
-    puVar7 = puVar7 + 1;
-    iVar5 = *(int *)(param_1 + 0x4c) + iVar5;
-    iVar8 = *(int *)(param_1 + 0x68) + iVar8;
-    iVar9 = *(int *)(param_1 + 0x6c) + iVar9;
-    iVar10 = *(int *)(param_1 + 0x70) + iVar10;
+    if (--count <= 0)
+      break;
+    depth++;
+    dither ^= 2;
+    pixel++;
+    z += *(int32 *)(raster + 0x4c);
+    red += *(int32 *)(raster + 0x68);
+    green += *(int32 *)(raster + 0x6c);
+    blue += *(int32 *)(raster + 0x70);
   }
-  return;
 }
 
 /* ==== 0x0100B280  (file offset 0x0B280)  FUN_0100b280 ================================================ */
@@ -14080,13 +14019,15 @@ void FUN_0100f450(undefined4 param_1,int param_2,undefined4 param_3,undefined4 *
 /* GUESS: name. The renderer's slot +0x2c (its vtable 0x01002398, set by its constructor FUN_01028d2c):
    returns 2 (GUESS: the renderer's kind; what the 2 means is not known). Written from its disassembly
    (0x0100f4d4 - 0x0100f4d8: `mov r0, #2` / `bx lr`, the bytes 02 00 a0 e3 1e ff 2f e1), which Ghidra
-   had left undisassembled (its function was then created by hand). param_1 (the renderer) is not
-   read. Other classes' slot +0x2c is another
-   method: the callers compare it with 5 (a camera), 9, 0x18, or take it as a pointer. */
-int32 swvRenderer_Kind(int param_1)
+   had left undisassembled (its function was then created by hand). renderer (r0) is not read. Other
+   classes' slot +0x2c is another method: the callers compare it with 5 (a camera), 9, 0x18, or take it
+   as a pointer. */
+int32 swvRenderer_Kind(const uint8 *renderer)
 
 {
-  return 2;
+  int32 kind = 2;
+
+  return kind;
 }
 
 /* ==== 0x0100F4DC  (file offset 0x0F4DC)  FUN_0100f4dc ================================================ */
@@ -29026,65 +28967,43 @@ void FUN_01020290(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
                  undefined4 param_5)
 
 {
-  swv_Graphics3D_bindTarget(param_1,param_2,param_3,param_4,param_5,0,0,param_2,param_3);
+  swv_Graphics3D_bindTarget((uint8 *)param_1,param_2,param_3,param_4,(void *)param_5,0,0,param_2,param_3);
   return;
 }
 
 /* ==== 0x010202E4  (file offset 0x202E4)  swv_Graphics3D_bindTarget =================================== */
-void swv_Graphics3D_bindTarget
-               (int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
-               undefined4 param_5,undefined4 param_6,undefined4 param_7,undefined4 param_8,
-               undefined4 param_9)
+/* Native Graphics3D bindTarget, called by IGraphics3D_BindTarget (0x0102ff38) with the target's cx, cy,
+   pitch, pixels and viewport, and by FUN_01020290 (the viewport the whole target). GUESS: name from
+   JSR-184 and the arguments. Sets the target's rectangle (+0x0c / +0x10 = 0, +0x14 / +0x18 the width
+   and height), +0x1c the pitch, +0x20 the pixels, and +0x84, +0x88, +0x8c, +0x90 = 0 (no alpha plane;
+   FUN_0102035c sets them for an Image2D); then FUN_01020b64(x, y, dx, dy) and FUN_0101d864 (a tail
+   jump; Ghidra had pasted its code in: the viewport's width and height clamped to 1 .. 1024, then
+   FUN_01021a78 and FUN_01023bc8). Differs from 1.1 (Graphics3D.bindTarget): the target is a raw RGB565
+   bitmap, not a Graphics; the clip (FUN_01020b64) and the viewport are the x, y, dx, dy given (the
+   spec: the target's clipping rectangle), the viewport's width and height clamped to 1 .. 1024 where
+   the spec throws -1301 (IllegalArgumentException) above maxViewportWidth / maxViewportHeight; no
+   -1300 (IllegalStateException) when a target is already bound. Evidence: 0x010202e4 - 0x01020358
+   (`stmib sp, {r0, r1, r2}` / `ldmia sp, {r1, r2, r3, r12}` / `stmia r9, ...` the rectangle, the `str`s
+   of +0x84 .. +0x90, `str r7, [sp]` / `bl 0x01020b64` with r1 x, r2 y, r3 dx and dy on the stack, `mov
+   r0, r4` / `b 0x0101d864`). */
+void swv_Graphics3D_bindTarget(uint8 *graphics,int32 width,int32 height,int32 pitch,void *pixels,int32 x,
+                               int32 y,int32 dx,int32 dy)
 
 {
-  undefined4 unaff_r4;
-  int iVar1;
-  undefined4 unaff_r5;
-  int iVar2;
-  undefined4 unaff_r6;
-  undefined4 in_lr;
-  
-                    /* Native Graphics3D bindTarget, called by IGraphics3D_BindTarget (0x0102ff38) with
-                       the target's cx, cy, pitch, pixels and viewport. GUESS: name from JSR-184 and the
-                       arguments. Differs from 1.1 (Graphics3D.bindTarget): the target is a raw RGB565
-                       bitmap, not a Graphics; the clip (FUN_01020b64) and the viewport are the x, y, dx,
-                       dy given (the spec: the target's clipping rectangle), the viewport's width and
-                       height clamped to 1 .. 1024 where the spec throws -1301 (IllegalArgumentException)
-                       above maxViewportWidth / maxViewportHeight; no -1300 (IllegalStateException) when
-                       a target is already bound. */
-  *(undefined4 *)(param_1 + 0xc) = 0;
-  *(undefined4 *)(param_1 + 0x10) = 0;
-  *(undefined4 *)(param_1 + 0x14) = param_2;
-  *(undefined4 *)(param_1 + 0x18) = param_3;
-  *(undefined4 *)(param_1 + 0x84) = 0;
-  *(undefined4 *)(param_1 + 0x20) = param_5;
-  *(undefined4 *)(param_1 + 0x1c) = param_4;
-  *(undefined4 *)(param_1 + 0x88) = 0;
-  *(undefined4 *)(param_1 + 0x8c) = 0;
-  *(undefined4 *)(param_1 + 0x90) = 0;
-  FUN_01020b64(param_1,param_6,param_7,param_8,param_9);
-  iVar1 = *(int *)(param_1 + 0x2c);
-  iVar2 = *(int *)(param_1 + 0x30);
-  if (iVar1 < 0x401) {
-    if (iVar1 < 1) {
-      iVar1 = 1;
-    }
-  }
-  else {
-    iVar1 = 0x400;
-  }
-  if (iVar2 < 0x401) {
-    if (iVar2 < 1) {
-      iVar2 = 1;
-    }
-  }
-  else {
-    iVar2 = 0x400;
-  }
-  FUN_01021a78(param_1,1,0);
-  FUN_01023bc8(param_1,*(undefined4 *)(param_1 + 0x24),*(undefined4 *)(param_1 + 0x28),iVar1,iVar2,
-               param_8,unaff_r4,unaff_r5,unaff_r6,in_lr);
-  return;
+  int32 *target = (int32 *)(graphics + 0x0c);
+
+  target[0] = 0;
+  target[1] = 0;
+  target[2] = width;
+  target[3] = height;
+  *(int32 *)(graphics + 0x84) = 0;
+  *(void **)(graphics + 0x20) = pixels;
+  *(int32 *)(graphics + 0x1c) = pitch;
+  *(int32 *)(graphics + 0x88) = 0;
+  *(int32 *)(graphics + 0x8c) = 0;
+  *(int32 *)(graphics + 0x90) = 0;
+  FUN_01020b64((int)graphics,(undefined4)x,(undefined4)y,(undefined4)dx,(undefined4)dy);
+  FUN_0101d864((int)graphics);   /* the binary: a tail jump */
 }
 
 /* ==== 0x0102035C  (file offset 0x2035C)  FUN_0102035c ================================================ */
@@ -30346,74 +30265,44 @@ void FUN_01021a78(int param_1,undefined4 param_2,int param_3)
 }
 
 /* ==== 0x01021ABC  (file offset 0x21ABC)  swvTexture2D_SetImage ======================================= */
-/* (not yet rewritten) JSR-184 1.1, Texture2D.setImage(image), on the texture param_1: the image (param_2)
-   swapped in at +0x2c with the counts of references kept (FUN_01004848, on the objects' +4 parts); then
-   error -1301 (IllegalArgumentException; a tail jump to FUN_0102f7e0) unless its width and its height (the
-   image's vtable +0x24 / +0x28, each asked twice) are powers of two (swv_IsPowerOfTwo) up to 1024 (the
-   implementation's maximum; GUESS: getProperties' maxTextureDimension, swvGraphics3D_Property 7 - 9). A
-   NULL image (-1302, NullPointerException) is refused by its callers, the Texture2D slots FUN_0103b57c
-   (33) and FUN_0103b3ec (31, through thunk_swvTexture2D_SetImage), before they call it. GUESS, a latent
-   engine bug: the image is stored before it is checked, so a texture keeps an image it refused.
-   thunk_swvTexture2D_SetImage (0x01008064) is a jump here; Ghidra repeated the code there, and followed
-   the tail jump into FUN_0102f7e0's code at the end. */
-void swvTexture2D_SetImage(int param_1,int param_2)
+/* JSR-184 1.1, Texture2D.setImage(image), on the native texture: the image swapped in at +0x2c with
+   the counts of references kept (FUN_01004848, on the objects' +4 parts); then error -1301
+   (IllegalArgumentException; a tail jump to FUN_0102f7e0, which does not return) unless its width and
+   its height (the image's vtable +0x24 / +0x28, each asked twice) are powers of two (swv_IsPowerOfTwo)
+   up to 1024 (the implementation's maximum; GUESS: getProperties' maxTextureDimension,
+   swvGraphics3D_Property 7 - 9). A NULL image (-1302, NullPointerException) is refused by its callers,
+   the Texture2D slots FUN_0103b57c (33) and FUN_0103b3ec (31, through thunk_swvTexture2D_SetImage),
+   before they call it. GUESS, a latent engine bug: the image is stored before it is checked, so a
+   texture keeps an image it refused. thunk_swvTexture2D_SetImage (0x01008064) is a jump here; Ghidra
+   repeated the code there. The image's vtable is not among the static engine ones (its +0x24 / +0x28
+   are GUESS getWidth / getHeight). Evidence: 0x01021abc - 0x01021b64 (`addne r1, r1, #4` / `addne r0,
+   r0, #4` / `bl 0x01004848` / `subne r0, r0, #4` / `str r0, [r4, #0x2c]`; each `blx r1` with r0 the
+   image, its result to `bl 0x01013af8` or `cmp r0, #0x400`; `ldmiale sp!, {r4, pc}`, else `b
+   0x0102f7e0`; Ghidra had dropped the receivers and followed the tail jump into FUN_0102f7e0's code). */
+void swvTexture2D_SetImage(uint8 *texture,uint8 *image)
 
 {
-  int iVar1;
-  int *piVar2;
-  void *pvVar3;
-  undefined4 uVar4;
-  
-  iVar1 = *(int *)(param_1 + 0x2c);
-  if (param_2 != 0) {
-    param_2 = param_2 + 4;
-  }
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + 4;
-  }
-  piVar2 = (int *)FUN_01004848(iVar1,param_2);
-  if (piVar2 != (int *)0x0) {
-    piVar2 = piVar2 + -1;
-  }
-  *(int **)(param_1 + 0x2c) = piVar2;
-  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
-     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
-     not static), so for one the method is not known here */
-  /* the image (the receiver) and the width restored: Ghidra had dropped them */
-  iVar1 = (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))(piVar2);
-  iVar1 = swv_IsPowerOfTwo(iVar1);
-  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
-     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
-     not static), so for one the method is not known here */
-  if ((iVar1 != 0) &&
-     (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x24) + **(int **)(param_1 + 0x2c)))
-                        (*(int **)(param_1 + 0x2c)), iVar1 < 0x401)) {
-    /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
-       FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
-       method is not known here */
-    /* the image (the receiver) and the height restored: Ghidra had dropped them */
-    iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) +
-                        **(int **)(param_1 + 0x2c)))(*(int **)(param_1 + 0x2c));
-    iVar1 = swv_IsPowerOfTwo(iVar1);
-    if ((iVar1 != 0) &&
-       (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) + **(int **)(param_1 + 0x2c))
-                )(*(int **)(param_1 + 0x2c)), iVar1 < 0x401)) {
-      return;
-    }
-  }
-  uVar4 = INTEGER_MINUS_1301;
-  iVar1 = FUN_0100f7d0();
-  FUN_01013bcc(*(undefined4 *)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),uVar4);
-  if (*(int *)(iVar1 + 0x14) != 0) {
-    FUN_01013bcc(*(undefined4 *)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),uVar4);
-  }
-  pvVar3 = helper_GetAppInstance();
-  uVar4 = *(undefined4 *)((int)pvVar3 + 0xc);
-  pvVar3 = helper_GetAppInstance();
-                    /* WARNING: Could not recover jumptable at 0x010398cc. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (*((IShell *)*(int **)((int)pvVar3 + 0xc))->pvt->CloseApplet)((IShell *)uVar4,0);
-  return;
+  uint8 *previous = *(uint8 **)(texture + 0x2c);
+  uint8 *held;
+  int32 vtable;
+
+  if (image != NULL)
+    image += 4;
+  if (previous != NULL)
+    previous += 4;
+  held = (uint8 *)FUN_01004848((int)previous,(int)image);
+  if (held != NULL)
+    held -= 4;
+  *(uint8 **)(texture + 0x2c) = held;
+  vtable = *(int32 *)held;
+  if (swv_IsPowerOfTwo((*(code *)(*(int32 *)(vtable + 0x24) + vtable))(held)) == 0
+      || (held = *(uint8 **)(texture + 0x2c), vtable = *(int32 *)held,
+          (*(code *)(*(int32 *)(vtable + 0x24) + vtable))(held) > 0x400)
+      || (held = *(uint8 **)(texture + 0x2c), vtable = *(int32 *)held,
+          swv_IsPowerOfTwo((*(code *)(*(int32 *)(vtable + 0x28) + vtable))(held)) == 0)
+      || (held = *(uint8 **)(texture + 0x2c), vtable = *(int32 *)held,
+          (*(code *)(*(int32 *)(vtable + 0x28) + vtable))(held) > 0x400))
+    FUN_0102f7e0(INTEGER_MINUS_1301);   /* the binary: a tail jump */
 }
 
 /* ==== 0x01021B6C  (file offset 0x21B6C)  FUN_01021b6c ================================================ */
@@ -32923,74 +32812,47 @@ void FUN_01023d00(int param_1)
 }
 
 /* ==== 0x01023D30  (file offset 0x23D30)  swvImage2D_SetValue ========================================= */
-/* (not yet rewritten) JSR-184 1.1, Image2D.set(x, y, width, height, image) on the native Image2D param_1
-   (param_2 - param_5; param_6 the pixel bytes, param_7 the pixels); its BREW-facing caller swvImage2D_Set
-   (Image2D slot 29) first refuses x < 0, y < 0, width <= 0 and height <= 0 (-1301) and NULL pixels
-   (-1302). Here error -1301 (IllegalArgumentException) unless the rectangle is inside the image (+0x34 /
-   +0x38), not empty, and param_6 holds swvImage2D_BytesPerPixel * width * height bytes; then -1300
-   (IllegalStateException) when the image is not mutable (+0x44); then each pixel converted by
-   FUN_01025bc4 into the 16-bit colour plane (the data +0x20 at +0x30, row pitch the width) and the alpha
-   plane (swvImage2D_AlphaPlane). */
-void swvImage2D_SetValue(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6,
-                 int param_7)
+/* JSR-184 1.1, Image2D.set(x, y, width, height, image) on the native Image2D image (size the bytes of
+   pixels); its BREW-facing caller swvImage2D_Set (Image2D slot 29) first refuses x < 0, y < 0, width <=
+   0 and height <= 0 (-1301) and NULL pixels (-1302). Here error -1301 (IllegalArgumentException;
+   FUN_0102f7e0, which does not return) unless the rectangle is inside the image (+0x34 / +0x38; signed
+   compares of the wrapped sums), not empty, and size holds at least swvImage2D_BytesPerPixel * width *
+   height bytes; then -1300 (IllegalStateException) when the image is not mutable (+0x44); then each
+   pixel converted by FUN_01025bc4 into the 16-bit colour plane (the data +0x20 at +0x30, row pitch the
+   width) and the alpha plane (swvImage2D_AlphaPlane). Evidence: 0x01023d30 - 0x01023e38 (`ldr r0, [r0,
+   #0x40]` / `bl 0x01011ab8`, Ghidra had dropped the format; `cmp r4, #0` / `cmpge r9, #0` / `ble`, `add
+   r0, r4, r9` / `cmp r0, r1` / `bgt`, the same for y, `mulle` / `mulle` / `cmple r0, r8` / `ble`, `mla
+   r2, r0, r7, r4`, the loops `cmp r4, r9` / `blt` and `cmp r10, r0` / `blt`). Callers: swvImage2D_Set
+   and FUN_01023e44. */
+void swvImage2D_SetValue(uint8 *image,int32 x,int32 y,int32 width,int32 height,int32 size,
+                         const uint8 *pixels)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  int iVar5;
-  int iVar6;
-  bool bVar7;
-  bool bVar8;
-  
-  uVar1 = *(undefined4 *)(param_1 + 0x40);
-  iVar2 = swvImage2D_BytesPerPixel((int32)uVar1);   /* Ghidra had dropped it (the format, +0x40) */
-  iVar4 = param_2;
-  if (-1 < param_2) {
-    iVar4 = param_4;
-  }
-  if ((iVar4 != 0 && (-1 < param_2 && -1 < param_4)) &&
-     (param_2 + param_4 <= *(int *)(param_1 + 0x34))) {
-    iVar4 = param_3;
-    iVar3 = param_2 + param_4;
-    if (-1 < param_3) {
-      iVar4 = param_5;
-      iVar3 = param_5;
-    }
-    if (iVar4 != 0 && (-1 < param_3 && -1 < iVar3)) {
-      iVar5 = *(int *)(param_1 + 0x38);
-      iVar3 = param_3 + param_5;
-      bVar8 = SBORROW4(iVar3,iVar5);
-      iVar4 = iVar3 - iVar5;
-      bVar7 = iVar3 == iVar5;
-      if (iVar3 <= iVar5) {
-        iVar3 = iVar2 * param_5 * param_4;
-        bVar8 = SBORROW4(iVar3,param_6);
-        iVar4 = iVar3 - param_6;
-        bVar7 = iVar3 == param_6;
-      }
-      if (bVar7 || iVar4 < 0 != bVar8) goto LAB_01023db4;
-    }
-  }
-  FUN_0102f7e0(INTEGER_MINUS_1301);
-LAB_01023db4:
-  if (*(int *)(param_1 + 0x44) == 0) {
+  int32 format = *(int32 *)(image + 0x40);
+  int32 bytesPerPixel = swvImage2D_BytesPerPixel(format);
+  int32 offset;
+  uint8 *colour;
+  uint8 *alpha;
+  int32 row;
+  int32 column;
+
+  if (x < 0 || width <= 0 || (int32)((uint32)x + (uint32)width) > *(int32 *)(image + 0x34) || y < 0
+      || height <= 0 || (int32)((uint32)y + (uint32)height) > *(int32 *)(image + 0x38)
+      || (int32)((uint32)bytesPerPixel * ((uint32)height * (uint32)width)) > size)
+    FUN_0102f7e0(INTEGER_MINUS_1301);
+  if (*(int32 *)(image + 0x44) == 0)
     FUN_0102f7e0(INTEGER_MINUS_1300);
-  }
-  param_2 = *(int *)(param_1 + 0x34) * param_3 + param_2;
-  iVar3 = *(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30) + param_2 * 2;
-  iVar4 = (int)swvImage2D_AlphaPlane((uint8 *)param_1);
-  iVar4 = iVar4 + param_2;
-  for (iVar5 = 0; iVar5 < param_5; iVar5 = iVar5 + 1) {
-    for (iVar6 = 0; iVar6 < param_4; iVar6 = iVar6 + 1) {
-      FUN_01025bc4(param_7,uVar1,iVar3 + iVar6 * 2,iVar4 + iVar6);
-      param_7 = param_7 + iVar2;
+  offset = *(int32 *)(image + 0x34) * y + x;
+  colour = *(uint8 **)(image + 0x20) + *(int32 *)(image + 0x30) + offset * 2;
+  alpha = swvImage2D_AlphaPlane(image) + offset;
+  for (row = 0; row < height; row++) {
+    for (column = 0; column < width; column++) {
+      FUN_01025bc4((byte *)pixels,(undefined4)format,(ushort *)(colour + column * 2),alpha + column);
+      pixels += bytesPerPixel;
     }
-    iVar3 = iVar3 + *(int *)(param_1 + 0x34) * 2;
-    iVar4 = *(int *)(param_1 + 0x34) + iVar4;
+    colour += *(int32 *)(image + 0x34) * 2;
+    alpha += *(int32 *)(image + 0x34);
   }
-  return;
 }
 
 /* ==== 0x01023E44  (file offset 0x23E44)  FUN_01023e44 ================================================ */
@@ -33013,7 +32875,7 @@ FUN_01023e44(int param_1,int param_2,int param_3,int param_4,int param_5,int par
   int iVar6;
   
   /* Ghidra had dropped four arguments: the call passes on all seven (0x01023e54 - 0x01023e74) */
-  swvImage2D_SetValue(param_1,param_2,param_3,param_4,param_5,param_6,param_7);
+  swvImage2D_SetValue((uint8 *)param_1,param_2,param_3,param_4,param_5,param_6,(const uint8 *)param_7);
   iVar1 = swvImage2D_BytesPerPixel(*(undefined4 *)(param_1 + 0x40));
   iVar4 = (iVar1 + 2) * param_5 * param_4;
   if (iVar4 - param_6 != 0 && param_6 <= iVar4) {
@@ -44422,43 +44284,34 @@ undefined4 FUN_0102feb8(int param_1,int param_2,int param_3)
 }
 
 /* ==== 0x0102FF38  (file offset 0x2FF38)  IGraphics3D_BindTarget ====================================== */
+/* Graphics3D interface slot 8 (+0x20): BindTarget(po, cx, cy, nPitch, pBits, x, y, dx, dy) inside an
+   error frame, forwarding to swv_Graphics3D_bindTarget on the native object (po->pNative, +4, less 4);
+   returns 0, or on an error its result code (swv_ErrorToResult). kh_OnAppStart calls it with the screen
+   IDIB. GUESS: name (JSR-184 1.1, Graphics3D.bindTarget, for a raw bitmap; how it differs from 1.1 is
+   at swv_Graphics3D_bindTarget). Evidence: 0x0102ff38 - 0x0102ffb4 (r0 - r3 pushed, `ldmia r9, {r5 -
+   r9}` the five stack arguments, `stmia sp, {r5 - r9}` / `bl 0x010202e4` with r1 cx, r2 cy, r3
+   nPitch, r4 the result). */
 int IGraphics3D_BindTarget
               (IGraphics3D *po,uint16 cx,uint16 cy,int nPitch,void *pBits,int x,int y,int dx,int dy)
 
 {
-  int iVar1;
-  void *pvVar2;
-  int iVar3;
-  undefined1 auStack_bc [136];
-  IGraphics3D *local_34;
-  uint local_30;
-  uint uStack_2c;
-  int iStack_28;
-  
-                    /* Graphics3D interface slot 8 (+0x20): BindTarget(po, cx, cy, nPitch, pBits, x, y,
-                       dx, dy) inside an error frame, forwarding to swv_Graphics3D_bindTarget on the
-                       native object (wrapper +4, minus 4). kh_OnAppStart calls it with the screen IDIB.
-                       GUESS: name (JSR-184 1.1, Graphics3D.bindTarget, for a raw bitmap; how it differs
-                       from 1.1 is at swv_Graphics3D_bindTarget). */
-  local_30 = (uint)cx;
-  iVar3 = 0;
-  local_34 = po;
-  uStack_2c = (uint)cy;
-  iStack_28 = nPitch;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_bc));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_bc);
-    pvVar2 = local_34->pNative;
-    if (pvVar2 != (void *)0x0) {
-      pvVar2 = (void *)((int)pvVar2 + -4);
-    }
-    swv_Graphics3D_bindTarget(pvVar2,local_30,(uint)cy,nPitch,pBits,x,y,dx,dy);
+  int result = 0;
+  int32 error;
+  uint8 frame[136];
+  uint8 *graphics;
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    graphics = (uint8 *)po->pNative;
+    if (graphics != NULL)
+      graphics -= 4;
+    swv_Graphics3D_bindTarget(graphics,cx,cy,nPitch,pBits,x,y,dx,dy);
     swv_TryPop();
   }
-  else {
-    iVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar3;
+  else
+    result = (int)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x0102FFB8  (file offset 0x2FFB8)  FUN_0102ffb8 ================================================ */
@@ -45226,23 +45079,18 @@ void FUN_01030b10(int param_1,int *param_2)
 }
 
 /* ==== 0x01030B38  (file offset 0x30B38)  swvImage2D_GetPixels ======================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 25 (+0x64) of Image2D (swv_InitVtbl_Image2D's
-   pVtbl[0x19]; a Swerve extension: JSR-184 1.1's Image2D has no such method, only getFormat, getWidth,
-   getHeight, isMutable and set): *param_2 = swvImage2D_Pixels of the native object (po->pNative, +4,
-   less 4). */
-void swvImage2D_GetPixels(int param_1,undefined4 *param_2)
+/* GUESS: name. ISwerveObject slot 25 (+0x64) of Image2D (swv_InitVtbl_Image2D's pVtbl[0x19]; a Swerve
+   extension: JSR-184 1.1's Image2D has no such method, only getFormat, getWidth, getHeight, isMutable
+   and set): *pPixels = swvImage2D_Pixels of the native object (po->pNative, +4, less 4). Evidence:
+   0x01030b38 - 0x01030b54 (`ldr r0, [r0, #4]` / `subne r0, r0, #4`, `bl 0x01010084`, `str r0, [r4]`). */
+void swvImage2D_GetPixels(ISwerveObject *po,void **pPixels)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  uVar2 = (undefined4)swvImage2D_Pixels((uint8 *)iVar1);
-  *param_2 = uVar2;
-  return;
+  uint8 *image = (uint8 *)po->pNative;
+
+  if (image != NULL)
+    image -= 4;
+  *pPixels = swvImage2D_Pixels(image);
 }
 
 /* ==== 0x01030B58  (file offset 0x30B58)  FUN_01030b58 ================================================ */
@@ -45289,43 +45137,44 @@ void swv_InitVtbl_Image2D(void **pVtbl)
 }
 
 /* ==== 0x01030C54  (file offset 0x30C54)  swvImage2D_InitFromPixels =================================== */
-undefined4
-swvImage2D_InitFromPixels(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,int param_6)
+/* GUESS: name. ISwerveObject slot 18 (+0x48) of Image2D (swv_InitVtbl_Image2D's pVtbl[0x12]; JSR-184
+   1.1, Image2D(format, width, height, image)): in an error frame, error -1301 (IllegalArgumentException;
+   FUN_0102f7e0, which does not return) unless 0x60 <= format <= 0x64 (ALPHA, LUMINANCE,
+   LUMINANCE_ALPHA, RGB, RGBA), width > 0 and height > 0; -1302 (NullPointerException) for NULL pixels;
+   then FUN_01007d70 builds the native object (po->pNative, +4, less 4) from the size bytes of pixels;
+   returns 0, or on an error its result code (swv_ErrorToResult). Evidence: 0x01030c54 - 0x01030d08 (r10
+   / r9 the stack arguments size and pixels, `sub r0, r4, #0x60` / `cmp r0, #4` / `blhi`, `cmp r5, #0`
+   / `blle`, `cmp r6, #0` / `blle`, `cmp r9, #0` / `bleq`, `bl 0x01007d70` with the six, r7 the
+   result). */
+int32 swvImage2D_InitFromPixels(ISwerveObject *po,int32 format,int32 width,int32 height,int32 size,
+                                const uint8 *pixels)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  undefined4 uVar3;
-  undefined1 auStack_ac [136];
-  
-  uVar3 = 0;
-  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_ac));   /* Ghidra had dropped it */
-  if (iVar2 == 0) {
-    swv_TryArm(auStack_ac);
-    uVar1 = INTEGER_MINUS_1301;
-    if (4 < param_2 - 0x60U) {
+  int32 result = 0;
+  int32 error;
+  uint8 frame[136];
+  uint8 *image;
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    if ((uint32)format - 0x60 > 4)
       FUN_0102f7e0(INTEGER_MINUS_1301);
-    }
-    if (param_3 < 1) {
-      FUN_0102f7e0(uVar1);
-    }
-    if (param_4 < 1) {
-      FUN_0102f7e0(uVar1);
-    }
-    if (param_6 == 0) {
+    if (width < 1)
+      FUN_0102f7e0(INTEGER_MINUS_1301);
+    if (height < 1)
+      FUN_0102f7e0(INTEGER_MINUS_1301);
+    if (pixels == NULL)
       FUN_0102f7e0(INTEGER_MINUS_1302);
-    }
-    iVar2 = *(int *)(param_1 + 4);
-    if (iVar2 != 0) {
-      iVar2 = iVar2 + -4;
-    }
-    FUN_01007d70(iVar2,param_2,param_3,param_4,param_5,param_6);
+    image = (uint8 *)po->pNative;
+    if (image != NULL)
+      image -= 4;
+    FUN_01007d70((int)image,(undefined4)format,(uint)width,(uint)height,size,(int)pixels);
     swv_TryPop();
   }
-  else {
-    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
-  }
-  return uVar3;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x01030D14  (file offset 0x30D14)  FUN_01030d14 ================================================ */
@@ -45365,56 +45214,48 @@ undefined4 FUN_01030d14(int param_1,int param_2,int param_3,int param_4)
 }
 
 /* ==== 0x01030DBC  (file offset 0x30DBC)  swvImage2D_InitFromPalette ================================== */
-undefined4
-swvImage2D_InitFromPalette(int param_1,int param_2,int param_3,int param_4,undefined4 param_5,int param_6,
-            undefined4 param_7,int param_8)
+/* GUESS: name. ISwerveObject slot 19 (+0x4c) of Image2D (swv_InitVtbl_Image2D's pVtbl[0x13]; JSR-184
+   1.1, Image2D(format, width, height, image, palette)): in an error frame, error -1301
+   (IllegalArgumentException; FUN_0102f7e0, which does not return) unless 0x60 <= format <= 0x64, width
+   > 0 and height > 0; -1302 (NullPointerException) for NULL indices or a NULL palette; then
+   FUN_01007e30 builds the native object (po->pNative, +4, less 4) from the indexSize bytes of indices
+   and the paletteSize bytes of palette; returns 0, or on an error its result code (swv_ErrorToResult).
+   Evidence: 0x01030dbc - 0x01030e8c (r0 - r3 pushed, the stack arguments at sp + 0xd0 .. 0xdc: indexSize,
+   indices r7, paletteSize r10, palette r8; the format, width and height `blhi` / `blle` checks, `cmp r7,
+   #0` / `bleq`, `cmp r8, #0` / `bleq`, `stmia sp, {r0, r7, r10}` / `str r8, [sp, #0xc]` / `bl
+   0x01007e30`, r9 the result). */
+int32 swvImage2D_InitFromPalette(ISwerveObject *po,int32 format,int32 width,int32 height,int32 indexSize,
+                                 const uint8 *indices,int32 paletteSize,const uint8 *palette)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  undefined4 uVar3;
-  undefined1 auStack_bc [136];
-  int local_34;
-  int iStack_30;
-  int iStack_2c;
-  int iStack_28;
-  
-  uVar3 = 0;
-  local_34 = param_1;
-  iStack_30 = param_2;
-  iStack_2c = param_3;
-  iStack_28 = param_4;
-  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_bc));   /* Ghidra had dropped it */
-  if (iVar2 == 0) {
-    swv_TryArm(auStack_bc);
-    uVar1 = INTEGER_MINUS_1301;
-    if (4 < param_2 - 0x60U) {
+  int32 result = 0;
+  int32 error;
+  uint8 frame[136];
+  uint8 *image;
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    if ((uint32)format - 0x60 > 4)
       FUN_0102f7e0(INTEGER_MINUS_1301);
-    }
-    if (param_3 < 1) {
-      FUN_0102f7e0(uVar1);
-    }
-    if (param_4 < 1) {
-      FUN_0102f7e0(uVar1);
-    }
-    uVar1 = INTEGER_MINUS_1302;
-    if (param_6 == 0) {
+    if (width < 1)
+      FUN_0102f7e0(INTEGER_MINUS_1301);
+    if (height < 1)
+      FUN_0102f7e0(INTEGER_MINUS_1301);
+    if (indices == NULL)
       FUN_0102f7e0(INTEGER_MINUS_1302);
-    }
-    if (param_8 == 0) {
-      FUN_0102f7e0(uVar1);
-    }
-    iVar2 = *(int *)(local_34 + 4);
-    if (iVar2 != 0) {
-      iVar2 = iVar2 + -4;
-    }
-    FUN_01007e30(iVar2,param_2,param_3,param_4,param_5,param_6,param_7,param_8);
+    if (palette == NULL)
+      FUN_0102f7e0(INTEGER_MINUS_1302);
+    image = (uint8 *)po->pNative;
+    if (image != NULL)
+      image -= 4;
+    FUN_01007e30((int)image,(undefined4)format,(uint)width,(uint)height,indexSize,(undefined4)indices,
+                 paletteSize,(int)palette);
     swv_TryPop();
   }
-  else {
-    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
-  }
-  return uVar3;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x01030E98  (file offset 0x30E98)  FUN_01030e98 ================================================ */
@@ -45468,47 +45309,45 @@ void FUN_01030f48(int param_1,undefined1 *param_2)
 }
 
 /* ==== 0x01030F60  (file offset 0x30F60)  swvImage2D_Set ============================================== */
-undefined4
-swvImage2D_Set(int param_1,int param_2,int param_3,int param_4,int param_5,undefined4 param_6,
-            int param_7)
+/* ISwerveObject slot 29 (+0x74) of Image2D (swv_InitVtbl_Image2D's pVtbl[0x1d]; JSR-184 1.1,
+   Image2D.set(x, y, width, height, image)): in an error frame, error -1301 (IllegalArgumentException;
+   FUN_0102f7e0, which does not return) for x < 0, y < 0, width <= 0 or height <= 0; -1302
+   (NullPointerException) for NULL pixels; then swvImage2D_SetValue on the native object (po->pNative,
+   +4, less 4) with the size bytes of pixels; returns 0, or on an error its result code
+   (swv_ErrorToResult). Evidence: 0x01030f60 - 0x01031024 (the stack arguments height r7, size, pixels
+   r10 at sp + 0xb8 .. 0xc0; `cmp r4, #0` / `bllt`, `cmp r5, #0` / `bllt`, `cmp r6, #0` / `blle`, `cmp
+   r7, #0` / `blle`, `cmp r10, #0` / `bleq`, `bl 0x01023d30` with the seven, r8 the result). */
+int32 swvImage2D_Set(ISwerveObject *po,int32 x,int32 y,int32 width,int32 height,int32 size,
+                     const uint8 *pixels)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  undefined4 uVar3;
-  undefined1 auStack_ac [136];
-  
-  uVar3 = 0;
-  iVar2 = swv_setjmp((undefined4 *)swv_TryPush(auStack_ac));   /* Ghidra had dropped it */
-  if (iVar2 == 0) {
-    swv_TryArm(auStack_ac);
-    uVar1 = INTEGER_MINUS_1301;
-    iVar2 = *(int *)(param_1 + 4);
-    if (iVar2 != 0) {
-      iVar2 = iVar2 + -4;
-    }
-    if (param_2 < 0) {
+  int32 result = 0;
+  int32 error;
+  uint8 frame[136];
+  uint8 *image;
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    image = (uint8 *)po->pNative;
+    if (image != NULL)
+      image -= 4;
+    if (x < 0)
       FUN_0102f7e0(INTEGER_MINUS_1301);
-    }
-    if (param_3 < 0) {
-      FUN_0102f7e0(uVar1);
-    }
-    if (param_4 < 1) {
-      FUN_0102f7e0(uVar1);
-    }
-    if (param_5 < 1) {
-      FUN_0102f7e0(uVar1);
-    }
-    if (param_7 == 0) {
+    if (y < 0)
+      FUN_0102f7e0(INTEGER_MINUS_1301);
+    if (width < 1)
+      FUN_0102f7e0(INTEGER_MINUS_1301);
+    if (height < 1)
+      FUN_0102f7e0(INTEGER_MINUS_1301);
+    if (pixels == NULL)
       FUN_0102f7e0(INTEGER_MINUS_1302);
-    }
-    swvImage2D_SetValue(iVar2,param_2,param_3,param_4,param_5,param_6,param_7);
+    swvImage2D_SetValue(image,x,y,width,height,size,pixels);
     swv_TryPop();
   }
-  else {
-    uVar3 = swv_ErrorToResult(iVar2);   /* Ghidra had dropped it */
-  }
-  return uVar3;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x01031030  (file offset 0x31030)  thunk_swv_InitVtbl_Object3D ================================= */
@@ -48037,37 +47876,35 @@ int swv_Create_Material(void **ppObj)
 }
 
 /* ==== 0x01033A24  (file offset 0x33A24)  swvMaterial_GetColor ======================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 22 (+0x58) of Material (kh_types.h
-   SwerveMaterialVtbl.GetColor): in an error frame, error -1301 for a target other than AMBIENT,
-   DIFFUSE, EMISSIVE or SPECULAR, else *param_3 = swvMaterial_Color(native, target); on an error its
-   result code (swv_ErrorToResult). */
-undefined4 swvMaterial_GetColor(int param_1,int param_2,undefined4 *param_3)
+/* GUESS: name. ISwerveObject slot 22 (+0x58) of Material (JSR-184 1.1, Material.getColor; kh_types.h
+   SwerveMaterialVtbl.GetColor): in an error frame, error -1301 (IllegalArgumentException; FUN_0102f7e0,
+   which does not return) for a target other than AMBIENT (0x400), DIFFUSE (0x800), EMISSIVE (0x1000) or
+   SPECULAR (0x2000), else *pArgb = swvMaterial_Color of the native object (po->pNative, +4, less 4) and
+   target; returns 0, or on an error its result code (swv_ErrorToResult). Evidence: 0x01033a24 -
+   0x01033aa4 (`cmp r4, #0x400` / `cmpne` 0x800, 0x1000, 0x2000 / `blne 0x0102f7e0`, `bl 0x0100f620`,
+   `str r0, [r7]`, r5 the result). */
+int32 swvMaterial_GetColor(ISwerveObject *po,int32 target,uint32 *pArgb)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  undefined1 auStack_9c [136];
-  
-  uVar3 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_9c);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    if (((param_2 != 0x400 && param_2 != 0x800) && param_2 != 0x1000) && param_2 != 0x2000) {
+  int32 result = 0;
+  int32 error;
+  uint8 frame[136];
+  uint8 *material;
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    material = (uint8 *)po->pNative;
+    if (material != NULL)
+      material -= 4;
+    if (target != 0x400 && target != 0x800 && target != 0x1000 && target != 0x2000)
       FUN_0102f7e0(INTEGER_MINUS_1301);
-    }
-    uVar2 = swvMaterial_Color((uint8 *)iVar1,param_2);
-    *param_3 = uVar2;
+    *pArgb = swvMaterial_Color(material,target);
     swv_TryPop();
   }
-  else {
-    uVar3 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar3;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x01033AAC  (file offset 0x33AAC)  FUN_01033aac ================================================ */
@@ -48117,31 +47954,31 @@ void FUN_01033b34(int param_1,undefined1 *param_2)
 }
 
 /* ==== 0x01033B4C  (file offset 0x33B4C)  swvMaterial_SetColor ======================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 23 (+0x5c) of Material (kh_types.h
-   SwerveMaterialVtbl.SetColor): in an error frame, swvMaterial_SetColorValue(native, targets, argb);
-   on an error its result code (swv_ErrorToResult). */
-undefined4 swvMaterial_SetColor(int param_1,undefined4 param_2,undefined4 param_3)
+/* GUESS: name. ISwerveObject slot 23 (+0x5c) of Material (JSR-184 1.1, Material.setColor; kh_types.h
+   SwerveMaterialVtbl.SetColor): in an error frame, swvMaterial_SetColorValue(native, targets, argb) on
+   the native object (po->pNative, +4, less 4; the targets are checked there); returns 0, or on an
+   error its result code (swv_ErrorToResult). Evidence: 0x01033b4c - 0x01033bb0 (`ldr r0, [r7, #4]` /
+   `subne r0, r0, #4`, r1 / r2 the targets and the colour, `bl 0x01020948`, r4 the result). */
+int32 swvMaterial_SetColor(ISwerveObject *po,uint32 targets,uint32 argb)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined1 auStack_9c [136];
-  
-  uVar2 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_9c));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_9c);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    swvMaterial_SetColorValue((uint8 *)iVar1,param_2,param_3);
+  int32 result = 0;
+  int32 error;
+  uint8 frame[136];
+  uint8 *material;
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    material = (uint8 *)po->pNative;
+    if (material != NULL)
+      material -= 4;
+    swvMaterial_SetColorValue(material,targets,argb);
     swv_TryPop();
   }
-  else {
-    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar2;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x01033BB4  (file offset 0x33BB4)  FUN_01033bb4 ================================================ */
@@ -52202,60 +52039,48 @@ int swv_Create_PolygonMode(void **ppObj)
 }
 
 /* ==== 0x01037FA0  (file offset 0x37FA0)  swvPolygonMode_GetCulling =================================== */
-/* (not yet rewritten) ISwerveObject slot 18 (+0x48) of PolygonMode (JSR-184 1.1,
-   PolygonMode.getCulling): *param_2 = swvPolygonMode_Culling of the native object (po->pNative, +4, less
-   4). */
-void swvPolygonMode_GetCulling(int param_1,undefined4 *param_2)
+/* ISwerveObject slot 18 (+0x48) of PolygonMode (JSR-184 1.1, PolygonMode.getCulling; kh_types.h
+   SwervePolygonModeVtbl): *pCulling = swvPolygonMode_Culling of the native object (po->pNative, +4,
+   less 4). Evidence: 0x01037fa0 - 0x01037fbc (`ldr r0, [r0, #4]` / `subne r0, r0, #4`, `bl 0x0100f6d8`,
+   `str r0, [r4]`). */
+void swvPolygonMode_GetCulling(ISwerveObject *po,int32 *pCulling)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  uVar2 = swvPolygonMode_Culling((uint8 *)iVar1);
-  *param_2 = uVar2;
-  return;
+  uint8 *mode = (uint8 *)po->pNative;
+
+  if (mode != NULL)
+    mode -= 4;
+  *pCulling = swvPolygonMode_Culling(mode);
 }
 
 /* ==== 0x01037FC0  (file offset 0x37FC0)  swvPolygonMode_GetShading =================================== */
-/* (not yet rewritten) ISwerveObject slot 20 (+0x50) of PolygonMode (JSR-184 1.1, PolygonMode.getShading;
-   kh_types.h SwervePolygonModeVtbl): *param_2 = swvPolygonMode_Shading of the native object
-   (po->pNative, +4, less 4). */
-void swvPolygonMode_GetShading(int param_1,undefined4 *param_2)
+/* ISwerveObject slot 20 (+0x50) of PolygonMode (JSR-184 1.1, PolygonMode.getShading; kh_types.h
+   SwervePolygonModeVtbl): *pShading = swvPolygonMode_Shading of the native object (po->pNative, +4,
+   less 4). Evidence: 0x01037fc0 - 0x01037fdc (`ldr r0, [r0, #4]` / `subne r0, r0, #4`, `bl 0x010106f8`,
+   `str r0, [r4]`). */
+void swvPolygonMode_GetShading(ISwerveObject *po,int32 *pShading)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  uVar2 = swvPolygonMode_Shading((uint8 *)iVar1);
-  *param_2 = uVar2;
-  return;
+  uint8 *mode = (uint8 *)po->pNative;
+
+  if (mode != NULL)
+    mode -= 4;
+  *pShading = swvPolygonMode_Shading(mode);
 }
 
 /* ==== 0x01037FE0  (file offset 0x37FE0)  swvPolygonMode_GetWinding =================================== */
-/* (not yet rewritten) ISwerveObject slot 22 (+0x58) of PolygonMode (JSR-184 1.1, PolygonMode.getWinding;
-   kh_types.h SwervePolygonModeVtbl): *param_2 = swvPolygonMode_Winding of the native object
-   (po->pNative, +4, less 4). */
-void swvPolygonMode_GetWinding(int param_1,undefined4 *param_2)
+/* ISwerveObject slot 22 (+0x58) of PolygonMode (JSR-184 1.1, PolygonMode.getWinding; kh_types.h
+   SwervePolygonModeVtbl): *pWinding = swvPolygonMode_Winding of the native object (po->pNative, +4,
+   less 4). Evidence: 0x01037fe0 - 0x01037ffc (`ldr r0, [r0, #4]` / `subne r0, r0, #4`, `bl 0x01011980`,
+   `str r0, [r4]`). */
+void swvPolygonMode_GetWinding(ISwerveObject *po,int32 *pWinding)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  uVar2 = swvPolygonMode_Winding((uint8 *)iVar1);
-  *param_2 = uVar2;
-  return;
+  uint8 *mode = (uint8 *)po->pNative;
+
+  if (mode != NULL)
+    mode -= 4;
+  *pWinding = swvPolygonMode_Winding(mode);
 }
 
 /* ==== 0x01038000  (file offset 0x38000)  swv_InitVtbl_PolygonMode ==================================== */
@@ -52281,54 +52106,50 @@ void swv_InitVtbl_PolygonMode(void **pVtbl)
 }
 
 /* ==== 0x010380B0  (file offset 0x380B0)  swvPolygonMode_IsTwoSidedLightingEnabled ==================== */
-/* (not yet rewritten) ISwerveObject slot 26 (+0x68) of PolygonMode (JSR-184 1.1,
-   PolygonMode.isTwoSidedLightingEnabled; kh_types.h SwervePolygonModeVtbl): *param_2 (a byte) =
-   swvPolygonMode_TwoSidedLighting of the native object (po->pNative, +4, less 4). */
-void swvPolygonMode_IsTwoSidedLightingEnabled(int param_1,undefined1 *param_2)
+/* ISwerveObject slot 26 (+0x68) of PolygonMode (JSR-184 1.1, PolygonMode.isTwoSidedLightingEnabled;
+   kh_types.h SwervePolygonModeVtbl): *pEnabled (a byte) = swvPolygonMode_TwoSidedLighting of the native
+   object (po->pNative, +4, less 4). Evidence: 0x010380b0 - 0x010380cc (`ldr r0, [r0, #4]` / `subne r0,
+   r0, #4`, `bl 0x01011aa8`, `strb r0, [r4]`). */
+void swvPolygonMode_IsTwoSidedLightingEnabled(ISwerveObject *po,uint8 *pEnabled)
 
 {
-  undefined1 uVar1;
-  int iVar2;
-  
-  iVar2 = *(int *)(param_1 + 4);
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + -4;
-  }
-  uVar1 = (undefined1)swvPolygonMode_TwoSidedLighting((uint8 *)iVar2);
-  *param_2 = uVar1;
-  return;
+  uint8 *mode = (uint8 *)po->pNative;
+
+  if (mode != NULL)
+    mode -= 4;
+  *pEnabled = (uint8)swvPolygonMode_TwoSidedLighting(mode);
 }
 
 /* ==== 0x010380D0  (file offset 0x380D0)  swvPolygonMode_SetCulling =================================== */
-/* (not yet rewritten) ISwerveObject slot 19 (+0x4c) of PolygonMode (JSR-184 1.1,
-   PolygonMode.setCulling): in an error frame, error -1301 (IllegalArgumentException) unless 0xa0 <=
-   culling <= 0xa2 (CULL_BACK, CULL_FRONT, CULL_NONE), then swvPolygonMode_SetCullingValue; on an error
-   its result code (swv_ErrorToResult). */
-undefined4 swvPolygonMode_SetCulling(int param_1,int param_2)
+/* ISwerveObject slot 19 (+0x4c) of PolygonMode (JSR-184 1.1, PolygonMode.setCulling; kh_types.h
+   SwervePolygonModeVtbl): in an error frame, error -1301 (IllegalArgumentException; FUN_0102f7e0, which
+   does not return) unless 0xa0 <= culling <= 0xa2 (CULL_BACK, CULL_FRONT, CULL_NONE), then
+   swvPolygonMode_SetCullingValue on the native object (po->pNative, +4, less 4); returns 0, or on an
+   error its result code (swv_ErrorToResult). Evidence: 0x010380d0 - 0x01038140 (`sub r0, r4, #0xa0` /
+   `cmp r0, #2` / `blhi 0x0102f7e0`, `bl 0x01020c1c` with r0 the native object and r1 culling, r5 the
+   result). */
+int32 swvPolygonMode_SetCulling(ISwerveObject *po,int32 culling)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined1 auStack_98 [136];
-  
-  uVar2 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_98);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    if (2 < param_2 - 0xa0U) {
+  int32 result = 0;
+  int32 error;
+  uint8 frame[136];
+  uint8 *mode;
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    mode = (uint8 *)po->pNative;
+    if (mode != NULL)
+      mode -= 4;
+    if ((uint32)culling - 0xa0 > 2)
       FUN_0102f7e0(INTEGER_MINUS_1301);
-    }
-    swvPolygonMode_SetCullingValue((uint8 *)iVar1,param_2);
+    swvPolygonMode_SetCullingValue(mode,culling);
     swv_TryPop();
   }
-  else {
-    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar2;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x01038148  (file offset 0x38148)  swvPolygonMode_SetLocalCameraLightingEnable ================= */
@@ -52380,84 +52201,81 @@ void swvPolygonMode_SetPerspectiveCorrectionEnable(int param_1,int param_2)
 }
 
 /* ==== 0x01038178  (file offset 0x38178)  swvPolygonMode_SetShading =================================== */
-/* (not yet rewritten) ISwerveObject slot 21 (+0x54) of PolygonMode (JSR-184 1.1, PolygonMode.setShading;
-   kh_types.h SwervePolygonModeVtbl): in an error frame, error -1301 (IllegalArgumentException) unless
-   the value is SHADE_FLAT (0xa4) or SHADE_SMOOTH (0xa5), then swvPolygonMode_SetShadingValue; on an
-   error its result code. */
-undefined4 swvPolygonMode_SetShading(int param_1,int param_2)
+/* ISwerveObject slot 21 (+0x54) of PolygonMode (JSR-184 1.1, PolygonMode.setShading; kh_types.h
+   SwervePolygonModeVtbl): in an error frame, error -1301 (IllegalArgumentException; FUN_0102f7e0, which
+   does not return) unless the value is SHADE_FLAT (0xa4) or SHADE_SMOOTH (0xa5), then
+   swvPolygonMode_SetShadingValue on the native object (po->pNative, +4, less 4); returns 0, or on an
+   error its result code (swv_ErrorToResult). Evidence: 0x01038178 - 0x010381e8 (`sub r0, r4, #0xa4` /
+   `cmp r0, #1` / `blhi`, `bl 0x01023108`, r5 the result). */
+int32 swvPolygonMode_SetShading(ISwerveObject *po,int32 shading)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined1 auStack_98 [136];
-  
-  uVar2 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_98);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    if (1 < param_2 - 0xa4U) {
+  int32 result = 0;
+  int32 error;
+  uint8 frame[136];
+  uint8 *mode;
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    mode = (uint8 *)po->pNative;
+    if (mode != NULL)
+      mode -= 4;
+    if ((uint32)shading - 0xa4 > 1)
       FUN_0102f7e0(INTEGER_MINUS_1301);
-    }
-    swvPolygonMode_SetShadingValue((uint8 *)iVar1,param_2);
+    swvPolygonMode_SetShadingValue(mode,shading);
     swv_TryPop();
   }
-  else {
-    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar2;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x010381F0  (file offset 0x381F0)  swvPolygonMode_SetTwoSidedLightingEnable ==================== */
 /* ISwerveObject slot 27 (+0x6c) of PolygonMode (JSR-184 1.1, PolygonMode.setTwoSidedLightingEnable;
    kh_types.h SwervePolygonModeVtbl): swvPolygonMode_SetTwoSidedLightingValue on the native object
-   (po->pNative, +4, less 4) with enable made 0 or 1 (`movne r1, #1`), a tail jump in the binary
-   (0x01038204; Ghidra had pasted the setter in). */
-void swvPolygonMode_SetTwoSidedLightingEnable(int param_1,int param_2)
+   (po->pNative, +4, less 4) with enable made 0 or 1, a tail jump in the binary. Evidence: 0x010381f0 -
+   0x01038204 (`ldr r0, [r0, #4]` / `subne r0, r0, #4`, `cmp r1, #0` / `movne r1, #1`, `b 0x01023fb4`;
+   Ghidra had pasted the setter in). */
+void swvPolygonMode_SetTwoSidedLightingEnable(ISwerveObject *po,int32 enable)
 
 {
-  int iVar1;
+  uint8 *mode = (uint8 *)po->pNative;
 
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  swvPolygonMode_SetTwoSidedLightingValue((uint8 *)iVar1,param_2 != 0);
+  if (mode != NULL)
+    mode -= 4;
+  swvPolygonMode_SetTwoSidedLightingValue(mode,enable != 0);
 }
 
 /* ==== 0x01038208  (file offset 0x38208)  swvPolygonMode_SetWinding =================================== */
-/* (not yet rewritten) ISwerveObject slot 23 (+0x5c) of PolygonMode (JSR-184 1.1, PolygonMode.setWinding;
-   kh_types.h SwervePolygonModeVtbl): in an error frame, error -1301 (IllegalArgumentException) unless
-   the value is WINDING_CCW (0xa8) or WINDING_CW (0xa9), then swvPolygonMode_SetWindingValue; on an error
-   its result code. */
-undefined4 swvPolygonMode_SetWinding(int param_1,int param_2)
+/* ISwerveObject slot 23 (+0x5c) of PolygonMode (JSR-184 1.1, PolygonMode.setWinding; kh_types.h
+   SwervePolygonModeVtbl): in an error frame, error -1301 (IllegalArgumentException; FUN_0102f7e0, which
+   does not return) unless the value is WINDING_CCW (0xa8) or WINDING_CW (0xa9), then
+   swvPolygonMode_SetWindingValue on the native object (po->pNative, +4, less 4); returns 0, or on an
+   error its result code (swv_ErrorToResult). Evidence: 0x01038208 - 0x01038278 (`sub r0, r4, #0xa8` /
+   `cmp r0, #1` / `blhi`, `bl 0x01023ce4`, r5 the result). */
+int32 swvPolygonMode_SetWinding(ISwerveObject *po,int32 winding)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined1 auStack_98 [136];
-  
-  uVar2 = 0;
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_98));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_98);
-    iVar1 = *(int *)(param_1 + 4);
-    if (iVar1 != 0) {
-      iVar1 = iVar1 + -4;
-    }
-    if (1 < param_2 - 0xa8U) {
+  int32 result = 0;
+  int32 error;
+  uint8 frame[136];
+  uint8 *mode;
+
+  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  if (error == 0) {
+    swv_TryArm((int)frame);
+    mode = (uint8 *)po->pNative;
+    if (mode != NULL)
+      mode -= 4;
+    if ((uint32)winding - 0xa8 > 1)
       FUN_0102f7e0(INTEGER_MINUS_1301);
-    }
-    swvPolygonMode_SetWindingValue((uint8 *)iVar1,param_2);
+    swvPolygonMode_SetWindingValue(mode,winding);
     swv_TryPop();
   }
-  else {
-    uVar2 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return uVar2;
+  else
+    result = (int32)swv_ErrorToResult(error);
+  return result;
 }
 
 /* ==== 0x01038280  (file offset 0x38280)  FUN_01038280 ================================================ */
@@ -55643,7 +55461,7 @@ undefined4 FUN_0103b57c(int param_1,int param_2)
     if (iVar2 == 0) {
       FUN_0102f7e0(INTEGER_MINUS_1302);
     }
-    swvTexture2D_SetImage(iVar1,iVar2);
+    swvTexture2D_SetImage((uint8 *)iVar1,(uint8 *)iVar2);
     swv_TryPop();
   }
   else {
