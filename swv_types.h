@@ -78,7 +78,7 @@ typedef enum SwerveObjectType {
     SWVT_TRANSFORM = 27,           SWVT_LOADER = 28
 } SwerveObjectType;
 
-/* The engine's error codes: what FUN_0102f7e0 (it does not return) is given, the JSR-184 exception each
+/* The engine's error codes: what swv_Throw (it does not return) is given, the JSR-184 exception each
  * stands for. The listing keeps the INTEGER_MINUS_* literals the code loads; the comments name these.
  * From the methods whose checks the spec lists (JSR-184 1.1): -1301 where it throws
  * IllegalArgumentException (Group.addChild, Texture2D.setImage, ...), -1302 NullPointerException
@@ -432,7 +432,7 @@ typedef struct SwvKeyframeSequence {
  *   +0x14             open (swvCleanupFrame_Open)
  * A new object is pushed while it is set up (swvCleanupStack_Push) and popped once its owner has stored
  * it (swv_CleanupPop / swvCleanupStack_Pop). swv_TryPop leaves the level (swvCleanupStack_Leave: what it
- * still holds destroyed) and pops the error frame. An error (FUN_0102f7e0) is thrown to the last active
+ * still holds destroyed) and pops the error frame. An error (swv_Throw) is thrown to the last active
  * frame (swvErrorFrame_Throw): the frame popped, the cleanup stack unwound (each object still held
  * destroyed through its engine vtable +0) and swv_longjmp back to its swv_setjmp, whose caller maps the
  * code (swv_ErrorToResult). */
