@@ -20597,7 +20597,7 @@ void FUN_01017840(int *param_1,undefined4 param_2)
    shifted (arithmetic) by that many bits. Returns the shift (0 when nothing changed; an even number), by
    which the caller scales the length back (Ghidra had made it void). An INT_MIN component (its absolute
    value still negative, the compare signed) leaves the vector as it is. The two light terms with an
-   attenuation, OMNI and SPOT (FUN_01013e88, FUN_0101420c), use it on the light-to-vertex vector, whose
+   attenuation, OMNI and SPOT (FUN_01013e88, FUN_0101420c), use it on the light-vertex vector, whose
    length (swv_FixedSqrt of the sum of squares, shifted back) is the distance d of JSR-184 1.1,
    Light.setAttenuation (1 / (c + l d + q d^2)); the range limit and the shift are engine behaviour
    (GUESS). Evidence: 0x01017894 - 0x01017908 (`cmp r1, #0` / `rsblt r1, r1, #0` for each, the two
