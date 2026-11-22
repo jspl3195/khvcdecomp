@@ -162,10 +162,20 @@ uint64 swv_memcpy_word_aligned(void *destination,void *source,uint32 byteCount)
   return MAKE_WORDS(ends,(uint32)from,(uint32)to);
 }
 
-/* ==== 0x010001F4  (file offset 0x001F4)  FUN_010001f4 ================================================ */
-ulonglong FUN_010001f4(uint param_1,uint param_2)
+/* ==== 0x010001F4  (file offset 0x001F4)  swv_rt_sdiv ================================================= */
+/* (not yet rewritten) ARM's C library signed division __rt_sdiv (the ARM ADS / SDT run-time library, by
+   its shape and its calls; GUESS: the name): the dividend param_2 (r1) by the divisor param_1 (r0),
+   rounded toward zero; a two-word result, .low (r0) the quotient and .high (r1) the remainder (with the
+   dividend's sign): callers that want the remainder (x % n) read .high, which Ghidra showed as
+   extraout_r1. A zero divisor branches to 0x01000c44 (__rt_div0: raise_signal_and_exit(2, 2) at
+   0x01001a40; Ghidra pasted the signal code in). Evidence: 0x010001f4 - 0x010002c4 (`ands r2, r0,
+   #0x80000000` / `rsbmi`, `eors r3, r2, r1, asr #32` / `rsbhs`, the `rsbs` / `subhs` / `adc` steps, `rsbs
+   ip, r0, #0` / `bhs 0x01000c44`, `eors r0, r2, r3, asr #31` / `add r0, r0, r3, lsr #31` the quotient,
+   `rsbhs r1, r1, #0` the remainder's sign). */
+int64 swv_rt_sdiv(uint param_1,uint param_2)
 
 {
+  int64 result;
   uint uVar1;
   uint uVar2;
   uint uVar3;
@@ -207,9 +217,11 @@ ulonglong FUN_010001f4(uint param_1,uint param_2)
                     /* WARNING: Could not recover jumptable at 0x01001c24. Too many branches */
                     /* WARNING: Treating indirect jump as call */
       uVar9 = (*(code *)(in_lr & 0xfffffffc))(0x18,WORD_HEXADECIMAL_00020026);
-      return uVar9;
+      (void)MAKE_WORDS(result,(int32)(uVar9 >> 0x20),(uint32)uVar9);
+      return result;
     }
-    return uVar9 & 0xffffffff00000000;
+    (void)MAKE_WORDS(result,(int32)(uVar9 >> 0x20),0);
+    return result;
   }
   do {
     if (bVar5) {
@@ -260,7 +272,8 @@ LAB_01000290:
   if ((bool)((byte)(uVar4 >> 0x1e) & 1)) {
     param_2 = -param_2;
   }
-  return CONCAT44(param_2,(uVar2 ^ uVar1) - uVar1);
+  (void)MAKE_WORDS(result,(int32)param_2,(uVar2 ^ uVar1) - uVar1);
+  return result;
 }
 
 /* ==== 0x010002C8  (file offset 0x002C8)  FUN_010002c8 ================================================ */
@@ -1350,8 +1363,8 @@ int FUN_01000f94(undefined4 param_1,uint param_2,undefined8 *param_3)
     }
     else if (HIGH_WORD_OF_DOUBLE_1647099 < (int)uVar9) {
       if (INTEGER_1129 <= (param_2 & 0x7fffffff) >> 0x14) {
-        iVar2 = FUN_010001f4(0x36,(((int)INTEGER_1129 >> 0xb) - INTEGER_1129) +
-                                  ((param_2 & 0x7fffffff) >> 0x14));
+        iVar2 = swv_rt_sdiv(0x36,(((int)INTEGER_1129 >> 0xb) - INTEGER_1129) +
+                                 ((param_2 & 0x7fffffff) >> 0x14)).low;
         puVar14 = (undefined4 *)(DATA_AT_01042894_OFFSET + 0x1001240 + iVar2 * 8);
         uVar16 = FUN_0103e36c(param_1,param_2,*puVar14,puVar14[1]);
       }
@@ -2933,119 +2946,118 @@ int AEEStaticMod_New(int16 nSize,IShell *pIShell,AEEHelperFuncs *ph,IModule **pp
 }
 
 /* ==== 0x01002A58  (file offset 0x02A58)  swvObject3D_AddAnimationTrackValue ========================== */
-/* (not yet rewritten) JSR-184 1.1, Object3D.addAnimationTrack, on the native object param_1 with the track
-   param_2: error -1301 (IllegalArgumentException) for a NULL track (the spec's NullPointerException,
-   -1302, is raised before, by the ISwerveObject slot 7, swvObject3D_AddAnimationTrack; a NULL reaches here
-   only from the engine's own callers) or when the object cannot animate its property (track +0x24; the
-   object's IsAnimatable, engine vtable +0x20); the track list at +0x10 made on first use (0x20 bytes, two
-   engine dynamic arrays: the tracks, and at +0x10 how many tracks each property has, the properties in the
-   list's order); -1301 for a track already there, or for one on a property already animated whose keyframe
-   sequence has another component count (+0x34, the spec's keyframe size); the track inserted after the
-   others on its property (FUN_01013368; the spec leaves the position undefined), its count of references
-   (+8) up, its property's count up (or a new property counted 1). */
-void swvObject3D_AddAnimationTrackValue(int *param_1,int param_2,undefined4 param_3,undefined4 param_4)
+/* JSR-184 1.1, Object3D.addAnimationTrack, on the native object object with the track track: error -1301
+   (IllegalArgumentException; FUN_0102f7e0, which does not return) for a NULL track (the spec's
+   NullPointerException, -1302, is raised before, by the ISwerveObject slot 7,
+   swvObject3D_AddAnimationTrack; a NULL reaches here only from the engine's own callers) or when the
+   object cannot animate its property (track +0x24; the object's IsAnimatable, engine vtable +0x20); the
+   track list at +0x10 made on first use (0x20 bytes, two engine dynamic arrays: the tracks, and at +0x10
+   how many tracks each property has, the properties in the list's order; each array initialised by
+   FUN_01027cb4, then given its static engine vtable, 0x010025AC and 0x01001EE8); then the track inserted
+   into the list by swvObject3D_InsertAnimationTrack (0x01002B00, a tail jump Ghidra had merged into this
+   function). No result (r0 is left as the insert leaves it). Ghidra had read r2 / r3 as two more
+   parameters (r3 is only pushed to keep the stack aligned). Evidence: 0x01002a58 - 0x01002af0 (`movs r6,
+   r1` / `bleq`, `ldr r1, [r6, #0x24]` / `blx r2` / `cmp r0, #0x0` / `bleq`, `ldr r0, [r4, #0x10]` / `bne`,
+   `mov r0, #0x20` / `bl 0x0102cc00`, `bl 0x01027cb4` twice with r5 and r5 + 0x10, `add r0, pc, r0` / `str
+   r0`, `str r5, [r4, #0x10]`, `mov r1, r6` / `ldr r0, [r4, #0x10]` / `b 0x01002b00`). */
+void swvObject3D_AddAnimationTrackValue(uint8 *object,uint8 *track)
 
 {
-  int iVar1;
-  int *piVar2;
-  int iVar3;
-  int iVar4;
-  undefined4 uVar5;
-  int iVar6;
-  int iVar7;
-  code *pcVar8;
-  int iVar9;
-  int iVar10;
-  int iVar11;
-  int local_20 [2];
-  undefined4 local_18;
-  
-  uVar5 = INTEGER_MINUS_1301;
-  local_18 = param_4;
-  if (param_2 == 0) {
+  uint8 *tracks;
+  int32 vtable;
+
+  if (track == NULL)
     FUN_0102f7e0(INTEGER_MINUS_1301);
-  }
+  vtable = *(int32 *)object;
   /* engine virtual call, slot +0x20: the object's IsAnimatable(the track's property, +0x24):
      swvObject3D_IsAnimatable or its class's own (swvMaterial_IsAnimatable .. swvSprite3D_IsAnimatable) */
-  iVar1 = (*(code *)(*(int *)(*param_1 + 0x20) + *param_1))(param_1,*(undefined4 *)(param_2 + 0x24))
-  ;
-  if (iVar1 == 0) {
-    FUN_0102f7e0(uVar5);
+  if ((*(code *)(*(int32 *)(vtable + 0x20) + vtable))(object,*(int32 *)(track + 0x24)) == 0)
+    FUN_0102f7e0(INTEGER_MINUS_1301);
+  if (*(uint8 **)(object + 0x10) == NULL) {
+    tracks = (uint8 *)swv_New(0x20);
+    if (tracks != NULL) {
+      FUN_01027cb4((int *)tracks);
+      *(int32 *)tracks = DATA_AT_010025AC_OFFSET + 0x1002ac8;
+      FUN_01027cb4((int *)(tracks + 0x10));
+      *(int32 *)(tracks + 0x10) = DATA_AT_01001EE8_OFFSET + 0x1002ae0;
+    }
+    *(uint8 **)(object + 0x10) = tracks;
   }
-  if (param_1[4] == 0) {
-    piVar2 = (int *)swv_New(0x20);
-    if (piVar2 != (int *)0x0) {
-      FUN_01027cb4(piVar2);
-      *piVar2 = DATA_AT_010025AC_OFFSET + 0x1002ac8;
-      FUN_01027cb4(piVar2 + 4);
-      piVar2[4] = DATA_AT_01001EE8_OFFSET + 0x1002ae0;
+  swvObject3D_InsertAnimationTrack(*(uint8 **)(object + 0x10),track);
+}
+
+/* ==== 0x01002B00  (file offset 0x02B00)  hand-written (no Ghidra function) =========================== */
+/* GUESS: name. A routine Ghidra has no function for (only swvObject3D_AddAnimationTrackValue reaches it,
+   by a tail jump, and Ghidra took it into that function's body), written from its disassembly (0x01002b00
+   - 0x01002c68): inserts the AnimationTrack track into an Object3D's track list tracks (0x20 bytes, two
+   engine dynamic arrays: the tracks, +4 the items, +8 the count, kept grouped by property, track +0x24;
+   and at +0x10 each group's track count, +0x14 the items, +0x18 the count, +0x1c the capacity). Error
+   -1301 (IllegalArgumentException; FUN_0102f7e0, which does not return) for a track already in the list,
+   or for one on a property already animated whose keyframe sequence (+0x1c; none counts as 0) has another
+   component count (+0x34, the spec's keyframe size: JSR-184 1.1, Object3D.addAnimationTrack). Walking the
+   tracks, the group number goes up at each change of property (as swvObject3D_RemoveAnimationTrackValue
+   does); the track is inserted (FUN_01013368, given the address of the track) before the first track on
+   its property, or after all of them for a new property (the spec leaves the order undefined); its count
+   of references (+8) up; its group's count up, or for a new property a count of 1 appended to the second
+   array (grown first when full: its engine vtable +4 with the new capacity, FUN_0102df78(count + 1,
+   capacity), and the count). Evidence: 0x01002b00 - 0x01002c68 (`push {r0, r1, ...}` the track kept at sp
+   + 8, `cmp r0, r1` / `bleq` the duplicate test; `mov r2, #0xff` / `mvn r7, #0x0` / `mov r1, r6` / `ldr
+   r8, [r4, #0x18]`, `cmp r2, r0` / `movne r2, r0` / `addne r7, r7, #1`, `cmp ip, r0` / `bne`, `ldrne r0,
+   [r0, #0x34]` twice / `cmp r1, r0` / `blne`, `mov r1, r5` / `mov r8, r7`; `add r2, sp, #0x8` / `bl
+   0x01013368`, `ldr r1, [r0, #4]` / `add r1, r1, #1` on track + 8, `cmp r0, r8` / `ldrgt` / `addgt`, `ldr
+   r1, [r4, #0xc]` kept as FUN_0102df78's r1, `blx r3`, `str r1, [r0]`). No result (r0 is left pointing at
+   the count it stored). */
+void swvObject3D_InsertAnimationTrack(uint8 *tracks,uint8 *track)
+
+{
+  uint8 *const *items = *(uint8 *const **)(tracks + 4);
+  uint8 *counts = tracks + 0x10;
+  const uint8 *sequence;
+  int32 count = *(int32 *)(tracks + 8);
+  int32 position = count;
+  int32 property = 0xff;
+  int32 group = -1;
+  int32 target;
+  int32 components;
+  int32 capacity;
+  int32 vtable;
+  int32 i;
+
+  for (i = 0; i < count; i++)
+    if (items[i] == track)
+      FUN_0102f7e0(INTEGER_MINUS_1301);
+  target = *(int32 *)(tracks + 0x18);
+  for (i = 0; i < count; i++) {
+    if (property != *(int32 *)(items[i] + 0x24)) {
+      property = *(int32 *)(items[i] + 0x24);
+      group++;
     }
-    param_1[4] = (int)piVar2;
+    if (*(int32 *)(track + 0x24) == property) {
+      sequence = *(const uint8 **)(items[i] + 0x1c);
+      components = sequence != NULL ? *(const int32 *)(sequence + 0x34) : 0;
+      sequence = *(const uint8 **)(track + 0x1c);
+      if ((sequence != NULL ? *(const int32 *)(sequence + 0x34) : 0) != components)
+        FUN_0102f7e0(INTEGER_MINUS_1301);
+      position = i;
+      target = group;
+      break;
+    }
   }
-  uVar5 = INTEGER_MINUS_1301;
-  iVar3 = param_1[4];
-  iVar1 = *(int *)(iVar3 + 8);
-  iVar6 = iVar3;
-  local_20[0] = param_2;
-  for (iVar9 = 0; iVar9 < iVar1; iVar9 = iVar9 + 1) {
-    if (*(int *)(*(int *)(iVar3 + 4) + iVar9 * 4) == local_20[0]) {
-      FUN_0102f7e0(uVar5);
+  FUN_01013368((int *)tracks,position,(undefined4 *)&track);
+  *(int32 *)(track + 8) = *(int32 *)(track + 8) + 1;
+  if (*(int32 *)(tracks + 0x18) > target)
+    (*(int32 **)(tracks + 0x14))[target]++;
+  else {
+    if (*(int32 *)(counts + 8) == *(int32 *)(counts + 0xc)) {
+      capacity = FUN_0102df78(*(int32 *)(counts + 8) + 1,*(int32 *)(counts + 0xc));
+      vtable = *(int32 *)counts;
+      /* engine virtual call, slot +0x4: the group count array's growth to capacity */
+      (*(code *)(*(int32 *)(vtable + 4) + vtable))(counts,capacity,*(int32 *)(counts + 8));
     }
+    count = *(int32 *)(counts + 8);
+    *(int32 *)(counts + 8) = count + 1;
+    (*(int32 **)(counts + 4))[count] = 1;
   }
-  iVar9 = 0xff;
-  iVar11 = -1;
-  iVar10 = 0;
-  do {
-    iVar4 = *(int *)(iVar3 + 0x18);
-    if (iVar1 <= iVar10) {
-LAB_01002bd0:
-      FUN_01013368(iVar3,iVar1,local_20);
-      *(int *)(local_20[0] + 8) = *(int *)(local_20[0] + 8) + 1;
-      if (iVar4 < *(int *)(iVar3 + 0x18)) {
-        piVar2 = (int *)(*(int *)(iVar3 + 0x14) + iVar4 * 4);
-        iVar1 = *piVar2 + 1;
-      }
-      else {
-        iVar1 = 1;
-        if (*(int *)(iVar3 + 0x18) == *(int *)(iVar3 + 0x1c)) {
-          uVar5 = FUN_0102df78(*(int *)(iVar3 + 0x18) + 1);
-          iVar9 = *(int *)(iVar3 + 0x10);
-          pcVar8 = (code *)(*(int *)(iVar9 + 4) + iVar9);
-          /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there
-             (by the object's class) */
-          (*pcVar8)((int *)(iVar3 + 0x10),uVar5,*(undefined4 *)(iVar3 + 0x18),pcVar8,iVar1,iVar6);
-        }
-        iVar6 = *(int *)(iVar3 + 0x18);
-        *(int *)(iVar3 + 0x18) = iVar6 + 1;
-        piVar2 = (int *)(*(int *)(iVar3 + 0x14) + iVar6 * 4);
-      }
-      *piVar2 = iVar1;
-      return;
-    }
-    iVar4 = *(int *)(*(int *)(*(int *)(iVar3 + 4) + iVar10 * 4) + 0x24);
-    if (iVar9 != iVar4) {
-      iVar11 = iVar11 + 1;
-      iVar9 = iVar4;
-    }
-    if (*(int *)(local_20[0] + 0x24) == iVar4) {
-      iVar1 = *(int *)(*(int *)(*(int *)(iVar3 + 4) + iVar10 * 4) + 0x1c);
-      iVar9 = 0;
-      if (iVar1 != 0) {
-        iVar9 = *(int *)(iVar1 + 0x34);
-      }
-      iVar7 = 0;
-      if (*(int *)(local_20[0] + 0x1c) != 0) {
-        iVar7 = *(int *)(*(int *)(local_20[0] + 0x1c) + 0x34);
-      }
-      iVar1 = iVar10;
-      iVar4 = iVar11;
-      if (iVar7 != iVar9) {
-        FUN_0102f7e0(uVar5);
-      }
-      goto LAB_01002bd0;
-    }
-    iVar10 = iVar10 + 1;
-  } while( true );
 }
 
 /* ==== 0x01002C70  (file offset 0x02C70)  FUN_01002c70 ================================================ */
@@ -3920,7 +3932,7 @@ int FUN_01003b00(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
   
   iVar3 = *(int *)(param_1 + 0x38);
   while (iVar3 != 0) {
-    iVar4 = swvObject3D_AnimateValue(iVar3,param_2,param_4);
+    iVar4 = swvObject3D_AnimateValue((uint8 *)iVar3,param_2,param_4);
     iVar3 = *(int *)(iVar3 + 0x34);
     if (iVar4 < param_3) {
       param_3 = iVar4;
@@ -3934,14 +3946,16 @@ int FUN_01003b00(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
       iVar4 = swvObject3D_Reference((uint8 *)param_1,iVar4);
       for (iVar2 = 0; iVar2 < *(int *)(iVar4 + 8); iVar2 = iVar2 + 1) {
         iVar1 = *(int *)(*(int *)(iVar4 + 4) + iVar2 * 4);
-        if ((iVar1 != 0) && (iVar1 = swvObject3D_AnimateValue(iVar1,param_2,param_4), iVar1 < param_3)) {
+        if ((iVar1 != 0) &&
+           (iVar1 = swvObject3D_AnimateValue((uint8 *)iVar1,param_2,param_4), iVar1 < param_3)) {
           param_3 = iVar1;
         }
       }
     }
     else {
       iVar3 = iVar4;
-      if ((iVar2 != 0) && (iVar4 = swvObject3D_AnimateValue(iVar2,param_2,param_4), iVar4 < param_3)) {
+      if ((iVar2 != 0) &&
+         (iVar4 = swvObject3D_AnimateValue((uint8 *)iVar2,param_2,param_4), iVar4 < param_3)) {
         param_3 = iVar4;
       }
     }
@@ -3962,13 +3976,13 @@ int FUN_01003be8(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
   int iVar4;
   
   if ((*(int *)(param_1 + 0x8c) != 0) &&
-     (iVar3 = swvObject3D_AnimateValue(*(int *)(param_1 + 0x8c),param_2,param_4,param_4,param_4),
+     (iVar3 = swvObject3D_AnimateValue(*(uint8 **)(param_1 + 0x8c),param_2,param_4),
      iVar3 < param_3)) {
     param_3 = iVar3;
   }
   iVar3 = *(int *)(param_1 + 0x38);
   while (iVar3 != 0) {
-    iVar4 = swvObject3D_AnimateValue(iVar3,param_2,param_4);
+    iVar4 = swvObject3D_AnimateValue((uint8 *)iVar3,param_2,param_4);
     iVar3 = *(int *)(iVar3 + 0x34);
     if (iVar4 < param_3) {
       param_3 = iVar4;
@@ -3982,14 +3996,16 @@ int FUN_01003be8(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
       iVar4 = swvObject3D_Reference((uint8 *)param_1,iVar4);
       for (iVar2 = 0; iVar2 < *(int *)(iVar4 + 8); iVar2 = iVar2 + 1) {
         iVar1 = *(int *)(*(int *)(iVar4 + 4) + iVar2 * 4);
-        if ((iVar1 != 0) && (iVar1 = swvObject3D_AnimateValue(iVar1,param_2,param_4), iVar1 < param_3)) {
+        if ((iVar1 != 0) &&
+           (iVar1 = swvObject3D_AnimateValue((uint8 *)iVar1,param_2,param_4), iVar1 < param_3)) {
           param_3 = iVar1;
         }
       }
     }
     else {
       iVar3 = iVar4;
-      if ((iVar2 != 0) && (iVar4 = swvObject3D_AnimateValue(iVar2,param_2,param_4), iVar4 < param_3)) {
+      if ((iVar2 != 0) &&
+         (iVar4 = swvObject3D_AnimateValue((uint8 *)iVar2,param_2,param_4), iVar4 < param_3)) {
         param_3 = iVar4;
       }
     }
@@ -3999,174 +4015,155 @@ int FUN_01003be8(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
 }
 
 /* ==== 0x01003C38  (file offset 0x03C38)  swvObject3D_AnimateValue ==================================== */
-/* (not yet rewritten) JSR-184 1.1, Object3D.animate(time) (param_2), native: once per animate pass
-   (param_3, a pass number, not a time: when -1 a new one, the global counter at FUN_0102ecec() + 0x18 plus
-   1, 0 after -2; the object's +0x18 the last pass it took part in, so an object reached twice is animated
-   once), for each animation track (+0x10) whose controller (track +0x20) is active at the time
-   (swvAnimationController_IsActive) and has a weight (+0x30; the spec: weight 0 disables it), its
-   keyframes sampled (FUN_01010de0) into a 4-word buffer (or, for MORPH_WEIGHTS 0x10a, the mesh's own
-   weights, swvMorphingMesh_Weights), cleared first, and weighted in (the spec's sum of weight * value;
-   CROP 0x103 with 2 components (X, Y) given the current size, a Sprite3D's +0x88 / +0x8c or FUN_01038644
-   of +0x34 / +0x38, as 4; SCALE 0x10e with 1 component made uniform, three); then the property set through
-   its vtable +0x1c (this, the property, the component count, the buffer); returns its vtable +0x14 (tail
-   call: the class's references animated, FUN_01003b00 for a Group) with the time, the shortest validity
-   (0x7fffffff, the spec's recommended maximum, when nothing is active) and the pass. The properties:
-   SwerveAnimTarget, swv_types.h. */
-undefined4 swvObject3D_AnimateValue(int *param_1,undefined4 param_2,int param_3)
+/* JSR-184 1.1, Object3D.animate(time), native, on the object object at the world time worldTime: once per
+   animate pass (pass, a pass number, not a time: when -1 a new one, the global counter at FUN_0102ecec() +
+   0x18 plus 1, 0 instead of -1; the object's +0x18 the last pass it took part in, so an object reached
+   twice is animated once and then returns 0x7fffffff at once), for each property of its track list (+0x10:
+   +4 the tracks, grouped by property, +0x14 / +0x18 each group's track count and the group count; see
+   swvObject3D_InsertAnimationTrack) a 4-word buffer (for MORPH_WEIGHTS 0x10a the mesh's own weights and
+   their count, swvMorphingMesh_Weights) cleared (thunk_swv_memset) before the first track that applies:
+   one whose controller (track +0x20) has a weight above 0 (+0x30; the spec: weight 0 disables it) and is
+   active at the time (swvAnimationController_IsActive). Each such track is sampled into the buffer
+   (FUN_01010de0, the AnimationTrack's sample: the spec's sum of weight * value) and the smallest validity
+   kept; for CROP (0x103) with 2 components (X, Y) the current size is weighted in first (a Sprite3D's,
+   class 0x12, +0x8c / +0x88; else FUN_01038644 of +0x34 / +0x38, GUESS: rounded to an int and clamped to 0
+   .. 0x7fffffff) and 4 components set; for SCALE (0x10e) with 1 component the X change is added to Y and Z
+   (uniform), 3 set. Then the property set through the object's vtable +0x1c (this, the property, the
+   component count, the buffer). Returns its vtable +0x14 (a tail call; the class's references animated,
+   FUN_01003b00 for a Group) given the time, the smallest validity (0x7fffffff, the spec's recommended
+   maximum, when nothing is active) and the pass. The properties: SwerveAnimTarget, swv_types.h. The flag
+   results of swv_fcmp_b / swv_fcmp_a written with common.h's FLOAT_GT / FLOAT_EQ. Ghidra had read the
+   saved r0 - r2 as a 64-bit local and pasted stale flags into the weight tests. Evidence: 0x01003c38 -
+   0x01004008 (`cmn r1, #1` / `bl 0x0102ecec` twice, `cmn r1, #1` / `moveq r1, #0`; `ldr r0, [r7, #0x18]` /
+   `cmp r0, r1` / `beq` the early return; `ldr r0, [r7, #0x10]` re-read at each group and each track; `subs
+   ip, ip, #0xa` / `bleq 0x01011900`; `movs r4, r0` / `ldrne r4, [r0, #0x30]`, `bl 0x0103f534` / `bls`, `bl
+   0x01013a80`; `ldreq r0, [sp, #0x10]` / `lsleq r2, r0, #2` / `bleq 0x01039df0`; the CROP `blx r1` on
+   object + 4 / `cmp r0, #0x12`, `bl 0x01038644` twice, `bl 0x0103f428` / `bne`; `bl 0x01010de0` with `str
+   r4, [sp]` the weight; `cmp r4, r0` / `strlt`; `blx ip` the +0x1c; `ldr r2, [r1, #0x14]` / `bx ip` the
+   tail call). */
+int32 swvObject3D_AnimateValue(uint8 *object,int32 worldTime,int32 pass)
 
 {
-  bool bVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  undefined4 uVar5;
-  int iVar6;
-  undefined4 uVar7;
-  undefined4 *puVar8;
-  uint uVar9;
-  bool bVar10;
-  undefined1 uVar11;
-  bool bVar12;
-  undefined4 *local_5c;
-  int local_58;
-  undefined4 local_54 [4];
-  int local_44;
-  uint local_40;
-  int local_3c;
-  int local_38;
-  int *local_34;
-  int *piStack_30;
-  undefined4 uStack_2c;
-  int local_28;
-  
-  piStack_30 = param_1;
-  uStack_2c = param_2;
-  local_28 = param_3;
-  if (param_3 == -1) {
-    iVar2 = FUN_0102ecec();
-    local_28 = *(int *)(iVar2 + 0x18) + 1;
-    if (*(int *)(iVar2 + 0x18) == -2) {
-      local_28 = 0;
-    }
-    iVar2 = FUN_0102ecec();
-    *(int *)(iVar2 + 0x18) = local_28;
+  uint32 values[4];
+  uint32 *buffer;
+  uint8 *node = object + 4;
+  uint8 *tracks;
+  uint8 *track;
+  const uint8 *controller;
+  int32 count;
+  int32 validity = 0x7fffffff;
+  int32 trackValidity;
+  int32 group;
+  int32 index = 0;
+  int32 size;
+  int32 j;
+  int32 property;
+  int32 components;
+  int32 started;
+  int32 cropWidth;
+  int32 cropHeight;
+  int32 vtable;
+  int32 result;
+  uint32 weight;
+  uint32 previous;
+  uint32 difference;
+
+  if (pass == -1) {
+    pass = *(int32 *)((uint8 *)FUN_0102ecec() + 0x18) + 1;
+    if (pass == -1)
+      pass = 0;
+    *(int32 *)((uint8 *)FUN_0102ecec() + 0x18) = pass;
   }
-  local_38 = 0x7fffffff;
-  if (param_1[6] != local_28) {
-    param_1[6] = local_28;
-    if (param_1[4] != 0) {
-      iVar2 = 0;
-      local_34 = param_1 + 1;
-      for (local_3c = 0; iVar4 = param_1[4], local_3c < *(int *)(iVar4 + 0x18);
-          local_3c = local_3c + 1) {
-        local_40 = *(uint *)(*(int *)(iVar4 + 0x14) + local_3c * 4);
-        local_44 = *(int *)(*(int *)(*(int *)(iVar4 + 4) + iVar2 * 4) + 0x24);
-        local_58 = 4;
-        local_5c = local_54;
-        if (local_44 == 0x10a) {   /* SWV_ANIM_MORPH_WEIGHTS: the mesh's own weights */
-          swvMorphingMesh_Weights((uint8 *)param_1,&local_58,(uint32 **)&local_5c);
-        }
-        iVar4 = 0;
-        bVar1 = false;
-        for (uVar9 = 0; bVar12 = local_40 <= uVar9, (int)uVar9 < (int)local_40; uVar9 = uVar9 + 1) {
-          iVar6 = *(int *)(*(int *)(param_1[4] + 4) + iVar2 * 4);
-          bVar10 = *(int *)(iVar6 + 0x20) == 0;
-          uVar5 = 0;
-          if (!bVar10) {
-            uVar5 = *(undefined4 *)(*(int *)(iVar6 + 0x20) + 0x30);
-          }
-          swv_fcmp_b(uVar5,0);
-          if (((bVar12 && !bVar10) && (*(int *)(iVar6 + 0x20) != 0)) &&
-             (iVar3 = swvAnimationController_IsActive(*(uint8 **)(iVar6 + 0x20),param_2), iVar3 != 0)) {
-            iVar4 = *(int *)(*(int *)(iVar6 + 0x1c) + 0x34);
-            if (!bVar1) {
-              /* Ghidra had dropped the size (r2 = the count << 2, 0x01003d84) */
-              thunk_swv_memset((undefined4)local_5c,0,local_58 << 2);
-            }
-            bVar1 = true;
-            if (local_44 == 0x103) {
-              if (iVar4 == 2) {
-                /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put
-                   there (by the object's class) */
-                iVar4 = (*(code *)(*(int *)(*local_34 + 4) + *local_34))(local_34);
-                uVar11 = iVar4 == 0x12;
-                if ((bool)uVar11) {
-                  iVar3 = param_1[0x22];
-                  iVar4 = param_1[0x23];
-                }
-                else {
-                  iVar4 = FUN_01038644(param_1[0xd],0,0x7fffffff);
-                  iVar3 = FUN_01038644(param_1[0xe],0,0x7fffffff);
-                }
-                swv_fcmp_a(uVar5,0x3f800000);
-                if ((bool)uVar11) {
-                  uVar7 = swv_fflt(iVar4);
-                  puVar8 = local_5c;
-                  uVar7 = swv_fadd(uVar7,local_5c[2]);
-                  puVar8[2] = uVar7;
-                  uVar7 = swv_fflt(iVar3);
-                }
-                else {
-                  uVar7 = swv_fflt(iVar4);
-                  uVar7 = swv_fmul(uVar7,uVar5);
-                  puVar8 = local_5c;
-                  uVar7 = swv_fadd(uVar7,local_5c[2]);
-                  puVar8[2] = uVar7;
-                  uVar7 = swv_fflt(iVar3);
-                  uVar7 = swv_fmul(uVar7,uVar5);
-                }
-                uVar7 = swv_fadd(uVar7,puVar8[3]);
-                puVar8[3] = uVar7;
-              }
-              iVar6 = FUN_01010de0(iVar6,param_2,local_58,local_5c,uVar5);
-              iVar4 = 4;
-            }
-            else if (local_44 == 0x10a) {
-              iVar6 = FUN_01010de0(iVar6,param_2,local_58,local_5c,uVar5);
-              iVar4 = local_58;
-            }
-            else if (local_44 == 0x10e) {
-              if (iVar4 == 1) {
-                uVar7 = *local_5c;
-                iVar6 = FUN_01010de0(iVar6,param_2,local_58,local_5c,uVar5);
-                puVar8 = local_5c;
-                uVar5 = swv_fsub(*local_5c,uVar7);
-                uVar7 = swv_fadd(puVar8[1],uVar5);
-                puVar8[1] = uVar7;
-                uVar5 = swv_fadd(puVar8[2],uVar5);
-                puVar8[2] = uVar5;
+  if (*(int32 *)(object + 0x18) == pass)
+    return validity;
+  *(int32 *)(object + 0x18) = pass;
+  if (*(uint8 **)(object + 0x10) != NULL)
+    for (group = 0; tracks = *(uint8 **)(object + 0x10), group < *(int32 *)(tracks + 0x18); group++) {
+      size = (*(int32 **)(tracks + 0x14))[group];
+      property = *(int32 *)((*(uint8 ***)(tracks + 4))[index] + 0x24);
+      count = 4;
+      buffer = values;
+      if (property == 0x10a)   /* SWV_ANIM_MORPH_WEIGHTS: the mesh's own weights */
+        swvMorphingMesh_Weights(object,&count,&buffer);
+      components = 0;
+      started = 0;
+      for (j = 0; j < size; j++, index++) {
+        track = (*(uint8 ***)(*(uint8 **)(object + 0x10) + 4))[index];
+        controller = *(const uint8 **)(track + 0x20);
+        weight = controller != NULL ? *(const uint32 *)(controller + 0x30) : 0;
+        if ((swv_fcmp_b(weight,0), FLOAT_GT(weight,0)) && controller != NULL &&
+            swvAnimationController_IsActive(controller,worldTime) != 0) {
+          components = *(const int32 *)(*(const uint8 **)(track + 0x1c) + 0x34);
+          if (!started)
+            thunk_swv_memset(buffer,0,(uint32)count << 2);
+          started = 1;
+          if (property == 0x103) {   /* SWV_ANIM_CROP */
+            if (components == 2) {
+              vtable = *(int32 *)node;
+              /* engine virtual call, slot +0x4: the class (GUESS), 0x12 a Sprite3D */
+              if ((*(code *)(*(int32 *)(vtable + 4) + vtable))(node) == 0x12) {
+                cropHeight = *(int32 *)(object + 0x88);
+                cropWidth = *(int32 *)(object + 0x8c);
               }
               else {
-                iVar6 = FUN_01010de0(iVar6,param_2,local_58,local_5c,uVar5);
+                cropWidth = FUN_01038644(*(uint32 *)(object + 0x34),0,0x7fffffff);
+                cropHeight = FUN_01038644(*(uint32 *)(object + 0x38),0,0x7fffffff);
               }
-              iVar4 = 3;
+              if ((swv_fcmp_a(weight,0x3f800000), FLOAT_EQ(weight,0x3f800000))) {
+                buffer[2] = swv_fadd(swv_fflt(cropWidth),buffer[2]);
+                buffer[3] = swv_fadd(swv_fflt(cropHeight),buffer[3]);
+              }
+              else {
+                buffer[2] = swv_fadd(swv_fmul(swv_fflt(cropWidth),weight),buffer[2]);
+                buffer[3] = swv_fadd(swv_fmul(swv_fflt(cropHeight),weight),buffer[3]);
+              }
             }
-            else {
-              iVar6 = FUN_01010de0(iVar6,param_2,local_58,local_5c,uVar5);
-            }
-            if (iVar6 < local_38) {
-              local_38 = iVar6;
-            }
+            trackValidity = (int32)FUN_01010de0((int)track,(undefined4)worldTime,(undefined4)count,
+                                                (undefined4)buffer,weight);
+            components = 4;
           }
-          iVar2 = iVar2 + 1;
-        }
-        if (bVar1) {
-          /* engine virtual call, slot +0x1c: of the static engine vtables only the renderer's (0x01002398)
-             FUN_01021d50 and 0x01002410's FUN_0100486c have it; a scene object's vtable is not among them
-             (GUESS: not static), so for one the method is not known here */
-          (*(code *)(*(int *)(*param_1 + 0x1c) + *param_1))(param_1,local_44,iVar4,local_5c);
+          else if (property == 0x10a) {
+            trackValidity = (int32)FUN_01010de0((int)track,(undefined4)worldTime,(undefined4)count,
+                                                (undefined4)buffer,weight);
+            components = count;
+          }
+          else if (property == 0x10e) {   /* SWV_ANIM_SCALE */
+            if (components == 1) {
+              previous = buffer[0];
+              trackValidity = (int32)FUN_01010de0((int)track,(undefined4)worldTime,(undefined4)count,
+                                                  (undefined4)buffer,weight);
+              difference = swv_fsub(buffer[0],previous);
+              buffer[1] = swv_fadd(buffer[1],difference);
+              buffer[2] = swv_fadd(buffer[2],difference);
+            }
+            else
+              trackValidity = (int32)FUN_01010de0((int)track,(undefined4)worldTime,(undefined4)count,
+                                                  (undefined4)buffer,weight);
+            components = 3;
+          }
+          else
+            trackValidity = (int32)FUN_01010de0((int)track,(undefined4)worldTime,(undefined4)count,
+                                                (undefined4)buffer,weight);
+          if (trackValidity < validity)
+            validity = trackValidity;
         }
       }
+      if (started) {
+        vtable = *(int32 *)object;
+        /* engine virtual call, slot +0x1c: the property set (this, the property, the component count, the
+           values); of the static engine vtables only the renderer's (0x01002398) FUN_01021d50 and
+           0x01002410's FUN_0100486c have it; a scene object's vtable is not among them (GUESS: not
+           static), so for one the method is not known here */
+        (*(code *)(*(int32 *)(vtable + 0x1c) + vtable))(object,property,components,buffer);
+      }
     }
-                    /* WARNING: Could not recover jumptable at 0x01004000. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-    /* engine virtual call, slot +0x14: of the static engine vtables only the renderer's (0x01002398)
-       FUN_01005104 and 0x01002410's swvM3GReader_State and 0x010027d8's 0x01022908 have it; a scene
-       object's vtable is not among them (GUESS: not static), so for one the method is not known here */
-    uVar5 = (*(code *)(*(int *)(*param_1 + 0x14) + *param_1))(param_1,param_2,local_38,local_28);
-    return uVar5;
-  }
-  return 0x7fffffff;
+  vtable = *(int32 *)object;
+  /* engine virtual call, slot +0x14 (a tail call): of the static engine vtables only the renderer's
+     (0x01002398) FUN_01005104 and 0x01002410's swvM3GReader_State and 0x010027d8's 0x01022908 have it;
+     a scene object's vtable is not among them (GUESS: not static), so for one the method is not known
+     here */
+  result = (*(code *)(*(int32 *)(vtable + 0x14) + vtable))(object,worldTime,validity,pass);
+  return result;
 }
 
 /* ==== 0x0100400C  (file offset 0x0400C)  FUN_0100400c ================================================ */
@@ -4830,171 +4827,131 @@ int32 swvKeyframeSequence_KeyframeWords(const SwvKeyframeSequence *sequence)
 }
 
 /* ==== 0x01004C4C  (file offset 0x04C4C)  swvKeyframeSequence_BuildTangents =========================== */
-/* GUESS: name (not yet rewritten). Builds the in and out tangents of a KeyframeSequence's valid
-   keyframes for SPLINE (param_2 0) or SQUAD (param_2 1, the quaternion path: FUN_010246a0,
-   FUN_0100e4e8, FUN_010272f4): for each keyframe, from its neighbours (swvKeyframeSequence_PreviousValid
-   / NextValid) scaled by the ratio of the time steps; in CONSTANT mode (0xc0) the first and last
-   keyframes get zero tangents. Only swvKeyframeSequence_Prepare calls it. */
-void swvKeyframeSequence_BuildTangents(int param_1,int param_2)
+/* GUESS: name. Builds the two tangents of each valid keyframe of the KeyframeSequence sequence for SPLINE
+   (quaternions 0) or SQUAD (quaternions 1), as JSR-184 1.1, KeyframeSequence (SPLINE, SQUAD) defines them.
+   The keyframes: k = validFirst .. validFirst + the valid count - 1, keyframe k % keyframeCount (the
+   remainder of swv_rt_sdiv); a keyframe is its time, its componentCount components, then the two tangents
+   of componentCount words each. Its neighbours are swvKeyframeSequence_PreviousValid / NextValid; at the
+   first valid keyframe the previous time is moved back by the duration rounded to an int (ffix of duration
+   + 0.5), at the last the next time forward by it (the wrap). factorOut = (tNext - t) / (tNext -
+   tPrevious) and factorIn = (t - tPrevious) / (tNext - tPrevious) (swv_frdiv, the reverse divide): the
+   spec's F-i / 2 and F+i / 2; in CONSTANT mode (0xc0) both 0 at the first and last valid keyframes (F-0 =
+   F+0 = F-N-1 = F+N-1 = 0), which for SPLINE are just zeroed. SPLINE: with d = the next keyframe's
+   component - the previous one's (the spec's Ti = (vi+1 - vi-1) / 2 times 2), T0i = factorOut * d, T1i =
+   factorIn * d. SQUAD: stepIn = FUN_010246a0(previous, this) and stepOut = FUN_010246a0(this, next)
+   (GUESS: log(conj(a) * b), the spec's log(qi-1^-1 qi) and log(qi^-1 qi+1)); per word, with sum = stepIn +
+   stepOut (Tn times 2), ai's exponent (factorOut * sum - stepOut) / 2 and bi's (stepIn - factorIn * sum) /
+   2, the halving as two multiplies (0x4e000000 = 2^29, then 0x30800000 = 2^-30, as the binary does), each
+   through FUN_0100e4e8 (GUESS: the quaternion exp), the two tangents set to the keyframe's quaternion and
+   multiplied by them (FUN_010272f4, GUESS: q = q * r): ai = qi exp((T0i - log(qi^-1 qi+1)) / 2), bi = qi
+   exp((log(qi-1^-1 qi) - T1i) / 2). Only swvKeyframeSequence_Prepare calls it. No result. Evidence:
+   0x01004c4c - 0x01004fb4 (`bl 0x01004c30`, `bl 0x01004c0c`, `mov r1, #0x3f000000` / `bl 0x0103eee8` / `bl
+   0x0103f490`, `add r0, r7, r5` / `sub r0, r0, #1`; `bl 0x010001f4` / `mul r0, sb, r1` the remainder
+   (Ghidra's extraout_r1, the arguments dropped); `cmp r0, #0xc0` / `cmpne r7, r0` / `moveq r5, #1`; `strgt
+   r1, [r8], #4` / `strgt r1, [r6], #4`; `bl 0x01011ae0`, `bl 0x01011b4c`, `subeq sl, sl, r0` / `addeq r5,
+   r5, r0`, `bl 0x0103f500` three times and `bl 0x0103f240` twice into sp + 0x54 / sp + 0x50; `bl
+   0x010246a0` with sp + 0x38 and sp + 0x28, the 4-word loop of 0x0103eee8 / 0x0103f604 / 0x0103f064 /
+   0x0103f030, `bl 0x0100e4e8` twice, the copy `str r1, [r8, r0, lsl #2]` / `str r1, [r6, r0, lsl #2]`, `bl
+   0x010272f4` twice; the SPLINE loop `ldr r1, [r5], #4` / `ldr r0, [sl], #4` / `bl 0x0103f064`). */
+void swvKeyframeSequence_BuildTangents(SwvKeyframeSequence *sequence,int32 quaternions)
 
 {
-  bool bVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  undefined4 uVar5;
-  undefined4 uVar6;
-  undefined4 *puVar7;
-  int extraout_r1;
-  int extraout_r1_00;
-  undefined4 *puVar8;
-  int extraout_r1_01;
-  undefined4 *puVar9;
-  int iVar10;
-  undefined4 *puVar11;
-  undefined4 uVar12;
-  int iVar13;
-  undefined4 uVar14;
-  undefined4 local_98 [4];
-  undefined4 local_88 [4];
-  undefined4 local_78 [4];
-  undefined4 local_68 [4];
-  int local_58;
-  int local_54;
-  undefined4 local_50;
-  undefined4 local_4c;
-  int local_48;
-  int local_44;
-  int local_40;
-  int local_3c;
-  int local_38;
-  int local_34;
-  undefined4 local_30;
-  int iStack_2c;
-  int local_28;
-  
-  iStack_2c = param_1;
-  local_28 = param_2;
-  iVar2 = swvKeyframeSequence_KeyframeWords((SwvKeyframeSequence *)param_1);   /* Ghidra had dropped it */
-  iVar3 = swvKeyframeSequence_ValidCount((SwvKeyframeSequence *)param_1);
-  local_3c = swv_ffix(swv_fadd(*(undefined4 *)(param_1 + 0x24),0x3f000000));   /* Ghidra had dropped it */
-  iVar10 = *(int *)(param_1 + 0x2c);
-  local_40 = iVar10 + iVar3 + -1;
-  do {
-    if (local_40 < iVar10) {
-      return;
-    }
-    FUN_010001f4(*(undefined4 *)(param_1 + 0x38),iVar10);
-    if (*(int *)(param_1 + 0x20) == 0xc0) {
-      iVar4 = *(int *)(param_1 + 0x2c);
-      iVar3 = iVar4;
-      if (iVar4 != iVar10) {
-        iVar3 = local_40;
-      }
-      if (iVar4 != iVar10 && iVar10 != iVar3) goto LAB_01004cd0;
-      bVar1 = true;
-    }
-    else {
-LAB_01004cd0:
-      bVar1 = false;
-    }
-    iVar3 = *(int *)(param_1 + 0x34);
-    puVar9 = (undefined4 *)(*(int *)(param_1 + 0x40) + iVar2 * extraout_r1 * 4 + iVar3 * 4 + 4);
-    puVar11 = puVar9 + iVar3;
-    if ((local_28 == 0) && (bVar1)) {
-      while (bVar1 = 0 < iVar3, iVar3 = iVar3 + -1, bVar1) {
-        *puVar11 = 0;
-        *puVar9 = 0;
-        puVar9 = puVar9 + 1;
-        puVar11 = puVar11 + 1;
+  uint32 stepIn[4];
+  uint32 stepOut[4];
+  uint32 exponentA[4];
+  uint32 exponentB[4];
+  int32 words = swvKeyframeSequence_KeyframeWords(sequence);
+  int32 valid = swvKeyframeSequence_ValidCount(sequence);
+  int32 period = swv_ffix(swv_fadd(sequence->duration,0x3f000000));
+  int32 last;
+  int32 k;
+  int32 i;
+  int32 count;
+  int32 previous;
+  int32 next;
+  int32 endpoint;
+  uint32 timePrevious;
+  uint32 time;
+  uint32 timeNext;
+  uint32 factorIn;
+  uint32 factorOut;
+  uint32 span;
+  uint32 difference;
+  uint32 sum;
+  uint32 *tangentA;
+  uint32 *tangentB;
+  const uint32 *componentsPrevious;
+  const uint32 *componentsNext;
+  const uint32 *components;
+
+  last = sequence->validFirst + valid - 1;
+  for (k = sequence->validFirst; k <= last; k++) {
+    tangentA = (uint32 *)(sequence->keyframes +
+                          words * swv_rt_sdiv((uint)sequence->keyframeCount,(uint)k).high);
+    endpoint = sequence->repeatMode == 0xc0 && (sequence->validFirst == k || k == last);
+    count = sequence->componentCount;
+    tangentA += count + 1;
+    tangentB = tangentA + count;
+    if (quaternions == 0 && endpoint) {
+      for (; count > 0; count--) {
+        *tangentB++ = 0;
+        *tangentA++ = 0;
       }
     }
     else {
-      local_44 = swvKeyframeSequence_PreviousValid((const SwvKeyframeSequence *)param_1,iVar10);
-      local_48 = swvKeyframeSequence_NextValid((const SwvKeyframeSequence *)param_1,iVar10);
-      if (bVar1) {
-        local_50 = 0;
-        local_4c = 0;
+      previous = swvKeyframeSequence_PreviousValid(sequence,k);
+      next = swvKeyframeSequence_NextValid(sequence,k);
+      if (endpoint) {
+        factorIn = 0;
+        factorOut = 0;
       }
       else {
-        iVar4 = *(int *)(param_1 + 0x40);
-        iVar3 = *(int *)(iVar4 + iVar2 * local_44 * 4);
-        FUN_010001f4(*(undefined4 *)(param_1 + 0x38),iVar10);
-        iVar13 = *(int *)(iVar4 + iVar2 * extraout_r1_00 * 4);
-        iVar4 = *(int *)(iVar4 + iVar2 * local_48 * 4);
-        if (*(int *)(param_1 + 0x2c) == iVar10) {
-          iVar3 = iVar3 - local_3c;
-        }
-        else if (iVar10 == local_40) {
-          iVar4 = iVar4 + local_3c;
-        }
-        local_54 = iVar4 - iVar3;
-        local_30 = swv_fflt(iVar13 - iVar3);
-        uVar5 = swv_fflt(local_54);
-        local_4c = swv_frdiv(uVar5,local_30);
-        uVar6 = swv_fflt(iVar4 - iVar13);
-        local_50 = swv_frdiv(uVar5,uVar6);
+        timePrevious = (uint32)sequence->keyframes[words * previous];
+        time = (uint32)sequence->keyframes[words *
+                                           swv_rt_sdiv((uint)sequence->keyframeCount,(uint)k).high];
+        timeNext = (uint32)sequence->keyframes[words * next];
+        if (sequence->validFirst == k)
+          timePrevious -= (uint32)period;
+        else if (k == last)
+          timeNext += (uint32)period;
+        difference = swv_fflt((int32)(time - timePrevious));
+        span = swv_fflt((int32)(timeNext - timePrevious));
+        factorIn = swv_frdiv(span,difference);
+        factorOut = swv_frdiv(span,swv_fflt((int32)(timeNext - time)));
       }
-      local_54 = *(int *)(param_1 + 0x34);
-      iVar3 = iVar2 * local_44;
-      local_34 = *(int *)(param_1 + 0x40);
-      puVar8 = (undefined4 *)(local_34 + iVar3 * 4);
-      local_38 = iVar2 * local_48;
-      puVar7 = (undefined4 *)(local_34 + local_38 * 4);
-      if (local_28 == 0) {
-        while( true ) {
-          puVar7 = puVar7 + 1;
-          puVar8 = puVar8 + 1;
-          iVar3 = local_54 + -1;
-          bVar1 = local_54 < 1;
-          local_54 = iVar3;
-          if (bVar1) break;
-          uVar5 = swv_fsub(*puVar7,*puVar8);
-          uVar6 = swv_fmul(local_50,uVar5);
-          *puVar9 = uVar6;
-          uVar5 = swv_fmul(local_4c,uVar5);
-          *puVar11 = uVar5;
-          puVar9 = puVar9 + 1;
-          puVar11 = puVar11 + 1;
+      count = sequence->componentCount;
+      componentsPrevious = (const uint32 *)(sequence->keyframes + words * previous + 1);
+      componentsNext = (const uint32 *)(sequence->keyframes + words * next + 1);
+      if (quaternions == 0) {
+        while (count-- > 0) {
+          difference = swv_fsub(*componentsNext++,*componentsPrevious++);
+          *tangentA++ = swv_fmul(factorOut,difference);
+          *tangentB++ = swv_fmul(factorIn,difference);
         }
       }
       else {
-        FUN_010001f4(*(undefined4 *)(param_1 + 0x38),iVar10);
-        local_58 = local_34 + iVar2 * extraout_r1_01 * 4 + 4;
-        FUN_010246a0(local_68,*(int *)(param_1 + 0x40) + iVar3 * 4 + 4,local_58);
-        FUN_010246a0(local_78,local_58,*(int *)(param_1 + 0x40) + local_38 * 4 + 4);
-        iVar3 = 0;
-        do {
-          uVar12 = local_78[iVar3];
-          uVar14 = local_68[iVar3];
-          uVar5 = swv_fadd(uVar14,uVar12);
-          uVar6 = swv_fmul(local_50,uVar5);
-          uVar6 = swv_fsub(uVar6,uVar12);
-          uVar6 = swv_fmul(uVar6,0x4e000000);
-          uVar6 = swv_fmul(uVar6,0x30800000);
-          local_88[iVar3] = uVar6;
-          uVar5 = swv_fmul(local_4c,uVar5);
-          uVar5 = swv_frsb(uVar5,uVar14);
-          uVar5 = swv_fmul(uVar5,0x4e000000);
-          uVar5 = swv_fmul(uVar5,0x30800000);
-          local_98[iVar3] = uVar5;
-          iVar3 = iVar3 + 1;
-        } while (iVar3 < 4);
-        FUN_0100e4e8(local_88);
-        FUN_0100e4e8(local_98);
-        iVar3 = 0;
-        do {
-          uVar5 = *(undefined4 *)(local_58 + iVar3 * 4);
-          puVar11[iVar3] = uVar5;
-          puVar9[iVar3] = uVar5;
-          iVar3 = iVar3 + 1;
-        } while (iVar3 < 4);
-        FUN_010272f4(puVar9,local_88);
-        FUN_010272f4(puVar11,local_98);
+        components = (const uint32 *)(sequence->keyframes +
+                                      words * swv_rt_sdiv((uint)sequence->keyframeCount,(uint)k).high + 1);
+        FUN_010246a0((uint *)stepIn,(uint *)componentsPrevious,(undefined4)components);
+        FUN_010246a0((uint *)stepOut,(uint *)components,(undefined4)componentsNext);
+        for (i = 0; i < 4; i++) {
+          sum = swv_fadd(stepIn[i],stepOut[i]);
+          exponentA[i] = swv_fmul(swv_fmul(swv_fsub(swv_fmul(factorOut,sum),stepOut[i]),0x4e000000),
+                                  0x30800000);
+          exponentB[i] = swv_fmul(swv_fmul(swv_frsb(swv_fmul(factorIn,sum),stepIn[i]),0x4e000000),
+                                  0x30800000);
+        }
+        FUN_0100e4e8((undefined4 *)exponentA);
+        FUN_0100e4e8((undefined4 *)exponentB);
+        for (i = 0; i < 4; i++) {
+          tangentB[i] = components[i];
+          tangentA[i] = components[i];
+        }
+        FUN_010272f4((uint *)tangentA,(undefined4 *)exponentA);
+        FUN_010272f4((uint *)tangentB,(undefined4 *)exponentB);
       }
     }
-    iVar10 = iVar10 + 1;
-  } while( true );
+  }
 }
 
 /* ==== 0x01004FB8  (file offset 0x04FB8)  swv_ColourClamp ============================================= */
@@ -5329,10 +5286,10 @@ undefined4 FUN_01005104(int param_1,int param_2,int param_3)
       iStack_a0 = iStack_7c;
       uVar2 = swv_fmul(uStack_ac,WORD_HEXADECIMAL_47800000);
       uVar2 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
-      iStack_bc = FUN_010001f4(iStack_a0,uVar2);
+      iStack_bc = swv_rt_sdiv(iStack_a0,uVar2).low;
       uVar2 = swv_fmul(uStack_b0,WORD_HEXADECIMAL_47800000);
       uVar2 = swv_ffix(swv_fadd(uVar2,0x3f000000));   /* Ghidra had dropped it */
-      iStack_c0 = FUN_010001f4(iVar8,uVar2);
+      iStack_c0 = swv_rt_sdiv(iVar8,uVar2).low;
       uVar16 = 0x1f < uStack_94;
       uVar15 = uStack_94 == 0x20;
       if ((bool)uVar15) {
@@ -5945,7 +5902,7 @@ int FUN_01006518(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     iVar1 = swvObject3D_AnimationTrackCount((uint8 *)param_2);
     for (iVar4 = 0; iVar4 < iVar1; iVar4 = iVar4 + 1) {
       uVar3 = (undefined4)swvObject3D_AnimationTrack((uint8 *)param_2,iVar4);
-      swvObject3D_AddAnimationTrackValue(param_1,uVar3);
+      swvObject3D_AddAnimationTrackValue((uint8 *)param_1,(uint8 *)uVar3);
     }
   }
   FUN_0101a230(param_1);
@@ -7347,7 +7304,6 @@ void FUN_01007e30(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
   int iVar2;
   int iVar3;
   int iVar4;
-  int extraout_r1;
   
   if ((int)(param_3 | param_4) >> 0xf != 0) {
     FUN_0102f7e0(0xfffffffc);
@@ -7356,14 +7312,14 @@ void FUN_01007e30(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
   if (param_5 < (int)(param_4 * param_3)) {
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
-  if ((param_7 < iVar1 * 0x100) && (FUN_010001f4(iVar1,param_7), extraout_r1 != 0)) {
+  if ((param_7 < iVar1 * 0x100) && (swv_rt_sdiv(iVar1,param_7).high != 0)) {
     FUN_0102f7e0(INTEGER_MINUS_1301);
   }
   *(undefined4 *)(param_1 + 0x44) = 0;
   *(undefined4 *)(param_1 + 0x40) = param_2;
   *(uint *)(param_1 + 0x34) = param_3;
   *(uint *)(param_1 + 0x38) = param_4;
-  iVar2 = FUN_010001f4(iVar1,param_7);
+  iVar2 = swv_rt_sdiv(iVar1,param_7).low;
   if (0x100 < iVar2) {
     iVar2 = 0x100;
   }
@@ -14022,7 +13978,6 @@ undefined4 FUN_0100f9f8(int param_1)
 {
   uint uVar1;
   int iVar2;
-  int extraout_r1;
   int iVar3;
   int iVar4;
   
@@ -14045,8 +14000,7 @@ undefined4 FUN_0100f9f8(int param_1)
         iVar3 = (int)*(short *)(*(int *)(param_1 + 0x2c) + iVar4 * 2);
       }
       if (*(int *)(param_1 + 0x20) == 3) {
-        FUN_010001f4(3,iVar4);
-        iVar2 = param_1 + extraout_r1 * 4;
+        iVar2 = param_1 + swv_rt_sdiv(3,iVar4).high * 4;
         if (*(int *)(iVar2 + 0x40) < iVar3) {
           *(int *)(iVar2 + 0x40) = iVar3;
         }
@@ -15082,8 +15036,8 @@ FUN_01010de0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_
     if (!(bool)uVar4) {
       uVar2 = swvAnimationController_Position(*(const uint8 **)(param_1 + 0x20),(int32)param_2);
     }
-    uVar3 = swvKeyframeSequence_Sample(*(undefined4 *)(param_1 + 0x1c),uVar2,param_3,param_4,param_5,
-                                       uVar3);
+    uVar3 = swvKeyframeSequence_Sample(*(SwvKeyframeSequence **)(param_1 + 0x1c),uVar2,(int32)param_3,
+                                       (uint32 *)param_4,param_5);
     swv_fcmp_a(uVar3,WORD_HEXADECIMAL_7F7FFFFF);
     if (!(bool)uVar4) {
       uVar2 = swvAnimationController_Speed(*(uint8 **)(param_1 + 0x20));
@@ -15169,421 +15123,237 @@ uint8 *swvMesh_VertexBuffer(const uint8 *mesh)
 }
 
 /* ==== 0x01010F98  (file offset 0x10F98)  swvKeyframeSequence_Sample ================================== */
-/* GUESS: name (not yet rewritten). Samples a KeyframeSequence at time param_2: prepares it first
-   (swvKeyframeSequence_Prepare, while +0x4c is 0); a duration (+0x24) of 0 or less is error -1300; in
-   LOOP mode (0xc1) the time wraps by the duration, otherwise it is clamped to the valid keyframes;
-   then interpolates between the keyframes around it. */
-undefined4
-swvKeyframeSequence_Sample(int param_1,undefined4 param_2,int param_3,undefined4 *param_4,
-                           undefined4 param_5)
+/* GUESS: name. Samples the KeyframeSequence sequence at the sequence time time (float bits) into value,
+   adding weight * the sampled value to each of the first count words (or the component count, if fewer;
+   always 4 for SLERP / SQUAD), the weighted sum JSR-184 1.1, Object3D.animate defines; returns the time
+   (float bits) the sample stays valid for, or 0 (the caller, FUN_01010de0, turns it into the validity
+   interval). Error -1300 (SWVE_ILLEGAL_STATE; FUN_0102f7e0, which does not return) for a duration (+0x24)
+   not above 0; prepared first while +0x4c is 0 (swvKeyframeSequence_Prepare). The keyframe range: the
+   valid keyframes validFirst .. validFirst + the valid count - 1, keyframe k at k % keyframeCount (the
+   remainder of swv_rt_sdiv), firstTime and lastTime their times. In LOOP mode (0xc1) the time wraps by the
+   duration (time - (float)(int)(time / duration) * duration, plus the duration when below 0); otherwise
+   before firstTime it is clamped there (valid for firstTime - time), at or after the duration it becomes
+   +0x28 - 1 (GUESS: +0x28 an int duration), and after lastTime it is clamped there (valid for ever,
+   0x7f7fffff, the largest float). With a single valid keyframe its value is taken (valid for ever). Inside
+   [firstTime, lastTime) the keyframe before the time is searched for and s = (time - its time) / (the next
+   one's - its); outside it, in LOOP mode, the segment from the last to the first keyframe across the wrap
+   (s = (time - lastTime, or duration - lastTime + time before firstTime) / (duration - lastTime +
+   firstTime)), else the first or last keyframe. A time on a keyframe (or STEP, 0xb4) takes that keyframe's
+   value; else between it and swvKeyframeSequence_NextValid: LINEAR (0xb0) v + (vNext - v) * s; SLERP
+   (0xb1) FUN_01024338(the result, q, qNext, s, 1) (GUESS: slerp); SPLINE (0xb2) the spec's Hermite form,
+   (2s^3 - 3s^2 + 1) v + (3s^2 - 2s^3) vNext + (s^3 - 2s^2 + s) T0 + (s^3 - s^2) T1Next (the keyframe's
+   first tangent, the next one's second: swvKeyframeSequence_BuildTangents); SQUAD (0xb3) FUN_010246f4(the
+   result, q, its first tangent, the next one's second tangent, qNext, s) (GUESS: squad); a weight other
+   than 1.0 multiplies each word (FUN_0102748c, GUESS: a quaternion's scale, for SLERP / SQUAD). The
+   validity, when no clamp set it (it starts at -1.0): 0, except for LINEAR, SLERP and STEP when value
+   (the sum so far) equals the next keyframe's components: then that keyframe's time - time (plus the
+   duration when below 0). The flag results of swv_fcmp_a / _b / _c written with common.h's FLOAT_LT /
+   FLOAT_GE / FLOAT_GT / FLOAT_EQ. Callers: FUN_01010de0 (an AnimationTrack's sample). Evidence: 0x01010f98
+   - 0x010118ec (`ldr sl, [sp, #0xa8]` the weight, the fifth argument; `bl 0x0103f534` / `blls`; `bleq
+   0x010266c0`; `bl 0x010001f4` / `mul r0, r8, r1` each remainder (Ghidra's extraout_r1, the arguments
+   dropped); `cmp r0, #0xc1`; `bl 0x0103f250` / `bl 0x0103f490` / `bl 0x0103f500` / `bl 0x0103f604` / `bl
+   0x0103f030`, `bl 0x0103f59c` / `bhs`; `bl 0x0103f534` / `blo` and `ldrhi` / `movhi`; `cmp r0, #0x1` /
+   `ldreq` 0x7f7fffff; the search loop `cmp r0, r1` / `bge`, `bl 0x0103f534` / `bhs`; `bl 0x0103f428` /
+   `moveq r0, #0x1` the exact flag; `bl 0x0103f240`; `cmp r0, r1` / `ldrgt` the count; `addls pc, pc, r1,
+   lsl #2` the interpolation switch, its four loops `mov r0, r6` / `cmp r0, #0x0` / `sub r6, r6, #1` /
+   `bgt`; `bl 0x01024338` with `mov r3, #1` / `str r3, [sp]`, `bl 0x010246f4` with `stm sp, {r2, fp}`, `bl
+   0x0102748c`; `bl 0x0103f59c` / `bhs` on the validity, the second switch, `bl 0x0103f428` / `bne` per
+   word, `bl 0x0103f500` / `bl 0x0103f064` / `bl 0x0103eee8`). The binary's constant flag (`mov fp, #1` /
+   `cmp fp, #0x0` / `beq`, always taken) is left out. */
+uint32 swvKeyframeSequence_Sample(SwvKeyframeSequence *sequence,uint32 time,int32 count,uint32 *value,
+                                  uint32 weight)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  int iVar4;
-  uint uVar5;
-  undefined4 uVar6;
-  undefined4 uVar7;
-  int iVar8;
-  int extraout_r1;
-  int extraout_r1_00;
-  int extraout_r1_01;
-  int extraout_r1_02;
-  int extraout_r1_03;
-  uint uVar9;
-  undefined4 *puVar10;
-  undefined4 uVar11;
-  undefined4 *puVar12;
-  int iVar13;
-  int iVar14;
-  uint uVar15;
-  undefined4 uVar16;
-  undefined4 *puVar17;
-  undefined1 in_ZR;
-  undefined1 in_CY;
-  bool bVar18;
-  undefined1 uVar19;
-  byte bVar20;
-  undefined1 uVar21;
-  undefined4 *local_8c;
-  undefined4 *local_88;
-  undefined4 *local_84;
-  undefined4 *local_80;
-  int local_7c;
-  undefined4 *local_78;
-  uint local_74;
-  undefined4 local_70;
-  int local_6c;
-  uint local_68;
-  undefined4 local_64;
-  uint local_60;
-  undefined4 local_5c;
-  int local_58;
-  undefined4 local_54;
-  undefined4 local_50;
-  undefined4 local_4c;
-  uint local_48;
-  uint local_44;
-  undefined4 *local_40;
-  uint local_3c;
-  int local_38;
-  int iStack_34;
-  undefined4 uStack_30;
-  int local_2c;
-  undefined4 *puStack_28;
-  
-  iStack_34 = param_1;
-  uStack_30 = param_2;
-  local_2c = param_3;
-  puStack_28 = param_4;
-  swv_fcmp_b(*(undefined4 *)(param_1 + 0x24),0);
-  if (!(bool)in_CY || (bool)in_ZR) {
+  uint32 rotation[4];
+  uint32 *start = value;
+  uint keyframeCount;
+  int32 valid;
+  int32 words;
+  int32 keyframe;
+  int32 end;
+  int32 last;
+  int32 current;
+  int32 next;
+  int32 n;
+  int32 i;
+  int32 clamped = 0;
+  int32 exact = 1;
+  uint32 firstTime;
+  uint32 lastTime;
+  uint32 previousTime;
+  uint32 nextTime;
+  uint32 validity;
+  uint32 s = 0;
+  uint32 numerator;
+  uint32 denominator;
+  uint32 square;
+  uint32 cube;
+  uint32 twiceCube;
+  uint32 threeSquare;
+  uint32 h1;
+  uint32 h2;
+  uint32 h3;
+  uint32 h4;
+  uint32 sum;
+  const uint32 *components;
+  const uint32 *componentsNext;
+  const uint32 *tangent;
+  const uint32 *tangentNext;
+
+  if ((swv_fcmp_b(sequence->duration,0), !FLOAT_GT(sequence->duration,0)))
     FUN_0102f7e0(INTEGER_MINUS_1300);
+  if (sequence->prepared == 0)
+    swvKeyframeSequence_Prepare(sequence);
+  valid = swvKeyframeSequence_ValidCount(sequence);
+  words = swvKeyframeSequence_KeyframeWords(sequence);
+  keyframe = sequence->validFirst;
+  firstTime = swv_fflt(sequence->keyframes[words * keyframe]);
+  end = keyframe + valid;
+  keyframeCount = (uint)sequence->keyframeCount;
+  last = end - 1;
+  lastTime = swv_fflt(sequence->keyframes[words * swv_rt_sdiv(keyframeCount,(uint)last).high]);
+  validity = FLOAT_MINUS_1;
+  if (sequence->repeatMode == 0xc1) {
+    time = swv_frsb(swv_fmul(swv_fflt(swv_ffix(swv_fdiv(time,sequence->duration))),sequence->duration),
+                    time);
+    if ((swv_fcmp_c(time,0), FLOAT_LT(time,0)))
+      time = swv_fadd(time,sequence->duration);
   }
-  if (*(int *)(param_1 + 0x4c) == 0) {
-    swvKeyframeSequence_Prepare(param_1);
-  }
-  local_58 = swvKeyframeSequence_ValidCount((SwvKeyframeSequence *)param_1);
-  iVar1 = swvKeyframeSequence_KeyframeWords((SwvKeyframeSequence *)param_1);
-  uVar15 = *(uint *)(param_1 + 0x2c);
-  local_38 = iVar1 * uVar15;
-  iVar13 = *(int *)(param_1 + 0x40);
-  local_5c = swv_fflt(*(undefined4 *)(iVar13 + local_38 * 4));
-  local_60 = uVar15 + local_58;
-  local_64 = *(undefined4 *)(param_1 + 0x38);
-  local_68 = local_60 - 1;
-  FUN_010001f4(local_64,local_68);
-  uVar2 = swv_fflt(*(undefined4 *)(iVar13 + iVar1 * extraout_r1 * 4));
-  local_6c = 0;
-  local_70 = FLOAT_MINUS_1;
-  uVar21 = 0xc0 < *(uint *)(param_1 + 0x20);
-  uVar19 = *(uint *)(param_1 + 0x20) == 0xc1;
-  if ((bool)uVar19) {
-    uVar16 = *(undefined4 *)(param_1 + 0x24);
-    uVar3 = swv_fflt(swv_ffix(swv_fdiv(param_2,uVar16)));   /* Ghidra had dropped the arguments */
-    uVar3 = swv_fmul(uVar3,uVar16);
-    param_2 = swv_frsb(uVar3,param_2);
-    swv_fcmp_c(param_2,0);
-    if (!(bool)uVar21) {
-      param_2 = swv_fadd(param_2,*(undefined4 *)(param_1 + 0x24));
-    }
+  else if ((swv_fcmp_c(time,firstTime), FLOAT_LT(time,firstTime))) {
+    validity = swv_fsub(firstTime,time);
+    clamped = 1;
+    time = firstTime;
   }
   else {
-    swv_fcmp_c(param_2,local_5c);
-    if ((bool)uVar21) {
-      swv_fcmp_b(param_2,*(undefined4 *)(param_1 + 0x24));
-      if ((bool)uVar21) {
-        param_2 = swv_fflt(*(int *)(param_1 + 0x28) + -1);
-      }
-      swv_fcmp_b(param_2,uVar2);
-      if ((bool)uVar21 && !(bool)uVar19) {
-        local_70 = WORD_HEXADECIMAL_7F7FFFFF;
-        param_2 = uVar2;
-      }
-    }
-    else {
-      local_70 = swv_fsub(local_5c,param_2);
-      local_6c = 1;
-      param_2 = local_5c;
+    if ((swv_fcmp_b(time,sequence->duration), FLOAT_GE(time,sequence->duration)))
+      time = swv_fflt(sequence->field_28 - 1);
+    if ((swv_fcmp_b(time,lastTime), FLOAT_GT(time,lastTime))) {
+      validity = WORD_HEXADECIMAL_7F7FFFFF;
+      time = lastTime;
     }
   }
-  local_74 = 1;
-  uVar3 = 0;
-  if (local_58 == 1) {
-    local_70 = WORD_HEXADECIMAL_7F7FFFFF;
+  if (valid == 1)
+    validity = WORD_HEXADECIMAL_7F7FFFFF;
+  else if (!clamped && (swv_fcmp_c(time,firstTime), !FLOAT_LT(time,firstTime)) &&
+           (swv_fcmp_b(time,lastTime), !FLOAT_GE(time,lastTime))) {
+    previousTime = swv_fflt(sequence->keyframes[words * keyframe]);
+    nextTime = swv_fflt(sequence->keyframes[words * swv_rt_sdiv(keyframeCount,(uint)(keyframe + 1)).high]);
+    while (keyframe + 1 < end && (swv_fcmp_b(time,nextTime), FLOAT_GE(time,nextTime))) {
+      keyframe++;
+      previousTime = nextTime;
+      nextTime = swv_fflt(sequence->keyframes[words *
+                                              swv_rt_sdiv(keyframeCount,(uint)(keyframe + 1)).high]);
+    }
+    exact = (swv_fcmp_a(time,previousTime), FLOAT_EQ(time,previousTime));
+    if (!exact) {
+      numerator = swv_fsub(time,previousTime);
+      s = swv_frdiv(swv_fsub(nextTime,previousTime),numerator);
+    }
+  }
+  else if (sequence->repeatMode == 0xc1) {
+    keyframe = last;
+    if (sequence->interpolation != 0xb4) {
+      exact = (swv_fcmp_a(time,lastTime), FLOAT_EQ(time,lastTime));
+      if (!exact) {
+        denominator = swv_fadd(swv_fsub(sequence->duration,lastTime),firstTime);
+        if ((swv_fcmp_c(time,firstTime), !FLOAT_LT(time,firstTime)))
+          numerator = swv_fsub(time,lastTime);
+        else
+          numerator = swv_fadd(swv_fsub(sequence->duration,lastTime),time);
+        s = swv_fdiv(numerator,denominator);
+      }
+    }
+  }
+  else if (!clamped)
+    keyframe = last;
+  n = sequence->componentCount > count ? count : sequence->componentCount;
+  if (exact || sequence->interpolation == 0xb4) {
+    current = swv_rt_sdiv(keyframeCount,(uint)keyframe).high;
+    components = (const uint32 *)(sequence->keyframes + words * current + 1);
+    if ((swv_fcmp_a(weight,0x3f800000), FLOAT_EQ(weight,0x3f800000)))
+      for (; n > 0; n--, value++)
+        *value = swv_fadd(*value,*components++);
+    else
+      for (; n > 0; n--, value++)
+        *value = swv_fadd(swv_fmul(weight,*components++),*value);
   }
   else {
-    bVar18 = true;
-    if (((local_6c != 0) || (swv_fcmp_c(param_2,local_5c), !bVar18)) ||
-       (swv_fcmp_b(param_2,uVar2), bVar18)) {
-      uVar9 = local_68;
-      if (*(int *)(param_1 + 0x20) == 0xc1) {
-        bVar20 = *(int *)(param_1 + 0x1c) == 0xb4;
-        uVar15 = uVar9;
-        if (!(bool)bVar20) {
-          swv_fcmp_a(param_2,uVar2);
-          local_74 = (uint)bVar20;
-          uVar19 = 1;
-          if (local_74 == 0) {
-            uVar3 = swv_fsub(*(undefined4 *)(param_1 + 0x24),uVar2);
-            uVar3 = swv_fadd(uVar3,local_5c);
-            swv_fcmp_c(param_2,local_5c);
-            if ((bool)uVar19) {
-              uVar2 = swv_fsub(param_2,uVar2);
-            }
-            else {
-              uVar2 = swv_fsub(*(undefined4 *)(param_1 + 0x24),uVar2);
-              uVar2 = swv_fadd(uVar2,param_2);
-            }
-            uVar3 = swv_fdiv(uVar2,uVar3);
-          }
+    current = swv_rt_sdiv(keyframeCount,(uint)keyframe).high;
+    next = swvKeyframeSequence_NextValid(sequence,keyframe);
+    components = (const uint32 *)(sequence->keyframes + words * current + 1);
+    componentsNext = (const uint32 *)(sequence->keyframes + words * next + 1);
+    if (sequence->interpolation == 0xb0) {
+      if ((swv_fcmp_a(weight,0x3f800000), FLOAT_EQ(weight,0x3f800000)))
+        for (; n > 0; n--, value++, components++)
+          *value = swv_fadd(swv_fadd(swv_fmul(swv_fsub(*componentsNext++,*components),s),*components),
+                            *value);
+      else
+        for (; n > 0; n--, value++, components++)
+          *value = swv_fadd(swv_fmul(swv_fadd(swv_fmul(swv_fsub(*componentsNext++,*components),s),
+                                              *components),weight),*value);
+    }
+    else if (sequence->interpolation == 0xb2) {
+      tangent = components + sequence->componentCount;
+      tangentNext = componentsNext + sequence->componentCount * 2;
+      square = swv_fmul(s,s);
+      cube = swv_fmul(square,s);
+      twiceCube = swv_fmul(cube,0x40000000);
+      threeSquare = swv_fmul(square,FLOAT_3);
+      h1 = swv_fadd(swv_fadd(threeSquare ^ 0x80000000,0x3f800000),twiceCube);
+      h2 = swv_fadd(twiceCube ^ 0x80000000,threeSquare);
+      h3 = swv_fadd(swv_fadd(swv_fmul(square ^ 0x80000000,0x40000000),s),cube);
+      h4 = swv_fsub(cube,square);
+      if ((swv_fcmp_a(weight,0x3f800000), FLOAT_EQ(weight,0x3f800000)))
+        for (; n > 0; n--, value++) {
+          sum = swv_fmul(h1,*components++);
+          sum = swv_fadd(swv_fmul(h2,*componentsNext++),sum);
+          sum = swv_fadd(swv_fmul(h3,*tangent++),sum);
+          *value = swv_fadd(swv_fadd(swv_fmul(h4,*tangentNext++),sum),*value);
         }
-      }
-      else if (local_6c == 0) {
-        uVar15 = uVar9;
-      }
+      else
+        for (; n > 0; n--, value++) {
+          sum = swv_fmul(h1,*components++);
+          sum = swv_fadd(swv_fmul(h2,*componentsNext++),sum);
+          sum = swv_fadd(swv_fmul(h3,*tangent++),sum);
+          *value = swv_fadd(swv_fmul(swv_fadd(swv_fmul(h4,*tangentNext++),sum),weight),*value);
+        }
     }
-    else {
-      iVar13 = *(int *)(param_1 + 0x40);
-      local_78 = (undefined4 *)swv_fflt(*(undefined4 *)(iVar13 + local_38 * 4));
-      FUN_010001f4(local_64,uVar15 + 1);
-      puVar17 = (undefined4 *)(iVar13 + iVar1 * extraout_r1_00 * 4);
-      while( true ) {
-        uVar2 = swv_fflt(*puVar17);
-        local_3c = uVar15 + 1;
-        bVar18 = local_60 <= local_3c;
-        bVar20 = local_3c == local_60;
-        if (((int)local_60 <= (int)local_3c) ||
-           (swv_fcmp_b(param_2,uVar2), uVar9 = local_3c, !bVar18)) break;
-        local_78 = (undefined4 *)uVar2;
-        FUN_010001f4(local_64,local_3c + 1);
-        puVar17 = (undefined4 *)(*(int *)(param_1 + 0x40) + iVar1 * extraout_r1_01 * 4);
-        uVar15 = uVar9;
-      }
-      swv_fcmp_a(param_2,local_78);
-      local_74 = (uint)bVar20;
-      if (local_74 == 0) {
-        uVar3 = swv_fsub(param_2,local_78);
-        uVar2 = swv_fsub(uVar2,local_78);
-        uVar3 = swv_frdiv(uVar2,uVar3);
+    else if (sequence->interpolation == 0xb1 || sequence->interpolation == 0xb3) {
+      if (sequence->interpolation == 0xb1)
+        FUN_01024338((undefined4 *)rotation,(undefined4 *)components,(undefined4 *)componentsNext,s,1);
+      else
+        FUN_010246f4((undefined4)rotation,(undefined4)components,
+                     (undefined4)(components + sequence->componentCount),
+                     (undefined4)(componentsNext + sequence->componentCount * 2),
+                     (undefined4)componentsNext,s);
+      if ((swv_fcmp_a(weight,0x3f800000), FLOAT_EQ(weight,0x3f800000)))
+        for (i = 0; i < 4; i++)
+          value[i] = swv_fadd(value[i],rotation[i]);
+      else {
+        FUN_0102748c((undefined4 *)rotation,weight);
+        for (i = 0; i < 4; i++)
+          value[i] = swv_fadd(rotation[i],value[i]);
       }
     }
   }
-  iVar13 = *(int *)(param_1 + 0x34);
-  if (local_2c < *(int *)(param_1 + 0x34)) {
-    iVar13 = local_2c;
-  }
-  uVar19 = local_74 == 0;
-  local_78 = param_4;
-  if ((!(bool)uVar19) || (uVar19 = true, *(int *)(param_1 + 0x1c) == 0xb4)) {
-    FUN_010001f4(local_64,uVar15);
-    puVar17 = (undefined4 *)(*(int *)(param_1 + 0x40) + iVar1 * extraout_r1_02 * 4 + 4);
-    swv_fcmp_a(param_5,0x3f800000);
-    if ((bool)uVar19) {
-      while( true ) {
-        uVar19 = 1;
-        if (iVar13 < 1) break;
-        uVar2 = swv_fadd(*param_4,*puVar17);
-        *param_4 = uVar2;
-        param_4 = param_4 + 1;
-        iVar13 = iVar13 + -1;
-        puVar17 = puVar17 + 1;
+  if ((swv_fcmp_c(validity,0), FLOAT_LT(validity,0))) {
+    validity = 0;
+    if (sequence->interpolation == 0xb0 || sequence->interpolation == 0xb1 ||
+        sequence->interpolation == 0xb4) {
+      n = sequence->componentCount > count ? count : sequence->componentCount;
+      next = swvKeyframeSequence_NextValid(sequence,keyframe);
+      componentsNext = (const uint32 *)(sequence->keyframes + words * next + 1);
+      for (i = 0; i < n; i++)
+        if ((swv_fcmp_a(start[i],componentsNext[i]), !FLOAT_EQ(start[i],componentsNext[i])))
+          break;
+      if (i >= n) {
+        validity = swv_fsub(swv_fflt(sequence->keyframes[words * next]),time);
+        if ((swv_fcmp_c(validity,0), FLOAT_LT(validity,0)))
+          validity = swv_fadd(validity,sequence->duration);
       }
     }
-    else {
-      while( true ) {
-        uVar19 = 1;
-        if (iVar13 < 1) break;
-        uVar2 = swv_fmul(param_5,*puVar17);
-        uVar2 = swv_fadd(uVar2,*param_4);
-        *param_4 = uVar2;
-        param_4 = param_4 + 1;
-        iVar13 = iVar13 + -1;
-        puVar17 = puVar17 + 1;
-      }
-    }
-    goto switchD_010113b0_default;
   }
-  FUN_010001f4(local_64,uVar15);
-  local_7c = extraout_r1_03;
-  iVar4 = swvKeyframeSequence_NextValid((const SwvKeyframeSequence *)param_1,uVar15);
-  local_40 = param_4 + 1;
-  uVar9 = *(int *)(param_1 + 0x1c) - 0xb0;
-  uVar19 = 3 < uVar9;
-  uVar21 = uVar9 == 4;
-  switch(*(int *)(param_1 + 0x1c)) {
-  case 0xb0:
-    local_84 = (undefined4 *)(*(int *)(param_1 + 0x40) + iVar1 * iVar4 * 4 + 4);
-    local_80 = (undefined4 *)(*(int *)(param_1 + 0x40) + iVar1 * local_7c * 4 + 4);
-    swv_fcmp_a(param_5,0x3f800000);
-    if ((bool)uVar21) {
-      while( true ) {
-        uVar19 = 1;
-        if (iVar13 < 1) break;
-        uVar16 = *local_80;
-        uVar2 = *local_84;
-        local_84 = local_84 + 1;
-        local_80 = local_80 + 1;
-        uVar2 = swv_fsub(uVar2,uVar16);
-        uVar2 = swv_fmul(uVar2,uVar3);
-        uVar2 = swv_fadd(uVar2,uVar16);
-        uVar2 = swv_fadd(uVar2,*param_4);
-        *param_4 = uVar2;
-        param_4 = param_4 + 1;
-        iVar13 = iVar13 + -1;
-      }
-    }
-    else {
-      while( true ) {
-        uVar19 = 1;
-        if (iVar13 < 1) break;
-        local_88 = (undefined4 *)*local_80;
-        uVar2 = *local_84;
-        local_84 = local_84 + 1;
-        local_80 = local_80 + 1;
-        uVar2 = swv_fsub(uVar2,local_88);
-        uVar2 = swv_fmul(uVar2,uVar3);
-        uVar2 = swv_fadd(uVar2,local_88);
-        uVar2 = swv_fmul(uVar2,param_5);
-        uVar2 = swv_fadd(uVar2,*param_4);
-        *param_4 = uVar2;
-        param_4 = param_4 + 1;
-        iVar13 = iVar13 + -1;
-      }
-    }
-    break;
-  case 0xb1:
-    FUN_01024338(&local_8c,*(int *)(param_1 + 0x40) + iVar1 * local_7c * 4 + 4,
-                 *(int *)(param_1 + 0x40) + iVar1 * iVar4 * 4 + 4,uVar3,1);
-    swv_fcmp_a(param_5,0x3f800000);
-    if (!(bool)uVar21) goto LAB_01011538;
-LAB_010114f8:
-    uVar2 = swv_fadd(*param_4,local_8c);
-    puVar17 = local_40;
-    *param_4 = uVar2;
-    uVar2 = swv_fadd(*local_40,local_88);
-    *puVar17 = uVar2;
-    uVar2 = swv_fadd(puVar17[1],local_84);
-    puVar12 = puVar17 + 2;
-    puVar17[1] = uVar2;
-    puVar17 = (undefined4 *)*puVar12;
-    puVar10 = local_80;
-    goto LAB_01011580;
-  case 0xb2:
-    local_84 = (undefined4 *)(*(int *)(param_1 + 0x40) + iVar1 * iVar4 * 4 + 4);
-    local_80 = (undefined4 *)(*(int *)(param_1 + 0x40) + iVar1 * local_7c * 4 + 4);
-    local_88 = local_80 + *(int *)(param_1 + 0x34);
-    local_8c = local_84 + *(int *)(param_1 + 0x34) * 2;
-    uVar9 = swv_fmul(uVar3,uVar3);
-    uVar2 = swv_fmul(uVar9,uVar3);
-    local_44 = swv_fmul(uVar2,0x40000000);
-    local_48 = local_44 ^ 0x80000000;
-    uVar5 = swv_fmul(uVar9,FLOAT_3);
-    uVar16 = swv_fadd(uVar5 ^ 0x80000000,0x3f800000);
-    uVar16 = swv_fadd(uVar16,local_44);
-    uVar6 = swv_fadd(local_48,uVar5);
-    uVar7 = swv_fmul(uVar9 ^ 0x80000000,0x40000000);
-    uVar3 = swv_fadd(uVar7,uVar3);
-    uVar3 = swv_fadd(uVar3,uVar2);
-    uVar2 = swv_fsub(uVar2,uVar9);
-    swv_fcmp_a(param_5,0x3f800000);
-    if ((bool)uVar21) {
-      while( true ) {
-        uVar19 = 1;
-        if (iVar13 < 1) break;
-        uVar7 = *local_80;
-        local_80 = local_80 + 1;
-        uVar7 = swv_fmul(uVar16,uVar7);
-        uVar11 = *local_84;
-        local_84 = local_84 + 1;
-        uVar11 = swv_fmul(uVar6,uVar11);
-        uVar7 = swv_fadd(uVar11,uVar7);
-        uVar11 = *local_88;
-        local_88 = local_88 + 1;
-        uVar11 = swv_fmul(uVar3,uVar11);
-        uVar7 = swv_fadd(uVar11,uVar7);
-        uVar11 = *local_8c;
-        local_8c = local_8c + 1;
-        uVar11 = swv_fmul(uVar2,uVar11);
-        uVar7 = swv_fadd(uVar11,uVar7);
-        uVar7 = swv_fadd(uVar7,*param_4);
-        *param_4 = uVar7;
-        param_4 = param_4 + 1;
-        iVar13 = iVar13 + -1;
-      }
-    }
-    else {
-      while( true ) {
-        uVar19 = 1;
-        if (iVar13 < 1) break;
-        uVar7 = *local_80;
-        local_80 = local_80 + 1;
-        local_4c = swv_fmul(uVar16,uVar7);
-        uVar7 = *local_84;
-        local_84 = local_84 + 1;
-        uVar7 = swv_fmul(uVar6,uVar7);
-        local_50 = swv_fadd(uVar7,local_4c);
-        uVar7 = *local_88;
-        local_88 = local_88 + 1;
-        uVar7 = swv_fmul(uVar3,uVar7);
-        local_54 = swv_fadd(uVar7,local_50);
-        uVar7 = *local_8c;
-        local_8c = local_8c + 1;
-        uVar7 = swv_fmul(uVar2,uVar7);
-        uVar7 = swv_fadd(uVar7,local_54);
-        uVar7 = swv_fmul(uVar7,param_5);
-        uVar7 = swv_fadd(uVar7,*param_4);
-        *param_4 = uVar7;
-        param_4 = param_4 + 1;
-        iVar13 = iVar13 + -1;
-      }
-    }
-    break;
-  case 0xb3:
-    iVar4 = *(int *)(param_1 + 0x40) + iVar1 * iVar4 * 4 + 4;
-    iVar13 = *(int *)(param_1 + 0x40) + iVar1 * local_7c * 4 + 4;
-    FUN_010246f4(&local_8c,iVar13,iVar13 + *(int *)(param_1 + 0x34) * 4,
-                 iVar4 + *(int *)(param_1 + 0x34) * 8,iVar4,uVar3);
-    swv_fcmp_a(param_5,0x3f800000);
-    if ((bool)uVar21) goto LAB_010114f8;
-LAB_01011538:
-    FUN_0102748c(&local_8c,param_5);
-    uVar2 = swv_fadd(local_8c,*param_4);
-    puVar17 = local_40;
-    *param_4 = uVar2;
-    uVar2 = swv_fadd(local_88,*local_40);
-    *puVar17 = uVar2;
-    uVar2 = swv_fadd(local_84,puVar17[1]);
-    puVar12 = puVar17 + 2;
-    puVar17[1] = uVar2;
-    puVar10 = (undefined4 *)*puVar12;
-    puVar17 = local_80;
-LAB_01011580:
-    uVar2 = swv_fadd(puVar17,puVar10);
-    *puVar12 = uVar2;
-  }
-switchD_010113b0_default:
-  swv_fcmp_c(local_70,0);
-  if ((bool)uVar19) {
-    return local_70;
-  }
-  local_70 = 0;
-  switch(*(undefined4 *)(param_1 + 0x1c)) {
-  case 0xb0:
-    break;
-  case 0xb1:
-    break;
-  case 0xb2:
-    return 0;
-  case 0xb3:
-    return 0;
-  case 0xb4:
-    break;
-  default:
-    goto switchD_010117dc_default;
-  }
-  iVar13 = *(int *)(param_1 + 0x34);
-  if (local_2c < *(int *)(param_1 + 0x34)) {
-    iVar13 = local_2c;
-  }
-  iVar4 = swvKeyframeSequence_NextValid((const SwvKeyframeSequence *)param_1,uVar15);
-  iVar8 = *(int *)(param_1 + 0x40);
-  for (iVar14 = 0; bVar18 = iVar14 == iVar13, iVar14 < iVar13; iVar14 = iVar14 + 1) {
-    swv_fcmp_a(local_78[iVar14],*(undefined4 *)(iVar8 + iVar1 * iVar4 * 4 + 4 + iVar14 * 4));
-    if (!bVar18) {
-      return local_70;
-    }
-  }
-  uVar19 = 1;
-  uVar2 = swv_fflt(*(undefined4 *)(*(int *)(param_1 + 0x40) + iVar1 * iVar4 * 4));
-  local_70 = swv_fsub(uVar2,param_2);
-  swv_fcmp_c(local_70,0);
-  if (!(bool)uVar19) {
-    local_70 = swv_fadd(local_70,*(undefined4 *)(param_1 + 0x24));
-  }
-switchD_010117dc_default:
-  return local_70;
+  return validity;
 }
 
 /* ==== 0x01011900  (file offset 0x11900)  swvMorphingMesh_Weights ===================================== */
@@ -25998,7 +25768,7 @@ void swvM3G_ReadObject3D(uint8 *object,uint8 *stream)
   *(uint32 *)(object + 0xc) = thunk_FUN_01019abc((int32)stream);
   count = FUN_01019698((int32)stream,4);
   for (i = 0; i < count; i++)
-    swvObject3D_AddAnimationTrackValue((int *)object,FUN_01019888((int32)stream,2));
+    swvObject3D_AddAnimationTrackValue(object,(uint8 *)FUN_01019888((int32)stream,2));
   count = FUN_01019698((int32)stream,8);
   if (count != 0) {
     parameters = (uint8 *)swv_New_2(0x10);
@@ -34084,105 +33854,66 @@ void FUN_010266b0(int param_1,int param_2,int param_3,int param_4)
 }
 
 /* ==== 0x010266C0  (file offset 0x266C0)  swvKeyframeSequence_Prepare ================================= */
-/* GUESS: name (not yet rewritten). Checks and prepares a KeyframeSequence before its first sampling:
-   the valid keyframes' times must not decrease (also across the wrap) and the last must not pass the
-   duration (+0x24), else error -1300 (FUN_0102f7e0); marks it prepared (+0x4c = 1); for SLERP (0xb1)
-   and SQUAD (0xb3) normalises each valid keyframe's quaternion (FUN_01015128, GUESS); for SPLINE and
-   SQUAD builds the tangents (swvKeyframeSequence_BuildTangents). Only swvKeyframeSequence_Sample calls
-   it. */
-void swvKeyframeSequence_Prepare(int param_1)
+/* GUESS: name. Checks and prepares the KeyframeSequence sequence before its first sampling: the valid
+   keyframes' times (signed ints) must not decrease, else error -1300 (FUN_0102f7e0, which does not return;
+   SWVE_ILLEGAL_STATE: the IllegalStateException Object3D.animate throws, JSR-184 1.1,
+   KeyframeSequence.setValidRange: the valid keyframes' times must be in non-decreasing order). With
+   validFirst <= validLast the pairs validFirst .. validLast are checked; for a wrapped range (validFirst >
+   validLast) the pairs validFirst .. keyframeCount - 1, then the last keyframe against the first (the
+   wrap), then the pairs 0 .. validLast - 1 only (the binary's bound: the pair validLast - 1, validLast is
+   not checked). Then -1300 when the last valid keyframe's time is after the duration (+0x24; swv_fcmp_c
+   `hi`: also for a NaN duration). Marks it prepared (+0x4c = 1); for SLERP (0xb1) and SQUAD (0xb3)
+   normalises each valid keyframe's quaternion (FUN_01015128, GUESS: its normalise; keyframe i %
+   keyframeCount, the remainder of swv_rt_sdiv, given the components after the time); for SPLINE (0xb2,
+   quaternions 0) and SQUAD (1) builds the tangents (swvKeyframeSequence_BuildTangents). Only
+   swvKeyframeSequence_Sample calls it. The flag result of swv_fcmp_c written with common.h's FLOAT_LE.
+   Evidence: 0x010266c0 - 0x010268ac (`bl 0x01004c30`; `cmp r7, r0` / `bgt` the wrap; the three loops' `cmp
+   r0, r1` / `movgt r0, r6` / `blgt`, their bounds `ldr r0, [r4, #0x30]` / `cmp r0, r7` / `bgt`, `ldr r0,
+   [r4, #0x38]` / `sub r0, r0, #1` and `ldr r0, [r4, #0x30]` / `sub r0, r0, #1`; `bl 0x01004c0c`; `bl
+   0x0103f500` / `ldr r1, [r4, #0x24]` / `bl 0x0103f59c` / `blhi`; `str r0, [r4, #0x4c]`; `bl 0x010001f4` /
+   `mul r0, r5, r1` the remainder, `add r0, r0, #4` / `bl 0x01015128`; `moveq r1, #0` or `mov r1, #1` / `bl
+   0x01004c4c`). */
+void swvKeyframeSequence_Prepare(SwvKeyframeSequence *sequence)
 
 {
-  int iVar1;
-  uint uVar2;
-  int iVar3;
-  undefined4 uVar4;
-  int iVar5;
-  undefined4 uVar6;
-  int extraout_r1;
-  int extraout_r1_00;
-  uint uVar7;
-  undefined1 uVar8;
-  undefined1 uVar9;
-  
-  iVar1 = swvKeyframeSequence_KeyframeWords((SwvKeyframeSequence *)param_1);   /* Ghidra had dropped it */
-  uVar6 = INTEGER_MINUS_1300;
-  uVar7 = *(uint *)(param_1 + 0x2c);
-  if (*(int *)(param_1 + 0x30) < (int)uVar7) {
-    while ((int)uVar7 < *(int *)(param_1 + 0x38) + -1) {
-      iVar3 = iVar1 * uVar7;
-      uVar7 = uVar7 + 1;
-      if (*(int *)(*(int *)(param_1 + 0x40) + iVar1 * uVar7 * 4) <
-          *(int *)(*(int *)(param_1 + 0x40) + iVar3 * 4)) {
-        FUN_0102f7e0(uVar6);
-      }
-    }
-    if (**(int **)(param_1 + 0x40) <
-        (*(int **)(param_1 + 0x40))[iVar1 * (*(int *)(param_1 + 0x38) + -1)]) {
-      FUN_0102f7e0(uVar6);
-    }
-    uVar7 = 0;
-    while( true ) {
-      uVar2 = *(int *)(param_1 + 0x30) - 1;
-      uVar9 = uVar7 <= uVar2;
-      uVar8 = uVar2 == uVar7;
-      if ((int)uVar2 <= (int)uVar7) break;
-      iVar3 = iVar1 * uVar7;
-      uVar7 = uVar7 + 1;
-      if (*(int *)(*(int *)(param_1 + 0x40) + iVar1 * uVar7 * 4) <
-          *(int *)(*(int *)(param_1 + 0x40) + iVar3 * 4)) {
-        FUN_0102f7e0(uVar6);
-      }
-    }
+  int32 words = swvKeyframeSequence_KeyframeWords(sequence);
+  int32 valid;
+  int32 i = sequence->validFirst;
+  uint32 lastTime;
+
+  if (i <= sequence->validLast) {
+    for (; i < sequence->validLast; i++)
+      if (sequence->keyframes[words * i] > sequence->keyframes[words * (i + 1)])
+        FUN_0102f7e0(INTEGER_MINUS_1300);
   }
   else {
-    while( true ) {
-      uVar2 = *(uint *)(param_1 + 0x30);
-      uVar9 = uVar7 <= uVar2;
-      uVar8 = uVar2 == uVar7;
-      if ((int)uVar2 <= (int)uVar7) break;
-      iVar3 = iVar1 * uVar7;
-      uVar7 = uVar7 + 1;
-      if (*(int *)(*(int *)(param_1 + 0x40) + iVar1 * uVar7 * 4) <
-          *(int *)(*(int *)(param_1 + 0x40) + iVar3 * 4)) {
-        FUN_0102f7e0(uVar6);
-      }
-    }
+    for (; i < sequence->keyframeCount - 1; i++)
+      if (sequence->keyframes[words * i] > sequence->keyframes[words * (i + 1)])
+        FUN_0102f7e0(INTEGER_MINUS_1300);
+    if (sequence->keyframes[words * (sequence->keyframeCount - 1)] > sequence->keyframes[0])
+      FUN_0102f7e0(INTEGER_MINUS_1300);
+    for (i = 0; i < sequence->validLast - 1; i++)
+      if (sequence->keyframes[words * i] > sequence->keyframes[words * (i + 1)])
+        FUN_0102f7e0(INTEGER_MINUS_1300);
   }
-  iVar3 = swvKeyframeSequence_ValidCount((SwvKeyframeSequence *)param_1);
-  uVar4 = swv_fflt(*(undefined4 *)(*(int *)(param_1 + 0x40) + iVar1 * *(int *)(param_1 + 0x30) * 4))
-  ;
-  swv_fcmp_c(uVar4,*(undefined4 *)(param_1 + 0x24));
-  if ((bool)uVar9 && !(bool)uVar8) {
-    FUN_0102f7e0(uVar6);
+  valid = swvKeyframeSequence_ValidCount(sequence);
+  lastTime = swv_fflt(sequence->keyframes[words * sequence->validLast]);
+  if ((swv_fcmp_c(lastTime,sequence->duration), !FLOAT_LE(lastTime,sequence->duration)))
+    FUN_0102f7e0(INTEGER_MINUS_1300);
+  sequence->prepared = 1;
+  if (sequence->interpolation == 0xb1) {
+    for (i = sequence->validFirst; i < sequence->validFirst + valid; i++)
+      FUN_01015128((undefined4 *)(sequence->keyframes +
+                                  words * swv_rt_sdiv((uint)sequence->keyframeCount,(uint)i).high + 1));
   }
-  *(undefined4 *)(param_1 + 0x4c) = 1;
-  iVar5 = *(int *)(param_1 + 0x1c);
-  if (iVar5 == 0xb1) {
-    for (iVar5 = *(int *)(param_1 + 0x2c); iVar5 < *(int *)(param_1 + 0x2c) + iVar3;
-        iVar5 = iVar5 + 1) {
-      FUN_010001f4(*(undefined4 *)(param_1 + 0x38),iVar5);
-      FUN_01015128(*(int *)(param_1 + 0x40) + iVar1 * extraout_r1 * 4 + 4);
-    }
+  else if (sequence->interpolation == 0xb2)
+    swvKeyframeSequence_BuildTangents(sequence,0);
+  else if (sequence->interpolation == 0xb3) {
+    for (i = sequence->validFirst; i < sequence->validFirst + valid; i++)
+      FUN_01015128((undefined4 *)(sequence->keyframes +
+                                  words * swv_rt_sdiv((uint)sequence->keyframeCount,(uint)i).high + 1));
+    swvKeyframeSequence_BuildTangents(sequence,1);
   }
-  else {
-    if (iVar5 == 0xb2) {
-      uVar6 = 0;
-    }
-    else {
-      if (iVar5 != 0xb3) {
-        return;
-      }
-      for (iVar5 = *(int *)(param_1 + 0x2c); iVar5 < *(int *)(param_1 + 0x2c) + iVar3;
-          iVar5 = iVar5 + 1) {
-        FUN_010001f4(*(undefined4 *)(param_1 + 0x38),iVar5);
-        FUN_01015128(*(int *)(param_1 + 0x40) + iVar1 * extraout_r1_00 * 4 + 4);
-      }
-      uVar6 = 1;
-    }
-    swvKeyframeSequence_BuildTangents(param_1,uVar6);
-  }
-  return;
 }
 
 /* ==== 0x010268B4  (file offset 0x268B4)  FUN_010268b4 ================================================ */
@@ -47932,7 +47663,7 @@ int32 swvObject3D_AddAnimationTrack(ISwerveObject *po,ISwerveObject *track)
       trackObject -= 4;
     if (trackObject == NULL)
       FUN_0102f7e0(INTEGER_MINUS_1302);
-    swvObject3D_AddAnimationTrackValue((int *)object,(int)trackObject);
+    swvObject3D_AddAnimationTrackValue(object,trackObject);
     swv_TryPop();
   }
   else
@@ -47961,7 +47692,7 @@ int32 swvObject3D_Animate(ISwerveObject *po,int32 worldTime,int32 *pValidity)
     object = (uint8 *)po->pNative;
     if (object != NULL)
       object -= 4;
-    *pValidity = (int32)swvObject3D_AnimateValue((int *)object,(undefined4)worldTime,-1);
+    *pValidity = swvObject3D_AnimateValue(object,worldTime,-1);
     swv_TryPop();
   }
   else
@@ -49425,7 +49156,7 @@ LAB_01036660:
         if ((0x300 < param_3) || (FUN_010002c8(3,param_3), extraout_r1 != 0)) {
           png_error((uint8 *)param_1,(const char *)(STRING_INVALID_PALETTE_CHUNK_OFFSET + 0x10366d0));
         }
-        uVar1 = FUN_010001f4(3,param_3);
+        uVar1 = swv_rt_sdiv(3,param_3).low;
         puVar4 = local_318;
         for (iVar3 = 0; iVar3 < (int)uVar1; iVar3 = iVar3 + 1) {
           FUN_01035814(param_1,&local_31c,3);

@@ -84,6 +84,24 @@ typedef struct float64 {
   ((result).high = (result).high - ((result).low < (w)), (result).low = (result).low - (w))
 #define SHIFT_LEFT_WORDS(result,a,n) \
   ((result).high = (a).high << (n) | (a).low >> (32 - (n)), (result).low = (a).low << (n))
+/* Float compares on the bit patterns (a float is its uint32 bits; no C float), as the integer tests the
+   soft-float compares' flag results amount to (swv21brew's swv_fcmp_a / swv_fcmp_b / swv_fcmp_c, kh.mod's
+   float_compare_*: Z when a == b, +0 == -0; C with Z clear when a > b; a NaN unordered). A caller writes
+   the call, then the test its branch makes, in comma form: `bhi` after swv_fcmp_b is FLOAT_GT, `bls` its
+   negation; after swv_fcmp_c (unordered: "greater") `bhi` is !FLOAT_LE and `bhs` !FLOAT_LT; `beq` after
+   swv_fcmp_a FLOAT_EQ. The arguments are evaluated more than once.
+   FLOAT_IS_NAN(a): a is a NaN. FLOAT_KEY(a): a non-NaN a's order as an unsigned word (+0 and -0 the same,
+   0x80000000). FLOAT_LT(a, b), FLOAT_LE, FLOAT_GT, FLOAT_GE, FLOAT_EQ: IEEE a < b, a <= b, a > b, a >= b,
+   a == b, each false when a or b is a NaN. */
+#define FLOAT_IS_NAN(a) (((uint32)(a) << 1) > 0xff000000)
+#define FLOAT_KEY(a) \
+  ((uint32)(a) & 0x80000000 ? 0x80000000 - ((uint32)(a) & 0x7fffffff) : 0x80000000 + (uint32)(a))
+#define FLOAT_ORDERED(a,b) (!FLOAT_IS_NAN(a) && !FLOAT_IS_NAN(b))
+#define FLOAT_LT(a,b) (FLOAT_ORDERED(a,b) && FLOAT_KEY(a) < FLOAT_KEY(b))
+#define FLOAT_LE(a,b) (FLOAT_ORDERED(a,b) && FLOAT_KEY(a) <= FLOAT_KEY(b))
+#define FLOAT_GT(a,b) FLOAT_LT(b,a)
+#define FLOAT_GE(a,b) FLOAT_LE(b,a)
+#define FLOAT_EQ(a,b) (FLOAT_ORDERED(a,b) && FLOAT_KEY(a) == FLOAT_KEY(b))
 int software_interrupt(int number);      /* Ghidra's name for the `svc` (swi) instruction, not a function:
                                             the trap with the given number, its result as r0 leaves it */
 

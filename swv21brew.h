@@ -292,6 +292,7 @@ uint32 swv_fp_status(uint32 mask,uint32 flags);   /* 0x0103F8E8 */
 /* No Ghidra function exists for these; bodies are hand-written in the .c file. */
 int AEEClsCreateInstance(AEECLSID ClsId, IShell *pIShell, IModule *po, void **ppObj);
 void AEEMod_FreeResources(IModule *po, IHeap *ph, IFileMgr *pfm);
+void swvObject3D_InsertAnimationTrack(uint8 *tracks,uint8 *track);   /* 0x01002B00 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
 SwvSkinBoneSet * swvSkin_CopyBoneSet(SwvSkinBoneSet *destination,const SwvSkinBoneSet *source);   /* 0x01027B40 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
 void swvPolygonMode_SetLocalCameraLightingValue(uint8 *mode,int32 enable);   /* 0x0100E4B8 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
 void swvPolygonMode_SetPerspectiveCorrectionValue(uint8 *mode,int32 enable);   /* 0x0100E4D0 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
@@ -302,7 +303,7 @@ int64 ll_mul(uint32 aLow,int32 aHigh,uint32 bLow,int32 bHigh);   /* 0x0100094C, 
 int32 swv_memcmp(const uint8 *a,const uint8 *b,uint32 n);   /* 0x01000080 GUESS: name, see swv21brew.c */
 void * swv_memcpy(void *destination,void *source,uint32 byteCount);   /* 0x01000100 GUESS: name, see swv21brew.c */
 uint64 swv_memcpy_word_aligned(void *destination,void *source,uint32 byteCount);   /* 0x01000188 GUESS: name, see swv21brew.c */
-ulonglong FUN_010001f4(uint param_1,uint param_2);
+int64 swv_rt_sdiv(uint param_1,uint param_2);   /* 0x010001F4 GUESS: name (ARM's __rt_sdiv: .low the quotient, .high the remainder), see swv21brew.c */
 int FUN_010002c8(uint param_1,uint param_2);
 void FUN_01000388(int param_1,int param_2,int param_3,uint param_4);
 void FUN_010003cc(int param_1,int param_2,int param_3,uint param_4);
@@ -332,7 +333,7 @@ int32 raise_signal(int32 signal,int32 type);   /* 0x01001BB4 GUESS: name, see sw
 int32 semihosting_exit(void);   /* 0x01001C18 GUESS: name, see swv21brew.c */
 int32 default_signal_handler(int32 signal,int32 type);   /* 0x01001C30 GUESS: name, see swv21brew.c */
 int32 debug_write_char(char character);   /* 0x01001D94 GUESS: name, see swv21brew.c */
-void swvObject3D_AddAnimationTrackValue(int *param_1,int param_2,undefined4 param_3,undefined4 param_4);   /* 0x01002A58 JSR-184 1.1, see swv21brew.c */
+void swvObject3D_AddAnimationTrackValue(uint8 *object,uint8 *track);   /* 0x01002A58 JSR-184 1.1, see swv21brew.c */
 int FUN_01002c70(int param_1,int param_2);
 void swvGroup_AddChild(uint8 *group,uint8 *child);   /* 0x01002D60 GUESS: name, see swv21brew.c */
 undefined4 FUN_01002dfc(undefined1 *param_1,int param_2,int param_3);
@@ -353,7 +354,7 @@ void FUN_0100385c(undefined4 param_1,int param_2);
 void FUN_010038c8(undefined4 param_1,int param_2);
 int FUN_01003b00(int param_1,undefined4 param_2,int param_3,undefined4 param_4);
 int FUN_01003be8(int param_1,undefined4 param_2,int param_3,undefined4 param_4);
-undefined4 swvObject3D_AnimateValue(int *param_1,undefined4 param_2,int param_3);   /* 0x01003C38 JSR-184 1.1, see swv21brew.c */
+int32 swvObject3D_AnimateValue(uint8 *object,int32 worldTime,int32 pass);   /* 0x01003C38 JSR-184 1.1, see swv21brew.c */
 void FUN_0100400c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0100406c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
 void FUN_010040cc(int *param_1,undefined1 *param_2,undefined4 param_3,undefined4 param_4);
@@ -374,7 +375,7 @@ void FUN_01004a68(int param_1,int *param_2,int *param_3,int *param_4,int *param_
 void swv_SetupFlatDither(uint8 *raster);   /* 0x01004B54 GUESS: name, see swv21brew.c */
 int32 swvKeyframeSequence_ValidCount(const SwvKeyframeSequence *sequence);   /* 0x01004C0C GUESS: name, see swv21brew.c */
 int32 swvKeyframeSequence_KeyframeWords(const SwvKeyframeSequence *sequence);   /* 0x01004C30 GUESS: name, see swv21brew.c */
-void swvKeyframeSequence_BuildTangents(int param_1,int param_2);
+void swvKeyframeSequence_BuildTangents(SwvKeyframeSequence *sequence,int32 quaternions);   /* 0x01004C4C GUESS: name, see swv21brew.c */
 void swv_ColourClamp(int32 *colour);   /* 0x01004FB8 GUESS: name, see swv21brew.c */
 void FUN_01005028(int param_1);
 void FUN_010050ac(int param_1);
@@ -572,7 +573,7 @@ undefined4 FUN_01010de0(int param_1,undefined4 param_2,undefined4 param_3,undefi
 void FUN_01010e84(int param_1,int param_2,int *param_3,undefined4 *param_4);
 uint8 *swvVertexBuffer_Array(const uint8 *buffer,int32 attribute);   /* 0x01010F60 GUESS: name, see swv21brew.c */
 uint8 *swvMesh_VertexBuffer(const uint8 *mesh);   /* 0x01010F90 GUESS: name, see swv21brew.c */
-undefined4 swvKeyframeSequence_Sample(int param_1,undefined4 param_2,int param_3,undefined4 *param_4,undefined4 param_5);
+uint32 swvKeyframeSequence_Sample(SwvKeyframeSequence *sequence,uint32 time,int32 count,uint32 *value,uint32 weight);   /* 0x01010F98 GUESS: name, see swv21brew.c */
 void swvMorphingMesh_Weights(const uint8 *mesh,int32 *pCount,uint32 **pWeights);   /* 0x01011900 GUESS: name, see swv21brew.c */
 void FUN_0101191c(int param_1,int param_2,undefined4 *param_3);
 int32 swvImage2D_Width(const uint8 *image);   /* 0x01011960 GUESS: name, see swv21brew.c */
@@ -906,7 +907,7 @@ void FUN_01026468(uint *param_1);
 undefined8 FUN_01026548(int param_1,int param_2);
 void FUN_010265fc(int param_1);
 void swvNode_SetDepth(uint8 *node,int32 parentDepth);   /* 0x01026614 GUESS: name, see swv21brew.c */
-void swvKeyframeSequence_Prepare(int param_1);
+void swvKeyframeSequence_Prepare(SwvKeyframeSequence *sequence);   /* 0x010266C0 GUESS: name, see swv21brew.c */
 int FUN_010268b4(void);
 undefined8 FUN_010268d4(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01026d30(int param_1,undefined4 param_2,int param_3);
