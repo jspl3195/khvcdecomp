@@ -55,7 +55,7 @@ void FUN_010039bc(undefined4 param_1,int param_2);   /* 0x010039BC, no Ghidra fu
 void * FUN_01003a00(int param_1,int param_2);   /* 0x01003A00, no Ghidra function */
 void * FUN_01003a10(int param_1,int param_2);   /* 0x01003A10, no Ghidra function */
 int32 swvSectionStored_Get08(const uint8 *section);   /* 0x01007D60, no Ghidra function; GUESS: name */
-int32 swvSectionZlib_Get0c(int param_1);   /* 0x01007D68, no Ghidra function */
+int32 swvSectionZlib_Get0c(const uint8 *section);   /* 0x01007D68, no Ghidra function */
 void FUN_01008754(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008754, no Ghidra function */
 void FUN_010087ac(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x010087AC, no Ghidra function */
 void FUN_01008804(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008804, no Ghidra function */
@@ -85,7 +85,7 @@ void FUN_01009438(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x0100943
 void FUN_010094bc(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x010094BC, no Ghidra function */
 void FUN_01009548(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x01009548, no Ghidra function */
 void FUN_010095e0(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x010095E0, no Ghidra function */
-int swvSectionStored_Feed(int param_1,int param_2,int param_3);   /* 0x01009BA4, no Ghidra function */
+int32 swvSectionStored_Feed(uint8 *section,const uint8 *data,int32 length);   /* 0x01009BA4, no Ghidra function */
 void FUN_01009c80(int param_1,void *param_2);   /* 0x01009C80, no Ghidra function */
 void FUN_01009c88(int param_1,void *param_2);   /* 0x01009C88, no Ghidra function */
 void FUN_01009c90(int param_1,void *param_2);   /* 0x01009C90, no Ghidra function */
@@ -118,9 +118,9 @@ void FUN_01009e4c(int param_1,void *param_2);   /* 0x01009E4C, no Ghidra functio
 int32 swvRenderer_Kind(const uint8 *renderer);   /* 0x0100F4D4 GUESS: name, see swv21brew.c */
 int32 swvM3GReader_State(const uint8 *reader);   /* 0x01010820 GUESS: name, see swv21brew.c */
 uint8 *swvImage2D_Indices(const uint8 *image);   /* 0x01011BCC GUESS: name, see swv21brew.c */
-int swvM3GReader_Feed(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5);   /* 0x01015348 GUESS: name, see swv21brew.c */
+int32 swvM3GReader_Feed(uint8 *reader,int32 array,const uint8 *data,int32 offset,int32 length);   /* 0x01015348 GUESS: name, see swv21brew.c */
 int FUN_010157e8(int param_1,uint8 *param_2,uint32 param_3);   /* 0x010157E8, no Ghidra function */
-void swvM3GReader_Fail(int param_1,int param_2);   /* 0x010159CC GUESS: name, see swv21brew.c */
+void swvM3GReader_Fail(uint8 *reader,int32 error);   /* 0x010159CC GUESS: name, see swv21brew.c */
 void FUN_0101f0b0(int param_1);   /* 0x0101F0B0, no Ghidra function */
 void FUN_010230f8(int param_1,int param_2);   /* 0x010230F8, no Ghidra function */
 void FUN_01023c60(int param_1,int param_2,int param_3,int param_4,int param_5);   /* 0x01023C60 */
@@ -146,8 +146,8 @@ void FUN_0102a4cc(int *param_1,int param_2);   /* 0x0102A4CC, no Ghidra function
 void FUN_0102a6d8(int *param_1,int param_2);   /* 0x0102A6D8, no Ghidra function */
 void FUN_0102a804(int *param_1,int param_2);   /* 0x0102A804, no Ghidra function */
 void FUN_0102a84c(int *param_1,int param_2);   /* 0x0102A84C, no Ghidra function */
-void swvSectionStored_Destroy(int *param_1,int param_2);   /* 0x0102A974, no Ghidra function */
-void swvSectionZlib_Destroy(int *param_1,int param_2);   /* 0x0102A9B0, no Ghidra function */
+void swvSectionStored_Destroy(uint8 *section,int32 freeIt);   /* 0x0102A974, no Ghidra function */
+void swvSectionZlib_Destroy(uint8 *section,int32 freeIt);   /* 0x0102A9B0, no Ghidra function */
 void FUN_0102aa04(int *param_1,int param_2);   /* 0x0102AA04, no Ghidra function */
 void FUN_0102aaac(int *param_1,int param_2);   /* 0x0102AAAC, no Ghidra function */
 void FUN_0102ab04(int *param_1,int param_2);   /* 0x0102AB04, no Ghidra function */
@@ -436,7 +436,7 @@ void FUN_01008144(int param_1,int param_2,int param_3,int param_4);
 void FUN_01008184(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, int param_5,int param_6);
 void FUN_010081ec(int param_1,undefined4 param_2,int param_3,int param_4,undefined4 param_5, undefined4 param_6,undefined4 param_7,undefined4 param_8);
 void FUN_010082f0(int param_1,int param_2,undefined4 param_3);
-uint swvSectionZlib_Init(int param_1,undefined4 param_2);
+uint32 swvSectionZlib_Init(uint8 *section,void *sink);
 void swvKeyframeSequence_Construct(SwvKeyframeSequence *sequence,int32 keyframeCount,int32 componentCount,int32 interpolation);   /* 0x01008398 GUESS: name, see swv21brew.c */
 void FUN_0100844c(int param_1,int param_2,int param_3,int param_4,int param_5);
 void FUN_01008540(int param_1,int param_2,int param_3,int param_4);
@@ -448,12 +448,12 @@ int FUN_01009638(int param_1,int param_2);
 void FUN_0100973c(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6, int param_7,int param_8,int param_9,int param_10,int param_11,int param_12);
 void FUN_01009860(int param_1);
 int * FUN_010098fc(void);
-int swvSection_CreateStored(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-int swvSection_CreateZlib(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
+uint8 *swvSection_CreateStored(void *sink);
+uint8 *swvSection_CreateZlib(void *sink);
 void FUN_01009a04(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 int FUN_01009ad0(void);
-int swvM3GReader_New(void);   /* 0x01009B80 GUESS: name, see swv21brew.c */
-undefined4 swvSectionZlib_Feed(int param_1,undefined4 param_2,undefined4 param_3);
+uint8 *swvM3GReader_New(void);   /* 0x01009B80 GUESS: name, see swv21brew.c */
+int32 swvSectionZlib_Feed(uint8 *section,const uint8 *data,int32 length);
 void FUN_01009c20(void);
 void FUN_01009c48(void);
 void FUN_01009cb0(void);
@@ -653,8 +653,8 @@ void FUN_01014d10(undefined4 param_1,undefined4 *param_2,undefined4 *param_3,und
 void FUN_01014f98(undefined4 param_1,undefined4 *param_2,undefined4 *param_3,undefined4 *param_4);
 void FUN_01015128(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_010151f0(int param_1,int param_2);
-undefined4 swvM3GReader_End(int *param_1);   /* 0x01015220 GUESS: name, see swv21brew.c */
-undefined4 swvM3GReader_Begin(int param_1,undefined4 param_2);   /* 0x010152D8 GUESS: name, see swv21brew.c */
+int32 swvM3GReader_End(uint8 *reader);   /* 0x01015220 GUESS: name, see swv21brew.c */
+int32 swvM3GReader_Begin(uint8 *reader,int32 allowSwerve);   /* 0x010152D8 GUESS: name, see swv21brew.c */
 void FUN_010159e4(int param_1,undefined4 param_2,int param_3);
 undefined4 FUN_01015a40(undefined4 param_1,int param_2,undefined4 *param_3,undefined4 *param_4);
 void FUN_01015ce8(undefined4 param_1,int param_2,int *param_3);
@@ -744,31 +744,31 @@ void FUN_0101d974(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
 void FUN_0101da48(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0101da90(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 uint FUN_0101dbcc(undefined4 param_1,int param_2);
-void swvM3G_ReadImage2D(int param_1,undefined4 param_2,undefined4 param_3,undefined2 *param_4);   /* 0x0101DBF8 GUESS: name, see swv21brew.c */
+void swvM3G_ReadImage2D(uint8 *image,uint8 *stream);   /* 0x0101DBF8 GUESS: name, see swv21brew.c */
 void FUN_0101de2c(int param_1,undefined4 param_2);
-void swvM3G_ReadMaterial(int param_1,undefined4 param_2);   /* 0x0101DED0 JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadObject3D(int param_1,undefined4 param_2);   /* 0x0101DF64 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadMaterial(uint8 *material,uint8 *stream);   /* 0x0101DED0 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadObject3D(uint8 *object,uint8 *stream);   /* 0x0101DF64 JSR-184 1.1, see swv21brew.c */
 undefined4 FUN_0101e0b0(int param_1,undefined4 param_2);
-void swvM3G_ReadTexture2D(int param_1,undefined4 param_2);   /* 0x0101E144 JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadAppearance(int param_1,undefined4 param_2);   /* 0x0101E288 GUESS: name, see swv21brew.c */
-void swvM3G_ReadBackground(int param_1,undefined4 param_2);   /* 0x0101E3F4 JSR-184 1.1, see swv21brew.c */
-void thunk_swvM3G_ReadObject3D(uint8 *object,uint8 *reader);   /* 0x0101E530 */
+void swvM3G_ReadTexture2D(uint8 *texture,uint8 *stream);   /* 0x0101E144 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadAppearance(uint8 *appearance,uint8 *stream);   /* 0x0101E288 GUESS: name, see swv21brew.c */
+void swvM3G_ReadBackground(uint8 *background,uint8 *stream);   /* 0x0101E3F4 JSR-184 1.1, see swv21brew.c */
+void thunk_swvM3G_ReadObject3D(uint8 *object,uint8 *stream);   /* 0x0101E530 */
 void FUN_0101e534(int param_1,undefined4 param_2);
-void swvM3G_ReadPolygonMode(int param_1,undefined4 param_2);   /* 0x0101E778 JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadSkinnedMesh(int param_1,undefined4 param_2);   /* 0x0101E824 JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadVertexArray(int param_1,undefined4 param_2);   /* 0x0101E8EC JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadHeader(int param_1,undefined4 param_2,uint param_3,uint param_4);   /* 0x0101EA94 JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadTransformable(int *param_1,undefined4 param_2);   /* 0x0101EE08 JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadAnimationTrack(int param_1,undefined4 param_2);   /* 0x0101EF44 JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadKeyframeSequence(int param_1,undefined4 param_2);   /* 0x0101F0B4 JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadTriangleStripArray(int param_1,undefined4 param_2);   /* 0x0101F3E4 JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadMesh(int param_1,undefined4 param_2);   /* 0x0101F760 JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadNode(int param_1,undefined4 param_2);   /* 0x0101F8AC JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadGroup(undefined4 param_1,undefined4 param_2);   /* 0x0101F9A8 JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadLight(int param_1,undefined4 param_2);   /* 0x0101F9F8 JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadWorld(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);   /* 0x0101FB28 JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadCamera(int param_1,undefined4 param_2);   /* 0x0101FBA8 JSR-184 1.1, see swv21brew.c */
-void swvM3G_ReadSprite3D(int param_1,undefined4 param_2);   /* 0x0101FCCC GUESS: name, see swv21brew.c */
+void swvM3G_ReadPolygonMode(uint8 *mode,uint8 *stream);   /* 0x0101E778 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadSkinnedMesh(uint8 *mesh,uint8 *stream);   /* 0x0101E824 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadVertexArray(uint8 *array,uint8 *stream);   /* 0x0101E8EC JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadHeader(uint8 *header,uint8 *stream);   /* 0x0101EA94 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadTransformable(uint8 *object,uint8 *stream);   /* 0x0101EE08 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadAnimationTrack(uint8 *track,uint8 *stream);   /* 0x0101EF44 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadKeyframeSequence(SwvKeyframeSequence *sequence,uint8 *stream);   /* 0x0101F0B4 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadTriangleStripArray(uint8 *strips,uint8 *stream);   /* 0x0101F3E4 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadMesh(uint8 *mesh,uint8 *stream);   /* 0x0101F760 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadNode(uint8 *node,uint8 *stream);   /* 0x0101F8AC JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadGroup(uint8 *group,uint8 *stream);   /* 0x0101F9A8 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadLight(uint8 *light,uint8 *stream);   /* 0x0101F9F8 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadWorld(uint8 *world,uint8 *stream);   /* 0x0101FB28 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadCamera(uint8 *camera,uint8 *stream);   /* 0x0101FBA8 JSR-184 1.1, see swv21brew.c */
+void swvM3G_ReadSprite3D(uint8 *sprite,uint8 *stream);   /* 0x0101FCCC GUESS: name, see swv21brew.c */
 void swvVertexArray_SetShorts(uint8 *array,int32 firstVertex,int32 numVertices,int32 length,const int16 *values);   /* 0x0101FDC4 JSR-184 1.1, see swv21brew.c */
 void FUN_0101fe5c(int param_1,int param_2,int param_3,undefined4 param_4,int param_5,int param_6);
 void swvVertexArray_SetBytes(uint8 *array,int32 firstVertex,int32 numVertices,int32 length,const int8 *values);   /* 0x0101FEFC JSR-184 1.1, see swv21brew.c */
@@ -960,14 +960,14 @@ void FUN_01028a3c(undefined4 *param_1);
 void FUN_01028a6c(int param_1);
 int * FUN_01028a7c(int *param_1);
 int * FUN_01028abc(int *param_1);
-int * swvSectionStored_Construct(int *param_1);
-int * swvSectionZlib_Construct(int *param_1);
+uint8 *swvSectionStored_Construct(uint8 *section);
+uint8 *swvSectionZlib_Construct(uint8 *section);
 int * FUN_01028b58(int *param_1);
 void FUN_01028bb0(int *param_1);
 int * FUN_01028cc8(int *param_1);
 int * FUN_01028d2c(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 int * FUN_01028f54(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
-int * swvM3GReader_Construct(int *param_1);   /* 0x01029010 GUESS: name, see swv21brew.c */
+uint8 *swvM3GReader_Construct(uint8 *reader);   /* 0x01029010 GUESS: name, see swv21brew.c */
 int * FUN_010290c4(int *param_1);
 void FUN_01029110(undefined4 *param_1);
 int * FUN_010291bc(int *param_1);
@@ -1056,7 +1056,7 @@ void * swv_New_2(uint32 size);   /* 0x0102CBE0 GUESS: name, see swv21brew.c */
 void FUN_0102cc18(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3);
 int FUN_0102cc60(void);
 int FUN_0102cc80(int param_1,int param_2);
-uint adler32(uint param_1,byte *param_2,uint param_3);
+uint32 adler32(uint32 adler,const uint8 *buf,uint32 len);
 void swvAnimationController_GetActiveIntervalEnd(ISwerveObject *po,int32 *pEnd);   /* 0x0102CE5C JSR-184 1.1, see swv21brew.c */
 void swvAnimationController_GetActiveIntervalStart(ISwerveObject *po,int32 *pStart);   /* 0x0102CE74 JSR-184 1.1, see swv21brew.c */
 void swvAnimationController_GetPosition(ISwerveObject *po,int32 worldTime,uint32 *pSequenceTime);   /* 0x0102CE8C JSR-184 1.1, see swv21brew.c */
@@ -1395,7 +1395,7 @@ undefined4 FUN_0103937c(int param_1,int param_2,int param_3,undefined4 param_4,i
 undefined4 FUN_01039424(int param_1,int param_2,int param_3);
 undefined4 FUN_010394ac(int param_1,undefined4 param_2);
 undefined4 FUN_01039510(int param_1,undefined4 param_2);
-uint thunk_adler32(uint param_1,byte *param_2,uint param_3);
+uint32 thunk_adler32(uint32 adler,const uint8 *buf,uint32 len);
 bool thunk_FUN_01039670(undefined4 *param_1);
 undefined4 FUN_010395b4(undefined4 param_1,undefined4 param_2,int *param_3);
 bool FUN_01039670(undefined4 *param_1);

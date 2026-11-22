@@ -476,7 +476,11 @@ typedef struct SwvKeyframeSequence {
  *   +0x20             the image (an Image2D, or NULL)
  *   +0x24 / +0x28     the x and y image modes: BORDER 0x20, REPEAT 0x21
  *   +0x2c .. +0x38    the crop rectangle: x, y, width, height (floats)
- *   +0x3c / +0x40     the colour clear and the depth clear enables */
+ *   +0x3c / +0x40     the colour clear and the depth clear enables, as the clear uses them (+0x3c
+ *                     gates the colour, +0x40 the depth). GUESS, a latent engine bug:
+ *                     swvM3G_ReadBackground stores the M3G record's depthClearEnabled at +0x3c and
+ *                     colorClearEnabled at +0x40 (M3G file format, Background: depth first), so a
+ *                     loaded Background has the two swapped */
 
 /* ---- the M3G reader, the Loader's stream parser (no struct yet) ------------------------------------
  * 0xe8 bytes (swvM3GReader_New / swvM3GReader_Construct); its engine vtables 0x01002410 at +0 and

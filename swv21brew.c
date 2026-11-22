@@ -7295,12 +7295,15 @@ int32 swvSectionStored_Get08(const uint8 *section)
 }
 
 /* ==== 0x01007D68  (file offset 0x07D68)  swvSectionZlib_Get0c ======================================== */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022E0 +0x8;
-   written from its disassembly (0x01007d68 - 0x01007d6c). Returns the object's word at +0xc. */
-int32 swvSectionZlib_Get0c(int param_1)
+/* GUESS: name. A routine Ghidra has no function for, reached only through the engine vtable at 0x010022E0
+   +0x8 (slot 2 of the M3G loader's zlib-section reader, swvSection_CreateZlib); written from its
+   disassembly (0x01007d68 - 0x01007d6c: `ldr r0, [r0, #0xc]` / `bx lr`). Returns the object's word at
+   +0xc, which its constructor sets to 0 (swvSectionZlib_Construct). Its stored twin,
+   swvSectionStored_Get08 (0x01007d60), returns +8. */
+int32 swvSectionZlib_Get0c(const uint8 *section)
 
 {
-  return *(int32 *)(param_1 + 0xc);
+  return *(const int32 *)(section + 0xc);
 }
 
 /* ==== 0x01007D70  (file offset 0x07D70)  FUN_01007d70 ================================================ */
@@ -7818,36 +7821,23 @@ void FUN_010082f0(int param_1,int param_2,undefined4 param_3)
 }
 
 /* ==== 0x0100835C  (file offset 0x0835C)  swvSectionZlib_Init ========================================= */
-/* GUESS: name (not yet rewritten). Sets up the zlib-section reader: its sink (swvSection_SetSink;
-   r0 and r1 passed through) and its zlib stream at +8 (FUN_010396cc, with the tag "ZLIB"). */
-uint swvSectionZlib_Init(int param_1,undefined4 param_2)
+/* GUESS: name. Sets up the zlib-section reader section (swvSection_CreateZlib calls it): its sink
+   (swvSection_SetSink, r0 and r1 passed through), then its zlib stream at +8 opened by FUN_010396cc (the
+   tag "ZLIB", the sink, which the stream's state keeps at +4 for what it inflates, and the stream's
+   address; 1 when it is set up, 0 when not); when it gives 0 the stream is torn down at once
+   (thunk_FUN_01039670, a tail jump, its result returned). Returns 1, or the tear-down's result.
+   Evidence: 0x0100835c - 0x01008390 (`add r2, r4, #8` FUN_010396cc's third argument: Ghidra had dropped
+   it; `moveq r0, r4` / `ldmiaeq` / `beq 0x010395b0`; Ghidra had pasted the target's code here). */
+uint32 swvSectionZlib_Init(uint8 *section,void *sink)
 
 {
-  uint uVar1;
-  int iVar2;
-  undefined4 *puVar3;
-  int *unaff_r4;
-  
-  swvSection_SetSink((uint8 *)param_1,(void *)param_2);   /* Ghidra had dropped them */
-  puVar3 = (undefined4 *)(param_1 + 8);
-  uVar1 = FUN_010396cc(FOUR_CHARACTER_TAG_ZLIB,param_2);
-  if (uVar1 != 0) {
-    return uVar1;
-  }
-  uVar1 = 0;
-  if (puVar3 != (undefined4 *)0x0) {
-    unaff_r4 = (int *)*puVar3;
-  }
-  if (puVar3 != (undefined4 *)0x0 && unaff_r4 != (int *)0x0) {
-    if (*unaff_r4 == FOUR_CHARACTER_TAG_ZLIB) {
-      iVar2 = FUN_01031034(unaff_r4[2]);
-      uVar1 = (uint)(iVar2 == 0);
-      helper_free((void *)unaff_r4[2]);
-    }
-    helper_free(unaff_r4);
-    *puVar3 = 0;
-  }
-  return uVar1;
+  uint32 result;
+
+  swvSection_SetSink(section,sink);
+  result = FUN_010396cc(FOUR_CHARACTER_TAG_ZLIB,(int32)sink,(uint32 *)(section + 8));
+  if (result == 0)
+    result = thunk_FUN_01039670((uint32 *)(section + 8));
+  return result;
 }
 
 /* ==== 0x01008398  (file offset 0x08398)  swvKeyframeSequence_Construct =============================== */
@@ -9328,61 +9318,59 @@ int * FUN_010098fc(void)
 }
 
 /* ==== 0x01009944  (file offset 0x09944)  swvSection_CreateStored ===================================== */
-/* GUESS: name (not yet rewritten). Creates the M3G loader's reader for a section stored uncompressed
-   (CompressionScheme 0, M3G file format section 6.1): a 0xc-byte object (swv_New_2) built by
-   swvSectionStored_Construct and registered (FUN_0100f8e8, FUN_0101807c, FUN_0101715c), its sink (where
-   the section's bytes go, the record reader) set to param_1 (swvSection_SetSink). Its vtable
-   (0x010022D4): 0 swvSectionStored_Destroy, 1 swvSectionStored_Feed, 2 swvSectionStored_Get08. */
-int swvSection_CreateStored(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+/* GUESS: name. Creates the M3G loader's reader for a section stored uncompressed (CompressionScheme 0, M3G
+   file format section 6.1): a 0xc-byte object (swv_New_2; r1 = 0, not read) built by
+   swvSectionStored_Construct and kept on the engine's object stack while it is set up (FUN_0101807c with
+   the globals' +0x10, FUN_0100f8e8, then FUN_0101715c; r1 is the object for that one too, which reads
+   only r0), its sink (where the section's bytes go, the M3G reader sink) set by swvSection_SetSink.
+   Returns the section reader (NULL when there is none). Its vtable (0x010022D4): 0
+   swvSectionStored_Destroy, 1 swvSectionStored_Feed, 2 swvSectionStored_Get08. swvM3GReader_Feed calls
+   it with the reader itself. Evidence: 0x01009944 - 0x010099a0 (r0 the sink kept in r5: Ghidra had
+   given it four parameters; `mov r0, #0` / `cmp r4, #0` / `beq` the result). */
+uint8 *swvSection_CreateStored(void *sink)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  int iVar3;
-  
-  iVar1 = swv_New_2(0xc);
-  if (iVar1 != 0) {
-    swvSectionStored_Construct(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+  uint8 *section;
+  uint8 *created = NULL;
+
+  section = (uint8 *)swv_New_2(0xc);
+  if (section != NULL) {
+    swvSectionStored_Construct(section);
+    FUN_0101807c(FUN_0100f8e8(),(uint32)section);
   }
-  swvSection_SetSink((uint8 *)iVar1,(void *)param_1);
-  iVar3 = 0;
-  if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
-    iVar3 = iVar1;
+  swvSection_SetSink(section,sink);
+  if (section != NULL) {
+    FUN_0101715c(FUN_0100f8e8());
+    created = section;
   }
-  return iVar3;
+  return created;
 }
 
 /* ==== 0x010099A4  (file offset 0x099A4)  swvSection_CreateZlib ======================================= */
-/* GUESS: name (not yet rewritten). Creates the M3G loader's reader for a zlib-compressed section
-   (CompressionScheme 1, zlib with a 32 k buffer, M3G file format section 6.1), like
-   swvSection_CreateStored: a 0x10-byte object (swvSectionZlib_Construct), set up by swvSectionZlib_Init
-   with the sink param_1. Its vtable (0x010022E0): 0 swvSectionZlib_Destroy, 1 swvSectionZlib_Feed, 2
-   swvSectionZlib_Get0c. */
-int swvSection_CreateZlib(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+/* GUESS: name. Creates the M3G loader's reader for a zlib-compressed section (CompressionScheme 1, zlib
+   with a 32 k buffer, M3G file format section 6.1), like swvSection_CreateStored: a 0x10-byte object
+   (swv_New_2) built by swvSectionZlib_Construct, kept on the engine's object stack while it is set up
+   (FUN_0101807c, FUN_0101715c), its sink and zlib stream set by swvSectionZlib_Init (its result not
+   read). Returns the section reader (NULL when there is none). Its vtable (0x010022E0): 0
+   swvSectionZlib_Destroy, 1 swvSectionZlib_Feed, 2 swvSectionZlib_Get0c. Evidence: 0x010099a4 -
+   0x01009a00 (the same code as swvSection_CreateStored's, `bl 0x0100835c` in place of `bl 0x0100806c`). */
+uint8 *swvSection_CreateZlib(void *sink)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  int iVar3;
-  
-  iVar1 = swv_New_2(0x10);
-  if (iVar1 != 0) {
-    swvSectionZlib_Construct(iVar1);
-    uVar2 = FUN_0100f8e8();
-    FUN_0101807c(uVar2,iVar1);
+  uint8 *section;
+  uint8 *created = NULL;
+
+  section = (uint8 *)swv_New_2(0x10);
+  if (section != NULL) {
+    swvSectionZlib_Construct(section);
+    FUN_0101807c(FUN_0100f8e8(),(uint32)section);
   }
-  swvSectionZlib_Init(iVar1,param_1);
-  iVar3 = 0;
-  if (iVar1 != 0) {
-    uVar2 = FUN_0100f8e8(0);
-    FUN_0101715c(uVar2,iVar1);
-    iVar3 = iVar1;
+  swvSectionZlib_Init(section,sink);
+  if (section != NULL) {
+    FUN_0101715c(FUN_0100f8e8());
+    created = section;
   }
-  return iVar3;
+  return created;
 }
 
 /* ==== 0x01009A04  (file offset 0x09A04)  FUN_01009a04 ================================================ */
@@ -9466,59 +9454,60 @@ int FUN_01009ad0(void)
 }
 
 /* ==== 0x01009B80  (file offset 0x09B80)  swvM3GReader_New ============================================ */
-/* GUESS: name (not yet rewritten). Makes an M3G reader: 0xe8 bytes (swv_New_2), constructed by
-   swvM3GReader_Construct. The Loader's creation calls it. */
-int swvM3GReader_New(void)
+/* GUESS: name. Makes an M3G reader: 0xe8 bytes (swv_New_2; r1 = 0, not read), constructed by
+   swvM3GReader_Construct when there are any (it cannot fail: swv_New_2 checks). The Loader's creation
+   (swv_Create_Loader) calls it. Evidence: 0x01009b80 - 0x01009ba0 (`movs r4, r0` / `blne 0x01029010`,
+   `mov r0, r4`). */
+uint8 *swvM3GReader_New(void)
 
 {
-  int iVar1;
-  
-  iVar1 = swv_New_2(0xe8);
-  if (iVar1 != 0) {
-    swvM3GReader_Construct(iVar1);
-  }
-  return iVar1;
+  uint8 *reader = (uint8 *)swv_New_2(0xe8);
+
+  if (reader != NULL)
+    swvM3GReader_Construct(reader);
+  return reader;
 }
 
 /* ==== 0x01009BA4  (file offset 0x09BA4)  swvSectionStored_Feed ======================================= */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022D4 +0x4;
-   written from its disassembly (0x01009ba4 - 0x01009bb4). Passes the call on to the object at +4: its
-   virtual slot +0x18, with param_2 and param_3 (a tail jump; r3 then holds the target's address, a
-   leftover). */
-int swvSectionStored_Feed(int param_1,int param_2,int param_3)
+/* GUESS: name. A routine Ghidra has no function for, reached only through the engine vtable at 0x010022D4
+   +0x4 (slot 1 of the stored-section reader, swvSection_CreateStored); written from its disassembly
+   (0x01009ba4 - 0x01009bb4: `ldr r0, [r0, #4]`, `ldr r12, [r3, #0x18]` / `add r3, r12, r3` / `bx r3`).
+   Passes the section's bytes on unchanged: a tail jump to its sink's (+4, the M3G reader, see
+   swvSection_SetSink) virtual slot +0x18 with data and length as they came (r1, r2), the result returned.
+   Of the static engine vtables 0x01002410, the M3G reader's, has FUN_010157e8 (the record reader) there.
+   swvM3GReader_Feed calls it through the section reader's slot +4. */
+int32 swvSectionStored_Feed(uint8 *section,const uint8 *data,int32 length)
 
 {
-  int iVar1;
+  uint8 *sink = *(uint8 **)(section + 4);
+  int32 taken;
 
-  iVar1 = *(int *)(param_1 + 4);
-  /* engine virtual call, slot +0x18: of the static engine vtables only the renderer's (0x01002398)
-     FUN_010204ec and 0x01002410's FUN_010157e8 and 0x010027d8's 0x010124b4 have it; a scene object's
-     vtable is not among them (GUESS: not static), so for one the method is not known here */
-  return (*(code *)(*(int *)(*(int *)iVar1 + 0x18) + *(int *)iVar1))(iVar1,param_2,param_3);
+  taken = (*(code *)(*(int32 *)(*(int32 *)sink + 0x18) + *(int32 *)sink))(sink,data,length);
+  return taken;
 }
 
 /* ==== 0x01009BB8  (file offset 0x09BB8)  swvSectionZlib_Feed ========================================= */
-/* GUESS: name (not yet rewritten). Slot 1 of the zlib-section reader's vtable: inflates param_3 bytes
-   at param_2 (FUN_010395b4) into the sink; on failure tears the stream (+8) down and reports the error
-   (FUN_0102f7e0). Returns 1, or 0 on failure. */
-undefined4 swvSectionZlib_Feed(int param_1,undefined4 param_2,undefined4 param_3)
+/* GUESS: name. Slot 1 of the zlib-section reader's vtable (0x010022E0 +0x4): clears the error word of the
+   engine's globals (FUN_0102ecec, +0x24), then inflates length bytes at data through the section's zlib
+   stream (+8; FUN_010395b4, which hands what it inflates to the sink); on failure the stream is torn
+   down (thunk_FUN_01039670) and an error the inflate left in the globals, if any, raised (FUN_0102f7e0,
+   which does not return). Returns 1, or 0 on failure. Evidence: 0x01009bb8 - 0x01009c1c (`add r2, r4,
+   #8` the stream, FUN_010395b4's third argument: Ghidra had dropped it; `movne r0, #1` / `ldmiane`, `mov
+   r0, #0`). swvM3GReader_Feed calls it through the section reader's slot +4. */
+int32 swvSectionZlib_Feed(uint8 *section,const uint8 *data,int32 length)
 
 {
-  int iVar1;
-  
-  iVar1 = FUN_0102ecec();
-  *(undefined4 *)(iVar1 + 0x24) = 0;
-  iVar1 = FUN_010395b4(param_2,param_3);
-  if (iVar1 == 0) {
-    thunk_FUN_01039670(param_1 + 8);
-    iVar1 = FUN_0102ecec();
-    if (*(int *)(iVar1 + 0x24) != 0) {
-      iVar1 = FUN_0102ecec();
-      FUN_0102f7e0(*(undefined4 *)(iVar1 + 0x24));
-    }
-    return 0;
+  int32 fed = 0;
+
+  *(int32 *)(FUN_0102ecec() + 0x24) = 0;
+  if (FUN_010395b4((uint32)data,(uint32)length,(int *)(section + 8)) != 0)
+    fed = 1;
+  else {
+    thunk_FUN_01039670((uint32 *)(section + 8));
+    if (*(int32 *)(FUN_0102ecec() + 0x24) != 0)
+      FUN_0102f7e0(*(int32 *)(FUN_0102ecec() + 0x24));
   }
-  return 1;
+  return fed;
 }
 
 /* ==== 0x01009C20  (file offset 0x09C20)  FUN_01009c20 ================================================ */
@@ -19400,148 +19389,141 @@ void FUN_010151f0(int param_1,int param_2)
 }
 
 /* ==== 0x01015220  (file offset 0x15220)  swvM3GReader_End ============================================ */
-/* GUESS: name (not yet rewritten). The M3G reader's slot +0x0c: ends a read: error -1103
-   (SWVE_READER_STATE) unless the state (+0x64) is 1 or 2 (begun or reading) and the file parser
-   (+0x24) waits for a section's compression byte (2), i.e. the data ended between two sections (M3G
-   file format section 9: a file cut inside a section is an error); then the state set to 3 (see
-   swvM3GReader_State); -10 when the virtual slot +0x20 refuses (handed to the slot +0x10); the section
-   reader (+0x10), if any, destroyed. */
-undefined4 swvM3GReader_End(int *param_1)
+/* GUESS: name. The M3G reader's slot +0x0c: ends a read: error -1103 (SWVE_READER_STATE; FUN_0102f7e0,
+   which does not return) when an error is already kept (+0xc not -1), unless the state (+0x64) is 1 or 2
+   (begun or reading), and unless the file parser (+0x24) waits for a section's compression byte (2), i.e.
+   the data ended between two sections (M3G file format section 9: a file cut inside a section is an
+   error); then the state set to 3 (see swvM3GReader_State); -1, or -10 when the virtual slot +0x20
+   refuses (0; the -10 handed to the slot +0x10, swvM3GReader_Fail); the section reader (+0x10), if any,
+   destroyed (its slot 0, with 1). Evidence: 0x01015220 - 0x010152d0 (`ldr r5, [0x10152d4]` the -1103 of
+   all three, `mvn r5, #0` / `mvn r5, #9` the result, the vtable read from +0 for each call). */
+int32 swvM3GReader_End(uint8 *reader)
 
 {
-  int iVar1;
-  int *piVar2;
-  undefined4 uVar3;
-  
-  uVar3 = INTEGER_MINUS_1103;
-  if (param_1[3] != -1) {
+  int32 result;
+  uint8 *section;
+
+  if (*(int32 *)(reader + 0xc) != -1)
     FUN_0102f7e0(INTEGER_MINUS_1103);
-  }
-  if (param_1[0x19] != 1 && param_1[0x19] != 2) {
-    FUN_0102f7e0(uVar3);
-  }
-  if (param_1[9] != 2) {
-    FUN_0102f7e0(uVar3);
-  }
-  param_1[0x19] = 3;
-  uVar3 = 0xffffffff;
+  if (*(int32 *)(reader + 0x64) != 1 && *(int32 *)(reader + 0x64) != 2)
+    FUN_0102f7e0(INTEGER_MINUS_1103);
+  if (*(int32 *)(reader + 0x24) != 2)
+    FUN_0102f7e0(INTEGER_MINUS_1103);
+  *(int32 *)(reader + 0x64) = 3;
+  result = -1;
   /* engine virtual call, slot +0x20: of the static engine vtables only the renderer's (0x01002398)
-     FUN_0101d01c and 0x01002410's FUN_01003408 have it; a scene object's vtable is not among them (GUESS:
-     not static), so for one the method is not known here */
-  iVar1 = (*(code *)(*(int *)(*param_1 + 0x20) + *param_1))(param_1);
-  if (iVar1 == 0) {
-    uVar3 = 0xfffffff6;
-    /* engine virtual call, slot +0x10: one of the 35 functions the static engine vtables put there (by the
-       object's class) */
-    (*(code *)(*(int *)(*param_1 + 0x10) + *param_1))(param_1,0xfffffff6);
+     FUN_0101d01c and 0x01002410's FUN_01003408 have it */
+  if ((*(code *)(*(int32 *)(*(int32 *)reader + 0x20) + *(int32 *)reader))(reader) == 0) {
+    result = -10;
+    (*(code *)(*(int32 *)(*(int32 *)reader + 0x10) + *(int32 *)reader))(reader,-10);
   }
-  piVar2 = (int *)param_1[4];
-  if (piVar2 != (int *)0x0) {
-    /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
-       object's class); slot 0 is the destructor */
-    (*(code *)(*(int *)*piVar2 + *piVar2))(piVar2,1);
-    param_1[4] = 0;
+  section = *(uint8 **)(reader + 0x10);
+  if (section != NULL) {
+    /* engine virtual call, slot +0x0: the section reader's destructor */
+    (*(code *)(*(int32 *)*(int32 *)section + *(int32 *)section))(section,1);
+    *(uint8 **)(reader + 0x10) = NULL;
   }
-  return uVar3;
+  return result;
 }
 
 /* ==== 0x010152D8  (file offset 0x152D8)  swvM3GReader_Begin ========================================== */
-/* GUESS: name (not yet rewritten). The M3G reader's slot +0x04: begins a read: error -1103 when an
-   error is already kept (+0xc not -1); param_2 kept at +0x18; unless +0x20 is set, the state (+0x64)
-   set to 1 (see swvM3GReader_State) and the object at +0x10 destroyed (its slot 0, with 1). */
-undefined4 swvM3GReader_Begin(int param_1,undefined4 param_2)
+/* GUESS: name. The M3G reader's slot +0x04: begins a read: error -1103 (SWVE_READER_STATE; FUN_0102f7e0,
+   which does not return) when an error is already kept (+0xc not -1); allowSwerve kept at +0x18
+   (non-zero: Swerve's own file identifier and types 23, 24 allowed, see swv_types.h); then -5 when the
+   file identifier has been begun (+0x20, the bytes of it matched, not 0), else -1, the state (+0x64) set
+   to 1 (see swvM3GReader_State) and the section reader at +0x10, if any, destroyed (its slot 0, with 1).
+   Evidence: 0x010152d8 - 0x01015340 (`mvn r5, #0` / `mvnne r5, #4` the result, `blx r2` with r1 = 1). */
+int32 swvM3GReader_Begin(uint8 *reader,int32 allowSwerve)
 
 {
-  int *piVar1;
-  undefined4 uVar2;
-  
-  if (*(int *)(param_1 + 0xc) != -1) {
+  int32 result = -1;
+  uint8 *section;
+
+  if (*(int32 *)(reader + 0xc) != -1)
     FUN_0102f7e0(INTEGER_MINUS_1103);
-  }
-  *(undefined4 *)(param_1 + 0x18) = param_2;
-  uVar2 = 0xffffffff;
-  if (*(int *)(param_1 + 0x20) == 0) {
-    *(undefined4 *)(param_1 + 100) = 1;
-    piVar1 = *(int **)(param_1 + 0x10);
-    if (piVar1 != (int *)0x0) {
-      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
-         the object's class); slot 0 is the destructor */
-      (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
-      *(undefined4 *)(param_1 + 0x10) = 0;
+  *(int32 *)(reader + 0x18) = allowSwerve;
+  if (*(int32 *)(reader + 0x20) != 0)
+    result = -5;
+  else {
+    *(int32 *)(reader + 0x64) = 1;
+    section = *(uint8 **)(reader + 0x10);
+    if (section != NULL) {
+      /* engine virtual call, slot +0x0: the section reader's destructor (swvSectionStored_Destroy or
+         swvSectionZlib_Destroy) */
+      (*(code *)(*(int32 *)*(int32 *)section + *(int32 *)section))(section,1);
+      *(uint8 **)(reader + 0x10) = NULL;
     }
   }
-  else {
-    uVar2 = 0xfffffffb;
-  }
-  return uVar2;
+  return result;
 }
 
 /* ==== 0x01015348  (file offset 0x15348)  swvM3GReader_Feed =========================================== */
 /* GUESS: name. The M3G reader's slot +0x8 (engine vtable 0x01002410; Ghidra had no function); written from
-   its disassembly (0x01015348 - 0x010157e0). Feeds param_5 bytes (param_3 + param_4; the fifth argument is
-   on the stack) to the M3G file reader (GUESS: the Loader's stream parser). +0x24 is the state: 1 the file
-   identifier (M3G file format section 5), a byte at a time (FUN_0101255c gives each) against one of two
-   12-byte strings: +0x48 the M3G one (0x010427a8: AB 'JSR184' BB 0D 0A 1A 0A; +0x14 = 0) or, when +0x18
-   allows it, +0x54 Swerve's own (0x0104279c: BB 'SWERVE' AB 0D 0A 1A 0A; +0x14 = 1); 2 a section's
-   CompressionScheme (section 6.1: 0 or 1, the section reader swvSection_CreateStored /
-   swvSection_CreateZlib at +0x10, after the virtual slot +0x1c agrees; the Adler-32 at +0x3c starts; +0x28
-   counts the sections); 3 to 6 the TotalSectionLength (section 6.2, +0x30; below 13 is an error, less 13
-   it is the Objects' length, kept in +0x40) and 7 to 10 the UncompressedLength (section 6.3, +0x34), least
-   significant byte first, both checksummed (FUN_010265fc adds them to +0x3c); 11 the Objects (section 6.4,
-   checksummed in their stored form by thunk_adler32 and fed to the section reader's virtual slot +4; at
-   the end the bytes the record reader took, +0x44, must equal +0x34, and the section reader is deleted);
-   12 to 15 the section's Checksum (section 6.5), which must match +0x3c, then the virtual slot +0x24 can
-   end the file. +0x2c counts the bytes read, +0x1c the header's TotalFileSize (section 10.1; -1 until the
-   header is read). Errors: FUN_0102f7e0 (-1103 SWVE_READER_STATE when called in the wrong state, -1201
-   (-0x4b1) for bad lengths) and the results -7 (bad identifier), -8 (bad CompressionScheme, or the section
-   reader refused), -9 (bad checksum), -10 (the slot +0x1c refused) and -11 (data past TotalFileSize),
-   handed to the virtual slot +0x10. Returns -1 while it needs more, the bytes used when the file ended, or
-   the error. */
-int swvM3GReader_Feed(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5)
+   its disassembly (0x01015348 - 0x010157e0). Feeds length bytes (data + offset; the fifth argument is on
+   the stack; array, r1, is not read: GUESS, the byte array the data belongs to) to the M3G file reader
+   (GUESS: the Loader's stream parser). +0x24 is the state: 1 the file identifier (M3G file format section
+   5), a byte at a time (FUN_0101255c gives each) against one of two 12-byte strings: +0x48 the M3G one
+   (0x010427a8: AB 'JSR184' BB 0D 0A 1A 0A; +0x14 = 0) or, when +0x18 allows it, +0x54 Swerve's own
+   (0x0104279c: BB 'SWERVE' AB 0D 0A 1A 0A; +0x14 = 1); 2 a section's CompressionScheme (section 6.1: 0 or
+   1, the section reader swvSection_CreateStored / swvSection_CreateZlib at +0x10, after the virtual slot
+   +0x1c agrees; the Adler-32 at +0x3c starts; +0x28 counts the sections); 3 to 6 the TotalSectionLength
+   (section 6.2, +0x30; below 13 is an error, less 13 it is the Objects' length, kept in +0x40) and 7 to
+   10 the UncompressedLength (section 6.3, +0x34), least significant byte first, both checksummed
+   (FUN_010265fc adds them to +0x3c); 11 the Objects (section 6.4, checksummed in their stored form by
+   thunk_adler32 and fed to the section reader's virtual slot +4; at the end the bytes the record reader
+   took, +0x44, must equal +0x34, and the section reader is deleted); 12 to 15 the section's Checksum
+   (section 6.5), which must match +0x3c, then the virtual slot +0x24 can end the file. +0x2c counts the
+   bytes read, +0x1c the header's TotalFileSize (section 10.1; -1 until the header is read). Errors:
+   FUN_0102f7e0 (-1103 SWVE_READER_STATE when called in the wrong state, -1201 (-0x4b1) for bad lengths)
+   and the results -7 (bad identifier), -8 (bad CompressionScheme, or the section reader refused), -9 (bad
+   checksum), -10 (the slot +0x1c refused) and -11 (data past TotalFileSize), handed to the virtual slot
+   +0x10 (swvM3GReader_Fail; -11 is returned without it). Returns -1 while it needs more, the bytes used
+   when the file ended, or the error. */
+int32 swvM3GReader_Feed(uint8 *reader,int32 array,const uint8 *data,int32 offset,int32 length)
 
 {
-  uint8 *p;
-  int left;
-  int status;
-  int done;
-  int state;
-  int next;
-  int n;
-  int *piVar1;
+  const uint8 *p;
+  int32 left;
+  int32 status;
+  int32 done;
+  int32 state;
+  int32 next;
+  int32 n;
+  uint8 *section;
 
-  if (param_1[3] != -1)
+  if (*(int32 *)(reader + 0xc) != -1)
     FUN_0102f7e0(0xfffffbb1);
-  if (param_1[0x19] != 1 && param_1[0x19] != 2)
+  if (*(int32 *)(reader + 0x64) != 1 && *(int32 *)(reader + 0x64) != 2)
     FUN_0102f7e0(0xfffffbb1);
-  param_1[0x19] = 2;
-  p = param_3 + param_4;
-  left = param_5;
+  *(int32 *)(reader + 0x64) = 2;
+  p = data + offset;
+  left = length;
   status = -1;
   done = 0;
   while (left != 0 && status == -1) {
-    if (param_1[0xb] == param_1[7])
+    if (*(int32 *)(reader + 0x2c) == *(int32 *)(reader + 0x1c))
       return -0xb;
-    state = param_1[9];
+    state = *(int32 *)(reader + 0x24);
     next = state;
     switch (state) {
     case 1:
-      if (param_1[0x18] == 0) {
-        if (FUN_0101255c(param_1 + 0x12,0) == *p) {
-          param_1[5] = 0;
-          param_1[0x18] = (int)(param_1 + 0x12);
+      if (*(uint8 **)(reader + 0x60) == NULL) {
+        if (FUN_0101255c(reader + 0x48,0) == *p) {
+          *(int32 *)(reader + 0x14) = 0;
+          *(uint8 **)(reader + 0x60) = reader + 0x48;
         }
-        else if (FUN_0101255c(param_1 + 0x15,0) == *p && param_1[6] != 0) {
-          param_1[5] = 1;
-          param_1[0x18] = (int)(param_1 + 0x15);
+        else if (FUN_0101255c(reader + 0x54,0) == *p && *(int32 *)(reader + 0x18) != 0) {
+          *(int32 *)(reader + 0x14) = 1;
+          *(uint8 **)(reader + 0x60) = reader + 0x54;
         }
         else
           status = -7;
       }
-      else if (FUN_0101255c(param_1[0x18],param_1[8]) != *p)
+      else if (FUN_0101255c(*(uint8 **)(reader + 0x60),*(int32 *)(reader + 0x20)) != *p)
         status = -7;
       if (status != -7) {
-        param_1[8] = param_1[8] + 1;
-        if (*(int *)(param_1[0x18] + 8) == param_1[8])
+        *(int32 *)(reader + 0x20) += 1;
+        if (*(int32 *)(*(uint8 **)(reader + 0x60) + 8) == *(int32 *)(reader + 0x20))
           next = 2;
       }
       break;
@@ -19549,108 +19531,109 @@ int swvM3GReader_Feed(int *param_1,int param_2,uint8 *param_3,int param_4,int pa
       /* engine virtual call, slot +0x1c: of the static engine vtables only the renderer's (0x01002398)
          FUN_01021d50 and 0x01002410's FUN_0100486c have it; a scene object's vtable is not among them
          (GUESS: not static), so for one the method is not known here */
-      if ((*(code *)(*(int *)(*param_1 + 0x1c) + *param_1))(param_1) == 0)
+      if ((*(code *)(*(int32 *)(*(int32 *)reader + 0x1c) + *(int32 *)reader))(reader) == 0)
         status = -10;
       else {
-        param_1[10] = param_1[10] + 1;
-        param_1[0xf] = 1;
-        param_1[0xf] = thunk_adler32(1,p,1);
+        *(int32 *)(reader + 0x28) += 1;
+        *(uint32 *)(reader + 0x3c) = 1;
+        *(uint32 *)(reader + 0x3c) = thunk_adler32(1,p,1);
         if (*p == 0)
-          param_1[4] = swvSection_CreateStored(param_1);
+          *(uint8 **)(reader + 0x10) = swvSection_CreateStored(reader);
         else if (*p == 1)
-          param_1[4] = swvSection_CreateZlib(param_1);
+          *(uint8 **)(reader + 0x10) = swvSection_CreateZlib(reader);
         else
           status = -8;
       }
       next = 3;
       break;
     case 3:
-      param_1[0xc] = *p;
+      *(uint32 *)(reader + 0x30) = *p;
       next = 4;
       break;
     case 4:
-      param_1[0xc] = param_1[0xc] | (uint)*p << 8;
+      *(uint32 *)(reader + 0x30) |= (uint32)*p << 8;
       next = 5;
       break;
     case 5:
-      param_1[0xc] = param_1[0xc] | (uint)*p << 0x10;
+      *(uint32 *)(reader + 0x30) |= (uint32)*p << 0x10;
       next = 6;
       break;
     case 6:
-      param_1[0xc] = param_1[0xc] | (uint)*p << 0x18;
-      FUN_010265fc(param_1,p + -3,4);
-      param_1[0x10] = param_1[0xc];
-      if ((uint)param_1[0x10] < 0xd)
+      *(uint32 *)(reader + 0x30) |= (uint32)*p << 0x18;
+      FUN_010265fc((int32)reader,p - 3,4);
+      *(uint32 *)(reader + 0x40) = *(uint32 *)(reader + 0x30);
+      if (*(uint32 *)(reader + 0x40) < 0xd)
         FUN_0102f7e0(-0x4b1);
-      param_1[0x10] = param_1[0x10] + -0xd;
+      *(uint32 *)(reader + 0x40) -= 0xd;
       next = 7;
       break;
     case 7:
-      param_1[0xd] = *p;
+      *(uint32 *)(reader + 0x34) = *p;
       next = 8;
       break;
     case 8:
-      param_1[0xd] = param_1[0xd] | (uint)*p << 8;
+      *(uint32 *)(reader + 0x34) |= (uint32)*p << 8;
       next = 9;
       break;
     case 9:
-      param_1[0xd] = param_1[0xd] | (uint)*p << 0x10;
+      *(uint32 *)(reader + 0x34) |= (uint32)*p << 0x10;
       next = 10;
       break;
     case 10:
-      param_1[0xd] = param_1[0xd] | (uint)*p << 0x18;
-      param_1[0x11] = 0;
-      FUN_010265fc(param_1,p + -3,4);
+      *(uint32 *)(reader + 0x34) |= (uint32)*p << 0x18;
+      *(int32 *)(reader + 0x44) = 0;
+      FUN_010265fc((int32)reader,p - 3,4);
       next = 0xb;
       break;
     case 0xb:
-      n = (uint)left <= (uint)param_1[0x10] ? left : param_1[0x10];
+      n = (uint32)left <= *(uint32 *)(reader + 0x40) ? left : *(int32 *)(reader + 0x40);
       if (n != 0) {
-        param_1[0xf] = thunk_adler32(param_1[0xf],p,n);
-        piVar1 = (int *)param_1[4];
+        *(uint32 *)(reader + 0x3c) = thunk_adler32(*(uint32 *)(reader + 0x3c),p,n);
+        section = *(uint8 **)(reader + 0x10);
         /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
-           the object's class) */
-        if ((*(code *)(*(int *)(*piVar1 + 4) + *piVar1))(piVar1,p,n) == 0) {
+           the object's class); here the section reader's swvSectionStored_Feed or swvSectionZlib_Feed */
+        if ((*(code *)(*(int32 *)(*(int32 *)section + 4) + *(int32 *)section))(section,p,n) == 0) {
           status = -8;
           break;
         }
       }
-      left = left - n;
-      param_1[0x10] = param_1[0x10] - n;
-      param_1[0xb] = param_1[0xb] + n;
-      p = p + n;
-      if (param_1[0x10] == 0) {
-        if (param_1[0xd] != param_1[0x11])
+      left -= n;
+      *(int32 *)(reader + 0x40) -= n;
+      *(int32 *)(reader + 0x2c) += n;
+      p += n;
+      if (*(int32 *)(reader + 0x40) == 0) {
+        if (*(int32 *)(reader + 0x34) != *(int32 *)(reader + 0x44))
           FUN_0102f7e0(-0x4b1);
         next = 0xc;
-        piVar1 = (int *)param_1[4];
-        if (piVar1 != (int *)0x0)
+        section = *(uint8 **)(reader + 0x10);
+        if (section != NULL)
           /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there
-             (by the object's class); slot 0 is the destructor */
-          (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
-        param_1[4] = 0;
+             (by the object's class); slot 0 is the destructor (here swvSectionStored_Destroy or
+             swvSectionZlib_Destroy) */
+          (*(code *)(*(int32 *)*(int32 *)section + *(int32 *)section))(section,1);
+        *(uint8 **)(reader + 0x10) = NULL;
       }
       break;
     case 0xc:
-      param_1[0xe] = *p;
+      *(uint32 *)(reader + 0x38) = *p;
       next = 0xd;
       break;
     case 0xd:
-      param_1[0xe] = param_1[0xe] | (uint)*p << 8;
+      *(uint32 *)(reader + 0x38) |= (uint32)*p << 8;
       next = 0xe;
       break;
     case 0xe:
-      param_1[0xe] = param_1[0xe] | (uint)*p << 0x10;
+      *(uint32 *)(reader + 0x38) |= (uint32)*p << 0x10;
       next = 0xf;
       break;
     case 0xf:
-      param_1[0xe] = param_1[0xe] | (uint)*p << 0x18;
-      if (param_1[0xf] != param_1[0xe])
+      *(uint32 *)(reader + 0x38) |= (uint32)*p << 0x18;
+      if (*(uint32 *)(reader + 0x3c) != *(uint32 *)(reader + 0x38))
         status = -9;
       /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
          FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
          (GUESS: not static), so for one the method is not known here */
-      else if ((*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1) != 0)
+      else if ((*(code *)(*(int32 *)(*(int32 *)reader + 0x24) + *(int32 *)reader))(reader) != 0)
         done = 1;
       next = 2;
       break;
@@ -19659,22 +19642,22 @@ int swvM3GReader_Feed(int *param_1,int param_2,uint8 *param_3,int param_4,int pa
       break;
     }
     if (state != 0xb) {
-      param_1[0xb] = param_1[0xb] + 1;
-      left = left + -1;
-      p = p + 1;
+      *(int32 *)(reader + 0x2c) += 1;
+      left--;
+      p++;
     }
-    param_1[9] = next;
+    *(int32 *)(reader + 0x24) = next;
     if (done != 0)
       break;
   }
   if (status != -1) {
     /* engine virtual call, slot +0x10: one of the 35 functions the static engine vtables put there (by the
-       object's class) */
-    (*(code *)(*(int *)(*param_1 + 0x10) + *param_1))(param_1,status);
+       object's class); here swvM3GReader_Fail */
+    (*(code *)(*(int32 *)(*(int32 *)reader + 0x10) + *(int32 *)reader))(reader,status);
     return status;
   }
   if (done != 0)
-    status = param_5 - left;
+    status = length - left;
   return status;
 }
 
@@ -19770,16 +19753,17 @@ int FUN_010157e8(int param_1,uint8 *param_2,uint32 param_3)
 }
 
 /* ==== 0x010159CC  (file offset 0x159CC)  swvM3GReader_Fail =========================================== */
-/* GUESS: name. The M3G reader's slot +0x10 (engine vtable 0x01002410; Ghidra had no function);
-   written from its disassembly (0x010159cc - 0x010159e0). Sets +0x64 to 4 and, when +0xc is still -1,
-   stores param_2 there. */
-void swvM3GReader_Fail(int param_1,int param_2)
+/* GUESS: name. The M3G reader's slot +0x10 (engine vtable 0x01002410; Ghidra had no function); written
+   from its disassembly (0x010159cc - 0x010159e0: `mov r2, #4` / `str r2, [r0, #0x64]`, `cmn r2, #1` /
+   `streq r1, [r0, #0xc]`). Marks the read failed (the state +0x64 = 4, see swvM3GReader_State) and keeps
+   error as the first error code (+0xc) when none is kept yet (-1). swvM3GReader_Feed and
+   swvM3GReader_End call it through the slot with their negative results. */
+void swvM3GReader_Fail(uint8 *reader,int32 error)
 
 {
-  *(int *)(param_1 + 0x64) = 4;
-  if (*(int *)(param_1 + 0xc) == -1)
-    *(int *)(param_1 + 0xc) = param_2;
-  return;
+  *(int32 *)(reader + 0x64) = 4;
+  if (*(int32 *)(reader + 0xc) == -1)
+    *(int32 *)(reader + 0xc) = error;
 }
 
 /* ==== 0x010159E4  (file offset 0x159E4)  FUN_010159e4 ================================================ */
@@ -26122,166 +26106,114 @@ uint FUN_0101dbcc(undefined4 param_1,int param_2)
 }
 
 /* ==== 0x0101DBF8  (file offset 0x1DBF8)  swvM3G_ReadImage2D ========================================== */
-/* (not yet rewritten) M3G file format section 11.10, Image2D (ObjectType 10): reads the record into the
-   native Image2D param_1: the Object3D part (swvM3G_ReadObject3D), the format (+0x40, ALPHA 0x60 .. RGBA
-   0x64), isMutable (+0x44), the width (+0x34) and height (+0x38) (error -1202 for 0, -4 for 0x8000 or
-   more). A mutable image has no pixel data: its planes are set to 0xff (JSR-184 1.1, Image2D(format,
-   width, height): opaque white). Otherwise the palette (Byte[]): none, then the pixels themselves (a
-   Byte[] of at least width * height pixel specifiers, else -1202); else its colours (error -1202 for a
-   size not a multiple of the pixel's below 256 entries; differs from section 11.10: a longer palette is
-   not refused, its first 256 entries are kept), each written to the palette (swvImage2D_Palette) and its
-   alpha to the alpha plane, then the indices (a Byte[] of at least width * height, else -1202). */
-/* WARNING: Removing unreachable block (ram,0x0100358c) */
-/* WARNING: Removing unreachable block (ram,0x01003590) */
-/* WARNING: Removing unreachable block (ram,0x0100354c) */
-/* WARNING: Removing unreachable block (ram,0x01003534) */
-/* WARNING: Removing unreachable block (ram,0x01003578) */
-/* WARNING: Removing unreachable block (ram,0x010035c0) */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-void swvM3G_ReadImage2D(int param_1,undefined4 param_2,undefined4 param_3,undefined2 *param_4)
+/* GUESS: name. M3G file format section 11.10, Image2D (ObjectType 10): reads the record into the native
+   Image2D image: the Object3D part (swvM3G_ReadObject3D), the format (+0x40, ALPHA 0x60 .. RGBA 0x64),
+   isMutable (+0x44), the width (+0x34) and height (+0x38) (error -1202, the file is bad, for 0, -4 for
+   0x8000 or more). A mutable image has no pixel data: FUN_0100350c(image, 0) lays its planes out and sets
+   them to 0xff (JSR-184 1.1, Image2D(format, width, height): opaque white; a tail jump, whose code Ghidra
+   had pasted here). Otherwise the palette (Byte[], FUN_01019698): none, then the pixels themselves (a
+   Byte[] of at least width * height pixel specifiers, swvImage2D_BytesPerPixel bytes each, else -1202;
+   FUN_01019920 each, the colour into the plane at +0x20 + +0x30 and the alpha into the alpha plane,
+   swvImage2D_AlphaPlane, when there is one; any beyond width * height read and dropped); else its colours
+   (error -1202 for a size not a multiple of the pixel's below 256 entries; differs from section 11.10: a
+   longer palette is not refused, its first 256 entries are kept), each written to the palette
+   (swvImage2D_Palette) and its alpha to the alpha plane, then the indices (a Byte[] of at least width *
+   height, else -1202, FUN_01019640, into +0x20 + +0x30). For ALPHA (0x60) FUN_01019920 writes no colour
+   (FUN_01025bc4), so the colour stored is whatever the local held (a stack slot the code never sets: the
+   r1 .. r3 it saved on entry). The size tests use FUN_010002c8 (ARM's __rt_udiv): its remainder (r1) is
+   the size less quotient * bytes per pixel here, its prototype giving the quotient only. Evidence:
+   0x0101dbf8 - 0x0101de24 (r0 and r1 kept for swvM3G_ReadObject3D: Ghidra had dropped them and given the
+   function the saved r1 .. r3 as parameters; `orr r0, r7, r5` / `movs r0, r0, asr #15` / `mvnne r0, #3`;
+   `ldmiane` / `bne 0x0100350c`; `cmp r7, r9, lsl #8` / `bcs` / `cmp r1, #0` the remainder, `cmp r0,
+   #0x100` / `movgt`; the palette's `do` loop (`subs r7, r7, r9` / `bne`), the colour at sp + 4 and the
+   alpha at sp; the pixels' `while` loop, the colour at sp + 8 and the alpha at sp + 4; `cmp r1, r0` /
+   `blhi`, `cmp r0, r5` / `blcc` the -1202s). */
+void swvM3G_ReadImage2D(uint8 *image,uint8 *stream)
 
 {
-  undefined1 uVar1;
-  undefined4 uVar2;
-  undefined4 uVar3;
-  uint uVar4;
-  uint uVar5;
-  int iVar6;
-  int iVar7;
-  undefined1 *puVar8;
-  int extraout_r1;
-  int iVar9;
-  uint uVar10;
-  int unaff_r7;
-  undefined2 *puVar11;
-  undefined2 *puVar12;
-  undefined1 *puVar13;
-  undefined4 uStack_30;
-  undefined4 uStack_2c;
-  undefined2 *puStack_28;
-  
-  uStack_30 = param_2;
-  uStack_2c = param_3;
-  puStack_28 = param_4;
-  swvM3G_ReadObject3D();
-  uVar2 = FUN_010196cc(param_2,0x5f,0x65);
-  uVar3 = FUN_01019618(param_2);
-  *(undefined4 *)(param_1 + 0x44) = uVar3;
-  uVar4 = FUN_01019abc(param_2);
-  uVar5 = FUN_01019abc(param_2);
-  if (uVar4 == 0 || uVar5 == 0) {
+  int32 format;
+  uint32 width;
+  uint32 height;
+  uint32 pixels;
+  int32 bytesPerPixel;
+  uint32 size;
+  int32 colours;
+  uint16 *palette;
+  uint16 *colourPlane;
+  uint8 *alphaPlane;
+  uint8 *indices;
+  uint8 index;
+  uint16 colour;
+  uint8 alpha;
+
+  swvM3G_ReadObject3D(image,stream);
+  format = FUN_010196cc((int32)stream,0x5f,0x65);
+  *(int32 *)(image + 0x44) = FUN_01019618((int32)stream);
+  width = FUN_01019abc((int32)stream);
+  height = FUN_01019abc((int32)stream);
+  if (width == 0 || height == 0)
     FUN_0102f7e0(INTEGER_MINUS_1202);
-  }
-  if ((int)(uVar4 | uVar5) >> 0xf != 0) {
-    FUN_0102f7e0(0xfffffffc);
-  }
-  *(uint *)(param_1 + 0x38) = uVar5;
-  *(uint *)(param_1 + 0x34) = uVar4;
-  *(undefined4 *)(param_1 + 0x40) = uVar2;
-  if (*(int *)(param_1 + 0x44) != 0) {
-    iVar9 = *(int *)(param_1 + 0x38) * *(int *)(param_1 + 0x34);
-    *(undefined4 *)(param_1 + 0x2c) = 0xffffffff;
-    *(undefined4 *)(param_1 + 0x30) = 0;
-    iVar6 = iVar9 * 2;
-    iVar7 = *(int *)(param_1 + 0x40);
-    if ((iVar7 == 100 || iVar7 == 0x62) || iVar7 == 0x60) {
-      unaff_r7 = 1;
-    }
-    if ((iVar7 != 100 && iVar7 != 0x62) && iVar7 != 0x60) {
-      unaff_r7 = 0;
-    }
-    if (unaff_r7 == 0) {
-      *(undefined4 *)(param_1 + 0x3c) = 0xffffffff;
+  if ((width | height) >> 15 != 0)
+    FUN_0102f7e0(-4);
+  *(uint32 *)(image + 0x38) = height;
+  *(uint32 *)(image + 0x34) = width;
+  *(int32 *)(image + 0x40) = format;
+  if (*(int32 *)(image + 0x44) != 0)
+    FUN_0100350c((int32)image,0);
+  else {
+    pixels = width * height;
+    bytesPerPixel = swvImage2D_BytesPerPixel(format);
+    size = FUN_01019698((int32)stream,1);
+    if (size != 0) {
+      if (size < (uint32)bytesPerPixel << 8 &&
+          size - FUN_010002c8(bytesPerPixel,size) * (uint32)bytesPerPixel != 0)
+        FUN_0102f7e0(INTEGER_MINUS_1202);
+      colours = FUN_010002c8(bytesPerPixel,size);
+      if (colours > 0x100)
+        colours = 0x100;
+      FUN_0100350c((int32)image,colours);
+      palette = swvImage2D_Palette(image);
+      alphaPlane = swvImage2D_AlphaPlane(image);
+      do {
+        FUN_01019920((int32)stream,format,(uint32)&colour,(uint32)&alpha);
+        if (colours > 0) {
+          *palette++ = colour;
+          if (alphaPlane != NULL)
+            *alphaPlane++ = alpha;
+          colours--;
+        }
+        size -= bytesPerPixel;
+      } while (size != 0);
+      size = FUN_01019698((int32)stream,1);
+      if (size < pixels)
+        FUN_0102f7e0(INTEGER_MINUS_1202);
+      indices = *(uint8 **)(image + 0x20) + *(int32 *)(image + 0x30);
+      for (; size != 0; size--) {
+        index = FUN_01019640((int32)stream);
+        if (pixels != 0) {
+          *indices++ = index;
+          pixels--;
+        }
+      }
     }
     else {
-      *(int *)(param_1 + 0x3c) = iVar6;
-      iVar6 = iVar9 * 3;
-    }
-    FUN_01023184(param_1 + 0x1c,iVar6);
-    if (((*(int *)(param_1 + 0x44) != 0) || (*(int *)(param_1 + 0x40) == 0x60)) &&
-       (thunk_swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30),0xff,iVar9 * 2),
-       *(int *)(param_1 + 0x44) != 0 && unaff_r7 != 0)) {
-      thunk_swv_memset(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x3c),0xff,iVar9);
-    }
-    return;
-  }
-  uVar4 = uVar4 * uVar5;
-  iVar6 = swvImage2D_BytesPerPixel(uVar2);
-  uVar5 = FUN_01019698(param_2,1);
-  if (uVar5 == 0) {
-    uVar5 = FUN_01019698(param_2,1);
-    if (uVar5 <= iVar6 * uVar4 && iVar6 * uVar4 - uVar5 != 0) {
-      FUN_0102f7e0(INTEGER_MINUS_1202);
-    }
-    FUN_0100350c(param_1,0);
-    iVar7 = *(int *)(param_1 + 0x30);
-    iVar9 = *(int *)(param_1 + 0x20);
-    puVar8 = (undefined1 *)swvImage2D_AlphaPlane((uint8 *)param_1);
-    puVar12 = (undefined2 *)(iVar9 + iVar7);
-    for (; uVar5 != 0; uVar5 = uVar5 - iVar6) {
-      FUN_01019920(param_2,uVar2,&puStack_28,&uStack_2c);
-      puVar13 = puVar8;
-      puVar11 = puVar12;
-      if (uVar4 != 0) {
-        puVar11 = puVar12 + 1;
-        *puVar12 = puStack_28._0_2_;
-        uVar10 = uVar4 - 1;
-        uVar4 = uVar4 - 1;
-        if (puVar8 != (undefined1 *)0x0) {
-          puVar13 = puVar8 + 1;
-          *puVar8 = (undefined1)uStack_2c;
-          uVar4 = uVar10;
+      size = FUN_01019698((int32)stream,1);
+      if (bytesPerPixel * pixels > size)
+        FUN_0102f7e0(INTEGER_MINUS_1202);
+      FUN_0100350c((int32)image,0);
+      colourPlane = (uint16 *)(*(uint8 **)(image + 0x20) + *(int32 *)(image + 0x30));
+      alphaPlane = swvImage2D_AlphaPlane(image);
+      for (; size != 0; size -= bytesPerPixel) {
+        FUN_01019920((int32)stream,format,(uint32)&colour,(uint32)&alpha);
+        if (pixels != 0) {
+          *colourPlane++ = colour;
+          if (alphaPlane != NULL)
+            *alphaPlane++ = alpha;
+          pixels--;
         }
       }
-      puVar8 = puVar13;
-      puVar12 = puVar11;
     }
   }
-  else {
-    if ((uVar5 < (uint)(iVar6 << 8)) && (FUN_010002c8(iVar6,uVar5), extraout_r1 != 0)) {
-      FUN_0102f7e0(INTEGER_MINUS_1202);
-    }
-    iVar7 = FUN_010002c8(iVar6,uVar5);
-    if (0x100 < iVar7) {
-      iVar7 = 0x100;
-    }
-    FUN_0100350c(param_1,iVar7);
-    puStack_28 = (undefined2 *)swvImage2D_Palette((uint8 *)param_1);
-    puVar8 = (undefined1 *)swvImage2D_AlphaPlane((uint8 *)param_1);
-    do {
-      FUN_01019920(param_2,uVar2,&uStack_2c,&uStack_30);
-      puVar13 = puVar8;
-      if (0 < iVar7) {
-        puVar12 = puStack_28 + 1;
-        *puStack_28 = (undefined2)uStack_2c;
-        iVar9 = iVar7 + -1;
-        iVar7 = iVar7 + -1;
-        puStack_28 = puVar12;
-        if (puVar8 != (undefined1 *)0x0) {
-          puVar13 = puVar8 + 1;
-          *puVar8 = (undefined1)uStack_30;
-          iVar7 = iVar9;
-        }
-      }
-      uVar5 = uVar5 - iVar6;
-      puVar8 = puVar13;
-    } while (uVar5 != 0);
-    uVar5 = FUN_01019698(param_2,1);
-    if (uVar5 < uVar4) {
-      FUN_0102f7e0(INTEGER_MINUS_1202);
-    }
-    puVar8 = (undefined1 *)(*(int *)(param_1 + 0x20) + *(int *)(param_1 + 0x30));
-    for (; uVar5 != 0; uVar5 = uVar5 - 1) {
-      uVar1 = FUN_01019640(param_2);
-      if (uVar4 != 0) {
-        *puVar8 = uVar1;
-        uVar4 = uVar4 - 1;
-        puVar8 = puVar8 + 1;
-      }
-    }
-  }
-  return;
 }
 
 /* ==== 0x0101DE2C  (file offset 0x1DE2C)  FUN_0101de2c ================================================ */
@@ -26310,78 +26242,79 @@ void FUN_0101de2c(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x0101DED0  (file offset 0x1DED0)  swvM3G_ReadMaterial ========================================= */
-void swvM3G_ReadMaterial(int param_1,undefined4 param_2)
+/* M3G file format section 11.15, Material (ObjectType 13): reads the record into the native Material
+   material: the Object3D part (swvM3G_ReadObject3D), the ambient (+0x1c), diffuse (+0x20, ColorRGBA: the
+   only one with its alpha), emissive (+0x24) and specular (+0x28) colours (FUN_01019650), the shininess
+   (+0x30, Float32, FUN_01019a0c), error -1202 (the file is bad) unless 0 <= shininess <= 128
+   (Material.setShininess's range), and vertexColorTrackingEnabled (+0x2c, a Boolean, FUN_01019618).
+   Evidence: 0x0101ded0 - 0x0101df5c (r0 and r1 kept for swvM3G_ReadObject3D: Ghidra had dropped them; `bl
+   0x0103f534` (swv_fcmp_b, flags as a compare; GUESS: unordered sets the carry, as __aeabi_cfcmple) /
+   `bcc` the error, `mov r1, #0x43000000` / `bl 0x0103f59c` (swv_fcmp_c) / `bls` past it). */
+void swvM3G_ReadMaterial(uint8 *material,uint8 *stream)
 
 {
-  undefined4 uVar1;
-  undefined1 in_ZR;
-  undefined1 in_CY;
-  
-  swvM3G_ReadObject3D();
-  FUN_01019650(param_2,param_1 + 0x1c,0);
-  FUN_01019650(param_2,param_1 + 0x20,1);
-  FUN_01019650(param_2,param_1 + 0x24,0);
-  FUN_01019650(param_2,param_1 + 0x28,0);
-  uVar1 = FUN_01019a0c(param_2);
-  *(undefined4 *)(param_1 + 0x30) = uVar1;
-  swv_fcmp_b(uVar1,0);
-  if ((!(bool)in_CY) ||
-     (swv_fcmp_c(*(undefined4 *)(param_1 + 0x30),0x43000000), (bool)in_CY && !(bool)in_ZR)) {
+  swvM3G_ReadObject3D(material,stream);
+  FUN_01019650((int32)stream,material + 0x1c,0);
+  FUN_01019650((int32)stream,material + 0x20,1);
+  FUN_01019650((int32)stream,material + 0x24,0);
+  FUN_01019650((int32)stream,material + 0x28,0);
+  *(uint32 *)(material + 0x30) = FUN_01019a0c((int32)stream);
+  if ((swv_fcmp_b(*(uint32 *)(material + 0x30),0), *(float *)(material + 0x30) < 0.0f) ||
+      (swv_fcmp_c(*(uint32 *)(material + 0x30),0x43000000), !(*(float *)(material + 0x30) <= 128.0f)))
     FUN_0102f7e0(INTEGER_MINUS_1202);
-  }
-  uVar1 = FUN_01019618(param_2);
-  *(undefined4 *)(param_1 + 0x2c) = uVar1;
-  return;
+  *(int32 *)(material + 0x2c) = FUN_01019618((int32)stream);
 }
 
 /* ==== 0x0101DF64  (file offset 0x1DF64)  swvM3G_ReadObject3D ========================================= */
-void swvM3G_ReadObject3D(int param_1,undefined4 param_2)
+/* M3G file format section 11.19, Object3D (no ObjectType of its own): reads the part every record starts
+   with into the native object: userID (+0xc, UInt32, thunk_FUN_01019abc), the animation tracks
+   (ObjectIndex[] of AnimationTrack, type 2: a count, FUN_01019698 with 4 bytes an element, each
+   FUN_01019888; added by swvObject3D_AddAnimationTrackValue), then the user parameters (a count, 8 bytes
+   an element): when there are any, an engine array of 0xc-byte entries (swv_New_2(0x10), its base
+   FUN_01027cb4 and vtable 0x01002628) at +0x14, sized by FUN_01023184, its byte pointers (+4 of each
+   entry) cleared first; each entry then gets parameterID (+0, UInt32), the value's length (+8, a count
+   of bytes) and, for a length above 0, the bytes themselves (swv_NewArray, at +4; FUN_01019640 each).
+   Called first by every record reader of a class, directly or through the Transformable / Node part;
+   thunk_swvM3G_ReadObject3D (0x0101e530) branches here. Evidence: 0x0101df64 - 0x0101e0a8 (the `bcc` loops
+   on unsigned counts, the `ble` before swv_NewArray, the `bgt` loop on the bytes reloading +8; r1 = 0
+   for swv_New_2 and swv_NewArray, not read). */
+void swvM3G_ReadObject3D(uint8 *object,uint8 *stream)
 
 {
-  undefined1 uVar1;
-  undefined4 uVar2;
-  uint uVar3;
-  int *piVar4;
-  int iVar5;
-  uint uVar6;
-  undefined4 *puVar7;
-  
-  uVar2 = thunk_FUN_01019abc(param_2);
-  *(undefined4 *)(param_1 + 0xc) = uVar2;
-  uVar3 = FUN_01019698(param_2,4);
-  for (uVar6 = 0; uVar6 < uVar3; uVar6 = uVar6 + 1) {
-    uVar2 = FUN_01019888(param_2,2);
-    swvObject3D_AddAnimationTrackValue(param_1,uVar2);
-  }
-  uVar3 = FUN_01019698(param_2,8);
-  if (uVar3 != 0) {
-    piVar4 = (int *)swv_New_2(0x10);
-    if (piVar4 != (int *)0x0) {
-      FUN_01027cb4(piVar4);
-      *piVar4 = DATA_AT_01002628_OFFSET_2 + 0x101dff4;
+  uint32 count;
+  uint32 i;
+  int32 length;
+  int32 j;
+  uint8 *parameters;
+  uint8 *entry;
+
+  *(uint32 *)(object + 0xc) = thunk_FUN_01019abc((int32)stream);
+  count = FUN_01019698((int32)stream,4);
+  for (i = 0; i < count; i++)
+    swvObject3D_AddAnimationTrackValue((int *)object,FUN_01019888((int32)stream,2));
+  count = FUN_01019698((int32)stream,8);
+  if (count != 0) {
+    parameters = (uint8 *)swv_New_2(0x10);
+    if (parameters != NULL) {
+      FUN_01027cb4((int *)parameters);
+      *(uint32 *)parameters = DATA_AT_01002628_OFFSET_2 + 0x101dff4;
     }
-    *(int **)(param_1 + 0x14) = piVar4;
-    FUN_01023184(piVar4,uVar3);
-    for (uVar6 = 0; uVar6 < uVar3; uVar6 = uVar6 + 1) {
-      *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x14) + 4) + uVar6 * 0xc + 4) = 0;
-    }
-    for (uVar6 = 0; uVar6 < uVar3; uVar6 = uVar6 + 1) {
-      puVar7 = (undefined4 *)(*(int *)(*(int *)(param_1 + 0x14) + 4) + uVar6 * 0xc);
-      uVar2 = thunk_FUN_01019abc(param_2);
-      *puVar7 = uVar2;
-      iVar5 = FUN_01019698(param_2,1);
-      puVar7[2] = iVar5;
-      if (0 < iVar5) {
-        uVar2 = swv_NewArray(iVar5);
-        puVar7[1] = uVar2;
-        for (iVar5 = 0; iVar5 < (int)puVar7[2]; iVar5 = iVar5 + 1) {
-          uVar1 = FUN_01019640(param_2);
-          *(undefined1 *)(puVar7[1] + iVar5) = uVar1;
-        }
+    *(uint8 **)(object + 0x14) = parameters;
+    FUN_01023184((int *)parameters,count);
+    for (i = 0; i < count; i++)
+      *(uint8 **)(*(uint8 **)(*(uint8 **)(object + 0x14) + 4) + i * 0xc + 4) = NULL;
+    for (i = 0; i < count; i++) {
+      entry = *(uint8 **)(*(uint8 **)(object + 0x14) + 4) + i * 0xc;
+      *(uint32 *)entry = thunk_FUN_01019abc((int32)stream);
+      length = FUN_01019698((int32)stream,1);
+      *(int32 *)(entry + 8) = length;
+      if (length > 0) {
+        *(uint8 **)(entry + 4) = (uint8 *)swv_NewArray(length);
+        for (j = 0; j < *(int32 *)(entry + 8); j++)
+          (*(uint8 **)(entry + 4))[j] = FUN_01019640((int32)stream);
       }
     }
   }
-  return;
 }
 
 /* ==== 0x0101E0B0  (file offset 0x1E0B0)  FUN_0101e0b0 ================================================ */
@@ -26394,7 +26327,8 @@ undefined4 FUN_0101e0b0(int param_1,undefined4 param_2)
   int iVar2;
   int iVar3;
   
-  swvM3G_ReadImage2D();
+  /* r0 and r1 passed on (`mov r4, r0` / `mov r6, r1` / `bl 0x0101dbf8`): Ghidra had dropped them */
+  swvM3G_ReadImage2D((uint8 *)param_1,(uint8 *)param_2);
   uVar1 = FUN_01019a0c(param_2);
   *(undefined4 *)(param_1 + 0x5c) = uVar1;
   uVar1 = FUN_01019a0c(param_2);
@@ -26418,247 +26352,179 @@ undefined4 FUN_0101e0b0(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x0101E144  (file offset 0x1E144)  swvM3G_ReadTexture2D ======================================== */
-/* (not yet rewritten) M3G file format section 11.24, Texture2D (ObjectType 17): the record, on the texture
-   param_1 and the reader param_2: the Transformable part (swvM3G_ReadTransformable), the image (an
-   ObjectIndex, FUN_010197c4: an Image2D or one of Swerve's types 23 / 24) at +0x2c as in
-   Texture2D.setImage; error -1202 (the file is bad) for none, or a width or height that is not a power of
-   two (swv_IsPowerOfTwo) up to 1024 (JSR-184 1.1, Texture2D(image): NullPointerException /
-   IllegalArgumentException); then, in the file's order, the blend colour (+0x24, ColorRGB, FUN_01019650),
-   the blending (+0x28: FUNC_ADD 0xe0 .. FUNC_REPLACE 0xe4), the wrapping S and T (+0x30 / +0x34:
-   WRAP_CLAMP 0xf0, WRAP_REPEAT 0xf1), the level filter (+0x38: FILTER_BASE_LEVEL 0xd0, FILTER_LINEAR,
-   FILTER_NEAREST) and the image filter (+0x3c: FILTER_LINEAR 0xd1, FILTER_NEAREST 0xd2, as
-   Texture2D.setFiltering), each a byte FUN_010196cc checks to lie strictly between its two bounds. */
-void swvM3G_ReadTexture2D(int param_1,undefined4 param_2)
+/* M3G file format section 11.24, Texture2D (ObjectType 17): the record, on the texture texture and the
+   reader stream: the Transformable part (swvM3G_ReadTransformable), the image (an ObjectIndex,
+   FUN_010197c4 with 0: an Image2D or Swerve's type 23) at +0x2c as in Texture2D.setImage
+   (FUN_01004848, a reference assignment on the interface pointers, +4); error -1202 (the file is bad)
+   for none, or a width or height (the image's virtual slots +0x24 / +0x28) that is not a power of two
+   (swv_IsPowerOfTwo) up to 1024 (JSR-184 1.1, Texture2D(image): NullPointerException /
+   IllegalArgumentException); then, in the file's order, the blend colour (+0x24, ColorRGB,
+   FUN_01019650), the blending (+0x28: FUNC_ADD 0xe0 .. FUNC_REPLACE 0xe4), the wrapping S and T (+0x30 /
+   +0x34: WRAP_CLAMP 0xf0, WRAP_REPEAT 0xf1), the level filter (+0x38: FILTER_BASE_LEVEL 0xd0,
+   FILTER_LINEAR, FILTER_NEAREST) and the image filter (+0x3c: FILTER_LINEAR 0xd1, FILTER_NEAREST 0xd2,
+   as Texture2D.setFiltering), each a byte FUN_010196cc checks to lie strictly between its two bounds.
+   Evidence: 0x0101e144 - 0x0101e27c (r0 and r1 kept for swvM3G_ReadTransformable: Ghidra had dropped
+   them; each `blx r1` with r0 = the image reloaded from +0x2c, the width / height in r0 for `bl
+   0x01013af8`, `cmp r0, #0x400` / `bgt` the error). */
+void swvM3G_ReadTexture2D(uint8 *texture,uint8 *stream)
 
 {
-  int iVar1;
-  int *piVar2;
-  undefined4 uVar3;
-  int iVar4;
-  
-  swvM3G_ReadTransformable();
-  iVar4 = *(int *)(param_1 + 0x2c);
-  iVar1 = FUN_010197c4(param_2,0);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + 4;
-  }
-  if (iVar4 != 0) {
-    iVar4 = iVar4 + 4;
-  }
-  piVar2 = (int *)FUN_01004848(iVar4,iVar1);
-  if (piVar2 != (int *)0x0) {
-    piVar2 = piVar2 + -1;
-  }
-  *(int **)(param_1 + 0x2c) = piVar2;
-  if (piVar2 != (int *)0x0) {
-    /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
-       FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them
-       (GUESS: not static), so for one the method is not known here */
-    /* the image (the receiver) and the width restored: Ghidra had dropped them */
-    iVar1 = (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))(piVar2);
-    iVar1 = swv_IsPowerOfTwo(iVar1);
-    if ((iVar1 != 0) &&
-       (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x24) + **(int **)(param_1 + 0x2c))
-                )(*(int **)(param_1 + 0x2c)), iVar1 < 0x401)) {
-      /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
-         FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
-         method is not known here */
-      /* the image (the receiver) and the height restored: Ghidra had dropped them */
-      iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) +
-                          **(int **)(param_1 + 0x2c)))(*(int **)(param_1 + 0x2c));
-      iVar1 = swv_IsPowerOfTwo(iVar1);
-      /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
-         FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
-         method is not known here */
-      if ((iVar1 != 0) &&
-         (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) +
-                            **(int **)(param_1 + 0x2c)))(*(int **)(param_1 + 0x2c)), iVar1 < 0x401))
-        goto LAB_0101e208;
-    }
-  }
-  FUN_0102f7e0(INTEGER_MINUS_1202);
-LAB_0101e208:
-  FUN_01019650(param_2,param_1 + 0x24,0);
-  uVar3 = FUN_010196cc(param_2,0xdf,0xe5);
-  *(undefined4 *)(param_1 + 0x28) = uVar3;
-  uVar3 = FUN_010196cc(param_2,0xef,0xf2);
-  *(undefined4 *)(param_1 + 0x30) = uVar3;
-  uVar3 = FUN_010196cc(param_2,0xef,0xf2);
-  *(undefined4 *)(param_1 + 0x34) = uVar3;
-  uVar3 = FUN_010196cc(param_2,0xcf,0xd3);
-  *(undefined4 *)(param_1 + 0x38) = uVar3;
-  uVar3 = FUN_010196cc(param_2,0xd0,0xd3);
-  *(undefined4 *)(param_1 + 0x3c) = uVar3;
-  return;
+  uint8 *old;
+  uint8 *image;
+
+  swvM3G_ReadTransformable(texture,stream);
+  old = *(uint8 **)(texture + 0x2c);
+  image = (uint8 *)FUN_010197c4((int32)stream,0);
+  image = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                image != NULL ? (int32)(image + 4) : 0);
+  if (image != NULL)
+    image -= 4;
+  *(uint8 **)(texture + 0x2c) = image;
+  /* engine virtual calls, slots +0x24 (the image's width) and +0x28 (its height) */
+  if (image == NULL ||
+      swv_IsPowerOfTwo((*(code *)(*(int32 *)(*(int32 *)image + 0x24) + *(int32 *)image))(image)) == 0 ||
+      (*(code *)(*(int32 *)(*(int32 *)image + 0x24) + *(int32 *)image))(image) > 0x400 ||
+      swv_IsPowerOfTwo((*(code *)(*(int32 *)(*(int32 *)image + 0x28) + *(int32 *)image))(image)) == 0 ||
+      (*(code *)(*(int32 *)(*(int32 *)image + 0x28) + *(int32 *)image))(image) > 0x400)
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  FUN_01019650((int32)stream,texture + 0x24,0);
+  *(int32 *)(texture + 0x28) = FUN_010196cc((int32)stream,0xdf,0xe5);
+  *(int32 *)(texture + 0x30) = FUN_010196cc((int32)stream,0xef,0xf2);
+  *(int32 *)(texture + 0x34) = FUN_010196cc((int32)stream,0xef,0xf2);
+  *(int32 *)(texture + 0x38) = FUN_010196cc((int32)stream,0xcf,0xd3);
+  *(int32 *)(texture + 0x3c) = FUN_010196cc((int32)stream,0xd0,0xd3);
 }
 
 /* ==== 0x0101E288  (file offset 0x1E288)  swvM3G_ReadAppearance ======================================= */
-void swvM3G_ReadAppearance(int param_1,undefined4 param_2)
+/* GUESS: name. M3G file format section 11.3, Appearance (ObjectType 3): reads the record into the native
+   Appearance appearance: the Object3D part (swvM3G_ReadObject3D), the layer (+0x1c, a Byte, FUN_01019640,
+   which gives it unsigned: -1202, the file is bad, above 63, so the negative layers the spec allows, -63
+   .. -1, are refused), the compositing mode (+0x20, type 6), fog (+0x24, type 7), polygon mode (+0x28,
+   type 8) and material (+0x2c, type 13) (FUN_01019888; null allowed), each kept by FUN_01004848 (a
+   reference assignment on the interface pointers, +4); then the textures (ObjectIndex[] of Texture2D,
+   type 17, FUN_01019698 with 4 bytes an element): -1202 for a null one, the first two kept at +0x30 /
+   +0x34 (two texture units) and any further ones read and dropped (the spec has more than the
+   implementation supports as an error). Evidence: 0x0101e288 - 0x0101e3ec (r0 and r1 kept for
+   swvM3G_ReadObject3D: Ghidra had dropped them; `cmn r0, #0x3f` / `blt`, `cmp r0, #0x3f` / `ble`; `movs
+   r7, r0` / `bleq` the error, `cmp r5, #2` / `bge` past the unit). */
+void swvM3G_ReadAppearance(uint8 *appearance,uint8 *stream)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  int iVar5;
-  int iVar6;
-  
-  swvM3G_ReadObject3D();
-  iVar2 = FUN_01019640(param_2);
-  *(int *)(param_1 + 0x1c) = iVar2;
-  uVar1 = INTEGER_MINUS_1202;
-  if ((iVar2 < -0x3f) || (0x3f < iVar2)) {
+  uint8 *old;
+  uint8 *object;
+  int32 layer;
+  int32 count;
+  int32 i;
+
+  swvM3G_ReadObject3D(appearance,stream);
+  layer = FUN_01019640((int32)stream);
+  *(int32 *)(appearance + 0x1c) = layer;
+  if (layer < -0x3f || layer > 0x3f)
     FUN_0102f7e0(INTEGER_MINUS_1202);
-  }
-  iVar5 = *(int *)(param_1 + 0x20);
-  iVar2 = FUN_01019888(param_2,6);
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + 4;
-  }
-  if (iVar5 != 0) {
-    iVar5 = iVar5 + 4;
-  }
-  iVar2 = FUN_01004848(iVar5,iVar2);
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + -4;
-  }
-  *(int *)(param_1 + 0x20) = iVar2;
-  iVar5 = *(int *)(param_1 + 0x24);
-  iVar2 = FUN_01019888(param_2,7);
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + 4;
-  }
-  if (iVar5 != 0) {
-    iVar5 = iVar5 + 4;
-  }
-  iVar2 = FUN_01004848(iVar5,iVar2);
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + -4;
-  }
-  *(int *)(param_1 + 0x24) = iVar2;
-  iVar5 = *(int *)(param_1 + 0x28);
-  iVar2 = FUN_01019888(param_2,8);
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + 4;
-  }
-  if (iVar5 != 0) {
-    iVar5 = iVar5 + 4;
-  }
-  iVar2 = FUN_01004848(iVar5,iVar2);
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + -4;
-  }
-  *(int *)(param_1 + 0x28) = iVar2;
-  iVar5 = *(int *)(param_1 + 0x2c);
-  iVar2 = FUN_01019888(param_2,0xd);
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + 4;
-  }
-  if (iVar5 != 0) {
-    iVar5 = iVar5 + 4;
-  }
-  iVar2 = FUN_01004848(iVar5,iVar2);
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + -4;
-  }
-  *(int *)(param_1 + 0x2c) = iVar2;
-  iVar2 = FUN_01019698(param_2,4);
-  for (iVar5 = 0; iVar5 < iVar2; iVar5 = iVar5 + 1) {
-    iVar3 = FUN_01019888(param_2,0x11);
-    if (iVar3 == 0) {
-      FUN_0102f7e0(uVar1);
-    }
-    if (iVar5 < 2) {
-      iVar6 = param_1 + iVar5 * 4;
-      iVar4 = *(int *)(iVar6 + 0x30);
-      if (iVar3 != 0) {
-        iVar3 = iVar3 + 4;
-      }
-      if (iVar4 != 0) {
-        iVar4 = iVar4 + 4;
-      }
-      iVar3 = FUN_01004848(iVar4,iVar3);
-      if (iVar3 != 0) {
-        iVar3 = iVar3 + -4;
-      }
-      *(int *)(iVar6 + 0x30) = iVar3;
+  old = *(uint8 **)(appearance + 0x20);
+  object = (uint8 *)FUN_01019888((int32)stream,6);
+  object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                 object != NULL ? (int32)(object + 4) : 0);
+  if (object != NULL)
+    object -= 4;
+  *(uint8 **)(appearance + 0x20) = object;
+  old = *(uint8 **)(appearance + 0x24);
+  object = (uint8 *)FUN_01019888((int32)stream,7);
+  object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                 object != NULL ? (int32)(object + 4) : 0);
+  if (object != NULL)
+    object -= 4;
+  *(uint8 **)(appearance + 0x24) = object;
+  old = *(uint8 **)(appearance + 0x28);
+  object = (uint8 *)FUN_01019888((int32)stream,8);
+  object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                 object != NULL ? (int32)(object + 4) : 0);
+  if (object != NULL)
+    object -= 4;
+  *(uint8 **)(appearance + 0x28) = object;
+  old = *(uint8 **)(appearance + 0x2c);
+  object = (uint8 *)FUN_01019888((int32)stream,0xd);
+  object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                 object != NULL ? (int32)(object + 4) : 0);
+  if (object != NULL)
+    object -= 4;
+  *(uint8 **)(appearance + 0x2c) = object;
+  count = FUN_01019698((int32)stream,4);
+  for (i = 0; i < count; i++) {
+    object = (uint8 *)FUN_01019888((int32)stream,0x11);
+    if (object == NULL)
+      FUN_0102f7e0(INTEGER_MINUS_1202);
+    if (i < 2) {
+      old = *(uint8 **)(appearance + 0x30 + i * 4);
+      object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                     object != NULL ? (int32)(object + 4) : 0);
+      if (object != NULL)
+        object -= 4;
+      *(uint8 **)(appearance + 0x30 + i * 4) = object;
     }
   }
-  return;
 }
 
 /* ==== 0x0101E3F4  (file offset 0x1E3F4)  swvM3G_ReadBackground ======================================= */
-void swvM3G_ReadBackground(int param_1,undefined4 param_2)
+/* M3G file format section 11.4, Background (ObjectType 4): reads the record into the native Background
+   background: the Object3D part (swvM3G_ReadObject3D), the colour (+0x1c, ColorRGBA, FUN_01019650), the
+   image (+0x20, FUN_010197c4 with 1: an Image2D, Swerve's type 23 or 24, or null; the
+   reference assignment done in place: the new interface's count (+4 +4) up, the old one's down and,
+   at 0, its slot 0 (the destructor) called with 1), the image modes X and Y (+0x24 / +0x28: BORDER 0x20,
+   REPEAT 0x21, FUN_010196cc), the crop rectangle (cropX, cropY, cropWidth, cropHeight: Int32s,
+   thunk_FUN_01019abc, kept as floats, swv_fflt, at +0x2c .. +0x38), error -1202 (the file is bad) for
+   a negative width or height; then depthClearEnabled (+0x3c) and colorClearEnabled (+0x40) (Booleans,
+   FUN_01019618; GUESS a latent engine bug: the clear, FUN_01005104, takes +0x3c as the colour clear
+   and +0x40 as the depth clear, see swv_types.h). Evidence: 0x0101e3f4 - 0x0101e528
+   (r0 and r1 kept for swvM3G_ReadObject3D: Ghidra had dropped them; `subs r0, r0, #1` / `str` / `bne`
+   before the `blx`; `bl 0x0103f534` (swv_fcmp_b) / `blcs` / `blcc` the error; GUESS: an unordered
+   compare sets the carry, as __aeabi_cfcmple). */
+void swvM3G_ReadBackground(uint8 *background,uint8 *stream)
 
 {
-  int *piVar1;
-  int iVar2;
-  int iVar3;
-  undefined4 uVar4;
-  undefined1 uVar5;
-  
-  swvM3G_ReadObject3D();
-  FUN_01019650(param_2,param_1 + 0x1c,1);
-  piVar1 = *(int **)(param_1 + 0x20);
-  if (piVar1 != (int *)0x0) {
-    piVar1 = piVar1 + 1;
+  uint8 *old;
+  uint8 *image;
+
+  swvM3G_ReadObject3D(background,stream);
+  FUN_01019650((int32)stream,background + 0x1c,1);
+  old = *(uint8 **)(background + 0x20);
+  if (old != NULL)
+    old += 4;
+  image = (uint8 *)FUN_010197c4((int32)stream,1);
+  if (image != NULL)
+    image += 4;
+  if (image != NULL)
+    *(int32 *)(image + 4) += 1;
+  if (old != NULL) {
+    *(int32 *)(old + 4) -= 1;
+    if (*(int32 *)(old + 4) == 0)
+      /* engine virtual call, slot +0x0: the destructor */
+      (*(code *)(*(int32 *)*(int32 *)old + *(int32 *)old))(old,1);
   }
-  iVar2 = FUN_010197c4(param_2,1);
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + 4;
-  }
-  if (iVar2 != 0) {
-    *(int *)(iVar2 + 4) = *(int *)(iVar2 + 4) + 1;
-  }
-  uVar5 = 1;
-  if (piVar1 != (int *)0x0) {
-    uVar5 = piVar1[1] != 0;
-    iVar3 = piVar1[1] + -1;
-    piVar1[1] = iVar3;
-    if (iVar3 == 0) {
-      /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
-         the object's class); slot 0 is the destructor */
-      (*(code *)(*(int *)*piVar1 + *piVar1))(piVar1,1);
-    }
-  }
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + -4;
-  }
-  *(int *)(param_1 + 0x20) = iVar2;
-  uVar4 = FUN_010196cc(param_2,0x1f,0x22);
-  *(undefined4 *)(param_1 + 0x24) = uVar4;
-  uVar4 = FUN_010196cc(param_2,0x1f,0x22);
-  *(undefined4 *)(param_1 + 0x28) = uVar4;
-  uVar4 = swv_fflt(thunk_FUN_01019abc(param_2));   /* Ghidra had dropped it */
-  *(undefined4 *)(param_1 + 0x2c) = uVar4;
-  uVar4 = swv_fflt(thunk_FUN_01019abc(param_2));   /* Ghidra had dropped it */
-  *(undefined4 *)(param_1 + 0x30) = uVar4;
-  uVar4 = swv_fflt(thunk_FUN_01019abc(param_2));   /* Ghidra had dropped it */
-  *(undefined4 *)(param_1 + 0x34) = uVar4;
-  uVar4 = swv_fflt(thunk_FUN_01019abc(param_2));   /* Ghidra had dropped it */
-  *(undefined4 *)(param_1 + 0x38) = uVar4;
-  swv_fcmp_b(*(undefined4 *)(param_1 + 0x34),0);
-  if ((bool)uVar5) {
-    swv_fcmp_b(*(undefined4 *)(param_1 + 0x38),0);
-  }
-  if (!(bool)uVar5) {
+  if (image != NULL)
+    image -= 4;
+  *(uint8 **)(background + 0x20) = image;
+  *(int32 *)(background + 0x24) = FUN_010196cc((int32)stream,0x1f,0x22);
+  *(int32 *)(background + 0x28) = FUN_010196cc((int32)stream,0x1f,0x22);
+  *(uint32 *)(background + 0x2c) = swv_fflt(thunk_FUN_01019abc((int32)stream));
+  *(uint32 *)(background + 0x30) = swv_fflt(thunk_FUN_01019abc((int32)stream));
+  *(uint32 *)(background + 0x34) = swv_fflt(thunk_FUN_01019abc((int32)stream));
+  *(uint32 *)(background + 0x38) = swv_fflt(thunk_FUN_01019abc((int32)stream));
+  if ((swv_fcmp_b(*(uint32 *)(background + 0x34),0), *(float *)(background + 0x34) < 0.0f) ||
+      (swv_fcmp_b(*(uint32 *)(background + 0x38),0), *(float *)(background + 0x38) < 0.0f))
     FUN_0102f7e0(INTEGER_MINUS_1202);
-  }
-  uVar4 = FUN_01019618(param_2);
-  *(undefined4 *)(param_1 + 0x3c) = uVar4;
-  uVar4 = FUN_01019618(param_2);
-  *(undefined4 *)(param_1 + 0x40) = uVar4;
-  return;
+  *(int32 *)(background + 0x3c) = FUN_01019618((int32)stream);
+  *(int32 *)(background + 0x40) = FUN_01019618((int32)stream);
 }
 
 /* ==== 0x0101E530  (file offset 0x1E530)  thunk_swvM3G_ReadObject3D =================================== */
-/* A one-instruction jump to swvM3G_ReadObject3D (0x0101df64, the M3G loader's Object3D part), the object
-   and the reader passed through; Ghidra had repeated its code here, see there. Evidence: 0x0101e530 (`b
-   0x0101df64`). */
-void thunk_swvM3G_ReadObject3D(uint8 *object,uint8 *reader)
+/* A branch to swvM3G_ReadObject3D (0x0101df64): `b 0x0101df64` (0x0101e530; Ghidra had pasted the
+   target's code here). Called by swvM3G_ReadTriangleStripArray for its Object3D part (the IndexBuffer's
+   superclass data). */
+void thunk_swvM3G_ReadObject3D(uint8 *object,uint8 *stream)
 
 {
-  swvM3G_ReadObject3D((int)object,(undefined4)reader);
+  swvM3G_ReadObject3D(object,stream);
 }
 
 /* ==== 0x0101E534  (file offset 0x1E534)  FUN_0101e534 ================================================ */
@@ -26754,7 +26620,8 @@ void FUN_0101e534(int param_1,undefined4 param_2)
   uint uStack_2c;
   uint uStack_28;
   
-  swvM3G_ReadObject3D();
+  /* r0 and r1 passed on (`mov r5, r1` / `mov r4, r0` / `bl 0x0101df64`): Ghidra had dropped them */
+  swvM3G_ReadObject3D((uint8 *)param_1,(uint8 *)param_2);
   uVar8 = FUN_01019abc(param_2);
   *(undefined4 *)(param_1 + 0x4c) = uVar8;
   iVar9 = FUN_01019640(param_2);
@@ -27356,347 +27223,254 @@ LAB_010190c8:
 }
 
 /* ==== 0x0101E778  (file offset 0x1E778)  swvM3G_ReadPolygonMode ====================================== */
-/* (not yet rewritten) M3G file format section 11.20, PolygonMode (ObjectType 8): reads the record into the
-   native PolygonMode param_1, in the file format's order: the Object3D part (swvM3G_ReadObject3D), the
-   culling (CULL_BACK 0xa0 .. CULL_NONE 0xa2), shading (SHADE_FLAT 0xa4, SHADE_SMOOTH 0xa5) and winding
-   (WINDING_CCW 0xa8, WINDING_CW 0xa9), each read as one of its constants (FUN_010196cc), then three
-   Booleans: twoSidedLightingEnabled (swvPolygonMode_SetTwoSidedLightingValue), localCameraLightingEnabled
-   (flag 0x200) and perspectiveCorrectionEnabled (flag 0x400). */
-void swvM3G_ReadPolygonMode(int param_1,undefined4 param_2)
+/* M3G file format section 11.20, PolygonMode (ObjectType 8): reads the record into the native PolygonMode
+   mode, in the file format's order: the Object3D part (swvM3G_ReadObject3D), the culling (CULL_BACK 0xa0
+   .. CULL_NONE 0xa2), shading (SHADE_FLAT 0xa4, SHADE_SMOOTH 0xa5) and winding (WINDING_CCW 0xa8,
+   WINDING_CW 0xa9), each read as one of its constants (FUN_010196cc: a byte strictly between its bounds,
+   else -1202), then three Booleans (FUN_01019618): twoSidedLightingEnabled
+   (swvPolygonMode_SetTwoSidedLightingValue), localCameraLightingEnabled (flag 0x200) and
+   perspectiveCorrectionEnabled (flag 0x400) in the flags word +0x1c. Evidence: 0x0101e778 - 0x0101e81c
+   (r0 and r1 kept for swvM3G_ReadObject3D: Ghidra had dropped them). */
+void swvM3G_ReadPolygonMode(uint8 *mode,uint8 *stream)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  
-  swvM3G_ReadObject3D();
-  uVar1 = FUN_010196cc(param_2,0x9f,0xa3);
-  swvPolygonMode_SetCullingValue((uint8 *)param_1,uVar1);
-  uVar1 = FUN_010196cc(param_2,0xa3,0xa6);
-  swvPolygonMode_SetShadingValue((uint8 *)param_1,uVar1);
-  uVar1 = FUN_010196cc(param_2,0xa7,0xaa);
-  swvPolygonMode_SetWindingValue((uint8 *)param_1,uVar1);
-  uVar1 = FUN_01019618(param_2);
-  swvPolygonMode_SetTwoSidedLightingValue((uint8 *)param_1,uVar1);
-  iVar2 = FUN_01019618(param_2);
-  if (iVar2 != 0) {
-    *(uint *)(param_1 + 0x1c) = *(uint *)(param_1 + 0x1c) | 0x200;
-  }
-  iVar2 = FUN_01019618(param_2);
-  if (iVar2 != 0) {
-    *(uint *)(param_1 + 0x1c) = *(uint *)(param_1 + 0x1c) | 0x400;
-  }
-  return;
+  swvM3G_ReadObject3D(mode,stream);
+  swvPolygonMode_SetCullingValue(mode,FUN_010196cc((int32)stream,0x9f,0xa3));
+  swvPolygonMode_SetShadingValue(mode,FUN_010196cc((int32)stream,0xa3,0xa6));
+  swvPolygonMode_SetWindingValue(mode,FUN_010196cc((int32)stream,0xa7,0xaa));
+  swvPolygonMode_SetTwoSidedLightingValue(mode,FUN_01019618((int32)stream));
+  if (FUN_01019618((int32)stream) != 0)
+    *(uint32 *)(mode + 0x1c) |= 0x200;
+  if (FUN_01019618((int32)stream) != 0)
+    *(uint32 *)(mode + 0x1c) |= 0x400;
 }
 
 /* ==== 0x0101E824  (file offset 0x1E824)  swvM3G_ReadSkinnedMesh ====================================== */
-void swvM3G_ReadSkinnedMesh(int param_1,undefined4 param_2)
+/* M3G file format section 11.22, SkinnedMesh (ObjectType 16): reads the record into the native SkinnedMesh
+   mesh: the Mesh part (swvM3G_ReadMesh), the skeleton (a Group, FUN_01019888 with 9; set by
+   FUN_010231c4), then transformReferenceCount bone references (FUN_01019698 with 16 bytes an element;
+   FUN_0101d554 makes room in the bone array +0xc0), each a transformNode (a Node, FUN_0101981c with 0),
+   firstVertex and vertexCount (UInt32s, FUN_01019abc; each at most 0x80000000) and the weight (Int32,
+   thunk_FUN_01019abc), added by swvSkinnedMesh_AddTransform (SkinnedMesh.addTransform(node, weight,
+   firstVertex, numVertices)); +0xac keeps the highest firstVertex + vertexCount - 1 (unsigned).
+   Evidence: 0x0101e824 - 0x0101e8e8 (r0 and r1 kept for swvM3G_ReadMesh: Ghidra had dropped them; `cmp
+   r6, #0x80000000` / `movhi`, `cmp r1, r0` / `strcc r0, [r7, #0xac]`, `str r5, [sp]` the fifth
+   argument). */
+void swvM3G_ReadSkinnedMesh(uint8 *mesh,uint8 *stream)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  uint uVar3;
-  uint uVar4;
-  uint uVar5;
-  undefined4 uVar6;
-  int iVar7;
-  
-  swvM3G_ReadMesh();
-  uVar1 = FUN_01019888(param_2,9);
-  FUN_010231c4(param_1,uVar1);
-  iVar2 = FUN_01019698(param_2,0x10);
-  FUN_0101d554(param_1 + 0xc0,iVar2);
-  for (iVar7 = 0; iVar7 < iVar2; iVar7 = iVar7 + 1) {
-    uVar1 = FUN_0101981c(param_2,0);
-    uVar3 = FUN_01019abc(param_2);
-    uVar4 = FUN_01019abc(param_2);
-    if (0x80000000 < uVar3) {
-      uVar3 = 0x80000000;
-    }
-    if (0x80000000 < uVar4) {
-      uVar4 = 0x80000000;
-    }
-    uVar5 = (uVar3 + uVar4) - 1;
-    if (*(uint *)(param_1 + 0xac) < uVar5) {
-      *(uint *)(param_1 + 0xac) = uVar5;
-    }
-    uVar6 = thunk_FUN_01019abc(param_2);
-    swvSkinnedMesh_AddTransform((uint8 *)param_1,(uint8 *)uVar1,uVar6,uVar3,uVar4);
+  int32 count;
+  int32 i;
+  int32 bone;
+  uint32 firstVertex;
+  uint32 vertexCount;
+
+  swvM3G_ReadMesh(mesh,stream);
+  FUN_010231c4((int32)mesh,(int *)FUN_01019888((int32)stream,9));
+  count = FUN_01019698((int32)stream,0x10);
+  FUN_0101d554((int *)(mesh + 0xc0),count);
+  for (i = 0; i < count; i++) {
+    bone = FUN_0101981c((int32)stream,0);
+    firstVertex = FUN_01019abc((int32)stream);
+    vertexCount = FUN_01019abc((int32)stream);
+    if (firstVertex > 0x80000000)
+      firstVertex = 0x80000000;
+    if (vertexCount > 0x80000000)
+      vertexCount = 0x80000000;
+    if (*(uint32 *)(mesh + 0xac) < firstVertex + vertexCount - 1)
+      *(uint32 *)(mesh + 0xac) = firstVertex + vertexCount - 1;
+    swvSkinnedMesh_AddTransform((int32)mesh,bone,thunk_FUN_01019abc((int32)stream),firstVertex,
+                                vertexCount);
   }
-  return;
 }
 
 /* ==== 0x0101E8EC  (file offset 0x1E8EC)  swvM3G_ReadVertexArray ====================================== */
-void swvM3G_ReadVertexArray(int param_1,undefined4 param_2)
+/* M3G file format section 11.28, VertexArray (ObjectType 20): reads the record into the native VertexArray
+   array: the Object3D part (swvM3G_ReadObject3D), componentSize (+0x24, 1 or 2) and componentCount (+0x20,
+   2 .. 4) (Bytes, FUN_01019640; else -1202, the file is bad), the encoding (0 raw, 1 deltas; above 1
+   -1202) and vertexCount (+0x1c, UInt16, FUN_01019a98); the data array (+0x28, its bytes +0x2c) sized
+   (FUN_01023184) to vertexCount * componentCount components of componentSize bytes, then each component
+   read (Bytes, FUN_01019640, or Int16s, FUN_01019764); with encoding 1 each is the previous one plus the
+   value read (the sums kept to 8 / 16 bits). Last +0x38 = 1. Evidence: 0x0101e8ec - 0x0101ea8c (r0 and
+   r1 kept for swvM3G_ReadObject3D: Ghidra had dropped them; `cmp r0, #1` / `movhi` the encoding; the
+   `bgt` loops recomputing [+0x20] * [+0x1c], `strb r7, [r0, r6]!`, `strh r7`; the 16-bit data pointer
+   loaded once, r8). */
+void swvM3G_ReadVertexArray(uint8 *array,uint8 *stream)
 
 {
-  undefined4 uVar1;
-  char cVar2;
-  undefined1 uVar3;
-  short sVar4;
-  undefined2 uVar5;
-  int iVar6;
-  uint uVar7;
-  int iVar8;
-  int iVar9;
-  char cVar10;
-  short sVar11;
-  
-  swvM3G_ReadObject3D();
-  iVar6 = FUN_01019640(param_2);
-  *(int *)(param_1 + 0x24) = iVar6;
-  uVar1 = INTEGER_MINUS_1202;
-  if ((iVar6 < 1) || (2 < iVar6)) {
+  uint32 encoding;
+  int32 i;
+  int32 sum;
+  int16 *values;
+
+  swvM3G_ReadObject3D(array,stream);
+  *(int32 *)(array + 0x24) = FUN_01019640((int32)stream);
+  if (*(int32 *)(array + 0x24) < 1 || *(int32 *)(array + 0x24) > 2)
     FUN_0102f7e0(INTEGER_MINUS_1202);
-  }
-  iVar6 = FUN_01019640(param_2);
-  *(int *)(param_1 + 0x20) = iVar6;
-  if ((iVar6 < 2) || (4 < iVar6)) {
-    FUN_0102f7e0(uVar1);
-  }
-  uVar7 = FUN_01019640(param_2);
-  if (1 < uVar7) {
-    FUN_0102f7e0(uVar1);
-  }
-  iVar6 = FUN_01019a98(param_2);
-  *(int *)(param_1 + 0x1c) = iVar6;
-  if (*(int *)(param_1 + 0x24) == 1) {
-    FUN_01023184(param_1 + 0x28,iVar6 * *(int *)(param_1 + 0x20));
-    if (uVar7 == 1) {
-      cVar10 = '\0';
-      for (iVar6 = 0; iVar8 = *(int *)(param_1 + 0x1c) * *(int *)(param_1 + 0x20),
-          iVar8 - iVar6 != 0 && iVar6 <= iVar8; iVar6 = iVar6 + 1) {
-        cVar2 = FUN_01019640(param_2);
-        cVar10 = cVar2 + cVar10;
-        *(char *)(*(int *)(param_1 + 0x2c) + iVar6) = cVar10;
+  *(int32 *)(array + 0x20) = FUN_01019640((int32)stream);
+  if (*(int32 *)(array + 0x20) < 2 || *(int32 *)(array + 0x20) > 4)
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  encoding = FUN_01019640((int32)stream);
+  if (encoding > 1)
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  *(int32 *)(array + 0x1c) = FUN_01019a98((int32)stream);
+  if (*(int32 *)(array + 0x24) == 1) {
+    FUN_01023184((int *)(array + 0x28),*(int32 *)(array + 0x1c) * *(int32 *)(array + 0x20));
+    sum = 0;
+    for (i = 0; i < *(int32 *)(array + 0x20) * *(int32 *)(array + 0x1c); i++) {
+      if (encoding == 1) {
+        sum += FUN_01019640((int32)stream);
+        (*(uint8 **)(array + 0x2c))[i] = (uint8)sum;
       }
-    }
-    else {
-      for (iVar6 = 0; iVar8 = *(int *)(param_1 + 0x1c) * *(int *)(param_1 + 0x20),
-          iVar8 - iVar6 != 0 && iVar6 <= iVar8; iVar6 = iVar6 + 1) {
-        uVar3 = FUN_01019640(param_2);
-        *(undefined1 *)(*(int *)(param_1 + 0x2c) + iVar6) = uVar3;
-      }
+      else
+        (*(uint8 **)(array + 0x2c))[i] = FUN_01019640((int32)stream);
     }
   }
   else {
-    FUN_01023184(param_1 + 0x28,iVar6 * *(int *)(param_1 + 0x20) * 2);
-    iVar8 = *(int *)(param_1 + 0x2c);
-    iVar6 = 0;
-    if (uVar7 == 1) {
-      sVar11 = 0;
-      for (iVar6 = 0; iVar9 = *(int *)(param_1 + 0x1c) * *(int *)(param_1 + 0x20),
-          iVar9 - iVar6 != 0 && iVar6 <= iVar9; iVar6 = iVar6 + 1) {
-        sVar4 = FUN_01019764(param_2);
-        sVar11 = sVar4 + sVar11;
-        *(short *)(iVar8 + iVar6 * 2) = sVar11;
+    FUN_01023184((int *)(array + 0x28),*(int32 *)(array + 0x1c) * (*(int32 *)(array + 0x20) << 1));
+    values = *(int16 **)(array + 0x2c);
+    sum = 0;
+    for (i = 0; i < *(int32 *)(array + 0x20) * *(int32 *)(array + 0x1c); i++) {
+      if (encoding == 1) {
+        sum += FUN_01019764((int32)stream);
+        values[i] = (int16)sum;
       }
-    }
-    else {
-      for (; iVar9 = *(int *)(param_1 + 0x1c) * *(int *)(param_1 + 0x20),
-          iVar9 - iVar6 != 0 && iVar6 <= iVar9; iVar6 = iVar6 + 1) {
-        uVar5 = FUN_01019764(param_2);
-        *(undefined2 *)(iVar8 + iVar6 * 2) = uVar5;
-      }
+      else
+        values[i] = (int16)FUN_01019764((int32)stream);
     }
   }
-  *(undefined4 *)(param_1 + 0x38) = 1;
-  return;
+  *(int32 *)(array + 0x38) = 1;
 }
 
 /* ==== 0x0101EA94  (file offset 0x1EA94)  swvM3G_ReadHeader =========================================== */
-void swvM3G_ReadHeader(int param_1,undefined4 param_2,uint param_3,uint param_4)
+/* M3G file format section 10.1, the Header object (ObjectType 0): reads the record into the native header:
+   VersionNumber (two Bytes, FUN_01019640), error -1202 (the file is bad) unless it is 1.0 (both bytes are
+   read first), hasExternalReferences (+0xc, a Boolean, FUN_01019618), TotalFileSize (+0x10) and
+   ApproximateContentSize (+0x14) (UInt32s, FUN_01019abc), then the AuthoringField (a String:
+   FUN_01019afc reads the UTF-8 bytes into the engine string at +0x18; a tail jump). Evidence: 0x0101ea94
+   - 0x0101eaf4 (`cmp r6, #1` / `cmpeq r0, #0` / `blne`, `add r1, r5, #0x18` / `ldmia` / `b 0x01019afc`:
+   Ghidra had pasted FUN_01019afc's code here and read its stack slots as the parameters param_3 and
+   param_4, which the code never reads). */
+void swvM3G_ReadHeader(uint8 *header,uint8 *stream)
 
 {
-  uint uVar1;
-  byte bVar2;
-  int iVar3;
-  int iVar4;
-  undefined4 uVar5;
-  uint *puVar6;
-  uint uStack_1c;
-  uint auStack_18 [2];
-  
-  iVar3 = FUN_01019640(param_2);
-  iVar4 = FUN_01019640(param_2);
-  if (iVar3 != 1 || iVar4 != 0) {
+  int32 major;
+  int32 minor;
+
+  major = FUN_01019640((int32)stream);
+  minor = FUN_01019640((int32)stream);
+  if (major != 1 || minor != 0)
     FUN_0102f7e0(INTEGER_MINUS_1202);
-  }
-  uVar5 = FUN_01019618(param_2);
-  *(undefined4 *)(param_1 + 0xc) = uVar5;
-  uVar5 = FUN_01019abc(param_2);
-  *(undefined4 *)(param_1 + 0x10) = uVar5;
-  uVar5 = FUN_01019abc(param_2);
-  *(undefined4 *)(param_1 + 0x14) = uVar5;
-  uVar5 = INTEGER_MINUS_1101;
-  uStack_1c = param_3;
-  auStack_18[0] = param_4;
-  while( true ) {
-    bVar2 = FUN_01019bd4(param_2);
-    auStack_18[0] = CONCAT31(auStack_18[0]._1_3_,bVar2);
-    if (bVar2 == 0) break;
-    if ((bVar2 & 0x80) == 0) {
-      FUN_010040cc(param_1 + 0x18,auStack_18);
-    }
-    else if ((~bVar2 & 0xc0) == 0) {
-      puVar6 = auStack_18;
-      while( true ) {
-        FUN_010040cc(param_1 + 0x18,puVar6);
-        uVar1 = (auStack_18[0] & 0xff) << 1;
-        auStack_18[0] = CONCAT31(auStack_18[0]._1_3_,(char)uVar1);
-        if ((uVar1 & 0x80) == 0) break;
-        bVar2 = FUN_01019bd4(param_2);
-        uStack_1c = CONCAT31(uStack_1c._1_3_,bVar2);
-        if ((bVar2 & 0xc0) != 0x80) {
-          FUN_0102f7e0(uVar5);
-        }
-        puVar6 = &uStack_1c;
-      }
-    }
-    else {
-      FUN_0102f7e0(uVar5);
-    }
-  }
-  return;
+  *(int32 *)(header + 0xc) = FUN_01019618((int32)stream);
+  *(uint32 *)(header + 0x10) = FUN_01019abc((int32)stream);
+  *(uint32 *)(header + 0x14) = FUN_01019abc((int32)stream);
+  FUN_01019afc((int32)stream,(uint32)(header + 0x18));
 }
 
 /* ==== 0x0101EE08  (file offset 0x1EE08)  swvM3G_ReadTransformable ==================================== */
-void swvM3G_ReadTransformable(int *param_1,undefined4 param_2)
+/* M3G file format section 11.26, Transformable (no ObjectType of its own): reads the Transformable part of
+   a record into the native object: the Object3D part (swvM3G_ReadObject3D); with hasComponentTransform
+   (a Boolean, FUN_01019618) the translation (FUN_010239a4) and the scale (FUN_01022bfc) (Vector3Ds,
+   FUN_01019ba4, into one zeroed stack vector), the orientation angle (Float32, FUN_01019a0c, times
+   0x3C8EFA35, pi / 180: degrees to radians) and axis (a zeroed Vector3D), error -1301
+   (IllegalArgumentException, as Transformable.setOrientation) for a non-zero angle about a zero axis,
+   turned into a quaternion (FUN_01028344) and set (FUN_01022140); with hasGeneralTransform the transform
+   (a Matrix, FUN_0101977c, which also classifies it in its word 16; set by FUN_01020d0c). Last the
+   object's virtual slot +0x24 (a tail jump; what it returns, if anything, is left in r0, which the
+   callers do not read). Called for their Transformable part by swvM3G_ReadNode and swvM3G_ReadTexture2D.
+   Evidence: 0x0101ee08 - 0x0101ef38 (r0 and r1 kept for swvM3G_ReadObject3D: Ghidra had dropped them;
+   the 0x44-byte frame: the matrix at sp, the quaternion at sp + 0x1c, the axis at sp + 0x2c, the vector
+   at sp + 0x38, the matrix's word 16 being the vector's last; `bl 0x0103f428` (swv_fcmp_a) / `beq` past
+   the axis tests, `moveq` / `bleq` for each; `bx r1` the slot). */
+void swvM3G_ReadTransformable(uint8 *object,uint8 *stream)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  undefined1 uVar3;
-  undefined1 auStack_58 [28];
-  undefined1 auStack_3c [16];
-  undefined4 local_2c;
-  undefined4 local_28;
-  undefined4 local_24;
-  undefined4 local_20;
-  undefined4 local_1c;
-  undefined4 local_18;
-  
-  swvM3G_ReadObject3D();
-  iVar1 = FUN_01019618(param_2);
-  uVar3 = iVar1 == 0;
-  if (!(bool)uVar3) {
-    local_20 = 0;
-    local_1c = 0;
-    local_18 = 0;
-    FUN_01019ba4(param_2,&local_20);
-    FUN_010239a4(param_1,&local_20);
-    FUN_01019ba4(param_2,&local_20);
-    FUN_01022bfc(param_1,&local_20);
-    uVar2 = FUN_01019a0c(param_2);
-    uVar2 = swv_fmul(uVar2,WORD_HEXADECIMAL_3C8EFA35);
-    local_2c = 0;
-    local_28 = 0;
-    local_24 = 0;
-    FUN_01019ba4(param_2,&local_2c);
-    swv_fcmp_a(uVar2,0);
-    if (!(bool)uVar3) {
-      swv_fcmp_a(local_2c,0);
-      if ((bool)uVar3) {
-        swv_fcmp_a(local_28,0);
-      }
-      if ((bool)uVar3) {
-        swv_fcmp_a(local_24,0);
-      }
-      if ((bool)uVar3) {
-        FUN_0102f7e0(INTEGER_MINUS_1301);
-      }
-    }
-    FUN_01028344(auStack_3c,uVar2,&local_2c);
-    FUN_01022140(param_1,auStack_3c);
+  uint32 matrix[17];
+  uint32 orientation[4];
+  uint32 axis[3];
+  uint32 vector[3];
+  uint32 angle;
+
+  swvM3G_ReadObject3D(object,stream);
+  if (FUN_01019618((int32)stream) != 0) {
+    vector[0] = 0;
+    vector[1] = 0;
+    vector[2] = 0;
+    FUN_01019ba4((int32)stream,vector);
+    FUN_010239a4((int *)object,(uint32)vector);
+    FUN_01019ba4((int32)stream,vector);
+    FUN_01022bfc((int *)object,(uint32)vector);
+    angle = swv_fmul(FUN_01019a0c((int32)stream),WORD_HEXADECIMAL_3C8EFA35);
+    axis[0] = 0;
+    axis[1] = 0;
+    axis[2] = 0;
+    FUN_01019ba4((int32)stream,axis);
+    if ((swv_fcmp_a(angle,0), *(float *)&angle != 0.0f) &&
+        (swv_fcmp_a(axis[0],0), *(float *)&axis[0] == 0.0f) &&
+        (swv_fcmp_a(axis[1],0), *(float *)&axis[1] == 0.0f) &&
+        (swv_fcmp_a(axis[2],0), *(float *)&axis[2] == 0.0f))
+      FUN_0102f7e0(INTEGER_MINUS_1301);
+    FUN_01028344(orientation,angle,axis);
+    FUN_01022140((int *)object,(uint32)orientation);
   }
-  iVar1 = FUN_01019618(param_2);
-  if (iVar1 != 0) {
-    local_18 = 0x20;
-    FUN_0101977c(param_2,auStack_58);
-    FUN_01020d0c(param_1,auStack_58);
+  if (FUN_01019618((int32)stream) != 0) {
+    matrix[16] = 0x20;
+    FUN_0101977c((int32)stream,matrix);
+    FUN_01020d0c((int *)object,(int32)matrix);
   }
-                    /* WARNING: Could not recover jumptable at 0x0101ef38. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
-     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
-     not static), so for one the method is not known here */
-  (*(code *)(*(int *)(*param_1 + 0x24) + *param_1))(param_1);
-  return;
+  /* engine virtual call, slot +0x24 (a tail jump) */
+  (*(code *)(*(int32 *)(*(int32 *)object + 0x24) + *(int32 *)object))(object);
 }
 
 /* ==== 0x0101EF44  (file offset 0x1EF44)  swvM3G_ReadAnimationTrack =================================== */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-void swvM3G_ReadAnimationTrack(int param_1,undefined4 param_2)
+/* M3G file format section 11.2, AnimationTrack (ObjectType 2): reads the record into the native
+   AnimationTrack track: the Object3D part (swvM3G_ReadObject3D), the keyframe sequence (+0x1c, a
+   KeyframeSequence, FUN_01019888 with 19; error -1202, the file is bad, for none) and the animation
+   controller (+0x20, type 1, or null), each kept by FUN_01004848 (a reference assignment on the
+   interface pointers, +4); the property (+0x24, UInt32, FUN_01019abc): -1202 unless ALPHA 0x100 ..
+   VISIBILITY 0x114; then FUN_01010dac gives the property's mask of allowed component counts (-1: any)
+   and -1202 when the sequence's componentCount is not among them (AnimationTrack(sequence, property):
+   IllegalArgumentException; a tail jump to FUN_0102f7e0, whose code Ghidra had pasted here). Evidence:
+   0x0101ef44 - 0x0101f01c (r0 and r1 kept for swvM3G_ReadObject3D: Ghidra had dropped them; `cmp r0,
+   #0xff` / `ble`, `subs r12, r0, #0x100` / `subges r12, r12, #0x15` / `blt` past the error; `cmn r0, #1`
+   / `beq`, `tst r0, r2, lsl r1` with r1 the componentCount (a register shift: its low byte, 32 or more
+   giving 0) / `beq 0x0102f7e0`). */
+void swvM3G_ReadAnimationTrack(uint8 *track,uint8 *stream)
 
 {
-  int iVar1;
-  uint uVar2;
-  void *pvVar3;
-  undefined4 uVar4;
-  int iVar5;
-  bool bVar6;
-  
-  swvM3G_ReadObject3D();
-  iVar5 = *(int *)(param_1 + 0x1c);
-  iVar1 = FUN_01019888(param_2,0x13);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + 4;
+  uint8 *old;
+  uint8 *object;
+  int32 property;
+  uint32 counts;
+  uint32 shift;
+
+  swvM3G_ReadObject3D(track,stream);
+  old = *(uint8 **)(track + 0x1c);
+  object = (uint8 *)FUN_01019888((int32)stream,0x13);
+  object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                 object != NULL ? (int32)(object + 4) : 0);
+  if (object != NULL)
+    object -= 4;
+  *(uint8 **)(track + 0x1c) = object;
+  if (object == NULL)
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  old = *(uint8 **)(track + 0x20);
+  object = (uint8 *)FUN_01019888((int32)stream,1);
+  object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                 object != NULL ? (int32)(object + 4) : 0);
+  if (object != NULL)
+    object -= 4;
+  *(uint8 **)(track + 0x20) = object;
+  property = FUN_01019abc((int32)stream);
+  *(int32 *)(track + 0x24) = property;
+  if (property < 0x100 || property >= 0x115)
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  counts = FUN_01010dac((uint32)track,*(int32 *)(track + 0x24));
+  if (counts != 0xffffffff) {
+    shift = (uint32)(*(SwvKeyframeSequence **)(track + 0x1c))->componentCount & 0xff;
+    if ((counts & (shift < 32 ? (uint32)1 << shift : 0)) == 0)
+      FUN_0102f7e0(INTEGER_MINUS_1202);
   }
-  if (iVar5 != 0) {
-    iVar5 = iVar5 + 4;
-  }
-  iVar1 = FUN_01004848(iVar5,iVar1);
-  uVar4 = INTEGER_MINUS_1202;
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  *(int *)(param_1 + 0x1c) = iVar1;
-  if (iVar1 == 0) {
-    FUN_0102f7e0(uVar4);
-  }
-  iVar5 = *(int *)(param_1 + 0x20);
-  iVar1 = FUN_01019888(param_2,1);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + 4;
-  }
-  if (iVar5 != 0) {
-    iVar5 = iVar5 + 4;
-  }
-  iVar1 = FUN_01004848(iVar5,iVar1);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  *(int *)(param_1 + 0x20) = iVar1;
-  iVar1 = FUN_01019abc(param_2);
-  *(int *)(param_1 + 0x24) = iVar1;
-  if (0xff < iVar1) {
-    bVar6 = SBORROW4(iVar1,0x100);
-    iVar5 = iVar1 + -0x100;
-    if (0xff < iVar1) {
-      bVar6 = SBORROW4(iVar5,0x15);
-      iVar5 = iVar1 + -0x115;
-    }
-    if (iVar5 < 0 != bVar6) goto LAB_0101efec;
-  }
-  FUN_0102f7e0(uVar4);
-LAB_0101efec:
-  uVar2 = FUN_01010dac(param_1,*(undefined4 *)(param_1 + 0x24));
-  if ((uVar2 != 0xffffffff) &&
-     ((uVar2 & 1 << (*(uint *)(*(int *)(param_1 + 0x1c) + 0x34) & 0xff)) == 0)) {
-    iVar1 = FUN_0100f7d0();
-    FUN_01013bcc(*(undefined4 *)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),uVar4);
-    if (*(int *)(iVar1 + 0x14) != 0) {
-      FUN_01013bcc(*(undefined4 *)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),uVar4);
-    }
-    pvVar3 = helper_GetAppInstance();
-    uVar4 = *(undefined4 *)((int)pvVar3 + 0xc);
-    pvVar3 = helper_GetAppInstance();
-                    /* WARNING: Could not recover jumptable at 0x010398cc. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-    (*((IShell *)*(int **)((int)pvVar3 + 0xc))->pvt->CloseApplet)((IShell *)uVar4,0);
-    return;
-  }
-  return;
 }
 
 /* ==== 0x0101F0B0  (file offset 0x1F0B0)  FUN_0101f0b0 ================================================ */
@@ -27709,724 +27483,485 @@ void FUN_0101f0b0(int param_1)
 }
 
 /* ==== 0x0101F0B4  (file offset 0x1F0B4)  swvM3G_ReadKeyframeSequence ================================= */
-void swvM3G_ReadKeyframeSequence(int param_1,undefined4 param_2)
+/* M3G file format section 11.12, KeyframeSequence (ObjectType 19): reads the record into the native
+   KeyframeSequence sequence: the Object3D part (swvM3G_ReadObject3D), the interpolation (+0x1c: LINEAR
+   0xb0 .. STEP 0xb4) and repeat mode (+0x20: CONSTANT 0xc0, LOOP 0xc1) (FUN_010196cc), the encoding (a
+   Byte, above 2 -1202, the file is bad), the duration (+0x28, UInt32, below 1 -1202; +0x24 the same as a
+   float, swv_fflt), validRangeFirst and validRangeLast (kept for the end), componentCount (+0x34: below 1
+   -1202, and SLERP 0xb1 / SQUAD 0xb3 need 4) and keyframeCount (+0x38, below 1 -1202); error -4 when
+   the keyframes' words (swvKeyframeSequence_KeyframeWords each) pass 0x7fffffff, then the keyframe array
+   (+0x3c, its data +0x40) sized (FUN_01023184). Each keyframe: its time (UInt32, thunk_FUN_01019abc;
+   -1202 when negative) and componentCount values: encoding 0 Float32s (FUN_01019a0c); encodings 1 and 2
+   the vectorBias and vectorScale first (two engine float arrays, swv_New_2(0x10) / FUN_01027cd8, kept on
+   the engine's object stack, FUN_0101807c, and read by FUN_010199ac), then Bytes (FUN_01019640) or
+   UInt16s (FUN_01019a98), each bias + scale * (value / 255 or 65535); the two arrays released at the end
+   (FUN_0102b784). Last the valid range set (FUN_01023af0: KeyframeSequence.setValidRange, error -1101 out
+   of range; a tail jump, whose code Ghidra had pasted here). Evidence: 0x0101f0b4 - 0x0101f3d0 (r0 and
+   r1 kept for swvM3G_ReadObject3D: Ghidra had dropped them; `cmp r0, #1` / `blt` and `cmp r1, #0xb1` /
+   `cmpne r1, #0xb3` / `bne` / `cmp r0, #4` / `beq` past the error (Ghidra had 0xb1 alone as an error);
+   `smull` / `subs` / `sbc` / `subs` / `sbcs` from the double 0.0 (0x0101f3d8) / `mvnlt r0, #3`; the bias
+   at sp + 4 read first, the scale at sp; `bl 0x0103f240` (swv_frdiv: the value / the range), `bl
+   0x0103f604` (swv_fmul, the scale first), `bl 0x0103eee8` (swv_fadd, the bias second); `b 0x01023af0`
+   with the range from sp + 0xc / sp + 8). */
+void swvM3G_ReadKeyframeSequence(SwvKeyframeSequence *sequence,uint8 *stream)
 
 {
-  longlong lVar1;
-  undefined4 uVar2;
-  uint uVar3;
-  int iVar4;
-  undefined4 uVar5;
-  int iVar6;
-  int iVar7;
-  int iVar8;
-  int *piVar9;
-  uint uVar10;
-  bool bVar11;
-  int local_38;
-  int local_34;
-  int local_30;
-  int local_2c;
-  undefined4 local_28;
-  uint quantised;
-  
-  swvM3G_ReadObject3D();
-  uVar2 = FUN_010196cc(param_2,0xaf,0xb5);
-  *(undefined4 *)(param_1 + 0x1c) = uVar2;
-  uVar2 = FUN_010196cc(param_2,0xbf,0xc2);
-  *(undefined4 *)(param_1 + 0x20) = uVar2;
-  uVar3 = FUN_01019640(param_2);
-  uVar2 = INTEGER_MINUS_1202;
-  if (2 < uVar3) {
+  int32 validFirst;
+  int32 validLast;
+  uint32 encoding;
+  int32 words;
+  uint32 wordsMagnitude;
+  uint32 countMagnitude;
+  uint64 size;
+  int32 frame;
+  int32 component;
+  int32 *keyframe;
+  uint8 *bias;
+  uint8 *scale;
+  uint32 range;
+  uint32 quantised;
+
+  swvM3G_ReadObject3D((uint8 *)sequence,stream);
+  sequence->interpolation = FUN_010196cc((int32)stream,0xaf,0xb5);
+  sequence->repeatMode = FUN_010196cc((int32)stream,0xbf,0xc2);
+  encoding = FUN_01019640((int32)stream);
+  if (encoding > 2)
     FUN_0102f7e0(INTEGER_MINUS_1202);
-  }
-  iVar4 = FUN_01019abc(param_2);
-  *(int *)(param_1 + 0x28) = iVar4;
-  if (iVar4 < 1) {
-    FUN_0102f7e0(uVar2);
-  }
-  uVar5 = swv_fflt(*(undefined4 *)(param_1 + 0x28));
-  *(undefined4 *)(param_1 + 0x24) = uVar5;
-  local_2c = FUN_01019abc(param_2);
-  local_30 = FUN_01019abc(param_2);
-  iVar4 = FUN_01019abc(param_2);
-  *(int *)(param_1 + 0x34) = iVar4;
-  if ((iVar4 < 1) ||
-     ((*(int *)(param_1 + 0x1c) == 0xb1 || *(int *)(param_1 + 0x1c) == 0xb3 && (iVar4 != 4)))) {
-    FUN_0102f7e0(uVar2);
-  }
-  iVar4 = FUN_01019abc(param_2);
-  *(int *)(param_1 + 0x38) = iVar4;
-  if (iVar4 < 1) {
-    FUN_0102f7e0(uVar2);
-  }
-  iVar4 = swvKeyframeSequence_KeyframeWords((SwvKeyframeSequence *)param_1);
-  lVar1 = (longlong)iVar4 * (longlong)*(int *)(param_1 + 0x38);
-  uVar10 = (uint)lVar1;
-  iVar8 = (int)((ulonglong)lVar1 >> 0x20) - (uint)(uVar10 < 0x7fffffff);
-  bVar11 = ZERO_DOUBLE_LOW_WORD < uVar10 + 0x80000001;
-  if ((int)(ZERO_DOUBLE_HIGH_WORD - (iVar8 + (uint)bVar11)) < 0 !=
-      (SBORROW4(ZERO_DOUBLE_HIGH_WORD,iVar8) != SBORROW4(ZERO_DOUBLE_HIGH_WORD - iVar8,(uint)bVar11))) {
-    FUN_0102f7e0(0xfffffffc);
-  }
-  FUN_01023184(param_1 + 0x3c,iVar4 * *(int *)(param_1 + 0x38));
-  iVar8 = 0;
-  if (uVar3 == 0) {
-    for (; iVar8 < *(int *)(param_1 + 0x38); iVar8 = iVar8 + 1) {
-      piVar9 = (int *)(*(int *)(param_1 + 0x40) + iVar4 * iVar8 * 4);
-      iVar6 = thunk_FUN_01019abc(param_2);
-      *piVar9 = iVar6;
-      if (iVar6 < 0) {
-        FUN_0102f7e0(uVar2);
-      }
-      for (iVar6 = 0; iVar6 < *(int *)(param_1 + 0x34); iVar6 = iVar6 + 1) {
-        iVar7 = FUN_01019a0c(param_2);
-        piVar9[iVar6 + 1] = iVar7;
-      }
-    }
-  }
-  else if (uVar3 == 1 || uVar3 == 2) {
-    iVar8 = swv_New_2(0x10);
-    local_34 = iVar8;
-    if (iVar8 != 0) {
-      FUN_01027cd8(iVar8);
-      uVar2 = FUN_0100f8e8();
-      FUN_0101807c(uVar2,iVar8);
-    }
-    iVar8 = swv_New_2(0x10);
-    local_38 = iVar8;
-    if (iVar8 != 0) {
-      FUN_01027cd8(iVar8);
-      uVar2 = FUN_0100f8e8();
-      FUN_0101807c(uVar2,iVar8);
-    }
-    FUN_010199ac(param_2,local_34,*(undefined4 *)(param_1 + 0x34));
-    FUN_010199ac(param_2,local_38,*(undefined4 *)(param_1 + 0x34));
-    uVar2 = INTEGER_65535;
-    if (uVar3 == 1) {
-      uVar2 = 0xff;
-    }
-    local_28 = swv_fflt(uVar2);
-    for (iVar8 = 0; iVar8 < *(int *)(param_1 + 0x38); iVar8 = iVar8 + 1) {
-      piVar9 = (int *)(*(int *)(param_1 + 0x40) + iVar4 * iVar8 * 4);
-      iVar6 = thunk_FUN_01019abc(param_2);
-      *piVar9 = iVar6;
-      if (iVar6 < 0) {
+  sequence->field_28 = FUN_01019abc((int32)stream);
+  if (sequence->field_28 <= 0)
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  sequence->duration = swv_fflt(sequence->field_28);
+  validFirst = FUN_01019abc((int32)stream);
+  validLast = FUN_01019abc((int32)stream);
+  sequence->componentCount = FUN_01019abc((int32)stream);
+  if (sequence->componentCount < 1 ||
+      ((sequence->interpolation == 0xb1 || sequence->interpolation == 0xb3) &&
+       sequence->componentCount != 4))
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  sequence->keyframeCount = FUN_01019abc((int32)stream);
+  if (sequence->keyframeCount < 1)
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  words = swvKeyframeSequence_KeyframeWords(sequence);
+  wordsMagnitude = words < 0 ? 0 - (uint32)words : (uint32)words;
+  countMagnitude = sequence->keyframeCount < 0 ? 0 - (uint32)sequence->keyframeCount
+                                               : (uint32)sequence->keyframeCount;
+  MULTIPLY_WORDS(size,wordsMagnitude,countMagnitude);
+  if ((words < 0) == (sequence->keyframeCount < 0) && (size.high != 0 || size.low > 0x7fffffff))
+    FUN_0102f7e0(-4);
+  FUN_01023184((int *)&sequence->field_3c,words * sequence->keyframeCount);
+  if (encoding == 0) {
+    for (frame = 0; frame < sequence->keyframeCount; frame++) {
+      keyframe = sequence->keyframes + words * frame;
+      *keyframe = thunk_FUN_01019abc((int32)stream);
+      if (*keyframe < 0)
         FUN_0102f7e0(INTEGER_MINUS_1202);
-      }
-      for (iVar6 = 0; iVar6 < *(int *)(param_1 + 0x34); iVar6 = iVar6 + 1) {
-        /* Ghidra had dropped the value (r0) of both reads */
-        if (uVar3 == 1) {
-          quantised = FUN_01019640();
-        }
-        else {
-          quantised = FUN_01019a98(param_2);
-        }
-        uVar2 = swv_fflt(quantised);
-        uVar2 = swv_frdiv(local_28,uVar2);
-        uVar5 = *(undefined4 *)(*(int *)(local_34 + 4) + iVar6 * 4);
-        uVar2 = swv_fmul(*(undefined4 *)(*(int *)(local_38 + 4) + iVar6 * 4),uVar2);
-        iVar7 = swv_fadd(uVar2,uVar5);
-        piVar9[iVar6 + 1] = iVar7;
+      for (component = 0; component < sequence->componentCount; component++)
+        keyframe[component + 1] = FUN_01019a0c((int32)stream);
+    }
+  }
+  else if (encoding == 1 || encoding == 2) {
+    bias = (uint8 *)swv_New_2(0x10);
+    if (bias != NULL) {
+      FUN_01027cd8((int *)bias);
+      FUN_0101807c(FUN_0100f8e8(),(uint32)bias);
+    }
+    scale = (uint8 *)swv_New_2(0x10);
+    if (scale != NULL) {
+      FUN_01027cd8((int *)scale);
+      FUN_0101807c(FUN_0100f8e8(),(uint32)scale);
+    }
+    FUN_010199ac((int32)stream,(int32)bias,sequence->componentCount);
+    FUN_010199ac((int32)stream,(int32)scale,sequence->componentCount);
+    range = swv_fflt(encoding == 1 ? 0xff : INTEGER_65535);
+    for (frame = 0; frame < sequence->keyframeCount; frame++) {
+      keyframe = sequence->keyframes + words * frame;
+      *keyframe = thunk_FUN_01019abc((int32)stream);
+      if (*keyframe < 0)
+        FUN_0102f7e0(INTEGER_MINUS_1202);
+      for (component = 0; component < sequence->componentCount; component++) {
+        if (encoding == 1)
+          quantised = FUN_01019640((int32)stream);
+        else
+          quantised = FUN_01019a98((int32)stream);
+        keyframe[component + 1] =
+            swv_fadd(swv_fmul((*(uint32 **)(scale + 4))[component],swv_frdiv(range,swv_fflt(quantised))),
+                     (*(uint32 **)(bias + 4))[component]);
       }
     }
-    FUN_0102b784(&local_38,0);
-    FUN_0102b784(&local_34,0);
+    FUN_0102b784((int *)&scale,0);
+    FUN_0102b784((int *)&bias,0);
   }
-  else {
-    FUN_0102f7e0(uVar2);
-  }
-  iVar6 = local_2c;
-  iVar8 = local_30;
-  bVar11 = local_2c == 0;
-  iVar4 = param_1;
-  if (-1 < local_2c) {
-    iVar4 = *(int *)(param_1 + 0x38);
-    bVar11 = iVar4 == local_2c;
-  }
-  if (!bVar11 && (-1 < local_2c && local_2c <= iVar4)) {
-    bVar11 = local_30 == 0;
-    if (-1 < local_30) {
-      bVar11 = iVar4 == local_30;
-    }
-    if (!bVar11 && (-1 < local_30 && local_30 <= iVar4)) goto LAB_01023b24;
-  }
-  FUN_0102f7e0(INTEGER_MINUS_1101);
-LAB_01023b24:
-  *(int *)(param_1 + 0x2c) = iVar6;
-  *(int *)(param_1 + 0x30) = iVar8;
-  *(undefined4 *)(param_1 + 0x4c) = 0;
-  return;
+  else
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  FUN_01023af0((int32)sequence,validFirst,validLast);
 }
 
 /* ==== 0x0101F3E4  (file offset 0x1F3E4)  swvM3G_ReadTriangleStripArray =============================== */
-void swvM3G_ReadTriangleStripArray(int param_1,undefined4 param_2)
+/* M3G file format section 11.27, TriangleStripArray (ObjectType 11): reads the record into the native
+   TriangleStripArray strips: the Object3D part (the IndexBuffer's superclass data;
+   thunk_swvM3G_ReadObject3D), the encoding (a Byte: 0 .. 2 or 0x80 .. 0x82, else -1202, the file is bad;
+   +0x20 = 1 for the implicit ones, bit 7 clear), the highest index +0x1c (0 first); implicit: startIndex
+   (+0x24, 16 bits) as a UInt32 (error -1101 above 0xffff), a Byte or a UInt16; explicit: the indices
+   array (+0x28, its data +0x2c, 16-bit entries; FUN_01019698 with 4, 1 or 2 bytes an element, sized by
+   FUN_01023184), each a UInt32 (-1101 above 0xffff), a Byte or a UInt16, +0x1c the highest. Then the
+   stripLengths (UInt32[] into the 16-bit array +0x38, its data +0x3c and count +0x40; FUN_01019704 with
+   -1: the count read first): -1202 for a strip shorter than 3, or when the lengths add up to fewer than
+   the explicit indices (+0x30, the indices' count); for implicit indices the highest is startIndex +
+   the sum - 1. Evidence: 0x0101f3e4 - 0x0101f634 (r0 and r1 kept for the thunk: Ghidra had dropped
+   them; `subhi r0, r6, #0x80` / `cmphi r0, #2` / `blhi`, `bic r0, r0, r6, lsr #7`; `subs r12, r0,
+   #0xff00` / `subcss r12, r12, #0xff` / `blhi` the -1101; `strcc` / `strhi` the highest; `cmp r0, #3` /
+   `blcc`, `cmp r0, r6` / `blgt`). */
+void swvM3G_ReadTriangleStripArray(uint8 *strips,uint8 *stream)
 
 {
-  undefined4 uVar1;
-  undefined4 uVar2;
-  undefined2 uVar3;
-  uint uVar4;
-  uint uVar5;
-  int iVar6;
-  int iVar7;
-  int iVar8;
-  bool bVar9;
-  
-  thunk_swvM3G_ReadObject3D();
-  uVar4 = FUN_01019640(param_2);
-  uVar1 = INTEGER_MINUS_1202;
-  uVar5 = uVar4;
-  if (2 < uVar4) {
-    uVar5 = uVar4 - 0x80;
-  }
-  if (2 < uVar5) {
+  uint32 encoding;
+  uint32 index;
+  int32 count;
+  int32 i;
+  int32 sum;
+
+  thunk_swvM3G_ReadObject3D(strips,stream);
+  encoding = FUN_01019640((int32)stream);
+  if (encoding > 2 && encoding - 0x80 > 2)
     FUN_0102f7e0(INTEGER_MINUS_1202);
-  }
-  *(uint *)(param_1 + 0x20) = ~(uVar4 >> 7) & 1;
-  *(undefined4 *)(param_1 + 0x1c) = 0;
-  uVar2 = INTEGER_MINUS_1101;
-  iVar6 = param_1 + 0x28;
-  if (uVar4 == 0x80) {
-    iVar7 = FUN_01019698(param_2,4);
-    FUN_01023184(iVar6,iVar7);
-    for (iVar6 = 0; iVar6 < iVar7; iVar6 = iVar6 + 1) {
-      uVar5 = FUN_01019abc(param_2);
-      bVar9 = uVar5 == 0xff00;
-      if (0xfeff < uVar5) {
-        bVar9 = uVar5 - 0xff00 == 0xff;
-      }
-      if ((0xfeff < uVar5 && 0xfe < uVar5 - 0xff00) && !bVar9) {
-        FUN_0102f7e0(uVar2);
-      }
-      if (*(uint *)(param_1 + 0x1c) < uVar5) {
-        *(uint *)(param_1 + 0x1c) = uVar5;
-      }
-      *(short *)(*(int *)(param_1 + 0x2c) + iVar6 * 2) = (short)uVar5;
+  *(uint32 *)(strips + 0x20) = ~(encoding >> 7) & 1;
+  *(uint32 *)(strips + 0x1c) = 0;
+  if (encoding == 0x80) {
+    count = FUN_01019698((int32)stream,4);
+    FUN_01023184((int *)(strips + 0x28),count);
+    for (i = 0; i < count; i++) {
+      index = FUN_01019abc((int32)stream);
+      if (index > 0xffff)
+        FUN_0102f7e0(INTEGER_MINUS_1101);
+      if (*(uint32 *)(strips + 0x1c) < index)
+        *(uint32 *)(strips + 0x1c) = index;
+      (*(uint16 **)(strips + 0x2c))[i] = (uint16)index;
     }
   }
-  else if ((int)uVar4 < 0x81) {
-    if (uVar4 == 0) {
-      uVar5 = FUN_01019abc(param_2);
-      bVar9 = uVar5 == 0xff00;
-      if (0xfeff < uVar5) {
-        bVar9 = uVar5 - 0xff00 == 0xff;
-      }
-      if ((0xfeff < uVar5 && 0xfe < uVar5 - 0xff00) && !bVar9) {
-        FUN_0102f7e0(uVar2);
-      }
-      *(short *)(param_1 + 0x24) = (short)uVar5;
-    }
-    else {
-      if (uVar4 == 1) {
-        uVar3 = FUN_01019640(param_2);
-      }
-      else {
-        if (uVar4 != 2) goto LAB_0101f5b8;
-        uVar3 = FUN_01019a98(param_2);
-      }
-      *(undefined2 *)(param_1 + 0x24) = uVar3;
+  else if (encoding == 0x81) {
+    count = FUN_01019698((int32)stream,1);
+    FUN_01023184((int *)(strips + 0x28),count);
+    for (i = 0; i < count; i++) {
+      index = FUN_01019640((int32)stream);
+      (*(uint16 **)(strips + 0x2c))[i] = (uint16)index;
+      if (index > *(uint32 *)(strips + 0x1c))
+        *(uint32 *)(strips + 0x1c) = index;
     }
   }
-  else if (uVar4 == 0x81) {
-    iVar7 = FUN_01019698(param_2,1);
-    FUN_01023184(iVar6,iVar7);
-    iVar6 = 0;
-    while (iVar6 < iVar7) {
-      uVar5 = FUN_01019640(param_2);
-      *(short *)(*(int *)(param_1 + 0x2c) + iVar6 * 2) = (short)uVar5;
-      iVar6 = iVar6 + 1;
-      if (*(uint *)(param_1 + 0x1c) < uVar5) {
-        *(uint *)(param_1 + 0x1c) = uVar5;
-      }
+  else if (encoding == 0x82) {
+    count = FUN_01019698((int32)stream,2);
+    FUN_01023184((int *)(strips + 0x28),count);
+    for (i = 0; i < count; i++) {
+      index = FUN_01019a98((int32)stream);
+      (*(uint16 **)(strips + 0x2c))[i] = (uint16)index;
+      if (index > *(uint32 *)(strips + 0x1c))
+        *(uint32 *)(strips + 0x1c) = index;
     }
   }
-  else if (uVar4 == 0x82) {
-    iVar7 = FUN_01019698(param_2,2);
-    FUN_01023184(iVar6,iVar7);
-    iVar6 = 0;
-    while (iVar6 < iVar7) {
-      uVar5 = FUN_01019a98(param_2);
-      *(short *)(*(int *)(param_1 + 0x2c) + iVar6 * 2) = (short)uVar5;
-      iVar6 = iVar6 + 1;
-      if (*(uint *)(param_1 + 0x1c) < uVar5) {
-        *(uint *)(param_1 + 0x1c) = uVar5;
-      }
-    }
+  else if (encoding == 0) {
+    index = FUN_01019abc((int32)stream);
+    if (index > 0xffff)
+      FUN_0102f7e0(INTEGER_MINUS_1101);
+    *(uint16 *)(strips + 0x24) = (uint16)index;
   }
-LAB_0101f5b8:
-  FUN_01019704(param_2,param_1 + 0x38,0xffffffff);
-  iVar7 = 0;
-  iVar8 = *(int *)(param_1 + 0x40);
-  for (iVar6 = 0; iVar6 < iVar8; iVar6 = iVar6 + 1) {
-    if (*(ushort *)(*(int *)(param_1 + 0x3c) + iVar6 * 2) < 3) {
-      FUN_0102f7e0(uVar1);
-    }
-    iVar7 = (uint)*(ushort *)(*(int *)(param_1 + 0x3c) + iVar6 * 2) + iVar7;
+  else if (encoding == 1)
+    *(uint16 *)(strips + 0x24) = FUN_01019640((int32)stream);
+  else if (encoding == 2)
+    *(uint16 *)(strips + 0x24) = (uint16)FUN_01019a98((int32)stream);
+  FUN_01019704((int32)stream,(int32)(strips + 0x38),-1);
+  sum = 0;
+  count = *(int32 *)(strips + 0x40);
+  for (i = 0; i < count; i++) {
+    if ((*(uint16 **)(strips + 0x3c))[i] < 3)
+      FUN_0102f7e0(INTEGER_MINUS_1202);
+    sum += (*(uint16 **)(strips + 0x3c))[i];
   }
-  if (iVar7 < *(int *)(param_1 + 0x30)) {
-    FUN_0102f7e0(uVar1);
-  }
-  if (*(int *)(param_1 + 0x20) != 0) {
-    *(uint *)(param_1 + 0x1c) = (uint)*(ushort *)(param_1 + 0x24) + iVar7 + -1;
-  }
-  return;
+  if (*(int32 *)(strips + 0x30) > sum)
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  if (*(int32 *)(strips + 0x20) != 0)
+    *(int32 *)(strips + 0x1c) = *(uint16 *)(strips + 0x24) + sum - 1;
 }
 
 /* ==== 0x0101F760  (file offset 0x1F760)  swvM3G_ReadMesh ============================================= */
-void swvM3G_ReadMesh(int param_1,undefined4 param_2)
+/* M3G file format section 11.16, Mesh (ObjectType 14): reads the record into the native Mesh mesh: the
+   Node part (swvM3G_ReadNode), the vertex buffer (+0x88, a VertexBuffer, FUN_01019888 with 21; error
+   -1202, the file is bad, for none), then submeshCount submeshes (FUN_01019698 with 8 bytes an element):
+   for a count above 0 the index-buffer array (+0x8c, its data +0x90) and the appearance array (+0x9c, its
+   data +0xa0) sized (FUN_01023184) and zeroed (thunk_swv_memset); each submesh's index buffer (a
+   TriangleStripArray, type 11; -1202 for none) and appearance (type 3, or null), each kept by
+   FUN_01004848 (a reference assignment on the interface pointers, +4). swvM3G_ReadSkinnedMesh reads its
+   Mesh part with it. Evidence: 0x0101f760 - 0x0101f8a4 (r0 and r1 kept for swvM3G_ReadNode: Ghidra had
+   dropped them; `ble` past the sizing, `mov r5, r7, lsl #2` the bytes zeroed, the `blt` loop reloading
+   +0x90 / +0xa0 after each FUN_01004848). */
+void swvM3G_ReadMesh(uint8 *mesh,uint8 *stream)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  int iVar5;
-  
-  swvM3G_ReadNode();
-  iVar4 = *(int *)(param_1 + 0x88);
-  iVar2 = FUN_01019888(param_2,0x15);
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + 4;
+  uint8 *old;
+  uint8 *object;
+  int32 count;
+  int32 i;
+
+  swvM3G_ReadNode(mesh,stream);
+  old = *(uint8 **)(mesh + 0x88);
+  object = (uint8 *)FUN_01019888((int32)stream,0x15);
+  object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                 object != NULL ? (int32)(object + 4) : 0);
+  if (object != NULL)
+    object -= 4;
+  *(uint8 **)(mesh + 0x88) = object;
+  if (object == NULL)
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  count = FUN_01019698((int32)stream,8);
+  if (count > 0) {
+    FUN_01023184((int *)(mesh + 0x8c),count);
+    thunk_swv_memset(*(uint32 *)(mesh + 0x90),0,count << 2);
+    FUN_01023184((int *)(mesh + 0x9c),count);
+    thunk_swv_memset(*(uint32 *)(mesh + 0xa0),0,count << 2);
   }
-  if (iVar4 != 0) {
-    iVar4 = iVar4 + 4;
+  for (i = 0; i < count; i++) {
+    old = *(uint8 **)(*(uint8 **)(mesh + 0x90) + i * 4);
+    object = (uint8 *)FUN_01019888((int32)stream,0xb);
+    object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                   object != NULL ? (int32)(object + 4) : 0);
+    if (object != NULL)
+      object -= 4;
+    *(uint8 **)(*(uint8 **)(mesh + 0x90) + i * 4) = object;
+    if (object == NULL)
+      FUN_0102f7e0(INTEGER_MINUS_1202);
+    old = *(uint8 **)(*(uint8 **)(mesh + 0xa0) + i * 4);
+    object = (uint8 *)FUN_01019888((int32)stream,3);
+    object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                   object != NULL ? (int32)(object + 4) : 0);
+    if (object != NULL)
+      object -= 4;
+    *(uint8 **)(*(uint8 **)(mesh + 0xa0) + i * 4) = object;
   }
-  iVar2 = FUN_01004848(iVar4,iVar2);
-  uVar1 = INTEGER_MINUS_1202;
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + -4;
-  }
-  *(int *)(param_1 + 0x88) = iVar2;
-  if (iVar2 == 0) {
-    FUN_0102f7e0(uVar1);
-  }
-  iVar2 = FUN_01019698(param_2,8);
-  if (0 < iVar2) {
-    FUN_01023184(param_1 + 0x8c,iVar2);
-    thunk_swv_memset(*(undefined4 *)(param_1 + 0x90),0,iVar2 << 2);
-    FUN_01023184(param_1 + 0x9c,iVar2);
-    thunk_swv_memset(*(undefined4 *)(param_1 + 0xa0),0,iVar2 << 2);
-  }
-  for (iVar4 = 0; iVar4 < iVar2; iVar4 = iVar4 + 1) {
-    iVar5 = *(int *)(*(int *)(param_1 + 0x90) + iVar4 * 4);
-    iVar3 = FUN_01019888(param_2,0xb);
-    if (iVar3 != 0) {
-      iVar3 = iVar3 + 4;
-    }
-    if (iVar5 != 0) {
-      iVar5 = iVar5 + 4;
-    }
-    iVar3 = FUN_01004848(iVar5,iVar3);
-    if (iVar3 != 0) {
-      iVar3 = iVar3 + -4;
-    }
-    *(int *)(*(int *)(param_1 + 0x90) + iVar4 * 4) = iVar3;
-    if (iVar3 == 0) {
-      FUN_0102f7e0(uVar1);
-    }
-    iVar5 = *(int *)(*(int *)(param_1 + 0xa0) + iVar4 * 4);
-    iVar3 = FUN_01019888(param_2,3);
-    if (iVar3 != 0) {
-      iVar3 = iVar3 + 4;
-    }
-    if (iVar5 != 0) {
-      iVar5 = iVar5 + 4;
-    }
-    iVar3 = FUN_01004848(iVar5,iVar3);
-    if (iVar3 != 0) {
-      iVar3 = iVar3 + -4;
-    }
-    *(int *)(*(int *)(param_1 + 0xa0) + iVar4 * 4) = iVar3;
-  }
-  return;
 }
 
 /* ==== 0x0101F8AC  (file offset 0x1F8AC)  swvM3G_ReadNode ============================================= */
-void swvM3G_ReadNode(int param_1,undefined4 param_2)
+/* M3G file format section 11.18, Node (no ObjectType of its own): reads the Node part of a record into the
+   native node: the Transformable part (swvM3G_ReadTransformable); error -1202 (the file is bad) unless
+   bit 1 of the word at +0x40 of the object the node's +0x20 +0x28 points to is set (GUESS: the record's
+   class must be a Node class); then, in the file's order, enableRendering (FUN_01022bb8) and
+   enablePicking (FUN_01022234) (Booleans, FUN_01019618), alphaFactor (a Byte, FUN_01019640: byte / 255,
+   a float at +0x28), scope (+0x2c, FUN_01019abc) and hasAlignment; with an alignment, zTarget and
+   yTarget (NONE 0x90 .. Z_AXIS 0x94, FUN_010196cc) and zReference and yReference (Nodes or null,
+   FUN_0101981c with 1), set by swvNode_SetAlignment (Node.setAlignment(zRef, zTarget, yRef, yTarget)).
+   Called for their Node part by swvM3G_ReadGroup, swvM3G_ReadLight, swvM3G_ReadMesh, swvM3G_ReadCamera
+   and swvM3G_ReadSprite3D. Evidence: 0x0101f8ac - 0x0101f98c (r0 and r1 kept for
+   swvM3G_ReadTransformable: Ghidra had dropped them; `tst r0, #2` / `bleq` the error; r6, r7 the
+   targets, r8 the first reference, `str r7, [sp]` the fifth argument). */
+void swvM3G_ReadNode(uint8 *node,uint8 *stream)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  undefined4 uVar3;
-  undefined4 uVar4;
-  undefined4 uVar5;
-  
-  swvM3G_ReadTransformable();
-  if ((*(uint *)(*(int *)(*(int *)(param_1 + 0x20) + 0x28) + 0x40) & 2) == 0) {
+  int32 zTarget;
+  int32 yTarget;
+  uint8 *zReference;
+
+  swvM3G_ReadTransformable(node,stream);
+  if ((*(uint32 *)(*(uint8 **)(*(uint8 **)(node + 0x20) + 0x28) + 0x40) & 2) == 0)
     FUN_0102f7e0(INTEGER_MINUS_1202);
+  FUN_01022bb8((int *)node,FUN_01019618((int32)stream));
+  FUN_01022234((int *)node,FUN_01019618((int32)stream));
+  *(uint32 *)(node + 0x28) = swv_fdiv(swv_fflt(FUN_01019640((int32)stream)),FLOAT_255);
+  *(uint32 *)(node + 0x2c) = FUN_01019abc((int32)stream);
+  if (FUN_01019618((int32)stream) != 0) {
+    zTarget = FUN_010196cc((int32)stream,0x8f,0x95);
+    yTarget = FUN_010196cc((int32)stream,0x8f,0x95);
+    zReference = (uint8 *)FUN_0101981c((int32)stream,1);
+    swvNode_SetAlignment(node,zReference,zTarget,(uint8 *)FUN_0101981c((int32)stream,1),yTarget);
   }
-  uVar1 = FUN_01019618(param_2);
-  FUN_01022bb8(param_1,uVar1);
-  uVar1 = FUN_01019618(param_2);
-  FUN_01022234(param_1,uVar1);
-  uVar1 = swv_fflt(FUN_01019640(param_2));   /* Ghidra had dropped it */
-  uVar1 = swv_fdiv(uVar1,FLOAT_255);
-  *(undefined4 *)(param_1 + 0x28) = uVar1;
-  uVar1 = FUN_01019abc(param_2);
-  *(undefined4 *)(param_1 + 0x2c) = uVar1;
-  iVar2 = FUN_01019618(param_2);
-  if (iVar2 != 0) {
-    uVar1 = FUN_010196cc(param_2,0x8f,0x95);
-    uVar3 = FUN_010196cc(param_2,0x8f,0x95);
-    uVar4 = FUN_0101981c(param_2,1);
-    uVar5 = FUN_0101981c(param_2,1);
-    swvNode_SetAlignment((uint8 *)param_1,(uint8 *)uVar4,uVar1,(uint8 *)uVar5,uVar3);
-  }
-  return;
 }
 
 /* ==== 0x0101F9A8  (file offset 0x1F9A8)  swvM3G_ReadGroup ============================================ */
-void swvM3G_ReadGroup(undefined4 param_1,undefined4 param_2)
+/* M3G file format section 11.9, Group (ObjectType 9): reads the record into the native Group group: the
+   Node part (swvM3G_ReadNode), then the children (ObjectIndex[]: a count, FUN_01019698 with 4 bytes an
+   element, then each a Node, FUN_0101981c with 0), each added by swvGroup_AddChild. swvM3G_ReadWorld reads
+   its Group part with it. Evidence: 0x0101f9a8 - 0x0101f9f4 (r0 and r1 kept for swvM3G_ReadNode: Ghidra
+   had dropped them; the `blt` loop on the count). */
+void swvM3G_ReadGroup(uint8 *group,uint8 *stream)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  int iVar3;
-  
-  swvM3G_ReadNode();
-  iVar1 = FUN_01019698(param_2,4);
-  for (iVar3 = 0; iVar3 < iVar1; iVar3 = iVar3 + 1) {
-    uVar2 = FUN_0101981c(param_2,0);
-    swvGroup_AddChild((uint8 *)param_1,(uint8 *)uVar2);
-  }
-  return;
+  int32 count;
+  int32 i;
+
+  swvM3G_ReadNode(group,stream);
+  count = FUN_01019698((int32)stream,4);
+  for (i = 0; i < count; i++)
+    swvGroup_AddChild(group,(uint8 *)FUN_0101981c((int32)stream,0));
 }
 
 /* ==== 0x0101F9F8  (file offset 0x1F9F8)  swvM3G_ReadLight ============================================ */
-void swvM3G_ReadLight(int param_1,undefined4 param_2)
+/* M3G file format section 11.13, Light (ObjectType 12): reads the record into the native Light light: the
+   Node part (swvM3G_ReadNode), the attenuations constant, linear and quadratic (+0x88, +0x8c, +0x90,
+   Float32s, FUN_01019a0c), error -1202 (the file is bad) when one is negative or all three are 0 (as
+   Light.setAttenuation); the colour (+0x94, ColorRGB, FUN_01019650), the mode (+0xa4: AMBIENT 0x80 ..
+   SPOT 0x83, FUN_010196cc), the intensity (+0x98), the spot angle (+0x9c, 0 .. 90, else -1202) and the
+   spot exponent (+0xa0, 0 .. 128, else -1202), as Light.setSpotAngle / setSpotExponent. Evidence:
+   0x0101f9f8 - 0x0101fb1c (r0 and r1 kept for swvM3G_ReadNode: Ghidra had dropped them; `bl 0x0103f534`
+   (swv_fcmp_b) / `movcs` / `blcs` the chain, `blcc` the error; `bl 0x0103f428` (swv_fcmp_a, equality) /
+   `moveq` / `bleq`; for the spot values `bcc` and, after swv_fcmp_c, `bls` past the error; GUESS: an
+   unordered compare sets the carry, as __aeabi_cfcmple; FUN_01019a0c refuses NaNs anyway). */
+void swvM3G_ReadLight(uint8 *light,uint8 *stream)
 
 {
-  undefined4 uVar1;
-  undefined4 uVar2;
-  undefined1 in_ZR;
-  undefined1 in_CY;
-  
-  uVar1 = INTEGER_MINUS_1202;
-  swvM3G_ReadNode();
-  uVar2 = FUN_01019a0c(param_2);
-  *(undefined4 *)(param_1 + 0x88) = uVar2;
-  uVar2 = FUN_01019a0c(param_2);
-  *(undefined4 *)(param_1 + 0x8c) = uVar2;
-  uVar2 = FUN_01019a0c(param_2);
-  *(undefined4 *)(param_1 + 0x90) = uVar2;
-  swv_fcmp_b(*(undefined4 *)(param_1 + 0x88),0);
-  if ((bool)in_CY) {
-    swv_fcmp_b(*(undefined4 *)(param_1 + 0x8c),0);
-  }
-  if ((bool)in_CY) {
-    swv_fcmp_b(*(undefined4 *)(param_1 + 0x90),0);
-  }
-  if (!(bool)in_CY) {
-    FUN_0102f7e0(uVar1);
-  }
-  swv_fcmp_a(*(undefined4 *)(param_1 + 0x88),0);
-  if ((bool)in_ZR) {
-    swv_fcmp_a(*(undefined4 *)(param_1 + 0x8c),0);
-  }
-  if ((bool)in_ZR) {
-    swv_fcmp_a(*(undefined4 *)(param_1 + 0x90),0);
-  }
-  if ((bool)in_ZR) {
-    FUN_0102f7e0(uVar1);
-  }
-  FUN_01019650(param_2,param_1 + 0x94,0);
-  uVar2 = FUN_010196cc(param_2,0x7f,0x84);
-  *(undefined4 *)(param_1 + 0xa4) = uVar2;
-  uVar2 = FUN_01019a0c(param_2);
-  *(undefined4 *)(param_1 + 0x98) = uVar2;
-  uVar2 = FUN_01019a0c(param_2);
-  *(undefined4 *)(param_1 + 0x9c) = uVar2;
-  swv_fcmp_b(uVar2,0);
-  if ((!(bool)in_CY) ||
-     (swv_fcmp_c(*(undefined4 *)(param_1 + 0x9c),FLOAT_90), (bool)in_CY && !(bool)in_ZR)) {
-    FUN_0102f7e0(uVar1);
-  }
-  uVar2 = FUN_01019a0c(param_2);
-  *(undefined4 *)(param_1 + 0xa0) = uVar2;
-  swv_fcmp_b(uVar2,0);
-  if ((!(bool)in_CY) ||
-     (swv_fcmp_c(*(undefined4 *)(param_1 + 0xa0),0x43000000), (bool)in_CY && !(bool)in_ZR)) {
-    FUN_0102f7e0(uVar1);
-  }
-  return;
+  swvM3G_ReadNode(light,stream);
+  *(uint32 *)(light + 0x88) = FUN_01019a0c((int32)stream);
+  *(uint32 *)(light + 0x8c) = FUN_01019a0c((int32)stream);
+  *(uint32 *)(light + 0x90) = FUN_01019a0c((int32)stream);
+  if ((swv_fcmp_b(*(uint32 *)(light + 0x88),0), *(float *)(light + 0x88) < 0.0f) ||
+      (swv_fcmp_b(*(uint32 *)(light + 0x8c),0), *(float *)(light + 0x8c) < 0.0f) ||
+      (swv_fcmp_b(*(uint32 *)(light + 0x90),0), *(float *)(light + 0x90) < 0.0f))
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  if ((swv_fcmp_a(*(uint32 *)(light + 0x88),0), *(float *)(light + 0x88) == 0.0f) &&
+      (swv_fcmp_a(*(uint32 *)(light + 0x8c),0), *(float *)(light + 0x8c) == 0.0f) &&
+      (swv_fcmp_a(*(uint32 *)(light + 0x90),0), *(float *)(light + 0x90) == 0.0f))
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  FUN_01019650((int32)stream,light + 0x94,0);
+  *(int32 *)(light + 0xa4) = FUN_010196cc((int32)stream,0x7f,0x84);
+  *(uint32 *)(light + 0x98) = FUN_01019a0c((int32)stream);
+  *(uint32 *)(light + 0x9c) = FUN_01019a0c((int32)stream);
+  if ((swv_fcmp_b(*(uint32 *)(light + 0x9c),0), *(float *)(light + 0x9c) < 0.0f) ||
+      (swv_fcmp_c(*(uint32 *)(light + 0x9c),FLOAT_90), !(*(float *)(light + 0x9c) <= 90.0f)))
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  *(uint32 *)(light + 0xa0) = FUN_01019a0c((int32)stream);
+  if ((swv_fcmp_b(*(uint32 *)(light + 0xa0),0), *(float *)(light + 0xa0) < 0.0f) ||
+      (swv_fcmp_c(*(uint32 *)(light + 0xa0),0x43000000), !(*(float *)(light + 0xa0) <= 128.0f)))
+    FUN_0102f7e0(INTEGER_MINUS_1202);
 }
 
 /* ==== 0x0101FB28  (file offset 0x1FB28)  swvM3G_ReadWorld ============================================ */
-/* WARNING: Removing unreachable block (ram,0x01026624) */
-
-void swvM3G_ReadWorld(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+/* M3G file format section 11.30, World (ObjectType 22): reads the record into the native World world: the
+   Group part (swvM3G_ReadGroup), the active camera (+0x88, a Camera or null, FUN_01019888 with 5) and the
+   background (+0x8c, a Background or null, FUN_01019888 with 4), each kept by FUN_01004848 (a reference
+   assignment on the objects' interface pointers, +4: the new one's count up, the old one released); then
+   the depths of the World's subtree are cached anew (swvNode_SetDepth(world, -1): the World 0, its
+   children 1, ...; a tail jump). Evidence: 0x0101fb28 - 0x0101fba4 (r0 and r1 kept for swvM3G_ReadGroup:
+   Ghidra had dropped them; `movs r1, r0` / `addne r1, r0, #4`, `subne r0, r0, #4`; `mvn r1, #0` / `b
+   0x01026614`: Ghidra had pasted swvNode_SetDepth's code here). */
+void swvM3G_ReadWorld(uint8 *world,uint8 *stream)
 
 {
-  int iVar1;
-  int iVar2;
-  
-  swvM3G_ReadGroup();
-  iVar2 = *(int *)(param_1 + 0x88);
-  iVar1 = FUN_01019888(param_2,5);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + 4;
-  }
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + 4;
-  }
-  iVar1 = FUN_01004848(iVar2,iVar1);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  *(int *)(param_1 + 0x88) = iVar1;
-  iVar2 = *(int *)(param_1 + 0x8c);
-  iVar1 = FUN_01019888(param_2,4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + 4;
-  }
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + 4;
-  }
-  iVar1 = FUN_01004848(iVar2,iVar1);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  *(int *)(param_1 + 0x8c) = iVar1;
-  *(undefined1 *)(param_1 + 0x3c) = 0;
-  for (iVar1 = *(int *)(param_1 + 0x38); iVar1 != 0; iVar1 = *(int *)(iVar1 + 0x34)) {
-    /* swvNode_SetDepth reads r0 and r1 only: Ghidra had added five phantom arguments */
-    swvNode_SetDepth((uint8 *)iVar1,*(uint8 *)(param_1 + 0x3c));
-  }
-  return;
+  uint8 *old;
+  uint8 *object;
+
+  swvM3G_ReadGroup(world,stream);
+  old = *(uint8 **)(world + 0x88);
+  object = (uint8 *)FUN_01019888((int32)stream,5);
+  object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                 object != NULL ? (int32)(object + 4) : 0);
+  if (object != NULL)
+    object -= 4;
+  *(uint8 **)(world + 0x88) = object;
+  old = *(uint8 **)(world + 0x8c);
+  object = (uint8 *)FUN_01019888((int32)stream,4);
+  object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                 object != NULL ? (int32)(object + 4) : 0);
+  if (object != NULL)
+    object -= 4;
+  *(uint8 **)(world + 0x8c) = object;
+  swvNode_SetDepth(world,-1);
 }
 
 /* ==== 0x0101FBA8  (file offset 0x1FBA8)  swvM3G_ReadCamera =========================================== */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-void swvM3G_ReadCamera(int param_1,undefined4 param_2)
+/* M3G file format section 11.5, Camera (ObjectType 5): reads the record into the native Camera camera: the
+   Node part (swvM3G_ReadNode), the projection type (+0x88: GENERIC 0x30, PARALLEL 0x31, PERSPECTIVE 0x32,
+   FUN_010196cc). GENERIC: the projection matrix (+0x94, FUN_0101977c, which also classifies it in its word
+   16, +0xd4; a tail jump, whose code Ghidra had pasted here). Otherwise (Float32s, FUN_01019a0c) the
+   height for PARALLEL (+0xdc, above 0) or fovy for PERSPECTIVE (+0xd8, above 0 and below 180), then the
+   aspect ratio (+0xe0, above 0), near (+0xe4) and far (+0xe8), whose difference must pass 0x377BA882
+   (about 1.5e-5) either way; for PERSPECTIVE both near and far above 0 (Camera.setPerspective /
+   setParallel: IllegalArgumentException); else -1202 (the file is bad; the last a tail jump to
+   FUN_0102f7e0, whose code Ghidra had pasted here). Evidence: 0x0101fba8 - 0x0101fcb8 (r0 and r1 kept for
+   swvM3G_ReadNode: Ghidra had dropped them; `addeq r1, r4, #0x94` / `beq 0x0101977c`; `bl 0x0103f534`
+   (swv_fcmp_b) / `bhi` past the error and `bls` / `blls` to it, `bl 0x0103f59c` (swv_fcmp_c) with the
+   float 180.0 (HIGH_WORD_OF_DOUBLE_5_POINT_629499534_TIMES_TEN_TO_THE_15, 0x43340000) / `bcc` past it;
+   `bl 0x0103f064` (swv_fsub) / `bic r0, r0, #0x80000000`; GUESS: an unordered compare sets the carry, as
+   __aeabi_cfcmple; FUN_01019a0c refuses NaNs anyway). */
+void swvM3G_ReadCamera(uint8 *camera,uint8 *stream)
 
 {
-  bool bVar1;
-  bool bVar2;
-  bool bVar3;
-  uint uVar4;
-  undefined4 uVar5;
-  int iVar6;
-  void *pvVar7;
-  int iVar8;
-  undefined4 uVar9;
-  undefined1 uVar10;
-  undefined1 uVar11;
-  
-  swvM3G_ReadNode();
-  uVar4 = FUN_010196cc(param_2,0x2f,0x33);
-  *(uint *)(param_1 + 0x88) = uVar4;
-  uVar9 = INTEGER_MINUS_1202;
-  if (uVar4 != 0x30) {
-    uVar11 = 0x30 < uVar4;
-    uVar10 = uVar4 == 0x31;
-    if ((bool)uVar10) {
-      uVar5 = FUN_01019a0c(param_2);
-      *(undefined4 *)(param_1 + 0xdc) = uVar5;
-      swv_fcmp_b(uVar5,0);
-      if ((bool)uVar11 && !(bool)uVar10) goto LAB_0101fc38;
+  int32 projection;
+  uint32 difference;
+  uint32 epsilon = WORD_HEXADECIMAL_377BA882;
+
+  swvM3G_ReadNode(camera,stream);
+  projection = FUN_010196cc((int32)stream,0x2f,0x33);
+  *(int32 *)(camera + 0x88) = projection;
+  if (projection == 0x30)
+    FUN_0101977c((int32)stream,(uint32 *)(camera + 0x94));
+  else {
+    if (projection == 0x31) {
+      *(uint32 *)(camera + 0xdc) = FUN_01019a0c((int32)stream);
+      if (swv_fcmp_b(*(uint32 *)(camera + 0xdc),0), *(float *)(camera + 0xdc) <= 0.0f)
+        FUN_0102f7e0(INTEGER_MINUS_1202);
     }
     else {
-      uVar5 = FUN_01019a0c(param_2);
-      *(undefined4 *)(param_1 + 0xd8) = uVar5;
-      swv_fcmp_b(uVar5,0);
-      if (((bool)uVar11 && !(bool)uVar10) &&
-         (swv_fcmp_c(*(undefined4 *)(param_1 + 0xd8),HIGH_WORD_OF_DOUBLE_5_POINT_629499534_TIMES_TEN_TO_THE_15), !(bool)uVar11))
-      goto LAB_0101fc38;
+      *(uint32 *)(camera + 0xd8) = FUN_01019a0c((int32)stream);
+      if ((swv_fcmp_b(*(uint32 *)(camera + 0xd8),0), *(float *)(camera + 0xd8) <= 0.0f) ||
+          (swv_fcmp_c(*(uint32 *)(camera + 0xd8),
+                      HIGH_WORD_OF_DOUBLE_5_POINT_629499534_TIMES_TEN_TO_THE_15),
+           !(*(float *)(camera + 0xd8) < 180.0f)))
+        FUN_0102f7e0(INTEGER_MINUS_1202);
     }
-    FUN_0102f7e0(uVar9);
-LAB_0101fc38:
-    uVar5 = FUN_01019a0c(param_2);
-    *(undefined4 *)(param_1 + 0xe0) = uVar5;
-    swv_fcmp_b(uVar5,0);
-    if (!(bool)uVar11 || (bool)uVar10) {
-      FUN_0102f7e0(uVar9);
-    }
-    uVar5 = FUN_01019a0c(param_2);
-    *(undefined4 *)(param_1 + 0xe4) = uVar5;
-    uVar5 = FUN_01019a0c(param_2);
-    *(undefined4 *)(param_1 + 0xe8) = uVar5;
-    uVar4 = swv_fsub(*(undefined4 *)(param_1 + 0xe4),uVar5);
-    swv_fcmp_b(uVar4 & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
-    if (!(bool)uVar11 || (bool)uVar10) {
-      FUN_0102f7e0(uVar9);
-    }
-    uVar11 = 0x31 < *(uint *)(param_1 + 0x88);
-    uVar10 = *(uint *)(param_1 + 0x88) == 0x32;
-    if ((bool)uVar10) {
-      swv_fcmp_b(*(undefined4 *)(param_1 + 0xe4),0);
-      if ((bool)uVar11 && !(bool)uVar10) {
-        swv_fcmp_b(*(undefined4 *)(param_1 + 0xe8),0);
-      }
-      if (!(bool)uVar11 || (bool)uVar10) {
-        iVar6 = FUN_0100f7d0();
-        FUN_01013bcc(*(undefined4 *)(iVar6 + *(int *)(iVar6 + 0x14) * 4 + -4),uVar9);
-        if (*(int *)(iVar6 + 0x14) != 0) {
-          FUN_01013bcc(*(undefined4 *)(iVar6 + *(int *)(iVar6 + 0x14) * 4 + -4),uVar9);
-        }
-        pvVar7 = helper_GetAppInstance();
-        uVar9 = *(undefined4 *)((int)pvVar7 + 0xc);
-        pvVar7 = helper_GetAppInstance();
-                    /* WARNING: Could not recover jumptable at 0x010398cc. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        (*((IShell *)*(int **)((int)pvVar7 + 0xc))->pvt->CloseApplet)((IShell *)uVar9,0);
-        return;
-      }
-    }
-    return;
+    *(uint32 *)(camera + 0xe0) = FUN_01019a0c((int32)stream);
+    if (swv_fcmp_b(*(uint32 *)(camera + 0xe0),0), *(float *)(camera + 0xe0) <= 0.0f)
+      FUN_0102f7e0(INTEGER_MINUS_1202);
+    *(uint32 *)(camera + 0xe4) = FUN_01019a0c((int32)stream);
+    *(uint32 *)(camera + 0xe8) = FUN_01019a0c((int32)stream);
+    difference = swv_fsub(*(uint32 *)(camera + 0xe4),*(uint32 *)(camera + 0xe8)) & 0x7fffffff;
+    if (swv_fcmp_b(difference,epsilon), *(float *)&difference <= *(float *)&epsilon)
+      FUN_0102f7e0(INTEGER_MINUS_1202);
+    if (*(int32 *)(camera + 0x88) == 0x32 &&
+        ((swv_fcmp_b(*(uint32 *)(camera + 0xe4),0), *(float *)(camera + 0xe4) <= 0.0f) ||
+         (swv_fcmp_b(*(uint32 *)(camera + 0xe8),0), *(float *)(camera + 0xe8) <= 0.0f)))
+      FUN_0102f7e0(INTEGER_MINUS_1202);
   }
-  uVar4 = 0;
-  do {
-    iVar6 = 0;
-    do {
-      uVar9 = FUN_01019a0c(param_2);
-      iVar8 = iVar6 + 1;
-      ((undefined4 *)(param_1 + 0x94))[iVar6 * 4 + uVar4] = uVar9;
-      uVar9 = WORD_HEXADECIMAL_377BA882;
-      iVar6 = iVar8;
-    } while (iVar8 < 4);
-    uVar4 = uVar4 + 1;
-    uVar11 = 3 < uVar4;
-    uVar10 = uVar4 == 4;
-  } while ((int)uVar4 < 4);
-  swv_fcmp_c(*(uint *)(param_1 + 0xa0) & 0x7fffffff,WORD_HEXADECIMAL_377BA882);
-  if ((((bool)uVar11 && !(bool)uVar10) ||
-      (swv_fcmp_c(*(uint *)(param_1 + 0xb0) & 0x7fffffff,uVar9), (bool)uVar11 && !(bool)uVar10)) ||
-     (swv_fcmp_c(*(uint *)(param_1 + 0xc0) & 0x7fffffff,uVar9), (bool)uVar11 && !(bool)uVar10)) {
-LAB_0101d6e0:
-    bVar1 = false;
-  }
-  else {
-    uVar4 = swv_fsub(*(undefined4 *)(param_1 + 0xd0),0x3f800000);
-    swv_fcmp_c(uVar4 & 0x7fffffff,uVar9);
-    if ((bool)uVar11 && !(bool)uVar10) goto LAB_0101d6e0;
-    bVar1 = true;
-  }
-  uVar10 = !bVar1;
-  uVar11 = true;
-  if ((bool)uVar10) {
-    *(undefined4 *)(param_1 + 0xd4) = 1;
-    return;
-  }
-  swv_fcmp_b(*(uint *)(param_1 + 0xc4) & 0x7fffffff,uVar9);
-  if ((((bool)uVar11 && !(bool)uVar10) ||
-      (swv_fcmp_b(*(uint *)(param_1 + 200) & 0x7fffffff,uVar9), (bool)uVar11 && !(bool)uVar10)) ||
-     (swv_fcmp_b(*(uint *)(param_1 + 0xcc) & 0x7fffffff,uVar9), (bool)uVar11 && !(bool)uVar10)) {
-    bVar1 = true;
-  }
-  else {
-    bVar1 = false;
-  }
-  swv_fcmp_c(*(uint *)(param_1 + 0x98) & 0x7fffffff,uVar9);
-  if ((((bool)uVar11 && !(bool)uVar10) ||
-      (swv_fcmp_c(*(uint *)(param_1 + 0x9c) & 0x7fffffff,uVar9), (bool)uVar11 && !(bool)uVar10)) ||
-     ((swv_fcmp_c(*(uint *)(param_1 + 0xa4) & 0x7fffffff,uVar9), (bool)uVar11 && !(bool)uVar10 ||
-      (((swv_fcmp_c(*(uint *)(param_1 + 0xac) & 0x7fffffff,uVar9), (bool)uVar11 && !(bool)uVar10 ||
-        (swv_fcmp_c(*(uint *)(param_1 + 0xb4) & 0x7fffffff,uVar9), (bool)uVar11 && !(bool)uVar10))
-       || (swv_fcmp_c(*(uint *)(param_1 + 0xb8) & 0x7fffffff,uVar9), (bool)uVar11 && !(bool)uVar10))
-      )))) {
-    bVar2 = false;
-  }
-  else {
-    bVar2 = true;
-  }
-  uVar4 = swv_fsub(*(undefined4 *)(param_1 + 0x94),0x3f800000);
-  swv_fcmp_c(uVar4 & 0x7fffffff,uVar9);
-  if (!(bool)uVar11 || (bool)uVar10) {
-    uVar4 = swv_fsub(*(undefined4 *)(param_1 + 0xa8),0x3f800000);
-    swv_fcmp_c(uVar4 & 0x7fffffff,uVar9);
-    if (!(bool)uVar11 || (bool)uVar10) {
-      uVar4 = swv_fsub(*(undefined4 *)(param_1 + 0xbc),0x3f800000);
-      swv_fcmp_c(uVar4 & 0x7fffffff,uVar9);
-      if (!(bool)uVar11 || (bool)uVar10) {
-        bVar3 = true;
-        goto LAB_0101d814;
-      }
-    }
-  }
-  bVar3 = false;
-LAB_0101d814:
-  if (!bVar1) {
-    if (bVar2) {
-      if (bVar3) {
-        uVar9 = 0x3f;
-      }
-      else {
-        uVar9 = 0xf;
-      }
-      *(undefined4 *)(param_1 + 0xd4) = uVar9;
-      return;
-    }
-    *(undefined4 *)(param_1 + 0xd4) = 7;
-    return;
-  }
-  if (!bVar2 || !bVar3) {
-    *(undefined4 *)(param_1 + 0xd4) = 3;
-    return;
-  }
-  *(undefined4 *)(param_1 + 0xd4) = 0x13;
-  return;
 }
 
 /* ==== 0x0101FCCC  (file offset 0x1FCCC)  swvM3G_ReadSprite3D ========================================= */
-void swvM3G_ReadSprite3D(int param_1,undefined4 param_2)
+/* GUESS: name. M3G file format section 11.23, Sprite (ObjectType 18; JSR-184 1.1's Sprite3D): reads the
+   record into the native Sprite3D sprite: the Node part (swvM3G_ReadNode), the image (+0x98, FUN_010197c4
+   with 0: an Image2D or Swerve's type 23) and the appearance (+0x9c, FUN_01019888 with 3),
+   each kept by FUN_01004848 (a reference assignment on the interface pointers, +4), error -1202 (the
+   file is bad) for none (Sprite3D(scaled, image, appearance): NullPointerException); isScaled (+0xa0, a
+   Boolean), then the crop rectangle cropX (+0x90), cropY (+0x94), cropWidth (+0x8c) and cropHeight
+   (+0x88) (Int32s, thunk_FUN_01019abc), error -1202 when the width or height is more than 1024 either
+   way (FUN_01039270, the magnitude; Sprite3D.setCrop: IllegalArgumentException). Evidence: 0x0101fccc -
+   0x0101fdbc (r0 and r1 kept for swvM3G_ReadNode: Ghidra had dropped them; the `str` order of the four
+   words, `cmp r0, #0x400` / `bgt`, `ble` past the error). */
+void swvM3G_ReadSprite3D(uint8 *sprite,uint8 *stream)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  undefined4 uVar3;
-  int iVar4;
-  
-  swvM3G_ReadNode();
-  iVar4 = *(int *)(param_1 + 0x98);
-  iVar2 = FUN_010197c4(param_2,0);
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + 4;
-  }
-  if (iVar4 != 0) {
-    iVar4 = iVar4 + 4;
-  }
-  iVar2 = FUN_01004848(iVar4,iVar2);
-  uVar1 = INTEGER_MINUS_1202;
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + -4;
-  }
-  *(int *)(param_1 + 0x98) = iVar2;
-  if (iVar2 == 0) {
-    FUN_0102f7e0(uVar1);
-  }
-  iVar4 = *(int *)(param_1 + 0x9c);
-  iVar2 = FUN_01019888(param_2,3);
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + 4;
-  }
-  if (iVar4 != 0) {
-    iVar4 = iVar4 + 4;
-  }
-  iVar2 = FUN_01004848(iVar4,iVar2);
-  if (iVar2 != 0) {
-    iVar2 = iVar2 + -4;
-  }
-  *(int *)(param_1 + 0x9c) = iVar2;
-  if (iVar2 == 0) {
-    FUN_0102f7e0(uVar1);
-  }
-  uVar3 = FUN_01019618(param_2);
-  *(undefined4 *)(param_1 + 0xa0) = uVar3;
-  uVar3 = thunk_FUN_01019abc(param_2);
-  *(undefined4 *)(param_1 + 0x90) = uVar3;
-  uVar3 = thunk_FUN_01019abc(param_2);
-  *(undefined4 *)(param_1 + 0x94) = uVar3;
-  uVar3 = thunk_FUN_01019abc(param_2);
-  *(undefined4 *)(param_1 + 0x8c) = uVar3;
-  uVar3 = thunk_FUN_01019abc(param_2);
-  *(undefined4 *)(param_1 + 0x88) = uVar3;
-  iVar2 = FUN_01039270(*(undefined4 *)(param_1 + 0x8c));
-  if ((0x400 < iVar2) || (iVar2 = FUN_01039270(*(undefined4 *)(param_1 + 0x88)), 0x400 < iVar2)) {
-    FUN_0102f7e0(uVar1);
-  }
-  return;
+  uint8 *old;
+  uint8 *object;
+
+  swvM3G_ReadNode(sprite,stream);
+  old = *(uint8 **)(sprite + 0x98);
+  object = (uint8 *)FUN_010197c4((int32)stream,0);
+  object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                 object != NULL ? (int32)(object + 4) : 0);
+  if (object != NULL)
+    object -= 4;
+  *(uint8 **)(sprite + 0x98) = object;
+  if (object == NULL)
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  old = *(uint8 **)(sprite + 0x9c);
+  object = (uint8 *)FUN_01019888((int32)stream,3);
+  object = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                 object != NULL ? (int32)(object + 4) : 0);
+  if (object != NULL)
+    object -= 4;
+  *(uint8 **)(sprite + 0x9c) = object;
+  if (object == NULL)
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  *(int32 *)(sprite + 0xa0) = FUN_01019618((int32)stream);
+  *(int32 *)(sprite + 0x90) = thunk_FUN_01019abc((int32)stream);
+  *(int32 *)(sprite + 0x94) = thunk_FUN_01019abc((int32)stream);
+  *(int32 *)(sprite + 0x8c) = thunk_FUN_01019abc((int32)stream);
+  *(int32 *)(sprite + 0x88) = thunk_FUN_01019abc((int32)stream);
+  if (FUN_01039270(*(int32 *)(sprite + 0x8c)) > 0x400 || FUN_01039270(*(int32 *)(sprite + 0x88)) > 0x400)
+    FUN_0102f7e0(INTEGER_MINUS_1202);
 }
 
 /* ==== 0x0101FDC4  (file offset 0x1FDC4)  swvVertexArray_SetShorts ==================================== */
@@ -36626,28 +36161,32 @@ int * FUN_01028abc(int *param_1)
 }
 
 /* ==== 0x01028AFC  (file offset 0x28AFC)  swvSectionStored_Construct ================================== */
-/* GUESS: name (not yet rewritten). The stored-section reader's constructor: the base constructor
-   (FUN_01027ec0, base vtable 0x0100200C; Ghidra dropped its argument), its vtable (0x010022D4), +8 = 0. */
-int * swvSectionStored_Construct(int *param_1)
+/* GUESS: name. The stored-section reader's constructor (swvSection_CreateStored calls it): the base
+   constructor FUN_01027ec0 (base vtable 0x0100200C), then its own vtable (0x010022D4) and +8 = 0;
+   returns section. Evidence: 0x01028afc - 0x01028b20 (`mov r4, r0` / `bl 0x01027ec0`, r0 the object:
+   Ghidra had dropped it; `str r0, [r4, #0]`, `str r0, [r4, #8]`, `mov r0, r4`). */
+uint8 *swvSectionStored_Construct(uint8 *section)
 
 {
-  FUN_01027ec0();
-  *param_1 = VTABLE_SECTION_STORED_OFFSET + 0x1028b14;
-  param_1[2] = 0;
-  return param_1;
+  FUN_01027ec0((int *)section);
+  *(uint32 *)section = VTABLE_SECTION_STORED_OFFSET + 0x1028b14;
+  *(int32 *)(section + 8) = 0;
+  return section;
 }
 
 /* ==== 0x01028B28  (file offset 0x28B28)  swvSectionZlib_Construct ==================================== */
-/* GUESS: name (not yet rewritten). The zlib-section reader's constructor: the base constructor, its
-   vtable (0x010022E0), +8 and +0xc = 0. */
-int * swvSectionZlib_Construct(int *param_1)
+/* GUESS: name. The zlib-section reader's constructor (swvSection_CreateZlib calls it): the base
+   constructor FUN_01027ec0 (base vtable 0x0100200C), then its own vtable (0x010022E0), +8 (the zlib
+   stream) and +0xc = 0; returns section. Evidence: 0x01028b28 - 0x01028b50 (`mov r4, r0` / `bl
+   0x01027ec0`, r0 the object: Ghidra had dropped it; the three `str`, `mov r0, r4`). */
+uint8 *swvSectionZlib_Construct(uint8 *section)
 
 {
-  FUN_01027ec0();
-  *param_1 = VTABLE_SECTION_ZLIB_OFFSET + 0x1028b40;
-  param_1[2] = 0;
-  param_1[3] = 0;
-  return param_1;
+  FUN_01027ec0((int *)section);
+  *(uint32 *)section = VTABLE_SECTION_ZLIB_OFFSET + 0x1028b40;
+  *(int32 *)(section + 8) = 0;
+  *(int32 *)(section + 0xc) = 0;
+  return section;
 }
 
 /* ==== 0x01028B58  (file offset 0x28B58)  FUN_01028b58 ================================================ */
@@ -36890,32 +36429,35 @@ int * FUN_01028f54(int *param_1,undefined4 param_2,undefined4 param_3,undefined4
 }
 
 /* ==== 0x01029010  (file offset 0x29010)  swvM3GReader_Construct ====================================== */
-/* GUESS: name (not yet rewritten). Constructs an M3G reader: its base (FUN_01028630), its vtables
-   (0x01002410 at +0, 0x01002438 at +4), the state 0, and its containers (+0x7c, +0xa0, +0xb0, +0xc0,
-   +0xd0). */
-int * swvM3GReader_Construct(int *param_1)
+/* GUESS: name. Constructs an M3G reader (swvM3GReader_New calls it): its base (FUN_01028630), its vtables
+   (0x01002410 at +0, 0x01002438 at +4), the record reader's state +0x70 .. +0x78 = 0, and its
+   containers: +0x7c (FUN_01029268), then four engine arrays (FUN_01027cb4 each, then its vtable): +0xa0
+   (0x01002598), +0xb0 (0x01001EC0), +0xc0 and +0xd0 (both 0x01001EE8); +0xe0 = 0. Returns reader.
+   Evidence: 0x01029010 - 0x010290ac (`mov r4, r0` / `bl 0x01028630`, r0 the object: Ghidra had dropped
+   it; `ldr r7, [0x10290c0]` / `add r7, pc, r7` kept for both last arrays). */
+uint8 *swvM3GReader_Construct(uint8 *reader)
 
 {
-  int iVar1;
-  
-  FUN_01028630();
-  *param_1 = DATA_AT_01002410_OFFSET + 0x1029028;
-  param_1[1] = DATA_AT_01002438_OFFSET + 0x1029034;
-  param_1[0x1c] = 0;
-  param_1[0x1d] = 0;
-  param_1[0x1e] = 0;
-  FUN_01029268(param_1 + 0x1f);
-  FUN_01027cb4(param_1 + 0x28);
-  param_1[0x28] = DATA_AT_01002598_OFFSET + 0x1029064;
-  FUN_01027cb4(param_1 + 0x2c);
-  param_1[0x2c] = DATA_AT_01001EC0_OFFSET + 0x102907c;
-  FUN_01027cb4(param_1 + 0x30);
-  iVar1 = DATA_AT_01001EE8_OFFSET_3 + 0x1029094;
-  param_1[0x30] = iVar1;
-  FUN_01027cb4(param_1 + 0x34);
-  param_1[0x34] = iVar1;
-  param_1[0x38] = 0;
-  return param_1;
+  uint32 vtable;
+
+  FUN_01028630((int *)reader);
+  *(uint32 *)reader = DATA_AT_01002410_OFFSET + 0x1029028;
+  *(uint32 *)(reader + 4) = DATA_AT_01002438_OFFSET + 0x1029034;
+  *(int32 *)(reader + 0x70) = 0;
+  *(int32 *)(reader + 0x74) = 0;
+  *(int32 *)(reader + 0x78) = 0;
+  FUN_01029268((int *)(reader + 0x7c));
+  FUN_01027cb4((int *)(reader + 0xa0));
+  *(uint32 *)(reader + 0xa0) = DATA_AT_01002598_OFFSET + 0x1029064;
+  FUN_01027cb4((int *)(reader + 0xb0));
+  *(uint32 *)(reader + 0xb0) = DATA_AT_01001EC0_OFFSET + 0x102907c;
+  FUN_01027cb4((int *)(reader + 0xc0));
+  vtable = DATA_AT_01001EE8_OFFSET_3 + 0x1029094;
+  *(uint32 *)(reader + 0xc0) = vtable;
+  FUN_01027cb4((int *)(reader + 0xd0));
+  *(uint32 *)(reader + 0xd0) = vtable;
+  *(int32 *)(reader + 0xe0) = 0;
+  return reader;
 }
 
 /* ==== 0x010290C4  (file offset 0x290C4)  FUN_010290c4 ================================================ */
@@ -37994,35 +37536,36 @@ void FUN_0102a910(int *param_1,int param_2)
 
 /* ==== 0x0102A974  (file offset 0x2A974)  swvSectionStored_Destroy ==================================== */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022D4 +0x0;
-   written from its disassembly (0x0102a974 - 0x0102a9a8). Destructor (GUESS): its class's vtable, then
-   the base destructor FUN_01029fc8 and, when param_2 is set, frees the object (helper_free's second
-   entry, 0x0102990c; a tail jump). */
-void swvSectionStored_Destroy(int *param_1,int param_2)
+   written from its disassembly (0x0102a974 - 0x0102a9a8). The stored-section reader's destructor
+   (GUESS): its class's vtable back, then the base destructor FUN_01029fc8 (with 0) and, when freeIt is
+   set, frees the object (helper_free's second entry, 0x0102990c; a tail jump: `ldmiane` / `bne`). The
+   M3G reader destroys its section reader through slot 0 with 1 (swvM3GReader_Feed, swvM3GReader_End,
+   swvM3GReader_Begin). */
+void swvSectionStored_Destroy(uint8 *section,int32 freeIt)
 
 {
-  *param_1 = VTABLE_SECTION_STORED_OFFSET_2 + 0x102a98c;
-  FUN_01029fc8(param_1,0);
-  if (param_2 != 0)
-    helper_free(param_1);
-  return;
+  *(uint32 *)section = VTABLE_SECTION_STORED_OFFSET_2 + 0x102a98c;
+  FUN_01029fc8((int *)section,0);
+  if (freeIt != 0)
+    helper_free(section);
 }
 
 /* ==== 0x0102A9B0  (file offset 0x2A9B0)  swvSectionZlib_Destroy ====================================== */
 /* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022E0 +0x0;
-   written from its disassembly (0x0102a9b0 - 0x0102a9fc). Destructor (GUESS): its class's vtable; the
-   member at +8 is torn down by thunk_FUN_01039670 when FUN_01039670 says 0; then the base destructor
-   FUN_01029fc8 and, when param_2 is set, frees the object (helper_free's second entry, 0x0102990c; a
-   tail jump). */
-void swvSectionZlib_Destroy(int *param_1,int param_2)
+   written from its disassembly (0x0102a9b0 - 0x0102a9fc). The zlib-section reader's destructor (GUESS):
+   its class's vtable back; the zlib stream at +8 torn down by thunk_FUN_01039670 when FUN_01039670 says 0
+   (both free it and clear the word, so the second finds nothing); then the base destructor FUN_01029fc8
+   (with 0) and, when freeIt is set, frees the object (helper_free's second entry, 0x0102990c; a tail
+   jump). Called through slot 0 with 1, like swvSectionStored_Destroy. */
+void swvSectionZlib_Destroy(uint8 *section,int32 freeIt)
 
 {
-  *param_1 = VTABLE_SECTION_ZLIB_OFFSET_2 + 0x102a9c8;
-  if (FUN_01039670(param_1 + 2) == 0)
-    thunk_FUN_01039670(param_1 + 2);
-  FUN_01029fc8(param_1,0);
-  if (param_2 != 0)
-    helper_free(param_1);
-  return;
+  *(uint32 *)section = VTABLE_SECTION_ZLIB_OFFSET_2 + 0x102a9c8;
+  if (FUN_01039670((uint32 *)(section + 8)) == 0)
+    thunk_FUN_01039670((uint32 *)(section + 8));
+  FUN_01029fc8((int *)section,0);
+  if (freeIt != 0)
+    helper_free(section);
 }
 
 /* ==== 0x0102AA04  (file offset 0x2AA04)  FUN_0102aa04 ================================================ */
@@ -39936,85 +39479,48 @@ int FUN_0102cc80(int param_1,int param_2)
 }
 
 /* ==== 0x0102CC94  (file offset 0x2CC94)  adler32 ===================================================== */
-/* zlib's adler32(adler, buf, len) (not yet rewritten): Mark Adler's checksum, the sums kept modulo
-   65521 (BASE) and reduced every 5552 bytes (NMAX), from zlib's adler32.c; starts from 1. Used by the
-   M3G loader's section checksums (swvM3GReader_Feed, FUN_010265fc), by zlib's inflate setup (FUN_010311c4
-   passes its address, the word at 0x010311c0, as the check function) and by swvArchive_Open. Reached
-   through thunk_adler32 (0x01039594). */
-uint adler32(uint param_1,byte *param_2,uint param_3)
+/* zlib's adler32(adler, buf, len), from zlib's adler32.c (Mark Adler's checksum; starts from 1): the sums
+   s1 (the low half) and s2 (the high half) kept modulo 65521 (BASE), reduced every 5552 bytes (NMAX) and
+   the bytes taken 16 at a time (zlib's DO16, which the binary has unrolled) then one at a time; 1 for a
+   NULL buf.
+   The reductions are FUN_010002c8 (ARM's __rt_udiv: the quotient in r0, the remainder in r1, which the
+   code keeps; its prototype gives the quotient, so the remainder is the value less quotient * 65521).
+   Used by the M3G loader's section checksums (swvM3GReader_Feed, FUN_010265fc), by zlib's inflate setup
+   (FUN_010311c4 passes its address, the word at 0x010311c0, as the check function) and by
+   swvArchive_Open. Reached through thunk_adler32 (0x01039594). Evidence: 0x0102cc94 - 0x0102cdf0 (`mov
+   r5, r0, lsl #16` / `lsr #16`, `moveq r0, #1` / `beq`; `subs r12, r7, #0x1000` / `subcss r12, r12,
+   #0x5b0` the NMAX test, `cmp r0, #0x10` / `bge` the 16-byte blocks; `bl 0x010002c8` / `mov r5, r1` and
+   `mov r6, r1`; `orr r0, r5, r6, lsl #16`). */
+uint32 adler32(uint32 adler,const uint8 *buf,uint32 len)
 
 {
-  uint uVar1;
-  undefined4 uVar2;
-  uint uVar3;
-  int iVar4;
-  int iVar5;
-  int iVar6;
-  int iVar7;
-  int iVar8;
-  int iVar9;
-  int iVar10;
-  int iVar11;
-  int iVar12;
-  int iVar13;
-  int iVar14;
-  int iVar15;
-  int iVar16;
-  int iVar17;
-  int iVar18;
-  uint extraout_r1;
-  uint extraout_r1_00;
-  uint uVar19;
-  
-  uVar2 = INTEGER_65521;
-  uVar1 = INTEGER_5552;
-  uVar19 = param_1 >> 0x10;
-  uVar3 = param_1;
-  if (param_2 == (byte *)0x0) {
-    uVar3 = 1;
-  }
-  param_1 = param_1 & 0xffff;
-  if (param_2 != (byte *)0x0) {
-    while (param_3 != 0) {
-      uVar3 = uVar1;
-      if (param_3 < 0x1000 || param_3 - 0x1000 < 0x5b0) {
-        uVar3 = param_3;
+  uint32 s1 = adler & 0xffff;
+  uint32 s2 = adler >> 16;
+  uint32 checksum = 1;
+  uint32 k;
+  int32 i;
+
+  if (buf != NULL) {
+    while (len != 0) {
+      k = len < INTEGER_5552 ? len : INTEGER_5552;
+      len -= k;
+      for (; k >= 16; k -= 16) {
+        for (i = 0; i < 16; i++) {
+          s1 += buf[i];
+          s2 += s1;
+        }
+        buf += 16;
       }
-      param_3 = param_3 - uVar3;
-      for (; 0xf < (int)uVar3; uVar3 = uVar3 - 0x10) {
-        iVar4 = *param_2 + param_1;
-        iVar5 = (uint)param_2[1] + iVar4;
-        iVar6 = (uint)param_2[2] + iVar5;
-        iVar7 = (uint)param_2[3] + iVar6;
-        iVar8 = (uint)param_2[4] + iVar7;
-        iVar9 = (uint)param_2[5] + iVar8;
-        iVar10 = (uint)param_2[6] + iVar9;
-        iVar11 = (uint)param_2[7] + iVar10;
-        iVar12 = (uint)param_2[8] + iVar11;
-        iVar13 = (uint)param_2[9] + iVar12;
-        iVar14 = (uint)param_2[10] + iVar13;
-        iVar15 = (uint)param_2[0xb] + iVar14;
-        iVar16 = (uint)param_2[0xc] + iVar15;
-        iVar17 = (uint)param_2[0xd] + iVar16;
-        iVar18 = (uint)param_2[0xe] + iVar17;
-        param_1 = (uint)param_2[0xf] + iVar18;
-        uVar19 = uVar19 + iVar4 + iVar5 + iVar6 + iVar7 + iVar8 + iVar9 + iVar10 + iVar11 + iVar12 +
-                 iVar13 + iVar14 + iVar15 + iVar16 + iVar17 + iVar18 + param_1;
-        param_2 = param_2 + 0x10;
+      for (; k != 0; k--) {
+        s1 += *buf++;
+        s2 += s1;
       }
-      for (; uVar3 != 0; uVar3 = uVar3 - 1) {
-        param_1 = *param_2 + param_1;
-        uVar19 = uVar19 + param_1;
-        param_2 = param_2 + 1;
-      }
-      FUN_010002c8(uVar2,param_1);
-      FUN_010002c8(INTEGER_65521,uVar19);
-      param_1 = extraout_r1;
-      uVar19 = extraout_r1_00;
+      s1 -= FUN_010002c8(INTEGER_65521,s1) * INTEGER_65521;
+      s2 -= FUN_010002c8(INTEGER_65521,s2) * INTEGER_65521;
     }
-    uVar3 = param_1 | uVar19 << 0x10;
+    checksum = s1 | s2 << 16;
   }
-  return uVar3;
+  return checksum;
 }
 
 /* ==== 0x0102CDFC  (file offset 0x2CDFC)  swv_Create_AnimationController ============================== */
@@ -53063,81 +52569,15 @@ undefined4 FUN_01039510(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x01039594  (file offset 0x39594)  thunk_adler32 =============================================== */
-/* A branch to adler32 (0x0102cc94). */
-uint thunk_adler32(uint param_1,byte *param_2,uint param_3)
+/* A branch to adler32 (0x0102cc94): `b 0x0102cc94` (Ghidra had pasted the target's code here). The M3G
+   reader (swvM3GReader_Feed), FUN_010265fc (its section lengths) and swvArchive_Open call it. */
+uint32 thunk_adler32(uint32 adler,const uint8 *buf,uint32 len)
 
 {
-  uint uVar1;
-  undefined4 uVar2;
-  uint uVar3;
-  int iVar4;
-  int iVar5;
-  int iVar6;
-  int iVar7;
-  int iVar8;
-  int iVar9;
-  int iVar10;
-  int iVar11;
-  int iVar12;
-  int iVar13;
-  int iVar14;
-  int iVar15;
-  int iVar16;
-  int iVar17;
-  int iVar18;
-  uint extraout_r1;
-  uint extraout_r1_00;
-  uint uVar19;
-  
-  uVar2 = INTEGER_65521;
-  uVar1 = INTEGER_5552;
-  uVar19 = param_1 >> 0x10;
-  uVar3 = param_1;
-  if (param_2 == (byte *)0x0) {
-    uVar3 = 1;
-  }
-  param_1 = param_1 & 0xffff;
-  if (param_2 != (byte *)0x0) {
-    while (param_3 != 0) {
-      uVar3 = uVar1;
-      if (param_3 < 0x1000 || param_3 - 0x1000 < 0x5b0) {
-        uVar3 = param_3;
-      }
-      param_3 = param_3 - uVar3;
-      for (; 0xf < (int)uVar3; uVar3 = uVar3 - 0x10) {
-        iVar4 = *param_2 + param_1;
-        iVar5 = (uint)param_2[1] + iVar4;
-        iVar6 = (uint)param_2[2] + iVar5;
-        iVar7 = (uint)param_2[3] + iVar6;
-        iVar8 = (uint)param_2[4] + iVar7;
-        iVar9 = (uint)param_2[5] + iVar8;
-        iVar10 = (uint)param_2[6] + iVar9;
-        iVar11 = (uint)param_2[7] + iVar10;
-        iVar12 = (uint)param_2[8] + iVar11;
-        iVar13 = (uint)param_2[9] + iVar12;
-        iVar14 = (uint)param_2[10] + iVar13;
-        iVar15 = (uint)param_2[0xb] + iVar14;
-        iVar16 = (uint)param_2[0xc] + iVar15;
-        iVar17 = (uint)param_2[0xd] + iVar16;
-        iVar18 = (uint)param_2[0xe] + iVar17;
-        param_1 = (uint)param_2[0xf] + iVar18;
-        uVar19 = uVar19 + iVar4 + iVar5 + iVar6 + iVar7 + iVar8 + iVar9 + iVar10 + iVar11 + iVar12 +
-                 iVar13 + iVar14 + iVar15 + iVar16 + iVar17 + iVar18 + param_1;
-        param_2 = param_2 + 0x10;
-      }
-      for (; uVar3 != 0; uVar3 = uVar3 - 1) {
-        param_1 = *param_2 + param_1;
-        uVar19 = uVar19 + param_1;
-        param_2 = param_2 + 1;
-      }
-      FUN_010002c8(uVar2,param_1);
-      FUN_010002c8(INTEGER_65521,uVar19);
-      param_1 = extraout_r1;
-      uVar19 = extraout_r1_00;
-    }
-    uVar3 = param_1 | uVar19 << 0x10;
-  }
-  return uVar3;
+  uint32 checksum;
+
+  checksum = adler32(adler,buf,len);
+  return checksum;
 }
 
 /* ==== 0x01039598  (file offset 0x39598)  helper_malloc =============================================== */
