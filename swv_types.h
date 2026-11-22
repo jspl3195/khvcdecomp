@@ -378,6 +378,9 @@ typedef struct SwvKeyframeSequence {
  *                       +0x8 the z reference (swvNode_AlignmentReferenceZ; NULL: the reference
  *                            given to Node.align, JSR-184 1.1 Node.setAlignment)
  *                       +0xc the y reference (swvNode_AlignmentReferenceY; NULL as for z)
+ *                     A reference of -1: its node was destroyed (swvNode_ForgetAlignmentReference,
+ *                     through the alignment reference trackers below); Node.align (FUN_0100a02c) then
+ *                     raises -1300 (GUESS: engine behaviour; 1.1 has no such case)
  *   +0x30             the parent (NULL for a root; swvNode_Depth walks it, FUN_010048e4 too,
  *                     swvNode_SameSceneGraph to the root, swvNode_HasAncestor / IsAncestorOf for an
  *                     ancestor)
@@ -388,6 +391,24 @@ typedef struct SwvKeyframeSequence {
  * The alignment targets (JSR-184 1.1, Node constants): NONE 0x90, ORIGIN 0x91, X_AXIS 0x92, Y_AXIS 0x93,
  * Z_AXIS 0x94; swvNode_SetAlignment (Node.setAlignment) stores them, the range 0x90 - 0x94 is checked by
  * its callers (-1301 in the BREW wrapper FUN_01034b78, -1202 in the M3G Node reader, FUN_010196cc). */
+
+/* ---- Node alignment reference trackers (no struct yet) -----------------------------------------
+ * For each node used as an alignment reference the engine keeps a tracker of the nodes aligned to it,
+ * so that the reference's destruction can be marked in their alignment blocks (GUESS: the names). The
+ * tracker list, made on first use (swvAlignment_Trackers; the engine globals, FUN_0102ecec, +0x28):
+ * 0x14 bytes, engine vtable 0x010023E0, at +4 an engine dynamic array (vtable 0x01002664; +8 the
+ * trackers, +0xc their count, +0x10 the capacity). A tracker: 0x18 bytes, engine vtable 0x01002890
+ * (slot +0 swvAlignmentTracker_Destroy):
+ *   +0x04             the reference node (a plain pointer: no reference count is taken)
+ *   +0x08             an engine dynamic array (vtable 0x010023CC) of the aligned nodes: +0xc the
+ *                     items, +0x10 the count, +0x14 the capacity
+ * swvNode_SetAlignment unregisters the node (swvAlignment_Unregister: out of the trackers of its old
+ * references, an emptied tracker destroyed), then registers it with the tracker of each new non-NULL
+ * reference (swvAlignment_Register, swvAlignment_RegisterReference: found or made). The Node destructor
+ * (FUN_0102c1dc) unregisters the node and destroys the tracker of which it is the reference
+ * (swvAlignment_ReferenceDestroyed): swvAlignmentTracker_Clear sets that reference to -1 in every node
+ * aligned to it (swvNode_ForgetAlignmentReference), so Node.align refuses it later (-1300) instead of
+ * reading a freed node. */
 
 /* ---- VertexBuffer, the native object (no struct yet) -------------------------------------------
  * Its fields (GUESS: the names; the BREW slots, kh_types.h SwerveVertexBufferVtbl, and

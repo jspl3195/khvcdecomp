@@ -3191,35 +3191,43 @@ void FUN_0100300c(int param_1,uint param_2,uint param_3,int param_4,int param_5,
   return;
 }
 
-/* ==== 0x010031A0  (file offset 0x031A0)  FUN_010031a0 ================================================ */
-void FUN_010031a0(int param_1,int param_2)
+/* ==== 0x010031A0  (file offset 0x031A0)  swvAlignmentTracker_AddNode ================================= */
+/* GUESS: name. Adds the aligned node node to the alignment reference tracker tracker (swv_types.h, the
+   alignment reference trackers): nothing for a NULL node or one already in its node array (+8: +0xc the
+   items, +0x10 the count, read once for the search); otherwise appended, the array grown first when full
+   (its engine vtable +4, given the new capacity from FUN_0102df78(count + 1, capacity) and the count).
+   Called by swvAlignment_RegisterReference. Ghidra had read r2 / r3 as more parameters (r0 / r1 are only
+   pushed, the node kept on the stack). Evidence: 0x010031a0 - 0x01003230 (`push {r0, r1, r4, lr}` / `ldr
+   r12, [sp, #4]` / `cmp r12, #0`, `ldr r3, [r0, #0x10]` before the loop, `cmp r2, r12` / `beq` to the
+   end, `add r4, r0, #8`, `cmp r0, r1` / `bne`, `bl 0x0102df78` with r1 the capacity, `blx r3` with r2 the
+   count, `str r1, [r4, #8]`, the store of `[sp, #4]`). */
+void swvAlignmentTracker_AddNode(uint8 *tracker,uint8 *node)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  int iVar3;
-  code *pcVar4;
-  
-  if (param_2 != 0) {
-    for (iVar3 = 0; iVar3 < *(int *)(param_1 + 0x10); iVar3 = iVar3 + 1) {
-      if (*(int *)(*(int *)(param_1 + 0xc) + iVar3 * 4) == param_2) {
-        return;
+  uint8 *nodes = tracker + 8;
+  int32 count;
+  int32 capacity;
+  int32 vtable;
+  int32 i;
+
+  if (node != NULL) {
+    count = *(int32 *)(tracker + 0x10);
+    for (i = 0; i < count && (*(uint8 ***)(tracker + 0xc))[i] != node; i++)
+      ;
+    if (i >= count) {
+      count = *(int32 *)(nodes + 8);
+      if (count == *(int32 *)(nodes + 0xc)) {
+        capacity = FUN_0102df78(count + 1,*(int32 *)(nodes + 0xc));
+        vtable = *(int32 *)nodes;
+        /* engine virtual call, slot +0x4: the node array's grow (GUESS; as in FUN_01023184), r1 the new
+           capacity, r2 the count */
+        (*(code *)(*(int32 *)(vtable + 4) + vtable))(nodes,capacity,*(int32 *)(nodes + 8));
       }
+      count = *(int32 *)(nodes + 8);
+      *(int32 *)(nodes + 8) = count + 1;
+      (*(uint8 ***)(nodes + 4))[count] = node;
     }
-    if (*(int *)(param_1 + 0x10) == *(int *)(param_1 + 0x14)) {
-      iVar3 = param_1;
-      uVar1 = FUN_0102df78(*(int *)(param_1 + 0x10) + 1);
-      iVar2 = *(int *)(param_1 + 8);
-      pcVar4 = (code *)(*(int *)(iVar2 + 4) + iVar2);
-      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
-         the object's class) */
-      (*pcVar4)((int *)(param_1 + 8),uVar1,*(undefined4 *)(param_1 + 0x10),pcVar4,iVar3);
-    }
-    iVar3 = *(int *)(param_1 + 0x10);
-    *(int *)(param_1 + 0x10) = iVar3 + 1;
-    *(int *)(*(int *)(param_1 + 0xc) + iVar3 * 4) = param_2;
   }
-  return;
 }
 
 /* ==== 0x01003234  (file offset 0x03234)  swvSkinnedMesh_AddTransform ================================= */
@@ -7869,25 +7877,16 @@ void FUN_01008624(int param_1,int param_2,int param_3,int param_4,int param_5,in
   return;
 }
 
-/* ==== 0x01008744  (file offset 0x08744)  FUN_01008744 ================================================ */
-void FUN_01008744(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+/* ==== 0x01008744  (file offset 0x08744)  swvAlignmentTracker_SetReference ============================ */
+/* GUESS: name. Gives the alignment reference tracker tracker its reference node (+4) and empties its node
+   array (+8; FUN_01023184 to 0 items, a tail jump that Ghidra took in, and with it two phantom
+   parameters). Called by swvAlignment_RegisterReference on a new tracker. Evidence: 0x01008744 -
+   0x01008750 (`str r1, [r0, #4]`, `mov r1, #0`, `add r0, r0, #8`, `b 0x01023184`). */
+void swvAlignmentTracker_SetReference(uint8 *tracker,uint8 *reference)
 
 {
-  int iVar1;
-  code *pcVar2;
-  
-  *(undefined4 *)(param_1 + 4) = param_2;
-  if (*(int *)(param_1 + 0x10) != 0) {
-    if (*(int *)(param_1 + 0x14) < 0) {
-      iVar1 = *(int *)(param_1 + 8);
-      pcVar2 = (code *)(*(int *)(iVar1 + 4) + iVar1);
-      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
-         the object's class) */
-      (*pcVar2)((int *)(param_1 + 8),0,*(int *)(param_1 + 0x10),pcVar2,param_4);
-    }
-    *(undefined4 *)(param_1 + 0x10) = 0;
-  }
-  return;
+  *(uint8 **)(tracker + 4) = reference;
+  FUN_01023184((int *)(tracker + 8),0);
 }
 
 /* ==== 0x01008754  (file offset 0x08754)  FUN_01008754 ================================================ */
@@ -9101,7 +9100,7 @@ uint8 *swv_Graphics3D_New(void)
   }
   *(int32 *)(graphics + 0xa8) = thunk_FUN_01009ad0();
   if (graphics != NULL)
-    FUN_0101715c((int)FUN_0100f8e8());
+    FUN_0101715c((int)FUN_0100f8e8(),(int32)graphics);
   return graphics;
 }
 
@@ -9158,7 +9157,7 @@ uint8 *swvSection_CreateStored(void *sink)
   }
   swvSection_SetSink(section,sink);
   if (section != NULL) {
-    FUN_0101715c(FUN_0100f8e8());
+    FUN_0101715c(FUN_0100f8e8(),(int32)section);
     created = section;
   }
   return created;
@@ -9185,7 +9184,7 @@ uint8 *swvSection_CreateZlib(void *sink)
   }
   swvSectionZlib_Init(section,sink);
   if (section != NULL) {
-    FUN_0101715c(FUN_0100f8e8());
+    FUN_0101715c(FUN_0100f8e8(),(int32)section);
     created = section;
   }
   return created;
@@ -9702,21 +9701,25 @@ void FUN_01009e4c(int param_1,void *param_2)
   return;
 }
 
-/* ==== 0x01009E54  (file offset 0x09E54)  FUN_01009e54 ================================================ */
-void FUN_01009e54(int param_1)
+/* ==== 0x01009E54  (file offset 0x09E54)  swvAlignmentTracker_Clear =================================== */
+/* GUESS: name. Empties the alignment reference tracker tracker (swv_types.h, the alignment reference
+   trackers) unless it has no reference (+4): every node of its array (+8: +0xc the items, +0x10 the
+   count) forgets the reference (swvNode_ForgetAlignmentReference, which sets it to -1), the array is sized
+   to 0 (FUN_01023184) and the reference cleared. Only swvAlignmentTracker_Destroy calls it, so the nodes
+   aligned to a destroyed reference node end up with -1 there. Evidence: 0x01009e54 - 0x01009ea8 (`ldr r0,
+   [r0, #4]` / `cmp r0, #0` / `beq`, the loop reloading +0xc, +4 and +0x10, `bl 0x010151f0`, `add r0, r4,
+   #8` / `mov r1, #0` / `bl 0x01023184`, `str r0, [r4, #4]` with 0). */
+void swvAlignmentTracker_Clear(uint8 *tracker)
 
 {
-  int iVar1;
-  
-  if (*(int *)(param_1 + 4) != 0) {
-    for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0x10); iVar1 = iVar1 + 1) {
-      FUN_010151f0(*(undefined4 *)(*(int *)(param_1 + 0xc) + iVar1 * 4),*(undefined4 *)(param_1 + 4)
-                  );
-    }
-    FUN_01023184(param_1 + 8,0);
-    *(undefined4 *)(param_1 + 4) = 0;
+  int32 i;
+
+  if (*(uint8 **)(tracker + 4) != NULL) {
+    for (i = 0; i < *(int32 *)(tracker + 0x10); i++)
+      swvNode_ForgetAlignmentReference((*(uint8 ***)(tracker + 0xc))[i],*(uint8 **)(tracker + 4));
+    FUN_01023184((int *)(tracker + 8),0);
+    *(uint8 **)(tracker + 4) = NULL;
   }
-  return;
 }
 
 /* ==== 0x01009EAC  (file offset 0x09EAC)  FUN_01009eac ================================================ */
@@ -9793,9 +9796,10 @@ uint * FUN_01009eac(int param_1,int param_2,int *param_3)
    the reference given to Node.align (the node align was called on when that was NULL), used where an
    alignment reference is NULL (JSR-184 1.1, Node.setAlignment). The targets come from
    swvNode_AlignmentTargetZ (z) and swvNode_AlignmentTargetY (y), the references from
-   swvNode_AlignmentReferenceZ / Y; error -1300 (IllegalStateException) for a reference of -1 (GUESS:
-   unresolved), the node itself, a reference with no path to the node's parent (FUN_010048e4 gives 0:
-   another scene graph, and so also any aligned node without a parent) or a descendant of the node
+   swvNode_AlignmentReferenceZ / Y; error -1300 (IllegalStateException) for a reference of -1 (a
+   destroyed reference node: swvNode_ForgetAlignmentReference; GUESS: engine behaviour, 1.1 has no such
+   case), the node itself, a reference with no path to the node's parent (FUN_010048e4 gives 0: another
+   scene graph, and so also any aligned node without a parent) or a descendant of the node
    (swvNode_IsAncestorOf), the 1.1 IllegalStateExceptions for a node aligned to itself or its descendant
    and for a reference in another scene graph. The reference's transform is taken to the node's parent
    and then by the node's +0x20 (FUN_0102c7a8, FUN_01029650; GUESS: the T component alone, as the spec's
@@ -13752,39 +13756,50 @@ undefined4 FUN_0100f7e0(void)
   return *(undefined4 *)(iVar1 + 0x30);
 }
 
-/* ==== 0x0100F810  (file offset 0x0F810)  FUN_0100f810 ================================================ */
-/* WARNING: Removing unreachable block (ram,0x0100f8b0) */
-/* WARNING: Removing unreachable block (ram,0x0100f8bc) */
-
-undefined4 FUN_0100f810(void)
+/* ==== 0x0100F810  (file offset 0x0F810)  swvAlignment_Trackers ======================================= */
+/* GUESS: name. The list of alignment reference trackers (swv_types.h, the alignment reference trackers),
+   kept in the engine globals (FUN_0102ecec, +0x28) and made on first use: 0x14 bytes (swv_New_2), the
+   base engine vtable 0x0100203C and then its own, 0x010023E0, and at +4 an engine dynamic array
+   (FUN_01027cb4, then its vtable 0x01002664); the new list is handed to the engine's guard (globals +0x10,
+   FUN_0100f8e8; FUN_0101807c) and let go of (FUN_010171a0) once it is stored. The second hand-over test
+   is dead code (the list was moved out of the held pointer just before: an inlined reference holder's
+   release, which Ghidra dropped): it is kept. Evidence: 0x0100f810 - 0x0100f8d8 (`ldr r0, [r0, #0x28]` /
+   `bne`, `mov r0, #0x14` / `bl 0x0102cbe0`, the three `add r0, pc, r0` / `str`, `bl 0x01027cb4` on r4 +
+   4, `bl 0x0100f8e8` / `bl 0x0101807c`, `mov r5, #0` / `bl 0x010171a0` / `mov r4, r5`, `str r5, [r0,
+   #0x28]`, the unreachable `bl 0x010171a0` / `blxne r2` with r1 1 at 0x0100f8b0 - 0x0100f8cc, `ldr r0,
+   [r0, #0x28]` from FUN_0102ecec again). */
+uint8 *swvAlignment_Trackers(void)
 
 {
-  int iVar1;
-  int *piVar2;
-  undefined4 uVar3;
-  int *piVar4;
-  
-  iVar1 = FUN_0102ecec();
-  if (*(int *)(iVar1 + 0x28) == 0) {
-    piVar2 = (int *)swv_New_2(0x14);
-    if (piVar2 != (int *)0x0) {
-      *piVar2 = DATA_AT_0100203C_OFFSET_4 + 0x100f844;
-      *piVar2 = DATA_AT_010023E0_OFFSET + 0x100f850;
-      FUN_01027cb4(piVar2 + 1);
-      piVar2[1] = DATA_AT_01002664_OFFSET + 0x100f868;
-      uVar3 = FUN_0100f8e8();
-      FUN_0101807c(uVar3,piVar2);
+  uint8 *list;
+  uint8 *held;
+  int32 vtable;
+
+  if (*(uint8 **)(FUN_0102ecec() + 0x28) == NULL) {
+    list = (uint8 *)swv_New_2(0x14);
+    if (list != NULL) {
+      *(uint32 *)list = DATA_AT_0100203C_OFFSET_4 + 0x100f844;
+      *(uint32 *)list = DATA_AT_010023E0_OFFSET + 0x100f850;
+      FUN_01027cb4((int *)(list + 4));
+      *(uint32 *)(list + 4) = DATA_AT_01002664_OFFSET + 0x100f868;
+      FUN_0101807c((int)FUN_0100f8e8(),(undefined4)list);
     }
-    piVar4 = (int *)0x0;
-    if (piVar2 != (int *)0x0) {
-      FUN_010171a0(piVar2);
-      piVar4 = piVar2;
+    held = NULL;
+    if (list != NULL) {
+      FUN_010171a0((int32)list);
+      held = list;
+      list = NULL;
     }
-    iVar1 = FUN_0102ecec();
-    *(int **)(iVar1 + 0x28) = piVar4;
+    *(uint8 **)(FUN_0102ecec() + 0x28) = held;
+    if (list != NULL) {
+      /* dead code: list is NULL here */
+      FUN_010171a0((int32)list);
+      vtable = *(int32 *)list;
+      /* engine virtual call, slot +0x0: the list's destructor, deleting (1) */
+      (*(code *)(*(int32 *)vtable + vtable))(list,1);
+    }
   }
-  iVar1 = FUN_0102ecec();
-  return *(undefined4 *)(iVar1 + 0x28);
+  return *(uint8 **)(FUN_0102ecec() + 0x28);
 }
 
 /* ==== 0x0100F8E8  (file offset 0x0F8E8)  FUN_0100f8e8 ================================================ */
@@ -15386,9 +15401,9 @@ int32 swvNode_AlignmentTargetY(const uint8 *node)
 /* The reference node of a node's z alignment (JSR-184 1.1, Node.getAlignmentReference(Z_AXIS)): its
    alignment block's (+0x24) +8, or NULL when it has no block (the 1.1 default (NONE, null)). NULL
    stands for the reference given to Node.align (JSR-184 1.1, Node.setAlignment; before: read as the
-   node's parent); FUN_0100a02c treats -1 as an error. Evidence: 0x010119fc - 0x01011a08 (`ldr r0, [r0,
-   #0x24]`, `cmp r0, #0`, `ldrne r0, [r0, #8]`). The z target is swvNode_AlignmentTargetZ (the block's
-   +0). */
+   node's parent); -1 is a destroyed reference node (swvNode_ForgetAlignmentReference), which
+   FUN_0100a02c treats as an error. Evidence: 0x010119fc - 0x01011a08 (`ldr r0, [r0, #0x24]`, `cmp r0,
+   #0`, `ldrne r0, [r0, #8]`). The z target is swvNode_AlignmentTargetZ (the block's +0). */
 uint8 *swvNode_AlignmentReferenceZ(const uint8 *node)
 
 {
@@ -18732,23 +18747,30 @@ void FUN_01015128(undefined4 *param_1)
   return;
 }
 
-/* ==== 0x010151F0  (file offset 0x151F0)  FUN_010151f0 ================================================ */
-void FUN_010151f0(int param_1,int param_2)
+/* ==== 0x010151F0  (file offset 0x151F0)  swvNode_ForgetAlignmentReference ============================ */
+/* GUESS: name. Makes the node node forget the alignment reference reference, a node being destroyed or
+   the node leaving its tracker: in node's alignment block (+0x24; nothing without one) the z reference
+   (+8) and the y reference (+0xc) equal to reference are set to -1, which Node.align (FUN_0100a02c) then
+   refuses with -1300 (SWVE_ILLEGAL_STATE). -1 is not NULL, which would stand for the reference given to
+   Node.align (JSR-184 1.1, Node.setAlignment): a destroyed reference does not fall back to it. JSR-184
+   1.1 has no such case (a Java node cannot be freed while another refers to it): engine behaviour
+   (GUESS). Called by swvAlignmentTracker_RemoveNode and swvAlignmentTracker_Clear (swv_types.h, the
+   alignment reference trackers). The block is read again before the y test. No result (r0 is left the
+   block; no caller reads it). Evidence: 0x010151f0 - 0x0101521c (`ldr r2, [r0, #0x24]` / `cmp r2, #0` /
+   `bxeq lr`, `mvn r12, #0`, `cmp r3, r1` / `streq r12, [r2, #8]`, `ldr r0, [r0, #0x24]`, `cmp r2, r1` /
+   `streq r12, [r0, #0xc]`). */
+void swvNode_ForgetAlignmentReference(uint8 *node,const uint8 *reference)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 0x24);
-  if (iVar1 == 0) {
-    return;
+  uint32 *alignment = *(uint32 **)(node + 0x24);
+
+  if (alignment != NULL) {
+    if (alignment[2] == (uint32)reference)
+      alignment[2] = 0xffffffff;
+    alignment = *(uint32 **)(node + 0x24);
+    if (alignment[3] == (uint32)reference)
+      alignment[3] = 0xffffffff;
   }
-  if (*(int *)(iVar1 + 8) == param_2) {
-    *(undefined4 *)(iVar1 + 8) = 0xffffffff;
-  }
-  if (*(int *)(*(int *)(param_1 + 0x24) + 0xc) == param_2) {
-    *(undefined4 *)(*(int *)(param_1 + 0x24) + 0xc) = 0xffffffff;
-  }
-  return;
 }
 
 /* ==== 0x01015220  (file offset 0x15220)  swvM3GReader_End ============================================ */
@@ -20058,15 +20080,19 @@ void FUN_01017120(undefined4 param_1,int param_2)
 }
 
 /* ==== 0x0101715C  (file offset 0x1715C)  FUN_0101715c ================================================ */
-void FUN_0101715c(int param_1)
+/* GUESS (not yet named): the engine's guard (globals +0x10, FUN_0100f8e8; GUESS: the objects under
+   construction, so that an error unwinding the stack can free them) lets go of its last held object:
+   FUN_010171b8 on its current frame (+8 the frames, +0x14 how many are open: the last one) and object (a
+   tail jump; Ghidra took FUN_010171b8 in). object is passed on but not read (the frame's last slot is
+   dropped, whichever object it holds). FUN_0101807c is the hold. Evidence: 0x0101715c - 0x01017170 (`ldr
+   r2, [r0, #0x14]`, `ldr r0, [r0, #8]`, `sub r2, r2, #1`, `ldr r0, [r0]` at r2 * 4, `b 0x010171b8` with
+   r1 unchanged). */
+void FUN_0101715c(int32 guard,int32 object)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(*(int *)(param_1 + 8) + (*(int *)(param_1 + 0x14) + -1) * 4);
-  FUN_01023184(iVar1 + 4,*(int *)(iVar1 + 0xc) + -1);
-  *(undefined4 *)(*(int *)(iVar1 + 8) + (*(int *)(iVar1 + 0xc) + -1) * 4) = 0;
-  return;
+  uint8 *const *frames = *(uint8 *const *const *)((uint8 *)guard + 8);
+
+  FUN_010171b8(frames[*(const int32 *)((uint8 *)guard + 0x14) - 1],object);
 }
 
 /* ==== 0x01017174  (file offset 0x17174)  FUN_01017174 ================================================ */
@@ -20087,21 +20113,28 @@ void FUN_01017190(int param_1)
 }
 
 /* ==== 0x010171A0  (file offset 0x171A0)  FUN_010171a0 ================================================ */
-void FUN_010171a0(void)
+/* GUESS (not yet named): the engine's guard (FUN_0100f8e8) lets go of object, the last object
+   FUN_0101807c gave it, once the caller has stored it: FUN_0101715c on the guard and object (a tail
+   jump; Ghidra took FUN_0101715c's code in and read no parameter). Evidence: 0x010171a0 - 0x010171b4
+   (`mov r4, r0`, `bl 0x0100f8e8`, `mov r1, r4`, `b 0x0101715c`). */
+void FUN_010171a0(int32 object)
 
 {
-  int iVar1;
-  int iVar2;
-  undefined4 in_r3;
-  undefined4 unaff_r4;
-  undefined4 in_lr;
-  
-  iVar1 = FUN_0100f8e8();
-  iVar2 = *(int *)(iVar1 + 0x14) + -1;
-  iVar1 = *(int *)(*(int *)(iVar1 + 8) + iVar2 * 4);
-  FUN_01023184(iVar1 + 4,*(int *)(iVar1 + 0xc) + -1,iVar2,in_r3,unaff_r4,in_lr);
-  *(undefined4 *)(*(int *)(iVar1 + 8) + (*(int *)(iVar1 + 0xc) + -1) * 4) = 0;
-  return;
+  FUN_0101715c((int32)FUN_0100f8e8(),object);
+}
+
+/* ==== 0x010171B8  (file offset 0x171B8)  FUN_010171b8 ================================================ */
+/* A routine Ghidra has no function for (FUN_0101715c reaches it by a tail jump, and Ghidra took it into
+   that function's body), written from its disassembly (0x010171b8 - 0x010171e8). Drops the last slot of
+   the guard frame frame (GUESS: see FUN_0101715c): its engine dynamic array (+4: +8 the items, +0xc the
+   count) sized to count - 1 (FUN_01023184), then the new last slot cleared (FUN_0101807c keeps an empty
+   slot at the end). object is passed on by FUN_0101715c but not read. Evidence: `ldr r0, [r0, #0xc]` /
+   `sub r1, r0, #1` / `add r0, r4, #4` / `bl 0x01023184`, the count read again, `str r1, [r0]` with 0. */
+void FUN_010171b8(uint8 *frame,int32 object)
+
+{
+  FUN_01023184((int *)(frame + 4),*(int32 *)(frame + 0xc) - 1);
+  (*(uint32 **)(frame + 8))[*(int32 *)(frame + 0xc) - 1] = 0;
 }
 
 /* ==== 0x010171EC  (file offset 0x171EC)  FUN_010171ec ================================================ */
@@ -22365,66 +22398,21 @@ void FUN_01019cc0(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x01019EBC  (file offset 0x19EBC)  FUN_01019ebc ================================================ */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-void FUN_01019ebc(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+/* ==== 0x01019EBC  (file offset 0x19EBC)  swvAlignment_Register ======================================= */
+/* GUESS: name. Registers the aligned node node with the trackers of its two alignment references
+   (swv_types.h, the alignment reference trackers): swvAlignment_RegisterReference on the tracker list
+   (swvAlignment_Trackers) with the z reference (swvNode_AlignmentReferenceZ), then with the y reference
+   (swvNode_AlignmentReferenceY; a tail jump, which Ghidra took in, reading r1 - r3 as more parameters).
+   Only swvNode_SetAlignment calls it, after storing the new alignment block. Evidence: 0x01019ebc -
+   0x01019efc (`bl 0x0100f810`, `bl 0x010119fc` / `bl 0x0101ffbc`, `bl 0x010119d8`, `pop` / `b
+   0x0101ffbc`, r0 the list, r1 the node, r2 the reference each time). */
+void swvAlignment_Register(uint8 *node)
 
 {
-  int iVar1;
-  undefined4 uVar2;
-  int iVar3;
-  int iVar4;
-  int *piVar5;
-  undefined4 unaff_r4;
-  undefined4 unaff_r5;
-  int *piVar6;
-  
-  iVar1 = FUN_0100f810();
-  uVar2 = (int)swvNode_AlignmentReferenceZ((uint8 *)param_1);
-  FUN_0101ffbc(iVar1,param_1,uVar2);
-  iVar3 = (int)swvNode_AlignmentReferenceY((uint8 *)param_1);
-  if (iVar3 != 0) {
-    for (iVar4 = 0; iVar4 < *(int *)(iVar1 + 0xc); iVar4 = iVar4 + 1) {
-      if (*(int *)(*(int *)(*(int *)(iVar1 + 8) + iVar4 * 4) + 4) == iVar3) {
-        FUN_010031a0(*(undefined4 *)(*(int *)(iVar1 + 8) + iVar4 * 4),param_1,*(int *)(iVar1 + 0xc),
-                     param_4,iVar3,param_4,unaff_r4,unaff_r5);
-        return;
-      }
-    }
-    piVar5 = (int *)swv_New_2(0x18);
-    if (piVar5 != (int *)0x0) {
-      *piVar5 = DATA_AT_0100203C_OFFSET_7 + 0x102003c;
-      *piVar5 = DATA_AT_01002890_OFFSET + 0x1020048;
-      piVar5[1] = 0;
-      FUN_01027cb4(piVar5 + 2);
-      piVar5[2] = DATA_AT_010023CC_OFFSET + 0x1020060;
-      uVar2 = FUN_0100f8e8();
-      FUN_0101807c(uVar2,piVar5);
-    }
-    FUN_01008744(piVar5,iVar3);
-    FUN_010031a0(piVar5,param_1);
-    piVar6 = piVar5;
-    if (*(int *)(iVar1 + 0xc) == *(int *)(iVar1 + 0x10)) {
-      uVar2 = FUN_0102df78(*(int *)(iVar1 + 0xc) + 1);
-      iVar3 = *(int *)(iVar1 + 4);
-      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
-         the object's class) */
-      (*(code *)(*(int *)(iVar3 + 4) + iVar3))
-                ((int *)(iVar1 + 4),uVar2,*(undefined4 *)(iVar1 + 0xc));
-    }
-    iVar3 = *(int *)(iVar1 + 0xc);
-    *(int *)(iVar1 + 0xc) = iVar3 + 1;
-    *(int **)(*(int *)(iVar1 + 8) + iVar3 * 4) = piVar6;
-    if (piVar5 != (int *)0x0) {
-      iVar1 = FUN_0100f8e8(piVar5);
-      iVar1 = *(int *)(*(int *)(iVar1 + 8) + (*(int *)(iVar1 + 0x14) + -1) * 4);
-      FUN_01023184(iVar1 + 4,*(int *)(iVar1 + 0xc) + -1);
-      *(undefined4 *)(*(int *)(iVar1 + 8) + (*(int *)(iVar1 + 0xc) + -1) * 4) = 0;
-      return;
-    }
-  }
-  return;
+  uint8 *trackers = swvAlignment_Trackers();
+
+  swvAlignment_RegisterReference(trackers,node,swvNode_AlignmentReferenceZ(node));
+  swvAlignment_RegisterReference(trackers,node,swvNode_AlignmentReferenceY(node));
 }
 
 /* ==== 0x01019F00  (file offset 0x19F00)  FUN_01019f00 ================================================ */
@@ -22463,48 +22451,51 @@ void swv_NativeRelease(uint8 *object)
   }
 }
 
-/* ==== 0x01019F54  (file offset 0x19F54)  FUN_01019f54 ================================================ */
-void FUN_01019f54(undefined4 param_1)
+/* ==== 0x01019F54  (file offset 0x19F54)  swvAlignment_Unregister ===================================== */
+/* GUESS: name. Takes the aligned node node out of the trackers of its alignment references (swv_types.h,
+   the alignment reference trackers), when the list (the engine globals, FUN_0102ecec, +0x28) exists: for
+   each tracker whose reference (+4) is node's y or z reference (swvNode_AlignmentReferenceY, then Z;
+   both always called), swvAlignmentTracker_RemoveNode; a tracker left with no node (+0x10) is removed
+   from the list (swvAlignment_RemoveTracker, the last one moved into its place, which the loop then
+   visits) and destroyed (its engine vtable +0, deleting). Called by swvNode_SetAlignment before it drops
+   the old alignment block, and by the Node destructor (FUN_0102c1dc) for a node with one. Ghidra had read
+   a 64-bit result of FUN_0102ecec and lost the destructor's arguments. Evidence: 0x01019f54 - 0x0101a00c
+   (`ldr r0, [r0, #0x28]` / `popeq`, `add r6, r0, #4`, `bl 0x010119d8` / `moveq r8, #1`, `bl 0x010119fc`
+   / `orrs r0, r8, r0` / `beq`, `bl 0x0101a154`, `ldr r0, [r5, #0x10]` / `bne`, `bl 0x0101a2a4` with r0
+   the list + 4 and r1 the index, `movne r1, #1` / `blxne r2`, `sub r4, r4, #1`, the count reloaded at
+   the loop test). */
+void swvAlignment_Unregister(uint8 *node)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  int iVar5;
-  int extraout_r1;
-  int extraout_r1_00;
-  int extraout_r1_01;
-  int iVar6;
-  int *piVar7;
-  undefined8 uVar8;
-  
-  uVar8 = FUN_0102ecec();
-  iVar5 = (int)((ulonglong)uVar8 >> 0x20);
-  iVar1 = *(int *)((int)uVar8 + 0x28);
-  if (iVar1 != 0) {
-    for (iVar6 = 0; iVar6 < *(int *)(iVar1 + 0xc); iVar6 = iVar6 + 1) {
-      piVar7 = *(int **)(*(int *)(iVar1 + 8) + iVar6 * 4);
-      iVar2 = (int)swvNode_AlignmentReferenceY((uint8 *)param_1);
-      iVar4 = piVar7[1];
-      iVar3 = (int)swvNode_AlignmentReferenceZ((uint8 *)param_1);
-      iVar5 = piVar7[1];
-      if ((iVar2 == iVar4 || iVar3 == iVar5) &&
-         (FUN_0101a154(piVar7,param_1), iVar5 = extraout_r1, piVar7[4] == 0)) {
-        FUN_0101a2a4(iVar1 + 4,iVar6);
-        iVar5 = extraout_r1_00;
-        if (piVar7 != (int *)0x0) {
-          /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there
-             (by the object's class); slot 0 is the destructor */
-          (*(code *)(*(int *)*piVar7 + *piVar7))();
-          iVar5 = extraout_r1_01;
+  uint8 *trackers = *(uint8 **)(FUN_0102ecec() + 0x28);
+  uint8 *list;
+  uint8 *tracker;
+  int32 yMatch;
+  int32 zMatch;
+  int32 vtable;
+  int32 i;
+
+  if (trackers != NULL) {
+    list = trackers + 4;
+    for (i = 0; i < *(int32 *)(list + 8); i++) {
+      tracker = (*(uint8 ***)(list + 4))[i];
+      yMatch = swvNode_AlignmentReferenceY(node) == *(uint8 **)(tracker + 4);
+      zMatch = swvNode_AlignmentReferenceZ(node) == *(uint8 **)(tracker + 4);
+      if ((yMatch | zMatch) != 0) {
+        swvAlignmentTracker_RemoveNode(tracker,node);
+        if (*(int32 *)(tracker + 0x10) == 0) {
+          swvAlignment_RemoveTracker(list,i);
+          if (tracker != NULL) {
+            vtable = *(int32 *)tracker;
+            /* engine virtual call, slot +0x0: the tracker's destructor (swvAlignmentTracker_Destroy),
+               deleting (1) */
+            (*(code *)(*(int32 *)vtable + vtable))(tracker,1);
+          }
+          i--;
         }
-        iVar6 = iVar6 + -1;
       }
     }
-    return;
   }
-  return;
 }
 
 /* ==== 0x0101A010  (file offset 0x1A010)  swvObject3D_RemoveAnimationTrackValue ======================= */
@@ -22588,61 +22579,68 @@ void FUN_0101a104(int param_1,int param_2)
   return;
 }
 
-/* ==== 0x0101A154  (file offset 0x1A154)  FUN_0101a154 ================================================ */
-void FUN_0101a154(int param_1,int param_2)
+/* ==== 0x0101A154  (file offset 0x1A154)  swvAlignmentTracker_RemoveNode ============================== */
+/* GUESS: name. Takes the aligned node node out of the alignment reference tracker tracker (swv_types.h,
+   the alignment reference trackers; nothing for a NULL node): each slot of its node array (+8: +0xc the
+   items, +0x10 the count) holding node gets the last node, the count is dropped, and node forgets the
+   tracker's reference (+4; swvNode_ForgetAlignmentReference, which sets it to -1). The slot just filled is
+   not looked at again. Only swvAlignment_Unregister calls it. Evidence: 0x0101a154 - 0x0101a1ac (`movs r6,
+   r1` / `popeq`, `cmp r2, r6` / `bne`, `sub r1, r1, #1` / `str r1, [r5, #0x10]`, `ldr r1, [r0, r1, lsl
+   #2]` / `str r1, [r0, r4, lsl #2]`, `ldr r1, [r5, #4]` / `bl 0x010151f0`, `add r4, r4, #1`). */
+void swvAlignmentTracker_RemoveNode(uint8 *tracker,uint8 *node)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  
-  if (param_2 == 0) {
-    return;
-  }
-  for (iVar3 = 0; iVar3 < *(int *)(param_1 + 0x10); iVar3 = iVar3 + 1) {
-    iVar1 = *(int *)(param_1 + 0xc);
-    if (*(int *)(iVar1 + iVar3 * 4) == param_2) {
-      iVar2 = *(int *)(param_1 + 0x10) + -1;
-      *(int *)(param_1 + 0x10) = iVar2;
-      *(undefined4 *)(iVar1 + iVar3 * 4) = *(undefined4 *)(iVar1 + iVar2 * 4);
-      FUN_010151f0(param_2,*(undefined4 *)(param_1 + 4));
+  uint8 **nodes;
+  int32 count;
+  int32 i;
+
+  if (node != NULL) {
+    for (i = 0; i < *(int32 *)(tracker + 0x10); i++) {
+      nodes = *(uint8 ***)(tracker + 0xc);
+      if (nodes[i] == node) {
+        count = *(int32 *)(tracker + 0x10) - 1;
+        *(int32 *)(tracker + 0x10) = count;
+        nodes[i] = nodes[count];
+        swvNode_ForgetAlignmentReference(node,*(uint8 **)(tracker + 4));
+      }
     }
   }
-  return;
 }
 
-/* ==== 0x0101A1B0  (file offset 0x1A1B0)  FUN_0101a1b0 ================================================ */
-void FUN_0101a1b0(int param_1)
+/* ==== 0x0101A1B0  (file offset 0x1A1B0)  swvAlignment_ReferenceDestroyed ============================= */
+/* GUESS: name. The node node is being destroyed (the Node destructor, FUN_0102c1dc): when the tracker
+   list (the engine globals, FUN_0102ecec, +0x28) exists and has a tracker whose reference (+4) is node
+   (the first; the count read once), that tracker is removed from the list (swvAlignment_RemoveTracker)
+   and destroyed (its engine vtable +0, deleting; a tail jump): swvAlignmentTracker_Destroy, whose
+   swvAlignmentTracker_Clear gives every node aligned to node -1 for that reference. Evidence: 0x0101a1b0
+   - 0x0101a22c (`ldr r0, [r0, #0x28]` / `popeq`, `add r0, r0, #4` / `ldr r3, [r0, #8]`, `ldr r2, [r2,
+   #4]` / `cmp r2, r4`, `bl 0x0101a2a4` with r1 the index, `movne r1, #1` / `bxne r2`). */
+void swvAlignment_ReferenceDestroyed(uint8 *node)
 
 {
-  int iVar1;
-  int iVar2;
-  int *piVar3;
-  
-  iVar1 = FUN_0102ecec();
-  iVar1 = *(int *)(iVar1 + 0x28);
-  if (iVar1 == 0) {
-    return;
-  }
-  iVar2 = 0;
-  while( true ) {
-    if (*(int *)(iVar1 + 0xc) <= iVar2) {
-      return;
+  uint8 *trackers = *(uint8 **)(FUN_0102ecec() + 0x28);
+  uint8 *list;
+  uint8 *tracker;
+  int32 count;
+  int32 vtable;
+  int32 i;
+
+  if (trackers != NULL) {
+    list = trackers + 4;
+    count = *(int32 *)(list + 8);
+    for (i = 0; i < count && *(uint8 **)((*(uint8 ***)(list + 4))[i] + 4) != node; i++)
+      ;
+    if (i < count) {
+      tracker = (*(uint8 ***)(list + 4))[i];
+      swvAlignment_RemoveTracker(list,i);
+      if (tracker != NULL) {
+        vtable = *(int32 *)tracker;
+        /* engine virtual call, slot +0x0: the tracker's destructor (swvAlignmentTracker_Destroy),
+           deleting (1) */
+        (*(code *)(*(int32 *)vtable + vtable))(tracker,1);
+      }
     }
-    if (*(int *)(*(int *)(*(int *)(iVar1 + 8) + iVar2 * 4) + 4) == param_1) break;
-    iVar2 = iVar2 + 1;
   }
-  piVar3 = *(int **)(*(int *)(iVar1 + 8) + iVar2 * 4);
-  FUN_0101a2a4();
-  if (piVar3 == (int *)0x0) {
-    return;
-  }
-                    /* WARNING: Could not recover jumptable at 0x0101a218. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
-     object's class); slot 0 is the destructor */
-  (*(code *)(*(int *)*piVar3 + *piVar3))(piVar3,1);
-  return;
 }
 
 /* ==== 0x0101A230  (file offset 0x1A230)  FUN_0101a230 ================================================ */
@@ -22673,17 +22671,21 @@ void FUN_0101a230(int param_1)
   return;
 }
 
-/* ==== 0x0101A2A4  (file offset 0x1A2A4)  FUN_0101a2a4 ================================================ */
-void FUN_0101a2a4(int param_1,int param_2)
+/* ==== 0x0101A2A4  (file offset 0x1A2A4)  swvAlignment_RemoveTracker ================================== */
+/* GUESS: name. Removes the item index from the engine dynamic array list (+4 the items, +8 the count):
+   the count dropped and the last item moved into the slot. Used on the tracker list's array (the list +
+   4) by swvAlignment_Unregister and swvAlignment_ReferenceDestroyed (swv_types.h, the alignment reference
+   trackers). Evidence: 0x0101a2a4 - 0x0101a2bc (`sub r2, r2, #1` / `str r2, [r0, #8]`, `ldr r2, [r0, r2,
+   lsl #2]` / `str r2, [r0, r1, lsl #2]`). */
+void swvAlignment_RemoveTracker(uint8 *list,int32 index)
 
 {
-  int iVar1;
-  
-  iVar1 = *(int *)(param_1 + 8) + -1;
-  *(int *)(param_1 + 8) = iVar1;
-  *(undefined4 *)(*(int *)(param_1 + 4) + param_2 * 4) =
-       *(undefined4 *)(*(int *)(param_1 + 4) + iVar1 * 4);
-  return;
+  int32 count = *(int32 *)(list + 8) - 1;
+  uint8 **items;
+
+  *(int32 *)(list + 8) = count;
+  items = *(uint8 ***)(list + 4);
+  items[index] = items[count];
 }
 
 /* ==== 0x0101A2C0  (file offset 0x1A2C0)  FUN_0101a2c0 ================================================ */
@@ -27705,72 +27707,80 @@ void swvAnimationController_SetActiveIntervalValue(uint8 *controller,int32 start
   *(int32 *)(controller + 0x20) = end;
 }
 
-/* ==== 0x0101FFBC  (file offset 0x1FFBC)  FUN_0101ffbc ================================================ */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-void FUN_0101ffbc(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
+/* ==== 0x0101FFBC  (file offset 0x1FFBC)  swvAlignment_RegisterReference ============================== */
+/* GUESS: name. Registers the aligned node node with the tracker of its alignment reference reference
+   (nothing for NULL) in the tracker list trackers (swv_types.h, the alignment reference trackers; +8 the
+   trackers, +0xc the count, read once for the search): the tracker whose reference (+4) it is gets the
+   node (swvAlignmentTracker_AddNode); without one, a new tracker (0x18 bytes, swv_New_2; the base engine
+   vtable 0x0100203C and then its own, 0x01002890, no reference, at +8 an engine dynamic array,
+   FUN_01027cb4, then its vtable 0x010023CC) is held by the engine's guard (FUN_0100f8e8, FUN_0101807c),
+   given the reference (swvAlignmentTracker_SetReference) and the node, appended to the list (its array
+   grown first when full: its engine vtable +4, with the new capacity from FUN_0102df78(count + 1,
+   capacity) and the count) and let go of by the guard (FUN_010171a0, a tail jump that Ghidra took in).
+   Called twice by swvAlignment_Register (z, then y). Evidence: 0x0101ffbc - 0x010200f4 (`movs r6, r2` /
+   `beq`, `ldr r2, [r5, #0xc]` before the loop, `bl 0x010031a0` on a match, `mov r0, #0x18` / `bl
+   0x0102cbe0`, `stm r4, {r0, r1}` with r1 0, `bl 0x01027cb4` on r4 + 8, `bl 0x0100f8e8` / `bl 0x0101807c`
+   when not NULL, `bl 0x01008744`, `bl 0x010031a0`, `add r5, r5, #4`, `bl 0x0102df78` with r1 the
+   capacity, `blx r3` with r2 the count, `popne` / `bne 0x010171a0`). */
+void swvAlignment_RegisterReference(uint8 *trackers,uint8 *node,uint8 *reference)
 
 {
-  int iVar1;
-  int *piVar2;
-  undefined4 uVar3;
-  int *piVar4;
-  
-  if (param_3 != 0) {
-    for (iVar1 = 0; iVar1 < *(int *)(param_1 + 0xc); iVar1 = iVar1 + 1) {
-      if (*(int *)(*(int *)(*(int *)(param_1 + 8) + iVar1 * 4) + 4) == param_3) {
-        FUN_010031a0(*(undefined4 *)(*(int *)(param_1 + 8) + iVar1 * 4),param_2,
-                     *(int *)(param_1 + 0xc),param_4,param_3,param_4);
-        return;
+  uint8 *list;
+  uint8 *tracker;
+  int32 count;
+  int32 capacity;
+  int32 vtable;
+  int32 i;
+
+  if (reference != NULL) {
+    count = *(int32 *)(trackers + 0xc);
+    for (i = 0; i < count && *(uint8 **)((*(uint8 ***)(trackers + 8))[i] + 4) != reference; i++)
+      ;
+    if (i < count)
+      swvAlignmentTracker_AddNode((*(uint8 ***)(trackers + 8))[i],node);
+    else {
+      tracker = (uint8 *)swv_New_2(0x18);
+      if (tracker != NULL) {
+        *(uint32 *)tracker = DATA_AT_0100203C_OFFSET_7 + 0x102003c;
+        *(uint32 *)tracker = DATA_AT_01002890_OFFSET + 0x1020048;
+        *(uint8 **)(tracker + 4) = NULL;
+        FUN_01027cb4((int *)(tracker + 8));
+        *(uint32 *)(tracker + 8) = DATA_AT_010023CC_OFFSET + 0x1020060;
+        FUN_0101807c((int)FUN_0100f8e8(),(undefined4)tracker);
       }
-    }
-    piVar2 = (int *)swv_New_2(0x18);
-    if (piVar2 != (int *)0x0) {
-      *piVar2 = DATA_AT_0100203C_OFFSET_7 + 0x102003c;
-      *piVar2 = DATA_AT_01002890_OFFSET + 0x1020048;
-      piVar2[1] = 0;
-      FUN_01027cb4(piVar2 + 2);
-      piVar2[2] = DATA_AT_010023CC_OFFSET + 0x1020060;
-      uVar3 = FUN_0100f8e8();
-      FUN_0101807c(uVar3,piVar2);
-    }
-    FUN_01008744(piVar2,param_3);
-    FUN_010031a0(piVar2,param_2);
-    piVar4 = piVar2;
-    if (*(int *)(param_1 + 0xc) == *(int *)(param_1 + 0x10)) {
-      uVar3 = FUN_0102df78(*(int *)(param_1 + 0xc) + 1);
-      iVar1 = *(int *)(param_1 + 4);
-      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
-         the object's class) */
-      (*(code *)(*(int *)(iVar1 + 4) + iVar1))
-                ((int *)(param_1 + 4),uVar3,*(undefined4 *)(param_1 + 0xc));
-    }
-    iVar1 = *(int *)(param_1 + 0xc);
-    *(int *)(param_1 + 0xc) = iVar1 + 1;
-    *(int **)(*(int *)(param_1 + 8) + iVar1 * 4) = piVar4;
-    if (piVar2 != (int *)0x0) {
-      iVar1 = FUN_0100f8e8(piVar2);
-      iVar1 = *(int *)(*(int *)(iVar1 + 8) + (*(int *)(iVar1 + 0x14) + -1) * 4);
-      FUN_01023184(iVar1 + 4,*(int *)(iVar1 + 0xc) + -1);
-      *(undefined4 *)(*(int *)(iVar1 + 8) + (*(int *)(iVar1 + 0xc) + -1) * 4) = 0;
-      return;
+      swvAlignmentTracker_SetReference(tracker,reference);
+      swvAlignmentTracker_AddNode(tracker,node);
+      list = trackers + 4;
+      count = *(int32 *)(list + 8);
+      if (count == *(int32 *)(list + 0xc)) {
+        capacity = FUN_0102df78(count + 1,*(int32 *)(list + 0xc));
+        vtable = *(int32 *)list;
+        /* engine virtual call, slot +0x4: the tracker array's grow (GUESS; as in FUN_01023184), r1 the
+           new capacity, r2 the count */
+        (*(code *)(*(int32 *)(vtable + 4) + vtable))(list,capacity,*(int32 *)(list + 8));
+      }
+      count = *(int32 *)(list + 8);
+      *(int32 *)(list + 8) = count + 1;
+      (*(uint8 ***)(list + 4))[count] = tracker;
+      if (tracker != NULL)
+        FUN_010171a0((int32)tracker);
     }
   }
-  return;
 }
 
 /* ==== 0x01020104  (file offset 0x20104)  swvNode_SetAlignment ======================================== */
-/* GUESS: name. JSR-184 1.1, Node.setAlignment(zRef, zTarget, yRef, yTarget) on the node node: error -1301
-   (IllegalArgumentException) when a reference is the node itself, or when both references are the same
-   node with the same target other than NONE (0x90); the old alignment record (+0x24) dropped (FUN_01019f54
-   on the node, then helper_free); unless all is NONE and NULL, a new 16-byte record (swv_New, zeroed): +0
-   the z target, +4 the y target, +8 the z reference, +0xc the y reference (as swvNode_AlignmentTargetZ / Y
-   and swvNode_AlignmentReferenceZ / Y read them), then FUN_01019ebc on the node. The targets' range is
-   checked by the callers (swv_types.h, the Node notes). Evidence: 0x01020104 - 0x010201d4 (`cmp r1, r0` /
-   `cmpne r8, r4` / `bleq`, `cmp r6, r8` / `bne`, `cmp r7, #0x90` / `cmpne r5, #0x90` / `beq`, `cmp r7, r5`
-   / `bleq`, `bl 0x01019f54` / `bl 0x01029910`, the `cmpeq` chain, `mov r0, #0x10` / `bl 0x0102cc00`,
-   `stmiane r0!, {r1, r2}` / `stmiane r0, {r1, r2}`, the four `str` through +0x24, `bl 0x01019ebc` with r0
-   the node). */
+/* GUESS: name. JSR-184 1.1, Node.setAlignment(zRef, zTarget, yRef, yTarget) on the node node: error
+   -1301 (IllegalArgumentException) when a reference is the node itself, or when both references are the
+   same node with the same target other than NONE (0x90); the old alignment record (+0x24) dropped
+   (swvAlignment_Unregister on the node, then helper_free); unless all is NONE and NULL, a new 16-byte
+   record (swv_New, zeroed): +0 the z target, +4 the y target, +8 the z reference, +0xc the y reference
+   (as swvNode_AlignmentTargetZ / Y and swvNode_AlignmentReferenceZ / Y read them), then
+   swvAlignment_Register on the node (swv_types.h, the alignment reference trackers). The targets' range
+   is checked by the callers (swv_types.h, the Node notes). Evidence: 0x01020104 - 0x010201d4 (`cmp r1,
+   r0` / `cmpne r8, r4` / `bleq`, `cmp r6, r8` / `bne`, `cmp r7, #0x90` / `cmpne r5, #0x90` / `beq`,
+   `cmp r7, r5` / `bleq`, `bl 0x01019f54` / `bl 0x01029910`, the `cmpeq` chain, `mov r0, #0x10` / `bl
+   0x0102cc00`, `stmiane r0!, {r1, r2}` / `stmiane r0, {r1, r2}`, the four `str` through +0x24, `bl
+   0x01019ebc` with r0 the node). */
 void swvNode_SetAlignment(uint8 *node,uint8 *zReference,int32 zTarget,uint8 *yReference,int32 yTarget)
 
 {
@@ -27781,7 +27791,7 @@ void swvNode_SetAlignment(uint8 *node,uint8 *zReference,int32 zTarget,uint8 *yRe
   if (zReference == yReference && zTarget != 0x90 && yTarget != 0x90 && zTarget == yTarget)
     FUN_0102f7e0(INTEGER_MINUS_1301);
   if (*(uint32 **)(node + 0x24) != NULL) {
-    FUN_01019f54((undefined4)node);
+    swvAlignment_Unregister(node);
     helper_free(*(void **)(node + 0x24));
     *(uint32 **)(node + 0x24) = NULL;
   }
@@ -27798,7 +27808,7 @@ void swvNode_SetAlignment(uint8 *node,uint8 *zReference,int32 zTarget,uint8 *yRe
     (*(uint32 **)(node + 0x24))[0] = (uint32)zTarget;
     (*(uint32 **)(node + 0x24))[3] = (uint32)yReference;
     (*(uint32 **)(node + 0x24))[1] = (uint32)yTarget;
-    FUN_01019ebc((undefined4)node);
+    swvAlignment_Register(node);
   }
 }
 
@@ -38160,9 +38170,9 @@ void FUN_0102c1dc(int *param_1,int param_2)
   *param_1 = WORD_HEXADECIMAL_FFFD6504 + 0x102c1f4;
   param_1[1] = iVar1 + 0x102c1fc;
   if (param_1[9] != 0) {
-    FUN_01019f54(param_1);
+    swvAlignment_Unregister((uint8 *)param_1);
   }
-  FUN_0101a1b0(param_1);
+  swvAlignment_ReferenceDestroyed((uint8 *)param_1);
   helper_free((void *)param_1[9]);
   while (param_1[0xe] != 0) {
     FUN_010261f0();
@@ -38357,29 +38367,33 @@ void FUN_0102c590(undefined4 param_1,int param_2)
   return;
 }
 
-/* ==== 0x0102C5A8  (file offset 0x2C5A8)  FUN_0102c5a8 ================================================ */
-void FUN_0102c5a8(int *param_1,int param_2)
+/* ==== 0x0102C5A8  (file offset 0x2C5A8)  swvAlignmentTracker_Destroy ================================= */
+/* GUESS: name. The alignment reference tracker's destructor (slot +0 of its engine vtable 0x01002890;
+   swv_types.h, the alignment reference trackers): its class's vtable, swvAlignmentTracker_Clear (so the
+   nodes aligned to its reference get -1 for it); its node array's (+8) destructor inlined: that array's
+   vtable 0x010023CC, the items (+0xc) freed and, when +0x10 is -1, the buffer at +0x14 (as the other
+   engine arrays' destructors); then the base engine vtable 0x0100203C for both and, when deleting is
+   set, the tracker freed (helper_free's second entry, 0x0102990c; a tail jump, which Ghidra took in).
+   Called through that slot by swvAlignment_Unregister and swvAlignment_ReferenceDestroyed. Evidence:
+   0x0102c5a8 - 0x0102c610 (`str r0, [r5]`, `bl 0x01009e54`, `str r0, [r5, #8]`, `ldr r0, [r5, #0xc]` /
+   `bl 0x01029908`, `cmn r0, #1` / `bleq 0x01029908`, `str r0, [r4]` / `str r0, [r5]`, `cmp r6, #0` /
+   `bne 0x0102990c`). */
+void swvAlignmentTracker_Destroy(uint8 *tracker,int32 deleting)
 
 {
-  int iVar1;
-  
-  *param_1 = DATA_AT_01002890_OFFSET_2 + 0x102c5c0;
-  FUN_01009e54(param_1);
-  param_1[2] = DATA_AT_010023CC_OFFSET_2 + 0x102c5d8;
-  helper_free((void *)param_1[3]);
-  if (param_1[4] == -1) {
-    helper_free((void *)param_1[5]);
-  }
-  iVar1 = DATA_AT_0100203C_OFFSET_39 + 0x102c5fc;
-  param_1[2] = iVar1;
-  *param_1 = iVar1;
-  if (param_2 == 0) {
-    return;
-  }
-                    /* WARNING: Could not recover jumptable at 0x010398e0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (*g_pHelperFuncs->free)(param_1);
-  return;
+  uint32 base;
+
+  *(uint32 *)tracker = DATA_AT_01002890_OFFSET_2 + 0x102c5c0;
+  swvAlignmentTracker_Clear(tracker);
+  *(uint32 *)(tracker + 8) = DATA_AT_010023CC_OFFSET_2 + 0x102c5d8;
+  helper_free(*(void **)(tracker + 0xc));
+  if (*(int32 *)(tracker + 0x10) == -1)
+    helper_free(*(void **)(tracker + 0x14));
+  base = DATA_AT_0100203C_OFFSET_39 + 0x102c5fc;
+  *(uint32 *)(tracker + 8) = base;
+  *(uint32 *)tracker = base;
+  if (deleting != 0)
+    helper_free(tracker);
 }
 
 /* ==== 0x0102C620  (file offset 0x2C620)  FUN_0102c620 ================================================ */
@@ -48031,7 +48045,7 @@ int32 swvObject3D_GetReferences(ISwerveObject *po,uint32 max,ISwerveObject **ref
       result = swv_WrapObject(((void **)array[1])[i],refs + i);
     *pCount = count;
     if (array != NULL) {
-      FUN_0101715c((int)FUN_0100f8e8(),array);
+      FUN_0101715c((int)FUN_0100f8e8(),(int32)array);
       if (array != NULL)
         /* engine virtual call, slot +0x0: the array's destructor */
         (*(code *)(*(int32 *)array[0] + array[0]))(array,1);

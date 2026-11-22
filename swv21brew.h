@@ -60,6 +60,7 @@ void FUN_01008754(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008
 void FUN_010087ac(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x010087AC, no Ghidra function */
 void FUN_01008804(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x01008804, no Ghidra function */
 void FUN_0100885c(int param_1,uint32 *src,uint32 *dst,int32 count);   /* 0x0100885C, no Ghidra function */
+void FUN_010171b8(uint8 *frame,int32 object);   /* 0x010171B8, no Ghidra function */
 void FUN_010088cc(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x010088CC, no Ghidra function */
 void FUN_0100893c(int param_1,uint16 *src,uint16 *dst,int32 count);   /* 0x0100893C, no Ghidra function */
 void FUN_010089ac(int param_1,uint8 *src,uint8 *dst,int32 count);   /* 0x010089AC, no Ghidra function */
@@ -346,7 +347,7 @@ void swvGroup_AddChild(uint8 *group,uint8 *child);   /* 0x01002D60 GUESS: name, 
 undefined4 FUN_01002dfc(undefined1 *param_1,int param_2,int param_3);
 void FUN_01002ef8(int param_1,int param_2,int param_3,undefined4 param_4,int param_5,int param_6);
 void FUN_0100300c(int param_1,uint param_2,uint param_3,int param_4,int param_5,int *param_6);
-void FUN_010031a0(int param_1,int param_2);
+void swvAlignmentTracker_AddNode(uint8 *tracker,uint8 *node);   /* 0x010031A0 GUESS: name, see swv21brew.c */
 void swvSkinnedMesh_AddTransform(uint8 *mesh,uint8 *bone,int32 weight,int32 firstVertex,int32 numVertices);   /* 0x01003234 GUESS: name, see swv21brew.c */
 int32 swvSkin_FindOrAddBoneSet(uint8 *mesh,const SwvSkinBoneSet *boneSet);   /* 0x010033A4 GUESS: name, see swv21brew.c */
 int FUN_01003408(int param_1);
@@ -452,7 +453,7 @@ void FUN_0100844c(int param_1,int param_2,int param_3,int param_4,int param_5);
 void FUN_01008540(int param_1,int param_2,int param_3,int param_4);
 void FUN_010085e8(void);
 void FUN_01008624(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6);
-void FUN_01008744(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
+void swvAlignmentTracker_SetReference(uint8 *tracker,uint8 *reference);   /* 0x01008744 GUESS: name, see swv21brew.c */
 uint FUN_01008c54(undefined4 param_1,uint param_2,uint param_3,int param_4);
 int FUN_01009638(int param_1,int param_2);
 void FUN_0100973c(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6, int param_7,int param_8,int param_9,int param_10,int param_11,int param_12);
@@ -467,7 +468,7 @@ int32 swvSectionZlib_Feed(uint8 *section,const uint8 *data,int32 length);
 void FUN_01009c20(void);
 void FUN_01009c48(void);
 void FUN_01009cb0(void);
-void FUN_01009e54(int param_1);
+void swvAlignmentTracker_Clear(uint8 *tracker);   /* 0x01009E54 GUESS: name, see swv21brew.c */
 uint * FUN_01009eac(int param_1,int param_2,int *param_3);
 void FUN_0100a02c(int param_1,int param_2);
 uint FUN_0100a470(int param_1,undefined4 param_2,undefined4 param_3);
@@ -542,7 +543,7 @@ undefined4 FUN_0100f798(void);
 undefined4 FUN_0100f7b0(void);
 undefined4 FUN_0100f7d0(void);
 undefined4 FUN_0100f7e0(void);
-undefined4 FUN_0100f810(void);
+uint8 *swvAlignment_Trackers(void);   /* 0x0100F810 GUESS: name, see swv21brew.c */
 undefined4 FUN_0100f8e8(void);
 int FUN_0100f8f8(int param_1);
 int FUN_0100f910(int param_1);
@@ -662,7 +663,7 @@ void FUN_01014b3c(undefined4 param_1,undefined4 *param_2,undefined4 *param_3,und
 void FUN_01014d10(undefined4 param_1,undefined4 *param_2,undefined4 *param_3,undefined4 *param_4);
 void FUN_01014f98(undefined4 param_1,undefined4 *param_2,undefined4 *param_3,undefined4 *param_4);
 void FUN_01015128(undefined4 *param_1);
-void FUN_010151f0(int param_1,int param_2);
+void swvNode_ForgetAlignmentReference(uint8 *node,const uint8 *reference);   /* 0x010151F0 GUESS: name, see swv21brew.c */
 int32 swvM3GReader_End(uint8 *reader);   /* 0x01015220 GUESS: name, see swv21brew.c */
 int32 swvM3GReader_Begin(uint8 *reader,int32 allowSwerve);   /* 0x010152D8 GUESS: name, see swv21brew.c */
 void FUN_010159e4(int param_1,undefined4 param_2,int param_3);
@@ -672,10 +673,10 @@ void FUN_010166a4(undefined4 param_1,int param_2,int param_3);
 int32 swvGroup_PickRayValue(uint8 *group,int32 scope,const uint32 *origin,const uint32 *direction,uint8 *ri);   /* 0x01016D8C JSR-184 1.1, see swv21brew.c */
 int32 swvGroup_PickCameraValue(uint8 *group,int32 scope,uint32 x,uint32 y,uint8 *camera,uint8 *ri);   /* 0x01016ECC JSR-184 1.1, see swv21brew.c */
 void FUN_01017120(undefined4 param_1,int param_2);
-void FUN_0101715c(int param_1);
+void FUN_0101715c(int32 guard,int32 object);
 void FUN_01017174(int param_1);
 void FUN_01017190(int param_1);
-void FUN_010171a0(void);
+void FUN_010171a0(int32 object);
 undefined4 * FUN_010171ec(int param_1,int param_2);
 void FUN_010171f8(int param_1,undefined4 *param_2);
 void FUN_01017254(int *param_1,undefined4 param_2);
@@ -723,15 +724,15 @@ void FUN_01019ba4(undefined4 param_1,undefined4 *param_2);
 undefined1 FUN_01019bd4(int param_1);
 void FUN_01019c10(uint param_1,int param_2,undefined4 param_3);
 void FUN_01019cc0(int param_1,int param_2);
-void FUN_01019ebc(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
+void swvAlignment_Register(uint8 *node);   /* 0x01019EBC GUESS: name, see swv21brew.c */
 void FUN_01019f00(undefined4 param_1,int param_2,undefined4 param_3);
-void FUN_01019f54(undefined4 param_1);
+void swvAlignment_Unregister(uint8 *node);   /* 0x01019F54 GUESS: name, see swv21brew.c */
 void swvObject3D_RemoveAnimationTrackValue(uint8 *object,const uint8 *track);   /* 0x0101A010 JSR-184 1.1, see swv21brew.c */
 void FUN_0101a104(int param_1,int param_2);
-void FUN_0101a154(int param_1,int param_2);
-void FUN_0101a1b0(int param_1);
+void swvAlignmentTracker_RemoveNode(uint8 *tracker,uint8 *node);   /* 0x0101A154 GUESS: name, see swv21brew.c */
+void swvAlignment_ReferenceDestroyed(uint8 *node);   /* 0x0101A1B0 GUESS: name, see swv21brew.c */
 void FUN_0101a230(int param_1);
-void FUN_0101a2a4(int param_1,int param_2);
+void swvAlignment_RemoveTracker(uint8 *list,int32 index);   /* 0x0101A2A4 GUESS: name, see swv21brew.c */
 void FUN_0101a2c0(int param_1,int param_2,undefined4 param_3);
 void FUN_0101a380(int param_1,int param_2,int param_3);
 void FUN_0101a478(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,undefined4 param_6);
@@ -783,7 +784,7 @@ void swvVertexArray_SetShorts(uint8 *array,int32 firstVertex,int32 numVertices,i
 void FUN_0101fe5c(int param_1,int param_2,int param_3,undefined4 param_4,int param_5,int param_6);
 void swvVertexArray_SetBytes(uint8 *array,int32 firstVertex,int32 numVertices,int32 length,const int8 *values);   /* 0x0101FEFC JSR-184 1.1, see swv21brew.c */
 void swvAnimationController_SetActiveIntervalValue(uint8 *controller,int32 start,int32 end);   /* 0x0101FF90 JSR-184 1.1, see swv21brew.c */
-void FUN_0101ffbc(int param_1,undefined4 param_2,int param_3,undefined4 param_4);
+void swvAlignment_RegisterReference(uint8 *trackers,uint8 *node,uint8 *reference);   /* 0x0101FFBC GUESS: name, see swv21brew.c */
 void swvNode_SetAlignment(uint8 *node,uint8 *zReference,int32 zTarget,uint8 *yReference,int32 yTarget);   /* 0x01020104 GUESS: name, see swv21brew.c */
 void FUN_010201dc(int param_1,int param_2,int param_3);
 void FUN_0102023c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
@@ -1050,7 +1051,7 @@ void FUN_0102c46c(int *param_1,int param_2);
 void FUN_0102c4d0(int *param_1,int param_2);
 void FUN_0102c584(undefined4 param_1,int param_2);
 void FUN_0102c590(undefined4 param_1,int param_2);
-void FUN_0102c5a8(int *param_1,int param_2);
+void swvAlignmentTracker_Destroy(uint8 *tracker,int32 deleting);   /* 0x0102C5A8 GUESS: name, see swv21brew.c */
 undefined4 FUN_0102c620(undefined4 *param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
 undefined4 FUN_0102c670(int *param_1,int *param_2);
 void FUN_0102c6b4(undefined4 *param_1,uint *param_2,undefined4 *param_3,undefined4 param_4);
