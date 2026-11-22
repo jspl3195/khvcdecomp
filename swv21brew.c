@@ -97,71 +97,43 @@ void *swv_memset(void *destination,uint32 value,uint32 byteCount)
 }
 
 /* ==== 0x01000130  (file offset 0x00130)  rt_memclr_w ================================================= */
-/* GUESS: name (not yet rewritten); see the comment below. */
-undefined4 * rt_memclr_w(undefined4 *param_1,uint param_2)
+/* GUESS: name. memset(destination, 0, byteCount) for a word-aligned destination: the ARM C library's
+   __rt_memclr_w (__aeabi_memclr4 in later ABIs), kh.mod's memset (0x00100110) again: r2 = 0, then the fill
+   at 0x01000134 that rt_memset also branches to (32 bytes at a time, then the bits of the count: 16, 8, 4,
+   2 and 1 bytes), written inline here. Returns the address past the last byte. Part of the engine's own C
+   library. Evidence: 0x01000130 - 0x01000184 (`mov r2, #0`, `subs r1, r1, #0x20` / two `stmiacs r0!, {r2,
+   r3, r12, lr}` / `subcss` / `bcs`, `movs r1, r1, lsl #0x1c` / `stmiacs` / `stmiami r0!, {r2, r3}`, `movs
+   r1, r1, lsl #2` / `strcs` / `moveq pc, lr` / two `strbmi` / `tst r1, #0x40000000` / `strbne`, r0 the
+   end). Verified against the binary under emulation (unicorn) and against Ghidra's original: 1,034,800
+   cases (counts 0 - 0x1f00 at word offsets 0 - 15), the returned address and the whole 8 KB buffer, 0
+   mismatches. */
+void *rt_memclr_w(void *destination,uint32 byteCount)
 
 {
-  uint uVar1;
-  undefined1 *puVar2;
-  undefined4 *puVar3;
-  undefined4 *puVar4;
-  bool bVar5;
-  
-                    /* memset(dst, 0, n) for a word-aligned dst: the ARM C library's __rt_memclr_w
-                       (__aeabi_memclr4 in later ABIs), kh.mod's memset (0x00100110) again: r2 = 0,
-                       then the fill at 0x01000134 that rt_memset also branches to (32 bytes at a
-                       time, then the bits of the count). Returns the address past the last byte.
-                       Part of the engine's own C library. */
-  bVar5 = 0x1f < param_2;
-  param_2 = param_2 - 0x20;
-  do {
-    if (bVar5) {
-      *param_1 = 0;
-      param_1[1] = 0;
-      param_1[2] = 0;
-      param_1[3] = 0;
-      param_1[4] = 0;
-      param_1[5] = 0;
-      param_1[6] = 0;
-      param_1[7] = 0;
-      param_1 = param_1 + 8;
-      bVar5 = 0x1f < param_2;
-      param_2 = param_2 - 0x20;
-    }
-  } while (bVar5);
-  if ((bool)((byte)(param_2 >> 4) & 1)) {
-    *param_1 = 0;
-    param_1[1] = 0;
-    param_1[2] = 0;
-    param_1[3] = 0;
-    param_1 = param_1 + 4;
+  uint32 *words = (uint32 *)destination;
+  uint8 *bytes;
+  int32 i;
+
+  for (; byteCount >= 0x20; byteCount -= 0x20)   /* 32 bytes at a time (two `stmia` of 4 words) */
+    for (i = 0; i < 8; i++)
+      *words++ = 0;
+  if (byteCount & 0x10)
+    for (i = 0; i < 4; i++)
+      *words++ = 0;
+  if (byteCount & 8) {
+    *words++ = 0;
+    *words++ = 0;
   }
-  if ((int)(param_2 << 0x1c) < 0) {
-    *param_1 = 0;
-    param_1[1] = 0;
-    param_1 = param_1 + 2;
+  if (byteCount & 4)
+    *words++ = 0;
+  bytes = (uint8 *)words;
+  if (byteCount & 2) {
+    *bytes++ = 0;
+    *bytes++ = 0;
   }
-  uVar1 = param_2 << 0x1e;
-  puVar3 = param_1;
-  if ((bool)((byte)((param_2 << 0x1c) >> 0x1e) & 1)) {
-    puVar3 = param_1 + 1;
-    *param_1 = 0;
-  }
-  if (uVar1 != 0) {
-    if ((int)uVar1 < 0) {
-      puVar2 = (undefined1 *)((int)puVar3 + 1);
-      *(undefined1 *)puVar3 = 0;
-      puVar3 = (undefined4 *)((int)puVar3 + 2);
-      *puVar2 = 0;
-    }
-    puVar4 = puVar3;
-    if ((uVar1 & 0x40000000) != 0) {
-      puVar4 = (undefined4 *)((int)puVar3 + 1);
-      *(undefined1 *)puVar3 = 0;
-    }
-    return puVar4;
-  }
-  return puVar3;
+  if (byteCount & 1)
+    *bytes++ = 0;
+  return bytes;
 }
 
 /* ==== 0x01000188  (file offset 0x00188)  swv_memcpy_word_aligned ===================================== */
@@ -10122,8 +10094,7 @@ void FUN_0100a02c(int param_1,int param_2)
     uVar7 = swv_fmul(local_c4);
     uVar6 = swv_fadd(uVar7,uVar6);
     uVar7 = swv_fmul(local_c0);
-    swv_fadd(uVar7,uVar6);
-    swv_f2d();
+    swv_f2d(swv_fadd(uVar7,uVar6));
     FUN_01000810();
     uVar6 = FUN_0103d3d4();
     if (iVar1 == 0x90) {
@@ -12869,8 +12840,7 @@ void FUN_0100e4e8(undefined4 *param_1)
   uVar2 = swv_fmul(param_1[1],param_1[1]);
   uVar1 = swv_fadd(uVar2,uVar1);
   uVar2 = swv_fmul(param_1[2],param_1[2]);
-  swv_fadd(uVar2,uVar1);
-  swv_f2d();
+  swv_f2d(swv_fadd(uVar2,uVar1));
   FUN_01000810();
   uVar1 = FUN_0103d3d4();
   swv_fcmp_b(uVar1,WORD_HEXADECIMAL_377BA882);
@@ -13696,8 +13666,7 @@ void FUN_0100f1fc(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3,un
   uVar2 = swv_fmul(param_1[1],param_1[1]);
   uVar1 = swv_fadd(uVar2,uVar1);
   uVar2 = swv_fmul(param_1[2],param_1[2]);
-  swv_fadd(uVar2,uVar1);
-  swv_f2d();
+  swv_f2d(swv_fadd(uVar2,uVar1));
   FUN_01000810();
   uVar3 = FUN_0103d3d4();
   uVar1 = WORD_HEXADECIMAL_47800000;
@@ -17390,8 +17359,7 @@ int FUN_01012908(int *param_1,int param_2,int param_3)
           param_1[10] = local_3c;
           param_1[0xb] = local_38;
           param_1[0xc] = local_34;
-          swv_fmul(*(undefined4 *)(param_2 + 0x9c),uVar2);
-          swv_f2d();
+          swv_f2d(swv_fmul(*(undefined4 *)(param_2 + 0x9c),uVar2));
           FUN_01000550();
           uVar3 = FUN_0103d3d4();
           uVar2 = WORD_HEXADECIMAL_47800000;
@@ -18704,8 +18672,7 @@ uint FUN_010146c8(undefined4 *param_1,undefined4 param_2,undefined4 param_3,unde
   uVar2 = swv_fmul(param_1[1],param_1[1]);
   uVar1 = swv_fadd(uVar2,uVar1);
   uVar2 = swv_fmul(param_1[2],param_1[2]);
-  swv_fadd(uVar2,uVar1);
-  swv_f2d();
+  swv_f2d(swv_fadd(uVar2,uVar1));
   uVar12 = FUN_01000810();
   uVar9 = (uint)(uVar12 >> 0x20);
   uVar10 = (uint)uVar12;
@@ -23016,8 +22983,7 @@ void FUN_01019cc0(int param_1,int param_2)
     else {
       uVar2 = swv_fmul(*(undefined4 *)(param_1 + 0xd8),WORD_HEXADECIMAL_3C8EFA35);
       uVar2 = swv_fmul(uVar2,0x4e000000);
-      swv_fmul(uVar2,0x30800000);
-      swv_f2d();
+      swv_f2d(swv_fmul(uVar2,0x30800000));
       FUN_01000880();
       uVar2 = FUN_0100062c();
       uVar2 = swv_frdiv(uVar2,0x3f800000);
@@ -24058,16 +24024,14 @@ void FUN_0101a89c(int param_1,int param_2)
     uVar3 = swv_fmul(puVar22[0xe]);
     uVar14 = swv_fadd(uVar3,uVar14);
     uVar3 = swv_fmul(puVar22[0xf]);
-    swv_fadd(uVar3,uVar14);
-    swv_f2d();
+    swv_f2d(swv_fadd(uVar3,uVar14));
     FUN_01000810();
     uVar14 = FUN_0103d3d4();
     uVar3 = swv_fmul(puVar22[10]);
     uVar4 = swv_fmul(puVar22[0xb]);
     uVar3 = swv_fadd(uVar4,uVar3);
     uVar4 = swv_fmul(puVar22[0xc]);
-    swv_fadd(uVar4,uVar3);
-    swv_f2d();
+    swv_f2d(swv_fadd(uVar4,uVar3));
     FUN_01000810();
     uVar3 = FUN_0103d3d4();
     puVar22[0xd] = puVar22[0x10];
@@ -24173,8 +24137,7 @@ void FUN_0101a89c(int param_1,int param_2)
       uVar14 = swv_fmul(uVar14,uVar14);
       uVar5 = swv_fflt(iVar2);
       uVar5 = swv_fmul(uVar5,uVar5);
-      swv_fadd(uVar5,uVar14);
-      swv_f2d();
+      swv_f2d(swv_fadd(uVar5,uVar14));
       FUN_01000810();
       iVar2 = swv_ffix(FUN_0103d3d4());   /* Ghidra had dropped it */
       *(int *)(param_1 + 0x194) = *(int *)(param_1 + 0x11c) + iVar2;
@@ -24188,8 +24151,7 @@ void FUN_0101a89c(int param_1,int param_2)
       uVar14 = swv_fmul(uVar14,uVar14);
       uVar5 = swv_fflt(iVar2 - iVar7);
       uVar5 = swv_fmul(uVar5,uVar5);
-      swv_fadd(uVar5,uVar14);
-      swv_f2d();
+      swv_f2d(swv_fadd(uVar5,uVar14));
       FUN_01000810();
       iVar2 = swv_ffix(FUN_0103d3d4());   /* Ghidra had dropped it */
       *(undefined4 *)(param_1 + 0x158) = *(undefined4 *)(param_1 + 0x11c);
@@ -33001,8 +32963,7 @@ LAB_0102444c:
   swv_fcmp_c(uVar5,HIGH_WORD_OF_DOUBLE_0_POINT_007806248963);
   if (!(bool)in_CY) {
     uVar3 = swv_fmul(uVar5,uVar5);
-    swv_frsb(uVar3,0x3f800000);
-    swv_f2d();
+    swv_f2d(swv_frsb(uVar3,0x3f800000));
     FUN_01000810();
     uVar6 = FUN_0103d3d4();
     swv_fcmp_b(uVar6 & 0x7fffffff,DOUBLE_2_POINT_658456546_TIMES_TEN_TO_THE_36_LOW_WORD);
@@ -33013,13 +32974,11 @@ LAB_0102444c:
       uVar4 = swv_ffix(swv_fadd(uVar4,0x3f000000));   /* Ghidra had dropped it */
       uVar3 = swv_fflt(FUN_0102edc0(uVar4,uVar3));   /* Ghidra had dropped it */
       uVar3 = swv_fmul(uVar3,0x37800000);
-      swv_fmul(uVar2,uVar3);
-      swv_f2d();
+      swv_f2d(swv_fmul(uVar2,uVar3));
       FUN_01000728();
       uVar2 = FUN_0103d3d4();
       uVar2 = swv_fdiv(uVar2,uVar6);
-      swv_fmul(param_4,uVar3);
-      swv_f2d();
+      swv_f2d(swv_fmul(param_4,uVar3));
       FUN_01000728();
       uVar3 = FUN_0103d3d4();
       param_4 = swv_fdiv(uVar3,uVar6);
@@ -33090,8 +33049,7 @@ void FUN_010246a0(uint *param_1,uint *param_2,undefined4 param_3)
   uVar2 = swv_fmul(param_1[1],param_1[1]);
   uVar1 = swv_fadd(uVar2,uVar1);
   uVar2 = swv_fmul(param_1[2],param_1[2]);
-  swv_fadd(uVar2,uVar1);
-  swv_f2d();
+  swv_f2d(swv_fadd(uVar2,uVar1));
   FUN_01000810();
   uVar2 = FUN_0103d3d4();
   swv_fcmp_b(uVar2,DOUBLE_2_POINT_658456541_TIMES_TEN_TO_THE_36_LOW_WORD);
@@ -36195,8 +36153,7 @@ undefined4 * FUN_01028030(undefined4 *param_1,undefined4 *param_2)
         uVar5 = *param_2;
         uVar2 = swv_fadd(param_2[10],0x3f800000);
         uVar2 = swv_fsub(uVar2,uVar5);
-        swv_fsub(uVar2,uVar1);
-        swv_f2d();
+        swv_f2d(swv_fsub(uVar2,uVar1));
         FUN_01000810();
         uVar1 = FUN_0103d3d4();
         uVar1 = swv_fmul(uVar1,0x40000000);
@@ -36218,8 +36175,7 @@ undefined4 * FUN_01028030(undefined4 *param_1,undefined4 *param_2)
         uVar5 = *param_2;
         uVar2 = swv_fadd(param_2[5],0x3f800000);
         uVar2 = swv_fsub(uVar2,uVar5);
-        swv_fsub(uVar2,uVar1);
-        swv_f2d();
+        swv_f2d(swv_fsub(uVar2,uVar1));
         FUN_01000810();
         uVar1 = FUN_0103d3d4();
         uVar1 = swv_fmul(uVar1,0x40000000);
@@ -36242,8 +36198,7 @@ undefined4 * FUN_01028030(undefined4 *param_1,undefined4 *param_2)
       uVar5 = param_2[5];
       uVar2 = swv_fadd(*param_2,0x3f800000);
       uVar2 = swv_fsub(uVar2,uVar5);
-      swv_fsub(uVar2,uVar1);
-      swv_f2d();
+      swv_f2d(swv_fsub(uVar2,uVar1));
       FUN_01000810();
       uVar1 = FUN_0103d3d4();
       uVar1 = swv_fmul(uVar1,0x40000000);
@@ -36285,7 +36240,7 @@ undefined4 * FUN_01028344(undefined4 *param_1,undefined4 param_2,undefined4 *par
 {
   undefined4 uVar1;
   undefined4 uVar2;
-  undefined8 uVar3;
+  float64 uVar3;
   undefined4 uStack_24;
   undefined4 uStack_20;
   undefined4 uStack_1c;
@@ -36295,11 +36250,10 @@ undefined4 * FUN_01028344(undefined4 *param_1,undefined4 param_2,undefined4 *par
     return (undefined4 *)0x0;
   }
   uVar1 = swv_fmul(param_2,0x4e000000);
-  swv_fmul(uVar1,0x30800000);
-  uVar3 = swv_f2d();
+  uVar3 = swv_f2d(swv_fmul(uVar1,0x30800000));
   FUN_01000728();
   uVar1 = FUN_0103d3d4();
-  FUN_01000550((int)uVar3,(int)((ulonglong)uVar3 >> 0x20));
+  FUN_01000550((int)uVar3.low,(int)uVar3.high);
   uVar2 = FUN_0103d3d4();
   uStack_24 = *param_3;
   uStack_20 = param_3[1];
@@ -62274,3262 +62228,1608 @@ LAB_0103f9e0:
 }
 
 /* ==== 0x0103EE80  (file offset 0x3EE80)  swv_f2d ===================================================== */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint swv_f2d(uint param_1,uint param_2,undefined4 param_3,uint param_4)
+/* The soft-float library's float -> double conversion, ARM's fplib _f2d (__aeabi_f2d in the run-time ABI).
+   Returns the float a as a double, exactly: a normal a is rebiased by 896 (1023 - 127; its bits shifted
+   right by 3, `asr`, the sign's copies taken back); +-0 is +-0, +-Inf +-Inf (the high word a | 0x700000);
+   a denormal is normalized through FUN_0103e23c's int -> double code (0x0103e24c: the leading zeros of a
+   << 3, the exponent 0x38600000 less them), written inline here. A quiet NaN gives the default NaN,
+   DOUBLE_NOT_A_NUMBER_HIGH_WORD:DOUBLE_NOT_A_NUMBER_LOW_WORD (the binary's copy at 0x0103f9b4 /
+   0x0103f9b8), its sign and payload dropped (0x0103f924 / 0x0103f9a0); a signalling NaN is invalid
+   (control word WORD_HEXADECIMAL_04000018: invalid, a double result, operation 8): the invalid flag, then
+   the trap FUN_010019e0 (status 0x100), given a, r1 and r3 as the caller left them (callerR1, callerR3,
+   never set) and a << 9, or the default NaN as well. Ghidra had read three more parameters, returned only
+   r0 and repeated the library's exception code: the result is r0:r1. The listing's other
+   swv_GetFpStatusPtr calls are the compare exit and code a conversion never reaches; they are not written.
+   Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py). The same code, word for word
+   apart from the branch and call offsets, as kh.mod's float_to_double (0x00126248; kh_mod.c), from which
+   this rewrite is taken. Evidence: 0x0103ee80 - 0x0103eee0 (`add r12, r0, #0x800000` / `tst r12,
+   #0x7f000000`, `movs r1, r0, asr #3` / `mov r0, r0, lsl #0x1d` / `add r1, r1, #0x38000000` / `submi`, `b
+   0x0103e24c` for a denormal, `bne 0x0103f1e8` for a NaN, `orr r1, r0, #0x700000` for Inf). Verified
+   against the binary under emulation (unicorn; swv_GetFpStatusPtr and the trap handler stubbed): 1,304,960
+   cases (special values and integer edges under 16 status words, then random words), the result, the
+   status word, the trap handler's arguments and the swv_GetFpStatusPtr calls the same, 0 mismatches. */
+float64 swv_f2d(uint32 a)
 
 {
-  int iVar1;
-  uint *puVar2;
-  undefined4 uVar3;
-  uint uVar4;
-  undefined4 uVar5;
-  uint uVar6;
-  uint uVar7;
-  uint uVar8;
-  uint in_lr;
-  bool bVar9;
-  
-  uVar7 = WORD_HEXADECIMAL_04000018;
-                    /* Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py).
-                       GUESS: identified by code pattern (ARM ADS fplib single-precision routine):
-                       float -> double (mantissa << 29). */
-  if ((param_1 + 0x800000 & 0x7f000000) != 0) {
-    if ((int)param_1 >> 3 < 0) {
-      return param_1 << 0x1d;
-    }
-    return param_1 << 0x1d;
+  float64 result;
+  uint32 *status;
+  uint32 word;
+  uint32 sign = a & 0x80000000;
+  uint32 mantissa;
+  uint32 zeros;
+  undefined8 trapped;       /* the trap's r0:r1, as FUN_010019e0's prototype gives them */
+  uint32 callerR1;          /* r1 and r3 as the caller left them: what the binary hands the trap (never */
+  uint32 callerR3;          /* initialized, as in the binary) */
+
+  if (((a + 0x800000) & 0x7f000000) != 0)   /* a normal a: the exponent neither 0 nor 0xff */
+    return MAKE_WORDS(result,(uint32)((int32)a >> 3) + 0x38000000 - (sign != 0 ? 0x70000000 : 0),a << 29);
+  if ((a + 0x800000) & 0x800000) {          /* the exponent 0 (0x0103eeac) */
+    if ((a << 1) == 0)
+      return MAKE_WORDS(result,a,0);        /* +-0 */
+    mantissa = a << 3;                      /* a denormal (0x0103e24c) */
+    for (zeros = 0; !(mantissa << zeros & 0x80000000); zeros++)
+      ;
+    mantissa <<= zeros;
+    return MAKE_WORDS(result,sign + 0x38600000 - zeros * 0x100000 + ((mantissa >> 11) & 0xfffff),
+                      mantissa << 21);
   }
-  if ((param_1 + 0x800000 & 0x800000) != 0) {
-    if ((param_1 & 0x7fffffff) == 0) {
-      return 0;
-    }
-    iVar1 = (param_1 << 3) << LZCOUNT(param_1 << 3);
-    if (iVar1 != 0) {
-      return iVar1 << 0x15;
-    }
-    return 0;
-  }
-  uVar6 = param_1 << 9;
-  if (uVar6 == 0) {
-    return 0;
-  }
-  if ((param_1 & 0x400000) != 0) {
-    uVar6 = WORD_HEXADECIMAL_04000018 & 0x4f;
-    uVar8 = WORD_HEXADECIMAL_04000018;
-    if (uVar6 == 0x48) {
-      uVar6 = 0x48;
-      goto LAB_0103ed1c;
-    }
-LAB_0103f924:
-    if ((uVar8 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x0103f938. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar8 & 0xf) != 8) {
-        uVar7 = (*(code *)(in_lr & 0xfffffffc))();
-        return uVar7;
-      }
-      if ((uVar8 & 0x40) == 0) {
-        uVar3 = _UNK_0103f9b4;
-        if ((uVar8 & 0x10) != 0) {
-          uVar3 = 0;
-          param_2 = _UNK_0103f9b8;
-        }
-                    /* WARNING: Could not recover jumptable at 0x0103f9b0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar7 = (*(code *)(in_lr & 0xfffffffc))(uVar3,param_2);
-        return uVar7;
-      }
-      if ((uVar8 & 0x10000) != 0) {
-                    /* WARNING: Could not recover jumptable at 0x0103f984. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar7 = (*(code *)(in_lr & 0xfffffffc))(0,0);
-        return uVar7;
-      }
-      if ((uVar8 & 0x20) != 0) {
-        uVar3 = 0xffffffff;
-        uVar5 = 0xffffffff;
-        if ((uVar6 & 0x80000000) != 0) {
-          uVar3 = 0;
-          uVar5 = 0;
-        }
-                    /* WARNING: Could not recover jumptable at 0x0103f99c. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar7 = (*(code *)(in_lr & 0xfffffffc))(uVar3,uVar5);
-        return uVar7;
-      }
-      if ((uVar8 & 0x10) == 0) {
-        uVar6 = 0x7fffffff;
-        uVar7 = param_2;
-        param_2 = param_1;
-      }
-      else {
-        uVar7 = 0x7fffffff;
-        uVar6 = 0xffffffff;
-      }
-      if ((param_2 & 0x80000000) != 0) {
-        uVar6 = ~uVar6;
-        uVar7 = ~uVar7;
-      }
-                    /* WARNING: Could not recover jumptable at 0x0103f978. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      uVar7 = (*(code *)(in_lr & 0xfffffffc))(uVar6,uVar7);
-      return uVar7;
-    }
-    uVar7 = 8;
-    goto LAB_0103f9e0;
-  }
-LAB_0103ed1c:
-  if ((WORD_HEXADECIMAL_04000018 & 0x10) == 0) {
-    uVar6 = param_2;
-  }
-  puVar2 = (uint *)swv_GetFpStatusPtr();
-  uVar4 = *puVar2;
-  if ((uVar7 & ~(uVar4 << 0x12) & 0x30000000) != 0) {
-    uVar7 = uVar7 | 0x40000000;
-  }
-  uVar8 = uVar7 | uVar4 & 0x1c00000;
-  *puVar2 = uVar4 | (uVar7 & 0x7fffffff) >> 0x1a;
-  bVar9 = (uVar7 & 0xf) != 8;
-  if (bVar9) {
-    uVar7 = uVar7 & 0x70;
-    uVar8 = uVar8 | uVar7 << 3;
-  }
-  else {
-    uVar7 = 0x20000;
-  }
-  if (!bVar9 && (uVar7 & ~uVar8) == 0) {
-    uVar8 = uVar8 | 0xc00000;
-  }
-  if ((uVar8 & 0x20000000) == 0) {
-    if ((uVar8 & 0x10000000) == 0) {
-      if ((uVar8 & 0x40000000) != 0) {
-        uVar4 = uVar4 & 0x1000;
-        goto joined_r0x0103edcc;
-      }
-      if ((uVar8 & 0x8000000) == 0) {
-        if ((uVar4 & 0x100) == 0) {
-          uVar6 = param_2;
-          if ((uVar8 & 0x80) == 0) {
-            uVar6 = param_1;
-          }
-          uVar6 = uVar6 & 0x80000000;
-          if ((uVar8 & 0x10) == 0) {
-            param_1 = WORD_HEXADECIMAL_7FC00000 | uVar6;
-          }
-          else {
-            param_2 = DOUBLE_NOT_A_NUMBER_HIGH_WORD | uVar6;
-            param_1 = DOUBLE_NOT_A_NUMBER_LOW_WORD;
-          }
-          goto LAB_0103f924;
-        }
-      }
-      else if ((uVar4 & 0x200) == 0) {
-        if ((uVar8 & 0x10) == 0) {
-          param_2 = param_1 ^ uVar6;
-        }
-        else {
-          param_2 = param_2 ^ param_4;
-        }
-        goto LAB_0103ee14;
-      }
-    }
-    else if ((uVar4 & 0x400) == 0) {
-      if ((uVar8 & 0x80) == 0) {
-        param_2 = param_1 & 0x80000000;
-      }
-      else {
-        param_2 = param_2 & 0x80000000;
-      }
-LAB_0103ee14:
-      uVar7 = INTEGER_0;
-      if ((uVar8 & 0x10) == 0) {
-        uVar7 = WORD_HEXADECIMAL_7F800000 | param_2 & 0x80000000;
-      }
-      return uVar7;
+  if ((a << 9) == 0)
+    return MAKE_WORDS(result,a | 0x700000,0);   /* +-Inf (0x0103eed8) */
+  if ((a & 0x400000) == 0) {                /* a signalling NaN: invalid (0x0103f1e8, 0x0103ed1c) */
+    status = (uint32 *)swv_GetFpStatusPtr();
+    word = *status | 1;
+    *status = word;
+    if (word & 0x100) {
+      trapped = FUN_010019e0(a,callerR1,a << 9,callerR3,WORD_HEXADECIMAL_04000018 | (word & 0x1c00000));
+      return MAKE_WORDS(result,(uint32)(trapped >> 32),(uint32)trapped);
     }
   }
-  else {
-    uVar4 = uVar4 & 0x800;
-joined_r0x0103edcc:
-    if (uVar4 == 0) {
-      return param_1;
-    }
-  }
-  uVar7 = FUN_010019e0(param_1,param_2,uVar6,param_4,uVar8,in_lr,uVar8,in_lr);
-  if ((uVar8 & 0xf) != 9) {
-    return uVar7;
-  }
-LAB_0103f9e0:
-  if ((uVar8 & 0x100000) == 0) {
-    return (uint)((uVar8 & uVar7 << 0x10) != 0);
-  }
-  if ((uVar8 & 0xf0000) == 0) {
-    uVar6 = uVar7 << 0x1d;
-    if ((bool)((byte)(uVar7 >> 3) & 1)) {
-      uVar6 = uVar6 | 0x30000000;
-    }
-    puVar2 = (uint *)swv_GetFpStatusPtr();
-    *puVar2 = *puVar2 & 0xfffffff | uVar6;
-    return uVar7;
-  }
-  if ((uVar7 & 8) != 0) {
-    return uVar7;
-  }
-  return 2 - uVar7;
+  return MAKE_WORDS(result,DOUBLE_NOT_A_NUMBER_HIGH_WORD,DOUBLE_NOT_A_NUMBER_LOW_WORD);
 }
 
 /* ==== 0x0103EEE8  (file offset 0x3EEE8)  swv_fadd ==================================================== */
-/* WARNING: Removing unreachable block (ram,0x0103ee1c) */
-/* WARNING: Removing unreachable block (ram,0x0103edd4) */
-/* WARNING: Removing unreachable block (ram,0x0103ede0) */
-/* WARNING: Removing unreachable block (ram,0x0103ede8) */
-/* WARNING: Removing unreachable block (ram,0x0103ede4) */
-/* WARNING: Removing unreachable block (ram,0x0103edec) */
-/* WARNING: Removing unreachable block (ram,0x0103ee0c) */
-/* WARNING: Removing unreachable block (ram,0x0103f988) */
-/* WARNING: Removing unreachable block (ram,0x0103f994) */
-/* WARNING: Removing unreachable block (ram,0x0103f99c) */
-/* WARNING: Removing unreachable block (ram,0x0103f944) */
-/* WARNING: Removing unreachable block (ram,0x0103f94c) */
-/* WARNING: Removing unreachable block (ram,0x0103f954) */
-/* WARNING: Removing unreachable block (ram,0x0103f958) */
-/* WARNING: Removing unreachable block (ram,0x0103f95c) */
-/* WARNING: Removing unreachable block (ram,0x0103f96c) */
-/* WARNING: Removing unreachable block (ram,0x0103f970) */
-/* WARNING: Removing unreachable block (ram,0x0103f978) */
-/* WARNING: Removing unreachable block (ram,0x0103f97c) */
-/* WARNING: Removing unreachable block (ram,0x0103ee38) */
-/* WARNING: Removing unreachable block (ram,0x0103ee44) */
-/* WARNING: Removing unreachable block (ram,0x0103edc4) */
-/* WARNING: Removing unreachable block (ram,0x0103edd0) */
-/* WARNING: Removing unreachable block (ram,0x0103f9a8) */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint swv_fadd(uint param_1,uint param_2)
+/* The soft-float library's single-precision add, ARM's fplib _fadd (__aeabi_fadd in the run-time ABI),
+   control code 0x4000001; 68 callers. Returns a + b, IEEE-754 rounded to nearest even, all as float bits.
+   Same signs add the magnitudes, different signs subtract them (the two cores, at 0x0103ef04 and
+   0x0103f080, shared by swv_fadd, swv_fsub and swv_frsb and written inline in each); an Inf or NaN operand
+   takes the special cases (0x0103f184). Like the rest of the library it keeps the status word through
+   swv_GetFpStatusPtr (sticky flags bits 0-4, trap enables bits 8-12: 0x100 invalid, 0x400 overflow, 0x800
+   underflow; bit 24 flush to zero) and calls the trap FUN_010019e0 for a trapped exception, through the
+   library's exception code (0x0103ed1c, written inline). Only an invalid operation or an overflow raises a
+   flag; rounding does not signal inexact, and an untrapped denormal result raises nothing (0x0103f864).
+   Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py). The same code, word for word
+   apart from the branch and call offsets, as kh.mod's float_add (0x001262B0; kh_mod.c), from which this
+   rewrite is taken. Ghidra had read r3 as a parameter (a work register) and repeated the shared code.
+   Evidence: 0x0103eee8 - 0x0103f02c (`bics r2, r12, r0, lsl #1` / `bicsne r2, r12, r1, lsl #1` / `beq` the
+   special cases, `teq r0, r1` / `bmi` the subtract core (0x0103ef04, `subs r2, r0, r1`), `adc r0, r0, r2,
+   lsl #23` the rounding, `mov r12, #0x10000001` an overflow and `mov r12, #0x4000001` an invalid operation
+   / `b 0x0103ed1c`). Verified against the binary under emulation (unicorn; swv_GetFpStatusPtr and the trap
+   handler stubbed): 1,378,408 cases (all pairs of 99 special values under 4 status words, then random
+   words, nearly equal and few-bit operands, every trap enable, flush to zero), the result, the status word
+   and the trap handler's arguments and the swv_GetFpStatusPtr calls the same, 0 mismatches. Against the
+   host's IEEE single add (numpy, status word 0): no difference but in the bits of some NaN results: for a
+   signalling NaN operand or an invalid operation the fplib gives the default NaN 0x7FC00000 with an
+   operand's sign, where x86 quietens the signalling NaN or gives 0xFFC00000 (quiet NaN operands: the
+   same). */
+uint32 swv_fadd(uint32 a,uint32 b)
 
 {
-  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
-  uint *puVar1;
-  uint uVar2;
-  uint uVar3;
-  int iVar4;
-  uint uVar5;
-  uint uVar6;
-  uint in_lr;
-  bool bVar7;
-  bool bVar8;
-  
-                    /* Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py).
-                       GUESS: identified by code pattern (ARM ADS fplib single-precision routine):
-                       float add (special-case code 0x4000001; 68 callers). */
-  if ((~(param_1 << 1) & 0xff000000) == 0 || (~(param_2 << 1) & 0xff000000) == 0) {
-    uVar3 = param_1 * 2;
-    uVar6 = 0x4000001;
-    if (0xff000000 < param_2 << 1 || 0xff000000 < uVar3) {
-      uVar3 = param_1 * 2 + 0x800000;
-      scratch = param_2 * 2 + 0x800000;
-      if (uVar3 < 0xff800001) {
-        uVar3 = scratch;
-      }
-      if (0xff800000 < uVar3) goto LAB_0103ed1c;
-LAB_0103f924:
-      if ((uVar6 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x0103f938. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        if ((uVar6 & 0xf) == 8) {
-                    /* WARNING: Could not recover jumptable at 0x0103f9b0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-          uVar3 = (*(code *)(in_lr & 0xfffffffc))(_UNK_0103f9b4,param_2);
-          return uVar3;
-        }
-        uVar3 = (*(code *)(in_lr & 0xfffffffc))();
-        return uVar3;
-      }
-      uVar3 = 8;
-      goto LAB_0103f9e0;
-    }
-    if (uVar3 != param_2 * 2) {
-      if (uVar3 != 0xff000000) {
-        return param_2;
-      }
-      return param_1;
-    }
-    if (-1 < (int)(param_1 ^ param_2)) {
-      return param_1;
-    }
-    uVar6 = 0x4000001;
-LAB_0103ed1c:
-    uVar3 = param_2;
-    puVar1 = (uint *)swv_GetFpStatusPtr();
-    uVar5 = *puVar1;
-    uVar2 = uVar6;
-    if ((uVar6 & ~(uVar5 << 0x12) & 0x30000000) != 0) {
-      uVar2 = uVar6 | 0x40000000;
-    }
-    uVar6 = uVar2 | uVar5 & 0x1c00000;
-    *puVar1 = uVar5 | uVar2 >> 0x1a;
-    bVar8 = (uVar2 & 0xf) != 8;
-    if (bVar8) {
-      uVar2 = 0;
+  uint32 *status;
+  uint32 control;   /* the exception word handed to the library's exception code (ip): bits 0-3 the
+                       operation (1 add, 2 subtract), 0x04000000 invalid, 0x10000000 overflow,
+                       0x20000000 underflow, 0x40000000 inexact; the status bits 22-24 are added */
+  uint32 exponent;  /* r2: the larger operand's sign and exponent (bit 8, bits 0-7); in the underflow
+                       code, the operation */
+  uint32 shift;     /* r3: the exponent difference */
+  uint32 mantissa;  /* the aligned magnitudes added or subtracted, binary point after bit 31 */
+  uint32 result;
+  uint32 round;
+  uint32 callerR3;  /* r3 as the caller left it: what the binary hands the trap handler on the paths
+                       that do not set r3 (never initialized, as in the binary) */
+  int32 zeros;
+  int32 aligned = 0;  /* the magnitudes are aligned, with their hidden bits, for the add or subtract */
+  int32 tie = 0;      /* the rounded result may be a tie, or overflow */
+  int32 raises = 0;   /* an exception (raise, 0x0103ed1c) rather than a denormal result (underflow) */
+
+  if ((~(a << 1) & 0xff000000) == 0 || (~(b << 1) & 0xff000000) == 0) {   /* an Inf or NaN operand */
+    if ((b << 1) > 0xff000000 || (a << 1) > 0xff000000) {   /* a NaN operand (0x0103f1c4) */
+      exponent = (a << 1) + 0x800000;        /* above 0xff800000: a signalling NaN */
+      shift = (b << 1) + 0x800000;
+      if (exponent <= 0xff800000 && shift <= 0xff800000)
+        return exponent < 0x800000 ? a : b;  /* the first quiet NaN */
+      control = 0x4000001;                        /* a signalling NaN: invalid */
+      result = a;
+      raises = 1;
     }
     else {
-      uVar2 = 0x20000;
-    }
-    if (!bVar8 && (uVar2 & ~uVar6) == 0) {
-      uVar6 = uVar6 | 0xc00000;
-    }
-    if ((uVar6 & 0x10000000) == 0) {
-      if ((uVar6 & 0x40000000) == 0) {
-        if ((uVar5 & 0x100) == 0) goto LAB_0103f924;
+      if ((a << 1) == (b << 1)) {              /* two infinities */
+        if ((int32)(a ^ b) >= 0)
+          return a;
+        control = 0x4000001;                   /* Inf - Inf: invalid */
+        shift = callerR3;
+        result = a;
+        raises = 1;
       }
-      else if ((uVar5 & 0x1000) == 0) {
-        return param_1;
+      else
+        return (a << 1) == 0xff000000 ? a : b; /* the infinite operand */
+    }
+  }
+  else if ((int32)(a ^ b) < 0) {
+    b ^= 0x80000000;                         /* a + b = a - (-b) */
+    /* subtract the magnitudes (0x0103f080) */
+    if (a < b) {                             /* |a| < |b|: swap them and flip both signs */
+      exponent = (a - b) ^ 0x80000000;
+      a -= exponent;
+      b += exponent;
+    }
+    exponent = a >> 23;
+    shift = exponent - (b >> 23);
+    if ((b << 1 & 0xff000000) == 0) {        /* b is zero or a denormal (0x0103f164) */
+      b <<= 8;
+      if (b == 0) {                          /* b is zero (0x0103efd0), a is the result */
+        if (a << 1 == 0)
+          a = 0;                             /* 0 - 0 = +0 */
+        if ((exponent & 0xff) || (a & 0x7fffffff) == 0)
+          return a;
+        result = a;                          /* a denormal */
+        exponent = 1;
+      }
+      else {
+        a <<= 8;
+        if (exponent & 0xff) {
+          a |= 0x80000000;
+          shift--;
+        }
+        else
+          exponent++;                        /* two denormals: a counts as exponent 1 */
+        aligned = 1;
       }
     }
-    else if ((uVar5 & 0x400) == 0) {
-      return WORD_HEXADECIMAL_7F800000 | param_1 & 0x80000000;
+    else {
+      a = 0x80000000 | a << 8;
+      b = 0x80000000 | b << 8;
+      aligned = 1;
+    }
+    if (aligned) {
+      mantissa = a - ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);   /* 0x0103f0ac */
+      if (mantissa & 0x80000000) {           /* still normalized */
+        round = mantissa >> 7 & 1;
+        exponent--;
+        result = (mantissa >> 8) + (exponent << 23) + round;
+        if (!round || (mantissa & 0x7f))
+          return result;
+        tie = 1;
+      }
+      else if ((exponent & 0xfe) && (mantissa & 0x40000000)) {   /* one bit of cancellation */
+        round = mantissa >> 6 & 1;
+        /* the sign-extended top bits lower the exponent by one */
+        result = (uint32)((int32)(mantissa << 1) >> 8) + (exponent << 23) + round;
+        if (!round || (mantissa & 0x3f))
+          return result;
+        tie = 1;
+      }
+      else {
+        shift = exponent >> 8;               /* the sign (0x0103f104) */
+        if (!(exponent & 0xfe) || mantissa << 1 == 0) {   /* exponent 0 or 1, or an exact zero */
+          result = mantissa >> 7;
+          if (result == 0)
+            return 0;
+          result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
+        }
+        else {
+          result = mantissa >> 1;            /* more cancellation: normalize (exact, no rounding) */
+          for (zeros = 0; !(result << zeros & 0x80000000); zeros++)
+            ;
+          exponent -= zeros;
+          round = (40 - zeros) & 31;         /* the binary's rotation, right by 40 - zeros */
+          result = round ? result >> round | result << (32 - round) : result;
+          if (shift == exponent >> 8)
+            return result + (exponent << 23);
+          exponent = -exponent;              /* below the smallest exponent: a denormal */
+          result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
+        }
+        exponent = 2;
+      }
+      if (tie) {                             /* 0x0103f0f0: a tie, unless bits of b were shifted out */
+        shift = 32 - shift;
+        b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
+        return b != 0 ? result - 1 : result & ~1;   /* below the tie: round down; a true tie: to even */
+      }
     }
   }
   else {
-    if ((int)(param_1 ^ param_2) < 0) {
-      param_2 = param_2 ^ 0x80000000;
-      if (param_1 < param_2) {
-        uVar3 = param_1 - param_2 ^ 0x80000000;
-        param_1 = param_1 - uVar3;
-        param_2 = param_2 + uVar3;
-      }
-      uVar3 = param_1 >> 0x17;
-      scratch = uVar3 - (param_2 >> 0x17);
-      if ((param_2 & 0x7f800000) == 0) {
-        param_2 = param_2 << 8;
-        if (param_2 == 0) {
-          if ((param_1 & 0x7fffffff) == 0) {
-            param_1 = 0;
-          }
-          goto LAB_0103efd8;
-        }
-        param_1 = param_1 << 8;
-        if ((uVar3 & 0xff) == 0) {
-          uVar3 = uVar3 + 1;
-        }
-        else {
-          param_1 = param_1 | 0x80000000;
-          scratch = scratch - 1;
-        }
+    /* add the magnitudes (0x0103ef04) */
+    if (a < b) {
+      result = a;
+      a = b;
+      b = result;
+    }
+    exponent = a >> 23;
+    shift = exponent - (b >> 23);
+    if ((b << 1 & 0xff000000) == 0) {        /* b is zero or a denormal (0x0103ef98) */
+      b <<= 8;
+      if (b == 0) {                          /* b is zero, a is the result (0x0103efd8) */
+        if ((exponent & 0xff) || (a & 0x7fffffff) == 0)
+          return a;
+        result = a;                          /* a denormal */
+        exponent = 1;
       }
       else {
-        param_1 = param_1 << 8 | 0x80000000;
-        param_2 = param_2 << 8 | 0x80000000;
-      }
-      uVar6 = param_1 - (param_2 >> (scratch & 0xff));
-      if ((int)uVar6 < 0) {
-        bVar8 = (bool)((byte)(uVar6 >> 7) & 1);
-        uVar3 = (uVar6 >> 8) + (uVar3 - 1) * 0x800000 + (uint)bVar8;
-        if (!bVar8) {
-          return uVar3;
-        }
-        if ((uVar6 & 0x7f) != 0) {
-          return uVar3;
-        }
-LAB_0103f0f0:
-        if (param_2 << (0x20 - scratch & 0xff) == 0) {
-          uVar3 = uVar3 & 0xfffffffe;
+        a <<= 8;
+        if (exponent & 0xff) {               /* a is normal: b counts as exponent 1 */
+          a |= 0x80000000;
+          shift--;
+          aligned = 1;
         }
         else {
-          uVar3 = uVar3 - 1;
+          result = (a + b) >> 8 | exponent << 23;   /* two denormals */
+          if (result & 0x800000)
+            return result;                   /* their sum is normal */
+          exponent = 1;
         }
-        return uVar3;
-      }
-      bVar7 = (uVar3 & 0xfe) == 0;
-      bVar8 = false;
-      if (!bVar7) {
-        param_1 = uVar6 * 2;
-        bVar8 = (int)param_1 < 0;
-        bVar7 = param_1 == 0;
-      }
-      if (bVar8) {
-        bVar8 = (bool)((byte)(param_1 >> 7) & 1);
-        uVar3 = ((int)param_1 >> 8) + uVar3 * 0x800000 + (uint)bVar8;
-        if (!bVar8) {
-          return uVar3;
-        }
-        if ((uVar6 & 0x3f) != 0) {
-          return uVar3;
-        }
-        goto LAB_0103f0f0;
-      }
-      scratch = uVar3 >> 8;
-      if (bVar7) {
-        if (uVar6 >> 7 == 0) {
-          return 0;
-        }
-        param_1 = (uVar6 >> 7) >> (uVar3 & 0xff) | scratch << 0x1f;
-        uVar3 = 2;
-      }
-      else {
-        if (param_1 == 0) {
-          return 0;
-        }
-        param_1 = param_1 >> 2;
-        uVar2 = uVar3 - LZCOUNT(param_1);
-        uVar6 = 0x28U - LZCOUNT(param_1) & 0x1f;
-        uVar6 = param_1 >> uVar6 | param_1 << 0x20 - uVar6;
-        if ((uVar3 ^ uVar2) >> 8 == 0) {
-          return uVar6 + uVar2 * 0x800000;
-        }
-        param_1 = uVar6 >> (-uVar2 & 0xff) | scratch << 0x1f;
-        uVar3 = 2;
       }
     }
     else {
-      iVar4 = param_1 - param_2;
-      if (param_1 < param_2) {
-        param_1 = param_1 - iVar4;
-        param_2 = param_2 + iVar4;
+      a = 0x80000000 | a << 8;
+      b = 0x80000000 | b << 8;
+      aligned = 1;
+    }
+    if (aligned) {                           /* 0x0103ef2c */
+      mantissa = a + ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);
+      if (mantissa >= a) {                   /* no carry out of bit 31 */
+        exponent--;
+        round = mantissa >> 7 & 1;
+        result = (mantissa >> 8) + (exponent << 23) + round;
+        if (!round || ((mantissa & 0x7f) && result << 1 < 0xff000000))
+          return result;
+        tie = 1;
       }
-      uVar3 = param_1 >> 0x17;
-      scratch = uVar3 - (param_2 >> 0x17);
-      if ((param_2 & 0x7f800000) != 0) {
-        param_2 = param_2 << 8 | 0x80000000;
-LAB_0103ef2c:
-        uVar2 = param_1 << 8 | 0x80000000;
-        uVar6 = param_2 >> (scratch & 0xff);
-        uVar5 = uVar2 + uVar6;
-        if (CARRY4(uVar2,uVar6)) {
-          uVar6 = uVar5 >> 1 | 0x80000000;
-          bVar8 = (bool)((byte)(uVar6 >> 7) & 1);
-          uVar6 = uVar6 >> 8;
-          param_1 = uVar6 + uVar3 * 0x800000 + (uint)bVar8;
-          if (bVar8) {
-            uVar6 = uVar5 & 0xff;
-          }
-          uVar3 = param_1 * 2;
-          if (uVar6 == 0) goto LAB_0103ef54;
-          if (uVar3 < 0xff000000) {
-            return param_1;
-          }
-        }
-        else {
-          bVar8 = (bool)((byte)(uVar5 >> 7) & 1);
-          param_1 = (uVar5 >> 8) + (uVar3 - 1) * 0x800000 + (uint)bVar8;
-          if (!bVar8) {
-            return param_1;
-          }
-          uVar3 = param_1 * 2;
-          if ((uVar5 & 0x7f) != 0) {
-            bVar8 = 0xfeffffff < uVar3;
-          }
-          if (!bVar8) {
-            return param_1;
-          }
-LAB_0103ef54:
-          scratch = 0x20 - scratch;
-          param_2 = param_2 << (scratch & 0xff);
-          if (param_2 == 0) {
-            param_1 = param_1 & 0xfffffffe;
-          }
-          if (uVar3 < 0xff000000) {
-            return param_1;
-          }
-        }
-        param_1 = param_1 + 0xa0000000;
-        uVar6 = 0x10000001;
-        goto LAB_0103ed1c;
+      else {                                 /* a carry: one more bit to drop (0x0103ef74) */
+        round = mantissa >> 8 & 1;
+        result = ((0x80000000 | mantissa >> 1) >> 8) + (exponent << 23) + round;
+        tie = round && !(mantissa & 0xff);
+        if (!tie && result << 1 < 0xff000000)
+          return result;
       }
-      param_2 = param_2 * 0x100;
-      if (param_2 == 0) {
-LAB_0103efd8:
-        if ((uVar3 & 0xff) != 0) {
-          return param_1;
-        }
-        if ((param_1 & 0x7fffffff) == 0) {
-          return param_1;
-        }
-        uVar3 = 1;
+      if (tie) {                             /* 0x0103ef54: a tie, unless bits of b were shifted out */
+        shift = 32 - shift;
+        b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
+        if (b == 0)
+          result &= ~1;                      /* a true tie: round to even */
+        if (result << 1 < 0xff000000)
+          return result;
       }
-      else {
-        if ((uVar3 & 0xff) != 0) {
-          scratch = scratch - 1;
-          goto LAB_0103ef2c;
-        }
-        param_1 = param_1 * 0x100 + param_2 >> 8 | uVar3 << 0x17;
-        if ((param_1 & 0x800000) != 0) {
-          return param_1;
-        }
-        uVar3 = 1;
-      }
+      result -= 0x60000000;                  /* overflow (0x0103ef68); for the trap handler, the */
+      control = 0x10000001;                  /* exponent wrapped by 192 */
+      raises = 1;
     }
-    puVar1 = (uint *)swv_GetFpStatusPtr();
-    if ((*puVar1 & 0x1000000) != 0) {
-      return param_1 & 0x80000000;
-    }
-    if ((*puVar1 & 0x800) == 0) {
-      return param_1;
-    }
-    param_2 = param_1 & 0x80000000 | 0x60000000;
-    if ((param_1 & 0xff0000) == 0) {
-      param_1 = param_1 << 8;
-      param_2 = param_2 + 0xfc000000;
-    }
-    if ((param_1 & 0xff0000) == 0) {
-      param_1 = param_1 << 8;
-      param_2 = param_2 + 0xfc000000;
-    }
-    if ((param_1 & 0xf00000) == 0) {
-      param_1 = param_1 << 4;
-      param_2 = param_2 + 0xfe000000;
-    }
-    if ((param_1 & 0xc00000) == 0) {
-      param_1 = param_1 << 2;
-      param_2 = param_2 - 0x1000000;
-    }
-    if ((param_1 & 0x800000) == 0) {
-      param_1 = param_1 << 1;
-    }
-    else {
-      param_2 = param_2 + 0x800000;
-    }
-    param_1 = param_1 & 0xff7fffff | param_2;
-    uVar6 = uVar3 | 0x20000000;
   }
-  uVar3 = FUN_010019e0(param_1,param_2,uVar3,scratch,uVar6,in_lr,uVar6,in_lr);
-  if ((uVar6 & 0xf) != 9) {
-    return uVar3;
-  }
-LAB_0103f9e0:
-  if ((uVar6 & 0x100000) == 0) {
-    return (uint)((uVar6 & uVar3 << 0x10) != 0);
-  }
-  if ((uVar6 & 0xf0000) == 0) {
-    uVar6 = uVar3 << 0x1d;
-    if ((bool)((byte)(uVar3 >> 3) & 1)) {
-      uVar6 = uVar6 | 0x30000000;
+  if (!raises) {                             /* 0x0103f864: a denormal result */
+    status = (uint32 *)swv_GetFpStatusPtr();
+    if (*status & 0x1000000)                 /* flush to zero */
+      return result & 0x80000000;
+    if (!(*status & 0x800))                  /* underflow not trapped: the denormal, no flag */
+      return result;
+    b = (result & 0x80000000) | 0x60000000;  /* for the trap handler: the result normalized, its */
+    if (!(result & 0xff0000)) {              /* exponent wrapped by 192 */
+      result <<= 8;
+      b -= 0x4000000;
     }
-    puVar1 = (uint *)swv_GetFpStatusPtr();
-    *puVar1 = *puVar1 & 0xfffffff | uVar6;
-    return uVar3;
+    if (!(result & 0xff0000)) {
+      result <<= 8;
+      b -= 0x4000000;
+    }
+    if (!(result & 0xf00000)) {
+      result <<= 4;
+      b -= 0x2000000;
+    }
+    if (!(result & 0xc00000)) {
+      result <<= 2;
+      b -= 0x1000000;
+    }
+    if (!(result & 0x800000))
+      result <<= 1;
+    else
+      b += 0x800000;
+    result = (result & ~0x800000) | b;
+    return (uint32)FUN_010019e0(result,b,exponent,shift,exponent | 0x20000000);
   }
-  if ((uVar3 & 8) != 0) {
-    return uVar3;
+  /* 0x0103ed1c: the library's exception code (only its invalid and overflow cases are reachable here) */
+  status = (uint32 *)swv_GetFpStatusPtr();
+  if (control & 0x30000000 & ~(*status << 18))
+    control |= 0x40000000;                   /* an untrapped overflow is also inexact */
+  *status |= (control << 1) >> 27;           /* the sticky flags */
+  control |= *status & 0x1c00000;
+  if (control & 0x10000000) {                /* overflow */
+    if (!(*status & 0x400))
+      return WORD_HEXADECIMAL_7F800000 | (result & 0x80000000);
   }
-  return 2 - uVar3;
+  else if (!(*status & 0x100))               /* invalid */
+    return WORD_HEXADECIMAL_7FC00000 | (result & 0x80000000);
+  return (uint32)FUN_010019e0(result,b,b,shift,control);
 }
 
 /* ==== 0x0103F030  (file offset 0x3F030)  swv_frsb ==================================================== */
-/* WARNING: Removing unreachable block (ram,0x0103ee1c) */
-/* WARNING: Removing unreachable block (ram,0x0103edd4) */
-/* WARNING: Removing unreachable block (ram,0x0103ede0) */
-/* WARNING: Removing unreachable block (ram,0x0103ede8) */
-/* WARNING: Removing unreachable block (ram,0x0103ede4) */
-/* WARNING: Removing unreachable block (ram,0x0103edec) */
-/* WARNING: Removing unreachable block (ram,0x0103ee0c) */
-/* WARNING: Removing unreachable block (ram,0x0103f988) */
-/* WARNING: Removing unreachable block (ram,0x0103f994) */
-/* WARNING: Removing unreachable block (ram,0x0103f99c) */
-/* WARNING: Removing unreachable block (ram,0x0103f944) */
-/* WARNING: Removing unreachable block (ram,0x0103f94c) */
-/* WARNING: Removing unreachable block (ram,0x0103f954) */
-/* WARNING: Removing unreachable block (ram,0x0103f958) */
-/* WARNING: Removing unreachable block (ram,0x0103f95c) */
-/* WARNING: Removing unreachable block (ram,0x0103f96c) */
-/* WARNING: Removing unreachable block (ram,0x0103f970) */
-/* WARNING: Removing unreachable block (ram,0x0103f978) */
-/* WARNING: Removing unreachable block (ram,0x0103f97c) */
-/* WARNING: Removing unreachable block (ram,0x0103ee38) */
-/* WARNING: Removing unreachable block (ram,0x0103ee44) */
-/* WARNING: Removing unreachable block (ram,0x0103edc4) */
-/* WARNING: Removing unreachable block (ram,0x0103edd0) */
-/* WARNING: Removing unreachable block (ram,0x0103f9a8) */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint swv_frsb(uint param_1,uint param_2)
+/* The soft-float library's single-precision reverse subtract, ARM's fplib _frsb (__aeabi_frsub in the
+   run-time ABI), control code 0x4000002, the operands swapped: the 'soft-float reverse subtract' in
+   tools/gen_swerve_patch.py. Returns b - a: the binary negates a and jumps into swv_fadd's or swv_fsub's
+   core (0x0103ef04 / 0x0103f080), or, for an Inf or NaN operand, swaps the operands and jumps into
+   swv_fsub's special cases (0x0103f184); that code is written inline below. IEEE-754 rounded to nearest
+   even, all as float bits. Same signs add the magnitudes, different signs subtract them (the two cores, at
+   0x0103ef04 and 0x0103f080, shared by swv_fadd, swv_fsub and swv_frsb and written inline in each); an Inf
+   or NaN operand takes the special cases (0x0103f184). Like the rest of the library it keeps the status
+   word through swv_GetFpStatusPtr (sticky flags bits 0-4, trap enables bits 8-12: 0x100 invalid, 0x400
+   overflow, 0x800 underflow; bit 24 flush to zero) and calls the trap FUN_010019e0 for a trapped
+   exception, through the library's exception code (0x0103ed1c, written inline). Only an invalid operation
+   or an overflow raises a flag; rounding does not signal inexact, and an untrapped denormal result raises
+   nothing (0x0103f864). Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py). The
+   same code, word for word apart from the branch and call offsets, as kh.mod's float_reverse_subtract
+   (0x001263F8; kh_mod.c), from which this rewrite is taken. Ghidra had read r3 as a parameter (a work
+   register) and repeated the shared code. Evidence: 0x0103f030 - 0x0103f060 (`eor r0, r0, #0x80000000` /
+   `teq r0, r1` / `bpl 0x0103ef04`, `eor r1, r1, #0x80000000` / `b 0x0103f080`, the three `eor` swap / `b
+   0x0103f184`). Verified against the binary under emulation (unicorn; swv_GetFpStatusPtr and the trap
+   handler stubbed): 1,378,408 cases (all pairs of 99 special values under 4 status words, then random
+   words, nearly equal and few-bit operands, every trap enable, flush to zero), the result, the status word
+   and the trap handler's arguments and the swv_GetFpStatusPtr calls the same, 0 mismatches. Against the
+   host's IEEE single subtract (numpy, status word 0): no difference but in the bits of some NaN results:
+   for a signalling NaN operand or an invalid operation the fplib gives the default NaN 0x7FC00000 with an
+   operand's sign, where x86 quietens the signalling NaN or gives 0xFFC00000 (quiet NaN operands: the
+   same). */
+uint32 swv_frsb(uint32 a,uint32 b)
 
 {
-  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
-  uint uVar1;
-  uint *puVar2;
-  int iVar3;
-  uint uVar4;
-  uint uVar5;
-  uint uVar6;
-  uint in_lr;
-  bool bVar7;
-  bool bVar8;
-  
-                    /* Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py).
-                       GUESS: identified by code pattern (ARM ADS fplib single-precision routine):
-                       float reverse subtract b - a (code 0x4000002, operands swapped): the
-                       'soft-float reverse subtract' in tools/gen_swerve_patch.py. */
-  if ((~(param_1 << 1) & 0xff000000) == 0 || (~(param_2 << 1) & 0xff000000) == 0) {
-    uVar1 = param_2 * 2;
-    uVar4 = 0x4000002;
-    if (0xff000000 < param_1 << 1 || 0xff000000 < uVar1) {
-      uVar1 = param_2 * 2 + 0x800000;
-      scratch = param_1 * 2 + 0x800000;
-      if (uVar1 < 0xff800001) {
-        uVar1 = scratch;
-      }
-      if (0xff800000 < uVar1) goto LAB_0103ed1c;
-LAB_0103f924:
-      if ((uVar4 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x0103f938. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        if ((uVar4 & 0xf) == 8) {
-                    /* WARNING: Could not recover jumptable at 0x0103f9b0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-          uVar1 = (*(code *)(in_lr & 0xfffffffc))(_UNK_0103f9b4,param_1);
-          return uVar1;
-        }
-        uVar1 = (*(code *)(in_lr & 0xfffffffc))();
-        return uVar1;
-      }
-      uVar1 = 8;
-      goto LAB_0103f9e0;
-    }
-    if (uVar1 != param_1 * 2) {
-      if (uVar1 != 0xff000000) {
-        return param_1 ^ 0x80000000;
-      }
-      return param_2;
-    }
-    if ((int)(param_2 ^ param_1) < 0) {
-      return param_2;
-    }
-    uVar4 = 0x4000002;
-LAB_0103ed1c:
-    uVar6 = param_1;
-    puVar2 = (uint *)swv_GetFpStatusPtr();
-    uVar5 = *puVar2;
-    uVar1 = uVar4;
-    if ((uVar4 & ~(uVar5 << 0x12) & 0x30000000) != 0) {
-      uVar1 = uVar4 | 0x40000000;
-    }
-    uVar4 = uVar1 | uVar5 & 0x1c00000;
-    *puVar2 = uVar5 | uVar1 >> 0x1a;
-    bVar7 = (uVar1 & 0xf) != 8;
-    if (bVar7) {
-      uVar1 = 0;
+  uint32 *status;
+  uint32 control;   /* the exception word handed to the library's exception code (ip): bits 0-3 the
+                       operation (1 add, 2 subtract), 0x04000000 invalid, 0x10000000 overflow,
+                       0x20000000 underflow, 0x40000000 inexact; the status bits 22-24 are added */
+  uint32 exponent;  /* r2: the larger operand's sign and exponent (bit 8, bits 0-7); in the underflow
+                       code, the operation */
+  uint32 shift;     /* r3: the exponent difference */
+  uint32 mantissa;  /* the aligned magnitudes added or subtracted, binary point after bit 31 */
+  uint32 result;
+  uint32 round;
+  uint32 callerR3;  /* r3 as the caller left it: what the binary hands the trap handler on the paths
+                       that do not set r3 (never initialized, as in the binary) */
+  int32 zeros;
+  int32 aligned = 0;  /* the magnitudes are aligned, with their hidden bits, for the add or subtract */
+  int32 tie = 0;      /* the rounded result may be a tie, or overflow */
+  int32 raises = 0;   /* an exception (raise, 0x0103ed1c) rather than a denormal result (underflow) */
+
+  if ((~(a << 1) & 0xff000000) == 0 || (~(b << 1) & 0xff000000) == 0) {   /* an Inf or NaN operand */
+    result = a;                              /* swv_fsub's special cases, with the operands */
+    a = b;                                   /* swapped (0x0103f054) */
+    b = result;
+    if ((b << 1) > 0xff000000 || (a << 1) > 0xff000000) {   /* a NaN operand (0x0103f1c4) */
+      exponent = (a << 1) + 0x800000;        /* above 0xff800000: a signalling NaN */
+      shift = (b << 1) + 0x800000;
+      if (exponent <= 0xff800000 && shift <= 0xff800000)
+        return exponent < 0x800000 ? a : b;  /* the first quiet NaN */
+      control = 0x4000002;                        /* a signalling NaN: invalid */
+      result = a;
+      raises = 1;
     }
     else {
-      uVar1 = 0x20000;
-    }
-    if (!bVar7 && (uVar1 & ~uVar4) == 0) {
-      uVar4 = uVar4 | 0xc00000;
-    }
-    if ((uVar4 & 0x10000000) == 0) {
-      if ((uVar4 & 0x40000000) == 0) {
-        if ((uVar5 & 0x100) == 0) goto LAB_0103f924;
+      if ((a << 1) == (b << 1)) {              /* two infinities */
+        if ((int32)(a ^ b) < 0)
+          return a;
+        control = 0x4000002;                   /* Inf - Inf: invalid */
+        shift = callerR3;
+        result = a;
+        raises = 1;
       }
-      else if ((uVar5 & 0x1000) == 0) {
-        return param_2;
+      else
+        return (a << 1) == 0xff000000 ? a : b ^ 0x80000000;   /* the infinite operand (b negated) */
+    }
+  }
+  else if ((int32)((a ^ 0x80000000) ^ b) >= 0) {
+    a ^= 0x80000000;                         /* b - a = (-a) + b */
+    /* add the magnitudes (0x0103ef04) */
+    if (a < b) {
+      result = a;
+      a = b;
+      b = result;
+    }
+    exponent = a >> 23;
+    shift = exponent - (b >> 23);
+    if ((b << 1 & 0xff000000) == 0) {        /* b is zero or a denormal (0x0103ef98) */
+      b <<= 8;
+      if (b == 0) {                          /* b is zero, a is the result (0x0103efd8) */
+        if ((exponent & 0xff) || (a & 0x7fffffff) == 0)
+          return a;
+        result = a;                          /* a denormal */
+        exponent = 1;
+      }
+      else {
+        a <<= 8;
+        if (exponent & 0xff) {               /* a is normal: b counts as exponent 1 */
+          a |= 0x80000000;
+          shift--;
+          aligned = 1;
+        }
+        else {
+          result = (a + b) >> 8 | exponent << 23;   /* two denormals */
+          if (result & 0x800000)
+            return result;                   /* their sum is normal */
+          exponent = 1;
+        }
       }
     }
-    else if ((uVar5 & 0x400) == 0) {
-      return WORD_HEXADECIMAL_7F800000 | param_2 & 0x80000000;
+    else {
+      a = 0x80000000 | a << 8;
+      b = 0x80000000 | b << 8;
+      aligned = 1;
+    }
+    if (aligned) {                           /* 0x0103ef2c */
+      mantissa = a + ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);
+      if (mantissa >= a) {                   /* no carry out of bit 31 */
+        exponent--;
+        round = mantissa >> 7 & 1;
+        result = (mantissa >> 8) + (exponent << 23) + round;
+        if (!round || ((mantissa & 0x7f) && result << 1 < 0xff000000))
+          return result;
+        tie = 1;
+      }
+      else {                                 /* a carry: one more bit to drop (0x0103ef74) */
+        round = mantissa >> 8 & 1;
+        result = ((0x80000000 | mantissa >> 1) >> 8) + (exponent << 23) + round;
+        tie = round && !(mantissa & 0xff);
+        if (!tie && result << 1 < 0xff000000)
+          return result;
+      }
+      if (tie) {                             /* 0x0103ef54: a tie, unless bits of b were shifted out */
+        shift = 32 - shift;
+        b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
+        if (b == 0)
+          result &= ~1;                      /* a true tie: round to even */
+        if (result << 1 < 0xff000000)
+          return result;
+      }
+      result -= 0x60000000;                  /* overflow (0x0103ef68); for the trap handler, the */
+      control = 0x10000001;                  /* exponent wrapped by 192 */
+      raises = 1;
     }
   }
   else {
-    uVar1 = param_1 ^ 0x80000000;
-    if (-1 < (int)(uVar1 ^ param_2)) {
-      iVar3 = uVar1 - param_2;
-      if (uVar1 < param_2) {
-        uVar1 = uVar1 - iVar3;
-        param_2 = param_2 + iVar3;
-      }
-      uVar4 = uVar1 >> 0x17;
-      scratch = uVar4 - (param_2 >> 0x17);
-      if ((param_2 & 0x7f800000) == 0) {
-        param_1 = param_2 * 0x100;
-        if (param_1 == 0) goto LAB_0103efd8;
-        if ((uVar4 & 0xff) == 0) {
-          uVar1 = uVar1 * 0x100 + param_1 >> 8 | uVar4 << 0x17;
-          if ((uVar1 & 0x800000) != 0) {
-            return uVar1;
-          }
-          uVar6 = 1;
-          goto LAB_0103f864;
-        }
-        scratch = scratch - 1;
+    a ^= 0x80000000;                         /* (-a) + b = (-a) - (-b) */
+    b ^= 0x80000000;
+    /* subtract the magnitudes (0x0103f080) */
+    if (a < b) {                             /* |a| < |b|: swap them and flip both signs */
+      exponent = (a - b) ^ 0x80000000;
+      a -= exponent;
+      b += exponent;
+    }
+    exponent = a >> 23;
+    shift = exponent - (b >> 23);
+    if ((b << 1 & 0xff000000) == 0) {        /* b is zero or a denormal (0x0103f164) */
+      b <<= 8;
+      if (b == 0) {                          /* b is zero (0x0103efd0), a is the result */
+        if (a << 1 == 0)
+          a = 0;                             /* 0 - 0 = +0 */
+        if ((exponent & 0xff) || (a & 0x7fffffff) == 0)
+          return a;
+        result = a;                          /* a denormal */
+        exponent = 1;
       }
       else {
-        param_1 = param_2 << 8 | 0x80000000;
+        a <<= 8;
+        if (exponent & 0xff) {
+          a |= 0x80000000;
+          shift--;
+        }
+        else
+          exponent++;                        /* two denormals: a counts as exponent 1 */
+        aligned = 1;
       }
-      uVar6 = uVar1 << 8 | 0x80000000;
-      uVar1 = param_1 >> (scratch & 0xff);
-      uVar5 = uVar6 + uVar1;
-      if (CARRY4(uVar6,uVar1)) {
-        uVar1 = uVar5 >> 1 | 0x80000000;
-        bVar7 = (bool)((byte)(uVar1 >> 7) & 1);
-        uVar1 = uVar1 >> 8;
-        param_2 = uVar1 + uVar4 * 0x800000 + (uint)bVar7;
-        if (bVar7) {
-          uVar1 = uVar5 & 0xff;
-        }
-        uVar4 = param_2 * 2;
-        if (uVar1 == 0) goto LAB_0103ef54;
-        if (uVar4 < 0xff000000) {
-          return param_2;
-        }
-      }
-      else {
-        bVar7 = (bool)((byte)(uVar5 >> 7) & 1);
-        param_2 = (uVar5 >> 8) + (uVar4 - 1) * 0x800000 + (uint)bVar7;
-        if (!bVar7) {
-          return param_2;
-        }
-        uVar4 = param_2 * 2;
-        if ((uVar5 & 0x7f) != 0) {
-          bVar7 = 0xfeffffff < uVar4;
-        }
-        if (!bVar7) {
-          return param_2;
-        }
-LAB_0103ef54:
-        scratch = 0x20 - scratch;
-        param_1 = param_1 << (scratch & 0xff);
-        if (param_1 == 0) {
-          param_2 = param_2 & 0xfffffffe;
-        }
-        if (uVar4 < 0xff000000) {
-          return param_2;
-        }
-      }
-      param_2 = param_2 + 0xa0000000;
-      uVar4 = 0x10000001;
-      goto LAB_0103ed1c;
-    }
-    param_2 = param_2 ^ 0x80000000;
-    if (uVar1 < param_2) {
-      uVar4 = uVar1 - param_2 ^ 0x80000000;
-      uVar1 = uVar1 - uVar4;
-      param_2 = param_2 + uVar4;
-    }
-    uVar4 = uVar1 >> 0x17;
-    scratch = uVar4 - (param_2 >> 0x17);
-    if ((param_2 & 0x7f800000) == 0) {
-      param_2 = param_2 << 8;
-      if (param_2 != 0) {
-        uVar1 = uVar1 << 8;
-        if ((uVar4 & 0xff) == 0) {
-          uVar4 = uVar4 + 1;
-        }
-        else {
-          uVar1 = uVar1 | 0x80000000;
-          scratch = scratch - 1;
-        }
-        goto LAB_0103f0ac;
-      }
-      if ((uVar1 & 0x7fffffff) == 0) {
-        uVar1 = 0;
-      }
-LAB_0103efd8:
-      if ((uVar4 & 0xff) != 0) {
-        return uVar1;
-      }
-      if ((uVar1 & 0x7fffffff) == 0) {
-        return uVar1;
-      }
-      uVar6 = 1;
     }
     else {
-      uVar1 = uVar1 << 8 | 0x80000000;
-      param_2 = param_2 << 8 | 0x80000000;
-LAB_0103f0ac:
-      uVar6 = uVar1 - (param_2 >> (scratch & 0xff));
-      if ((int)uVar6 < 0) {
-        bVar7 = (bool)((byte)(uVar6 >> 7) & 1);
-        uVar1 = (uVar6 >> 8) + (uVar4 - 1) * 0x800000 + (uint)bVar7;
-        if (!bVar7) {
-          return uVar1;
-        }
-        if ((uVar6 & 0x7f) != 0) {
-          return uVar1;
-        }
-LAB_0103f0f0:
-        if (param_2 << (0x20 - scratch & 0xff) == 0) {
-          uVar1 = uVar1 & 0xfffffffe;
-        }
-        else {
-          uVar1 = uVar1 - 1;
-        }
-        return uVar1;
+      a = 0x80000000 | a << 8;
+      b = 0x80000000 | b << 8;
+      aligned = 1;
+    }
+    if (aligned) {
+      mantissa = a - ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);   /* 0x0103f0ac */
+      if (mantissa & 0x80000000) {           /* still normalized */
+        round = mantissa >> 7 & 1;
+        exponent--;
+        result = (mantissa >> 8) + (exponent << 23) + round;
+        if (!round || (mantissa & 0x7f))
+          return result;
+        tie = 1;
       }
-      bVar8 = (uVar4 & 0xfe) == 0;
-      bVar7 = false;
-      if (!bVar8) {
-        uVar1 = uVar6 * 2;
-        bVar7 = (int)uVar1 < 0;
-        bVar8 = uVar1 == 0;
-      }
-      if (bVar7) {
-        bVar7 = (bool)((byte)(uVar1 >> 7) & 1);
-        uVar1 = ((int)uVar1 >> 8) + uVar4 * 0x800000 + (uint)bVar7;
-        if (!bVar7) {
-          return uVar1;
-        }
-        if ((uVar6 & 0x3f) != 0) {
-          return uVar1;
-        }
-        goto LAB_0103f0f0;
-      }
-      scratch = uVar4 >> 8;
-      if (bVar8) {
-        if (uVar6 >> 7 == 0) {
-          return 0;
-        }
-        uVar1 = (uVar6 >> 7) >> (uVar4 & 0xff) | scratch << 0x1f;
-        uVar6 = 2;
+      else if ((exponent & 0xfe) && (mantissa & 0x40000000)) {   /* one bit of cancellation */
+        round = mantissa >> 6 & 1;
+        /* the sign-extended top bits lower the exponent by one */
+        result = (uint32)((int32)(mantissa << 1) >> 8) + (exponent << 23) + round;
+        if (!round || (mantissa & 0x3f))
+          return result;
+        tie = 1;
       }
       else {
-        if (uVar1 == 0) {
-          return 0;
+        shift = exponent >> 8;               /* the sign (0x0103f104) */
+        if (!(exponent & 0xfe) || mantissa << 1 == 0) {   /* exponent 0 or 1, or an exact zero */
+          result = mantissa >> 7;
+          if (result == 0)
+            return 0;
+          result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
         }
-        uVar1 = uVar1 >> 2;
-        uVar5 = uVar4 - LZCOUNT(uVar1);
-        uVar6 = 0x28U - LZCOUNT(uVar1) & 0x1f;
-        uVar1 = uVar1 >> uVar6 | uVar1 << 0x20 - uVar6;
-        if ((uVar4 ^ uVar5) >> 8 == 0) {
-          return uVar1 + uVar5 * 0x800000;
+        else {
+          result = mantissa >> 1;            /* more cancellation: normalize (exact, no rounding) */
+          for (zeros = 0; !(result << zeros & 0x80000000); zeros++)
+            ;
+          exponent -= zeros;
+          round = (40 - zeros) & 31;         /* the binary's rotation, right by 40 - zeros */
+          result = round ? result >> round | result << (32 - round) : result;
+          if (shift == exponent >> 8)
+            return result + (exponent << 23);
+          exponent = -exponent;              /* below the smallest exponent: a denormal */
+          result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
         }
-        uVar1 = uVar1 >> (-uVar5 & 0xff) | scratch << 0x1f;
-        uVar6 = 2;
+        exponent = 2;
+      }
+      if (tie) {                             /* 0x0103f0f0: a tie, unless bits of b were shifted out */
+        shift = 32 - shift;
+        b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
+        return b != 0 ? result - 1 : result & ~1;   /* below the tie: round down; a true tie: to even */
       }
     }
-LAB_0103f864:
-    puVar2 = (uint *)swv_GetFpStatusPtr();
-    if ((*puVar2 & 0x1000000) != 0) {
-      return uVar1 & 0x80000000;
-    }
-    if ((*puVar2 & 0x800) == 0) {
-      return uVar1;
-    }
-    param_1 = uVar1 & 0x80000000 | 0x60000000;
-    if ((uVar1 & 0xff0000) == 0) {
-      uVar1 = uVar1 << 8;
-      param_1 = param_1 + 0xfc000000;
-    }
-    if ((uVar1 & 0xff0000) == 0) {
-      uVar1 = uVar1 << 8;
-      param_1 = param_1 + 0xfc000000;
-    }
-    if ((uVar1 & 0xf00000) == 0) {
-      uVar1 = uVar1 << 4;
-      param_1 = param_1 + 0xfe000000;
-    }
-    if ((uVar1 & 0xc00000) == 0) {
-      uVar1 = uVar1 << 2;
-      param_1 = param_1 - 0x1000000;
-    }
-    if ((uVar1 & 0x800000) == 0) {
-      uVar1 = uVar1 << 1;
-    }
-    else {
-      param_1 = param_1 + 0x800000;
-    }
-    param_2 = uVar1 & 0xff7fffff | param_1;
-    uVar4 = uVar6 | 0x20000000;
   }
-  uVar1 = FUN_010019e0(param_2,param_1,uVar6,scratch,uVar4,in_lr,uVar4,in_lr);
-  if ((uVar4 & 0xf) != 9) {
-    return uVar1;
-  }
-LAB_0103f9e0:
-  if ((uVar4 & 0x100000) == 0) {
-    return (uint)((uVar4 & uVar1 << 0x10) != 0);
-  }
-  if ((uVar4 & 0xf0000) == 0) {
-    uVar4 = uVar1 << 0x1d;
-    if ((bool)((byte)(uVar1 >> 3) & 1)) {
-      uVar4 = uVar4 | 0x30000000;
+  if (!raises) {                             /* 0x0103f864: a denormal result */
+    status = (uint32 *)swv_GetFpStatusPtr();
+    if (*status & 0x1000000)                 /* flush to zero */
+      return result & 0x80000000;
+    if (!(*status & 0x800))                  /* underflow not trapped: the denormal, no flag */
+      return result;
+    b = (result & 0x80000000) | 0x60000000;  /* for the trap handler: the result normalized, its */
+    if (!(result & 0xff0000)) {              /* exponent wrapped by 192 */
+      result <<= 8;
+      b -= 0x4000000;
     }
-    puVar2 = (uint *)swv_GetFpStatusPtr();
-    *puVar2 = *puVar2 & 0xfffffff | uVar4;
-    return uVar1;
+    if (!(result & 0xff0000)) {
+      result <<= 8;
+      b -= 0x4000000;
+    }
+    if (!(result & 0xf00000)) {
+      result <<= 4;
+      b -= 0x2000000;
+    }
+    if (!(result & 0xc00000)) {
+      result <<= 2;
+      b -= 0x1000000;
+    }
+    if (!(result & 0x800000))
+      result <<= 1;
+    else
+      b += 0x800000;
+    result = (result & ~0x800000) | b;
+    return (uint32)FUN_010019e0(result,b,exponent,shift,exponent | 0x20000000);
   }
-  if ((uVar1 & 8) != 0) {
-    return uVar1;
+  /* 0x0103ed1c: the library's exception code (only its invalid and overflow cases are reachable here) */
+  status = (uint32 *)swv_GetFpStatusPtr();
+  if (control & 0x30000000 & ~(*status << 18))
+    control |= 0x40000000;                   /* an untrapped overflow is also inexact */
+  *status |= (control << 1) >> 27;           /* the sticky flags */
+  control |= *status & 0x1c00000;
+  if (control & 0x10000000) {                /* overflow */
+    if (!(*status & 0x400))
+      return WORD_HEXADECIMAL_7F800000 | (result & 0x80000000);
   }
-  return 2 - uVar1;
+  else if (!(*status & 0x100))               /* invalid */
+    return WORD_HEXADECIMAL_7FC00000 | (result & 0x80000000);
+  return (uint32)FUN_010019e0(result,b,b,shift,control);
 }
 
 /* ==== 0x0103F064  (file offset 0x3F064)  swv_fsub ==================================================== */
-/* WARNING: Removing unreachable block (ram,0x0103ee1c) */
-/* WARNING: Removing unreachable block (ram,0x0103edd4) */
-/* WARNING: Removing unreachable block (ram,0x0103ede0) */
-/* WARNING: Removing unreachable block (ram,0x0103ede8) */
-/* WARNING: Removing unreachable block (ram,0x0103ede4) */
-/* WARNING: Removing unreachable block (ram,0x0103edec) */
-/* WARNING: Removing unreachable block (ram,0x0103ee0c) */
-/* WARNING: Removing unreachable block (ram,0x0103f988) */
-/* WARNING: Removing unreachable block (ram,0x0103f994) */
-/* WARNING: Removing unreachable block (ram,0x0103f99c) */
-/* WARNING: Removing unreachable block (ram,0x0103f944) */
-/* WARNING: Removing unreachable block (ram,0x0103f94c) */
-/* WARNING: Removing unreachable block (ram,0x0103f954) */
-/* WARNING: Removing unreachable block (ram,0x0103f958) */
-/* WARNING: Removing unreachable block (ram,0x0103f95c) */
-/* WARNING: Removing unreachable block (ram,0x0103f96c) */
-/* WARNING: Removing unreachable block (ram,0x0103f970) */
-/* WARNING: Removing unreachable block (ram,0x0103f978) */
-/* WARNING: Removing unreachable block (ram,0x0103f97c) */
-/* WARNING: Removing unreachable block (ram,0x0103ee38) */
-/* WARNING: Removing unreachable block (ram,0x0103ee44) */
-/* WARNING: Removing unreachable block (ram,0x0103edc4) */
-/* WARNING: Removing unreachable block (ram,0x0103edd0) */
-/* WARNING: Removing unreachable block (ram,0x0103f9a8) */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint swv_fsub(uint param_1,uint param_2)
+/* The soft-float library's single-precision subtract, ARM's fplib _fsub (__aeabi_fsub in the run-time
+   ABI), control code 0x4000002. Returns a - b: as swv_fadd, with the roles of the two cores swapped (same
+   signs subtract the magnitudes, different signs add them) and its own special cases; IEEE-754 rounded to
+   nearest even, all as float bits. Same signs add the magnitudes, different signs subtract them (the two
+   cores, at 0x0103ef04 and 0x0103f080, shared by swv_fadd, swv_fsub and swv_frsb and written inline in
+   each); an Inf or NaN operand takes the special cases (0x0103f184). Like the rest of the library it keeps
+   the status word through swv_GetFpStatusPtr (sticky flags bits 0-4, trap enables bits 8-12: 0x100
+   invalid, 0x400 overflow, 0x800 underflow; bit 24 flush to zero) and calls the trap FUN_010019e0 for a
+   trapped exception, through the library's exception code (0x0103ed1c, written inline). Only an invalid
+   operation or an overflow raises a flag; rounding does not signal inexact, and an untrapped denormal
+   result raises nothing (0x0103f864). Soft-float library (region 0x0103ED00-0x0103F900,
+   tools/profile_state.py). The same code, word for word apart from the branch and call offsets, as
+   kh.mod's float_subtract (0x0012642C; kh_mod.c), from which this rewrite is taken. Ghidra had read r3 as
+   a parameter (a work register) and repeated the shared code. Evidence: 0x0103f064 - 0x0103f1e4 (`teq r0,
+   r1` / `eormi r1, r1, #0x80000000` / `bmi 0x0103ef04` the add core, `subs r12, r0, r1, lsr r3`, `clz r12,
+   r0` the cancellation, `b 0x0103f864` a denormal result, `mov r12, #0x4000002` / `b 0x0103ed1c`).
+   Verified against the binary under emulation (unicorn; swv_GetFpStatusPtr and the trap handler stubbed):
+   1,378,408 cases (all pairs of 99 special values under 4 status words, then random words, nearly equal
+   and few-bit operands, every trap enable, flush to zero), the result, the status word and the trap
+   handler's arguments and the swv_GetFpStatusPtr calls the same, 0 mismatches. Against the host's IEEE
+   single subtract (numpy, status word 0): no difference but in the bits of some NaN results: for a
+   signalling NaN operand or an invalid operation the fplib gives the default NaN 0x7FC00000 with an
+   operand's sign, where x86 quietens the signalling NaN or gives 0xFFC00000 (quiet NaN operands: the
+   same). */
+uint32 swv_fsub(uint32 a,uint32 b)
 
 {
-  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
-  uint *puVar1;
-  int iVar2;
-  uint uVar3;
-  uint uVar4;
-  uint uVar5;
-  uint uVar6;
-  uint in_lr;
-  bool bVar7;
-  bool bVar8;
-  
-                    /* Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py).
-                       GUESS: identified by code pattern (ARM ADS fplib single-precision routine):
-                       float subtract a - b (code 0x4000002). */
-  if ((~(param_1 << 1) & 0xff000000) == 0 || (~(param_2 << 1) & 0xff000000) == 0) {
-    uVar3 = param_1 * 2;
-    uVar6 = 0x4000002;
-    if (0xff000000 < param_2 << 1 || 0xff000000 < uVar3) {
-      uVar3 = param_1 * 2 + 0x800000;
-      scratch = param_2 * 2 + 0x800000;
-      if (uVar3 < 0xff800001) {
-        uVar3 = scratch;
-      }
-      if (0xff800000 < uVar3) goto LAB_0103ed1c;
-LAB_0103f924:
-      if ((uVar6 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x0103f938. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        if ((uVar6 & 0xf) == 8) {
-                    /* WARNING: Could not recover jumptable at 0x0103f9b0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-          uVar3 = (*(code *)(in_lr & 0xfffffffc))(_UNK_0103f9b4,param_2);
-          return uVar3;
-        }
-        uVar3 = (*(code *)(in_lr & 0xfffffffc))();
-        return uVar3;
-      }
-      uVar3 = 8;
-      goto LAB_0103f9e0;
-    }
-    if (uVar3 != param_2 * 2) {
-      if (uVar3 != 0xff000000) {
-        return param_2 ^ 0x80000000;
-      }
-      return param_1;
-    }
-    if ((int)(param_1 ^ param_2) < 0) {
-      return param_1;
-    }
-    uVar6 = 0x4000002;
-LAB_0103ed1c:
-    uVar3 = param_2;
-    puVar1 = (uint *)swv_GetFpStatusPtr();
-    uVar5 = *puVar1;
-    uVar4 = uVar6;
-    if ((uVar6 & ~(uVar5 << 0x12) & 0x30000000) != 0) {
-      uVar4 = uVar6 | 0x40000000;
-    }
-    uVar6 = uVar4 | uVar5 & 0x1c00000;
-    *puVar1 = uVar5 | uVar4 >> 0x1a;
-    bVar7 = (uVar4 & 0xf) != 8;
-    if (bVar7) {
-      uVar4 = 0;
+  uint32 *status;
+  uint32 control;   /* the exception word handed to the library's exception code (ip): bits 0-3 the
+                       operation (1 add, 2 subtract), 0x04000000 invalid, 0x10000000 overflow,
+                       0x20000000 underflow, 0x40000000 inexact; the status bits 22-24 are added */
+  uint32 exponent;  /* r2: the larger operand's sign and exponent (bit 8, bits 0-7); in the underflow
+                       code, the operation */
+  uint32 shift;     /* r3: the exponent difference */
+  uint32 mantissa;  /* the aligned magnitudes added or subtracted, binary point after bit 31 */
+  uint32 result;
+  uint32 round;
+  uint32 callerR3;  /* r3 as the caller left it: what the binary hands the trap handler on the paths
+                       that do not set r3 (never initialized, as in the binary) */
+  int32 zeros;
+  int32 aligned = 0;  /* the magnitudes are aligned, with their hidden bits, for the add or subtract */
+  int32 tie = 0;      /* the rounded result may be a tie, or overflow */
+  int32 raises = 0;   /* an exception (raise, 0x0103ed1c) rather than a denormal result (underflow) */
+
+  if ((~(a << 1) & 0xff000000) == 0 || (~(b << 1) & 0xff000000) == 0) {   /* an Inf or NaN operand */
+    if ((b << 1) > 0xff000000 || (a << 1) > 0xff000000) {   /* a NaN operand (0x0103f1c4) */
+      exponent = (a << 1) + 0x800000;        /* above 0xff800000: a signalling NaN */
+      shift = (b << 1) + 0x800000;
+      if (exponent <= 0xff800000 && shift <= 0xff800000)
+        return exponent < 0x800000 ? a : b;  /* the first quiet NaN */
+      control = 0x4000002;                        /* a signalling NaN: invalid */
+      result = a;
+      raises = 1;
     }
     else {
-      uVar4 = 0x20000;
-    }
-    if (!bVar7 && (uVar4 & ~uVar6) == 0) {
-      uVar6 = uVar6 | 0xc00000;
-    }
-    if ((uVar6 & 0x10000000) == 0) {
-      if ((uVar6 & 0x40000000) == 0) {
-        if ((uVar5 & 0x100) == 0) goto LAB_0103f924;
+      if ((a << 1) == (b << 1)) {              /* two infinities */
+        if ((int32)(a ^ b) < 0)
+          return a;
+        control = 0x4000002;                   /* Inf - Inf: invalid */
+        shift = callerR3;
+        result = a;
+        raises = 1;
       }
-      else if ((uVar5 & 0x1000) == 0) {
-        return param_1;
+      else
+        return (a << 1) == 0xff000000 ? a : b ^ 0x80000000;   /* the infinite operand (b negated) */
+    }
+  }
+  else if ((int32)(a ^ b) < 0) {
+    b ^= 0x80000000;                         /* a - b = a + (-b) */
+    /* add the magnitudes (0x0103ef04) */
+    if (a < b) {
+      result = a;
+      a = b;
+      b = result;
+    }
+    exponent = a >> 23;
+    shift = exponent - (b >> 23);
+    if ((b << 1 & 0xff000000) == 0) {        /* b is zero or a denormal (0x0103ef98) */
+      b <<= 8;
+      if (b == 0) {                          /* b is zero, a is the result (0x0103efd8) */
+        if ((exponent & 0xff) || (a & 0x7fffffff) == 0)
+          return a;
+        result = a;                          /* a denormal */
+        exponent = 1;
+      }
+      else {
+        a <<= 8;
+        if (exponent & 0xff) {               /* a is normal: b counts as exponent 1 */
+          a |= 0x80000000;
+          shift--;
+          aligned = 1;
+        }
+        else {
+          result = (a + b) >> 8 | exponent << 23;   /* two denormals */
+          if (result & 0x800000)
+            return result;                   /* their sum is normal */
+          exponent = 1;
+        }
       }
     }
-    else if ((uVar5 & 0x400) == 0) {
-      return WORD_HEXADECIMAL_7F800000 | param_1 & 0x80000000;
+    else {
+      a = 0x80000000 | a << 8;
+      b = 0x80000000 | b << 8;
+      aligned = 1;
+    }
+    if (aligned) {                           /* 0x0103ef2c */
+      mantissa = a + ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);
+      if (mantissa >= a) {                   /* no carry out of bit 31 */
+        exponent--;
+        round = mantissa >> 7 & 1;
+        result = (mantissa >> 8) + (exponent << 23) + round;
+        if (!round || ((mantissa & 0x7f) && result << 1 < 0xff000000))
+          return result;
+        tie = 1;
+      }
+      else {                                 /* a carry: one more bit to drop (0x0103ef74) */
+        round = mantissa >> 8 & 1;
+        result = ((0x80000000 | mantissa >> 1) >> 8) + (exponent << 23) + round;
+        tie = round && !(mantissa & 0xff);
+        if (!tie && result << 1 < 0xff000000)
+          return result;
+      }
+      if (tie) {                             /* 0x0103ef54: a tie, unless bits of b were shifted out */
+        shift = 32 - shift;
+        b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
+        if (b == 0)
+          result &= ~1;                      /* a true tie: round to even */
+        if (result << 1 < 0xff000000)
+          return result;
+      }
+      result -= 0x60000000;                  /* overflow (0x0103ef68); for the trap handler, the */
+      control = 0x10000001;                  /* exponent wrapped by 192 */
+      raises = 1;
     }
   }
   else {
-    if ((int)(param_1 ^ param_2) < 0) {
-      param_2 = param_2 ^ 0x80000000;
-      iVar2 = param_1 - param_2;
-      if (param_1 < param_2) {
-        param_1 = param_1 - iVar2;
-        param_2 = param_2 + iVar2;
-      }
-      uVar3 = param_1 >> 0x17;
-      scratch = uVar3 - (param_2 >> 0x17);
-      if ((param_2 & 0x7f800000) == 0) {
-        param_2 = param_2 * 0x100;
-        if (param_2 == 0) goto LAB_0103efd8;
-        if ((uVar3 & 0xff) == 0) {
-          param_1 = param_1 * 0x100 + param_2 >> 8 | uVar3 << 0x17;
-          if ((param_1 & 0x800000) != 0) {
-            return param_1;
-          }
-          uVar3 = 1;
-          goto LAB_0103f864;
-        }
-        scratch = scratch - 1;
+    /* subtract the magnitudes (0x0103f080) */
+    if (a < b) {                             /* |a| < |b|: swap them and flip both signs */
+      exponent = (a - b) ^ 0x80000000;
+      a -= exponent;
+      b += exponent;
+    }
+    exponent = a >> 23;
+    shift = exponent - (b >> 23);
+    if ((b << 1 & 0xff000000) == 0) {        /* b is zero or a denormal (0x0103f164) */
+      b <<= 8;
+      if (b == 0) {                          /* b is zero (0x0103efd0), a is the result */
+        if (a << 1 == 0)
+          a = 0;                             /* 0 - 0 = +0 */
+        if ((exponent & 0xff) || (a & 0x7fffffff) == 0)
+          return a;
+        result = a;                          /* a denormal */
+        exponent = 1;
       }
       else {
-        param_2 = param_2 << 8 | 0x80000000;
+        a <<= 8;
+        if (exponent & 0xff) {
+          a |= 0x80000000;
+          shift--;
+        }
+        else
+          exponent++;                        /* two denormals: a counts as exponent 1 */
+        aligned = 1;
       }
-      uVar4 = param_1 << 8 | 0x80000000;
-      uVar6 = param_2 >> (scratch & 0xff);
-      uVar5 = uVar4 + uVar6;
-      if (CARRY4(uVar4,uVar6)) {
-        uVar6 = uVar5 >> 1 | 0x80000000;
-        bVar7 = (bool)((byte)(uVar6 >> 7) & 1);
-        uVar6 = uVar6 >> 8;
-        param_1 = uVar6 + uVar3 * 0x800000 + (uint)bVar7;
-        if (bVar7) {
-          uVar6 = uVar5 & 0xff;
-        }
-        uVar3 = param_1 * 2;
-        if (uVar6 == 0) goto LAB_0103ef54;
-        if (uVar3 < 0xff000000) {
-          return param_1;
-        }
-      }
-      else {
-        bVar7 = (bool)((byte)(uVar5 >> 7) & 1);
-        param_1 = (uVar5 >> 8) + (uVar3 - 1) * 0x800000 + (uint)bVar7;
-        if (!bVar7) {
-          return param_1;
-        }
-        uVar3 = param_1 * 2;
-        if ((uVar5 & 0x7f) != 0) {
-          bVar7 = 0xfeffffff < uVar3;
-        }
-        if (!bVar7) {
-          return param_1;
-        }
-LAB_0103ef54:
-        scratch = 0x20 - scratch;
-        param_2 = param_2 << (scratch & 0xff);
-        if (param_2 == 0) {
-          param_1 = param_1 & 0xfffffffe;
-        }
-        if (uVar3 < 0xff000000) {
-          return param_1;
-        }
-      }
-      param_1 = param_1 + 0xa0000000;
-      uVar6 = 0x10000001;
-      goto LAB_0103ed1c;
-    }
-    if (param_1 < param_2) {
-      uVar3 = param_1 - param_2 ^ 0x80000000;
-      param_1 = param_1 - uVar3;
-      param_2 = param_2 + uVar3;
-    }
-    uVar3 = param_1 >> 0x17;
-    scratch = uVar3 - (param_2 >> 0x17);
-    if ((param_2 & 0x7f800000) == 0) {
-      param_2 = param_2 << 8;
-      if (param_2 != 0) {
-        param_1 = param_1 << 8;
-        if ((uVar3 & 0xff) == 0) {
-          uVar3 = uVar3 + 1;
-        }
-        else {
-          param_1 = param_1 | 0x80000000;
-          scratch = scratch - 1;
-        }
-        goto LAB_0103f0ac;
-      }
-      if ((param_1 & 0x7fffffff) == 0) {
-        param_1 = 0;
-      }
-LAB_0103efd8:
-      if ((uVar3 & 0xff) != 0) {
-        return param_1;
-      }
-      if ((param_1 & 0x7fffffff) == 0) {
-        return param_1;
-      }
-      uVar3 = 1;
     }
     else {
-      param_1 = param_1 << 8 | 0x80000000;
-      param_2 = param_2 << 8 | 0x80000000;
-LAB_0103f0ac:
-      uVar6 = param_1 - (param_2 >> (scratch & 0xff));
-      if ((int)uVar6 < 0) {
-        bVar7 = (bool)((byte)(uVar6 >> 7) & 1);
-        uVar3 = (uVar6 >> 8) + (uVar3 - 1) * 0x800000 + (uint)bVar7;
-        if (!bVar7) {
-          return uVar3;
-        }
-        if ((uVar6 & 0x7f) != 0) {
-          return uVar3;
-        }
-LAB_0103f0f0:
-        if (param_2 << (0x20 - scratch & 0xff) == 0) {
-          uVar3 = uVar3 & 0xfffffffe;
-        }
-        else {
-          uVar3 = uVar3 - 1;
-        }
-        return uVar3;
+      a = 0x80000000 | a << 8;
+      b = 0x80000000 | b << 8;
+      aligned = 1;
+    }
+    if (aligned) {
+      mantissa = a - ((shift & 0xff) < 32 ? b >> (shift & 0xff) : 0);   /* 0x0103f0ac */
+      if (mantissa & 0x80000000) {           /* still normalized */
+        round = mantissa >> 7 & 1;
+        exponent--;
+        result = (mantissa >> 8) + (exponent << 23) + round;
+        if (!round || (mantissa & 0x7f))
+          return result;
+        tie = 1;
       }
-      bVar8 = (uVar3 & 0xfe) == 0;
-      bVar7 = false;
-      if (!bVar8) {
-        param_1 = uVar6 * 2;
-        bVar7 = (int)param_1 < 0;
-        bVar8 = param_1 == 0;
-      }
-      if (bVar7) {
-        bVar7 = (bool)((byte)(param_1 >> 7) & 1);
-        uVar3 = ((int)param_1 >> 8) + uVar3 * 0x800000 + (uint)bVar7;
-        if (!bVar7) {
-          return uVar3;
-        }
-        if ((uVar6 & 0x3f) != 0) {
-          return uVar3;
-        }
-        goto LAB_0103f0f0;
-      }
-      scratch = uVar3 >> 8;
-      if (bVar8) {
-        if (uVar6 >> 7 == 0) {
-          return 0;
-        }
-        param_1 = (uVar6 >> 7) >> (uVar3 & 0xff) | scratch << 0x1f;
-        uVar3 = 2;
+      else if ((exponent & 0xfe) && (mantissa & 0x40000000)) {   /* one bit of cancellation */
+        round = mantissa >> 6 & 1;
+        /* the sign-extended top bits lower the exponent by one */
+        result = (uint32)((int32)(mantissa << 1) >> 8) + (exponent << 23) + round;
+        if (!round || (mantissa & 0x3f))
+          return result;
+        tie = 1;
       }
       else {
-        if (param_1 == 0) {
-          return 0;
+        shift = exponent >> 8;               /* the sign (0x0103f104) */
+        if (!(exponent & 0xfe) || mantissa << 1 == 0) {   /* exponent 0 or 1, or an exact zero */
+          result = mantissa >> 7;
+          if (result == 0)
+            return 0;
+          result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
         }
-        param_1 = param_1 >> 2;
-        uVar4 = uVar3 - LZCOUNT(param_1);
-        uVar6 = 0x28U - LZCOUNT(param_1) & 0x1f;
-        uVar6 = param_1 >> uVar6 | param_1 << 0x20 - uVar6;
-        if ((uVar3 ^ uVar4) >> 8 == 0) {
-          return uVar6 + uVar4 * 0x800000;
+        else {
+          result = mantissa >> 1;            /* more cancellation: normalize (exact, no rounding) */
+          for (zeros = 0; !(result << zeros & 0x80000000); zeros++)
+            ;
+          exponent -= zeros;
+          round = (40 - zeros) & 31;         /* the binary's rotation, right by 40 - zeros */
+          result = round ? result >> round | result << (32 - round) : result;
+          if (shift == exponent >> 8)
+            return result + (exponent << 23);
+          exponent = -exponent;              /* below the smallest exponent: a denormal */
+          result = ((exponent & 0xff) < 32 ? result >> (exponent & 0xff) : 0) | shift << 31;
         }
-        param_1 = uVar6 >> (-uVar4 & 0xff) | scratch << 0x1f;
-        uVar3 = 2;
+        exponent = 2;
+      }
+      if (tie) {                             /* 0x0103f0f0: a tie, unless bits of b were shifted out */
+        shift = 32 - shift;
+        b = (shift & 0xff) < 32 ? b << (shift & 0xff) : 0;
+        return b != 0 ? result - 1 : result & ~1;   /* below the tie: round down; a true tie: to even */
       }
     }
-LAB_0103f864:
-    puVar1 = (uint *)swv_GetFpStatusPtr();
-    if ((*puVar1 & 0x1000000) != 0) {
-      return param_1 & 0x80000000;
-    }
-    if ((*puVar1 & 0x800) == 0) {
-      return param_1;
-    }
-    param_2 = param_1 & 0x80000000 | 0x60000000;
-    if ((param_1 & 0xff0000) == 0) {
-      param_1 = param_1 << 8;
-      param_2 = param_2 + 0xfc000000;
-    }
-    if ((param_1 & 0xff0000) == 0) {
-      param_1 = param_1 << 8;
-      param_2 = param_2 + 0xfc000000;
-    }
-    if ((param_1 & 0xf00000) == 0) {
-      param_1 = param_1 << 4;
-      param_2 = param_2 + 0xfe000000;
-    }
-    if ((param_1 & 0xc00000) == 0) {
-      param_1 = param_1 << 2;
-      param_2 = param_2 - 0x1000000;
-    }
-    if ((param_1 & 0x800000) == 0) {
-      param_1 = param_1 << 1;
-    }
-    else {
-      param_2 = param_2 + 0x800000;
-    }
-    param_1 = param_1 & 0xff7fffff | param_2;
-    uVar6 = uVar3 | 0x20000000;
   }
-  uVar3 = FUN_010019e0(param_1,param_2,uVar3,scratch,uVar6,in_lr,uVar6,in_lr);
-  if ((uVar6 & 0xf) != 9) {
-    return uVar3;
-  }
-LAB_0103f9e0:
-  if ((uVar6 & 0x100000) == 0) {
-    return (uint)((uVar6 & uVar3 << 0x10) != 0);
-  }
-  if ((uVar6 & 0xf0000) == 0) {
-    uVar6 = uVar3 << 0x1d;
-    if ((bool)((byte)(uVar3 >> 3) & 1)) {
-      uVar6 = uVar6 | 0x30000000;
+  if (!raises) {                             /* 0x0103f864: a denormal result */
+    status = (uint32 *)swv_GetFpStatusPtr();
+    if (*status & 0x1000000)                 /* flush to zero */
+      return result & 0x80000000;
+    if (!(*status & 0x800))                  /* underflow not trapped: the denormal, no flag */
+      return result;
+    b = (result & 0x80000000) | 0x60000000;  /* for the trap handler: the result normalized, its */
+    if (!(result & 0xff0000)) {              /* exponent wrapped by 192 */
+      result <<= 8;
+      b -= 0x4000000;
     }
-    puVar1 = (uint *)swv_GetFpStatusPtr();
-    *puVar1 = *puVar1 & 0xfffffff | uVar6;
-    return uVar3;
+    if (!(result & 0xff0000)) {
+      result <<= 8;
+      b -= 0x4000000;
+    }
+    if (!(result & 0xf00000)) {
+      result <<= 4;
+      b -= 0x2000000;
+    }
+    if (!(result & 0xc00000)) {
+      result <<= 2;
+      b -= 0x1000000;
+    }
+    if (!(result & 0x800000))
+      result <<= 1;
+    else
+      b += 0x800000;
+    result = (result & ~0x800000) | b;
+    return (uint32)FUN_010019e0(result,b,exponent,shift,exponent | 0x20000000);
   }
-  if ((uVar3 & 8) != 0) {
-    return uVar3;
+  /* 0x0103ed1c: the library's exception code (only its invalid and overflow cases are reachable here) */
+  status = (uint32 *)swv_GetFpStatusPtr();
+  if (control & 0x30000000 & ~(*status << 18))
+    control |= 0x40000000;                   /* an untrapped overflow is also inexact */
+  *status |= (control << 1) >> 27;           /* the sticky flags */
+  control |= *status & 0x1c00000;
+  if (control & 0x10000000) {                /* overflow */
+    if (!(*status & 0x400))
+      return WORD_HEXADECIMAL_7F800000 | (result & 0x80000000);
   }
-  return 2 - uVar3;
+  else if (!(*status & 0x100))               /* invalid */
+    return WORD_HEXADECIMAL_7FC00000 | (result & 0x80000000);
+  return (uint32)FUN_010019e0(result,b,b,shift,control);
 }
 
 /* ==== 0x0103F240  (file offset 0x3F240)  swv_frdiv =================================================== */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-uint swv_frdiv(uint param_1,uint param_2)
+/* The soft-float library's single-precision reverse divide, ARM's fplib _frdiv (__aeabi_frdiv in the
+   run-time ABI). Returns b / a: the binary swaps the operands (three `eor`) and goes on into swv_fdiv (`b
+   0x0103f250`), a call here. Ghidra had read r3 as a parameter (a work register) and repeated swv_fdiv's
+   code. Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py). The same code, word for
+   word apart from the branch and call offsets, as kh.mod's float_reverse_divide (0x00126608; kh_mod.c),
+   from which this rewrite is taken. Evidence: 0x0103f240 - 0x0103f24c (`eor r0, r0, r1` / `eor r1, r1, r0`
+   / `eor r0, r0, r1`, `b 0x0103f250`). Verified against the binary under emulation (unicorn;
+   swv_GetFpStatusPtr and the trap handler stubbed): 1,378,408 cases (all pairs of 99 special values under
+   4 status words, then random words, nearly equal and few-bit operands, every trap enable, flush to zero),
+   the result, the status word and the trap handler's arguments and the swv_GetFpStatusPtr calls the same,
+   0 mismatches. Against the host's IEEE single divide (numpy, status word 0): no difference but in the
+   bits of some NaN results: for a signalling NaN operand or an invalid operation the fplib gives the
+   default NaN 0x7FC00000 with an operand's sign, where x86 quietens the signalling NaN or gives 0xFFC00000
+   (quiet NaN operands: the same). */
+uint32 swv_frdiv(uint32 a,uint32 b)
 
 {
-  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
-  uint *puVar1;
-  undefined4 uVar2;
-  uint uVar3;
-  uint uVar4;
-  undefined4 uVar5;
-  uint uVar6;
-  uint uVar7;
-  uint in_lr;
-  uint uVar8;
-  int iVar9;
-  uint uVar10;
-  bool bVar11;
-  bool bVar12;
-  
-                    /* Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py).
-                       GUESS: identified by code pattern (ARM ADS fplib single-precision routine):
-                       float reverse divide b / a (16-byte entry before swv_fdiv with the operands
-                       swapped). */
-  uVar6 = param_2 >> 7 & 0xff0000;
-  bVar11 = uVar6 == 0;
-  if (!bVar11) {
-    scratch = param_1 >> 7 & 0xff0000;
-    bVar11 = scratch == 0;
-  }
-  if (!bVar11) {
-    bVar11 = uVar6 == 0xff0000;
-  }
-  if (!bVar11) {
-    bVar11 = scratch == 0xff0000;
-  }
-  if (bVar11) {
-    scratch = param_1 >> 7 & 0xff0000;
-    if ((int)(param_2 ^ param_1) < 0) {
-      uVar6 = uVar6 | 0x100;
-    }
-    uVar7 = WORD_HEXADECIMAL_04000004;
-    if (uVar6 < 0xff0000 && scratch < 0xff0000) {
-      if ((param_1 & 0x7fffffff) == 0) {
-        if ((param_2 & 0x7fffffff) != 0) {
-          uVar7 = WORD_HEXADECIMAL_08000004;
-        }
-        goto LAB_0103ed1c;
-      }
-      if ((param_2 & 0x7fffffff) == 0) {
-        return uVar6 << 0x17;
-      }
-      param_2 = param_2 << 8;
-      param_1 = param_1 << 8;
-      if ((uVar6 & 0xff0000) == 0) {
-        uVar6 = uVar6 + LZCOUNT(param_2) * -0x10000 + 0x10000;
-        param_2 = param_2 << LZCOUNT(param_2);
-        if (scratch == 0) goto LAB_0103f760;
-        param_1 = param_1 | 0x80000000;
-      }
-      else {
-LAB_0103f760:
-        param_2 = param_2 | 0x80000000;
-        scratch = scratch + LZCOUNT(param_1) * -0x10000 + 0x10000;
-        param_1 = param_1 << LZCOUNT(param_1);
-      }
-      param_2 = param_2 >> 8;
-      param_1 = param_1 >> 8;
-      goto code_r0x0103f280;
-    }
-    uVar8 = param_2 * 2;
-    if (uVar8 < 0xff000001) {
-      uVar8 = param_1 * 2;
-    }
-    if (uVar8 < 0xff000001) {
-      if ((param_2 & 0x7fffffff) != 0x7f800000 || (param_1 & 0x7fffffff) != 0x7f800000) {
-        if ((param_1 & 0x7fffffff) == 0x7f800000) {
-          param_2 = 0;
-        }
-        else {
-          param_2 = param_2 & 0x7fffffff;
-        }
-        return param_2 | uVar6 << 0x17;
-      }
-      param_2 = uVar6 << 0x17;
-      goto LAB_0103ed1c;
-    }
-    uVar6 = param_2 * 2 + 0x800000;
-    scratch = param_1 * 2 + 0x800000;
-    uVar8 = uVar6;
-    if (uVar6 < 0xff800001) {
-      uVar8 = scratch;
-    }
-    if (0xff800000 < uVar8) goto LAB_0103ed1c;
-    uVar8 = WORD_HEXADECIMAL_04000004;
-    if (0x7fffff < uVar6) {
-      param_2 = param_1;
-    }
-LAB_0103f924:
-    if ((uVar8 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x0103f938. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar8 & 0xf) != 8) {
-        uVar6 = (*(code *)(in_lr & 0xfffffffc))();
-        return uVar6;
-      }
-      if ((uVar8 & 0x40) == 0) {
-        uVar2 = _UNK_0103f9b4;
-        if ((uVar8 & 0x10) != 0) {
-          uVar2 = 0;
-          param_1 = _UNK_0103f9b8;
-        }
-                    /* WARNING: Could not recover jumptable at 0x0103f9b0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar6 = (*(code *)(in_lr & 0xfffffffc))(uVar2,param_1);
-        return uVar6;
-      }
-      if ((uVar8 & 0x10000) != 0) {
-                    /* WARNING: Could not recover jumptable at 0x0103f984. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar6 = (*(code *)(in_lr & 0xfffffffc))(0,0);
-        return uVar6;
-      }
-      if ((uVar8 & 0x20) == 0) {
-        if ((uVar8 & 0x10) == 0) {
-          uVar7 = 0x7fffffff;
-          uVar6 = param_1;
-          param_1 = param_2;
-        }
-        else {
-          uVar6 = 0x7fffffff;
-          uVar7 = 0xffffffff;
-        }
-        if ((param_1 & 0x80000000) != 0) {
-          uVar7 = ~uVar7;
-          uVar6 = ~uVar6;
-        }
-                    /* WARNING: Could not recover jumptable at 0x0103f978. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar6 = (*(code *)(in_lr & 0xfffffffc))(uVar7,uVar6);
-        return uVar6;
-      }
-      uVar2 = 0xffffffff;
-      uVar5 = 0xffffffff;
-      if ((uVar6 & 0x80000000) != 0) {
-        uVar2 = 0;
-        uVar5 = 0;
-      }
-                    /* WARNING: Could not recover jumptable at 0x0103f99c. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      uVar6 = (*(code *)(in_lr & 0xfffffffc))(uVar2,uVar5);
-      return uVar6;
-    }
-    uVar6 = 8;
-    goto LAB_0103f9e0;
-  }
-  if ((int)(param_2 ^ param_1) < 0) {
-    uVar6 = uVar6 | 0x100;
-  }
-  param_2 = param_2 & 0xffffff | 0x800000;
-  param_1 = param_1 & 0xffffff | 0x800000;
-code_r0x0103f280:
-  bVar11 = param_1 <= param_2;
-  uVar8 = (uint)*(byte *)(0x103f27f - (param_1 >> 0x11));
-  uVar7 = -param_1;
-  iVar9 = uVar8 * 2;
-  if (!bVar11) {
-    param_2 = param_2 << 1;
-  }
-  iVar9 = uVar8 * 0x100 + (((int)(uVar7 * iVar9) >> 4) * iVar9 >> 0x15);
-  uVar8 = iVar9 * (param_2 >> 8) >> 0x14;
-  uVar4 = uVar7 * uVar8 + param_2 * 0x800;
-  uVar6 = (uVar6 - scratch) + 0x7d0000;
-  uVar3 = iVar9 * (uVar4 >> 8) >> 0x13;
-  uVar4 = uVar7 * uVar3 + uVar4 * 0x1000;
-  uVar10 = uVar6 & 0x100;
-  uVar6 = uVar6 + ((int)uVar6 >> 0x10) + (uint)bVar11;
-  bVar11 = CARRY4(uVar4,uVar7);
-  if (bVar11) {
-    uVar4 = uVar4 + uVar7;
-  }
-  scratch = uVar3 + uVar8 * 0x1000 + (uint)bVar11;
-  if (uVar4 != 0) {
-    uVar10 = uVar10 | 0x40000002;
-  }
-  bVar11 = CARRY4(uVar7,uVar4 * 2);
-  bVar12 = uVar4 * 2 == param_1;
-  if (bVar11) {
-    uVar10 = uVar10 | 0x40000001;
-  }
-  if (bVar12) {
-    uVar10 = uVar10 | 4;
-  }
-  param_2 = scratch + uVar6 * 0x800000 + (uint)bVar11;
-  if (!bVar12) {
-    bVar11 = 0xfbffff < uVar6;
-  }
-  if (!bVar11) {
-    return param_2;
-  }
-  uVar7 = param_2 * -0x80000000;
-  if (bVar12 || uVar6 == 0xfc0000) {
-    param_2 = param_2 & 0xfffffffe;
-  }
-  if (uVar6 < 0xfc0000) {
-    return param_2;
-  }
-  if ((int)(uVar6 - 0xfc0000) < 0) {
-    if (param_2 * 2 - 0x1000000 < 0x3000000) {
-      return param_2;
-    }
-    param_2 = param_2 + 0x60000000;
-    bVar12 = (uVar10 & 4) == 0;
-    bVar11 = !bVar12 && uVar7 == 0;
-    if (bVar12 || (uVar10 | 8 | uVar7) == 0xffffffff) {
-      bVar11 = (uVar10 & 1) != 0;
-    }
-    if (bVar11) {
-      uVar6 = 0x40000004;
-    }
-    else {
-      uVar6 = 0xc0000004;
-    }
-    if ((uVar10 & 0x40000000) == 0) {
-      uVar6 = 4;
-    }
-    puVar1 = (uint *)swv_GetFpStatusPtr();
-    param_1 = *puVar1;
-    if ((param_1 & 0x1000000) != 0) {
-      return param_2 & 0x80000000;
-    }
-    if ((param_1 & 0x800) == 0) {
-      scratch = 0xc1 - (param_2 & 0x80000000 | param_2 >> 0x17 & 0xfffffeff);
-      if ((scratch & 0x7fffffff) < 0x18) {
-        uVar7 = param_2 << (0x20 - scratch & 0xff);
-        uVar8 = 0x20 - (0x20 - scratch);
-        scratch = uVar8 & 0x80000000;
-        param_2 = (param_2 & 0xffffff | 0x800000) >> (uVar8 & 0xff) | scratch;
-        if (uVar7 == 0) {
-          param_1 = 0;
-          uVar7 = uVar6;
-          if ((uVar6 & 0x40000000) == 0) {
-            return param_2;
-          }
-        }
-        else {
-          *puVar1 = *puVar1 | 8;
-          param_1 = uVar7 << 1;
-          if (SUB41(uVar7 >> 0x1f,0)) {
-            if (param_1 == 0) {
-              bVar11 = (bool)((byte)(uVar6 >> 0x1e) & 1);
-              uVar7 = ~((int)uVar6 >> 0x1f);
-              if (!bVar11 || uVar7 == 0) {
-                param_2 = param_2 + 1;
-              }
-              if (!bVar11) {
-                param_2 = param_2 & 0xfffffffe;
-              }
-            }
-            else {
-              param_2 = param_2 + 1;
-            }
-          }
-          scratch = uVar7;
-          uVar7 = uVar6 | 0x40000000;
-        }
-      }
-      else {
-        param_1 = *puVar1 | 8;
-        *puVar1 = param_1;
-        if (SBORROW4(scratch & 0x7fffffff,-0x7fffffe7)) {
-          param_2 = scratch & 0x80000000;
-        }
-        else {
-          uVar7 = param_2 & 0x7fffff;
-          param_2 = (scratch & 0x80000000) + 1;
-          if (uVar7 == 0 && (uVar6 & 0x80000000) == 0) {
-            param_2 = scratch & 0x80000000;
-          }
-        }
-        uVar7 = 0x40000000;
-      }
-      goto LAB_0103ed1c;
-    }
-    uVar8 = uVar6 | 0x20000000;
-  }
-  else {
-    if (0xfdffffff < param_2 * 2 + 0x1000000) {
-      return param_2;
-    }
-    param_2 = param_2 + 0xa0000000;
-    param_1 = uVar10 & 0x40000000;
-    uVar7 = param_1 | 0x10000004;
-LAB_0103ed1c:
-    if ((uVar7 & 0x10) == 0) {
-      uVar6 = param_1;
-    }
-    puVar1 = (uint *)swv_GetFpStatusPtr();
-    uVar3 = *puVar1;
-    if ((uVar7 & ~(uVar3 << 0x12) & 0x30000000) != 0) {
-      uVar7 = uVar7 | 0x40000000;
-    }
-    uVar8 = uVar7 | uVar3 & 0x1c00000;
-    *puVar1 = uVar3 | (uVar7 & 0x7fffffff) >> 0x1a;
-    bVar11 = (uVar7 & 0xf) != 8;
-    if (bVar11) {
-      uVar7 = uVar7 & 0x70;
-      uVar8 = uVar8 | uVar7 << 3;
-    }
-    else {
-      uVar7 = 0x20000;
-    }
-    if (!bVar11 && (uVar7 & ~uVar8) == 0) {
-      uVar8 = uVar8 | 0xc00000;
-    }
-    if ((uVar8 & 0x20000000) == 0) {
-      if ((uVar8 & 0x10000000) == 0) {
-        if ((uVar8 & 0x40000000) != 0) {
-          uVar3 = uVar3 & 0x1000;
-          goto joined_r0x0103edcc;
-        }
-        if ((uVar8 & 0x8000000) == 0) {
-          if ((uVar3 & 0x100) == 0) {
-            uVar6 = param_1;
-            if ((uVar8 & 0x80) == 0) {
-              uVar6 = param_2;
-            }
-            uVar6 = uVar6 & 0x80000000;
-            if ((uVar8 & 0x10) == 0) {
-              param_2 = WORD_HEXADECIMAL_7FC00000 | uVar6;
-            }
-            else {
-              param_1 = DOUBLE_NOT_A_NUMBER_HIGH_WORD | uVar6;
-              param_2 = DOUBLE_NOT_A_NUMBER_LOW_WORD;
-            }
-            goto LAB_0103f924;
-          }
-        }
-        else if ((uVar3 & 0x200) == 0) {
-          if ((uVar8 & 0x10) == 0) {
-            param_1 = param_2 ^ uVar6;
-          }
-          else {
-            param_1 = param_1 ^ scratch;
-          }
-          goto LAB_0103ee14;
-        }
-      }
-      else if ((uVar3 & 0x400) == 0) {
-        if ((uVar8 & 0x80) == 0) {
-          param_1 = param_2 & 0x80000000;
-        }
-        else {
-          param_1 = param_1 & 0x80000000;
-        }
-LAB_0103ee14:
-        uVar6 = INTEGER_0;
-        if ((uVar8 & 0x10) == 0) {
-          uVar6 = WORD_HEXADECIMAL_7F800000 | param_1 & 0x80000000;
-        }
-        return uVar6;
-      }
-    }
-    else {
-      uVar3 = uVar3 & 0x800;
-joined_r0x0103edcc:
-      if (uVar3 == 0) {
-        return param_2;
-      }
-    }
-  }
-  uVar6 = FUN_010019e0(param_2,param_1,uVar6,scratch);
-  if ((uVar8 & 0xf) != 9) {
-    return uVar6;
-  }
-LAB_0103f9e0:
-  if ((uVar8 & 0x100000) == 0) {
-    return (uint)((uVar8 & uVar6 << 0x10) != 0);
-  }
-  if ((uVar8 & 0xf0000) != 0) {
-    if ((uVar6 & 8) == 0) {
-      return 2 - uVar6;
-    }
-    return uVar6;
-  }
-  uVar7 = uVar6 << 0x1d;
-  if ((bool)((byte)(uVar6 >> 3) & 1)) {
-    uVar7 = uVar7 | 0x30000000;
-  }
-  puVar1 = (uint *)swv_GetFpStatusPtr();
-  *puVar1 = *puVar1 & 0xfffffff | uVar7;
-  return uVar6;
+  return swv_fdiv(b,a);
 }
 
 /* ==== 0x0103F250  (file offset 0x3F250)  swv_fdiv ==================================================== */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
+/* The soft-float library's single-precision divide, ARM's fplib _fdiv (__aeabi_fdiv in the run-time ABI).
+   Returns a / b, IEEE-754 rounded to nearest even, all as float bits. Written from the disassembly:
+   Ghidra's listing read uninitialized registers, and it had read r3 as a parameter (a work register). The
+   quotient comes from an 8-bit estimate of 1/b (swv_fdiv_reciprocals, the bytes at 0x0103f200 -
+   0x0103f23f), refined once, and two quotient digits with their remainders, then a last correction; the
+   remainder decides the rounding. x / 0 is a divide by zero (WORD_HEXADECIMAL_08000004, status 0x200), 0 /
+   0 and Inf / Inf are invalid (WORD_HEXADECIMAL_04000004). Status word, trap FUN_010019e0 and results
+   below the normal range: the library's underflow code (0x0103f77c, shared with swv_fmul and written
+   inline: flush to zero, the trapped underflow, or the result rounded to a denormal with the underflow and
+   inexact flags) and its exception code (0x0103ed1c). Where that underflow code goes on to a trapped
+   inexact, kh_mod.c's copy hands the trap the shift (the binary: only its sign, `and r3, r3, #0x80000000`)
+   for an exact denormal and the lost bits (the binary: ~(ip asr 31), `mvns r3, r2, asr #31`) for a tie;
+   written here as the binary does. Soft-float library (region 0x0103ED00-0x0103F900,
+   tools/profile_state.py). The same code, word for word apart from the branch and call offsets, as
+   kh.mod's float_divide (0x00126618; kh_mod.c), from which this rewrite is taken. Evidence: 0x0103f250 -
+   0x0103f41c (`ands r2, r12, r0, lsr #7` / `andsne r3, r12, r1, lsr #7` the special exponents, `ldrb lr,
+   [r12, -r0, lsr #17]` the estimate, the two `mla` digits, `adc r0, r3, r2, lsl #23` the rounding, `ldr
+   r12` the control words at 0x0103f420 / 0x0103f424, `b 0x0103f77c` / `b 0x0103ed1c`). Verified against
+   the binary under emulation (unicorn; swv_GetFpStatusPtr and the trap handler stubbed): 1,378,408 cases
+   (all pairs of 99 special values under 4 status words, then random words, nearly equal and few-bit
+   operands, every trap enable, flush to zero), the result, the status word and the trap handler's
+   arguments and the swv_GetFpStatusPtr calls the same, 0 mismatches. Against the host's IEEE single divide
+   (numpy, status word 0): no difference but in the bits of some NaN results: for a signalling NaN operand
+   or an invalid operation the fplib gives the default NaN 0x7FC00000 with an operand's sign, where x86
+   quietens the signalling NaN or gives 0xFFC00000 (quiet NaN operands: the same). */
+static const uint8 swv_fdiv_reciprocals[64] = {   /* by b's mantissa >> 17 (64-127): the bytes at */
+  0xfe,0xfa,0xf7,0xf3,0xf0,0xec,0xe9,0xe6,0xe2,0xdf,0xdc,0xd9,0xd7,0xd4,0xd1,0xce,   /* 0x0103f23f */
+  0xcc,0xc9,0xc7,0xc5,0xc2,0xc0,0xbe,0xbc,0xb9,0xb7,0xb5,0xb3,0xb2,0xb0,0xae,0xac,   /* down to */
+  0xaa,0xa8,0xa7,0xa5,0xa3,0xa2,0xa0,0x9f,0x9d,0x9c,0x9a,0x99,0x97,0x96,0x95,0x93,   /* 0x0103f200 */
+  0x92,0x91,0x8f,0x8e,0x8d,0x8c,0x8b,0x89,0x88,0x87,0x86,0x85,0x84,0x83,0x82,0x81
+};
 
-uint swv_fdiv(uint param_1,uint param_2)
+uint32 swv_fdiv(uint32 a,uint32 b)
 
 {
-  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
-  uint *puVar1;
-  undefined4 uVar2;
-  uint uVar3;
-  uint uVar4;
-  undefined4 uVar5;
-  uint uVar6;
-  uint uVar7;
-  uint in_lr;
-  uint uVar8;
-  int iVar9;
-  uint uVar10;
-  bool bVar11;
-  bool bVar12;
-  
-                    /* Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py).
-                       GUESS: identified by code pattern (ARM ADS fplib single-precision routine):
-                       float divide a / b. */
-  uVar6 = param_1 >> 7 & 0xff0000;
-  bVar11 = uVar6 == 0;
-  if (!bVar11) {
-    scratch = param_2 >> 7 & 0xff0000;
-    bVar11 = scratch == 0;
-  }
-  if (!bVar11) {
-    bVar11 = uVar6 == 0xff0000;
-  }
-  if (!bVar11) {
-    bVar11 = scratch == 0xff0000;
-  }
-  if (bVar11) {
-    scratch = param_2 >> 7 & 0xff0000;
-    if ((int)(param_1 ^ param_2) < 0) {
-      uVar6 = uVar6 | 0x100;
-    }
-    uVar7 = WORD_HEXADECIMAL_04000004;
-    if (uVar6 < 0xff0000 && scratch < 0xff0000) {
-      if ((param_2 & 0x7fffffff) == 0) {
-        if ((param_1 & 0x7fffffff) != 0) {
-          uVar7 = WORD_HEXADECIMAL_08000004;
-        }
-        goto LAB_0103ed1c;
+  uint32 *status;
+  uint32 control = 0;  /* ip, the exception word: the operation in bits 0-3 (4 divide), 0x04000000 invalid,
+                          0x08000000 divide by zero, 0x10000000 overflow, 0x40000000 inexact, 0x80000000
+                          (with inexact) the result was rounded down */
+  uint32 exponent;     /* r2: the result's exponent in bits 16-24 (biased, may go below zero), its sign
+                          in bit 8 */
+  uint32 other;        /* r3: b's exponent; then the quotient; for the trap handler, r3 */
+  uint32 result;       /* r0 */
+  uint32 second;       /* r1: the dividend, then the remainder; then the rounding flags; for the trap
+                          handler, r1 */
+  uint32 shift;
+  uint32 lost;
+  uint32 count;        /* a shift count: its low byte, as the binary's shift by a register */
+  uint32 round;
+  int32 denormal;     /* a is the denormal */
+  int32 special;
+  int32 path = 0;      /* 1: an exception (0x0103ed1c); 2: a result below the normal range (0x0103f77c) */
+  uint32 divisor;      /* r0 in the binary, negated */
+  uint32 estimate;     /* lr: the reciprocal estimate */
+  uint32 digit;        /* ip */
+  uint32 carry;
+  uint32 flags;        /* lr, then r1: bit 8 the sign, 0x40000002 inexact, 0x40000001 rounded up, 4 a
+                          tie, 8 always, bit 31 the rounded result's lowest bit */
+
+  exponent = a >> 7 & 0xff0000;
+  other = b >> 7 & 0xff0000;
+  special = exponent == 0 || other == 0 || exponent == 0xff0000 || other == 0xff0000;
+  if ((int32)(a ^ b) < 0)
+    exponent |= 0x100;                       /* the result's sign */
+  result = a;
+  second = b;
+  if (special) {
+    if (exponent >= 0xff0000 || other >= 0xff0000) {         /* an Inf or NaN operand (0x0103f3cc) */
+      if ((a << 1) > 0xff000000 || (b << 1) > 0xff000000) {   /* a NaN operand (0x0103f1c4) */
+        exponent = (a << 1) + 0x800000;      /* above 0xff800000: a signalling NaN */
+        other = (b << 1) + 0x800000;
+        if (exponent <= 0xff800000 && other <= 0xff800000)
+          return exponent < 0x800000 ? a : b;                  /* the first quiet NaN */
+        control = WORD_HEXADECIMAL_04000004;                  /* a signalling NaN: invalid */
+        path = 1;
       }
-      if ((param_1 & 0x7fffffff) == 0) {
-        return uVar6 << 0x17;
+      else if (a << 1 == 0xff000000 && b << 1 == 0xff000000) {
+        result = exponent << 23;             /* Inf / Inf: invalid */
+        control = WORD_HEXADECIMAL_04000004;
+        path = 1;
       }
-      param_1 = param_1 << 8;
-      param_2 = param_2 << 8;
-      if ((uVar6 & 0xff0000) == 0) {
-        uVar6 = uVar6 + LZCOUNT(param_1) * -0x10000 + 0x10000;
-        param_1 = param_1 << LZCOUNT(param_1);
-        if (scratch == 0) goto LAB_0103f760;
-        param_2 = param_2 | 0x80000000;
-      }
-      else {
-LAB_0103f760:
-        param_1 = param_1 | 0x80000000;
-        scratch = scratch + LZCOUNT(param_2) * -0x10000 + 0x10000;
-        param_2 = param_2 << LZCOUNT(param_2);
-      }
-      param_1 = param_1 >> 8;
-      param_2 = param_2 >> 8;
-      goto code_r0x0103f280;
+      else if (b << 1 == 0xff000000)
+        return exponent << 23;               /* x / Inf: a zero */
+      else
+        return (a & 0x7fffffff) | exponent << 23;   /* Inf / x */
     }
-    uVar8 = param_1 * 2;
-    if (uVar8 < 0xff000001) {
-      uVar8 = param_2 * 2;
+    else if (b << 1 == 0) {                  /* 0x0103f410 */
+      /* 0 / 0: invalid; x / 0: divide by zero */
+      control = a << 1 == 0 ? WORD_HEXADECIMAL_04000004 : WORD_HEXADECIMAL_08000004;
+      path = 1;
     }
-    if (uVar8 < 0xff000001) {
-      if ((param_1 & 0x7fffffff) != 0x7f800000 || (param_2 & 0x7fffffff) != 0x7f800000) {
-        if ((param_2 & 0x7fffffff) == 0x7f800000) {
-          param_1 = 0;
-        }
-        else {
-          param_1 = param_1 & 0x7fffffff;
-        }
-        return param_1 | uVar6 << 0x17;
-      }
-      param_1 = uVar6 << 0x17;
-      goto LAB_0103ed1c;
-    }
-    uVar6 = param_1 * 2 + 0x800000;
-    scratch = param_2 * 2 + 0x800000;
-    uVar8 = uVar6;
-    if (uVar6 < 0xff800001) {
-      uVar8 = scratch;
-    }
-    if (0xff800000 < uVar8) goto LAB_0103ed1c;
-    uVar8 = WORD_HEXADECIMAL_04000004;
-    if (0x7fffff < uVar6) {
-      param_1 = param_2;
-    }
-LAB_0103f924:
-    if ((uVar8 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x0103f938. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar8 & 0xf) != 8) {
-        uVar6 = (*(code *)(in_lr & 0xfffffffc))();
-        return uVar6;
-      }
-      if ((uVar8 & 0x40) == 0) {
-        uVar2 = _UNK_0103f9b4;
-        if ((uVar8 & 0x10) != 0) {
-          uVar2 = 0;
-          param_2 = _UNK_0103f9b8;
-        }
-                    /* WARNING: Could not recover jumptable at 0x0103f9b0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar6 = (*(code *)(in_lr & 0xfffffffc))(uVar2,param_2);
-        return uVar6;
-      }
-      if ((uVar8 & 0x10000) != 0) {
-                    /* WARNING: Could not recover jumptable at 0x0103f984. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar6 = (*(code *)(in_lr & 0xfffffffc))(0,0);
-        return uVar6;
-      }
-      if ((uVar8 & 0x20) == 0) {
-        if ((uVar8 & 0x10) == 0) {
-          uVar7 = 0x7fffffff;
-          uVar6 = param_2;
-          param_2 = param_1;
-        }
-        else {
-          uVar6 = 0x7fffffff;
-          uVar7 = 0xffffffff;
-        }
-        if ((param_2 & 0x80000000) != 0) {
-          uVar7 = ~uVar7;
-          uVar6 = ~uVar6;
-        }
-                    /* WARNING: Could not recover jumptable at 0x0103f978. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar6 = (*(code *)(in_lr & 0xfffffffc))(uVar7,uVar6);
-        return uVar6;
-      }
-      uVar2 = 0xffffffff;
-      uVar5 = 0xffffffff;
-      if ((uVar6 & 0x80000000) != 0) {
-        uVar2 = 0;
-        uVar5 = 0;
-      }
-                    /* WARNING: Could not recover jumptable at 0x0103f99c. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      uVar6 = (*(code *)(in_lr & 0xfffffffc))(uVar2,uVar5);
-      return uVar6;
-    }
-    uVar6 = 8;
-    goto LAB_0103f9e0;
-  }
-  if ((int)(param_1 ^ param_2) < 0) {
-    uVar6 = uVar6 | 0x100;
-  }
-  param_1 = param_1 & 0xffffff | 0x800000;
-  param_2 = param_2 & 0xffffff | 0x800000;
-code_r0x0103f280:
-  bVar11 = param_2 <= param_1;
-  uVar8 = (uint)*(byte *)(0x103f27f - (param_2 >> 0x11));
-  uVar7 = -param_2;
-  iVar9 = uVar8 * 2;
-  if (!bVar11) {
-    param_1 = param_1 << 1;
-  }
-  iVar9 = uVar8 * 0x100 + (((int)(uVar7 * iVar9) >> 4) * iVar9 >> 0x15);
-  uVar8 = iVar9 * (param_1 >> 8) >> 0x14;
-  uVar4 = uVar7 * uVar8 + param_1 * 0x800;
-  uVar6 = (uVar6 - scratch) + 0x7d0000;
-  uVar3 = iVar9 * (uVar4 >> 8) >> 0x13;
-  uVar4 = uVar7 * uVar3 + uVar4 * 0x1000;
-  uVar10 = uVar6 & 0x100;
-  uVar6 = uVar6 + ((int)uVar6 >> 0x10) + (uint)bVar11;
-  bVar11 = CARRY4(uVar4,uVar7);
-  if (bVar11) {
-    uVar4 = uVar4 + uVar7;
-  }
-  scratch = uVar3 + uVar8 * 0x1000 + (uint)bVar11;
-  if (uVar4 != 0) {
-    uVar10 = uVar10 | 0x40000002;
-  }
-  bVar11 = CARRY4(uVar7,uVar4 * 2);
-  bVar12 = uVar4 * 2 == param_2;
-  if (bVar11) {
-    uVar10 = uVar10 | 0x40000001;
-  }
-  if (bVar12) {
-    uVar10 = uVar10 | 4;
-  }
-  param_1 = scratch + uVar6 * 0x800000 + (uint)bVar11;
-  if (!bVar12) {
-    bVar11 = 0xfbffff < uVar6;
-  }
-  if (!bVar11) {
-    return param_1;
-  }
-  uVar7 = param_1 * -0x80000000;
-  if (bVar12 || uVar6 == 0xfc0000) {
-    param_1 = param_1 & 0xfffffffe;
-  }
-  if (uVar6 < 0xfc0000) {
-    return param_1;
-  }
-  if ((int)(uVar6 - 0xfc0000) < 0) {
-    if (param_1 * 2 - 0x1000000 < 0x3000000) {
-      return param_1;
-    }
-    param_1 = param_1 + 0x60000000;
-    bVar12 = (uVar10 & 4) == 0;
-    bVar11 = !bVar12 && uVar7 == 0;
-    if (bVar12 || (uVar10 | 8 | uVar7) == 0xffffffff) {
-      bVar11 = (uVar10 & 1) != 0;
-    }
-    if (bVar11) {
-      uVar6 = 0x40000004;
-    }
+    else if (a << 1 == 0)
+      return exponent << 23;                 /* 0 / x: a zero */
     else {
-      uVar6 = 0xc0000004;
-    }
-    if ((uVar10 & 0x40000000) == 0) {
-      uVar6 = 4;
-    }
-    puVar1 = (uint *)swv_GetFpStatusPtr();
-    param_2 = *puVar1;
-    if ((param_2 & 0x1000000) != 0) {
-      return param_1 & 0x80000000;
-    }
-    if ((param_2 & 0x800) == 0) {
-      scratch = 0xc1 - (param_1 & 0x80000000 | param_1 >> 0x17 & 0xfffffeff);
-      if ((scratch & 0x7fffffff) < 0x18) {
-        uVar7 = param_1 << (0x20 - scratch & 0xff);
-        uVar8 = 0x20 - (0x20 - scratch);
-        scratch = uVar8 & 0x80000000;
-        param_1 = (param_1 & 0xffffff | 0x800000) >> (uVar8 & 0xff) | scratch;
-        if (uVar7 == 0) {
-          param_2 = 0;
-          uVar7 = uVar6;
-          if ((uVar6 & 0x40000000) == 0) {
-            return param_1;
-          }
-        }
-        else {
-          *puVar1 = *puVar1 | 8;
-          param_2 = uVar7 << 1;
-          if (SUB41(uVar7 >> 0x1f,0)) {
-            if (param_2 == 0) {
-              bVar11 = (bool)((byte)(uVar6 >> 0x1e) & 1);
-              uVar7 = ~((int)uVar6 >> 0x1f);
-              if (!bVar11 || uVar7 == 0) {
-                param_1 = param_1 + 1;
-              }
-              if (!bVar11) {
-                param_1 = param_1 & 0xfffffffe;
-              }
-            }
-            else {
-              param_1 = param_1 + 1;
-            }
-          }
-          scratch = uVar7;
-          uVar7 = uVar6 | 0x40000000;
-        }
+      /* denormals: normalized to bit 31, their exponents lowered (0x0103f72c), then to bit 23 for the
+         divide (0x0103f3bc) */
+      result = a << 8;
+      second = b << 8;
+      denormal = (exponent & 0xff0000) == 0;
+      if (denormal) {
+        for (shift = 0; !(result << shift & 0x80000000); shift++)
+          ;
+        exponent = exponent - (shift << 16) + 0x10000;
+        result <<= shift;
       }
-      else {
-        param_2 = *puVar1 | 8;
-        *puVar1 = param_2;
-        if (SBORROW4(scratch & 0x7fffffff,-0x7fffffe7)) {
-          param_1 = scratch & 0x80000000;
-        }
-        else {
-          uVar7 = param_1 & 0x7fffff;
-          param_1 = (scratch & 0x80000000) + 1;
-          if (uVar7 == 0 && (uVar6 & 0x80000000) == 0) {
-            param_1 = scratch & 0x80000000;
-          }
-        }
-        uVar7 = 0x40000000;
+      if (denormal && (other & 0xff0000) != 0)
+        second |= 0x80000000;
+      else {                                 /* b is a denormal (0x0103f760) */
+        result |= 0x80000000;
+        for (shift = 0; !(second << shift & 0x80000000); shift++)
+          ;
+        other = other - (shift << 16) + 0x10000;
+        second <<= shift;
       }
-      goto LAB_0103ed1c;
+      divisor = second >> 8;
+      second = result >> 8;
     }
-    uVar8 = uVar6 | 0x20000000;
   }
   else {
-    if (0xfdffffff < param_1 * 2 + 0x1000000) {
-      return param_1;
+    second = (a | 0x800000) & 0xffffff;      /* the mantissas with their hidden bits */
+    divisor = (b | 0x800000) & 0xffffff;
+  }
+  if (path == 0) {                           /* 0x0103f280 */
+    exponent -= other;
+    carry = second >= divisor;
+    estimate = (uint32)swv_fdiv_reciprocals[(divisor >> 17) - 64] << 1;
+    divisor = -divisor;
+    digit = divisor * estimate;
+    if (!carry)
+      second <<= 1;
+    digit = (uint32)((int32)digit >> 4);
+    other = digit * estimate;
+    estimate = (estimate << 7) + (uint32)((int32)other >> 21);   /* the refined reciprocal */
+    digit = (second >> 8) * estimate;
+    second <<= 11;
+    other = digit >> 20;                     /* the first quotient digit */
+    second = divisor * other + second;       /* its remainder */
+    exponent += 0x7d0000;
+    digit = (second >> 8) * estimate;
+    second <<= 12;
+    digit >>= 19;                            /* the second digit */
+    second = divisor * digit + second;
+    flags = exponent & 0x100;                /* the sign */
+    exponent = exponent + (uint32)((int32)exponent >> 16) + carry;   /* bits 0-8: the exponent, the sign */
+    divisor = -divisor;
+    carry = second >= divisor;               /* the last correction */
+    if (carry)
+      second -= divisor;
+    other = digit + (other << 12) + carry;   /* the quotient */
+    if (second != 0)
+      flags |= 0x40000002;                   /* inexact */
+    carry = second << 1 >= divisor;          /* the remainder at or above half: round up */
+    if (carry)
+      flags |= 0x40000001;
+    if (second << 1 == divisor)
+      flags |= 4;                            /* exactly half */
+    second = flags | 8;                      /* r1: the flags */
+    result = other + (exponent << 23) + carry;
+    if (!(second & 4) && exponent < 0xfc0000)
+      return result;
+    second |= result << 31;
+    if ((second & 4) || exponent == 0xfc0000)
+      result &= ~1u;                         /* a tie: to even */
+    if (exponent < 0xfc0000)
+      return result;
+    if ((int32)(exponent - 0xfc0000) >= 0) { /* overflow (0x0103f364) */
+      if ((result << 1) + 0x1000000 >= 0xfe000000)
+        return result;
+      result -= 0x60000000;                  /* for the trap handler, the exponent wrapped by 192 */
+      second &= 0x40000000;                  /* r1: only the inexact bit */
+      control = 0x10000004 | second;
+      path = 1;
     }
-    param_1 = param_1 + 0xa0000000;
-    param_2 = uVar10 & 0x40000000;
-    uVar7 = param_2 | 0x10000004;
-LAB_0103ed1c:
-    if ((uVar7 & 0x10) == 0) {
-      uVar6 = param_2;
+    else {                                   /* below the normal range (0x0103f330) */
+      if ((result << 1) - 0x1000000 < 0x3000000)
+        return result;
+      result += 0x60000000;
+      if (second & 4)
+        control = second & 0x80000000 ? 0xc0000004 : 0x40000004;
+      else
+        control = second & 1 ? 0x40000004 : 0xc0000004;
+      if (!(second & 0x40000000))
+        control = 4;                         /* exact */
+      path = 2;
     }
-    puVar1 = (uint *)swv_GetFpStatusPtr();
-    uVar3 = *puVar1;
-    if ((uVar7 & ~(uVar3 << 0x12) & 0x30000000) != 0) {
-      uVar7 = uVar7 | 0x40000000;
-    }
-    uVar8 = uVar7 | uVar3 & 0x1c00000;
-    *puVar1 = uVar3 | (uVar7 & 0x7fffffff) >> 0x1a;
-    bVar11 = (uVar7 & 0xf) != 8;
-    if (bVar11) {
-      uVar7 = uVar7 & 0x70;
-      uVar8 = uVar8 | uVar7 << 3;
-    }
-    else {
-      uVar7 = 0x20000;
-    }
-    if (!bVar11 && (uVar7 & ~uVar8) == 0) {
-      uVar8 = uVar8 | 0xc00000;
-    }
-    if ((uVar8 & 0x20000000) == 0) {
-      if ((uVar8 & 0x10000000) == 0) {
-        if ((uVar8 & 0x40000000) != 0) {
-          uVar3 = uVar3 & 0x1000;
-          goto joined_r0x0103edcc;
-        }
-        if ((uVar8 & 0x8000000) == 0) {
-          if ((uVar3 & 0x100) == 0) {
-            uVar6 = param_2;
-            if ((uVar8 & 0x80) == 0) {
-              uVar6 = param_1;
-            }
-            uVar6 = uVar6 & 0x80000000;
-            if ((uVar8 & 0x10) == 0) {
-              param_1 = WORD_HEXADECIMAL_7FC00000 | uVar6;
-            }
-            else {
-              param_2 = DOUBLE_NOT_A_NUMBER_HIGH_WORD | uVar6;
-              param_1 = DOUBLE_NOT_A_NUMBER_LOW_WORD;
-            }
-            goto LAB_0103f924;
+  }
+  if (path == 2) {                           /* below the normal range (0x0103f77c) */
+    status = (uint32 *)swv_GetFpStatusPtr();
+    if (*status & 0x1000000)                 /* flush to zero */
+      return result & 0x80000000;
+    if (*status & 0x800)                     /* underflow trapped: the result, its exponent wrapped */
+      return (uint32)FUN_010019e0(result,*status,control,other,control | 0x20000000);
+    shift = 0xc1 - (((result & 0x80000000) | result >> 23) & ~0x100);   /* the denormal's shift, sign */
+    if ((int32)(shift & 0x7fffffff) <= 0x17) {                         /* in bit 31 */
+      count = (0x20 - shift) & 0xff;
+      lost = count < 32 ? result << count : 0;   /* the bits shifted out */
+      count = shift & 0xff;
+      result = (count < 32 ? ((result & 0xffffff) | 0x800000) >> count : 0) | (shift & 0x80000000);
+      if (lost == 0) {
+        if (!(control & 0x40000000))         /* exact */
+          return result;
+        second = 0;
+        other = shift & 0x80000000;          /* r3: the sign (`and r3, r3, #0x80000000`) */
+      }
+      else {
+        *status |= 8;                        /* underflow */
+        other = lost;
+        if (lost & 0x80000000) {             /* round to nearest: */
+          if (lost << 1 != 0)
+            result++;
+          else {                             /* a tie; r3 = ~(ip asr 31) (`mvns r3, r2, asr #31`) */
+            other = control & 0x80000000 ? 0 : 0xffffffff;
+            if (control & 0x80000000)        /* the multiply or divide rounded down */
+              result++;
+            else if (!(control & 0x40000000))   /* an exact result: to even */
+              result = (result + 1) & ~1u;
           }
         }
-        else if ((uVar3 & 0x200) == 0) {
-          if ((uVar8 & 0x10) == 0) {
-            param_2 = param_1 ^ uVar6;
-          }
-          else {
-            param_2 = param_2 ^ scratch;
-          }
-          goto LAB_0103ee14;
-        }
-      }
-      else if ((uVar3 & 0x400) == 0) {
-        if ((uVar8 & 0x80) == 0) {
-          param_2 = param_1 & 0x80000000;
-        }
-        else {
-          param_2 = param_2 & 0x80000000;
-        }
-LAB_0103ee14:
-        uVar6 = INTEGER_0;
-        if ((uVar8 & 0x10) == 0) {
-          uVar6 = WORD_HEXADECIMAL_7F800000 | param_2 & 0x80000000;
-        }
-        return uVar6;
+        second = lost << 1;
+        control |= 0x40000000;
       }
     }
-    else {
-      uVar3 = uVar3 & 0x800;
-joined_r0x0103edcc:
-      if (uVar3 == 0) {
-        return param_1;
+    else {                                   /* too small for a denormal (0x0103f830) */
+      *status |= 8;
+      if ((shift & 0x7fffffff) >= 0x19)
+        result = shift & 0x80000000;
+      else {                                 /* half the smallest denormal: rounded */
+        round = result << 9 == 0;
+        result = (shift & 0x80000000) + 1;
+        if (round && !(control & 0x80000000))
+          result &= ~1u;
       }
+      second = *status;
+      other = shift;
+      control = 0x40000000;
     }
   }
-  uVar6 = FUN_010019e0(param_1,param_2,uVar6,scratch);
-  if ((uVar8 & 0xf) != 9) {
-    return uVar6;
+  status = (uint32 *)swv_GetFpStatusPtr();              /* the exception (0x0103ed1c) */
+  if (control & 0x30000000 & ~(*status << 18))
+    control |= 0x40000000;                   /* an untrapped overflow is also inexact */
+  *status |= (control << 1) >> 27;           /* the sticky flags */
+  control |= *status & 0x1c00000;
+  if (control & 0x10000000) {                /* overflow */
+    if (!(*status & 0x400))
+      return WORD_HEXADECIMAL_7F800000 | (result & 0x80000000);
   }
-LAB_0103f9e0:
-  if ((uVar8 & 0x100000) == 0) {
-    return (uint)((uVar8 & uVar6 << 0x10) != 0);
+  else if (control & 0x40000000) {           /* inexact (the underflows) */
+    if (!(*status & 0x1000))
+      return result;
   }
-  if ((uVar8 & 0xf0000) != 0) {
-    if ((uVar6 & 8) == 0) {
-      return 2 - uVar6;
-    }
-    return uVar6;
+  else if (control & 0x8000000) {            /* divide by zero */
+    if (!(*status & 0x200))
+      return WORD_HEXADECIMAL_7F800000 | ((result ^ second) & 0x80000000);
   }
-  uVar7 = uVar6 << 0x1d;
-  if ((bool)((byte)(uVar6 >> 3) & 1)) {
-    uVar7 = uVar7 | 0x30000000;
-  }
-  puVar1 = (uint *)swv_GetFpStatusPtr();
-  *puVar1 = *puVar1 & 0xfffffff | uVar7;
-  return uVar6;
+  else if (!(*status & 0x100))               /* invalid */
+    return WORD_HEXADECIMAL_7FC00000 | (result & 0x80000000);
+  return (uint32)FUN_010019e0(result,second,second,other,control);
 }
 
 /* ==== 0x0103F428  (file offset 0x3F428)  swv_fcmp_a ================================================== */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint swv_fcmp_a(uint param_1,uint param_2)
+/* The soft-float library's quiet single-precision compare, for == and != (ARM's fplib; GUESS: ADS _fcmpeq,
+   __aeabi_cfcmpeq in the run-time ABI). Leaves the result in the CPU flags, as an unsigned `cmp a, b`
+   would: Z set when a == b (+0 == -0), C set with Z clear when a > b, C clear when a < b (N and V mean
+   nothing). C cannot express that: the listing's callers test Ghidra's in_ZR / in_CY after the call.
+   Infinities compare as numbers (through 0x0103daa8, which only fixes V). No caller reads r0, but it is
+   returned as the binary leaves it: a when there is no NaN; 8 after a NaN (the exception code's compare
+   exit, 0x0103f924 / 0x0103f9e0); after a trap, the trap handler's result t, or 2 - t when its bit 3 is
+   clear (0x0103f9f8). What C can express is the rest, below: an unordered compare (a NaN) leaves C and Z
+   clear; only a signalling NaN raises invalid (status bit 0) and, when that is trapped (bit 0x100), calls
+   the trap FUN_010019e0 (with r3 = (b << 1) + 0x800000, as the binary leaves it). Soft-float library
+   (region 0x0103ED00-0x0103F900, tools/profile_state.py). The same code, word for word apart from the
+   branch and call offsets, as kh.mod's float_compare_equal (0x001267F0; kh_mod.c), from which this rewrite
+   is taken. Evidence: 0x0103f428 - 0x0103f488 (`orrs r12, r0, r1` / `bmi`, `cmn r12, #0x800000` / `bmi`,
+   `cmp r0, r1`, or `cmp r1, r0` for two negatives, / `mov pc, lr`; a NaN: `ldr r12` the control word
+   WORD_HEXADECIMAL_04120009 / `b 0x0103daa8`). Verified against the binary under emulation (unicorn):
+   1,378,408 cases, r0, the status word, the trap handler's arguments and the swv_GetFpStatusPtr calls the
+   same, 0 mismatches; the binary's flags against the host's IEEE comparison (Z: a == b, C: a >= b,
+   unordered Z and C clear): no difference. */
+uint32 swv_fcmp_a(uint32 a,uint32 b)
 
 {
-  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
-  uint uVar1;
-  undefined4 uVar2;
-  uint *puVar3;
-  uint uVar4;
-  undefined4 uVar5;
-  uint uVar6;
-  uint uVar7;
-  uint in_lr;
-  bool bVar8;
-  
-  uVar1 = WORD_HEXADECIMAL_04120009;
-                    /* Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py).
-                       GUESS: identified by code pattern (ARM ADS fplib single-precision routine):
-                       float compare (one of the fcmp variants; which relation is not determined).
-                        */
-  uVar7 = param_1 | param_2;
-  if ((int)uVar7 < 0) {
-    if ((int)(uVar7 + 0x800000) < 0) {
-      return param_1;
-    }
-    if (param_1 << 1 < 0xff000000 && param_2 << 1 < 0xff000000) {
-      return param_1;
-    }
-  }
-  else {
-    if (-1 < (int)(uVar7 + 0x800000)) {
-      return param_1;
-    }
-    if (param_1 << 1 < 0xff000000 && param_2 << 1 < 0xff000000) {
-      return param_1;
-    }
-  }
-  uVar6 = 0x1000000;
-  uVar7 = param_1 * 2;
-  if (uVar7 < 0xff000001) {
-    uVar7 = param_2 * 2;
-  }
-  if (uVar7 < 0xff000001) {
-    if ((int)(param_1 | param_2) < 0) {
-      if (!SBORROW4(param_2,param_1)) {
-        return param_1;
-      }
-    }
-    else if (!SBORROW4(param_1,param_2)) {
-      return param_1;
-    }
-    return param_1;
-  }
-  if ((WORD_HEXADECIMAL_04120009 & 0x50000) == 0) {
-    uVar6 = param_1 * 2 + 0x800000;
-    scratch = param_2 * 2 + 0x800000;
-    uVar7 = uVar6;
-    if (uVar6 < 0xff800001) {
-      uVar7 = scratch;
-    }
-    if (0xff800000 < uVar7) goto LAB_0103ed1c;
-    uVar7 = WORD_HEXADECIMAL_04120009;
-    if (0x7fffff < uVar6) {
-      param_1 = param_2;
-    }
-LAB_0103f924:
-    if ((uVar7 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x0103f938. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar7 & 0xf) != 8) {
-        uVar1 = (*(code *)(in_lr & 0xfffffffc))();
-        return uVar1;
-      }
-      if ((uVar7 & 0x40) == 0) {
-        uVar2 = _UNK_0103f9b4;
-        if ((uVar7 & 0x10) != 0) {
-          uVar2 = 0;
-          param_2 = _UNK_0103f9b8;
-        }
-                    /* WARNING: Could not recover jumptable at 0x0103f9b0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar1 = (*(code *)(in_lr & 0xfffffffc))(uVar2,param_2);
-        return uVar1;
-      }
-      if ((uVar7 & 0x10000) != 0) {
-                    /* WARNING: Could not recover jumptable at 0x0103f984. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar1 = (*(code *)(in_lr & 0xfffffffc))(0,0);
-        return uVar1;
-      }
-      if ((uVar7 & 0x20) == 0) {
-        if ((uVar7 & 0x10) == 0) {
-          uVar7 = 0x7fffffff;
-          uVar1 = param_2;
-          param_2 = param_1;
-        }
-        else {
-          uVar1 = 0x7fffffff;
-          uVar7 = 0xffffffff;
-        }
-        if ((param_2 & 0x80000000) != 0) {
-          uVar7 = ~uVar7;
-          uVar1 = ~uVar1;
-        }
-                    /* WARNING: Could not recover jumptable at 0x0103f978. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar1 = (*(code *)(in_lr & 0xfffffffc))(uVar7,uVar1);
-        return uVar1;
-      }
-      uVar2 = 0xffffffff;
-      uVar5 = 0xffffffff;
-      if ((uVar6 & 0x80000000) != 0) {
-        uVar2 = 0;
-        uVar5 = 0;
-      }
-                    /* WARNING: Could not recover jumptable at 0x0103f99c. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      uVar1 = (*(code *)(in_lr & 0xfffffffc))(uVar2,uVar5);
-      return uVar1;
-    }
-    uVar1 = 8;
-    goto LAB_0103f9e0;
-  }
-LAB_0103ed1c:
-  if ((WORD_HEXADECIMAL_04120009 & 0x10) == 0) {
-    uVar6 = param_2;
-  }
-  puVar3 = (uint *)swv_GetFpStatusPtr();
-  uVar4 = *puVar3;
-  if ((uVar1 & ~(uVar4 << 0x12) & 0x30000000) != 0) {
-    uVar1 = uVar1 | 0x40000000;
-  }
-  uVar7 = uVar1 | uVar4 & 0x1c00000;
-  *puVar3 = uVar4 | (uVar1 & 0x7fffffff) >> 0x1a;
-  bVar8 = (uVar1 & 0xf) != 8;
-  if (bVar8) {
-    uVar1 = uVar1 & 0x70;
-    uVar7 = uVar7 | uVar1 << 3;
-  }
-  else {
-    uVar1 = 0x20000;
-  }
-  if (!bVar8 && (uVar1 & ~uVar7) == 0) {
-    uVar7 = uVar7 | 0xc00000;
-  }
-  if ((uVar7 & 0x20000000) == 0) {
-    if ((uVar7 & 0x10000000) == 0) {
-      if ((uVar7 & 0x40000000) != 0) {
-        uVar4 = uVar4 & 0x1000;
-        goto joined_r0x0103edcc;
-      }
-      if ((uVar7 & 0x8000000) == 0) {
-        if ((uVar4 & 0x100) == 0) {
-          uVar6 = param_2;
-          if ((uVar7 & 0x80) == 0) {
-            uVar6 = param_1;
-          }
-          uVar6 = uVar6 & 0x80000000;
-          if ((uVar7 & 0x10) == 0) {
-            param_1 = WORD_HEXADECIMAL_7FC00000 | uVar6;
-          }
-          else {
-            param_2 = DOUBLE_NOT_A_NUMBER_HIGH_WORD | uVar6;
-            param_1 = DOUBLE_NOT_A_NUMBER_LOW_WORD;
-          }
-          goto LAB_0103f924;
-        }
-      }
-      else if ((uVar4 & 0x200) == 0) {
-        if ((uVar7 & 0x10) == 0) {
-          param_2 = param_1 ^ uVar6;
-        }
-        else {
-          param_2 = param_2 ^ scratch;
-        }
-        goto LAB_0103ee14;
-      }
-    }
-    else if ((uVar4 & 0x400) == 0) {
-      if ((uVar7 & 0x80) == 0) {
-        param_2 = param_1 & 0x80000000;
-      }
-      else {
-        param_2 = param_2 & 0x80000000;
-      }
-LAB_0103ee14:
-      uVar1 = INTEGER_0;
-      if ((uVar7 & 0x10) == 0) {
-        uVar1 = WORD_HEXADECIMAL_7F800000 | param_2 & 0x80000000;
-      }
-      return uVar1;
-    }
-  }
-  else {
-    uVar4 = uVar4 & 0x800;
-joined_r0x0103edcc:
-    if (uVar4 == 0) {
-      return param_1;
-    }
-  }
-  uVar1 = FUN_010019e0(param_1,param_2,uVar6,scratch,uVar7,in_lr,uVar7,in_lr);
-  if ((uVar7 & 0xf) != 9) {
-    return uVar1;
-  }
-LAB_0103f9e0:
-  if ((uVar7 & 0x100000) == 0) {
-    return (uint)((uVar7 & uVar1 << 0x10) != 0);
-  }
-  if ((uVar7 & 0xf0000) != 0) {
-    if ((uVar1 & 8) == 0) {
-      return 2 - uVar1;
-    }
-    return uVar1;
-  }
-  uVar7 = uVar1 << 0x1d;
-  if ((bool)((byte)(uVar1 >> 3) & 1)) {
-    uVar7 = uVar7 | 0x30000000;
-  }
-  puVar3 = (uint *)swv_GetFpStatusPtr();
-  *puVar3 = *puVar3 & 0xfffffff | uVar7;
-  return uVar1;
+  uint32 *status;
+  uint32 result;
+
+  if ((a << 1) <= 0xff000000 && (b << 1) <= 0xff000000)
+    return a;                                /* no NaN: the flags hold the comparison */
+  if ((a << 1) + 0x800000 <= 0xff800000 && (b << 1) + 0x800000 <= 0xff800000)
+    return 8;                                /* only quiet NaNs: unordered, no exception */
+  status = (uint32 *)swv_GetFpStatusPtr();   /* invalid (the library's exception code, 0x0103ed1c) */
+  *status |= 1;
+  if (!(*status & 0x100))
+    return 8;
+  result = (uint32)FUN_010019e0(a,b,b,(b << 1) + 0x800000,
+                                WORD_HEXADECIMAL_04120009 | (*status & 0x1c00000));
+  return result & 8 ? result : 2 - result;
 }
 
 /* ==== 0x0103F490  (file offset 0x3F490)  swv_ffix ==================================================== */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint swv_ffix(uint param_1)
+/* The soft-float library's float -> int conversion, ARM's fplib _ffix (__aeabi_f2iz in the run-time ABI,
+   C's (int)a). Truncates toward zero: a << 8 with the hidden bit at 31 (unless the sign and exponent are
+   0, `asrs` at 0x0103f490) shifted right by 158 - exponent, negated for a negative a (whose exponent 0
+   drops the hidden bit again, 0x0103f4bc); no rounding and no inexact flag. Out of range (2^31 or more,
+   below -2^31; -2^31 itself, 0xCF000000, converts), Inf or NaN (0x0103f4d0): invalid, through the
+   library's exception code (0x0103ed1c) with the control word WORD_HEXADECIMAL_04020048 (invalid, an
+   integer result 0x40, operation 8; 0x10000 more for a NaN, quiet or signalling: 0x0103f1e8 sends both
+   on): the invalid flag (status bit 0), the control word's status bits 22-24 and 0xC00000; then the trap
+   FUN_010019e0 when status 0x100 is set, with a, a << 1 twice and the shifted mantissa as r3, and the
+   trap's r0 is the result; otherwise the integer default: 0 for a NaN, 0x7FFFFFFF, or 0x80000000 for a
+   negative a. The listing's second swv_GetFpStatusPtr call (0x0103fa20) is the compare exit, which a
+   conversion never reaches; it is not written. Returns int32 (Ghidra had uint). Soft-float library (region
+   0x0103ED00-0x0103F900, tools/profile_state.py). The same code, word for word apart from the branch and
+   call offsets, as kh.mod's float_to_int (0x00126858; kh_mod.c), from which this rewrite is taken.
+   Evidence: 0x0103f490 - 0x0103f4f0 (`asrs r2, r0, #0x17` / `orrne r3, r3, #0x80000000`, `rsbs r2, r2,
+   #0x9e` / `bls`, `lsr r0, r3, r2`, `cmp r0, #0xcf000000` / `bhi`, `sub r0, r0, r3, lsr r2`, `ldr r12` the
+   control word, `orrhi r12, r12, #0x10000` / `bhi 0x0103f1e8`). Verified against the binary under
+   emulation (unicorn; swv_GetFpStatusPtr and the trap handler stubbed): 1,304,960 cases (special values
+   and integer edges under 16 status words, then random words), the result, the status word, the trap
+   handler's arguments and the swv_GetFpStatusPtr calls the same, 0 mismatches. Against the host's IEEE
+   truncation: no difference in range. */
+int32 swv_ffix(uint32 a)
 
 {
-  uint *puVar1;
-  undefined4 uVar2;
-  uint uVar3;
-  uint uVar4;
-  undefined4 uVar5;
-  uint uVar6;
-  uint uVar7;
-  uint uVar8;
-  uint uVar9;
-  uint in_lr;
-  bool bVar10;
-  
-                    /* Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py).
-                       GUESS: identified by code pattern (ARM ADS fplib single-precision routine):
-                       float -> int, truncating. */
-  uVar6 = (int)param_1 >> 0x17;
-  uVar7 = param_1 << 8;
-  if (uVar6 != 0) {
-    uVar7 = uVar7 | 0x80000000;
+  uint32 *status;
+  uint32 word;
+  uint32 control = WORD_HEXADECIMAL_04020048;
+  uint32 mantissa = a << 8;
+  uint32 exponent = a >> 23 & 0xff;
+  uint32 shift = 0x9e - exponent;    /* the right shift that leaves the integer part (lsr by r2) */
+
+  if ((a >> 23) != 0)                       /* the hidden bit: the sign and exponent are not 0 */
+    mantissa |= 0x80000000;
+  if ((int32)a >= 0) {
+    if (exponent < 0x9e)
+      return (int32)(shift < 32 ? mantissa >> shift : 0);
   }
-  if ((int)uVar6 < 0) {
-    if (param_1 < 0xcf000001) {
-      if ((uVar6 & 0xff) == 0) {
-        uVar7 = uVar7 & 0x7fffffff;
-      }
-      return -(uVar7 >> (0x9e - (uVar6 & 0xff) & 0xff));
-    }
+  else if (a <= 0xcf000000) {               /* negative, down to -2^31 (0x0103f4b8) */
+    if (exponent == 0)
+      mantissa &= ~0x80000000;
+    return (int32)(0 - (shift < 32 ? mantissa >> shift : 0));
   }
-  else {
-    bVar10 = uVar6 < 0x9f;
-    uVar6 = 0x9e - uVar6;
-    if (bVar10 && uVar6 != 0) {
-      return uVar7 >> (uVar6 & 0xff);
-    }
-  }
-  uVar4 = param_1 * 2;
-  uVar8 = WORD_HEXADECIMAL_04020048;
-  if ((0xff000000 < uVar4) &&
-     (uVar9 = WORD_HEXADECIMAL_04020048 | 0x10000, uVar8 = uVar9, (param_1 & 0x400000) != 0)) {
-    uVar6 = WORD_HEXADECIMAL_04020048 & 0x4f;
-    if (uVar6 == 0x48) {
-      uVar6 = 0x48;
-      goto LAB_0103ed1c;
-    }
-LAB_0103f924:
-    if ((uVar9 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x0103f938. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar9 & 0xf) != 8) {
-        uVar7 = (*(code *)(in_lr & 0xfffffffc))();
-        return uVar7;
-      }
-      if ((uVar9 & 0x40) == 0) {
-        uVar2 = _UNK_0103f9b4;
-        if ((uVar9 & 0x10) != 0) {
-          uVar2 = 0;
-          uVar4 = _UNK_0103f9b8;
-        }
-                    /* WARNING: Could not recover jumptable at 0x0103f9b0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar7 = (*(code *)(in_lr & 0xfffffffc))(uVar2,uVar4);
-        return uVar7;
-      }
-      if ((uVar9 & 0x10000) != 0) {
-                    /* WARNING: Could not recover jumptable at 0x0103f984. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar7 = (*(code *)(in_lr & 0xfffffffc))(0,0);
-        return uVar7;
-      }
-      if ((uVar9 & 0x20) != 0) {
-        uVar2 = 0xffffffff;
-        uVar5 = 0xffffffff;
-        if ((uVar6 & 0x80000000) != 0) {
-          uVar2 = 0;
-          uVar5 = 0;
-        }
-                    /* WARNING: Could not recover jumptable at 0x0103f99c. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar7 = (*(code *)(in_lr & 0xfffffffc))(uVar2,uVar5);
-        return uVar7;
-      }
-      if ((uVar9 & 0x10) == 0) {
-        uVar6 = 0x7fffffff;
-        uVar7 = uVar4;
-        uVar4 = param_1;
-      }
-      else {
-        uVar7 = 0x7fffffff;
-        uVar6 = 0xffffffff;
-      }
-      if ((uVar4 & 0x80000000) != 0) {
-        uVar6 = ~uVar6;
-        uVar7 = ~uVar7;
-      }
-                    /* WARNING: Could not recover jumptable at 0x0103f978. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      uVar7 = (*(code *)(in_lr & 0xfffffffc))(uVar6,uVar7);
-      return uVar7;
-    }
-    uVar7 = 8;
-    goto LAB_0103f9e0;
-  }
-LAB_0103ed1c:
-  if ((uVar8 & 0x10) == 0) {
-    uVar6 = uVar4;
-  }
-  puVar1 = (uint *)swv_GetFpStatusPtr();
-  uVar3 = *puVar1;
-  if ((uVar8 & ~(uVar3 << 0x12) & 0x30000000) != 0) {
-    uVar8 = uVar8 | 0x40000000;
-  }
-  uVar9 = uVar8 | uVar3 & 0x1c00000;
-  *puVar1 = uVar3 | (uVar8 & 0x7fffffff) >> 0x1a;
-  bVar10 = (uVar8 & 0xf) != 8;
-  if (bVar10) {
-    uVar8 = uVar8 & 0x70;
-    uVar9 = uVar9 | uVar8 << 3;
-  }
-  else {
-    uVar8 = 0x20000;
-  }
-  if (!bVar10 && (uVar8 & ~uVar9) == 0) {
-    uVar9 = uVar9 | 0xc00000;
-  }
-  if ((uVar9 & 0x20000000) == 0) {
-    if ((uVar9 & 0x10000000) == 0) {
-      if ((uVar9 & 0x40000000) != 0) {
-        uVar3 = uVar3 & 0x1000;
-        goto joined_r0x0103edcc;
-      }
-      if ((uVar9 & 0x8000000) == 0) {
-        if ((uVar3 & 0x100) == 0) {
-          uVar6 = uVar4;
-          if ((uVar9 & 0x80) == 0) {
-            uVar6 = param_1;
-          }
-          uVar6 = uVar6 & 0x80000000;
-          if ((uVar9 & 0x10) == 0) {
-            param_1 = WORD_HEXADECIMAL_7FC00000 | uVar6;
-          }
-          else {
-            uVar4 = DOUBLE_NOT_A_NUMBER_HIGH_WORD | uVar6;
-            param_1 = DOUBLE_NOT_A_NUMBER_LOW_WORD;
-          }
-          goto LAB_0103f924;
-        }
-      }
-      else if ((uVar3 & 0x200) == 0) {
-        if ((uVar9 & 0x10) == 0) {
-          uVar4 = param_1 ^ uVar6;
-        }
-        else {
-          uVar4 = uVar4 ^ uVar7;
-        }
-        goto LAB_0103ee14;
-      }
-    }
-    else if ((uVar3 & 0x400) == 0) {
-      if ((uVar9 & 0x80) == 0) {
-        uVar4 = param_1 & 0x80000000;
-      }
-      else {
-        uVar4 = uVar4 & 0x80000000;
-      }
-LAB_0103ee14:
-      uVar7 = INTEGER_0;
-      if ((uVar9 & 0x10) == 0) {
-        uVar7 = WORD_HEXADECIMAL_7F800000 | uVar4 & 0x80000000;
-      }
-      return uVar7;
-    }
-  }
-  else {
-    uVar3 = uVar3 & 0x800;
-joined_r0x0103edcc:
-    if (uVar3 == 0) {
-      return param_1;
-    }
-  }
-  uVar7 = FUN_010019e0(param_1,uVar4,uVar6,uVar7,uVar9,in_lr,uVar9,in_lr);
-  if ((uVar9 & 0xf) != 9) {
-    return uVar7;
-  }
-LAB_0103f9e0:
-  if ((uVar9 & 0x100000) == 0) {
-    return (uint)((uVar9 & uVar7 << 0x10) != 0);
-  }
-  if ((uVar9 & 0xf0000) == 0) {
-    uVar6 = uVar7 << 0x1d;
-    if ((bool)((byte)(uVar7 >> 3) & 1)) {
-      uVar6 = uVar6 | 0x30000000;
-    }
-    puVar1 = (uint *)swv_GetFpStatusPtr();
-    *puVar1 = *puVar1 & 0xfffffff | uVar6;
-    return uVar7;
-  }
-  if ((uVar7 & 8) != 0) {
-    return uVar7;
-  }
-  return 2 - uVar7;
+  if ((a << 1) > 0xff000000)
+    control |= 0x10000;                     /* a NaN */
+  status = (uint32 *)swv_GetFpStatusPtr();   /* invalid (the library's exception code, 0x0103ed1c) */
+  word = *status | 1;
+  *status = word;
+  control |= (word & 0x1c00000) | 0xc00000;
+  if ((word & 0x100) == 0)
+    return control & 0x10000 ? 0 : (int32)a < 0 ? (int32)0x80000000 : 0x7fffffff;
+  return (int32)(uint32)FUN_010019e0(a,a << 1,a << 1,mantissa,control);
 }
 
 /* ==== 0x0103F4F8  (file offset 0x3F4F8)  swv_ffltu =================================================== */
-uint swv_ffltu(int param_1)
+/* The soft-float library's unsigned int -> float conversion, ARM's fplib _ffltu (__aeabi_ui2f in the
+   run-time ABI). Returns value as float bits, rounded to nearest, ties to even: 0 gives +0.0; otherwise
+   the exponent 127 + 31 - the leading zeros, the 23 bits after the leading 1, plus the round bit (which
+   may carry into the exponent). The binary sets r2 = 0x40000000 (no sign) and jumps into swv_fflt's
+   conversion (0x0103f50c), written inline here; the base 0x4F800000 Ghidra showed and the value shifted
+   right arithmetically (its sign bits and hidden bit) make 0x4F000000. Soft-float library (region
+   0x0103ED00-0x0103F900, tools/profile_state.py). Evidence: 0x0103f4f8 - 0x0103f4fc (`mov r2,
+   #0x40000000`, `b 0x0103f50c`) and 0x0103f50c - 0x0103f530 (`clz r1, r0`, `lsls r0, r0, r1` / `moveq pc,
+   lr`, `sub r2, r2, r1, lsl #23` / `add r2, r2, #0x0f800000`, `lsls r1, r0, #25` / `adc r0, r2, r0, asr
+   #8`, `movsne` / `bichs r0, r0, #1` the tie). Verified against the binary under emulation (unicorn) and
+   against Ghidra's original: 1,304,960 cases, 0 mismatches; against the host's IEEE conversion: no
+   difference. */
+uint32 swv_ffltu(uint32 value)
 
 {
-  uint uVar1;
-  uint uVar2;
-  bool bVar3;
-  
-                    /* Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py).
-                       GUESS: identified by code pattern (ARM ADS fplib single-precision routine):
-                       unsigned int -> float (no sign handling, base 0x4f800000). */
-  uVar1 = param_1 << LZCOUNT(param_1);
-  if (uVar1 == 0) {
+  uint32 magnitude = value;
+  uint32 zeros;
+  uint32 result;
+
+  if (magnitude == 0)
     return 0;
-  }
-  bVar3 = (bool)((byte)(uVar1 >> 7) & 1);
-  uVar2 = LZCOUNT(param_1) * -0x800000 + 0x4f800000 + ((int)uVar1 >> 8) + (uint)bVar3;
-  if ((uVar1 & 0x7f) != 0) {
-    bVar3 = false;
-  }
-  if (bVar3) {
-    uVar2 = uVar2 & 0xfffffffe;
-  }
-  return uVar2;
+  for (zeros = 0; !(magnitude << zeros & 0x80000000); zeros++)
+    ;
+  magnitude <<= zeros;                            /* the top bit set; zeros is below 32 here */
+  result = 0x4F000000u - zeros * 0x800000u + ((magnitude >> 8) & 0x7fffffu) + (magnitude >> 7 & 1);
+  if ((magnitude & 0xff) == 0x80)                 /* exactly halfway: to even */
+    result &= ~1u;
+  return result;
 }
 
 /* ==== 0x0103F500  (file offset 0x3F500)  swv_fflt ==================================================== */
-uint swv_fflt(uint param_1)
+/* The soft-float library's int -> float conversion, ARM's fplib _fflt (__aeabi_i2f in the run-time ABI);
+   same bit pattern as kh.mod's int->float at 0x001268c8 (kh_mod.c int_to_float, from which this rewrite is
+   taken). Returns the float's bits: the sign, the exponent 127 + 31 - the leading zeros of the magnitude,
+   the 23 bits after the leading 1, rounded to nearest, ties to even (the rounding may carry into the
+   exponent); 0 gives +0.0. The binary adds 0x0F800000 to the sign | 0x40000000 and the value shifted right
+   arithmetically, whose sign bits and hidden bit make 0x4F000000, then the round bit (`adc`), and clears
+   bit 0 on a tie (`bichs` after `movsne`); written here with unsigned arithmetic. Soft-float library
+   (region 0x0103ED00-0x0103F900, tools/profile_state.py). Evidence: 0x0103f500 - 0x0103f530 (`ands r2, r0,
+   #0x80000000` / `rsbne r0, r0, #0` / `orr r2, r2, #0x40000000`, `clz r1, r0`, `lsls r0, r0, r1` / `moveq
+   pc, lr`, `adc r0, r2, r0, asr #8`, `bichs r0, r0, #1`). Verified against the binary under emulation
+   (unicorn) and against Ghidra's original: 1,304,960 cases, 0 mismatches; against the host's IEEE
+   conversion: no difference. */
+uint32 swv_fflt(int32 value)
 
 {
-  uint uVar1;
-  uint uVar2;
-  bool bVar3;
-  
-                    /* Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py).
-                       GUESS: identified by code pattern (ARM ADS fplib single-precision routine):
-                       int -> float (sign, LZCOUNT, exponent; same bit pattern as kh.mod's
-                       int->float at 0x001268c8). */
-  uVar2 = param_1 & 0x80000000;
-  if (uVar2 != 0) {
-    param_1 = -param_1;
-  }
-  uVar1 = param_1 << LZCOUNT(param_1);
-  if (uVar1 == 0) {
+  uint32 sign = (uint32)value & 0x80000000u;
+  uint32 magnitude = sign != 0 ? 0u - (uint32)value : (uint32)value;
+  uint32 zeros;
+  uint32 result;
+
+  if (magnitude == 0)
     return 0;
-  }
-  bVar3 = (bool)((byte)(uVar1 >> 7) & 1);
-  uVar2 = (uVar2 | 0x40000000) + LZCOUNT(param_1) * -0x800000 + 0xf800000 + ((int)uVar1 >> 8) +
-          (uint)bVar3;
-  if ((uVar1 & 0x7f) != 0) {
-    bVar3 = false;
-  }
-  if (bVar3) {
-    uVar2 = uVar2 & 0xfffffffe;
-  }
-  return uVar2;
+  for (zeros = 0; !(magnitude << zeros & 0x80000000); zeros++)
+    ;
+  magnitude <<= zeros;                            /* the top bit set; zeros is below 32 here */
+  result = (sign | 0x4F000000u) - zeros * 0x800000u + ((magnitude >> 8) & 0x7fffffu) +
+           (magnitude >> 7 & 1);
+  if ((magnitude & 0xff) == 0x80)                 /* exactly halfway: to even */
+    result &= ~1u;
+  return result;
 }
 
 /* ==== 0x0103F534  (file offset 0x3F534)  swv_fcmp_b ================================================== */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint swv_fcmp_b(uint param_1,uint param_2)
+/* The soft-float library's single-precision compare, for > and >= (bhi / bhs are false for a NaN; ARM's
+   fplib; GUESS: ADS _fcmpge, __aeabi_cfcmple in the run-time ABI); 60 callers. Leaves the result in the
+   CPU flags, as an unsigned `cmp a, b` would: Z set when a == b (+0 == -0), C set with Z clear when a > b,
+   C clear when a < b (N and V mean nothing). C cannot express that: the listing's callers test Ghidra's
+   in_ZR / in_CY after the call. Infinities compare as numbers (through 0x0103daa8, which only fixes V). No
+   caller reads r0, but it is returned as the binary leaves it: a when there is no NaN; 8 after a NaN (the
+   exception code's compare exit, 0x0103f924 / 0x0103f9e0); after a trap, the trap handler's result t, or 2
+   - t when its bit 3 is clear (0x0103f9f8). What C can express is the rest, below: an unordered compare (a
+   NaN) leaves C and Z clear and raises invalid (status bit 0) for any NaN; when that is trapped (bit
+   0x100), it calls the trap FUN_010019e0, given r3 as the caller left it (callerR3, never set). Soft-float
+   library (region 0x0103ED00-0x0103F900, tools/profile_state.py). The same code, word for word apart from
+   the branch and call offsets, as kh.mod's float_compare_greater (0x001268FC; kh_mod.c), from which this
+   rewrite is taken. Evidence: 0x0103f534 - 0x0103f594 (`orrs r12, r0, r1` / `bmi`, `cmn r12, #0x800000` /
+   `bmi`, `cmp r0, r1`, or `cmp r1, r0` for two negatives, / `mov pc, lr`; a NaN: `ldr r12` the control
+   word WORD_HEXADECIMAL_04130009 / `b 0x0103daa8`). Verified against the binary under emulation (unicorn):
+   1,378,408 cases, r0, the status word, the trap handler's arguments and the swv_GetFpStatusPtr calls the
+   same, 0 mismatches; the binary's flags against the host's IEEE comparison (Z: a == b, C: a >= b,
+   unordered Z and C clear): no difference. */
+uint32 swv_fcmp_b(uint32 a,uint32 b)
 
 {
-  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
-  uint uVar1;
-  undefined4 uVar2;
-  uint *puVar3;
-  uint uVar4;
-  undefined4 uVar5;
-  uint uVar6;
-  uint uVar7;
-  uint in_lr;
-  bool bVar8;
-  
-  uVar1 = WORD_HEXADECIMAL_04130009;
-                    /* Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py).
-                       GUESS: identified by code pattern (ARM ADS fplib single-precision routine):
-                       float compare (another fcmp variant, 60 callers). */
-  uVar7 = param_1 | param_2;
-  if ((int)uVar7 < 0) {
-    if ((int)(uVar7 + 0x800000) < 0) {
-      return param_1;
-    }
-    if (param_1 << 1 < 0xff000000 && param_2 << 1 < 0xff000000) {
-      return param_1;
-    }
-  }
-  else {
-    if (-1 < (int)(uVar7 + 0x800000)) {
-      return param_1;
-    }
-    if (param_1 << 1 < 0xff000000 && param_2 << 1 < 0xff000000) {
-      return param_1;
-    }
-  }
-  uVar6 = 0x1000000;
-  uVar7 = param_1 * 2;
-  if (uVar7 < 0xff000001) {
-    uVar7 = param_2 * 2;
-  }
-  if (uVar7 < 0xff000001) {
-    if ((int)(param_1 | param_2) < 0) {
-      if (!SBORROW4(param_2,param_1)) {
-        return param_1;
-      }
-    }
-    else if (!SBORROW4(param_1,param_2)) {
-      return param_1;
-    }
-    return param_1;
-  }
-  if ((WORD_HEXADECIMAL_04130009 & 0x50000) == 0) {
-    uVar6 = param_1 * 2 + 0x800000;
-    scratch = param_2 * 2 + 0x800000;
-    uVar7 = uVar6;
-    if (uVar6 < 0xff800001) {
-      uVar7 = scratch;
-    }
-    if (0xff800000 < uVar7) goto LAB_0103ed1c;
-    uVar7 = WORD_HEXADECIMAL_04130009;
-    if (0x7fffff < uVar6) {
-      param_1 = param_2;
-    }
-LAB_0103f924:
-    if ((uVar7 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x0103f938. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar7 & 0xf) != 8) {
-        uVar1 = (*(code *)(in_lr & 0xfffffffc))();
-        return uVar1;
-      }
-      if ((uVar7 & 0x40) == 0) {
-        uVar2 = _UNK_0103f9b4;
-        if ((uVar7 & 0x10) != 0) {
-          uVar2 = 0;
-          param_2 = _UNK_0103f9b8;
-        }
-                    /* WARNING: Could not recover jumptable at 0x0103f9b0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar1 = (*(code *)(in_lr & 0xfffffffc))(uVar2,param_2);
-        return uVar1;
-      }
-      if ((uVar7 & 0x10000) != 0) {
-                    /* WARNING: Could not recover jumptable at 0x0103f984. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar1 = (*(code *)(in_lr & 0xfffffffc))(0,0);
-        return uVar1;
-      }
-      if ((uVar7 & 0x20) == 0) {
-        if ((uVar7 & 0x10) == 0) {
-          uVar7 = 0x7fffffff;
-          uVar1 = param_2;
-          param_2 = param_1;
-        }
-        else {
-          uVar1 = 0x7fffffff;
-          uVar7 = 0xffffffff;
-        }
-        if ((param_2 & 0x80000000) != 0) {
-          uVar7 = ~uVar7;
-          uVar1 = ~uVar1;
-        }
-                    /* WARNING: Could not recover jumptable at 0x0103f978. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar1 = (*(code *)(in_lr & 0xfffffffc))(uVar7,uVar1);
-        return uVar1;
-      }
-      uVar2 = 0xffffffff;
-      uVar5 = 0xffffffff;
-      if ((uVar6 & 0x80000000) != 0) {
-        uVar2 = 0;
-        uVar5 = 0;
-      }
-                    /* WARNING: Could not recover jumptable at 0x0103f99c. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      uVar1 = (*(code *)(in_lr & 0xfffffffc))(uVar2,uVar5);
-      return uVar1;
-    }
-    uVar1 = 8;
-    goto LAB_0103f9e0;
-  }
-LAB_0103ed1c:
-  if ((WORD_HEXADECIMAL_04130009 & 0x10) == 0) {
-    uVar6 = param_2;
-  }
-  puVar3 = (uint *)swv_GetFpStatusPtr();
-  uVar4 = *puVar3;
-  if ((uVar1 & ~(uVar4 << 0x12) & 0x30000000) != 0) {
-    uVar1 = uVar1 | 0x40000000;
-  }
-  uVar7 = uVar1 | uVar4 & 0x1c00000;
-  *puVar3 = uVar4 | (uVar1 & 0x7fffffff) >> 0x1a;
-  bVar8 = (uVar1 & 0xf) != 8;
-  if (bVar8) {
-    uVar1 = uVar1 & 0x70;
-    uVar7 = uVar7 | uVar1 << 3;
-  }
-  else {
-    uVar1 = 0x20000;
-  }
-  if (!bVar8 && (uVar1 & ~uVar7) == 0) {
-    uVar7 = uVar7 | 0xc00000;
-  }
-  if ((uVar7 & 0x20000000) == 0) {
-    if ((uVar7 & 0x10000000) == 0) {
-      if ((uVar7 & 0x40000000) != 0) {
-        uVar4 = uVar4 & 0x1000;
-        goto joined_r0x0103edcc;
-      }
-      if ((uVar7 & 0x8000000) == 0) {
-        if ((uVar4 & 0x100) == 0) {
-          uVar6 = param_2;
-          if ((uVar7 & 0x80) == 0) {
-            uVar6 = param_1;
-          }
-          uVar6 = uVar6 & 0x80000000;
-          if ((uVar7 & 0x10) == 0) {
-            param_1 = WORD_HEXADECIMAL_7FC00000 | uVar6;
-          }
-          else {
-            param_2 = DOUBLE_NOT_A_NUMBER_HIGH_WORD | uVar6;
-            param_1 = DOUBLE_NOT_A_NUMBER_LOW_WORD;
-          }
-          goto LAB_0103f924;
-        }
-      }
-      else if ((uVar4 & 0x200) == 0) {
-        if ((uVar7 & 0x10) == 0) {
-          param_2 = param_1 ^ uVar6;
-        }
-        else {
-          param_2 = param_2 ^ scratch;
-        }
-        goto LAB_0103ee14;
-      }
-    }
-    else if ((uVar4 & 0x400) == 0) {
-      if ((uVar7 & 0x80) == 0) {
-        param_2 = param_1 & 0x80000000;
-      }
-      else {
-        param_2 = param_2 & 0x80000000;
-      }
-LAB_0103ee14:
-      uVar1 = INTEGER_0;
-      if ((uVar7 & 0x10) == 0) {
-        uVar1 = WORD_HEXADECIMAL_7F800000 | param_2 & 0x80000000;
-      }
-      return uVar1;
-    }
-  }
-  else {
-    uVar4 = uVar4 & 0x800;
-joined_r0x0103edcc:
-    if (uVar4 == 0) {
-      return param_1;
-    }
-  }
-  uVar1 = FUN_010019e0(param_1,param_2,uVar6,scratch,uVar7,in_lr,uVar7,in_lr);
-  if ((uVar7 & 0xf) != 9) {
-    return uVar1;
-  }
-LAB_0103f9e0:
-  if ((uVar7 & 0x100000) == 0) {
-    return (uint)((uVar7 & uVar1 << 0x10) != 0);
-  }
-  if ((uVar7 & 0xf0000) != 0) {
-    if ((uVar1 & 8) == 0) {
-      return 2 - uVar1;
-    }
-    return uVar1;
-  }
-  uVar7 = uVar1 << 0x1d;
-  if ((bool)((byte)(uVar1 >> 3) & 1)) {
-    uVar7 = uVar7 | 0x30000000;
-  }
-  puVar3 = (uint *)swv_GetFpStatusPtr();
-  *puVar3 = *puVar3 & 0xfffffff | uVar7;
-  return uVar1;
+  uint32 *status;
+  uint32 result;
+  uint32 callerR3;  /* r3 as the caller left it: what the binary hands the trap handler (never
+                       initialized, as in the binary) */
+
+  if ((a << 1) <= 0xff000000 && (b << 1) <= 0xff000000)
+    return a;                                /* no NaN: the flags hold the comparison */
+  status = (uint32 *)swv_GetFpStatusPtr();   /* invalid (the library's exception code, 0x0103ed1c) */
+  *status |= 1;
+  if (!(*status & 0x100))
+    return 8;
+  result = (uint32)FUN_010019e0(a,b,b,callerR3,WORD_HEXADECIMAL_04130009 | (*status & 0x1c00000));
+  return result & 8 ? result : 2 - result;
 }
 
 /* ==== 0x0103F59C  (file offset 0x3F59C)  swv_fcmp_c ================================================== */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-
-uint swv_fcmp_c(uint param_1,uint param_2)
+/* The soft-float library's single-precision compare with an unordered result of "greater", for < and <=
+   (blo / bls are false for a NaN; ARM's fplib; GUESS: ADS _fcmple); 53 callers. Leaves the result in the
+   CPU flags, as an unsigned `cmp a, b` would: Z set when a == b (+0 == -0), C set with Z clear when a > b,
+   C clear when a < b (N and V mean nothing). C cannot express that: the listing's callers test Ghidra's
+   in_ZR / in_CY after the call. Infinities compare as numbers (through 0x0103daa8, which only fixes V). No
+   caller reads r0, but it is returned as the binary leaves it: a when there is no NaN; 8 after a NaN (the
+   exception code's compare exit, 0x0103f924 / 0x0103f9e0); after a trap, the trap handler's result t, or 2
+   - t when its bit 3 is clear (0x0103f9f8). What C can express is the rest, below: an unordered compare (a
+   NaN) leaves C set and Z clear and raises invalid (status bit 0) for any NaN; when that is trapped (bit
+   0x100), it calls the trap FUN_010019e0, given r3 as the caller left it (callerR3, never set). Soft-float
+   library (region 0x0103ED00-0x0103F900, tools/profile_state.py). The same code, word for word apart from
+   the branch and call offsets, as kh.mod's float_compare_less (0x00126964; kh_mod.c), from which this
+   rewrite is taken. Evidence: 0x0103f59c - 0x0103f5fc (`orrs r12, r0, r1` / `bmi`, `cmn r12, #0x800000` /
+   `bmi`, `cmp r0, r1`, or `cmp r1, r0` for two negatives, / `mov pc, lr`; a NaN: `ldr r12` the control
+   word WORD_HEXADECIMAL_04160009 / `b 0x0103daa8`). Verified against the binary under emulation (unicorn):
+   1,378,408 cases, r0, the status word, the trap handler's arguments and the swv_GetFpStatusPtr calls the
+   same, 0 mismatches; the binary's flags against the host's IEEE comparison (Z: a == b, C: a >= b,
+   unordered Z clear, C set): no difference. */
+uint32 swv_fcmp_c(uint32 a,uint32 b)
 
 {
-  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
-  uint uVar1;
-  undefined4 uVar2;
-  uint *puVar3;
-  uint uVar4;
-  undefined4 uVar5;
-  uint uVar6;
-  uint uVar7;
-  uint in_lr;
-  bool bVar8;
-  
-  uVar1 = WORD_HEXADECIMAL_04160009;
-                    /* Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py).
-                       GUESS: identified by code pattern (ARM ADS fplib single-precision routine):
-                       float compare (another fcmp variant, 53 callers). */
-  uVar7 = param_1 | param_2;
-  if ((int)uVar7 < 0) {
-    if ((int)(uVar7 + 0x800000) < 0) {
-      return param_1;
-    }
-    if (param_1 << 1 < 0xff000000 && param_2 << 1 < 0xff000000) {
-      return param_1;
-    }
-  }
-  else {
-    if (-1 < (int)(uVar7 + 0x800000)) {
-      return param_1;
-    }
-    if (param_1 << 1 < 0xff000000 && param_2 << 1 < 0xff000000) {
-      return param_1;
-    }
-  }
-  uVar6 = 0x1000000;
-  uVar7 = param_1 * 2;
-  if (uVar7 < 0xff000001) {
-    uVar7 = param_2 * 2;
-  }
-  if (uVar7 < 0xff000001) {
-    if ((int)(param_1 | param_2) < 0) {
-      if (!SBORROW4(param_2,param_1)) {
-        return param_1;
-      }
-    }
-    else if (!SBORROW4(param_1,param_2)) {
-      return param_1;
-    }
-    return param_1;
-  }
-  if ((WORD_HEXADECIMAL_04160009 & 0x50000) == 0) {
-    uVar6 = param_1 * 2 + 0x800000;
-    scratch = param_2 * 2 + 0x800000;
-    uVar7 = uVar6;
-    if (uVar6 < 0xff800001) {
-      uVar7 = scratch;
-    }
-    if (0xff800000 < uVar7) goto LAB_0103ed1c;
-    uVar7 = WORD_HEXADECIMAL_04160009;
-    if (0x7fffff < uVar6) {
-      param_1 = param_2;
-    }
-LAB_0103f924:
-    if ((uVar7 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x0103f938. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar7 & 0xf) != 8) {
-        uVar1 = (*(code *)(in_lr & 0xfffffffc))();
-        return uVar1;
-      }
-      if ((uVar7 & 0x40) == 0) {
-        uVar2 = _UNK_0103f9b4;
-        if ((uVar7 & 0x10) != 0) {
-          uVar2 = 0;
-          param_2 = _UNK_0103f9b8;
-        }
-                    /* WARNING: Could not recover jumptable at 0x0103f9b0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar1 = (*(code *)(in_lr & 0xfffffffc))(uVar2,param_2);
-        return uVar1;
-      }
-      if ((uVar7 & 0x10000) != 0) {
-                    /* WARNING: Could not recover jumptable at 0x0103f984. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar1 = (*(code *)(in_lr & 0xfffffffc))(0,0);
-        return uVar1;
-      }
-      if ((uVar7 & 0x20) == 0) {
-        if ((uVar7 & 0x10) == 0) {
-          uVar7 = 0x7fffffff;
-          uVar1 = param_2;
-          param_2 = param_1;
-        }
-        else {
-          uVar1 = 0x7fffffff;
-          uVar7 = 0xffffffff;
-        }
-        if ((param_2 & 0x80000000) != 0) {
-          uVar7 = ~uVar7;
-          uVar1 = ~uVar1;
-        }
-                    /* WARNING: Could not recover jumptable at 0x0103f978. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar1 = (*(code *)(in_lr & 0xfffffffc))(uVar7,uVar1);
-        return uVar1;
-      }
-      uVar2 = 0xffffffff;
-      uVar5 = 0xffffffff;
-      if ((uVar6 & 0x80000000) != 0) {
-        uVar2 = 0;
-        uVar5 = 0;
-      }
-                    /* WARNING: Could not recover jumptable at 0x0103f99c. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      uVar1 = (*(code *)(in_lr & 0xfffffffc))(uVar2,uVar5);
-      return uVar1;
-    }
-    uVar1 = 8;
-    goto LAB_0103f9e0;
-  }
-LAB_0103ed1c:
-  if ((WORD_HEXADECIMAL_04160009 & 0x10) == 0) {
-    uVar6 = param_2;
-  }
-  puVar3 = (uint *)swv_GetFpStatusPtr();
-  uVar4 = *puVar3;
-  if ((uVar1 & ~(uVar4 << 0x12) & 0x30000000) != 0) {
-    uVar1 = uVar1 | 0x40000000;
-  }
-  uVar7 = uVar1 | uVar4 & 0x1c00000;
-  *puVar3 = uVar4 | (uVar1 & 0x7fffffff) >> 0x1a;
-  bVar8 = (uVar1 & 0xf) != 8;
-  if (bVar8) {
-    uVar1 = uVar1 & 0x70;
-    uVar7 = uVar7 | uVar1 << 3;
-  }
-  else {
-    uVar1 = 0x20000;
-  }
-  if (!bVar8 && (uVar1 & ~uVar7) == 0) {
-    uVar7 = uVar7 | 0xc00000;
-  }
-  if ((uVar7 & 0x20000000) == 0) {
-    if ((uVar7 & 0x10000000) == 0) {
-      if ((uVar7 & 0x40000000) != 0) {
-        uVar4 = uVar4 & 0x1000;
-        goto joined_r0x0103edcc;
-      }
-      if ((uVar7 & 0x8000000) == 0) {
-        if ((uVar4 & 0x100) == 0) {
-          uVar6 = param_2;
-          if ((uVar7 & 0x80) == 0) {
-            uVar6 = param_1;
-          }
-          uVar6 = uVar6 & 0x80000000;
-          if ((uVar7 & 0x10) == 0) {
-            param_1 = WORD_HEXADECIMAL_7FC00000 | uVar6;
-          }
-          else {
-            param_2 = DOUBLE_NOT_A_NUMBER_HIGH_WORD | uVar6;
-            param_1 = DOUBLE_NOT_A_NUMBER_LOW_WORD;
-          }
-          goto LAB_0103f924;
-        }
-      }
-      else if ((uVar4 & 0x200) == 0) {
-        if ((uVar7 & 0x10) == 0) {
-          param_2 = param_1 ^ uVar6;
-        }
-        else {
-          param_2 = param_2 ^ scratch;
-        }
-        goto LAB_0103ee14;
-      }
-    }
-    else if ((uVar4 & 0x400) == 0) {
-      if ((uVar7 & 0x80) == 0) {
-        param_2 = param_1 & 0x80000000;
-      }
-      else {
-        param_2 = param_2 & 0x80000000;
-      }
-LAB_0103ee14:
-      uVar1 = INTEGER_0;
-      if ((uVar7 & 0x10) == 0) {
-        uVar1 = WORD_HEXADECIMAL_7F800000 | param_2 & 0x80000000;
-      }
-      return uVar1;
-    }
-  }
-  else {
-    uVar4 = uVar4 & 0x800;
-joined_r0x0103edcc:
-    if (uVar4 == 0) {
-      return param_1;
-    }
-  }
-  uVar1 = FUN_010019e0(param_1,param_2,uVar6,scratch,uVar7,in_lr,uVar7,in_lr);
-  if ((uVar7 & 0xf) != 9) {
-    return uVar1;
-  }
-LAB_0103f9e0:
-  if ((uVar7 & 0x100000) == 0) {
-    return (uint)((uVar7 & uVar1 << 0x10) != 0);
-  }
-  if ((uVar7 & 0xf0000) != 0) {
-    if ((uVar1 & 8) == 0) {
-      return 2 - uVar1;
-    }
-    return uVar1;
-  }
-  uVar7 = uVar1 << 0x1d;
-  if ((bool)((byte)(uVar1 >> 3) & 1)) {
-    uVar7 = uVar7 | 0x30000000;
-  }
-  puVar3 = (uint *)swv_GetFpStatusPtr();
-  *puVar3 = *puVar3 & 0xfffffff | uVar7;
-  return uVar1;
+  uint32 *status;
+  uint32 result;
+  uint32 callerR3;  /* r3 as the caller left it: what the binary hands the trap handler (never
+                       initialized, as in the binary) */
+
+  if ((a << 1) <= 0xff000000 && (b << 1) <= 0xff000000)
+    return a;                                /* no NaN: the flags hold the comparison */
+  status = (uint32 *)swv_GetFpStatusPtr();   /* invalid (the library's exception code, 0x0103ed1c) */
+  *status |= 1;
+  if (!(*status & 0x100))
+    return 8;
+  result = (uint32)FUN_010019e0(a,b,b,callerR3,WORD_HEXADECIMAL_04160009 | (*status & 0x1c00000));
+  return result & 8 ? result : 2 - result;
 }
 
 /* ==== 0x0103F604  (file offset 0x3F604)  swv_fmul ==================================================== */
-/* WARNING: Removing unreachable block (ram,0x0103f9e8) */
-/* WARNING: Removing unreachable block (ram,0x0103fa0c) */
-/* WARNING: Removing unreachable block (ram,0x0103fa14) */
-/* WARNING: Removing unreachable block (ram,0x0103fa18) */
-/* WARNING: Removing unreachable block (ram,0x0103ee1c) */
-/* WARNING: Removing unreachable block (ram,0x0103edd4) */
-/* WARNING: Removing unreachable block (ram,0x0103ede0) */
-/* WARNING: Removing unreachable block (ram,0x0103ede8) */
-/* WARNING: Removing unreachable block (ram,0x0103ede4) */
-/* WARNING: Removing unreachable block (ram,0x0103edec) */
-/* WARNING: Removing unreachable block (ram,0x0103ee0c) */
-/* WARNING: Removing unreachable block (ram,0x0103f988) */
-/* WARNING: Removing unreachable block (ram,0x0103f994) */
-/* WARNING: Removing unreachable block (ram,0x0103f99c) */
-/* WARNING: Removing unreachable block (ram,0x0103f944) */
-/* WARNING: Removing unreachable block (ram,0x0103f94c) */
-/* WARNING: Removing unreachable block (ram,0x0103f954) */
-/* WARNING: Removing unreachable block (ram,0x0103f958) */
-/* WARNING: Removing unreachable block (ram,0x0103f95c) */
-/* WARNING: Removing unreachable block (ram,0x0103f96c) */
-/* WARNING: Removing unreachable block (ram,0x0103f970) */
-/* WARNING: Removing unreachable block (ram,0x0103f978) */
-/* WARNING: Removing unreachable block (ram,0x0103f97c) */
-/* WARNING: Removing unreachable block (ram,0x0103ee38) */
-/* WARNING: Removing unreachable block (ram,0x0103ee44) */
-/* WARNING: Removing unreachable block (ram,0x0103edc4) */
-/* WARNING: Removing unreachable block (ram,0x0103edd0) */
-/* WARNING: Removing unreachable block (ram,0x0103f9f0) */
-/* WARNING: Removing unreachable block (ram,0x0103f9f8) */
-/* WARNING: Removing unreachable block (ram,0x0103fa00) */
-/* WARNING: Removing unreachable block (ram,0x0103f9a8) */
-/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-uint swv_fmul(uint param_1,uint param_2)
+/* The soft-float library's single-precision multiply, ARM's fplib _fmul (__aeabi_fmul in the run-time
+   ABI); 85 callers, the most-called of the family. Returns a * b, IEEE-754 rounded to nearest even, all as
+   float bits. Written from the disassembly: Ghidra's listing read uninitialized registers and took the
+   stack pointer for a number (the binary's `adc r12, sp, r0, lsl #1` only keeps the round bit and the
+   result's lowest bit, since sp is word-aligned), and it had read r3 as a parameter (a work register). The
+   mantissas multiply as a 64-bit product (`umull`), its low word only a sticky bit. Status word, trap
+   FUN_010019e0 and results below the normal range: the library's underflow code (0x0103f77c, shared with
+   swv_fdiv and written inline: flush to zero, the trapped underflow, or the result rounded to a denormal
+   with the underflow and inexact flags) and its exception code (0x0103ed1c). Where that underflow code
+   goes on to a trapped inexact, kh_mod.c's copy hands the trap the shift (the binary: only its sign, `and
+   r3, r3, #0x80000000`) for an exact denormal and the lost bits (the binary: ~(ip asr 31), `mvns r3, r2,
+   asr #31`) for a tie; written here as the binary does. Soft-float library (region 0x0103ED00-0x0103F900,
+   tools/profile_state.py). The same code, word for word apart from the branch and call offsets, as
+   kh.mod's float_multiply (0x001269CC; kh_mod.c), from which this rewrite is taken. Evidence: 0x0103f604 -
+   0x0103f8e4 (`ands r2, r12, r0, lsr #7` / `andsne r3, r12, r1, lsr #7` / `teqne` the special exponents,
+   `umull`, `adc r0, r3, r2, lsl #0x17` the rounding, `cmp r2, #0xfc0000` overflow / underflow, `bl
+   swv_GetFpStatusPtr` at 0x0103f784, `b 0x0103ed1c`). Verified against the binary under emulation
+   (unicorn; swv_GetFpStatusPtr and the trap handler stubbed): 1,378,408 cases (all pairs of 99 special
+   values under 4 status words, then random words, nearly equal and few-bit operands, every trap enable,
+   flush to zero), the result, the status word and the trap handler's arguments and the swv_GetFpStatusPtr
+   calls the same, 0 mismatches. Against the host's IEEE single multiply (numpy, status word 0): no
+   difference but in the bits of some NaN results: for a signalling NaN operand or an invalid operation the
+   fplib gives the default NaN 0x7FC00000 with an operand's sign, where x86 quietens the signalling NaN or
+   gives 0xFFC00000 (quiet NaN operands: the same). */
+uint32 swv_fmul(uint32 a,uint32 b)
 
 {
-  uint scratch;   /* r3, a work register: Ghidra had read it as a 4th parameter */
-  int iVar1;
-  uint *puVar2;
-  uint uVar3;
-  int iVar4;
-  uint uVar5;
-  uint uVar6;
-  uint uVar7;
-  uint uVar8;
-  undefined1 *puVar9;
-  uint in_lr;
-  bool bVar10;
-  bool bVar11;
-  
-                    /* Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py).
-                       GUESS: identified by code pattern (ARM ADS fplib single-precision routine):
-                       float multiply (85 callers, most-called of the family). */
-  uVar3 = param_1 >> 7 & 0xff0000;
-  bVar10 = uVar3 == 0;
-  if (!bVar10) {
-    scratch = param_2 >> 7 & 0xff0000;
-    bVar10 = scratch == 0;
-  }
-  if (!bVar10) {
-    bVar10 = uVar3 == 0xff0000;
-  }
-  if (!bVar10) {
-    bVar10 = scratch == 0xff0000;
-  }
-  if (bVar10) {
-    uVar7 = param_2 >> 7 & 0xff0000;
-    if ((int)(param_1 ^ param_2) < 0) {
-      uVar3 = uVar3 | 0x100;
-    }
-    if (uVar3 < 0xff0000 && uVar7 < 0xff0000) {
-      if ((param_1 & 0x7fffffff) == 0 || (param_2 & 0x7fffffff) == 0) {
-        return uVar3 << 0x17;
+  uint32 *status;
+  uint32 control = 0;  /* ip, the exception word: the operation in bits 0-3 (3 multiply), 0x04000000
+                          invalid, 0x08000000 divide by zero, 0x10000000 overflow, 0x40000000 inexact,
+                          0x80000000 (with inexact) the result was rounded down */
+  uint32 exponent;     /* r2: the result's exponent in bits 16-24 (biased, may go below zero), its sign
+                          in bit 8 */
+  uint32 other;        /* r3: b's exponent; then the product's high word, normalized to bit 31; for the
+                          trap handler, r3 */
+  uint32 result;       /* r0 */
+  uint32 second;       /* r1: b's mantissa; for the trap handler, r1 */
+  uint32 shift;
+  uint32 lost;
+  uint32 count;        /* a shift count: its low byte, as the binary's shift by a register */
+  uint32 round;
+  int32 denormal;     /* a is the denormal */
+  int32 special;
+  int32 path = 0;      /* 1: an exception (0x0103ed1c); 2: a result below the normal range (0x0103f77c) */
+  uint64 product;
+  uint32 low;
+
+  exponent = a >> 7 & 0xff0000;
+  other = b >> 7 & 0xff0000;
+  special = exponent == 0 || other == 0 || exponent == 0xff0000 || other == 0xff0000;
+  if ((int32)(a ^ b) < 0)
+    exponent |= 0x100;                       /* the result's sign */
+  result = a;
+  second = b;
+  if (special) {
+    if (exponent >= 0xff0000 || other >= 0xff0000) {         /* an Inf or NaN operand (0x0103f6f8) */
+      if ((a << 1) > 0xff000000 || (b << 1) > 0xff000000) {   /* a NaN operand (0x0103f1c4) */
+        exponent = (a << 1) + 0x800000;      /* above 0xff800000: a signalling NaN */
+        other = (b << 1) + 0x800000;
+        if (exponent <= 0xff800000 && other <= 0xff800000)
+          return exponent < 0x800000 ? a : b;                  /* the first quiet NaN */
+        control = 0x4000003;                                  /* a signalling NaN: invalid */
+        path = 1;
       }
-      param_1 = param_1 << 8;
-      param_2 = param_2 << 8;
-      if ((uVar3 & 0xff0000) == 0) {
-        uVar3 = uVar3 + LZCOUNT(param_1) * -0x10000 + 0x10000;
-        param_1 = param_1 << LZCOUNT(param_1);
-        if (uVar7 != 0) {
-          param_2 = param_2 | 0x80000000;
-          scratch = uVar7;
-          goto LAB_0103f630;
-        }
-      }
-      param_1 = param_1 | 0x80000000;
-      scratch = uVar7 + LZCOUNT(param_2) * -0x10000 + 0x10000;
-      param_2 = param_2 << LZCOUNT(param_2);
-      goto LAB_0103f630;
-    }
-    uVar8 = param_1 * 2;
-    if (uVar8 < 0xff000001) {
-      uVar8 = param_2 * 2;
-    }
-    uVar6 = 0x4000003;
-    if (uVar8 < 0xff000001) {
-      if ((param_1 & 0x7fffffff) != 0 && (param_2 & 0x7fffffff) != 0) {
-        return (uVar3 | 0xff) << 0x17;
-      }
-      uVar6 = 0x4000003;
-      goto LAB_0103ed1c;
-    }
-    uVar3 = param_1 * 2 + 0x800000;
-    uVar7 = param_2 * 2 + 0x800000;
-    if (uVar3 < 0xff800001) {
-      uVar3 = uVar7;
-    }
-    if (0xff800000 < uVar3) goto LAB_0103ed1c;
-LAB_0103f924:
-    if ((uVar6 & 0xf) != 9) {
-                    /* WARNING: Could not recover jumptable at 0x0103f938. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-      if ((uVar6 & 0xf) == 8) {
-                    /* WARNING: Could not recover jumptable at 0x0103f9b0. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-        uVar3 = (*(code *)(in_lr & 0xfffffffc))(_UNK_0103f9b4,param_2);
-        return uVar3;
-      }
-      uVar3 = (*(code *)(in_lr & 0xfffffffc))();
-      return uVar3;
-    }
-    uVar3 = 0;
-    uVar8 = uVar6;
-  }
-  else {
-    if ((int)(param_1 ^ param_2) < 0) {
-      uVar3 = uVar3 | 0x100;
-    }
-    param_1 = param_1 << 8 | 0x80000000;
-    param_2 = param_2 << 8 | 0x80000000;
-LAB_0103f630:
-    uVar7 = (uint)((ulonglong)param_2 * (ulonglong)param_1 >> 0x20);
-    iVar4 = uVar3 + scratch + -0x800000;
-    if ((int)((ulonglong)param_2 * (ulonglong)param_1) != 0) {
-      uVar7 = uVar7 | 1;
-    }
-    bVar10 = 0x7fffffff < uVar7;
-    if (!bVar10) {
-      uVar7 = uVar7 << 1;
-    }
-    iVar1 = iVar4 >> 0x10;
-    uVar8 = (uint)bVar10;
-    uVar5 = iVar4 + iVar1 + uVar8;
-    bVar10 = (bool)((byte)(uVar7 >> 7) & 1);
-    uVar3 = uVar7 >> 8;
-    param_1 = uVar3 + uVar5 * 0x800000 + (uint)bVar10;
-    uVar6 = (uint)bVar10;
-    puVar9 = &stack0x00000000 +
-             uVar6 + (uint)bVar10 * 2 +
-                     uVar3 * 2 + uVar8 * 0x1000000 + iVar1 * 0x1000000 + scratch * 0x1000000;
-    if (bVar10) {
-      uVar3 = uVar7 & 0x7f;
-    }
-    if (uVar3 != 0) {
-      bVar10 = 0xfbffff < uVar5;
-    }
-    if (!bVar10) {
-      return param_1;
-    }
-    if (uVar3 == 0 || uVar5 == 0xfc0000) {
-      param_1 = param_1 & 0xfffffffe;
-    }
-    if (uVar5 < 0xfc0000) {
-      return param_1;
-    }
-    if ((int)(uVar5 - 0xfc0000) < 0) {
-      if (param_1 * 2 - 0x1000000 < 0x3000000) {
-        return param_1;
-      }
-      param_1 = param_1 + 0x60000000;
-      bVar11 = (uVar7 & 0x7f) == 0;
-      bVar10 = !bVar11;
-      if (bVar10) {
-        puVar9 = (undefined1 *)((uint)puVar9 >> 1 | uVar6 * -0x80000000);
-        bVar11 = puVar9 == (undefined1 *)0x0;
-      }
-      bVar10 = bVar10 && uVar6 != 0;
-      if (bVar11) {
-        bVar10 = -1 < (int)((uint)puVar9 >> 2 | (int)puVar9 << 0x1e);
-      }
-      if (bVar10) {
-        uVar6 = 0x40000003;
-      }
+      else if (a << 1 != 0 && b << 1 != 0)
+        return (exponent | 0xff) << 23;      /* Inf * x */
       else {
-        uVar6 = 0xc0000003;
+        control = 0x4000003;                 /* Inf * 0: invalid */
+        path = 1;
       }
-      if ((uVar7 & 0xff) == 0) {
-        uVar6 = 3;
-      }
-      puVar2 = (uint *)swv_GetFpStatusPtr();
-      param_2 = *puVar2;
-      if ((param_2 & 0x1000000) != 0) {
-        return param_1 & 0x80000000;
-      }
-      if ((param_2 & 0x800) == 0) {
-        uVar7 = 0xc1 - (param_1 & 0x80000000 | param_1 >> 0x17 & 0xfffffeff);
-        if ((uVar7 & 0x7fffffff) < 0x18) {
-          uVar3 = param_1 << (0x20 - uVar7 & 0xff);
-          uVar8 = 0x20 - (0x20 - uVar7);
-          uVar7 = uVar8 & 0x80000000;
-          param_1 = (param_1 & 0xffffff | 0x800000) >> (uVar8 & 0xff) | uVar7;
-          if (uVar3 == 0) {
-            param_2 = 0;
-            if ((uVar6 & 0x40000000) == 0) {
-              return param_1;
-            }
-          }
-          else {
-            *puVar2 = *puVar2 | 8;
-            param_2 = uVar3 << 1;
-            if (SUB41(uVar3 >> 0x1f,0)) {
-              if (param_2 == 0) {
-                bVar10 = (bool)((byte)(uVar6 >> 0x1e) & 1);
-                uVar3 = ~((int)uVar6 >> 0x1f);
-                if (!bVar10 || uVar3 == 0) {
-                  param_1 = param_1 + 1;
-                }
-                if (!bVar10) {
-                  param_1 = param_1 & 0xfffffffe;
-                }
-              }
-              else {
-                param_1 = param_1 + 1;
-              }
-            }
-            uVar6 = uVar6 | 0x40000000;
-            uVar7 = uVar3;
-          }
-        }
-        else {
-          param_2 = *puVar2 | 8;
-          *puVar2 = param_2;
-          if (SBORROW4(uVar7 & 0x7fffffff,-0x7fffffe7)) {
-            param_1 = uVar7 & 0x80000000;
-          }
-          else {
-            uVar3 = param_1 & 0x7fffff;
-            param_1 = (uVar7 & 0x80000000) + 1;
-            if (uVar3 == 0 && (uVar6 & 0x80000000) == 0) {
-              param_1 = uVar7 & 0x80000000;
-            }
-          }
-          uVar6 = 0x40000000;
-        }
-        goto LAB_0103ed1c;
-      }
-      uVar8 = uVar6 | 0x20000000;
-      uVar5 = uVar6;
     }
     else {
-      if ((int)((param_1 + 0x800000) * 2) < 0) {
-        return param_1;
+      if (a << 1 == 0 || b << 1 == 0)
+        return exponent << 23;               /* a zero: a zero of the result's sign */
+      /* denormals: normalized to bit 31, their exponents lowered (0x0103f72c) */
+      result = a << 8;
+      second = b << 8;
+      denormal = (exponent & 0xff0000) == 0;
+      if (denormal) {
+        for (shift = 0; !(result << shift & 0x80000000); shift++)
+          ;
+        exponent = exponent - (shift << 16) + 0x10000;
+        result <<= shift;
       }
-      param_1 = param_1 + 0xa0000000;
-      uVar6 = 0x10000003;
-LAB_0103ed1c:
-      puVar2 = (uint *)swv_GetFpStatusPtr();
-      uVar3 = *puVar2;
-      if ((uVar6 & ~(uVar3 << 0x12) & 0x30000000) != 0) {
-        uVar6 = uVar6 | 0x40000000;
+      if (denormal && (other & 0xff0000) != 0)
+        second |= 0x80000000;
+      else {                                 /* b is a denormal (0x0103f760) */
+        result |= 0x80000000;
+        for (shift = 0; !(second << shift & 0x80000000); shift++)
+          ;
+        other = other - (shift << 16) + 0x10000;
+        second <<= shift;
       }
-      uVar8 = uVar6 | uVar3 & 0x1c00000;
-      *puVar2 = uVar3 | (uVar6 & 0x7fffffff) >> 0x1a;
-      bVar10 = (uVar6 & 0xf) != 8;
-      if (bVar10) {
-        uVar6 = 0;
-      }
-      else {
-        uVar6 = 0x20000;
-      }
-      if (!bVar10 && (uVar6 & ~uVar8) == 0) {
-        uVar8 = uVar8 | 0xc00000;
-      }
-      uVar5 = param_2;
-      if ((uVar8 & 0x10000000) == 0) {
-        if ((uVar8 & 0x40000000) == 0) {
-          uVar6 = uVar8;
-          if ((uVar3 & 0x100) == 0) goto LAB_0103f924;
-        }
-        else if ((uVar3 & 0x1000) == 0) {
-          return param_1;
-        }
-      }
-      else if ((uVar3 & 0x400) == 0) {
-        return WORD_HEXADECIMAL_7F800000 | param_1 & 0x80000000;
-      }
-    }
-    uVar3 = FUN_010019e0(param_1,param_2,uVar5,uVar7);
-    if ((uVar8 & 0xf) != 9) {
-      return uVar3;
     }
   }
-  return (uint)((uVar8 & uVar3 << 0x10) != 0);
+  else {
+    result = 0x80000000 | a << 8;
+    second = 0x80000000 | b << 8;
+  }
+  if (path == 0) {                           /* 0x0103f630 */
+    exponent += other;
+    MULTIPLY_WORDS(product,result,second);
+    exponent -= 0x800000;
+    other = product.high | (product.low != 0);   /* the low word only as a sticky bit */
+    round = other >= 0x80000000;
+    if (!round)
+      other <<= 1;
+    exponent = exponent + (uint32)((int32)exponent >> 16) + round;   /* bits 0-8: the exponent, the sign */
+    round = other >> 7 & 1;
+    result = (other >> 8) + (exponent << 23) + round;
+    low = result & 1;
+    if (!round || (other & 0x7f) != 0) {     /* not a tie */
+      if (exponent < 0xfc0000)
+        return result;
+      if (exponent == 0xfc0000)
+        result &= ~1u;
+    }
+    else
+      result &= ~1u;                         /* a tie: to even */
+    if (exponent < 0xfc0000)
+      return result;
+    if ((int32)(exponent - 0xfc0000) >= 0) { /* overflow (0x0103f6b0) */
+      if ((result + 0x800000) << 1 & 0x80000000)
+        return result;
+      result -= 0x60000000;                  /* for the trap handler, the exponent wrapped by 192 */
+      control = 0x10000003;
+      path = 1;
+    }
+    else {                                   /* below the normal range (0x0103f67c) */
+      if ((result << 1) - 0x1000000 < 0x3000000)
+        return result;
+      result += 0x60000000;
+      if (other & 0x7f)
+        control = round ? 0x40000003 : 0xc0000003;
+      else
+        control = low ? 0xc0000003 : 0x40000003;
+      if ((other & 0xff) == 0)
+        control = 3;                         /* exact */
+      path = 2;
+    }
+  }
+  if (path == 2) {                           /* below the normal range (0x0103f77c) */
+    status = (uint32 *)swv_GetFpStatusPtr();
+    if (*status & 0x1000000)                 /* flush to zero */
+      return result & 0x80000000;
+    if (*status & 0x800)                     /* underflow trapped: the result, its exponent wrapped */
+      return (uint32)FUN_010019e0(result,*status,control,other,control | 0x20000000);
+    shift = 0xc1 - (((result & 0x80000000) | result >> 23) & ~0x100);   /* the denormal's shift, sign */
+    if ((int32)(shift & 0x7fffffff) <= 0x17) {                         /* in bit 31 */
+      count = (0x20 - shift) & 0xff;
+      lost = count < 32 ? result << count : 0;   /* the bits shifted out */
+      count = shift & 0xff;
+      result = (count < 32 ? ((result & 0xffffff) | 0x800000) >> count : 0) | (shift & 0x80000000);
+      if (lost == 0) {
+        if (!(control & 0x40000000))         /* exact */
+          return result;
+        second = 0;
+        other = shift & 0x80000000;          /* r3: the sign (`and r3, r3, #0x80000000`) */
+      }
+      else {
+        *status |= 8;                        /* underflow */
+        other = lost;
+        if (lost & 0x80000000) {             /* round to nearest: */
+          if (lost << 1 != 0)
+            result++;
+          else {                             /* a tie; r3 = ~(ip asr 31) (`mvns r3, r2, asr #31`) */
+            other = control & 0x80000000 ? 0 : 0xffffffff;
+            if (control & 0x80000000)        /* the multiply or divide rounded down */
+              result++;
+            else if (!(control & 0x40000000))   /* an exact result: to even */
+              result = (result + 1) & ~1u;
+          }
+        }
+        second = lost << 1;
+        control |= 0x40000000;
+      }
+    }
+    else {                                   /* too small for a denormal (0x0103f830) */
+      *status |= 8;
+      if ((shift & 0x7fffffff) >= 0x19)
+        result = shift & 0x80000000;
+      else {                                 /* half the smallest denormal: rounded */
+        round = result << 9 == 0;
+        result = (shift & 0x80000000) + 1;
+        if (round && !(control & 0x80000000))
+          result &= ~1u;
+      }
+      second = *status;
+      other = shift;
+      control = 0x40000000;
+    }
+  }
+  status = (uint32 *)swv_GetFpStatusPtr();              /* the exception (0x0103ed1c) */
+  if (control & 0x30000000 & ~(*status << 18))
+    control |= 0x40000000;                   /* an untrapped overflow is also inexact */
+  *status |= (control << 1) >> 27;           /* the sticky flags */
+  control |= *status & 0x1c00000;
+  if (control & 0x10000000) {                /* overflow */
+    if (!(*status & 0x400))
+      return WORD_HEXADECIMAL_7F800000 | (result & 0x80000000);
+  }
+  else if (control & 0x40000000) {           /* inexact (the underflows) */
+    if (!(*status & 0x1000))
+      return result;
+  }
+  else if (control & 0x8000000) {            /* divide by zero */
+    if (!(*status & 0x200))
+      return WORD_HEXADECIMAL_7F800000 | ((result ^ second) & 0x80000000);
+  }
+  else if (!(*status & 0x100))               /* invalid */
+    return WORD_HEXADECIMAL_7FC00000 | (result & 0x80000000);
+  return (uint32)FUN_010019e0(result,second,second,other,control);
 }
 
 /* ==== 0x0103F8E8  (file offset 0x3F8E8)  swv_fp_status =============================================== */
-void swv_fp_status(uint param_1,uint param_2)
+/* The soft-float library's status-word access, ARM's fplib __fp_status(mask, flags) (ADS / RVCT C
+   library). Only the writable bits 0x01C01F1F (~WORD_HEXADECIMAL_FE3FE0E0: the sticky flags, bits 0-4, the
+   trap enables, bits 8-12, the rounding mode and flush to zero, bits 22-24) take part: the status word
+   (from swv_GetFpStatusPtr) becomes (old & ~mask) ^ flags, and the old word is returned. Ghidra had it
+   void: r0 is the old word (`ldr r0, [r3]`), and FUN_0100062c reads it (swv_fp_status(INTEGER_2056,0): the
+   underflow trap and flag cleared, then the old word given back). Soft-float library (region
+   0x0103ED00-0x0103F900, tools/profile_state.py). Evidence: 0x0103f8e8 - 0x0103f91c (`ldr r2` the word at
+   0x0103f920, `bic r1, r1, r2` / `bic r2, r0, r2`, `bl swv_GetFpStatusPtr`, `ldr r0, [r3]`, `bic r2, r0,
+   r2` / `eor r2, r2, r1` / `str r2, [r3]`, `mov pc, lr` with r0 the old word). Verified against the binary
+   under emulation (unicorn) and against Ghidra's original: 1,300,000 random mask, flags and status words,
+   the result, the status word and the one swv_GetFpStatusPtr call, 0 mismatches. */
+uint32 swv_fp_status(uint32 mask,uint32 flags)
 
 {
-  uint uVar1;
-  uint uVar2;
-  uint *puVar3;
-  
-                    /* Soft-float library (region 0x0103ED00-0x0103F900, tools/profile_state.py).
-                       GUESS: identified by code pattern (ARM ADS fplib single-precision routine):
-                       updates the soft-float status word: *status = (*status & ~(mask & ~K)) ^
-                       (flags & ~K), status from swv_GetFpStatusPtr (like ADS __fp_status). */
-  uVar1 = ~WORD_HEXADECIMAL_FE3FE0E0;
-  uVar2 = ~WORD_HEXADECIMAL_FE3FE0E0;
-  puVar3 = (uint *)swv_GetFpStatusPtr();
-  *puVar3 = *puVar3 & ~(param_1 & uVar2) ^ param_2 & uVar1;
-  return;
+  uint32 *status;
+  uint32 previous;
+
+  flags &= ~WORD_HEXADECIMAL_FE3FE0E0;   /* only the writable bits 0x01C01F1F */
+  mask &= ~WORD_HEXADECIMAL_FE3FE0E0;
+  status = (uint32 *)swv_GetFpStatusPtr();
+  previous = *status;
+  *status = (previous & ~mask) ^ flags;
+  return previous;
 }
+

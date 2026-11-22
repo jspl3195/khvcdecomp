@@ -17,13 +17,6 @@
 #include "swv_types.h"
 #include "kh_types.h"
 
-/* A double (IEEE-754 double precision), as its two words: a type of its own, so a double is not taken
-   for a 64-bit integer (uint64) or the other way round. The soft-float library's double routines take
-   and return it; the word macros work on it too (they only use .low and .high). */
-typedef struct float64 {
-  uint32 low;
-  uint32 high;
-} float64;
 /* Comparisons of two float64 on their words, with no C floating type: the comparison a caller's branch
    makes after double_compare_equal / _greater / _less (which leave the result in the flags), written
    after the comma. +0 == -0; every comparison is false for a NaN, so the negations stand for the

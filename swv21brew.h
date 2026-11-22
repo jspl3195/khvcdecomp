@@ -173,7 +173,7 @@ int FUN_0102da68(int param_1);   /* 0x0102DA68, no Ghidra function */
 /* Named functions (entry points, SDK glue, helper wrappers, identified game code). */
 int AEEMod_Load(IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod);   /* 0x01000000 */
 void * swv_memset(void *destination,uint32 value,uint32 byteCount);   /* 0x0100010C */
-undefined4 * rt_memclr_w(undefined4 *param_1,uint param_2);   /* 0x01000130 GUESS: name */
+void *rt_memclr_w(void *destination,uint32 byteCount);   /* 0x01000130 GUESS: name */
 int32 swv_setjmp(uint32 *env);   /* 0x01000500 */
 uint32 AEEMod_AddRef(IModule *po);   /* 0x010028C8 */
 int AEEMod_CreateInstance(IModule *po,IShell *pIShell,AEECLSID ClsId,void **ppObj);   /* 0x010028DC */
@@ -274,20 +274,20 @@ int32 swv_Create_VertexBuffer(void **ppObj);   /* 0x0103CC48 */
 void swv_InitVtbl_VertexBuffer(void **pVtbl);   /* 0x0103CEB0 */
 int32 swv_Create_World(void **ppObj);   /* 0x0103D18C */
 void swv_InitVtbl_World(void **pVtbl);   /* 0x0103D2C4 */
-uint swv_f2d(uint param_1,uint param_2,undefined4 param_3,uint param_4);   /* 0x0103EE80 */
-uint swv_fadd(uint param_1,uint param_2);   /* 0x0103EEE8 */
-uint swv_frsb(uint param_1,uint param_2);   /* 0x0103F030 */
-uint swv_fsub(uint param_1,uint param_2);   /* 0x0103F064 */
-uint swv_frdiv(uint param_1,uint param_2);   /* 0x0103F240 */
-uint swv_fdiv(uint param_1,uint param_2);   /* 0x0103F250 */
-uint swv_fcmp_a(uint param_1,uint param_2);   /* 0x0103F428 */
-uint swv_ffix(uint param_1);   /* 0x0103F490 */
-uint swv_ffltu(int param_1);   /* 0x0103F4F8 */
-uint swv_fflt(uint param_1);   /* 0x0103F500 */
-uint swv_fcmp_b(uint param_1,uint param_2);   /* 0x0103F534 */
-uint swv_fcmp_c(uint param_1,uint param_2);   /* 0x0103F59C */
-uint swv_fmul(uint param_1,uint param_2);   /* 0x0103F604 */
-void swv_fp_status(uint param_1,uint param_2);   /* 0x0103F8E8 */
+float64 swv_f2d(uint32 a);   /* 0x0103EE80 */
+uint32 swv_fadd(uint32 a,uint32 b);   /* 0x0103EEE8 */
+uint32 swv_frsb(uint32 a,uint32 b);   /* 0x0103F030 */
+uint32 swv_fsub(uint32 a,uint32 b);   /* 0x0103F064 */
+uint32 swv_frdiv(uint32 a,uint32 b);   /* 0x0103F240 */
+uint32 swv_fdiv(uint32 a,uint32 b);   /* 0x0103F250 */
+uint32 swv_fcmp_a(uint32 a,uint32 b);   /* 0x0103F428 */
+int32 swv_ffix(uint32 a);   /* 0x0103F490 */
+uint32 swv_ffltu(uint32 value);   /* 0x0103F4F8 */
+uint32 swv_fflt(int32 value);   /* 0x0103F500 */
+uint32 swv_fcmp_b(uint32 a,uint32 b);   /* 0x0103F534 */
+uint32 swv_fcmp_c(uint32 a,uint32 b);   /* 0x0103F59C */
+uint32 swv_fmul(uint32 a,uint32 b);   /* 0x0103F604 */
+uint32 swv_fp_status(uint32 mask,uint32 flags);   /* 0x0103F8E8 */
 
 /* No Ghidra function exists for these; bodies are hand-written in the .c file. */
 int AEEClsCreateInstance(AEECLSID ClsId, IShell *pIShell, IModule *po, void **ppObj);

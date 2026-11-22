@@ -39,6 +39,14 @@ typedef struct int64 {
   uint32 low;
   int32 high;
 } int64;
+/* A double (IEEE-754 double precision), as its two words: a type of its own, so a double is not taken
+   for a 64-bit integer (uint64) or the other way round. The soft-float libraries' double routines
+   (kh.mod's, and swv21brew's swv_f2d) take and return it; the word macros work on it too (they only use
+   .low and .high). */
+typedef struct float64 {
+  uint32 low;
+  uint32 high;
+} float64;
 /* What the code does with 64-bit values, as macros on the two words (no calls; the arguments are
    evaluated more than once, and the result is assigned high word first).
    MAKE_WORDS(result, h, l): result = h:l, and the expression's value is result (Ghidra's CONCAT44).
