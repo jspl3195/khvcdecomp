@@ -4391,127 +4391,103 @@ int32 swvArchive_EnumNext(SwvExtObject *archive,uint32 *size,char **name)
 }
 
 /* ==== 0x01004380  (file offset 0x04380)  swvArchive_Open ============================================= */
-/* GUESS: name (not yet rewritten). Slot 4 of the SWVARC archive's vtable: opens the archive file
-   (param_2, IFileMgr OpenFile, read-only) and checks it: the 12-byte magic AB 53 57 56 41 52 43 BB 0D 0A
-   1A 0A ("\xabSWVARC\xbb\r\n\x1a\n", PNG-like; at 0x0103faac), byte 0x0c 0, the header and directory
-   size (0x0d), the file size (0x11, against IFile GetInfo) and the adler32 (0x1d, of the header and
-   directory with that field zeroed, read 0x400 bytes at a time); then reads the directory (from 0x21)
-   into pBuffer and keeps pFile and the data's start (field_10, the header and directory size). Returns
-   0, 0xd with an archive already open, 2 with no memory, or 0x1000b (GUESS: bad archive). No file of
-   the game's data has the magic: kh.mod never creates class 100. */
-int swvArchive_Open(int param_1,undefined4 param_2)
+/* GUESS: name. Slot 4 of the SWVARC archive's vtable (Ext100Vtbl, SwvExtObject): opens the archive file
+   (path, IFileMgr OpenFile, read-only) and checks it: the 12-byte magic AB 53 57 56 41 52 43 BB 0D 0A 1A
+   0A ("\xabSWVARC\xbb\r\n\x1a\n", PNG-like; at 0x0103faac), byte 0x0c 0, the header and directory size
+   (0x0d), the file size (0x11, against IFile GetInfo) and the adler32 (0x1d, of the header and directory
+   with that field zeroed, read 0x400 bytes at a time; zlib's adler32, thunk_adler32); then reads the
+   directory (from 0x21) into pBuffer and keeps pFile and the data's start (field_10, the header and
+   directory size). Returns 0, 0xd with an archive already open, 2 with no memory, IShell CreateInstance's
+   or IFileMgr GetLastError's error, IFile Seek's (the archive is then kept but its file released, as the
+   binary does) or 0x1000b (GUESS: bad archive). The first read's checks all run, whatever failed before.
+   When OpenFile fails and GetLastError returns 0, the binary would go on with r6 / r7 as its caller left
+   them (read and headerSize, not set on that path; Ghidra's unaff_r6 / unaff_r7). No file of the game's
+   data has the magic: kh.mod never creates class 100. Evidence: 0x01004380 - 0x01004620 (`movne r0, #0xd`,
+   the CreateInstance slot +8 `blx` with sp + 0x50, OpenFile +8 with 1, GetLastError +0x24, `bl
+   0x01039598` 0x400, Read +0xc, `cmp r0, #0x26` / `ldrlo r4`, the memcmp slot +0xdc, `bl 0x01038624`
+   +0xd / +0x11 / +0x1d, GetInfo +0x18 with sp (dwSize sp + 8), `bl 0x01039df0`; Ghidra had dropped
+   thunk_adler32's length: `cmp r7, r6` / `movhs r2, r6` / `movlo r2, r7` / `mov r0, #1` / `bl
+   0x01039594`, and in the loop `sub r0, r7, r6` / `cmp r0, r8` / `movhi r0, r8` / `mov r2, r0`; and the
+   free slot +0x6c's argument, `movne r0, sb`; the Release +4, `sub r8, r7, #0x21`, Seek +0x1c with 0,
+   0x21, `stm r0, {r5, r6, r7}` at +8, `bl 0x010398d0`). */
+int32 swvArchive_Open(SwvExtObject *archive,const char *path)
 
 {
-  int iVar1;
-  void *pvVar2;
-  int *piVar3;
-  int iVar4;
-  uint uVar5;
-  uint uVar6;
-  uint32 uVar7;
-  int iVar8;
-  uint unaff_r6;
-  uint unaff_r7;
-  uint32 size;
-  undefined1 auStack_78 [8];
-  int local_70;
-  int local_2c;
-  int *local_28;
-  
-  if (*(int *)(param_1 + 8) == 0) {
-    pvVar2 = helper_GetAppInstance();
-    iVar1 = (*((IShell *)*(int **)((int)pvVar2 + 0xc))->pvt->CreateInstance)
-                ((IShell *)*(int **)((int)pvVar2 + 0xc),AEECLSID_FILEMGR_VALUE,&local_28);
-    if (iVar1 == 0) {
-      piVar3 = (int *)(*((IFileMgr *)local_28)->pvt->OpenFile)((IFileMgr *)local_28,param_2,1);
-      pvVar2 = (void *)0x0;
-      if (piVar3 == (int *)0x0) {
-        /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-        iVar1 = (*((IFileMgr *)local_28)->pvt->GetLastError)((IFileMgr *)local_28);
-      }
+  int32 result = 0xd;
+  IShell *shell;
+  IFileMgr *fileMgr;
+  IFile *file;
+  uint8 *buffer = NULL;
+  void *directory;
+  uint32 read;
+  uint32 headerSize;
+  uint32 got;
+  uint32 adler;
+  uint32 expected;
+  FileInfo info;
+
+  if (archive->pFile == NULL) {
+    shell = ((AEEApplet *)helper_GetAppInstance())->m_pIShell;
+    result = (*shell->pvt->CreateInstance)(shell,AEECLSID_FILEMGR_VALUE,(void **)&fileMgr);
+    if (result == 0) {
+      file = (*fileMgr->pvt->OpenFile)(fileMgr,path,1);
+      if (file == NULL)
+        result = (*fileMgr->pvt->GetLastError)(fileMgr);
       else {
-        pvVar2 = helper_malloc(0x400);
-        unaff_r6 = (*((IFile *)piVar3)->pvt->Read)((IFile *)piVar3,pvVar2,0x400);
-        if (unaff_r6 < 0x26) {
-          iVar1 = WORD_HEXADECIMAL_0001000B;
-        }
-                    /* helper[55] int memcmp(const void *a, const void *b, uint32 n)
-                       (AEEHelperFuncs +0xdc, via *(base-4)) */
-        iVar4 = (*g_pHelperFuncs->memcmp)
-                          (pvVar2,DATA_AT_0103FAAC_OFFSET + 0x100444c,0xc);
-        if (iVar4 != 0) {
-          iVar1 = WORD_HEXADECIMAL_0001000B;
-        }
-        if (*(char *)((int)pvVar2 + 0xc) != '\0') {
-          iVar1 = WORD_HEXADECIMAL_0001000B;
-        }
-        unaff_r7 = swv_ReadLE32((int)pvVar2 + 0xd);
-        (*((IFile *)piVar3)->pvt->GetInfo)((IFile *)piVar3,auStack_78);
-        iVar4 = swv_ReadLE32((int)pvVar2 + 0x11);
-        if (iVar4 != local_70) {
-          iVar1 = WORD_HEXADECIMAL_0001000B;
-        }
-        local_2c = swv_ReadLE32((int)pvVar2 + 0x1d);
-        thunk_swv_memset((int)pvVar2 + 0x1d,0,4);
+        buffer = (uint8 *)helper_malloc(0x400);
+        read = (uint32)(*file->pvt->Read)(file,buffer,0x400);
+        if (read < 0x26)
+          result = WORD_HEXADECIMAL_0001000B;
+        if ((*g_pHelperFuncs->memcmp)(buffer,(const void *)(DATA_AT_0103FAAC_OFFSET + 0x100444c),0xc) != 0)
+          result = WORD_HEXADECIMAL_0001000B;
+        if (buffer[0xc] != 0)
+          result = WORD_HEXADECIMAL_0001000B;
+        headerSize = swv_ReadLE32(buffer + 0xd);
+        (*file->pvt->GetInfo)(file,&info);
+        if (swv_ReadLE32(buffer + 0x11) != info.dwSize)
+          result = WORD_HEXADECIMAL_0001000B;
+        expected = swv_ReadLE32(buffer + 0x1d);
+        thunk_swv_memset(buffer + 0x1d,0,4);
       }
-      if (iVar1 == 0) {
-        iVar4 = thunk_adler32(1,pvVar2);
-        while ((iVar8 = iVar1, iVar1 = iVar8, unaff_r6 < unaff_r7 && (iVar8 == 0))) {
-          uVar5 = (*((IFile *)piVar3)->pvt->Read)((IFile *)piVar3,pvVar2,0x400);
-          iVar1 = WORD_HEXADECIMAL_0001000B;
-          if (uVar5 != 0) {
-            uVar6 = unaff_r7 - unaff_r6;
-            if (uVar5 < unaff_r7 - unaff_r6) {
-              uVar6 = uVar5;
-            }
-            iVar4 = thunk_adler32(iVar4,pvVar2,uVar6);
-            unaff_r6 = unaff_r6 + uVar5;
-            iVar1 = iVar8;
+      if (result == 0) {
+        adler = thunk_adler32(1,buffer,headerSize < read ? headerSize : read);
+        while (read < headerSize && result == 0) {
+          got = (uint32)(*file->pvt->Read)(file,buffer,0x400);
+          if (got == 0)
+            result = WORD_HEXADECIMAL_0001000B;
+          else {
+            adler = thunk_adler32(adler,buffer,headerSize - read > got ? got : headerSize - read);
+            read += got;
           }
         }
-        if ((unaff_r7 <= unaff_r6) && (iVar4 != local_2c)) {
-          iVar1 = WORD_HEXADECIMAL_0001000B;
-        }
+        if (read >= headerSize && adler != expected)
+          result = WORD_HEXADECIMAL_0001000B;
       }
-      /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-      (*((IFileMgr *)local_28)->pvt->Release)((IFileMgr *)local_28);
-      if (pvVar2 != (void *)0x0) {
-        (*g_pHelperFuncs->free)();
-      }
-      if (iVar1 == 0) {
-        size = unaff_r7 - 0x21;
-        pvVar2 = helper_malloc(size);
-        if (pvVar2 == (void *)0x0) {
-          iVar1 = 2;
-        }
+      (*fileMgr->pvt->Release)(fileMgr);
+      if (buffer != NULL)
+        (*g_pHelperFuncs->free)(buffer);
+      if (result == 0) {
+        directory = helper_malloc(headerSize - 0x21);
+        if (directory == NULL)
+          result = 2;
         else {
-          iVar1 = (*((IFile *)piVar3)->pvt->Seek)((IFile *)piVar3,0,0x21);
-          uVar7 = (*((IFile *)piVar3)->pvt->Read)((IFile *)piVar3,pvVar2,size);
-          iVar4 = WORD_HEXADECIMAL_0001000B;
-          if (uVar7 == size) {
-            *(int **)(param_1 + 8) = piVar3;
-            *(void **)(param_1 + 0xc) = pvVar2;
-            *(uint *)(param_1 + 0x10) = unaff_r7;
-            if (iVar1 == 0) {
-              return 0;
-            }
+          result = (*file->pvt->Seek)(file,0,0x21);
+          if ((uint32)(*file->pvt->Read)(file,directory,headerSize - 0x21) == headerSize - 0x21) {
+            archive->pFile = file;
+            archive->pBuffer = directory;
+            archive->field_10 = headerSize;
           }
           else {
-            helper_free(pvVar2);
-            iVar1 = iVar4;
+            helper_free(directory);
+            result = WORD_HEXADECIMAL_0001000B;
           }
         }
       }
-      if (piVar3 != (int *)0x0) {
-        /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-        (*((IFile *)piVar3)->pvt->Release)((IFile *)piVar3);
-      }
+      if (result != 0 && file != NULL)
+        (*file->pvt->Release)(file);
     }
   }
-  else {
-    iVar1 = 0xd;
-  }
-  return iVar1;
+  return result;
 }
 
 /* ==== 0x01004638  (file offset 0x04638)  swvArchive_OpenEntry ======================================== */
@@ -4697,7 +4673,7 @@ int FUN_010048e4(int param_1,int param_2,undefined4 param_3)
       if (iVar1 != param_2) {
         iVar1 = 0;
       }
-      iVar3 = swv_Matrix4Invert(param_3);
+      iVar3 = swv_Matrix4Invert((uint32 *)param_3);
       if (iVar3 == 0) {
         FUN_0102f7e0(INTEGER_MINUS_1000);
       }
@@ -9169,7 +9145,7 @@ int FUN_01009638(int param_1,int param_2)
       if (iVar6 != param_2) {
         iVar6 = 0;
       }
-      iVar3 = swv_Matrix4Invert(param_1);
+      iVar3 = swv_Matrix4Invert((uint32 *)param_1);
       if (iVar3 == 0) {
         FUN_0102f7e0(INTEGER_MINUS_1000);
       }
@@ -11172,11 +11148,11 @@ void FUN_0100bae0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
       auStack_18[iVar1] = *(undefined4 *)(param_1 + iVar1 * 4 + 0x290);
       iVar1 = iVar1 + 1;
     } while (iVar1 < 4);
-    swv_RasterTriangleSetup(param_1);
+    swv_RasterTriangleSetup((uint8 *)param_1);
     *(undefined4 *)(param_1 + 0x290) = auStack_18[2];
     *(undefined4 *)(param_1 + 0x294) = auStack_18[1];
     *(undefined4 *)(param_1 + 0x298) = auStack_18[3];
-    swv_RasterTriangleSetup(param_1);
+    swv_RasterTriangleSetup((uint8 *)param_1);
     return;
   }
   return;
@@ -11988,808 +11964,562 @@ void swv_RasterTriangle(uint8 *raster,uint8 *vertex0,uint8 *vertex1,uint8 *verte
   vertices[0] = vertex0;
   vertices[1] = vertex1;
   vertices[2] = vertex2;
-  swv_RasterTriangleSetup((int)raster);   /* the binary: a tail jump */
+  swv_RasterTriangleSetup(raster);   /* the binary: a tail jump */
 }
 
 /* ==== 0x0100CF00  (file offset 0x0CF00)  swv_RasterTriangleSetup ===================================== */
-/* GUESS: name (not yet rewritten). Sets up the triangle whose vertices swv_RasterTriangle stored
-   (+0x290 .. +0x298) and picks its span routine (+0x2b8) from the compositing state (JSR-184 1.1,
-   CompositingMode; the fields in swv_types.h): swv_SpanFillGeneric by default, FUN_0100bb68 for
-   textured triangles (flag 4). The untextured fast paths need no alpha threshold (+0x25c), no alpha
-   write, colour write and depth test: blending ALPHA (0x40) with depth write off gives
-   swv_SpanFillGouraudAlpha; REPLACE (0x44) with depth write on calls swv_SetupFlatDither and gives
-   swv_SpanFillFlatDithered with flag 2 clear (flat shading), swv_SpanFillGouraud with it set (smooth
-   shading); all of them dither. The textured fast paths (swv_SpanFillTextured, FUN_0100ac0c,
-   FUN_0100c92c) need unit 0 alone (unit 1's +0x18c = 0x5f) with an RGB or RGBA image (+0x158 = 99 /
-   100, JSR-184 1.1 Image2D.RGB / RGBA). Called by swv_RasterTriangle (its tail jump) and twice by
-   FUN_0100bae0. */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-void swv_RasterTriangleSetup(int param_1)
+/* GUESS: name. Sets up the triangle whose vertices swv_RasterTriangle stored (+0x290 .. +0x298) and picks
+   its span routine (+0x2b8) from the compositing state (JSR-184 1.1, CompositingMode; the fields in
+   swv_types.h): swv_SpanFillGeneric by default, FUN_0100bb68 for textured triangles (flag 4). The
+   untextured fast paths need no alpha threshold (+0x25c), no alpha write, colour write and depth test:
+   blending ALPHA (0x40) with depth write off gives swv_SpanFillGouraudAlpha; REPLACE (0x44) with depth
+   write on calls swv_SetupFlatDither and gives swv_SpanFillFlatDithered with flag 2 clear (flat shading),
+   swv_SpanFillGouraud with it set (smooth shading); all of them dither. The textured fast paths
+   (swv_SpanFillTextured, FUN_0100ac0c, FUN_0100c92c) need unit 0 alone (unit 1's +0x18c = 0x5f) with an
+   RGB or RGBA image (+0x158 = 99 / 100, JSR-184 1.1 Image2D.RGB / RGBA). Called by swv_RasterTriangle (its
+   tail jump) and twice by FUN_0100bae0. In detail: a vertex is x, y (+0 / +4, 28.4 fixed point: rows and
+   columns are (v + 0xf) >> 4), z (+8), red, green, blue (+0xc .. +0x14, 16.16), alpha (+0x18) and a second
+   alpha byte (+0x19), and per texture unit two coordinates from +0x1c (0x10 bytes a unit). The flags
+   (+0x258) start as +0x28c; with flags 0x204 and all three +0x19 bytes 0xff, 0x204 is cleared and the
+   colours set to +0x270 .. +0x278. Flag 0x400 (GUESS: colour clamping needed) is cleared, set for blending
+   ALPHA_ADD (0x41) or MODULATE_X2 (0x43), a unit blending FUNC_ADD (0xe0), or (shading or texturing) a
+   colour component that is 0 in all nine words' common bits or one of them 0x10000 or above; flag 2 is
+   cleared when the vertices' colours agree (red and blue but the low 9 bits, green but the low 8, alpha
+   exactly), and a flat white opaque first vertex (three 0x10000, alpha 0xff) lets REPLACE / MODULATE
+   (0xe3) texturing use swv_SpanFillTextured rather than FUN_0100ac0c. Nothing is drawn when the triangle
+   covers no column or no row. From the top vertex the back edge walks the vertices backwards (the span's
+   end, +0xdc) and the front edge forwards (its start, +0x10); an edge's x steps (16.12 fixed point, +
+   0xfff) are dx times FUN_0102f468 (dy, 0x14; GUESS: a table reciprocal) >> 8, both edges sharing one
+   count of 3 vertex changes. The back edge also sets up the per-unit texture values (+0xe8 .. +0x140,
+   fractions +0xe0 / +0xe4), the front edge the depth (+0x1c, steps +0x7c / +0xac from +0x1c0 / +0x1c4),
+   colours (+0x38 .. +0x40, clamped to 0xffff untextured), alpha (+0x44, +0x48 with flag 0x200) and texture
+   values (+0x20 .. +0xc0, fraction +0x14 / +0x18): the value at the first pixel centre (the gradient times
+   the sub-pixel offset >> 4) and two steps per row, picked by the carry out of the x fraction. Each row
+   (+4) inside the target (+0x284 rows, +0x280 columns) runs the span routine on the colour row +8 (+0x27c
+   + +0x288 * row) and the depth row +0xc (+0x2a0 + +0x280 * row * 2), or FUN_01006078 (GUESS: the clipped
+   span) when the span leaves the target; a span whose start is past its end ends the triangle. The texture
+   products are signed 32 x 32 -> 64, summed (`smull` / `adds` / `adc`, MULTIPLY_SIGNED_WORDS / ADD_WORDS)
+   and the bits 16..47 kept. Evidence: 0x0100cf00 - 0x0100dfc0 (the min / max loop with `strlt r5, [sp,
+   #0x38]`, `subs r0, r1, r0, asr #4` / `cmpne r1, #0` / `popeq`, `bics r0, r0, r2` 0x204, the +0x19 `cmp
+   r0, #0xff` chain, `bic r0, r0, #0x400` / `orr r2, r0, #2`, `cmp r3, #0xe0`, the `lsr #9` / `lsl #9` and
+   `bic #0xff` colour compares, `cmp r3, #0x10000` / `mov r1, #0`, the and / or of the nine words / `cmpne
+   r2, #0x10000` / `orrhs`, the span literals at 0x0100d220 - 0x0100d37c and `bl 0x01004b54`, `mla r0, r2,
+   r1, r0` / `bl 0x01020dec`, `mov r1, #3` / `str r1, [sp, #0x40]`, `bl 0x0102f468` with 0x14, `ldr r1,
+   [pc, #0xb80]` 0xfff, the `smull` / `adds` / `adc` / `lsr #0x10` / `orr lsl #16`, `subs ip, r3, #0xff00`
+   / `subsge ip, ip, #0xff` / `movge r3, lr` the clamp, `orrs r0, ip, r0` / `bmi`, `blx r1`, `cmp r1, r2` /
+   `popgt` / `bllt 0x01006078`, the row steps at 0x0100ddec - 0x0100dfa8). */
+void swv_RasterTriangleSetup(uint8 *raster)
 
 {
-  longlong lVar1;
-  int iVar2;
-  uint uVar3;
-  int iVar4;
-  undefined4 uVar5;
-  uint uVar6;
-  int iVar7;
-  int *piVar8;
-  int iVar9;
-  int *piVar10;
-  int iVar11;
-  int iVar12;
-  int iVar13;
-  int iVar14;
-  int *piVar15;
-  int iVar16;
-  int iVar17;
-  int iVar18;
-  bool bVar19;
-  bool bVar20;
-  bool bVar21;
-  uint local_74;
-  uint local_70;
-  int local_6c;
-  int local_64;
-  uint local_60;
-  uint local_5c;
-  int local_58;
-  int local_50;
-  int iStack_48;
-  
-  piVar8 = *(int **)(param_1 + 0x290);
-  local_60 = 0;
-  local_70 = 0;
-  local_5c = 0;
-  local_74 = 0;
-  uVar6 = *(uint *)(param_1 + 0x28c);
-  *(uint *)(param_1 + 600) = uVar6;
-  iVar17 = piVar8[1];
-  iVar2 = *piVar8;
-  local_50 = 0;
-  iVar9 = 1;
-  iVar7 = iVar2;
-  iVar18 = iVar17;
-  do {
-    piVar15 = *(int **)(param_1 + iVar9 * 4 + 0x290);
-    iVar12 = piVar15[1];
-    if (iVar12 < iVar18) {
-      iVar18 = iVar12;
-      local_50 = iVar9;
+  uint8 **vertices = (uint8 **)(raster + 0x290);
+  uint32 *flags = (uint32 *)(raster + 0x258);
+  int32 *row = (int32 *)(raster + 4);
+  int32 *values = (int32 *)(raster + 0x1c);
+  const int32 *from, *to, *steps, *textureSteps;
+  const uint8 *v0, *v1, *v2;
+  uint8 *unit;
+  int32 *out;
+  int32 minX, maxX, minY, maxY, lastRow, backEnd, frontEnd, back, front, next, slope, k, i;
+  int32 backStep = 0, backX = 0, frontStep = 0, frontX = 0, countdown = 3, notWhite = 1;
+  int32 blend, format, dx, dy, startX, endX, fraction, colour;
+  uint32 alignedX, state;
+  int64 sum, product;
+
+  front = 0;
+  *flags = *(uint32 *)(raster + 0x28c);
+  minY = maxY = ((const int32 *)vertices[0])[1];
+  minX = maxX = ((const int32 *)vertices[0])[0];
+  for (k = 1; k < 3; k++) {
+    from = (const int32 *)vertices[k];
+    if (from[1] < minY) {
+      minY = from[1];
+      front = k;
     }
-    if (iVar17 < iVar12) {
-      iVar17 = iVar12;
-    }
-    iVar12 = *piVar15;
-    iVar9 = iVar9 + 1;
-    if (iVar12 < iVar2) {
-      iVar2 = iVar12;
-    }
-    if (iVar7 < iVar12) {
-      iVar7 = iVar12;
-    }
-  } while (iVar9 < 3);
-  local_6c = iVar18 + 0xf >> 4;
-  local_64 = local_50;
-  *(int *)(param_1 + 4) = local_6c;
-  iVar18 = iVar17 + 0xf >> 4;
-  if (iVar7 + 0xf >> 4 == iVar2 + 0xf >> 4 || iVar18 == local_6c) {
+    if (from[1] > maxY)
+      maxY = from[1];
+    if (from[0] < minX)
+      minX = from[0];
+    if (from[0] > maxX)
+      maxX = from[0];
+  }
+  backEnd = frontEnd = *row = minY + 0xf >> 4;
+  back = front;
+  lastRow = maxY + 0xf >> 4;
+  if ((maxX + 0xf >> 4) == (minX + 0xf >> 4) || lastRow == backEnd)
     return;
-  }
-  if ((~uVar6 & 0x204) == 0) {
-    uVar3 = (uint)*(byte *)((int)piVar8 + 0x19);
-    bVar20 = 0xfe < uVar3;
-    if (bVar20) {
-      uVar3 = (uint)*(byte *)(*(int *)(param_1 + 0x294) + 0x19);
-    }
-    bVar21 = bVar20 && 0xfe < uVar3;
-    if (bVar20 && 0xfe < uVar3) {
-      uVar3 = *(uint *)(param_1 + 0x298);
-      bVar21 = 0xfe < *(byte *)(uVar3 + 0x19);
-    }
-    if (bVar21) {
-      *(uint *)(param_1 + 600) = uVar6 & 0xfffffdfb;
-      uVar5 = *(undefined4 *)(param_1 + 0x270);
-      *(undefined4 *)(uVar3 + 0xc) = uVar5;
-      *(undefined4 *)(*(int *)(param_1 + 0x294) + 0xc) = uVar5;
-      *(undefined4 *)(*(int *)(param_1 + 0x290) + 0xc) = uVar5;
-      uVar5 = *(undefined4 *)(param_1 + 0x274);
-      *(undefined4 *)(*(int *)(param_1 + 0x298) + 0x10) = uVar5;
-      *(undefined4 *)(*(int *)(param_1 + 0x294) + 0x10) = uVar5;
-      *(undefined4 *)(*(int *)(param_1 + 0x290) + 0x10) = uVar5;
-      uVar5 = *(undefined4 *)(param_1 + 0x278);
-      *(undefined4 *)(*(int *)(param_1 + 0x298) + 0x14) = uVar5;
-      *(undefined4 *)(*(int *)(param_1 + 0x294) + 0x14) = uVar5;
-      *(undefined4 *)(*(int *)(param_1 + 0x290) + 0x14) = uVar5;
+  if ((~*flags & 0x204) == 0 && vertices[0][0x19] == 0xff && vertices[1][0x19] == 0xff &&
+      vertices[2][0x19] == 0xff) {
+    *flags &= ~(uint32)0x204;
+    for (k = 0; k < 3; k++) {
+      colour = *(int32 *)(raster + 0x270 + k * 4);
+      *(int32 *)(vertices[2] + 0xc + k * 4) = colour;
+      *(int32 *)(vertices[1] + 0xc + k * 4) = colour;
+      *(int32 *)(vertices[0] + 0xc + k * 4) = colour;
     }
   }
-  bVar20 = true;
-  uVar6 = *(uint *)(param_1 + 600) & 0xfffffbff;
-  *(uint *)(param_1 + 600) = uVar6 | 2;
-  iVar2 = *(int *)(param_1 + 0x268);
-  if (iVar2 == 0x41 || iVar2 == 0x43) {
-    *(uint *)(param_1 + 600) = uVar6 | 0x402;
+  *flags = (*flags & ~(uint32)0x400) | 2;
+  blend = *(int32 *)(raster + 0x268);
+  if (blend == 0x41 || blend == 0x43)
+    *flags |= 0x400;
+  for (k = 0; k < 2; k++)
+    if (*(int32 *)(raster + 0x15c + k * 0x34) == 0xe0)
+      *flags |= 0x400;
+  v1 = vertices[1];
+  v0 = vertices[0];
+  v2 = vertices[2];
+  if ((*(const uint32 *)(v1 + 0xc) & ~(uint32)0x1ff) == (*(const uint32 *)(v0 + 0xc) & ~(uint32)0x1ff) &&
+      (*(const uint32 *)(v2 + 0xc) & ~(uint32)0x1ff) == (*(const uint32 *)(v0 + 0xc) & ~(uint32)0x1ff) &&
+      (*(const uint32 *)(v0 + 0x10) & ~(uint32)0xff) == (*(const uint32 *)(v1 + 0x10) & ~(uint32)0xff) &&
+      (*(const uint32 *)(v2 + 0x10) & ~(uint32)0xff) == (*(const uint32 *)(v0 + 0x10) & ~(uint32)0xff) &&
+      (*(const uint32 *)(v0 + 0x14) & ~(uint32)0x1ff) == (*(const uint32 *)(v1 + 0x14) & ~(uint32)0x1ff) &&
+      (*(const uint32 *)(v2 + 0x14) & ~(uint32)0x1ff) == (*(const uint32 *)(v0 + 0x14) & ~(uint32)0x1ff) &&
+      v0[0x18] == v1[0x18] && v0[0x18] == v2[0x18]) {
+    *flags &= ~(uint32)2;
+    if (*(const int32 *)(v0 + 0xc) == 0x10000 && *(const int32 *)(v0 + 0x10) == 0x10000 &&
+        *(const int32 *)(v0 + 0x14) == 0x10000 && v0[0x18] == 0xff)
+      notWhite = 0;
   }
-  iVar7 = 0;
-  do {
-    iVar17 = iVar7 * 0x34;
-    iVar7 = iVar7 + 1;
-    if (*(int *)(param_1 + iVar17 + 0x15c) == 0xe0) {
-      *(uint *)(param_1 + 600) = *(uint *)(param_1 + 600) | 0x400;
-    }
-  } while (iVar7 < 2);
-  iVar9 = *(int *)(param_1 + 0x294);
-  iVar17 = *(int *)(param_1 + 0x290);
-  iVar7 = *(int *)(param_1 + 0x298);
-  uVar6 = *(uint *)(iVar9 + 0xc) & 0xfffffe00;
-  uVar3 = *(uint *)(iVar17 + 0xc) & 0xfffffe00;
-  bVar21 = uVar6 == uVar3;
-  if (bVar21) {
-    uVar6 = *(uint *)(iVar7 + 0xc) & 0xfffffe00;
-  }
-  if (bVar21 && uVar6 == uVar3) {
-    uVar3 = *(uint *)(iVar17 + 0x10) & 0xffffff00;
-    uVar6 = *(uint *)(iVar9 + 0x10) & 0xffffff00;
-    bVar21 = uVar3 == uVar6;
-    if (bVar21) {
-      uVar6 = *(uint *)(iVar7 + 0x10) & 0xffffff00;
-    }
-    if (bVar21 && uVar6 == uVar3) {
-      uVar6 = *(uint *)(iVar9 + 0x14) & 0xfffffe00;
-      uVar3 = *(uint *)(iVar17 + 0x14) & 0xfffffe00;
-      bVar21 = uVar3 == uVar6;
-      if (bVar21) {
-        uVar6 = *(uint *)(iVar7 + 0x14) & 0xfffffe00;
+  if ((*flags & 6) != 0 &&
+      ((*(const uint32 *)(v0 + 0xc) & *(const uint32 *)(v0 + 0x10) & *(const uint32 *)(v0 + 0x14) &
+        *(const uint32 *)(v1 + 0xc) & *(const uint32 *)(v1 + 0x10) & *(const uint32 *)(v1 + 0x14) &
+        *(const uint32 *)(v2 + 0xc) & *(const uint32 *)(v2 + 0x10) & *(const uint32 *)(v2 + 0x14)) == 0 ||
+       (*(const uint32 *)(v0 + 0xc) | *(const uint32 *)(v0 + 0x10) | *(const uint32 *)(v0 + 0x14) |
+        *(const uint32 *)(v1 + 0xc) | *(const uint32 *)(v1 + 0x10) | *(const uint32 *)(v1 + 0x14) |
+        *(const uint32 *)(v2 + 0xc) | *(const uint32 *)(v2 + 0x10) | *(const uint32 *)(v2 + 0x14)) >=
+       0x10000))
+    *flags |= 0x400;
+  if ((*flags & 4) == 0) {
+    *(int32 *)(raster + 0x2b8) = ADDRESS_OF_swv_SpanFillGeneric_OFFSET + 0x100d310;
+    if (*(int32 *)(raster + 0x25c) == 0 && (*flags & 1) != 0 &&
+        (*(int32 *)(raster + 0x260) == 0 || (*flags & 0x800) == 0) && (*flags & 0x20) != 0) {
+      if ((*flags & 0x40) == 0) {
+        if (blend == 0x40)
+          *(int32 *)(raster + 0x2b8) = ADDRESS_OF_swv_SpanFillGouraudAlpha_OFFSET + 0x100d380;
       }
-      bVar19 = bVar21 && uVar6 == uVar3;
-      if (bVar21 && uVar6 == uVar3) {
-        uVar3 = (uint)*(byte *)(iVar17 + 0x18);
-        bVar19 = uVar3 == *(byte *)(iVar9 + 0x18);
-      }
-      if ((bVar19) && (uVar3 == *(byte *)(iVar7 + 0x18))) {
-        *(uint *)(param_1 + 600) = *(uint *)(param_1 + 600) & 0xfffffffd;
-        iVar12 = *(int *)(iVar17 + 0xc);
-        bVar21 = iVar12 == 0x10000;
-        if (bVar21) {
-          iVar12 = *(int *)(iVar17 + 0x10);
-        }
-        bVar19 = bVar21 && iVar12 == 0x10000;
-        if (bVar21 && iVar12 == 0x10000) {
-          bVar19 = *(int *)(iVar17 + 0x14) == 0x10000;
-        }
-        bVar21 = false;
-        if (bVar19) {
-          bVar21 = *(char *)(iVar17 + 0x18) == -1;
-        }
-        if (bVar21) {
-          bVar20 = false;
-        }
-      }
-    }
-  }
-  if (((*(uint *)(param_1 + 600) & 6) != 0) &&
-     ((*(uint *)(iVar17 + 0xc) & *(uint *)(iVar17 + 0x10) & *(uint *)(iVar17 + 0x14) &
-       *(uint *)(iVar9 + 0xc) & *(uint *)(iVar9 + 0x10) & *(uint *)(iVar9 + 0x14) &
-       *(uint *)(iVar7 + 0xc) & *(uint *)(iVar7 + 0x10) & *(uint *)(iVar7 + 0x14)) == 0 ||
-      0xffff < (*(uint *)(iVar17 + 0xc) | *(uint *)(iVar17 + 0x10) | *(uint *)(iVar17 + 0x14) |
-                *(uint *)(iVar9 + 0xc) | *(uint *)(iVar9 + 0x10) | *(uint *)(iVar9 + 0x14) |
-                *(uint *)(iVar7 + 0xc) | *(uint *)(iVar7 + 0x10) | *(uint *)(iVar7 + 0x14)))) {
-    *(uint *)(param_1 + 600) = *(uint *)(param_1 + 600) | 0x400;
-  }
-  uVar6 = *(uint *)(param_1 + 600);
-  if ((uVar6 & 4) == 0) {
-    *(int *)(param_1 + 0x2b8) = ADDRESS_OF_swv_SpanFillGeneric_OFFSET + 0x100d310;
-    if ((((*(int *)(param_1 + 0x25c) == 0) && ((uVar6 & 1) != 0)) &&
-        (*(int *)(param_1 + 0x260) == 0 || (uVar6 & 0x800) == 0)) && ((uVar6 & 0x20) != 0)) {
-      if ((uVar6 & 0x40) == 0) {
-        if (iVar2 == 0x40) {
-          *(int *)(param_1 + 0x2b8) = ADDRESS_OF_swv_SpanFillGouraudAlpha_OFFSET + 0x100d380;
-        }
-      }
-      else if (iVar2 == 0x44) {
-        if ((uVar6 & 2) == 0) {
-          iVar2 = ADDRESS_OF_swv_SpanFillFlatDithered_OFFSET + 0x100d35c;
-        }
-        else {
-          iVar2 = ADDRESS_OF_swv_SpanFillGouraud_OFFSET + 0x100d364;
-        }
-        *(int *)(param_1 + 0x2b8) = iVar2;
-        swv_SetupFlatDither((uint8 *)param_1);
+      else if (blend == 0x44) {
+        if ((*flags & 2) == 0)
+          *(int32 *)(raster + 0x2b8) = ADDRESS_OF_swv_SpanFillFlatDithered_OFFSET + 0x100d35c;
+        else
+          *(int32 *)(raster + 0x2b8) = ADDRESS_OF_swv_SpanFillGouraud_OFFSET + 0x100d364;
+        swv_SetupFlatDither(raster);
       }
     }
   }
   else {
-    *(int *)(param_1 + 0x2b8) = ADDRESS_OF_FUNCTION_0100bb68_OFFSET + 0x100d22c;
-    iVar7 = *(int *)(param_1 + 0x158);
-    if ((iVar7 != 0x5f) && (*(int *)(param_1 + 0x18c) == 0x5f)) {
-      iVar17 = *(int *)(param_1 + 0x16c);
-      bVar21 = -1 < iVar17;
-      if (bVar21) {
-        iVar17 = *(int *)(param_1 + 0x170);
-      }
-      if (((bVar21 && -1 < iVar17) &&
-          (uVar3 = *(uint *)(param_1 + 0x260), uVar3 == 0 || (uVar6 & 0x800) == 0)) &&
-         ((uVar6 & 0x20) != 0 && (uVar6 & 1) != 0)) {
-        bVar21 = (uVar6 & 0x200) == 0;
-        if (bVar21) {
-          uVar3 = *(uint *)(param_1 + 0x17c);
+    *(int32 *)(raster + 0x2b8) = ADDRESS_OF_FUNCTION_0100bb68_OFFSET + 0x100d22c;
+    format = *(int32 *)(raster + 0x158);
+    if (format != 0x5f && *(int32 *)(raster + 0x18c) == 0x5f && *(int32 *)(raster + 0x16c) >= 0 &&
+        *(int32 *)(raster + 0x170) >= 0 && (*(int32 *)(raster + 0x260) == 0 || (*flags & 0x800) == 0) &&
+        (*flags & 0x20) != 0 && (*flags & 1) != 0 && (*flags & 0x200) == 0 &&
+        (*(uint32 *)(raster + 0x17c) & 0x180) == 0 && (format == 99 || format == 100)) {
+      if (blend == 0x44) {
+        if ((*flags & 0x40) != 0) {
+          if (*(int32 *)(raster + 0x15c) == 0xe4)
+            *(int32 *)(raster + 0x2b8) = ADDRESS_OF_swv_SpanFillTextured_OFFSET + 0x100d2ac;
+          else if (*(int32 *)(raster + 0x15c) == 0xe3) {
+            if (notWhite)
+              *(int32 *)(raster + 0x2b8) = ADDRESS_OF_FUNCTION_0100ac0c_OFFSET + 0x100d2d4;
+            else
+              *(int32 *)(raster + 0x2b8) = ADDRESS_OF_swv_SpanFillTextured_OFFSET + 0x100d2ac;
+          }
         }
-        if ((bVar21 && (uVar3 & 0x180) == 0) && (iVar7 == 99 || iVar7 == 100)) {
-          if (iVar2 == 0x44) {
-            if ((uVar6 & 0x40) != 0) {
-              if (*(int *)(param_1 + 0x15c) == 0xe4) {
-                *(int *)(param_1 + 0x2b8) = ADDRESS_OF_swv_SpanFillTextured_OFFSET + 0x100d2ac;
+      }
+      else if (format == 100 && blend == 0x40 && (*flags & 0x40) == 0 &&
+               *(int32 *)(raster + 0x15c) == 0xe3)
+        *(int32 *)(raster + 0x2b8) = ADDRESS_OF_FUNCTION_0100c92c_OFFSET + 0x100d2fc;
+    }
+  }
+  *(int32 *)(raster + 8) = *(int32 *)(raster + 0x288) * *row + *(int32 *)(raster + 0x27c);
+  FUN_01020dec((int)raster);
+  *(int32 *)(raster + 0xc) = *(int32 *)(raster + 0x2a0) + *(int32 *)(raster + 0x280) * *row * 2;
+  while (*row < lastRow) {
+    if (backEnd <= *row)
+      do {
+        next = back < 1 ? 2 : back - 1;
+        from = (const int32 *)vertices[back];
+        to = (const int32 *)vertices[next];
+        backEnd = to[1] + 0xf >> 4;
+        if (*row < backEnd) {
+          slope = (to[0] - from[0]) * FUN_0102f468(to[1] - from[1],0x14);
+          backStep = slope >> 8;
+          backX = INTEGER_4095 + from[0] * 0x100;
+          if ((from[1] & 0xf) != 0)
+            backX += (int32)((uint32)backStep * (uint32)(0x10 - (from[1] & 0xf))) >> 4;
+          if ((*flags & 4) != 0) {
+            *(uint32 *)(raster + 0xe4) = (uint32)backStep & 0xfff;
+            slope >>= 20;
+            *(uint32 *)(raster + 0xe0) = (uint32)backX & 0xfff;
+            dy = ((int32)(((((uint32)from[1] + 0xf) & ~(uint32)0xf) - (uint32)from[1]) << 16) >> 4) +
+                 0x800;
+            dx = ((int32)((((uint32)(backX >> 8) & ~(uint32)0xf) - (uint32)from[0]) << 16) >> 4) + 0x800;
+            for (i = 0; i < *(int32 *)(raster + 0x26c); i++) {
+              const int32 *coords = (const int32 *)(vertices[back] + i * 0x10 + 0x1c);
+
+              unit = raster + i * 0x34;
+              out = (int32 *)(raster + i * 4);
+              if ((*flags & 8) == 0) {
+                MULTIPLY_SIGNED_WORDS(sum,*(int32 *)(unit + 0x200),dx);
+                MULTIPLY_SIGNED_WORDS(product,*(int32 *)(unit + 0x204),dy);
+                ADD_WORDS(sum,sum,product);
+                out[0xe8 / 4] = (int32)(sum.low >> 16 | (uint32)sum.high << 16) +
+                                *(int32 *)(unit + 0x1f4 + back * 4);
+                MULTIPLY_SIGNED_WORDS(sum,*(int32 *)(unit + 0x1f4 + back * 4),coords[0]);
+                MULTIPLY_SIGNED_WORDS(product,*(int32 *)(unit + 0x210),dy);
+                ADD_WORDS(sum,sum,product);
+                MULTIPLY_SIGNED_WORDS(product,*(int32 *)(unit + 0x20c),dx);
+                ADD_WORDS(sum,sum,product);
+                out[0xf0 / 4] = (int32)(sum.low >> 16 | (uint32)sum.high << 16);
+                MULTIPLY_SIGNED_WORDS(sum,*(int32 *)(unit + 0x1f4 + back * 4),coords[1]);
+                MULTIPLY_SIGNED_WORDS(product,*(int32 *)(unit + 0x21c),dy);
+                ADD_WORDS(sum,sum,product);
+                MULTIPLY_SIGNED_WORDS(product,*(int32 *)(unit + 0x218),dx);
+                ADD_WORDS(sum,sum,product);
+                out[0xf8 / 4] = (int32)(sum.low >> 16 | (uint32)sum.high << 16);
+                out[0x118 / 4] = slope * *(int32 *)(unit + 0x200) + *(int32 *)(unit + 0x204);
+                out[0x130 / 4] = out[0x118 / 4] + *(int32 *)(unit + 0x200);
               }
-              else if (*(int *)(param_1 + 0x15c) == 0xe3) {
-                if (bVar20) {
-                  *(int *)(param_1 + 0x2b8) = ADDRESS_OF_FUNCTION_0100ac0c_OFFSET + 0x100d2d4;
-                }
-                else {
-                  *(int *)(param_1 + 0x2b8) = ADDRESS_OF_swv_SpanFillTextured_OFFSET + 0x100d2ac;
-                }
+              else {
+                MULTIPLY_SIGNED_WORDS(sum,*(int32 *)(unit + 0x20c),dx);
+                MULTIPLY_SIGNED_WORDS(product,*(int32 *)(unit + 0x210),dy);
+                ADD_WORDS(sum,sum,product);
+                out[0xf0 / 4] = (int32)(sum.low >> 16 | (uint32)sum.high << 16) + coords[0] * 0x80;
+                MULTIPLY_SIGNED_WORDS(sum,*(int32 *)(unit + 0x218),dx);
+                MULTIPLY_SIGNED_WORDS(product,*(int32 *)(unit + 0x21c),dy);
+                ADD_WORDS(sum,sum,product);
+                out[0xf8 / 4] = (int32)(sum.low >> 16 | (uint32)sum.high << 16) + coords[1] * 0x80;
               }
+              out[0x120 / 4] = slope * *(int32 *)(unit + 0x20c) + *(int32 *)(unit + 0x210);
+              out[0x138 / 4] = out[0x120 / 4] + *(int32 *)(unit + 0x20c);
+              out[0x128 / 4] = slope * *(int32 *)(unit + 0x218) + *(int32 *)(unit + 0x21c);
+              out[0x140 / 4] = out[0x128 / 4] + *(int32 *)(unit + 0x218);
             }
           }
-          else {
-            bVar20 = iVar7 == 100 && iVar2 == 0x40;
-            if (iVar7 == 100 && iVar2 == 0x40) {
-              bVar20 = (uVar6 & 0x40) == 0;
+        }
+        countdown--;
+        back = next;
+      } while (countdown > 0 && backEnd <= *row);
+    if (frontEnd <= *row)
+      do {
+        next = front < 2 ? front + 1 : 0;
+        to = (const int32 *)vertices[next];
+        from = (const int32 *)vertices[front];
+        frontEnd = to[1] + 0xf >> 4;
+        if (*row < frontEnd) {
+          slope = (to[0] - from[0]) * FUN_0102f468(to[1] - from[1],0x14);
+          frontStep = slope >> 8;
+          frontX = INTEGER_4095 + from[0] * 0x100;
+          if ((from[1] & 0xf) != 0)
+            frontX += (int32)((uint32)frontStep * (uint32)(0x10 - (from[1] & 0xf))) >> 4;
+          *(uint32 *)(raster + 0x18) = (uint32)frontStep & 0xfff;
+          slope >>= 20;
+          *(uint32 *)(raster + 0x14) = (uint32)frontX & 0xfff;
+          dy = (int32)((((uint32)from[1] + 0xf) & ~(uint32)0xf) - (uint32)from[1]);
+          alignedX = (uint32)(frontX >> 8) & ~(uint32)0xf;
+          dx = (int32)(alignedX - (uint32)from[0]);
+          *(int32 *)(raster + 0x7c) = *(int32 *)(raster + 0x1c0) * slope + *(int32 *)(raster + 0x1c4);
+          values[0] = from[2] + (*(int32 *)(raster + 0x1c0) * dx + dy * *(int32 *)(raster + 0x1c4) >> 4);
+          *(int32 *)(raster + 0xac) = *(int32 *)(raster + 0x7c) + *(int32 *)(raster + 0x4c);
+          state = *flags;
+          if ((state & 2) != 0) {
+            colour = *(const int32 *)(vertices[front] + 0xc);
+            if ((state & 4) == 0) {
+              if (colour >= 0xffff)
+                colour = INTEGER_65535;
+              *(int32 *)(raster + 0x38) = colour;
+              colour = *(const int32 *)(vertices[front] + 0x10);
+              if (colour >= 0xffff)
+                colour = INTEGER_65535;
+              *(int32 *)(raster + 0x3c) = colour;
+              colour = *(const int32 *)(vertices[front] + 0x14);
+              if (colour >= 0xffff)
+                colour = INTEGER_65535;
+              *(int32 *)(raster + 0x40) = colour;
             }
-            bVar21 = false;
-            if (bVar20) {
-              bVar21 = *(int *)(param_1 + 0x15c) == 0xe3;
+            else {
+              *(int32 *)(raster + 0x38) = colour;
+              *(int32 *)(raster + 0x3c) = *(const int32 *)(vertices[front] + 0x10);
+              *(int32 *)(raster + 0x40) = *(const int32 *)(vertices[front] + 0x14);
             }
-            if (bVar21) {
-              *(int *)(param_1 + 0x2b8) = ADDRESS_OF_FUNCTION_0100c92c_OFFSET + 0x100d2fc;
+            *(int32 *)(raster + 0x44) =
+              vertices[front][0x18] * 0x101 +
+              (*(int32 *)(raster + 0x1e8) * dx + dy * *(int32 *)(raster + 0x1ec) >> 4) + 0x80;
+            for (i = 0; i < 3; i++)
+              *(int32 *)(raster + 0x38 + i * 4) +=
+                (*(int32 *)(raster + 0x1c8 + i * 8) * dx + dy * *(int32 *)(raster + 0x1cc + i * 8) >> 4) +
+                0x80;
+            *(int32 *)(raster + 0xa4) = *(int32 *)(raster + 0x1e8) * slope + *(int32 *)(raster + 0x1ec);
+            *(int32 *)(raster + 0xd4) = *(int32 *)(raster + 0xa4) + *(int32 *)(raster + 0x74);
+            for (i = 0; i < 3; i++) {
+              *(int32 *)(raster + 0x98 + i * 4) =
+                *(int32 *)(raster + 0x1c8 + i * 8) * slope + *(int32 *)(raster + 0x1cc + i * 8);
+              *(int32 *)(raster + 0xc8 + i * 4) =
+                *(int32 *)(raster + 0x98 + i * 4) + *(int32 *)(raster + 0x68 + i * 4);
             }
           }
+          if ((state & 0x200) != 0) {
+            *(int32 *)(raster + 0x48) =
+              vertices[front][0x19] * 0x101 +
+              (*(int32 *)(raster + 0x1e0) * dx + dy * *(int32 *)(raster + 0x1e4) >> 4) + 0x80;
+            *(int32 *)(raster + 0xa8) = *(int32 *)(raster + 0x1e0) * slope + *(int32 *)(raster + 0x1e4);
+            *(int32 *)(raster + 0xd8) = *(int32 *)(raster + 0xa8) + *(int32 *)(raster + 0x78);
+          }
+          if ((state & 4) != 0) {
+            dy = ((int32)(((((uint32)from[1] + 0xf) & ~(uint32)0xf) - (uint32)from[1]) << 16) >> 4) +
+                 0x800;
+            dx = ((int32)((alignedX - (uint32)from[0]) << 16) >> 4) + 0x800;
+            for (i = 0; i < *(int32 *)(raster + 0x26c); i++) {
+              const int32 *coords = (const int32 *)(vertices[front] + i * 0x10 + 0x1c);
+
+              unit = raster + i * 0x34;
+              out = (int32 *)(raster + i * 4);
+              if ((*flags & 8) == 0) {
+                MULTIPLY_SIGNED_WORDS(sum,*(int32 *)(unit + 0x200),dx);
+                MULTIPLY_SIGNED_WORDS(product,*(int32 *)(unit + 0x204),dy);
+                ADD_WORDS(sum,sum,product);
+                out[0x20 / 4] = (int32)(sum.low >> 16 | (uint32)sum.high << 16) +
+                                *(int32 *)(unit + 0x1f4 + front * 4);
+                MULTIPLY_SIGNED_WORDS(sum,*(int32 *)(unit + 0x1f4 + front * 4),coords[0]);
+                MULTIPLY_SIGNED_WORDS(product,*(int32 *)(unit + 0x210),dy);
+                ADD_WORDS(sum,sum,product);
+                MULTIPLY_SIGNED_WORDS(product,*(int32 *)(unit + 0x20c),dx);
+                ADD_WORDS(sum,sum,product);
+                out[0x28 / 4] = (int32)(sum.low >> 16 | (uint32)sum.high << 16);
+                MULTIPLY_SIGNED_WORDS(sum,*(int32 *)(unit + 0x1f4 + front * 4),coords[1]);
+                MULTIPLY_SIGNED_WORDS(product,*(int32 *)(unit + 0x21c),dy);
+                ADD_WORDS(sum,sum,product);
+                MULTIPLY_SIGNED_WORDS(product,*(int32 *)(unit + 0x218),dx);
+                ADD_WORDS(sum,sum,product);
+                out[0x30 / 4] = (int32)(sum.low >> 16 | (uint32)sum.high << 16);
+                out[0x80 / 4] = slope * *(int32 *)(unit + 0x200) + *(int32 *)(unit + 0x204);
+                out[0xb0 / 4] = out[0x80 / 4] + *(int32 *)(unit + 0x200);
+              }
+              else {
+                MULTIPLY_SIGNED_WORDS(sum,*(int32 *)(unit + 0x20c),dx);
+                MULTIPLY_SIGNED_WORDS(product,*(int32 *)(unit + 0x210),dy);
+                ADD_WORDS(sum,sum,product);
+                out[0x28 / 4] = (int32)(sum.low >> 16 | (uint32)sum.high << 16) + coords[0] * 0x80;
+                MULTIPLY_SIGNED_WORDS(sum,*(int32 *)(unit + 0x218),dx);
+                MULTIPLY_SIGNED_WORDS(product,*(int32 *)(unit + 0x21c),dy);
+                ADD_WORDS(sum,sum,product);
+                out[0x30 / 4] = (int32)(sum.low >> 16 | (uint32)sum.high << 16) + coords[1] * 0x80;
+              }
+              out[0x88 / 4] = slope * *(int32 *)(unit + 0x20c) + *(int32 *)(unit + 0x210);
+              out[0xb8 / 4] = out[0x88 / 4] + *(int32 *)(unit + 0x20c);
+              out[0x90 / 4] = slope * *(int32 *)(unit + 0x218) + *(int32 *)(unit + 0x21c);
+              out[0xc0 / 4] = out[0x90 / 4] + *(int32 *)(unit + 0x218);
+            }
+          }
+        }
+        countdown--;
+        front = next;
+      } while (countdown > 0 && frontEnd <= *row);
+    startX = frontX >> 12;
+    *(int32 *)(raster + 0x10) = startX;
+    endX = backX >> 12;
+    *(int32 *)(raster + 0xdc) = endX;
+    if ((*(int32 *)(raster + 0x284) - *row - 1 | *row) >= 0) {
+      if ((endX - startX - 1 | startX | *(int32 *)(raster + 0x280) - endX) < 0) {
+        if (endX < startX)
+          return;
+        if (startX < endX)
+          FUN_01006078((int)raster);
+      }
+      else
+        /* the span routine swv_RasterTriangleSetup picked (+0x2b8): swv_SpanFillGeneric,
+           swv_SpanFillFlatDithered, swv_SpanFillGouraud, swv_SpanFillGouraudAlpha, swv_SpanFillTextured,
+           FUN_0100bb68, FUN_0100ac0c or FUN_0100c92c */
+        (*(void (**)(uint8 *))(raster + 0x2b8))(raster);
+    }
+    *(int32 *)(raster + 8) += *(int32 *)(raster + 0x288);
+    *row += 1;
+    frontX += frontStep;
+    backX += backStep;
+    fraction = *(int32 *)(raster + 0x14) + *(int32 *)(raster + 0x18);
+    *(uint32 *)(raster + 0x14) = (uint32)fraction & 0xfff;
+    steps = (const int32 *)(raster + (fraction >> 12) * 0x30 + 0x7c);
+    values[0] += steps[0];
+    *(int32 *)(raster + 0xc) += *(int32 *)(raster + 0x280) * 2;
+    values[10] += steps[10];
+    if ((*flags & 2) != 0)
+      for (i = 7; i < 10; i++)
+        values[i] += steps[i];
+    if ((*flags & 0x200) != 0)
+      values[11] += steps[11];
+    if ((*flags & 4) != 0) {
+      fraction = *(int32 *)(raster + 0xe0) + *(int32 *)(raster + 0xe4);
+      *(uint32 *)(raster + 0xe0) = (uint32)fraction & 0xfff;
+      textureSteps = (const int32 *)(raster + (fraction >> 12) * 0x18 + 0x118);
+      for (i = 0; i < *(int32 *)(raster + 0x26c); i++) {
+        out = (int32 *)(raster + i * 4);
+        values[i + 3] += steps[i + 3];
+        values[i + 5] += steps[i + 5];
+        out[0xf0 / 4] += textureSteps[i + 2];
+        out[0xf8 / 4] += textureSteps[i + 4];
+        if ((*flags & 8) == 0) {
+          values[i + 1] += steps[i + 1];
+          out[0xe8 / 4] += textureSteps[i];
         }
       }
     }
   }
-  *(int *)(param_1 + 8) =
-       *(int *)(param_1 + 0x288) * *(int *)(param_1 + 4) + *(int *)(param_1 + 0x27c);
-  FUN_01020dec(param_1);
-  *(int *)(param_1 + 0xc) =
-       *(int *)(param_1 + 0x2a0) + *(int *)(param_1 + 0x280) * *(int *)(param_1 + 4) * 2;
-  iStack_48 = 3;
-  if (*(int *)(param_1 + 4) < iVar18) {
-    piVar8 = (int *)(param_1 + 0x1c);
-    local_58 = local_6c;
-    do {
-      if (local_6c <= *(int *)(param_1 + 4)) {
-        do {
-          if (local_64 < 1) {
-            iVar2 = 2;
-          }
-          else {
-            iVar2 = local_64 + -1;
-          }
-          iVar7 = param_1 + local_64 * 4;
-          piVar10 = *(int **)(iVar7 + 0x290);
-          piVar15 = *(int **)(param_1 + iVar2 * 4 + 0x290);
-          iVar17 = piVar15[1];
-          local_6c = iVar17 + 0xf >> 4;
-          if (*(int *)(param_1 + 4) < local_6c) {
-            iVar9 = *piVar15;
-            iVar12 = *piVar10;
-            iVar17 = FUN_0102f468(iVar17 - piVar10[1],0x14);
-            iVar17 = (iVar9 - iVar12) * iVar17;
-            local_74 = iVar17 >> 8;
-            local_70 = INTEGER_4095 + *piVar10 * 0x100;
-            if ((piVar10[1] & 0xfU) != 0) {
-              local_70 = local_70 + ((int)(local_74 * (0x10 - (piVar10[1] & 0xfU))) >> 4);
-            }
-            if ((*(uint *)(param_1 + 600) & 4) != 0) {
-              *(uint *)(param_1 + 0xe4) = local_74 & 0xfff;
-              iVar17 = iVar17 >> 0x14;
-              iVar9 = 0;
-              *(uint *)(param_1 + 0xe0) = local_70 & 0xfff;
-              iVar12 = ((int)(((piVar10[1] + 0xfU & 0xfffffff0) - piVar10[1]) * 0x10000) >> 4) +
-                       0x800;
-              iVar16 = ((int)((((int)local_70 >> 8 & 0xfffffff0U) - *piVar10) * 0x10000) >> 4) +
-                       0x800;
-              if (0 < *(int *)(param_1 + 0x26c)) {
-                do {
-                  iVar4 = *(int *)(iVar7 + 0x290) + iVar9 * 0x10;
-                  iVar11 = param_1 + iVar9 * 0x34;
-                  if ((*(uint *)(param_1 + 600) & 8) == 0) {
-                    iVar14 = param_1 + iVar9 * 4;
-                    lVar1 = (longlong)*(int *)(iVar11 + 0x200) * (longlong)iVar16 +
-                            (longlong)*(int *)(iVar11 + 0x204) * (longlong)iVar12;
-                    iVar13 = iVar11 + local_64 * 4;
-                    *(uint *)(iVar14 + 0xe8) =
-                         ((uint)lVar1 >> 0x10 | (int)((ulonglong)lVar1 >> 0x20) * 0x10000) +
-                         *(int *)(iVar13 + 500);
-                    lVar1 = (longlong)*(int *)(iVar11 + 0x20c) * (longlong)iVar16 +
-                            (longlong)*(int *)(iVar11 + 0x210) * (longlong)iVar12 +
-                            (longlong)*(int *)(iVar13 + 500) * (longlong)*(int *)(iVar4 + 0x1c);
-                    *(uint *)(iVar14 + 0xf0) =
-                         (uint)lVar1 >> 0x10 | (int)((ulonglong)lVar1 >> 0x20) * 0x10000;
-                    lVar1 = (longlong)*(int *)(iVar11 + 0x218) * (longlong)iVar16 +
-                            (longlong)*(int *)(iVar11 + 0x21c) * (longlong)iVar12 +
-                            (longlong)*(int *)(iVar13 + 500) * (longlong)*(int *)(iVar4 + 0x20);
-                    *(uint *)(iVar14 + 0xf8) =
-                         (uint)lVar1 >> 0x10 | (int)((ulonglong)lVar1 >> 0x20) * 0x10000;
-                    iVar4 = iVar17 * *(int *)(iVar11 + 0x200) + *(int *)(iVar11 + 0x204);
-                    *(int *)(iVar14 + 0x118) = iVar4;
-                    *(int *)(iVar14 + 0x130) = iVar4 + *(int *)(iVar11 + 0x200);
-                    iVar4 = iVar17 * *(int *)(iVar11 + 0x20c) + *(int *)(iVar11 + 0x210);
-                    *(int *)(iVar14 + 0x120) = iVar4;
-                    *(int *)(iVar14 + 0x138) = iVar4 + *(int *)(iVar11 + 0x20c);
-                    iVar4 = iVar17 * *(int *)(iVar11 + 0x218) + *(int *)(iVar11 + 0x21c);
-                    *(int *)(iVar14 + 0x128) = iVar4;
-                    *(int *)(iVar14 + 0x140) = iVar4 + *(int *)(iVar11 + 0x218);
-                  }
-                  else {
-                    iVar13 = param_1 + iVar9 * 4;
-                    lVar1 = (longlong)*(int *)(iVar11 + 0x20c) * (longlong)iVar16 +
-                            (longlong)*(int *)(iVar11 + 0x210) * (longlong)iVar12;
-                    *(uint *)(iVar13 + 0xf0) =
-                         ((uint)lVar1 >> 0x10 | (int)((ulonglong)lVar1 >> 0x20) * 0x10000) +
-                         *(int *)(iVar4 + 0x1c) * 0x80;
-                    lVar1 = (longlong)*(int *)(iVar11 + 0x218) * (longlong)iVar16 +
-                            (longlong)*(int *)(iVar11 + 0x21c) * (longlong)iVar12;
-                    *(uint *)(iVar13 + 0xf8) =
-                         ((uint)lVar1 >> 0x10 | (int)((ulonglong)lVar1 >> 0x20) * 0x10000) +
-                         *(int *)(iVar4 + 0x20) * 0x80;
-                    iVar4 = iVar17 * *(int *)(iVar11 + 0x20c) + *(int *)(iVar11 + 0x210);
-                    *(int *)(iVar13 + 0x120) = iVar4;
-                    *(int *)(iVar13 + 0x138) = iVar4 + *(int *)(iVar11 + 0x20c);
-                    iVar4 = iVar17 * *(int *)(iVar11 + 0x218) + *(int *)(iVar11 + 0x21c);
-                    *(int *)(iVar13 + 0x128) = iVar4;
-                    *(int *)(iVar13 + 0x140) = iVar4 + *(int *)(iVar11 + 0x218);
-                  }
-                  iVar9 = iVar9 + 1;
-                } while (iVar9 < *(int *)(param_1 + 0x26c));
-              }
-            }
-          }
-          iStack_48 = iStack_48 + -1;
-          local_64 = iVar2;
-        } while ((0 < iStack_48) && (local_6c <= *(int *)(param_1 + 4)));
-      }
-      if (local_58 <= *(int *)(param_1 + 4)) {
-        do {
-          iVar2 = param_1 + local_50 * 4;
-          if (local_50 < 2) {
-            iVar7 = local_50 + 1;
-          }
-          else {
-            iVar7 = 0;
-          }
-          piVar15 = *(int **)(param_1 + iVar7 * 4 + 0x290);
-          piVar10 = *(int **)(iVar2 + 0x290);
-          iVar17 = piVar15[1];
-          local_58 = iVar17 + 0xf >> 4;
-          if (*(int *)(param_1 + 4) < local_58) {
-            iVar9 = *piVar15;
-            iVar12 = *piVar10;
-            iVar17 = FUN_0102f468(iVar17 - piVar10[1],0x14);
-            iVar17 = (iVar9 - iVar12) * iVar17;
-            local_60 = iVar17 >> 8;
-            local_5c = INTEGER_4095 + *piVar10 * 0x100;
-            if ((piVar10[1] & 0xfU) != 0) {
-              local_5c = local_5c + ((int)(local_60 * (0x10 - (piVar10[1] & 0xfU))) >> 4);
-            }
-            *(uint *)(param_1 + 0x18) = local_60 & 0xfff;
-            iVar17 = iVar17 >> 0x14;
-            *(uint *)(param_1 + 0x14) = local_5c & 0xfff;
-            iVar12 = (piVar10[1] + 0xfU & 0xfffffff0) - piVar10[1];
-            uVar6 = (int)local_5c >> 8 & 0xfffffff0;
-            iVar16 = uVar6 - *piVar10;
-            iVar9 = *(int *)(param_1 + 0x1c0) * iVar17 + *(int *)(param_1 + 0x1c4);
-            iVar4 = piVar10[2];
-            *(int *)(param_1 + 0x7c) = iVar9;
-            *(int *)(param_1 + 0x1c) =
-                 iVar4 + (*(int *)(param_1 + 0x1c0) * iVar16 + iVar12 * *(int *)(param_1 + 0x1c4) >>
-                         4);
-            *(int *)(param_1 + 0xac) = iVar9 + *(int *)(param_1 + 0x4c);
-            iVar9 = INTEGER_65535;
-            uVar3 = *(uint *)(param_1 + 600);
-            if ((uVar3 & 2) != 0) {
-              iVar4 = *(int *)(*(int *)(iVar2 + 0x290) + 0xc);
-              if ((uVar3 & 4) == 0) {
-                bVar20 = SBORROW4(iVar4,0xff00);
-                iVar11 = iVar4 + -0xff00;
-                if (0xfeff < iVar4) {
-                  bVar20 = SBORROW4(iVar11,0xff);
-                  iVar11 = iVar4 + -0xffff;
-                }
-                if (iVar11 < 0 == bVar20) {
-                  iVar4 = INTEGER_65535;
-                }
-                *(int *)(param_1 + 0x38) = iVar4;
-                iVar4 = *(int *)(*(int *)(iVar2 + 0x290) + 0x10);
-                bVar20 = SBORROW4(iVar4,0xff00);
-                iVar11 = iVar4 + -0xff00;
-                if (0xfeff < iVar4) {
-                  bVar20 = SBORROW4(iVar11,0xff);
-                  iVar11 = iVar4 + -0xffff;
-                }
-                if (iVar11 < 0 == bVar20) {
-                  iVar4 = iVar9;
-                }
-                *(int *)(param_1 + 0x3c) = iVar4;
-                iVar4 = *(int *)(*(int *)(iVar2 + 0x290) + 0x14);
-                bVar20 = SBORROW4(iVar4,0xff00);
-                iVar11 = iVar4 + -0xff00;
-                if (0xfeff < iVar4) {
-                  bVar20 = SBORROW4(iVar11,0xff);
-                  iVar11 = iVar4 + -0xffff;
-                }
-                if (iVar11 < 0 == bVar20) {
-                  iVar4 = iVar9;
-                }
-                *(int *)(param_1 + 0x40) = iVar4;
-              }
-              else {
-                *(int *)(param_1 + 0x38) = iVar4;
-                *(undefined4 *)(param_1 + 0x3c) = *(undefined4 *)(*(int *)(iVar2 + 0x290) + 0x10);
-                *(undefined4 *)(param_1 + 0x40) = *(undefined4 *)(*(int *)(iVar2 + 0x290) + 0x14);
-              }
-              *(uint *)(param_1 + 0x44) =
-                   (uint)*(byte *)(*(int *)(iVar2 + 0x290) + 0x18) * 0x101 +
-                   (*(int *)(param_1 + 0x1e8) * iVar16 + iVar12 * *(int *)(param_1 + 0x1ec) >> 4) +
-                   0x80;
-              *(int *)(param_1 + 0x38) =
-                   *(int *)(param_1 + 0x38) +
-                   (*(int *)(param_1 + 0x1c8) * iVar16 + iVar12 * *(int *)(param_1 + 0x1cc) >> 4) +
-                   0x80;
-              *(int *)(param_1 + 0x3c) =
-                   *(int *)(param_1 + 0x3c) +
-                   (*(int *)(param_1 + 0x1d0) * iVar16 + iVar12 * *(int *)(param_1 + 0x1d4) >> 4) +
-                   0x80;
-              *(int *)(param_1 + 0x40) =
-                   *(int *)(param_1 + 0x40) +
-                   (*(int *)(param_1 + 0x1d8) * iVar16 + iVar12 * *(int *)(param_1 + 0x1dc) >> 4) +
-                   0x80;
-              iVar9 = *(int *)(param_1 + 0x1e8) * iVar17 + *(int *)(param_1 + 0x1ec);
-              *(int *)(param_1 + 0xa4) = iVar9;
-              *(int *)(param_1 + 0xd4) = iVar9 + *(int *)(param_1 + 0x74);
-              iVar9 = *(int *)(param_1 + 0x1c8) * iVar17 + *(int *)(param_1 + 0x1cc);
-              *(int *)(param_1 + 0x98) = iVar9;
-              *(int *)(param_1 + 200) = iVar9 + *(int *)(param_1 + 0x68);
-              iVar9 = *(int *)(param_1 + 0x1d0) * iVar17 + *(int *)(param_1 + 0x1d4);
-              *(int *)(param_1 + 0x9c) = iVar9;
-              *(int *)(param_1 + 0xcc) = iVar9 + *(int *)(param_1 + 0x6c);
-              iVar9 = *(int *)(param_1 + 0x1d8) * iVar17 + *(int *)(param_1 + 0x1dc);
-              *(int *)(param_1 + 0xa0) = iVar9;
-              *(int *)(param_1 + 0xd0) = iVar9 + *(int *)(param_1 + 0x70);
-            }
-            if ((uVar3 & 0x200) != 0) {
-              *(uint *)(param_1 + 0x48) =
-                   (uint)*(byte *)(*(int *)(iVar2 + 0x290) + 0x19) * 0x101 +
-                   (*(int *)(param_1 + 0x1e0) * iVar16 + iVar12 * *(int *)(param_1 + 0x1e4) >> 4) +
-                   0x80;
-              iVar9 = *(int *)(param_1 + 0x1e0) * iVar17 + *(int *)(param_1 + 0x1e4);
-              *(int *)(param_1 + 0xa8) = iVar9;
-              *(int *)(param_1 + 0xd8) = iVar9 + *(int *)(param_1 + 0x78);
-            }
-            if ((uVar3 & 4) != 0) {
-              iVar12 = ((int)(((piVar10[1] + 0xfU & 0xfffffff0) - piVar10[1]) * 0x10000) >> 4) +
-                       0x800;
-              iVar16 = ((int)((uVar6 - *piVar10) * 0x10000) >> 4) + 0x800;
-              iVar9 = 0;
-              if (0 < *(int *)(param_1 + 0x26c)) {
-                do {
-                  iVar4 = *(int *)(iVar2 + 0x290) + iVar9 * 0x10;
-                  iVar11 = param_1 + iVar9 * 0x34;
-                  if ((*(uint *)(param_1 + 600) & 8) == 0) {
-                    iVar14 = param_1 + iVar9 * 4;
-                    lVar1 = (longlong)*(int *)(iVar11 + 0x200) * (longlong)iVar16 +
-                            (longlong)*(int *)(iVar11 + 0x204) * (longlong)iVar12;
-                    iVar13 = iVar11 + local_50 * 4;
-                    *(uint *)(iVar14 + 0x20) =
-                         ((uint)lVar1 >> 0x10 | (int)((ulonglong)lVar1 >> 0x20) * 0x10000) +
-                         *(int *)(iVar13 + 500);
-                    lVar1 = (longlong)*(int *)(iVar11 + 0x20c) * (longlong)iVar16 +
-                            (longlong)*(int *)(iVar11 + 0x210) * (longlong)iVar12 +
-                            (longlong)*(int *)(iVar13 + 500) * (longlong)*(int *)(iVar4 + 0x1c);
-                    *(uint *)(iVar14 + 0x28) =
-                         (uint)lVar1 >> 0x10 | (int)((ulonglong)lVar1 >> 0x20) * 0x10000;
-                    lVar1 = (longlong)*(int *)(iVar11 + 0x218) * (longlong)iVar16 +
-                            (longlong)*(int *)(iVar11 + 0x21c) * (longlong)iVar12 +
-                            (longlong)*(int *)(iVar13 + 500) * (longlong)*(int *)(iVar4 + 0x20);
-                    *(uint *)(iVar14 + 0x30) =
-                         (uint)lVar1 >> 0x10 | (int)((ulonglong)lVar1 >> 0x20) * 0x10000;
-                    iVar4 = iVar17 * *(int *)(iVar11 + 0x200) + *(int *)(iVar11 + 0x204);
-                    *(int *)(iVar14 + 0x80) = iVar4;
-                    *(int *)(iVar14 + 0xb0) = iVar4 + *(int *)(iVar11 + 0x200);
-                    iVar4 = iVar17 * *(int *)(iVar11 + 0x20c) + *(int *)(iVar11 + 0x210);
-                    *(int *)(iVar14 + 0x88) = iVar4;
-                    *(int *)(iVar14 + 0xb8) = iVar4 + *(int *)(iVar11 + 0x20c);
-                    iVar4 = iVar17 * *(int *)(iVar11 + 0x218) + *(int *)(iVar11 + 0x21c);
-                    *(int *)(iVar14 + 0x90) = iVar4;
-                    *(int *)(iVar14 + 0xc0) = iVar4 + *(int *)(iVar11 + 0x218);
-                  }
-                  else {
-                    iVar13 = param_1 + iVar9 * 4;
-                    lVar1 = (longlong)*(int *)(iVar11 + 0x20c) * (longlong)iVar16 +
-                            (longlong)*(int *)(iVar11 + 0x210) * (longlong)iVar12;
-                    *(uint *)(iVar13 + 0x28) =
-                         ((uint)lVar1 >> 0x10 | (int)((ulonglong)lVar1 >> 0x20) * 0x10000) +
-                         *(int *)(iVar4 + 0x1c) * 0x80;
-                    lVar1 = (longlong)*(int *)(iVar11 + 0x218) * (longlong)iVar16 +
-                            (longlong)*(int *)(iVar11 + 0x21c) * (longlong)iVar12;
-                    *(uint *)(iVar13 + 0x30) =
-                         ((uint)lVar1 >> 0x10 | (int)((ulonglong)lVar1 >> 0x20) * 0x10000) +
-                         *(int *)(iVar4 + 0x20) * 0x80;
-                    iVar4 = iVar17 * *(int *)(iVar11 + 0x20c) + *(int *)(iVar11 + 0x210);
-                    *(int *)(iVar13 + 0x88) = iVar4;
-                    *(int *)(iVar13 + 0xb8) = iVar4 + *(int *)(iVar11 + 0x20c);
-                    iVar4 = iVar17 * *(int *)(iVar11 + 0x218) + *(int *)(iVar11 + 0x21c);
-                    *(int *)(iVar13 + 0x90) = iVar4;
-                    *(int *)(iVar13 + 0xc0) = iVar4 + *(int *)(iVar11 + 0x218);
-                  }
-                  iVar9 = iVar9 + 1;
-                } while (iVar9 < *(int *)(param_1 + 0x26c));
-              }
-            }
-          }
-          iStack_48 = iStack_48 + -1;
-          local_50 = iVar7;
-        } while ((0 < iStack_48) && (local_58 <= *(int *)(param_1 + 4)));
-      }
-      uVar6 = (int)local_5c >> 0xc;
-      *(uint *)(param_1 + 0x10) = uVar6;
-      iVar2 = (int)local_70 >> 0xc;
-      *(int *)(param_1 + 0xdc) = iVar2;
-      if (-1 < (int)((*(int *)(param_1 + 0x284) - *(uint *)(param_1 + 4)) - 1 |
-                    *(uint *)(param_1 + 4))) {
-        if ((int)((iVar2 - uVar6) - 1 | uVar6 | *(int *)(param_1 + 0x280) - iVar2) < 0) {
-          if (iVar2 < (int)uVar6) {
-            return;
-          }
-          if ((int)uVar6 < iVar2) {
-            FUN_01006078(param_1);
-          }
-        }
-        else {
-          /* the span routine swv_RasterTriangleSetup picked (+0x2b8): swv_SpanFillGeneric,
-             swv_SpanFillFlatDithered, swv_SpanFillGouraud, swv_SpanFillGouraudAlpha,
-             swv_SpanFillTextured, FUN_0100bb68, FUN_0100ac0c or FUN_0100c92c */
-          (**(code **)(param_1 + 0x2b8))(param_1);
-        }
-      }
-      *(int *)(param_1 + 8) = *(int *)(param_1 + 8) + *(int *)(param_1 + 0x288);
-      *(int *)(param_1 + 4) = *(int *)(param_1 + 4) + 1;
-      local_5c = local_5c + local_60;
-      local_70 = local_70 + local_74;
-      uVar6 = *(int *)(param_1 + 0x14) + *(int *)(param_1 + 0x18);
-      *(uint *)(param_1 + 0x14) = uVar6 & 0xfff;
-      iVar2 = param_1 + ((int)uVar6 >> 0xc) * 0x30;
-      piVar15 = (int *)(iVar2 + 0x7c);
-      *piVar8 = *piVar8 + *piVar15;
-      *(int *)(param_1 + 0xc) = *(int *)(param_1 + 0xc) + *(int *)(param_1 + 0x280) * 2;
-      *(int *)(param_1 + 0x44) = *(int *)(param_1 + 0x44) + *(int *)(iVar2 + 0xa4);
-      if ((*(uint *)(param_1 + 600) & 2) != 0) {
-        *(int *)(param_1 + 0x38) = *(int *)(param_1 + 0x38) + *(int *)(iVar2 + 0x98);
-        *(int *)(param_1 + 0x3c) = *(int *)(param_1 + 0x3c) + *(int *)(iVar2 + 0x9c);
-        *(int *)(param_1 + 0x40) = *(int *)(param_1 + 0x40) + *(int *)(iVar2 + 0xa0);
-      }
-      if ((*(uint *)(param_1 + 600) & 0x200) != 0) {
-        *(int *)(param_1 + 0x48) = *(int *)(param_1 + 0x48) + *(int *)(iVar2 + 0xa8);
-      }
-      if ((*(uint *)(param_1 + 600) & 4) != 0) {
-        uVar6 = *(int *)(param_1 + 0xe0) + *(int *)(param_1 + 0xe4);
-        *(uint *)(param_1 + 0xe0) = uVar6 & 0xfff;
-        iVar7 = param_1 + ((int)uVar6 >> 0xc) * 0x18 + 0x118;
-        iVar2 = 0;
-        if (0 < *(int *)(param_1 + 0x26c)) {
-          do {
-            iVar17 = param_1 + iVar2 * 4;
-            piVar8[iVar2 + 3] = piVar8[iVar2 + 3] + piVar15[iVar2 + 3];
-            piVar8[iVar2 + 5] = piVar8[iVar2 + 5] + piVar15[iVar2 + 5];
-            iVar9 = iVar7 + iVar2 * 4;
-            *(int *)(iVar17 + 0xf0) = *(int *)(iVar17 + 0xf0) + *(int *)(iVar9 + 8);
-            *(int *)(iVar17 + 0xf8) = *(int *)(iVar17 + 0xf8) + *(int *)(iVar9 + 0x10);
-            if ((*(uint *)(param_1 + 600) & 8) == 0) {
-              piVar8[iVar2 + 1] = piVar8[iVar2 + 1] + piVar15[iVar2 + 1];
-              *(int *)(iVar17 + 0xe8) = *(int *)(iVar17 + 0xe8) + *(int *)(iVar7 + iVar2 * 4);
-            }
-            iVar2 = iVar2 + 1;
-          } while (iVar2 < *(int *)(param_1 + 0x26c));
-        }
-      }
-    } while (*(int *)(param_1 + 4) < iVar18);
-    return;
-  }
-  return;
 }
 
 /* ==== 0x0100DFEC  (file offset 0x0DFEC)  swv_SpanFillTextured ======================================== */
-void swv_SpanFillTextured(int param_1)
+/* Contains the textured span fill: profiled region 0x0100E2E0-0x0100E460, inner loop at 0x0100E31C
+   (tools/profile_state.py, gen_swerve_patch.py). GUESS: name; the rasteriser's span routine for
+   textured triangles with unit 0 alone (swv_RasterTriangleSetup picks it; the fields in swv_types.h).
+   It first scans the z-buffer from the first x to the end (+0xdc) for a pixel the nearer end's depth
+   (+0x1c, or the far end's when the step +0x4c is negative, >> 12) can pass, and returns when there is
+   none. Then it fills the span from the first x in segments: flag 8 of +0x258 (GUESS: affine) gives one
+   segment of the whole span with u, v (+0x28 / +0x30 >> 7) stepped by +0x20c / +0x218 >> 7; else the
+   segments are +0x1f0 pixels (GUESS: perspective), u and v at each segment end being the interpolated
+   u / w and v / w (+0x28 / +0x30, steps +0x214 / +0x220) times the reciprocal of w (+0x20, step +0x208;
+   FUN_0102f468, GUESS: a table reciprocal, with 0x2e, then 0x28 of w >> 6), and the steps (end - start)
+   times the reciprocal of the pixel count (FUN_0102f468 with 0x1e, + 0x4000); the last segment uses
+   the span's far end (+0xe8 - +0x200 for w, +0xf0 - +0x20c, +0xf8 - +0x218 for u / v) and, as the
+   binary, starts its next u, v from the previous segment's (stale) end. Texture unit 0 (+0x158): +0x14
+   / +0x18 the log2 width / height (u, v are 16-bit fractions), +0x28 the RGB565 colours, +0x2c the
+   alphas (bytes), +0x30 the palette indices (bytes, or none). A pixel is drawn where the z-buffer's
+   word >= depth >> 12 (then both are written); with an alpha map and a threshold (+0x25c) only where
+   (alpha * 0x101 + (alpha >> 7)) >> 8 >= the threshold. The fixed-point products are signed 32 x 32
+   -> 64 (`smull`, MULTIPLY_SIGNED_WORDS), the bits 23..54 kept for u, v and 16..47 (then >> 14) for the
+   steps. Like the binary, a segment of 0 pixels would run 2^32 times (do-while on `subs`). Evidence:
+   0x0100dfec - 0x0100e48c (`mlalt r2, r11, r12, r2` / `asr #0xc`, the `ldrh r12, [r1], #2` scan,
+   `tst r0, #8`, `bl 0x0102f468` with 0x2e / 0x28 / 0x1e, `smull` / `lsr #0x17` / `orr lsl #9` and
+   `lsr #0x10` / `orr lsl #0x10` / `asr #0xe`, `cmpne r0, #0` the alpha loop, `subs r9, r9, #1` /
+   `bne`, `cmp r11, #0` / `bgt 0x0100e144`). */
+void swv_SpanFillTextured(uint8 *raster)
 
 {
-  undefined2 uVar1;
-  longlong lVar2;
-  int iVar3;
-  uint uVar4;
-  ushort *puVar5;
-  uint uVar7;
-  int iVar8;
-  ushort *puVar9;
-  ushort *puVar10;
-  int iVar11;
-  uint uVar12;
-  uint uVar13;
-  undefined2 *puVar14;
-  int iVar15;
-  int iVar16;
-  int *piVar17;
-  bool bVar18;
-  undefined1 auStack_60 [60];
-  ushort *puVar6;
-  
-                    /* Contains the textured span fill: profiled region 0x0100E2E0-0x0100E460, inner
-                       loop at 0x0100E31C (tools/profile_state.py, gen_swerve_patch.py). GUESS: the
-                       whole function is the textured span routine. */
-  iVar3 = *(int *)(param_1 + 0x10);
-  iVar11 = *(int *)(param_1 + 0x1c);
-  iVar15 = *(int *)(param_1 + 0xdc) - iVar3;
-  puVar10 = (ushort *)(*(int *)(param_1 + 0xc) + iVar3 * 2);
-  iVar8 = iVar11;
-  if (*(int *)(param_1 + 0x4c) < 0) {
-    iVar8 = iVar15 * *(int *)(param_1 + 0x4c) + iVar11;
-  }
-  puVar9 = puVar10 + iVar15;
-  piVar17 = (int *)auStack_60;
-  if (puVar9 <= puVar10) {
-    piVar17 = (int *)&stack0xffffffdc;
-  }
-  puVar5 = puVar10;
-  if (puVar9 <= puVar10) {
+  int32 x = *(int32 *)(raster + 0x10);
+  int32 z = *(int32 *)(raster + 0x1c);
+  int32 count = *(int32 *)(raster + 0xdc) - x;
+  uint16 *depth = *(uint16 **)(raster + 0x0c) + x;
+  uint16 *end = depth + count;
+  const uint16 *scan = depth;
+  int32 nearest = z;
+  uint8 *unit = raster + 0x158;
+  uint16 *pixel;
+  int64 product;
+  int32 segment, n, reciprocal, scale;
+  int32 w = 0, uw = 0, vw = 0;
+  int32 uLast = 0, vLast = 0, uNext = 0, vNext = 0, uEnd, vEnd;
+  int32 uStep = 0, vStep = 0;
+  uint32 u, v, index;
+
+  if (*(int32 *)(raster + 0x4c) < 0)
+    nearest = count * *(int32 *)(raster + 0x4c) + z;
+  nearest >>= 12;
+  if (scan >= end)
     return;
-  }
-  while (puVar6 = puVar5 + 1, (int)(uint)*puVar5 < iVar8 >> 0xc) {
-    puVar5 = puVar6;
-    if (puVar9 <= puVar6) {
+  while ((int32)*scan++ < nearest)
+    if (scan >= end)
       return;
-    }
-  }
-  piVar17[0xd] = *(int *)(param_1 + 0x1f0);
-  puVar14 = (undefined2 *)(*(int *)(param_1 + 8) + iVar3 * 2);
-  piVar17[4] = 0;
-  piVar17[3] = 0;
-  piVar17[2] = 0;
-  piVar17[1] = 0;
-  if ((*(uint *)(param_1 + 600) & 8) == 0) {
-    iVar8 = *(int *)(param_1 + 0x20);
-    piVar17[0xb] = *(int *)(param_1 + 0x208) + iVar8;
-    iVar8 = FUN_0102f468(iVar8,0x2e);
-    iVar3 = *(int *)(param_1 + 0x28);
-    iVar16 = *(int *)(param_1 + 0x30);
-    piVar17[10] = *(int *)(param_1 + 0x214) + iVar3;
-    piVar17[9] = *(int *)(param_1 + 0x220) + iVar16;
-    lVar2 = (longlong)(iVar3 >> 7) * (longlong)iVar8;
-    piVar17[8] = (uint)lVar2 >> 0x17 | (int)((ulonglong)lVar2 >> 0x20) << 9;
-    lVar2 = (longlong)(iVar16 >> 7) * (longlong)iVar8;
-    uVar12 = piVar17[8];
-    uVar13 = (uint)lVar2 >> 0x17 | (int)((ulonglong)lVar2 >> 0x20) << 9;
-    piVar17[7] = uVar13;
+  segment = *(int32 *)(raster + 0x1f0);
+  pixel = *(uint16 **)(raster + 0x08) + x;
+  if ((*(uint32 *)(raster + 0x258) & 8) != 0) {
+    segment = count;
+    v = (uint32)(*(int32 *)(raster + 0x30) >> 7);
+    u = (uint32)(*(int32 *)(raster + 0x28) >> 7);
+    uStep = *(int32 *)(raster + 0x20c) >> 7;
+    vStep = *(int32 *)(raster + 0x218) >> 7;
   }
   else {
-    piVar17[0xd] = iVar15;
-    uVar13 = *(int *)(param_1 + 0x30) >> 7;
-    uVar12 = *(int *)(param_1 + 0x28) >> 7;
-    piVar17[4] = *(int *)(param_1 + 0x20c) >> 7;
-    piVar17[3] = *(int *)(param_1 + 0x218) >> 7;
+    w = *(int32 *)(raster + 0x208) + *(int32 *)(raster + 0x20);
+    reciprocal = FUN_0102f468(*(int32 *)(raster + 0x20),0x2e);
+    uw = *(int32 *)(raster + 0x214) + *(int32 *)(raster + 0x28);
+    vw = *(int32 *)(raster + 0x220) + *(int32 *)(raster + 0x30);
+    MULTIPLY_SIGNED_WORDS(product,*(int32 *)(raster + 0x28) >> 7,reciprocal);
+    uLast = (int32)(product.low >> 23 | (uint32)product.high << 9);
+    MULTIPLY_SIGNED_WORDS(product,*(int32 *)(raster + 0x30) >> 7,reciprocal);
+    vLast = (int32)(product.low >> 23 | (uint32)product.high << 9);
+    u = (uint32)uLast;
+    v = (uint32)vLast;
   }
-  if (iVar15 < 1) {
+  if (count <= 0)
     return;
-  }
-  piVar17[0xe] = param_1 + 0x158;
   do {
-    iVar8 = piVar17[0xd];
-    if ((*(uint *)(param_1 + 600) & 8) == 0) {
-      if (iVar8 < iVar15) {
-        iVar3 = FUN_0102f468(piVar17[0xb] >> 6,0x28);
-        piVar17[0xc] = iVar3;
-        iVar3 = FUN_0102f468(piVar17[0xd],0x1e);
-        *piVar17 = iVar3 + 0x4000;
-        piVar17[8] = (uint)((longlong)(piVar17[10] >> 7) * (longlong)piVar17[0xc]) >> 0x17 |
-                     (int)((ulonglong)((longlong)(piVar17[10] >> 7) * (longlong)piVar17[0xc]) >>
-                          0x20) << 9;
-        piVar17[7] = (uint)((longlong)(piVar17[9] >> 7) * (longlong)piVar17[0xc]) >> 0x17 |
-                     (int)((ulonglong)((longlong)(piVar17[9] >> 7) * (longlong)piVar17[0xc]) >> 0x20
-                          ) << 9;
-        piVar17[2] = piVar17[8];
-        piVar17[1] = piVar17[7];
-        piVar17[4] = (int)((uint)((longlong)(int)(piVar17[2] - uVar12) * (longlong)*piVar17) >> 0x10
-                          | (int)((ulonglong)
-                                  ((longlong)(int)(piVar17[2] - uVar12) * (longlong)*piVar17) >>
-                                 0x20) << 0x10) >> 0xe;
-        piVar17[3] = (int)((uint)((longlong)(int)(piVar17[1] - uVar13) * (longlong)*piVar17) >> 0x10
-                          | (int)((ulonglong)
-                                  ((longlong)(int)(piVar17[1] - uVar13) * (longlong)*piVar17) >>
-                                 0x20) << 0x10) >> 0xe;
+    n = segment;
+    if ((*(uint32 *)(raster + 0x258) & 8) == 0) {
+      if (segment < count) {
+        reciprocal = FUN_0102f468(w >> 6,0x28);
+        scale = FUN_0102f468(segment,0x1e) + 0x4000;
+        MULTIPLY_SIGNED_WORDS(product,uw >> 7,reciprocal);
+        uLast = (int32)(product.low >> 23 | (uint32)product.high << 9);
+        MULTIPLY_SIGNED_WORDS(product,vw >> 7,reciprocal);
+        vLast = (int32)(product.low >> 23 | (uint32)product.high << 9);
+        uNext = uLast;
+        vNext = vLast;
+        MULTIPLY_SIGNED_WORDS(product,uNext - (int32)u,scale);
+        uStep = (int32)(product.low >> 16 | (uint32)product.high << 16) >> 14;
+        MULTIPLY_SIGNED_WORDS(product,vNext - (int32)v,scale);
+        vStep = (int32)(product.low >> 16 | (uint32)product.high << 16) >> 14;
       }
       else {
-        piVar17[0xd] = iVar15;
-        iVar8 = iVar15;
-        if (1 < iVar15) {
-          iVar3 = FUN_0102f468(*(int *)(param_1 + 0xe8) - *(int *)(param_1 + 0x200) >> 6,0x28);
-          piVar17[0xc] = iVar3;
-          iVar3 = FUN_0102f468(iVar15 + -1,0x1e);
-          *piVar17 = iVar3 + 0x4000;
-          lVar2 = (longlong)(*(int *)(param_1 + 0xf0) - *(int *)(param_1 + 0x20c) >> 7) *
-                  (longlong)piVar17[0xc];
-          piVar17[6] = (uint)lVar2 >> 0x17 | (int)((ulonglong)lVar2 >> 0x20) << 9;
-          lVar2 = (longlong)(*(int *)(param_1 + 0xf8) - *(int *)(param_1 + 0x218) >> 7) *
-                  (longlong)piVar17[0xc];
-          piVar17[5] = (uint)lVar2 >> 0x17 | (int)((ulonglong)lVar2 >> 0x20) << 9;
-          piVar17[4] = (int)((uint)((longlong)*piVar17 * (longlong)(piVar17[6] - piVar17[8])) >>
-                             0x10 | (int)((ulonglong)
-                                          ((longlong)*piVar17 * (longlong)(piVar17[6] - piVar17[8]))
-                                         >> 0x20) << 0x10) >> 0xe;
-          piVar17[3] = (int)((uint)((longlong)*piVar17 * (longlong)(piVar17[5] - piVar17[7])) >>
-                             0x10 | (int)((ulonglong)
-                                          ((longlong)*piVar17 * (longlong)(piVar17[5] - piVar17[7]))
-                                         >> 0x20) << 0x10) >> 0xe;
+        n = count;
+        segment = count;
+        if (count > 1) {
+          reciprocal = FUN_0102f468((*(int32 *)(raster + 0xe8) - *(int32 *)(raster + 0x200)) >> 6,0x28);
+          scale = FUN_0102f468(count - 1,0x1e) + 0x4000;
+          MULTIPLY_SIGNED_WORDS(product,(*(int32 *)(raster + 0xf0) - *(int32 *)(raster + 0x20c)) >> 7,
+                                reciprocal);
+          uEnd = (int32)(product.low >> 23 | (uint32)product.high << 9);
+          MULTIPLY_SIGNED_WORDS(product,(*(int32 *)(raster + 0xf8) - *(int32 *)(raster + 0x218)) >> 7,
+                                reciprocal);
+          vEnd = (int32)(product.low >> 23 | (uint32)product.high << 9);
+          MULTIPLY_SIGNED_WORDS(product,scale,uEnd - uLast);
+          uStep = (int32)(product.low >> 16 | (uint32)product.high << 16) >> 14;
+          MULTIPLY_SIGNED_WORDS(product,scale,vEnd - vLast);
+          vStep = (int32)(product.low >> 16 | (uint32)product.high << 16) >> 14;
         }
       }
     }
-    iVar16 = piVar17[0xe];
-    iVar15 = iVar15 - iVar8;
-    bVar18 = *(int *)(iVar16 + 0x2c) != 0;
-    iVar3 = 0;
-    if (bVar18) {
-      iVar3 = *(int *)(param_1 + 0x25c);
-    }
-    if (bVar18 && iVar3 != 0) {
+    count -= n;
+    if (*(uint8 **)(unit + 0x2c) != NULL && *(int32 *)(raster + 0x25c) != 0)
       do {
-        if (iVar11 >> 0xc <= (int)(uint)*puVar10) {
-          uVar4 = ((uVar12 & 0xffff) >> (0x10 - *(uint *)(iVar16 + 0x14) & 0xff)) +
-                  (((uVar13 & 0xffff) >> (0x10U - *(int *)(iVar16 + 0x18) & 0xff)) <<
-                  (*(uint *)(iVar16 + 0x14) & 0xff));
-          if (*(int *)(iVar16 + 0x30) != 0) {
-            uVar4 = (uint)*(byte *)(*(int *)(iVar16 + 0x30) + uVar4);
-          }
-          uVar7 = (uint)*(byte *)(*(int *)(iVar16 + 0x2c) + uVar4);
-          if (*(int *)(param_1 + 0x25c) <= (int)(uVar7 * 0x101 + ((int)uVar7 >> 7)) >> 8) {
-            uVar1 = *(undefined2 *)(*(int *)(iVar16 + 0x28) + uVar4 * 2);
-            *puVar10 = (ushort)(iVar11 >> 0xc);
-            *puVar14 = uVar1;
+        if ((int32)*depth >= z >> 12) {
+          uint32 alpha;
+
+          index = ((u & 0xffff) >> (16 - *(uint32 *)(unit + 0x14))) +
+                  (((v & 0xffff) >> (16 - *(uint32 *)(unit + 0x18))) << *(uint32 *)(unit + 0x14));
+          if (*(uint8 **)(unit + 0x30) != NULL)
+            index = (*(uint8 **)(unit + 0x30))[index];
+          alpha = (*(uint8 **)(unit + 0x2c))[index];
+          if (*(int32 *)(raster + 0x25c) <= (int32)(alpha * 0x101 + (alpha >> 7)) >> 8) {
+            uint16 colour = (*(uint16 **)(unit + 0x28))[index];
+
+            *depth = (uint16)(z >> 12);
+            *pixel = colour;
           }
         }
-        puVar10 = puVar10 + 1;
-        iVar11 = *(int *)(param_1 + 0x4c) + iVar11;
-        puVar14 = puVar14 + 1;
-        uVar12 = uVar12 + piVar17[4];
-        iVar8 = iVar8 + -1;
-        uVar13 = uVar13 + piVar17[3];
-      } while (iVar8 != 0);
-    }
-    else {
+        depth++;
+        z += *(int32 *)(raster + 0x4c);
+        pixel++;
+        u += (uint32)uStep;
+        v += (uint32)vStep;
+      } while (--n != 0);
+    else
       do {
-        if (iVar11 >> 0xc <= (int)(uint)*puVar10) {
-          *puVar10 = (ushort)(iVar11 >> 0xc);
-          uVar4 = ((uVar12 & 0xffff) >> (0x10 - *(uint *)(iVar16 + 0x14) & 0xff)) +
-                  (((uVar13 & 0xffff) >> (0x10U - *(int *)(iVar16 + 0x18) & 0xff)) <<
-                  (*(uint *)(iVar16 + 0x14) & 0xff));
-          if (*(int *)(iVar16 + 0x30) != 0) {
-            uVar4 = (uint)*(byte *)(*(int *)(iVar16 + 0x30) + uVar4);
-          }
-          *puVar14 = *(undefined2 *)(*(int *)(iVar16 + 0x28) + uVar4 * 2);
+        if ((int32)*depth >= z >> 12) {
+          *depth = (uint16)(z >> 12);
+          index = ((u & 0xffff) >> (16 - *(uint32 *)(unit + 0x14))) +
+                  (((v & 0xffff) >> (16 - *(uint32 *)(unit + 0x18))) << *(uint32 *)(unit + 0x14));
+          if (*(uint8 **)(unit + 0x30) != NULL)
+            index = (*(uint8 **)(unit + 0x30))[index];
+          *pixel = (*(uint16 **)(unit + 0x28))[index];
         }
-        puVar10 = puVar10 + 1;
-        iVar11 = *(int *)(param_1 + 0x4c) + iVar11;
-        puVar14 = puVar14 + 1;
-        uVar12 = uVar12 + piVar17[4];
-        iVar8 = iVar8 + -1;
-        uVar13 = uVar13 + piVar17[3];
-      } while (iVar8 != 0);
-    }
-    uVar12 = piVar17[2];
-    piVar17[0xb] = *(int *)(param_1 + 0x208) + piVar17[0xb];
-    uVar13 = piVar17[1];
-    piVar17[10] = *(int *)(param_1 + 0x214) + piVar17[10];
-    piVar17[9] = *(int *)(param_1 + 0x220) + piVar17[9];
-  } while (0 < iVar15);
-  return;
+        depth++;
+        z += *(int32 *)(raster + 0x4c);
+        pixel++;
+        u += (uint32)uStep;
+        v += (uint32)vStep;
+      } while (--n != 0);
+    w += *(int32 *)(raster + 0x208);
+    u = (uint32)uNext;
+    v = (uint32)vNext;
+    uw += *(int32 *)(raster + 0x214);
+    vw += *(int32 *)(raster + 0x220);
+  } while (count > 0);
 }
 
 /* ==== 0x0100E490  (file offset 0x0E490)  swvVertexArray_GetComponent ================================= */
@@ -12813,6 +12543,39 @@ int32 swvVertexArray_GetComponent(uint8 *array,int32 vertex,int32 component)
   else
     value = *(int16 *)element;
   return value;
+}
+
+/* ==== 0x0100E4B8  (file offset 0x0E4B8)  hand-written (no Ghidra function) =========================== */
+/* GUESS: name. A routine Ghidra has no function for (only slot 24,
+   swvPolygonMode_SetLocalCameraLightingEnable, reaches it, by a tail jump, and Ghidra took it into that
+   function's body), written from its disassembly (0x0100e4b8 - 0x0100e4cc): sets the flag 0x200 (GUESS:
+   local camera lighting, JSR-184 1.1 PolygonMode.setLocalCameraLightingEnable) of a native PolygonMode's
+   +0x1c when enable is not 0, else clears it. Evidence: `movs r2, r1`, `ldr r1, [r0, #0x1c]`, `biceq r1,
+   r1, #0x200` / `orrne r1, r1, #0x200`, `str r1, [r0, #0x1c]`, `bx lr` (r0 left the mode: no result). */
+void swvPolygonMode_SetLocalCameraLightingValue(uint8 *mode,int32 enable)
+
+{
+  if (enable == 0)
+    *(uint32 *)(mode + 0x1c) &= ~(uint32)0x200;
+  else
+    *(uint32 *)(mode + 0x1c) |= 0x200;
+}
+
+/* ==== 0x0100E4D0  (file offset 0x0E4D0)  hand-written (no Ghidra function) =========================== */
+/* GUESS: name. A routine Ghidra has no function for (only slot 25,
+   swvPolygonMode_SetPerspectiveCorrectionEnable, reaches it, by a tail jump, and Ghidra took it into that
+   function's body), written from its disassembly (0x0100e4d0 - 0x0100e4e4): sets the flag 0x400 (GUESS:
+   perspective correction, JSR-184 1.1 PolygonMode.setPerspectiveCorrectionEnable) of a native
+   PolygonMode's +0x1c when enable is not 0, else clears it. Evidence: `movs r2, r1`, `ldr r1, [r0,
+   #0x1c]`, `biceq r1, r1, #0x400` / `orrne r1, r1, #0x400`, `str r1, [r0, #0x1c]`, `bx lr` (r0 left the
+   mode: no result). */
+void swvPolygonMode_SetPerspectiveCorrectionValue(uint8 *mode,int32 enable)
+
+{
+  if (enable == 0)
+    *(uint32 *)(mode + 0x1c) &= ~(uint32)0x400;
+  else
+    *(uint32 *)(mode + 0x1c) |= 0x400;
 }
 
 /* ==== 0x0100E4E8  (file offset 0x0E4E8)  FUN_0100e4e8 ================================================ */
@@ -17760,7 +17523,7 @@ void FUN_01013744(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
   undefined1 uVar7;
   undefined1 uVar8;
   
-  iVar4 = swv_Matrix4Invert();
+  iVar4 = swv_Matrix4Invert((uint32 *)(param_1 + 0xc));   /* Ghidra had dropped it (r0) */
   uVar8 = iVar4 == 0;
   uVar7 = 1;
   if ((bool)uVar8) {
@@ -17849,167 +17612,111 @@ LAB_0101d814:
 }
 
 /* ==== 0x0101376C  (file offset 0x1376C)  swv_Matrix4Invert =========================================== */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
-undefined4 swv_Matrix4Invert(int param_1)
+/* 4x4 matrix inversion, int Invert(Matrix *) on 16 floats + a flag word (tools/gen_swerve_patch.py:
+   about 365 calls per frame, about 4000 guest instructions each). GUESS: name. Inverts the transform
+   matrix (16 floats, row by row, then the flags word +0x40) in place by Gauss-Jordan elimination with
+   partial pivoting, on a copy (work) and an identity (inverse, swv_Matrix4SetIdentity; its flags word
+   first set to 0x20, then the identity's 0x3f); floats through the soft-float routines (swv_fcmp_a /
+   _b / _c, swv_frdiv the reciprocal 1.0 / x, swv_fmul, swv_frsb b - a). Flags 0x20 or 0x3f (GUESS: an
+   identity or already-simple transform): nothing done. When the largest magnitude of the first three
+   rows is below 1.0, both matrices are first scaled by its reciprocal (it being 0: returns 0). Each
+   column's pivot is the row with the largest magnitude from the diagonal down; a pivot of magnitude
+   below 0x800000 (the smallest normal float) returns 0 (singular; the matrix then unchanged). On success
+   the inverse with the matrix's own flags word is copied over the matrix (0x44 bytes) and 1 returned.
+   The swv_fcmp_* results are in the flags (`bhi`, `bhs`, `beq`, `blo`), written in comma form as the
+   bit tests they amount to (as in swvAnimationController_Position): the largest magnitude, never NaN,
+   starts at +0, so x > it (fcmp_b `bhi`, false for a NaN) is x <= 0x7f800000 && x > it; magnitudes
+   compare as unsigned words, a NaN (above 0x7f800000) being unordered (fcmp_c: C set, so not `blo`).
+   Evidence: 0x0101376c - 0x01013a7c (`cmp r0, #0x20` / `cmpne r0, #0x3f` / `beq`, `bl 0x01039dec` 0x44
+   (Ghidra had dropped the count), `str 0x20, [sp, #0x40]`, `bl 0x01012568`, the `bl 0x0103f534` /
+   `movhi r4, r6` / `eor r0, r6, #0x80000000` loop over 3 rows, `bl 0x0103f59c` with 1.0 / `bhs`, `bl
+   0x0103f428` with 0 / `moveq r0, #0`, `bl 0x0103f240`, the `bic #0x80000000` / `bl 0x0103f59c` / `movlo
+   r6, r5` pivot search, the swap loop, `mov r1, #0x800000` / `movlo r0, #0`, `str sb, [r8, r4, lsl #2]`
+   1.0, `bl 0x0103f604` / `bl 0x0103f030`, `str r0, [fp, r4, lsl #2]` 0, `ldr r0, [r0, #0x40]` / `str
+   r0, [sp, #0x40]`, `bl 0x01039dec`, `mov r0, #1`). */
+int32 swv_Matrix4Invert(uint32 *matrix)
 
 {
-  int iVar1;
-  uint uVar2;
-  uint uVar3;
-  undefined4 uVar4;
-  undefined4 uVar5;
-  uint uVar6;
-  int iVar7;
-  uint uVar8;
-  int iVar9;
-  undefined4 *puVar10;
-  uint uVar11;
-  bool bVar12;
-  undefined1 uVar13;
-  undefined1 uVar14;
-  undefined4 local_b8 [16];
-  undefined4 local_78;
-  uint local_74 [17];
-  undefined4 *puStack_30;
-  uint local_2c;
-  int local_28;
-  
-                    /* 4x4 matrix inversion, int Invert(Matrix *) on 16 floats + a flag word
-                       (tools/gen_swerve_patch.py: about 365 calls per frame, about 4000 guest
-                       instructions each). */
-  uVar2 = *(uint *)(param_1 + 0x40);
-  uVar14 = 0x1f < uVar2;
-  bVar12 = uVar2 == 0x20;
-  if (!bVar12) {
-    uVar14 = 0x3e < uVar2;
-  }
-  uVar13 = bVar12 || uVar2 == 0x3f;
-  if (!bVar12 && uVar2 != 0x3f) {
-    local_28 = param_1;
-    /* the count restored from r2: Ghidra had dropped it */
-    thunk_swv_memcpy(local_74,param_1,0x44);
-    local_78 = 0x20;
-    swv_Matrix4SetIdentity(local_b8);
-    uVar2 = 0;
-    uVar11 = 0;
-    do {
-      uVar8 = 0;
-      uVar6 = uVar2;
-      do {
-        uVar2 = local_74[uVar11 * 4 + uVar8];
-        swv_fcmp_b(uVar2,uVar6);
-        if (!(bool)uVar14 || (bool)uVar13) {
-          uVar3 = uVar2 ^ 0x80000000;
-          swv_fcmp_b(uVar3,uVar6);
-          uVar2 = uVar6;
-          if ((bool)uVar14 && !(bool)uVar13) {
-            uVar2 = uVar3;
-          }
+  int32 result = 1;
+  uint32 inverse[17];
+  uint32 work[17];
+  uint32 largest = 0;
+  uint32 value;
+  uint32 reciprocal;
+  uint32 factor;
+  int32 row, column, next, pivot, k;
+
+  if (matrix[16] != 0x20 && matrix[16] != 0x3f) {
+    thunk_swv_memcpy(work,matrix,0x44);
+    inverse[16] = 0x20;
+    swv_Matrix4SetIdentity(inverse);
+    for (row = 0; row < 3; row++)
+      for (column = 0; column < 4; column++) {
+        value = work[row * 4 + column];
+        if ((swv_fcmp_b(value,largest), value <= 0x7f800000 && value > largest))
+          largest = value;
+        else {
+          value ^= 0x80000000;
+          if ((swv_fcmp_b(value,largest), value <= 0x7f800000 && value > largest))
+            largest = value;
         }
-        uVar8 = uVar8 + 1;
-        uVar14 = 3 < uVar8;
-        uVar13 = uVar8 == 4;
-        uVar6 = uVar2;
-      } while ((int)uVar8 < 4);
-      uVar11 = uVar11 + 1;
-      uVar14 = 2 < uVar11;
-      uVar13 = uVar11 == 3;
-    } while ((int)uVar11 < 3);
-    swv_fcmp_c(uVar2,0x3f800000);
-    if (!(bool)uVar14) {
-      swv_fcmp_a(uVar2,0);
-      if ((bool)uVar13) {
-        return 0;
       }
-      uVar4 = swv_frdiv(uVar2,0x3f800000);
-      iVar9 = 0;
-      do {
-        iVar7 = 0;
-        do {
-          uVar2 = swv_fmul(local_74[iVar9 * 4 + iVar7],uVar4);
-          local_74[iVar9 * 4 + iVar7] = uVar2;
-          iVar1 = iVar9 * 4 + iVar7;
-          uVar5 = swv_fmul(local_b8[iVar1],uVar4);
-          iVar7 = iVar7 + 1;
-          local_b8[iVar1] = uVar5;
-        } while (iVar7 < 4);
-        iVar9 = iVar9 + 1;
-      } while (iVar9 < 4);
+    if ((swv_fcmp_c(largest,0x3f800000), largest < 0x3f800000)) {
+      if ((swv_fcmp_a(largest,0), largest == 0))
+        result = 0;
+      else {
+        reciprocal = swv_frdiv(largest,0x3f800000);
+        for (row = 0; row < 4; row++)
+          for (column = 0; column < 4; column++) {
+            work[row * 4 + column] = swv_fmul(work[row * 4 + column],reciprocal);
+            inverse[row * 4 + column] = swv_fmul(inverse[row * 4 + column],reciprocal);
+          }
+      }
     }
-    uVar2 = 0;
-    do {
-      uVar11 = uVar2 + 1;
-      local_2c = uVar11;
-      uVar6 = uVar2;
-      for (; (int)uVar11 < 4; uVar11 = uVar11 + 1) {
-        bVar12 = 3 < uVar11;
-        swv_fcmp_c(local_74[uVar6 * 4 + uVar2] & 0x7fffffff,
-                   local_74[uVar11 * 4 + uVar2] & 0x7fffffff);
-        if (!bVar12) {
-          uVar6 = uVar11;
+    for (column = 0; result != 0 && column < 4; column = next) {
+      next = column + 1;
+      pivot = column;
+      for (row = next; row < 4; row++)
+        if ((swv_fcmp_c(work[pivot * 4 + column] & 0x7fffffff,work[row * 4 + column] & 0x7fffffff),
+             (work[pivot * 4 + column] & 0x7fffffff) < (work[row * 4 + column] & 0x7fffffff) &&
+             (work[row * 4 + column] & 0x7fffffff) <= 0x7f800000))
+          pivot = row;
+      if (pivot != column)
+        for (k = 0; k < 4; k++) {
+          value = work[column * 4 + k];
+          work[column * 4 + k] = work[pivot * 4 + k];
+          work[pivot * 4 + k] = value;
+          value = inverse[column * 4 + k];
+          inverse[column * 4 + k] = inverse[pivot * 4 + k];
+          inverse[pivot * 4 + k] = value;
         }
-      }
-      bVar12 = uVar2 <= uVar6;
-      if (uVar6 != uVar2) {
-        uVar11 = 0;
-        do {
-          uVar8 = local_74[uVar6 * 4 + uVar11];
-          local_74[uVar6 * 4 + uVar11] = local_74[uVar2 * 4 + uVar11];
-          local_74[uVar2 * 4 + uVar11] = uVar8;
-          uVar4 = local_b8[uVar6 * 4 + uVar11];
-          local_b8[uVar6 * 4 + uVar11] = local_b8[uVar2 * 4 + uVar11];
-          local_b8[uVar2 * 4 + uVar11] = uVar4;
-          uVar11 = uVar11 + 1;
-          bVar12 = 3 < uVar11;
-        } while ((int)uVar11 < 4);
-      }
-      swv_fcmp_c(local_74[uVar2 * 5] & 0x7fffffff,0x800000);
-      if (!bVar12) {
-        return 0;
-      }
-      uVar4 = swv_frdiv(local_74[uVar2 * 5],0x3f800000);
-      iVar9 = 0;
-      do {
-        uVar5 = swv_fmul(local_b8[uVar2 * 4 + iVar9],uVar4);
-        local_b8[uVar2 * 4 + iVar9] = uVar5;
-        iVar9 = iVar9 + 1;
-        uVar11 = local_2c;
-      } while (iVar9 < 4);
-      for (; (int)uVar11 < 4; uVar11 = uVar11 + 1) {
-        uVar6 = swv_fmul(local_74[uVar2 * 4 + uVar11],uVar4);
-        local_74[uVar2 * 4 + uVar11] = uVar6;
-      }
-      local_74[uVar2 * 5] = 0x3f800000;
-      uVar11 = 0;
-      do {
-        if (uVar11 != uVar2) {
-          uVar6 = local_74[uVar11 * 4 + uVar2];
-          puStack_30 = local_b8 + uVar11 * 4;
-          iVar9 = 0;
-          do {
-            puVar10 = puStack_30 + iVar9;
-            uVar4 = swv_fmul(uVar6,local_b8[uVar2 * 4 + iVar9]);
-            uVar4 = swv_frsb(uVar4,*puVar10);
-            iVar9 = iVar9 + 1;
-            *puVar10 = uVar4;
-            uVar8 = local_2c;
-          } while (iVar9 < 4);
-          for (; (int)uVar8 < 4; uVar8 = uVar8 + 1) {
-            uVar4 = swv_fmul(uVar6,local_74[uVar2 * 4 + uVar8]);
-            uVar3 = swv_frsb(uVar4,local_74[uVar11 * 4 + uVar8]);
-            local_74[uVar11 * 4 + uVar8] = uVar3;
+      if ((swv_fcmp_c(work[column * 5] & 0x7fffffff,0x800000), (work[column * 5] & 0x7fffffff) < 0x800000))
+        result = 0;
+      else {
+        reciprocal = swv_frdiv(work[column * 5],0x3f800000);
+        for (k = 0; k < 4; k++)
+          inverse[column * 4 + k] = swv_fmul(inverse[column * 4 + k],reciprocal);
+        for (k = next; k < 4; k++)
+          work[column * 4 + k] = swv_fmul(work[column * 4 + k],reciprocal);
+        work[column * 5] = 0x3f800000;
+        for (row = 0; row < 4; row++)
+          if (row != column) {
+            factor = work[row * 4 + column];
+            for (k = 0; k < 4; k++)
+              inverse[row * 4 + k] =
+                swv_frsb(swv_fmul(factor,inverse[column * 4 + k]),inverse[row * 4 + k]);
+            for (k = next; k < 4; k++)
+              work[row * 4 + k] = swv_frsb(swv_fmul(factor,work[column * 4 + k]),work[row * 4 + k]);
+            work[row * 4 + column] = 0;
           }
-          local_74[uVar11 * 4 + uVar2] = 0;
-        }
-        uVar11 = uVar11 + 1;
-      } while ((int)uVar11 < 4);
-      uVar2 = local_2c;
-    } while ((int)local_2c < 4);
-    local_78 = *(undefined4 *)(local_28 + 0x40);
-    thunk_swv_memcpy(local_28,local_b8,0x44);
+      }
+    }
+    if (result != 0) {
+      inverse[16] = matrix[16];
+      thunk_swv_memcpy(matrix,inverse,0x44);
+    }
   }
-  return 1;
+  return result;
 }
 
 /* ==== 0x01013A80  (file offset 0x13A80)  swvAnimationController_IsActive ============================= */
@@ -20309,7 +20016,7 @@ LAB_01016740:
             FUN_01018018(param_1,param_2);
             FUN_010183b0(iVar3);
             swv_Matrix4Copy(auStack_58,*(int *)(iVar3 + 0x20) + 0x2c);
-            iVar4 = swv_Matrix4Invert(auStack_58);
+            iVar4 = swv_Matrix4Invert((uint32 *)auStack_58);
             if (iVar4 == 0) {
               FUN_0102f7e0(uVar6);
             }
@@ -20617,7 +20324,7 @@ int32 swvGroup_Pick(uint8 *group,int32 scope,uint32 x,uint32 y,uint8 *camera,uin
   *(uint8 **)(state + 0x30) = camera;
   *(int32 *)(state + 0x38) = scope;
   swv_Matrix4Copy(inverse,(undefined4)FUN_0100f910((int)camera));
-  if (swv_Matrix4Invert((int)inverse) == 0)
+  if (swv_Matrix4Invert(inverse) == 0)
     FUN_0102f7e0(INTEGER_MINUS_1300);
   pointX = swv_fmul(x,0x40000000);
   pointY = swv_fmul(y,0x40000000);
@@ -40481,7 +40188,7 @@ void FUN_0102da44(int param_1)
   undefined1 auStack_48 [72];
   
   swv_Matrix4Copy(auStack_48,param_1 + 0xc);
-  swv_Matrix4Invert(auStack_48);
+  swv_Matrix4Invert((uint32 *)auStack_48);
   return;
 }
 
@@ -51131,51 +50838,37 @@ int32 swvPolygonMode_SetCulling(ISwerveObject *po,int32 culling)
 }
 
 /* ==== 0x01038148  (file offset 0x38148)  swvPolygonMode_SetLocalCameraLightingEnable ================= */
-/* (not yet rewritten) ISwerveObject slot 24 (+0x60) of PolygonMode (JSR-184 1.1,
-   PolygonMode.setLocalCameraLightingEnable; kh_types.h SwervePolygonModeVtbl): sets the flag 0x200 of
-   the native object (po->pNative, +4, less 4) when param_2 is not 0, else clears it. */
-void swvPolygonMode_SetLocalCameraLightingEnable(int param_1,int param_2)
+/* ISwerveObject slot 24 (+0x60) of PolygonMode (JSR-184 1.1, PolygonMode.setLocalCameraLightingEnable;
+   kh_types.h SwervePolygonModeVtbl): swvPolygonMode_SetLocalCameraLightingValue on the native object
+   (po->pNative, +4, less 4) with enable made 0 or 1, a tail jump in the binary (it sets the flag 0x200 of
+   the native object's +0x1c when enable is not 0, else clears it). Evidence: 0x01038148 - 0x0103815c
+   (`ldr r0, [r0, #4]` / `subne r0, r0, #4`, `cmp r1, #0` / `movne r1, #1`, `b 0x0100e4b8`; Ghidra had
+   pasted the setter in). */
+void swvPolygonMode_SetLocalCameraLightingEnable(ISwerveObject *po,int32 enable)
 
 {
-  int iVar1;
-  uint uVar2;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  if (param_2 == 0) {
-    uVar2 = *(uint *)(iVar1 + 0x1c) & 0xfffffdff;
-  }
-  else {
-    uVar2 = *(uint *)(iVar1 + 0x1c) | 0x200;
-  }
-  *(uint *)(iVar1 + 0x1c) = uVar2;
-  return;
+  uint8 *mode = (uint8 *)po->pNative;
+
+  if (mode != NULL)
+    mode -= 4;
+  swvPolygonMode_SetLocalCameraLightingValue(mode,enable != 0);
 }
 
 /* ==== 0x01038160  (file offset 0x38160)  swvPolygonMode_SetPerspectiveCorrectionEnable =============== */
-/* (not yet rewritten) ISwerveObject slot 25 (+0x64) of PolygonMode (JSR-184 1.1,
-   PolygonMode.setPerspectiveCorrectionEnable; kh_types.h SwervePolygonModeVtbl): sets the flag 0x400 of
-   the native object (po->pNative, +4, less 4) when param_2 is not 0, else clears it. */
-void swvPolygonMode_SetPerspectiveCorrectionEnable(int param_1,int param_2)
+/* ISwerveObject slot 25 (+0x64) of PolygonMode (JSR-184 1.1, PolygonMode.setPerspectiveCorrectionEnable;
+   kh_types.h SwervePolygonModeVtbl): swvPolygonMode_SetPerspectiveCorrectionValue on the native object
+   (po->pNative, +4, less 4) with enable made 0 or 1, a tail jump in the binary (it sets the flag 0x400 of
+   the native object's +0x1c when enable is not 0, else clears it). Evidence: 0x01038160 - 0x01038174
+   (`ldr r0, [r0, #4]` / `subne r0, r0, #4`, `cmp r1, #0` / `movne r1, #1`, `b 0x0100e4d0`; Ghidra had
+   pasted the setter in). */
+void swvPolygonMode_SetPerspectiveCorrectionEnable(ISwerveObject *po,int32 enable)
 
 {
-  int iVar1;
-  uint uVar2;
-  
-  iVar1 = *(int *)(param_1 + 4);
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + -4;
-  }
-  if (param_2 == 0) {
-    uVar2 = *(uint *)(iVar1 + 0x1c) & 0xfffffbff;
-  }
-  else {
-    uVar2 = *(uint *)(iVar1 + 0x1c) | 0x400;
-  }
-  *(uint *)(iVar1 + 0x1c) = uVar2;
-  return;
+  uint8 *mode = (uint8 *)po->pNative;
+
+  if (mode != NULL)
+    mode -= 4;
+  swvPolygonMode_SetPerspectiveCorrectionValue(mode,enable != 0);
 }
 
 /* ==== 0x01038178  (file offset 0x38178)  swvPolygonMode_SetShading =================================== */
@@ -53194,378 +52887,153 @@ int swv_NewSwerve(int16 nSize,IShell *pIShell,IModule *pIModule,ISwerve **ppObj)
 }
 
 /* ==== 0x01039FB4  (file offset 0x39FB4)  swv_WrapObject ============================================== */
-int swv_WrapObject(void *pNative,ISwerveObject **ppOut)
+/* swv_WrapObject(pNative, ppOut) - wraps an engine object as a BREW interface {vtbl, native, refs}:
+   asks the native object for its type (virtual at vtbl+4, SwerveObjectType), builds that type's vtable
+   once (0x1c..0xe4 bytes, swv_InitVtbl_<Class>) and caches it in SwerveGlobals->pVtblCache, then sets the
+   3 shared slots (AddRef 0x01011f8c, Release 0x01012294, QueryInterface 0x01011fc4). GUESS: name. In
+   detail: error -1302 (NullPointerException; FUN_0102f7e0, which does not return) for a NULL ppOut;
+   *ppOut = NULL; a NULL pNative returns 0. Then, in an error frame: the type (the engine virtual call,
+   slot +4) picks the cache entry (the table of swv_GetVtblCache) and the vtable's size; a missing vtable
+   is allocated (swv_New), cleared (rt_memclr_w) and filled by the class's swv_InitVtbl_*. Type 0, 23 and
+   those above 28 return 0x1000d (GUESS: unsupported class) at once, the error frame left pushed as in the
+   binary (no swv_TryPop). The type is asked again for the interface: a Loader (28) gets 0x20 bytes
+   (cleared twice: rt_memclr_w, swv_memset), any other 0xc (zeroed when not NULL); {vtable, pNative, 0},
+   swvObj_AddRef, FUN_0103aed8 (GUESS: registers it), *ppOut, swv_TryPop; returns 0. On an error the
+   native object's count (+4) goes up and swv_NativeRelease drops it, helper_free is given r4 as setjmp
+   saved it (0: no vtable is freed) and 2 is returned. The binary has one block per type (a jump
+   table); written here as one switch for the entry and size and one for the swv_InitVtbl_* call, the same
+   calls in the same order. Evidence: 0x01039fb4 - 0x0103a764 (`movs r8, r1` / `bleq 0x0102f7e0`, `str
+   sb, [r8]`, `mov r4, #0` / `bl 0x01025e98` / `bl 0x01000500`, `bl 0x0100500c`, `bl 0x0103999c`, `ldr
+   r2, [r1, #4]` / `blx r1`, `cmp r1, #0x1c` / `addls pc, pc, r1, lsl #2` with r0 = 0x1000d, the 26 blocks
+   (`ldr r4, [r5, #n]`, `bl 0x0102cc00`, `blne 0x01000130`, `bl` the init, `str r4, [r5, #n]`), the three
+   `str` at 0x0103a690 - 0x0103a6a8, the second `blx r1` / `cmp r0, #0x1c`, `bl 0x0100010c`, `stmne r0!,
+   {r1, r2}`, `stm r5, {r4, r6, sb}`, `bl 0x01011f8c`, `bl 0x0103aed8`, `str r5, [r8]`, `bl 0x01026298`,
+   and at 0x0103a73c the error path, `mov r0, r4` / `bl 0x01029910`, `mov r7, #2`). */
+int32 swv_WrapObject(void *pNative,ISwerveObject **ppOut)
 
 {
-  int iVar1;
-  void **ppvVar2;
-  undefined4 uVar3;
-  ISwerveObject *po;
+  int32 result = 0;
+  int32 type;
+  int32 slot = 0;
+  uint32 size = 0;
+  void **cache;
   ISwerveObjectVtbl *pVtbl;
-  undefined1 auStack_a4 [136];
-  
-                    /* swv_WrapObject(pNative, ppOut) - wraps an engine object as a BREW interface
-                       {vtbl, native, refs}: asks the native object for its type (virtual at vtbl+4,
-                       SwerveObjectType), builds that type's vtable once (0x1c..0xe4 bytes,
-                       swv_InitVtbl_<Class>) and caches it in SwerveGlobals->pVtblCache, then sets
-                       the 3 shared slots (AddRef 0x01011f8c, Release 0x01012294, QueryInterface
-                       0x01011fc4). GUESS: name. */
-  if (ppOut == (ISwerveObject **)0x0) {
+  ISwerveObject *po;
+  uint8 frame[136];
+
+  if (ppOut == NULL)
     FUN_0102f7e0(INTEGER_MINUS_1302);
-  }
-  *ppOut = (ISwerveObject *)0x0;
-  if (pNative == (void *)0x0) {
-    return 0;
-  }
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_a4));   /* Ghidra had dropped it */
-  if (iVar1 != 0) {
-    *(int *)((int)pNative + 4) = *(int *)((int)pNative + 4) + 1;
-    swv_NativeRelease(pNative);
-    helper_free((void *)0x0);
-    return 2;
-  }
-  swv_TryArm(auStack_a4);
-  ppvVar2 = swv_GetVtblCache();
-  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
-     object's class) */
-  uVar3 = (*(code *)(*(int *)(*(int *)pNative + 4) + *(int *)pNative))(pNative);
-  iVar1 = WORD_HEXADECIMAL_0001000D;
-  switch(uVar3) {
-  case 0:
-    return WORD_HEXADECIMAL_0001000D;
-  case 1:
-    pVtbl = *ppvVar2;
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x6c);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x6c);
+  *ppOut = NULL;
+  if (pNative != NULL) {
+    if (swv_setjmp((uint32 *)swv_TryPush(frame)) != 0) {
+      *(int32 *)((uint8 *)pNative + 4) += 1;
+      swv_NativeRelease((uint8 *)pNative);
+      helper_free(NULL);   /* r4 (the vtable), as swv_setjmp saved it: 0 */
+      result = 2;
+    }
+    else {
+      swv_TryArm(frame);
+      cache = swv_GetVtblCache();
+      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
+         the object's class) */
+      type = (*(code *)(*(int32 *)(*(int32 *)pNative + 4) + *(int32 *)pNative))(pNative);
+      switch (type) {
+      case SWVT_ANIMATIONCONTROLLER: slot = 0x00; size = 0x6c; break;
+      case SWVT_ANIMATIONTRACK:      slot = 0x01; size = 0x5c; break;
+      case SWVT_APPEARANCE:          slot = 0x02; size = 0x78; break;
+      case SWVT_BACKGROUND:          slot = 0x03; size = 0x88; break;
+      case SWVT_CAMERA:              slot = 0x04; size = 0xc0; break;
+      case SWVT_COMPOSITINGMODE:     slot = 0x05; size = 0x84; break;
+      case SWVT_FOG:                 slot = 0x06; size = 0x6c; break;
+      case SWVT_POLYGONMODE:         slot = 0x10; size = 0x70; break;
+      case SWVT_GROUP:               slot = 0x08; size = 0xc4; break;
+      case SWVT_IMAGE2D:             slot = 0x09; size = 0x78; break;
+      case SWVT_TRIANGLESTRIPARRAY:  slot = 0x17; size = 0x50; break;
+      case SWVT_LIGHT:               slot = 0x0b; size = 0xe4; break;
+      case SWVT_MATERIAL:            slot = 0x0d; size = 0x60; break;
+      case SWVT_MESH:                slot = 0x0e; size = 0xc8; break;
+      case SWVT_MORPHINGMESH:        slot = 0x0f; size = 0xe0; break;
+      case SWVT_SKINNEDMESH:         slot = 0x12; size = 0xd8; break;
+      case SWVT_TEXTURE2D:           slot = 0x15; size = 0xa8; break;
+      case SWVT_SPRITE3D:            slot = 0x13; size = 0xd8; break;
+      case SWVT_KEYFRAMESEQUENCE:    slot = 0x0a; size = 0x64; break;
+      case SWVT_VERTEXARRAY:         slot = 0x18; size = 0x54; break;
+      case SWVT_VERTEXBUFFER:        slot = 0x19; size = 0x74; break;
+      case SWVT_WORLD:               slot = 0x1a; size = 0xd4; break;
+      case SWVT_CLASS24:             slot = 0x14; size = 0x90; break;
+      case SWVT_GRAPHICS3D:          slot = 0x07; size = 0x5c; break;
+      case SWVT_RAYINTERSECTION:     slot = 0x11; size = 0x30; break;
+      case SWVT_TRANSFORM:           slot = 0x16; size = 0x44; break;
+      case SWVT_LOADER:              slot = 0x0c; size = 0x1c; break;
+      default:                       result = WORD_HEXADECIMAL_0001000D; break;
       }
-      swv_InitVtbl_AnimationController((void **)pVtbl);
-      *ppvVar2 = pVtbl;
-    }
-    break;
-  case 2:
-    pVtbl = ppvVar2[1];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x5c);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x5c);
+      if (result == 0) {
+        pVtbl = (ISwerveObjectVtbl *)cache[slot];
+        if (pVtbl == NULL) {
+          pVtbl = (ISwerveObjectVtbl *)swv_New(size);
+          if (pVtbl != NULL)
+            rt_memclr_w(pVtbl,size);
+          switch (type) {
+          case SWVT_ANIMATIONCONTROLLER: swv_InitVtbl_AnimationController((void **)pVtbl); break;
+          case SWVT_ANIMATIONTRACK:      swv_InitVtbl_AnimationTrack((void **)pVtbl); break;
+          case SWVT_APPEARANCE:          swv_InitVtbl_Appearance((void **)pVtbl); break;
+          case SWVT_BACKGROUND:          swv_InitVtbl_Background((void **)pVtbl); break;
+          case SWVT_CAMERA:              swv_InitVtbl_Camera((void **)pVtbl); break;
+          case SWVT_COMPOSITINGMODE:     swv_InitVtbl_CompositingMode((void **)pVtbl); break;
+          case SWVT_FOG:                 swv_InitVtbl_Fog((void **)pVtbl); break;
+          case SWVT_POLYGONMODE:         swv_InitVtbl_PolygonMode((void **)pVtbl); break;
+          case SWVT_GROUP:               swv_InitVtbl_Group((void **)pVtbl); break;
+          case SWVT_IMAGE2D:             swv_InitVtbl_Image2D((void **)pVtbl); break;
+          case SWVT_TRIANGLESTRIPARRAY:  swv_InitVtbl_TriangleStripArray((void **)pVtbl); break;
+          case SWVT_LIGHT:               swv_InitVtbl_Light((void **)pVtbl); break;
+          case SWVT_MATERIAL:            swv_InitVtbl_Material((void **)pVtbl); break;
+          case SWVT_MESH:                swv_InitVtbl_Mesh((void **)pVtbl); break;
+          case SWVT_MORPHINGMESH:        swv_InitVtbl_MorphingMesh((void **)pVtbl); break;
+          case SWVT_SKINNEDMESH:         swv_InitVtbl_SkinnedMesh((void **)pVtbl); break;
+          case SWVT_TEXTURE2D:           swv_InitVtbl_Texture2D((void **)pVtbl); break;
+          case SWVT_SPRITE3D:            swv_InitVtbl_Sprite3D((void **)pVtbl); break;
+          case SWVT_KEYFRAMESEQUENCE:    swv_InitVtbl_KeyframeSequence((void **)pVtbl); break;
+          case SWVT_VERTEXARRAY:         swv_InitVtbl_VertexArray((void **)pVtbl); break;
+          case SWVT_VERTEXBUFFER:        swv_InitVtbl_VertexBuffer((void **)pVtbl); break;
+          case SWVT_WORLD:               swv_InitVtbl_World((void **)pVtbl); break;
+          case SWVT_CLASS24:             swv_InitVtbl_Class24((void **)pVtbl); break;
+          case SWVT_GRAPHICS3D:          swv_InitVtbl_Graphics3D((void **)pVtbl); break;
+          case SWVT_RAYINTERSECTION:     swv_InitVtbl_RayIntersection((void **)pVtbl); break;
+          case SWVT_TRANSFORM:           swv_InitVtbl_Transform((void **)pVtbl); break;
+          default:                       swv_InitVtbl_Loader((void **)pVtbl); break;
+          }
+          cache[slot] = pVtbl;
+        }
+        pVtbl->AddRef = (uint32 (*)(ISwerveObject *))(ADDRESS_OF_swvObj_AddRef_OFFSET + 0x103a694);
+        pVtbl->Release = (uint32 (*)(ISwerveObject *))(ADDRESS_OF_swvObj_Release_OFFSET + 0x103a6a0);
+        pVtbl->QueryInterface = (int (*)(ISwerveObject *,SwerveClassId,void **))
+                                (ADDRESS_OF_swvObj_QueryInterface_OFFSET + 0x103a6ac);
+        /* the engine virtual call again, slot +0x4 */
+        if ((*(code *)(*(int32 *)(*(int32 *)pNative + 4) + *(int32 *)pNative))(pNative) == SWVT_LOADER) {
+          po = (ISwerveObject *)swv_New(0x20);
+          if (po != NULL)
+            rt_memclr_w(po,0x20);
+          swv_memset(po,0,0x20);
+        }
+        else {
+          po = (ISwerveObject *)swv_New(0xc);
+          if (po != NULL) {
+            po->pvt = NULL;
+            po->pNative = NULL;
+            po->m_nRefs = 0;
+          }
+        }
+        po->pvt = pVtbl;
+        po->pNative = pNative;
+        po->m_nRefs = 0;
+        swvObj_AddRef(po);
+        FUN_0103aed8((undefined4)po);
+        *ppOut = po;
+        swv_TryPop();
       }
-      swv_InitVtbl_AnimationTrack((void **)pVtbl);
-      ppvVar2[1] = pVtbl;
-    }
-    break;
-  case 3:
-    pVtbl = ppvVar2[2];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x78);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x78);
-      }
-      swv_InitVtbl_Appearance((void **)pVtbl);
-      ppvVar2[2] = pVtbl;
-    }
-    break;
-  case 4:
-    pVtbl = ppvVar2[3];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x88);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x88);
-      }
-      swv_InitVtbl_Background((void **)pVtbl);
-      ppvVar2[3] = pVtbl;
-    }
-    break;
-  case 5:
-    pVtbl = ppvVar2[4];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xc0);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0xc0);
-      }
-      swv_InitVtbl_Camera((void **)pVtbl);
-      ppvVar2[4] = pVtbl;
-    }
-    break;
-  case 6:
-    pVtbl = ppvVar2[5];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x84);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x84);
-      }
-      swv_InitVtbl_CompositingMode((void **)pVtbl);
-      ppvVar2[5] = pVtbl;
-    }
-    break;
-  case 7:
-    pVtbl = ppvVar2[6];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x6c);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x6c);
-      }
-      swv_InitVtbl_Fog((void **)pVtbl);
-      ppvVar2[6] = pVtbl;
-    }
-    break;
-  case 8:
-    pVtbl = ppvVar2[0x10];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x70);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x70);
-      }
-      swv_InitVtbl_PolygonMode((void **)pVtbl);
-      ppvVar2[0x10] = pVtbl;
-    }
-    break;
-  case 9:
-    pVtbl = ppvVar2[8];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xc4);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0xc4);
-      }
-      swv_InitVtbl_Group((void **)pVtbl);
-      ppvVar2[8] = pVtbl;
-    }
-    break;
-  case 10:
-    pVtbl = ppvVar2[9];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x78);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x78);
-      }
-      swv_InitVtbl_Image2D((void **)pVtbl);
-      ppvVar2[9] = pVtbl;
-    }
-    break;
-  case 0xb:
-    pVtbl = ppvVar2[0x17];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x50);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x50);
-      }
-      swv_InitVtbl_TriangleStripArray((void **)pVtbl);
-      ppvVar2[0x17] = pVtbl;
-    }
-    break;
-  case 0xc:
-    pVtbl = ppvVar2[0xb];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xe4);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0xe4);
-      }
-      swv_InitVtbl_Light((void **)pVtbl);
-      ppvVar2[0xb] = pVtbl;
-    }
-    break;
-  case 0xd:
-    pVtbl = ppvVar2[0xd];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x60);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x60);
-      }
-      swv_InitVtbl_Material((void **)pVtbl);
-      ppvVar2[0xd] = pVtbl;
-    }
-    break;
-  case 0xe:
-    pVtbl = ppvVar2[0xe];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(200);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,200);
-      }
-      swv_InitVtbl_Mesh((void **)pVtbl);
-      ppvVar2[0xe] = pVtbl;
-    }
-    break;
-  case 0xf:
-    pVtbl = ppvVar2[0xf];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xe0);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0xe0);
-      }
-      swv_InitVtbl_MorphingMesh((void **)pVtbl);
-      ppvVar2[0xf] = pVtbl;
-    }
-    break;
-  case 0x10:
-    pVtbl = ppvVar2[0x12];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xd8);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0xd8);
-      }
-      swv_InitVtbl_SkinnedMesh((void **)pVtbl);
-      ppvVar2[0x12] = pVtbl;
-    }
-    break;
-  case 0x11:
-    pVtbl = ppvVar2[0x15];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xa8);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0xa8);
-      }
-      swv_InitVtbl_Texture2D((void **)pVtbl);
-      ppvVar2[0x15] = pVtbl;
-    }
-    break;
-  case 0x12:
-    pVtbl = ppvVar2[0x13];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xd8);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0xd8);
-      }
-      swv_InitVtbl_Sprite3D((void **)pVtbl);
-      ppvVar2[0x13] = pVtbl;
-    }
-    break;
-  case 0x13:
-    pVtbl = ppvVar2[10];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(100);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,100);
-      }
-      swv_InitVtbl_KeyframeSequence((void **)pVtbl);
-      ppvVar2[10] = pVtbl;
-    }
-    break;
-  case 0x14:
-    pVtbl = ppvVar2[0x18];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x54);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x54);
-      }
-      swv_InitVtbl_VertexArray((void **)pVtbl);
-      ppvVar2[0x18] = pVtbl;
-    }
-    break;
-  case 0x15:
-    pVtbl = ppvVar2[0x19];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x74);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x74);
-      }
-      swv_InitVtbl_VertexBuffer((void **)pVtbl);
-      ppvVar2[0x19] = pVtbl;
-    }
-    break;
-  case 0x16:
-    pVtbl = ppvVar2[0x1a];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0xd4);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0xd4);
-      }
-      swv_InitVtbl_World((void **)pVtbl);
-      ppvVar2[0x1a] = pVtbl;
-    }
-    break;
-  case 0x17:
-    return WORD_HEXADECIMAL_0001000D;
-  case 0x18:
-    pVtbl = ppvVar2[0x14];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x90);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x90);
-      }
-      swv_InitVtbl_Class24((void **)pVtbl);
-      ppvVar2[0x14] = pVtbl;
-    }
-    break;
-  case 0x19:
-    pVtbl = ppvVar2[7];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x5c);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x5c);
-      }
-      swv_InitVtbl_Graphics3D((void **)pVtbl);
-      ppvVar2[7] = pVtbl;
-    }
-    break;
-  case 0x1a:
-    pVtbl = ppvVar2[0x11];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x30);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x30);
-      }
-      swv_InitVtbl_RayIntersection((void **)pVtbl);
-      ppvVar2[0x11] = pVtbl;
-    }
-    break;
-  case 0x1b:
-    pVtbl = ppvVar2[0x16];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x44);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x44);
-      }
-      swv_InitVtbl_Transform((void **)pVtbl);
-      ppvVar2[0x16] = pVtbl;
-    }
-    break;
-  case 0x1c:
-    pVtbl = ppvVar2[0xc];
-    if (pVtbl == (ISwerveObjectVtbl *)0x0) {
-      pVtbl = (ISwerveObjectVtbl *)swv_New(0x1c);
-      if (pVtbl != (ISwerveObjectVtbl *)0x0) {
-        rt_memclr_w(pVtbl,0x1c);
-      }
-      swv_InitVtbl_Loader((void **)pVtbl);
-      ppvVar2[0xc] = pVtbl;
-    }
-    break;
-  default:
-    goto switchD_0103a028_default;
-  }
-  pVtbl->AddRef = (_func_6 *)(ADDRESS_OF_swvObj_AddRef_OFFSET + 0x103a694);
-  pVtbl->Release = (_func_7 *)(ADDRESS_OF_swvObj_Release_OFFSET + 0x103a6a0);
-  pVtbl->QueryInterface = (_func_8 *)(ADDRESS_OF_swvObj_QueryInterface_OFFSET + 0x103a6ac);
-  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
-     object's class) */
-  iVar1 = (*(code *)(*(int *)(*(int *)pNative + 4) + *(int *)pNative))(pNative);
-  if (iVar1 == 0x1c) {
-    po = (ISwerveObject *)swv_New(0x20);
-    if (po != (ISwerveObject *)0x0) {
-      rt_memclr_w(po,0x20);
-    }
-    swv_memset(po,0,0x20);
-  }
-  else {
-    po = (ISwerveObject *)swv_New(0xc);
-    if (po != (ISwerveObject *)0x0) {
-      po->pvt = (ISwerveObjectVtbl *)0x0;
-      po->pNative = (void *)0x0;
-      po->m_nRefs = 0;
     }
   }
-  po->pvt = pVtbl;
-  po->pNative = pNative;
-  po->m_nRefs = 0;
-  swvObj_AddRef(po);
-  FUN_0103aed8(po);
-  *ppOut = po;
-  swv_TryPop();
-  iVar1 = 0;
-switchD_0103a028_default:
-  return iVar1;
+  return result;
 }
 
 /* ==== 0x0103A77C  (file offset 0x3A77C)  FUN_0103a77c ================================================ */

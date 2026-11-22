@@ -183,11 +183,11 @@ void swv_TryArm(uint8 *frame);   /* 0x0100500C */
 uint8 *swv_Graphics3D_New(void);   /* 0x010098A4 */
 void swv_SpanFillGeneric(uint8 *raster);   /* 0x0100A8B4 GUESS: name, see swv21brew.c */
 void swv_SpanFillGouraud(uint8 *raster);   /* 0x0100B18C GUESS: name, see swv21brew.c */
-void swv_SpanFillTextured(int param_1);   /* 0x0100DFEC */
+void swv_SpanFillTextured(uint8 *raster);   /* 0x0100DFEC GUESS: name, see swv21brew.c */
 uint32 swvObj_AddRef(ISwerveObject *po);   /* 0x01011F8C */
 int32 swvObj_QueryInterface(ISwerveObject *po,SwerveClassId cls,void **ppo);   /* 0x01011FC4 */
 uint32 swvObj_Release(ISwerveObject *po);   /* 0x01012294 */
-undefined4 swv_Matrix4Invert(int param_1);   /* 0x0101376C */
+int32 swv_Matrix4Invert(uint32 *matrix);   /* 0x0101376C GUESS: name, see swv21brew.c */
 void swv_NativeRelease(uint8 *object);   /* 0x01019F28 */
 void swv_Graphics3D_bindTarget(uint8 *graphics,int32 width,int32 height,int32 pitch,void *pixels,int32 x, int32 y,int32 dx,int32 dy);   /* 0x010202E4 */
 uint32 ISwerve_AddRef(ISwerve *po);   /* 0x01024788 */
@@ -260,7 +260,7 @@ SwerveGlobals * swv_GetGlobals(void);   /* 0x01039978 */
 void ** swv_GetVtblCache(void);   /* 0x0103999C */
 void * thunk_swv_memset(void *destination,uint32 value,uint32 byteCount);   /* 0x01039DF0 */
 int swv_NewSwerve(int16 nSize,IShell *pIShell,IModule *pIModule,ISwerve **ppObj);   /* 0x01039DF4 */
-int swv_WrapObject(void *pNative,ISwerveObject **ppOut);   /* 0x01039FB4 */
+int32 swv_WrapObject(void *pNative,ISwerveObject **ppOut);   /* 0x01039FB4 GUESS: name, see swv21brew.c */
 void swv_SetGlobal00(uint32 value);   /* 0x0103AF88 */
 int32 swv_Create_Texture2D(void **ppObj);   /* 0x0103B200 */
 void swv_InitVtbl_Texture2D(void **pVtbl);   /* 0x0103B32C */
@@ -293,6 +293,8 @@ uint32 swv_fp_status(uint32 mask,uint32 flags);   /* 0x0103F8E8 */
 int AEEClsCreateInstance(AEECLSID ClsId, IShell *pIShell, IModule *po, void **ppObj);
 void AEEMod_FreeResources(IModule *po, IHeap *ph, IFileMgr *pfm);
 SwvSkinBoneSet * swvSkin_CopyBoneSet(SwvSkinBoneSet *destination,const SwvSkinBoneSet *source);   /* 0x01027B40 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
+void swvPolygonMode_SetLocalCameraLightingValue(uint8 *mode,int32 enable);   /* 0x0100E4B8 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
+void swvPolygonMode_SetPerspectiveCorrectionValue(uint8 *mode,int32 enable);   /* 0x0100E4D0 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
 
 /* Not yet identified (auto-named by Ghidra). */
 int64 ll_mul_int(uint32 aLow,int32 aHigh,int32 b);   /* 0x01000028 GUESS: name, see swv21brew.c */
@@ -362,7 +364,7 @@ uint32 swvExt_Release(SwvExtObject *object);   /* 0x01004200 GUESS: name, see sw
 int32 swvArchiveEntry_Read(SwvExtObject *entry,void *buffer,uint32 count);   /* 0x01004250 GUESS: name, see swv21brew.c */
 void swvArchive_EnumInit(SwvExtObject *archive);   /* 0x010042BC GUESS: name, see swv21brew.c */
 int32 swvArchive_EnumNext(SwvExtObject *archive,uint32 *size,char **name);   /* 0x010042D0 GUESS: name, see swv21brew.c */
-int swvArchive_Open(int param_1,undefined4 param_2);
+int32 swvArchive_Open(SwvExtObject *archive,const char *path);   /* 0x01004380 GUESS: name, see swv21brew.c */
 int32 swvArchive_OpenEntry(SwvExtObject *archive,const char *name,uint32 *size,SwvExtObject **ppEntry);   /* 0x01004638 GUESS: name, see swv21brew.c */
 int32 swvSkin_BoneSetsEqual(uint8 *mesh,const uint16 *a,const uint16 *b);   /* 0x010047B0 GUESS: name, see swv21brew.c */
 int FUN_01004848(int param_1,int param_2);
@@ -470,7 +472,7 @@ void FUN_0100bb68(int param_1);
 void swv_SpanFillGouraudAlpha(uint8 *raster);   /* 0x0100C7A0 GUESS: name, see swv21brew.c */
 void FUN_0100c92c(int param_1);
 void swv_RasterTriangle(uint8 *raster,uint8 *vertex0,uint8 *vertex1,uint8 *vertex2);   /* 0x0100CEF4 GUESS: name, see swv21brew.c */
-void swv_RasterTriangleSetup(int param_1);   /* 0x0100CF00 GUESS: name, see swv21brew.c */
+void swv_RasterTriangleSetup(uint8 *raster);   /* 0x0100CF00 GUESS: name, see swv21brew.c */
 int32 swvVertexArray_GetComponent(uint8 *array,int32 vertex,int32 component);   /* 0x0100E490 GUESS: name, see swv21brew.c */
 void FUN_0100e4e8(undefined4 *param_1);
 int FUN_0100e5b0(void);
@@ -1350,8 +1352,8 @@ void swvPolygonMode_GetShading(ISwerveObject *po,int32 *pShading);   /* 0x01037F
 void swvPolygonMode_GetWinding(ISwerveObject *po,int32 *pWinding);   /* 0x01037FE0 JSR-184 1.1, see swv21brew.c */
 void swvPolygonMode_IsTwoSidedLightingEnabled(ISwerveObject *po,uint8 *pEnabled);   /* 0x010380B0 JSR-184 1.1, see swv21brew.c */
 int32 swvPolygonMode_SetCulling(ISwerveObject *po,int32 culling);   /* 0x010380D0 JSR-184 1.1, see swv21brew.c */
-void swvPolygonMode_SetLocalCameraLightingEnable(int param_1,int param_2);   /* 0x01038148 JSR-184 1.1, see swv21brew.c */
-void swvPolygonMode_SetPerspectiveCorrectionEnable(int param_1,int param_2);   /* 0x01038160 JSR-184 1.1, see swv21brew.c */
+void swvPolygonMode_SetLocalCameraLightingEnable(ISwerveObject *po,int32 enable);   /* 0x01038148 JSR-184 1.1, see swv21brew.c */
+void swvPolygonMode_SetPerspectiveCorrectionEnable(ISwerveObject *po,int32 enable);   /* 0x01038160 JSR-184 1.1, see swv21brew.c */
 int32 swvPolygonMode_SetShading(ISwerveObject *po,int32 shading);   /* 0x01038178 JSR-184 1.1, see swv21brew.c */
 void swvPolygonMode_SetTwoSidedLightingEnable(ISwerveObject *po,int32 enable);   /* 0x010381F0 JSR-184 1.1, see swv21brew.c */
 int32 swvPolygonMode_SetWinding(ISwerveObject *po,int32 winding);   /* 0x01038208 JSR-184 1.1, see swv21brew.c */

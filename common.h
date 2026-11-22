@@ -51,6 +51,9 @@ typedef struct float64 {
    evaluated more than once, and the result is assigned high word first).
    MAKE_WORDS(result, h, l): result = h:l, and the expression's value is result (Ghidra's CONCAT44).
    MULTIPLY_WORDS(result, a, b): result = a * b, a and b 32-bit unsigned, from four 16 x 16 products.
+   MULTIPLY_SIGNED_WORDS(result, a, b): result = a * b, a and b 32-bit signed and result an int64 (ARM's
+   smull): the high word from the four 16 x 16 products as in MULTIPLY_WORDS, less b when a is negative
+   and a when b is.
    ADD_WORDS(result, a, b): result = a + b, the carry from the low word into the high (result may be a
    or b). SUBTRACT_WORDS(result, a, b): result = a - b, the same way. SUBTRACT_WORD(result, w): result =
    result - w, w a 32-bit word. SHIFT_LEFT_WORDS(result, a, n): result = a << n, 0 < n < 32 (result may
@@ -62,6 +65,15 @@ typedef struct float64 {
                    ((((a) & 0xffff) * ((b) & 0xffff) >> 16) + (((a) >> 16) * ((b) & 0xffff) & 0xffff) + \
                     (((a) & 0xffff) * ((b) >> 16) & 0xffff) >> 16), \
    (result).low = (a) * (b))
+#define MULTIPLY_SIGNED_WORDS(result,a,b) \
+  ((result).high = (int32)(((uint32)(a) >> 16) * ((uint32)(b) >> 16) + \
+                           ((((uint32)(a) >> 16) * ((uint32)(b) & 0xffff)) >> 16) + \
+                           ((((uint32)(a) & 0xffff) * ((uint32)(b) >> 16)) >> 16) + \
+                           (((((uint32)(a) & 0xffff) * ((uint32)(b) & 0xffff) >> 16) + \
+                             ((((uint32)(a) >> 16) * ((uint32)(b) & 0xffff)) & 0xffff) + \
+                             ((((uint32)(a) & 0xffff) * ((uint32)(b) >> 16)) & 0xffff)) >> 16) - \
+                           ((int32)(a) < 0 ? (uint32)(b) : 0) - ((int32)(b) < 0 ? (uint32)(a) : 0)), \
+   (result).low = (uint32)(a) * (uint32)(b))
 #define ADD_WORDS(result,a,b) \
   ((result).high = (a).high + (b).high + ((a).low + (b).low < (a).low), \
    (result).low = (a).low + (b).low)
