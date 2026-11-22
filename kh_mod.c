@@ -26552,20 +26552,23 @@ uint32 float_divide(uint32 a,uint32 b)
         if (!(control & 0x40000000))         /* exact */
           return result;
         second = 0;
-        other = shift;
+        other = shift & 0x80000000;          /* r3: the sign (0x00126ba8 `and r3, r3, #0x80000000`) */
       }
       else {
         *status |= 8;                        /* underflow */
+        other = lost;
         if (lost & 0x80000000) {             /* round to nearest: */
           if (lost << 1 != 0)
             result++;
-          else if (control & 0x80000000)     /* a tie: the multiply or divide rounded down */
-            result++;
-          else if (!(control & 0x40000000))  /* a tie on an exact result: to even */
-            result = (result + 1) & ~1u;
+          else {                             /* a tie; r3 = ~(ip asr 31) (0x00126bd4 `mvns`) */
+            other = control & 0x80000000 ? 0 : 0xffffffff;
+            if (control & 0x80000000)        /* the multiply or divide rounded down */
+              result++;
+            else if (!(control & 0x40000000))   /* an exact result: to even */
+              result = (result + 1) & ~1u;
+          }
         }
         second = lost << 1;
-        other = lost;
         control |= 0x40000000;
       }
     }
@@ -26780,7 +26783,8 @@ uint32 float_compare_less(uint32 a,uint32 b)
    kh_GetFpStatusPtr and calls the exception routine float_raise_exception for a trapped exception; a
    result below the normal range is rounded to a denormal (underflow and inexact) or flushed to zero.
    Verified against the binary under emulation (research_notes/soft_float_test, double_reference.py, kind
-ff). */ uint32 float_multiply(uint32 a,uint32 b)
+   ff). */
+uint32 float_multiply(uint32 a,uint32 b)
 
 {
   uint32 *status;
@@ -26909,20 +26913,23 @@ ff). */ uint32 float_multiply(uint32 a,uint32 b)
         if (!(control & 0x40000000))         /* exact */
           return result;
         second = 0;
-        other = shift;
+        other = shift & 0x80000000;          /* r3: the sign (0x00126ba8 `and r3, r3, #0x80000000`) */
       }
       else {
         *status |= 8;                        /* underflow */
+        other = lost;
         if (lost & 0x80000000) {             /* round to nearest: */
           if (lost << 1 != 0)
             result++;
-          else if (control & 0x80000000)     /* a tie: the multiply or divide rounded down */
-            result++;
-          else if (!(control & 0x40000000))  /* a tie on an exact result: to even */
-            result = (result + 1) & ~1u;
+          else {                             /* a tie; r3 = ~(ip asr 31) (0x00126bd4 `mvns`) */
+            other = control & 0x80000000 ? 0 : 0xffffffff;
+            if (control & 0x80000000)        /* the multiply or divide rounded down */
+              result++;
+            else if (!(control & 0x40000000))   /* an exact result: to even */
+              result = (result + 1) & ~1u;
+          }
         }
         second = lost << 1;
-        other = lost;
         control |= 0x40000000;
       }
     }

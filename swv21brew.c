@@ -61631,9 +61631,8 @@ uint32 swv_frdiv(uint32 a,uint32 b)
    below the normal range: the library's underflow code (0x0103f77c, shared with swv_fmul and written
    inline: flush to zero, the trapped underflow, or the result rounded to a denormal with the underflow and
    inexact flags) and its exception code (0x0103ed1c). Where that underflow code goes on to a trapped
-   inexact, kh_mod.c's copy hands the trap the shift (the binary: only its sign, `and r3, r3, #0x80000000`)
-   for an exact denormal and the lost bits (the binary: ~(ip asr 31), `mvns r3, r2, asr #31`) for a tie;
-   written here as the binary does. Soft-float library (region 0x0103ED00-0x0103F900,
+   inexact, the trap gets r3 = the sign (`and r3, r3, #0x80000000`) for an exact denormal and ~(ip asr 31)
+   (`mvns r3, r2, asr #31`) for a tie. Soft-float library (region 0x0103ED00-0x0103F900,
    tools/profile_state.py). The same code, word for word apart from the branch and call offsets, as
    kh.mod's float_divide (0x00126618; kh_mod.c), from which this rewrite is taken. Evidence: 0x0103f250 -
    0x0103f41c (`ands r2, r12, r0, lsr #7` / `andsne r3, r12, r1, lsr #7` the special exponents, `ldrb lr,
@@ -62120,21 +62119,20 @@ uint32 swv_fcmp_c(uint32 a,uint32 b)
    FUN_010019e0 and results below the normal range: the library's underflow code (0x0103f77c, shared with
    swv_fdiv and written inline: flush to zero, the trapped underflow, or the result rounded to a denormal
    with the underflow and inexact flags) and its exception code (0x0103ed1c). Where that underflow code
-   goes on to a trapped inexact, kh_mod.c's copy hands the trap the shift (the binary: only its sign, `and
-   r3, r3, #0x80000000`) for an exact denormal and the lost bits (the binary: ~(ip asr 31), `mvns r3, r2,
-   asr #31`) for a tie; written here as the binary does. Soft-float library (region 0x0103ED00-0x0103F900,
-   tools/profile_state.py). The same code, word for word apart from the branch and call offsets, as
-   kh.mod's float_multiply (0x001269CC; kh_mod.c), from which this rewrite is taken. Evidence: 0x0103f604 -
-   0x0103f8e4 (`ands r2, r12, r0, lsr #7` / `andsne r3, r12, r1, lsr #7` / `teqne` the special exponents,
-   `umull`, `adc r0, r3, r2, lsl #0x17` the rounding, `cmp r2, #0xfc0000` overflow / underflow, `bl
-   swv_GetFpStatusPtr` at 0x0103f784, `b 0x0103ed1c`). Verified against the binary under emulation
-   (unicorn; swv_GetFpStatusPtr and the trap handler stubbed): 1,378,408 cases (all pairs of 99 special
-   values under 4 status words, then random words, nearly equal and few-bit operands, every trap enable,
-   flush to zero), the result, the status word and the trap handler's arguments and the swv_GetFpStatusPtr
-   calls the same, 0 mismatches. Against the host's IEEE single multiply (numpy, status word 0): no
-   difference but in the bits of some NaN results: for a signalling NaN operand or an invalid operation the
-   fplib gives the default NaN 0x7FC00000 with an operand's sign, where x86 quietens the signalling NaN or
-   gives 0xFFC00000 (quiet NaN operands: the same). */
+   goes on to a trapped inexact, the trap gets r3 = the sign (`and r3, r3, #0x80000000`) for an exact
+   denormal and ~(ip asr 31) (`mvns r3, r2, asr #31`) for a tie. Soft-float library (region
+   0x0103ED00-0x0103F900, tools/profile_state.py). The same code, word for word apart from the branch and
+   call offsets, as kh.mod's float_multiply (0x001269CC; kh_mod.c), from which this rewrite is taken.
+   Evidence: 0x0103f604 - 0x0103f8e4 (`ands r2, r12, r0, lsr #7` / `andsne r3, r12, r1, lsr #7` / `teqne`
+   the special exponents, `umull`, `adc r0, r3, r2, lsl #0x17` the rounding, `cmp r2, #0xfc0000` overflow /
+   underflow, `bl swv_GetFpStatusPtr` at 0x0103f784, `b 0x0103ed1c`). Verified against the binary under
+   emulation (unicorn; swv_GetFpStatusPtr and the trap handler stubbed): 1,378,408 cases (all pairs of 99
+   special values under 4 status words, then random words, nearly equal and few-bit operands, every trap
+   enable, flush to zero), the result, the status word and the trap handler's arguments and the
+   swv_GetFpStatusPtr calls the same, 0 mismatches. Against the host's IEEE single multiply (numpy, status
+   word 0): no difference but in the bits of some NaN results: for a signalling NaN operand or an invalid
+   operation the fplib gives the default NaN 0x7FC00000 with an operand's sign, where x86 quietens the
+   signalling NaN or gives 0xFFC00000 (quiet NaN operands: the same). */
 uint32 swv_fmul(uint32 a,uint32 b)
 
 {
