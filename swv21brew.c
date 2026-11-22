@@ -2694,9 +2694,9 @@ int32 debug_write_char(char character)
   return software_interrupt(0x123456);
 }
 
-/* ==== 0x01002894  (file offset 0x02894)  hand-written (no Ghidra function) =========================== */
+/* ==== 0x01002894  (file offset 0x02894)  AEEClsCreateInstance ======================================== */
 /* Default class factory, reached from AEEMod_CreateInstance when pfnModCrInst is NULL. Ghidra
-   merged it into AEEMod_CreateInstance's body. Literal 0x010028c4 = 0x0102bbfc (AEECLSID_SWERVE).
+   had merged it into AEEMod_CreateInstance's body. Literal 0x010028c4 = 0x0102bbfc (AEECLSID_SWERVE).
    Same SDK code as kh.mod's (AEEModGen.c), with the class factory swapped for swv_NewSwerve. */
 int AEEClsCreateInstance(AEECLSID ClsId, IShell *pIShell, IModule *po, void **ppObj)
 {
@@ -2723,13 +2723,13 @@ uint32 AEEMod_AddRef(IModule *po)
 /* ==== 0x010028DC  (file offset 0x028DC)  AEEMod_CreateInstance ======================================= */
 /* AEEMod_CreateInstance - IModule vtbl[2]. Called by khvcemu with clsid 0x0102bbfc (runtime.py:286). When
    the module's pfnModCrInst (AEEMod +0xC) is set, a tail jump to it, else (it is NULL here) a tail jump to
-   AEEClsCreateInstance (0x01002894, merged into this body by Ghidra): if ClsId == 0x0102bbfc (literal
-   0x010028c4) -> swv_NewSwerve(0x10, pIShell, po, ppObj); else *ppObj = 0, returns 1. Both get (ClsId,
-   pIShell, po, ppObj), PFNMODCREATEINST's order (Ghidra had dropped the arguments of the pfnModCrInst
-   call). The trailing `bx lr` at 0x0100290c is AEEMod_FreeResources (IModule vtbl[3]). Name/prototype from
-   the BREW SDK generic module code (AEEModGen.c): the code layout matches it (same stub as kh.mod).
-   Evidence: 0x010028dc - 0x01002908 (`mov lr, r2` / `mov r0, lr` ClsId, `mov r2, r0` po, `ldr r12, [r0,
-   #0xc]` / `cmp r12, #0`, `beq 0x01002894`, `bxne r12`). */
+   AEEClsCreateInstance (0x01002894, which Ghidra had merged into this body): if ClsId == 0x0102bbfc
+   (literal 0x010028c4) -> swv_NewSwerve(0x10, pIShell, po, ppObj); else *ppObj = 0, returns 1. Both get
+   (ClsId, pIShell, po, ppObj), PFNMODCREATEINST's order (Ghidra had dropped the arguments of the
+   pfnModCrInst call). The trailing `bx lr` at 0x0100290c is AEEMod_FreeResources (IModule vtbl[3]).
+   Name/prototype from the BREW SDK generic module code (AEEModGen.c): the code layout matches it (same
+   stub as kh.mod). Evidence: 0x010028dc - 0x01002908 (`mov lr, r2` / `mov r0, lr` ClsId, `mov r2, r0` po,
+   `ldr r12, [r0, #0xc]` / `cmp r12, #0`, `beq 0x01002894`, `bxne r12`). */
 int AEEMod_CreateInstance(IModule *po,IShell *pIShell,AEECLSID ClsId,void **ppObj)
 
 {
@@ -2743,8 +2743,8 @@ int AEEMod_CreateInstance(IModule *po,IShell *pIShell,AEECLSID ClsId,void **ppOb
   return result;
 }
 
-/* ==== 0x0100290C  (file offset 0x0290C)  hand-written (no Ghidra function) =========================== */
-/* IModule vtbl[3]. Disassembly: bx lr (inside Ghidra's AEEMod_CreateInstance body). */
+/* ==== 0x0100290C  (file offset 0x0290C)  AEEMod_FreeResources ======================================== */
+/* IModule vtbl[3]. Disassembly: bx lr (Ghidra had merged it into AEEMod_CreateInstance's body). */
 void AEEMod_FreeResources(IModule *po, IHeap *ph, IFileMgr *pfm)
 {
 }
