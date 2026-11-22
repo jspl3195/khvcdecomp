@@ -327,8 +327,11 @@ typedef struct SwvKeyframeSequence {
     uint32   field_00[7];    /* +0x00 .. +0x1b not identified */
     int32    interpolation;  /* +0x1c 0xb0 .. 0xb4 */
     int32    repeatMode;     /* +0x20 0xc0 CONSTANT, 0xc1 LOOP */
-    uint32   duration;       /* +0x24 float bits; must be above 0 */
-    int32    field_28;       /* +0x28 an int (swvKeyframeSequence_Sample uses it - 1) */
+    uint32   duration;       /* +0x24 the duration as float bits (swv_fflt of +0x28); must be above 0 */
+    int32    durationInt;    /* +0x28 the duration, an int: the M3G file's UInt32
+                                (swvM3G_ReadKeyframeSequence) and what JSR-184 1.1,
+                                KeyframeSequence.getDuration returns (slot 19, 0x01032ac0);
+                                swvKeyframeSequence_Sample uses it - 1 */
     int32    validFirst;     /* +0x2c the valid range (setValidRange); first > last: it wraps, and the
                                 wrapped keyframes 0 .. last are numbered keyframeCount + i
                                 (swvKeyframeSequence_PreviousValid / NextValid) */

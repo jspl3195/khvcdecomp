@@ -15015,7 +15015,7 @@ uint8 *swvMesh_VertexBuffer(const uint8 *mesh)
    remainder of swv_rt_sdiv), firstTime and lastTime their times. In LOOP mode (0xc1) the time wraps by the
    duration (time - (float)(int)(time / duration) * duration, plus the duration when below 0); otherwise
    before firstTime it is clamped there (valid for firstTime - time), at or after the duration it becomes
-   +0x28 - 1 (GUESS: +0x28 an int duration), and after lastTime it is clamped there (valid for ever,
+   +0x28 - 1 (+0x28 the int duration), and after lastTime it is clamped there (valid for ever,
    0x7f7fffff, the largest float). With a single valid keyframe its value is taken (valid for ever). Inside
    [firstTime, lastTime) the keyframe before the time is searched for and s = (time - its time) / (the next
    one's - its); outside it, in LOOP mode, the segment from the last to the first keyframe across the wrap
@@ -15108,7 +15108,7 @@ uint32 swvKeyframeSequence_Sample(SwvKeyframeSequence *sequence,uint32 time,int3
   }
   else {
     if ((swv_fcmp_b(time,sequence->duration), FLOAT_GE(time,sequence->duration)))
-      time = swv_fflt(sequence->field_28 - 1);
+      time = swv_fflt(sequence->durationInt - 1);
     if ((swv_fcmp_b(time,lastTime), FLOAT_GT(time,lastTime))) {
       validity = WORD_HEXADECIMAL_7F7FFFFF;
       time = lastTime;
@@ -26886,10 +26886,10 @@ void swvM3G_ReadKeyframeSequence(SwvKeyframeSequence *sequence,uint8 *stream)
   encoding = FUN_01019640((int32)stream);
   if (encoding > 2)
     FUN_0102f7e0(INTEGER_MINUS_1202);
-  sequence->field_28 = FUN_01019abc((int32)stream);
-  if (sequence->field_28 <= 0)
+  sequence->durationInt = FUN_01019abc((int32)stream);
+  if (sequence->durationInt <= 0)
     FUN_0102f7e0(INTEGER_MINUS_1202);
-  sequence->duration = swv_fflt(sequence->field_28);
+  sequence->duration = swv_fflt(sequence->durationInt);
   validFirst = FUN_01019abc((int32)stream);
   validLast = FUN_01019abc((int32)stream);
   sequence->componentCount = FUN_01019abc((int32)stream);
