@@ -33712,9 +33712,10 @@ int32 swvBackground_GetType(const uint8 *object)
 }
 
 /* ==== 0x01026140  (file offset 0x26140)  swvGraphics3D_GetType ======================================= */
-/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01002034 (`sub
-   r0, r0, #4` / `b`), slot +0x4 of the Graphics3D's second engine vtable 0x01002024 (the object's +4; its
-   first, 0x0100201C: the destructor 0x01029FF8, slot +0x4 swvGraphics3D_GetType; the tables stored by
+/* A routine Ghidra has no function for, reached only through the Graphics3D's engine vtables: slot +0x4
+   of its first, 0x0100201C, directly (where the other classes have their M3G record reader: the
+   Graphics3D has none; slot +0x0 the destructor 0x01029FF8), and the this-adjusting thunk at 0x01002034
+   (`sub r0, r0, #4` / `b`), slot +0x4 of its second, 0x01002024 (the object's +4; the tables stored by
    FUN_01027eec); written from its disassembly (0x01026140 - 0x01026144). GUESS: name. The Graphics3D's
    getType: returns 25 (SWVT_GRAPHICS3D, SwerveObjectType; one of Swerve's own types). object is not read.
    Evidence: `mov r0, #0x19` / `bx lr`. */

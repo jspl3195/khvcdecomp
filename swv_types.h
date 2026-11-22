@@ -642,7 +642,8 @@ typedef struct SwvRect {
  * engine object, the scene objects too, has two, one after the other:
  *   the first, at the object's +0: +0x0 the destructor (the object, deleting), +0x4 the M3G record reader
  *   (the object, the stream: swvM3G_Read*; the abstract bases' 0x01000128, the pure virtual trap,
- *   raise_signal_and_exit with 12, GUESS SIGPVFN; the RayIntersection's empty, it has no record);
+ *   raise_signal_and_exit with 12, GUESS SIGPVFN; the RayIntersection's empty, it has no record;
+ *   the Graphics3D's is its getType, swvGraphics3D_GetType, called directly);
  *   the second, 8 bytes on, at the object's +4: +0x0 and +0x4 thunks (sub r0, r0, #4 / b) to the
  *   destructor and to getType (swv<Class>_GetType, 0x01026100 - 0x010261ec, the SwerveObjectType), then
  *   the class's other methods.
