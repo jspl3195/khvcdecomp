@@ -17661,7 +17661,10 @@ void FUN_01013c58(int param_1,int param_2,int *param_3,int param_4)
    (param_1, 0x90 bytes; swvLight_Shade's own routine at +0, set by FUN_01012908 from the JSR-184 mode)
    to the vertex colour param_2: like FUN_0101411c, with the distance attenuation (+0x5c .. +0x64:
    constant, linear, quadratic, Light.setAttenuation's order; FUN_0102f080) in the factor
-   (swv_ColourScale); the specular term, FUN_01013c58, when +8 is set. */
+   (swv_ColourScale); the specular term, FUN_01013c58, when +8 is set. The distance is the d of JSR-184
+   1.1, Light.setAttenuation (1 / (c + l d + q d^2), d the distance between the light and the vertex):
+   the vertex-to-light vector scaled down (swv_Vec3ScaleDown), its length (swv_FixedSqrt of the sum of
+   squares) shifted back; no light for a distance below 6. */
 void FUN_01013e88(int param_1,int param_2)
 
 {
@@ -17718,11 +17721,11 @@ void FUN_01013e88(int param_1,int param_2)
   if (iVar2 < 1) {
     return;
   }
-  uVar4 = FUN_01017894(&iStack_38);
+  uVar4 = (uint)swv_Vec3ScaleDown(&iStack_38);
   lVar1 = (longlong)iStack_38 * (longlong)iStack_38 + (longlong)iStack_34 * (longlong)iStack_34 +
           (longlong)iStack_30 * (longlong)iStack_30;
   iVar3 = (int)((ulonglong)lVar1 >> 0x20);
-  iVar3 = FUN_0102f240((uint)lVar1 >> 0x10 | iVar3 * 0x10000,iVar3 >> 0x10);
+  iVar3 = (int)swv_FixedSqrt((uint)lVar1 >> 0x10 | iVar3 * 0x10000).low;
   iVar3 = iVar3 << (uVar4 & 0xff);
   if (iVar3 < 6) {
     return;
@@ -17817,7 +17820,10 @@ void FUN_0101411c(int param_1,int param_2)
    (param_1, 0x90 bytes; swvLight_Shade's own routine at +0, set by FUN_01012908 from the JSR-184 mode)
    to the vertex colour param_2: like FUN_01013e88, with the spot cone (+0x54 its angle's cosine, +0x58
    its exponent; set from the Light's +0x9c / +0xa0, spotAngle and spotExponent in the order of M3G file
-   format 11.13) in the factor (swv_ColourScale); the specular term, FUN_01013c58, when +8 is set. */
+   format 11.13) in the factor (swv_ColourScale); the specular term, FUN_01013c58, when +8 is set. The
+   distance is the d of JSR-184 1.1, Light.setAttenuation (1 / (c + l d + q d^2), d the distance between
+   the light and the vertex): the vector between them scaled down (swv_Vec3ScaleDown), its length
+   (swv_FixedSqrt of the sum of squares) shifted back; no light when the scaled length is below 2. */
 void FUN_0101420c(int param_1,int param_2)
 
 {
@@ -17877,11 +17883,11 @@ void FUN_0101420c(int param_1,int param_2)
     return;
   }
   iVar4 = FUN_0102c868(&iStack_3c,param_1 + 0x1c);
-  uVar5 = FUN_01017894(&iStack_3c);
+  uVar5 = (uint)swv_Vec3ScaleDown(&iStack_3c);
   lVar1 = (longlong)iStack_3c * (longlong)iStack_3c + (longlong)iStack_38 * (longlong)iStack_38 +
           (longlong)iStack_34 * (longlong)iStack_34;
   iVar3 = (int)((ulonglong)lVar1 >> 0x20);
-  iVar3 = FUN_0102f240((uint)lVar1 >> 0x10 | iVar3 * 0x10000,iVar3 >> 0x10);
+  iVar3 = (int)swv_FixedSqrt((uint)lVar1 >> 0x10 | iVar3 * 0x10000).low;
   if (iVar3 < 2) {
     return;
   }
@@ -20584,45 +20590,38 @@ void FUN_01017840(int *param_1,undefined4 param_2)
   return;
 }
 
-/* ==== 0x01017894  (file offset 0x17894)  FUN_01017894 ================================================ */
-void FUN_01017894(uint *param_1)
+/* ==== 0x01017894  (file offset 0x17894)  swv_Vec3ScaleDown =========================================== */
+/* GUESS: name. Scales the 16.16 fixed-point 3-vector vector down so that its squared length does not
+   overflow: when the largest magnitude (the absolute values of x, y, z or'ed together) is above
+   0x400000 (64.0), it is shifted right two bits at a time until it is not, and each component is
+   shifted (arithmetic) by that many bits. Returns the shift (0 when nothing changed; an even number), by
+   which the caller scales the length back (Ghidra had made it void). An INT_MIN component (its absolute
+   value still negative, the compare signed) leaves the vector as it is. The two light terms with an
+   attenuation, OMNI and SPOT (FUN_01013e88, FUN_0101420c), use it on the light-to-vertex vector, whose
+   length (swv_FixedSqrt of the sum of squares, shifted back) is the distance d of JSR-184 1.1,
+   Light.setAttenuation (1 / (c + l d + q d^2)); the range limit and the shift are engine behaviour
+   (GUESS). Evidence: 0x01017894 - 0x01017908 (`cmp r1, #0` / `rsblt r1, r1, #0` for each, the two
+   `orr`, `cmp r1, #0x400000` / `mov r0, #0` / `pople {pc}`, the loop `asr r1, r1, #2` / `add r0, r0, #2` /
+   `bgt`, the three `asr` by r0 and `str`, `pop {pc}` with r0 the shift). */
+int32 swv_Vec3ScaleDown(int32 *vector)
 
 {
-  uint uVar1;
-  uint uVar2;
-  uint uVar3;
-  uint uVar4;
-  uint uVar5;
-  uint uVar6;
-  
-  uVar5 = *param_1;
-  uVar1 = param_1[1];
-  uVar4 = uVar5;
-  if ((int)uVar5 < 0) {
-    uVar4 = -uVar5;
+  int32 x = vector[0];
+  int32 y = vector[1];
+  int32 z = vector[2];
+  int32 magnitude = (x < 0 ? -x : x) | (y < 0 ? -y : y) | (z < 0 ? -z : z);
+  int32 shift = 0;
+
+  if (magnitude > 0x400000) {
+    do {
+      magnitude >>= 2;
+      shift += 2;
+    } while (magnitude > 0x400000);
+    vector[0] = x >> shift;
+    vector[1] = y >> shift;
+    vector[2] = z >> shift;
   }
-  uVar2 = uVar1;
-  if ((int)uVar1 < 0) {
-    uVar2 = -uVar1;
-  }
-  uVar3 = param_1[2];
-  uVar6 = uVar3;
-  if ((int)uVar3 < 0) {
-    uVar6 = -uVar3;
-  }
-  uVar6 = uVar6 | uVar2 | uVar4;
-  uVar4 = 0;
-  if ((int)uVar6 < 0x400001) {
-    return;
-  }
-  do {
-    uVar6 = (int)uVar6 >> 2;
-    uVar4 = uVar4 + 2;
-  } while (0x400000 < (int)uVar6);
-  *param_1 = (int)uVar5 >> (uVar4 & 0xff);
-  param_1[1] = (int)uVar1 >> (uVar4 & 0xff);
-  param_1[2] = (int)uVar3 >> (uVar4 & 0xff);
-  return;
+  return shift;
 }
 
 /* ==== 0x0101790C  (file offset 0x1790C)  swvSkin_BuildBoneSets ======================================= */
@@ -21620,10 +21619,9 @@ LAB_01018ec8:
               local_154 = (uVar9 - (iVar6 >> 1)) * local_124;
               local_158 = (uVar14 - (local_bc >> 1)) * local_128;
               lVar1 = (longlong)local_158 * (longlong)local_158 >> 0x10;
-              iVar10 = FUN_0102f240(((uint)((longlong)local_154 * (longlong)local_154) >> 0x10 |
+              iVar10 = (int)swv_FixedSqrt(((uint)((longlong)local_154 * (longlong)local_154) >> 0x10 |
                                     (int)((ulonglong)((longlong)local_154 * (longlong)local_154) >>
-                                         0x20) << 0x10) + (int)lVar1,(int)((ulonglong)lVar1 >> 0x20)
-                                   );
+                                         0x20) << 0x10) + (int)lVar1).low;
               local_108[9] = iVar10 + (iVar10 >> 0x10) * -0x10000;
               iVar10 = (iVar10 >> 0x10) + 1;
               uVar17 = (iVar6 >> 1) - (iVar10 << (*(uint *)(param_1 + 0x68) & 0xff));
@@ -21699,10 +21697,9 @@ LAB_010190c8:
             }
             if ((uVar16 & 0x100) != 0) {
               lVar1 = (longlong)(int)uVar14 * (longlong)(int)uVar14 >> 0x10;
-              uVar5 = FUN_0102f240(((uint)((longlong)(int)uVar9 * (longlong)(int)uVar9) >> 0x10 |
+              uVar5 = swv_FixedSqrt(((uint)((longlong)(int)uVar9 * (longlong)(int)uVar9) >> 0x10 |
                                    (int)((ulonglong)((longlong)(int)uVar9 * (longlong)(int)uVar9) >>
-                                        0x20) << 0x10) + (int)lVar1,(int)((ulonglong)lVar1 >> 0x20))
-              ;
+                                        0x20) << 0x10) + (int)lVar1).low;
               uVar19 = ll_mul_int(INTEGER_46341,INTEGER_0,uVar5);
               local_108[8] = (uVar19.low >> 16 | (uint32)uVar19.high << 16);
             }
@@ -26462,10 +26459,9 @@ LAB_01018ec8:
               iStack_154 = (uVar16 - (iVar5 >> 1)) * iStack_124;
               iStack_158 = (uVar17 - (iStack_bc >> 1)) * iStack_128;
               lVar1 = (longlong)iStack_158 * (longlong)iStack_158 >> 0x10;
-              iVar12 = FUN_0102f240(((uint)((longlong)iStack_154 * (longlong)iStack_154) >> 0x10 |
-                                    (int)((ulonglong)((longlong)iStack_154 * (longlong)iStack_154)
-                                         >> 0x20) << 0x10) + (int)lVar1,
-                                    (int)((ulonglong)lVar1 >> 0x20));
+              iVar12 = (int)swv_FixedSqrt(((uint)((longlong)iStack_154 * (longlong)iStack_154) >>
+                                    0x10 | (int)((ulonglong)((longlong)iStack_154 *
+                                    (longlong)iStack_154) >> 0x20) << 0x10) + (int)lVar1).low;
               aiStack_108[9] = iVar12 + (iVar12 >> 0x10) * -0x10000;
               iVar12 = (iVar12 >> 0x10) + 1;
               uVar19 = (iVar5 >> 1) - (iVar12 << (*(uint *)(param_1 + 0x68) & 0xff));
@@ -26543,10 +26539,9 @@ LAB_010190c8:
             }
             if ((uVar11 & 0x100) != 0) {
               lVar1 = (longlong)(int)uVar17 * (longlong)(int)uVar17 >> 0x10;
-              uVar8 = FUN_0102f240(((uint)((longlong)(int)uVar16 * (longlong)(int)uVar16) >> 0x10 |
+              uVar8 = swv_FixedSqrt(((uint)((longlong)(int)uVar16 * (longlong)(int)uVar16) >> 0x10 |
                                    (int)((ulonglong)((longlong)(int)uVar16 * (longlong)(int)uVar16)
-                                        >> 0x20) << 0x10) + (int)lVar1,
-                                   (int)((ulonglong)lVar1 >> 0x20));
+                                        >> 0x20) << 0x10) + (int)lVar1).low;
               uVar21 = ll_mul_int(INTEGER_46341,INTEGER_0,uVar8);
               aiStack_108[8] = (uVar21.low >> 16 | (uint32)uVar21.high << 16);
             }
@@ -33976,7 +33971,7 @@ void FUN_01026468(uint *param_1)
           (longlong)(int)param_1[1] * (longlong)(int)param_1[1] +
           (longlong)(int)param_1[2] * (longlong)(int)param_1[2];
   iVar2 = (int)((ulonglong)lVar1 >> 0x20);
-  iVar2 = FUN_0102f088((uint)lVar1 >> 0x10 | iVar2 * 0x10000,iVar2 >> 0x10);
+  iVar2 = (int)swv_FixedInvSqrt((uint)lVar1 >> 0x10 | iVar2 * 0x10000);
   *param_1 = (uint)((longlong)iVar2 * (longlong)(int)*param_1) >> 0x10 |
              (int)((ulonglong)((longlong)iVar2 * (longlong)(int)*param_1) >> 0x20) << 0x10;
   param_1[1] = (uint)((longlong)iVar2 * (longlong)(int)param_1[1]) >> 0x10 |
@@ -41860,8 +41855,17 @@ int FUN_0102f080(int param_1)
   return iVar1;
 }
 
-/* ==== 0x0102F088  (file offset 0x2F088)  FUN_0102f088 ================================================ */
-ulonglong FUN_0102f088(uint param_1)
+/* ==== 0x0102F088  (file offset 0x2F088)  swv_FixedInvSqrt ============================================ */
+/* GUESS (not yet rewritten): name. The inverse square root of the unsigned 16.16 fixed-point value
+   param_1 (1 / sqrt(x), in 16.16): 0x7fffffff for 0, 0x1000000 (256.0) for 1 and 0xb504f3 (256 /
+   sqrt(2)) for 2, the smallest values; otherwise param_1 is normalised (shifted left 16, 8, 4, 2 bits
+   while small, the shift counted), a first estimate made from it (0xa0000000 less the normalised value,
+   times 1.5, when it is below 0x40000000, less half of it otherwise, shifted right by 22 less half the
+   shift), then two Newton-Raphson steps y = y * (3 - x * y * y) / 2 (0x30000 is 3.0), the products in
+   one of two orders by the estimate's size (compared with 0x199a, 0.1: `subs ip, r4, #0x1900` / `subsge
+   ip, ip, #0x9a`). Returns the 64-bit last product shifted right 16 (r0:r1; its callers read r0). Called
+   by swv_FixedSqrt and FUN_01026468. */
+ulonglong swv_FixedInvSqrt(uint param_1)
 
 {
   longlong lVar1;
@@ -41944,14 +41948,25 @@ ulonglong FUN_0102f088(uint param_1)
          (longlong)(int)uVar3 >> 0x10;
 }
 
-/* ==== 0x0102F240  (file offset 0x2F240)  FUN_0102f240 ================================================ */
-longlong FUN_0102f240(int param_1)
+/* ==== 0x0102F240  (file offset 0x2F240)  swv_FixedSqrt =============================================== */
+/* GUESS: name. The square root of the 16.16 fixed-point value value: value times its inverse square root
+   (swv_FixedInvSqrt), the 64-bit product shifted right 16 (arithmetic), all 64 bits returned (r0:r1;
+   the callers read the low word). Ghidra had read r1 as a second, high argument word (the callers pass
+   a sum of squares that way; swv_FixedInvSqrt sets r1 before it is read). Called by the OMNI and SPOT
+   light terms (FUN_01013e88, FUN_0101420c, the distance d after swv_Vec3ScaleDown), FUN_01018460 and
+   FUN_0101e534 (twice each). Evidence: 0x0102f240 - 0x0102f260 (`mov r4, r0` / `bl 0x0102f088`, `smull
+   ip, r1, r0, r4`, `lsr r0, ip, #0x10` / `orr r0, r0, r1, lsl #16`, `asr r1, r1, #0x10`). */
+int64 swv_FixedSqrt(int32 value)
 
 {
-  int iVar1;
-  
-  iVar1 = FUN_0102f088();
-  return (longlong)iVar1 * (longlong)param_1 >> 0x10;
+  int32 inverse = (int32)swv_FixedInvSqrt((uint)value);
+  int64 product;
+  int64 result;
+
+  MULTIPLY_SIGNED_WORDS(product,inverse,value);
+  result.low = product.low >> 16 | (uint32)product.high << 16;
+  result.high = product.high >> 16;
+  return result;
 }
 
 /* ==== 0x0102F264  (file offset 0x2F264)  FUN_0102f264 ================================================ */

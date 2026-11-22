@@ -689,7 +689,7 @@ void FUN_010172d4(int param_1);
 void FUN_010172fc(undefined4 *param_1,uint *param_2);
 undefined4 * FUN_0101749c(undefined4 *param_1,undefined4 *param_2);
 void FUN_01017840(int *param_1,undefined4 param_2);
-void FUN_01017894(uint *param_1);
+int32 swv_Vec3ScaleDown(int32 *vector);   /* 0x01017894 GUESS: name, see swv21brew.c */
 void swvSkin_BuildBoneSets(uint8 *mesh);   /* 0x0101790C GUESS: name, see swv21brew.c */
 bool FUN_01017b00(int param_1);
 int FUN_01017bc4(int param_1);
@@ -1155,8 +1155,8 @@ int FUN_0102edb4(int param_1);
 int FUN_0102edc0(uint param_1,uint param_2,undefined4 param_3,undefined4 param_4);
 int FUN_0102ee88(uint param_1);
 int FUN_0102f080(int param_1);
-ulonglong FUN_0102f088(uint param_1);
-longlong FUN_0102f240(int param_1);
+ulonglong swv_FixedInvSqrt(uint param_1);   /* 0x0102F088 GUESS: name, see swv21brew.c */
+int64 swv_FixedSqrt(int32 value);   /* 0x0102F240 GUESS: name, see swv21brew.c */
 uint FUN_0102f264(undefined4 param_1);
 uint FUN_0102f3e4(int param_1);
 int FUN_0102f468(int param_1,int param_2);
