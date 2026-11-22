@@ -297,6 +297,12 @@ SwvSkinBoneSet * swvSkin_CopyBoneSet(SwvSkinBoneSet *destination,const SwvSkinBo
 void swvPolygonMode_SetLocalCameraLightingValue(uint8 *mode,int32 enable);   /* 0x0100E4B8 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
 void swvPolygonMode_SetPerspectiveCorrectionValue(uint8 *mode,int32 enable);   /* 0x0100E4D0 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
 int32 swv_rt_div0(void);   /* 0x01000C44 GUESS: name (ARM's __rt_div0), hand-written (no Ghidra function), see swv21brew.c */
+void swvM3G_ReadMorphingMesh(uint8 *mesh,uint8 *stream);   /* 0x0101EAFC GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
+void swvM3G_ReadVertexBuffer(uint8 *buffer,uint8 *stream);   /* 0x0101EBC8 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
+void swvM3G_ReadCompositingMode(uint8 *mode,uint8 *stream);   /* 0x0101F024 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
+void swvM3G_ReadAnimationController(uint8 *controller,uint8 *stream);   /* 0x0101F640 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
+void swvM3G_ReadFog(uint8 *fog,uint8 *stream);   /* 0x0101F6C4 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
+void swvM3G_ReadExternalReference(uint8 *reference,uint8 *stream);   /* 0x0101F998 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
 
 /* Not yet identified (auto-named by Ghidra). */
 int64 ll_mul_int(uint32 aLow,int32 aHigh,int32 b);   /* 0x01000028 GUESS: name, see swv21brew.c */

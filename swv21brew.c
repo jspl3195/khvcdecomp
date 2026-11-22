@@ -9062,7 +9062,10 @@ void FUN_01009860(int param_1)
   if (param_1 < 0x1d) {
                     /* WARNING: Could not recover jumptable at 0x01009888. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-    /* a jump through the table at FUN_0102ecec()'s global (not identified) */
+    /* a jump through the factory table at FUN_0102ecec()'s global (field 0; 0x7c bytes, made by
+       FUN_010098fc, filled by FUN_0102f514 / FUN_0102f774 through FUN_01019f00): the type's "new"
+       routine (e.g. FUN_0100eac8, AnimationController), whose object's engine vtable slot +0x4 is
+       its M3G reader (swvM3G_Read<Class>) */
     (**(code **)(*piVar1 + param_1 * 4 + 4))();
     return;
   }
@@ -9071,7 +9074,8 @@ void FUN_01009860(int param_1)
   }
                     /* WARNING: Could not recover jumptable at 0x0100989c. Too many branches */
                     /* WARNING: Treating indirect jump as call */
-  /* a jump through the table at FUN_0102ecec()'s global (not identified) */
+  /* a jump through the factory table's +0x78 entry, type 255: FUN_0100eb34, the External Reference
+     (its reader swvM3G_ReadExternalReference) */
   (**(code **)(*piVar1 + 0x78))();
   return;
 }
@@ -20717,8 +20721,10 @@ LAB_01017c08:
       FUN_0100412c(param_1 + 0xa0,&local_a0);
       piVar4 = (int *)FUN_01038760(&local_9c);
       FUN_0100400c(param_1 + 0xb0,DATA_AT_01040138_OFFSET_2 + 0x1017c90);
-      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
-         the object's class) */
+      /* engine virtual call, slot +0x4: the class's M3G record reader, given the record stream +0x7c
+         (swvM3G_Read<Class> by ObjectType 1 .. 22: e.g. swvM3G_ReadAnimationController, vtable
+         0x0100248C; swvM3G_ReadCompositingMode, 0x010022EC; swvM3G_ReadFog, 0x01002678;
+         swvM3G_ReadMorphingMesh, 0x010021C4; swvM3G_ReadVertexBuffer, 0x01002210) */
       (*(code *)(*(int *)(*piVar4 + 4) + *piVar4))(piVar4,param_1 + 0x7c);
       FUN_0102bb44(&local_9c,0);
       swv_TryPop();
@@ -20758,8 +20764,8 @@ bool FUN_01017ccc(int param_1)
       FUN_0100412c(param_1 + 0xa0,&local_a0);
       piVar3 = (int *)FUN_01038760(&local_9c);
       FUN_0100400c(param_1 + 0xb0,DATA_AT_01040138_OFFSET_3 + 0x1017d70);
-      /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by
-         the object's class) */
+      /* engine virtual call, slot +0x4: the External Reference's M3G record reader,
+         swvM3G_ReadExternalReference (vtable 0x0100272C), given the record stream +0x7c */
       (*(code *)(*(int *)(*piVar3 + 4) + *piVar3))(piVar3,param_1 + 0x7c);
       local_a0 = *(int *)(param_1 + 0xa8) + -1;
       FUN_0100406c(param_1 + 0xd0,&local_a0);
@@ -26738,6 +26744,149 @@ void swvM3G_ReadHeader(uint8 *header,uint8 *stream)
   FUN_01019afc((int32)stream,(uint32)(header + 0x18));
 }
 
+/* ==== 0x0101EAFC  (file offset 0x1EAFC)  hand-written (no Ghidra function) =========================== */
+/* GUESS: name. M3G file format section 11.17, MorphingMesh (ObjectType 15): reads the record into the
+   native MorphingMesh mesh: the Mesh part (swvM3G_ReadMesh), morphTargetCount (FUN_01019698 with 8 bytes
+   an element), the morph-target array (+0xc4, its data +0xc8) sized (FUN_01023184) and, for a count
+   above 0, zeroed (thunk_swv_memset), the weight array (+0xd4, its data +0xd8; swvMorphingMesh_Weights)
+   sized; then each target's morphTarget (a VertexBuffer, FUN_01019888 with 21; error -1202, the file is
+   bad, for none), kept by FUN_01004848 (a reference assignment on the interface pointers, +4), and its
+   initialWeight (Float32, FUN_01019a0c). The class's M3G reader: slot +0x4 of its engine vtable
+   0x010021C4 (constructor FUN_010287cc on the Mesh constructor FUN_01029304, made by FUN_0100e924
+   through the factory FUN_01009860), called by FUN_01017bc4 for each record of the type. A routine
+   Ghidra has no function for, reached only through that vtable, written from its disassembly
+   (0x0101eafc - 0x0101ebc0). Evidence: `cmp r6, #0` / `lslgt r2, r6, #2` / `blgt 0x01039df0` (the
+   weight array sized either way); the `blt` loop loading the target before FUN_01019888 and reloading
+   +0xc8 / +0xd8 after the calls. */
+void swvM3G_ReadMorphingMesh(uint8 *mesh,uint8 *stream)
+
+{
+  uint8 *old;
+  uint8 *target;
+  int32 count;
+  int32 i;
+
+  swvM3G_ReadMesh(mesh,stream);
+  count = FUN_01019698((int32)stream,8);
+  FUN_01023184((int *)(mesh + 0xc4),count);
+  if (count > 0)
+    thunk_swv_memset(*(void **)(mesh + 0xc8),0,(uint32)count << 2);
+  FUN_01023184((int *)(mesh + 0xd4),count);
+  for (i = 0; i < count; i++) {
+    old = (*(uint8 ***)(mesh + 0xc8))[i];
+    target = (uint8 *)FUN_01019888((int32)stream,0x15);
+    target = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                   target != NULL ? (int32)(target + 4) : 0);
+    if (target != NULL)
+      target -= 4;
+    (*(uint8 ***)(mesh + 0xc8))[i] = target;
+    if (target == NULL)
+      FUN_0102f7e0(INTEGER_MINUS_1202);
+    (*(uint32 **)(mesh + 0xd8))[i] = FUN_01019a0c((int32)stream);
+  }
+}
+
+/* ==== 0x0101EBC8  (file offset 0x1EBC8)  hand-written (no Ghidra function) =========================== */
+/* GUESS: name. M3G file format section 11.29, VertexBuffer (ObjectType 21): reads the record into the
+   native VertexBuffer buffer: the Object3D part (swvM3G_ReadObject3D), the defaultColor (+0x20,
+   ColorRGBA, FUN_01019650), the positions (+0x24, a VertexArray, FUN_01019888 with 20, or null; kept by
+   FUN_01004848, a reference assignment on the interface pointers, +4) giving the vertex count (+0x1c,
+   the array's +0x1c), positionBias (+0x38 .. +0x40) and positionScale (+0x44) (Float32s, FUN_01019a0c),
+   the normals (or null; swvVertexBuffer_SetNormalsValue, which checks the component count), the colors
+   (+0x2c, or null; kept by FUN_01004848), then texcoordArrayCount (thunk_FUN_01019abc) arrays: each
+   texCoords (error -1202, the file is bad, for none: the spec never serialises a null one), its
+   texCoordBias (Float32[3], into a stack buffer zeroed before the loop) and texCoordScale; only the
+   first two (the engine's texturing units) are kept: +0x30 + 4i (FUN_01004848), the bias +0x58 + 12i
+   (FUN_010279d0) and the scale +0x70 + 4i; the others are read and dropped (the spec asks for an
+   error). Each array after the first one set must have the same vertex count, else -1202. Positions,
+   colours and texture coordinates are stored directly, without the swvVertexBuffer_Set*Value checks.
+   The class's M3G reader: slot +0x4 of its engine vtable 0x01002210 (constructor FUN_01028898, made by
+   FUN_0100e948 through the factory FUN_01009860), called by FUN_01017bc4 for each record of the type.
+   A routine Ghidra has no function for, reached only through that vtable, written from its disassembly
+   (0x0101ebc8 - 0x0101ee00). Evidence: `push {r1-r3, ...}` the bias buffer at sp (`str r0, [sp]`,
+   `[sp, #4]`, `[sp, #8]` with 0 before the loop), `mov r1, sp` / `bl 0x010279d0`; `cmp r7, #1` / `bne`
+   before each count check (r7: the vertex count set); `cmp r6, #2` / `bge` past the kept part. */
+void swvM3G_ReadVertexBuffer(uint8 *buffer,uint8 *stream)
+
+{
+  uint8 *old;
+  uint8 *array;
+  int32 counted;
+  int32 count;
+  int32 i;
+  uint32 scale;
+  uint32 bias[3];
+
+  swvM3G_ReadObject3D(buffer,stream);
+  counted = 0;
+  FUN_01019650((int32)stream,buffer + 0x20,1);
+  old = *(uint8 **)(buffer + 0x24);
+  array = (uint8 *)FUN_01019888((int32)stream,0x14);
+  array = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                array != NULL ? (int32)(array + 4) : 0);
+  if (array != NULL)
+    array -= 4;
+  *(uint8 **)(buffer + 0x24) = array;
+  if (array != NULL) {
+    counted = 1;
+    *(int32 *)(buffer + 0x1c) = *(int32 *)(array + 0x1c);
+  }
+  *(uint32 *)(buffer + 0x38) = FUN_01019a0c((int32)stream);
+  *(uint32 *)(buffer + 0x3c) = FUN_01019a0c((int32)stream);
+  *(uint32 *)(buffer + 0x40) = FUN_01019a0c((int32)stream);
+  *(uint32 *)(buffer + 0x44) = FUN_01019a0c((int32)stream);
+  array = (uint8 *)FUN_01019888((int32)stream,0x14);
+  if (array != NULL) {
+    if (counted == 1 && *(int32 *)(array + 0x1c) != *(int32 *)(buffer + 0x1c))
+      FUN_0102f7e0(INTEGER_MINUS_1202);
+    *(int32 *)(buffer + 0x1c) = *(int32 *)(array + 0x1c);
+    counted = 1;
+    swvVertexBuffer_SetNormalsValue(buffer,array);
+  }
+  old = *(uint8 **)(buffer + 0x2c);
+  array = (uint8 *)FUN_01019888((int32)stream,0x14);
+  array = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                array != NULL ? (int32)(array + 4) : 0);
+  if (array != NULL)
+    array -= 4;
+  *(uint8 **)(buffer + 0x2c) = array;
+  if (array != NULL) {
+    if (counted == 1 && *(int32 *)(array + 0x1c) != *(int32 *)(buffer + 0x1c))
+      FUN_0102f7e0(INTEGER_MINUS_1202);
+    counted = 1;
+    *(int32 *)(buffer + 0x1c) = *(int32 *)(array + 0x1c);
+  }
+  count = (int32)thunk_FUN_01019abc((int32)stream);
+  bias[0] = 0;
+  bias[1] = 0;
+  bias[2] = 0;
+  for (i = 0; i < count; i++) {
+    array = (uint8 *)FUN_01019888((int32)stream,0x14);
+    if (array == NULL)
+      FUN_0102f7e0(INTEGER_MINUS_1202);
+    bias[0] = FUN_01019a0c((int32)stream);
+    bias[1] = FUN_01019a0c((int32)stream);
+    bias[2] = FUN_01019a0c((int32)stream);
+    scale = FUN_01019a0c((int32)stream);
+    if (i < 2) {
+      old = *(uint8 **)(buffer + 0x30 + i * 4);
+      array = (uint8 *)FUN_01004848(old != NULL ? (int32)(old + 4) : 0,
+                                    array != NULL ? (int32)(array + 4) : 0);
+      if (array != NULL)
+        array -= 4;
+      *(uint8 **)(buffer + 0x30 + i * 4) = array;
+      if (array != NULL) {
+        if (counted == 1 && *(int32 *)(array + 0x1c) != *(int32 *)(buffer + 0x1c))
+          FUN_0102f7e0(INTEGER_MINUS_1202);
+        counted = 1;
+        *(int32 *)(buffer + 0x1c) = *(int32 *)(array + 0x1c);
+      }
+      FUN_010279d0((undefined4 *)(buffer + 0x58 + i * 12),(undefined4 *)bias);
+      *(uint32 *)(buffer + 0x70 + i * 4) = scale;
+    }
+  }
+}
+
 /* ==== 0x0101EE08  (file offset 0x1EE08)  swvM3G_ReadTransformable ==================================== */
 /* M3G file format section 11.26, Transformable (no ObjectType of its own): reads the Transformable part of
    a record into the native object: the Object3D part (swvM3G_ReadObject3D); with hasComponentTransform
@@ -26842,6 +26991,33 @@ void swvM3G_ReadAnimationTrack(uint8 *track,uint8 *stream)
     if ((counts & (shift < 32 ? (uint32)1 << shift : 0)) == 0)
       FUN_0102f7e0(INTEGER_MINUS_1202);
   }
+}
+
+/* ==== 0x0101F024  (file offset 0x1F024)  hand-written (no Ghidra function) =========================== */
+/* GUESS: name. M3G file format section 11.6, CompositingMode (ObjectType 6): reads the record into the
+   native CompositingMode mode, in the spec's order: the Object3D part (swvM3G_ReadObject3D), the
+   Booleans (FUN_01019618) depthTestEnabled (+0x24), depthWriteEnabled (+0x28), colorWriteEnabled (+0x1c)
+   and alphaWriteEnabled (+0x20), the blending (+0x2c: ALPHA 0x40 .. REPLACE 0x44, FUN_010196cc: a byte
+   strictly between its bounds, else -1202, the file is bad), the alphaThreshold (+0x30: the Byte,
+   FUN_01019640, as a float divided by 255, so 0xff is 1.0; swv_fflt, swv_fdiv), depthOffsetFactor
+   (+0x34) and depthOffsetUnits (+0x38) (Float32s, FUN_01019a0c). The class's M3G reader: slot +0x4 of
+   its engine vtable 0x010022EC (constructor FUN_01028b58, made by FUN_0100e990 through the factory
+   FUN_01009860), called by FUN_01017bc4 for each record of the type. A routine Ghidra has no function
+   for, reached only through that vtable, written from its disassembly (0x0101f024 - 0x0101f0a8).
+   Evidence: `mov r2, #0x45` / `mov r1, #0x3f` / `bl 0x010196cc`; `bl 0x01019640` / `bl 0x0103f500` /
+   `ldr r1, [pc, #0x20]` (0x437f0000, 255.0, at 0x0101f0ac) / `bl 0x0103f250`. */
+void swvM3G_ReadCompositingMode(uint8 *mode,uint8 *stream)
+
+{
+  swvM3G_ReadObject3D(mode,stream);
+  *(int32 *)(mode + 0x24) = FUN_01019618((int32)stream);
+  *(int32 *)(mode + 0x28) = FUN_01019618((int32)stream);
+  *(int32 *)(mode + 0x1c) = FUN_01019618((int32)stream);
+  *(int32 *)(mode + 0x20) = FUN_01019618((int32)stream);
+  *(uint32 *)(mode + 0x2c) = FUN_010196cc((int32)stream,0x3f,0x45);
+  *(uint32 *)(mode + 0x30) = swv_fdiv(swv_fflt(FUN_01019640((int32)stream)),FLOAT_255);
+  *(uint32 *)(mode + 0x34) = FUN_01019a0c((int32)stream);
+  *(uint32 *)(mode + 0x38) = FUN_01019a0c((int32)stream);
 }
 
 /* ==== 0x0101F0B0  (file offset 0x1F0B0)  FUN_0101f0b0 ================================================ */
@@ -27053,6 +27229,79 @@ void swvM3G_ReadTriangleStripArray(uint8 *strips,uint8 *stream)
     *(int32 *)(strips + 0x1c) = *(uint16 *)(strips + 0x24) + sum - 1;
 }
 
+/* ==== 0x0101F640  (file offset 0x1F640)  hand-written (no Ghidra function) =========================== */
+/* GUESS: name. M3G file format section 11.1, AnimationController (ObjectType 1): reads the record into the
+   native AnimationController controller: the Object3D part (swvM3G_ReadObject3D), the speed (+0x2c) and
+   weight (+0x30) (Float32s, FUN_01019a0c), error -1202 (the file is bad; FUN_0102f7e0, which does not
+   return) for a weight below 0 or a NaN (AnimationController.setWeight's IllegalArgumentException),
+   activeIntervalStart (+0x1c) and activeIntervalEnd (+0x20) (Int32s, thunk_FUN_01019abc), -1202 when the
+   start is after the end (signed; setActiveInterval's check), then referenceSequenceTime (+0x24,
+   Float32) and referenceWorldTime (+0x28, Int32): the spec's fields in its order, at the offsets
+   swvAnimationController_SetSpeedValue, _SetWeightValue, _SetActiveIntervalValue and _SetPositionValue
+   use. The class's M3G reader: slot +0x4 of its engine vtable 0x0100248C (constructor FUN_010291bc,
+   made by FUN_0100eac8 through the factory FUN_01009860), called by FUN_01017bc4 for each record of
+   the type. A routine Ghidra has no function for, reached only through that vtable, written from its
+   disassembly (0x0101f640 - 0x0101f6bc). Evidence: `ldr r6, [pc, #0x6c]` (-1202, 0x0101f6c0), `mov r1,
+   #0` / `bl 0x0103f534` (swv_fcmp_b: unordered leaves C clear) / `bllo` the error; `ldr r1, [r4,
+   #0x1c]` / `cmp r1, r0` / `blgt`. */
+void swvM3G_ReadAnimationController(uint8 *controller,uint8 *stream)
+
+{
+  uint32 weight;
+
+  swvM3G_ReadObject3D(controller,stream);
+  *(uint32 *)(controller + 0x2c) = FUN_01019a0c((int32)stream);
+  weight = FUN_01019a0c((int32)stream);
+  *(uint32 *)(controller + 0x30) = weight;
+  if ((swv_fcmp_b(weight,0), !FLOAT_GE(weight,0)))
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  *(int32 *)(controller + 0x1c) = thunk_FUN_01019abc((int32)stream);
+  *(int32 *)(controller + 0x20) = thunk_FUN_01019abc((int32)stream);
+  if (*(int32 *)(controller + 0x1c) > *(int32 *)(controller + 0x20))
+    FUN_0102f7e0(INTEGER_MINUS_1202);
+  *(uint32 *)(controller + 0x24) = FUN_01019a0c((int32)stream);
+  *(int32 *)(controller + 0x28) = thunk_FUN_01019abc((int32)stream);
+}
+
+/* ==== 0x0101F6C4  (file offset 0x1F6C4)  hand-written (no Ghidra function) =========================== */
+/* GUESS: name. M3G file format section 11.7, Fog (ObjectType 7): reads the record into the native Fog fog:
+   the Object3D part (swvM3G_ReadObject3D), the colour (+0x1c, ColorRGB, FUN_01019650), the mode (+0x2c:
+   EXPONENTIAL 0x50 or LINEAR 0x51, FUN_010196cc: a byte strictly between its bounds, else -1202, the
+   file is bad); EXPONENTIAL: the density (+0x20, Float32, FUN_01019a0c; no check that it is not
+   negative); LINEAR: near (+0x24) and far (+0x28), then -1202 (FUN_0102f7e0, a tail jump) when |near -
+   far| (swv_fsub, the sign bit cleared) is at most 0x377ba882 (about 1.5e-5) or a NaN: the engine's
+   near == far. The class's M3G reader: slot +0x4 of its engine vtable 0x01002678 (constructor
+   FUN_010292b8, made by FUN_0100eaec through the factory FUN_01009860), called by FUN_01017bc4 for each
+   record of the type. A routine Ghidra has no function for, reached only through that vtable, written
+   from its disassembly (0x0101f6c4 - 0x0101f754). Evidence: `mov r2, #0x52` / `mov r1, #0x4f` / `bl
+   0x010196cc`; `cmp r0, #0x50` / `beq 0x0101f748` (the EXPONENTIAL read laid out after the return),
+   `cmp r0, #0x51` / `bne`; `bl 0x0103f064` / `bic r0, r0, #0x80000000` / `ldr r1` (0x0101f758) / `bl
+   0x0103f534` (swv_fcmp_b: unordered leaves C and Z clear) / `ldrls r0` (-1202, 0x0101f75c) / `popls` /
+   `bls 0x0102f7e0`. */
+void swvM3G_ReadFog(uint8 *fog,uint8 *stream)
+
+{
+  uint32 mode;
+  uint32 farPlane;
+  uint32 distance;
+
+  swvM3G_ReadObject3D(fog,stream);
+  FUN_01019650((int32)stream,fog + 0x1c,0);
+  mode = FUN_010196cc((int32)stream,0x4f,0x52);
+  *(uint32 *)(fog + 0x2c) = mode;
+  if (mode == 0x50)
+    *(uint32 *)(fog + 0x20) = FUN_01019a0c((int32)stream);
+  else if (mode == 0x51) {
+    *(uint32 *)(fog + 0x24) = FUN_01019a0c((int32)stream);
+    farPlane = FUN_01019a0c((int32)stream);
+    *(uint32 *)(fog + 0x28) = farPlane;
+    distance = swv_fsub(*(uint32 *)(fog + 0x24),farPlane) & 0x7fffffff;
+    if ((swv_fcmp_b(distance,WORD_HEXADECIMAL_377BA882),
+         !FLOAT_GT(distance,WORD_HEXADECIMAL_377BA882)))
+      FUN_0102f7e0(INTEGER_MINUS_1202);
+  }
+}
+
 /* ==== 0x0101F760  (file offset 0x1F760)  swvM3G_ReadMesh ============================================= */
 /* M3G file format section 11.16, Mesh (ObjectType 14): reads the record into the native Mesh mesh: the
    Node part (swvM3G_ReadNode), the vertex buffer (+0x88, a VertexBuffer, FUN_01019888 with 21; error
@@ -27142,6 +27391,21 @@ void swvM3G_ReadNode(uint8 *node,uint8 *stream)
     zReference = (uint8 *)FUN_0101981c((int32)stream,1);
     swvNode_SetAlignment(node,zReference,zTarget,(uint8 *)FUN_0101981c((int32)stream,1),yTarget);
   }
+}
+
+/* ==== 0x0101F998  (file offset 0x1F998)  hand-written (no Ghidra function) =========================== */
+/* GUESS: name. M3G file format section 10.2, External Reference (ObjectType 255): reads the record into
+   the native external reference reference: no superclass data (no Object3D part, as the spec says), only
+   the URI (a String: FUN_01019afc reads the UTF-8 bytes into the engine string at +0xc, which the
+   constructor FUN_010293e4 makes; a tail jump). The class's M3G reader: slot +0x4 of its engine vtable
+   0x0100272C (made by FUN_0100eb34, the factory FUN_01009860's type 255 entry), called by FUN_01017ccc
+   for each record of the external-reference section. A routine Ghidra has no function for, reached
+   only through that vtable, written from its disassembly (0x0101f998 - 0x0101f9a4: `mov r2, r0`, `mov
+   r0, r1`, `add r1, r2, #0xc`, `b 0x01019afc`). */
+void swvM3G_ReadExternalReference(uint8 *reference,uint8 *stream)
+
+{
+  FUN_01019afc((int32)stream,(uint32)(reference + 0xc));
 }
 
 /* ==== 0x0101F9A8  (file offset 0x1F9A8)  swvM3G_ReadGroup ============================================ */
