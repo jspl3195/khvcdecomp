@@ -4137,7 +4137,7 @@ void FUN_0100412c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
    0x44-byte transform, the weight scale) to the list list (a SkinnedMesh's +0xd0: vtable +0, array +4,
    count +8, capacity +0xc) and returns the new entry: a full list is first grown through its virtual slot
    +4 to FUN_0102df78(count + 1, capacity); the entry is FUN_0102cc80(list, old count), filled by a tail
-   jump to swvSkin_CopyBoneSet (0x01027b40, no Ghidra function: Ghidra had pasted its code here). Called by
+   jump to swvSkin_CopyBoneSet (0x01027b40; Ghidra had pasted its code here). Called by
    swvSkin_BuildBoneSets (the template) and swvSkin_FindOrAddBoneSet. Evidence: 0x0100418c - 0x010041e8
    (`cmp r0, r1` / `bne`, `add r0, r0, #1` with r1 still the capacity for `bl 0x0102df78` (Ghidra had
    dropped it), r1 its result and r2 the count for the `blx r3`, `ldr r1, [r4, #8]` / `add r0, r1, #1` /
@@ -16261,9 +16261,9 @@ int32 swvLight_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x010124AC  (file offset 0x124AC)  FUN_010124ac ================================================ */
-/* A routine Ghidra has no function for, reached only through an engine vtable (a scene object's, not
-   static); written from its disassembly (0x010124ac: `b 0x01012444`, a tail jump, here a call). The
-   IsAnimatable(property) of a Node subclass that adds no property of its own (the class not
+/* Reached only through an engine vtable (a scene object's, not static); Ghidra has it as a thunk of
+   swvNode_IsAnimatable. Written from its disassembly (0x010124ac: `b 0x01012444`, a tail jump, here a
+   call). The IsAnimatable(property) of a Node subclass that adds no property of its own (the class not
    identified; GUESS: Group, Mesh, SkinnedMesh or World): swvNode_IsAnimatable's answer. */
 int32 FUN_010124ac(const uint8 *object,int32 property)
 
