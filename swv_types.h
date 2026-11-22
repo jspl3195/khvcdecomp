@@ -289,7 +289,19 @@ typedef struct SwvExtObject {
  * (count +0xc8: SwvSkinBone, one per M3G addTransform(bone, weight, firstVertex, numVertices)); at
  * +0xd0 a list (array +0xd4, count +0xd8) of SwvSkinBoneSet, the distinct sets of the (at most 2)
  * heaviest bones of its vertices, index 0 the no-bone template; and at +0xe0 a list (array +0xe4,
- * count +0xe8) of uint16, each vertex's bone-set index. +0xf0 / +0xf4 / +0xf8 become 1 once built.
+ * count +0xe8) of uint16, each vertex's bone-set index. +0xf0 becomes 1 once built.
+ * Its bone entries: at +0xb4 (count +0xb8), 0x90 bytes each, one a bone node (FUN_01002c70 finds or adds
+ * the bone's, its index the SwvSkinBone bone):
+ *   +0x00             the bone node
+ *   +0x04             the at-rest matrix (B of JSR-184 1.1, SkinnedMesh: this.getTransformTo(bone) at
+ *                     addTransform, swvSkinnedMesh_AddTransform)
+ *   +0x48             the current matrix: the bone's transform to the mesh times the at-rest one (M B;
+ *                     swvSkinnedMesh_BoneMatrix makes it again when +0x8c is set)
+ *   +0x8c             out of date (set by swvSkinnedMesh_MarkMovedBones when the bone node's transform
+ *                     changed, node +0x3d bit 3; cleared by swvSkinnedMesh_BoneMatrix)
+ * The mesh's out-of-date flags, set by swvSkinnedMesh_MarkMovedBones before each draw:
+ *   +0xf4             the bone sets' matrices (swvSkinnedMesh_BoneSetMatrix makes them again, clears it)
+ *   +0xf8             the skinned VertexBuffer (FUN_01010938 makes it again, clears it)
  * GUESS: the field names. */
 typedef struct SwvSkinBone {
     int32    weight;        /* +0x00 swvSkin_VertexBones keeps the heaviest */
@@ -388,6 +400,9 @@ typedef struct SwvKeyframeSequence {
  *   +0x38             a Group's first child (swvGroup_ChildCount, swvGroup_NthChild, FUN_01003474)
  *   +0x3c             the depth, a byte (0 for a root; 0xff: not cached or deeper than 254;
  *                     swvNode_Depth, swvNode_SetDepth)
+ *   +0x3d             flags, a byte; bit 3 (0x8): the transform changed (FUN_01023d00 sets it on a node
+ *                     and its descendants; FUN_0100f950 makes the node's matrix again and clears it;
+ *                     swvSkinnedMesh_MarkMovedBones reads it for the bones)
  * The alignment targets (JSR-184 1.1, Node constants): NONE 0x90, ORIGIN 0x91, X_AXIS 0x92, Y_AXIS 0x93,
  * Z_AXIS 0x94; swvNode_SetAlignment (Node.setAlignment) stores them, the range 0x90 - 0x94 is checked by
  * its callers (-1301 in the BREW wrapper FUN_01034b78, -1202 in the M3G Node reader, FUN_010196cc). */
@@ -465,7 +480,7 @@ typedef struct SwvKeyframeSequence {
  * their count, +0xd4 their weights: an engine dynamic array (FUN_01023184), +0xd8 the floats (as uint32
  * bits), +0xdc their count (swvMorphingMesh_Weights; FUN_01006918 copies them).
  * A SkinnedMesh's (FUN_01010938): +0xf8 set when the skinned buffer must be made again, +0x100 the
- * skinned VertexBuffer. */
+ * skinned VertexBuffer; its bones and skinning data: SkinnedMesh skinning data, above. */
 
 /* ---- VertexArray (class 29), the native object (no struct yet) ------------------------------
  * The fields its readers use (GUESS: the names; swvVertexArray_GetComponent, FUN_010257fc,

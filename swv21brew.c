@@ -10036,7 +10036,7 @@ uint FUN_0100a470(int param_1,undefined4 param_2,undefined4 param_3)
     if (0 < iVar6) {
       do {
         swv_Matrix4Copy(auStack_ac,auStack_68);
-        uVar1 = FUN_0100fe8c(*(undefined4 *)(param_1 + 0xf0),iVar5);
+        uVar1 = swvSkinnedMesh_BoneSetMatrix(*(undefined4 *)(param_1 + 0xf0),iVar5);
         FUN_0101749c(auStack_ac,uVar1);
         FUN_0101749c(auStack_ac,param_2);
         uVar2 = FUN_01022c5c(*(int *)(param_1 + 0xe4) + iVar5 * 0x50,auStack_ac,iVar3 + 1,param_3,0)
@@ -13395,8 +13395,18 @@ int32 swvRenderer_Kind(const uint8 *renderer)
   return kind;
 }
 
-/* ==== 0x0100F4DC  (file offset 0x0F4DC)  FUN_0100f4dc ================================================ */
-undefined4 * FUN_0100f4dc(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
+/* ==== 0x0100F4DC  (file offset 0x0F4DC)  swvSkinnedMesh_BoneMatrix =================================== */
+/* GUESS (not yet rewritten): name. The current matrix of a bone of the SkinnedMesh param_1, for the
+   SwvSkinBone record param_2 (its +8 the bone's index in the entries at +0xb4, 0x90 bytes each;
+   swv_types.h, SkinnedMesh): when the entry is out of date (+0x8c, swvSkinnedMesh_MarkMovedBones) it
+   is made again, the transform from the bone (+0) to the mesh (FUN_010048e4, Node.getTransformTo) into
+   +0x48, times the at-rest matrix +4 (FUN_010275fc), and the flag cleared; returns entry +0x48 (M B of
+   JSR-184 1.1, SkinnedMesh). Two arguments: Ghidra's param_3 / param_4 are phantoms (r3 is FUN_010048e4's
+   fourth word, the bone again). Called by swvSkinnedMesh_BoneSetMatrix. Evidence: 0x0100f4dc - 0x0100f52c
+   (`ldrh r1, [r1, #8]`, `ldr r1, [r4, #0x8c]` / `beq`, `add r2, r4, #0x48` / `mov r1, r0` / `mov r0, r3`
+   / `bl 0x010048e4`, `add r1, r4, #4` / `bl 0x010275fc`, `str r0, [r4, #0x8c]` with 0, `add r0, r4,
+   #0x48`). */
+undefined4 * swvSkinnedMesh_BoneMatrix(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
   undefined4 *puVar1;
@@ -14060,8 +14070,17 @@ int FUN_0100fdec(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
   return *(int *)(param_1 + 0x94) + param_2 * 0xc;
 }
 
-/* ==== 0x0100FE8C  (file offset 0x0FE8C)  FUN_0100fe8c ================================================ */
-int FUN_0100fe8c(int param_1,int param_2)
+/* ==== 0x0100FE8C  (file offset 0x0FE8C)  swvSkinnedMesh_BoneSetMatrix ================================ */
+/* GUESS (not yet rewritten): name. The matrix of bone set param_2 of the SkinnedMesh param_1 (its +0xd4
+   list, 0x4c bytes a set; swv_types.h, SwvSkinBoneSet): the skinning data built first
+   (swvSkin_BuildBoneSets; Ghidra had dropped its argument, the mesh); when the bone sets are out of
+   date (+0xf4, swvSkinnedMesh_MarkMovedBones) and param_2 is above 0 (set 0 is the no-bone template),
+   each set from 1 gets the weighted sum of its (at most 2) bones' matrices (swvSkinnedMesh_BoneMatrix,
+   each times its weight, swv_fflt, times the set's weight scale +0x48: FUN_0101da48; the second added,
+   FUN_01027970), its elements 3, 7 and 11 set to 0 and 15 to 1.0 (the projective part) and its flags
+   made again (FUN_0101d674); a set whose first bone is 0xffff ends the walk; then +0xf4 cleared. Returns
+   the set's matrix (+4). Called by FUN_01010938 (the skinned positions) and FUN_0100a470. */
+int swvSkinnedMesh_BoneSetMatrix(int param_1,int param_2)
 
 {
   undefined4 uVar1;
@@ -14072,13 +14091,13 @@ int FUN_0100fe8c(int param_1,int param_2)
   int iVar6;
   undefined1 auStack_68 [68];
   
-  swvSkin_BuildBoneSets();
+  swvSkin_BuildBoneSets((uint8 *)param_1);   /* Ghidra had dropped it */
   if ((0 < param_2) && (*(int *)(param_1 + 0xf4) != 0)) {
     for (iVar6 = 1; iVar6 < *(int *)(param_1 + 0xd8); iVar6 = iVar6 + 1) {
       puVar3 = (ushort *)(*(int *)(param_1 + 0xd4) + iVar6 * 0x4c);
       puVar4 = (undefined4 *)(*(int *)(param_1 + 0xc4) + (uint)*puVar3 * 0xc);
       puVar2 = puVar3 + 2;
-      uVar1 = FUN_0100f4dc(param_1,puVar4);
+      uVar1 = swvSkinnedMesh_BoneMatrix(param_1,puVar4);
       FUN_01027acc(puVar2,uVar1);
       if (*puVar3 == 0xffff) break;
       uVar1 = swv_fflt(*puVar4);
@@ -14088,7 +14107,7 @@ int FUN_0100fe8c(int param_1,int param_2)
       do {
         if (puVar3[iVar5] == 0xffff) break;
         puVar4 = (undefined4 *)(*(int *)(param_1 + 0xc4) + (uint)puVar3[iVar5] * 0xc);
-        uVar1 = FUN_0100f4dc(param_1,puVar4);
+        uVar1 = swvSkinnedMesh_BoneMatrix(param_1,puVar4);
         swv_Matrix4Copy(auStack_68,uVar1);
         uVar1 = swv_fflt(*puVar4);
         uVar1 = swv_fmul(uVar1,*(undefined4 *)(puVar3 + 0x24));
@@ -14726,7 +14745,7 @@ undefined4 FUN_01010938(int param_1)
     swvSkin_BuildBoneSets(param_1);
     local_28 = param_1 + 0xe0;
     uVar14 = 0xffffffff;
-    uVar4 = FUN_0100fe8c(param_1,0);
+    uVar4 = swvSkinnedMesh_BoneSetMatrix(param_1,0);
     swv_Matrix4Copy(auStack_6c,uVar4);
     local_70 = 0x20;
     FUN_0101da48(auStack_b0,*(undefined4 *)(iVar2 + 0x44));
@@ -14736,7 +14755,7 @@ undefined4 FUN_01010938(int param_1)
     for (iVar2 = 0; iVar2 < iVar3; iVar2 = iVar2 + 1) {
       uVar5 = (uint)*(ushort *)(*(int *)(local_28 + 4) + iVar2 * 2);
       if (uVar5 != uVar14) {
-        uVar4 = FUN_0100fe8c(param_1,uVar5);
+        uVar4 = swvSkinnedMesh_BoneSetMatrix(param_1,uVar5);
         FUN_01027acc(auStack_6c,uVar4);
         FUN_010275fc(auStack_6c,auStack_b0);
         uVar14 = uVar5;
@@ -22920,9 +22939,9 @@ LAB_0101a5c0:
         }
         goto LAB_0101a81c;
       }
-      FUN_0101d598(param_2);
+      swvSkinnedMesh_MarkMovedBones((uint8 *)param_2);
       if (param_2[0xe] != 0) {
-        FUN_0101a514(param_1);
+        FUN_0101a514(param_1,(int *)param_2[0xe]);   /* the skeleton: Ghidra had dropped it */
       }
     }
   }
@@ -23006,19 +23025,6 @@ LAB_0101a81c:
 void FUN_0101a830(int param_1,int *param_2)
 
 {
-  undefined4 uVar1;
-  undefined4 uVar2;
-  int iVar3;
-  int iVar4;
-  uint uVar5;
-  int iVar6;
-  int iVar7;
-  int iVar8;
-  int iVar9;
-  int iVar10;
-  bool bVar11;
-  char cVar12;
-  
   *(undefined4 *)(param_1 + 0xc) = 0x3f800000;
   FUN_01023184(param_1 + 0x10,1);
   *(undefined4 *)(*(int *)(param_1 + 0x14) + 4) = 0;
@@ -23030,125 +23036,7 @@ void FUN_0101a830(int param_1,int *param_2)
   if (*(int *)(param_1 + 0x104) != 0) {
     return;
   }
-  bVar11 = (*(byte *)((int)param_2 + 0x3d) & 1) == 0;
-  if (bVar11) {
-    return;
-  }
-  uVar1 = *(undefined4 *)(param_1 + 0xc);
-  iVar9 = param_2[10];
-  swv_fcmp_a(iVar9,0x3f800000);
-  if (!bVar11) {
-    uVar2 = swv_fmul(*(undefined4 *)(param_1 + 0xc),iVar9);
-    *(undefined4 *)(param_1 + 0xc) = uVar2;
-  }
-  /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
-     object's class) */
-  iVar9 = (*(code *)(*(int *)(param_2[1] + 4) + param_2[1]))(param_2 + 1);
-  if (iVar9 != 0xf) {
-    if (iVar9 < 0x10) {
-      if (iVar9 == 5) goto LAB_0101a81c;
-      if (iVar9 == 9) goto LAB_0101a5c0;
-      if ((iVar9 == 0xc) || (iVar9 != 0xe)) goto LAB_0101a81c;
-    }
-    else {
-      if (iVar9 != 0x10) {
-        if (iVar9 == 0x12) {
-          if (((param_2[0xb] & *(uint *)(param_1 + 0x108)) != 0) &&
-             (param_2[0x27] != 0 && param_2[0x26] != 0)) {
-            iVar9 = *(int *)(param_2[0x27] + 0x20);
-            if (iVar9 == 0) {
-              iVar9 = *(int *)(param_1 + 0x9a8);
-            }
-            FUN_0100300c(param_1,param_2,0,*(int *)(iVar9 + 0x2c) != 0x44);
-          }
-          goto LAB_0101a81c;
-        }
-        if (iVar9 != 0x16) goto LAB_0101a81c;
-LAB_0101a5c0:
-        for (iVar9 = param_2[0xe]; iVar9 != 0; iVar9 = *(int *)(iVar9 + 0x34)) {
-          FUN_0101a514(param_1,iVar9);
-        }
-        goto LAB_0101a81c;
-      }
-      FUN_0101d598(param_2);
-      if (param_2[0xe] != 0) {
-        FUN_0101a514(param_1);
-      }
-    }
-  }
-  /* engine virtual call, slot +0x2c: of the static engine vtables only the renderer's (0x01002398)
-     swvRenderer_Kind has it; a scene object's vtable is not among them (GUESS: not static), so for one the
-     method is not known here */
-  if (((param_2[0xb] & *(uint *)(param_1 + 0x108)) != 0) &&
-     (iVar9 = (*(code *)(*(int *)(*param_2 + 0x2c) + *param_2))(param_2), iVar9 != 0)) {
-    iVar9 = param_2[0x25];
-    iVar10 = 0;
-    if (0 < iVar9) {
-      do {
-        iVar3 = FUN_0100f1c8(param_2,iVar10);
-        if ((iVar3 != 0) && (iVar4 = FUN_0100f734(param_2,iVar10), iVar4 != 0)) {
-          iVar4 = *(int *)(iVar3 + 0x20);
-          if (iVar4 == 0) {
-            iVar4 = *(int *)(param_1 + 0x9a8);
-          }
-          uVar5 = *(uint *)(iVar4 + 0x2c);
-          bVar11 = uVar5 != 0x44;
-          if ((bVar11) && (cVar12 = 0x3f < uVar5, uVar5 == 0x40)) {
-            iVar4 = *(int *)(iVar3 + 0x2c);
-            swv_fcmp_c(*(undefined4 *)(param_1 + 0xc),0x3f800000);
-            if ((bool)cVar12) {
-              if ((iVar4 == 0) ||
-                  (uVar5 = swvMaterial_Color((uint8 *)iVar4,0x800), (~uVar5 & 0xff000000) == 0)) {
-                iVar8 = *(int *)(*param_2 + 0x2c);
-                iVar6 = (*(code *)(iVar8 + *param_2))(param_2);
-                iVar7 = *(int *)(iVar6 + 0x2c);
-                iVar4 = 0;
-                if (iVar7 != 0) {
-                  iVar4 = *(int *)(iVar7 + 0x1c);
-                  iVar8 = iVar4;
-                }
-                if (((iVar7 != 0 && iVar8 != 0) && -1 < iVar4) && (*(int *)(iVar7 + 0x20) == 4)) {
-                  cVar12 = '\0';
-                }
-                else if ((~*(uint *)(iVar6 + 0x20) & 0xff000000) != 0) {
-                  cVar12 = '\0';
-                }
-              }
-              else {
-                cVar12 = '\0';
-              }
-            }
-            if (cVar12 != '\0') {
-              uVar5 = 0;
-              do {
-                if (1 < uVar5) {
-                  swv_Throw(INTEGER_MINUS_1101);
-                }
-                iVar8 = *(int *)(iVar3 + uVar5 * 4 + 0x30);
-                iVar4 = 0;
-                if (iVar8 != 0) {
-                  iVar4 = *(int *)(iVar8 + 0x2c);
-                }
-                if ((iVar8 != 0 && iVar4 != 0) &&
-                   (iVar4 = *(int *)(iVar4 + 0x40), (iVar4 == 0x60 || iVar4 == 0x62) || iVar4 == 100
-                   )) {
-                  cVar12 = '\0';
-                }
-                uVar5 = uVar5 + 1;
-              } while ((int)uVar5 < 2);
-              if (cVar12 != '\0') {
-                bVar11 = false;
-              }
-            }
-          }
-          FUN_0100300c(param_1,param_2,iVar10,bVar11);
-        }
-        iVar10 = iVar10 + 1;
-      } while (iVar10 < iVar9);
-    }
-  }
-LAB_0101a81c:
-  *(undefined4 *)(param_1 + 0xc) = uVar1;
+  FUN_0101a514(param_1,param_2);   /* a tail jump; Ghidra had pasted FUN_0101a514's code here */
   return;
 }
 
@@ -25172,29 +25060,34 @@ void FUN_0101d554(int *param_1,int param_2,undefined4 param_3,undefined4 param_4
   return;
 }
 
-/* ==== 0x0101D598  (file offset 0x1D598)  FUN_0101d598 ================================================ */
-void FUN_0101d598(int param_1)
+/* ==== 0x0101D598  (file offset 0x1D598)  swvSkinnedMesh_MarkMovedBones =============================== */
+/* GUESS: name. Marks what of the SkinnedMesh mesh its moved bones make out of date, before the draw
+   (FUN_0101a514, for a SkinnedMesh, then the skeleton): for each bone entry (+0xb4, 0x90 bytes each,
+   +0xb8 their count; swv_types.h, SkinnedMesh) its out-of-date flag (+0x8c) is set when its bone node
+   (+0) has its transform-changed bit (node +0x3d bit 3, which FUN_01023d00 sets on a node and its
+   descendants) and stays set until swvSkinnedMesh_BoneMatrix makes the bone's matrix again; then
+   the bone sets' flag (mesh +0xf4, swvSkinnedMesh_BoneSetMatrix) and the skinned buffer's (+0xf8,
+   FUN_01010938) are set with it. The matrix it keeps current is M B of JSR-184 1.1, SkinnedMesh (v' =
+   sum w M B v: B the at-rest transformation from the mesh to the bone, M the bone's to a reference
+   system, here the mesh's own); the out-of-date flags are engine behaviour. Evidence: 0x0101d598 -
+   0x0101d61c (`ldr r1, [r0, #0xb4]`, `add r3, r2, r2, lsl #3` / `add r3, r1, r3, lsl #4`, `ldr lr, [r3,
+   #0x8c]`, `ldrb r1, [r1, #0x3d]` / `tst ip, r1, lsr #3`, `str r1, [r3, #0x8c]`, `str r1, [r0, #0xf4]`,
+   `str r1, [r0, #0xf8]`, `ldr r1, [r0, #0xb8]` / `cmp r1, r2` / `bgt`). */
+void swvSkinnedMesh_MarkMovedBones(uint8 *mesh)
 
 {
-  int iVar1;
-  uint uVar2;
-  int iVar3;
-  int *piVar4;
-  
-  for (iVar3 = 0; iVar3 < *(int *)(param_1 + 0xb8); iVar3 = iVar3 + 1) {
-    piVar4 = (int *)(*(int *)(param_1 + 0xb4) + iVar3 * 0x90);
-    if ((piVar4[0x23] == 0) && ((*(byte *)(*piVar4 + 0x3d) >> 3 & 1) == 0)) {
-      iVar1 = 0;
-    }
-    else {
-      iVar1 = 1;
-    }
-    piVar4[0x23] = iVar1;
-    uVar2 = (uint)(*(int *)(param_1 + 0xf4) != 0 || iVar1 != 0);
-    *(uint *)(param_1 + 0xf4) = uVar2;
-    *(uint *)(param_1 + 0xf8) = (uint)(*(int *)(param_1 + 0xf8) != 0 || uVar2 != 0);
+  int32 i;
+
+  for (i = 0; i < *(int32 *)(mesh + 0xb8); i++) {
+    uint8 *entry = *(uint8 **)(mesh + 0xb4) + i * 0x90;
+    int32 moved = *(int32 *)(entry + 0x8c) != 0 || (*(*(uint8 **)entry + 0x3d) >> 3 & 1) != 0;
+    int32 setsDue;
+
+    *(int32 *)(entry + 0x8c) = moved;
+    setsDue = *(int32 *)(mesh + 0xf4) != 0 || moved != 0;
+    *(int32 *)(mesh + 0xf4) = setsDue;
+    *(int32 *)(mesh + 0xf8) = *(int32 *)(mesh + 0xf8) != 0 || setsDue != 0;
   }
-  return;
 }
 
 /* ==== 0x0101D620  (file offset 0x1D620)  FUN_0101d620 ================================================ */

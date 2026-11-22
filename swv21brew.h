@@ -529,7 +529,7 @@ void FUN_0100f1fc(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3,un
 void swvNode_AlignmentVector(uint32 *out,uint8 *node,const uint32 *matrix,int32 target);   /* 0x0100F350 GUESS: name, see swv21brew.c */
 void FUN_0100f3cc(undefined4 param_1,int param_2,undefined4 param_3,undefined4 *param_4);
 void FUN_0100f450(undefined4 param_1,int param_2,undefined4 param_3,undefined4 *param_4);
-undefined4 * FUN_0100f4dc(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
+undefined4 * swvSkinnedMesh_BoneMatrix(int param_1,int param_2,undefined4 param_3,undefined4 param_4);   /* 0x0100F4DC GUESS: name, see swv21brew.c */
 int32 swvGraphics3D_Property(uint32 index);   /* 0x0100F530 GUESS: name, see swv21brew.c */
 int32 swvGroup_ChildCount(const uint8 *group);   /* 0x0100F594 JSR-184 1.1, see swv21brew.c */
 uint8 *swvGroup_NthChild(const uint8 *group,int32 *index);   /* 0x0100F5B4 GUESS: name, see swv21brew.c */
@@ -557,7 +557,7 @@ undefined4 FUN_0100f9f8(int param_1);
 undefined4 FUN_0100fac0(int param_1);
 int FUN_0100fb34(int param_1,int param_2);
 int FUN_0100fdec(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
-int FUN_0100fe8c(int param_1,int param_2);
+int swvSkinnedMesh_BoneSetMatrix(int param_1,int param_2);   /* 0x0100FE8C GUESS: name, see swv21brew.c */
 uint16 *swvImage2D_Palette(const uint8 *image);   /* 0x0100FFE4 GUESS: name, see swv21brew.c */
 int32 swvImage2D_ColourStride(const uint8 *image);   /* 0x0100FFFC GUESS: name, see swv21brew.c */
 uint32 swv_ColourToRGB565(const int32 *colour);   /* 0x01010008 GUESS: name, see swv21brew.c */
@@ -750,7 +750,7 @@ void FUN_0101d17c(int param_1,int param_2);
 int FUN_0101d21c(int *param_1,int param_2);
 void FUN_0101d37c(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0101d554(int *param_1,int param_2,undefined4 param_3,undefined4 param_4);
-void FUN_0101d598(int param_1);
+void swvSkinnedMesh_MarkMovedBones(uint8 *mesh);   /* 0x0101D598 GUESS: name, see swv21brew.c */
 void FUN_0101d620(int param_1);
 void FUN_0101d674(undefined4 *param_1);
 void FUN_0101d864(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
