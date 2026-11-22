@@ -16079,8 +16079,8 @@ int32 swvMaterial_IsAnimatable(const uint8 *object,int32 property)
    (swvObject3D_AddAnimationTrackValue, JSR-184 1.1, Object3D.addAnimationTrack, raises -1301,
    IllegalArgumentException for an incompatible track, when it gives 0): no property of its own (the spec
    gives Object3D none), so 0; every class's own (swvMaterial_IsAnimatable .. swvSprite3D_IsAnimatable, and
-   swvCamera_IsAnimatable and FUN_010124ac, which Ghidra has no function for; the masks in swv_types.h)
-   ends here. Evidence: 0x01012324 - 0x01012328 (`mov r0, #0` / `bx lr`). */
+   swvCamera_IsAnimatable and FUN_010124ac; the masks in swv_types.h) ends here. Evidence:
+   0x01012324 - 0x01012328 (`mov r0, #0` / `bx lr`). */
 int32 swvObject3D_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -16268,9 +16268,9 @@ int32 FUN_010124ac(const uint8 *object,int32 property)
 }
 
 /* ==== 0x010124B0  (file offset 0x124B0)  swvCamera_IsAnimatable ====================================== */
-/* A routine Ghidra has no function for, reached only through an engine vtable (a scene object's, not
-   static); written from its disassembly. GUESS: name. A Camera's IsAnimatable(property), its engine vtable
-   +0x20 (swvObject3D_AddAnimationTrackValue, JSR-184 1.1, Object3D.addAnimationTrack, asks it): 1 for the
+/* Reached only through an engine vtable (a scene object's, not static); written from its disassembly.
+   GUESS: name. A Camera's IsAnimatable(property), its engine vtable +0x20
+   (swvObject3D_AddAnimationTrackValue, JSR-184 1.1, Object3D.addAnimationTrack, asks it): 1 for the
    properties it adds, SWV_ANIMATED_CAMERA (FAR_DISTANCE, FIELD_OF_VIEW, NEAR_DISTANCE), else its base
    class's answer, swvNode_IsAnimatable (1 when that is not 0); the bit as in the others (0 from a shift of
    32 up). The mask is the properties JSR-184 1.1, AnimationTrack's fields give Camera. Evidence:
@@ -18817,27 +18817,27 @@ int32 swvM3GReader_Begin(uint8 *reader,int32 allowSwerve)
 }
 
 /* ==== 0x01015348  (file offset 0x15348)  swvM3GReader_Feed =========================================== */
-/* GUESS: name. The M3G reader's slot +0x8 (engine vtable 0x01002410; Ghidra had no function); written from
-   its disassembly (0x01015348 - 0x010157e0). Feeds length bytes (data + offset; the fifth argument is on
-   the stack; array, r1, is not read: GUESS, the byte array the data belongs to) to the M3G file reader
-   (GUESS: the Loader's stream parser). +0x24 is the state: 1 the file identifier (M3G file format section
-   5), a byte at a time (FUN_0101255c gives each) against one of two 12-byte strings: +0x48 the M3G one
-   (0x010427a8: AB 'JSR184' BB 0D 0A 1A 0A; +0x14 = 0) or, when +0x18 allows it, +0x54 Swerve's own
-   (0x0104279c: BB 'SWERVE' AB 0D 0A 1A 0A; +0x14 = 1); 2 a section's CompressionScheme (section 6.1: 0 or
-   1, the section reader swvSection_CreateStored / swvSection_CreateZlib at +0x10, after the virtual slot
-   +0x1c agrees; the Adler-32 at +0x3c starts; +0x28 counts the sections); 3 to 6 the TotalSectionLength
-   (section 6.2, +0x30; below 13 is an error, less 13 it is the Objects' length, kept in +0x40) and 7 to
-   10 the UncompressedLength (section 6.3, +0x34), least significant byte first, both checksummed
-   (FUN_010265fc adds them to +0x3c); 11 the Objects (section 6.4, checksummed in their stored form by
-   thunk_adler32 and fed to the section reader's virtual slot +4; at the end the bytes the record reader
-   took, +0x44, must equal +0x34, and the section reader is deleted); 12 to 15 the section's Checksum
-   (section 6.5), which must match +0x3c, then the virtual slot +0x24 can end the file. +0x2c counts the
-   bytes read, +0x1c the header's TotalFileSize (section 10.1; -1 until the header is read). Errors:
-   FUN_0102f7e0 (-1103 SWVE_READER_STATE when called in the wrong state, -1201 (-0x4b1) for bad lengths)
-   and the results -7 (bad identifier), -8 (bad CompressionScheme, or the section reader refused), -9 (bad
-   checksum), -10 (the slot +0x1c refused) and -11 (data past TotalFileSize), handed to the virtual slot
-   +0x10 (swvM3GReader_Fail; -11 is returned without it). Returns -1 while it needs more, the bytes used
-   when the file ended, or the error. */
+/* GUESS: name. The M3G reader's slot +0x8 (engine vtable 0x01002410); written from its disassembly
+   (0x01015348 - 0x010157e0). Feeds length bytes (data + offset; the fifth argument is on the stack; array,
+   r1, is not read: GUESS, the byte array the data belongs to) to the M3G file reader (GUESS: the Loader's
+   stream parser). +0x24 is the state: 1 the file identifier (M3G file format section 5), a byte at a time
+   (FUN_0101255c gives each) against one of two 12-byte strings: +0x48 the M3G one (0x010427a8: AB 'JSR184'
+   BB 0D 0A 1A 0A; +0x14 = 0) or, when +0x18 allows it, +0x54 Swerve's own (0x0104279c: BB 'SWERVE' AB 0D
+   0A 1A 0A; +0x14 = 1); 2 a section's CompressionScheme (section 6.1: 0 or 1, the section reader
+   swvSection_CreateStored / swvSection_CreateZlib at +0x10, after the virtual slot +0x1c agrees; the
+   Adler-32 at +0x3c starts; +0x28 counts the sections); 3 to 6 the TotalSectionLength (section 6.2, +0x30;
+   below 13 is an error, less 13 it is the Objects' length, kept in +0x40) and 7 to 10 the
+   UncompressedLength (section 6.3, +0x34), least significant byte first, both checksummed (FUN_010265fc
+   adds them to +0x3c); 11 the Objects (section 6.4, checksummed in their stored form by thunk_adler32 and
+   fed to the section reader's virtual slot +4; at the end the bytes the record reader took, +0x44, must
+   equal +0x34, and the section reader is deleted); 12 to 15 the section's Checksum (section 6.5), which
+   must match +0x3c, then the virtual slot +0x24 can end the file. +0x2c counts the bytes read, +0x1c the
+   header's TotalFileSize (section 10.1; -1 until the header is read). Errors: FUN_0102f7e0 (-1103
+   SWVE_READER_STATE when called in the wrong state, -1201 (-0x4b1) for bad lengths) and the results -7
+   (bad identifier), -8 (bad CompressionScheme, or the section reader refused), -9 (bad checksum), -10 (the
+   slot +0x1c refused) and -11 (data past TotalFileSize), handed to the virtual slot +0x10
+   (swvM3GReader_Fail; -11 is returned without it). Returns -1 while it needs more, the bytes used when the
+   file ended, or the error. */
 int32 swvM3GReader_Feed(uint8 *reader,int32 array,const uint8 *data,int32 offset,int32 length)
 
 {
