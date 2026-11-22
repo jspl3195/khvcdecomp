@@ -18694,7 +18694,7 @@ void FUN_01014f98(undefined4 param_1,undefined4 *param_2,undefined4 *param_3,und
 }
 
 /* ==== 0x01015128  (file offset 0x15128)  FUN_01015128 ================================================ */
-void FUN_01015128(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+void FUN_01015128(undefined4 *param_1)
 
 {
   undefined4 uVar1;
@@ -21772,7 +21772,7 @@ void FUN_0101956c(uint *param_1)
 }
 
 /* ==== 0x01019618  (file offset 0x19618)  FUN_01019618 ================================================ */
-bool FUN_01019618(void)
+bool FUN_01019618(int param_1)
 
 {
   byte bVar1;
@@ -21785,7 +21785,7 @@ bool FUN_01019618(void)
 }
 
 /* ==== 0x01019640  (file offset 0x19640)  FUN_01019640 ================================================ */
-undefined1 FUN_01019640(void)
+undefined1 FUN_01019640(int param_1)
 
 {
   undefined1 uVar1;
@@ -21886,7 +21886,7 @@ uint thunk_FUN_01019abc(undefined4 param_1)
 }
 
 /* ==== 0x0101977C  (file offset 0x1977C)  FUN_0101977c ================================================ */
-void FUN_0101977c(undefined4 param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4)
+void FUN_0101977c(int param_1,uint *param_2)
 
 {
   bool bVar1;
@@ -50838,7 +50838,7 @@ uint32 swv_ReadLE32(const uint8 *bytes)
 }
 
 /* ==== 0x01038644  (file offset 0x38644)  FUN_01038644 ================================================ */
-int FUN_01038644(uint param_1,int param_2,int param_3,undefined4 param_4)
+int FUN_01038644(uint param_1,int param_2,int param_3)
 
 {
   int iVar1;

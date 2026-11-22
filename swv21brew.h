@@ -655,7 +655,7 @@ void FUN_010148c8(undefined4 *param_1,undefined4 *param_2);
 void FUN_01014b3c(undefined4 param_1,undefined4 *param_2,undefined4 *param_3,undefined4 *param_4, int param_5);
 void FUN_01014d10(undefined4 param_1,undefined4 *param_2,undefined4 *param_3,undefined4 *param_4);
 void FUN_01014f98(undefined4 param_1,undefined4 *param_2,undefined4 *param_3,undefined4 *param_4);
-void FUN_01015128(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
+void FUN_01015128(undefined4 *param_1);
 void FUN_010151f0(int param_1,int param_2);
 int32 swvM3GReader_End(uint8 *reader);   /* 0x01015220 GUESS: name, see swv21brew.c */
 int32 swvM3GReader_Begin(uint8 *reader,int32 allowSwerve);   /* 0x010152D8 GUESS: name, see swv21brew.c */
@@ -694,15 +694,15 @@ void FUN_010181e4(int param_1,int param_2);
 void FUN_010183b0(int param_1);
 void FUN_01018460(int param_1);
 void FUN_0101956c(uint *param_1);
-bool FUN_01019618(void);
-undefined1 FUN_01019640(void);
+bool FUN_01019618(int param_1);
+undefined1 FUN_01019640(int param_1);
 void FUN_01019650(undefined4 param_1,undefined1 *param_2,int param_3);
 int FUN_01019698(int param_1,int param_2);
 uint FUN_010196cc(undefined4 param_1,uint param_2,uint param_3);
 void FUN_01019704(undefined4 param_1,int param_2,int param_3,undefined4 param_4);
 int FUN_01019764(void);
 uint thunk_FUN_01019abc(undefined4 param_1);
-void FUN_0101977c(undefined4 param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
+void FUN_0101977c(int param_1,uint *param_2);
 int FUN_010197c4(undefined4 param_1,int param_2);
 int FUN_0101981c(undefined4 param_1,int param_2);
 int FUN_01019888(undefined4 param_1,int param_2);
@@ -1370,7 +1370,7 @@ void FUN_01038488(int param_1,undefined4 *param_2);
 undefined4 FUN_010384a0(int param_1,uint param_2,undefined4 *param_3);
 undefined4 FUN_01038518(int param_1,uint param_2,undefined4 *param_3);
 uint32 swv_ReadLE32(const uint8 *bytes);   /* 0x01038624 GUESS: name, see swv21brew.c */
-int FUN_01038644(uint param_1,int param_2,int param_3,undefined4 param_4);
+int FUN_01038644(uint param_1,int param_2,int param_3);
 int FUN_010386cc(int *param_1);
 int FUN_010386fc(int *param_1);
 int FUN_01038730(int *param_1);
