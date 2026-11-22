@@ -172,14 +172,14 @@ int FUN_0102da68(int param_1);   /* 0x0102DA68, no Ghidra function */
 
 /* Named functions (entry points, SDK glue, helper wrappers, identified game code). */
 int AEEMod_Load(IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod);   /* 0x01000000 */
-undefined4 swv_memset(undefined4 param_1,uint param_2,undefined4 param_3);   /* 0x0100010C */
+void * swv_memset(void *destination,uint32 value,uint32 byteCount);   /* 0x0100010C */
 undefined4 * rt_memclr_w(undefined4 *param_1,uint param_2);   /* 0x01000130 GUESS: name */
-longlong swv_setjmp(undefined4 *param_1);   /* 0x01000500 */
+int32 swv_setjmp(uint32 *env);   /* 0x01000500 */
 uint32 AEEMod_AddRef(IModule *po);   /* 0x010028C8 */
 int AEEMod_CreateInstance(IModule *po,IShell *pIShell,AEECLSID ClsId,void **ppObj);   /* 0x010028DC */
 uint32 AEEMod_Release(IModule *po);   /* 0x01002910 */
-int AEEStaticMod_New(int16 nSize,IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod,void *pfnMC, void *pfnMF);   /* 0x0100297C */
-void swv_TryArm(int param_1);   /* 0x0100500C */
+int AEEStaticMod_New(int16 nSize,IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod,PFNMODCREATEINST pfnMC,PFNFREEMODDATA pfnMF);   /* 0x0100297C */
+void swv_TryArm(uint8 *frame);   /* 0x0100500C */
 uint8 *swv_Graphics3D_New(void);   /* 0x010098A4 */
 void swv_SpanFillGeneric(uint8 *raster);   /* 0x0100A8B4 GUESS: name, see swv21brew.c */
 void swv_SpanFillGouraud(uint8 *raster);   /* 0x0100B18C GUESS: name, see swv21brew.c */
@@ -188,91 +188,91 @@ uint32 swvObj_AddRef(ISwerveObject *po);   /* 0x01011F8C */
 int32 swvObj_QueryInterface(ISwerveObject *po,SwerveClassId cls,void **ppo);   /* 0x01011FC4 */
 uint32 swvObj_Release(ISwerveObject *po);   /* 0x01012294 */
 undefined4 swv_Matrix4Invert(int param_1);   /* 0x0101376C */
-void swv_NativeRelease(int *param_1);   /* 0x01019F28 */
+void swv_NativeRelease(uint8 *object);   /* 0x01019F28 */
 void swv_Graphics3D_bindTarget(uint8 *graphics,int32 width,int32 height,int32 pitch,void *pixels,int32 x, int32 y,int32 dx,int32 dy);   /* 0x010202E4 */
 uint32 ISwerve_AddRef(ISwerve *po);   /* 0x01024788 */
 int ISwerve_CreateObject(ISwerve *po,SwerveClassId cls,void **ppObj);   /* 0x0102479C */
 uint32 ISwerve_Release(ISwerve *po);   /* 0x01024978 */
 void ISwerve_GetPixelFormat(ISwerve *po,SwervePixelFormat *pFmt);   /* 0x01024A1C */
 void ISwerve_GetVersion(ISwerve *po,SwerveVersion *pVer);   /* 0x01024A68 */
-int swv_TryPush(int param_1);   /* 0x01025E98 */
+uint8 * swv_TryPush(uint8 *frame);   /* 0x01025E98 */
 void swv_TryPop(void);   /* 0x01026298 */
 void helper_free(void *p);   /* 0x01029908 */
 void helper_free(void *p);   /* 0x01029910 */
 void * helper_malloc(uint32 size);   /* 0x0102CBF8 */
 void * helper_malloc(uint32 size);   /* 0x0102CBFC */
-void * swv_New(uint32 param_1);   /* 0x0102CC00 */
-int swv_GetFpStatusPtr(void);   /* 0x0102CC70 */
-int swv_Create_AnimationController(void **ppObj);   /* 0x0102CDFC */
+void * swv_New(uint32 size);   /* 0x0102CC00 */
+uint32 * swv_GetFpStatusPtr(void);   /* 0x0102CC70 */
+int32 swv_Create_AnimationController(void **ppObj);   /* 0x0102CDFC */
 void swv_InitVtbl_AnimationController(void **pVtbl);   /* 0x0102CEE4 */
-int swv_Create_AnimationTrack(void **ppObj);   /* 0x0102D160 */
+int32 swv_Create_AnimationTrack(void **ppObj);   /* 0x0102D160 */
 void swv_InitVtbl_AnimationTrack(void **pVtbl);   /* 0x0102D2B0 */
-int swv_Create_Appearance(void **ppObj);   /* 0x0102D3CC */
+int32 swv_Create_Appearance(void **ppObj);   /* 0x0102D3CC */
 void swv_InitVtbl_Appearance(void **pVtbl);   /* 0x0102D678 */
-int swv_Create_Ext100(void **ppObj);   /* 0x0102D8AC */
-int swv_Create_Ext101(void **ppObj);   /* 0x0102D990 */
-int swv_Create_Background(void **ppObj);   /* 0x0102DA7C */
+int32 swv_Create_Ext100(void **ppObj);   /* 0x0102D8AC */
+int32 swv_Create_Ext101(void **ppObj);   /* 0x0102D990 */
+int32 swv_Create_Background(void **ppObj);   /* 0x0102DA7C */
 void swv_InitVtbl_Background(void **pVtbl);   /* 0x0102DC40 */
-int swv_Create_Camera(void **ppObj);   /* 0x0102E00C */
+int32 swv_Create_Camera(void **ppObj);   /* 0x0102E00C */
 void swv_InitVtbl_Camera(void **pVtbl);   /* 0x0102E150 */
-int swv_Create_CompositingMode(void **ppObj);   /* 0x0102E44C */
+int32 swv_Create_CompositingMode(void **ppObj);   /* 0x0102E44C */
 void swv_InitVtbl_CompositingMode(void **pVtbl);   /* 0x0102E50C */
-int swv_Create_Fog(void **ppObj);   /* 0x0102E9E0 */
+int32 swv_Create_Fog(void **ppObj);   /* 0x0102E9E0 */
 void swv_InitVtbl_Fog(void **pVtbl);   /* 0x0102EABC */
 void swv_SetGlobal00(uint32 value);   /* 0x0102ECE8 */
 uint32 swv_GetGlobal00(void);   /* 0x0102F464 */
-int swv_Create_Graphics3D(void **ppObj);   /* 0x0102F904 */
+int32 swv_Create_Graphics3D(void **ppObj);   /* 0x0102F904 */
 void swv_InitVtbl_Graphics3D(void **pVtbl);   /* 0x0102FA30 */
 int IGraphics3D_BindTarget (IGraphics3D *po,uint16 cx,uint16 cy,int nPitch,void *pBits,int x,int y,int dx,int dy);   /* 0x0102FF38 */
-int swv_Create_Group(void **ppObj);   /* 0x0103028C */
+int32 swv_Create_Group(void **ppObj);   /* 0x0103028C */
 void swv_InitVtbl_Group(void **pVtbl);   /* 0x01030380 */
-int swv_Create_Image2D(void **ppObj);   /* 0x01030A4C */
+int32 swv_Create_Image2D(void **ppObj);   /* 0x01030A4C */
 void swv_InitVtbl_Image2D(void **pVtbl);   /* 0x01030B84 */
-int swv_Create_KeyframeSequence(void **ppObj);   /* 0x01032A60 */
+int32 swv_Create_KeyframeSequence(void **ppObj);   /* 0x01032A60 */
 void swv_InitVtbl_KeyframeSequence(void **pVtbl);   /* 0x01032AF0 */
-int swv_Create_Light(void **ppObj);   /* 0x01032DF8 */
+int32 swv_Create_Light(void **ppObj);   /* 0x01032DF8 */
 void swv_InitVtbl_Light(void **pVtbl);   /* 0x01032F1C */
-int swv_Create_Loader(void **ppObj);   /* 0x01033634 */
+int32 swv_Create_Loader(void **ppObj);   /* 0x01033634 */
 void swv_InitVtbl_Loader(void **pVtbl);   /* 0x01033764 */
-int swv_Create_Material(void **ppObj);   /* 0x010339C4 */
+int32 swv_Create_Material(void **ppObj);   /* 0x010339C4 */
 void swv_InitVtbl_Material(void **pVtbl);   /* 0x01033AC4 */
-int swv_Create_Mesh(void **ppObj);   /* 0x01033C6C */
+int32 swv_Create_Mesh(void **ppObj);   /* 0x01033C6C */
 void swv_InitVtbl_Mesh(void **pVtbl);   /* 0x01033E44 */
-int swv_Create_MorphingMesh(void **ppObj);   /* 0x01034200 */
+int32 swv_Create_MorphingMesh(void **ppObj);   /* 0x01034200 */
 void swv_InitVtbl_MorphingMesh(void **pVtbl);   /* 0x01034384 */
-int swv_Create_PolygonMode(void **ppObj);   /* 0x01037F40 */
+int32 swv_Create_PolygonMode(void **ppObj);   /* 0x01037F40 */
 void swv_InitVtbl_PolygonMode(void **pVtbl);   /* 0x01038000 */
-int swv_Create_RayIntersection(void **ppObj);   /* 0x010382E0 */
+int32 swv_Create_RayIntersection(void **ppObj);   /* 0x010382E0 */
 void swv_InitVtbl_RayIntersection(void **pVtbl);   /* 0x01038590 */
-int swv_Create_SkinnedMesh(void **ppObj);   /* 0x01038818 */
+int32 swv_Create_SkinnedMesh(void **ppObj);   /* 0x01038818 */
 void swv_InitVtbl_SkinnedMesh(void **pVtbl);   /* 0x010388E4 */
-int swv_Create_Sprite3D(void **ppObj);   /* 0x01038C2C */
+int32 swv_Create_Sprite3D(void **ppObj);   /* 0x01038C2C */
 void swv_InitVtbl_Sprite3D(void **pVtbl);   /* 0x01038DC4 */
-int swv_Create_Class24(void **ppObj);   /* 0x0103927C */
+int32 swv_Create_Class24(void **ppObj);   /* 0x0103927C */
 void swv_InitVtbl_Class24(void **pVtbl);   /* 0x0103930C */
 void * helper_malloc(uint32 size);   /* 0x01039598 */
-undefined4 swv_ErrorToResult(int param_1);   /* 0x0103976C */
+uint32 swv_ErrorToResult(int32 error);   /* 0x0103976C GUESS: name, see swv21brew.c */
 void helper_free(void *p);   /* 0x010398D0 */
 uint32 swv_GetGlobal00(void);   /* 0x01039910 */
 ISwerve * swv_GetSwerveObject(void);   /* 0x01039938 */
 void * helper_GetAppInstance(void);   /* 0x01039960 */
 SwerveGlobals * swv_GetGlobals(void);   /* 0x01039978 */
 void ** swv_GetVtblCache(void);   /* 0x0103999C */
-undefined4 thunk_swv_memset(undefined4 param_1,uint param_2,undefined4 param_3);   /* 0x01039DF0 */
+void * thunk_swv_memset(void *destination,uint32 value,uint32 byteCount);   /* 0x01039DF0 */
 int swv_NewSwerve(int16 nSize,IShell *pIShell,IModule *pIModule,ISwerve **ppObj);   /* 0x01039DF4 */
 int swv_WrapObject(void *pNative,ISwerveObject **ppOut);   /* 0x01039FB4 */
 void swv_SetGlobal00(uint32 value);   /* 0x0103AF88 */
-int swv_Create_Texture2D(void **ppObj);   /* 0x0103B200 */
+int32 swv_Create_Texture2D(void **ppObj);   /* 0x0103B200 */
 void swv_InitVtbl_Texture2D(void **pVtbl);   /* 0x0103B32C */
-int swv_Create_Transform(void **ppObj);   /* 0x0103B68C */
+int32 swv_Create_Transform(void **ppObj);   /* 0x0103B68C */
 void swv_InitVtbl_Transform(void **pVtbl);   /* 0x0103B768 */
-int swv_Create_TriangleStripArray(void **ppObj);   /* 0x0103C81C */
+int32 swv_Create_TriangleStripArray(void **ppObj);   /* 0x0103C81C */
 void swv_InitVtbl_TriangleStripArray(void **pVtbl);   /* 0x0103C87C */
-int swv_Create_VertexArray(void **ppObj);   /* 0x0103C9C4 */
+int32 swv_Create_VertexArray(void **ppObj);   /* 0x0103C9C4 */
 void swv_InitVtbl_VertexArray(void **pVtbl);   /* 0x0103CA24 */
-int swv_Create_VertexBuffer(void **ppObj);   /* 0x0103CC48 */
+int32 swv_Create_VertexBuffer(void **ppObj);   /* 0x0103CC48 */
 void swv_InitVtbl_VertexBuffer(void **pVtbl);   /* 0x0103CEB0 */
-int swv_Create_World(void **ppObj);   /* 0x0103D18C */
+int32 swv_Create_World(void **ppObj);   /* 0x0103D18C */
 void swv_InitVtbl_World(void **pVtbl);   /* 0x0103D2C4 */
 uint swv_f2d(uint param_1,uint param_2,undefined4 param_3,uint param_4);   /* 0x0103EE80 */
 uint swv_fadd(uint param_1,uint param_2);   /* 0x0103EEE8 */
@@ -292,6 +292,7 @@ void swv_fp_status(uint param_1,uint param_2);   /* 0x0103F8E8 */
 /* No Ghidra function exists for these; bodies are hand-written in the .c file. */
 int AEEClsCreateInstance(AEECLSID ClsId, IShell *pIShell, IModule *po, void **ppObj);
 void AEEMod_FreeResources(IModule *po, IHeap *ph, IFileMgr *pfm);
+SwvSkinBoneSet * swvSkin_CopyBoneSet(SwvSkinBoneSet *destination,const SwvSkinBoneSet *source);   /* 0x01027B40 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
 
 /* Not yet identified (auto-named by Ghidra). */
 int64 ll_mul_int(uint32 aLow,int32 aHigh,int32 b);   /* 0x01000028 GUESS: name, see swv21brew.c */
@@ -337,7 +338,7 @@ void FUN_01002ef8(int param_1,int param_2,int param_3,undefined4 param_4,int par
 void FUN_0100300c(int param_1,uint param_2,uint param_3,int param_4,int param_5,int *param_6);
 void FUN_010031a0(int param_1,int param_2);
 undefined8 swvSkinnedMesh_AddTransform(int param_1,int param_2,int param_3,int param_4,int param_5);   /* 0x01003234 GUESS: name, see swv21brew.c */
-int swvSkin_FindOrAddBoneSet(int param_1,undefined4 param_2);
+int32 swvSkin_FindOrAddBoneSet(uint8 *mesh,const SwvSkinBoneSet *boneSet);   /* 0x010033A4 GUESS: name, see swv21brew.c */
 int FUN_01003408(int param_1);
 void FUN_01003474(int param_1,undefined4 param_2);
 void swvNode_Align(int param_1,int param_2);   /* 0x010034CC JSR-184 1.1, see swv21brew.c */
@@ -355,14 +356,14 @@ void FUN_0100400c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
 void FUN_0100406c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
 void FUN_010040cc(int *param_1,undefined1 *param_2,undefined4 param_3,undefined4 param_4);
 void FUN_0100412c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
-undefined4 * swvSkin_AppendBoneSet(int *param_1,undefined4 *param_2);
+SwvSkinBoneSet * swvSkin_AppendBoneSet(uint8 *list,const SwvSkinBoneSet *boneSet);   /* 0x0100418C GUESS: name, see swv21brew.c */
 uint32 swvExt_AddRef(SwvExtObject *object);   /* 0x010041EC GUESS: name, see swv21brew.c */
 uint32 swvExt_Release(SwvExtObject *object);   /* 0x01004200 GUESS: name, see swv21brew.c */
-void swvArchiveEntry_Read(int param_1,undefined4 param_2,uint param_3,undefined4 param_4);
+int32 swvArchiveEntry_Read(SwvExtObject *entry,void *buffer,uint32 count);   /* 0x01004250 GUESS: name, see swv21brew.c */
 void swvArchive_EnumInit(SwvExtObject *archive);   /* 0x010042BC GUESS: name, see swv21brew.c */
-undefined4 swvArchive_EnumNext(int param_1,undefined4 *param_2,int *param_3);
+int32 swvArchive_EnumNext(SwvExtObject *archive,uint32 *size,char **name);   /* 0x010042D0 GUESS: name, see swv21brew.c */
 int swvArchive_Open(int param_1,undefined4 param_2);
-int swvArchive_OpenEntry(int param_1,undefined4 param_2,undefined4 *param_3,void **param_4);
+int32 swvArchive_OpenEntry(SwvExtObject *archive,const char *name,uint32 *size,SwvExtObject **ppEntry);   /* 0x01004638 GUESS: name, see swv21brew.c */
 int32 swvSkin_BoneSetsEqual(uint8 *mesh,const uint16 *a,const uint16 *b);   /* 0x010047B0 GUESS: name, see swv21brew.c */
 int FUN_01004848(int param_1,int param_2);
 int FUN_0100486c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
@@ -425,7 +426,7 @@ void FUN_01007e30(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
 void FUN_01007f40(int param_1,undefined4 param_2,uint param_3,uint param_4,int param_5);
 undefined4 FUN_01007f8c(int param_1,int param_2,int param_3,int param_4,int param_5);
 undefined4 FUN_0100800c(int param_1,undefined4 param_2,undefined4 param_3);
-void thunk_swvTexture2D_SetImage(int param_1,int param_2);
+void thunk_swvTexture2D_SetImage(uint8 *texture,uint8 *image);   /* 0x01008064 */
 void thunk_FUN_01023f30(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 void swvSection_SetSink(uint8 *section,void *sink);
 void FUN_01008074(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
@@ -501,7 +502,7 @@ int FUN_0100ec1c(void);
 int * FUN_0100ec40(void);
 void swv_FillRect(uint8 *raster,int32 x,int32 y,int32 width,int32 height,uint16 colour,uint8 alpha);   /* 0x0100ECA0 GUESS: name, see swv21brew.c */
 void FUN_0100ed84(int param_1,int param_2,int param_3);
-uint swvSkin_VertexBones(int param_1,uint param_2,int param_3);
+int32 swvSkin_VertexBones(const uint8 *mesh,uint32 vertex,int32 *bones);   /* 0x0100EDD4 GUESS: name, see swv21brew.c */
 uint8 *swvObject3D_FindValue(uint8 *object,int32 userId);   /* 0x0100EEF0 JSR-184 1.1, see swv21brew.c */
 void swv_ColourScale(int32 *colour,int32 factor);   /* 0x0100EFE4 GUESS: name, see swv21brew.c */
 void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
@@ -615,7 +616,7 @@ int32 FUN_010124ac(const uint8 *object,int32 property);   /* 0x010124AC hand-wri
 int32 swvCamera_IsAnimatable(const uint8 *object,int32 property);   /* 0x010124B0 GUESS: name, hand-written (no Ghidra function), see swv21brew.c */
 int32 swvSprite3D_IsAnimatable(const uint8 *object,int32 property);   /* 0x010124DC GUESS: name, see swv21brew.c */
 int32 swvNode_SameSceneGraph(const uint8 *node,const uint8 *other);   /* 0x01012508 GUESS: name, see swv21brew.c */
-void swv_Matrix4SetIdentity(undefined4 *param_1);
+void swv_Matrix4SetIdentity(uint32 *matrix);   /* 0x01012568 GUESS: name, see swv21brew.c */
 void FUN_010125e4(int param_1,uint param_2,undefined4 param_3,undefined4 param_4,undefined4 *param_5 );
 void FUN_010126d0(void);
 void FUN_01012758(void);
@@ -674,7 +675,7 @@ void FUN_010172fc(undefined4 *param_1,uint *param_2);
 undefined4 * FUN_0101749c(undefined4 *param_1,undefined4 *param_2);
 void FUN_01017840(int *param_1,undefined4 param_2);
 void FUN_01017894(uint *param_1);
-void swvSkin_BuildBoneSets(int param_1,undefined4 param_2,int param_3);
+void swvSkin_BuildBoneSets(uint8 *mesh);   /* 0x0101790C GUESS: name, see swv21brew.c */
 bool FUN_01017b00(int param_1);
 int FUN_01017bc4(int param_1);
 bool FUN_01017ccc(int param_1);
@@ -751,7 +752,7 @@ undefined4 FUN_0101e0b0(int param_1,undefined4 param_2);
 void swvM3G_ReadTexture2D(int param_1,undefined4 param_2);   /* 0x0101E144 JSR-184 1.1, see swv21brew.c */
 void swvM3G_ReadAppearance(int param_1,undefined4 param_2);   /* 0x0101E288 GUESS: name, see swv21brew.c */
 void swvM3G_ReadBackground(int param_1,undefined4 param_2);   /* 0x0101E3F4 JSR-184 1.1, see swv21brew.c */
-void thunk_swvM3G_ReadObject3D(int param_1,undefined4 param_2);
+void thunk_swvM3G_ReadObject3D(uint8 *object,uint8 *reader);   /* 0x0101E530 */
 void FUN_0101e534(int param_1,undefined4 param_2);
 void swvM3G_ReadPolygonMode(int param_1,undefined4 param_2);   /* 0x0101E778 JSR-184 1.1, see swv21brew.c */
 void swvM3G_ReadSkinnedMesh(int param_1,undefined4 param_2);   /* 0x0101E824 JSR-184 1.1, see swv21brew.c */
@@ -984,7 +985,7 @@ int * FUN_01029540(int *param_1);
 int * FUN_010295ac(int *param_1);
 void * FUN_01029620(void *param_1);
 void * FUN_01029650(void *param_1,uint *param_2);
-void * swv_Matrix4Copy(void *param_1,undefined4 param_2);
+void * swv_Matrix4Copy(void *destination,const void *source);   /* 0x010296E8 GUESS: name, see swv21brew.c */
 undefined4 * FUN_01029724(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
 void FUN_010297d4(undefined4 *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, undefined4 param_5,undefined4 param_6,undefined4 param_7,undefined4 param_8, undefined4 param_9,undefined4 param_10,undefined4 param_11,undefined4 param_12, undefined4 param_13,undefined4 param_14,undefined4 param_15,undefined4 param_16, undefined4 param_17);
 void FUN_01029850(void *param_1);
@@ -1049,9 +1050,9 @@ uint FUN_0102c7d4(undefined4 *param_1,undefined4 *param_2,undefined4 param_3,uin
 void FUN_0102c820(undefined4 *param_1,undefined4 *param_2,undefined4 param_3);
 undefined8 FUN_0102c868(int *param_1,int *param_2);
 void FUN_0102c8bc(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3,undefined4 param_4);
-void * swv_NewArray(uint32 param_1);
+void * swv_NewArray(uint32 size);   /* 0x0102CB54 GUESS: name, see swv21brew.c */
 undefined4 FUN_0102cb6c(undefined4 *param_1,undefined4 *param_2);
-void * swv_New_2(uint32 param_1);
+void * swv_New_2(uint32 size);   /* 0x0102CBE0 GUESS: name, see swv21brew.c */
 void FUN_0102cc18(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3);
 int FUN_0102cc60(void);
 int FUN_0102cc80(int param_1,int param_2);
@@ -1186,7 +1187,7 @@ int32 swvImage2D_InitFromPalette(ISwerveObject *po,int32 format,int32 width,int3
 undefined4 FUN_01030e98(int param_1,int param_2,int param_3,int param_4,int param_5);
 void FUN_01030f48(int param_1,undefined1 *param_2);
 int32 swvImage2D_Set(ISwerveObject *po,int32 x,int32 y,int32 width,int32 height,int32 size, const uint8 *pixels);   /* 0x01030F60 JSR-184 1.1, see swv21brew.c */
-void thunk_swv_InitVtbl_Object3D(int param_1);
+void thunk_swv_InitVtbl_Object3D(void **pVtbl);   /* 0x01031030 */
 void FUN_01031034(int param_1,int param_2);
 undefined4 FUN_010311c4(int param_1,char *param_2,int param_3);
 undefined4 FUN_010311d4(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
@@ -1277,7 +1278,7 @@ void swvObject3D_GetUserId(ISwerveObject *po,int32 *pUserId);   /* 0x010350FC JS
 void FUN_01035114(int param_1);
 void FUN_01035134(int param_1,int param_2,undefined4 *param_3);
 void FUN_0103515c(int param_1);
-void swv_InitVtbl_Object3D(int param_1);   /* 0x0103517C GUESS: name, see swv21brew.c */
+void swv_InitVtbl_Object3D(void **pVtbl);   /* 0x0103517C GUESS: name, see swv21brew.c */
 int32 swvObject3D_RemoveAnimationTrack(ISwerveObject *po,ISwerveObject *track);   /* 0x01035270 GUESS: name, see swv21brew.c */
 void FUN_010352f4(int param_1);
 void swvObject3D_SetUserId(ISwerveObject *po,int32 userId);   /* 0x01035304 JSR-184 1.1, see swv21brew.c */
@@ -1364,7 +1365,7 @@ undefined4 FUN_0103840c(int param_1,undefined4 param_2,int param_3);
 void FUN_01038488(int param_1,undefined4 *param_2);
 undefined4 FUN_010384a0(int param_1,uint param_2,undefined4 *param_3);
 undefined4 FUN_01038518(int param_1,uint param_2,undefined4 *param_3);
-int swv_ReadLE32(byte *param_1);
+uint32 swv_ReadLE32(const uint8 *bytes);   /* 0x01038624 GUESS: name, see swv21brew.c */
 int FUN_01038644(uint param_1,int param_2,int param_3,undefined4 param_4);
 int FUN_010386cc(int *param_1);
 int FUN_010386fc(int *param_1);
@@ -1405,7 +1406,7 @@ void FUN_01039a10(int param_1,undefined4 *param_2);
 int FUN_01039a28(int param_1,undefined4 param_2,undefined4 param_3,int *param_4);
 int FUN_01039aac(int param_1,undefined4 param_2,undefined4 param_3,int *param_4);
 int FUN_01039c24(int param_1,int param_2);
-undefined4 thunk_swv_memcpy(undefined4 param_1,undefined4 param_2,undefined4 param_3);   /* 0x01039DEC */
+void * thunk_swv_memcpy(void *destination,const void *source,uint32 byteCount);   /* 0x01039DEC */
 int FUN_0103a77c(int param_1,int param_2,void **param_3);
 int FUN_0103ad28(int param_1,undefined4 param_2,undefined4 *param_3);
 void FUN_0103ae48(void);

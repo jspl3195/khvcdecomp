@@ -20,18 +20,16 @@
 #include "swv21brew.h"
 
 /* ==== 0x01000000  (file offset 0x00000)  AEEMod_Load ================================================= */
+/* AEEMod_Load - swv21brew's module entry (first instruction). Called by khvcemu load_extension
+   (runtime.py:267-288) when kh.mod first does ISHELL_CreateInstance(AEECLSID_SWERVE 0x0102bbfc). Calls
+   AEEStaticMod_New(0x14 = sizeof(AEEMod), pIShell, ph, ppMod, NULL, NULL) and returns its result.
+   Name/prototype from the BREW SDK generic module code (AEEModGen.c): the code layout matches it (same
+   stub as kh.mod). Evidence: 0x01000000 - 0x01000024 (the two NULLs stored at [sp] and [sp, #4], the
+   arguments moved up a register, `mov r0, #0x14`, `bl 0x0100297c`). */
 int AEEMod_Load(IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod)
 
 {
-  int iVar1;
-  
-                    /* AEEMod_Load - swv21brew's module entry (first instruction). Called by khvcemu
-                       load_extension (runtime.py:267-288) when kh.mod first does
-                       ISHELL_CreateInstance(AEECLSID_SWERVE 0x0102bbfc). Tail-calls
-                       AEEStaticMod_New(0x14, ...). Name/prototype from the BREW SDK generic module
-                       code (AEEModGen.c): the code layout matches it (same stub as kh.mod). */
-  iVar1 = AEEStaticMod_New(0x14,pIShell,ph,ppMod,(void *)0x0,(void *)0x0);
-  return iVar1;
+  return AEEStaticMod_New(0x14,pIShell,ph,ppMod,NULL,NULL);
 }
 
 /* ==== 0x01000028  (file offset 0x00028)  ll_mul_int ================================================== */
@@ -84,17 +82,18 @@ void * swv_memcpy(void *destination,void *source,uint32 byteCount)
 }
 
 /* ==== 0x0100010C  (file offset 0x0010C)  swv_memset ================================================== */
-undefined4 swv_memset(undefined4 param_1,uint param_2,undefined4 param_3)
+/* memset(destination, value, byteCount): replicates the low byte of value to a word and fills with
+   rt_memset(destination, byteCount, pattern); returns the destination (kept on the stack, `stmdb sp!, {r0,
+   lr}` / `ldmia sp!, {r0, pc}`). Part of the engine's own C library (it does not use helper memset). Most
+   of the engine calls it through thunk_swv_memset (0x01039df0). Evidence: 0x0100010c - 0x01000124 (`and
+   r3, r1, #0xff`, `orr r2, r3, r3, lsl #8`, `orr r2, r2, r2, lsl #16`, `mov r1, r2` the count). */
+void *swv_memset(void *destination,uint32 value,uint32 byteCount)
 
 {
-  uint uVar1;
-  
-                    /* memset(dst, c, n): replicates the byte to a word and fills with rt_memset.
-                       Part of the engine's own C library (it does not use helper memset). Most of
-                       the engine calls it through thunk_swv_memset (0x01039df0). */
-  uVar1 = param_2 & 0xff | (param_2 & 0xff) << 8;
-  rt_memset(param_1,param_3,uVar1 | uVar1 << 0x10);
-  return param_1;
+  uint32 pattern = (value & 0xff) | (value & 0xff) << 8;
+
+  rt_memset(destination,byteCount,pattern | pattern << 16);
+  return destination;
 }
 
 /* ==== 0x01000130  (file offset 0x00130)  rt_memclr_w ================================================= */
@@ -497,37 +496,23 @@ longlong FUN_01000474(int param_1,uint param_2,uint param_3,uint param_4)
 }
 
 /* ==== 0x01000500  (file offset 0x00500)  swv_setjmp ================================================== */
-longlong swv_setjmp(undefined4 *param_1)
+/* setjmp (GUESS: the ARM C library's): stores r8, r9, fp (r11), lr, then r4-r7, then sl (r10), sp into the
+   buffer (env[0..9]), and env[10] the r0 left by a `bl` to the next instruction (an absent weak routine,
+   so env + 10 itself), and returns 0; swv_longjmp (0x01000524) makes it return again with its value. Used
+   with swv_TryPush / swv_TryArm / swv_TryPop as the engine's error handling (each API entry runs inside
+   such a frame), and by libpng (png_error). Evidence: 0x01000500 - 0x01000520 (`stmia r0!, {r8, r9, r11,
+   lr}`, `stmia r0!, {r4, r5, r6, r7}`, `stmia r0!, {r10, sp}`, `stmdb sp!, {r0, lr}` / `bl 0x01000514` /
+   `ldmia sp!, {r1, lr}` / `stmia r1!, {r0}`, `mov r0, #0` / `mov pc, lr`); the result is r0 = 0 (Ghidra
+   had read r0:r1 as a 64-bit value, env + 11 in the high word). */
+int32 swv_setjmp(uint32 *env)
 
 {
-  undefined4 unaff_r4;
-  undefined4 unaff_r5;
-  undefined4 unaff_r6;
-  undefined4 unaff_r7;
-  undefined4 unaff_r8;
-  undefined4 unaff_r9;
-  undefined4 unaff_r10;
-  undefined4 unaff_r11;
-  undefined4 in_lr;
-  
-                    /* setjmp (GUESS: the ARM C library's): stores r8, r9, fp (r11), lr, then r4-r7,
-                       then sl (r10), sp into the buffer (env[0..9]), and env[10] the r0 left by a `bl`
-                       to the next instruction (an absent weak routine, so env + 10 itself), and
-                       returns 0; swv_longjmp (0x01000524) makes it return again with its value. Used
-                       with swv_TryPush / swv_TryArm / swv_TryPop as the engine's error handling (each
-                       API entry runs inside such a frame), and by libpng (png_error). */
-  *param_1 = unaff_r8;
-  param_1[1] = unaff_r9;
-  param_1[2] = unaff_r11;
-  param_1[3] = in_lr;
-  param_1[4] = unaff_r4;
-  param_1[5] = unaff_r5;
-  param_1[6] = unaff_r6;
-  param_1[7] = unaff_r7;
-  param_1[8] = unaff_r10;
-  param_1[9] = register0x00000054;
-  param_1[10] = param_1 + 10;
-  return ZEXT48(param_1 + 0xb) << 0x20;
+  int32 result = 0;
+
+  /* env[0..9] = r8, r9, fp, lr, r4 - r7, sl, sp: the caller's registers (stmia, no C form) */
+  /* the `bl` to the next instruction (the absent weak routine) leaves r0 = env + 10 */
+  env[10] = (uint32)(env + 10);
+  return result;
 }
 
 /* ==== 0x01000524  (file offset 0x00524)  swv_longjmp ================================================= */
@@ -2869,34 +2854,26 @@ uint32 AEEMod_AddRef(IModule *po)
 }
 
 /* ==== 0x010028DC  (file offset 0x028DC)  AEEMod_CreateInstance ======================================= */
-/* WARNING: Removing unreachable block (ram,0x0100290c) */
-/* WARNING: Restarted to delay deadcode elimination for space: stack */
-
+/* AEEMod_CreateInstance - IModule vtbl[2]. Called by khvcemu with clsid 0x0102bbfc (runtime.py:286). When
+   the module's pfnModCrInst (AEEMod +0xC) is set, a tail jump to it, else (it is NULL here) a tail jump to
+   AEEClsCreateInstance (0x01002894, merged into this body by Ghidra): if ClsId == 0x0102bbfc (literal
+   0x010028c4) -> swv_NewSwerve(0x10, pIShell, po, ppObj); else *ppObj = 0, returns 1. Both get (ClsId,
+   pIShell, po, ppObj), PFNMODCREATEINST's order (Ghidra had dropped the arguments of the pfnModCrInst
+   call). The trailing `bx lr` at 0x0100290c is AEEMod_FreeResources (IModule vtbl[3]). Name/prototype from
+   the BREW SDK generic module code (AEEModGen.c): the code layout matches it (same stub as kh.mod).
+   Evidence: 0x010028dc - 0x01002908 (`mov lr, r2` / `mov r0, lr` ClsId, `mov r2, r0` po, `ldr r12, [r0,
+   #0xc]` / `cmp r12, #0`, `beq 0x01002894`, `bxne r12`). */
 int AEEMod_CreateInstance(IModule *po,IShell *pIShell,AEECLSID ClsId,void **ppObj)
 
 {
-  int iVar1;
-  
-                    /* AEEMod_CreateInstance - IModule vtbl[2]. Called by khvcemu with clsid
-                       0x0102bbfc (runtime.py:286). pfnModCrInst (+0xC) is NULL, so it continues
-                       into AEEClsCreateInstance (0x01002894, merged into this body by Ghidra): if
-                       ClsId == 0x0102bbfc (literal 0x010028c4) -> swv_NewSwerve(0x10, pIShell, po,
-                       ppObj); else *ppObj = 0, returns 1. The trailing `bx lr` at 0x0100290c is
-                       AEEMod_FreeResources (IModule vtbl[3]). Name/prototype from the BREW SDK
-                       generic module code (AEEModGen.c): the code layout matches it (same stub as
-                       kh.mod). */
-  if (po[3].pvt != (IModuleVtbl *)0x0) {
-                    /* WARNING: Could not recover jumptable at 0x01002908. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-    iVar1 = (*(code *)po[3].pvt)();
-    return iVar1;
-  }
-  *ppObj = (void *)0x0;
-  iVar1 = 1;
-  if (ClsId == AEECLSID_SWERVE_VALUE) {
-    iVar1 = swv_NewSwerve(0x10,pIShell,po,ppObj);
-  }
-  return iVar1;
+  PFNMODCREATEINST create = ((AEEMod *)po)->pfnModCrInst;
+  int result;
+
+  if (create == NULL)
+    result = AEEClsCreateInstance(ClsId,pIShell,po,ppObj);
+  else
+    result = (*create)(ClsId,pIShell,po,ppObj);
+  return result;
 }
 
 /* ==== 0x0100290C  (file offset 0x0290C)  hand-written (no Ghidra function) =========================== */
@@ -2935,57 +2912,52 @@ uint32 AEEMod_Release(IModule *po)
 }
 
 /* ==== 0x0100297C  (file offset 0x0297C)  AEEStaticMod_New ============================================ */
-int AEEStaticMod_New(int16 nSize,IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod,void *pfnMC,
-                    void *pfnMF)
+/* AEEStaticMod_New - allocates AEEMod (nSize + 0x10, helper malloc; nSize below sizeof(AEEMod), 0x14, has
+   0x14 added) with its IModule vtable at +nSize: AddRef 0x010028c8, Release 0x01002910, CreateInstance
+   0x010028dc, FreeResources 0x0100290c; m_nRefs 1, m_pIShell, pfnModCrInst = pfnMC, pfnModFreeData =
+   pfnMF, *ppMod = it. Unlike kh.mod's copy it AddRefs pIShell; ph is not read. Returns 0, 1 (EFAILED)
+   without ppMod or pIShell, 14 (EBADPARM) for nSize < 0, 2 (ENOMEMORY). Name/prototype from the BREW SDK
+   generic module code (AEEModGen.c): the code layout matches it (same stub as kh.mod). Evidence:
+   0x0100297c - 0x01002a40 (`movs r7, r3` / `cmpne r6, #0` / `moveq r0, #1`, `cmp r5, #0` / `movlt r0,
+   #0xe`, `cmp r5, #0x14` / `addcc` / `lsl #16` / `asr #16`, `ldr r1, [r0, #0x68]` / `blx r1`, the four
+   PC-relative `str`, `stmib r4, {r0, r6, r8, r9}`, the AddRef `blx r1`). */
+int AEEStaticMod_New(int16 nSize,IShell *pIShell,AEEHelperFuncs *ph,IModule **ppMod,PFNMODCREATEINST pfnMC,
+                     PFNFREEMODDATA pfnMF)
 
 {
-  uint uVar1;
-  int iVar2;
-  IModule *pIVar3;
-  IModuleVtbl *pIVar4;
-  
-                    /* AEEStaticMod_New - allocates AEEMod (nSize + 0x10, helper malloc) with its
-                       IModule vtable at +nSize: AddRef 0x010028c8, Release 0x01002910,
-                       CreateInstance 0x010028dc, FreeResources 0x0100290c. Unlike kh.mod's copy it
-                       AddRefs pIShell. Returns 14 (EBADPARM) for nSize < 0. pfnMC/pfnMF are
-                       PFNMODCREATEINST/PFNFREEMODDATA (void * in Ghidra). Name/prototype from the
-                       BREW SDK generic module code (AEEModGen.c): the code layout matches it (same
-                       stub as kh.mod). */
-  uVar1 = (uint)nSize;
-  if (ppMod == (IModule **)0x0 || pIShell == (IShell *)0x0) {
-    iVar2 = 1;
-  }
-  else if ((int)uVar1 < 0) {
-    iVar2 = 0xe;
-  }
+  int result;
+  AEEMod *module;
+  IModuleVtbl *vtbl;
+
+  if (ppMod == NULL || pIShell == NULL)
+    result = 1;
+  else if (nSize < 0)
+    result = 0xe;
   else {
-    *ppMod = (IModule *)0x0;
-    if (uVar1 < 0x14) {
-      uVar1 = (int)((uVar1 + 0x14) * 0x10000) >> 0x10;
-    }
-                    /* helper[26] void * malloc(uint32 size)  (AEEHelperFuncs +0x68, via *(base-4))
-                        */
-    pIVar3 = (IModule *)(*g_pHelperFuncs->malloc)(uVar1 + 0x10);
-    if (pIVar3 == (IModule *)0x0) {
-      iVar2 = 2;
-    }
+    *ppMod = NULL;
+    if (nSize < 0x14)
+      nSize = (int16)(nSize + 0x14);
+    module = (AEEMod *)(*g_pHelperFuncs->malloc)((uint32)(nSize + 0x10));
+    if (module == NULL)
+      result = 2;
     else {
-      pIVar4 = (IModuleVtbl *)((int)&pIVar3->pvt + uVar1);
-      pIVar4->AddRef = (_func_351 *)(ADDRESS_OF_AEEMod_AddRef_OFFSET + 0x10029f8);
-      pIVar4->Release = (_func_352 *)(ADDRESS_OF_AEEMod_Release_OFFSET + 0x1002a04);
-      pIVar4->CreateInstance = (_func_353 *)(ADDRESS_OF_AEEMod_CreateInstance_OFFSET + 0x1002a10);
-      pIVar4->FreeResources = (_func_354 *)(DATA_AT_0100290C_OFFSET + 0x1002a1c);
-      pIVar3->pvt = pIVar4;
-      pIVar3[1].pvt = (IModuleVtbl *)0x1;
-      pIVar3[2].pvt = (IModuleVtbl *)pIShell;
-      pIVar3[3].pvt = pfnMC;
-      pIVar3[4].pvt = pfnMF;
+      vtbl = (IModuleVtbl *)((uint8 *)module + nSize);
+      vtbl->AddRef = (uint32 (*)(IModule *))(ADDRESS_OF_AEEMod_AddRef_OFFSET + 0x10029f8);
+      vtbl->Release = (uint32 (*)(IModule *))(ADDRESS_OF_AEEMod_Release_OFFSET + 0x1002a04);
+      vtbl->CreateInstance = (int (*)(IModule *,IShell *,AEECLSID,void **))
+                                 (ADDRESS_OF_AEEMod_CreateInstance_OFFSET + 0x1002a10);
+      vtbl->FreeResources = (void (*)(IModule *,IHeap *,IFileMgr *))(DATA_AT_0100290C_OFFSET + 0x1002a1c);
+      module->pvt = vtbl;
+      module->m_nRefs = 1;
+      module->m_pIShell = pIShell;
+      module->pfnModCrInst = pfnMC;
+      module->pfnModFreeData = pfnMF;
       (*pIShell->pvt->AddRef)(pIShell);
-      iVar2 = 0;
-      *ppMod = pIVar3;
+      result = 0;
+      *ppMod = (IModule *)module;
     }
   }
-  return iVar2;
+  return result;
 }
 
 /* ==== 0x01002A58  (file offset 0x02A58)  swvObject3D_AddAnimationTrackValue ========================== */
@@ -3508,31 +3480,26 @@ LAB_010032b0:
 }
 
 /* ==== 0x010033A4  (file offset 0x033A4)  swvSkin_FindOrAddBoneSet ==================================== */
-/* GUESS: name (not yet rewritten). Returns the index of the SkinnedMesh's bone set (the list at
-   +0xd0: array +0xd4, count +0xd8, SwvSkinBoneSet) equal to param_2 (swvSkin_BoneSetsEqual), searching
-   from 1 (0 is the no-bone template), or appends it (swvSkin_AppendBoneSet) and returns the old count,
-   its index. Only swvSkin_BuildBoneSets calls it. */
-int swvSkin_FindOrAddBoneSet(int param_1,undefined4 param_2)
+/* GUESS: name. Returns the index of the SkinnedMesh's bone set (the list at +0xd0: array +0xd4, count
+   +0xd8, SwvSkinBoneSet) equal to boneSet (swvSkin_BoneSetsEqual), searching from 1 (0 is the no-bone
+   template), or appends it (swvSkin_AppendBoneSet) and returns the old count, its index. Only
+   swvSkin_BuildBoneSets calls it. Evidence: 0x010033a4 - 0x01003404 (`mov r4, #1`, `ldr r6, [r0, #0xd8]`
+   read once (+0xd4 at each step: BoneSetsEqual writes neither), `mov r8, #0x13` / `mul` / `lsl #2` the
+   0x4c-byte sets, `cmp r4, r6` / `blt`, `add r0, r5, #0xd0` / `bl 0x0100418c`, `mov r0, r6`). */
+int32 swvSkin_FindOrAddBoneSet(uint8 *mesh,const SwvSkinBoneSet *boneSet)
 
 {
-  int iVar1;
-  int iVar2;
-  int iVar3;
-  
-  iVar2 = 1;
-  iVar3 = *(int *)(param_1 + 0xd8);
-  while( true ) {
-    if (iVar3 <= iVar2) {
-      swvSkin_AppendBoneSet(param_1 + 0xd0,param_2);
-      return iVar3;
-    }
-    iVar1 = swvSkin_BoneSetsEqual((uint8 *)param_1,
-                                  (const uint16 *)(*(int *)(param_1 + 0xd4) + iVar2 * 0x4c),
-                                  (const uint16 *)param_2);
-    if (iVar1 != 0) break;
-    iVar2 = iVar2 + 1;
+  const SwvSkinBoneSet *sets = *(const SwvSkinBoneSet **)(mesh + 0xd4);
+  int32 count = *(int32 *)(mesh + 0xd8);
+  int32 index = 1;
+
+  while (index < count && swvSkin_BoneSetsEqual(mesh,sets[index].bones,boneSet->bones) == 0)
+    index++;
+  if (index >= count) {
+    swvSkin_AppendBoneSet(mesh + 0xd0,boneSet);
+    index = count;
   }
-  return iVar2;
+  return index;
 }
 
 /* ==== 0x01003408  (file offset 0x03408)  FUN_01003408 ================================================ */
@@ -4374,28 +4341,31 @@ void FUN_0100412c(int *param_1,undefined4 *param_2,undefined4 param_3,undefined4
 }
 
 /* ==== 0x0100418C  (file offset 0x0418C)  swvSkin_AppendBoneSet ======================================= */
-/* GUESS: name (not yet rewritten). Appends a copy of the bone set param_2 (SwvSkinBoneSet, 0x4c
-   bytes: the indices, the 0x44-byte transform through FUN_01027acc, the weight scale) to the list
-   param_1 (a SkinnedMesh's +0xd0: count +8, capacity +0xc, grown through its virtual slot +4) and
-   returns it. Called by swvSkin_BuildBoneSets (the template) and swvSkin_FindOrAddBoneSet. */
-undefined4 * swvSkin_AppendBoneSet(int *param_1,undefined4 *param_2)
+/* GUESS: name. Appends a copy of the bone set boneSet (SwvSkinBoneSet, 0x4c bytes: the indices, the
+   0x44-byte transform, the weight scale) to the list list (a SkinnedMesh's +0xd0: vtable +0, array +4,
+   count +8, capacity +0xc) and returns the new entry: a full list is first grown through its virtual slot
+   +4 to FUN_0102df78(count + 1, capacity); the entry is FUN_0102cc80(list, old count), filled by a tail
+   jump to swvSkin_CopyBoneSet (0x01027b40, no Ghidra function: Ghidra had pasted its code here). Called by
+   swvSkin_BuildBoneSets (the template) and swvSkin_FindOrAddBoneSet. Evidence: 0x0100418c - 0x010041e8
+   (`cmp r0, r1` / `bne`, `add r0, r0, #1` with r1 still the capacity for `bl 0x0102df78` (Ghidra had
+   dropped it), r1 its result and r2 the count for the `blx r3`, `ldr r1, [r4, #8]` / `add r0, r1, #1` /
+   `str`, r1 the old count for `bl 0x0102cc80` (dropped too), `mov r1, r5` / `b 0x01027b40`). */
+SwvSkinBoneSet *swvSkin_AppendBoneSet(uint8 *list,const SwvSkinBoneSet *boneSet)
 
 {
-  undefined4 uVar1;
-  undefined4 *puVar2;
-  
-  if (param_1[2] == param_1[3]) {
-    uVar1 = FUN_0102df78(param_1[2] + 1);
+  int32 count = *(int32 *)(list + 8);
+
+  if (count == *(int32 *)(list + 0xc)) {
+    int32 vtable = *(int32 *)list;
+
     /* engine virtual call, slot +0x4: one of the 18 functions the static engine vtables put there (by the
-       object's class) */
-    (*(code *)(*(int *)(*param_1 + 4) + *param_1))(param_1,uVar1,param_1[2]);
+       object's class); here the list's grow (the new capacity, the count) */
+    (*(code *)(*(int32 *)(vtable + 4) + vtable))
+        (list,FUN_0102df78(count + 1,*(int32 *)(list + 0xc)),*(int32 *)(list + 8));
   }
-  param_1[2] = param_1[2] + 1;
-  puVar2 = (undefined4 *)FUN_0102cc80(param_1);
-  *puVar2 = *param_2;
-  FUN_01027acc(puVar2 + 1,param_2 + 1);
-  puVar2[0x12] = param_2[0x12];
-  return puVar2;
+  count = *(int32 *)(list + 8);
+  *(int32 *)(list + 8) = count + 1;
+  return swvSkin_CopyBoneSet((SwvSkinBoneSet *)FUN_0102cc80((int)list,count),boneSet);
 }
 
 /* ==== 0x010041EC  (file offset 0x041EC)  swvExt_AddRef =============================================== */
@@ -4434,29 +4404,26 @@ uint32 swvExt_Release(SwvExtObject *object)
 }
 
 /* ==== 0x01004250  (file offset 0x04250)  swvArchiveEntry_Read ======================================== */
-/* GUESS: name (not yet rewritten). Slot 2 of the archive entry stream's vtable (Ext101Vtbl): reads at
-   most param_3 bytes into param_2 from the entry's region of the archive's IFile: seeks to start
-   (field_10) + position (field_18), reads min(param_3, size (field_14) - position) bytes and advances
-   the position. */
-void swvArchiveEntry_Read(int param_1,undefined4 param_2,uint param_3,undefined4 param_4)
+/* GUESS: name. Slot 2 of the archive entry stream's vtable (Ext101Vtbl, SwvExtObject): reads at most count
+   bytes into buffer from the entry's region of the archive's IFile: seeks (IFILE_Seek, _SEEK_START) to
+   start (field_10) + position (field_18), reads min(count, size (field_14) - position) bytes (unsigned)
+   and advances the position by what IFILE_Read returned, which it returns (r0 is left holding it: Ghidra
+   had typed the function void and given it a fourth argument from a register leftover). Evidence:
+   0x01004250 - 0x010042b8 (`sub r1, r1, r0` / `cmp r1, r2` / `movhi r1, r2`, `mov r1, #0` / `add r2, r1,
+   r0`, the Seek slot +0x1c and the Read slot +0xc `blx r3`, `add r1, r1, r0` / `str r1, [r4, #0x18]`). */
+int32 swvArchiveEntry_Read(SwvExtObject *entry,void *buffer,uint32 count)
 
 {
-  int iVar1;
-  uint uVar2;
-  int *piVar3;
-  
-  piVar3 = *(int **)(param_1 + 8);
-  uVar2 = *(int *)(param_1 + 0x14) - *(int *)(param_1 + 0x18);
-  if (param_3 < uVar2) {
-    uVar2 = param_3;
-  }
-  (*((IFile *)piVar3)->pvt->Seek)
-      ((IFile *)piVar3,0,
-       *(int *)(param_1 + 0x10) + *(int *)(param_1 + 0x18)
-       /* not arguments, value leftovers: *(code **)(*piVar3 + 0x1c),param_4 */);
-  iVar1 = (*((IFile *)piVar3)->pvt->Read)((IFile *)piVar3,param_2,uVar2);
-  *(int *)(param_1 + 0x18) = *(int *)(param_1 + 0x18) + iVar1;
-  return;
+  IFile *file = entry->pFile;
+  uint32 available = entry->field_14 - entry->field_18;
+  int32 read;
+
+  if (available > count)
+    available = count;
+  (*file->pvt->Seek)(file,0,(int32)(entry->field_10 + entry->field_18));
+  read = (*file->pvt->Read)(file,buffer,available);
+  entry->field_18 += read;
+  return read;
 }
 
 /* ==== 0x010042BC  (file offset 0x042BC)  swvArchive_EnumInit ========================================= */
@@ -4473,46 +4440,41 @@ void swvArchive_EnumInit(SwvExtObject *archive)
 }
 
 /* ==== 0x010042D0  (file offset 0x042D0)  swvArchive_EnumNext ========================================= */
-/* GUESS: name (not yet rewritten). Slot 3 of the SWVARC archive's vtable: the next directory entry of
-   the listing swvArchive_EnumInit starts (index field_14, advanced here): *name (param_3) gets a
-   strdup of the entry's name, *size (param_2, when not NULL) its data size; returns 1, or 0 at the end
-   (or with no archive open). The directory (pBuffer): a 32-bit count, then entries {entry size, ?,
-   data size (+8), name hash (+0xc), name (+0x10)}, every value little-endian (swv_ReadLE32). */
-undefined4 swvArchive_EnumNext(int param_1,undefined4 *param_2,int *param_3)
+/* GUESS: name. Slot 3 of the SWVARC archive's vtable (Ext100Vtbl, SwvExtObject): the next directory entry
+   of the listing swvArchive_EnumInit starts (index field_14, advanced here): *name gets a strdup of the
+   entry's name, *size (when not NULL) its data size; returns 1, or 0 at the end, with no archive open
+   (pFile NULL) or when strdup fails (*name is NULL then). The directory (pBuffer): a 32-bit count, then
+   entries {entry size, ?, data size (+8), name hash (+0xc), name (+0x10)}, every value little-endian
+   (swv_ReadLE32); entry index is reached by adding up the entry sizes. Evidence: 0x010042d0 - 0x01004378
+   (`str r0, [r2]` with 0, `ldr r0, [r8, #8]` / `cmp r0, #0`, `cmp r0, r5` / `bls` (unsigned), `add r0, r5,
+   #1` / `str r0, [r8, #0x14]`, the `sub r5, r5, #1` / `bne` walk, the strdup slot +0xf4 `blx r1` on entry
+   + 0x10, `cmp r6, #0`, `add r0, r4, #8`). */
+int32 swvArchive_EnumNext(SwvExtObject *archive,uint32 *size,char **name)
 
 {
-  uint uVar1;
-  int iVar2;
-  undefined4 uVar3;
-  int iVar4;
-  uint uVar5;
-  
-  *param_3 = 0;
-  iVar4 = *(int *)(param_1 + 0xc);
-  if (*(int *)(param_1 + 8) != 0) {
-    uVar1 = swv_ReadLE32(iVar4);
-    uVar5 = *(uint *)(param_1 + 0x14);
-    if (uVar5 < uVar1) {
-      *(uint *)(param_1 + 0x14) = uVar5 + 1;
-      iVar4 = iVar4 + 4;
-      for (; uVar5 != 0; uVar5 = uVar5 - 1) {
-        iVar2 = swv_ReadLE32(iVar4);
-        iVar4 = iVar2 + iVar4;
-      }
-                    /* helper[61] char * strdup(const char *s)  (AEEHelperFuncs +0xf4, via
-                       *(base-4)) */
-      iVar2 = (*g_pHelperFuncs->strdup)(iVar4 + 0x10);
-      *param_3 = iVar2;
-      if (iVar2 != 0) {
-        if (param_2 != (undefined4 *)0x0) {
-          uVar3 = swv_ReadLE32(iVar4 + 8);
-          *param_2 = uVar3;
-        }
-        return 1;
+  const uint8 *entry = (const uint8 *)archive->pBuffer;
+  int32 found = 0;
+  uint32 count;
+  uint32 index;
+
+  *name = NULL;
+  if (archive->pFile != NULL) {
+    count = swv_ReadLE32(entry);
+    index = archive->field_14;
+    if (count > index) {
+      archive->field_14 = index + 1;
+      entry += 4;
+      for (; index != 0; index--)
+        entry += swv_ReadLE32(entry);
+      *name = (*g_pHelperFuncs->strdup)((const char *)entry + 0x10);
+      if (*name != NULL) {
+        if (size != NULL)
+          *size = swv_ReadLE32(entry + 8);
+        found = 1;
       }
     }
   }
-  return 0;
+  return found;
 }
 
 /* ==== 0x01004380  (file offset 0x04380)  swvArchive_Open ============================================= */
@@ -4640,85 +4602,71 @@ int swvArchive_Open(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x01004638  (file offset 0x04638)  swvArchive_OpenEntry ======================================== */
-/* GUESS: name (not yet rewritten). Slot 5 of the SWVARC archive's vtable: opens the entry named
-   param_2 as an archive entry stream (class 101, swv_Create_Ext101) in *param_4, its size in *param_3.
-   The name is lowercased (strdup, strlower) and hashed from its last character to its first, h = h *
-   0x19660d + c + 0x3c6ef35f (the constants of Numerical Recipes' quick LCG); the entry with that hash
-   (+0xc) is found by walking the directory, adding up the data sizes for its offset from field_10.
-   The stream shares the archive's IFile (AddRef) and gets its start (field_10) and size (field_14).
-   Returns 0, 0xd with no archive open, 2 with no memory, or 0x101 when no entry matches. */
-int swvArchive_OpenEntry(int param_1,undefined4 param_2,undefined4 *param_3,void **param_4)
+/* GUESS: name. Slot 5 of the SWVARC archive's vtable (Ext100Vtbl, SwvExtObject): opens the entry named
+   name as an archive entry stream (class 101, swv_Create_Ext101) in *ppEntry, its size in *size (when not
+   NULL). The name is copied (helper strdup) and lowercased (helper strlower, on the copy: Ghidra had
+   dropped that argument) and hashed from its last character to its first, h = h * 0x19660d + c +
+   0x3c6ef35f (the multiplier and increment of the quick LCG in Numerical Recipes in C, 2nd ed., ch. 7.1),
+   the copy freed; the entry with that hash (+0xc) is found by walking the directory (pBuffer: a count,
+   then entries of their own size +0), adding up the data sizes (+8) for its offset from field_10. The
+   stream shares the archive's IFile (AddRef) and gets its start (field_10) and size (field_14). Returns 0,
+   0xd with no archive open, 2 when the copy fails, swv_Create_Ext101's error, or 0x101 when no entry
+   matches. Evidence: 0x01004638 - 0x01004794 (`str r0, [r3]` with 0, `moveq r0, #0xd`, the strdup slot
+   +0xf4 and the strlower slot +0x114 `blx` with r0 the copy, `movs r8, r0` / `moveq r0, #2`, the strlen
+   +0x14, `mulgt` / `ldrbgt lr, [r2, #-1]!` / `addgt`, the free +0x6c, `cmp r0, r6` / `bne`, `bl
+   0x0102d990`, the AddRef slot +0 `blx`, `str` +8 / +0x10 / +0x14, `strne r0, [r10]`, `ldr r0,
+   [0x10047ac]` 0x101). */
+int32 swvArchive_OpenEntry(SwvExtObject *archive,const char *name,uint32 *size,SwvExtObject **ppEntry)
 
 {
-  bool bVar1;
-  int iVar2;
-  int iVar3;
-  int iVar4;
-  undefined4 uVar5;
-  byte *pbVar6;
-  int iVar7;
-  int iVar8;
-  void *pvVar9;
-  int iVar10;
-  
-  *param_4 = (void *)0x0;
-  if (*(int *)(param_1 + 8) == 0) {
-    iVar3 = 0xd;
-  }
-  else {
-    iVar7 = *(int *)(param_1 + 0xc);
-    iVar2 = swv_ReadLE32(iVar7);
-    iVar3 = INTEGER_MINUS_18052;
-    iVar7 = iVar7 + 4;
-    iVar10 = *(int *)(param_1 + 0x10);
-                    /* helper[61] char * strdup(const char *s)  (AEEHelperFuncs +0xf4, via
-                       *(base-4)) */
-    (*g_pHelperFuncs->strdup)(param_2);
-                    /* helper[69] char * strlower(char *s)  (AEEHelperFuncs +0x114, via *(base-4))
-                        */
-    iVar3 = (*g_pHelperFuncs->strlower)();
-    if (iVar3 == 0) {
-      iVar3 = 2;
-    }
+  int32 result = 0xd;
+  int32 found = 0;
+  const uint8 *entry;
+  uint32 count;
+  uint32 offset;
+  uint32 hash = 0;
+  uint32 entrySize;
+  int32 length;
+  char *lower;
+  SwvExtObject *stream;
+
+  *ppEntry = NULL;
+  if (archive->pFile != NULL) {
+    entry = (const uint8 *)archive->pBuffer;
+    count = swv_ReadLE32(entry);
+    entry += 4;
+    offset = archive->field_10;
+    lower = (*g_pHelperFuncs->strlower)((*g_pHelperFuncs->strdup)(name));
+    if (lower == NULL)
+      result = 2;
     else {
-      iVar8 = 0;
-                    /* helper[5] uint32 strlen(const char *s)  (AEEHelperFuncs +0x14, via *(base-4))
-                        */
-      iVar4 = (*g_pHelperFuncs->strlen)(iVar3);
-      pbVar6 = (byte *)(iVar3 + iVar4);
-      while (bVar1 = 0 < iVar4, iVar4 = iVar4 + -1, bVar1) {
-        pbVar6 = pbVar6 + -1;
-        iVar8 = WORD_HEXADECIMAL_0019660D * iVar8 + (uint)*pbVar6 + WORD_HEXADECIMAL_3C6EF35F;
-      }
-                    /* helper[27] void free(void *p)  (AEEHelperFuncs +0x6c, via *(base-4)) */
-      (*g_pHelperFuncs->free)(iVar3);
-      for (; iVar3 = INTEGER_257, iVar2 != 0; iVar2 = iVar2 + -1) {
-        iVar3 = swv_ReadLE32(iVar7 + 0xc);
-        if (iVar3 == iVar8) {
-          iVar3 = swv_Create_Ext101(param_4);
-          if (iVar3 != 0) {
-            return iVar3;
+      for (length = (int32)(*g_pHelperFuncs->strlen)(lower); length > 0; length--)
+        hash = WORD_HEXADECIMAL_0019660D * hash + (uint8)lower[length - 1] + WORD_HEXADECIMAL_3C6EF35F;
+      (*g_pHelperFuncs->free)(lower);
+      result = INTEGER_257;
+      for (; count != 0 && !found; count--) {
+        if (swv_ReadLE32(entry + 0xc) == hash) {
+          found = 1;
+          result = swv_Create_Ext101((void **)ppEntry);
+          if (result == 0) {
+            stream = *ppEntry;
+            (*archive->pFile->pvt->AddRef)(archive->pFile);
+            stream->pFile = archive->pFile;
+            stream->field_10 = offset;
+            entrySize = swv_ReadLE32(entry + 8);
+            stream->field_14 = entrySize;
+            if (size != NULL)
+              *size = entrySize;
           }
-          pvVar9 = *param_4;
-          /* Ghidra had dropped the receiver; restored from the disassembly (r0) */
-          (*((IFile *)*(undefined4 **)(param_1 + 8))->pvt->AddRef)((IFile *)*(undefined4 **)(param_1 + 8));
-          *(undefined4 *)((int)pvVar9 + 8) = *(undefined4 *)(param_1 + 8);
-          *(int *)((int)pvVar9 + 0x10) = iVar10;
-          uVar5 = swv_ReadLE32(iVar7 + 8);
-          *(undefined4 *)((int)pvVar9 + 0x14) = uVar5;
-          if (param_3 != (undefined4 *)0x0) {
-            *param_3 = uVar5;
-          }
-          return 0;
         }
-        iVar3 = swv_ReadLE32(iVar7 + 8);
-        iVar10 = iVar3 + iVar10;
-        iVar3 = swv_ReadLE32(iVar7);
-        iVar7 = iVar3 + iVar7;
+        else {
+          offset += swv_ReadLE32(entry + 8);
+          entry += swv_ReadLE32(entry);
+        }
       }
     }
   }
-  return iVar3;
+  return result;
 }
 
 /* ==== 0x010047B0  (file offset 0x047B0)  swvSkin_BoneSetsEqual ======================================= */
@@ -5184,15 +5132,15 @@ void swv_ColourClamp(int32 *colour)
 }
 
 /* ==== 0x0100500C  (file offset 0x0500C)  swv_TryArm ================================================== */
-void swv_TryArm(int param_1)
+/* GUESS: name. Marks the error frame armed (+0x84 = 1) after swv_setjmp returned 0, first passing the
+   engine's current frame list (FUN_0100f8e8) to FUN_01018094. Evidence: 0x0100500c - 0x01005024 (`bl
+   0x0100f8e8` whose result stays in r0 for `bl 0x01018094`: Ghidra had dropped that argument; `mov r0, #1`
+   / `str r0, [r4, #0x84]`). */
+void swv_TryArm(uint8 *frame)
 
 {
-                    /* Marks the error frame armed (+0x84 = 1) after swv_setjmp returned 0. GUESS:
-                       name. */
-  FUN_0100f8e8();
-  FUN_01018094();
-  *(undefined4 *)(param_1 + 0x84) = 1;
-  return;
+  FUN_01018094(FUN_0100f8e8());
+  *(uint32 *)(frame + 0x84) = 1;
 }
 
 /* ==== 0x01005028  (file offset 0x05028)  FUN_01005028 ================================================ */
@@ -7638,68 +7586,13 @@ undefined4 FUN_0100800c(int param_1,undefined4 param_2,undefined4 param_3)
 }
 
 /* ==== 0x01008064  (file offset 0x08064)  thunk_swvTexture2D_SetImage ================================= */
-/* A one-instruction jump to swvTexture2D_SetImage (JSR-184 1.1, Texture2D.setImage), called by the
-   Texture2D slot 31 FUN_0103b3ec (GUESS: its constructor, Texture2D(image)); Ghidra repeated its code
-   here, see there.
-   */
-void thunk_swvTexture2D_SetImage(int param_1,int param_2)
+/* A one-instruction jump to swvTexture2D_SetImage (JSR-184 1.1, Texture2D.setImage), the texture and the
+   image passed through, called by the Texture2D slot 31 FUN_0103b3ec (GUESS: its constructor,
+   Texture2D(image)); Ghidra repeated its code here, see there. Evidence: 0x01008064 (`b 0x01021abc`). */
+void thunk_swvTexture2D_SetImage(uint8 *texture,uint8 *image)
 
 {
-  int iVar1;
-  int *piVar2;
-  void *pvVar3;
-  undefined4 uVar4;
-  
-  iVar1 = *(int *)(param_1 + 0x2c);
-  if (param_2 != 0) {
-    param_2 = param_2 + 4;
-  }
-  if (iVar1 != 0) {
-    iVar1 = iVar1 + 4;
-  }
-  piVar2 = (int *)FUN_01004848(iVar1,param_2);
-  if (piVar2 != (int *)0x0) {
-    piVar2 = piVar2 + -1;
-  }
-  *(int **)(param_1 + 0x2c) = piVar2;
-  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
-     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
-     not static), so for one the method is not known here */
-  /* the image (the receiver) and the width restored: Ghidra had dropped them */
-  iVar1 = (*(code *)(*(int *)(*piVar2 + 0x24) + *piVar2))(piVar2);
-  iVar1 = swv_IsPowerOfTwo(iVar1);
-  /* engine virtual call, slot +0x24: of the static engine vtables only the renderer's (0x01002398)
-     FUN_0101a380 and 0x01002410's FUN_0102da68 have it; a scene object's vtable is not among them (GUESS:
-     not static), so for one the method is not known here */
-  if ((iVar1 != 0) &&
-     (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x24) + **(int **)(param_1 + 0x2c)))
-                        (*(int **)(param_1 + 0x2c)), iVar1 < 0x401)) {
-    /* engine virtual call, slot +0x28: of the static engine vtables only the renderer's (0x01002398)
-       FUN_0101d21c has it; a scene object's vtable is not among them (GUESS: not static), so for one the
-       method is not known here */
-    /* the image (the receiver) and the height restored: Ghidra had dropped them */
-    iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) +
-                        **(int **)(param_1 + 0x2c)))(*(int **)(param_1 + 0x2c));
-    iVar1 = swv_IsPowerOfTwo(iVar1);
-    if ((iVar1 != 0) &&
-       (iVar1 = (*(code *)(*(int *)(**(int **)(param_1 + 0x2c) + 0x28) + **(int **)(param_1 + 0x2c))
-                )(*(int **)(param_1 + 0x2c)), iVar1 < 0x401)) {
-      return;
-    }
-  }
-  uVar4 = INTEGER_MINUS_1301;
-  iVar1 = FUN_0100f7d0();
-  FUN_01013bcc(*(undefined4 *)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),uVar4);
-  if (*(int *)(iVar1 + 0x14) != 0) {
-    FUN_01013bcc(*(undefined4 *)(iVar1 + *(int *)(iVar1 + 0x14) * 4 + -4),uVar4);
-  }
-  pvVar3 = helper_GetAppInstance();
-  uVar4 = *(undefined4 *)((int)pvVar3 + 0xc);
-  pvVar3 = helper_GetAppInstance();
-                    /* WARNING: Could not recover jumptable at 0x010398cc. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  (*((IShell *)*(int **)((int)pvVar3 + 0xc))->pvt->CloseApplet)((IShell *)uVar4,0);
-  return;
+  swvTexture2D_SetImage((int)texture,(int)image);
 }
 
 /* ==== 0x01008068  (file offset 0x08068)  thunk_FUN_01023f30 ========================================== */
@@ -13610,73 +13503,51 @@ void FUN_0100ed84(int param_1,int param_2,int param_3)
 }
 
 /* ==== 0x0100EDD4  (file offset 0x0EDD4)  swvSkin_VertexBones ========================================= */
-/* GUESS: name (not yet rewritten). The bones of a SkinnedMesh that move vertex param_2: of the bone
-   table's entries (+0xc4, count +0xc8, SwvSkinBone) whose range (firstVertex, vertexCount) covers it, at
-   most the 2 heaviest (weight +0), their table indices into param_3 (an int[2]); returns how many.
-   An entry whose range is empty or past the vertex count is an error (FUN_0102f7e0, -1300). */
-uint swvSkin_VertexBones(int param_1,uint param_2,int param_3)
+/* GUESS: name. The bones of a SkinnedMesh that move vertex vertex: of the bone table's entries (+0xc4,
+   count +0xc8, SwvSkinBone) whose range (firstVertex, vertexCount) covers it, at most 2, their table
+   indices into bones (an int32[2]); returns how many. An entry whose range is empty or past the vertex
+   count (the skin's VertexBuffer, +0x88, its +0x1c) is an error (FUN_0102f7e0, -1300, which does not
+   return), whether it covers the vertex or not. While fewer than 2 are kept a covering entry is added;
+   after that one heavier (weight +0) than the heaviest weight kept so far replaces the lighter of the two
+   kept (GUESS, a quirk: compared with the heaviest, not the lighter one, so a bone between the two is
+   dropped). Evidence: 0x0100edd4 - 0x0100eee8 (r8 the count, r9 the heaviest, r10 the vertex count; `cmp
+   r0, r10` / `blge` and `beq` / `ble` the two errors, `bhi` / `bls` (unsigned) the range, `mvn r1, #0` /
+   `cmp r8, #2` / `movlt r1, r8` / `addlt`, `cmp r0, r9` / `ble` skip, the 2-step `bge` loop, `cmn r1, #1`
+   / `strne r5` / `cmpne r0, r9` / `movgt r9, r0`). */
+int32 swvSkin_VertexBones(const uint8 *mesh,uint32 vertex,int32 *bones)
 
 {
-  int iVar1;
-  uint uVar2;
-  uint uVar3;
-  uint *puVar4;
-  int iVar5;
-  uint uVar6;
-  uint uVar7;
-  int iVar8;
-  bool bVar9;
-  
-  iVar5 = 0;
-  uVar6 = 0;
-  uVar7 = 0;
-  iVar8 = *(int *)(*(int *)(param_1 + 0x88) + 0x1c);
-  do {
-    if (*(int *)(param_1 + 200) <= iVar5) {
-      return uVar6;
-    }
-    puVar4 = (uint *)(*(int *)(param_1 + 0xc4) + iVar5 * 0xc);
-    if (iVar8 <= (int)(uint)(ushort)puVar4[1]) {
+  int32 vertexCount = *(const int32 *)(*(const uint8 *const *)(mesh + 0x88) + 0x1c);
+  int32 count = 0;
+  int32 heaviest = 0;
+  int32 i;
+
+  for (i = 0; i < *(const int32 *)(mesh + 0xc8); i++) {
+    const SwvSkinBone *table = *(const SwvSkinBone *const *)(mesh + 0xc4);
+    const SwvSkinBone *bone = &table[i];
+    int32 slot = -1;
+    int32 j;
+
+    if (bone->firstVertex >= vertexCount)
       FUN_0102f7e0(INTEGER_MINUS_1300);
-    }
-    if ((*(ushort *)((int)puVar4 + 6) == 0) ||
-       (iVar8 < (int)((uint)(ushort)puVar4[1] + (uint)*(ushort *)((int)puVar4 + 6)))) {
+    if (bone->vertexCount == 0 || bone->firstVertex + bone->vertexCount > vertexCount)
       FUN_0102f7e0(INTEGER_MINUS_1300);
-    }
-    if (((ushort)puVar4[1] <= param_2) &&
-       (uVar2 = (uint)(ushort)puVar4[1] + (uint)*(ushort *)((int)puVar4 + 6), param_2 < uVar2)) {
-      uVar3 = 0xffffffff;
-      if ((int)uVar6 < 2) {
-        uVar3 = uVar6;
-        uVar6 = uVar6 + 1;
+    if (bone->firstVertex <= vertex && vertex < (uint32)(bone->firstVertex + bone->vertexCount)) {
+      if (count < 2)
+        slot = count++;
+      else if (bone->weight > heaviest) {
+        for (j = 0; j < 2; j++)
+          if (slot < 0 || table[bones[j]].weight < table[bones[slot]].weight)
+            slot = j;
       }
-      else {
-        if ((int)*puVar4 <= (int)uVar7) goto LAB_0100eed4;
-        uVar2 = 0;
-        do {
-          if (((int)uVar3 < 0) ||
-             (*(int *)(*(int *)(param_1 + 0xc4) + *(int *)(param_3 + uVar2 * 4) * 0xc) <
-              *(int *)(*(int *)(param_1 + 0xc4) + *(int *)(param_3 + uVar3 * 4) * 0xc))) {
-            uVar3 = uVar2;
-          }
-          uVar2 = uVar2 + 1;
-        } while ((int)uVar2 < 2);
-      }
-      bVar9 = SCARRY4(uVar3,1);
-      iVar1 = uVar3 + 1;
-      if (uVar3 != 0xffffffff) {
-        *(int *)(param_3 + uVar3 * 4) = iVar5;
-        uVar2 = *puVar4;
-        bVar9 = SBORROW4(uVar2,uVar7);
-        iVar1 = uVar2 - uVar7;
-      }
-      if ((uVar3 != 0xffffffff && uVar2 != uVar7) && iVar1 < 0 == bVar9) {
-        uVar7 = uVar2;
+      if (slot != -1) {
+        bones[slot] = i;
+        if (bone->weight > heaviest)
+          heaviest = bone->weight;
       }
     }
-LAB_0100eed4:
-    iVar5 = iVar5 + 1;
-  } while( true );
+  }
+  return count;
 }
 
 /* ==== 0x0100EEF0  (file offset 0x0EEF0)  swvObject3D_FindValue ======================================= */
@@ -14673,7 +14544,7 @@ int FUN_0100fdec(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
     iVar2 = *(int *)(param_1 + 0xf0);
     iVar1 = *(int *)(param_1 + 0xe4);
     if (iVar2 != 0) {
-      swvSkin_BuildBoneSets(iVar2,param_2,iVar1,param_4,param_4);
+      swvSkin_BuildBoneSets((uint8 *)iVar2);
       iVar1 = *(int *)(param_1 + 0xe4) +
               (uint)*(ushort *)(*(int *)(iVar2 + 0xe4) + param_2 * 2) * 0x50;
     }
@@ -15564,7 +15435,7 @@ void FUN_01010e84(int param_1,int param_2,int *param_3,undefined4 *param_4)
   iVar2 = *(int *)(param_1 + 0xf0);
   iVar1 = *(int *)(param_1 + 0xe4);
   if (iVar2 != 0) {
-    swvSkin_BuildBoneSets(iVar2,param_2,iVar1,param_4,param_4);
+    swvSkin_BuildBoneSets((uint8 *)iVar2);
     iVar1 = *(int *)(param_1 + 0xe4) +
             (uint)*(ushort *)(*(int *)(iVar2 + 0xe4) + param_2 * 2) * 0x50;
   }
@@ -17134,29 +17005,30 @@ int32 swvNode_SameSceneGraph(const uint8 *node,const uint8 *other)
 }
 
 /* ==== 0x01012568  (file offset 0x12568)  swv_Matrix4SetIdentity ====================================== */
-/* GUESS: name (not yet rewritten). Sets a transform (16 floats, row by row, then a flags word) to the
-   identity: 1.0 (0x3f800000) on the diagonal, 0 elsewhere, flags 0x3f. */
-void swv_Matrix4SetIdentity(undefined4 *param_1)
+/* GUESS: name. Sets a transform (16 floats, row by row, then a flags word) to the identity: 1.0
+   (0x3f800000) on the diagonal, 0 elsewhere, flags 0x3f. Evidence: 0x01012568 - 0x010125b8 (`mov r1, #0`
+   and twelve `str r1`, from +0x38 down to +4; `mov r1, #0x3f800000` and four `str r1` at +0x3c, +0x28,
+   +0x14, +0; `mov r1, #0x3f` / `str r1, [r0, #0x40]`). */
+void swv_Matrix4SetIdentity(uint32 *matrix)
 
 {
-  param_1[0xe] = 0;
-  param_1[0xd] = 0;
-  param_1[0xc] = 0;
-  param_1[0xb] = 0;
-  param_1[9] = 0;
-  param_1[8] = 0;
-  param_1[7] = 0;
-  param_1[6] = 0;
-  param_1[4] = 0;
-  param_1[3] = 0;
-  param_1[2] = 0;
-  param_1[1] = 0;
-  param_1[0xf] = 0x3f800000;
-  param_1[10] = 0x3f800000;
-  param_1[5] = 0x3f800000;
-  *param_1 = 0x3f800000;
-  param_1[0x10] = 0x3f;
-  return;
+  matrix[14] = 0;
+  matrix[13] = 0;
+  matrix[12] = 0;
+  matrix[11] = 0;
+  matrix[9] = 0;
+  matrix[8] = 0;
+  matrix[7] = 0;
+  matrix[6] = 0;
+  matrix[4] = 0;
+  matrix[3] = 0;
+  matrix[2] = 0;
+  matrix[1] = 0;
+  matrix[15] = 0x3f800000;
+  matrix[10] = 0x3f800000;
+  matrix[5] = 0x3f800000;
+  matrix[0] = 0x3f800000;
+  matrix[16] = 0x3f;
 }
 
 /* ==== 0x010125E4  (file offset 0x125E4)  FUN_010125e4 ================================================ */
@@ -21409,105 +21281,81 @@ void FUN_01017894(uint *param_1)
 }
 
 /* ==== 0x0101790C  (file offset 0x1790C)  swvSkin_BuildBoneSets ======================================= */
-/* GUESS: name (not yet rewritten). Builds a SkinnedMesh's skinning data once (+0xf0 still 0), when
-   it has a vertex buffer (+0x88; its +0x1c the vertex count, its +0x24 GUESS: the positions) and +0x38
-   is set (GUESS: its bones): empties the bone-set list (+0xd0) and adds the template (index 0: no bones,
-   0xffff, 0xffff; an identity transform, swv_Matrix4SetIdentity; weight scale 1.0); then for each
-   vertex takes its bones (swvSkin_VertexBones), a weight scale of 1 / the sum of their weights, and
-   the index of the matching set (swvSkin_FindOrAddBoneSet; 0 with no bones) into the uint16 array at
-   +0xe4 (+0xe0, one per vertex). Sets +0xf0, +0xf4 and +0xf8 to 1. */
-void swvSkin_BuildBoneSets(int param_1,undefined4 param_2,int param_3)
+/* GUESS: name. Builds a SkinnedMesh's skinning data once (+0xf0 still 0), when it has a vertex buffer
+   (+0x88; its +0x1c the vertex count, its +0x24 GUESS: the positions, which must be set) and +0x38 is set
+   (GUESS: its bones): empties the bone-set list (+0xd0, FUN_01023184 with 0) and adds the template (index
+   0: no bones, 0xffff, 0xffff; an identity transform, swv_Matrix4SetIdentity, its flags word first set to
+   0x20 and then overwritten; weight scale 1.0); sizes the per-vertex list (+0xe0) to the vertex count and
+   zeroes it; then for each vertex starts from a copy of the template, takes its bones
+   (swvSkin_VertexBones; each one's range checked again, error -1300 through FUN_0102f7e0, which does not
+   return), their indices and a weight scale of 1 / the sum of their weights (swv_fflt, swv_frdiv) when the
+   sum is positive, and stores the index of the matching set (swvSkin_FindOrAddBoneSet; 0 with no bones)
+   into the uint16 array at +0xe4. Sets +0xf0, +0xf4 and +0xf8 to 1. Only the mesh is passed (r0; Ghidra's
+   second and third parameters were register leftovers). Evidence: 0x0101790c - 0x01017af4 (the 0xac-byte
+   frame: the template at sp+0x58, the vertex's set at sp+4, the bones at sp+0x50; `ldrne r2, [r0, #0x24]`
+   / `cmpne r2, #0` / `movne r1, r2`, `ldr r2, [r5, #0xf0]`, `ldrne r1, [r5, #0x38]`, `str r0, [sp, #0x9c]`
+   0x20, the `strh` loop of INTEGER_65535, `str r4, [sp, #0xa0]` 1.0, `mov r1, r10, lsl #16` / `lsr #16`,
+   `ldr r0, [sp, #0x58]` / `str r0, [sp, #4]`, `bl 0x010296e8`, `blge` / `bl 0x0102f7e0`, `strh r9`, `bl
+   0x0103f500` / `bl 0x0103f240` with 0x3f800000, `moveq r0, #0` / `bl 0x010033a4`, `strh r0, [r1]`). */
+void swvSkin_BuildBoneSets(uint8 *mesh)
 
 {
-  undefined2 uVar1;
-  int iVar2;
-  undefined4 uVar3;
-  int iVar4;
-  int *piVar5;
-  int iVar6;
-  int iVar7;
-  int iVar8;
-  uint uVar9;
-  undefined4 local_cc;
-  undefined1 auStack_c8 [68];
-  undefined4 local_84;
-  int local_80 [2];
-  undefined4 local_78;
-  undefined1 auStack_74 [64];
-  undefined4 local_34;
-  undefined4 local_30;
-  undefined1 *local_2c;
-  undefined1 *local_28;
-  
-  iVar2 = *(int *)(param_1 + 0x88);
-  if (iVar2 != 0) {
-    param_3 = *(int *)(iVar2 + 0x24);
-  }
-  iVar7 = 0;
-  if (iVar2 != 0 && param_3 != 0) {
-    iVar7 = param_3;
-  }
-  if (*(int *)(param_1 + 0xf0) == 0) {
-    iVar4 = 0;
-    if (iVar7 != 0) {
-      iVar4 = *(int *)(param_1 + 0x38);
-    }
-    if (iVar7 != 0 && iVar4 != 0) {
-      iVar7 = *(int *)(iVar2 + 0x1c);
-      FUN_01023184(param_1 + 0xd0,0);
-      local_28 = auStack_74;
-      local_34 = 0x20;
-      iVar2 = 0;
-      do {
-        iVar4 = iVar2 * 2;
-        iVar2 = iVar2 + 1;
-        *(short *)(auStack_74 + iVar4 + -4) = (short)INTEGER_65535;
-      } while (iVar2 < 2);
-      local_30 = 0x3f800000;
-      swv_Matrix4SetIdentity(local_28);
-      swvSkin_AppendBoneSet(param_1 + 0xd0,&local_78);
-      FUN_01023184(param_1 + 0xe0,iVar7);
-      thunk_swv_memset(*(undefined4 *)(param_1 + 0xe4),0,*(int *)(param_1 + 0xe8) << 1);
-      local_2c = auStack_c8;
-      for (uVar9 = 0; (int)uVar9 < iVar7; uVar9 = uVar9 + 1) {
-        local_80[0] = 0;
-        local_80[1] = 0;
-        iVar2 = swvSkin_VertexBones(param_1,uVar9 & 0xffff,local_80);
-        iVar6 = 0;
-        local_cc = local_78;
-        swv_Matrix4Copy(local_2c,local_28);
-        local_84 = local_30;
-        for (iVar4 = 0; iVar4 < iVar2; iVar4 = iVar4 + 1) {
-          iVar8 = local_80[iVar4];
-          piVar5 = (int *)(*(int *)(param_1 + 0xc4) + iVar8 * 0xc);
-          if (iVar7 <= (int)(uint)*(ushort *)(piVar5 + 1)) {
-            FUN_0102f7e0(INTEGER_MINUS_1300);
-          }
-          if ((*(ushort *)((int)piVar5 + 6) == 0) ||
-             (iVar7 < (int)((uint)*(ushort *)(piVar5 + 1) + (uint)*(ushort *)((int)piVar5 + 6)))) {
-            FUN_0102f7e0(INTEGER_MINUS_1300);
-          }
-          *(short *)(auStack_c8 + iVar4 * 2 + -4) = (short)iVar8;
-          iVar6 = *piVar5 + iVar6;
-        }
-        if (0 < iVar6) {
-          uVar3 = swv_fflt(iVar6);
-          local_84 = swv_frdiv(uVar3,0x3f800000);
-        }
-        if (iVar2 == 0) {
-          uVar1 = 0;
-        }
-        else {
-          uVar1 = swvSkin_FindOrAddBoneSet(param_1,&local_cc);
-        }
-        *(undefined2 *)(*(int *)(param_1 + 0xe4) + uVar9 * 2) = uVar1;
+  const uint8 *vertexBuffer = *(const uint8 *const *)(mesh + 0x88);
+  int32 positions = 0;
+  SwvSkinBoneSet set;
+  int32 bones[2];
+  SwvSkinBoneSet template;
+  int32 vertexCount;
+  int32 vertex;
+  int32 count;
+  int32 weights;
+  int32 i;
+  uint16 index;
+
+  if (vertexBuffer != NULL && *(const int32 *)(vertexBuffer + 0x24) != 0)
+    positions = *(const int32 *)(vertexBuffer + 0x24);
+  if (*(int32 *)(mesh + 0xf0) == 0 && positions != 0 && *(int32 *)(mesh + 0x38) != 0) {
+    vertexCount = *(const int32 *)(vertexBuffer + 0x1c);
+    FUN_01023184((int *)(mesh + 0xd0),0);
+    template.transform[16] = 0x20;
+    for (i = 0; i < 2; i++)
+      template.bones[i] = (uint16)INTEGER_65535;
+    template.weightScale = 0x3f800000;
+    swv_Matrix4SetIdentity(template.transform);
+    swvSkin_AppendBoneSet(mesh + 0xd0,&template);
+    FUN_01023184((int *)(mesh + 0xe0),vertexCount);
+    thunk_swv_memset(*(void **)(mesh + 0xe4),0,*(uint32 *)(mesh + 0xe8) << 1);
+    for (vertex = 0; vertex < vertexCount; vertex++) {
+      bones[0] = 0;
+      bones[1] = 0;
+      count = swvSkin_VertexBones(mesh,(uint32)vertex & 0xffff,bones);
+      weights = 0;
+      set.bones[0] = template.bones[0];
+      set.bones[1] = template.bones[1];
+      swv_Matrix4Copy(set.transform,template.transform);
+      set.weightScale = template.weightScale;
+      for (i = 0; i < count; i++) {
+        const SwvSkinBone *bone = *(const SwvSkinBone *const *)(mesh + 0xc4) + bones[i];
+
+        if (bone->firstVertex >= vertexCount)
+          FUN_0102f7e0(INTEGER_MINUS_1300);
+        if (bone->vertexCount == 0 || bone->firstVertex + bone->vertexCount > vertexCount)
+          FUN_0102f7e0(INTEGER_MINUS_1300);
+        set.bones[i] = (uint16)bones[i];
+        weights += bone->weight;
       }
-      *(undefined4 *)(param_1 + 0xf0) = 1;
-      *(undefined4 *)(param_1 + 0xf4) = 1;
-      *(undefined4 *)(param_1 + 0xf8) = 1;
+      if (weights > 0)
+        set.weightScale = swv_frdiv(swv_fflt((uint32)weights),0x3f800000);
+      if (count == 0)
+        index = 0;
+      else
+        index = (uint16)swvSkin_FindOrAddBoneSet(mesh,&set);
+      (*(uint16 **)(mesh + 0xe4))[vertex] = index;
     }
+    *(int32 *)(mesh + 0xf0) = 1;
+    *(int32 *)(mesh + 0xf4) = 1;
+    *(int32 *)(mesh + 0xf8) = 1;
   }
-  return;
 }
 
 /* ==== 0x01017B00  (file offset 0x17B00)  FUN_01017b00 ================================================ */
@@ -23315,27 +23163,23 @@ void FUN_01019f00(undefined4 param_1,int param_2,undefined4 param_3)
 }
 
 /* ==== 0x01019F28  (file offset 0x19F28)  swv_NativeRelease =========================================== */
-void swv_NativeRelease(int *param_1)
+/* GUESS: name. Drops a native engine object's reference count (+4) and, at zero, a tail jump to its
+   virtual destructor (vtbl slot +0, the object and 1) unless the object is NULL (tested after the count is
+   written). Evidence: 0x01019f28 - 0x01019f50 (`subs r1, r1, #1` / `str r1, [r0, #4]` / `bxne lr`, `cmp
+   r0, #0`, `ldrne r1, [r0]` / `ldrne r2, [r1]` / `addne r2, r2, r1`, `movne r1, #1` / `bxne r2`). */
+void swv_NativeRelease(uint8 *object)
 
 {
-  int iVar1;
-  
-                    /* Drops a native engine object's reference count (+4) and calls its virtual
-                       destructor (vtbl+0, arg 1) at zero. GUESS: name. */
-  iVar1 = param_1[1];
-  param_1[1] = iVar1 + -1;
-  if (iVar1 + -1 != 0) {
-    return;
+  int32 refs = *(int32 *)(object + 4) - 1;
+
+  *(int32 *)(object + 4) = refs;
+  if (refs == 0 && object != NULL) {
+    int32 vtable = *(int32 *)object;
+
+    /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by
+       the object's class); slot 0 is the destructor */
+    (*(code *)(*(int32 *)vtable + vtable))(object,1);
   }
-  if (param_1 == (int *)0x0) {
-    return;
-  }
-                    /* WARNING: Could not recover jumptable at 0x01019f4c. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  /* engine virtual call, slot +0x0: one of the 65 functions the static engine vtables put there (by the
-     object's class); slot 0 is the destructor */
-  (*(code *)(*(int *)*param_1 + *param_1))(param_1,1);
-  return;
 }
 
 /* ==== 0x01019F54  (file offset 0x19F54)  FUN_01019f54 ================================================ */
@@ -26891,53 +26735,13 @@ void swvM3G_ReadBackground(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x0101E530  (file offset 0x1E530)  thunk_swvM3G_ReadObject3D =================================== */
-void thunk_swvM3G_ReadObject3D(int param_1,undefined4 param_2)
+/* A one-instruction jump to swvM3G_ReadObject3D (0x0101df64, the M3G loader's Object3D part), the object
+   and the reader passed through; Ghidra had repeated its code here, see there. Evidence: 0x0101e530 (`b
+   0x0101df64`). */
+void thunk_swvM3G_ReadObject3D(uint8 *object,uint8 *reader)
 
 {
-  undefined1 uVar1;
-  undefined4 uVar2;
-  uint uVar3;
-  int *piVar4;
-  int iVar5;
-  uint uVar6;
-  undefined4 *puVar7;
-  
-  uVar2 = thunk_FUN_01019abc(param_2);
-  *(undefined4 *)(param_1 + 0xc) = uVar2;
-  uVar3 = FUN_01019698(param_2,4);
-  for (uVar6 = 0; uVar6 < uVar3; uVar6 = uVar6 + 1) {
-    uVar2 = FUN_01019888(param_2,2);
-    swvObject3D_AddAnimationTrackValue(param_1,uVar2);
-  }
-  uVar3 = FUN_01019698(param_2,8);
-  if (uVar3 != 0) {
-    piVar4 = (int *)swv_New_2(0x10);
-    if (piVar4 != (int *)0x0) {
-      FUN_01027cb4(piVar4);
-      *piVar4 = DATA_AT_01002628_OFFSET_2 + 0x101dff4;
-    }
-    *(int **)(param_1 + 0x14) = piVar4;
-    FUN_01023184(piVar4,uVar3);
-    for (uVar6 = 0; uVar6 < uVar3; uVar6 = uVar6 + 1) {
-      *(undefined4 *)(*(int *)(*(int *)(param_1 + 0x14) + 4) + uVar6 * 0xc + 4) = 0;
-    }
-    for (uVar6 = 0; uVar6 < uVar3; uVar6 = uVar6 + 1) {
-      puVar7 = (undefined4 *)(*(int *)(*(int *)(param_1 + 0x14) + 4) + uVar6 * 0xc);
-      uVar2 = thunk_FUN_01019abc(param_2);
-      *puVar7 = uVar2;
-      iVar5 = FUN_01019698(param_2,1);
-      puVar7[2] = iVar5;
-      if (0 < iVar5) {
-        uVar2 = swv_NewArray(iVar5);
-        puVar7[1] = uVar2;
-        for (iVar5 = 0; iVar5 < (int)puVar7[2]; iVar5 = iVar5 + 1) {
-          uVar1 = FUN_01019640(param_2);
-          *(undefined1 *)(puVar7[1] + iVar5) = uVar1;
-        }
-      }
-    }
-  }
-  return;
+  swvM3G_ReadObject3D((int)object,(undefined4)reader);
 }
 
 /* ==== 0x0101E534  (file offset 0x1E534)  FUN_0101e534 ================================================ */
@@ -33581,200 +33385,163 @@ void FUN_010246f4(undefined4 param_1,undefined4 param_2,undefined4 param_3,undef
 }
 
 /* ==== 0x01024788  (file offset 0x24788)  ISwerve_AddRef ============================================== */
+/* ISwerve vtbl[0]: ++m_nRefs (+4), the new count returned. Vtable built by swv_NewSwerve. Evidence:
+   0x01024788 - 0x01024798 (`ldr r0, [r0, #4]` / `add r0, r0, #1` / `str r0, [r1, #4]`). */
 uint32 ISwerve_AddRef(ISwerve *po)
 
 {
-  uint32 uVar1;
-  
-                    /* ISwerve vtbl[0]: ++m_nRefs (+4). Vtable built by swv_NewSwerve. */
-  uVar1 = po->m_nRefs + 1;
-  po->m_nRefs = uVar1;
-  return uVar1;
+  return ++po->m_nRefs;
 }
 
 /* ==== 0x0102479C  (file offset 0x2479C)  ISwerve_CreateObject ======================================== */
+/* ISwerve vtbl[4]: creates a new engine object of class cls (SwerveClassId) into *ppObj, by its
+   swv_Create_<Class> constructor (each called with ppObj, its result returned). NULL ppObj -> 14
+   (EBADPARM). Unknown or abstract class (0, 11 IndexBuffer, 18 Node, 19 Object3D, 27 Transformable,
+   anything else) -> *ppObj = 0, returns 1. Classes 1-31 are JSR-184 classes (alphabetical numbering,
+   proven by swvObj_QueryInterface); 100/101 are Swerve extensions. kh.mod uses 8 (Graphics3D), 21
+   (RayIntersection), 26 (Transform). Called GetObject in earlier notes. po is not read. The binary's
+   switch: equality tests and two jump tables (classes 0 - 15 and 17 - 25), each case a `bl` to the
+   constructor. Evidence: 0x0102479c - 0x01024974 (`movs r0, r2` / `moveq r0, #0xe`, `mov r2, #1`, `cmp r1,
+   #0xf` / `addls pc, pc, r1, lsl #2`, `sub r1, r1, #0x11` / `cmp r1, #8` / `addls pc`, the `bl` to
+   0x0102cdfc .. 0x0103d18c, `mov r1, #0` / `str r1, [r0]`, `mov r0, r2`). */
 int ISwerve_CreateObject(ISwerve *po,SwerveClassId cls,void **ppObj)
 
 {
-  int iVar1;
-  bool bVar2;
-  
-                    /* ISwerve vtbl[4]: creates a new engine object of class cls (SwerveClassId)
-                       into *ppObj. NULL ppObj -> 14 (EBADPARM). Unknown or abstract class (0, 11
-                       IndexBuffer, 18 Node, 19 Object3D, 27 Transformable) -> *ppObj = 0, returns
-                       1. Classes 1-31 are JSR-184 classes (alphabetical numbering, proven by
-                       swvObj_QueryInterface); 100/101 are Swerve extensions. kh.mod uses 8
-                       (Graphics3D), 21 (RayIntersection), 26 (Transform). Called GetObject in
-                       earlier notes. */
-  bVar2 = ppObj == (void **)0x0;
-  if (bVar2) {
-    ppObj = (void **)BAD_PARAMETER_ERROR_AS_POINTER;
-  }
-  iVar1 = 1;
-  if (bVar2) {
-    return (int)ppObj;
-  }
-  if (cls == SWV_MESH) {
-    iVar1 = swv_Create_Mesh(ppObj);
-    return iVar1;
-  }
-  if (0x10 < (int)cls) {
-    if (cls == SWV_TRANSFORM) {
-      iVar1 = swv_Create_Transform(ppObj);
-      return iVar1;
+  int result = 0xe;
+
+  if (ppObj != NULL) {
+    switch (cls) {
+    case SWV_ANIMATIONCONTROLLER:
+      result = swv_Create_AnimationController(ppObj);
+      break;
+    case SWV_ANIMATIONTRACK:
+      result = swv_Create_AnimationTrack(ppObj);
+      break;
+    case SWV_APPEARANCE:
+      result = swv_Create_Appearance(ppObj);
+      break;
+    case SWV_BACKGROUND:
+      result = swv_Create_Background(ppObj);
+      break;
+    case SWV_CAMERA:
+      result = swv_Create_Camera(ppObj);
+      break;
+    case SWV_COMPOSITINGMODE:
+      result = swv_Create_CompositingMode(ppObj);
+      break;
+    case SWV_FOG:
+      result = swv_Create_Fog(ppObj);
+      break;
+    case SWV_GRAPHICS3D:
+      result = swv_Create_Graphics3D(ppObj);
+      break;
+    case SWV_GROUP:
+      result = swv_Create_Group(ppObj);
+      break;
+    case SWV_IMAGE2D:
+      result = swv_Create_Image2D(ppObj);
+      break;
+    case SWV_KEYFRAMESEQUENCE:
+      result = swv_Create_KeyframeSequence(ppObj);
+      break;
+    case SWV_LIGHT:
+      result = swv_Create_Light(ppObj);
+      break;
+    case SWV_LOADER:
+      result = swv_Create_Loader(ppObj);
+      break;
+    case SWV_MATERIAL:
+      result = swv_Create_Material(ppObj);
+      break;
+    case SWV_MESH:
+      result = swv_Create_Mesh(ppObj);
+      break;
+    case SWV_MORPHINGMESH:
+      result = swv_Create_MorphingMesh(ppObj);
+      break;
+    case SWV_POLYGONMODE:
+      result = swv_Create_PolygonMode(ppObj);
+      break;
+    case SWV_RAYINTERSECTION:
+      result = swv_Create_RayIntersection(ppObj);
+      break;
+    case SWV_SKINNEDMESH:
+      result = swv_Create_SkinnedMesh(ppObj);
+      break;
+    case SWV_SPRITE3D:
+      result = swv_Create_Sprite3D(ppObj);
+      break;
+    case SWV_CLASS24:
+      result = swv_Create_Class24(ppObj);
+      break;
+    case SWV_TEXTURE2D:
+      result = swv_Create_Texture2D(ppObj);
+      break;
+    case SWV_TRANSFORM:
+      result = swv_Create_Transform(ppObj);
+      break;
+    case SWV_TRIANGLESTRIPARRAY:
+      result = swv_Create_TriangleStripArray(ppObj);
+      break;
+    case SWV_VERTEXARRAY:
+      result = swv_Create_VertexArray(ppObj);
+      break;
+    case SWV_VERTEXBUFFER:
+      result = swv_Create_VertexBuffer(ppObj);
+      break;
+    case SWV_WORLD:
+      result = swv_Create_World(ppObj);
+      break;
+    case SWV_EXT100:
+      result = swv_Create_Ext100(ppObj);
+      break;
+    case SWV_EXT101:
+      result = swv_Create_Ext101(ppObj);
+      break;
+    default:
+      *ppObj = NULL;
+      result = 1;
+      break;
     }
-    if ((int)cls < 0x1b) {
-      switch(cls) {
-      case SWV_MORPHINGMESH:
-        iVar1 = swv_Create_MorphingMesh(ppObj);
-        return iVar1;
-      case SWV_NODE:
-        break;
-      case SWV_OBJECT3D:
-        break;
-      case SWV_POLYGONMODE:
-        iVar1 = swv_Create_PolygonMode(ppObj);
-        return iVar1;
-      case SWV_RAYINTERSECTION:
-        iVar1 = swv_Create_RayIntersection(ppObj);
-        return iVar1;
-      case SWV_SKINNEDMESH:
-        iVar1 = swv_Create_SkinnedMesh(ppObj);
-        return iVar1;
-      case SWV_SPRITE3D:
-        iVar1 = swv_Create_Sprite3D(ppObj);
-        return iVar1;
-      case SWV_CLASS24:
-        iVar1 = swv_Create_Class24(ppObj);
-        return iVar1;
-      case SWV_TEXTURE2D:
-        iVar1 = swv_Create_Texture2D(ppObj);
-        return iVar1;
-      }
-    }
-    else {
-      if (cls == SWV_WORLD) {
-        iVar1 = swv_Create_World(ppObj);
-        return iVar1;
-      }
-      if ((int)cls < 0x20) {
-        if (cls == SWV_TRIANGLESTRIPARRAY) {
-          iVar1 = swv_Create_TriangleStripArray(ppObj);
-          return iVar1;
-        }
-        if (cls == SWV_VERTEXARRAY) {
-          iVar1 = swv_Create_VertexArray(ppObj);
-          return iVar1;
-        }
-        if (cls == SWV_VERTEXBUFFER) {
-          iVar1 = swv_Create_VertexBuffer(ppObj);
-          return iVar1;
-        }
-      }
-      else {
-        if (cls == SWV_EXT100) {
-          iVar1 = swv_Create_Ext100(ppObj);
-          return iVar1;
-        }
-        if (cls == SWV_EXT101) {
-          iVar1 = swv_Create_Ext101(ppObj);
-          return iVar1;
-        }
-      }
-    }
-    goto switchD_010247c0_default;
   }
-  switch(cls) {
-  case 0:
-  default:
-switchD_010247c0_default:
-    *ppObj = (void *)0x0;
-    break;
-  case SWV_ANIMATIONCONTROLLER:
-    iVar1 = swv_Create_AnimationController(ppObj);
-    break;
-  case SWV_ANIMATIONTRACK:
-    iVar1 = swv_Create_AnimationTrack(ppObj);
-    break;
-  case SWV_APPEARANCE:
-    iVar1 = swv_Create_Appearance(ppObj);
-    break;
-  case SWV_BACKGROUND:
-    iVar1 = swv_Create_Background(ppObj);
-    break;
-  case SWV_CAMERA:
-    iVar1 = swv_Create_Camera(ppObj);
-    break;
-  case SWV_COMPOSITINGMODE:
-    iVar1 = swv_Create_CompositingMode(ppObj);
-    break;
-  case SWV_FOG:
-    iVar1 = swv_Create_Fog(ppObj);
-    break;
-  case SWV_GRAPHICS3D:
-    iVar1 = swv_Create_Graphics3D(ppObj);
-    break;
-  case SWV_GROUP:
-    iVar1 = swv_Create_Group(ppObj);
-    break;
-  case SWV_IMAGE2D:
-    iVar1 = swv_Create_Image2D(ppObj);
-    break;
-  case SWV_INDEXBUFFER:
-    goto switchD_010247c0_default;
-  case SWV_KEYFRAMESEQUENCE:
-    iVar1 = swv_Create_KeyframeSequence(ppObj);
-    break;
-  case SWV_LIGHT:
-    iVar1 = swv_Create_Light(ppObj);
-    break;
-  case SWV_LOADER:
-    iVar1 = swv_Create_Loader(ppObj);
-    break;
-  case SWV_MATERIAL:
-    iVar1 = swv_Create_Material(ppObj);
-  }
-  return iVar1;
+  return result;
 }
 
 /* ==== 0x01024978  (file offset 0x24978)  ISwerve_Release ============================================= */
+/* ISwerve vtbl[1]: on the last reference tears the engine down (FUN_01026380, FUN_0103ae48), restores the
+   applet's pFreeAppData (+0x1c) from SwerveGlobals->pfnSavedFreeAppData (+0xc), frees the 29 cached
+   vtables, the cache and the globals (helper_free, the one at 0x010398d0), releases IShell and IModule,
+   frees itself; returns the new count (0 then). Evidence: 0x01024978 - 0x01024a14 (`subs r0, r0, #1` /
+   `str r0, [r5, #4]` / `ldmiane`, the GetAppInstance `blx r0` through the helper table, `ldr r1, [r0,
+   #0x20]` / `ldr r1, [r1, #0xc]` / `str r1, [r0, #0x1c]`, `add r6, r0, #0x74` and the `bcc` loop, the
+   Release slot +4 `blx` on +8 and +0xc, `mov r0, #0`). */
 uint32 ISwerve_Release(ISwerve *po)
 
 {
-  uint32 uVar1;
-  int iVar2;
-  void **ppvVar3;
-  SwerveGlobals *p;
-  void **ppvVar4;
-  
-                    /* ISwerve vtbl[1]: on last ref tears the engine down (0x01026380, 0x0103ae48),
-                       restores the applet's pFreeAppData from globals+0xC, frees the 29 cached
-                       vtables and the globals, releases IShell/IModule, frees itself. */
-  uVar1 = po->m_nRefs - 1;
-  po->m_nRefs = uVar1;
-  if (uVar1 != 0) {
-    return uVar1;
+  uint32 refs = --po->m_nRefs;
+
+  if (refs == 0) {
+    uint8 *applet;
+    void **vtbl;
+    void **end;
+
+    FUN_01026380();
+    FUN_0103ae48();
+    applet = (uint8 *)(*g_pHelperFuncs->GetAppInstance)();
+    *(void **)(applet + 0x1c) = (*(SwerveGlobals **)(applet + 0x20))->pfnSavedFreeAppData;
+    vtbl = swv_GetVtblCache();
+    end = vtbl + 0x1d;
+    do {
+      helper_free(*vtbl);
+      vtbl++;
+    } while (vtbl < end);
+    helper_free(swv_GetVtblCache());
+    helper_free(swv_GetGlobals());
+    (*po->m_pIShell->pvt->Release)(po->m_pIShell);
+    (*po->m_pIModule->pvt->Release)(po->m_pIModule);
+    helper_free(po);
   }
-  FUN_01026380();
-  FUN_0103ae48();
-                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
-                        */
-  iVar2 = (*g_pHelperFuncs->GetAppInstance)();
-  *(undefined4 *)(iVar2 + 0x1c) = *(undefined4 *)(*(int *)(iVar2 + 0x20) + 0xc);
-  ppvVar3 = swv_GetVtblCache();
-  ppvVar4 = ppvVar3 + 0x1d;
-  do {
-    helper_free(*ppvVar3);
-    ppvVar3 = ppvVar3 + 1;
-  } while (ppvVar3 < ppvVar4);
-  ppvVar3 = swv_GetVtblCache();
-  helper_free(ppvVar3);
-  p = swv_GetGlobals();
-  helper_free(p);
-  (*po->m_pIShell->pvt->Release)(po->m_pIShell);
-  (*po->m_pIModule->pvt->Release)(po->m_pIModule);
-  helper_free(po);
-  return 0;
+  return refs;
 }
 
 /* ==== 0x01024A1C  (file offset 0x24A1C)  ISwerve_GetPixelFormat ====================================== */
@@ -34863,20 +34630,21 @@ void FUN_01025e3c(int param_1)
 }
 
 /* ==== 0x01025E98  (file offset 0x25E98)  swv_TryPush ================================================= */
-int swv_TryPush(int param_1)
+/* GUESS: name. Pushes a 136-byte error frame (buffer +0x80 = active, +0x84 = armed): both cleared, the
+   frame appended to the engine's frame list (FUN_01018170 on FUN_0100f7d0's list), then active = 1;
+   returns the frame, for swv_setjmp (its first 0x2c bytes are the jmp_buf). Pattern: frame on the stack,
+   swv_setjmp, swv_TryArm on the 0 path, swv_TryPop at the end; on error the code is mapped by
+   swv_ErrorToResult. Evidence: 0x01025e98 - 0x01025ec4 (`str r0, [r4, #0x80]` / `[r4, #0x84]` with 0, `bl
+   0x0100f7d0` its result in r0 and `mov r1, r4` for `bl 0x01018170`, `mov r0, #1` / `str r0, [r4, #0x80]`,
+   `mov r0, r4`). */
+uint8 *swv_TryPush(uint8 *frame)
 
 {
-  undefined4 uVar1;
-  
-                    /* Pushes a 136-byte error frame (buffer +0x80 = active, +0x84 = armed). GUESS:
-                       name. Pattern: frame on the stack, swv_setjmp, swv_TryArm on the 0 path,
-                       swv_TryPop at the end; on error the code is mapped by swv_ErrorToResult. */
-  *(undefined4 *)(param_1 + 0x80) = 0;
-  *(undefined4 *)(param_1 + 0x84) = 0;
-  uVar1 = FUN_0100f7d0();
-  FUN_01018170(uVar1,param_1);
-  *(undefined4 *)(param_1 + 0x80) = 1;
-  return param_1;
+  *(uint32 *)(frame + 0x80) = 0;
+  *(uint32 *)(frame + 0x84) = 0;
+  FUN_01018170(FUN_0100f7d0(),(undefined4)frame);
+  *(uint32 *)(frame + 0x80) = 1;
+  return frame;
 }
 
 /* ==== 0x01025EC8  (file offset 0x25EC8)  FUN_01025ec8 ================================================ */
@@ -35100,18 +34868,15 @@ void FUN_010261f0(int param_1)
 }
 
 /* ==== 0x01026298  (file offset 0x26298)  swv_TryPop ================================================== */
+/* GUESS: name. Pops the current error frame: FUN_01017190 on the frame list (FUN_0100f7d0, its count +0x14
+   less one), then a tail jump to FUN_01017174 with FUN_0100f8e8's list. Evidence: 0x01026298 - 0x010262ac
+   (`bl 0x0100f7d0` / `bl 0x01017190` and `bl 0x0100f8e8` / `b 0x01017174`, each with the first call's
+   result left in r0: Ghidra had dropped both arguments and repeated FUN_01017174's code here). */
 void swv_TryPop(void)
 
 {
-  int iVar1;
-  
-                    /* Pops the current error frame. GUESS: name. */
-  FUN_0100f7d0();
-  FUN_01017190();
-  iVar1 = FUN_0100f8e8();
-  FUN_01005028();
-  *(int *)(iVar1 + 0x14) = *(int *)(iVar1 + 0x14) + -1;
-  return;
+  FUN_01017190(FUN_0100f7d0());
+  FUN_01017174(FUN_0100f8e8());
 }
 
 /* ==== 0x010262B0  (file offset 0x262B0)  FUN_010262b0 ================================================ */
@@ -36319,6 +36084,23 @@ FUN_01027b08(undefined4 *param_1,undefined4 *param_2,undefined4 param_3,undefine
   FUN_01027acc(param_1 + 0x12,param_2 + 0x12);
   param_1[0x23] = param_2[0x23];
   return param_1;
+}
+
+/* ==== 0x01027B40  (file offset 0x27B40)  hand-written (no Ghidra function) =========================== */
+/* GUESS: name. Copies the SkinnedMesh bone set source (SwvSkinBoneSet, 0x4c bytes) into destination: the
+   two bone indices (one word), the 0x44-byte transform (FUN_01027acc) and the weight scale; returns
+   destination. Ghidra has no function here: only swvSkin_AppendBoneSet reaches it, by a tail jump, and
+   Ghidra took it into that function's body. Evidence: 0x01027b40 - 0x01027b68 (`ldr r0, [r1], #4` / `str
+   r0, [r4]`, `add r0, r4, #4` / `bl 0x01027acc` with r1 = source + 4, `ldr r0, [r5, #0x48]` / `str r0,
+   [r4, #0x48]`, `mov r0, r4`). */
+SwvSkinBoneSet *swvSkin_CopyBoneSet(SwvSkinBoneSet *destination,const SwvSkinBoneSet *source)
+
+{
+  destination->bones[0] = source->bones[0];
+  destination->bones[1] = source->bones[1];
+  FUN_01027acc((undefined4)destination->transform,(undefined4)source->transform);
+  destination->weightScale = source->weightScale;
+  return destination;
 }
 
 /* ==== 0x01027B6C  (file offset 0x27B6C)  FUN_01027b6c ================================================ */
@@ -37779,16 +37561,21 @@ void * FUN_01029650(void *param_1,uint *param_2)
 }
 
 /* ==== 0x010296E8  (file offset 0x296E8)  swv_Matrix4Copy ============================================= */
-/* GUESS: name (not yet rewritten). Copies the 0x44-byte transform param_2 into param_1, allocating
-   param_1 first when it is NULL; returns param_1 (NULL with no memory). */
-void * swv_Matrix4Copy(void *param_1,undefined4 param_2)
+/* GUESS: name. Copies the 0x44-byte transform source (16 floats and a flags word, as
+   swv_Matrix4SetIdentity) into destination, allocating destination first (helper_malloc, through its thunk
+   at 0x0102cbf8) when it is NULL; returns destination (NULL with no memory). Evidence: 0x010296e8 -
+   0x01029720 (`movs r4, r0` / `bne`, `mov r0, #0x44` / `bl 0x0102cbf8`, `moveq r0, r4` / `ldmiaeq`, `bl
+   0x01039dec` with 0x44). */
+void *swv_Matrix4Copy(void *destination,const void *source)
 
 {
-  if ((param_1 == (void *)0x0) && (param_1 = helper_malloc(0x44), param_1 == (void *)0x0)) {
-    return (void *)0x0;
-  }
-  thunk_swv_memcpy(param_1,param_2,0x44);
-  return param_1;
+  void *matrix = destination;
+
+  if (matrix == NULL)
+    matrix = helper_malloc(0x44);
+  if (matrix != NULL)
+    thunk_swv_memcpy(matrix,source,0x44);
+  return matrix;
 }
 
 /* ==== 0x01029724  (file offset 0x29724)  FUN_01029724 ================================================ */
@@ -40313,17 +40100,18 @@ LAB_0102cb34:
 }
 
 /* ==== 0x0102CB54  (file offset 0x2CB54)  swv_NewArray ================================================ */
-/* GUESS: name (GUESS: the C++ operator new[]). An engine allocation that cannot fail:
-   helper_malloc(size), checked by swv_CheckNotNull (Ghidra had dropped its argument, r0). Byte for
-   byte the same as swv_New and swv_New_2; its callers allocate arrays (count << 2 bytes). */
-void * swv_NewArray(uint32 param_1)
+/* GUESS: name (GUESS: the C++ operator new[]). An engine allocation that cannot fail: helper_malloc(size)
+   (the one at 0x01039598), checked by swv_CheckNotNull (which raises error -4 on NULL), the block
+   returned. Evidence: 0x0102cb54 - 0x0102cb68 (`bl 0x01039598`, `mov r4, r0`, `bl 0x01013bb4` with r0 the
+   block, `mov r0, r4`). Byte for byte the same as swv_New and swv_New_2; its callers allocate arrays
+   (count << 2 bytes). */
+void *swv_NewArray(uint32 size)
 
 {
-  void *pvVar1;
-  
-  pvVar1 = helper_malloc(param_1);
-  swv_CheckNotNull((int32)pvVar1);   /* Ghidra had dropped it */
-  return pvVar1;
+  void *block = helper_malloc(size);
+
+  swv_CheckNotNull((int32)block);
+  return block;
 }
 
 /* ==== 0x0102CB6C  (file offset 0x2CB6C)  FUN_0102cb6c ================================================ */
@@ -40353,54 +40141,51 @@ undefined4 FUN_0102cb6c(undefined4 *param_1,undefined4 *param_2)
 }
 
 /* ==== 0x0102CBE0  (file offset 0x2CBE0)  swv_New_2 =================================================== */
-/* GUESS: name. An engine allocation that cannot fail: helper_malloc(size), checked by
-   swv_CheckNotNull (Ghidra had dropped its argument, r0). A second copy of swv_New (0x0102cc00), byte
-   for byte the same, used by other callers (fixed-size objects). */
-void * swv_New_2(uint32 param_1)
+/* GUESS: name. An engine allocation that cannot fail: helper_malloc(size) (the one at 0x01039598), checked
+   by swv_CheckNotNull (which raises error -4 on NULL), the block returned. Evidence: 0x0102cbe0 -
+   0x0102cbf4 (`bl 0x01039598`, `mov r4, r0`, `bl 0x01013bb4` with r0 the block, `mov r0, r4`). A second
+   copy of swv_New (0x0102cc00), byte for byte the same, used by other callers (fixed-size objects). */
+void *swv_New_2(uint32 size)
 
 {
-  void *pvVar1;
-  
-  pvVar1 = helper_malloc(param_1);
-  swv_CheckNotNull((int32)pvVar1);   /* Ghidra had dropped it */
-  return pvVar1;
+  void *block = helper_malloc(size);
+
+  swv_CheckNotNull((int32)block);
+  return block;
 }
 
 /* ==== 0x0102CBF8  (file offset 0x2CBF8)  helper_malloc =============================================== */
-void * helper_malloc(uint32 size)
+/* A branch to the helper_malloc at 0x01039598 (Ghidra gives the three the same name): AEEHelperFuncs
+   malloc(size). Evidence: 0x0102cbf8 (`b 0x01039598`). */
+void *helper_malloc(uint32 size)
 
 {
-  void *pvVar1;
-  
-                    /* WARNING: Could not recover jumptable at 0x010395a8. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  pvVar1 = (void *)(*g_pHelperFuncs->malloc)(size);
-  return pvVar1;
+  /* the helper_malloc at 0x01039598 */
+  return helper_malloc(size);
 }
 
 /* ==== 0x0102CBFC  (file offset 0x2CBFC)  helper_malloc =============================================== */
-void * helper_malloc(uint32 size)
+/* A branch to the helper_malloc at 0x01039598 (Ghidra gives the three the same name): AEEHelperFuncs
+   malloc(size). Evidence: 0x0102cbfc (`b 0x01039598`). */
+void *helper_malloc(uint32 size)
 
 {
-  void *pvVar1;
-  
-                    /* WARNING: Could not recover jumptable at 0x010395a8. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  pvVar1 = (void *)(*g_pHelperFuncs->malloc)(size);
-  return pvVar1;
+  /* the helper_malloc at 0x01039598 */
+  return helper_malloc(size);
 }
 
 /* ==== 0x0102CC00  (file offset 0x2CC00)  swv_New ===================================================== */
-void * swv_New(uint32 param_1)
+/* An engine allocation that cannot fail: helper_malloc(size) (the one at 0x01039598), checked by
+   swv_CheckNotNull (which raises error -4 on NULL), the block returned. Evidence: 0x0102cc00 - 0x0102cc14
+   (`bl 0x01039598`, `mov r4, r0`, `bl 0x01013bb4` with r0 the block, `mov r0, r4`). Used for every
+   fixed-size engine allocation. GUESS: operator new equivalent. */
+void *swv_New(uint32 size)
 
 {
-  void *pvVar1;
-  
-                    /* Allocates (helper_malloc) and checks the result (0x01013bb4). Used for every
-                       fixed-size engine allocation. GUESS: operator new equivalent. */
-  pvVar1 = helper_malloc(param_1);
-  swv_CheckNotNull((int32)pvVar1);   /* Ghidra had dropped it */
-  return pvVar1;
+  void *block = helper_malloc(size);
+
+  swv_CheckNotNull((int32)block);
+  return block;
 }
 
 /* ==== 0x0102CC18  (file offset 0x2CC18)  FUN_0102cc18 ================================================ */
@@ -40431,15 +40216,13 @@ int FUN_0102cc60(void)
 }
 
 /* ==== 0x0102CC70  (file offset 0x2CC70)  swv_GetFpStatusPtr ========================================== */
-int swv_GetFpStatusPtr(void)
+/* Returns the address of the engine's soft-float status word (used by swv_fp_status): FUN_0102ecec's
+   engine state + 0x34. GUESS: kept in engine globals, like kh.mod's KHApp+0xd8. Evidence: 0x0102cc70 -
+   0x0102cc7c (`bl 0x0102ecec` / `add r0, r0, #0x34`). */
+uint32 *swv_GetFpStatusPtr(void)
 
 {
-  int iVar1;
-  
-                    /* Returns the address of the engine's soft-float status word (used by
-                       swv_fp_status). GUESS: kept in engine globals, like kh.mod's KHApp+0xd8. */
-  iVar1 = FUN_0102ecec();
-  return iVar1 + 0x34;
+  return (uint32 *)(FUN_0102ecec() + 0x34);
 }
 
 /* ==== 0x0102CC80  (file offset 0x2CC80)  FUN_0102cc80 ================================================ */
@@ -40532,33 +40315,35 @@ uint adler32(uint param_1,byte *param_2,uint param_3)
 }
 
 /* ==== 0x0102CDFC  (file offset 0x2CDFC)  swv_Create_AnimationController ============================== */
-int swv_Create_AnimationController(void **ppObj)
+/* Constructor for class 1 (AnimationController): ISwerve_CreateObject(po, 1, ppObj) lands here with ppObj
+   in r0. Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(1) makes the
+   native object of internal object type 1 (SwerveObjectType). Evidence: 0x0102cdfc - 0x0102ce58 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x1` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_AnimationController(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 1 (AnimationController): ISwerve_CreateObject(po, 1,
-                       ppObj) lands here with ppObj in r0. Creates the native object inside an error
-                       frame and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's
-                       switch (0x0102479c); class name from the JSR-184 alphabetical numbering
-                       proven by swvObj_QueryInterface's hierarchy table (see swv_types.h
-                       SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(1);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(1);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x0102CE5C  (file offset 0x2CE5C)  swvAnimationController_GetActiveIntervalEnd ================= */
@@ -40674,9 +40459,9 @@ int32 swvAnimationController_SetActiveInterval(ISwerveObject *po,int32 start,int
   uint8 *controller;
   uint8 frame[136];
 
-  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  error = (int32)swv_setjmp((uint32 *)swv_TryPush(frame));
   if (error == 0) {
-    swv_TryArm((int)frame);
+    swv_TryArm(frame);
     controller = (uint8 *)po->pNative;
     if (controller != NULL)
       controller -= 4;
@@ -40704,9 +40489,9 @@ int32 swvAnimationController_SetPosition(ISwerveObject *po,uint32 sequenceTime,i
   uint8 *controller;
   uint8 frame[136];
 
-  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  error = (int32)swv_setjmp((uint32 *)swv_TryPush(frame));
   if (error == 0) {
-    swv_TryArm((int)frame);
+    swv_TryArm(frame);
     controller = (uint8 *)po->pNative;
     if (controller != NULL)
       controller -= 4;
@@ -40734,9 +40519,9 @@ int32 swvAnimationController_SetSpeed(ISwerveObject *po,uint32 speed,int32 world
   uint8 *controller;
   uint8 frame[136];
 
-  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  error = (int32)swv_setjmp((uint32 *)swv_TryPush(frame));
   if (error == 0) {
-    swv_TryArm((int)frame);
+    swv_TryArm(frame);
     controller = (uint8 *)po->pNative;
     if (controller != NULL)
       controller -= 4;
@@ -40766,9 +40551,9 @@ int32 swvAnimationController_SetWeight(ISwerveObject *po,uint32 weight)
   uint8 *controller;
   uint8 frame[136];
 
-  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  error = (int32)swv_setjmp((uint32 *)swv_TryPush(frame));
   if (error == 0) {
-    swv_TryArm((int)frame);
+    swv_TryArm(frame);
     controller = (uint8 *)po->pNative;
     if (controller != NULL)
       controller -= 4;
@@ -40784,32 +40569,35 @@ int32 swvAnimationController_SetWeight(ISwerveObject *po,uint32 weight)
 }
 
 /* ==== 0x0102D160  (file offset 0x2D160)  swv_Create_AnimationTrack =================================== */
-int swv_Create_AnimationTrack(void **ppObj)
+/* Constructor for class 2 (AnimationTrack): ISwerve_CreateObject(po, 2, ppObj) lands here with ppObj in
+   r0. Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(2) makes the
+   native object of internal object type 2 (SwerveObjectType). Evidence: 0x0102d160 - 0x0102d1bc (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x2` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_AnimationTrack(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 2 (AnimationTrack): ISwerve_CreateObject(po, 2, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(2);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(2);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x0102D1C0  (file offset 0x2D1C0)  FUN_0102d1c0 ================================================ */
@@ -40973,32 +40761,35 @@ void FUN_0102d3ac(int param_1,int param_2)
 }
 
 /* ==== 0x0102D3CC  (file offset 0x2D3CC)  swv_Create_Appearance ======================================= */
-int swv_Create_Appearance(void **ppObj)
+/* Constructor for class 3 (Appearance): ISwerve_CreateObject(po, 3, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(3) makes the
+   native object of internal object type 3 (SwerveObjectType). Evidence: 0x0102d3cc - 0x0102d428 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x3` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_Appearance(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 3 (Appearance): ISwerve_CreateObject(po, 3, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(3);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(3);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x0102D42C  (file offset 0x2D42C)  FUN_0102d42c ================================================ */
@@ -41380,92 +41171,98 @@ undefined4 FUN_0102d838(int param_1,undefined4 param_2,int param_3)
 }
 
 /* ==== 0x0102D8AC  (file offset 0x2D8AC)  swv_Create_Ext100 =========================================== */
-int swv_Create_Ext100(void **ppObj)
+/* Constructor for class 100 (Ext100): ISwerve_CreateObject(po, 100, ppObj) lands here with ppObj in r0.
+   Not a JSR-184 class (JSR-184 1.1's 30 classes are ids 1 - 31, swv_types.h SwerveClassId): a Swerve
+   extension, the SWVARC archive (swvArchive_Open; swv_types.h SWV_EXT100). Unlike the JSR-184 classes it
+   uses no error frame and no native object: *ppObj = NULL; the class's vtable is built once (helper_malloc
+   0x18, through its thunk 0x0102cbf8) and kept in the vtable cache's [0x1b]: Ext100Vtbl (GUESS: name), 0
+   swvExt_AddRef, 1 swvExt_Release, 2 swvArchive_EnumInit, 3 swvArchive_EnumNext, 4 swvArchive_Open, 5
+   swvArchive_OpenEntry; then the 0x18-byte SwvExtObject is allocated, the ISwerve object AddRef'd (the
+   reference swvExt_Release drops), the object zeroed, its vtable set and its count made 1, and *ppObj =
+   it. Returns 0, or 2 (ENOMEMORY) when an allocation fails. Evidence: 0x0102d8ac - 0x0102d974 (`str r0,
+   [r6]` with 0, `ldr r4, [r0, #0x6c]` / `cmp r4, #0`, the six PC-relative `str`, `str r4, [r5, #0x6c]`,
+   `mov r0, #2`, `bl 0x01039938` / `bl 0x01024788`, `bl 0x01039df0` with 0 and 0x18, `ldr` / `add #1` /
+   `str` +4, `str r5, [r6]`). */
+int32 swv_Create_Ext100(void **ppObj)
 
 {
-  void **ppvVar1;
-  undefined4 *puVar2;
-  ISwerve *po;
-  int *piVar3;
-  
-                    /* Constructor for class 100 (Ext100): ISwerve_CreateObject(po, 100, ppObj) lands
-                       here with ppObj in r0. Creates the native object inside an error frame and wraps
-                       it with swv_WrapObject. Class id from ISwerve_CreateObject's switch (0x0102479c).
-                       Not a JSR-184 class (JSR-184 1.1's 30 classes are ids 1 - 31, swv_types.h
-                       SwerveClassId): a Swerve extension, the SWVARC archive (swvArchive_Open;
-                       swv_types.h SWV_EXT100). */
-  *ppObj = (void *)0x0;
-  ppvVar1 = swv_GetVtblCache();
-  piVar3 = ppvVar1[0x1b];
-  if (piVar3 == (int *)0x0) {
-    piVar3 = helper_malloc(0x18);
-    if (piVar3 == (int *)0x0) {
-      return 2;
+  int32 result = 2;
+  void **cache;
+  void **vtbl;
+  SwvExtObject *object;
+
+  *ppObj = NULL;
+  cache = swv_GetVtblCache();
+  vtbl = (void **)cache[0x1b];
+  if (vtbl == NULL) {
+    vtbl = (void **)helper_malloc(0x18);
+    if (vtbl != NULL) {
+      vtbl[0] = (void *)(ADDRESS_OF_swvExt_AddRef_OFFSET + 0x102d8ec);
+      vtbl[1] = (void *)(ADDRESS_OF_swvExt_Release_OFFSET + 0x102d8f8);
+      vtbl[2] = (void *)(ADDRESS_OF_swvArchive_EnumInit_OFFSET + 0x102d904);
+      vtbl[3] = (void *)(ADDRESS_OF_swvArchive_EnumNext_OFFSET + 0x102d910);
+      vtbl[4] = (void *)(ADDRESS_OF_swvArchive_Open_OFFSET + 0x102d91c);
+      vtbl[5] = (void *)(ADDRESS_OF_swvArchive_OpenEntry_OFFSET + 0x102d928);
+      cache[0x1b] = vtbl;
     }
-    /* Ext100Vtbl (GUESS: name), the SWVARC archive: 0 swvExt_AddRef, 1 swvExt_Release,
-       2 swvArchive_EnumInit, 3 swvArchive_EnumNext, 4 swvArchive_Open, 5 swvArchive_OpenEntry */
-    *piVar3 = ADDRESS_OF_swvExt_AddRef_OFFSET + 0x102d8ec;
-    piVar3[1] = ADDRESS_OF_swvExt_Release_OFFSET + 0x102d8f8;
-    piVar3[2] = ADDRESS_OF_swvArchive_EnumInit_OFFSET + 0x102d904;
-    piVar3[3] = ADDRESS_OF_swvArchive_EnumNext_OFFSET + 0x102d910;
-    piVar3[4] = ADDRESS_OF_swvArchive_Open_OFFSET + 0x102d91c;
-    piVar3[5] = ADDRESS_OF_swvArchive_OpenEntry_OFFSET + 0x102d928;
-    ppvVar1[0x1b] = piVar3;
   }
-  puVar2 = helper_malloc(0x18);
-  if (puVar2 == (undefined4 *)0x0) {
-    return 2;
+  if (vtbl != NULL) {
+    object = (SwvExtObject *)helper_malloc(0x18);
+    if (object != NULL) {
+      ISwerve_AddRef(swv_GetSwerveObject());
+      thunk_swv_memset(object,0,0x18);
+      object->pvt = vtbl;
+      object->m_nRefs++;
+      *ppObj = object;
+      result = 0;
+    }
   }
-  po = swv_GetSwerveObject();
-  ISwerve_AddRef(po);
-  thunk_swv_memset(puVar2,0,0x18);
-  *puVar2 = piVar3;
-  puVar2[1] = puVar2[1] + 1;
-  *ppObj = puVar2;
-  return 0;
+  return result;
 }
 
 /* ==== 0x0102D990  (file offset 0x2D990)  swv_Create_Ext101 =========================================== */
-int swv_Create_Ext101(void **ppObj)
+/* Constructor for class 101 (Ext101): ISwerve_CreateObject(po, 101, ppObj) lands here with ppObj in r0;
+   swvArchive_OpenEntry calls it too. Not a JSR-184 class (JSR-184 1.1's 30 classes are ids 1 - 31,
+   swv_types.h SwerveClassId): a Swerve extension, one SWVARC archive entry's stream (swvArchiveEntry_Read;
+   swv_types.h SWV_EXT101). As swv_Create_Ext100: no error frame; *ppObj = NULL; the vtable built once (0xc
+   bytes) in the vtable cache's [0x1c]: Ext101Vtbl (GUESS: name), 0 swvExt_AddRef, 1 swvExt_Release, 2
+   swvArchiveEntry_Read; the 0x1c-byte SwvExtObject allocated, the ISwerve object AddRef'd, the object
+   zeroed, its vtable set, its count made 1, *ppObj = it. Returns 0, or 2 (ENOMEMORY). Evidence: 0x0102d990
+   - 0x0102da34 (`ldr r4, [r0, #0x70]`, `mov r0, #0xc` / `bl 0x0102cbf8`, the three PC-relative `str`, `str
+   r4, [r5, #0x70]`, `mov r0, #0x1c`, `bl 0x01039938` / `bl 0x01024788`, `bl 0x01039df0`, `ldr` / `add #1`
+   / `str` +4, `str r5, [r6]`). */
+int32 swv_Create_Ext101(void **ppObj)
 
 {
-  void **ppvVar1;
-  undefined4 *puVar2;
-  ISwerve *po;
-  int *piVar3;
-  
-                    /* Constructor for class 101 (Ext101): ISwerve_CreateObject(po, 101, ppObj) lands
-                       here with ppObj in r0. Creates the native object inside an error frame and wraps
-                       it with swv_WrapObject. Class id from ISwerve_CreateObject's switch (0x0102479c).
-                       Not a JSR-184 class (JSR-184 1.1's 30 classes are ids 1 - 31, swv_types.h
-                       SwerveClassId): a Swerve extension, one SWVARC archive entry's stream
-                       (swvArchiveEntry_Read; swv_types.h SWV_EXT101). */
-  *ppObj = (void *)0x0;
-  ppvVar1 = swv_GetVtblCache();
-  piVar3 = ppvVar1[0x1c];
-  if (piVar3 == (int *)0x0) {
-    piVar3 = helper_malloc(0xc);
-    if (piVar3 == (int *)0x0) {
-      return 2;
+  int32 result = 2;
+  void **cache;
+  void **vtbl;
+  SwvExtObject *object;
+
+  *ppObj = NULL;
+  cache = swv_GetVtblCache();
+  vtbl = (void **)cache[0x1c];
+  if (vtbl == NULL) {
+    vtbl = (void **)helper_malloc(0xc);
+    if (vtbl != NULL) {
+      vtbl[0] = (void *)(ADDRESS_OF_swvExt_AddRef_OFFSET_2 + 0x102d9d0);
+      vtbl[1] = (void *)(ADDRESS_OF_swvExt_Release_OFFSET_2 + 0x102d9dc);
+      vtbl[2] = (void *)(ADDRESS_OF_swvArchiveEntry_Read_OFFSET + 0x102d9e8);
+      cache[0x1c] = vtbl;
     }
-    /* Ext101Vtbl (GUESS: name), an archive entry stream: 0 swvExt_AddRef, 1 swvExt_Release,
-       2 swvArchiveEntry_Read */
-    *piVar3 = ADDRESS_OF_swvExt_AddRef_OFFSET_2 + 0x102d9d0;
-    piVar3[1] = ADDRESS_OF_swvExt_Release_OFFSET_2 + 0x102d9dc;
-    piVar3[2] = ADDRESS_OF_swvArchiveEntry_Read_OFFSET + 0x102d9e8;
-    ppvVar1[0x1c] = piVar3;
   }
-  puVar2 = helper_malloc(0x1c);
-  if (puVar2 == (undefined4 *)0x0) {
-    return 2;
+  if (vtbl != NULL) {
+    object = (SwvExtObject *)helper_malloc(0x1c);
+    if (object != NULL) {
+      ISwerve_AddRef(swv_GetSwerveObject());
+      thunk_swv_memset(object,0,0x1c);
+      object->pvt = vtbl;
+      object->m_nRefs++;
+      *ppObj = object;
+      result = 0;
+    }
   }
-  po = swv_GetSwerveObject();
-  ISwerve_AddRef(po);
-  thunk_swv_memset(puVar2,0,0x1c);
-  *puVar2 = piVar3;
-  puVar2[1] = puVar2[1] + 1;
-  *ppObj = puVar2;
-  return 0;
+  return result;
 }
 
 /* ==== 0x0102DA44  (file offset 0x2DA44)  FUN_0102da44 ================================================ */
@@ -41490,32 +41287,35 @@ int FUN_0102da68(int param_1)
 }
 
 /* ==== 0x0102DA7C  (file offset 0x2DA7C)  swv_Create_Background ======================================= */
-int swv_Create_Background(void **ppObj)
+/* Constructor for class 4 (Background): ISwerve_CreateObject(po, 4, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(4) makes the
+   native object of internal object type 4 (SwerveObjectType). Evidence: 0x0102da7c - 0x0102dad8 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x4` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_Background(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 4 (Background): ISwerve_CreateObject(po, 4, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(4);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(4);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x0102DADC  (file offset 0x2DADC)  FUN_0102dadc ================================================ */
@@ -41910,32 +41710,35 @@ int FUN_0102df78(int param_1,int param_2)
 }
 
 /* ==== 0x0102E00C  (file offset 0x2E00C)  swv_Create_Camera =========================================== */
-int swv_Create_Camera(void **ppObj)
+/* Constructor for class 5 (Camera): ISwerve_CreateObject(po, 5, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(5) makes the
+   native object of internal object type 5 (SwerveObjectType). Evidence: 0x0102e00c - 0x0102e068 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x5` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_Camera(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 5 (Camera): ISwerve_CreateObject(po, 5, ppObj) lands
-                       here with ppObj in r0. Creates the native object inside an error frame and
-                       wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(5);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(5);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x0102E06C  (file offset 0x2E06C)  FUN_0102e06c ================================================ */
@@ -42165,32 +41968,35 @@ LAB_0102e3a4:
 }
 
 /* ==== 0x0102E44C  (file offset 0x2E44C)  swv_Create_CompositingMode ================================== */
-int swv_Create_CompositingMode(void **ppObj)
+/* Constructor for class 6 (CompositingMode): ISwerve_CreateObject(po, 6, ppObj) lands here with ppObj in
+   r0. Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(6) makes the
+   native object of internal object type 6 (SwerveObjectType). Evidence: 0x0102e44c - 0x0102e4a8 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x6` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_CompositingMode(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 6 (CompositingMode): ISwerve_CreateObject(po, 6, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(6);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(6);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x0102E4AC  (file offset 0x2E4AC)  FUN_0102e4ac ================================================ */
@@ -42544,32 +42350,35 @@ bool FUN_0102e968(int *param_1,undefined4 param_2,undefined4 param_3)
 }
 
 /* ==== 0x0102E9E0  (file offset 0x2E9E0)  swv_Create_Fog ============================================== */
-int swv_Create_Fog(void **ppObj)
+/* Constructor for class 7 (Fog): ISwerve_CreateObject(po, 7, ppObj) lands here with ppObj in r0. Creates
+   the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(7) makes the
+   native object of internal object type 7 (SwerveObjectType). Evidence: 0x0102e9e0 - 0x0102ea3c (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x7` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_Fog(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 7 (Fog): ISwerve_CreateObject(po, 7, ppObj) lands here
-                       with ppObj in r0. Creates the native object inside an error frame and wraps
-                       it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(7);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(7);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x0102EA40  (file offset 0x2EA40)  FUN_0102ea40 ================================================ */
@@ -42772,14 +42581,13 @@ undefined4 FUN_0102ec78(int param_1,int param_2)
 }
 
 /* ==== 0x0102ECE8  (file offset 0x2ECE8)  swv_SetGlobal00 ============================================= */
+/* A branch to the swv_SetGlobal00 at 0x0103af88 (Ghidra gives both the same name; Ghidra had shown its
+   body here): SwerveGlobals->field_00 = value. Evidence: 0x0102ece8 (`b 0x0103af88`). */
 void swv_SetGlobal00(uint32 value)
 
 {
-  int iVar1;
-  
-  iVar1 = (*g_pHelperFuncs->GetAppInstance)();
-  **(uint32 **)(iVar1 + 0x20) = value;
-  return;
+  /* the swv_SetGlobal00 at 0x0103af88 */
+  swv_SetGlobal00(value);
 }
 
 /* ==== 0x0102ECEC  (file offset 0x2ECEC)  FUN_0102ecec ================================================ */
@@ -43620,15 +43428,13 @@ LAB_0103ed1c:
 }
 
 /* ==== 0x0102F464  (file offset 0x2F464)  swv_GetGlobal00 ============================================= */
-/* WARNING: Unknown calling convention -- yet parameter storage is locked */
-
+/* A branch to the swv_GetGlobal00 at 0x01039910 (Ghidra gives both the same name; Ghidra had shown its
+   body here): SwerveGlobals->field_00. Evidence: 0x0102f464 (`b 0x01039910`). */
 uint32 swv_GetGlobal00(void)
 
 {
-  int iVar1;
-  
-  iVar1 = (*g_pHelperFuncs->GetAppInstance)();
-  return **(uint32 **)(iVar1 + 0x20);
+  /* the swv_GetGlobal00 at 0x01039910 */
+  return swv_GetGlobal00();
 }
 
 /* ==== 0x0102F468  (file offset 0x2F468)  FUN_0102f468 ================================================ */
@@ -43868,32 +43674,34 @@ undefined4 FUN_0102f898(int param_1,int param_2)
 }
 
 /* ==== 0x0102F904  (file offset 0x2F904)  swv_Create_Graphics3D ======================================= */
-int swv_Create_Graphics3D(void **ppObj)
+/* Constructor for class 8 (Graphics3D): ISwerve_CreateObject(po, 8, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). Evidence: 0x0102f904 -
+   0x0102f95c (the 0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to
+   swv_setjmp, `cmp r0, #0` / `bne`; on 0 swv_TryArm(frame), `bl` swv_Graphics3D_New, `addne r0, r0, #4`
+   (the object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over
+   swv_TryPop; else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_Graphics3D(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 8 (Graphics3D): ISwerve_CreateObject(po, 8, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)swv_Graphics3D_New();
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)swv_Graphics3D_New();
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x0102F960  (file offset 0x2F960)  swvGraphics3D_GetProperty =================================== */
@@ -43908,9 +43716,9 @@ int32 swvGraphics3D_GetProperty(IGraphics3D *po,uint32 index,int32 *value)
   int32 error;
   uint8 frame[136];
 
-  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  error = (int32)swv_setjmp((uint32 *)swv_TryPush(frame));
   if (error == 0) {
-    swv_TryArm((int)frame);
+    swv_TryArm(frame);
     if (index > 11)
       FUN_0102f7e0(INTEGER_MINUS_1301);
     *value = swvGraphics3D_Property(index);
@@ -44520,32 +44328,35 @@ undefined4 FUN_01030220(int param_1,int param_2)
 }
 
 /* ==== 0x0103028C  (file offset 0x3028C)  swv_Create_Group ============================================ */
-int swv_Create_Group(void **ppObj)
+/* Constructor for class 9 (Group): ISwerve_CreateObject(po, 9, ppObj) lands here with ppObj in r0. Creates
+   the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(9) makes the
+   native object of internal object type 9 (SwerveObjectType). Evidence: 0x0103028c - 0x010302e8 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x9` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_Group(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 9 (Group): ISwerve_CreateObject(po, 9, ppObj) lands
-                       here with ppObj in r0. Creates the native object inside an error frame and
-                       wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(9);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(9);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x010302EC  (file offset 0x302EC)  swvGroup_GetChild =========================================== */
@@ -44981,32 +44792,35 @@ FUN_01030624(int *param_1,uint param_2,uint param_3,int param_4,int param_5,uint
 }
 
 /* ==== 0x01030A4C  (file offset 0x30A4C)  swv_Create_Image2D ========================================== */
-int swv_Create_Image2D(void **ppObj)
+/* Constructor for class 10 (Image2D): ISwerve_CreateObject(po, 10, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(10) makes the
+   native object of internal object type 10 (SwerveObjectType). Evidence: 0x01030a4c - 0x01030aa8 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0xa` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_Image2D(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 10 (Image2D): ISwerve_CreateObject(po, 10, ppObj) lands
-                       here with ppObj in r0. Creates the native object inside an error frame and
-                       wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(10);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(10);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x01030AAC  (file offset 0x30AAC)  FUN_01030aac ================================================ */
@@ -45351,25 +45165,12 @@ int32 swvImage2D_Set(ISwerveObject *po,int32 x,int32 y,int32 width,int32 height,
 }
 
 /* ==== 0x01031030  (file offset 0x31030)  thunk_swv_InitVtbl_Object3D ================================= */
-void thunk_swv_InitVtbl_Object3D(int param_1)
+/* A branch to swv_InitVtbl_Object3D (0x0103517c), the vtable passed through (Ghidra had repeated its code
+   here). Evidence: 0x01031030 (`b 0x0103517c`). */
+void thunk_swv_InitVtbl_Object3D(void **pVtbl)
 
 {
-  *(int *)(param_1 + 0xc) = ADDRESS_OF_swvObject3D_GetUserId_OFFSET + 0x1035188;
-  *(int *)(param_1 + 0x10) = ADDRESS_OF_swvObject3D_SetUserId_OFFSET + 0x1035194;
-  *(int *)(param_1 + 0x14) = ADDRESS_OF_swvObject3D_GetAnimationTrackCount_OFFSET + 0x10351a0;
-  *(int *)(param_1 + 0x18) = ADDRESS_OF_swvObject3D_GetAnimationTrack_OFFSET + 0x10351ac;
-  *(int *)(param_1 + 0x1c) = ADDRESS_OF_swvObject3D_AddAnimationTrack_OFFSET + 0x10351b8;
-  *(int *)(param_1 + 0x20) = ADDRESS_OF_swvObject3D_RemoveAnimationTrack_OFFSET + 0x10351c4;
-  *(int *)(param_1 + 0x24) = ADDRESS_OF_swvObject3D_Animate_OFFSET + 0x10351d0;
-  *(int *)(param_1 + 0x28) = ADDRESS_OF_swvObject3D_Find_OFFSET + 0x10351dc;
-  *(int *)(param_1 + 0x2c) = ADDRESS_OF_swvObject3D_GetReferences_OFFSET + 0x10351e8;
-  *(int *)(param_1 + 0x30) = ADDRESS_OF_FUNCTION_01035114_OFFSET + 0x10351f4;
-  *(int *)(param_1 + 0x34) = ADDRESS_OF_FUNCTION_01035318_OFFSET + 0x1035200;
-  *(int *)(param_1 + 0x38) = ADDRESS_OF_FUNCTION_010352f4_OFFSET + 0x103520c;
-  *(int *)(param_1 + 0x3c) = ADDRESS_OF_FUNCTION_01035134_OFFSET + 0x1035218;
-  *(int *)(param_1 + 0x40) = ADDRESS_OF_FUNCTION_0103515c_OFFSET + 0x1035224;
-  *(int *)(param_1 + 0x44) = ADDRESS_OF_swvObject3D_Duplicate_OFFSET + 0x1035230;
-  return;
+  swv_InitVtbl_Object3D(pVtbl);
 }
 
 /* ==== 0x01031034  (file offset 0x31034)  FUN_01031034 ================================================ */
@@ -46838,33 +46639,35 @@ undefined4 FUN_01032a28(undefined4 *param_1,undefined4 *param_2,int *param_3,int
 }
 
 /* ==== 0x01032A60  (file offset 0x32A60)  swv_Create_KeyframeSequence ================================= */
-int swv_Create_KeyframeSequence(void **ppObj)
+/* Constructor for class 12 (KeyframeSequence): ISwerve_CreateObject(po, 12, ppObj) lands here with ppObj
+   in r0. Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(19) makes the
+   native object of internal object type 19 (SwerveObjectType). Evidence: 0x01032a60 - 0x01032abc (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x13` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_KeyframeSequence(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 12 (KeyframeSequence): ISwerve_CreateObject(po, 12,
-                       ppObj) lands here with ppObj in r0. Creates the native object inside an error
-                       frame and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's
-                       switch (0x0102479c); class name from the JSR-184 alphabetical numbering
-                       proven by swvObj_QueryInterface's hierarchy table (see swv_types.h
-                       SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(0x13);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(19);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x01032AC0  (file offset 0x32AC0)  FUN_01032ac0 ================================================ */
@@ -47063,32 +46866,35 @@ undefined4 FUN_01032d90(int param_1,undefined4 param_2,undefined4 param_3)
 }
 
 /* ==== 0x01032DF8  (file offset 0x32DF8)  swv_Create_Light ============================================ */
-int swv_Create_Light(void **ppObj)
+/* Constructor for class 13 (Light): ISwerve_CreateObject(po, 13, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(12) makes the
+   native object of internal object type 12 (SwerveObjectType). Evidence: 0x01032df8 - 0x01032e54 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0xc` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_Light(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 13 (Light): ISwerve_CreateObject(po, 13, ppObj) lands
-                       here with ppObj in r0. Creates the native object inside an error frame and
-                       wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(0xc);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(12);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x01032E58  (file offset 0x32E58)  FUN_01032e58 ================================================ */
@@ -47568,32 +47374,34 @@ LAB_01033580:
 }
 
 /* ==== 0x01033634  (file offset 0x33634)  swv_Create_Loader =========================================== */
-int swv_Create_Loader(void **ppObj)
+/* Constructor for class 14 (Loader): ISwerve_CreateObject(po, 14, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). Evidence: 0x01033634 -
+   0x0103368c (the 0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to
+   swv_setjmp, `cmp r0, #0` / `bne`; on 0 swv_TryArm(frame), `bl` swvM3GReader_New, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_Loader(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 14 (Loader): ISwerve_CreateObject(po, 14, ppObj) lands
-                       here with ppObj in r0. Creates the native object inside an error frame and
-                       wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)swvM3GReader_New();
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)swvM3GReader_New();
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x01033690  (file offset 0x33690)  FUN_01033690 ================================================ */
@@ -47847,32 +47655,35 @@ int FUN_010339a4(int param_1)
 }
 
 /* ==== 0x010339C4  (file offset 0x339C4)  swv_Create_Material ========================================= */
-int swv_Create_Material(void **ppObj)
+/* Constructor for class 15 (Material): ISwerve_CreateObject(po, 15, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(13) makes the
+   native object of internal object type 13 (SwerveObjectType). Evidence: 0x010339c4 - 0x01033a20 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0xd` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_Material(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 15 (Material): ISwerve_CreateObject(po, 15, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(0xd);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(13);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x01033A24  (file offset 0x33A24)  swvMaterial_GetColor ======================================== */
@@ -48034,32 +47845,35 @@ void FUN_01033c50(int param_1,int param_2)
 }
 
 /* ==== 0x01033C6C  (file offset 0x33C6C)  swv_Create_Mesh ============================================= */
-int swv_Create_Mesh(void **ppObj)
+/* Constructor for class 16 (Mesh): ISwerve_CreateObject(po, 16, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(14) makes the
+   native object of internal object type 14 (SwerveObjectType). Evidence: 0x01033c6c - 0x01033cc8 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0xe` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_Mesh(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 16 (Mesh): ISwerve_CreateObject(po, 16, ppObj) lands
-                       here with ppObj in r0. Creates the native object inside an error frame and
-                       wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(0xe);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(14);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x01033CCC  (file offset 0x33CCC)  FUN_01033ccc ================================================ */
@@ -48389,32 +48203,35 @@ undefined4 FUN_0103418c(int param_1,undefined4 param_2,int param_3)
 }
 
 /* ==== 0x01034200  (file offset 0x34200)  swv_Create_MorphingMesh ===================================== */
-int swv_Create_MorphingMesh(void **ppObj)
+/* Constructor for class 17 (MorphingMesh): ISwerve_CreateObject(po, 17, ppObj) lands here with ppObj in
+   r0. Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(15) makes the
+   native object of internal object type 15 (SwerveObjectType). Evidence: 0x01034200 - 0x0103425c (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0xf` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_MorphingMesh(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 17 (MorphingMesh): ISwerve_CreateObject(po, 17, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(0xf);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(15);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x01034260  (file offset 0x34260)  FUN_01034260 ================================================ */
@@ -49189,9 +49006,9 @@ int32 swvObject3D_AddAnimationTrack(ISwerveObject *po,ISwerveObject *track)
   uint8 *trackObject;
   uint8 frame[136];
 
-  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  error = (int32)swv_setjmp((uint32 *)swv_TryPush(frame));
   if (error == 0) {
-    swv_TryArm((int)frame);
+    swv_TryArm(frame);
     object = (uint8 *)po->pNative;
     if (object != NULL)
       object -= 4;
@@ -49225,9 +49042,9 @@ int32 swvObject3D_Animate(ISwerveObject *po,int32 worldTime,int32 *pValidity)
   uint8 *object;
   uint8 frame[136];
 
-  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  error = (int32)swv_setjmp((uint32 *)swv_TryPush(frame));
   if (error == 0) {
-    swv_TryArm((int)frame);
+    swv_TryArm(frame);
     object = (uint8 *)po->pNative;
     if (object != NULL)
       object -= 4;
@@ -49256,9 +49073,9 @@ int32 swvObject3D_Duplicate(ISwerveObject *po,ISwerveObject **ppo)
   uint8 *copy;
   uint8 frame[136];
 
-  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  error = (int32)swv_setjmp((uint32 *)swv_TryPush(frame));
   if (error == 0) {
-    swv_TryArm((int)frame);
+    swv_TryArm(frame);
     object = (uint8 *)po->pNative;
     if (object != NULL)
       object -= 4;
@@ -49290,9 +49107,9 @@ int32 swvObject3D_Find(ISwerveObject *po,int32 userId,ISwerveObject **ppo)
   uint8 *found;
   uint8 frame[136];
 
-  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  error = (int32)swv_setjmp((uint32 *)swv_TryPush(frame));
   if (error == 0) {
-    swv_TryArm((int)frame);
+    swv_TryArm(frame);
     object = (uint8 *)po->pNative;
     if (object != NULL)
       object -= 4;
@@ -49323,9 +49140,9 @@ int32 swvObject3D_GetAnimationTrack(ISwerveObject *po,int32 index,ISwerveObject 
   uint8 *track;
   uint8 frame[136];
 
-  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  error = (int32)swv_setjmp((uint32 *)swv_TryPush(frame));
   if (error == 0) {
-    swv_TryArm((int)frame);
+    swv_TryArm(frame);
     object = (const uint8 *)po->pNative;
     if (object != NULL)
       object -= 4;
@@ -49383,9 +49200,9 @@ int32 swvObject3D_GetReferences(ISwerveObject *po,uint32 max,ISwerveObject **ref
   uint32 i;
   uint8 frame[136];
 
-  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  error = (int32)swv_setjmp((uint32 *)swv_TryPush(frame));
   if (error == 0) {
-    swv_TryArm((int)frame);
+    swv_TryArm(frame);
     object = (uint8 *)po->pNative;
     if (object != NULL)
       object -= 4;
@@ -49485,28 +49302,28 @@ void FUN_0103515c(int param_1)
 }
 
 /* ==== 0x0103517C  (file offset 0x3517C)  swv_InitVtbl_Object3D ======================================= */
-/* GUESS: name. Fills the ISwerveObject slots every class shares, 3 - 17 (+0x0c .. +0x44: the
-   JSR-184 Object3D methods, kh_types.h SwerveObject3DVtbl), in the vtable param_1; every
-   swv_InitVtbl_* calls it before its own slots (Ghidra dropped the argument at most calls). */
-void swv_InitVtbl_Object3D(int param_1)
+/* GUESS: name. Fills the ISwerveObject slots every class shares, 3 - 17 (+0x0c .. +0x44: the JSR-184
+   Object3D methods, kh_types.h SwerveObject3DVtbl), in the vtable pVtbl; every swv_InitVtbl_* calls it
+   before its own slots (Ghidra dropped the argument at most calls). Evidence: 0x0103517c - 0x01035230 (15
+   `ldr r1, [pc, ...]` / `add r1, pc, r1` / `str r1, [r0, #...]`). */
+void swv_InitVtbl_Object3D(void **pVtbl)
 
 {
-  *(int *)(param_1 + 0xc) = ADDRESS_OF_swvObject3D_GetUserId_OFFSET + 0x1035188;
-  *(int *)(param_1 + 0x10) = ADDRESS_OF_swvObject3D_SetUserId_OFFSET + 0x1035194;
-  *(int *)(param_1 + 0x14) = ADDRESS_OF_swvObject3D_GetAnimationTrackCount_OFFSET + 0x10351a0;
-  *(int *)(param_1 + 0x18) = ADDRESS_OF_swvObject3D_GetAnimationTrack_OFFSET + 0x10351ac;
-  *(int *)(param_1 + 0x1c) = ADDRESS_OF_swvObject3D_AddAnimationTrack_OFFSET + 0x10351b8;
-  *(int *)(param_1 + 0x20) = ADDRESS_OF_swvObject3D_RemoveAnimationTrack_OFFSET + 0x10351c4;
-  *(int *)(param_1 + 0x24) = ADDRESS_OF_swvObject3D_Animate_OFFSET + 0x10351d0;
-  *(int *)(param_1 + 0x28) = ADDRESS_OF_swvObject3D_Find_OFFSET + 0x10351dc;
-  *(int *)(param_1 + 0x2c) = ADDRESS_OF_swvObject3D_GetReferences_OFFSET + 0x10351e8;
-  *(int *)(param_1 + 0x30) = ADDRESS_OF_FUNCTION_01035114_OFFSET + 0x10351f4;
-  *(int *)(param_1 + 0x34) = ADDRESS_OF_FUNCTION_01035318_OFFSET + 0x1035200;
-  *(int *)(param_1 + 0x38) = ADDRESS_OF_FUNCTION_010352f4_OFFSET + 0x103520c;
-  *(int *)(param_1 + 0x3c) = ADDRESS_OF_FUNCTION_01035134_OFFSET + 0x1035218;
-  *(int *)(param_1 + 0x40) = ADDRESS_OF_FUNCTION_0103515c_OFFSET + 0x1035224;
-  *(int *)(param_1 + 0x44) = ADDRESS_OF_swvObject3D_Duplicate_OFFSET + 0x1035230;
-  return;
+  pVtbl[3] = (void *)(ADDRESS_OF_swvObject3D_GetUserId_OFFSET + 0x1035188);
+  pVtbl[4] = (void *)(ADDRESS_OF_swvObject3D_SetUserId_OFFSET + 0x1035194);
+  pVtbl[5] = (void *)(ADDRESS_OF_swvObject3D_GetAnimationTrackCount_OFFSET + 0x10351a0);
+  pVtbl[6] = (void *)(ADDRESS_OF_swvObject3D_GetAnimationTrack_OFFSET + 0x10351ac);
+  pVtbl[7] = (void *)(ADDRESS_OF_swvObject3D_AddAnimationTrack_OFFSET + 0x10351b8);
+  pVtbl[8] = (void *)(ADDRESS_OF_swvObject3D_RemoveAnimationTrack_OFFSET + 0x10351c4);
+  pVtbl[9] = (void *)(ADDRESS_OF_swvObject3D_Animate_OFFSET + 0x10351d0);
+  pVtbl[10] = (void *)(ADDRESS_OF_swvObject3D_Find_OFFSET + 0x10351dc);
+  pVtbl[11] = (void *)(ADDRESS_OF_swvObject3D_GetReferences_OFFSET + 0x10351e8);
+  pVtbl[12] = (void *)(ADDRESS_OF_FUNCTION_01035114_OFFSET + 0x10351f4);
+  pVtbl[13] = (void *)(ADDRESS_OF_FUNCTION_01035318_OFFSET + 0x1035200);
+  pVtbl[14] = (void *)(ADDRESS_OF_FUNCTION_010352f4_OFFSET + 0x103520c);
+  pVtbl[15] = (void *)(ADDRESS_OF_FUNCTION_01035134_OFFSET + 0x1035218);
+  pVtbl[16] = (void *)(ADDRESS_OF_FUNCTION_0103515c_OFFSET + 0x1035224);
+  pVtbl[17] = (void *)(ADDRESS_OF_swvObject3D_Duplicate_OFFSET + 0x1035230);
 }
 
 /* ==== 0x01035270  (file offset 0x35270)  swvObject3D_RemoveAnimationTrack ============================ */
@@ -49526,9 +49343,9 @@ int32 swvObject3D_RemoveAnimationTrack(ISwerveObject *po,ISwerveObject *track)
   uint8 *trackObject;
   uint8 frame[136];
 
-  error = (int32)swv_setjmp((undefined4 *)swv_TryPush((int)frame));
+  error = (int32)swv_setjmp((uint32 *)swv_TryPush(frame));
   if (error == 0) {
-    swv_TryArm((int)frame);
+    swv_TryArm(frame);
     object = (uint8 *)po->pNative;
     if (object != NULL)
       object -= 4;
@@ -52010,32 +51827,35 @@ void thunk_FUN_01036188(int param_1,int param_2)
 }
 
 /* ==== 0x01037F40  (file offset 0x37F40)  swv_Create_PolygonMode ====================================== */
-int swv_Create_PolygonMode(void **ppObj)
+/* Constructor for class 20 (PolygonMode): ISwerve_CreateObject(po, 20, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(8) makes the
+   native object of internal object type 8 (SwerveObjectType). Evidence: 0x01037f40 - 0x01037f9c (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x8` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_PolygonMode(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 20 (PolygonMode): ISwerve_CreateObject(po, 20, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(8);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(8);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x01037FA0  (file offset 0x37FA0)  swvPolygonMode_GetCulling =================================== */
@@ -52301,33 +52121,35 @@ void FUN_01038280(int param_1,undefined4 *param_2,undefined4 param_3,undefined4 
 }
 
 /* ==== 0x010382E0  (file offset 0x382E0)  swv_Create_RayIntersection ================================== */
-int swv_Create_RayIntersection(void **ppObj)
+/* Constructor for class 21 (RayIntersection): ISwerve_CreateObject(po, 21, ppObj) lands here with ppObj in
+   r0. Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(26) makes the
+   native object of internal object type 26 (SwerveObjectType). Evidence: 0x010382e0 - 0x0103833c (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x1a` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_RayIntersection(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 21 (RayIntersection): ISwerve_CreateObject(po, 21,
-                       ppObj) lands here with ppObj in r0. Creates the native object inside an error
-                       frame and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's
-                       switch (0x0102479c); class name from the JSR-184 alphabetical numbering
-                       proven by swvObj_QueryInterface's hierarchy table (see swv_types.h
-                       SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(0x1a);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(26);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x01038340  (file offset 0x38340)  FUN_01038340 ================================================ */
@@ -52533,13 +52355,13 @@ void swv_InitVtbl_RayIntersection(void **pVtbl)
 }
 
 /* ==== 0x01038624  (file offset 0x38624)  swv_ReadLE32 ================================================ */
-/* GUESS: name (not yet rewritten). Reads a little-endian 32-bit value from any address, a byte at a
-   time. */
-int swv_ReadLE32(byte *param_1)
+/* GUESS: name. Reads a little-endian 32-bit value from any address, a byte at a time (the SWVARC archive's
+   directory, swvArchive_*). Evidence: 0x01038624 - 0x01038640 (four `ldrb`, `add ... lsl #8` / `lsl #16` /
+   `lsl #24`). */
+uint32 swv_ReadLE32(const uint8 *bytes)
 
 {
-  return (uint)*param_1 + (uint)param_1[1] * 0x100 + (uint)param_1[2] * 0x10000 +
-         (uint)param_1[3] * 0x1000000;
+  return (uint32)bytes[0] + ((uint32)bytes[1] << 8) + ((uint32)bytes[2] << 16) + ((uint32)bytes[3] << 24);
 }
 
 /* ==== 0x01038644  (file offset 0x38644)  FUN_01038644 ================================================ */
@@ -52679,32 +52501,35 @@ FUN_01038794(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undef
 }
 
 /* ==== 0x01038818  (file offset 0x38818)  swv_Create_SkinnedMesh ====================================== */
-int swv_Create_SkinnedMesh(void **ppObj)
+/* Constructor for class 22 (SkinnedMesh): ISwerve_CreateObject(po, 22, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(16) makes the
+   native object of internal object type 16 (SwerveObjectType). Evidence: 0x01038818 - 0x01038874 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x10` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_SkinnedMesh(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 22 (SkinnedMesh): ISwerve_CreateObject(po, 22, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(0x10);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(16);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x01038878  (file offset 0x38878)  FUN_01038878 ================================================ */
@@ -52941,32 +52766,35 @@ undefined4 FUN_01038b54(int param_1,int param_2,int param_3,int param_4,int para
 }
 
 /* ==== 0x01038C2C  (file offset 0x38C2C)  swv_Create_Sprite3D ========================================= */
-int swv_Create_Sprite3D(void **ppObj)
+/* Constructor for class 23 (Sprite3D): ISwerve_CreateObject(po, 23, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(18) makes the
+   native object of internal object type 18 (SwerveObjectType). Evidence: 0x01038c2c - 0x01038c88 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x12` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_Sprite3D(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 23 (Sprite3D): ISwerve_CreateObject(po, 23, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(0x12);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(18);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x01038C8C  (file offset 0x38C8C)  FUN_01038c8c ================================================ */
@@ -53371,34 +53199,36 @@ int FUN_01039270(int param_1)
 }
 
 /* ==== 0x0103927C  (file offset 0x3927C)  swv_Create_Class24 ========================================== */
-int swv_Create_Class24(void **ppObj)
+/* Constructor for class 24 (Class24): ISwerve_CreateObject(po, 24, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); the other ids follow JSR-184's alphabetical class order,
+   proven by swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). Class 24 is an
+   Image2D subclass with no JSR-184 name: JSR-184 1.1 has no class between Sprite3D and Texture2D. GUESS:
+   what it is. FUN_01009860(24) makes the native object of internal object type 24 (SwerveObjectType).
+   Evidence: 0x0103927c - 0x010392d8 (the 0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush
+   and its result to swv_setjmp, `cmp r0, #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x18` / `bl`
+   FUN_01009860, `addne r0, r0, #4` (the object's +4 part, the one swv_WrapObject takes), `mov r1, r4`
+   ppObj, the result kept over swv_TryPop; else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had
+   dropped the swv_TryPush and swv_ErrorToResult arguments.) */
+int32 swv_Create_Class24(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 24 (Class24): ISwerve_CreateObject(po, 24, ppObj) lands here
-                       with ppObj in r0. Creates the native object inside an error frame and wraps it
-                       with swv_WrapObject. Class id from ISwerve_CreateObject's switch (0x0102479c); the
-                       other ids follow JSR-184's alphabetical class order, proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). Class 24
-                       is an Image2D subclass with no JSR-184 name: JSR-184 1.1 has no class between
-                       Sprite3D and Texture2D. GUESS: what it is. */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(0x18);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(24);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x010392DC  (file offset 0x392DC)  FUN_010392dc ================================================ */
@@ -53659,16 +53489,12 @@ uint thunk_adler32(uint param_1,byte *param_2,uint param_3)
 }
 
 /* ==== 0x01039598  (file offset 0x39598)  helper_malloc =============================================== */
-void * helper_malloc(uint32 size)
+/* Wrapper: a tail jump to AEEHelperFuncs[26] malloc (+0x68), size and the result passed through. Evidence:
+   0x01039598 - 0x010395a8 (`ldr r1, [r1, #-4]` the table, `ldr r1, [r1, #0x68]` / `bx r1`). */
+void *helper_malloc(uint32 size)
 
 {
-  void *pvVar1;
-  
-                    /* Wrapper: tail-jumps to AEEHelperFuncs[26] malloc (+0x68). */
-                    /* WARNING: Could not recover jumptable at 0x010395a8. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  pvVar1 = (void *)(*g_pHelperFuncs->malloc)(size);
-  return pvVar1;
+  return (*g_pHelperFuncs->malloc)(size);
 }
 
 /* ==== 0x010395B0  (file offset 0x395B0)  thunk_FUN_01039670 ========================================== */
@@ -53804,94 +53630,70 @@ undefined4 FUN_010396cc(int param_1,int param_2,undefined4 *param_3)
 }
 
 /* ==== 0x0103976C  (file offset 0x3976C)  swv_ErrorToResult =========================================== */
-undefined4 swv_ErrorToResult(int param_1)
+/* GUESS: name. Maps an internal (negative) engine error number (SwerveError) to the result code returned
+   through the BREW interface: 0 for 0; 0x10001 .. 0x1000f for -4, -9, -39, -41, -1000, -1001, -1101
+   (IndexOutOfBoundsException), -1103, -1200, -1201, -1202 (IOException), -1203, -1300
+   (IllegalStateException), -1301 (IllegalArgumentException), -1302 (NullPointerException); 0x10000 for any
+   other value (-2 among them). The binary is a compiled switch, a binary search (Ghidra's SCARRY4 tests).
+   Evidence: 0x0103976c - 0x01039868 (`adds r12, r1, #0x400` / `addles r12, r12, #0x4d` / `addeq r0, r0,
+   #7`, the `cmn` / `adds` equality tests, `ldreq r0` of the literals 0x0103986c - 0x010398a0, `mov r0,
+   #0x10000`, `cmp r1, #0` / `moveq r0, #0`). */
+uint32 swv_ErrorToResult(int32 error)
 
 {
-  undefined4 uVar1;
-  int iVar2;
-  bool bVar3;
-  bool bVar4;
-  
-                    /* Maps an internal (negative) engine error number to the result code returned
-                       through the BREW interface (0x10000 + n, e.g. 0x10007). GUESS: name. */
-  bVar4 = SCARRY4(param_1,0x400);
-  iVar2 = param_1 + 0x400;
-  bVar3 = param_1 == -0x400;
-  if (param_1 < -0x3ff) {
-    bVar4 = SCARRY4(iVar2,0x4d);
-    iVar2 = param_1 + 0x44d;
-    bVar3 = param_1 == -0x44d;
+  uint32 result = 0x10000;
+
+  switch (error) {
+  case 0:
+    result = 0;
+    break;
+  case -4:
+    result = WORD_HEXADECIMAL_00010001;
+    break;
+  case -9:
+    result = WORD_HEXADECIMAL_00010002;
+    break;
+  case -0x27:
+    result = WORD_HEXADECIMAL_00010003;
+    break;
+  case -0x29:
+    result = WORD_HEXADECIMAL_00010004;
+    break;
+  case SWVE_ARITHMETIC:
+    result = WORD_HEXADECIMAL_00010005;
+    break;
+  case -0x3e9:
+    result = WORD_HEXADECIMAL_00010006;
+    break;
+  case SWVE_INDEX_OUT_OF_BOUNDS:
+    result = 0x10007;
+    break;
+  case SWVE_READER_STATE:
+    result = WORD_HEXADECIMAL_00010008;
+    break;
+  case SWVE_END_OF_DATA:
+    result = WORD_HEXADECIMAL_00010009;
+    break;
+  case -0x4b1:
+    result = WORD_HEXADECIMAL_0001000A;
+    break;
+  case SWVE_BAD_FILE:
+    result = WORD_HEXADECIMAL_0001000B;
+    break;
+  case -0x4b3:
+    result = WORD_HEXADECIMAL_0001000C;
+    break;
+  case SWVE_ILLEGAL_STATE:
+    result = WORD_HEXADECIMAL_0001000D;
+    break;
+  case SWVE_ILLEGAL_ARGUMENT:
+    result = WORD_HEXADECIMAL_0001000E;
+    break;
+  case SWVE_NULL_POINTER:
+    result = WORD_HEXADECIMAL_0001000F;
+    break;
   }
-  uVar1 = 0x10000;
-  if (bVar3) {
-    return 0x10007;
-  }
-  if (iVar2 < 0 != bVar4) {
-    bVar4 = SCARRY4(param_1,0x400);
-    iVar2 = param_1 + 0x400;
-    bVar3 = param_1 == -0x400;
-    if (param_1 < -0x3ff) {
-      bVar4 = SCARRY4(iVar2,0xb2);
-      iVar2 = param_1 + 0x4b2;
-      bVar3 = param_1 == -0x4b2;
-    }
-    if (bVar3) {
-      return WORD_HEXADECIMAL_0001000B;
-    }
-    if (iVar2 < 0 == bVar4) {
-      if (param_1 == -0x4b1) {
-        return WORD_HEXADECIMAL_0001000A;
-      }
-      if (param_1 != -0x4b0) {
-        if (param_1 == -0x44f) {
-          uVar1 = WORD_HEXADECIMAL_00010008;
-        }
-        return uVar1;
-      }
-      return WORD_HEXADECIMAL_00010009;
-    }
-    if (param_1 == -0x516) {
-      return WORD_HEXADECIMAL_0001000F;
-    }
-    if (param_1 != -0x515) {
-      if (param_1 != -0x514) {
-        if (param_1 == -0x4b3) {
-          uVar1 = WORD_HEXADECIMAL_0001000C;
-        }
-        return uVar1;
-      }
-      return WORD_HEXADECIMAL_0001000D;
-    }
-    return WORD_HEXADECIMAL_0001000E;
-  }
-  if (param_1 == -9) {
-    return WORD_HEXADECIMAL_00010002;
-  }
-  if (param_1 < -8) {
-    if (param_1 == -0x3e9) {
-      return WORD_HEXADECIMAL_00010006;
-    }
-    if (param_1 != -1000) {
-      if (param_1 != -0x29) {
-        if (param_1 == -0x27) {
-          uVar1 = WORD_HEXADECIMAL_00010003;
-        }
-        return uVar1;
-      }
-      return WORD_HEXADECIMAL_00010004;
-    }
-    return WORD_HEXADECIMAL_00010005;
-  }
-  if (param_1 == -4) {
-    return WORD_HEXADECIMAL_00010001;
-  }
-  if (param_1 != -2) {
-    if (param_1 == 0) {
-      uVar1 = 0;
-    }
-    return uVar1;
-  }
-  return 0x10000;
+  return result;
 }
 
 /* ==== 0x010398D0  (file offset 0x398D0)  helper_free ================================================= */
@@ -53923,74 +53725,66 @@ void FUN_010398e8(int param_1)
 }
 
 /* ==== 0x01039910  (file offset 0x39910)  swv_GetGlobal00 ============================================= */
-/* WARNING: Unknown calling convention -- yet parameter storage is locked */
-
+/* Returns SwerveGlobals->field_00 (GetAppInstance()+0x20, then +0): FUN_0102ecec checks it is not NULL and
+   uses it as the engine's state (its +0xc and +0x10 the error frame lists, +0x34 the soft-float status).
+   SwerveGlobals: the host applet's GetAppInstance()+0x20, stored there by swv_NewSwerve; GetAppInstance is
+   called through the helper table (`ldr r0, [r0, #0xc0]` / `blx r0`), not through helper_GetAppInstance.
+   Evidence: 0x01039910 - 0x01039930 (`blx r0`, `ldr r0, [r0, #0x20]`, `ldr r0, [r0]`). */
 uint32 swv_GetGlobal00(void)
 
 {
-  int iVar1;
-  
-                    /* Returns SwerveGlobals->field_00 (GetAppInstance()+0x20, then +0). Meaning of
-                       the field not identified. */
-  iVar1 = (*g_pHelperFuncs->GetAppInstance)();
-  return **(uint32 **)(iVar1 + 0x20);
+  uint8 *applet = (uint8 *)(*g_pHelperFuncs->GetAppInstance)();
+
+  return (*(SwerveGlobals **)(applet + 0x20))->field_00;
 }
 
 /* ==== 0x01039938  (file offset 0x39938)  swv_GetSwerveObject ========================================= */
-/* WARNING: Unknown calling convention -- yet parameter storage is locked */
-
-ISwerve * swv_GetSwerveObject(void)
+/* Returns SwerveGlobals->pSwerve (+4): the ISwerve object. SwerveGlobals: the host applet's
+   GetAppInstance()+0x20, stored there by swv_NewSwerve; GetAppInstance is called through the helper table
+   (`ldr r0, [r0, #0xc0]` / `blx r0`), not through helper_GetAppInstance. Evidence: 0x01039938 - 0x01039958
+   (`blx r0`, `ldr r0, [r0, #0x20]`, `ldr r0, [r0, #4]`). */
+ISwerve *swv_GetSwerveObject(void)
 
 {
-  int iVar1;
-  
-                    /* Returns SwerveGlobals->pSwerve (+4): the ISwerve object. */
-  iVar1 = (*g_pHelperFuncs->GetAppInstance)();
-  return *(ISwerve **)(*(int *)(iVar1 + 0x20) + 4);
+  uint8 *applet = (uint8 *)(*g_pHelperFuncs->GetAppInstance)();
+
+  return (*(SwerveGlobals **)(applet + 0x20))->pSwerve;
 }
 
 /* ==== 0x01039960  (file offset 0x39960)  helper_GetAppInstance ======================================= */
-/* WARNING: Unknown calling convention -- yet parameter storage is locked */
-
-void * helper_GetAppInstance(void)
+/* Wrapper: a tail jump to AEEHelperFuncs[48] GetAppInstance (+0xc0), its result returned. Returns the HOST
+   applet (kh.mod's KHApp). Evidence: 0x01039960 - 0x01039970 (`ldr r0, [r0, #-4]` the table, `ldr r0, [r0,
+   #0xc0]` / `bx r0`). */
+void *helper_GetAppInstance(void)
 
 {
-  void *pvVar1;
-  
-                    /* Wrapper: tail-jumps to AEEHelperFuncs[48] GetAppInstance (+0xc0). Returns the
-                       HOST applet (kh.mod's KHApp). */
-                    /* WARNING: Could not recover jumptable at 0x01039970. Too many branches */
-                    /* WARNING: Treating indirect jump as call */
-  pvVar1 = (void *)(*g_pHelperFuncs->GetAppInstance)();
-  return pvVar1;
+  return (*g_pHelperFuncs->GetAppInstance)();
 }
 
 /* ==== 0x01039978  (file offset 0x39978)  swv_GetGlobals ============================================== */
-/* WARNING: Unknown calling convention -- yet parameter storage is locked */
-
-SwerveGlobals * swv_GetGlobals(void)
+/* Returns GetAppInstance()->+0x20: the engine's SwerveGlobals, stored in the host applet by swv_NewSwerve.
+   GetAppInstance is called through the helper table (`ldr r0, [r0, #0xc0]` / `blx r0`). Evidence:
+   0x01039978 - 0x01039994 (`blx r0`, `ldr r0, [r0, #0x20]`). */
+SwerveGlobals *swv_GetGlobals(void)
 
 {
-  int iVar1;
-  
-                    /* Returns GetAppInstance()->+0x20: the engine's SwerveGlobals, stored in the
-                       host applet by swv_NewSwerve. */
-  iVar1 = (*g_pHelperFuncs->GetAppInstance)();
-  return *(SwerveGlobals **)(iVar1 + 0x20);
+  uint8 *applet = (uint8 *)(*g_pHelperFuncs->GetAppInstance)();
+
+  return *(SwerveGlobals **)(applet + 0x20);
 }
 
 /* ==== 0x0103999C  (file offset 0x3999C)  swv_GetVtblCache ============================================ */
-/* WARNING: Unknown calling convention -- yet parameter storage is locked */
-
-void ** swv_GetVtblCache(void)
+/* Returns SwerveGlobals->pVtblCache (+8): the per-type BREW vtables built by swv_WrapObject (29 entries,
+   0x74 bytes; [0x1b] and [0x1c] the two extension classes' from swv_Create_Ext100 / swv_Create_Ext101).
+   SwerveGlobals: the host applet's GetAppInstance()+0x20, stored there by swv_NewSwerve; GetAppInstance is
+   called through the helper table (`ldr r0, [r0, #0xc0]` / `blx r0`), not through helper_GetAppInstance.
+   Evidence: 0x0103999c - 0x010399bc (`blx r0`, `ldr r0, [r0, #0x20]`, `ldr r0, [r0, #8]`). */
+void **swv_GetVtblCache(void)
 
 {
-  int iVar1;
-  
-                    /* Returns SwerveGlobals->pVtblCache (+8): the per-type BREW vtables built by
-                       swv_WrapObject. */
-  iVar1 = (*g_pHelperFuncs->GetAppInstance)();
-  return *(void ***)(*(int *)(iVar1 + 0x20) + 8);
+  uint8 *applet = (uint8 *)(*g_pHelperFuncs->GetAppInstance)();
+
+  return (*(SwerveGlobals **)(applet + 0x20))->pVtblCache;
 }
 
 /* ==== 0x010399C4  (file offset 0x399C4)  FUN_010399c4 ================================================ */
@@ -54204,115 +53998,107 @@ LAB_01039cf0:
 }
 
 /* ==== 0x01039DEC  (file offset 0x39DEC)  thunk_swv_memcpy ============================================ */
-/* A branch to swv_memcpy (0x01000100): memcpy(destination, source, byteCount), returning the
-   destination. Ghidra had merged swv_memcpy in; so it did in the 7 functions that end with a tail
-   jump here. */
-undefined4 thunk_swv_memcpy(undefined4 param_1,undefined4 param_2,undefined4 param_3)
+/* A branch to swv_memcpy (0x01000100): memcpy(destination, source, byteCount), returning the destination.
+   Ghidra had merged swv_memcpy in; so it did in the 7 functions that end with a tail jump here. Evidence:
+   0x01039dec (`b 0x01000100`: the arguments and the result pass through). */
+void *thunk_swv_memcpy(void *destination,const void *source,uint32 byteCount)
 
 {
-  return (undefined4)swv_memcpy((void *)param_1,(void *)param_2,param_3);
+  return swv_memcpy(destination,(void *)source,byteCount);
 }
 
 /* ==== 0x01039DF0  (file offset 0x39DF0)  thunk_swv_memset ============================================ */
-/* A branch to swv_memset (0x0100010c), the address most of the engine calls for memset(dst, c, n)
-   (Ghidra had shown swv_memset's body here). */
-undefined4 thunk_swv_memset(undefined4 param_1,uint param_2,undefined4 param_3)
+/* A branch to swv_memset (0x0100010c), the address most of the engine calls for memset(destination, value,
+   byteCount), returning the destination (Ghidra had shown swv_memset's body here). Evidence: 0x01039df0
+   (`b 0x0100010c`). */
+void *thunk_swv_memset(void *destination,uint32 value,uint32 byteCount)
 
 {
-  return swv_memset(param_1,param_2,param_3);
+  return swv_memset(destination,value,byteCount);
 }
 
 /* ==== 0x01039DF4  (file offset 0x39DF4)  swv_NewSwerve =============================================== */
+/* swv_NewSwerve - creates the ISwerve object (the class factory body for AEECLSID_SWERVE, called by
+   AEEClsCreateInstance). Same shape as AEEApplet_New: GetAppInstance first (the HOST applet), 1 (EFAILED)
+   without ppObj, pIShell or pIModule; allocates nSize (raised to 0x10 when below it, an unsigned compare)
+   + 0x14, 5-entry vtable at +nSize (AddRef 0x01024788, Release 0x01024978, GetVersion 0x01024a68,
+   GetPixelFormat 0x01024a1c, CreateObject 0x0102479c), +4 refs 1, +8 IShell*, +0xC IModule*. Allocates the
+   engine globals (SwerveGlobals, 0x24 bytes, zeroed) and stores them in the HOST APPLET at
+   GetAppInstance()+0x20 with pSwerve, then a zeroed 0x74-byte vtable cache at globals+8, and runs the
+   engine's start-up FUN_010130ac (1: success). On success AddRefs IShell and IModule, *ppObj = it, passes
+   the globals, the object and the address of the stack word holding ppObj to FUN_0103aed8 (which returns
+   its argument; GUESS: a leftover of a debug build), and replaces the applet's pFreeAppData (+0x1C) with
+   its own clean-up (0x010398e8), saving the old one at globals+0xC; returns 0. Otherwise frees the object,
+   the globals and the cache (helper_free of NULL included; the applet keeps the freed globals) and returns
+   1 (no globals) or 2 (ENOMEMORY: no object, no cache, or the start-up failed). GUESS: name (swv_ = engine
+   code). Evidence: 0x01039df4 - 0x01039f94 (the `blx r0` first, `cmp r11, #0` / `cmpne r9` / `cmpne r10` /
+   `moveq r0, #1`, `mov r8, #1`, `cmp r6, #0x10` / `addcc`, the five PC-relative `str`, `stmib r4, {r0, r9,
+   r10}`, `bl 0x0100010c` twice, `cmp r0, #1` / `movne r8, #2` / `moveq r8, #0`, the three `bl 0x0103aed8`
+   with r6, r4, sp, the `bl 0x010398d0` frees of r4, r6, r7). */
 int swv_NewSwerve(int16 nSize,IShell *pIShell,IModule *pIModule,ISwerve **ppObj)
 
 {
-  uint uVar1;
-  int iVar2;
-  int iVar3;
-  ISwerve *p;
-  ISwerveVtbl *pIVar4;
-  void *p_00;
-  void *p_01;
-  ISwerve **ppIStack_28;
-  
-                    /* swv_NewSwerve - creates the ISwerve object (the class factory body for
-                       AEECLSID_SWERVE). Same shape as AEEApplet_New: allocates nSize (>= 0x10) +
-                       0x14, 5-entry vtable at +nSize (AddRef 0x01024788, Release 0x01024978,
-                       GetVersion 0x01024a68, GetPixelFormat 0x01024a1c, CreateObject 0x0102479c),
-                       +4 refs, +8 IShell*, +0xC IModule* (both AddRef'd). Allocates the engine
-                       globals (SwerveGlobals, 0x24 bytes) and stores them in the HOST APPLET at
-                       GetAppInstance()+0x20, plus a 0x74-byte vtable cache at globals+8; replaces
-                       the applet's pFreeAppData (+0x1C) with its own clean-up, saving the old one
-                       at globals+0xC. GUESS: name (swv_ = engine code). */
-  uVar1 = (uint)nSize;
-  p_01 = (void *)0x0;
-  ppIStack_28 = ppObj;
-                    /* helper[48] void * GetAppInstance(void)  (AEEHelperFuncs +0xc0, via *(base-4))
-                        */
-  iVar2 = (*g_pHelperFuncs->GetAppInstance)();
-  iVar3 = iVar2;
-  if ((ppObj == (ISwerve **)0x0 || pIShell == (IShell *)0x0) || pIModule == (IModule *)0x0) {
-    iVar3 = 1;
-  }
-  if ((ppObj != (ISwerve **)0x0 && pIShell != (IShell *)0x0) && pIModule != (IModule *)0x0) {
-    *ppObj = (ISwerve *)0x0;
-    if (uVar1 < 0x10) {
-      uVar1 = (int)((uVar1 + 0x10) * 0x10000) >> 0x10;
-    }
-    p = helper_malloc(uVar1 + 0x14);
-    if (p == (ISwerve *)0x0) {
-      iVar3 = 2;
-    }
+  uint8 *applet = (uint8 *)(*g_pHelperFuncs->GetAppInstance)();
+  ISwerve **savedPpObj = ppObj;
+  int result = 1;
+  ISwerve *po;
+  ISwerveVtbl *vtbl;
+  SwerveGlobals *globals;
+  void **cache = NULL;
+
+  if (ppObj != NULL && pIShell != NULL && pIModule != NULL) {
+    *ppObj = NULL;
+    if ((uint32)nSize < 0x10)
+      nSize = (int16)(nSize + 0x10);
+    po = (ISwerve *)helper_malloc((uint32)(nSize + 0x14));
+    if (po == NULL)
+      result = 2;
     else {
-      pIVar4 = (ISwerveVtbl *)((int)&p->pvt + uVar1);
-      pIVar4->AddRef = (_func_1 *)(ADDRESS_OF_ISwerve_AddRef_OFFSET + 0x1039e78);
-      pIVar4->Release = (_func_2 *)(ADDRESS_OF_ISwerve_Release_OFFSET + 0x1039e84);
-      pIVar4->GetVersion = (_func_3 *)(ADDRESS_OF_ISwerve_GetVersion_OFFSET + 0x1039e90);
-      pIVar4->GetPixelFormat = (_func_4 *)(ADDRESS_OF_ISwerve_GetPixelFormat_OFFSET + 0x1039e9c);
-      pIVar4->CreateObject = (_func_5 *)(ADDRESS_OF_ISwerve_CreateObject_OFFSET + 0x1039ea8);
-      p->pvt = pIVar4;
-      p->m_nRefs = 1;
-      p->m_pIShell = pIShell;
-      p->m_pIModule = pIModule;
-      p_00 = helper_malloc(0x24);
-      iVar3 = 1;
-      if (p_00 != (void *)0x0) {
-        swv_memset(p_00,0,0x24);
-        *(void **)(iVar2 + 0x20) = p_00;
-        *(ISwerve **)((int)p_00 + 4) = p;
-        p_01 = helper_malloc(0x74);
-        if (p_01 == (void *)0x0) {
-          iVar3 = 2;
-        }
+      vtbl = (ISwerveVtbl *)((uint8 *)po + nSize);
+      vtbl->AddRef = (uint32 (*)(ISwerve *))(ADDRESS_OF_ISwerve_AddRef_OFFSET + 0x1039e78);
+      vtbl->Release = (uint32 (*)(ISwerve *))(ADDRESS_OF_ISwerve_Release_OFFSET + 0x1039e84);
+      vtbl->GetVersion = (void (*)(ISwerve *,SwerveVersion *))
+                             (ADDRESS_OF_ISwerve_GetVersion_OFFSET + 0x1039e90);
+      vtbl->GetPixelFormat = (void (*)(ISwerve *,SwervePixelFormat *))
+                                 (ADDRESS_OF_ISwerve_GetPixelFormat_OFFSET + 0x1039e9c);
+      vtbl->CreateObject = (int (*)(ISwerve *,SwerveClassId,void **))
+                               (ADDRESS_OF_ISwerve_CreateObject_OFFSET + 0x1039ea8);
+      po->pvt = vtbl;
+      po->m_nRefs = 1;
+      po->m_pIShell = pIShell;
+      po->m_pIModule = pIModule;
+      globals = (SwerveGlobals *)helper_malloc(0x24);
+      if (globals != NULL) {
+        swv_memset(globals,0,0x24);
+        *(SwerveGlobals **)(applet + 0x20) = globals;
+        globals->pSwerve = po;
+        cache = (void **)helper_malloc(0x74);
+        if (cache == NULL)
+          result = 2;
         else {
-          swv_memset(p_01,0,0x74);
-          *(void **)(*(int *)(iVar2 + 0x20) + 8) = p_01;
-          iVar3 = FUN_010130ac();
-          if (iVar3 == 1) {
-            iVar3 = 0;
-          }
-          else {
-            iVar3 = 2;
-          }
-          if (iVar3 == 0) {
-            (*pIShell->pvt->AddRef)(pIShell);
-            (*pIModule->pvt->AddRef)(pIModule);
-            *ppObj = p;
-            FUN_0103aed8(p_00);
-            FUN_0103aed8(p);
-            FUN_0103aed8(&ppIStack_28);
-            *(undefined4 *)(*(int *)(iVar2 + 0x20) + 0xc) = *(undefined4 *)(iVar2 + 0x1c);
-            *(int *)(iVar2 + 0x1c) = ADDRESS_OF_FUNCTION_010398e8_OFFSET + 0x1039f74;
-            return 0;
-          }
+          swv_memset(cache,0,0x74);
+          (*(SwerveGlobals **)(applet + 0x20))->pVtblCache = cache;
+          result = FUN_010130ac() == 1 ? 0 : 2;
         }
       }
-      helper_free(p);
-      helper_free(p_00);
-      helper_free(p_01);
+      if (result == 0) {
+        (*pIShell->pvt->AddRef)(pIShell);
+        (*pIModule->pvt->AddRef)(pIModule);
+        *ppObj = po;
+        FUN_0103aed8((undefined4)globals);
+        FUN_0103aed8((undefined4)po);
+        FUN_0103aed8((undefined4)&savedPpObj);
+        (*(SwerveGlobals **)(applet + 0x20))->pfnSavedFreeAppData = *(void **)(applet + 0x1c);
+        *(uint32 *)(applet + 0x1c) = ADDRESS_OF_FUNCTION_010398e8_OFFSET + 0x1039f74;
+      }
+      else {
+        helper_free(po);
+        helper_free(globals);
+        helper_free(cache);
+      }
     }
   }
-  return iVar3;
+  return result;
 }
 
 /* ==== 0x01039FB4  (file offset 0x39FB4)  swv_WrapObject ============================================== */
@@ -55051,15 +54837,16 @@ undefined4 FUN_0103aed8(undefined4 param_1)
 }
 
 /* ==== 0x0103AF88  (file offset 0x3AF88)  swv_SetGlobal00 ============================================= */
+/* Sets SwerveGlobals->field_00 = value (pairs with swv_GetGlobal00). SwerveGlobals: the host applet's
+   GetAppInstance()+0x20, stored there by swv_NewSwerve; GetAppInstance is called through the helper table
+   (`ldr r0, [r0, #0xc0]` / `blx r0`), not through helper_GetAppInstance. Evidence: 0x0103af88 - 0x0103afac
+   (`blx r0`, `ldr r0, [r0, #0x20]`, `str r4, [r0]`). */
 void swv_SetGlobal00(uint32 value)
 
 {
-  int iVar1;
-  
-                    /* Sets SwerveGlobals->field_00 = value (pairs with swv_GetGlobal00). */
-  iVar1 = (*g_pHelperFuncs->GetAppInstance)();
-  **(uint32 **)(iVar1 + 0x20) = value;
-  return;
+  uint8 *applet = (uint8 *)(*g_pHelperFuncs->GetAppInstance)();
+
+  (*(SwerveGlobals **)(applet + 0x20))->field_00 = value;
 }
 
 /* ==== 0x0103AFB4  (file offset 0x3AFB4)  FUN_0103afb4 ================================================ */
@@ -55187,32 +54974,35 @@ int FUN_0103b154(int param_1,undefined4 param_2,int param_3)
 }
 
 /* ==== 0x0103B200  (file offset 0x3B200)  swv_Create_Texture2D ======================================== */
-int swv_Create_Texture2D(void **ppObj)
+/* Constructor for class 25 (Texture2D): ISwerve_CreateObject(po, 25, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(17) makes the
+   native object of internal object type 17 (SwerveObjectType). Evidence: 0x0103b200 - 0x0103b25c (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x11` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_Texture2D(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 25 (Texture2D): ISwerve_CreateObject(po, 25, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(0x11);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(17);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x0103B260  (file offset 0x3B260)  FUN_0103b260 ================================================ */
@@ -55505,32 +55295,35 @@ undefined4 FUN_0103b600(int param_1,int param_2,int param_3)
 }
 
 /* ==== 0x0103B68C  (file offset 0x3B68C)  swv_Create_Transform ======================================== */
-int swv_Create_Transform(void **ppObj)
+/* Constructor for class 26 (Transform): ISwerve_CreateObject(po, 26, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(27) makes the
+   native object of internal object type 27 (SwerveObjectType). Evidence: 0x0103b68c - 0x0103b6e8 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x1b` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_Transform(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 26 (Transform): ISwerve_CreateObject(po, 26, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(0x1b);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(27);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x0103B6EC  (file offset 0x3B6EC)  FUN_0103b6ec ================================================ */
@@ -56636,33 +56429,35 @@ undefined4 FUN_0103c784(int param_1,undefined4 *param_2)
 }
 
 /* ==== 0x0103C81C  (file offset 0x3C81C)  swv_Create_TriangleStripArray =============================== */
-int swv_Create_TriangleStripArray(void **ppObj)
+/* Constructor for class 28 (TriangleStripArray): ISwerve_CreateObject(po, 28, ppObj) lands here with ppObj
+   in r0. Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(11) makes the
+   native object of internal object type 11 (SwerveObjectType). Evidence: 0x0103c81c - 0x0103c878 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0xb` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_TriangleStripArray(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 28 (TriangleStripArray): ISwerve_CreateObject(po, 28,
-                       ppObj) lands here with ppObj in r0. Creates the native object inside an error
-                       frame and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's
-                       switch (0x0102479c); class name from the JSR-184 alphabetical numbering
-                       proven by swvObj_QueryInterface's hierarchy table (see swv_types.h
-                       SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(0xb);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(11);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x0103C87C  (file offset 0x3C87C)  swv_InitVtbl_TriangleStripArray ============================= */
@@ -56741,32 +56536,35 @@ undefined4 FUN_0103c944(int param_1,undefined4 param_2,undefined4 param_3,int pa
 }
 
 /* ==== 0x0103C9C4  (file offset 0x3C9C4)  swv_Create_VertexArray ====================================== */
-int swv_Create_VertexArray(void **ppObj)
+/* Constructor for class 29 (VertexArray): ISwerve_CreateObject(po, 29, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(20) makes the
+   native object of internal object type 20 (SwerveObjectType). Evidence: 0x0103c9c4 - 0x0103ca20 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x14` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_VertexArray(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 29 (VertexArray): ISwerve_CreateObject(po, 29, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(0x14);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(20);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x0103CA24  (file offset 0x3CA24)  swv_InitVtbl_VertexArray ==================================== */
@@ -56890,32 +56688,35 @@ undefined4 FUN_0103cbac(int param_1,undefined4 param_2,int param_3,undefined4 pa
 }
 
 /* ==== 0x0103CC48  (file offset 0x3CC48)  swv_Create_VertexBuffer ===================================== */
-int swv_Create_VertexBuffer(void **ppObj)
+/* Constructor for class 30 (VertexBuffer): ISwerve_CreateObject(po, 30, ppObj) lands here with ppObj in
+   r0. Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(21) makes the
+   native object of internal object type 21 (SwerveObjectType). Evidence: 0x0103cc48 - 0x0103cca4 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x15` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_VertexBuffer(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 30 (VertexBuffer): ISwerve_CreateObject(po, 30, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(0x15);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(21);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x0103CCA8  (file offset 0x3CCA8)  swvVertexBuffer_GetColors =================================== */
@@ -57281,32 +57082,35 @@ swvVertexBuffer_SetTexCoords(int param_1,undefined4 param_2,int param_3,undefine
 }
 
 /* ==== 0x0103D18C  (file offset 0x3D18C)  swv_Create_World ============================================ */
-int swv_Create_World(void **ppObj)
+/* Constructor for class 31 (World): ISwerve_CreateObject(po, 31, ppObj) lands here with ppObj in r0.
+   Creates the native object inside an error frame and wraps it with swv_WrapObject. Class id from
+   ISwerve_CreateObject's switch (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
+   swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). FUN_01009860(22) makes the
+   native object of internal object type 22 (SwerveObjectType). Evidence: 0x0103d18c - 0x0103d1e8 (the
+   0x88-byte frame, `sub sp, sp, #0x88`, passed in r0 to swv_TryPush and its result to swv_setjmp, `cmp r0,
+   #0` / `bne`; on 0 swv_TryArm(frame), `mov r0, #0x16` / `bl` FUN_01009860, `addne r0, r0, #4` (the
+   object's +4 part, the one swv_WrapObject takes), `mov r1, r4` ppObj, the result kept over swv_TryPop;
+   else swv_ErrorToResult(r0, the swv_setjmp result). Ghidra had dropped the swv_TryPush and
+   swv_ErrorToResult arguments.) */
+int32 swv_Create_World(void **ppObj)
 
 {
-  int iVar1;
-  void *pNative;
-  undefined1 auStack_90 [136];
-  
-                    /* Constructor for class 31 (World): ISwerve_CreateObject(po, 31, ppObj) lands
-                       here with ppObj in r0. Creates the native object inside an error frame and
-                       wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). */
-  iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
-  if (iVar1 == 0) {
-    swv_TryArm(auStack_90);
-    pNative = (void *)FUN_01009860(0x16);
-    if (pNative != (void *)0x0) {
-      pNative = (void *)((int)pNative + 4);
-    }
-    iVar1 = swv_WrapObject(pNative,ppObj);
+  int32 result;
+  uint8 *native;
+  uint8 frame[136];
+
+  result = swv_setjmp((uint32 *)swv_TryPush(frame));
+  if (result == 0) {
+    swv_TryArm(frame);
+    native = (uint8 *)FUN_01009860(22);
+    if (native != NULL)
+      native += 4;
+    result = swv_WrapObject(native,(ISwerveObject **)ppObj);
     swv_TryPop();
   }
-  else {
-    iVar1 = swv_ErrorToResult(iVar1);   /* Ghidra had dropped it */
-  }
-  return iVar1;
+  else
+    result = (int32)swv_ErrorToResult(result);
+  return result;
 }
 
 /* ==== 0x0103D1EC  (file offset 0x3D1EC)  FUN_0103d1ec ================================================ */
