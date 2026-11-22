@@ -506,8 +506,8 @@ int * FUN_0100eef0(int *param_1,int param_2);
 void swv_ColourScale(int32 *colour,int32 factor);   /* 0x0100EFE4 GUESS: name, see swv21brew.c */
 void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 int32 swvImage2D_AlphaStride(const uint8 *image);   /* 0x0100F154 GUESS: name, see swv21brew.c */
-int32 swvObject3D_AnimationTrackCount(const uint8 *object);   /* 0x0100F170 GUESS: name, see swv21brew.c */
-void *swvObject3D_AnimationTrack(const uint8 *object,int32 index);   /* 0x0100F184 GUESS: name, see swv21brew.c */
+int32 swvObject3D_AnimationTrackCount(const uint8 *object);   /* 0x0100F170 JSR-184 1.1, see swv21brew.c */
+void *swvObject3D_AnimationTrack(const uint8 *object,int32 index);   /* 0x0100F184 JSR-184 1.1, see swv21brew.c */
 undefined4 FUN_0100f1c8(int param_1,int param_2);
 void FUN_0100f1fc(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3,undefined4 param_4);
 void swvNode_AlignmentVector(uint32 *out,uint8 *node,const uint32 *matrix,int32 target);   /* 0x0100F350 GUESS: name, see swv21brew.c */
@@ -515,9 +515,9 @@ void FUN_0100f3cc(undefined4 param_1,int param_2,undefined4 param_3,undefined4 *
 void FUN_0100f450(undefined4 param_1,int param_2,undefined4 param_3,undefined4 *param_4);
 undefined4 * FUN_0100f4dc(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 int32 swvGraphics3D_Property(uint32 index);   /* 0x0100F530 GUESS: name, see swv21brew.c */
-int32 swvGroup_ChildCount(const uint8 *group);   /* 0x0100F594 GUESS: name, see swv21brew.c */
+int32 swvGroup_ChildCount(const uint8 *group);   /* 0x0100F594 JSR-184 1.1, see swv21brew.c */
 uint8 *swvGroup_NthChild(const uint8 *group,int32 *index);   /* 0x0100F5B4 GUESS: name, see swv21brew.c */
-uint8 *swvGroup_Child(const uint8 *group,int32 index);   /* 0x0100F5DC GUESS: name, see swv21brew.c */
+uint8 *swvGroup_Child(const uint8 *group,int32 index);   /* 0x0100F5DC JSR-184 1.1, see swv21brew.c */
 uint32 swvMaterial_Color(const uint8 *material,int32 target);   /* 0x0100F620 GUESS: name, see swv21brew.c */
 void FUN_0100f654(int param_1,int param_2);
 int32 swvPolygonMode_Culling(const uint8 *mode);   /* 0x0100F6D8 GUESS: name, see swv21brew.c */
@@ -552,11 +552,11 @@ undefined8 FUN_01010148(int param_1,uint param_2);
 undefined4 FUN_010102c8(int param_1,int param_2,undefined4 param_3,undefined4 param_4);
 undefined4 FUN_01010320(int param_1,int param_2,undefined4 *param_3);
 void FUN_01010384(int param_1,int param_2,undefined4 *param_3);
-int32 swvObject3D_References(uint8 *object,int32 max,uint8 **out);   /* 0x010103D4 GUESS: name, see swv21brew.c */
+int32 swvObject3D_References(uint8 *object,int32 max,uint8 **out);   /* 0x010103D4 JSR-184 1.1, see swv21brew.c */
 undefined4 FUN_010104f0(int param_1);
 int32 swvPolygonMode_Shading(const uint8 *mode);   /* 0x010106F8 GUESS: name, see swv21brew.c */
 void FUN_0101070c(int param_1,int param_2,int *param_3,undefined4 *param_4,undefined4 *param_5);
-uint32 swvAnimationController_Speed(const uint8 *controller);   /* 0x01010818 GUESS: name, see swv21brew.c */
+uint32 swvAnimationController_Speed(const uint8 *controller);   /* 0x01010818 JSR-184 1.1, see swv21brew.c */
 undefined4 FUN_01010828(int param_1,uint param_2,int param_3,undefined4 *param_4);
 bool FUN_010108d4(undefined4 param_1,undefined4 param_2,int param_3);
 int FUN_01010924(int param_1,int param_2);
@@ -577,10 +577,10 @@ int32 swvImage2D_GetWidth(uint8 *image);   /* 0x01011968 GUESS: name, see swv21b
 int32 swvPolygonMode_Winding(const uint8 *mode);   /* 0x01011980 GUESS: name, see swv21brew.c */
 undefined4 FUN_01011994(int param_1);
 int FUN_010119a8(int param_1,int param_2,int param_3);
-uint8 *swvNode_AlignmentReferenceY(const uint8 *node);   /* 0x010119D8 GUESS: name, see swv21brew.c */
-int32 swvNode_AlignmentTargetY(const uint8 *node);   /* 0x010119E8 GUESS: name, see swv21brew.c */
-uint8 *swvNode_AlignmentReferenceZ(const uint8 *node);   /* 0x010119FC GUESS: name, see swv21brew.c */
-int32 swvNode_AlignmentTargetZ(const uint8 *node);   /* 0x01011A0C GUESS: name, see swv21brew.c */
+uint8 *swvNode_AlignmentReferenceY(const uint8 *node);   /* 0x010119D8 JSR-184 1.1, see swv21brew.c */
+int32 swvNode_AlignmentTargetY(const uint8 *node);   /* 0x010119E8 JSR-184 1.1, see swv21brew.c */
+uint8 *swvNode_AlignmentReferenceZ(const uint8 *node);   /* 0x010119FC JSR-184 1.1, see swv21brew.c */
+int32 swvNode_AlignmentTargetZ(const uint8 *node);   /* 0x01011A0C JSR-184 1.1, see swv21brew.c */
 void FUN_01011a20(int param_1,int param_2,undefined4 *param_3);
 int FUN_01011a84(int param_1);
 uint32 swvPolygonMode_TwoSidedLighting(const uint8 *mode);   /* 0x01011AA8 GUESS: name, see swv21brew.c */
@@ -1056,15 +1056,15 @@ void FUN_0102cc18(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3);
 int FUN_0102cc60(void);
 int FUN_0102cc80(int param_1,int param_2);
 uint adler32(uint param_1,byte *param_2,uint param_3);
-void swvAnimationController_GetActiveIntervalEnd(int param_1,undefined4 *param_2);   /* 0x0102CE5C GUESS: name, see swv21brew.c */
-void swvAnimationController_GetActiveIntervalStart(int param_1,undefined4 *param_2);   /* 0x0102CE74 GUESS: name, see swv21brew.c */
-void swvAnimationController_GetPosition(int param_1,undefined4 param_2,undefined4 *param_3);   /* 0x0102CE8C GUESS: name, see swv21brew.c */
-void swvAnimationController_GetSpeed(int param_1,undefined4 *param_2);   /* 0x0102CEAC GUESS: name, see swv21brew.c */
-void swvAnimationController_GetWeight(int param_1,undefined4 *param_2);   /* 0x0102CECC GUESS: name, see swv21brew.c */
-undefined4 swvAnimationController_SetActiveInterval(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x0102CF84 GUESS: name, see swv21brew.c */
-undefined4 swvAnimationController_SetPosition(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x0102CFEC GUESS: name, see swv21brew.c */
-undefined4 swvAnimationController_SetSpeed(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x0102D060 GUESS: name, see swv21brew.c */
-undefined4 swvAnimationController_SetWeight(int param_1,undefined4 param_2);   /* 0x0102D0D4 GUESS: name, see swv21brew.c */
+void swvAnimationController_GetActiveIntervalEnd(int param_1,undefined4 *param_2);   /* 0x0102CE5C JSR-184 1.1, see swv21brew.c */
+void swvAnimationController_GetActiveIntervalStart(int param_1,undefined4 *param_2);   /* 0x0102CE74 JSR-184 1.1, see swv21brew.c */
+void swvAnimationController_GetPosition(int param_1,undefined4 param_2,undefined4 *param_3);   /* 0x0102CE8C JSR-184 1.1, see swv21brew.c */
+void swvAnimationController_GetSpeed(int param_1,undefined4 *param_2);   /* 0x0102CEAC JSR-184 1.1, see swv21brew.c */
+void swvAnimationController_GetWeight(int param_1,undefined4 *param_2);   /* 0x0102CECC JSR-184 1.1, see swv21brew.c */
+undefined4 swvAnimationController_SetActiveInterval(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x0102CF84 JSR-184 1.1, see swv21brew.c */
+undefined4 swvAnimationController_SetPosition(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x0102CFEC JSR-184 1.1, see swv21brew.c */
+undefined4 swvAnimationController_SetSpeed(int param_1,undefined4 param_2,undefined4 param_3);   /* 0x0102D060 JSR-184 1.1, see swv21brew.c */
+undefined4 swvAnimationController_SetWeight(int param_1,undefined4 param_2);   /* 0x0102D0D4 JSR-184 1.1, see swv21brew.c */
 int FUN_0102d1c0(int param_1,ISwerveObject **param_2);
 int FUN_0102d22c(int param_1,ISwerveObject **param_2);
 void FUN_0102d298(int param_1,undefined4 *param_2);
@@ -1344,16 +1344,16 @@ int32 png_sig_cmp(const uint8 *sig,uint32 start,uint32 numToCheck);   /* 0x01037
 void png_warning(int param_1,char *param_2);   /* 0x01037EB0 libpng */
 int FUN_01037eec(undefined4 param_1,int param_2,int param_3,undefined4 param_4);
 void thunk_FUN_01036188(int param_1,int param_2);
-void swvPolygonMode_GetCulling(int param_1,undefined4 *param_2);   /* 0x01037FA0 GUESS: name, see swv21brew.c */
-void swvPolygonMode_GetShading(int param_1,undefined4 *param_2);   /* 0x01037FC0 GUESS: name, see swv21brew.c */
-void swvPolygonMode_GetWinding(int param_1,undefined4 *param_2);   /* 0x01037FE0 GUESS: name, see swv21brew.c */
-void swvPolygonMode_IsTwoSidedLightingEnabled(int param_1,undefined1 *param_2);   /* 0x010380B0 GUESS: name, see swv21brew.c */
-undefined4 swvPolygonMode_SetCulling(int param_1,int param_2);   /* 0x010380D0 GUESS: name, see swv21brew.c */
-void swvPolygonMode_SetLocalCameraLightingEnable(int param_1,int param_2);   /* 0x01038148 GUESS: name, see swv21brew.c */
-void swvPolygonMode_SetPerspectiveCorrectionEnable(int param_1,int param_2);   /* 0x01038160 GUESS: name, see swv21brew.c */
-undefined4 swvPolygonMode_SetShading(int param_1,int param_2);   /* 0x01038178 GUESS: name, see swv21brew.c */
-void swvPolygonMode_SetTwoSidedLightingEnable(int param_1,int param_2);   /* 0x010381F0 GUESS: name, see swv21brew.c */
-undefined4 swvPolygonMode_SetWinding(int param_1,int param_2);   /* 0x01038208 GUESS: name, see swv21brew.c */
+void swvPolygonMode_GetCulling(int param_1,undefined4 *param_2);   /* 0x01037FA0 JSR-184 1.1, see swv21brew.c */
+void swvPolygonMode_GetShading(int param_1,undefined4 *param_2);   /* 0x01037FC0 JSR-184 1.1, see swv21brew.c */
+void swvPolygonMode_GetWinding(int param_1,undefined4 *param_2);   /* 0x01037FE0 JSR-184 1.1, see swv21brew.c */
+void swvPolygonMode_IsTwoSidedLightingEnabled(int param_1,undefined1 *param_2);   /* 0x010380B0 JSR-184 1.1, see swv21brew.c */
+undefined4 swvPolygonMode_SetCulling(int param_1,int param_2);   /* 0x010380D0 JSR-184 1.1, see swv21brew.c */
+void swvPolygonMode_SetLocalCameraLightingEnable(int param_1,int param_2);   /* 0x01038148 JSR-184 1.1, see swv21brew.c */
+void swvPolygonMode_SetPerspectiveCorrectionEnable(int param_1,int param_2);   /* 0x01038160 JSR-184 1.1, see swv21brew.c */
+undefined4 swvPolygonMode_SetShading(int param_1,int param_2);   /* 0x01038178 JSR-184 1.1, see swv21brew.c */
+void swvPolygonMode_SetTwoSidedLightingEnable(int param_1,int param_2);   /* 0x010381F0 JSR-184 1.1, see swv21brew.c */
+undefined4 swvPolygonMode_SetWinding(int param_1,int param_2);   /* 0x01038208 JSR-184 1.1, see swv21brew.c */
 void FUN_01038280(int param_1,undefined4 *param_2,undefined4 param_3,undefined4 param_4);
 void FUN_01038340(int param_1,undefined4 *param_2);
 int FUN_01038358(int param_1,ISwerveObject **param_2);
@@ -1458,17 +1458,17 @@ undefined4 FUN_0103c944(int param_1,undefined4 param_2,undefined4 param_3,int pa
 undefined4 FUN_0103ca64(int param_1,int param_2,int param_3,int param_4);
 undefined4 FUN_0103cb10(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5);
 undefined4 FUN_0103cbac(int param_1,undefined4 param_2,int param_3,undefined4 param_4,int param_5);
-int swvVertexBuffer_GetColors(int param_1,ISwerveObject **param_2);   /* 0x0103CCA8 GUESS: name, see swv21brew.c */
-void swvVertexBuffer_GetDefaultColor(int param_1,undefined4 *param_2);   /* 0x0103CD14 GUESS: name, see swv21brew.c */
-int swvVertexBuffer_GetNormals(int param_1,ISwerveObject **param_2);   /* 0x0103CD2C GUESS: name, see swv21brew.c */
-int swvVertexBuffer_GetPositions(int param_1,undefined4 param_2,undefined4 param_3,ISwerveObject **param_4);   /* 0x0103CD98 GUESS: name, see swv21brew.c */
-int swvVertexBuffer_GetTexCoords(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, ISwerveObject **param_5);   /* 0x0103CE14 GUESS: name, see swv21brew.c */
-void swvVertexBuffer_GetVertexCount(int param_1,undefined4 *param_2);   /* 0x0103CE98 GUESS: name, see swv21brew.c */
-undefined4 swvVertexBuffer_SetColors(int param_1,int param_2);   /* 0x0103CF70 GUESS: name, see swv21brew.c */
-void swvVertexBuffer_SetDefaultColor(int param_1,undefined4 param_2);   /* 0x0103CFDC GUESS: name, see swv21brew.c */
-undefined4 swvVertexBuffer_SetNormals(int param_1,int param_2);   /* 0x0103CFF0 GUESS: name, see swv21brew.c */
-undefined4 swvVertexBuffer_SetPositions(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);   /* 0x0103D05C GUESS: name, see swv21brew.c */
-undefined4 swvVertexBuffer_SetTexCoords(int param_1,undefined4 param_2,int param_3,undefined4 param_4,undefined4 param_5, undefined4 param_6);   /* 0x0103D0F0 GUESS: name, see swv21brew.c */
+int swvVertexBuffer_GetColors(int param_1,ISwerveObject **param_2);   /* 0x0103CCA8 JSR-184 1.1, see swv21brew.c */
+void swvVertexBuffer_GetDefaultColor(int param_1,undefined4 *param_2);   /* 0x0103CD14 JSR-184 1.1, see swv21brew.c */
+int swvVertexBuffer_GetNormals(int param_1,ISwerveObject **param_2);   /* 0x0103CD2C JSR-184 1.1, see swv21brew.c */
+int swvVertexBuffer_GetPositions(int param_1,undefined4 param_2,undefined4 param_3,ISwerveObject **param_4);   /* 0x0103CD98 JSR-184 1.1, see swv21brew.c */
+int swvVertexBuffer_GetTexCoords(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4, ISwerveObject **param_5);   /* 0x0103CE14 JSR-184 1.1, see swv21brew.c */
+void swvVertexBuffer_GetVertexCount(int param_1,undefined4 *param_2);   /* 0x0103CE98 JSR-184 1.1, see swv21brew.c */
+undefined4 swvVertexBuffer_SetColors(int param_1,int param_2);   /* 0x0103CF70 JSR-184 1.1, see swv21brew.c */
+void swvVertexBuffer_SetDefaultColor(int param_1,undefined4 param_2);   /* 0x0103CFDC JSR-184 1.1, see swv21brew.c */
+undefined4 swvVertexBuffer_SetNormals(int param_1,int param_2);   /* 0x0103CFF0 JSR-184 1.1, see swv21brew.c */
+undefined4 swvVertexBuffer_SetPositions(int param_1,int param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5);   /* 0x0103D05C JSR-184 1.1, see swv21brew.c */
+undefined4 swvVertexBuffer_SetTexCoords(int param_1,undefined4 param_2,int param_3,undefined4 param_4,undefined4 param_5, undefined4 param_6);   /* 0x0103D0F0 JSR-184 1.1, see swv21brew.c */
 int FUN_0103d1ec(int param_1,ISwerveObject **param_2);
 int FUN_0103d258(int param_1,ISwerveObject **param_2);
 undefined4 FUN_0103d314(int param_1,int param_2);

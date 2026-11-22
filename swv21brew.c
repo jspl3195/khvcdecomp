@@ -2989,14 +2989,16 @@ int AEEStaticMod_New(int16 nSize,IShell *pIShell,AEEHelperFuncs *ph,IModule **pp
 }
 
 /* ==== 0x01002A58  (file offset 0x02A58)  FUN_01002a58 ================================================ */
-/* GUESS (not yet rewritten): JSR-184 Object3D.addAnimationTrack on the native object param_1 with the
-   track param_2: error -1301 for a NULL track or when the object cannot animate its property (track
-   +0x24; the object's IsAnimatable, engine vtable +0x20); the track list at +0x10 made on first use
-   (0x20 bytes, two engine dynamic arrays: the tracks, and at +0x10 how many tracks each property has,
-   the properties in the list's order); -1301 for a track already there, or for one on a property
-   already animated whose keyframe sequence has another component count (+0x34); the track inserted
-   after the others on its property (FUN_01013368), its count of references (+8) up, its property's
-   count up (or a new property counted 1). */
+/* (not yet rewritten) JSR-184 1.1, Object3D.addAnimationTrack, on the native object param_1 with the track
+   param_2: error -1301 (IllegalArgumentException) for a NULL track (the spec's NullPointerException,
+   -1302, is raised before, by the ISwerveObject slot 7, FUN_01034d24; a NULL reaches here only from the
+   engine's own callers) or when the object cannot animate its property (track +0x24; the object's
+   IsAnimatable, engine vtable +0x20); the track list at +0x10 made on first use (0x20 bytes, two engine
+   dynamic arrays: the tracks, and at +0x10 how many tracks each property has, the properties in the list's
+   order); -1301 for a track already there, or for one on a property already animated whose keyframe
+   sequence has another component count (+0x34, the spec's keyframe size); the track inserted after the
+   others on its property (FUN_01013368; the spec leaves the position undefined), its count of references
+   (+8) up, its property's count up (or a new property counted 1). */
 void FUN_01002a58(int *param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -3151,13 +3153,15 @@ int FUN_01002c70(int param_1,int param_2)
 }
 
 /* ==== 0x01002D60  (file offset 0x02D60)  FUN_01002d60 ================================================ */
-/* GUESS (not yet rewritten): JSR-184 Group.addChild(child) on the group param_1: error -1302 for a
-   NULL child; -1301 (IllegalArgumentException) when the child is the group itself, a World (type
-   0x16), already has a parent (+0x30) or is an ancestor of the group (swvNode_IsAncestorOf); then the
-   child linked into the child list (+0x38, the siblings at +0x34) with its count of references (+8)
-   up, its parent set and its depth (swvNode_SetDepth from swvNode_Depth); when the root above is a
-   World (type 0x16), its +0x98 cleared (GUESS: a cached list to be made again). Ghidra's reading of
-   the case with children already there (the sibling walk, FUN_01014510) is incomplete. */
+/* (not yet rewritten) JSR-184 1.1, Group.addChild(child) on the group param_1: error -1302
+   (NullPointerException) for a NULL child; -1301 (IllegalArgumentException) when the child is the group
+   itself, a World (type 0x16), already has a parent (+0x30) or is an ancestor of the group
+   (swvNode_IsAncestorOf). Differs from 1.1 (GUESS: 1.0 behaviour): 1.1 throws only for a parent other
+   than this Group, here a child already in this group is refused too. Then the child linked into the
+   child list (+0x38, the siblings at +0x34) with its count of references (+8) up, its parent set and
+   its depth (swvNode_SetDepth from swvNode_Depth); when the root above is a World (type 0x16), its
+   +0x98 cleared (GUESS: a cached list to be made again). Ghidra's reading of the case with children
+   already there (the sibling walk, FUN_01014510) is incomplete. */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
 void FUN_01002d60(int param_1,int param_2)
@@ -3416,14 +3420,16 @@ void FUN_010031a0(int param_1,int param_2)
 }
 
 /* ==== 0x01003234  (file offset 0x03234)  FUN_01003234 ================================================ */
-/* GUESS (not yet rewritten): JSR-184 SkinnedMesh.addTransform(bone, weight, firstVertex,
-   numVertices) on the mesh param_1: error -1302 for a NULL bone; -1301 for a weight below 1, a bone
-   that is neither the skeleton (+0x38) nor under it (swvNode_HasAncestor), or numVertices below 1;
-   -1101 (IndexOutOfBounds) for a negative firstVertex or firstVertex + numVertices above 0xffff; then
-   a 10-byte record (the weight, the two 16-bit vertex numbers, the bone's index from FUN_01002c70)
-   appended to the list at +0xc0, the bone's rest transform (FUN_010048e4, the bone to the mesh) set,
-   +0xac raised to the last vertex, +0xf0 cleared (to be rebuilt). The undefined8 result is Ghidra
-   reading saved registers: GUESS, no result its callers use. */
+/* (not yet rewritten) JSR-184 1.1, SkinnedMesh.addTransform(bone, weight, firstVertex, numVertices) on
+   the mesh param_1: error -1302 (NullPointerException) for a NULL bone; -1301
+   (IllegalArgumentException) for a weight below 1, a bone that is neither the skeleton (+0x38) nor
+   under it (swvNode_HasAncestor), or numVertices below 1; -1101 (IndexOutOfBoundsException) for a
+   negative firstVertex or firstVertex + numVertices above 0xffff (65535); then a 10-byte record (the
+   weight, the two 16-bit vertex numbers, the bone's index from FUN_01002c70) appended to the list at
+   +0xc0, the bone's at-rest transform set from FUN_010048e4 (this.getTransformTo(bone), -1000
+   ArithmeticException when it cannot be computed), +0xac raised to the last vertex, +0xf0 cleared (to
+   be rebuilt). The undefined8 result is Ghidra reading saved registers: GUESS, no result its callers
+   use. */
 undefined8 FUN_01003234(int param_1,int param_2,int param_3,int param_4,int param_5)
 
 {
@@ -3572,10 +3578,10 @@ void FUN_01003474(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x010034CC  (file offset 0x034CC)  FUN_010034cc ================================================ */
-/* GUESS (not yet rewritten): JSR-184 Node.align(reference): error -1301 (IllegalArgumentException)
-   unless the reference param_2 (NULL: the node itself) is in the node's scene graph
-   (swvNode_SameSceneGraph), then FUN_01003474's work on the node and its children. The binary shares
-   FUN_01003474's code (Ghidra repeated it here). */
+/* (not yet rewritten) JSR-184 1.1, Node.align(reference): error -1301 (IllegalArgumentException) unless
+   the reference param_2 (NULL: the node itself) is in the node's scene graph (swvNode_SameSceneGraph),
+   then FUN_01003474's work on the node and its children (FUN_0100a02c for each aligned node, with the
+   reference). The binary shares FUN_01003474's code (Ghidra repeated it here). */
 void FUN_010034cc(int param_1,int param_2)
 
 {
@@ -4019,10 +4025,11 @@ void * FUN_01003a10(int param_1,int param_2)
 }
 
 /* ==== 0x01003B00  (file offset 0x03B00)  FUN_01003b00 ================================================ */
-/* GUESS (not yet rewritten): animates a Group: FUN_01003c38 (GUESS: Object3D.animate) with param_2 /
-   param_4 on each child (+0x38, +0x34 the next) and on each object of its base references
-   (swvObject3D_Reference, walked like swvObject3D_References: -2 a list, -1 the end); returns the
-   smallest validity, from param_3. */
+/* GUESS (not yet rewritten): animates a Group: FUN_01003c38 (the native JSR-184 1.1, Object3D.animate)
+   with param_2 (the world time) / param_4 (the animate pass) on each child (+0x38, +0x34 the next) and on
+   each object of its base references (swvObject3D_Reference, walked like swvObject3D_References: -2 a
+   list, -1 the end); returns the smallest validity, from param_3 (the spec's reachable objects: the
+   minimum of their validity intervals). */
 int FUN_01003b00(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
 
 {
@@ -4112,15 +4119,18 @@ int FUN_01003be8(int param_1,undefined4 param_2,int param_3,undefined4 param_4)
 }
 
 /* ==== 0x01003C38  (file offset 0x03C38)  FUN_01003c38 ================================================ */
-/* GUESS (not yet rewritten): JSR-184 Object3D.animate(time) (param_2): once per world time (param_3, or
-   the next one when -1; +0x18 the last), for each animation track (+0x10) whose controller (track
-   +0x20) is active at the time
-   (swvAnimationController_IsActive) and has a weight (+0x30), its keyframes sampled
-   (FUN_01010de0) into a 4-word buffer (or, for MORPH_WEIGHTS 0x10a, the mesh's own weights,
-   swvMorphingMesh_Weights), cleared first, and weighted in (CROP 0x103 offset by a size, a Sprite3D's
-   +0x88 / +0x8c or FUN_01038644 of +0x34 / +0x38; SCALE 0x10e from one component to three); then the
-   property set through its vtable +0x1c (this, the property, the component count, the buffer); returns
-   its vtable +0x14 (tail call) with the time and the shortest validity. The properties:
+/* (not yet rewritten) JSR-184 1.1, Object3D.animate(time) (param_2), native: once per animate pass
+   (param_3, a pass number, not a time: when -1 a new one, the global counter at FUN_0102ecec() + 0x18 plus
+   1, 0 after -2; the object's +0x18 the last pass it took part in, so an object reached twice is animated
+   once), for each animation track (+0x10) whose controller (track +0x20) is active at the time
+   (swvAnimationController_IsActive) and has a weight (+0x30; the spec: weight 0 disables it), its
+   keyframes sampled (FUN_01010de0) into a 4-word buffer (or, for MORPH_WEIGHTS 0x10a, the mesh's own
+   weights, swvMorphingMesh_Weights), cleared first, and weighted in (the spec's sum of weight * value;
+   CROP 0x103 with 2 components (X, Y) given the current size, a Sprite3D's +0x88 / +0x8c or FUN_01038644
+   of +0x34 / +0x38, as 4; SCALE 0x10e with 1 component made uniform, three); then the property set through
+   its vtable +0x1c (this, the property, the component count, the buffer); returns its vtable +0x14 (tail
+   call: the class's references animated, FUN_01003b00 for a Group) with the time, the shortest validity
+   (0x7fffffff, the spec's recommended maximum, when nothing is active) and the pass. The properties:
    SwerveAnimTarget, swv_types.h. */
 undefined4 FUN_01003c38(int *param_1,undefined4 param_2,int param_3)
 
@@ -4776,12 +4786,15 @@ int FUN_0100486c(int param_1,undefined4 param_2,undefined4 param_3,undefined4 pa
 }
 
 /* ==== 0x010048E4  (file offset 0x048E4)  FUN_010048e4 ================================================ */
-/* GUESS (not yet rewritten): the transform from node param_1 to node param_2 (JSR-184
-   Node.getTransformTo) into the matrix param_3 (identity when they are the same node): the deeper one
-   walked up (swvNode_Depth, the parent at +0x30) until the depths match, then both together to their
-   common ancestor, each node's transform (FUN_0100f8f8) multiplied in on the way (FUN_0101749c); one
-   side inverted (swv_Matrix4Invert, error -1000 when it cannot be); returns the common ancestor, or 0
-   when they are not in the same tree. A World target (type 0x16) is handled apart. */
+/* (not yet rewritten) the transform from node param_1 to node param_2 (JSR-184 1.1,
+   Node.getTransformTo: param_1's coordinates into param_2's) into the matrix param_3 (identity when
+   they are the same node): the deeper one walked up (swvNode_Depth, the parent at +0x30) until the
+   depths match, then both together to their common ancestor, each node's transform (FUN_0100f8f8)
+   multiplied in on the way (FUN_0101749c); param_2's side inverted (swv_Matrix4Invert, error -1000
+   (ArithmeticException) when it cannot be); returns the common ancestor, or 0 when there is no path
+   (getTransformTo's false) or a node is NULL (the -1302 NullPointerException checks are in the BREW
+   wrapper FUN_010349b8, slot 40). FUN_010108d4 is the boolean getTransformTo on it. A World target
+   (type 0x16) is handled apart. */
 int FUN_010048e4(int param_1,int param_2,undefined4 param_3)
 
 {
@@ -4951,11 +4964,12 @@ void swv_SetupFlatDither(uint8 *raster)
 }
 
 /* ==== 0x01004C0C  (file offset 0x04C0C)  swvKeyframeSequence_ValidCount ============================== */
-/* GUESS: name. How many keyframes a KeyframeSequence's valid range holds, as JSR-184 defines
-   setValidRange(first, last): last - first + 1, or, when first > last (the range wraps past the last
-   keyframe), keyframeCount - first + last + 1. Evidence (0x01004c0c - 0x01004c2c): `cmp r1, r2` of
-   +0x2c and +0x30, then `ldrgt` +0x38 / `subgt` / `addgt` or `suble`, and `add r0, r0, #1`. Callers:
-   swvKeyframeSequence_BuildTangents, swvKeyframeSequence_Sample, swvKeyframeSequence_Prepare. */
+/* GUESS: name. How many keyframes a KeyframeSequence's valid range holds, as JSR-184 1.1,
+   KeyframeSequence.setValidRange(first, last) defines it: last - first + 1, or, when first > last (the
+   range wraps past the last keyframe), keyframeCount - first + last + 1. Evidence (0x01004c0c -
+   0x01004c2c): `cmp r1, r2` of +0x2c and +0x30, then `ldrgt` +0x38 / `subgt` / `addgt` or `suble`, and
+   `add r0, r0, #1`. Callers: swvKeyframeSequence_BuildTangents, swvKeyframeSequence_Sample,
+   swvKeyframeSequence_Prepare. */
 int32 swvKeyframeSequence_ValidCount(const SwvKeyframeSequence *sequence)
 
 {
@@ -5232,14 +5246,17 @@ void FUN_010050ac(int param_1)
 }
 
 /* ==== 0x01005104  (file offset 0x05104)  FUN_01005104 ================================================ */
-/* GUESS (not yet rewritten): the Background clear (JSR-184 Graphics3D.clear) of the viewport in
-   param_1 (+4 the target, +8 the rasteriser) with the Background param_2 (NULL: the colour and
-   alpha are cleared to 0): +0x1c the ARGB colour, +0x20 the image, +0x24 / +0x28 the x / y image
-   modes (0x20 BORDER, 0x21 REPEAT), +0x2c .. +0x38 the crop rectangle, +0x3c / +0x40 the colour and
-   depth clear enables. With a BORDER image it fills the strips around it with the colour
-   (swv_FillRect: above, below, left, right) and draws the image (FUN_0102329c, FUN_01024a8c);
-   without one, swv_FillRect over the whole viewport. With the depth clear on it ends by setting the
-   z-buffer (FUN_01035388) to 0xffff. */
+/* GUESS (not yet rewritten): the Background clear (JSR-184 1.1, Graphics3D.clear) of the viewport in
+   param_1 (+4 the target, +8 the rasteriser) with the Background param_2 (NULL: the colour and alpha are
+   cleared to 0 and the depth cleared too, the spec's defaults of transparent black and the maximum
+   depth): +0x1c the ARGB colour, +0x20 the image, +0x24 / +0x28 the x / y image modes (JSR-184 1.1,
+   Background: 0x20 BORDER, 0x21 REPEAT), +0x2c .. +0x38 the crop rectangle, +0x3c / +0x40 the colour and
+   depth clear enables (+0x40 gates the depth clear at the end). With a BORDER image it fills the strips
+   around it with the colour (swv_FillRect: above, below, left, right) and draws the image (FUN_0102329c,
+   FUN_01024a8c); without one, swv_FillRect over the whole viewport. With the depth clear on it ends by
+   setting the z-buffer (FUN_01035388) to 0xffff. Differs from 1.1 (GUESS: left to its callers): no error
+   -1301 (IllegalArgumentException) here for a background image in another format than the target, nor
+   -1300 (IllegalStateException) when no target is bound. */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
 undefined4 FUN_01005104(int param_1,int param_2,int param_3)
@@ -6065,11 +6082,11 @@ int FUN_010064c4(int param_1,int param_2)
 }
 
 /* ==== 0x01006518  (file offset 0x06518)  FUN_01006518 ================================================ */
-/* GUESS (not yet rewritten): the Object3D part of a duplicate (JSR-184 Object3D.duplicate): copies
-   param_2's user id (+0x0c) into param_1, frees param_1's animation track list (+0x10; FUN_0102c4d0,
-   GUESS its deleting destructor), adds each of param_2's tracks again (swvObject3D_AnimationTrack,
-   FUN_01002a58: GUESS the native addAnimationTrack), then FUN_0101a230; and a new 0x10-byte object at
-   +0x14 when param_2 has a non-empty one there (GUESS: the user parameters). */
+/* GUESS (not yet rewritten): the Object3D part of a duplicate (JSR-184 1.1, Object3D.duplicate: the same
+   user ID, the same references): copies param_2's user id (+0x0c) into param_1, frees param_1's animation
+   track list (+0x10; FUN_0102c4d0, GUESS its deleting destructor), adds each of param_2's tracks again
+   (swvObject3D_AnimationTrack, FUN_01002a58: the native addAnimationTrack), then FUN_0101a230; and a new
+   0x10-byte object at +0x14 when param_2 has a non-empty one there (GUESS: the user parameters). */
 int FUN_01006518(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -7425,12 +7442,15 @@ int32 swvSectionZlib_Get0c(int param_1)
 }
 
 /* ==== 0x01007D70  (file offset 0x07D70)  FUN_01007d70 ================================================ */
-/* GUESS (not yet rewritten): builds an unpalettised Image2D (JSR-184 Image2D(format, width, height,
-   pixels)): error -4 when the width (param_3) or the height (param_4) is 0x8000 or more, -1301 when the
-   param_5 bytes of pixels are fewer than swvImage2D_BytesPerPixel * width * height; not mutable (+0x44
-   = 0), the format (+0x40), width (+0x34) and height (+0x38); its storage (FUN_0100350c); then each
-   pixel of param_6 converted by FUN_01025bc4 into the 16-bit colour plane (the data +0x20 at +0x30) and
-   the alpha plane (swvImage2D_AlphaPlane). */
+/* GUESS (not yet rewritten): builds an unpalettised, immutable Image2D (JSR-184 1.1, Image2D(format,
+   width, height, image)); the format, width > 0 and height > 0 (-1301) and NULL image (-1302) checks are
+   its BREW-facing caller's (FUN_01030c54, Image2D slot 18). Here error -1301 (IllegalArgumentException)
+   when the param_5 bytes of pixels are fewer than swvImage2D_BytesPerPixel * width * height, as the spec
+   lists; not mutable (+0x44 = 0), the format (+0x40), width (+0x34) and height (+0x38); its storage
+   (FUN_0100350c); then each pixel of param_6 converted by FUN_01025bc4 into the 16-bit colour plane (the
+   data +0x20 at +0x30) and the alpha plane (swvImage2D_AlphaPlane). Differs from 1.1: error -4 (not a
+   SwerveError code; GUESS: an engine size limit) when the width (param_3) or the height (param_4) is
+   0x8000 or more, which the spec bounds only by memory. */
 void FUN_01007d70(int param_1,undefined4 param_2,uint param_3,uint param_4,int param_5,int param_6)
 
 {
@@ -7467,11 +7487,17 @@ void FUN_01007d70(int param_1,undefined4 param_2,uint param_3,uint param_4,int p
 }
 
 /* ==== 0x01007E30  (file offset 0x07E30)  FUN_01007e30 ================================================ */
-/* GUESS (not yet rewritten): builds a palettised Image2D (JSR-184 Image2D(format, width, height,
-   pixels, palette)): error -1301 for a bad palette size; the format (+0x40), width (+0x34) and height
-   (+0x38); the width * height index bytes param_6 copied to the index plane (swvImage2D_Indices,
-   +0x30); then up to 256 palette colours (param_8, param_7 bytes in all) converted by FUN_01025bc4
-   into the palette (swvImage2D_Palette, RGB565) and its alpha (swvImage2D_AlphaPlane). */
+/* GUESS (not yet rewritten): builds a palettised, immutable Image2D (JSR-184 1.1, Image2D(format, width,
+   height, image, palette)); the format, width > 0 and height > 0 (-1301) and NULL image or palette
+   (-1302) checks are its BREW-facing caller's (FUN_01030dbc, Image2D slot 19). Here error -1301
+   (IllegalArgumentException) when the param_5 index bytes are fewer than width * height, or when the
+   palette's param_7 bytes are fewer than 256 entries and not a whole number of entries (the spec's
+   (palette.length < 256*C) && (palette.length % C != 0); FUN_010001f4 the division); the format (+0x40),
+   width (+0x34) and height (+0x38); the width * height index bytes param_6 copied to the index plane
+   (swvImage2D_Indices, +0x30); then up to 256 palette colours (param_8; the first 256 only, as the spec
+   says) converted by FUN_01025bc4 into the palette (swvImage2D_Palette, RGB565) and its alpha
+   (swvImage2D_AlphaPlane). Differs from 1.1: error -4 (not a SwerveError code) when the width or the
+   height is 0x8000 or more. */
 void FUN_01007e30(int param_1,undefined4 param_2,uint param_3,uint param_4,int param_5,
                  undefined4 param_6,int param_7,int param_8)
 
@@ -7612,8 +7638,9 @@ undefined4 FUN_0100800c(int param_1,undefined4 param_2,undefined4 param_3)
 }
 
 /* ==== 0x01008064  (file offset 0x08064)  thunk_FUN_01021abc ========================================== */
-/* A one-instruction jump to FUN_01021abc (GUESS Texture2D.setImage); Ghidra repeated its code here,
-   see there. */
+/* A one-instruction jump to FUN_01021abc (JSR-184 1.1, Texture2D.setImage), called by the Texture2D slot
+   31 FUN_0103b3ec (GUESS: its constructor, Texture2D(image)); Ghidra repeated its code here, see there.
+   */
 void thunk_FUN_01021abc(int param_1,int param_2)
 
 {
@@ -9480,10 +9507,10 @@ int * FUN_010098fc(void)
 
 /* ==== 0x01009944  (file offset 0x09944)  swvSection_CreateStored ===================================== */
 /* GUESS: name (not yet rewritten). Creates the M3G loader's reader for a section stored uncompressed
-   (compression byte 0): a 0xc-byte object (swv_New_2) built by swvSectionStored_Construct and
-   registered (FUN_0100f8e8, FUN_0101807c, FUN_0101715c), its sink (where the section's bytes go, the
-   record reader) set to param_1 (swvSection_SetSink). Its vtable (0x010022D4): 0 swvSectionStored_Destroy,
-   1 swvSectionStored_Feed, 2 swvSectionStored_Get08. */
+   (CompressionScheme 0, M3G file format section 6.1): a 0xc-byte object (swv_New_2) built by
+   swvSectionStored_Construct and registered (FUN_0100f8e8, FUN_0101807c, FUN_0101715c), its sink (where
+   the section's bytes go, the record reader) set to param_1 (swvSection_SetSink). Its vtable
+   (0x010022D4): 0 swvSectionStored_Destroy, 1 swvSectionStored_Feed, 2 swvSectionStored_Get08. */
 int swvSection_CreateStored(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -9509,9 +9536,10 @@ int swvSection_CreateStored(undefined4 param_1,undefined4 param_2,undefined4 par
 
 /* ==== 0x010099A4  (file offset 0x099A4)  swvSection_CreateZlib ======================================= */
 /* GUESS: name (not yet rewritten). Creates the M3G loader's reader for a zlib-compressed section
-   (compression byte 1), like swvSection_CreateStored: a 0x10-byte object (swvSectionZlib_Construct),
-   set up by swvSectionZlib_Init with the sink param_1. Its vtable (0x010022E0): 0 swvSectionZlib_Destroy,
-   1 swvSectionZlib_Feed, 2 swvSectionZlib_Get0c. */
+   (CompressionScheme 1, zlib with a 32 k buffer, M3G file format section 6.1), like
+   swvSection_CreateStored: a 0x10-byte object (swvSectionZlib_Construct), set up by swvSectionZlib_Init
+   with the sink param_1. Its vtable (0x010022E0): 0 swvSectionZlib_Destroy, 1 swvSectionZlib_Feed, 2
+   swvSectionZlib_Get0c. */
 int swvSection_CreateZlib(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -10132,14 +10160,21 @@ uint * FUN_01009eac(int param_1,int param_2,int *param_3)
 }
 
 /* ==== 0x0100A02C  (file offset 0x0A02C)  FUN_0100a02c ================================================ */
-/* GUESS (not yet rewritten): the Node alignment (JSR-184 Node.align) of the node param_1, param_2
-   standing for the parent where a reference is NULL. The targets come from swvNode_AlignmentTargetZ (z)
-   and swvNode_AlignmentTargetY (y), the references from swvNode_AlignmentReferenceZ / Y; error -1300
-   (FUN_0102f7e0) for a reference of -1, the node itself, or one it cannot be aligned to (FUN_010048e4,
-   swvNode_IsAncestorOf: a descendant of the node). With one target NONE (0x90) it turns the node about
-   the other axis only; with both,
-   the z vector (swvNode_AlignmentVector of the z reference's matrix relative to the node, normalised by
-   FUN_010263e8) is kept and y is made perpendicular to it (cross products, FUN_0102c6b4). */
+/* (not yet rewritten) the alignment of one aligned node param_1 (JSR-184 1.1, Node.align); param_2 is
+   the reference given to Node.align (the node align was called on when that was NULL), used where an
+   alignment reference is NULL (JSR-184 1.1, Node.setAlignment). The targets come from
+   swvNode_AlignmentTargetZ (z) and swvNode_AlignmentTargetY (y), the references from
+   swvNode_AlignmentReferenceZ / Y; error -1300 (IllegalStateException) for a reference of -1 (GUESS:
+   unresolved), the node itself, a reference with no path to the node's parent (FUN_010048e4 gives 0:
+   another scene graph, and so also any aligned node without a parent) or a descendant of the node
+   (swvNode_IsAncestorOf), the 1.1 IllegalStateExceptions for a node aligned to itself or its descendant
+   and for a reference in another scene graph. The reference's transform is taken to the node's parent
+   and then by the node's +0x20 (FUN_0102c7a8, FUN_01029650; GUESS: the T component alone, as the spec's
+   frame A). With one target NONE (0x90) the shortest rotation taking the other axis (z, or y) to its
+   target vector (GUESS: a quaternion from the cross product with that axis, as the spec's single-axis
+   case); with both, the z vector (swvNode_AlignmentVector of the z reference's matrix relative to the
+   node, normalised by FUN_010263e8) is kept and y is made perpendicular to it (cross products,
+   FUN_0102c6b4), z first as 1.1 says. Before: param_2 had been read as the parent. */
 void FUN_0100a02c(int param_1,int param_2)
 
 {
@@ -10534,11 +10569,12 @@ void swv_SpanFillFlatDithered(uint8 *raster)
 
 /* ==== 0x0100A8B4  (file offset 0x0A8B4)  swv_SpanFillGeneric ========================================= */
 /* GUESS: name (not yet rewritten). The rasteriser's general untextured span routine, the default of
-   swv_RasterTriangleSetup: the whole JSR-184 compositing state per pixel. Alpha threshold (+0x25c:
-   draws where alpha >> 8 >= it), depth test (flag 0x20) and depth write (flag 0x40), the blending
-   (+0x268: 0x40 ALPHA .. 0x44 REPLACE; the colour already there is read unless REPLACE), colour write
-   (flag 1) and alpha write (flag 0x800, to the 8-bit alpha buffer +0x260, row stride +0x264). Its fast
-   paths: swv_SpanFillFlatDithered, swv_SpanFillGouraud, swv_SpanFillGouraudAlpha. */
+   swv_RasterTriangleSetup: the whole compositing state per pixel (JSR-184 1.1, CompositingMode). Alpha
+   threshold (+0x25c: draws where alpha >> 8 >= it, as CompositingMode.setAlphaThreshold), depth test
+   (flag 0x20) and depth write (flag 0x40), the blending (+0x268: 0x40 ALPHA .. 0x44 REPLACE, the
+   CompositingMode constants; the colour already there is read unless REPLACE), colour write (flag 1)
+   and alpha write (flag 0x800, to the 8-bit alpha buffer +0x260, row stride +0x264). Its fast paths:
+   swv_SpanFillFlatDithered, swv_SpanFillGouraud, swv_SpanFillGouraudAlpha. */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
 void swv_SpanFillGeneric(int param_1)
@@ -12208,15 +12244,16 @@ void swv_RasterTriangle(uint8 *raster,uint8 *vertex0,uint8 *vertex1,uint8 *verte
 
 /* ==== 0x0100CF00  (file offset 0x0CF00)  swv_RasterTriangleSetup ===================================== */
 /* GUESS: name (not yet rewritten). Sets up the triangle whose vertices swv_RasterTriangle stored
-   (+0x290 .. +0x298) and picks its span routine (+0x2b8) from the JSR-184 compositing state (the
-   fields in swv_types.h): swv_SpanFillGeneric by default, FUN_0100bb68 for textured triangles (flag
-   4). The untextured fast paths need no alpha threshold (+0x25c), no alpha write, colour write and
-   depth test: blending ALPHA (0x40) with depth write off gives swv_SpanFillGouraudAlpha; REPLACE
-   (0x44) with depth write on calls swv_SetupFlatDither and gives swv_SpanFillFlatDithered with flag 2
-   clear (flat shading), swv_SpanFillGouraud with it set (smooth shading); all of them dither. The
-   textured fast paths (swv_SpanFillTextured, FUN_0100ac0c, FUN_0100c92c) need unit 0 alone (unit 1's
-   +0x18c = 0x5f) with an RGB or RGBA image (+0x158 = 99 / 100). Called by swv_RasterTriangle (its
-   tail jump) and twice by FUN_0100bae0. */
+   (+0x290 .. +0x298) and picks its span routine (+0x2b8) from the compositing state (JSR-184 1.1,
+   CompositingMode; the fields in swv_types.h): swv_SpanFillGeneric by default, FUN_0100bb68 for
+   textured triangles (flag 4). The untextured fast paths need no alpha threshold (+0x25c), no alpha
+   write, colour write and depth test: blending ALPHA (0x40) with depth write off gives
+   swv_SpanFillGouraudAlpha; REPLACE (0x44) with depth write on calls swv_SetupFlatDither and gives
+   swv_SpanFillFlatDithered with flag 2 clear (flat shading), swv_SpanFillGouraud with it set (smooth
+   shading); all of them dither. The textured fast paths (swv_SpanFillTextured, FUN_0100ac0c,
+   FUN_0100c92c) need unit 0 alone (unit 1's +0x18c = 0x5f) with an RGB or RGBA image (+0x158 = 99 /
+   100, JSR-184 1.1 Image2D.RGB / RGBA). Called by swv_RasterTriangle (its tail jump) and twice by
+   FUN_0100bae0. */
 /* WARNING: Restarted to delay deadcode elimination for space: stack */
 
 void swv_RasterTriangleSetup(int param_1)
@@ -13009,11 +13046,12 @@ void swv_SpanFillTextured(int param_1)
 /* ==== 0x0100E490  (file offset 0x0E490)  swvVertexArray_GetComponent ================================= */
 /* GUESS: name. Reads one component of one vertex of a native VertexArray (class 29), sign-extended:
    the element vertex * components + component of its values, a signed byte when the component size
-   is 1, a signed 16-bit word otherwise (JSR-184 VertexArray components are 1 or 2 bytes). The array:
-   +0x1c the vertex count, +0x20 the components per vertex, +0x24 the component size, +0x2c the
-   values. Evidence: 0x0100e490 - 0x0100e4b4 (mla, mul, ldrsbeq / ldrshne; Ghidra's (char) cast is
-   that signed byte, wrong where char is unsigned). Every caller (FUN_01010938, FUN_01015ce8,
-   FUN_01025a50) converts the result straight to float (swv_fflt), as x, y and z. */
+   is 1, a signed 16-bit word otherwise (JSR-184 1.1, VertexArray(numVertices, numComponents,
+   componentSize): componentSize 1 or 2; M3G file format section 11.28). The array: +0x1c the vertex count,
+   +0x20 the components per vertex, +0x24 the component size, +0x2c the values. Evidence: 0x0100e490 -
+   0x0100e4b4 (mla, mul, ldrsbeq / ldrshne; Ghidra's (char) cast is that signed byte, wrong where char
+   is unsigned). Every caller (FUN_01010938, FUN_01015ce8, FUN_01025a50) converts the result straight
+   to float (swv_fflt), as x, y and z. */
 int32 swvVertexArray_GetComponent(uint8 *array,int32 vertex,int32 component)
 
 {
@@ -13764,7 +13802,7 @@ void swv_ColourScale(int32 *colour,int32 factor)
 /* ==== 0x0100F030  (file offset 0x0F030)  FUN_0100f030 ================================================ */
 /* GUESS (not yet rewritten): copies node param_2's alignment into param_1 (a duplicate): the references
    (mapped through swvNode_HasAncestor / FUN_0100ed84 when they are in the copied subtree) and the
-   targets go to FUN_01020104 in the order of Node.setAlignment(zRef, zTarget, yRef, yTarget). */
+   targets go to FUN_01020104 (JSR-184 1.1, Node.setAlignment(zRef, zTarget, yRef, yTarget)). */
 void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -13803,11 +13841,11 @@ void FUN_0100f030(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 }
 
 /* ==== 0x0100F154  (file offset 0x0F154)  swvImage2D_AlphaStride ====================================== */
-/* GUESS: name. The row stride of an Image2D's alpha plane (one byte a pixel): its row pitch (+0x34,
-   in pixels) when its format (+0x40) has alpha, JSR-184 ALPHA 0x60, LUMINANCE_ALPHA 0x62 or RGBA 0x64,
-   else 0. Evidence: 0x0100f154 - 0x0100f16c (`cmp #0x64` / `cmpne #0x60` / `cmpne #0x62`, `ldreq`
-   +0x34, `movne` 0; Ghidra tested the three twice). Only FUN_0102035c (GUESS: bindTarget) uses it,
-   as the target's alpha stride (+0x88). */
+/* GUESS: name. The row stride of an Image2D's alpha plane (one byte a pixel): its row pitch (+0x34, in
+   pixels) when its format (+0x40) has alpha, JSR-184 1.1, Image2D: ALPHA 0x60, LUMINANCE_ALPHA 0x62 or
+   RGBA 0x64, else 0. Evidence: 0x0100f154 - 0x0100f16c (`cmp #0x64` / `cmpne #0x60` / `cmpne #0x62`,
+   `ldreq` +0x34, `movne` 0; Ghidra tested the three twice). Only FUN_0102035c (Graphics3D.bindTarget of
+   an Image2D) uses it, as the target's alpha stride (+0x88). */
 int32 swvImage2D_AlphaStride(const uint8 *image)
 
 {
@@ -13822,9 +13860,8 @@ int32 swvImage2D_AlphaStride(const uint8 *image)
 }
 
 /* ==== 0x0100F170  (file offset 0x0F170)  swvObject3D_AnimationTrackCount ============================= */
-/* GUESS: name. The number of animation tracks of a native Object3D (JSR-184
-   Object3D.getAnimationTrackCount): its track list (+0x10, a growable array: +4 the items, +8 the
-   count) has count tracks, or there are none while the list is NULL. Evidence: 0x0100f170 -
+/* JSR-184 1.1, Object3D.getAnimationTrackCount, native: its track list (+0x10, a growable array: +4 the
+   items, +8 the count) has count tracks, or there are none while the list is NULL. Evidence: 0x0100f170 -
    0x0100f180 (`ldr r0, [r0, #0x10]`, `cmp r0, #0`, `ldrne r0, [r0, #8]`, `moveq r0, #0`). Used by
    swvObject3D_GetAnimationTrackCount (the ISwerveObject slot 5, kh_types.h SwerveObject3DVtbl),
    swvObject3D_AnimationTrack and FUN_01006518. */
@@ -13842,11 +13879,10 @@ int32 swvObject3D_AnimationTrackCount(const uint8 *object)
 }
 
 /* ==== 0x0100F184  (file offset 0x0F184)  swvObject3D_AnimationTrack ================================== */
-/* GUESS: name. Animation track index of a native Object3D (JSR-184 Object3D.getAnimationTrack):
-   error -1101 (FUN_0102f7e0, which does not return; GUESS: an index out of range) unless 0 <= index
-   < swvObject3D_AnimationTrackCount, then the track list's (+0x10) item index (its +4, a word each).
-   Evidence: 0x0100f184 - 0x0100f1c0 (`cmp r1, #0` / `blt` to the error, the count, `cmp r0, r4` /
-   `bgt` past it, `ldr` +0x10 / +4 / `add r0, r0, r4, lsl #2`). Used by
+/* JSR-184 1.1, Object3D.getAnimationTrack, native: error -1101 (IndexOutOfBoundsException; FUN_0102f7e0,
+   which does not return) unless 0 <= index < swvObject3D_AnimationTrackCount, then the track list's
+   (+0x10) item index (its +4, a word each). Evidence: 0x0100f184 - 0x0100f1c0 (`cmp r1, #0` / `blt` to the
+   error, the count, `cmp r0, r4` / `bgt` past it, `ldr` +0x10 / +4 / `add r0, r0, r4, lsl #2`). Used by
    swvObject3D_GetAnimationTrack (slot 6) and FUN_01006518. */
 void *swvObject3D_AnimationTrack(const uint8 *object,int32 index)
 
@@ -13931,13 +13967,13 @@ void FUN_0100f1fc(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3,un
 }
 
 /* ==== 0x0100F350  (file offset 0x0F350)  swvNode_AlignmentVector ===================================== */
-/* GUESS: name. The vector a node is aligned to (JSR-184 Node.setAlignment), out of the reference's
-   matrix (4 x 4 floats, each axis 4 consecutive words: GUESS column-major), by the target constant:
-   ORIGIN (0x91) the translation (words 12 - 14), X_AXIS (0x92) words 0 - 2, Y_AXIS (0x93) words 4 -
-   6, Z_AXIS (0x94) words 8 - 10; NONE (0x90) or any other value 0, 0, 0. node, the node being aligned
+/* GUESS: name. The vector a node is aligned to, out of the reference's matrix (4 x 4 floats, each axis
+   4 consecutive words: GUESS column-major), by the target constant (JSR-184 1.1, Node.setAlignment):
+   ORIGIN (0x91) the translation (words 12 - 14), X_AXIS (0x92) words 0 - 2, Y_AXIS (0x93) words 4 - 6,
+   Z_AXIS (0x94) words 8 - 10; NONE (0x90) or any other value 0, 0, 0. node, the node being aligned
    (what every caller passes in r1), is not read: the body starts with `mov r1, #0`. Evidence:
    0x0100f350 - 0x0100f3c8 (`sub r3, r3, #0x90` / `cmp r3, #4` / `addls pc, pc, r3, lsl #2`). Only
-   FUN_0100a02c (GUESS: the Node alignment) calls it, for the z and the y target. */
+   FUN_0100a02c (the Node alignment, Node.align) calls it, for the z and the y target. */
 void swvNode_AlignmentVector(uint32 *out,uint8 *node,const uint32 *matrix,int32 target)
 
 {
@@ -14057,14 +14093,17 @@ undefined4 * FUN_0100f4dc(int param_1,int param_2,undefined4 param_3,undefined4 
 }
 
 /* ==== 0x0100F530  (file offset 0x0F530)  swvGraphics3D_Property ====================================== */
-/* GUESS: name. One of the Graphics3D's twelve fixed properties (JSR-184 Graphics3D.getProperties),
+/* GUESS: name. One of the Graphics3D's twelve fixed properties (JSR-184 1.1, Graphics3D.getProperties),
    by index: 0 - 3 give 0 (false), 4 and 5 give 1 (true), 6 gives 0x100, 7 - 9 give 0x400, 10 and 11 give
-   2, any other index 0. GUESS, the names, in JSR-184's order: the antialiasing, true colour, dithering
-   and mipmapping flags; perspective correction and local camera lighting; 256 the largest texture
-   dimension; 1024 the largest viewport width, height and dimension; 2 the texture units and the
-   transforms per vertex (kh.mod never asks, so nothing confirms the order). Evidence: 0x0100f530 -
-   0x0100f590 (`cmp r0, #0xb` / `addls pc, pc, r0, lsl #2`, a table of branches to the five `mov r0` /
-   `bx lr`). Only swvGraphics3D_GetProperty calls it. */
+   2, any other index 0. GUESS, the names: 1.1's fourteen keys less the two viewport keys it adds
+   (maxViewportWidth, maxViewportHeight), in its table's order: supportAntialiasing, supportTrueColor,
+   supportDithering and supportMipmapping false; supportPerspectiveCorrection and
+   supportLocalCameraLighting true; maxLights 256; maxViewportDimension, maxTextureDimension and
+   maxSpriteCropDimension 1024 (the engine's own limits: a viewport 1 .. 1024, swv_Graphics3D_bindTarget
+   and FUN_01023bc8; a texture up to 1024, FUN_01021abc); maxTransformsPerVertex and numTextureUnits 2
+   (the rasteriser has two texture units). kh.mod never asks, so nothing confirms the order. Evidence:
+   0x0100f530 - 0x0100f590 (`cmp r0, #0xb` / `addls pc, pc, r0, lsl #2`, a table of branches to the five
+   `mov r0` / `bx lr`). Only swvGraphics3D_GetProperty calls it. */
 int32 swvGraphics3D_Property(uint32 index)
 
 {
@@ -14095,10 +14134,10 @@ int32 swvGraphics3D_Property(uint32 index)
 }
 
 /* ==== 0x0100F594  (file offset 0x0F594)  swvGroup_ChildCount ========================================= */
-/* GUESS: name. The number of children of a native Group (JSR-184 Group.getChildCount): its child
-   list, the first child at +0x38, each child's next sibling at +0x34, counted to the NULL. Evidence:
-   0x0100f594 - 0x0100f5b0 (`ldr r1, [r1, #0x38]`, then `addne r0, r0, #1` / `ldrne r1, [r1, #0x34]`
-   / `bne`). Only swvGroup_GetChildCount (kh_types.h SwerveGroupVtbl slot 43) calls it. */
+/* The number of children of a native Group (JSR-184 1.1, Group.getChildCount): its child list, the
+   first child at +0x38, each child's next sibling at +0x34, counted to the NULL. Evidence: 0x0100f594 -
+   0x0100f5b0 (`ldr r1, [r1, #0x38]`, then `addne r0, r0, #1` / `ldrne r1, [r1, #0x34]` / `bne`). Only
+   swvGroup_GetChildCount (kh_types.h SwerveGroupVtbl slot 43) calls it. */
 int32 swvGroup_ChildCount(const uint8 *group)
 
 {
@@ -14129,11 +14168,11 @@ uint8 *swvGroup_NthChild(const uint8 *group,int32 *index)
 }
 
 /* ==== 0x0100F5DC  (file offset 0x0F5DC)  swvGroup_Child ============================================== */
-/* GUESS: name. Child index of a native Group (JSR-184 Group.getChild): error -1101 (FUN_0102f7e0,
-   which does not return; GUESS an index out of range) for a negative index or when the Group has no
-   such child (swvGroup_NthChild gives NULL). Evidence: 0x0100f5dc - 0x0100f618 (the index kept on the
-   stack for swvGroup_NthChild, `movlt` / `bllt` and `moveq` / `bleq` the error, r0 the child; Ghidra
-   had read the saved registers as a 64-bit result). Only swvGroup_GetChild (slot 44) calls it. */
+/* Child index of a native Group (JSR-184 1.1, Group.getChild): error -1101 (IndexOutOfBoundsException;
+   FUN_0102f7e0, which does not return) for a negative index or when the Group has no such child
+   (swvGroup_NthChild gives NULL). Evidence: 0x0100f5dc - 0x0100f618 (the index kept on the stack for
+   swvGroup_NthChild, `movlt` / `bllt` and `moveq` / `bleq` the error, r0 the child; Ghidra had read the
+   saved registers as a 64-bit result). Only swvGroup_GetChild (slot 44) calls it. */
 uint8 *swvGroup_Child(const uint8 *group,int32 index)
 
 {
@@ -14148,9 +14187,10 @@ uint8 *swvGroup_Child(const uint8 *group,int32 index)
 }
 
 /* ==== 0x0100F620  (file offset 0x0F620)  swvMaterial_Color =========================================== */
-/* GUESS: name. One colour of a native Material (JSR-184 Material.getColor), by target: AMBIENT
+/* GUESS: name. One colour of a native Material (JSR-184 1.1, Material.getColor), by target: AMBIENT
    (0x400) +0x1c, DIFFUSE (0x800) +0x20, EMISSIVE (0x1000) +0x24, SPECULAR (0x2000) +0x28 (ARGB words;
-   only the diffuse keeps its alpha, see swvMaterial_SetColorValue), any other value 0. Evidence:
+   only the diffuse keeps its alpha, as the spec says, see swvMaterial_SetColorValue), any other value 0
+   (the -1301, IllegalArgumentException, the spec lists for it is swvMaterial_GetColor's). Evidence:
    0x0100f620 - 0x0100f650 (`cmp r1, #0x400` / `ldreq r0, [r0, #0x1c]` / `bxeq lr`, and so on). Used by
    swvMaterial_GetColor (kh_types.h SwerveMaterialVtbl slot 22), the light setup FUN_010234bc, the
    lighting FUN_0101bd48 and FUN_0101a514. */
@@ -14203,11 +14243,11 @@ void FUN_0100f654(int param_1,int param_2)
 }
 
 /* ==== 0x0100F6D8  (file offset 0x0F6D8)  swvPolygonMode_Culling ====================================== */
-/* GUESS: name. The culling of a native PolygonMode (JSR-184 PolygonMode.getCulling), from its flags
-   word (+0x1c): CULL_BACK (0xa0) when bit 0 is set, else CULL_FRONT (0xa1) when bit 1 is, else
-   CULL_NONE (0xa2, the field's 4). Evidence: 0x0100f6d8 - 0x0100f6f4 (`tst r0, #1` / `movne r0,
-   #0xa0` / `bxne lr`, `tst r0, #2` / `moveq r0, #0xa2` / `movne r0, #0xa1`). Only
-   swvPolygonMode_GetCulling (slot 18) calls it. */
+/* GUESS: name. The culling of a native PolygonMode (JSR-184 1.1, PolygonMode.getCulling), from its flags
+   word (+0x1c): CULL_BACK (0xa0) when bit 0 is set, else CULL_FRONT (0xa1) when bit 1 is, else CULL_NONE
+   (0xa2, the field's 4). Evidence: 0x0100f6d8 - 0x0100f6f4 (`tst r0, #1` / `movne r0, #0xa0` / `bxne
+   lr`, `tst r0, #2` / `moveq r0, #0xa2` / `movne r0, #0xa1`). Only swvPolygonMode_GetCulling (slot 18)
+   calls it. */
 int32 swvPolygonMode_Culling(const uint8 *mode)
 
 {
@@ -14224,11 +14264,13 @@ int32 swvPolygonMode_Culling(const uint8 *mode)
 }
 
 /* ==== 0x0100F6F8  (file offset 0x0F6F8)  swvImage2D_StorageFormat ==================================== */
-/* GUESS: name. The format an Image2D is stored in: its JSR-184 format (+0x40) with LUMINANCE_ALPHA
-   (0x62) as RGBA (0x64) and LUMINANCE (0x61) as RGB (0x63) (GUESS: luminance is kept as RGB565, its
-   alpha in the alpha plane); ALPHA (0x60), RGB, RGBA unchanged. Evidence: 0x0100f6f8 - 0x0100f710
-   (`cmp #0x62` / `moveq #0x64` / `bxeq lr`, `cmp #0x61` / `moveq #0x63`). FUN_0102035c (GUESS:
-   bindTarget) wants RGB or RGBA; FUN_010236c4 uses it too. */
+/* GUESS: name. The format an Image2D is stored in: its JSR-184 format (+0x40; JSR-184 1.1, Image2D) with
+   LUMINANCE_ALPHA (0x62) as RGBA (0x64) and LUMINANCE (0x61) as RGB (0x63) (GUESS: luminance is kept as
+   RGB565, its alpha in the alpha plane); ALPHA (0x60), RGB, RGBA unchanged. Evidence: 0x0100f6f8 -
+   0x0100f710 (`cmp #0x62` / `moveq #0x64` / `bxeq lr`, `cmp #0x61` / `moveq #0x63`). FUN_0102035c
+   (Graphics3D.bindTarget of an Image2D) wants RGB or RGBA, so it also takes LUMINANCE and
+   LUMINANCE_ALPHA images, which JSR-184 1.1 refuses (IllegalArgumentException); FUN_010236c4 uses it
+   too. */
 int32 swvImage2D_StorageFormat(const uint8 *image)
 
 {
@@ -14814,10 +14856,11 @@ void *swvImage2D_Pixels(uint8 *image)
 }
 
 /* ==== 0x01010094  (file offset 0x10094)  FUN_01010094 ================================================ */
-/* GUESS (not yet rewritten): an AnimationController's position (JSR-184
-   AnimationController.getPosition) at the world time param_2: its reference sequence time (+0x24, a
-   float) + (param_2 - its reference world time, +0x28) * its speed (+0x2c), the product skipped when
-   the speed is 1.0; floats through the soft-float routines, which Ghidra pasted in. */
+/* (not yet rewritten) JSR-184 1.1, AnimationController.getPosition, native: the AnimationController's
+   sequence time at the world time param_2, ts = tsref + s (tw - twref): its reference sequence time
+   (+0x24, a float) + (param_2 - its reference world time, +0x28) * its speed (+0x2c), the multiply skipped
+   when |speed - 1.0| < 0x377ba882 (about 1.5e-5); floats through the soft-float routines, which Ghidra
+   pasted in. */
 /* WARNING: Removing unreachable block (ram,0x0103ee1c) */
 /* WARNING: Removing unreachable block (ram,0x0103edd4) */
 /* WARNING: Removing unreachable block (ram,0x0103ede0) */
@@ -15319,15 +15362,17 @@ void FUN_01010384(int param_1,int param_2,undefined4 *param_3)
 }
 
 /* ==== 0x010103D4  (file offset 0x103D4)  swvObject3D_References ====================================== */
-/* GUESS: name. The objects a native Object3D refers to (JSR-184 Object3D.getReferences): its own
-   method at engine vtable +0x18, reference(index), is called with index 0, 1, 2, ... until it returns
-   -1. A -2 says the next index is a list (a growable array: +4 the items, +8 the count): its non-NULL
-   items are stored, up to max - found of them, or only counted when out is NULL; any other non-zero
-   value is one object, stored while out is not NULL and found < max; 0 is skipped. Each is stored as
-   object + 4, the pointer swv_WrapObject takes; the number of them all is returned, which can be more
-   than max. Evidence: 0x010103d4 - 0x010104ec (`cmn r0, #1` / `bne` the loop, `cmn r0, #2`, the list's
-   +8 and +4, `cmp r5, #0` / `cmpne r4, r8` / `bge`). Only swvObject3D_GetReferences (slot 11) calls
-   it. */
+/* JSR-184 1.1, Object3D.getReferences, native: its own method at engine vtable +0x18, reference(index), is
+   called with index 0, 1, 2, ... until it returns -1. A -2 says the next index is a list (a growable
+   array: +4 the items, +8 the count): when out is NULL its non-NULL items are all counted; else only its
+   first max - found items are looked at, the non-NULL ones stored and counted, the rest neither. Any other
+   non-zero value is one object, counted always and stored while out is not NULL and found < max; 0 is
+   skipped (the spec: null references are never returned). Each is stored as object + 4, the pointer
+   swv_WrapObject takes; the count is returned, which can be more than max (single references past max),
+   but with out given it leaves out a list's references past max. Evidence: 0x010103d4 - 0x010104ec (`cmn
+   r0, #1` / `bne` the loop, `cmn r0, #2`, the list's +8 and +4, `sub r2, r8, r4` / `movgt r2, r1` the
+   list's limit, `cmp r5, #0` / `cmpne r4, r8` / `bge`). Only swvObject3D_GetReferences (slot 11) calls it.
+   */
 int32 swvObject3D_References(uint8 *object,int32 max,uint8 **out)
 
 {
@@ -15461,7 +15506,7 @@ undefined4 FUN_010104f0(int param_1)
 }
 
 /* ==== 0x010106F8  (file offset 0x106F8)  swvPolygonMode_Shading ====================================== */
-/* GUESS: name. The shading of a native PolygonMode (JSR-184 PolygonMode.getShading), from its flags
+/* GUESS: name. The shading of a native PolygonMode (JSR-184 1.1, PolygonMode.getShading), from its flags
    word (+0x1c): SHADE_FLAT (0xa4) when bit 0x20 is set, else SHADE_SMOOTH (0xa5; the field's 0x40).
    Evidence: 0x010106f8 - 0x01010708 (`tst r0, #0x20` / `moveq r0, #0xa5` / `movne r0, #0xa4`). Only
    swvPolygonMode_GetShading (slot 20) calls it. */
@@ -15514,10 +15559,10 @@ void FUN_0101070c(int param_1,int param_2,int *param_3,undefined4 *param_4,undef
 }
 
 /* ==== 0x01010818  (file offset 0x10818)  swvAnimationController_Speed ================================ */
-/* GUESS: name. A native AnimationController's speed (JSR-184 AnimationController.getSpeed), a float
-   (its bits; 1.0 is 0x3f800000) at +0x2c. Evidence: 0x01010818 - 0x0101081c (`ldr r0, [r0, #0x2c]` /
-   `bx lr`); FUN_01010094 multiplies the world time since +0x28 by it, FUN_01010de0 divides a sequence
-   time by it. Used by swvAnimationController_GetSpeed (slot 22) and FUN_01010de0. */
+/* JSR-184 1.1, AnimationController.getSpeed, native: the speed, a float (its bits; 1.0 is 0x3f800000) at
+   +0x2c. Evidence: 0x01010818 - 0x0101081c (`ldr r0, [r0, #0x2c]` / `bx lr`); FUN_01010094 multiplies the
+   world time since +0x28 by it, FUN_01010de0 divides a sequence time by it. Used by
+   swvAnimationController_GetSpeed (slot 22) and FUN_01010de0. */
 uint32 swvAnimationController_Speed(const uint8 *controller)
 
 {
@@ -15825,11 +15870,13 @@ undefined4 FUN_01010dac(undefined4 param_1,int param_2)
 
 /* ==== 0x01010DE0  (file offset 0x10DE0)  FUN_01010de0 ================================================ */
 /* GUESS (not yet rewritten): an AnimationTrack's sample (param_1: +0x1c its KeyframeSequence, +0x20 its
-   AnimationController) at the world time param_2: 0x7fffffff (valid for ever) when the controller is
-   not active (swvAnimationController_IsActive); else the sequence sampled (swvKeyframeSequence_Sample)
-   at the controller's position (FUN_01010094), and the time that returns (GUESS: until the next
-   keyframe, in sequence time) divided by the controller's speed (swvAnimationController_Speed, unless
-   1.0) and made an integer: GUESS the validity in world time that JSR-184's animate returns. */
+   AnimationController) at the world time param_2: 0x7fffffff (valid for ever, the maximum JSR-184 1.1,
+   Object3D.animate recommends) when the controller is not active (swvAnimationController_IsActive); else
+   the sequence sampled (swvKeyframeSequence_Sample) at the controller's position (FUN_01010094,
+   AnimationController.getPosition), and the time that returns (GUESS: until the next keyframe, in sequence
+   time) divided by the controller's speed (swvAnimationController_Speed, unless 1.0) and made an integer:
+   the validity interval, in world time, that Object3D.animate returns (FUN_01003c38 keeps the smallest).
+   */
 undefined4
 FUN_01010de0(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5
             )
@@ -16410,7 +16457,7 @@ int32 swvImage2D_GetWidth(uint8 *image)
 }
 
 /* ==== 0x01011980  (file offset 0x11980)  swvPolygonMode_Winding ====================================== */
-/* GUESS: name. The winding of a native PolygonMode (JSR-184 PolygonMode.getWinding), from its flags
+/* GUESS: name. The winding of a native PolygonMode (JSR-184 1.1, PolygonMode.getWinding), from its flags
    word (+0x1c): WINDING_CCW (0xa8) when bit 0x8 is set, else WINDING_CW (0xa9; the field's 0x10).
    Evidence: 0x01011980 - 0x01011990 (`tst r0, #8` / `moveq r0, #0xa9` / `movne r0, #0xa8`). Only
    swvPolygonMode_GetWinding (slot 22) calls it. */
@@ -16459,10 +16506,11 @@ int FUN_010119a8(int param_1,int param_2,int param_3)
 }
 
 /* ==== 0x010119D8  (file offset 0x119D8)  swvNode_AlignmentReferenceY ================================= */
-/* GUESS: name. The reference node of a node's y alignment (JSR-184 Node.getAlignmentReference(Y_AXIS)):
-   its alignment block's (+0x24) +0xc, or NULL when it has no block (see
-   swvNode_AlignmentReferenceZ). Evidence: 0x010119d8 - 0x010119e4 (`ldr r0, [r0, #0x24]`,
-   `cmp r0, #0`, `ldrne r0, [r0, #0xc]`). The y target is swvNode_AlignmentTargetY (the block's +4). */
+/* The reference node of a node's y alignment (JSR-184 1.1, Node.getAlignmentReference(Y_AXIS)): its
+   alignment block's (+0x24) +0xc, or NULL when it has no block (the 1.1 default (NONE, null)); a NULL
+   reference stands for the one given to Node.align (see swvNode_AlignmentReferenceZ). Evidence:
+   0x010119d8 - 0x010119e4 (`ldr r0, [r0, #0x24]`, `cmp r0, #0`, `ldrne r0, [r0, #0xc]`). The y target
+   is swvNode_AlignmentTargetY (the block's +4). */
 uint8 *swvNode_AlignmentReferenceY(const uint8 *node)
 
 {
@@ -16477,8 +16525,8 @@ uint8 *swvNode_AlignmentReferenceY(const uint8 *node)
 }
 
 /* ==== 0x010119E8  (file offset 0x119E8)  swvNode_AlignmentTargetY ==================================== */
-/* GUESS: name. The target of a node's y alignment (JSR-184 Node.getAlignmentTarget(Y_AXIS)): its
-   alignment block's (+0x24) +4, or NONE (0x90) when it has no block. Evidence: 0x010119e8 -
+/* The target of a node's y alignment (JSR-184 1.1, Node.getAlignmentTarget(Y_AXIS)): its alignment
+   block's (+0x24) +4, or NONE (0x90) when it has no block (the 1.1 default). Evidence: 0x010119e8 -
    0x010119f8 (`ldr r0, [r0, #0x24]`, `cmp r0, #0`, `moveq r0, #0x90`, `ldrne r0, [r0, #4]`). The y
    reference is swvNode_AlignmentReferenceY (+0xc). */
 int32 swvNode_AlignmentTargetY(const uint8 *node)
@@ -16495,10 +16543,12 @@ int32 swvNode_AlignmentTargetY(const uint8 *node)
 }
 
 /* ==== 0x010119FC  (file offset 0x119FC)  swvNode_AlignmentReferenceZ ================================= */
-/* GUESS: name. The reference node of a node's z alignment (JSR-184 Node.getAlignmentReference(Z_AXIS)):
-   its alignment block's (+0x24) +8, or NULL when it has no block. NULL stands for the node's parent;
-   FUN_0100a02c treats -1 as an error. Evidence: 0x010119fc - 0x01011a08 (`ldr r0, [r0, #0x24]`,
-   `cmp r0, #0`, `ldrne r0, [r0, #8]`). The z target is swvNode_AlignmentTargetZ (the block's +0). */
+/* The reference node of a node's z alignment (JSR-184 1.1, Node.getAlignmentReference(Z_AXIS)): its
+   alignment block's (+0x24) +8, or NULL when it has no block (the 1.1 default (NONE, null)). NULL
+   stands for the reference given to Node.align (JSR-184 1.1, Node.setAlignment; before: read as the
+   node's parent); FUN_0100a02c treats -1 as an error. Evidence: 0x010119fc - 0x01011a08 (`ldr r0, [r0,
+   #0x24]`, `cmp r0, #0`, `ldrne r0, [r0, #8]`). The z target is swvNode_AlignmentTargetZ (the block's
+   +0). */
 uint8 *swvNode_AlignmentReferenceZ(const uint8 *node)
 
 {
@@ -16513,11 +16563,11 @@ uint8 *swvNode_AlignmentReferenceZ(const uint8 *node)
 }
 
 /* ==== 0x01011A0C  (file offset 0x11A0C)  swvNode_AlignmentTargetZ ==================================== */
-/* GUESS: name. The target of a node's z alignment (JSR-184 Node.getAlignmentTarget(Z_AXIS)): its
-   alignment block's (+0x24) first word, or NONE (0x90) when it has no block. Evidence: 0x01011a0c -
-   0x01011a1c (`ldr r0, [r0, #0x24]`, `cmp r0, #0`, `moveq r0, #0x90`, `ldrne r0, [r0]`). The z
-   reference is swvNode_AlignmentReferenceZ (+8); FUN_0100f030 passes both to FUN_01020104 in the
-   order of Node.setAlignment(zRef, zTarget, yRef, yTarget). */
+/* The target of a node's z alignment (JSR-184 1.1, Node.getAlignmentTarget(Z_AXIS)): its alignment
+   block's (+0x24) first word, or NONE (0x90) when it has no block (the 1.1 default). Evidence:
+   0x01011a0c - 0x01011a1c (`ldr r0, [r0, #0x24]`, `cmp r0, #0`, `moveq r0, #0x90`, `ldrne r0, [r0]`).
+   The z reference is swvNode_AlignmentReferenceZ (+8); FUN_0100f030 passes both to FUN_01020104
+   (Node.setAlignment(zRef, zTarget, yRef, yTarget)). */
 int32 swvNode_AlignmentTargetZ(const uint8 *node)
 
 {
@@ -16576,7 +16626,7 @@ int FUN_01011a84(int param_1)
 }
 
 /* ==== 0x01011AA8  (file offset 0x11AA8)  swvPolygonMode_TwoSidedLighting ============================= */
-/* GUESS: name. Whether a native PolygonMode has two-sided lighting on (JSR-184
+/* GUESS: name. Whether a native PolygonMode has two-sided lighting on (JSR-184 1.1,
    PolygonMode.isTwoSidedLightingEnabled): bit 0x100 of its flags word (+0x1c; the field 0x180 is 0x80
    off, 0x100 on), as 0 or 1. Evidence: 0x01011aa8 - 0x01011ab4 (`ldr r0, [r0, #0x1c]`, `mov r1, #1`,
    `and r0, r1, r0, lsr #8`). Only swvPolygonMode_IsTwoSidedLightingEnabled (slot 26) calls it. */
@@ -16587,11 +16637,11 @@ uint32 swvPolygonMode_TwoSidedLighting(const uint8 *mode)
 }
 
 /* ==== 0x01011AB8  (file offset 0x11AB8)  swvImage2D_BytesPerPixel ==================================== */
-/* GUESS: name. The bytes a pixel of a JSR-184 Image2D format takes in the pixels an application
-   gives: LUMINANCE_ALPHA (0x62) 2, RGB (0x63) 3, RGBA (0x64) 4, anything else (ALPHA 0x60,
-   LUMINANCE 0x61) 1; SwerveImageFormat, swv_types.h. Evidence: 0x01011ab8 - 0x01011adc (`cmp r0,
-   #0x62` / `moveq r0, #2` / `bxeq lr`, the same for 0x63 and 0x64, `movne r0, #1`). Used by the
-   Image2D constructors and set (FUN_01007d70, FUN_01007e30, FUN_01007f8c, FUN_01023d30,
+/* GUESS: name. The bytes a pixel of a JSR-184 Image2D format takes in the pixels an application gives
+   (JSR-184 1.1, Image2D, its format constants): LUMINANCE_ALPHA (0x62) 2, RGB (0x63) 3, RGBA (0x64) 4,
+   anything else (ALPHA 0x60, LUMINANCE 0x61) 1; SwerveImageFormat, swv_types.h. Evidence: 0x01011ab8 -
+   0x01011adc (`cmp r0, #0x62` / `moveq r0, #2` / `bxeq lr`, the same for 0x63 and 0x64, `movne r0, #1`).
+   Used by the Image2D constructors and set (FUN_01007d70, FUN_01007e30, FUN_01007f8c, FUN_01023d30,
    FUN_01023e44) and the M3G reader (FUN_01019920, FUN_0101dbf8). */
 int32 swvImage2D_BytesPerPixel(int32 format)
 
@@ -17226,13 +17276,13 @@ uint32 swvObj_Release(ISwerveObject *po)
 }
 
 /* ==== 0x010122F0  (file offset 0x122F0)  swvMaterial_IsAnimatable ==================================== */
-/* GUESS: name. A Material's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+/* GUESS: name. A Material's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184 1.1,
    Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_MATERIAL (ALPHA,
-   AMBIENT_COLOR, DIFFUSE_COLOR, EMISSIVE_COLOR, SHININESS, SPECULAR_COLOR), else its base class's
-   answer, swvObject3D_IsAnimatable (1 when that is not 0). The bit is 1 << (property - 0xff), a
-   register shift: 0 from 32 up. The mask is JSR-184's animatable properties of Material. Evidence:
-   0x010122f0 - 0x0101231c (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `ldr r3, [0x01012300]` / `tst
-   r2, r3`, `bl` the base at 0x0101230c with r0 and r1 as they came; Ghidra had dropped them). */
+   AMBIENT_COLOR, DIFFUSE_COLOR, EMISSIVE_COLOR, SHININESS, SPECULAR_COLOR), else its base class's answer,
+   swvObject3D_IsAnimatable (1 when that is not 0). The bit is 1 << (property - 0xff), a register shift: 0
+   from 32 up. The mask is the properties JSR-184 1.1, AnimationTrack's fields give Material. Evidence:
+   0x010122f0 - 0x0101231c (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `ldr r3, [0x01012300]` / `tst r2,
+   r3`, `bl` the base at 0x0101230c with r0 and r1 as they came; Ghidra had dropped them). */
 int32 swvMaterial_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17247,11 +17297,12 @@ int32 swvMaterial_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x01012324  (file offset 0x12324)  swvObject3D_IsAnimatable ==================================== */
-/* GUESS: name. The Object3D base's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58,
-   JSR-184 Object3D.addAnimationTrack, raises -1301 when it gives 0): no property of its own, so 0;
-   every class's own (swvMaterial_IsAnimatable .. swvSprite3D_IsAnimatable, and swvCamera_IsAnimatable
-   and FUN_010124ac, which Ghidra has no function for; the masks in swv_types.h) ends here. Evidence:
-   0x01012324 - 0x01012328 (`mov r0, #0` / `bx lr`). */
+/* GUESS: name. The Object3D base's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+   1.1, Object3D.addAnimationTrack, raises -1301, IllegalArgumentException for an incompatible track, when
+   it gives 0): no property of its own (the spec gives Object3D none), so 0; every class's own
+   (swvMaterial_IsAnimatable .. swvSprite3D_IsAnimatable, and swvCamera_IsAnimatable and FUN_010124ac,
+   which Ghidra has no function for; the masks in swv_types.h) ends here. Evidence: 0x01012324 - 0x01012328
+   (`mov r0, #0` / `bx lr`). */
 int32 swvObject3D_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17259,11 +17310,11 @@ int32 swvObject3D_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x0101232C  (file offset 0x1232C)  swvTexture2D_IsAnimatable =================================== */
-/* GUESS: name. A Texture2D's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
-   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_TEXTURE2D (COLOR),
-   else its base class's answer, swvTransformable_IsAnimatable (1 when that is not 0). The bit is 1 <<
-   (property - 0xff), a register shift: 0 from 32 up. The mask is JSR-184's animatable properties of
-   Texture2D. Evidence: 0x0101232c - 0x01012354 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2,
+/* GUESS: name. A Texture2D's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184 1.1,
+   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_TEXTURE2D (COLOR), else
+   its base class's answer, swvTransformable_IsAnimatable (1 when that is not 0). The bit is 1 << (property
+   - 0xff), a register shift: 0 from 32 up. The mask is the properties JSR-184 1.1, AnimationTrack's fields
+   give Texture2D. Evidence: 0x0101232c - 0x01012354 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2,
    #0x08`, `bl` the base at 0x01012344 with r0 and r1 as they came; Ghidra had dropped them). */
 int32 swvTexture2D_IsAnimatable(const uint8 *object,int32 property)
 
@@ -17279,13 +17330,13 @@ int32 swvTexture2D_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x01012358  (file offset 0x12358)  swvBackground_IsAnimatable ================================== */
-/* GUESS: name. A Background's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+/* GUESS: name. A Background's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184 1.1,
    Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_BACKGROUND (ALPHA,
-   COLOR, CROP), else its base class's answer, swvObject3D_IsAnimatable (1 when that is not 0). The bit
-   is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is JSR-184's animatable
-   properties of Background. Evidence: 0x01012358 - 0x01012380 (`sub r2, r1, #0xff` / `mov r2, r3, lsl
-   r2`, `tst r2, #0x1a`, `bl` the base at 0x01012370 with r0 and r1 as they came; Ghidra had dropped
-   them). */
+   COLOR, CROP), else its base class's answer, swvObject3D_IsAnimatable (1 when that is not 0). The bit is
+   1 << (property - 0xff), a register shift: 0 from 32 up. The mask is the properties JSR-184 1.1,
+   AnimationTrack's fields give Background. Evidence: 0x01012358 - 0x01012380 (`sub r2, r1, #0xff` / `mov
+   r2, r3, lsl r2`, `tst r2, #0x1a`, `bl` the base at 0x01012370 with r0 and r1 as they came; Ghidra had
+   dropped them). */
 int32 swvBackground_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17301,12 +17352,12 @@ int32 swvBackground_IsAnimatable(const uint8 *object,int32 property)
 
 /* ==== 0x01012384  (file offset 0x12384)  swvMorphingMesh_IsAnimatable ================================ */
 /* GUESS: name. A MorphingMesh's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
-   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_MORPHINGMESH
-   (MORPH_WEIGHTS), else its base class's answer, swvNode_IsAnimatable (1 when that is not 0). The bit
-   is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is JSR-184's animatable
-   properties of MorphingMesh. Evidence: 0x01012384 - 0x010123ac (`sub r2, r1, #0xff` / `mov r2, r3, lsl
-   r2`, `tst r2, #0x800`, `bl` the base at 0x0101239c with r0 and r1 as they came; Ghidra had dropped
-   them). */
+   1.1, Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_MORPHINGMESH
+   (MORPH_WEIGHTS), else its base class's answer, swvNode_IsAnimatable (1 when that is not 0). The bit is 1
+   << (property - 0xff), a register shift: 0 from 32 up. The mask is the properties JSR-184 1.1,
+   AnimationTrack's fields give MorphingMesh. Evidence: 0x01012384 - 0x010123ac (`sub r2, r1, #0xff` / `mov
+   r2, r3, lsl r2`, `tst r2, #0x800`, `bl` the base at 0x0101239c with r0 and r1 as they came; Ghidra had
+   dropped them). */
 int32 swvMorphingMesh_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17322,11 +17373,12 @@ int32 swvMorphingMesh_IsAnimatable(const uint8 *object,int32 property)
 
 /* ==== 0x010123B0  (file offset 0x123B0)  swvVertexBuffer_IsAnimatable ================================ */
 /* GUESS: name. A VertexBuffer's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
-   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_VERTEXBUFFER (ALPHA,
-   COLOR), else its base class's answer, swvObject3D_IsAnimatable (1 when that is not 0). The bit is 1
-   << (property - 0xff), a register shift: 0 from 32 up. The mask is JSR-184's animatable properties of
-   VertexBuffer. Evidence: 0x010123b0 - 0x010123d8 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2,
-   #0x0a`, `bl` the base at 0x010123c8 with r0 and r1 as they came; Ghidra had dropped them). */
+   1.1, Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_VERTEXBUFFER
+   (ALPHA, COLOR), else its base class's answer, swvObject3D_IsAnimatable (1 when that is not 0). The bit
+   is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is the properties JSR-184 1.1,
+   AnimationTrack's fields give VertexBuffer. Evidence: 0x010123b0 - 0x010123d8 (`sub r2, r1, #0xff` / `mov
+   r2, r3, lsl r2`, `tst r2, #0x0a`, `bl` the base at 0x010123c8 with r0 and r1 as they came; Ghidra had
+   dropped them). */
 int32 swvVertexBuffer_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17342,12 +17394,12 @@ int32 swvVertexBuffer_IsAnimatable(const uint8 *object,int32 property)
 
 /* ==== 0x010123DC  (file offset 0x123DC)  swvTransformable_IsAnimatable =============================== */
 /* GUESS: name. A Transformable's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
-   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_TRANSFORMABLE
-   (ORIENTATION, SCALE, TRANSLATION), else its base class's answer, swvObject3D_IsAnimatable (1 when
-   that is not 0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is
-   JSR-184's animatable properties of Transformable. Evidence: 0x010123dc - 0x01012408 (`sub r2, r1,
-   #0xff` / `mov r2, r3, lsl r2`, `ldr r3, [0x010123ec]` / `tst r2, r3`, `bl` the base at 0x010123f8
-   with r0 and r1 as they came; Ghidra had dropped them). */
+   1.1, Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_TRANSFORMABLE
+   (ORIENTATION, SCALE, TRANSLATION), else its base class's answer, swvObject3D_IsAnimatable (1 when that
+   is not 0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is the properties
+   JSR-184 1.1, AnimationTrack's fields give Transformable. Evidence: 0x010123dc - 0x01012408 (`sub r2, r1,
+   #0xff` / `mov r2, r3, lsl r2`, `ldr r3, [0x010123ec]` / `tst r2, r3`, `bl` the base at 0x010123f8 with
+   r0 and r1 as they came; Ghidra had dropped them). */
 int32 swvTransformable_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17362,13 +17414,13 @@ int32 swvTransformable_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x01012410  (file offset 0x12410)  swvFog_IsAnimatable ========================================= */
-/* GUESS: name. A Fog's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+/* GUESS: name. A Fog's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184 1.1,
    Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_FOG (COLOR, DENSITY,
-   FAR_DISTANCE, NEAR_DISTANCE), else its base class's answer, swvObject3D_IsAnimatable (1 when that is
-   not 0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is JSR-184's
-   animatable properties of Fog. Evidence: 0x01012410 - 0x0101243c (`sub r2, r1, #0xff` / `mov r2, r3,
-   lsl r2`, `ldr r3, [0x01012420]` / `tst r2, r3`, `bl` the base at 0x0101242c with r0 and r1 as they
-   came; Ghidra had dropped them). */
+   FAR_DISTANCE, NEAR_DISTANCE), else its base class's answer, swvObject3D_IsAnimatable (1 when that is not
+   0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is the properties
+   JSR-184 1.1, AnimationTrack's fields give Fog. Evidence: 0x01012410 - 0x0101243c (`sub r2, r1, #0xff` /
+   `mov r2, r3, lsl r2`, `ldr r3, [0x01012420]` / `tst r2, r3`, `bl` the base at 0x0101242c with r0 and r1
+   as they came; Ghidra had dropped them). */
 int32 swvFog_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17383,13 +17435,13 @@ int32 swvFog_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x01012444  (file offset 0x12444)  swvNode_IsAnimatable ======================================== */
-/* GUESS: name. A Node's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+/* GUESS: name. A Node's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184 1.1,
    Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_NODE (ALPHA,
    PICKABILITY, VISIBILITY), else its base class's answer, swvTransformable_IsAnimatable (1 when that is
-   not 0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is JSR-184's
-   animatable properties of Node. Evidence: 0x01012444 - 0x01012470 (`sub r2, r1, #0xff` / `mov r2, r3,
-   lsl r2`, `ldr r3, [0x01012454]` / `tst r2, r3`, `bl` the base at 0x01012460 with r0 and r1 as they
-   came; Ghidra had dropped them). */
+   not 0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is the properties
+   JSR-184 1.1, AnimationTrack's fields give Node. Evidence: 0x01012444 - 0x01012470 (`sub r2, r1, #0xff` /
+   `mov r2, r3, lsl r2`, `ldr r3, [0x01012454]` / `tst r2, r3`, `bl` the base at 0x01012460 with r0 and r1
+   as they came; Ghidra had dropped them). */
 int32 swvNode_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17404,12 +17456,12 @@ int32 swvNode_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x01012478  (file offset 0x12478)  swvLight_IsAnimatable ======================================= */
-/* GUESS: name. A Light's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
+/* GUESS: name. A Light's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184 1.1,
    Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_LIGHT (COLOR,
-   INTENSITY, SPOT_ANGLE, SPOT_EXPONENT), else its base class's answer, swvNode_IsAnimatable (1 when
-   that is not 0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is
-   JSR-184's animatable properties of Light. Evidence: 0x01012478 - 0x010124a4 (`sub r2, r1, #0xff` /
-   `mov r2, r3, lsl r2`, `ldr r3, [0x01012488]` / `tst r2, r3`, `bl` the base at 0x01012494 with r0 and
+   INTENSITY, SPOT_ANGLE, SPOT_EXPONENT), else its base class's answer, swvNode_IsAnimatable (1 when that
+   is not 0). The bit is 1 << (property - 0xff), a register shift: 0 from 32 up. The mask is the properties
+   JSR-184 1.1, AnimationTrack's fields give Light. Evidence: 0x01012478 - 0x010124a4 (`sub r2, r1, #0xff`
+   / `mov r2, r3, lsl r2`, `ldr r3, [0x01012488]` / `tst r2, r3`, `bl` the base at 0x01012494 with r0 and
    r1 as they came; Ghidra had dropped them). */
 int32 swvLight_IsAnimatable(const uint8 *object,int32 property)
 
@@ -17437,13 +17489,13 @@ int32 FUN_010124ac(const uint8 *object,int32 property)
 
 /* ==== 0x010124B0  (file offset 0x124B0)  swvCamera_IsAnimatable ====================================== */
 /* A routine Ghidra has no function for, reached only through an engine vtable (a scene object's, not
-   static); written from its disassembly. GUESS: name. A Camera's IsAnimatable(property), its engine
-   vtable +0x20 (FUN_01002a58, JSR-184 Object3D.addAnimationTrack, asks it): 1 for the properties it
-   adds, SWV_ANIMATED_CAMERA (FAR_DISTANCE, FIELD_OF_VIEW, NEAR_DISTANCE), else its base class's answer,
+   static); written from its disassembly. GUESS: name. A Camera's IsAnimatable(property), its engine vtable
+   +0x20 (FUN_01002a58, JSR-184 1.1, Object3D.addAnimationTrack, asks it): 1 for the properties it adds,
+   SWV_ANIMATED_CAMERA (FAR_DISTANCE, FIELD_OF_VIEW, NEAR_DISTANCE), else its base class's answer,
    swvNode_IsAnimatable (1 when that is not 0); the bit as in the others (0 from a shift of 32 up). The
-   mask is JSR-184's animatable properties of Camera. Evidence: 0x010124b0 - 0x010124d8 (`sub r2, r1,
-   #0xff` / `mov r2, r3, lsl r2`, `tst r2, #0x1300`, `bl 0x01012444` at 0x010124c8 with r0 and r1 as
-   they came). */
+   mask is the properties JSR-184 1.1, AnimationTrack's fields give Camera. Evidence: 0x010124b0 -
+   0x010124d8 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2, #0x1300`, `bl 0x01012444` at 0x010124c8
+   with r0 and r1 as they came). */
 int32 swvCamera_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17458,12 +17510,12 @@ int32 swvCamera_IsAnimatable(const uint8 *object,int32 property)
 }
 
 /* ==== 0x010124DC  (file offset 0x124DC)  swvSprite3D_IsAnimatable ==================================== */
-/* GUESS: name. A Sprite3D's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184
-   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_SPRITE3D (CROP),
-   else its base class's answer, swvNode_IsAnimatable (1 when that is not 0). The bit is 1 << (property
-   - 0xff), a register shift: 0 from 32 up. The mask is JSR-184's animatable properties of Sprite3D.
-   Evidence: 0x010124dc - 0x01012504 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2, #0x10`, `bl`
-   the base at 0x010124f4 with r0 and r1 as they came; Ghidra had dropped them). */
+/* GUESS: name. A Sprite3D's IsAnimatable(property), its engine vtable +0x20 (FUN_01002a58, JSR-184 1.1,
+   Object3D.addAnimationTrack, asks it): 1 for the properties it adds, SWV_ANIMATED_SPRITE3D (CROP), else
+   its base class's answer, swvNode_IsAnimatable (1 when that is not 0). The bit is 1 << (property - 0xff),
+   a register shift: 0 from 32 up. The mask is the properties JSR-184 1.1, AnimationTrack's fields give
+   Sprite3D. Evidence: 0x010124dc - 0x01012504 (`sub r2, r1, #0xff` / `mov r2, r3, lsl r2`, `tst r2,
+   #0x10`, `bl` the base at 0x010124f4 with r0 and r1 as they came; Ghidra had dropped them). */
 int32 swvSprite3D_IsAnimatable(const uint8 *object,int32 property)
 
 {
@@ -17482,10 +17534,11 @@ int32 swvSprite3D_IsAnimatable(const uint8 *object,int32 property)
    (each walked up its parents, +0x30, to the node with none), else 0. The binary tests three things,
    the other's root being the node, the other being the node's root, or the two roots equal; the first
    two are cases of the third (a root has no parent, so it is its own root), so only the third is
-   written here. Callers: FUN_010034cc (JSR-184 Node.align, -1301 for a reference in another graph)
-   and FUN_01016ecc (GUESS: Group.pick, -1300 for a camera in another graph). Evidence: 0x01012508 -
-   0x01012558 (`cmp r0, #0` / `cmpne r1, #0` / `beq`, two `ldr r2, [r2, #0x30]` loops, `cmp r3, r0` /
-   `cmpne r1, r12` / `cmpne r12, r3` / `moveq r0, #1`, `mov r0, #0`). */
+   written here. Callers: FUN_010034cc (JSR-184 1.1, Node.align: -1301 IllegalArgumentException for a
+   reference in another graph) and FUN_01016ecc (JSR-184 1.1, Group.pick: -1300 IllegalStateException
+   for a camera with no path to the group). Evidence: 0x01012508 - 0x01012558 (`cmp r0, #0` / `cmpne r1,
+   #0` / `beq`, two `ldr r2, [r2, #0x30]` loops, `cmp r3, r0` / `cmpne r1, r12` / `cmpne r12, r3` /
+   `moveq r0, #1`, `mov r0, #0`). */
 int32 swvNode_SameSceneGraph(const uint8 *node,const uint8 *other)
 
 {
@@ -18594,12 +18647,12 @@ undefined4 swv_Matrix4Invert(int param_1)
 }
 
 /* ==== 0x01013A80  (file offset 0x13A80)  swvAnimationController_IsActive ============================= */
-/* GUESS: name. Whether an AnimationController is active at the world time worldTime (JSR-184): always
-   when its active interval's start (+0x1c) and end (+0x20) are equal, else when start <= worldTime <
-   end (signed). Callers: FUN_01003c38 (GUESS Object3D.animate, which skips a track whose controller is
-   not active) and FUN_01010de0 (an AnimationTrack's sample). Evidence: 0x01013a80 - 0x01013aac (`ldr
-   r2, [r0, #0x1c]` / `ldr r0, [r0, #0x20]`, `cmp r2, r0` / `beq` 1, `cmp r2, r1` / `bgt` 0, `cmp r0,
-   r1` / `bgt` 1, else 0). */
+/* GUESS: name. Whether an AnimationController is active at the world time worldTime (JSR-184 1.1,
+   AnimationController.setActiveInterval): always when its active interval's start (+0x1c) and end (+0x20)
+   are equal, else when start <= worldTime < end (signed). Callers: FUN_01003c38 (the native
+   Object3D.animate, which skips a track whose controller is not active) and FUN_01010de0 (an
+   AnimationTrack's sample). Evidence: 0x01013a80 - 0x01013aac (`ldr r2, [r0, #0x1c]` / `ldr r0, [r0,
+   #0x20]`, `cmp r2, r0` / `beq` 1, `cmp r2, r1` / `bgt` 0, `cmp r0, r1` / `bgt` 1, else 0). */
 int32 swvAnimationController_IsActive(const uint8 *controller,int32 worldTime)
 
 {
@@ -18615,14 +18668,14 @@ int32 swvAnimationController_IsActive(const uint8 *controller,int32 worldTime)
 }
 
 /* ==== 0x01013AB0  (file offset 0x13AB0)  swvNode_IsAncestorOf ======================================== */
-/* GUESS: name. Whether ancestor is a proper ancestor of the Node node (its parent, its parent's
-   parent, ...): 0 for a NULL node, else swvNode_HasAncestor(node, ancestor). The binary has no loop of
-   its own: it tests node, swaps the two arguments and jumps into the next routine (a conditional tail
-   jump, here a call; Ghidra had repeated that routine's loop here). Callers: FUN_01002d60 (GUESS
+/* GUESS: name. Whether ancestor is a proper ancestor of the Node node (its parent, its parent's parent,
+   ...): 0 for a NULL node, else swvNode_HasAncestor(node, ancestor). The binary has no loop of its own:
+   it tests node, swaps the two arguments and jumps into the next routine (a conditional tail jump, here
+   a call; Ghidra had repeated that routine's loop here). Callers: FUN_01002d60 (JSR-184 1.1,
    Group.addChild: the child must not be an ancestor of the group), FUN_010231c4 (GUESS the SkinnedMesh
-   skeleton: not an ancestor of the mesh), FUN_010048e4 (Node.getTransformTo), FUN_0100a02c (the
-   alignment). Evidence: 0x01013ab0 - 0x01013ac4 (`mov r2, r0`, `movs r0, r1`, `movne r1, r2` / `bne
-   0x01013ac8`, `moveq r0, #0` / `bx lr`). */
+   skeleton: not an ancestor of the mesh), FUN_010048e4 (Node.getTransformTo), FUN_0100a02c (Node.align:
+   a node aligned to its descendant). Evidence: 0x01013ab0 - 0x01013ac4 (`mov r2, r0`, `movs r0, r1`,
+   `movne r1, r2` / `bne 0x01013ac8`, `moveq r0, #0` / `bx lr`). */
 int32 swvNode_IsAncestorOf(const uint8 *ancestor,const uint8 *node)
 
 {
@@ -18634,9 +18687,9 @@ int32 swvNode_IsAncestorOf(const uint8 *ancestor,const uint8 *node)
 }
 
 /* ==== 0x01013AC8  (file offset 0x13AC8)  swvNode_HasAncestor ========================================= */
-/* GUESS: name. Whether the Node node has ancestor among its ancestors: its parents (+0x30) walked
-   from its own parent to the root, 1 on meeting ancestor, else 0 (the node itself does not count).
-   swvNode_IsAncestorOf jumps into it with the arguments swapped. Callers: FUN_01003234 (GUESS
+/* GUESS: name. Whether the Node node has ancestor among its ancestors: its parents (+0x30) walked from
+   its own parent to the root, 1 on meeting ancestor, else 0 (the node itself does not count).
+   swvNode_IsAncestorOf jumps into it with the arguments swapped. Callers: FUN_01003234 (JSR-184 1.1,
    SkinnedMesh.addTransform: the bone must be the skeleton or under it), FUN_0100f030 (the alignment
    references in a copied subtree), FUN_0101d17c, FUN_0101d21c. Evidence: 0x01013ac8 - 0x01013af4 (`ldr
    r0, [r0, #0x30]` / `cmp r0, #0` / `beq` 0, `cmp r0, r1` / `ldrne r0, [r0, #0x30]`, `mov r0, #1`). */
@@ -18653,13 +18706,13 @@ int32 swvNode_HasAncestor(const uint8 *node,const uint8 *ancestor)
 }
 
 /* ==== 0x01013AF8  (file offset 0x13AF8)  swv_IsPowerOfTwo ============================================ */
-/* GUESS: name. Whether value's magnitude is a power of two (1, 2, 4, ...): 0 for 0; a negative value
-   is negated first (0x80000000 stays negative and gives 0); the value halved while it is above 0 and
-   even, then 1 when nothing but bit 0 is left. Callers: FUN_01021abc (GUESS Texture2D.setImage) and
-   FUN_0101e144 (the M3G loader's Texture2D), on the image's width and height (JSR-184: powers of two,
-   up to 1024). Evidence: 0x01013af8 - 0x01013b30 (`cmp r0, #0` / `beq` 0, `bge`, `rsb r0, r0, #0`,
-   `mov r0, r0, asr #1` / `cmp r0, #0` / `ble`, `tst r0, #1` / `beq`, `bics r0, r0, #1` / `moveq r0,
-   #1`). */
+/* GUESS: name. Whether value's magnitude is a power of two (1, 2, 4, ...): 0 for 0; a negative value is
+   negated first (0x80000000 stays negative and gives 0); the value halved while it is above 0 and even,
+   then 1 when nothing but bit 0 is left. Callers: FUN_01021abc (JSR-184 1.1, Texture2D.setImage) and
+   FUN_0101e144 (the M3G loader's Texture2D), on the image's width and height (the spec: positive powers
+   of two, up to the implementation's maximum, here 1024). Evidence: 0x01013af8 - 0x01013b30 (`cmp r0,
+   #0` / `beq` 0, `bge`, `rsb r0, r0, #0`, `mov r0, r0, asr #1` / `cmp r0, #0` / `ble`, `tst r0, #1` /
+   `beq`, `bics r0, r0, #1` / `moveq r0, #1`). */
 int32 swv_IsPowerOfTwo(int32 value)
 
 {
@@ -18830,11 +18883,11 @@ void FUN_01013c58(int param_1,int param_2,int *param_3,int param_4)
 }
 
 /* ==== 0x01013E88  (file offset 0x13E88)  FUN_01013e88 ================================================ */
-/* GUESS (not yet rewritten): the OMNI light term (mode 0x82): adds the light (param_1, 0x90 bytes;
-   swvLight_Shade's own routine at +0, set by FUN_01012908 from the JSR-184 mode) to the vertex colour
-   param_2: like FUN_0101411c, with the distance attenuation (+0x5c .. +0x64: constant, linear,
-   quadratic; FUN_0102f080) in the factor (swv_ColourScale); the specular term, FUN_01013c58, when +8 is
-   set. */
+/* GUESS (not yet rewritten): the OMNI light term (mode 0x82, JSR-184 1.1 Light.OMNI): adds the light
+   (param_1, 0x90 bytes; swvLight_Shade's own routine at +0, set by FUN_01012908 from the JSR-184 mode)
+   to the vertex colour param_2: like FUN_0101411c, with the distance attenuation (+0x5c .. +0x64:
+   constant, linear, quadratic, Light.setAttenuation's order; FUN_0102f080) in the factor
+   (swv_ColourScale); the specular term, FUN_01013c58, when +8 is set. */
 void FUN_01013e88(int param_1,int param_2)
 
 {
@@ -18943,11 +18996,11 @@ void FUN_01013e88(int param_1,int param_2)
 }
 
 /* ==== 0x0101411C  (file offset 0x1411C)  FUN_0101411c ================================================ */
-/* GUESS (not yet rewritten): the DIRECTIONAL light term (mode 0x81): adds the light (param_1, 0x90
-   bytes; swvLight_Shade's own routine at +0, set by FUN_01012908 from the JSR-184 mode) to the vertex
-   colour param_2: the light colour (+0x48 .. +0x50) scaled by the diffuse factor (swv_ColourScale),
-   modulated by the material colour (swv_ColourModulate) and added (swv_ColourAdd); the specular term,
-   FUN_01013c58, when +8 is set. */
+/* GUESS (not yet rewritten): the DIRECTIONAL light term (mode 0x81, JSR-184 1.1 Light.DIRECTIONAL): adds
+   the light (param_1, 0x90 bytes; swvLight_Shade's own routine at +0, set by FUN_01012908 from the
+   JSR-184 mode) to the vertex colour param_2: the light colour (+0x48 .. +0x50) scaled by the diffuse
+   factor (swv_ColourScale), modulated by the material colour (swv_ColourModulate) and added
+   (swv_ColourAdd); the specular term, FUN_01013c58, when +8 is set. */
 void FUN_0101411c(int param_1,int param_2)
 
 {
@@ -18986,11 +19039,11 @@ void FUN_0101411c(int param_1,int param_2)
 }
 
 /* ==== 0x0101420C  (file offset 0x1420C)  FUN_0101420c ================================================ */
-/* GUESS (not yet rewritten): the SPOT light term (mode 0x83): adds the light (param_1, 0x90 bytes;
-   swvLight_Shade's own routine at +0, set by FUN_01012908 from the JSR-184 mode) to the vertex colour
-   param_2: like FUN_01013e88, with the spot cone (+0x54 its angle's cosine, +0x58 its exponent; set
-   from the Light's +0x9c / +0xa0) in the factor (swv_ColourScale); the specular term, FUN_01013c58,
-   when +8 is set. */
+/* GUESS (not yet rewritten): the SPOT light term (mode 0x83, JSR-184 1.1 Light.SPOT): adds the light
+   (param_1, 0x90 bytes; swvLight_Shade's own routine at +0, set by FUN_01012908 from the JSR-184 mode)
+   to the vertex colour param_2: like FUN_01013e88, with the spot cone (+0x54 its angle's cosine, +0x58
+   its exponent; set from the Light's +0x9c / +0xa0, spotAngle and spotExponent in the order of M3G file
+   format 11.13) in the factor (swv_ColourScale); the specular term, FUN_01013c58, when +8 is set. */
 void FUN_0101420c(int param_1,int param_2)
 
 {
@@ -19970,8 +20023,12 @@ void FUN_010151f0(int param_1,int param_2)
 }
 
 /* ==== 0x01015220  (file offset 0x15220)  swvM3GReader_End ============================================ */
-/* GUESS: name (not yet rewritten). The M3G reader's slot +0x0c: ends a read: error unless the state
-   (+0x64) is 2 (reading), then the state set to 3 (see swvM3GReader_State). */
+/* GUESS: name (not yet rewritten). The M3G reader's slot +0x0c: ends a read: error -1103
+   (SWVE_READER_STATE) unless the state (+0x64) is 1 or 2 (begun or reading) and the file parser
+   (+0x24) waits for a section's compression byte (2), i.e. the data ended between two sections (M3G
+   file format section 9: a file cut inside a section is an error); then the state set to 3 (see
+   swvM3GReader_State); -10 when the virtual slot +0x20 refuses (handed to the slot +0x10); the section
+   reader (+0x10), if any, destroyed. */
 undefined4 swvM3GReader_End(int *param_1)
 
 {
@@ -20043,19 +20100,26 @@ undefined4 swvM3GReader_Begin(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x01015348  (file offset 0x15348)  swvM3GReader_Feed =========================================== */
-/* GUESS: name. The M3G reader's slot +0x8 (engine vtable 0x01002410; Ghidra had no function); written
-   from its disassembly (0x01015348 - 0x010157e0). Feeds param_5 bytes (param_3 + param_4; the fifth
-   argument is on the stack) to the M3G file reader (GUESS: the Loader's stream parser). +0x24 is the
-   state: 1 the file identifier, a byte at a time against one of the two expected strings (+0x48, or +0x54
-   when +0x18 allows it; FUN_0101255c gives each byte); 2 a section's compression byte (0 or 1: the section
-   reader swvSection_CreateStored / swvSection_CreateZlib at +0x10, after the virtual slot +0x1c agrees;
-   the Adler-32 at +0x3c starts); 3 to 6 and 7 to 10 two 32-bit lengths (+0x30, kept less 13 in +0x40, and
-   +0x34; FUN_010265fc checksums them); 11 the section data (checksummed by thunk_adler32 and fed to the
-   section reader's virtual slot +4; at the end +0x34 must equal +0x44 and the section reader is deleted);
-   12 to 15 the section's checksum, which must match +0x3c, then the virtual slot +0x24 can end the file.
-   Errors: FUN_0102f7e0 (K0 when called in the wrong state, -0x4b1 for bad lengths) and the results -7 to
-   -11, handed to the virtual slot +0x10. Returns -1 while it needs more, the bytes used when the file
-   ended, or the error. */
+/* GUESS: name. The M3G reader's slot +0x8 (engine vtable 0x01002410; Ghidra had no function); written from
+   its disassembly (0x01015348 - 0x010157e0). Feeds param_5 bytes (param_3 + param_4; the fifth argument is
+   on the stack) to the M3G file reader (GUESS: the Loader's stream parser). +0x24 is the state: 1 the file
+   identifier (M3G file format section 5), a byte at a time (FUN_0101255c gives each) against one of two
+   12-byte strings: +0x48 the M3G one (0x010427a8: AB 'JSR184' BB 0D 0A 1A 0A; +0x14 = 0) or, when +0x18
+   allows it, +0x54 Swerve's own (0x0104279c: BB 'SWERVE' AB 0D 0A 1A 0A; +0x14 = 1); 2 a section's
+   CompressionScheme (section 6.1: 0 or 1, the section reader swvSection_CreateStored /
+   swvSection_CreateZlib at +0x10, after the virtual slot +0x1c agrees; the Adler-32 at +0x3c starts; +0x28
+   counts the sections); 3 to 6 the TotalSectionLength (section 6.2, +0x30; below 13 is an error, less 13
+   it is the Objects' length, kept in +0x40) and 7 to 10 the UncompressedLength (section 6.3, +0x34), least
+   significant byte first, both checksummed (FUN_010265fc adds them to +0x3c); 11 the Objects (section 6.4,
+   checksummed in their stored form by thunk_adler32 and fed to the section reader's virtual slot +4; at
+   the end the bytes the record reader took, +0x44, must equal +0x34, and the section reader is deleted);
+   12 to 15 the section's Checksum (section 6.5), which must match +0x3c, then the virtual slot +0x24 can
+   end the file. +0x2c counts the bytes read, +0x1c the header's TotalFileSize (section 10.1; -1 until the
+   header is read). Errors: FUN_0102f7e0 (-1103 SWVE_READER_STATE when called in the wrong state, -1201
+   (-0x4b1) for bad lengths) and the results -7 (bad identifier), -8 (bad CompressionScheme, or the section
+   reader refused), -9 (bad checksum), -10 (the slot +0x1c refused) and -11 (data past TotalFileSize),
+   handed to the virtual slot +0x10. Returns -1 while it needs more, the bytes used when the file ended, or
+   the error. */
 int swvM3GReader_Feed(int *param_1,int param_2,uint8 *param_3,int param_4,int param_5)
 
 {
@@ -21151,12 +21215,15 @@ bool FUN_01016d8c(int param_1,undefined4 param_2,undefined4 *param_3,uint *param
 }
 
 /* ==== 0x01016ECC  (file offset 0x16ECC)  FUN_01016ecc ================================================ */
-/* GUESS (not yet rewritten): JSR-184 Group.pick(scope, x, y, camera, ray) on the group param_1: error
+/* (not yet rewritten) JSR-184 1.1, Group.pick(scope, x, y, camera, ri) on the group param_1: error
    -1300 (IllegalStateException) unless the camera param_5 is in the group's scene graph
-   (swvNode_SameSceneGraph); then the pick state (FUN_0100f7b0: +0x30 the camera, +0x38 the scope) gets
-   a ray through the viewport point (2x - 1, 1 - 2y) at depths -1 and 1, by the inverse of the camera's
-   matrix (FUN_0100f910; GUESS: its projection); the result 1 for a hit, and then ray param_6, when
-   set, passed to FUN_01027a54 (GUESS: filled in). */
+   (swvNode_SameSceneGraph; the -1302 for a NULL camera is in the BREW wrapper FUN_010303f0); then the
+   pick state (FUN_0100f7b0: +0x30 the camera, +0x38 the scope) gets a ray through the viewport point
+   (2x - 1, 1 - 2y) at depths -1 and 1, by the inverse of the camera's matrix (FUN_0100f910; GUESS: its
+   projection, the spec's P inverse), error -1300 too when it cannot be inverted: differs from 1.1
+   (GUESS: 1.0 behaviour), whose ArithmeticException is -1000 (the same r6, 0x01016f40); the ray then
+   taken to the group (FUN_010048e4, camera to group); the result 1 for a hit, and then ray param_6,
+   when set, passed to FUN_01027a54 (GUESS: filled in). */
 bool FUN_01016ecc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
                  undefined4 param_5,int param_6)
 
@@ -23310,10 +23377,11 @@ undefined4 FUN_010198c8(int param_1)
 }
 
 /* ==== 0x01019920  (file offset 0x19920)  FUN_01019920 ================================================ */
-/* GUESS (not yet rewritten): reads one pixel of the format param_2 from the M3G stream param_1:
-   swvImage2D_BytesPerPixel bytes (FUN_01019640, one byte each) into a word on the stack, which
-   FUN_01025bc4 converts into the 16-bit colour param_3 and the alpha param_4. Called by the M3G Image2D
-   reader FUN_0101dbf8 for each pixel and each palette colour. */
+/* (not yet rewritten) M3G file format section 11.10: reads one pixel specifier of the format param_2 from
+   the M3G stream param_1: swvImage2D_BytesPerPixel bytes (1 ALPHA / LUMINANCE, 2 LUMINANCE_ALPHA, 3 RGB,
+   4 RGBA; FUN_01019640, one byte each) into a word on the stack, which FUN_01025bc4 converts into the
+   16-bit colour param_3 and the alpha param_4. Called by the M3G Image2D reader FUN_0101dbf8 for each
+   pixel and each palette colour. */
 void FUN_01019920(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -26714,10 +26782,15 @@ uint FUN_0101dbcc(undefined4 param_1,int param_2)
 }
 
 /* ==== 0x0101DBF8  (file offset 0x1DBF8)  FUN_0101dbf8 ================================================ */
-/* GUESS (not yet rewritten): reads an M3G Image2D's pixels into the native Image2D param_1: for a
-   palettised one, its palette (up to 256 colours, error -1202 for a bad size), each colour written to
-   the palette (swvImage2D_Palette) and its alpha to the alpha plane, then the indices; otherwise the
-   pixels themselves. */
+/* (not yet rewritten) M3G file format section 11.10, Image2D (ObjectType 10): reads the record into the
+   native Image2D param_1: the Object3D part (FUN_0101df64), the format (+0x40, ALPHA 0x60 .. RGBA 0x64),
+   isMutable (+0x44), the width (+0x34) and height (+0x38) (error -1202 for 0, -4 for 0x8000 or more). A
+   mutable image has no pixel data: its planes are set to 0xff (JSR-184 1.1, Image2D(format, width,
+   height): opaque white). Otherwise the palette (Byte[]): none, then the pixels themselves (a Byte[] of at
+   least width * height pixel specifiers, else -1202); else its colours (error -1202 for a size not a
+   multiple of the pixel's below 256 entries; differs from section 11.10: a longer palette is not refused,
+   its first 256 entries are kept), each written to the palette (swvImage2D_Palette) and its alpha to the
+   alpha plane, then the indices (a Byte[] of at least width * height, else -1202). */
 /* WARNING: Removing unreachable block (ram,0x0100358c) */
 /* WARNING: Removing unreachable block (ram,0x01003590) */
 /* WARNING: Removing unreachable block (ram,0x0100354c) */
@@ -27005,14 +27078,16 @@ undefined4 FUN_0101e0b0(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x0101E144  (file offset 0x1E144)  FUN_0101e144 ================================================ */
-/* GUESS (not yet rewritten): the M3G loader's Texture2D record, on the texture param_1 and the
-   reader param_2: the Transformable part (FUN_0101ee08), the image (an object reference,
-   FUN_010197c4) at +0x2c as in Texture2D.setImage; error -1202 (the file is bad) for none, or a width
-   or height that is not a power of two (swv_IsPowerOfTwo) up to 1024; then, in the file's order, the
-   blend colour (+0x24, FUN_01019650), the blending (+0x28: FUNC_ADD 0xe0 .. REPLACE 0xe4), the
-   wrapping S and T (+0x30 / +0x34: CLAMP 0xf0, REPEAT 0xf1), the level filter (+0x38: BASE_LEVEL 0xd0,
-   LINEAR, NEAREST) and the image filter (+0x3c: LINEAR 0xd1, NEAREST 0xd2), each a byte
-   FUN_010196cc checks to lie strictly between its two bounds. */
+/* (not yet rewritten) M3G file format section 11.24, Texture2D (ObjectType 17): the record, on the texture
+   param_1 and the reader param_2: the Transformable part (FUN_0101ee08), the image (an ObjectIndex,
+   FUN_010197c4: an Image2D or one of Swerve's types 23 / 24) at +0x2c as in Texture2D.setImage; error
+   -1202 (the file is bad) for none, or a width or height that is not a power of two (swv_IsPowerOfTwo)
+   up to 1024 (JSR-184 1.1, Texture2D(image): NullPointerException / IllegalArgumentException); then, in
+   the file's order, the blend colour (+0x24, ColorRGB, FUN_01019650), the blending (+0x28: FUNC_ADD
+   0xe0 .. FUNC_REPLACE 0xe4), the wrapping S and T (+0x30 / +0x34: WRAP_CLAMP 0xf0, WRAP_REPEAT 0xf1),
+   the level filter (+0x38: FILTER_BASE_LEVEL 0xd0, FILTER_LINEAR, FILTER_NEAREST) and the image filter
+   (+0x3c: FILTER_LINEAR 0xd1, FILTER_NEAREST 0xd2, as Texture2D.setFiltering), each a byte FUN_010196cc
+   checks to lie strictly between its two bounds. */
 void FUN_0101e144(int param_1,undefined4 param_2)
 
 {
@@ -27981,10 +28056,12 @@ LAB_010190c8:
 }
 
 /* ==== 0x0101E778  (file offset 0x1E778)  FUN_0101e778 ================================================ */
-/* GUESS (not yet rewritten): reads an M3G PolygonMode record into the native PolygonMode param_1, in
-   the file format's order: the culling, shading and winding (each read as one of its constants), then
-   three booleans, GUESS two-sided lighting (swvPolygonMode_SetTwoSidedLightingValue), local camera
-   lighting (flag 0x200) and perspective correction (flag 0x400). */
+/* (not yet rewritten) M3G file format section 11.20, PolygonMode (ObjectType 8): reads the record into the
+   native PolygonMode param_1, in the file format's order: the Object3D part (FUN_0101df64), the culling
+   (CULL_BACK 0xa0 .. CULL_NONE 0xa2), shading (SHADE_FLAT 0xa4, SHADE_SMOOTH 0xa5) and winding
+   (WINDING_CCW 0xa8, WINDING_CW 0xa9), each read as one of its constants (FUN_010196cc), then three
+   Booleans: twoSidedLightingEnabled (swvPolygonMode_SetTwoSidedLightingValue),
+   localCameraLightingEnabled (flag 0x200) and perspectiveCorrectionEnabled (flag 0x400). */
 void FUN_0101e778(int param_1,undefined4 param_2)
 
 {
@@ -29326,9 +29403,14 @@ void swv_Graphics3D_bindTarget
   undefined4 unaff_r6;
   undefined4 in_lr;
   
-                    /* Native Graphics3D bindTarget, called by IGraphics3D_BindTarget (0x0102ff38)
-                       with the target's cx, cy, pitch, pixels and viewport. GUESS: name from
-                       JSR-184 and the arguments. */
+                    /* Native Graphics3D bindTarget, called by IGraphics3D_BindTarget (0x0102ff38) with
+                       the target's cx, cy, pitch, pixels and viewport. GUESS: name from JSR-184 and the
+                       arguments. Differs from 1.1 (Graphics3D.bindTarget): the target is a raw RGB565
+                       bitmap, not a Graphics; the clip (FUN_01020b64) and the viewport are the x, y, dx,
+                       dy given (the spec: the target's clipping rectangle), the viewport's width and
+                       height clamped to 1 .. 1024 where the spec throws -1301 (IllegalArgumentException)
+                       above maxViewportWidth / maxViewportHeight; no -1300 (IllegalStateException) when
+                       a target is already bound. */
   *(undefined4 *)(param_1 + 0xc) = 0;
   *(undefined4 *)(param_1 + 0x10) = 0;
   *(undefined4 *)(param_1 + 0x14) = param_2;
@@ -29365,13 +29447,18 @@ void swv_Graphics3D_bindTarget
 }
 
 /* ==== 0x0102035C  (file offset 0x2035C)  FUN_0102035c ================================================ */
-/* GUESS (not yet rewritten): binds an Image2D (param_2) as the render target param_1 (JSR-184
-   Graphics3D.bindTarget): error -1301 unless the image is mutable (+0x44) and stored as RGB or RGBA
-   (swvImage2D_StorageFormat); then the target's +0x0c / +0x10 = 0, +0x14 / +0x18 the width and height
-   (the image's vtable +0x24 / +0x28), +0x1c the colour stride (swvImage2D_ColourStride), +0x20 the
-   pixels (swvImage2D_Pixels), +0x84 RGBA, +0x88 the alpha stride (swvImage2D_AlphaStride), +0x8c the alpha
-   plane (swvImage2D_AlphaPlane), +0x90 the image's +0x4c when its vtable +0x2c gives 0x18; then
-   FUN_01020b64 and FUN_0101d864 (GUESS: the viewport, the rasteriser's buffers). */
+/* GUESS (not yet rewritten): binds an Image2D (param_2) as the render target param_1 (JSR-184 1.1,
+   Graphics3D.bindTarget; its BREW-facing caller FUN_0102fe4c): error -1301 (IllegalArgumentException)
+   unless the image is mutable (+0x44) and stored as RGB or RGBA (swvImage2D_StorageFormat); then the
+   target's +0x0c / +0x10 = 0, +0x14 / +0x18 the width and height (the image's vtable +0x24 / +0x28),
+   +0x1c the colour stride (swvImage2D_ColourStride), +0x20 the pixels (swvImage2D_Pixels), +0x84 RGBA,
+   +0x88 the alpha stride (swvImage2D_AlphaStride), +0x8c the alpha plane (swvImage2D_AlphaPlane), +0x90
+   the image's +0x4c when its vtable +0x2c gives 0x18; then FUN_01020b64 and FUN_0101d864 (GUESS: the
+   viewport, the rasteriser's buffers). Differs from 1.1: a NULL image is passed over without an error
+   (the spec: NullPointerException, -1302; FUN_0102fe4c does not check it either); LUMINANCE and
+   LUMINANCE_ALPHA images pass, being stored as RGB / RGBA (the spec refuses any format but RGB and
+   RGBA); no -1300 (IllegalStateException) for a target already bound, nor -1301 for an image above the
+   largest viewport. */
 undefined8 FUN_0102035c(int param_1,int *param_2)
 
 {
@@ -29771,10 +29858,11 @@ void FUN_0102060c(int *param_1,int *param_2,int *param_3,int param_4)
 }
 
 /* ==== 0x01020948  (file offset 0x20948)  swvMaterial_SetColorValue =================================== */
-/* GUESS: name. Sets colours of a native Material (JSR-184 Material.setColor): targets is an OR of
-   AMBIENT 0x400, DIFFUSE 0x800, EMISSIVE 0x1000 and SPECULAR 0x2000, error -1301 (FUN_0102f7e0, which
-   does not return) when it is 0 or has any other bit; each target named gets argb, the ambient,
-   emissive and specular without its alpha (& 0xffffff), the diffuse whole. Evidence: 0x01020948 -
+/* GUESS: name. Sets colours of a native Material (JSR-184 1.1, Material.setColor): targets is an OR of
+   AMBIENT 0x400, DIFFUSE 0x800, EMISSIVE 0x1000 and SPECULAR 0x2000, error -1301
+   (IllegalArgumentException; FUN_0102f7e0, which does not return) when it is 0 or has any other bit;
+   each target named gets argb, the ambient, emissive and specular without its alpha (& 0xffffff), the
+   diffuse whole (the spec: the alpha is ignored for all but the diffuse colour). Evidence: 0x01020948 -
    0x01020990 (`movs r4, r1` / `beq`, `bics r0, r4, #0x3c00` / `beq`, the error, `bic r0, r6,
    #0xff000000`, a `tst` / `strne` for each target). Only swvMaterial_SetColor (slot 23) calls it. */
 void swvMaterial_SetColorValue(uint8 *material,uint32 targets,uint32 argb)
@@ -29796,9 +29884,9 @@ void swvMaterial_SetColorValue(uint8 *material,uint32 targets,uint32 argb)
 }
 
 /* ==== 0x010209AC  (file offset 0x209AC)  FUN_010209ac ================================================ */
-/* GUESS (not yet rewritten): JSR-184 VertexBuffer.setColors(colors) on the VertexBuffer param_1
-   (swvVertexBuffer_SetColors, slot 21, calls it): error -1301 unless the array param_2 (NULL clears)
-   has 1-byte components, 3 or 4 a vertex (JSR-184's rule for colours); then a tail jump to
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setColors(colors) on the VertexBuffer param_1
+   (swvVertexBuffer_SetColors, slot 21, calls it): error -1301 (IllegalArgumentException) unless the
+   array param_2 (NULL clears) has 1-byte components and 3 or 4 a vertex; then a tail jump to
    FUN_01023b3c with the slot +0x2c (Ghidra repeated its code here). */
 void FUN_010209ac(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
@@ -29922,13 +30010,14 @@ void FUN_01020a28(int param_1,int param_2)
 }
 
 /* ==== 0x01020B64  (file offset 0x20B64)  FUN_01020b64 ================================================ */
-/* GUESS (not yet rewritten): sets the renderer's clip (GUESS: the setClip of
-   JSR-184 Graphics3D's target): the clip x, y, width, height (param_2 .. param_5) at +0x24, +0x7c = 1
-   (the viewport to be clipped again, FUN_01026548), the target's rectangle (+0x0c) copied to +0x34 and
-   cut to the clip (swv_RectIntersect); +0x44 the address of its first pixel (the pixels +0x20, y *
-   the row stride +0x1c, x * 2: RGB565), 0 when it is empty. Callers: swv_Graphics3D_bindTarget (its
-   viewport arguments) and FUN_0102035c (the whole image). The undefined8 result (CONCAT44 of param_3
-   and param_2) is Ghidra reading registers left as they were: GUESS, no result its callers use. */
+/* GUESS (not yet rewritten): sets the renderer's clip, the target clipping rectangle (JSR-184 1.1:
+   Graphics3D has no setClip; bindTarget sets the viewport to the target's clipping rectangle): the clip
+   x, y, width, height (param_2 .. param_5) at +0x24, +0x7c = 1 (the viewport to be clipped again,
+   FUN_01026548), the target's rectangle (+0x0c) copied to +0x34 and cut to the clip (swv_RectIntersect);
+   +0x44 the address of its first pixel (the pixels +0x20, y * the row stride +0x1c, x * 2: RGB565), 0
+   when it is empty. Callers: swv_Graphics3D_bindTarget (its viewport arguments) and FUN_0102035c (the
+   whole image). The undefined8 result (CONCAT44 of param_3 and param_2) is Ghidra reading registers left
+   as they were: GUESS, no result its callers use. */
 undefined8
 FUN_01020b64(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,undefined4 param_5
             )
@@ -29976,10 +30065,10 @@ void FUN_01020bcc(int param_1,undefined4 param_2,undefined4 param_3,undefined4 p
 }
 
 /* ==== 0x01020C1C  (file offset 0x20C1C)  swvPolygonMode_SetCullingValue ============================== */
-/* GUESS: name. Sets a native PolygonMode's culling (JSR-184 PolygonMode.setCulling): CULL_BACK
-   (0xa0) 1, CULL_FRONT (0xa1) 2, CULL_NONE (0xa2) 4 into the field 0x7 (swvPolygonMode_SetFlags, a
-   tail jump in the binary: 0x01020c40); any other value is ignored (the callers check it first).
-   Evidence: 0x01020c1c - 0x01020c40. Called by swvPolygonMode_SetCulling (slot 19) and the M3G reader
+/* GUESS: name. Sets a native PolygonMode's culling (JSR-184 1.1, PolygonMode.setCulling): CULL_BACK
+   (0xa0) 1, CULL_FRONT (0xa1) 2, CULL_NONE (0xa2) 4 into the field 0x7 (swvPolygonMode_SetFlags, a tail
+   jump in the binary: 0x01020c40); any other value is ignored (the callers check it first). Evidence:
+   0x01020c1c - 0x01020c40. Called by swvPolygonMode_SetCulling (slot 19) and the M3G reader
    FUN_0101e778. */
 void swvPolygonMode_SetCullingValue(uint8 *mode,int32 culling)
 
@@ -30616,13 +30705,16 @@ void FUN_01021a78(int param_1,undefined4 param_2,int param_3)
 }
 
 /* ==== 0x01021ABC  (file offset 0x21ABC)  FUN_01021abc ================================================ */
-/* GUESS (not yet rewritten): JSR-184 Texture2D.setImage(image) on the texture param_1: the image
+/* (not yet rewritten) JSR-184 1.1, Texture2D.setImage(image), on the texture param_1: the image
    (param_2) swapped in at +0x2c with the counts of references kept (FUN_01004848, on the objects' +4
-   parts); then error -1301 (a tail jump to FUN_0102f7e0) unless its width and its height (the image's
-   vtable +0x24 / +0x28, each asked twice) are powers of two (swv_IsPowerOfTwo) up to 1024. GUESS,
-   latent engine bugs: the image is stored before it is checked, and a NULL image is not checked
-   before its vtable is read. thunk_FUN_01021abc (0x01008064) is a jump here; Ghidra repeated the code
-   there, and followed the tail jump into FUN_0102f7e0's code at the end. */
+   parts); then error -1301 (IllegalArgumentException; a tail jump to FUN_0102f7e0) unless its width and
+   its height (the image's vtable +0x24 / +0x28, each asked twice) are powers of two (swv_IsPowerOfTwo)
+   up to 1024 (the implementation's maximum; GUESS: getProperties' maxTextureDimension,
+   swvGraphics3D_Property 7 - 9). A NULL image (-1302, NullPointerException) is refused by its callers,
+   the Texture2D slots FUN_0103b57c (33) and FUN_0103b3ec (31, through thunk_FUN_01021abc), before they
+   call it. GUESS, a latent engine bug: the image is stored before it is checked, so a texture keeps an
+   image it refused. thunk_FUN_01021abc (0x01008064) is a jump here; Ghidra repeated the code there, and
+   followed the tail jump into FUN_0102f7e0's code at the end. */
 void FUN_01021abc(int param_1,int param_2)
 
 {
@@ -31049,11 +31141,12 @@ void FUN_01021f28(int param_1)
 }
 
 /* ==== 0x010220B0  (file offset 0x220B0)  FUN_010220b0 ================================================ */
-/* GUESS (not yet rewritten): JSR-184 VertexBuffer.setNormals(normals) on the VertexBuffer param_1
-   (swvVertexBuffer_SetNormals, slot 19, calls it): error -1301 unless the array param_2 (NULL clears)
-   has 3 components a vertex (JSR-184's rule for normals); FUN_01023b3c with the slot +0x28; then the
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setNormals(normals) on the VertexBuffer param_1
+   (swvVertexBuffer_SetNormals, slot 19, calls it): error -1301 (IllegalArgumentException) unless the
+   array param_2 (NULL clears) has 3 components a vertex; FUN_01023b3c with the slot +0x28; then the
    normals' scale (+0x54: 1 / 127.5 for bytes, 1 / 32767.5 for 16-bit words; 1.0 without normals) and
-   bias (+0x48 .. +0x50, half the scale each, FUN_010279d0), mapping the stored values to -1 .. 1. */
+   bias (+0x48 .. +0x50, half the scale each, FUN_010279d0), mapping the stored values to -1 .. 1, the
+   largest positive integer to +1 and the most negative to -1, as the spec asks. */
 void FUN_010220b0(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -31269,11 +31362,12 @@ void FUN_01022340(int param_1,undefined4 param_2,undefined4 param_3)
 }
 
 /* ==== 0x0102234C  (file offset 0x2234C)  FUN_0102234c ================================================ */
-/* GUESS (not yet rewritten): JSR-184 VertexBuffer.setPositions(positions, scale, bias) on the
-   VertexBuffer param_1: errors (FUN_0102f7e0) unless the array param_2 (NULL clears) has 3
-   components a vertex, and for a bias (param_5) of fewer floats (param_4) than that; +0x44 the scale
-   (param_3), +0x38 .. +0x40 the bias (FUN_0102ed04 each; 0 without one); then a tail jump to
-   FUN_01023b3c with the slot +0x24 (Ghidra repeated its code here). */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setPositions(positions, scale, bias) on the
+   VertexBuffer param_1: error -1301 (IllegalArgumentException) unless the array param_2 (NULL clears)
+   has 3 components a vertex, and for a bias (param_5) of fewer floats (param_4) than that; +0x44 the
+   scale (param_3), +0x38 .. +0x40 the bias (FUN_0102ed04 each; 0 without one); then a tail jump to
+   FUN_01023b3c with the slot +0x24 (Ghidra repeated its code here). Evidence: 0x0102236c (`ldr r8,
+   [0x10223ec]`, -1301 for every check). */
 void FUN_0102234c(int param_1,int param_2,undefined4 param_3,int param_4,undefined4 *param_5)
 
 {
@@ -32230,7 +32324,7 @@ void FUN_010230f8(int param_1,int param_2)
 }
 
 /* ==== 0x01023108  (file offset 0x23108)  swvPolygonMode_SetShadingValue ============================== */
-/* GUESS: name. Sets a native PolygonMode's shading (JSR-184 PolygonMode.setShading): SHADE_FLAT
+/* GUESS: name. Sets a native PolygonMode's shading (JSR-184 1.1, PolygonMode.setShading): SHADE_FLAT
    (0xa4) 0x20, SHADE_SMOOTH (0xa5) 0x40 into the field 0x60 (swvPolygonMode_SetFlags, a tail jump:
    0x01023120); any other value is ignored. Evidence: 0x01023108 - 0x01023120. Called by slot 21
    (swvPolygonMode_SetShading) and FUN_0101e778. */
@@ -32554,12 +32648,13 @@ undefined4 FUN_010234bc(int param_1,int param_2,undefined4 param_3,uint param_4,
 }
 
 /* ==== 0x0102358C  (file offset 0x2358C)  FUN_0102358c ================================================ */
-/* GUESS (not yet rewritten): JSR-184 VertexBuffer.setTexCoords(index, texCoords, scale, bias) on the
-   VertexBuffer param_1: errors (FUN_0102f7e0) for a unit param_2 above 1, an array param_3 of other
-   than 2 or 3 components a vertex, or a bias (param_6) of fewer floats (param_5) than that; +0x70 + 4
-   * unit the scale (param_4), +0x58 + 0xc * unit the bias (FUN_0102ed04 each, the third only for 3
-   components; 0 without one); then a tail jump to FUN_01023b3c with the slot +0x30 + 4 * unit (Ghidra
-   repeated its code here). */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setTexCoords(index, texCoords, scale, bias) on the
+   VertexBuffer param_1: error -1101 (IndexOutOfBoundsException) for a unit param_2 above 1 (two
+   units), -1301 (IllegalArgumentException) for an array param_3 of other than 2 or 3 components a
+   vertex or a bias (param_6) of fewer floats (param_5) than that; +0x70 + 4 * unit the scale
+   (param_4), +0x58 + 0xc * unit the bias (FUN_0102ed04 each, the third only for 3 components; 0
+   without one); then a tail jump to FUN_01023b3c with the slot +0x30 + 4 * unit (Ghidra repeated its
+   code here). Evidence: 0x010235a8 / 0x010235c4 (the literals -1101 and -1301). */
 void FUN_0102358c(int param_1,uint param_2,int param_3,undefined4 param_4,int param_5,
                  undefined4 *param_6)
 
@@ -32985,10 +33080,12 @@ LAB_01023b24:
 /* GUESS (not yet rewritten): sets one of the VertexBuffer param_1's arrays (the slot param_2, one of
    +0x24 .. +0x34) to the VertexArray param_3 (NULL: none): when the buffer has arrays besides the
    slot's current one (swvVertexBuffer_HasOnlyArray gives 0) and a vertex count (+0x1c), the new array
-   must have that count (its +0x1c), else -1301 (JSR-184's rule); the array swapped in with the counts
-   of references kept (FUN_01004848, on the objects' +4 parts); the buffer's vertex count then the new
-   array's, or 0 once it has no array left. FUN_0102234c, FUN_010209ac and FUN_0102358c end in a tail
-   jump to it (Ghidra repeated its code in each); FUN_010220b0 calls it. */
+   must have that count (its +0x1c), else -1301 (IllegalArgumentException; JSR-184 1.1, VertexBuffer
+   setPositions .. setColors: getVertexCount differs while at least one other VertexArray is set); the
+   array swapped in with the counts of references kept (FUN_01004848, on the objects' +4 parts); the
+   buffer's vertex count then the new array's, or 0 once it has no array left (as getVertexCount).
+   FUN_0102234c, FUN_010209ac and FUN_0102358c end in a tail jump to it (Ghidra repeated its code in
+   each); FUN_010220b0 calls it. */
 void FUN_01023b3c(int param_1,int *param_2,int param_3)
 
 {
@@ -33139,7 +33236,7 @@ void FUN_01023c90(int param_1,int param_2,int param_3)
 }
 
 /* ==== 0x01023CE4  (file offset 0x23CE4)  swvPolygonMode_SetWindingValue ============================== */
-/* GUESS: name. Sets a native PolygonMode's winding (JSR-184 PolygonMode.setWinding): WINDING_CCW
+/* GUESS: name. Sets a native PolygonMode's winding (JSR-184 1.1, PolygonMode.setWinding): WINDING_CCW
    (0xa8) 8, WINDING_CW (0xa9) 0x10 into the field 0x18 (swvPolygonMode_SetFlags, a tail jump:
    0x01023cfc); any other value is ignored. Evidence: 0x01023ce4 - 0x01023cfc. Called by slot 23
    (swvPolygonMode_SetWinding) and FUN_0101e778. */
@@ -33171,12 +33268,14 @@ void FUN_01023d00(int param_1)
 }
 
 /* ==== 0x01023D30  (file offset 0x23D30)  FUN_01023d30 ================================================ */
-/* GUESS (not yet rewritten): JSR-184 Image2D.set(x, y, width, height, pixels) on the native Image2D
-   param_1 (param_2 - param_5; param_6 the pixel bytes, param_7 the pixels): error -1301 unless the
-   rectangle is inside the image (+0x34 / +0x38), not empty, and param_6 holds swvImage2D_BytesPerPixel
-   * width * height bytes; -1300 when the image is not mutable (+0x44); then each pixel converted by
-   FUN_01025bc4 into the 16-bit colour plane (the data +0x20 at +0x30, row pitch the width) and the
-   alpha plane (swvImage2D_AlphaPlane). */
+/* (not yet rewritten) JSR-184 1.1, Image2D.set(x, y, width, height, image) on the native Image2D param_1
+   (param_2 - param_5; param_6 the pixel bytes, param_7 the pixels); its BREW-facing caller FUN_01030f60
+   (Image2D slot 29) first refuses x < 0, y < 0, width <= 0 and height <= 0 (-1301) and NULL pixels
+   (-1302). Here error -1301 (IllegalArgumentException) unless the rectangle is inside the image (+0x34 /
+   +0x38), not empty, and param_6 holds swvImage2D_BytesPerPixel * width * height bytes; then -1300
+   (IllegalStateException) when the image is not mutable (+0x44); then each pixel converted by
+   FUN_01025bc4 into the 16-bit colour plane (the data +0x20 at +0x30, row pitch the width) and the alpha
+   plane (swvImage2D_AlphaPlane). */
 void FUN_01023d30(int param_1,int param_2,int param_3,int param_4,int param_5,int param_6,
                  int param_7)
 
@@ -33498,10 +33597,12 @@ LAB_0101d814:
 }
 
 /* ==== 0x01023FB4  (file offset 0x23FB4)  swvPolygonMode_SetTwoSidedLightingValue ===================== */
-/* GUESS: name. Sets a native PolygonMode's field 0x180 (GUESS: two-sided lighting, the fourth value
-   of the M3G record FUN_0101e778 reads): 0x80 when enable is 0, else 0x100 (swvPolygonMode_SetFlags, a
-   tail jump: 0x01023fc0). Evidence: 0x01023fb4 - 0x01023fc0 (`cmp r1, #0` / `moveq r1, #0x80` /
-   `movne r1, #0x100`). Called by slot 27 (swvPolygonMode_SetTwoSidedLightingEnable) and FUN_0101e778. */
+/* GUESS: name. Sets a native PolygonMode's field 0x180 (GUESS: two-sided lighting; it is what slot 27,
+   swvPolygonMode_SetTwoSidedLightingEnable, sets, and the fourth value of the M3G record FUN_0101e778
+   reads, twoSidedLightingEnabled in M3G file format 11.20): 0x80 when enable is 0, else 0x100
+   (swvPolygonMode_SetFlags, a tail jump: 0x01023fc0). Evidence: 0x01023fb4 - 0x01023fc0 (`cmp r1, #0` /
+   `moveq r1, #0x80` / `movne r1, #0x100`). Called by slot 27 (swvPolygonMode_SetTwoSidedLightingEnable)
+   and FUN_0101e778. */
 void swvPolygonMode_SetTwoSidedLightingValue(uint8 *mode,int32 enable)
 
 {
@@ -37382,7 +37483,9 @@ void FUN_0102885c(int *param_1)
 
 /* ==== 0x01028898  (file offset 0x28898)  FUN_01028898 ================================================ */
 /* GUESS (not yet rewritten): a VertexBuffer's constructor (0x78 bytes): its vtables, the default colour
-   (+0x20) 0xff000000 and no arrays. */
+   (+0x20) 0xffffffff (opaque white, as JSR-184 1.1 VertexBuffer(); 0xff000000 is stored first, then
+   overwritten: 0x010288b8 / 0x010288fc, `mov r1, #0xff000000` ... `mvn r0, #0` / `str r0, [r4, #0x20]`),
+   no arrays, the scales 1.0. */
 int * FUN_01028898(int *param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
@@ -40942,9 +41045,9 @@ int swv_Create_AnimationController(void **ppObj)
 }
 
 /* ==== 0x0102CE5C  (file offset 0x2CE5C)  swvAnimationController_GetActiveIntervalEnd ================= */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 21 (+0x54) of AnimationController (JSR-184
-   AnimationController.getActiveIntervalEnd; kh_types.h SwerveAnimationControllerVtbl): *param_2 = the
-   native object (po->pNative, +4, less 4)'s active interval end (+0x20). */
+/* (not yet rewritten) JSR-184 1.1, AnimationController.getActiveIntervalEnd: ISwerveObject slot 21 (+0x54)
+   of AnimationController (kh_types.h SwerveAnimationControllerVtbl): *param_2 = the native object
+   (po->pNative, +4, less 4)'s active interval end (+0x20). */
 void swvAnimationController_GetActiveIntervalEnd(int param_1,undefined4 *param_2)
 
 {
@@ -40959,9 +41062,9 @@ void swvAnimationController_GetActiveIntervalEnd(int param_1,undefined4 *param_2
 }
 
 /* ==== 0x0102CE74  (file offset 0x2CE74)  swvAnimationController_GetActiveIntervalStart =============== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 20 (+0x50) of AnimationController (JSR-184
-   AnimationController.getActiveIntervalStart; kh_types.h SwerveAnimationControllerVtbl): *param_2 = the
-   native object (po->pNative, +4, less 4)'s active interval start (+0x1c). */
+/* (not yet rewritten) JSR-184 1.1, AnimationController.getActiveIntervalStart: ISwerveObject slot 20
+   (+0x50) of AnimationController (kh_types.h SwerveAnimationControllerVtbl): *param_2 = the native object
+   (po->pNative, +4, less 4)'s active interval start (+0x1c). */
 void swvAnimationController_GetActiveIntervalStart(int param_1,undefined4 *param_2)
 
 {
@@ -40976,9 +41079,9 @@ void swvAnimationController_GetActiveIntervalStart(int param_1,undefined4 *param
 }
 
 /* ==== 0x0102CE8C  (file offset 0x2CE8C)  swvAnimationController_GetPosition ========================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 24 (+0x60) of AnimationController (JSR-184
-   AnimationController.getPosition; kh_types.h SwerveAnimationControllerVtbl): *param_3 = the sequence
-   time at the world time param_2 (FUN_01010094). */
+/* (not yet rewritten) JSR-184 1.1, AnimationController.getPosition: ISwerveObject slot 24 (+0x60) of
+   AnimationController (kh_types.h SwerveAnimationControllerVtbl): *param_3 = the sequence time at the
+   world time param_2 (FUN_01010094, the native getPosition). */
 void swvAnimationController_GetPosition(int param_1,undefined4 param_2,undefined4 *param_3)
 
 {
@@ -40995,9 +41098,9 @@ void swvAnimationController_GetPosition(int param_1,undefined4 param_2,undefined
 }
 
 /* ==== 0x0102CEAC  (file offset 0x2CEAC)  swvAnimationController_GetSpeed ============================= */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 22 (+0x58) of AnimationController (JSR-184
-   AnimationController.getSpeed; kh_types.h SwerveAnimationControllerVtbl): *param_2 =
-   swvAnimationController_Speed of the native object (po->pNative, +4, less 4). */
+/* (not yet rewritten) JSR-184 1.1, AnimationController.getSpeed: ISwerveObject slot 22 (+0x58) of
+   AnimationController (kh_types.h SwerveAnimationControllerVtbl): *param_2 = swvAnimationController_Speed
+   of the native object (po->pNative, +4, less 4). */
 void swvAnimationController_GetSpeed(int param_1,undefined4 *param_2)
 
 {
@@ -41014,9 +41117,9 @@ void swvAnimationController_GetSpeed(int param_1,undefined4 *param_2)
 }
 
 /* ==== 0x0102CECC  (file offset 0x2CECC)  swvAnimationController_GetWeight ============================ */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 18 (+0x48) of AnimationController (JSR-184
-   AnimationController.getWeight; kh_types.h SwerveAnimationControllerVtbl): *param_2 = the native
-   object (po->pNative, +4, less 4)'s weight (+0x30, a float). */
+/* (not yet rewritten) JSR-184 1.1, AnimationController.getWeight: ISwerveObject slot 18 (+0x48) of
+   AnimationController (kh_types.h SwerveAnimationControllerVtbl): *param_2 = the native object
+   (po->pNative, +4, less 4)'s weight (+0x30, a float). */
 void swvAnimationController_GetWeight(int param_1,undefined4 *param_2)
 
 {
@@ -41052,9 +41155,10 @@ void swv_InitVtbl_AnimationController(void **pVtbl)
 }
 
 /* ==== 0x0102CF84  (file offset 0x2CF84)  swvAnimationController_SetActiveInterval ==================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 23 (+0x5c) of AnimationController (JSR-184
-   AnimationController.setActiveInterval; kh_types.h SwerveAnimationControllerVtbl): in an error frame,
-   FUN_0101ff90 (start, end); on an error its result code. */
+/* (not yet rewritten) JSR-184 1.1, AnimationController.setActiveInterval: ISwerveObject slot 23 (+0x5c) of
+   AnimationController (kh_types.h SwerveAnimationControllerVtbl): in an error frame, FUN_0101ff90 (start,
+   end: error -1301, IllegalArgumentException, when start > end, else +0x1c / +0x20 stored); on an error
+   its result code. */
 undefined4 swvAnimationController_SetActiveInterval(int param_1,undefined4 param_2,undefined4 param_3)
 
 {
@@ -41080,9 +41184,10 @@ undefined4 swvAnimationController_SetActiveInterval(int param_1,undefined4 param
 }
 
 /* ==== 0x0102CFEC  (file offset 0x2CFEC)  swvAnimationController_SetPosition ========================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 25 (+0x64) of AnimationController (JSR-184
-   AnimationController.setPosition; kh_types.h SwerveAnimationControllerVtbl): in an error frame,
-   FUN_01022340 (the sequence time, a float, and the world time); on an error its result code. */
+/* (not yet rewritten) JSR-184 1.1, AnimationController.setPosition: ISwerveObject slot 25 (+0x64) of
+   AnimationController (kh_types.h SwerveAnimationControllerVtbl): in an error frame, FUN_01022340 (the
+   sequence time, a float checked by FUN_0102ed04, and the world time: the reference point (twref, tsref),
+   +0x28 / +0x24); on an error its result code. */
 undefined4 swvAnimationController_SetPosition(int param_1,undefined4 param_2,undefined4 param_3)
 
 {
@@ -41110,9 +41215,10 @@ undefined4 swvAnimationController_SetPosition(int param_1,undefined4 param_2,und
 }
 
 /* ==== 0x0102D060  (file offset 0x2D060)  swvAnimationController_SetSpeed ============================= */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 26 (+0x68) of AnimationController (JSR-184
-   AnimationController.setSpeed; kh_types.h SwerveAnimationControllerVtbl): in an error frame,
-   FUN_01023244 (the speed, a float, and the world time); on an error its result code. */
+/* (not yet rewritten) JSR-184 1.1, AnimationController.setSpeed: ISwerveObject slot 26 (+0x68) of
+   AnimationController (kh_types.h SwerveAnimationControllerVtbl): in an error frame, FUN_01023244 (the
+   speed, a float checked by FUN_0102ed04, and the world time: tsref' = getPosition(worldTime), twref' =
+   worldTime, s' = speed, as the spec; +0x24 / +0x28 / +0x2c); on an error its result code. */
 undefined4 swvAnimationController_SetSpeed(int param_1,undefined4 param_2,undefined4 param_3)
 
 {
@@ -41140,10 +41246,10 @@ undefined4 swvAnimationController_SetSpeed(int param_1,undefined4 param_2,undefi
 }
 
 /* ==== 0x0102D0D4  (file offset 0x2D0D4)  swvAnimationController_SetWeight ============================ */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 19 (+0x4c) of AnimationController (JSR-184
-   AnimationController.setWeight; kh_types.h SwerveAnimationControllerVtbl): in an error frame, error
-   -1301 for a negative weight, then FUN_01023c88 (GUESS: stores it, +0x30); on an error its result
-   code. */
+/* (not yet rewritten) JSR-184 1.1, AnimationController.setWeight: ISwerveObject slot 19 (+0x4c) of
+   AnimationController (kh_types.h SwerveAnimationControllerVtbl): in an error frame, error -1301
+   (IllegalArgumentException) for a negative weight, then FUN_01023c88 (stores it, +0x30); on an error its
+   result code. */
 undefined4 swvAnimationController_SetWeight(int param_1,undefined4 param_2)
 
 {
@@ -41785,12 +41891,12 @@ int swv_Create_Ext100(void **ppObj)
   ISwerve *po;
   int *piVar3;
   
-                    /* Constructor for class 100 (Ext100): ISwerve_CreateObject(po, 100, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId).
-                       GUESS: Swerve extension class, meaning unknown. */
+                    /* Constructor for class 100 (Ext100): ISwerve_CreateObject(po, 100, ppObj) lands
+                       here with ppObj in r0. Creates the native object inside an error frame and wraps
+                       it with swv_WrapObject. Class id from ISwerve_CreateObject's switch (0x0102479c).
+                       Not a JSR-184 class (JSR-184 1.1's 30 classes are ids 1 - 31, swv_types.h
+                       SwerveClassId): a Swerve extension, the SWVARC archive (swvArchive_Open;
+                       swv_types.h SWV_EXT100). */
   *ppObj = (void *)0x0;
   ppvVar1 = swv_GetVtblCache();
   piVar3 = ppvVar1[0x1b];
@@ -41831,12 +41937,12 @@ int swv_Create_Ext101(void **ppObj)
   ISwerve *po;
   int *piVar3;
   
-                    /* Constructor for class 101 (Ext101): ISwerve_CreateObject(po, 101, ppObj)
-                       lands here with ppObj in r0. Creates the native object inside an error frame
-                       and wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId).
-                       GUESS: Swerve extension class, meaning unknown. */
+                    /* Constructor for class 101 (Ext101): ISwerve_CreateObject(po, 101, ppObj) lands
+                       here with ppObj in r0. Creates the native object inside an error frame and wraps
+                       it with swv_WrapObject. Class id from ISwerve_CreateObject's switch (0x0102479c).
+                       Not a JSR-184 class (JSR-184 1.1's 30 classes are ids 1 - 31, swv_types.h
+                       SwerveClassId): a Swerve extension, one SWVARC archive entry's stream
+                       (swvArchiveEntry_Read; swv_types.h SWV_EXT101). */
   *ppObj = (void *)0x0;
   ppvVar1 = swv_GetVtblCache();
   piVar3 = ppvVar1[0x1c];
@@ -44694,10 +44800,11 @@ int IGraphics3D_BindTarget
   uint uStack_2c;
   int iStack_28;
   
-                    /* Graphics3D interface slot 8 (+0x20): BindTarget(po, cx, cy, nPitch, pBits, x,
-                       y, dx, dy) inside an error frame, forwarding to swv_Graphics3D_bindTarget on
-                       the native object (wrapper +4, minus 4). kh_OnAppStart calls it with the
-                       screen IDIB. GUESS: name (JSR-184 Graphics3D.bindTarget). */
+                    /* Graphics3D interface slot 8 (+0x20): BindTarget(po, cx, cy, nPitch, pBits, x, y,
+                       dx, dy) inside an error frame, forwarding to swv_Graphics3D_bindTarget on the
+                       native object (wrapper +4, minus 4). kh_OnAppStart calls it with the screen IDIB.
+                       GUESS: name (JSR-184 1.1, Graphics3D.bindTarget, for a raw bitmap; how it differs
+                       from 1.1 is at swv_Graphics3D_bindTarget). */
   local_30 = (uint)cx;
   iVar3 = 0;
   local_34 = po;
@@ -45485,8 +45592,9 @@ void FUN_01030b10(int param_1,int *param_2)
 
 /* ==== 0x01030B38  (file offset 0x30B38)  swvImage2D_GetPixels ======================================== */
 /* GUESS: name (not yet rewritten). ISwerveObject slot 25 (+0x64) of Image2D (swv_InitVtbl_Image2D's
-   pVtbl[0x19]; GUESS a Swerve extension, JSR-184's Image2D has no such method): *param_2 =
-   swvImage2D_Pixels of the native object (po->pNative, +4, less 4). */
+   pVtbl[0x19]; a Swerve extension: JSR-184 1.1's Image2D has no such method, only getFormat, getWidth,
+   getHeight, isMutable and set): *param_2 = swvImage2D_Pixels of the native object (po->pNative, +4,
+   less 4). */
 void swvImage2D_GetPixels(int param_1,undefined4 *param_2)
 
 {
@@ -49765,10 +49873,12 @@ void swvObject3D_GetAnimationTrackCount(int param_1,undefined4 *param_2)
 
 /* ==== 0x01034F94  (file offset 0x34F94)  swvObject3D_GetReferences =================================== */
 /* GUESS: name (not yet rewritten). ISwerveObject slot 11 (+0x2c) of every class (kh_types.h
-   SwerveObject3DVtbl.GetReferences; JSR-184 Object3D.getReferences): in an error frame, a temporary
-   array of param_2 slots, swvObject3D_References into it, error -1301 when param_2 is not 0 and the
-   output array param_3 is NULL, each of the first param_2 found wrapped (swv_WrapObject) into param_3,
-   the number of them all into *param_4; then the array destroyed. */
+   SwerveObject3DVtbl.GetReferences; JSR-184 1.1, Object3D.getReferences): in an error frame, a temporary
+   array of param_2 slots, swvObject3D_References into it, error -1301 when param_2 is not 0 and the output
+   array param_3 is NULL, each of the first param_2 found wrapped (swv_WrapObject) into param_3, the count
+   swvObject3D_References gives into *param_4; then the array destroyed. Differs from 1.1 (GUESS: 1.0
+   behaviour, or the BREW interface's): no -1301 (IllegalArgumentException) for an array shorter than the
+   references, param_2 < the count; the copy is cut to param_2 instead. */
 int swvObject3D_GetReferences(int param_1,uint param_2,int param_3,uint *param_4)
 
 {
@@ -52447,9 +52557,9 @@ int swv_Create_PolygonMode(void **ppObj)
 }
 
 /* ==== 0x01037FA0  (file offset 0x37FA0)  swvPolygonMode_GetCulling =================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 18 (+0x48) of PolygonMode (JSR-184
-   PolygonMode.getCulling): *param_2 = swvPolygonMode_Culling of the native object (po->pNative, +4,
-   less 4). */
+/* (not yet rewritten) ISwerveObject slot 18 (+0x48) of PolygonMode (JSR-184 1.1,
+   PolygonMode.getCulling): *param_2 = swvPolygonMode_Culling of the native object (po->pNative, +4, less
+   4). */
 void swvPolygonMode_GetCulling(int param_1,undefined4 *param_2)
 
 {
@@ -52466,9 +52576,9 @@ void swvPolygonMode_GetCulling(int param_1,undefined4 *param_2)
 }
 
 /* ==== 0x01037FC0  (file offset 0x37FC0)  swvPolygonMode_GetShading =================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 20 (+0x50) of PolygonMode (JSR-184
-   PolygonMode.getShading; kh_types.h SwervePolygonModeVtbl): *param_2 = swvPolygonMode_Shading of the
-   native object (po->pNative, +4, less 4). */
+/* (not yet rewritten) ISwerveObject slot 20 (+0x50) of PolygonMode (JSR-184 1.1, PolygonMode.getShading;
+   kh_types.h SwervePolygonModeVtbl): *param_2 = swvPolygonMode_Shading of the native object
+   (po->pNative, +4, less 4). */
 void swvPolygonMode_GetShading(int param_1,undefined4 *param_2)
 
 {
@@ -52485,9 +52595,9 @@ void swvPolygonMode_GetShading(int param_1,undefined4 *param_2)
 }
 
 /* ==== 0x01037FE0  (file offset 0x37FE0)  swvPolygonMode_GetWinding =================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 22 (+0x58) of PolygonMode (JSR-184
-   PolygonMode.getWinding; kh_types.h SwervePolygonModeVtbl): *param_2 = swvPolygonMode_Winding of the
-   native object (po->pNative, +4, less 4). */
+/* (not yet rewritten) ISwerveObject slot 22 (+0x58) of PolygonMode (JSR-184 1.1, PolygonMode.getWinding;
+   kh_types.h SwervePolygonModeVtbl): *param_2 = swvPolygonMode_Winding of the native object
+   (po->pNative, +4, less 4). */
 void swvPolygonMode_GetWinding(int param_1,undefined4 *param_2)
 
 {
@@ -52526,7 +52636,7 @@ void swv_InitVtbl_PolygonMode(void **pVtbl)
 }
 
 /* ==== 0x010380B0  (file offset 0x380B0)  swvPolygonMode_IsTwoSidedLightingEnabled ==================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 26 (+0x68) of PolygonMode (JSR-184
+/* (not yet rewritten) ISwerveObject slot 26 (+0x68) of PolygonMode (JSR-184 1.1,
    PolygonMode.isTwoSidedLightingEnabled; kh_types.h SwervePolygonModeVtbl): *param_2 (a byte) =
    swvPolygonMode_TwoSidedLighting of the native object (po->pNative, +4, less 4). */
 void swvPolygonMode_IsTwoSidedLightingEnabled(int param_1,undefined1 *param_2)
@@ -52545,9 +52655,10 @@ void swvPolygonMode_IsTwoSidedLightingEnabled(int param_1,undefined1 *param_2)
 }
 
 /* ==== 0x010380D0  (file offset 0x380D0)  swvPolygonMode_SetCulling =================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 19 (+0x4c) of PolygonMode (JSR-184
-   PolygonMode.setCulling): in an error frame, error -1301 unless 0xa0 <= culling <= 0xa2, then
-   swvPolygonMode_SetCullingValue; on an error its result code (swv_ErrorToResult). */
+/* (not yet rewritten) ISwerveObject slot 19 (+0x4c) of PolygonMode (JSR-184 1.1,
+   PolygonMode.setCulling): in an error frame, error -1301 (IllegalArgumentException) unless 0xa0 <=
+   culling <= 0xa2 (CULL_BACK, CULL_FRONT, CULL_NONE), then swvPolygonMode_SetCullingValue; on an error
+   its result code (swv_ErrorToResult). */
 undefined4 swvPolygonMode_SetCulling(int param_1,int param_2)
 
 {
@@ -52576,7 +52687,7 @@ undefined4 swvPolygonMode_SetCulling(int param_1,int param_2)
 }
 
 /* ==== 0x01038148  (file offset 0x38148)  swvPolygonMode_SetLocalCameraLightingEnable ================= */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 24 (+0x60) of PolygonMode (JSR-184
+/* (not yet rewritten) ISwerveObject slot 24 (+0x60) of PolygonMode (JSR-184 1.1,
    PolygonMode.setLocalCameraLightingEnable; kh_types.h SwervePolygonModeVtbl): sets the flag 0x200 of
    the native object (po->pNative, +4, less 4) when param_2 is not 0, else clears it. */
 void swvPolygonMode_SetLocalCameraLightingEnable(int param_1,int param_2)
@@ -52600,7 +52711,7 @@ void swvPolygonMode_SetLocalCameraLightingEnable(int param_1,int param_2)
 }
 
 /* ==== 0x01038160  (file offset 0x38160)  swvPolygonMode_SetPerspectiveCorrectionEnable =============== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 25 (+0x64) of PolygonMode (JSR-184
+/* (not yet rewritten) ISwerveObject slot 25 (+0x64) of PolygonMode (JSR-184 1.1,
    PolygonMode.setPerspectiveCorrectionEnable; kh_types.h SwervePolygonModeVtbl): sets the flag 0x400 of
    the native object (po->pNative, +4, less 4) when param_2 is not 0, else clears it. */
 void swvPolygonMode_SetPerspectiveCorrectionEnable(int param_1,int param_2)
@@ -52624,10 +52735,10 @@ void swvPolygonMode_SetPerspectiveCorrectionEnable(int param_1,int param_2)
 }
 
 /* ==== 0x01038178  (file offset 0x38178)  swvPolygonMode_SetShading =================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 21 (+0x54) of PolygonMode (JSR-184
-   PolygonMode.setShading; kh_types.h SwervePolygonModeVtbl): in an error frame, error -1301 unless the
-   value is SHADE_FLAT (0xa4) or SHADE_SMOOTH (0xa5), then swvPolygonMode_SetShadingValue; on an error
-   its result code. */
+/* (not yet rewritten) ISwerveObject slot 21 (+0x54) of PolygonMode (JSR-184 1.1, PolygonMode.setShading;
+   kh_types.h SwervePolygonModeVtbl): in an error frame, error -1301 (IllegalArgumentException) unless
+   the value is SHADE_FLAT (0xa4) or SHADE_SMOOTH (0xa5), then swvPolygonMode_SetShadingValue; on an
+   error its result code. */
 undefined4 swvPolygonMode_SetShading(int param_1,int param_2)
 
 {
@@ -52656,11 +52767,10 @@ undefined4 swvPolygonMode_SetShading(int param_1,int param_2)
 }
 
 /* ==== 0x010381F0  (file offset 0x381F0)  swvPolygonMode_SetTwoSidedLightingEnable ==================== */
-/* GUESS: name. ISwerveObject slot 27 (+0x6c) of PolygonMode (JSR-184
-   PolygonMode.setTwoSidedLightingEnable; kh_types.h SwervePolygonModeVtbl):
-   swvPolygonMode_SetTwoSidedLightingValue on the native object (po->pNative, +4, less 4) with enable
-   made 0 or 1 (`movne r1, #1`), a tail jump in the binary (0x01038204; Ghidra had pasted the setter
-   in). */
+/* ISwerveObject slot 27 (+0x6c) of PolygonMode (JSR-184 1.1, PolygonMode.setTwoSidedLightingEnable;
+   kh_types.h SwervePolygonModeVtbl): swvPolygonMode_SetTwoSidedLightingValue on the native object
+   (po->pNative, +4, less 4) with enable made 0 or 1 (`movne r1, #1`), a tail jump in the binary
+   (0x01038204; Ghidra had pasted the setter in). */
 void swvPolygonMode_SetTwoSidedLightingEnable(int param_1,int param_2)
 
 {
@@ -52674,9 +52784,9 @@ void swvPolygonMode_SetTwoSidedLightingEnable(int param_1,int param_2)
 }
 
 /* ==== 0x01038208  (file offset 0x38208)  swvPolygonMode_SetWinding =================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 23 (+0x5c) of PolygonMode (JSR-184
-   PolygonMode.setWinding; kh_types.h SwervePolygonModeVtbl): in an error frame, error -1301 unless the
-   value is WINDING_CCW (0xa8) or WINDING_CW (0xa9), then swvPolygonMode_SetWindingValue; on an error
+/* (not yet rewritten) ISwerveObject slot 23 (+0x5c) of PolygonMode (JSR-184 1.1, PolygonMode.setWinding;
+   kh_types.h SwervePolygonModeVtbl): in an error frame, error -1301 (IllegalArgumentException) unless
+   the value is WINDING_CCW (0xa8) or WINDING_CW (0xa9), then swvPolygonMode_SetWindingValue; on an error
    its result code. */
 undefined4 swvPolygonMode_SetWinding(int param_1,int param_2)
 
@@ -53805,12 +53915,13 @@ int swv_Create_Class24(void **ppObj)
   void *pNative;
   undefined1 auStack_90 [136];
   
-                    /* Constructor for class 24 (Class24): ISwerve_CreateObject(po, 24, ppObj) lands
-                       here with ppObj in r0. Creates the native object inside an error frame and
-                       wraps it with swv_WrapObject. Class id from ISwerve_CreateObject's switch
-                       (0x0102479c); class name from the JSR-184 alphabetical numbering proven by
-                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId).
-                       GUESS: class 24 is an Image2D subclass with no JSR-184 name. */
+                    /* Constructor for class 24 (Class24): ISwerve_CreateObject(po, 24, ppObj) lands here
+                       with ppObj in r0. Creates the native object inside an error frame and wraps it
+                       with swv_WrapObject. Class id from ISwerve_CreateObject's switch (0x0102479c); the
+                       other ids follow JSR-184's alphabetical class order, proven by
+                       swvObj_QueryInterface's hierarchy table (see swv_types.h SwerveClassId). Class 24
+                       is an Image2D subclass with no JSR-184 name: JSR-184 1.1 has no class between
+                       Sprite3D and Texture2D. GUESS: what it is. */
   iVar1 = swv_setjmp((undefined4 *)swv_TryPush(auStack_90));   /* Ghidra had dropped it */
   if (iVar1 == 0) {
     swv_TryArm(auStack_90);
@@ -57345,11 +57456,10 @@ int swv_Create_VertexBuffer(void **ppObj)
 }
 
 /* ==== 0x0103CCA8  (file offset 0x3CCA8)  swvVertexBuffer_GetColors =================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 20 (+0x50) of VertexBuffer (JSR-184
-   VertexBuffer.getColors; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
-   less 4): its colours (+0x2c) wrapped into *param_2.
-   GUESS: the colours / normals names corrected (were swapped): FUN_010209ac enforces JSR-184's colours
-   rule on +0x2c, FUN_010220b0 the normals' on +0x28. */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getColors. ISwerveObject slot 20 (+0x50) of
+   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): its
+   colours (+0x2c) wrapped into *param_2. The colours / normals names corrected (were swapped):
+   FUN_010209ac enforces VertexBuffer.setColors' rule on +0x2c, FUN_010220b0 setNormals' on +0x28. */
 int swvVertexBuffer_GetColors(int param_1,ISwerveObject **param_2)
 
 {
@@ -57378,9 +57488,9 @@ int swvVertexBuffer_GetColors(int param_1,ISwerveObject **param_2)
 }
 
 /* ==== 0x0103CD14  (file offset 0x3CD14)  swvVertexBuffer_GetDefaultColor ============================= */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 22 (+0x58) of VertexBuffer (JSR-184
-   VertexBuffer.getDefaultColor; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative,
-   +4, less 4): *param_2 = its default colour (+0x20). */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getDefaultColor. ISwerveObject slot 22 (+0x58) of
+   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4):
+   *param_2 = its default colour (+0x20, 0xAARRGGBB). */
 void swvVertexBuffer_GetDefaultColor(int param_1,undefined4 *param_2)
 
 {
@@ -57395,11 +57505,10 @@ void swvVertexBuffer_GetDefaultColor(int param_1,undefined4 *param_2)
 }
 
 /* ==== 0x0103CD2C  (file offset 0x3CD2C)  swvVertexBuffer_GetNormals ================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 18 (+0x48) of VertexBuffer (JSR-184
-   VertexBuffer.getNormals; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
-   less 4): its normals (+0x28) wrapped into *param_2.
-   GUESS: the colours / normals names corrected (were swapped): FUN_010209ac enforces JSR-184's colours
-   rule on +0x2c, FUN_010220b0 the normals' on +0x28. */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getNormals. ISwerveObject slot 18 (+0x48) of
+   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): its
+   normals (+0x28) wrapped into *param_2. The colours / normals names corrected (were swapped):
+   FUN_010209ac enforces VertexBuffer.setColors' rule on +0x2c, FUN_010220b0 setNormals' on +0x28. */
 int swvVertexBuffer_GetNormals(int param_1,ISwerveObject **param_2)
 
 {
@@ -57428,9 +57537,10 @@ int swvVertexBuffer_GetNormals(int param_1,ISwerveObject **param_2)
 }
 
 /* ==== 0x0103CD98  (file offset 0x3CD98)  swvVertexBuffer_GetPositions ================================ */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 25 (+0x64) of VertexBuffer (JSR-184
-   VertexBuffer.getPositions; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
-   less 4): its positions and their scale and bias (FUN_010100f0), the array wrapped into *param_4. */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getPositions. ISwerveObject slot 25 (+0x64) of
+   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): its
+   positions and their scale and bias (FUN_010100f0: the scale then the 3 bias floats; -1301,
+   IllegalArgumentException, for a scaleBias shorter than 4), the array wrapped into *param_4. */
 int swvVertexBuffer_GetPositions(int param_1,undefined4 param_2,undefined4 param_3,ISwerveObject **param_4)
 
 {
@@ -57459,10 +57569,11 @@ int swvVertexBuffer_GetPositions(int param_1,undefined4 param_2,undefined4 param
 }
 
 /* ==== 0x0103CE14  (file offset 0x3CE14)  swvVertexBuffer_GetTexCoords ================================ */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 27 (+0x6c) of VertexBuffer (JSR-184
-   VertexBuffer.getTexCoords; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
-   less 4): unit param_2 (error -1101 above 1; FUN_01010828) and its scale and bias, the array wrapped
-   into the last argument. */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getTexCoords. ISwerveObject slot 27 (+0x6c) of
+   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): unit
+   param_2 (error -1101, IndexOutOfBoundsException, above 1; FUN_01010828) and its scale and bias (-1301,
+   IllegalArgumentException, for a scaleBias shorter than the components + 1), the array wrapped into
+   the last argument. */
 int swvVertexBuffer_GetTexCoords(int param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
                 ISwerveObject **param_5)
 
@@ -57492,9 +57603,9 @@ int swvVertexBuffer_GetTexCoords(int param_1,undefined4 param_2,undefined4 param
 }
 
 /* ==== 0x0103CE98  (file offset 0x3CE98)  swvVertexBuffer_GetVertexCount ============================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 24 (+0x60) of VertexBuffer (JSR-184
-   VertexBuffer.getVertexCount; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative,
-   +4, less 4): *param_2 = its vertex count (+0x1c). */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.getVertexCount. ISwerveObject slot 24 (+0x60) of
+   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4):
+   *param_2 = its vertex count (+0x1c; 0 without arrays). */
 void swvVertexBuffer_GetVertexCount(int param_1,undefined4 *param_2)
 
 {
@@ -57532,11 +57643,10 @@ void swv_InitVtbl_VertexBuffer(void **pVtbl)
 }
 
 /* ==== 0x0103CF70  (file offset 0x3CF70)  swvVertexBuffer_SetColors =================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 21 (+0x54) of VertexBuffer (JSR-184
-   VertexBuffer.setColors; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
-   less 4): in an error frame, FUN_010209ac (the array).
-   GUESS: the colours / normals names corrected (were swapped): FUN_010209ac enforces JSR-184's colours
-   rule on +0x2c, FUN_010220b0 the normals' on +0x28. */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setColors. ISwerveObject slot 21 (+0x54) of
+   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in
+   an error frame, FUN_010209ac (the array). The colours / normals names corrected (were swapped):
+   FUN_010209ac enforces VertexBuffer.setColors' rule on +0x2c, FUN_010220b0 setNormals' on +0x28. */
 undefined4 swvVertexBuffer_SetColors(int param_1,int param_2)
 
 {
@@ -57570,9 +57680,9 @@ undefined4 swvVertexBuffer_SetColors(int param_1,int param_2)
 }
 
 /* ==== 0x0103CFDC  (file offset 0x3CFDC)  swvVertexBuffer_SetDefaultColor ============================= */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 23 (+0x5c) of VertexBuffer (JSR-184
-   VertexBuffer.setDefaultColor; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative,
-   +4, less 4): its default colour (+0x20) = param_2. */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setDefaultColor. ISwerveObject slot 23 (+0x5c) of
+   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): its
+   default colour (+0x20) = param_2 (0xAARRGGBB). */
 void swvVertexBuffer_SetDefaultColor(int param_1,undefined4 param_2)
 
 {
@@ -57587,11 +57697,10 @@ void swvVertexBuffer_SetDefaultColor(int param_1,undefined4 param_2)
 }
 
 /* ==== 0x0103CFF0  (file offset 0x3CFF0)  swvVertexBuffer_SetNormals ================================== */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 19 (+0x4c) of VertexBuffer (JSR-184
-   VertexBuffer.setNormals; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
-   less 4): in an error frame, FUN_010220b0 (the array).
-   GUESS: the colours / normals names corrected (were swapped): FUN_010209ac enforces JSR-184's colours
-   rule on +0x2c, FUN_010220b0 the normals' on +0x28. */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setNormals. ISwerveObject slot 19 (+0x4c) of
+   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in
+   an error frame, FUN_010220b0 (the array). The colours / normals names corrected (were swapped):
+   FUN_010209ac enforces VertexBuffer.setColors' rule on +0x2c, FUN_010220b0 setNormals' on +0x28. */
 undefined4 swvVertexBuffer_SetNormals(int param_1,int param_2)
 
 {
@@ -57625,9 +57734,9 @@ undefined4 swvVertexBuffer_SetNormals(int param_1,int param_2)
 }
 
 /* ==== 0x0103D05C  (file offset 0x3D05C)  swvVertexBuffer_SetPositions ================================ */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 26 (+0x68) of VertexBuffer (JSR-184
-   VertexBuffer.setPositions; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
-   less 4): in an error frame, FUN_0102234c (the array, its scale and bias). */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setPositions. ISwerveObject slot 26 (+0x68) of
+   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in
+   an error frame, FUN_0102234c (the array, its scale and bias). */
 undefined4
 swvVertexBuffer_SetPositions(int param_1,int param_2,undefined4 param_3,undefined4 param_4,
                              undefined4 param_5)
@@ -57665,9 +57774,9 @@ swvVertexBuffer_SetPositions(int param_1,int param_2,undefined4 param_3,undefine
 }
 
 /* ==== 0x0103D0F0  (file offset 0x3D0F0)  swvVertexBuffer_SetTexCoords ================================ */
-/* GUESS: name (not yet rewritten). ISwerveObject slot 28 (+0x70) of VertexBuffer (JSR-184
-   VertexBuffer.setTexCoords; kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4,
-   less 4): in an error frame, FUN_0102358c (the unit, the array, its scale and bias). */
+/* (not yet rewritten) JSR-184 1.1, VertexBuffer.setTexCoords. ISwerveObject slot 28 (+0x70) of
+   VertexBuffer (kh_types.h SwerveVertexBufferVtbl), on the native object (po->pNative, +4, less 4): in
+   an error frame, FUN_0102358c (the unit, the array, its scale and bias). */
 undefined4
 swvVertexBuffer_SetTexCoords(int param_1,undefined4 param_2,int param_3,undefined4 param_4,
                              undefined4 param_5,undefined4 param_6)

@@ -982,11 +982,12 @@ typedef struct SwervePolygonModeVtbl {
     void (*SetTwoSidedLightingEnable)(ISwerveObject *po,int32 enable);   /* +0x6c slot 27, 0x010381f0 */
 } SwervePolygonModeVtbl;
 
-/* VertexBuffer: JSR-184 1.0's eleven methods, as get / set pairs (GUESS for the unchecked ones) */
+/* VertexBuffer: the eleven methods of JSR-184 1.1 VertexBuffer, as get / set pairs (all checked) */
 typedef struct SwerveVertexBufferVtbl {
     SwerveObject3DVtbl base;                                             /* +0x00 - +0x44 */
-    /* slots 18 - 21: GUESS, the colours / normals names corrected (were swapped): slot 19's native
-       FUN_010220b0 enforces JSR-184's normals rule (+0x28), slot 21's FUN_010209ac the colours' (+0x2c) */
+    /* slots 18 - 21: the colours / normals names corrected (were swapped): slot 19's native
+       FUN_010220b0 enforces JSR-184 1.1 VertexBuffer.setNormals' rule (+0x28), slot 21's
+       FUN_010209ac setColors' (+0x2c) */
     int32 (*GetNormals)(ISwerveObject *po,ISwerveObject **ppo);          /* +0x48 slot 18, 0x0103cd2c */
     int32 (*SetNormals)(ISwerveObject *po,ISwerveObject *normals);       /* +0x4c slot 19, 0x0103cff0 */
     int32 (*GetColors)(ISwerveObject *po,ISwerveObject **ppo);           /* +0x50 slot 20, 0x0103cca8 */

@@ -47,8 +47,9 @@ typedef enum SwerveClassId {
     SWV_RAYINTERSECTION     = 21,
     SWV_SKINNEDMESH         = 22,
     SWV_SPRITE3D            = 23,
-    SWV_CLASS24             = 24,   /* GUESS: an Image2D subclass that is not a JSR-184 class (QI accepts
-                                       10 and 24); its name would sort between Sprite3D and Texture2D */
+    SWV_CLASS24             = 24,   /* an Image2D subclass (QI accepts 10 and 24) that is not a
+                                       JSR-184 class: JSR-184 1.1 has none between Sprite3D and
+                                       Texture2D, where its name would sort (GUESS: what it is) */
     SWV_TEXTURE2D           = 25,
     SWV_TRANSFORM           = 26,
     SWV_TRANSFORMABLE       = 27,   /* abstract */
@@ -77,8 +78,31 @@ typedef enum SwerveObjectType {
     SWVT_TRANSFORM = 27,           SWVT_LOADER = 28
 } SwerveObjectType;
 
-/* JSR-184 AnimationTrack target properties (AnimationTrack +0x24; FUN_01003c38, GUESS: Object3D.animate,
- * tests CROP, MORPH_WEIGHTS and SCALE). The values are JSR-184's. */
+/* The engine's error codes: what FUN_0102f7e0 (it does not return) is given, the JSR-184 exception each
+ * stands for. The listing keeps the INTEGER_MINUS_* literals the code loads; the comments name these.
+ * From the methods whose checks the spec lists (JSR-184 1.1): -1301 where it throws
+ * IllegalArgumentException (Group.addChild, Texture2D.setImage, ...), -1302 NullPointerException
+ * (a null argument), -1300 IllegalStateException (Node.align: a node aligned to its descendant), -1101
+ * IndexOutOfBoundsException (Group.getChild, Object3D.getAnimationTrack, ...), -1000
+ * ArithmeticException (Node.getTransformTo: a singular transformation), -1202 the Loader's
+ * IOException for data not in a valid format (the M3G record readers' range checks). */
+typedef enum SwerveError {
+    SWVE_ARITHMETIC           = -1000,   /* ArithmeticException */
+    SWVE_INDEX_OUT_OF_BOUNDS  = -1101,   /* IndexOutOfBoundsException */
+    SWVE_READER_STATE         = -1103,   /* GUESS: the M3G reader used out of order (swvM3GReader_End /
+                                            _Begin); no spec method maps to it */
+    SWVE_END_OF_DATA          = -1200,   /* GUESS: a read past the end of the loader's buffer
+                                            (FUN_01019698, FUN_01026d30); an IOException to the
+                                            application */
+    SWVE_BAD_FILE             = -1202,   /* IOException: the M3G data is not valid */
+    SWVE_ILLEGAL_STATE        = -1300,   /* IllegalStateException */
+    SWVE_ILLEGAL_ARGUMENT     = -1301,   /* IllegalArgumentException */
+    SWVE_NULL_POINTER         = -1302    /* NullPointerException */
+} SwerveError;
+
+/* JSR-184 AnimationTrack target properties (AnimationTrack +0x24; FUN_01003c38, the native
+ * Object3D.animate, tests CROP, MORPH_WEIGHTS and SCALE). The values: JSR-184 1.1, AnimationTrack
+ * (Constant Field Values, ALPHA 256 .. VISIBILITY 276). */
 typedef enum SwerveAnimTarget {
     SWV_ANIM_ALPHA = 0x100,           SWV_ANIM_AMBIENT_COLOR = 0x101,   SWV_ANIM_COLOR = 0x102,
     SWV_ANIM_CROP = 0x103,            SWV_ANIM_DENSITY = 0x104,         SWV_ANIM_DIFFUSE_COLOR = 0x105,
@@ -93,7 +117,8 @@ typedef enum SwerveAnimTarget {
  * IsAnimatable(property) (swvObject3D_IsAnimatable gives none; swvMaterial_IsAnimatable ..
  * swvSprite3D_IsAnimatable and swvCamera_IsAnimatable test their mask, then ask their base;
  * FUN_010124ac, a Node subclass's, only asks Node's). A property's bit is
- * 1 << (property - 0xff). The masks are JSR-184's animatable properties of each class. */
+ * 1 << (property - 0xff). The masks are the classes JSR-184 1.1, AnimationTrack's fields name for each
+ * property (each mask, its hex value and its base class checked against them). */
 #define SWV_ANIM_BIT(property)      ((uint32)1 << ((property) - 0xff))
 /* 0x000300c6, Material; base Object3D */
 #define SWV_ANIMATED_MATERIAL       (SWV_ANIM_BIT(SWV_ANIM_ALPHA) | \
@@ -209,8 +234,10 @@ typedef struct IGraphics3DVtbl {
     /*  7 +0x1c */ int (*slot7)(IGraphics3D *po, ...);
     /*  8 +0x20 */ int (*BindTarget)(IGraphics3D *po, uint16 cx, uint16 cy, int nPitch, void *pBits,
                                      int x, int y, int dx, int dy);
-                   /* 0x0102ff38 -> native 0x010202e4. GUESS: name (JSR-184 Graphics3D.bindTarget);
-                      kh.mod passes the screen IDIB's cx, cy, nPitch, pBmp and its view rect */
+                   /* 0x0102ff38 -> native 0x010202e4. GUESS: name (JSR-184 1.1, Graphics3D.bindTarget,
+                      for a raw bitmap: the viewport clamped to 1 .. 1024 instead of -1301, no -1300
+                      for a bound target; see swv_Graphics3D_bindTarget); kh.mod passes the screen
+                      IDIB's cx, cy, nPitch, pBmp and its view rect */
     /*  9 +0x24 */ int (*slot9)(IGraphics3D *po, ...);
     /* 10 +0x28 */ int (*slot10)(IGraphics3D *po, ...);
     /* 11 +0x2c */ int (*slot11)(IGraphics3D *po, ...);
@@ -228,7 +255,9 @@ typedef struct IGraphics3DVtbl {
                    /* 0x0102f960 swvGraphics3D_GetProperty. GUESS: name (JSR-184
                       Graphics3D.getProperties, by index): -1301 above 11, else the value of
                       swvGraphics3D_Property: 0 - 3 false, 4 - 5 true, 6 256, 7 - 9 1024, 10 - 11 2
-                      (GUESS the property names; kh.mod does not call it) */
+                      (GUESS the property names: 1.1's keys less maxViewportWidth / Height, so 6
+                      maxLights, 7 - 9 the largest viewport, texture and sprite crop; kh.mod does not
+                      call it) */
 } IGraphics3DVtbl;
 struct IGraphics3D { const IGraphics3DVtbl *pvt; void *pNative; uint32 m_nRefs; };
 
@@ -272,21 +301,24 @@ typedef struct SwvSkinBoneSet {
 } SwvSkinBoneSet;
 
 /* ---- AnimationController, the native object (no struct yet) ------------------------------------
- * Its fields (GUESS: the names, JSR-184 AnimationController; the BREW slots 18 - 26, kh_types.h
- * SwerveAnimationControllerVtbl):
+ * Its fields (GUESS: the names; JSR-184 1.1, AnimationController: setActiveInterval FUN_0101ff90 sets
+ * +0x1c / +0x20, setPosition FUN_01022340 +0x24 / +0x28, setSpeed FUN_01023244 +0x2c, setWeight
+ * FUN_01023c88 +0x30; the BREW slots 18 - 26, kh_types.h SwerveAnimationControllerVtbl):
  *   +0x1c / +0x20     the active interval's start and end (world times): active when they are
  *                     equal, else for start <= t < end (swvAnimationController_IsActive)
  *   +0x24             the reference sequence time (a float)
  *   +0x28             the reference world time
  *   +0x2c             the speed (a float; swvAnimationController_Speed)
  *   +0x30             the weight (a float)
- * The position at a world time is +0x24 + (worldTime - +0x28) * +0x2c (FUN_01010094); an
+ * The position at a world time is +0x24 + (worldTime - +0x28) * +0x2c (FUN_01010094, the spec's
+ * ts = tsref + s (tw - twref)); an
  * AnimationTrack's sample gives its validity as 0x7fffffff (for ever) when the controller is not
  * active (FUN_01010de0). */
 
 /* ---- KeyframeSequence (class 12) --------------------------------------------------------------
  * The fields the keyframe code reads (swvKeyframeSequence_*); the Object3D part before +0x1c is not
- * identified yet. The values are JSR-184's: interpolation LINEAR 0xb0 (176), SLERP 0xb1, SPLINE 0xb2,
+ * identified yet. The values: JSR-184 1.1, KeyframeSequence (Constant Field Values): interpolation
+ * LINEAR 0xb0 (176), SLERP 0xb1, SPLINE 0xb2,
  * SQUAD 0xb3, STEP 0xb4; repeat mode CONSTANT 0xc0 (192), LOOP 0xc1. A keyframe is
  * swvKeyframeSequence_KeyframeWords words of keyframes: its time (an int), then its components (float
  * bits; for SPLINE and SQUAD each with its two tangents). GUESS: the names of the fields not proven. */
@@ -312,7 +344,8 @@ typedef struct SwvKeyframeSequence {
  * The fields every class shares (GUESS: the names; swvObject3D_AnimationTrackCount,
  * swvObject3D_AnimationTrack, FUN_01006518):
  *   +0x00             the vtable (engine-relative offsets; +4 getType)
- *   +0x0c             the user id (JSR-184 Object3D.getUserID)
+ *   +0x0c             the user id (JSR-184 1.1, Object3D.getUserID / setUserID: FUN_010350fc and
+ *                     FUN_01035304, the slots 3 and 4; kept by a duplicate, FUN_01006518)
  *   +0x10             the animation track list, or NULL: a growable array, +4 the items (a word each),
  *                     +8 the count
  *   +0x14             a list of its own, copied when not empty (GUESS: the user parameters)
@@ -328,13 +361,15 @@ typedef struct SwvKeyframeSequence {
  * swv_InitVtbl_Object3D. */
 
 /* ---- Node, the base of the scene-graph objects (no struct yet) ---------------------------------
- * The fields the alignment code reads (GUESS: the names; FUN_0100a02c, GUESS the Node alignment):
+ * The fields the alignment code reads (GUESS: the names; FUN_0100a02c, the Node alignment, JSR-184
+ * 1.1 Node.align):
  *   +0x20             the node's transform (FUN_0102c7a8 reads it)
  *   +0x24             the alignment block, or NULL (no alignment):
  *                       +0x0 the z target (swvNode_AlignmentTargetZ; NONE without a block)
  *                       +0x4 the y target (swvNode_AlignmentTargetY; NONE without a block)
- *                       +0x8 the z reference (swvNode_AlignmentReferenceZ; NULL: the parent)
- *                       +0xc the y reference (swvNode_AlignmentReferenceY)
+ *                       +0x8 the z reference (swvNode_AlignmentReferenceZ; NULL: the reference
+ *                            given to Node.align, JSR-184 1.1 Node.setAlignment)
+ *                       +0xc the y reference (swvNode_AlignmentReferenceY; NULL as for z)
  *   +0x30             the parent (NULL for a root; swvNode_Depth walks it, FUN_010048e4 too,
  *                     swvNode_SameSceneGraph to the root, swvNode_HasAncestor / IsAncestorOf for an
  *                     ancestor)
@@ -342,7 +377,9 @@ typedef struct SwvKeyframeSequence {
  *   +0x38             a Group's first child (swvGroup_ChildCount, swvGroup_NthChild, FUN_01003474)
  *   +0x3c             the depth, a byte (0 for a root; 0xff: not cached or deeper than 254;
  *                     swvNode_Depth, swvNode_SetDepth)
- * The JSR-184 alignment targets: NONE 0x90, ORIGIN 0x91, X_AXIS 0x92, Y_AXIS 0x93, Z_AXIS 0x94. */
+ * The alignment targets (JSR-184 1.1, Node constants): NONE 0x90, ORIGIN 0x91, X_AXIS 0x92, Y_AXIS
+ * 0x93, Z_AXIS 0x94; FUN_01020104 (Node.setAlignment) stores them, the range 0x90 - 0x94 is checked
+ * by its callers (-1301 in the BREW wrapper FUN_01034b78, -1202 in the M3G Node reader, FUN_010196cc). */
 
 /* ---- VertexBuffer, the native object (no struct yet) -------------------------------------------
  * Its fields (GUESS: the names; the BREW slots, kh_types.h SwerveVertexBufferVtbl, and
@@ -351,12 +388,16 @@ typedef struct SwvKeyframeSequence {
  *                     swvVertexBuffer_HasOnlyArray; -1301), 0 once it has none
  *   +0x20             the default colour (ARGB)
  *   +0x24             the positions (a VertexArray; attribute 0)
- *   +0x28             the normals (attribute 2; GUESS: corrected, was "the colours": FUN_010220b0
- *                     enforces JSR-184's normals rule on it)
- *   +0x2c             the colours (attribute 1; GUESS: corrected, was "the normals": FUN_010209ac
- *                     enforces the colours' rule)
+ *   +0x28             the normals (attribute 2; corrected, was "the colours": FUN_010220b0 enforces
+ *                     JSR-184 1.1 VertexBuffer.setNormals' rule on it)
+ *   +0x2c             the colours (attribute 1; corrected, was "the normals": FUN_010209ac enforces
+ *                     VertexBuffer.setColors' rule)
  *   +0x30 / +0x34     the texture coordinates of units 0 / 1 (attributes 3, 4)
- * Made by FUN_01028898 (0x78 bytes; the default colour 0xff000000). */
+ *   +0x38 .. +0x44    the positions' bias (3 floats) and scale (FUN_0102234c)
+ *   +0x48 .. +0x54    the normals' bias and scale (FUN_010220b0: to -1 .. 1)
+ *   +0x58 .. +0x6c    the texture coordinates' bias, 3 floats a unit; +0x70 / +0x74 their scales
+ * Made by FUN_01028898 (0x78 bytes; the default colour 0xffffffff, opaque white, as JSR-184 1.1
+ * VertexBuffer(); corrected, was 0xff000000, the value it stores first). */
 
 /* ---- Mesh, the native object (no struct yet) ----------------------------------------------------
  * Its fields (GUESS: the names):
@@ -385,15 +426,17 @@ typedef struct SwvKeyframeSequence {
  *   0x060             shading: 0x20 SHADE_FLAT, 0x40 SHADE_SMOOTH (0xa4, 0xa5)
  *   0x180             two-sided lighting: 0x80 off, 0x100 on
  *   0x200 / 0x400     local camera lighting / perspective correction (on when set)
- * The names of the last three (GUESS, but firm): the BREW-facing slots 18 - 27 are exactly JSR-184 1.0's
- * ten PolygonMode methods (kh_types.h SwervePolygonModeVtbl: only two-sided lighting has a getter,
- * swvPolygonMode_TwoSidedLighting), and the M3G reader FUN_0101e778 reads them in the file format's
- * order. */
+ * The names of the last three (GUESS, but firm): the BREW-facing slots 18 - 27 are exactly JSR-184 1.1's
+ * twelve PolygonMode methods less the two it adds ("Since M3G 1.1": isLocalCameraLightingEnabled and
+ * isPerspectiveCorrectionEnabled), i.e. 1.0's ten (kh_types.h SwervePolygonModeVtbl: only two-sided
+ * lighting has a getter, swvPolygonMode_TwoSidedLighting), and the M3G reader FUN_0101e778 reads them in
+ * the file format's order (M3G file format 11.20: culling, shading, winding, then the three flags). The
+ * values are JSR-184 1.1's (CULL_BACK 160 ... WINDING_CW 169). */
 
 /* ---- Material (class 15), the native object (no struct yet) ------------------------------------
  * Its colours (GUESS: the names, JSR-184 Material; swvMaterial_Color, swvMaterial_SetColorValue), ARGB
- * words, by target (AMBIENT 0x400, DIFFUSE 0x800, EMISSIVE 0x1000, SPECULAR 0x2000; setColor takes an
- * OR of them):
+ * words, by target (JSR-184 1.1, Material: AMBIENT 0x400, DIFFUSE 0x800, EMISSIVE 0x1000, SPECULAR
+ * 0x2000; setColor takes an OR of them, and keeps the alpha of the diffuse colour only):
  *   +0x1c             the ambient colour (stored without its alpha)
  *   +0x20             the diffuse colour (the only one with its alpha)
  *   +0x24             the emissive colour (without its alpha)
@@ -413,7 +456,7 @@ typedef struct SwvKeyframeSequence {
  *   +0x3c             the alpha plane's offset in the data, -1 when there is none
  *   +0x40             the JSR-184 format (SwerveImageFormat: ALPHA 0x60, LUMINANCE 0x61, LUMINANCE_ALPHA
  *                     0x62, RGB 0x63, RGBA 0x64; swvImage2D_BytesPerPixel gives the bytes a pixel)
- *   +0x44             mutable (FUN_0102035c, GUESS bindTarget, wants it)
+ *   +0x44             mutable (FUN_0102035c, Graphics3D.bindTarget of an Image2D, wants it)
  *   +0x48             a colour buffer FUN_0100800c allocates (width * height words; GUESS: a work copy),
  *                     an engine dynamic array (+0x4c the items); FUN_01007f8c / FUN_01023e44 fill it
  *                     from a second plane after the pixels (two bytes a pixel)
@@ -421,8 +464,9 @@ typedef struct SwvKeyframeSequence {
  * Its vtable (offsets from the table, like every engine vtable): +0x24 / +0x28 the width and height
  * (GUESS: getWidth / getHeight, swvImage2D_GetWidth / GetHeight), +0x30 the pixels (swvImage2D_Pixels
  * calls it; the BREW-facing slot 25, swvImage2D_GetPixels, returns them).
- * A Texture2D's image (its +0x2c; FUN_01021abc, GUESS Texture2D.setImage, and the loader's
- * FUN_0101e144) must have a width and height that are powers of two (swv_IsPowerOfTwo) up to 1024;
+ * A Texture2D's image (its +0x2c; FUN_01021abc, JSR-184 1.1 Texture2D.setImage, and the loader's
+ * FUN_0101e144) must have a width and height that are powers of two (swv_IsPowerOfTwo) up to 1024 (the
+ * engine's maximum; the spec leaves it to the implementation);
  * the texture's +0x24 the blend colour, +0x28 the blending, +0x30 / +0x34 the wrapping S / T, +0x38
  * the level filter, +0x3c the image filter (JSR-184's values). */
 
@@ -438,12 +482,25 @@ typedef struct SwvKeyframeSequence {
  * 0xe8 bytes (swvM3GReader_New / swvM3GReader_Construct); its engine vtables 0x01002410 at +0 and
  * 0x01002438 at +4. Its slots: +0x04 swvM3GReader_Begin, +0x08 swvM3GReader_Feed, +0x0c
  * swvM3GReader_End, +0x10 swvM3GReader_Fail, +0x14 swvM3GReader_State, +0x18 the record reader
- * (FUN_010157e8), +0x24 FUN_0102da68 (+0xd8 above 0). Its fields (GUESS: the names):
+ * (FUN_010157e8), +0x24 FUN_0102da68 (+0xd8 above 0). Its fields (GUESS: the names; the file format's
+ * parts, M3G file format sections 5 - 7, from swvM3GReader_Feed and FUN_010157e8):
  *   +0x0c             the first error code (-1 while there is none; swvM3GReader_Fail)
- *   +0x18             swvM3GReader_Begin's argument
+ *   +0x10             the current section's reader (swvSection_CreateStored / swvSection_CreateZlib)
+ *   +0x14             0 for an M3G file identifier, 1 for Swerve's own ("\xbbSWERVE\xab\r\n\x1a\n")
+ *   +0x18             swvM3GReader_Begin's argument (non-zero: Swerve's identifier and the types
+ *                     23, 24 allowed)
+ *   +0x1c             the header's TotalFileSize (section 10.1; -1 before it)
  *   +0x24             the parser's own state (1 the file identifier, 2 a section's compression byte, ...)
+ *   +0x28             the section index (-1 before the first): 0 takes only the header object, 1 the
+ *                     external references when the header has them (sections 4, 10.1, 10.2)
+ *   +0x2c             the bytes read
+ *   +0x30 / +0x34     the section's TotalSectionLength / UncompressedLength (sections 6.2, 6.3)
+ *   +0x38 / +0x3c     the section's Checksum read / the Adler-32 computed (section 6.5)
+ *   +0x40             the Objects' bytes still to read (TotalSectionLength - 13)
+ *   +0x44             the object bytes the record reader took (must equal +0x34)
+ *   +0x48 / +0x54     the two file identifiers (section 5; 12 bytes each)
  *   +0x64             the read's state: 0 new, 1 begun, 2 reading, 3 ended, 4 failed
- *   +0x70 .. +0x7c    the record reader's state, type byte, length and record buffer */
+ *   +0x70 .. +0x7c    the record reader's state, ObjectType byte, Length and record buffer (section 7) */
 
 /* ---- the lighting colour ---------------------------------------------------------------------------
  * Three int32, red, green, blue, in 8.8 fixed point (0x100 is 1.0; no struct yet). Made from the RGB
