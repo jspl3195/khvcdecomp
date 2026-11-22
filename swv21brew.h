@@ -126,18 +126,39 @@ uint8 *swvImage2D_Indices(const uint8 *image);   /* 0x01011BCC GUESS: name, see 
 int32 swvM3GReader_Feed(uint8 *reader,int32 array,const uint8 *data,int32 offset,int32 length);   /* 0x01015348 GUESS: name, see swv21brew.c */
 int FUN_010157e8(int param_1,uint8 *param_2,uint32 param_3);   /* 0x010157E8, no Ghidra function */
 void swvM3GReader_Fail(uint8 *reader,int32 error);   /* 0x010159CC GUESS: name, see swv21brew.c */
-void FUN_0101f0b0(int param_1);   /* 0x0101F0B0, no Ghidra function */
+void swvM3G_ReadRayIntersection(uint8 *intersection,uint8 *stream);   /* 0x0101F0B0, no Ghidra function */
 void FUN_010230f8(int param_1,int param_2);   /* 0x010230F8, no Ghidra function */
+int32 swvImage2D_GetType(const uint8 *object);   /* 0x01026100, no Ghidra function */
+int32 swvMaterial_GetType(const uint8 *object);   /* 0x01026108, no Ghidra function */
 void FUN_01023c60(int param_1,int param_2,int param_3,int param_4,int param_5);   /* 0x01023C60 */
-int32 FUN_01026110(int param_1);   /* 0x01026110, no Ghidra function */
-int32 FUN_01026118(int param_1);   /* 0x01026118, no Ghidra function */
-int32 FUN_01026120(int param_1);   /* 0x01026120, no Ghidra function */
-int32 FUN_01026140(int param_1);   /* 0x01026140, no Ghidra function */
-int32 FUN_01026168(int param_1);   /* 0x01026168, no Ghidra function */
-int32 FUN_01026170(int param_1);   /* 0x01026170, no Ghidra function */
-int32 FUN_010261a8(int param_1);   /* 0x010261A8, no Ghidra function */
-int32 FUN_010261c0(int param_1);   /* 0x010261C0, no Ghidra function */
-int32 FUN_010261e0(int param_1);   /* 0x010261E0, no Ghidra function */
+int32 swvObject3D_GetType(const uint8 *object);   /* 0x01026110, no Ghidra function */
+int32 swvClass24_GetType(const uint8 *object);   /* 0x01026118, no Ghidra function */
+int32 swvTexture2D_GetType(const uint8 *object);   /* 0x01026120, no Ghidra function */
+int32 swvTransform_GetType(const uint8 *object);   /* 0x01026128, no Ghidra function */
+int32 swvAppearance_GetType(const uint8 *object);   /* 0x01026130, no Ghidra function */
+int32 swvBackground_GetType(const uint8 *object);   /* 0x01026138, no Ghidra function */
+int32 swvGraphics3D_GetType(const uint8 *object);   /* 0x01026140, no Ghidra function */
+int32 swvProceduralImage_GetType(const uint8 *object);   /* 0x01026148, no Ghidra function */
+int32 swvPolygonMode_GetType(const uint8 *object);   /* 0x01026150, no Ghidra function */
+int32 swvSkinnedMesh_GetType(const uint8 *object);   /* 0x01026158, no Ghidra function */
+int32 swvVertexArray_GetType(const uint8 *object);   /* 0x01026160, no Ghidra function */
+int32 swvMorphingMesh_GetType(const uint8 *object);   /* 0x01026168, no Ghidra function */
+int32 swvVertexBuffer_GetType(const uint8 *object);   /* 0x01026170, no Ghidra function */
+int32 swvAnimationTrack_GetType(const uint8 *object);   /* 0x01026178, no Ghidra function */
+int32 swvCompositingMode_GetType(const uint8 *object);   /* 0x01026180, no Ghidra function */
+int32 swvRayIntersection_GetType(const uint8 *object);   /* 0x01026188, no Ghidra function */
+int32 swvKeyframeSequence_GetType(const uint8 *object);   /* 0x01026190, no Ghidra function */
+int32 swvLoader_GetType(const uint8 *object);   /* 0x01026198, no Ghidra function */
+int32 swvTriangleStripArray_GetType(const uint8 *object);   /* 0x010261A0, no Ghidra function */
+int32 swvAnimationController_GetType(const uint8 *object);   /* 0x010261A8, no Ghidra function */
+int32 swvFog_GetType(const uint8 *object);   /* 0x010261B0, no Ghidra function */
+int32 swvMesh_GetType(const uint8 *object);   /* 0x010261B8, no Ghidra function */
+int32 swvExternalReference_GetType(const uint8 *object);   /* 0x010261C0, no Ghidra function */
+int32 swvGroup_GetType(const uint8 *object);   /* 0x010261C8, no Ghidra function */
+int32 swvLight_GetType(const uint8 *object);   /* 0x010261D0, no Ghidra function */
+int32 swvWorld_GetType(const uint8 *object);   /* 0x010261D8, no Ghidra function */
+int32 swvCamera_GetType(const uint8 *object);   /* 0x010261E0, no Ghidra function */
+int32 swvSprite3D_GetType(const uint8 *object);   /* 0x010261E8, no Ghidra function */
 void FUN_010266b0(int param_1,int param_2,int param_3,int param_4);   /* 0x010266B0, no Ghidra function */
 void FUN_01029b58(int *param_1,int param_2);   /* 0x01029B58, no Ghidra function */
 void FUN_01029b74(int *param_1,int param_2);   /* 0x01029B74, no Ghidra function */
@@ -154,6 +175,7 @@ void FUN_0102a84c(int *param_1,int param_2);   /* 0x0102A84C, no Ghidra function
 void swvSectionStored_Destroy(uint8 *section,int32 freeIt);   /* 0x0102A974, no Ghidra function */
 void swvSectionZlib_Destroy(uint8 *section,int32 freeIt);   /* 0x0102A9B0, no Ghidra function */
 void FUN_0102aa04(int *param_1,int param_2);   /* 0x0102AA04, no Ghidra function */
+void swvRayIntersection_Destroy(uint8 *intersection,int32 deleting);   /* 0x0102AA48, no Ghidra function */
 void FUN_0102aaac(int *param_1,int param_2);   /* 0x0102AAAC, no Ghidra function */
 void FUN_0102ab04(int *param_1,int param_2);   /* 0x0102AB04, no Ghidra function */
 void FUN_0102ad0c(int *param_1,int param_2);   /* 0x0102AD0C, no Ghidra function */
@@ -465,7 +487,7 @@ void FUN_01009860(int param_1);
 int * FUN_010098fc(void);
 uint8 *swvSection_CreateStored(void *sink);
 uint8 *swvSection_CreateZlib(void *sink);
-void FUN_01009a04(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
+void swvPick_NewRecord(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);   /* 0x01009A04 GUESS: name, see swv21brew.c */
 int FUN_01009ad0(void);
 uint8 *swvM3GReader_New(void);   /* 0x01009B80 GUESS: name, see swv21brew.c */
 int32 swvSectionZlib_Feed(uint8 *section,const uint8 *data,int32 length);
@@ -503,7 +525,7 @@ int FUN_0100e924(void);
 int FUN_0100e948(void);
 int FUN_0100e96c(void);
 int FUN_0100e990(void);
-void FUN_0100e9b4(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);
+void swvRayIntersection_New(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4);   /* 0x0100E9B4 GUESS: name, see swv21brew.c */
 int FUN_0100ea80(void);
 int FUN_0100eaa4(void);
 int FUN_0100eac8(void);
@@ -546,7 +568,7 @@ undefined4 FUN_0100f780(void);
 undefined4 FUN_0100f798(void);
 undefined4 FUN_0100f7b0(void);
 uint8 *swv_ErrorFrames(void);   /* 0x0100F7D0 GUESS: name, see swv21brew.c */
-undefined4 FUN_0100f7e0(void);
+undefined4 swvPick_Record(void);   /* 0x0100F7E0 GUESS: name, see swv21brew.c */
 uint8 *swvAlignment_Trackers(void);   /* 0x0100F810 GUESS: name, see swv21brew.c */
 uint8 *swv_CleanupStack(void);   /* 0x0100F8E8 GUESS: name, see swv21brew.c */
 int FUN_0100f8f8(int param_1);
@@ -2566,6 +2588,9 @@ extern undefined4 STRING_INVALID_CHUNK_TYPE_SELF_RELATIVE_OFFSET;   /* was DAT_0
 #define DOUBLE_1_POINT_03820598_TIMES_TEN_TO_THE_34_HIGH_WORD 0x46FFFE00   /* was DAT_010183ac (word at 0x010183AC); with the word at 0x010183A8: the double 1.0382059798880336e+34 = 0x46FFFE0047800000 */
 #define DOUBLE_2_POINT_658456546_TIMES_TEN_TO_THE_36_LOW_WORD 0x37FBA882   /* was DAT_01024694 (word at 0x01024694); with the word at 0x01024698: the double 2.6584565459990054e+36 = 0x4780000037FBA882 */
 #define DOUBLE_2_POINT_658456546_TIMES_TEN_TO_THE_36_HIGH_WORD 0x47800000   /* was DAT_01024698 (word at 0x01024698); with the word at 0x01024694: the double 2.6584565459990054e+36 = 0x4780000037FBA882 */
+#define DATA_AT_01002324_OFFSET 0xFFFD78C4   /* was DAT_0102aaa0 (word at 0x0102AAA0); PC-relative offset: + 0x102aa60 (the pc) = 0x01002324 */
+#define DATA_AT_01001E5C_OFFSET_13 0xFFFD73D8   /* was DAT_0102aaa4 (word at 0x0102AAA4); PC-relative offset: + 0x102aa84 (the pc) = 0x01001E5C */
+#define DATA_AT_0100203C_OFFSET_67 0xFFFD75B0   /* was DAT_0102aaa8 (word at 0x0102AAA8); PC-relative offset: + 0x102aa8c (the pc) = 0x0100203C */
 #define DOUBLE_0_POINT_0963475405_LOW_WORD 0x7F7FFFFF   /* was DAT_0102f3bc (word at 0x0102F3BC); with the word at 0x0102F3C0: the double 0.0963475405005738 = 0x3FB8AA3B7F7FFFFF */
 #define DOUBLE_0_POINT_0963475405_HIGH_WORD 0x3FB8AA3B   /* was DAT_0102f3c0 (word at 0x0102F3C0); with the word at 0x0102F3BC: the double 0.0963475405005738 = 0x3FB8AA3B7F7FFFFF */
 #define DOUBLE_5_POINT_036114712_TIMES_TEN_TO_THE_23_LOW_WORD 0x48A005A5   /* was DAT_0102f3cc (word at 0x0102F3CC); with the word at 0x0102F3D0: the double 5.036114711907845e+23 = 0x44DAA93548A005A5 */

@@ -9175,8 +9175,14 @@ uint8 *swvSection_CreateZlib(void *sink)
   return created;
 }
 
-/* ==== 0x01009A04  (file offset 0x09A04)  FUN_01009a04 ================================================ */
-void FUN_01009a04(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+/* ==== 0x01009A04  (file offset 0x09A04)  swvPick_NewRecord =========================================== */
+/* GUESS (not yet rewritten): name. Makes the engine's shared pick result record (swvPick_Record keeps
+   it): a RayIntersection (swv_types.h, RayIntersection; 0x4c bytes, swv_New_2): the base tables 0x0100203C
+   / 0x01001E5C, then 0x01002248 / its +8, then the RayIntersection's 0x01002324 / its +8; its fields
+   cleared, +0x30 and +0x48 1.0. Returns the object in r0 (NULL when the allocation fails; Ghidra had made
+   it void, swvPick_Record reads it: r0 is not written after swv_New_2). The same code as
+   swvRayIntersection_New. */
+void swvPick_NewRecord(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
   int *piVar1;
@@ -12705,8 +12711,13 @@ int FUN_0100e990(void)
   return iVar1;
 }
 
-/* ==== 0x0100E9B4  (file offset 0x0E9B4)  FUN_0100e9b4 ================================================ */
-void FUN_0100e9b4(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
+/* ==== 0x0100E9B4  (file offset 0x0E9B4)  swvRayIntersection_New ====================================== */
+/* GUESS (not yet rewritten): name. A new RayIntersection (swv_types.h, RayIntersection; 0x4c bytes,
+   swv_New_2; SWVT_RAYINTERSECTION): the base tables 0x0100203C / 0x01001E5C, then 0x01002248 / its +8,
+   then 0x01002324 / its +8; its fields cleared, +0x30 and +0x48 1.0. Returns the object in r0 (NULL when
+   the allocation fails; Ghidra had made it void). Nothing calls it directly (GUESS: the class factory's).
+   The same code as swvPick_NewRecord. */
+void swvRayIntersection_New(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4)
 
 {
   int *piVar1;
@@ -13734,8 +13745,12 @@ uint8 *swv_ErrorFrames(void)
   return *(uint8 **)(FUN_0102ecec() + 0xc);
 }
 
-/* ==== 0x0100F7E0  (file offset 0x0F7E0)  FUN_0100f7e0 ================================================ */
-undefined4 FUN_0100f7e0(void)
+/* ==== 0x0100F7E0  (file offset 0x0F7E0)  swvPick_Record ============================================== */
+/* GUESS (not yet rewritten): name. The engine's shared pick result record, a RayIntersection kept in
+   the engine globals (FUN_0102ecec, +0x30), made on first use (swvPick_NewRecord). The Group.pick forms
+   fill it (swvGroup_PickRayValue, swvGroup_PickCameraValue: +0xc the intersected node, +0x14 the
+   distance) and copy it to the caller's RayIntersection on a hit (FUN_01027a54). */
+undefined4 swvPick_Record(void)
 
 {
   int iVar1;
@@ -13743,7 +13758,7 @@ undefined4 FUN_0100f7e0(void)
   
   iVar1 = FUN_0102ecec();
   if (*(int *)(iVar1 + 0x30) == 0) {
-    uVar2 = FUN_01009a04();
+    uVar2 = swvPick_NewRecord();
     iVar1 = FUN_0102ecec();
     *(undefined4 *)(iVar1 + 0x30) = uVar2;
   }
@@ -19968,7 +19983,7 @@ LAB_01016d6c:
    which does not return) when the direction is zero, which the engine takes as each |d| at most
    0x377ba882 (about 1.5e-5; the spec says dx = dy = dz = 0); then the pick state (FUN_0100f7b0: +0x30 no
    camera, +0x38 the scope, +8 to FUN_01023184 with 0) gets the ray's two ends, +0x18 the origin and +0x24
-   origin + direction (FUN_010279d0); the result record (FUN_0100f7e0, +0x34; FUN_01021b7c with 0: no
+   origin + direction (FUN_010279d0); the result record (swvPick_Record, +0x34; FUN_01021b7c with 0: no
    intersected node, its +0xc; +0x14 the distance FLT_MAX 0x7f7fffff) given the origin and the direction
    (FUN_01022a94: its +0x34 and +0x40, the ray RayIntersection.getRay returns); FUN_010166a4 the pick
    through the group (its picker, +0x88, the state, the group). Returns 1 for a hit (the record's
@@ -20010,7 +20025,7 @@ int32 swvGroup_PickRayValue(uint8 *group,int32 scope,const uint32 *origin,const 
   end[1] = swv_fadd(direction[1],origin[1]);
   end[2] = swv_fadd(direction[2],origin[2]);
   FUN_010279d0((undefined4 *)(state + 0x24),end);
-  record = FUN_0100f7e0();
+  record = swvPick_Record();
   *(uint32 *)(state + 0x34) = record;
   FUN_01021b7c((int)record,0);
   *(uint32 *)(*(uint8 **)(state + 0x34) + 0x14) = WORD_HEXADECIMAL_7F7FFFFF;
@@ -20037,7 +20052,7 @@ int32 swvGroup_PickRayValue(uint8 *group,int32 scope,const uint32 *origin,const 
    ArithmeticException is -1000 (the same r6, 0x01016f40); the group's picker (+0x88: FUN_01018018
    before and after); the ray then taken to the group (FUN_010048e4, camera to group, into a matrix
    whose flags word, +0x40, is first set to 0x20: the binary keeps the point's three words in that
-   matrix's last three, as here; FUN_0101d674, FUN_010257a8); the result record (FUN_0100f7e0, +0x34;
+   matrix's last three, as here; FUN_0101d674, FUN_010257a8); the result record (swvPick_Record, +0x34;
    FUN_01021b7c with 0, +0x14 the distance FLT_MAX 0x7f7fffff) given the ray's start and far - near
    (swv_frsb; FUN_01022a94; the spec's origin p and direction p' - p); FUN_010166a4 the pick through the
    group, FUN_01017120 twice; the result 1 for a hit (the record's +0xc), and then ri, when set, filled
@@ -20095,7 +20110,7 @@ int32 swvGroup_PickCameraValue(uint8 *group,int32 scope,uint32 x,uint32 y,uint8 
   FUN_010048e4((int)camera,(int)group,(undefined4)transform);
   FUN_0101d674(transform);
   FUN_010257a8((undefined4)picker,(int)state,(undefined4)transform);
-  *(uint32 *)(state + 0x34) = FUN_0100f7e0();
+  *(uint32 *)(state + 0x34) = swvPick_Record();
   FUN_01021b7c(*(int *)(state + 0x34),0);
   *(uint32 *)(*(uint8 **)(state + 0x34) + 0x14) = 0x7f7fffff;
   direction[0] = swv_frsb(nearPoint[0],farPoint[0]);
@@ -26991,13 +27006,18 @@ void swvM3G_ReadCompositingMode(uint8 *mode,uint8 *stream)
   *(uint32 *)(mode + 0x38) = FUN_01019a0c((int32)stream);
 }
 
-/* ==== 0x0101F0B0  (file offset 0x1F0B0)  FUN_0101f0b0 ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100235C +0x8;
-   written from its disassembly (0x0101f0b0 - 0x0101f0b0). Does nothing (bx lr). */
-void FUN_0101f0b0(int param_1)
+/* ==== 0x0101F0B0  (file offset 0x1F0B0)  swvM3G_ReadRayIntersection ================================== */
+/* A routine Ghidra has no function for, reached only through slot +0x4 of the RayIntersection's
+   first engine vtable, 0x01002324 (every class's first table: +0 its destructor, +4 its M3G record reader,
+   called with the object and the stream; then its second table, the object's +4); written from its
+   disassembly (0x0101f0b0 - 0x0101f0b0). GUESS: name. The RayIntersection's M3G record reader, which
+   reads nothing: the M3G file format has no RayIntersection record (section 12, ObjectType Values: 0 - 22
+   and 255), and its base's table (0x01002248) has the pure virtual trap there (0x01000128:
+   raise_signal_and_exit with 12, GUESS SIGPVFN). Neither intersection nor stream is read. The class:
+   swv_types.h, RayIntersection. Evidence: `bx lr`. */
+void swvM3G_ReadRayIntersection(uint8 *intersection,uint8 *stream)
 
 {
-  return;
 }
 
 /* ==== 0x0101F0B4  (file offset 0x1F0B4)  swvM3G_ReadKeyframeSequence ================================= */
@@ -33588,94 +33608,396 @@ FUN_01025ec8(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4
   return 0;
 }
 
-/* ==== 0x01026110  (file offset 0x26110)  FUN_01026110 ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01001E5C +0x4;
-   written from its disassembly (0x01026110 - 0x01026114). Returns 0 (GUESS: the class's type number).
-   param_1 (the object) is not read. */
-int32 FUN_01026110(int param_1)
+/* ==== 0x01026100  (file offset 0x26100)  swvImage2D_GetType ========================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01001DE8 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the Image2D's second engine vtable 0x01001DB4 (the object's +4; its
+   first, 0x01001DAC: the destructor 0x01029914, slot +0x4 swvM3G_ReadImage2D; the tables stored by
+   FUN_01027b6c); written from its disassembly (0x01026100 - 0x01026104). GUESS: name. The Image2D's
+   getType: returns 10 (SWVT_IMAGE2D, SwerveObjectType; the M3G ObjectType of the class, M3G file format
+   section 12). object is not read. Evidence: `mov r0, #0xa` / `bx lr`. */
+int32 swvImage2D_GetType(const uint8 *object)
+
+{
+  return SWVT_IMAGE2D;
+}
+
+/* ==== 0x01026108  (file offset 0x26108)  swvMaterial_GetType ========================================= */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01001E24 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the Material's second engine vtable 0x01001DFC (the object's +4; its
+   first, 0x01001DF4: the destructor 0x01029A10, slot +0x4 swvM3G_ReadMaterial; the tables stored by
+   FUN_0100e5d4); written from its disassembly (0x01026108 - 0x0102610c). GUESS: name. The Material's
+   getType: returns 13 (SWVT_MATERIAL, SwerveObjectType; the M3G ObjectType of the class, M3G file format
+   section 12). object is not read. Evidence: `mov r0, #0xd` / `bx lr`. */
+int32 swvMaterial_GetType(const uint8 *object)
+
+{
+  return SWVT_MATERIAL;
+}
+
+/* ==== 0x01026110  (file offset 0x26110)  swvObject3D_GetType ========================================= */
+/* A routine Ghidra has no function for, reached only directly, at +0x4 of the second engine vtables of the
+   base classes (0x01001E5C, the one every constructor stores first, and 0x01001E34, 0x01002048,
+   0x010021B4, 0x01002250, 0x01002274, 0x01002700); written from its disassembly (0x01026110 - 0x01026114).
+   GUESS: name. The base class's getType (GUESS: Object3D's): returns 0, no type. object is not read.
+   Evidence: `mov r0, #0x0` / `bx lr`. */
+int32 swvObject3D_GetType(const uint8 *object)
 
 {
   return 0;
 }
 
-/* ==== 0x01026118  (file offset 0x26118)  FUN_01026118 ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100203C +0x5c;
-   written from its disassembly (0x01026118 - 0x0102611c). Returns 24 (GUESS: the class's type number).
-   param_1 (the object) is not read. */
-int32 FUN_01026118(int param_1)
+/* ==== 0x01026118  (file offset 0x26118)  swvClass24_GetType ========================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01001EA4 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the Class24's second engine vtable 0x01001E6C (the object's +4; its
+   first, 0x01001E64: the destructor 0x01029B74, slot +0x4 FUN_0101e0b0; the tables stored by
+   FUN_0100e63c); written from its disassembly (0x01026118 - 0x0102611c). GUESS: name. The Class24's
+   getType: returns 24 (SWVT_CLASS24, SwerveObjectType; one of Swerve's own types). object is not read.
+   Evidence: `mov r0, #0x18` / `bx lr`. */
+int32 swvClass24_GetType(const uint8 *object)
 
 {
-  return 0x18;
+  return SWVT_CLASS24;
 }
 
-/* ==== 0x01026120  (file offset 0x26120)  FUN_01026120 ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtables at 0x01001E6C +0x24,
-   0x0100217C +0x78; written from its disassembly (0x01026120 - 0x01026124). Returns 17 (GUESS: the
-   class's type number). param_1 (the object) is not read. */
-int32 FUN_01026120(int param_1)
+/* ==== 0x01026120  (file offset 0x26120)  swvTexture2D_GetType ======================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01001F48 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the Texture2D's second engine vtable 0x01001F18 (the object's +4; its
+   first, 0x01001F10: the destructor 0x01029D74, slot +0x4 swvM3G_ReadTexture2D; the tables stored by
+   FUN_01027d0c); written from its disassembly (0x01026120 - 0x01026124). GUESS: name. The Texture2D's
+   getType: returns 17 (SWVT_TEXTURE2D, SwerveObjectType; the M3G ObjectType of the class, M3G file format
+   section 12). object is not read. Evidence: `mov r0, #0x11` / `bx lr`. */
+int32 swvTexture2D_GetType(const uint8 *object)
 
 {
-  return 0x11;
+  return SWVT_TEXTURE2D;
 }
 
-/* ==== 0x01026140  (file offset 0x26140)  FUN_01026140 ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100201C +0x4;
-   written from its disassembly (0x01026140 - 0x01026144). Returns 25 (GUESS: the class's type number).
-   param_1 (the object) is not read. */
-int32 FUN_01026140(int param_1)
+/* ==== 0x01026128  (file offset 0x26128)  swvTransform_GetType ======================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01001F6C (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the Transform's second engine vtable 0x01001F58 (the object's +4; its
+   first, 0x01001F50: the destructor 0x01029DC8, slot +0x4 0x0101E284; the tables stored by FUN_01027d68);
+   written from its disassembly (0x01026128 - 0x0102612c). GUESS: name. The Transform's getType: returns 27
+   (SWVT_TRANSFORM, SwerveObjectType; one of Swerve's own types). object is not read. Evidence: `mov r0,
+   #0x1b` / `bx lr`. */
+int32 swvTransform_GetType(const uint8 *object)
 
 {
-  return 0x19;
+  return SWVT_TRANSFORM;
 }
 
-/* ==== 0x01026168  (file offset 0x26168)  FUN_01026168 ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x0100217C +0x1c;
-   written from its disassembly (0x01026168 - 0x0102616c). Returns 15 (GUESS: the class's type number).
-   param_1 (the object) is not read. */
-int32 FUN_01026168(int param_1)
+/* ==== 0x01026130  (file offset 0x26130)  swvAppearance_GetType ======================================= */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01001FA4 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the Appearance's second engine vtable 0x01001F7C (the object's +4; its
+   first, 0x01001F74: the destructor 0x01029E10, slot +0x4 swvM3G_ReadAppearance; the tables stored by
+   FUN_01027e10); written from its disassembly (0x01026130 - 0x01026134). GUESS: name. The Appearance's
+   getType: returns 3 (SWVT_APPEARANCE, SwerveObjectType; the M3G ObjectType of the class, M3G file format
+   section 12). object is not read. Evidence: `mov r0, #0x3` / `bx lr`. */
+int32 swvAppearance_GetType(const uint8 *object)
 
 {
-  return 0xf;
+  return SWVT_APPEARANCE;
 }
 
-/* ==== 0x01026170  (file offset 0x26170)  FUN_01026170 ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010027D8 +0xa4;
-   written from its disassembly (0x01026170 - 0x01026174). Returns 21 (GUESS: the class's type number).
-   param_1 (the object) is not read. */
-int32 FUN_01026170(int param_1)
+/* ==== 0x01026138  (file offset 0x26138)  swvBackground_GetType ======================================= */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01002004 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the Background's second engine vtable 0x01001FDC (the object's +4; its
+   first, 0x01001FD4: the destructor 0x01029F68, slot +0x4 swvM3G_ReadBackground; the tables stored by
+   FUN_0100e724); written from its disassembly (0x01026138 - 0x0102613c). GUESS: name. The Background's
+   getType: returns 4 (SWVT_BACKGROUND, SwerveObjectType; the M3G ObjectType of the class, M3G file format
+   section 12). object is not read. Evidence: `mov r0, #0x4` / `bx lr`. */
+int32 swvBackground_GetType(const uint8 *object)
 
 {
-  return 0x15;
+  return SWVT_BACKGROUND;
 }
 
-/* ==== 0x010261A8  (file offset 0x261A8)  FUN_010261a8 ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010027D8 +0x64;
-   written from its disassembly (0x010261a8 - 0x010261ac). Returns 1 (GUESS: the class's type number).
-   param_1 (the object) is not read. */
-int32 FUN_010261a8(int param_1)
+/* ==== 0x01026140  (file offset 0x26140)  swvGraphics3D_GetType ======================================= */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01002034 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the Graphics3D's second engine vtable 0x01002024 (the object's +4; its
+   first, 0x0100201C: the destructor 0x01029FF8, slot +0x4 swvGraphics3D_GetType; the tables stored by
+   FUN_01027eec); written from its disassembly (0x01026140 - 0x01026144). GUESS: name. The Graphics3D's
+   getType: returns 25 (SWVT_GRAPHICS3D, SwerveObjectType; one of Swerve's own types). object is not read.
+   Evidence: `mov r0, #0x19` / `bx lr`. */
+int32 swvGraphics3D_GetType(const uint8 *object)
 
 {
-  return 1;
+  return SWVT_GRAPHICS3D;
 }
 
-/* ==== 0x010261C0  (file offset 0x261C0)  FUN_010261c0 ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x01002438 +0x8;
-   written from its disassembly (0x010261c0 - 0x010261c4). Returns 255 (GUESS: the class's type number).
-   param_1 (the object) is not read. */
-int32 FUN_010261c0(int param_1)
+/* ==== 0x01026148  (file offset 0x26148)  swvProceduralImage_GetType ================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x010020AC (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the ProceduralImage's second engine vtable 0x01002074 (the object's +4;
+   its first, 0x0100206C: the destructor 0x0102A198, slot +0x4 FUN_0101e534; the tables stored by
+   FUN_01028464); written from its disassembly (0x01026148 - 0x0102614c). GUESS: name. The
+   ProceduralImage's getType: returns 23 (SWVT_UNUSED23, SwerveObjectType; one of Swerve's own types). The
+   procedural image (swv_types.h, Image2D; its constructor FUN_01028464) has this type, not SWVT_CLASS24
+   (24 is the type of the tables FUN_0100e63c stores). object is not read. Evidence: `mov r0, #0x17` / `bx
+   lr`. */
+int32 swvProceduralImage_GetType(const uint8 *object)
+
+{
+  return SWVT_UNUSED23;
+}
+
+/* ==== 0x01026150  (file offset 0x26150)  swvPolygonMode_GetType ====================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x010020EC (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the PolygonMode's second engine vtable 0x010020C4 (the object's +4; its
+   first, 0x010020BC: the destructor 0x0102A23C, slot +0x4 swvM3G_ReadPolygonMode; the tables stored by
+   FUN_010285fc); written from its disassembly (0x01026150 - 0x01026154). GUESS: name. The PolygonMode's
+   getType: returns 8 (SWVT_POLYGONMODE, SwerveObjectType; the M3G ObjectType of the class, M3G file format
+   section 12). object is not read. Evidence: `mov r0, #0x8` / `bx lr`. */
+int32 swvPolygonMode_GetType(const uint8 *object)
+
+{
+  return SWVT_POLYGONMODE;
+}
+
+/* ==== 0x01026158  (file offset 0x26158)  swvSkinnedMesh_GetType ====================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x0100216C (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the SkinnedMesh's second engine vtable 0x01002134 (the object's +4; its
+   first, 0x0100212C: the destructor 0x0102A2F4, slot +0x4 swvM3G_ReadSkinnedMesh; the tables stored by
+   FUN_0100e810); written from its disassembly (0x01026158 - 0x0102615c). GUESS: name. The SkinnedMesh's
+   getType: returns 16 (SWVT_SKINNEDMESH, SwerveObjectType; the M3G ObjectType of the class, M3G file
+   format section 12). object is not read. Evidence: `mov r0, #0x10` / `bx lr`. */
+int32 swvSkinnedMesh_GetType(const uint8 *object)
+
+{
+  return SWVT_SKINNEDMESH;
+}
+
+/* ==== 0x01026160  (file offset 0x26160)  swvVertexArray_GetType ====================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x010021A4 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the VertexArray's second engine vtable 0x0100217C (the object's +4; its
+   first, 0x01002174: the destructor 0x0102A4CC, slot +0x4 swvM3G_ReadVertexArray; the tables stored by
+   FUN_010286dc); written from its disassembly (0x01026160 - 0x01026164). GUESS: name. The VertexArray's
+   getType: returns 20 (SWVT_VERTEXARRAY, SwerveObjectType; the M3G ObjectType of the class, M3G file
+   format section 12). object is not read. Evidence: `mov r0, #0x14` / `bx lr`. */
+int32 swvVertexArray_GetType(const uint8 *object)
+
+{
+  return SWVT_VERTEXARRAY;
+}
+
+/* ==== 0x01026168  (file offset 0x26168)  swvMorphingMesh_GetType ===================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01002204 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the MorphingMesh's second engine vtable 0x010021CC (the object's +4;
+   its first, 0x010021C4: the destructor 0x0102A5B8, slot +0x4 swvM3G_ReadMorphingMesh; the tables stored
+   by FUN_010287cc); written from its disassembly (0x01026168 - 0x0102616c). GUESS: name. The
+   MorphingMesh's getType: returns 15 (SWVT_MORPHINGMESH, SwerveObjectType; the M3G ObjectType of the
+   class, M3G file format section 12). object is not read. Evidence: `mov r0, #0xf` / `bx lr`. */
+int32 swvMorphingMesh_GetType(const uint8 *object)
+
+{
+  return SWVT_MORPHINGMESH;
+}
+
+/* ==== 0x01026170  (file offset 0x26170)  swvVertexBuffer_GetType ===================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01002240 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the VertexBuffer's second engine vtable 0x01002218 (the object's +4;
+   its first, 0x01002210: the destructor 0x0102A6F4, slot +0x4 swvM3G_ReadVertexBuffer; the tables stored
+   by FUN_01028898); written from its disassembly (0x01026170 - 0x01026174). GUESS: name. The
+   VertexBuffer's getType: returns 21 (SWVT_VERTEXBUFFER, SwerveObjectType; the M3G ObjectType of the
+   class, M3G file format section 12). object is not read. Evidence: `mov r0, #0x15` / `bx lr`. */
+int32 swvVertexBuffer_GetType(const uint8 *object)
+
+{
+  return SWVT_VERTEXBUFFER;
+}
+
+/* ==== 0x01026178  (file offset 0x26178)  swvAnimationTrack_GetType =================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x010022CC (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the AnimationTrack's second engine vtable 0x010022A4 (the object's +4;
+   its first, 0x0100229C: the destructor 0x0102A910, slot +0x4 swvM3G_ReadAnimationTrack; the tables stored
+   by FUN_01028abc); written from its disassembly (0x01026178 - 0x0102617c). GUESS: name. The
+   AnimationTrack's getType: returns 2 (SWVT_ANIMATIONTRACK, SwerveObjectType; the M3G ObjectType of the
+   class, M3G file format section 12). object is not read. Evidence: `mov r0, #0x2` / `bx lr`. */
+int32 swvAnimationTrack_GetType(const uint8 *object)
+
+{
+  return SWVT_ANIMATIONTRACK;
+}
+
+/* ==== 0x01026180  (file offset 0x26180)  swvCompositingMode_GetType ================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x0100231C (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the CompositingMode's second engine vtable 0x010022F4 (the object's +4;
+   its first, 0x010022EC: the destructor 0x0102AA04, slot +0x4 swvM3G_ReadCompositingMode; the tables
+   stored by FUN_01028b58); written from its disassembly (0x01026180 - 0x01026184). GUESS: name. The
+   CompositingMode's getType: returns 6 (SWVT_COMPOSITINGMODE, SwerveObjectType; the M3G ObjectType of the
+   class, M3G file format section 12). object is not read. Evidence: `mov r0, #0x6` / `bx lr`. */
+int32 swvCompositingMode_GetType(const uint8 *object)
+
+{
+  return SWVT_COMPOSITINGMODE;
+}
+
+/* ==== 0x01026188  (file offset 0x26188)  swvRayIntersection_GetType ================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01002340 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the RayIntersection's second engine vtable 0x0100232C (the object's +4;
+   its first, 0x01002324: the destructor 0x0102AA48 swvRayIntersection_Destroy, slot +0x4
+   swvM3G_ReadRayIntersection; the tables stored by swvPick_NewRecord and swvRayIntersection_New); written
+   from its disassembly (0x01026188 - 0x0102618c). GUESS: name. The RayIntersection's getType: returns 26
+   (SWVT_RAYINTERSECTION, SwerveObjectType; one of Swerve's own types). object is not read.
+   Evidence: `mov r0, #0x1a` / `bx lr`. */
+int32 swvRayIntersection_GetType(const uint8 *object)
+
+{
+  return SWVT_RAYINTERSECTION;
+}
+
+/* ==== 0x01026190  (file offset 0x26190)  swvKeyframeSequence_GetType ================================= */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01002390 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the KeyframeSequence's second engine vtable 0x01002368 (the object's
+   +4; its first, 0x01002360: the destructor 0x0102AC8C, slot +0x4 swvM3G_ReadKeyframeSequence; the tables
+   stored by FUN_01028cc8); written from its disassembly (0x01026190 - 0x01026194). GUESS: name. The
+   KeyframeSequence's getType: returns 19 (SWVT_KEYFRAMESEQUENCE, SwerveObjectType; the M3G ObjectType of
+   the class, M3G file format section 12). object is not read. Evidence: `mov r0, #0x13` / `bx lr`. */
+int32 swvKeyframeSequence_GetType(const uint8 *object)
+
+{
+  return SWVT_KEYFRAMESEQUENCE;
+}
+
+/* ==== 0x01026198  (file offset 0x26198)  swvLoader_GetType =========================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x0100244C (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the Loader's second engine vtable 0x01002438 (the object's +4; its
+   first, 0x01002430: the destructor 0x01003428, slot +0x4 0x0102DA88; the tables stored by
+   swvM3GReader_Construct); written from its disassembly (0x01026198 - 0x0102619c). GUESS: name. The
+   Loader's getType: returns 28 (SWVT_LOADER, SwerveObjectType; one of Swerve's own types). object is not
+   read. Evidence: `mov r0, #0x1c` / `bx lr`. */
+int32 swvLoader_GetType(const uint8 *object)
+
+{
+  return SWVT_LOADER;
+}
+
+/* ==== 0x010261A0  (file offset 0x261A0)  swvTriangleStripArray_GetType =============================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01002484 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the TriangleStripArray's second engine vtable 0x0100245C (the object's
+   +4; its first, 0x01002454: the destructor 0x0102B324, slot +0x4 swvM3G_ReadTriangleStripArray; the
+   tables stored by FUN_010290c4); written from its disassembly (0x010261a0 - 0x010261a4). GUESS: name. The
+   TriangleStripArray's getType: returns 11 (SWVT_TRIANGLESTRIPARRAY, SwerveObjectType; the M3G ObjectType
+   of the class, M3G file format section 12). object is not read. Evidence: `mov r0, #0xb` / `bx lr`. */
+int32 swvTriangleStripArray_GetType(const uint8 *object)
+
+{
+  return SWVT_TRIANGLESTRIPARRAY;
+}
+
+/* ==== 0x010261A8  (file offset 0x261A8)  swvAnimationController_GetType ============================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x010024BC (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the AnimationController's second engine vtable 0x01002494 (the object's
+   +4; its first, 0x0100248C: the destructor 0x0102B38C, slot +0x4 swvM3G_ReadAnimationController; the
+   tables stored by FUN_010291bc); written from its disassembly (0x010261a8 - 0x010261ac). GUESS: name. The
+   AnimationController's getType: returns 1 (SWVT_ANIMATIONCONTROLLER, SwerveObjectType; the M3G ObjectType
+   of the class, M3G file format section 12). object is not read. Evidence: `mov r0, #0x1` / `bx lr`. */
+int32 swvAnimationController_GetType(const uint8 *object)
+
+{
+  return SWVT_ANIMATIONCONTROLLER;
+}
+
+/* ==== 0x010261B0  (file offset 0x261B0)  swvFog_GetType ============================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x010026A8 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the Fog's second engine vtable 0x01002680 (the object's +4; its first,
+   0x01002678: the destructor 0x0102C078, slot +0x4 swvM3G_ReadFog; the tables stored by FUN_010292b8);
+   written from its disassembly (0x010261b0 - 0x010261b4). GUESS: name. The Fog's getType: returns 7
+   (SWVT_FOG, SwerveObjectType; the M3G ObjectType of the class, M3G file format section 12). object is not
+   read. Evidence: `mov r0, #0x7` / `bx lr`. */
+int32 swvFog_GetType(const uint8 *object)
+
+{
+  return SWVT_FOG;
+}
+
+/* ==== 0x010261B8  (file offset 0x261B8)  swvMesh_GetType ============================================= */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x010026F0 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the Mesh's second engine vtable 0x010026B8 (the object's +4; its first,
+   0x010026B0: the destructor 0x0102C0BC, slot +0x4 swvM3G_ReadMesh; the tables stored by FUN_01029304);
+   written from its disassembly (0x010261b8 - 0x010261bc). GUESS: name. The Mesh's getType: returns 14
+   (SWVT_MESH, SwerveObjectType; the M3G ObjectType of the class, M3G file format section 12). object is
+   not read. Evidence: `mov r0, #0xe` / `bx lr`. */
+int32 swvMesh_GetType(const uint8 *object)
+
+{
+  return SWVT_MESH;
+}
+
+/* ==== 0x010261C0  (file offset 0x261C0)  swvExternalReference_GetType ================================ */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01002748 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the ExternalReference's second engine vtable 0x01002734 (the object's
+   +4; its first, 0x0100272C: the destructor 0x0102C254, slot +0x4 swvM3G_ReadExternalReference; the tables
+   stored by FUN_010293e4); written from its disassembly (0x010261c0 - 0x010261c4). GUESS: name. The
+   ExternalReference's getType: returns 255 (0xff, SwerveObjectType; the M3G ObjectType of an external
+   reference, M3G file format section 12). object is not read. Evidence: `mov r0, #0xff` / `bx lr`. */
+int32 swvExternalReference_GetType(const uint8 *object)
 
 {
   return 0xff;
 }
 
-/* ==== 0x010261E0  (file offset 0x261E0)  FUN_010261e0 ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010027D8 +0x24;
-   written from its disassembly (0x010261e0 - 0x010261e4). Returns 5 (GUESS: the class's type number).
-   param_1 (the object) is not read. */
-int32 FUN_010261e0(int param_1)
+/* ==== 0x010261C8  (file offset 0x261C8)  swvGroup_GetType ============================================ */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01002788 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the Group's second engine vtable 0x01002758 (the object's +4; its
+   first, 0x01002750: the destructor 0x0102C2F4, slot +0x4 swvM3G_ReadGroup; the tables stored by
+   FUN_0102950c); written from its disassembly (0x010261c8 - 0x010261cc). GUESS: name. The Group's getType:
+   returns 9 (SWVT_GROUP, SwerveObjectType; the M3G ObjectType of the class, M3G file format section 12).
+   object is not read. Evidence: `mov r0, #0x9` / `bx lr`. */
+int32 swvGroup_GetType(const uint8 *object)
 
 {
-  return 5;
+  return SWVT_GROUP;
+}
+
+/* ==== 0x010261D0  (file offset 0x261D0)  swvLight_GetType ============================================ */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x010027C8 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the Light's second engine vtable 0x01002798 (the object's +4; its
+   first, 0x01002790: the destructor 0x0102C338, slot +0x4 swvM3G_ReadLight; the tables stored by
+   FUN_0100eb7c); written from its disassembly (0x010261d0 - 0x010261d4). GUESS: name. The Light's getType:
+   returns 12 (SWVT_LIGHT, SwerveObjectType; the M3G ObjectType of the class, M3G file format section 12).
+   object is not read. Evidence: `mov r0, #0xc` / `bx lr`. */
+int32 swvLight_GetType(const uint8 *object)
+
+{
+  return SWVT_LIGHT;
+}
+
+/* ==== 0x010261D8  (file offset 0x261D8)  swvWorld_GetType ============================================ */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01002808 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the World's second engine vtable 0x010027D8 (the object's +4; its
+   first, 0x010027D0: the destructor 0x0102C37C, slot +0x4 swvM3G_ReadWorld; the tables stored by
+   FUN_01029540); written from its disassembly (0x010261d8 - 0x010261dc). GUESS: name. The World's getType:
+   returns 22 (SWVT_WORLD, SwerveObjectType; the M3G ObjectType of the class, M3G file format section 12).
+   object is not read. Evidence: `mov r0, #0x16` / `bx lr`. */
+int32 swvWorld_GetType(const uint8 *object)
+
+{
+  return SWVT_WORLD;
+}
+
+/* ==== 0x010261E0  (file offset 0x261E0)  swvCamera_GetType =========================================== */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01002848 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the Camera's second engine vtable 0x01002818 (the object's +4; its
+   first, 0x01002810: the destructor 0x0102C41C, slot +0x4 swvM3G_ReadCamera; the tables stored by
+   FUN_010295ac); written from its disassembly (0x010261e0 - 0x010261e4). GUESS: name. The Camera's
+   getType: returns 5 (SWVT_CAMERA, SwerveObjectType; the M3G ObjectType of the class, M3G file format
+   section 12). object is not read. Evidence: `mov r0, #0x5` / `bx lr`. */
+int32 swvCamera_GetType(const uint8 *object)
+
+{
+  return SWVT_CAMERA;
+}
+
+/* ==== 0x010261E8  (file offset 0x261E8)  swvSprite3D_GetType ========================================= */
+/* A routine Ghidra has no function for, reached only through the this-adjusting thunk at 0x01002888 (`sub
+   r0, r0, #4` / `b`), slot +0x4 of the Sprite3D's second engine vtable 0x01002858 (the object's +4; its
+   first, 0x01002850: the destructor 0x0102C46C, slot +0x4 swvM3G_ReadSprite3D; the tables stored by
+   FUN_0100ec40); written from its disassembly (0x010261e8 - 0x010261ec). GUESS: name. The Sprite3D's
+   getType: returns 18 (SWVT_SPRITE3D, SwerveObjectType; the M3G ObjectType of the class, M3G file format
+   section 12). object is not read. Evidence: `mov r0, #0x12` / `bx lr`. */
+int32 swvSprite3D_GetType(const uint8 *object)
+
+{
+  return SWVT_SPRITE3D;
 }
 
 /* ==== 0x010261F0  (file offset 0x261F0)  FUN_010261f0 ================================================ */
@@ -37150,9 +37472,10 @@ void swvSectionZlib_Destroy(uint8 *section,int32 freeIt)
 }
 
 /* ==== 0x0102AA04  (file offset 0x2AA04)  FUN_0102aa04 ================================================ */
-/* A routine Ghidra has no function for, reached only through the engine vtable at 0x010022E0 +0x44;
-   written from its disassembly (0x0102aa04 - 0x0102aa40). Destructor (GUESS): its class's vtables (+0,
-   and at +4 the second one, 8 bytes on), then FUN_01029a54 and, when param_2 is set, frees the object
+/* A routine Ghidra has no function for, reached only through slot +0x0 of the CompositingMode's first
+   engine vtable, 0x010022EC (and the thunk at 0x01002314, slot +0x0 of its second, 0x010022F4); written
+   from its disassembly (0x0102aa04 - 0x0102aa40). Destructor (GUESS): its class's vtables (+0, and at +4
+   the second one, 8 bytes on), then FUN_01029a54 and, when param_2 is set, frees the object
    (helper_free's second entry, 0x0102990c; a tail jump). */
 void FUN_0102aa04(int *param_1,int param_2)
 
@@ -37163,6 +37486,31 @@ void FUN_0102aa04(int *param_1,int param_2)
   if (param_2 != 0)
     helper_free(param_1);
   return;
+}
+
+/* ==== 0x0102AA48  (file offset 0x2AA48)  swvRayIntersection_Destroy ================================== */
+/* A routine Ghidra has no function for, reached only through slot +0x0 of the RayIntersection's
+   first engine vtable, 0x01002324 (and the thunk at 0x01002338, slot +0x0 of its second, 0x0100232C);
+   written from its disassembly (0x0102aa48 - 0x0102aa9c). GUESS: name. The RayIntersection's destructor:
+   its two tables (0x01002324, and 8 bytes on at +4), the intersected node (+0xc) released when set
+   (swv_NativeRelease on its +4 part), the base tables 0x0100203C / 0x01001E5C stored together; when
+   deleting is set the object is freed (helper_free's second entry, 0x0102990c; a tail jump). Evidence:
+   `ldr r0, [pc, #0x44]` / `add r0, pc, r0` / `str r0, [r4]` / `add r0, r0, #8` / `str r0, [r4, #4]`,
+   `ldr r0, [r4, #0xc]` / `cmp r0, #0` / `addne r0, r0, #4` / `blne 0x01019f28`, `stm r4, {r0, r1}`, `cmp
+   r5, #0` / `bne 0x0102990c`. */
+void swvRayIntersection_Destroy(uint8 *intersection,int32 deleting)
+
+{
+  uint32 table = DATA_AT_01002324_OFFSET + 0x102aa60;
+
+  *(uint32 *)intersection = table;
+  *(uint32 *)(intersection + 4) = table + 8;
+  if (*(uint8 **)(intersection + 0xc) != NULL)
+    swv_NativeRelease(*(uint8 **)(intersection + 0xc) + 4);
+  *(uint32 *)intersection = DATA_AT_0100203C_OFFSET_67 + 0x102aa8c;
+  *(uint32 *)(intersection + 4) = DATA_AT_01001E5C_OFFSET_13 + 0x102aa84;
+  if (deleting != 0)
+    helper_free(intersection);
 }
 
 /* ==== 0x0102AAAC  (file offset 0x2AAAC)  FUN_0102aaac ================================================ */

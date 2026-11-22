@@ -73,7 +73,7 @@ typedef enum SwerveObjectType {
     SWVT_SKINNEDMESH = 16,         SWVT_TEXTURE2D = 17,      SWVT_SPRITE3D = 18,
     SWVT_KEYFRAMESEQUENCE = 19,    SWVT_VERTEXARRAY = 20,    SWVT_VERTEXBUFFER = 21,
     SWVT_WORLD = 22,
-    SWVT_UNUSED23 = 23,            /* refused by QueryInterface; shares type 24's vtable */
+    SWVT_UNUSED23 = 23,            /* refused by QueryInterface; the procedural image (FUN_01028464) */
     SWVT_CLASS24 = 24,             SWVT_GRAPHICS3D = 25,     SWVT_RAYINTERSECTION = 26,
     SWVT_TRANSFORM = 27,           SWVT_LOADER = 28
 } SwerveObjectType;
@@ -637,11 +637,30 @@ typedef struct SwvRect {
  *                     swv_SpanFillTextured, FUN_0100bb68, FUN_0100ac0c, FUN_0100c92c) */
 
 /* ---- the engine's static vtables ---------------------------------------------------------------
- * 65 tables at 0x01001dac - 0x01002890 (the constructors store them; each word an offset from the table
- * to the method, some to this-adjusting thunks, sub r0, r0, #n / b, kept among the tables). All but
- * three are small classes (5 slots or fewer: GUESS the containers, slot +4 FUN_01023420 in most); the
- * scene objects' (Camera, Image2D, Group, ...) are not among them (GUESS: not static), so a virtual call
- * on one is not resolved by these tables.
+ * At 0x01001dac - 0x01002890 (the constructors store them; each word an offset from the table's start to
+ * the method, some to this-adjusting thunks, sub r0, r0, #n / b, kept among the tables). Every class of
+ * engine object, the scene objects too, has two, one after the other:
+ *   the first, at the object's +0: +0x0 the destructor (the object, deleting), +0x4 the M3G record reader
+ *   (the object, the stream: swvM3G_Read*; the abstract bases' 0x01000128, the pure virtual trap,
+ *   raise_signal_and_exit with 12, GUESS SIGPVFN; the RayIntersection's empty, it has no record);
+ *   the second, 8 bytes on, at the object's +4: +0x0 and +0x4 thunks (sub r0, r0, #4 / b) to the
+ *   destructor and to getType (swv<Class>_GetType, 0x01026100 - 0x010261ec, the SwerveObjectType), then
+ *   the class's other methods.
+ * By type, each class's first table (its getType's thunk is at +0xc):
+ *     1 AnimationController 0x0100248C  2 AnimationTrack 0x0100229C       3 Appearance 0x01001F74
+ *     4 Background 0x01001FD4           5 Camera 0x01002810               6 CompositingMode 0x010022EC
+ *     7 Fog 0x01002678                  8 PolygonMode 0x010020BC          9 Group 0x01002750
+ *    10 Image2D 0x01001DAC             11 TriangleStripArray 0x01002454  12 Light 0x01002790
+ *    13 Material 0x01001DF4            14 Mesh 0x010026B0                15 MorphingMesh 0x010021C4
+ *    16 SkinnedMesh 0x0100212C         17 Texture2D 0x01001F10           18 Sprite3D 0x01002850
+ *    19 KeyframeSequence 0x01002360    20 VertexArray 0x01002174         21 VertexBuffer 0x01002210
+ *    22 World 0x010027D0               23 ProceduralImage 0x0100206C     24 Class24 0x01001E64
+ *    25 Graphics3D 0x0100201C          26 RayIntersection 0x01002324     27 Transform 0x01001F50
+ *    28 Loader 0x01002430             255 ExternalReference 0x0100272C
+ * Base classes' second tables give getType 0 directly (swvObject3D_GetType). The containers (the dynamic
+ * arrays and other small classes) have one small table (slot +4 FUN_01023420 in most). An earlier reading
+ * had cut the tables at the wrong starts (0x0100235C, one slot, run into the KeyframeSequence's
+ * 0x01002360).
  * The renderer's (0x01002398; constructor FUN_01028d2c, GUESS JSR-184 Graphics3D's implementation):
  *   +0x00 0x0102ad0c the destructor          +0x1c FUN_01021d50
  *   +0x04 FUN_01005eb8                       +0x20 FUN_0101d01c
@@ -665,8 +684,18 @@ typedef struct SwvRect {
  *                     FUN_01026548 clears it)
  *   +0x84             an RGBA image target (FUN_0102035c); +0x88 / +0x8c its alpha plane's stride
  *                     and the plane; +0x90 the image's +0x4c (for the image vtable +0x2c's 0x18)
- * The two other long ones: 0x01002410 (10 slots) and 0x010027d8 (7, thunks and methods Ghidra has no
- * function for). */
+ * The M3G reader's 0x01002410 (10 slots) is the other long one; 0x010027D8 is the World's second table. */
+
+/* ---- RayIntersection (class 26), the native object (no struct yet) ----------------------------
+ * 0x4c bytes (swvRayIntersection_New; swvPick_NewRecord makes the engine's shared pick record, kept in the
+ * engine globals +0x30, swvPick_Record). Its tables: 0x01002324 at +0 (swvRayIntersection_Destroy;
+ * swvM3G_ReadRayIntersection, empty: the M3G file format has no RayIntersection record) and 0x0100232C at
+ * +4 (swvRayIntersection_GetType, 26); its base's 0x01002248 has the pure virtual trap for the reader.
+ * The fields the Group.pick forms fill (JSR-184 1.1, RayIntersection; GUESS: the names):
+ *   +0x0c             the intersected node (FUN_01021b7c sets it; the destructor releases it)
+ *   +0x14             the distance (FLT_MAX before a pick)
+ *   +0x34 / +0x40     the ray's origin and direction (FUN_01022a94; RayIntersection.getRay)
+ * The constructor clears the others and sets +0x30 and +0x48 to 1.0. */
 
 /* ---- engine globals ------------------------------------------------------------------------
  * Swerve has no writable statics either: swv_NewSwerve allocates this 0x24-byte block and
